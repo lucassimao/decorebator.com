@@ -2,6 +2,7 @@ package users
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -22,11 +23,9 @@ type Claims struct {
 
 func generateJWT(userID int64) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour) // Token is valid for 24 hour
-	claims := &Claims{
-		UserID: userID,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-		},
+	claims := &jwt.StandardClaims{
+		ExpiresAt: expirationTime.Unix(),
+		Subject:   fmt.Sprint(userID),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -65,6 +64,10 @@ func LoginUser(email, password string) (string, error) {
 	if err != nil {
 		log.Println("Failure at LoginUser:", err)
 		return "", errors.New("Could not start process login. Try again later")
+	}
+
+	if len(results) != 1 {
+		return "", errors.New("Invalid combination of email and/or password.")
 	}
 
 	user := results[0]

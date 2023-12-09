@@ -19,21 +19,25 @@ import (
 func main() {
 
 	router := gin.Default()
-	// router.Use(common.ValidateIDParamMidleware())
 
-	router.GET("/wordlists", wordlists.Handlers.GetAll)
-	router.POST("/wordlists", wordlists.Handlers.Create)
-	router.GET("/wordlists/:wordlistId", wordlists.Handlers.GetById)
-	router.PUT("/wordlists/:wordlistId", wordlists.Handlers.Update)
-	router.DELETE("/wordlists/:wordlistId", wordlists.Handlers.Delete)
-	router.GET("/wordlists/:wordlistId/words")
-	router.GET("/wordlists/:wordlistId/words/:wordId", words.Handlers.GetAll)
-	router.DELETE("/wordlists/:wordlistId/words/:wordId", words.Handlers.Delete)
-	router.PATCH("/wordlists/:wordlistId/words/:wordId", words.Handlers.Update)
-	router.POST("/wordlists/:wordlistId/words", words.Handlers.Create)
-
+	// Routes without authentication
 	router.POST("/users", users.Handlers.SignUp)
 	router.POST("/login", users.Handlers.Login)
+
+	// Routes with authentication
+	authenticatedRoutes := router.Group("/")
+	authenticatedRoutes.Use(users.Handlers.Authenticate)
+	{
+		authenticatedRoutes.GET("/wordlists", wordlists.Handlers.GetAll)
+		authenticatedRoutes.POST("/wordlists", wordlists.Handlers.Create)
+		authenticatedRoutes.GET("/wordlists/:wordlistId", wordlists.Handlers.GetById)
+		authenticatedRoutes.PUT("/wordlists/:wordlistId", wordlists.Handlers.Update)
+		authenticatedRoutes.DELETE("/wordlists/:wordlistId", wordlists.Handlers.Delete)
+		authenticatedRoutes.GET("/wordlists/:wordlistId/words", words.Handlers.GetAll)
+		authenticatedRoutes.DELETE("/wordlists/:wordlistId/words/:wordId", words.Handlers.Delete)
+		authenticatedRoutes.PUT("/wordlists/:wordlistId/words/:wordId", words.Handlers.Update)
+		authenticatedRoutes.POST("/wordlists/:wordlistId/words", words.Handlers.Create)
+	}
 
 	srv := &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),

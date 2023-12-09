@@ -1,8 +1,13 @@
 package users
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -54,4 +59,50 @@ func (h *UserHandlers) Login(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, gin.H{"token": jwtToken})
 	}
+}
+
+func (h *UserHandlers) Authenticate(c *gin.Context) {
+
+	const BearerSchema = "Bearer "
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
+		return
+	}
+
+	tokenString := strings.TrimPrefix(authHeader, BearerSchema)
+
+	if tokenString == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token not found"})
+		return
+	}
+
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("JWT_KEY")), nil
+	})
+
+	if err != nil || !token.Valid {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token vaidation error"})
+		return
+	}
+
+	claims, ok := token.Claims.(*jwt.StandardClaims)
+
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		return
+	}
+
+	userID, err := strconv.ParseInt(claims.Subject, 10, 64)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		return
+	}
+
+	c.Set("userID", userID)
+
+	c.Next()
 }

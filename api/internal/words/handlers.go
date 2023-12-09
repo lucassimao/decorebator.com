@@ -20,24 +20,24 @@ var Handlers = &WordsHandlers{}
 
 func (h *WordsHandlers) GetAll(c *gin.Context) {
 	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	var userId int64 = -1
+	var userId int64 = c.GetInt64("userID")
 
-	wordlists, err := GetWordsFromWordlist(wordlistId, userId)
+	words, err := GetWordsFromWordlist(wordlistId, userId)
 	if err != nil {
-		log.Println("Error in getUserWordlists:", err)
-		c.String(http.StatusInternalServerError, "Couldn't get user wordlists")
+		log.Println("Error in GetAll:", err)
+		c.String(http.StatusInternalServerError, "Couldn't get user words")
 		return
 	}
-	c.IndentedJSON(http.StatusOK, wordlists)
+	c.IndentedJSON(http.StatusOK, words)
 }
 
 func (h *WordsHandlers) Create(c *gin.Context) {
 	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	var userId int64 = -1
+	var userId int64 = c.GetInt64("userID")
 	var input WordInput
 
 	if err := c.BindJSON(&input); err != nil {
-		c.Status(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -46,20 +46,19 @@ func (h *WordsHandlers) Create(c *gin.Context) {
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
 	} else {
-		c.IndentedJSON(http.StatusCreated, saved)
+		c.JSON(http.StatusCreated, saved)
 	}
 }
 
 func (h *WordsHandlers) Delete(c *gin.Context) {
-	var userId int64 = -1
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	var userId int64 = c.GetInt64("userID")
+	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
 
 	_, err := DeleteWord(id, userId)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.String(http.StatusNotFound, err.Error())
 		} else {
-			log.Println(err)
 			c.String(http.StatusInternalServerError, "Couldn't delete wordlist #%d", id)
 		}
 		return
@@ -70,11 +69,11 @@ func (h *WordsHandlers) Delete(c *gin.Context) {
 func (h *WordsHandlers) Update(c *gin.Context) {
 	var input WordInput
 
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	var userId int64 = -1
+	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
+	var userId int64 = c.GetInt64("userID")
 
 	if err := c.BindJSON(&input); err != nil {
-		c.Status(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -60,6 +61,7 @@ func (repository *WordlistRepository) save(name, description string, userID int6
 
 	err := repository.db.QueryRow(context.Background(), query, name, description, userID).Scan(&wordlistID, &createdAt, &updatedAt)
 	if err != nil {
+		log.Printf("user %v %v %v", name, description, userID)
 		return nil, err
 	}
 
@@ -80,7 +82,7 @@ func (repository *WordlistRepository) find(args FindArgs) ([]*Wordlist, error) {
 		builder.WriteString(` WHERE id = $1`)
 		queryArgs = append(queryArgs, args.id)
 	} else if args.ownerId != nil {
-		builder.WriteString(` WHERE ownerId = $1`)
+		builder.WriteString(` WHERE user_id = $1`)
 		queryArgs = append(queryArgs, args.ownerId)
 	}
 
@@ -111,7 +113,8 @@ func (repository *WordlistRepository) find(args FindArgs) ([]*Wordlist, error) {
 	return wordlists, nil
 }
 
-func (repository *WordlistRepository) delete(userId, wordlistID int64) (int64, error) {
+func (repository *WordlistRepository) delete(wordlistID, userId int64) (int64, error) {
+	log.Printf("delete %v %v", userId, wordlistID)
 	query := `DELETE FROM wordlists WHERE user_id=$1 AND ID=$2`
 	result, err := repository.db.Exec(context.Background(), query, userId, wordlistID)
 	if err != nil {

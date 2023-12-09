@@ -40,7 +40,7 @@ func (w Word) MarshalJSON() ([]byte, error) {
         "createdAt": %s,
         "updatedAt": %s,
         "wordlistId": %d,
-        "userId": %d,
+        "userId": %d
     }`, w.ID, w.Name, createdAt, updatedAt, w.WordlistID, w.UserID)), nil
 }
 
@@ -64,7 +64,7 @@ func (repository *WordRepository) save(name string, userId, wordlistId int64) (*
 }
 
 func (repository *WordRepository) getAllFromWordlist(wordlistId, userId int64) ([]*Word, error) {
-	query := `SELECT id , name created_at, updated_At, user_id FROM words WHERE wordlist_id=$1 AND user_id=$2`
+	query := `SELECT id , name, created_at, updated_At FROM words WHERE wordlist_id=$1 AND user_id=$2`
 	rows, err := repository.db.Query(context.Background(), query, wordlistId, userId)
 	if err != nil {
 		return nil, err
@@ -74,8 +74,8 @@ func (repository *WordRepository) getAllFromWordlist(wordlistId, userId int64) (
 
 	words := []*Word{}
 	for rows.Next() {
-		w := Word{WordlistID: wordlistId}
-		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.UserID)
+		w := Word{WordlistID: wordlistId, UserID: userId}
+		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -89,7 +89,7 @@ func (repository *WordRepository) getAllFromWordlist(wordlistId, userId int64) (
 }
 
 func (repository *WordRepository) delete(userId, wordID int64) (int64, error) {
-	query := `DELETE FROM words WHERE user_id=$1 AND ID=$2`
+	query := `DELETE FROM words WHERE user_id=$1 AND id=$2`
 	result, err := repository.db.Exec(context.Background(), query, userId, wordID)
 	if err != nil {
 		return 0, err
