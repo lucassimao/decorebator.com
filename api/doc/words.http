@@ -1,0 +1,45 @@
+@email="abc@gmail.com"
+@password= "12345"
+
+
+### Creating user
+POST http://localhost:3000/users
+content-type: application/json
+
+{
+"FirstName":"Test 1",
+"LastName":"xpto",
+"Email": {{email}},
+"Password": {{password}}
+}
+
+### Login
+# @name loginRequest
+POST http://localhost:3000/login
+content-type: application/json
+
+{
+"Email": {{email}},
+"Password": {{password}}
+}
+
+@authToken = {{loginRequest.response.body.token}}
+
+### Creating wordlist
+# @name wordlistRequest
+POST http://localhost:3000/wordlists
+authorization: {{authToken}}
+
+{
+"Name":"Wordlist test"
+}
+
+@wordlistId = {{wordlistRequest.response.body.id}}
+
+### Creating word
+POST http://localhost:3000/wordlists/{{wordlistId}}/words
+authorization: {{authToken}}
+
+{
+ "Name":"landscape"   
+}
