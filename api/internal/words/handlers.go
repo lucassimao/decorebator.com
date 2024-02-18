@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"decorebator.com/internal/common"
-	"decorebator.com/internal/openai"
 	"github.com/gin-gonic/gin"
 )
 
@@ -43,8 +42,6 @@ func (h *WordsHandlers) Create(c *gin.Context) {
 	}
 
 	saved, err := SaveWord(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistId})
-
-	go openai.GetDefinition(input.Name)
 
 	if err != nil {
 		c.Status(http.StatusInternalServerError)

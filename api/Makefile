@@ -44,7 +44,7 @@ watch:
 	done
 
 psql: ## Start psql session to development database
-	@$(GODOTENV_PATH) -f .env sh -c 'PGPASSWORD=$(POSTGRES_PASSWORD) psql -U $(POSTGRES_USER) -h localhost -d $(POSTGRES_DB)'
+	@$(GODOTENV_PATH) -f .env sh -c 'PGPASSWORD=$(POSTGRES_PASSWORD) psql -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -h localhost -d $(POSTGRES_DB)'
 
 build: clean ## Build restful api and save it to bin/main
 	go build -o bin/main ./cmd/web

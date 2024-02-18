@@ -34,12 +34,14 @@ authorization: {{authToken}}
 "Name":"Wordlist test"
 }
 
-@wordlistId = {{wordlistRequest.response.body.id}}
+@wordlistId = {{wordlistRequest.response.body.id}} 
+
+@wordlistId = 10
 
 ### Creating word
 POST http://localhost:3000/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
- "Name":"landscape"   
+ "Name":"hitherto"   
 }

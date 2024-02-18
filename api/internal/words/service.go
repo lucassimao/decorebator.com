@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/openai"
 )
 
 var repository *WordRepository
@@ -23,6 +24,8 @@ func GetWordsFromWordlist(wordlistId, userId int64) ([]*Word, error) {
 
 func SaveWord(newWord *Word) (*Word, error) {
 	word, err := repository.save(newWord.Name, newWord.UserID, newWord.WordlistID)
+	go openai.GetDefinition(newWord.Name, word.ID)
+
 	if err != nil {
 		log.Println("Failure at SaveWord:", err)
 		return nil, errors.New("Could not save your word")

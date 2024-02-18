@@ -8,17 +8,31 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"decorebator.com/internal/common"
 )
 
-func GetDefinition(word string) {
-	userMessage := fmt.Sprintf("Give me the meaning and 5 examples of usage of the word %s.", word)
+var repository *DefinitionRepository
+
+func init() {
+	db, err := common.GetDBConnection()
+	if err != nil {
+		log.Fatal("failed to open db connection: ", err)
+	}
+	repository = &DefinitionRepository{db}
+}
+
+func GetDefinition(token string, tokenId int64) {
+	userMessage := fmt.Sprintf("Give me the meaning, part of speech and 5 example phrases of the word %s.", token)
 	requestBodyStruct := map[string]interface{}{
 		"model":           "gpt-3.5-turbo-1106",
 		"response_format": map[string]string{"type": "json_object"},
 		"messages": []map[string]string{
-			{"role": "system", "content": "You are a helpful assistant designed to output JSON."},
-			{"role": "assistant", "content": "The resulting JSON should include just two properties: meaning (string) and usage (array of strings)."},
+			{"role": "system", "content": "You are a helpful dictionary assistant designed to output JSON."},
+			{"role": "system", "content": "The JSON must have the property results, which value is an array where each item should have three properties: meaning (string), part_of_speech (string) and examples (array of strings)."},
 			{"role": "user", "content": userMessage},
+			{"role": "assistant", "content": "The array items should represent all different parts of speech that the word can assume."},
+			{"role": "assistant", "content": "If the part of speech is a verb, then ignore the examples property and add instead a new one named inflections. The inflections will be an array of objects, each object has the properties: inflection (string), tense(string) and examples (array of strings). Tense been either present, past, past participle. Inflection been the verb in the tense. Examples been an array of 5 example phrases of the verb in that tense."},
 		},
 	}
 
@@ -55,5 +69,22 @@ func GetDefinition(word string) {
 		log.Fatalf("Error unmarshalling response body: %v", err)
 	}
 
-	fmt.Println("Response from ChatGPT:", chatResponse)
+	if len(chatResponse.Choices) == 0 {
+		log.Fatalf("No content from ChatGPT for %s", token)
+	}
+
+	var firstDefinition = chatResponse.Choices[0].Message.Content
+	var openAIDefinition OpenAPIDefinition
+	err = json.Unmarshal([]byte(firstDefinition), &openAIDefinition)
+	if err != nil {
+		log.Fatalf("Error unmarshalling definition: %v", err)
+	}
+	// log.Printf("%v\n", openAIDefinition)
+
+	for index := range openAIDefinition.Results {
+		openAIDefinition.Results[index].Language = "en"
+		openAIDefinition.Results[index].Token = token
+	}
+
+	repository.save(tokenId, openAIDefinition.Results)
 }

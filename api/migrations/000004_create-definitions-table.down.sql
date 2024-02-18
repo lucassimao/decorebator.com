@@ -1,0 +1,6 @@
+BEGIN;
+
+DROP TABLE IF EXISTS word_definitions CASCADE;
+DROP TABLE IF EXISTS definitions;
+
+END;
