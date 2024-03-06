@@ -1,4 +1,4 @@
-package openai
+package definitions
 
 import (
 	"context"
@@ -68,7 +68,7 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 
 		if err != nil {
 			tx.Rollback(context.Background())
-			log.Printf("%v\n", err)
+			log.Printf("Failed to insert into word_definition %v %v %v\n", tokenId, def.ID, err)
 			return nil, err
 		}
 

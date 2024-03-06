@@ -9,20 +9,10 @@ import (
 	"net/http"
 	"os"
 
-	"decorebator.com/internal/common"
+	"decorebator.com/internal/definitions"
 )
 
-var repository *DefinitionRepository
-
-func init() {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		log.Fatal("failed to open db connection: ", err)
-	}
-	repository = &DefinitionRepository{db}
-}
-
-func GetDefinition(token string, tokenId int64) {
+func GetDefinition(token string) ([]definitions.Definition, error) {
 	userMessage := fmt.Sprintf("Give me the meaning, part of speech and 5 example phrases of the word %s.", token)
 	requestBodyStruct := map[string]interface{}{
 		"model":           "gpt-3.5-turbo-1106",
@@ -86,5 +76,5 @@ func GetDefinition(token string, tokenId int64) {
 		openAIDefinition.Results[index].Token = token
 	}
 
-	repository.save(tokenId, openAIDefinition.Results)
+	return openAIDefinition.Results, nil
 }

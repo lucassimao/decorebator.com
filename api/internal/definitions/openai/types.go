@@ -1,5 +1,7 @@
 package openai
 
+import "decorebator.com/internal/definitions"
+
 type ChatCompletionResponse struct {
 	ID                string   `json:"id"`
 	Object            string   `json:"object"`
@@ -29,5 +31,5 @@ type Usage struct {
 }
 
 type OpenAPIDefinition struct {
-	Results []Definition `json:"results"`
+	Results []definitions.Definition `json:"results"`
 }

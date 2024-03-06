@@ -20,7 +20,7 @@ var Handlers = &WordsHandlers{}
 
 func (h *WordsHandlers) GetAll(c *gin.Context) {
 	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	var userId int64 = c.GetInt64("userID")
+	userId := c.GetInt64("userID")
 
 	words, err := GetWordsFromWordlist(wordlistId, userId)
 	if err != nil {
@@ -33,7 +33,7 @@ func (h *WordsHandlers) GetAll(c *gin.Context) {
 
 func (h *WordsHandlers) Create(c *gin.Context) {
 	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	var userId int64 = c.GetInt64("userID")
+	userId := c.GetInt64("userID")
 	var input WordInput
 
 	if err := c.BindJSON(&input); err != nil {
@@ -51,7 +51,7 @@ func (h *WordsHandlers) Create(c *gin.Context) {
 }
 
 func (h *WordsHandlers) Delete(c *gin.Context) {
-	var userId int64 = c.GetInt64("userID")
+	userId := c.GetInt64("userID")
 	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
 
 	_, err := DeleteWord(id, userId)
@@ -70,7 +70,7 @@ func (h *WordsHandlers) Update(c *gin.Context) {
 	var input WordInput
 
 	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
-	var userId int64 = c.GetInt64("userID")
+	userId := c.GetInt64("userID")
 
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

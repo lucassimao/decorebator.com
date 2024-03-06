@@ -36,12 +36,30 @@ authorization: {{authToken}}
 
 @wordlistId = {{wordlistRequest.response.body.id}} 
 
-@wordlistId = 10
 
 ### Creating word
 POST http://localhost:3000/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
- "Name":"hitherto"   
+ "Name":"hence"   
+}
+
+
+@wordlistId = 1
+
+### Generating a quiz
+POST http://localhost:3000/wordlists/{{wordlistId}}/quizzes
+authorization: {{authToken}}
+
+{
+}
+
+### Saving quiz result
+PATCH http://localhost:3000/wordlists/{{wordlistId}}/quizzes
+authorization: {{authToken}}
+
+{
+    "success": true,
+    "definitionId":9
 }

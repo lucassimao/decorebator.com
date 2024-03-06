@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/quizzes"
 	"decorebator.com/internal/users"
 	"decorebator.com/internal/wordlists"
 	"decorebator.com/internal/words"
@@ -37,6 +38,9 @@ func main() {
 		authenticatedRoutes.DELETE("/wordlists/:wordlistId/words/:wordId", words.Handlers.Delete)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId/words/:wordId", words.Handlers.Update)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/words", words.Handlers.Create)
+		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizzes.Handlers.Create)
+		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizzes.Handlers.Save)
+
 	}
 
 	srv := &http.Server{
