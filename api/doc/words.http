@@ -42,7 +42,7 @@ POST http://localhost:3000/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
- "Name":"hence"   
+ "Name":"tally"   
 }
 
 
@@ -61,5 +61,5 @@ authorization: {{authToken}}
 
 {
     "success": true,
-    "definitionId":9
+    "definitionId":4
 }

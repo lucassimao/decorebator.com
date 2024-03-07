@@ -82,3 +82,29 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 
 	return definitions, nil
 }
+
+func (repository *DefinitionRepository) getRandomMeanings(filterOutIds []int, limit int) ([]string, error) {
+	query := `
+		SELECT meaning FROM definitions WHERE id != ALL($1) ORDER BY random() LIMIT $2;
+	`
+
+	rows, err := repository.db.Query(context.Background(), query, filterOutIds, limit)
+	if err != nil {
+		log.Printf("Failed to get random meanings: %v\n", err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var meanings []string
+	for rows.Next() {
+		var meaning string
+		err = rows.Scan(&meaning)
+		if err != nil {
+			return nil, err
+		}
+		meanings = append(meanings, meaning)
+	}
+
+	return meanings, nil
+}

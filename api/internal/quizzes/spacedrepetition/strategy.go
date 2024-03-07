@@ -3,7 +3,7 @@ package spacedrepetion
 type Challenge struct {
 	Token        string   `json:"token"`
 	Options      []string `json:"options"`
-	OptionIndex  int      `json:"optionIndex"`
+	AnswerIndex  int      `json:"answerIndex"`
 	DefinitionID int64    `json:"definitionId"`
 }
 

@@ -3,6 +3,8 @@ package spacedrepetion
 import (
 	"context"
 	"log"
+	"math/rand"
+	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/definitions"
@@ -10,18 +12,26 @@ import (
 
 type LeitnerSystemAlgorithm struct{}
 
-func getNextDefinition(userID, boxID, wordlistID int64) (*definitions.Definition, error) {
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, error) {
+	// Grouping by box_id and getting the earliest updated_at
 	query := `
-		SELECT 
-			def.id,def.token, def.part_of_speech, def.meaning, def.examples, def.inflections 
-		FROM 
-			leitner_system_tracking lst join definitions def ON lst.definition_id = def.id 
+		WITH earliest_per_box AS (
+			SELECT DISTINCT ON (lst.box_id) def.id, def.token, def.part_of_speech, def.meaning, def.examples, def.inflections , lst.updated_at
+				FROM leitner_system_tracking lst JOIN definitions def ON lst.definition_id = def.id
 			JOIN word_definitions wd ON def.id = wd.definition_id
 			JOIN words w ON wd.word_id = w.id
-		WHERE 
-			lst.user_id =$1 AND lst.box_id=$2 AND w.wordlist_id=$3
-		ORDER BY lst.updated_at ASC
-		LIMIT 1
+			WHERE 
+				lst.user_id =$1 AND w.wordlist_id=$2
+			ORDER BY
+				lst.box_id, lst.updated_at ASC NULLS FIRST
+		)
+		SELECT id, token, part_of_speech, meaning, examples, inflections 
+		FROM earliest_per_box ORDER BY updated_at ASC NULLS FIRST
+		LIMIT 1;
 	`
 
 	db, err := common.GetDBConnection()
@@ -29,7 +39,7 @@ func getNextDefinition(userID, boxID, wordlistID int64) (*definitions.Definition
 		log.Fatal("failed to open db connection: ", err)
 	}
 
-	rows, err := db.Query(context.Background(), query, userID, boxID, wordlistID)
+	rows, err := db.Query(context.Background(), query, userID, wordlistID)
 	if err != nil {
 		return nil, err
 	}
@@ -79,16 +89,29 @@ func (LeitnerSystemAlgorithm) IncludeDefinitions(userID int64, definitions []def
 	return nil
 }
 func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challenge, error) {
-	next, err := getNextDefinition(userID, 2, wordlistID)
+	next, err := getNextDefinition(userID, wordlistID)
 	if err != nil {
 		log.Println("Error in CreateChallenge:", err)
 		return nil, err
 	}
 
+	randomMeanings, err := definitions.GetRandomMeanings([]int{int(next.ID)}, 3)
+
+	if err != nil {
+		log.Println("Error getting random meanings:", err)
+		return nil, err
+	}
+
+	index := rand.Intn(4)
+
+	randomMeanings = append(randomMeanings, "")
+	copy(randomMeanings[index+1:], randomMeanings[index:])
+	randomMeanings[index] = next.Meaning
+
 	challenge := &Challenge{
 		Token:        next.Token,
-		Options:      []string{"option1", "option2", "option3"},
-		OptionIndex:  1,
+		Options:      randomMeanings,
+		AnswerIndex:  index,
 		DefinitionID: next.ID,
 	}
 
@@ -97,7 +120,7 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 
 func (LeitnerSystemAlgorithm) SaveChallengeResult(definitionID int64, success bool) error {
 
-	query := `UPDATE leitner_system_tracking SET box_id = CASE WHEN $1 THEN box_id + 1 ELSE 1 END WHERE definition_id = $2`
+	query := `UPDATE leitner_system_tracking SET updated_at=now(), box_id = CASE WHEN $1 THEN box_id + 1 ELSE 1 END WHERE definition_id = $2`
 
 	db, err := common.GetDBConnection()
 	if err != nil {

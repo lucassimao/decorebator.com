@@ -12,6 +12,7 @@ type QuizHandlers struct{}
 
 var Handlers = &QuizHandlers{}
 
+// Using the LeitnerSystemAlgorithm as the default strategy. Should be replaced by a factory method based on user preferences.
 var strategy sr.SpacedRepetionStrategy = sr.LeitnerSystemAlgorithm{}
 
 func (h *QuizHandlers) Create(c *gin.Context) {
