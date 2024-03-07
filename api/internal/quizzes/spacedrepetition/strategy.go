@@ -1,13 +1,21 @@
 package spacedrepetion
 
+type ChallengeType int
+
+const (
+	GUESS_MEANING ChallengeType = iota
+	COMPLETE_SENTENCE
+)
+
 type Challenge struct {
-	Token        string   `json:"token"`
-	Options      []string `json:"options"`
-	AnswerIndex  int      `json:"answerIndex"`
-	DefinitionID int64    `json:"definitionId"`
+	Value       string        `json:"value"`
+	Options     []string      `json:"options"`
+	AnswerIndex int           `json:"answerIndex"`
+	ID          int64         `json:"id"`
+	Type        ChallengeType `json:"type"`
 }
 
 type SpacedRepetionStrategy interface {
 	CreateChallenge(wordlistID, userID int64) (*Challenge, error)
-	SaveChallengeResult(definitionID int64, success bool) error
+	SaveChallengeResult(id int64, success bool) error
 }

@@ -31,8 +31,8 @@ func (h *QuizHandlers) Create(c *gin.Context) {
 }
 
 type SaveInput struct {
-	Success      bool  `json:"success"`
-	DefinitionID int64 `json:"definitionId"`
+	Success bool  `json:"success"`
+	Id      int64 `json:"id"`
 }
 
 func (h *QuizHandlers) Save(c *gin.Context) {
@@ -44,7 +44,7 @@ func (h *QuizHandlers) Save(c *gin.Context) {
 		return
 	}
 
-	var err = strategy.SaveChallengeResult(input.DefinitionID, input.Success)
+	var err = strategy.SaveChallengeResult(input.Id, input.Success)
 
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
