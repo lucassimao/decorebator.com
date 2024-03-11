@@ -89,12 +89,11 @@ func (repository *DefinitionRepository) getRandomMeanings(filterOutIds []int, li
 	`
 
 	rows, err := repository.db.Query(context.Background(), query, filterOutIds, limit)
+	defer rows.Close()
 	if err != nil {
 		log.Printf("Failed to get random meanings: %v\n", err)
 		return nil, err
 	}
-
-	defer rows.Close()
 
 	var meanings []string
 	for rows.Next() {
@@ -107,4 +106,67 @@ func (repository *DefinitionRepository) getRandomMeanings(filterOutIds []int, li
 	}
 
 	return meanings, nil
+}
+
+func (repository *DefinitionRepository) getRandomExamples(filterOutIds []int, partOfSpeech string, limit int) ([]string, error) {
+	query := `
+		WITH random_item AS (
+			SELECT
+			id,
+			examples,
+			floor(random() * array_length(examples, 1))::int + 1 AS random_index
+			FROM definitions
+			where array_length(examples, 1) > 0 AND part_of_speech=$1 AND id != ALL($2)
+			ORDER BY random()
+			LIMIT $3
+		)
+		SELECT
+			id,
+			examples[random_index] AS random_example,
+			random_index
+		FROM random_item;
+	`
+	rows, err := repository.db.Query(context.Background(), query, partOfSpeech, filterOutIds, limit)
+	if err != nil {
+		log.Printf("Failed to get random examples: %v\n", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var examples []string
+	for rows.Next() {
+		var example string
+		err = rows.Scan(&example)
+		if err != nil {
+			log.Printf("Failed to scan results from random meanings: %v\n", err)
+			return nil, err
+		}
+		examples = append(examples, example)
+	}
+	return examples, nil
+}
+
+
+func (repository *DefinitionRepository) getRandomTokens(filterOutIds []int, partOfSpeech string, limit int) ([]string, error) {
+	query := `
+		SELECT token FROM definitions WHERE part_of_speech=$1 AND id != ALL($2) ORDER BY random() LIMIT $3;
+	`
+	rows, err := repository.db.Query(context.Background(), query, partOfSpeech, filterOutIds, limit)
+	if err != nil {
+		log.Printf("Failed to get random tokens: %v\n", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tokens []string
+	for rows.Next() {
+		var token string
+		err = rows.Scan(&token)
+		if err != nil {
+			log.Printf("Failed to scan results from random tokens: %v\n", err)
+			return nil, err
+		}
+		tokens = append(tokens, token)
+	}
+	return tokens, nil
 }

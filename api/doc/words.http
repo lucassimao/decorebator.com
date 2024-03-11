@@ -42,7 +42,7 @@ POST http://localhost:3000/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
- "Name":"warring"   
+ "Name":"maquis"  
 }
 
 
@@ -61,5 +61,5 @@ authorization: {{authToken}}
 
 {
     "success": true,
-    "id":3
+    "id":30
 }

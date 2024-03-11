@@ -21,11 +21,12 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 	query := `
 		WITH earliest_per_box AS (
 			SELECT DISTINCT ON (lst.box_id) def.id,lst.id AS lst_id, def.token, def.part_of_speech, def.meaning, def.examples, def.inflections , lst.updated_at
-				FROM leitner_system_tracking lst JOIN definitions def ON lst.definition_id = def.id
+				FROM leitner_system_tracking lst 
+			JOIN definitions def ON lst.definition_id = def.id
 			JOIN word_definitions wd ON def.id = wd.definition_id
 			JOIN words w ON wd.word_id = w.id
 			WHERE 
-				lst.user_id =$1 AND w.wordlist_id=$2
+				lst.user_id =$1 AND w.wordlist_id=$2 AND def.meaning IS NOT NULL AND array_length(def.examples,1) > 0
 			ORDER BY
 				lst.box_id, lst.updated_at ASC NULLS FIRST
 		)
@@ -96,25 +97,46 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 		return nil, err
 	}
 
-	randomMeanings, err := definitions.GetRandomMeanings([]int{int(definition.ID)}, 3)
+	var options []string
+	var value string
+	var index int
+	var quizzType ChallengeType
 
-	if err != nil {
-		log.Println("Error getting random meanings:", err)
-		return nil, err
+	// If the definition is even, we GENERATE a GUESS_MEANING otherwise we generate a COMPLETE_SENTENCE
+	if definition.ID%2 == 0 {
+		randomMeanings, err := definitions.GetRandomMeanings([]int{int(definition.ID)}, 3)
+		if err != nil {
+			log.Println("Error getting random meanings:", err)
+			return nil, err
+		}
+
+		quizzType = GUESS_MEANING
+		value = definition.Token
+		options = append(randomMeanings, definition.Meaning)
+	} else {
+		randomTokens, err := definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
+		if err != nil {
+			log.Println("Error getting random meanings:", err)
+			return nil, err
+		}
+
+		quizzType = COMPLETE_SENTENCE
+		i := rand.Intn(len(definition.Examples))
+		value = definition.Examples[i]
+		options = append(randomTokens, definition.Token)
 	}
 
-	randomMeanings = append(randomMeanings, "")
-	index := rand.Intn(len(randomMeanings))
-
-	copy(randomMeanings[index+1:], randomMeanings[index:])
-	randomMeanings[index] = definition.Meaning
+	lastItem := options[len(options)-1]
+	index = rand.Intn(len(options))
+	copy(options[index+1:], options[index:])
+	options[index] = lastItem
 
 	challenge := &Challenge{
-		Value:       definition.Token,
-		Options:     randomMeanings,
+		Value:       value,
+		Options:     options,
 		AnswerIndex: index,
 		ID:          leitnerSystemID,
-		Type:        GUESS_MEANING,
+		Type:        quizzType,
 	}
 
 	return challenge, nil

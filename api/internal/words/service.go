@@ -3,6 +3,7 @@ package words
 import (
 	"errors"
 	"log"
+	"strings"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/definitions"
@@ -25,7 +26,7 @@ func GetWordsFromWordlist(wordlistId, userId int64) ([]*Word, error) {
 }
 
 func SaveWord(dto *Word) (*Word, error) {
-	word, err := repository.save(dto.Name, dto.UserID, dto.WordlistID)
+	word, err := repository.save(strings.ToLower(dto.Name), dto.UserID, dto.WordlistID)
 
 	if err != nil {
 		log.Println("Failure at SaveWord:", err)

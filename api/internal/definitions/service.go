@@ -38,3 +38,11 @@ func FetchAndSave(token string, tokenId int64, definerFunc TokenDefiner) ([]Defi
 func GetRandomMeanings(filterOutIds []int, size int) ([]string, error) {
 	return repository.getRandomMeanings(filterOutIds, size)
 }
+
+func GetRandomExamples(filterOutIds []int, partOfSpeech string, size int) ([]string, error) {
+	return repository.getRandomExamples(filterOutIds, partOfSpeech, size)
+}
+
+func GetRandomTokens(filterOutIds []int, partOfSpeech string, size int) ([]string, error) {
+	return repository.getRandomTokens(filterOutIds, partOfSpeech, size)
+}
