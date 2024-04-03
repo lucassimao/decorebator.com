@@ -1,0 +1,28 @@
+- Generate quiz
+    - once a word is created:
+        ok fetch and save definitions
+        ok insert in the quiz engine
+        ok save result
+        ok increase box number automatically
+        ok load options from the db
+        ok load index of right option
+        ok implement complete sentence quiz
+        - write script to load definitions from Wiktionary json file
+        - write Wiktionary definer in definitions/wiktionary package
+        - use openai to only get examples of usage of words
+        - use openai only as a fallback when the oxford api fails
+        ok save words in lowercase
+        - remove calls to log.Fatal in api/internal/definitions/openai/service.go
+- Webapp
+    - signup
+    - login
+    - logout
+    - create wordlist
+    - add word
+    - quiz
+
+- automated tests
+- replace log calls with a specialized library which supports structure and levels
+- [REFACTORING] When saving word, check settings to decide which definer should be use for definitions.FetchAndSave
+- When saving new word, move the goroutine calling FetchAndSave and IncludeDefinitions to a processing queue 
+- customize quiz algorithm based on user settings ( api/internal/quizzes/handlers.go )

@@ -32,6 +32,9 @@ migrate-drop: ## Drop everything
 run: ## run ./cmd/web
 	$(GODOTENV_PATH) -f .env go run ./cmd/web
 
+wiktionary-loader: ## Load wiktionary data file by running ./cmd/wiktionaryLoader
+	go run ./cmd/wiktionaryLoader ../raw-wiktextract-data.json
+
 watch:
 	@while true; do \
 		$(MAKE) run & \
@@ -48,6 +51,8 @@ psql: ## Start psql session to development database
 
 build: clean ## Build restful api and save it to bin/main
 	go build -o bin/main ./cmd/web
+	go build -o bin/wiktionaryLoader ./cmd/wiktionaryLoader
+
 
 clean: ## Remove build related file
 	rm -fr ./bin
