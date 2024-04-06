@@ -7,7 +7,7 @@
         ok load options from the db
         ok load index of right option
         ok implement complete sentence quiz
-        - write script to load definitions from Wiktionary json file
+        ok write script to load definitions from Wiktionary json file
         - write Wiktionary definer in definitions/wiktionary package
         - use openai to only get examples of usage of words
         - use openai only as a fallback when the oxford api fails

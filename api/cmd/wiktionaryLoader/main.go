@@ -64,10 +64,10 @@ func main() {
 		line := scanner.Text()
 
 		if len(jsonData) == BATCH_SIZE {
-			wg.Add(1)
-			var clonedData = make([]string, len(jsonData))
 			// acquire semaphore before starting a new goroutine
 			sem <- true
+			wg.Add(1)
+			var clonedData = make([]string, len(jsonData))
 			copy(clonedData, jsonData)
 			go saveBatch(clonedData)
 			jsonData = jsonData[:0]
@@ -119,8 +119,8 @@ func saveBatch(jsonData []string) {
 		return
 	}
 
-	var sql = stringBuilder.String() // remove the trailing comma
-	var sqlNoTrailingComma = sql[:len(sql)-1]
+	var sql = stringBuilder.String()
+	var sqlNoTrailingComma = sql[:len(sql)-1] // remove the trailing comma
 
 	result, err := db.Exec(context.Background(), sqlNoTrailingComma, positionalParams...)
 	if err != nil {

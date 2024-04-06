@@ -40,7 +40,6 @@ func main() {
 		authenticatedRoutes.POST("/wordlists/:wordlistId/words", words.Handlers.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizzes.Handlers.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizzes.Handlers.Save)
-
 	}
 
 	srv := &http.Server{
@@ -65,7 +64,7 @@ func main() {
 	<-quit
 	log.Println("Shutdown Server ...")
 
-	if os.Getenv("PORT") == "production" {
+	if os.Getenv("env") == "production" {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 

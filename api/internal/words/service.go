@@ -7,7 +7,7 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/definitions"
-	"decorebator.com/internal/definitions/openai"
+	"decorebator.com/internal/definitions/wiktionary"
 	spacedrepetion "decorebator.com/internal/quizzes/spacedrepetition"
 )
 
@@ -26,7 +26,9 @@ func GetWordsFromWordlist(wordlistId, userId int64) ([]*Word, error) {
 }
 
 func SaveWord(dto *Word) (*Word, error) {
-	word, err := repository.save(strings.ToLower(dto.Name), dto.UserID, dto.WordlistID)
+	var lowerCasedName = strings.ToLower(dto.Name)
+	var trimmedName = strings.TrimSpace(lowerCasedName)
+	word, err := repository.save(trimmedName, dto.UserID, dto.WordlistID)
 
 	if err != nil {
 		log.Println("Failure at SaveWord:", err)
@@ -34,7 +36,7 @@ func SaveWord(dto *Word) (*Word, error) {
 	}
 
 	go func() {
-		defs, err := definitions.FetchAndSave(word.Name, word.ID, openai.GetDefinition)
+		defs, err := definitions.FetchAndSave(word.Name, word.ID, wiktionary.GetDefinition)
 		if err != nil {
 			log.Println("Could not fetch and save word:", err)
 			return
