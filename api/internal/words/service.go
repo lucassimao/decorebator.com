@@ -7,6 +7,7 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/definitions"
+	"decorebator.com/internal/definitions/openai"
 	"decorebator.com/internal/definitions/wiktionary"
 	spacedrepetion "decorebator.com/internal/quizzes/spacedrepetition"
 )
@@ -38,12 +39,20 @@ func SaveWord(dto *Word) (*Word, error) {
 	go func() {
 		defs, err := definitions.FetchAndSave(word.Name, word.ID, wiktionary.GetDefinition)
 		if err != nil {
-			log.Println("Could not fetch and save word:", err)
-			return
+			log.Printf("Failed to fetch from wiktionary: %v\n", err)
+			log.Println("Falling back to ChatGPT")
+
+			defs, err = definitions.FetchAndSave(word.Name, word.ID, openai.GetDefinition)
+			if err != nil {
+				log.Printf("Failed to fetch from openai: %v\n", err)
+			}
 		}
-		algorithm := spacedrepetion.LeitnerSystemAlgorithm{}
-		algorithm.IncludeDefinitions(dto.UserID, defs)
-		log.Printf("Fetched and saved %v definitions for word %s\n", len(defs), dto.Name)
+
+		if len(defs) >= 0 {
+			algorithm := spacedrepetion.LeitnerSystemAlgorithm{}
+			algorithm.IncludeDefinitions(dto.UserID, defs)
+			log.Printf("Fetched and saved %v definitions for word %s\n", len(defs), dto.Name)
+		}
 	}()
 
 	return word, nil

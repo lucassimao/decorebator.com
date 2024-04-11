@@ -8,11 +8,14 @@
         ok load index of right option
         ok implement complete sentence quiz
         ok write script to load definitions from Wiktionary json file
-        - write Wiktionary definer in definitions/wiktionary package
-        - use openai to only get examples of usage of words
-        - use openai only as a fallback when the oxford api fails
+        ok write Wiktionary definer in definitions/wiktionary package
+        ok use openai to only get examples of usage of words
+        ok use openai only as a fallback when the wiktionary strategy fails
         ok save words in lowercase
-        - remove calls to log.Fatal in api/internal/definitions/openai/service.go
+        ok remove calls to log.Fatal in api/internal/definitions/openai/service.go
+        - handle the case of form_of records in wiktionary
+            Ex: leaching
+            {"pos": "verb", "lang": "English", "word": "leaching", "senses": [{"tags": ["form-of", "gerund", "participle", "present"], "links": [["leach", "leach#English"]], "form_of": [{"word": "leach"}], "glosses": ["present participle and gerund of leach"]}], "sounds": [{"ipa": "/ˈliːt͡ʃɪŋ/"}, {"rhymes": "-iːtʃɪŋ"}], "lang_code": "en", "head_templates": [{"args": {"1": "en", "2": "verb form"}, "name": "head", "expansion": "leaching"}]}
 - Webapp
     - signup
     - login

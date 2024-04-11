@@ -31,22 +31,21 @@ POST http://localhost:3000/wordlists
 authorization: {{authToken}}
 
 {
-"Name":"Wordlist test"
+"Name":"Wordlist test2"
 }
 
 @wordlistId = {{wordlistRequest.response.body.id}} 
-
+@wordlistId = 1
 
 ### Creating word
 POST http://localhost:3000/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
- "Name":"skepticism"  
+ "Name":"Leaching"  
 }
 
 
-@wordlistId = 1
 
 ### Generating a quiz
 POST http://localhost:3000/wordlists/{{wordlistId}}/quizzes

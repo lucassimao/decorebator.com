@@ -2,14 +2,21 @@ package openai
 
 import "decorebator.com/internal/definitions"
 
+type ChatGPTError struct {
+	Message string `json:"message"`
+	Type    string `json:"type"`
+	Param   string `json:"param"`
+	Code    string `json:"code"`
+}
 type ChatCompletionResponse struct {
-	ID                string   `json:"id"`
-	Object            string   `json:"object"`
-	Created           int64    `json:"created"`
-	Model             string   `json:"model"`
-	SystemFingerprint string   `json:"system_fingerprint"`
-	Choices           []Choice `json:"choices"`
-	Usage             Usage    `json:"usage"`
+	ID                string       `json:"id"`
+	Object            string       `json:"object"`
+	Created           int64        `json:"created"`
+	Model             string       `json:"model"`
+	SystemFingerprint string       `json:"system_fingerprint"`
+	Choices           []Choice     `json:"choices"`
+	Usage             Usage        `json:"usage"`
+	Error             ChatGPTError `json:"error"`
 }
 
 type Choice struct {

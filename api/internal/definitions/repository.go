@@ -22,6 +22,7 @@ type Definition struct {
 	PartOfSpeech string       `json:"part_of_speech"`
 	Examples     []string     `json:"examples"`
 	Inflections  []Inflection `json:"inflections"`
+	Source       string
 
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
@@ -41,8 +42,8 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 
 	// Prepare the definitions insert
 	definitionsInsert := `
-        INSERT INTO definitions (token, language, part_of_speech, meaning, examples, inflections, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, now())
+        INSERT INTO definitions (token, language, part_of_speech, meaning, examples, inflections, created_at, source)
+        VALUES ($1, $2, $3, $4, $5, $6, now(), $7)
         RETURNING id, created_at, updated_at`
 
 	wordDefinitionsInsert := `INSERT INTO word_definitions (word_id, definition_id) VALUES ($1, $2)`
@@ -52,7 +53,7 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 		var updatedAt pgtype.Timestamp
 
 		// Execute the query within the transaction
-		err := tx.QueryRow(context.Background(), definitionsInsert, def.Token, def.Language, def.PartOfSpeech, def.Meaning, def.Examples, def.Inflections).Scan(&def.ID, &createdAt, &updatedAt)
+		err := tx.QueryRow(context.Background(), definitionsInsert, def.Token, def.Language, def.PartOfSpeech, def.Meaning, def.Examples, def.Inflections, def.Source).Scan(&def.ID, &createdAt, &updatedAt)
 		if err != nil {
 			tx.Rollback(context.Background())
 			log.Printf("Failed definitions insert: %v\n", err)
@@ -145,7 +146,6 @@ func (repository *DefinitionRepository) getRandomExamples(filterOutIds []int, pa
 	}
 	return examples, nil
 }
-
 
 func (repository *DefinitionRepository) getRandomTokens(filterOutIds []int, partOfSpeech string, limit int) ([]string, error) {
 	query := `

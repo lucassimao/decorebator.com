@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/definitions"
+	"decorebator.com/internal/definitions/openai"
 )
 
 // Type alias for convenience
@@ -30,12 +32,12 @@ type WiktionaryData struct {
 func GetDefinition(token string) ([]Definition, error) {
 	db, err := common.GetDBConnection()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not open db connection: %w", err)
 	}
 
 	rows, err := db.Query(context.Background(), "SELECT id,word,data FROM wiktionary WHERE word = $1", token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading from wiktionary: %w", err)
 	}
 
 	var definitions []Definition
@@ -47,31 +49,41 @@ func GetDefinition(token string) ([]Definition, error) {
 
 		err = rows.Scan(&id, &token, &data)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error scanning db result row: %w", err)
 		}
 
-		// Unmarshal the jsonData into the map
 		if err := json.Unmarshal(data, &jsonData); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error unmarshal wikionary data: %w", err)
 		}
 
 		for _, sense := range jsonData.Senses {
 			var glosses = sense.Glosses
-			fmt.Printf("Glosses: %v\n", glosses)
-
 			var examples []string
+
 			for _, example := range sense.Examples {
 				examples = append(examples, example.Text)
 			}
 
+			// making sure that each definition has at least 5 examples
+			if len(examples) < 5 {
+				additionalExamples, err := openai.GetExamples(token, jsonData.PartOfSpeech, 5-len(examples), glosses[0])
+
+				if err != nil {
+					log.Fatalf("Error getting examples from OpenAI: %v", err)
+				} else {
+					examples = append(examples, additionalExamples...)
+				}
+			}
+
 			fmt.Printf("Examples: %v\n", examples)
-			// use openapi to fetch examples if needed taking into account the part of speech and word
 
 			var definition Definition
+			definition.Token = token
 			definition.Meaning = glosses[0]
 			definition.Examples = examples
 			definition.PartOfSpeech = jsonData.PartOfSpeech
 			definition.Language = jsonData.Language
+			definition.Source = "wiktionary"
 
 			definitions = append(definitions, definition)
 		}
