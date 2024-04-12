@@ -16,7 +16,7 @@
         ok handle the case of form_of records in wiktionary
 - Webapp
     - signup
-    - login
+    ok login
     - logout
     - create wordlist
     - add word

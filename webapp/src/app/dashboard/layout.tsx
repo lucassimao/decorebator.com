@@ -7,6 +7,9 @@ import { Group, Skeleton } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import { isAuthenticated } from "@/lib/auth";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getWordlists } from "@/lib/wordlists";
+import { Badge, NavLink } from "@mantine/core";
 
 export default function LayoutDashboard({
   children,
@@ -21,6 +24,18 @@ export default function LayoutDashboard({
       router.push("/login");
     }
   }, []);
+
+  const {
+    data: wordlists,
+    isLoading: isLoadingWordlists,
+    isError,
+    error,
+    isFetched,
+  } = useQuery({
+    queryKey: ["wordlists"],
+    queryFn: getWordlists,
+  });
+
   return (
     <AppShell
       header={{ height: 60 }}
@@ -34,12 +49,20 @@ export default function LayoutDashboard({
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md">
-        Navbar
-        {Array(15)
-          .fill(0)
-          .map((_, index) => (
-            <Skeleton key={index} h={28} mt="sm" animate={false} />
-          ))}
+        Wordlists
+        {isLoadingWordlists
+          ? Array(15)
+              .fill(0)
+              .map((_, index) => (
+                <Skeleton key={index} h={28} mt="sm" animate={true} />
+              ))
+          : wordlists?.map((wordlist) => (
+              <NavLink
+                href="#required-for-focus"
+                label={wordlist.name}
+                key={`wordlist${wordlist.id}`}
+              />
+            ))}
       </AppShell.Navbar>
       <AppShell.Main>{children}</AppShell.Main>
     </AppShell>

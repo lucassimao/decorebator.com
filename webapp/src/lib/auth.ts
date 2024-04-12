@@ -1,15 +1,6 @@
 "use client";
 
-type ApplicationErrorCode = "AuthenticationError";
-
-class ApplicationError extends Error {
-  readonly code?: ApplicationErrorCode;
-
-  constructor(message: string, code?: ApplicationErrorCode) {
-    super(message);
-    this.code = code;
-  }
-}
+import { ApplicationError } from "./common";
 
 export async function authenticate(username: string, password: string) {
   try {
@@ -38,7 +29,7 @@ export async function authenticate(username: string, password: string) {
   }
 }
 
-export function isAuthenticated() {
+export function isAuthenticated(): boolean {
   const token = localStorage.getItem("token");
   if (!token) {
     return false;
@@ -59,6 +50,6 @@ export function isAuthenticated() {
   return exp > now;
 }
 
-export function getAuthToken() {
-  return localStorage.getItem("token");
+export function getAuthToken(): string {
+  return localStorage.getItem("token") || "";
 }
