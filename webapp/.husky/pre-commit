@@ -1,0 +1,2 @@
+cd webapp
+pnpm exec lint-staged
