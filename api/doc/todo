@@ -13,9 +13,7 @@
         ok use openai only as a fallback when the wiktionary strategy fails
         ok save words in lowercase
         ok remove calls to log.Fatal in api/internal/definitions/openai/service.go
-        - handle the case of form_of records in wiktionary
-            Ex: leaching
-            {"pos": "verb", "lang": "English", "word": "leaching", "senses": [{"tags": ["form-of", "gerund", "participle", "present"], "links": [["leach", "leach#English"]], "form_of": [{"word": "leach"}], "glosses": ["present participle and gerund of leach"]}], "sounds": [{"ipa": "/ˈliːt͡ʃɪŋ/"}, {"rhymes": "-iːtʃɪŋ"}], "lang_code": "en", "head_templates": [{"args": {"1": "en", "2": "verb form"}, "name": "head", "expansion": "leaching"}]}
+        ok handle the case of form_of records in wiktionary
 - Webapp
     - signup
     - login
@@ -24,8 +22,13 @@
     - add word
     - quiz
 
+- deploy
+    - create a docker image
+    - deploy to heroku
+
+
 - automated tests
-- replace log calls with a specialized library which supports structure and levels
+- [REFACTORING] Use a specialized library for logging
 - [REFACTORING] When saving word, check settings to decide which definer should be use for definitions.FetchAndSave
 - When saving new word, move the goroutine calling FetchAndSave and IncludeDefinitions to a processing queue 
 - customize quiz algorithm based on user settings ( api/internal/quizzes/handlers.go )
