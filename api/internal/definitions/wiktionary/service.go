@@ -3,12 +3,14 @@ package wiktionary
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/definitions"
 	"decorebator.com/internal/definitions/openai"
+	"github.com/jackc/pgx/v5"
 )
 
 // Type alias for convenience
@@ -18,9 +20,14 @@ type WiktionaryExample struct {
 	Text string `json:"text"`
 }
 
+type FormOf struct {
+	Word string `json:"word"`
+}
+
 type WiktionarySense struct {
 	Glosses  []string            `json:"glosses"`
 	Examples []WiktionaryExample `json:"examples"`
+	FormOf   []FormOf            `json:"form_of"`
 }
 type WiktionaryData struct {
 	PartOfSpeech string            `json:"pos"`
@@ -30,6 +37,8 @@ type WiktionaryData struct {
 }
 
 func GetDefinition(token string) ([]Definition, error) {
+	log.Printf("searching %s definition in wiktionary\n", token)
+
 	db, err := common.GetDBConnection()
 	if err != nil {
 		return nil, fmt.Errorf("could not open db connection: %w", err)
@@ -37,8 +46,13 @@ func GetDefinition(token string) ([]Definition, error) {
 
 	rows, err := db.Query(context.Background(), "SELECT id,word,data FROM wiktionary WHERE word = $1", token)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			fmt.Printf("no definition for %s in wiktionary\n", token)
+			return nil, nil
+		}
 		return nil, fmt.Errorf("error reading from wiktionary: %w", err)
 	}
+	defer rows.Close()
 
 	var definitions []Definition
 	for rows.Next() {
@@ -48,17 +62,28 @@ func GetDefinition(token string) ([]Definition, error) {
 		var jsonData WiktionaryData
 
 		err = rows.Scan(&id, &token, &data)
+
 		if err != nil {
-			return nil, fmt.Errorf("error scanning db result row: %w", err)
+			return nil, fmt.Errorf("error scanning db result for word %s: %w", token, err)
 		}
 
 		if err := json.Unmarshal(data, &jsonData); err != nil {
-			return nil, fmt.Errorf("error unmarshal wikionary data: %w", err)
+			return nil, fmt.Errorf("error unmarshaling wikionary for word %s data: %w", token, err)
 		}
 
 		for _, sense := range jsonData.Senses {
 			var glosses = sense.Glosses
 			var examples []string
+
+			// if the token is any form of a verb, then get the definition of the verb instead
+			if len(sense.FormOf) > 0 && jsonData.PartOfSpeech == "verb" {
+				verbDefinitions, err := GetDefinition(sense.FormOf[0].Word)
+				if err != nil {
+					return nil, fmt.Errorf("error searching %s definition: %w", sense.FormOf[0].Word, err)
+				}
+				definitions = append(definitions, verbDefinitions...)
+				continue
+			}
 
 			for _, example := range sense.Examples {
 				examples = append(examples, example.Text)
@@ -89,5 +114,6 @@ func GetDefinition(token string) ([]Definition, error) {
 		}
 	}
 
+	log.Printf("%d definitions for %s found in wiktionary\n", len(definitions), token)
 	return definitions, nil
 }

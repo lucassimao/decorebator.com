@@ -70,11 +70,11 @@ func GetExamples(token string, partOfSpeech string, number int, sense string) ([
 		{"role": "system", "content": "Each phrase must have at least 3 words."},
 		{"role": "system", "content": "The JSON must have the property examples which is an array of strings."},
 		{"role": "user", "content": userPrompt},
-		{"role": "user", "content": fmt.Sprintf("All phrases must convey the following sense: %s", sense)},
+		{"role": "user", "content": fmt.Sprintf("All phrases must include the word %s and convey the following sense: %s", token, sense)},
 	}
 
 	chatResponse, err := chatGPT(messages)
-	fmt.Printf("Response: %v\n", chatResponse)
+	// fmt.Printf("Response: %v\n", chatResponse)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get examples from ChatGPT: %w", err)
@@ -94,6 +94,8 @@ func GetExamples(token string, partOfSpeech string, number int, sense string) ([
 }
 
 func GetDefinition(token string) ([]definitions.Definition, error) {
+	log.Printf("searching %s definition in chatGPT\n", token)
+
 	userMessage := fmt.Sprintf("Give me the meaning, part of speech and 5 example phrases of the word %s.", token)
 	messages := []map[string]string{
 		{"role": "system", "content": "You are a helpful dictionary assistant designed to output JSON."},
@@ -101,6 +103,7 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 		{"role": "user", "content": userMessage},
 		{"role": "assistant", "content": "The array items should represent all different parts of speech that the word can assume."},
 		{"role": "assistant", "content": "If the part of speech is a verb, then ignore the examples property and add instead a new one named inflections. The inflections will be an array of objects, each object has the properties: inflection (string), tense(string) and examples (array of strings). Tense been either present, past, past participle. Inflection been the verb in the tense. Examples been an array of 5 example phrases of the verb in that tense."},
+		{"role": "assistant", "content": "If the word can not be found, then the property results should be an empty array."},
 	}
 
 	var chatResponse, err = chatGPT(messages)
@@ -126,5 +129,6 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 		openAIDefinition.Results[index].Source = "ChatGPT"
 	}
 
+	log.Printf("%d definitions found for %s in chatGPT\n", len(openAIDefinition.Results), token)
 	return openAIDefinition.Results, nil
 }

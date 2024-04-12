@@ -38,8 +38,7 @@ func SaveWord(dto *Word) (*Word, error) {
 
 	go func() {
 		defs, err := definitions.FetchAndSave(word.Name, word.ID, wiktionary.GetDefinition)
-		if err != nil {
-			log.Printf("Failed to fetch from wiktionary: %v\n", err)
+		if err != nil || len(defs) == 0 {
 			log.Println("Falling back to ChatGPT")
 
 			defs, err = definitions.FetchAndSave(word.Name, word.ID, openai.GetDefinition)
@@ -48,7 +47,7 @@ func SaveWord(dto *Word) (*Word, error) {
 			}
 		}
 
-		if len(defs) >= 0 {
+		if len(defs) > 0 {
 			algorithm := spacedrepetion.LeitnerSystemAlgorithm{}
 			algorithm.IncludeDefinitions(dto.UserID, defs)
 			log.Printf("Fetched and saved %v definitions for word %s\n", len(defs), dto.Name)

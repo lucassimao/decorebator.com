@@ -29,3 +29,4 @@
 - [REFACTORING] When saving word, check settings to decide which definer should be use for definitions.FetchAndSave
 - When saving new word, move the goroutine calling FetchAndSave and IncludeDefinitions to a processing queue 
 - customize quiz algorithm based on user settings ( api/internal/quizzes/handlers.go )
+- Reuse entries already fetched from wiktionary or chatgpt
