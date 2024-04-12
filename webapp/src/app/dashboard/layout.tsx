@@ -21,7 +21,6 @@ export default function LayoutDashboard({
       router.push("/login");
     }
   }, []);
-
   return (
     <AppShell
       header={{ height: 60 }}

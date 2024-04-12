@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prepare": "cd .. && husky webapp/.husky"
+    "prepare": "cd .. && pnpx husky webapp/.husky"
   },
   "dependencies": {
     "@mantine/core": "^7.8.0",

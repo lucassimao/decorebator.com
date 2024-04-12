@@ -11,10 +11,7 @@ export default function LoginPage() {
   const router = useRouter();
   const form = useForm({
     mode: "uncontrolled",
-    initialValues: {
-      email: "",
-      password: "",
-    },
+    initialValues: { email: "", password: "" },
     validate: {
       email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
     },
