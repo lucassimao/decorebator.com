@@ -1,6 +1,7 @@
 package users
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type SignupInput struct {
@@ -27,10 +29,33 @@ type UserHandlers struct{}
 
 var Handlers = &UserHandlers{}
 
+func translateValidationErrors(errs validator.ValidationErrors) map[string]string {
+	var errors = make(map[string]string)
+	for _, e := range errs {
+		field := strings.ToLower(strings.SplitN(e.StructNamespace(), ".", 2)[1])
+		switch e.Tag() {
+		case "required":
+			errors[field] = "The " + field + " field is required."
+		case "email":
+			errors[field] = "The " + field + " field must be a valid email address."
+		case "min":
+			errors[field] = "The " + field + " field must be at least " + e.Param() + " characters long."
+		default:
+			errors[field] = "The " + field + " field is invalid."
+		}
+	}
+	return errors
+}
+
 func (h *UserHandlers) SignUp(c *gin.Context) {
 	var input SignupInput
-
 	if err := c.BindJSON(&input); err != nil {
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			c.JSON(http.StatusBadRequest, gin.H{"validationErrors": translateValidationErrors(ve)})
+			return
+		}
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -40,6 +65,10 @@ func (h *UserHandlers) SignUp(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	} else {
+		jwtToken, err := LoginUser(input.Email, input.Password)
+		if err == nil {
+			c.Writer.Header().Set("Authorization", jwtToken)
+		}
 		c.JSON(http.StatusCreated, saved)
 	}
 }

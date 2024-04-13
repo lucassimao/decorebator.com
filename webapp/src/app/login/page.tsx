@@ -1,10 +1,23 @@
 "use client";
-import { authenticate, isAuthenticated } from "@/lib/auth";
-import { Button, Loader, PasswordInput, TextInput, Alert } from "@mantine/core";
+import { authenticate } from "@/lib/auth";
+import {
+  Alert,
+  Button,
+  Loader,
+  PasswordInput,
+  TextInput,
+  rem,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { IconLock } from "@tabler/icons-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
+
+const icon = (
+  <IconLock style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
+);
 
 export default function LoginPage() {
   const { pending: isFormPending } = useFormStatus();
@@ -21,7 +34,7 @@ export default function LoginPage() {
   const handleSubmit = async (values: typeof form.values) => {
     try {
       await authenticate(values.email, values.password);
-      router.push("/dashboard");
+      router.push("/wordlists");
     } catch (error: any) {
       setError(error.message || "Something went wrong");
     }
@@ -65,11 +78,21 @@ export default function LoginPage() {
               label: "mb-2",
               root: "mb-4",
             }}
+            leftSection={icon}
             {...form.getInputProps("password")}
             key="password"
           />
 
           <div className="flex items-center justify-between">
+            <Button
+              variant="default"
+              type="button"
+              component={Link}
+              href="/signup"
+            >
+              Don't have an account? Sign up
+            </Button>
+
             {isFormPending ? (
               <Loader color="blue" />
             ) : (

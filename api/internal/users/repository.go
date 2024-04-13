@@ -7,8 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"decorebator.com/internal/common"
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -65,6 +67,12 @@ func (repository *UserRepository) save(firstName, lastName, password, email stri
 
 	err = repository.db.QueryRow(context.Background(), query, firstName, lastName, passwordHash, email).Scan(&userID, &createdAt, &updatedAt)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if ok := errors.As(err, &pgErr); ok {
+			if pgErr.Code == "23505" {
+				return nil, common.BusinessError{Message: "Email already exists."}
+			}
+		}
 		return nil, err
 	}
 

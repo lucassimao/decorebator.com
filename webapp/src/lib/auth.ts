@@ -1,6 +1,6 @@
 "use client";
 
-import { ApplicationError } from "./common";
+import { ApplicationError, ValidationError } from "./common";
 
 export async function authenticate(username: string, password: string) {
   try {
@@ -52,4 +52,39 @@ export function isAuthenticated(): boolean {
 
 export function getAuthToken(): string {
   return localStorage.getItem("token") || "";
+}
+
+type UserRegistrationDTO = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+};
+
+export async function signup(dto: UserRegistrationDTO) {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+    method: "POST",
+    body: JSON.stringify({
+      email: dto.email,
+      password: dto.password,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    const result = await response.json();
+    if ("validationErrors" in result) {
+      throw new ValidationError(result.validationErrors);
+    } else {
+      throw new ApplicationError(result.error, "SignUpError");
+    }
+  }
+
+  const token = response.headers.get("Authorization");
+  if (token) {
+    localStorage.setItem("token", token);
+  }
 }

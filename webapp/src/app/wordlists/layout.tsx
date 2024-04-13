@@ -30,11 +30,12 @@ export default function LayoutDashboard({
     isLoading: isLoadingWordlists,
     isError,
     error,
-    isFetched,
   } = useQuery({
     queryKey: ["wordlists"],
     queryFn: getWordlists,
   });
+
+  // TODO handle errors
 
   return (
     <AppShell
@@ -58,7 +59,7 @@ export default function LayoutDashboard({
               ))
           : wordlists?.map((wordlist) => (
               <NavLink
-                href="#required-for-focus"
+                href={`/wordlists/${wordlist.id}`}
                 label={wordlist.name}
                 key={`wordlist${wordlist.id}`}
               />

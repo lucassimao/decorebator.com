@@ -50,8 +50,13 @@ func init() {
 func SaveUser(firstName, lastName, password, email string) (*User, error) {
 	user, err := repository.save(firstName, lastName, password, email)
 	if err != nil {
-		log.Println("Failure at SaveUser:", err)
-		return nil, errors.New("Could not save new user")
+		log.Println("failed to save new user:", err)
+		switch err.(type) {
+		case common.BusinessError:
+			return nil, err
+		default:
+			return nil, errors.New("could not save new user")
+		}
 	}
 	return user, nil
 }
@@ -63,11 +68,11 @@ func LoginUser(email, password string) (string, error) {
 	results, err := repository.find(args)
 	if err != nil {
 		log.Println("Failure at LoginUser:", err)
-		return "", errors.New("Could not start process login. Try again later")
+		return "", errors.New("could not start process login. Try again later")
 	}
 
 	if len(results) != 1 {
-		return "", errors.New("Invalid combination of email and/or password.")
+		return "", errors.New("invalid combination of email and/or password")
 	}
 
 	user := results[0]
@@ -76,7 +81,7 @@ func LoginUser(email, password string) (string, error) {
 	if err == nil {
 		return generateJWT(user.ID)
 	} else {
-		return "", errors.New("Invalid combination of email and/or password.")
+		return "", errors.New("invalid combination of email and/or password")
 	}
 
 }
