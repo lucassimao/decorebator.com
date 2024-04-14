@@ -3,6 +3,7 @@ package users
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -67,7 +68,7 @@ func (h *UserHandlers) SignUp(c *gin.Context) {
 	} else {
 		jwtToken, err := LoginUser(input.Email, input.Password)
 		if err == nil {
-			c.Writer.Header().Set("Authorization", jwtToken)
+			writeAuthenticationCookie(c, jwtToken)
 		}
 		c.JSON(http.StatusCreated, saved)
 	}
@@ -84,22 +85,45 @@ func (h *UserHandlers) Login(c *gin.Context) {
 	jwtToken, err := LoginUser(input.Email, input.Password)
 	if err != nil {
 		c.Status(http.StatusBadRequest)
-		return
 	} else {
-		c.JSON(http.StatusOK, gin.H{"token": jwtToken})
+		writeAuthenticationCookie(c, jwtToken)
+		c.Status(http.StatusOK)
 	}
+}
+
+func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
+	var maxAge, path, domain, secure, httpOnly, sameSite = int64(0), "/", "decorebator.com", false, true, http.SameSiteStrictMode
+
+	if os.Getenv("ENV") == "production" {
+		maxAge = AUTH_TOKEN_DURATION.Milliseconds()
+		// requires https
+		secure = true
+	}
+
+	if !canConvertToInt(maxAge) {
+		panic("maxAge can not be safely converted to int")
+	}
+
+	c.SetSameSite(sameSite)
+	c.SetCookie("Authorization", jwtToken, int(maxAge), path, domain, secure, httpOnly)
 }
 
 func (h *UserHandlers) Authenticate(c *gin.Context) {
 
 	const BearerSchema = "Bearer "
-	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
+	authorization, err := c.Cookie("Authorization")
+
+	if err == http.ErrNoCookie {
+		// fallback to header
+		authorization = c.GetHeader("Authorization")
+	}
+
+	if authorization == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization missing"})
 		return
 	}
 
-	tokenString := strings.TrimPrefix(authHeader, BearerSchema)
+	tokenString := strings.TrimPrefix(authorization, BearerSchema)
 
 	if tokenString == "" {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token not found"})
@@ -134,4 +158,8 @@ func (h *UserHandlers) Authenticate(c *gin.Context) {
 	c.Set("userID", userID)
 
 	c.Next()
+}
+
+func canConvertToInt(n int64) bool {
+	return n >= int64(math.MinInt) && n <= int64(math.MaxInt)
 }

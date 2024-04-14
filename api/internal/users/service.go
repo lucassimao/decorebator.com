@@ -14,6 +14,8 @@ import (
 
 var repository *UserRepository
 
+const AUTH_TOKEN_DURATION = 24 * time.Hour
+
 // Claims struct that will be encoded to a JWT.
 // jwt.StandardClaims is an embedded type to provide expiry time, issued at time, etc.
 type Claims struct {
@@ -22,7 +24,7 @@ type Claims struct {
 }
 
 func generateJWT(userID int64) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour) // Token is valid for 24 hour
+	expirationTime := time.Now().Add(AUTH_TOKEN_DURATION) // Token is valid for 24 hour
 	claims := &jwt.StandardClaims{
 		ExpiresAt: expirationTime.Unix(),
 		Subject:   fmt.Sprint(userID),

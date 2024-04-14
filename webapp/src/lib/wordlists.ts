@@ -1,7 +1,5 @@
 "use client";
 
-import { getAuthToken } from "./auth";
-
 type Wordlist = {
   name: string;
   id: number;
@@ -11,13 +9,9 @@ type Word = {
   name: string;
   id: number;
 };
-
 export async function getWordlists(): Promise<Wordlist[]> {
   const result = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wordlists`, {
-    method: "GET",
-    headers: {
-      authorization: getAuthToken(),
-    },
+    credentials: "include",
   });
 
   if (!result.ok) {
@@ -29,12 +23,7 @@ export async function getWordlists(): Promise<Wordlist[]> {
 export async function getWords(wordlistId: number): Promise<Word[]> {
   const result = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/wordlists/${wordlistId}/words`,
-    {
-      method: "GET",
-      headers: {
-        authorization: getAuthToken(),
-      },
-    },
+    { credentials: "include" },
   );
 
   if (!result.ok) {

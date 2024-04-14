@@ -40,6 +40,9 @@ devDependencies:
   "@tanstack/react-query-devtools":
     specifier: ^5.29.2
     version: 5.29.2(@tanstack/react-query@5.29.2)(react@18.2.0)
+  "@types/js-cookie":
+    specifier: ^3.0.6
+    version: 3.0.6
   "@types/node":
     specifier: ^20
     version: 20.12.7
@@ -636,6 +639,13 @@ packages:
     dependencies:
       "@tanstack/query-core": 5.29.0
       react: 18.2.0
+
+  /@types/js-cookie@3.0.6:
+    resolution:
+      {
+        integrity: sha512-wkw9yd1kEXOPnvEeEV1Go1MmxtBJL0RR79aOTAApecWFVu7w0NNXNqhcWgvw2YgZDYadliXkl14pa3WXw5jlCQ==,
+      }
+    dev: true
 
   /@types/json-schema@7.0.15:
     resolution:

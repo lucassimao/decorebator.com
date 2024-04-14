@@ -10,6 +10,7 @@ export async function authenticate(username: string, password: string) {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
     });
     if (!response.ok) {
       throw new ApplicationError(
@@ -17,8 +18,7 @@ export async function authenticate(username: string, password: string) {
         "AuthenticationError",
       );
     }
-    const result = await response.json();
-    localStorage.setItem("token", result.token);
+    localStorage.setItem("authenticated", "true");
   } catch (error) {
     if (error instanceof ApplicationError) {
       throw error;
@@ -30,28 +30,7 @@ export async function authenticate(username: string, password: string) {
 }
 
 export function isAuthenticated(): boolean {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    return false;
-  }
-
-  const payloadBase64 = token.split(".")[1];
-  const decodedJson = atob(payloadBase64);
-  const decoded = JSON.parse(decodedJson);
-  const exp = decoded.exp; // Get the expiration time
-
-  // No expiration time, considered expired for safety
-  if (!exp) {
-    localStorage.removeItem("token");
-    return false;
-  }
-
-  const now = Math.floor(Date.now() / 1000); // Current time in Unix timestamp
-  return exp > now;
-}
-
-export function getAuthToken(): string {
-  return localStorage.getItem("token") || "";
+  return localStorage.getItem("authenticated") == "true";
 }
 
 type UserRegistrationDTO = {
@@ -81,10 +60,5 @@ export async function signup(dto: UserRegistrationDTO) {
     } else {
       throw new ApplicationError(result.error, "SignUpError");
     }
-  }
-
-  const token = response.headers.get("Authorization");
-  if (token) {
-    localStorage.setItem("token", token);
   }
 }
