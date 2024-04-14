@@ -12,8 +12,10 @@ import { useEffect } from "react";
 
 export default function LayoutDashboard({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params: { wordlistId: string };
 }>) {
   const [opened, { toggle }] = useDisclosure();
   const router = useRouter();
@@ -38,9 +40,10 @@ export default function LayoutDashboard({
   useEffect(() => {
     if (!isFetched) return;
     if (!wordlists?.length) return;
+    if (!params.wordlistId) return;
 
     router.push(`/wordlists/${wordlists[0].id}`);
-  }, [isFetched]);
+  }, [isFetched, params.wordlistId]);
 
   // TODO handle errors
 

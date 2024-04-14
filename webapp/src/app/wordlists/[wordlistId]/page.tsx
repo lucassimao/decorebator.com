@@ -1,9 +1,10 @@
 "use client";
 
 import { getWords } from "@/lib/wordlists";
+import { ScrollArea, TextInput } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
-import { ScrollArea, UnstyledButton, TextInput } from "@mantine/core";
 import { useRef, useState } from "react";
+import styles from "./styles.module.css";
 
 export default function WordPage({
   params,
@@ -30,21 +31,26 @@ export default function WordPage({
     word.name.toLowerCase().includes(query.toLowerCase()),
   );
 
-  const items = filtered?.map((word, index) => (
-    <UnstyledButton
-      data-list-item
-      key={`word-${word.id}`}
-      display="block"
-      // bg={index === hovered ? 'var(--mantine-color-blue-light)' : undefined}
-      w="100%"
-      p={5}
+  const items = (
+    <ol
+      style={{ "--length": filtered?.length || 0 } as React.CSSProperties}
+      role="list"
     >
-      {word.name}
-    </UnstyledButton>
-  ));
+      {filtered?.map((word, index) => (
+        <li style={{ "--i": index + 1 } as React.CSSProperties}>
+          <h3>{word.name}</h3>
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+            eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            Adipiscing diam donec adipiscing tristique risus.
+          </p>
+        </li>
+      ))}
+    </ol>
+  );
 
   return (
-    <>
+    <div className={styles.wrapper}>
       <TextInput
         value={query}
         onChange={(event) => {
@@ -80,6 +86,6 @@ export default function WordPage({
       <ScrollArea type="always" mt="md" viewportRef={viewportRef}>
         {items}
       </ScrollArea>
-    </>
+    </div>
   );
 }
