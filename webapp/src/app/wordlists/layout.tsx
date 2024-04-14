@@ -3,13 +3,12 @@
 import { AppShell, Burger } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
-import { Group, Skeleton } from "@mantine/core";
-import { useRouter } from "next/navigation";
 import { isAuthenticated } from "@/lib/auth";
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { getWordlists } from "@/lib/wordlists";
-import { Badge, NavLink } from "@mantine/core";
+import { Group, NavLink, Skeleton } from "@mantine/core";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function LayoutDashboard({
   children,
@@ -30,12 +29,22 @@ export default function LayoutDashboard({
     isLoading: isLoadingWordlists,
     isError,
     error,
+    isFetched,
   } = useQuery({
     queryKey: ["wordlists"],
     queryFn: getWordlists,
   });
 
+  useEffect(() => {
+    if (!isFetched) return;
+    if (!wordlists?.length) return;
+
+    router.push(`/wordlists/${wordlists[0].id}`);
+  }, [isFetched]);
+
   // TODO handle errors
+
+  // display default view if no wordlists
 
   return (
     <AppShell

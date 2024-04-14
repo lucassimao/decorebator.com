@@ -91,11 +91,17 @@ func (h *UserHandlers) Login(c *gin.Context) {
 	}
 }
 
+func (h *UserHandlers) Logout(c *gin.Context) {
+	writeAuthenticationCookie(c, "")
+	c.Status(http.StatusOK)
+}
+
 func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
-	var maxAge, path, domain, secure, httpOnly, sameSite = int64(0), "/", "decorebator.com", false, true, http.SameSiteStrictMode
+	var maxAge, path, domain, secure, httpOnly, sameSite = int64(0), "/", "localhost", false, true, http.SameSiteStrictMode
 
 	if os.Getenv("ENV") == "production" {
 		maxAge = AUTH_TOKEN_DURATION.Milliseconds()
+		domain = "decorebator.com"
 		// requires https
 		secure = true
 	}
@@ -105,7 +111,14 @@ func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
 	}
 
 	c.SetSameSite(sameSite)
-	c.SetCookie("Authorization", jwtToken, int(maxAge), path, domain, secure, httpOnly)
+
+	if len(jwtToken) > 0 {
+		c.SetCookie("Authorization", jwtToken, int(maxAge), path, domain, secure, httpOnly)
+	} else {
+		// clear cookie
+		fmt.Println("Clearing authorization cookie")
+		c.SetCookie("Authorization", "", int(-1), path, domain, secure, httpOnly)
+	}
 }
 
 func (h *UserHandlers) Authenticate(c *gin.Context) {

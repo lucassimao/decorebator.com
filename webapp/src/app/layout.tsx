@@ -28,7 +28,6 @@ export default function RootLayout({
       <body className={inter.className}>
         <MantineProvider>
           <QueryClientProvider client={queryClient}>
-            {" "}
             <ReactQueryDevtools initialIsOpen={false} /> {children}
           </QueryClientProvider>
         </MantineProvider>

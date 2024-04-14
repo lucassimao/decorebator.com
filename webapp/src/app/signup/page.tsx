@@ -1,6 +1,6 @@
 "use client";
-import Link from "next/link";
-import { authenticate, signup } from "@/lib/auth";
+import { signup } from "@/lib/auth";
+import { ValidationError } from "@/lib/common";
 import {
   Alert,
   Button,
@@ -10,12 +10,11 @@ import {
   rem,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useFormStatus } from "react-dom";
 import { IconLock } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
-import { ValidationError } from "@/lib/common";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useFormStatus } from "react-dom";
 
 const icon = (
   <IconLock style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
@@ -51,9 +50,7 @@ export default function SignupPage() {
     },
   });
 
-  const handleSubmit = async (values: typeof form.values) => {
-    await mutateAsync();
-  };
+  const handleSubmit = async (values: typeof form.values) => mutateAsync();
 
   return (
     <main className="bg-gray-100 flex items-center justify-center min-h-screen">

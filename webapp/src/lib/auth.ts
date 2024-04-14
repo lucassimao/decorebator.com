@@ -52,6 +52,7 @@ export async function signup(dto: UserRegistrationDTO) {
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
   });
   if (!response.ok) {
     const result = await response.json();
@@ -60,5 +61,14 @@ export async function signup(dto: UserRegistrationDTO) {
     } else {
       throw new ApplicationError(result.error, "SignUpError");
     }
+  }
+}
+
+export async function logout() {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/logout`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to logout user");
   }
 }

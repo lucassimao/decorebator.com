@@ -19,10 +19,18 @@ import (
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://dev.decorebator.com:4000")
+		var origin string
+
+		if os.Getenv("ENV") == "production" {
+			origin = "https://decorebator.com"
+		} else {
+			origin = "http://localhost:4000"
+		}
+		c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Cookie")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
+
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
@@ -40,6 +48,7 @@ func main() {
 
 	// Routes without authentication
 	router.POST("/users", users.Handlers.SignUp)
+	router.GET("/logout", users.Handlers.Logout)
 	router.POST("/login", users.Handlers.Login)
 
 	// Routes with authentication
