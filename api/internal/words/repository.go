@@ -63,7 +63,7 @@ func (repository *WordRepository) save(name string, userId, wordlistId int64) (*
 	return &Word{wordID, name, createdAt, updatedAt, wordlistId, userId}, nil
 }
 
-func (repository *WordRepository) getAllFromWordlist(wordlistId, userId int64) ([]*Word, error) {
+func (repository *WordRepository) getAllFromWordlist(wordlistId, userId int64) ([]Word, error) {
 	query := `SELECT id , name, created_at, updated_At FROM words WHERE wordlist_id=$1 AND user_id=$2`
 	rows, err := repository.db.Query(context.Background(), query, wordlistId, userId)
 	if err != nil {
@@ -72,14 +72,14 @@ func (repository *WordRepository) getAllFromWordlist(wordlistId, userId int64) (
 
 	defer rows.Close()
 
-	words := []*Word{}
+	words := []Word{}
 	for rows.Next() {
 		w := Word{WordlistID: wordlistId, UserID: userId}
 		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
-		words = append(words, &w)
+		words = append(words, w)
 	}
 
 	if err = rows.Err(); err != nil {

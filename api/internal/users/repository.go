@@ -83,7 +83,7 @@ type FindArgs struct {
 	email *string
 }
 
-func (repository *UserRepository) find(args FindArgs) ([]*User, error) {
+func (repository *UserRepository) find(args FindArgs) ([]User, error) {
 	var builder strings.Builder
 	builder.WriteString(`SELECT id,first_name, last_name, password_hash, created_at, updated_at FROM users`)
 	var queryArgs []interface{}
@@ -93,7 +93,7 @@ func (repository *UserRepository) find(args FindArgs) ([]*User, error) {
 		queryArgs = append(queryArgs, args.email)
 	}
 
-	users := []*User{}
+	users := []User{}
 	query := builder.String()
 	rows, err := repository.db.Query(context.Background(), query, queryArgs...)
 	if err != nil {
@@ -106,12 +106,12 @@ func (repository *UserRepository) find(args FindArgs) ([]*User, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		w := User{}
-		err := rows.Scan(&w.ID, &w.FirstName, &w.LastName, &w.PasswordHash, &w.CreatedAt, &w.UpdatedAt)
+		user := User{}
+		err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
-		users = append(users, &w)
+		users = append(users, user)
 	}
 
 	if err = rows.Err(); err != nil {

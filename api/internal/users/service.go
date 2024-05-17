@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"decorebator.com/internal/common"
@@ -16,18 +17,27 @@ var repository *UserRepository
 
 const AUTH_TOKEN_DURATION = 24 * time.Hour
 
-// Claims struct that will be encoded to a JWT.
 // jwt.StandardClaims is an embedded type to provide expiry time, issued at time, etc.
 type Claims struct {
-	UserID int64 `json:"userId"`
+	FirstName   string `json:"firstName"`
+	LastName    string `json:"lastName"`
+	Environment string `json:"environment"`
 	jwt.StandardClaims
 }
 
-func generateJWT(userID int64) (string, error) {
-	expirationTime := time.Now().Add(AUTH_TOKEN_DURATION) // Token is valid for 24 hour
-	claims := &jwt.StandardClaims{
-		ExpiresAt: expirationTime.Unix(),
-		Subject:   fmt.Sprint(userID),
+func generateJWT(user User) (string, error) {
+	ginMode := os.Getenv("GIN_MODE")
+
+	claims := &Claims{
+		FirstName:   user.FirstName,
+		LastName:    user.LastName,
+		Environment: ginMode,
+		StandardClaims: jwt.StandardClaims{
+			Issuer:    "Decorebator",
+			ExpiresAt: time.Now().Add(AUTH_TOKEN_DURATION).Unix(), // Token is valid for 24 hour
+			Subject:   fmt.Sprint(user.ID),
+			IssuedAt:  time.Now().Unix(),
+		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -64,8 +74,10 @@ func SaveUser(firstName, lastName, password, email string) (*User, error) {
 }
 
 func LoginUser(email, password string) (string, error) {
+	lowerCaseEmail := strings.ToLower(email)
+
 	args := FindArgs{
-		email: &email,
+		email: &lowerCaseEmail,
 	}
 	results, err := repository.find(args)
 	if err != nil {
@@ -81,7 +93,7 @@ func LoginUser(email, password string) (string, error) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err == nil {
-		return generateJWT(user.ID)
+		return generateJWT(user)
 	} else {
 		return "", errors.New("invalid combination of email and/or password")
 	}

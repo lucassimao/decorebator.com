@@ -23,7 +23,7 @@ type SignupInput struct {
 
 type LoginInput struct {
 	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=5"`
+	Password string `json:"password" binding:"required"`
 }
 
 type UserHandlers struct{}
@@ -61,16 +61,17 @@ func (h *UserHandlers) SignUp(c *gin.Context) {
 		return
 	}
 
-	saved, err := SaveUser(input.FirstName, input.LastName, input.Password, input.Email)
+	_, err := SaveUser(input.FirstName, input.LastName, input.Password, input.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	} else {
 		jwtToken, err := LoginUser(input.Email, input.Password)
+		c.Header("authorization", jwtToken)
 		if err == nil {
 			writeAuthenticationCookie(c, jwtToken)
 		}
-		c.JSON(http.StatusCreated, saved)
+		c.Status(http.StatusCreated)
 	}
 }
 
@@ -86,6 +87,7 @@ func (h *UserHandlers) Login(c *gin.Context) {
 	if err != nil {
 		c.Status(http.StatusBadRequest)
 	} else {
+		c.Header("authorization", jwtToken)
 		writeAuthenticationCookie(c, jwtToken)
 		c.Status(http.StatusOK)
 	}

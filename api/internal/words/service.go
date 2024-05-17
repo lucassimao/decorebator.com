@@ -22,7 +22,7 @@ func init() {
 	repository = &WordRepository{db}
 }
 
-func GetWordsFromWordlist(wordlistId, userId int64) ([]*Word, error) {
+func GetWordsFromWordlist(wordlistId, userId int64) ([]Word, error) {
 	return repository.getAllFromWordlist(wordlistId, userId)
 }
 
