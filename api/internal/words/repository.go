@@ -64,7 +64,7 @@ func (repository *WordRepository) save(name string, userId, wordlistId int64) (*
 }
 
 func (repository *WordRepository) getAllFromWordlist(wordlistId, userId int64) ([]Word, error) {
-	query := `SELECT id , name, created_at, updated_At FROM words WHERE wordlist_id=$1 AND user_id=$2`
+	query := `SELECT id , name, created_at, updated_At FROM words WHERE wordlist_id=$1 AND user_id=$2 order by id desc`
 	rows, err := repository.db.Query(context.Background(), query, wordlistId, userId)
 	if err != nil {
 		return nil, err
