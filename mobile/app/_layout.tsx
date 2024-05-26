@@ -94,19 +94,10 @@ export default function RootLayout() {
 
 const queryClient = new QueryClient();
 
-type Modal = "new-wordlist" | null;
-
 function RootLayoutNav() {
-  const [modal, setModal] = useState<Modal>(null);
-
-  const clearModal = () => setModal(null);
-
   return (
     <PaperProvider theme={CombinedDefaultTheme}>
       <QueryClientProvider client={queryClient}>
-        {modal == "new-wordlist" && (
-          <NewWordlistDialog onDismiss={clearModal} />
-        )}
         <Stack>
           <Stack.Screen name="signup" options={{ headerShown: false }} />
           <Stack.Screen name="signin" options={{ headerShown: false }} />
@@ -114,14 +105,13 @@ function RootLayoutNav() {
             name="dashboard/index"
             options={{
               headerShown: true,
-              headerRight: () => (
-                <IconButton
-                  icon="notebook-plus"
-                  size={25}
-                  onPress={() => setModal("new-wordlist")}
-                />
-              ),
               headerTitle: "Dashboard",
+            }}
+          />
+          <Stack.Screen
+            name="dashboard/welcome"
+            options={{
+              headerShown: false,
             }}
           />
         </Stack>

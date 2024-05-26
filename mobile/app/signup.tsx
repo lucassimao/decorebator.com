@@ -34,7 +34,7 @@ export default function SignupScreen() {
       setSignUpError(error.message);
     },
     onSuccess: () => {
-      router.replace("/dashboard");
+      router.replace("/dashboard/welcome");
     },
   });
 

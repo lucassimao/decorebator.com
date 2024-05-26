@@ -25,6 +25,7 @@ export type Quiz = {
 };
 
 export type CreateWordDTO = Pick<Word, "wordlistId" | "name">;
+export type CreateWordlistDTO = Pick<Wordlist, "description" | "name">;
 
 export async function getUserWordlists() {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/wordlists";
@@ -118,6 +119,33 @@ export async function getWordlist(wordlistId: number): Promise<Wordlist> {
     headers: {
       authorization,
     },
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok) {
+    const message =
+      body?.error ||
+      Object.values(body?.validationErrors)?.[0] ||
+      DEFAULT_ERROR;
+    throw new Error(message);
+  }
+  return body;
+}
+
+export async function addWordlist(dto: CreateWordlistDTO): Promise<void> {
+  const endpoint = process.env.EXPO_PUBLIC_API_URL + `/wordlists`;
+  const authorization = getAuthorization();
+
+  if (!authorization) {
+    throw new Error(AUTH_REQUIRED_ERROR);
+  }
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      authorization,
+    },
+    body: JSON.stringify(dto),
     credentials: "include",
   });
   const body = await response.json();

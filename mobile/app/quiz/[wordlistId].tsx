@@ -62,7 +62,7 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
             mode="contained"
           >
             <View style={styles.buttonContent}>
-              <Text style={styles.buttonText}>{option}</Text>
+              <Text style={styles.buttonText}>aaa{option}</Text>
             </View>
           </Button>
         ))}

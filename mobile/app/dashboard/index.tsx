@@ -1,9 +1,12 @@
 import * as wordlistsApi from "@/api/wordlists";
+import * as usersApi from "@/api/users";
+
 import { useQuery } from "@tanstack/react-query";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
+  IconButton,
   List,
   TouchableRipple,
   useTheme,
@@ -14,9 +17,16 @@ import BottonBar from "@/components/dashboard/BottonBar";
 import DeleteWordDialog from "@/components/dashboard/DeleteWordDialog";
 import EmptyDashboard from "@/components/dashboard/EmptyDashboard";
 import LoadingIndicator from "@/components/dashboard/LoadingIndicator";
+import { useNavigation } from "@react-navigation/native";
+import NewWordlistDialog from "@/components/dashboard/NewWordlistDialog";
+import { router } from "expo-router";
+type Dialog = "new-wordlist" | "delete-word" | null;
 
 export default function Dashboard() {
   const theme = useTheme();
+  const navigation = useNavigation();
+  const user = usersApi.getUserInfo();
+
   const [expandedWordlistId, setExpandedWordlistId] = React.useState<
     number | null
   >(null);
@@ -24,6 +34,46 @@ export default function Dashboard() {
     React.useState<wordlistsApi.Word | null>(null);
   const [snackBarProps, setSnackBarProps] =
     React.useState<SnackBarProps | null>(null);
+
+  const [modal, setModal] = useState<Dialog>(null);
+
+  const clearModal = () => setModal(null);
+
+  React.useEffect(() => {
+    const options: React.JSX.Element[] = [];
+
+    const isNewWordlistButtonVisible = !expandedWordlistId;
+    if (isNewWordlistButtonVisible) {
+      options.push(
+        <IconButton
+          icon="notebook-plus"
+          size={25}
+          key={"new-wordlist"}
+          onPress={() => setModal("new-wordlist")}
+        />,
+      );
+    }
+
+    options.push(
+      <IconButton
+        icon="logout-variant"
+        size={25}
+        key={"logout"}
+        onPress={() => usersApi.sigout().then(() => router.replace("signin"))}
+      />,
+    );
+
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={{ display: "flex", flexDirection: "row" }}>{options}</View>
+      ),
+      headerLeft: null,
+    });
+  }, [navigation, expandedWordlistId]);
+
+  useEffect(() => {
+    setModal(wordToDelete ? "delete-word" : null);
+  }, [wordToDelete]);
 
   // useFocusEffect(
   //     React.useCallback(() => {
@@ -79,7 +129,14 @@ export default function Dashboard() {
 
   if (isLoadingWordlists) return <LoadingIndicator />;
 
-  if (!wordlists?.length) return <EmptyDashboard />;
+  if (!wordlists?.length)
+    return (
+      <EmptyDashboard
+        subtitle="It's time for a new challenge!"
+        onWordlistCreated={getWordlists}
+        title={`Hey, ${user?.firstName}`}
+      />
+    );
 
   const onListAccordionPressed = (wordlistId: number) => {
     // user pressed same item. Closing it
@@ -109,6 +166,7 @@ export default function Dashboard() {
       type: "success",
       onDismiss: closeSnackBar,
     });
+    setExpandedWordlistId(null);
   };
 
   const onDismissDeleteWordDialog = (success?: boolean) => {
@@ -123,14 +181,30 @@ export default function Dashboard() {
     setWordToDelete(null);
   };
 
+  const onDismissCreateWordlistDialog = (success?: boolean) => {
+    if (success) {
+      setSnackBarProps({
+        message: "wordlist created",
+        type: "success",
+        onDismiss: closeSnackBar,
+      });
+      getWordlists();
+    }
+    clearModal();
+  };
+
   return (
     <View style={styles.container}>
-      {wordToDelete && (
+      {modal == "delete-word" && wordToDelete && (
         <DeleteWordDialog
           word={wordToDelete}
           onDismiss={onDismissDeleteWordDialog}
         />
       )}
+      {modal == "new-wordlist" && (
+        <NewWordlistDialog onDismiss={onDismissCreateWordlistDialog} />
+      )}
+
       {snackBarProps && <SnackBar {...snackBarProps} />}
 
       <ScrollView contentContainerStyle={styles.scrollViewContent}>

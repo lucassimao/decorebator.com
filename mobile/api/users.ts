@@ -52,6 +52,15 @@ export async function signup(data: UserSignup) {
   }
 }
 
+export async function sigout() {
+  if (Platform.OS === "web") {
+    localStorage.removeItem("authorization");
+  } else if (Platform.OS === "ios" || Platform.OS === "android") {
+    await SecureStore.deleteItemAsync("authorization");
+  } else {
+    throw new Error("Unknown platform: " + Platform.OS);
+  }
+}
 export async function signin(data: UserSignin) {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/login";
 
@@ -74,7 +83,7 @@ export async function signin(data: UserSignin) {
   }
 }
 
-export async function getUserInfo(): Promise<UserInfo | null> {
+export function getUserInfo(): UserInfo | null {
   const authorization = getAuthorization();
 
   if (!authorization) {

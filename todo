@@ -18,6 +18,7 @@
         [ ] timeout requests if db takes longer to respond in the api
         [ ] add sentry   
         [ ] use structured logging 
+        [ ] delete wordlist associated to words
 
 - Mobile
     [ok] signup
@@ -27,8 +28,9 @@
     [ ] dashboard
         [x] list wordlists
         [x] add word
-        [ ] toolbar button to create a new wordlist
-        [ ] display custom screen if user doesn't have wordlists
+        [x] toolbar button to create a new wordlist
+        [x] toolbar button to signout
+        [x] display custom screen if user doesn't have wordlists
         [ ] clicking on a word should open a modal defining the clicked word
         [ ] display word status: pending, error, no meaning found, etc
         [ ] review mode: display words so that user can learn their meaning and usage
