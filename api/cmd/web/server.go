@@ -24,10 +24,11 @@ func CORSMiddleware() gin.HandlerFunc {
 		if os.Getenv("ENV") == "production" {
 			origin = "https://decorebator.com"
 		} else {
-			origin = "http://localhost:4000"
+			origin = c.Request.Header.Get("Origin")
 		}
 		c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Type, Content-Length, Authorization, Cookie")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Cookie")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 

@@ -2,7 +2,9 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { Link, router } from "expo-router";
+
+import { useEffect, useState } from "react";
 import {
   useQuery,
   useMutation,
@@ -32,6 +34,7 @@ const { LightTheme, DarkTheme } = adaptNavigationTheme({
 });
 
 import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
+import NewWordlistDialog from "@/components/dashboard/NewWordlistDialog";
 
 const CombinedDefaultTheme = {
   ...MD3LightTheme,
@@ -59,7 +62,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: "(tabs)",
+  initialRouteName: "signin",
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -91,10 +94,19 @@ export default function RootLayout() {
 
 const queryClient = new QueryClient();
 
+type Modal = "new-wordlist" | null;
+
 function RootLayoutNav() {
+  const [modal, setModal] = useState<Modal>(null);
+
+  const clearModal = () => setModal(null);
+
   return (
     <PaperProvider theme={CombinedDefaultTheme}>
       <QueryClientProvider client={queryClient}>
+        {modal == "new-wordlist" && (
+          <NewWordlistDialog onDismiss={clearModal} />
+        )}
         <Stack>
           <Stack.Screen name="signup" options={{ headerShown: false }} />
           <Stack.Screen name="signin" options={{ headerShown: false }} />
@@ -105,16 +117,12 @@ function RootLayoutNav() {
               headerRight: () => (
                 <IconButton
                   icon="notebook-plus"
-                  size={20}
-                  onPress={() => console.log("Pressed")}
+                  size={25}
+                  onPress={() => setModal("new-wordlist")}
                 />
               ),
               headerTitle: "Dashboard",
             }}
-          />
-          <Stack.Screen
-            name="quiz/[wordlistId]"
-            options={{ headerShown: true, headerTitle: "Quiz" }}
           />
         </Stack>
       </QueryClientProvider>

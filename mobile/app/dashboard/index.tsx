@@ -1,6 +1,6 @@
 import * as wordlistsApi from "@/api/wordlists";
 import { useQuery } from "@tanstack/react-query";
-import * as React from "react";
+import React, { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,

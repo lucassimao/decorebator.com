@@ -18,8 +18,8 @@ const NAVIGATION_ROUTES = [
   {
     key: NavigationRouteKey.New,
     title: "New word",
-    focusedIcon: "notebook-plus",
-    unfocusedIcon: "notebook-plus-outline",
+    focusedIcon: "notebook-edit",
+    unfocusedIcon: "notebook-edit-outline",
   },
   {
     key: NavigationRouteKey.Practice,

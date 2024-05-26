@@ -1,5 +1,5 @@
 import * as SecureStore from "expo-secure-store";
-import { AUTH_REQUIRED_ERROR, DEFAULT_ERROR } from "./users";
+import { AUTH_REQUIRED_ERROR, DEFAULT_ERROR, getAuthorization } from "./users";
 
 export type Wordlist = {
   createdAt: string;
@@ -28,7 +28,7 @@ export type CreateWordDTO = Pick<Word, "wordlistId" | "name">;
 
 export async function getUserWordlists() {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/wordlists";
-  const authorization = await SecureStore.getItemAsync("authorization");
+  const authorization = getAuthorization();
 
   if (!authorization) {
     throw new Error(AUTH_REQUIRED_ERROR);
@@ -39,6 +39,8 @@ export async function getUserWordlists() {
     headers: {
       authorization,
     },
+
+    credentials: "include",
   });
   const body = await response.json();
   if (!response.ok) {
@@ -54,7 +56,7 @@ export async function getUserWordlists() {
 export async function getWords(wordlistId: number): Promise<Word[]> {
   const endpoint =
     process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/words`;
-  const authorization = await SecureStore.getItemAsync("authorization");
+  const authorization = getAuthorization();
 
   if (!authorization) {
     throw new Error(AUTH_REQUIRED_ERROR);
@@ -65,6 +67,7 @@ export async function getWords(wordlistId: number): Promise<Word[]> {
     headers: {
       authorization,
     },
+    credentials: "include",
   });
   const body = await response.json();
   if (!response.ok) {
@@ -79,7 +82,7 @@ export async function getWords(wordlistId: number): Promise<Word[]> {
 
 export async function deleteWordlist(wordlistId: number): Promise<void> {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}`;
-  const authorization = await SecureStore.getItemAsync("authorization");
+  const authorization = getAuthorization();
 
   if (!authorization) {
     throw new Error(AUTH_REQUIRED_ERROR);
@@ -90,6 +93,7 @@ export async function deleteWordlist(wordlistId: number): Promise<void> {
     headers: {
       authorization,
     },
+    credentials: "include",
   });
   if (!response.ok) {
     const body = await response.json();
@@ -103,7 +107,7 @@ export async function deleteWordlist(wordlistId: number): Promise<void> {
 
 export async function getWordlist(wordlistId: number): Promise<Wordlist> {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}`;
-  const authorization = await SecureStore.getItemAsync("authorization");
+  const authorization = getAuthorization();
 
   if (!authorization) {
     throw new Error(AUTH_REQUIRED_ERROR);
@@ -114,6 +118,7 @@ export async function getWordlist(wordlistId: number): Promise<Wordlist> {
     headers: {
       authorization,
     },
+    credentials: "include",
   });
   const body = await response.json();
   if (!response.ok) {
@@ -129,7 +134,7 @@ export async function getWordlist(wordlistId: number): Promise<Wordlist> {
 export async function addWord(dto: CreateWordDTO): Promise<void> {
   const endpoint =
     process.env.EXPO_PUBLIC_API_URL + `/wordlists/${dto.wordlistId}/words`;
-  const authorization = await SecureStore.getItemAsync("authorization");
+  const authorization = getAuthorization();
 
   if (!authorization) {
     throw new Error(AUTH_REQUIRED_ERROR);
@@ -141,6 +146,7 @@ export async function addWord(dto: CreateWordDTO): Promise<void> {
       authorization,
     },
     body: JSON.stringify(dto),
+    credentials: "include",
   });
   const body = await response.json();
   if (!response.ok) {
@@ -159,7 +165,7 @@ export async function deleteWord(word: Word): Promise<void> {
   const endpoint =
     process.env.EXPO_PUBLIC_API_URL +
     `/wordlists/${wordlistId}/words/${wordId}`;
-  const authorization = await SecureStore.getItemAsync("authorization");
+  const authorization = getAuthorization();
 
   if (!authorization) {
     throw new Error(AUTH_REQUIRED_ERROR);
@@ -170,6 +176,7 @@ export async function deleteWord(word: Word): Promise<void> {
     headers: {
       authorization,
     },
+    credentials: "include",
   });
   if (!response.ok) {
     const body = await response.json();
@@ -184,7 +191,7 @@ export async function deleteWord(word: Word): Promise<void> {
 export async function newQuiz(wordlistId: number): Promise<Quiz> {
   const endpoint =
     process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/quizzes`;
-  const authorization = await SecureStore.getItemAsync("authorization");
+  const authorization = getAuthorization();
 
   if (!authorization) {
     throw new Error(AUTH_REQUIRED_ERROR);
@@ -195,6 +202,7 @@ export async function newQuiz(wordlistId: number): Promise<Quiz> {
     headers: {
       authorization,
     },
+    credentials: "include",
   });
   const body = await response.json();
   if (!response.ok) {
@@ -214,7 +222,7 @@ export async function answerQuiz(
 ): Promise<void> {
   const endpoint =
     process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/quizzes`;
-  const authorization = await SecureStore.getItemAsync("authorization");
+  const authorization = getAuthorization();
 
   if (!authorization) {
     throw new Error(AUTH_REQUIRED_ERROR);
@@ -229,6 +237,7 @@ export async function answerQuiz(
       id: quizId,
       success,
     }),
+    credentials: "include",
   });
   if (!response.ok) {
     const body = await response.json();

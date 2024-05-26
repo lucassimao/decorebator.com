@@ -1,5 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 import * as jwt from "./jwt";
+import { Platform } from "react-native";
 
 export type UserSignup = {
   firstName: string;
@@ -33,6 +34,7 @@ export async function signup(data: UserSignup) {
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
   });
   if (!response.ok) {
     const body = await response.json();
@@ -44,7 +46,7 @@ export async function signup(data: UserSignup) {
   }
   const authorization = response.headers.get("authorization");
   if (authorization) {
-    await SecureStore.setItemAsync("authorization", authorization);
+    saveAuthorization(authorization);
   } else {
     throw new Error(DEFAULT_ERROR);
   }
@@ -59,20 +61,21 @@ export async function signin(data: UserSignin) {
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
   });
   if (!response.ok) {
     throw new Error(SIGN_IN_ERROR);
   }
   const authorization = response.headers.get("authorization");
   if (authorization) {
-    await SecureStore.setItemAsync("authorization", authorization);
+    saveAuthorization(authorization);
   } else {
     throw new Error(DEFAULT_ERROR);
   }
 }
 
 export async function getUserInfo(): Promise<UserInfo | null> {
-  const authorization = await SecureStore.getItemAsync("authorization");
+  const authorization = getAuthorization();
 
   if (!authorization) {
     throw new Error(AUTH_REQUIRED_ERROR);
@@ -84,4 +87,24 @@ export async function getUserInfo(): Promise<UserInfo | null> {
     lastName: decoded.payload?.lastName,
     id: +decoded.payload?.sub,
   };
+}
+
+function saveAuthorization(authorization: string) {
+  if (Platform.OS === "web") {
+    localStorage.setItem("authorization", authorization);
+  } else if (Platform.OS === "ios" || Platform.OS === "android") {
+    SecureStore.setItem("authorization", authorization);
+  } else {
+    throw new Error("Unknown platform: " + Platform.OS);
+  }
+}
+
+export function getAuthorization() {
+  if (Platform.OS === "web") {
+    return localStorage.getItem("authorization");
+  } else if (Platform.OS === "ios" || Platform.OS === "android") {
+    return SecureStore.getItem("authorization");
+  } else {
+    throw new Error("Unsupported platform: " + Platform.OS);
+  }
 }
