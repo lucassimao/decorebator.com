@@ -114,6 +114,7 @@ function RootLayoutNav() {
               headerShown: false,
             }}
           />
+      
         </Stack>
       </QueryClientProvider>
     </PaperProvider>

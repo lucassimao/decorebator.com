@@ -14,7 +14,7 @@
         [x] save words in lowercase
         [x] remove calls to log.Fatal in api/internal/definitions/openai/service.go
         [x] handle the case of form_of records in wiktionary
-        [ ] quiz options are been returned more than once 
+        [ ] quiz options are been returned more than once or even little than needed
         [ ] timeout requests if db takes longer to respond in the api
         [ ] add sentry   
         [ ] use structured logging 
@@ -36,8 +36,7 @@
         [ ] review mode: display words so that user can learn their meaning and usage
         [ ] (v2) display how strong is the definition of a word for an user 
     [ ] quiz
-        [ ] use challenge instead of quiz
-        [ ] make button read if clicking the wrong option
+        [ ] make button red if clicking the wrong option
         [ ] make button green if clicking the wrong option
         [ ] When replacing option, be aware of suffixes 
         [ ] button click effect with depth effects
