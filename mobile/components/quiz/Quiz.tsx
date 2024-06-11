@@ -1,6 +1,6 @@
 import * as wordlistsApi from "@/api/wordlists";
 import * as React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Surface, TouchableRipple, useTheme } from "react-native-paper";
 
 type Props = {
@@ -34,6 +34,8 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
     }
 
     return (
+        <View style={styles.container1}>
+
         <Surface  theme={theme} elevation={5} style={styles.container}>
             <Text
                 style={[styles.header, quiz.type == 1 ? styles.completeSentenceQuiz : styles.guessMeaningQuiz]}
@@ -41,30 +43,38 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
                 {title}
             </Text>
 
-            <View style={styles.content}>
+        
+            <ScrollView contentContainerStyle={{alignItems:'stretch'}}  style={styles.content}>
                 {quiz.options.map((option, index) => (
                     <Surface
                         theme={theme}
                         style={[
-                              { backgroundColor: selectedIndex == null ? theme.colors.primary : '#FFF' },
+                               { backgroundColor: selectedIndex == null ? theme.colors.primary : '#fff' },
                             styles.option,
                             selectedIndex === index
                                 ? quiz.answerIndex == index
                                     ? styles.correctOption
                                     : styles.wrongOption
                                 : null,
+                            
                         ]}
                         key={`${option}-${index}`}
-                        elevation={5}>
+                        elevation={4}>
                         <TouchableRipple disabled={selectedIndex != null} theme={theme} rippleColor={theme.colors.inversePrimary}
                             onPress={() => setSelectedIndex(index)}>
-                            <Text style={styles.buttonText}>{option}</Text>
+                            <Text style={[
+                                styles.buttonText,
+                                selectedIndex != null && selectedIndex != index && quiz.answerIndex == index ? {color:'green'} : null
+                            ]}>{option}</Text>
                         </TouchableRipple>
                     </Surface>
                 ))}
-            </View>
+            </ScrollView>
 
-               {selectedIndex!=null && <Surface
+           
+
+        </Surface>
+        {selectedIndex!=null && <Surface
                     theme={theme}
                     style={[
                         { backgroundColor: theme.colors.primary },
@@ -77,23 +87,32 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
                         <Text style={styles.buttonText}>Next Quizz</Text>
                     </TouchableRipple>
                 </Surface>}
+        </View>
 
-        </Surface>
     );
 };
 
 const styles = StyleSheet.create({
 
+    container1: {
+        flex: 1,
+        marginTop: 20,
+        marginBottom: 20,
+       width: '90%', 
+       height: '90%', 
+   },
+
     container: {
-         flex: 1,
-         marginTop: 20,
-         marginBottom: 20,
+        backgroundColor:'#fff',
+
+        flex: 1,
+         height:'100%',
+         width:'100%',
          alignItems: "center",
          justifyContent:'space-between',
-        width: "90%", 
         borderRadius: 10,
         padding: 20,
-        paddingBottom:0
+        paddingBottom:0,
     },
     header: {
         fontWeight: "bold",
@@ -107,13 +126,14 @@ const styles = StyleSheet.create({
     },
     completeSentenceQuiz:{
         fontSize: 25,
-        marginBottom:25,
+        marginBottom:45,
     },
     content: {
         flexGrow:1,
         flex:1,
         width:'100%',
-        alignItems: "stretch",
+        padding:10
+        // alignItems: "stretch",
         // justifyContent:'center',
     },
     option: {

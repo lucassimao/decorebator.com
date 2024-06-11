@@ -27,7 +27,7 @@ func (h *QuizHandlers) Create(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, challenge)
+	c.JSON(http.StatusOK, challenge)
 }
 
 type SaveInput struct {

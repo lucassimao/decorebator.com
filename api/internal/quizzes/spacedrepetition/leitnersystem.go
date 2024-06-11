@@ -16,22 +16,38 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64, error) {
+func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64, int64, error) {
 	// Grouping by box_id and getting the earliest updated_at
 	query := `
-		WITH earliest_per_box AS (
-			SELECT DISTINCT ON (lst.box_id) def.id,lst.id AS lst_id, def.token, def.part_of_speech, def.meaning, def.examples, def.inflections , lst.updated_at
-				FROM leitner_system_tracking lst 
-			JOIN definitions def ON lst.definition_id = def.id
-			JOIN word_definitions wd ON def.id = wd.definition_id
+		-- rouding robin by updated_at
+		WITH words_queue AS (
+			SELECT wd.word_id, max(lst.updated_at) max_lst_updated_at
+			FROM leitner_system_tracking lst
+			JOIN word_definitions wd ON wd.definition_id = lst.definition_id
 			JOIN words w ON wd.word_id = w.id
 			WHERE 
-				lst.user_id =$1 AND w.wordlist_id=$2 AND def.meaning IS NOT NULL AND array_length(def.examples,1) > 0
+				w.user_id =$1 AND w.wordlist_id=$2 
+			GROUP BY 
+				wd.word_id
 			ORDER BY
-				lst.box_id, lst.updated_at ASC NULLS FIRST
+				max_lst_updated_at ASC NULLS FIRST
+			LIMIT 1
+		),
+		earliest_per_box AS (
+			SELECT def.id, lst.id AS lst_id, def.token, 
+					def.part_of_speech,  def.meaning, def.examples, def.inflections , lst.box_id
+			FROM leitner_system_tracking lst 
+			JOIN definitions def ON lst.definition_id = def.id
+			JOIN word_definitions wd ON def.id = wd.definition_id
+			WHERE 
+				lst.user_id = $1
+				AND wd.word_id = (select word_id FROM words_queue)
+				--AND def.meaning IS NOT NULL AND array_length(def.examples,1) > 0
+			ORDER BY
+				lst.box_id ASC, lst.updated_at ASC NULLS FIRST, wd.word_id ASC
 		)
-		SELECT id, token, part_of_speech, meaning, examples, inflections, lst_id
-		FROM earliest_per_box ORDER BY updated_at ASC NULLS FIRST
+		SELECT id, token, part_of_speech, meaning, examples, inflections, lst_id, box_id
+		FROM earliest_per_box 
 		LIMIT 1;
 	`
 
@@ -42,7 +58,7 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 
 	rows, err := db.Query(context.Background(), query, userID, wordlistID)
 	if err != nil {
-		return nil, -1, err
+		return nil, -1, -1, err
 	}
 
 	defer rows.Close()
@@ -50,14 +66,16 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 	rows.Next()
 	definition := definitions.Definition{}
 	var leitnerSystemID int64
+	var boxID int64
+
 	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
-		&definition.Meaning, &definition.Examples, &definition.Inflections, &leitnerSystemID)
+		&definition.Meaning, &definition.Examples, &definition.Inflections, &leitnerSystemID, &boxID)
 
 	if err != nil {
-		return nil, -1, err
+		return nil, -1, -1, err
 	}
 
-	return &definition, leitnerSystemID, nil
+	return &definition, leitnerSystemID, boxID, nil
 }
 
 func (LeitnerSystemAlgorithm) IncludeDefinitions(userID int64, definitions []definitions.Definition) error {
@@ -91,7 +109,7 @@ func (LeitnerSystemAlgorithm) IncludeDefinitions(userID int64, definitions []def
 	return nil
 }
 func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challenge, error) {
-	definition, leitnerSystemID, err := getNextDefinition(userID, wordlistID)
+	definition, leitnerSystemID, boxID, err := getNextDefinition(userID, wordlistID)
 	if err != nil {
 		log.Println("Error in CreateChallenge:", err)
 		return nil, err
@@ -102,8 +120,8 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 	var index int
 	var quizzType ChallengeType
 
-	// If the definition is even, we GENERATE a GUESS_MEANING otherwise we generate a COMPLETE_SENTENCE
-	if definition.ID%2 == 0 {
+	// boxID been odd, will make each first quiz of a definition of type GUESS_MEANING, otherwise a COMPLETE_SENTENCE
+	if boxID%2 == 1 {
 		randomMeanings, err := definitions.GetRandomMeanings([]int{int(definition.ID)}, 3)
 		if err != nil {
 			log.Println("Error getting random meanings:", err)
@@ -144,7 +162,9 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 
 func (LeitnerSystemAlgorithm) SaveChallengeResult(id int64, success bool) error {
 
-	query := `UPDATE leitner_system_tracking SET updated_at=now(), box_id = CASE WHEN $1 THEN box_id + 1 ELSE 1 END WHERE id = $2`
+	query := `UPDATE leitner_system_tracking 
+	SET updated_at=now(), box_id = CASE WHEN $1 THEN box_id + 1 ELSE box_id END 
+	WHERE id = $2`
 
 	db, err := common.GetDBConnection()
 	if err != nil {
@@ -155,5 +175,6 @@ func (LeitnerSystemAlgorithm) SaveChallengeResult(id int64, success bool) error 
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

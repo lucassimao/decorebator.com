@@ -1,5 +1,5 @@
-- Generate quiz
-    - once a word is created:
+- Backend
+    [x] once a word is created:
         [x] fetch and save definitions
         [x] insert in the quiz engine
         [x] save result
@@ -14,11 +14,22 @@
         [x] save words in lowercase
         [x] remove calls to log.Fatal in api/internal/definitions/openai/service.go
         [x] handle the case of form_of records in wiktionary
+    [ ] Quiz
+        [x] guess meaning quiz should have top priority
+        [ ] avoid options from the same word when listing them in the meaning from word quiz
+        [ ] for complete sentence quiz,  option to be replaced should be computed in the backend. Keep aware of suffixes
         [ ] quiz options are been returned more than once or even little than needed
         [ ] timeout requests if db takes longer to respond in the api
-        [ ] add sentry   
-        [ ] use structured logging 
+        [ ] "Sorry I coudn't find the word XYZ in the dictionary" been returned as quiz option
         [ ] delete wordlist associated to words
+        [ ] allow custom algorithm
+        [ ] display word tips based on links and topics in the wiktionary data ( lookup crease in wiktionary)
+    [ ] Setup redis and map each word in the wiktionary table to a list of primary key ids. Use in api/internal/definitions/wiktionary/service.go
+    [ ] use structured logging 
+    [ ] add sentry   
+    [ ] subscription
+        [ ] free user is limited to create only X wordlists with Y words
+        [ ] support paying user: limit-free account
 
 - Mobile
     [ok] signup
@@ -32,19 +43,19 @@
         [x] toolbar button to signout
         [x] display custom screen if user doesn't have wordlists
         [ ] clicking on a word should open a modal defining the clicked word
-        [ ] display word status: pending, error, no meaning found, etc
-        [ ] review mode: display words so that user can learn their meaning and usage
+        [ ] (v2) display word status: pending, error, no meaning found, etc
         [ ] (v2) display how strong is the definition of a word for an user 
-    [ ] quiz
-        [ ] make button red if clicking the wrong option
-        [ ] make button green if clicking the wrong option
-        [ ] When replacing option, be aware of suffixes 
-        [ ] button click effect with depth effects
+    [x] quiz
+        [x] make button red if clicking the wrong option
+        [x] make button green if clicking the rigth option
+        [x] button click effect with depth effects
         [x] refactoring
         [x] check keys of children components
+        [ ] display part of speech
+        [ ] (v2) report error
     [ ] add sentry    
     [ ] recover password in the login screen
-    [ ] logout
+    [x] logout
 
 - deploy
     [ ] create a docker image

@@ -43,6 +43,10 @@ func CORSMiddleware() gin.HandlerFunc {
 
 func main() {
 
+	if os.Getenv("ENV") == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	router := gin.Default()
 
 	router.Use(CORSMiddleware())
