@@ -84,12 +84,17 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 	return definitions, nil
 }
 
-func (repository *DefinitionRepository) getRandomMeanings(filterOutIds []int, limit int) ([]string, error) {
+func (repository *DefinitionRepository) getRandomMeanings(definitionIdsToIgnore []int, limit int) ([]string, error) {
+	// all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
 	query := `
-		SELECT meaning FROM definitions WHERE id != ALL($1) ORDER BY random() LIMIT $2;
+		SELECT meaning FROM definitions def
+		JOIN word_definitions wd ON wd.definition_id = def.id
+		WHERE wd.word_id NOT IN (select word_id FROM word_definitions WHERE definition_id = ANY($1)) 
+		ORDER BY random() 
+		LIMIT $2;
 	`
 
-	rows, err := repository.db.Query(context.Background(), query, filterOutIds, limit)
+	rows, err := repository.db.Query(context.Background(), query, definitionIdsToIgnore, limit)
 	defer rows.Close()
 	if err != nil {
 		log.Printf("Failed to get random meanings: %v\n", err)
@@ -147,11 +152,24 @@ func (repository *DefinitionRepository) getRandomExamples(filterOutIds []int, pa
 	return examples, nil
 }
 
-func (repository *DefinitionRepository) getRandomTokens(filterOutIds []int, partOfSpeech string, limit int) ([]string, error) {
+func (repository *DefinitionRepository) getRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, limit int) ([]string, error) {
+	// using CTE as DISTINCT couldn't be applied directly to the main query that's using ORDER BY random()
 	query := `
-		SELECT token FROM definitions WHERE part_of_speech=$1 AND id != ALL($2) ORDER BY random() LIMIT $3;
+		WITH tokens AS (
+			SELECT 
+				token
+			FROM 
+				definitions def
+			JOIN 
+				word_definitions wd ON wd.definition_id = def.id
+			WHERE 
+				part_of_speech=$1 
+				AND wd.word_id NOT IN (select word_id FROM word_definitions WHERE definition_id = ANY($2)) 
+			ORDER BY random()
+		)
+		SELECT DISTINCT token FROM tokens LIMIT $3;
 	`
-	rows, err := repository.db.Query(context.Background(), query, partOfSpeech, filterOutIds, limit)
+	rows, err := repository.db.Query(context.Background(), query, partOfSpeech, definitionIdsToIgnore, limit)
 	if err != nil {
 		log.Printf("Failed to get random tokens: %v\n", err)
 		return nil, err

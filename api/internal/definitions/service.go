@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/nlputils"
 )
 
 var repository *DefinitionRepository
@@ -26,6 +27,19 @@ func FetchAndSave(token string, tokenId int64, definerFunc TokenDefiner) ([]Defi
 		return nil, fmt.Errorf("could not define %s(%d): %w", token, tokenId, err)
 	}
 
+	// wrapping token ocurrence within [ ] inside each example
+	for _, definition := range definitions {
+		for index, example := range definition.Examples {
+			start, end, err := nlputils.FindTerm(definition.Token, example)
+			if err != nil {
+				fmt.Printf("Failed to FindTerm: %v (%s in %s)\n", err, definition.Token, example)
+				continue
+			}
+
+			definition.Examples[index] = fmt.Sprintf("%s[%s]%s", example[:start], example[start:end], example[end:])
+		}
+	}
+
 	definitions, err = repository.save(tokenId, definitions)
 	if err != nil {
 		return nil, fmt.Errorf("faild to save definitions: %w", err)
@@ -34,14 +48,14 @@ func FetchAndSave(token string, tokenId int64, definerFunc TokenDefiner) ([]Defi
 	return definitions, nil
 }
 
-func GetRandomMeanings(filterOutIds []int, size int) ([]string, error) {
-	return repository.getRandomMeanings(filterOutIds, size)
+func GetRandomMeanings(definitionIdsToIgnore []int, size int) ([]string, error) {
+	return repository.getRandomMeanings(definitionIdsToIgnore, size)
 }
 
 func GetRandomExamples(filterOutIds []int, partOfSpeech string, size int) ([]string, error) {
 	return repository.getRandomExamples(filterOutIds, partOfSpeech, size)
 }
 
-func GetRandomTokens(filterOutIds []int, partOfSpeech string, size int) ([]string, error) {
-	return repository.getRandomTokens(filterOutIds, partOfSpeech, size)
+func GetRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, size int) ([]string, error) {
+	return repository.getRandomTokens(definitionIdsToIgnore, partOfSpeech, size)
 }

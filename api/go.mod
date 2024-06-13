@@ -6,7 +6,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.9.1
 	github.com/jackc/pgx v3.6.2+incompatible
-	github.com/rs/cors v1.10.1
+	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1
 )
 
 require (

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"math/rand"
+	"regexp"
 	"time"
 
 	"decorebator.com/internal/common"
@@ -134,14 +135,22 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 	} else {
 		randomTokens, err := definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 		if err != nil {
-			log.Println("Error getting random meanings:", err)
+			log.Println("Error getting random tokens:", err)
 			return nil, err
 		}
 
 		quizzType = COMPLETE_SENTENCE
 		i := rand.Intn(len(definition.Examples))
 		value = definition.Examples[i]
-		options = append(randomTokens, definition.Token)
+
+		re := regexp.MustCompile(`\[(.*?)\]`)
+		matches := re.FindAllStringSubmatch(value, -1)
+		if len(matches) > 0 {
+			options = append(randomTokens, matches[0][1])
+		} else {
+			options = append(randomTokens, definition.Token)
+		}
+
 	}
 
 	lastItem := options[len(options)-1]

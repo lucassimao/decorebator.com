@@ -71,6 +71,7 @@ func GetExamples(token string, partOfSpeech string, number int, sense string) ([
 		{"role": "system", "content": "The JSON must have the property examples which is an array of strings."},
 		{"role": "user", "content": userPrompt},
 		{"role": "user", "content": fmt.Sprintf("All phrases must include the word %s and convey the following sense: %s", token, sense)},
+		{"role": "user", "content": fmt.Sprintf("If %s is a verb, then use its different tenses. If noum, you can use its plural or singular form.", token)},
 	}
 
 	chatResponse, err := chatGPT(messages)

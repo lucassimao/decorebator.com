@@ -19,16 +19,7 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
     let title: string;
     // Complete sentence quiz
     if (quiz.type == 1) {
-        const answer = quiz.options[quiz.answerIndex];
-        const [before, after] = quiz.value.split(answer);
-        title = [
-            before,
-            answer
-                .split("")
-                .map(() => `_`)
-                .join(""),
-            after,
-        ].join(" ");
+        title = quiz.value.replace(/\[(.*?)\]/g, (_, p1) => '_'.repeat(p1.length));
     } else {
         title = quiz.value;
     }
