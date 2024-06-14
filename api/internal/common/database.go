@@ -37,7 +37,6 @@ func GetDBConnection() (*pgxpool.Pool, error) {
 	if err := db.Ping(context.Background()); err != nil {
 		return nil, err
 	}
-
 	return db, nil
 }
 

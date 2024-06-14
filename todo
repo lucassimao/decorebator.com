@@ -19,12 +19,11 @@
         [x] avoid options from the same word when listing them in the meaning from word quiz
         [x] quiz options are been returned more than once or even little than needed
         [x] for complete sentence quiz,  option to be replaced should be computed in the backend. Keep aware of suffixes
-        [ ] timeout requests if db takes longer to respond in the api
-        [ ] "Sorry I coudn't find the word XYZ in the dictionary" been returned as quiz option
-        [ ] delete wordlist associated to words
+        [x] delete wordlist associated to words
         [ ] (v2) allow custom algorithm
         [ ] (v2) display word tips based on links and topics in the wiktionary data ( lookup crease in wiktionary)
-    [ ] Setup redis and map each word in the wiktionary table to a list of primary key ids. Use in api/internal/definitions/wiktionary/service.go
+    [ ] Setup redis and map each word in the wiktionary table to a list of primary key ids. 
+        Use in api/internal/definitions/wiktionary/service.go
     [ ] use structured logging 
     [ ] add sentry   
     [ ] subscription

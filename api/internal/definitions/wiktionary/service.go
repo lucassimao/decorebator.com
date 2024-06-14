@@ -6,10 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/definitions"
 	"decorebator.com/internal/definitions/openai"
+	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -37,6 +39,22 @@ type WiktionaryData struct {
 }
 
 func GetDefinition(token string) ([]Definition, error) {
+	redisAddr, isRedisAddrSet := os.LookupEnv("REDIS_ADDR")
+
+	if isRedisAddrSet {
+
+		cache := redis.NewClient(&redis.Options{
+			Addr:     redisAddr,
+			Password: "", // no password set
+			DB:       0,  // use default DB
+		})
+
+		result, err := cache.HGet(context.Background(), "wikitionary", token).Result()
+		if err == nil {
+			// extract definition ids here from 'result'
+		}
+	}
+
 	log.Printf("searching %s definition in wiktionary\n", token)
 
 	db, err := common.GetDBConnection()
