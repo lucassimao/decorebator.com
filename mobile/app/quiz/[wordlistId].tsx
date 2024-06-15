@@ -16,7 +16,7 @@ export default function QuizScreen() {
   const closeSnackBar = () => setSnackBarProps(null);
 
   const navigation = useNavigation();
-  
+
   React.useEffect(() => {
     navigation.setOptions({
       headerShown: true,
@@ -41,13 +41,6 @@ export default function QuizScreen() {
   const { mutate: answerQuiz, isPending } = useMutation<void, Error, boolean>({
     mutationFn: (success) =>
       wordlistsApi.answerQuiz(Number(wordlistId), Number(quiz?.id), success),
-    // onMutate: (success) => {
-    //   setSnackBarProps({
-    //     onDismiss: closeSnackBar,
-    //     message: success ? "Correct" : "Wrong",
-    //     type: success ? "success" : "error",
-    //   });
-    // },
     onError: (error) => {
       setSnackBarProps({
         onDismiss: closeSnackBar,
@@ -57,7 +50,6 @@ export default function QuizScreen() {
     },
     onSuccess: () => {
       refetch();
-      // setSnackBar(null)
     },
   });
 
@@ -74,12 +66,18 @@ export default function QuizScreen() {
   const onOptionSelected = (optionIndex: number) =>
     answerQuiz(optionIndex == quiz?.answerIndex);
 
+  const isAnyRequestPending = isPending || isLoading;
+
+  if (isAnyRequestPending) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size={"large"} animating={true} theme={theme} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {(isPending || isLoading) && (
-        <ActivityIndicator size={"large"} animating={true} theme={theme} />
-      )}
-
       {quiz && <Quiz onOptionSelected={onOptionSelected} quiz={quiz} />}
 
       {snackBarProps && <Snackbar {...snackBarProps} />}

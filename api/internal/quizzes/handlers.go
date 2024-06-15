@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"decorebator.com/internal/common"
 	sr "decorebator.com/internal/quizzes/spacedrepetition"
 	"github.com/gin-gonic/gin"
 )
@@ -23,7 +24,8 @@ func (h *QuizHandlers) Create(c *gin.Context) {
 	challenge, err := strategy.CreateChallenge(wordlistID, userId)
 
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		common.Logger.Error("failed to create quiz", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

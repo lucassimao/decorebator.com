@@ -43,7 +43,7 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 			WHERE 
 				lst.user_id = $1
 				AND wd.word_id = (select word_id FROM words_queue)
-				--AND def.meaning IS NOT NULL AND array_length(def.examples,1) > 0
+				AND def.meaning IS NOT NULL AND array_length(def.examples,1) > 0
 			ORDER BY
 				lst.box_id ASC, lst.updated_at ASC NULLS FIRST, wd.word_id ASC
 		)

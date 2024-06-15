@@ -119,9 +119,9 @@ func GetDefinition(token string) ([]Definition, error) {
 				examples = append(examples, example.Text)
 			}
 
-			// making sure that each definition has at least 5 examples
+			// fallback to chatgpt if no enough examples
 			if len(examples) < 5 {
-				additionalExamples, err := openai.GetExamples(token, jsonData.PartOfSpeech, 5-len(examples), glosses[0])
+				additionalExamples, err := openai.GetExamples(token, jsonData.PartOfSpeech, 5, glosses[0])
 
 				if err != nil {
 					logger.Error("Error getting examples from OpenAI", "error", err)

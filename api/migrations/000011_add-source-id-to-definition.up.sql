@@ -1,1 +1,1 @@
-ALTER table definitions ADD source_id varchar not null;
+ALTER table definitions ADD source_id varchar;

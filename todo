@@ -20,13 +20,16 @@
         [x] quiz options are been returned more than once or even little than needed
         [x] for complete sentence quiz,  option to be replaced should be computed in the backend. Keep aware of suffixes
         [x] delete wordlist associated to words
+        [ ] check if References in examples can be removed. August 14, 1784 ...
+        [ ] Image quiz
         [ ] (v2) allow custom algorithm
         [ ] (v2) display word tips based on links and topics in the wiktionary data ( lookup crease in wiktionary)
     [x] Setup redis and map each word in the wiktionary table to a list of primary key ids. 
         Use in api/internal/definitions/wiktionary/service.go
-    [ ] use structured logging 
+    [x] use structured logging 
     [ ] add sentry   
     [ ] subscription
+        [ ] integrate revenueCat
         [ ] free user is limited to create only X wordlists with Y words
         [ ] support paying user: limit-free account
 

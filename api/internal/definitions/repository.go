@@ -41,8 +41,8 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 
 	// Prepare the definitions insert
 	definitionsInsert := `
-        INSERT INTO definitions (token, language, part_of_speech, meaning, examples, inflections, created_at, source)
-        VALUES ($1, $2, $3, $4, $5, $6, now(), $7)
+        INSERT INTO definitions (token, language, part_of_speech, meaning, examples, inflections, created_at, source, source_id)
+        VALUES ($1, $2, $3, $4, $5, $6, now(), $7, $8)
         RETURNING id, created_at, updated_at`
 
 	wordDefinitionsInsert := `INSERT INTO word_definitions (word_id, definition_id) VALUES ($1, $2)`
@@ -52,7 +52,7 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 		var updatedAt pgtype.Timestamp
 
 		// Execute the query within the transaction
-		err := tx.QueryRow(context.Background(), definitionsInsert, def.Token, def.Language, def.PartOfSpeech, def.Meaning, def.Examples, def.Inflections, def.Source).Scan(&def.ID, &createdAt, &updatedAt)
+		err := tx.QueryRow(context.Background(), definitionsInsert, def.Token, def.Language, def.PartOfSpeech, def.Meaning, def.Examples, def.Inflections, def.Source, def.SourceId).Scan(&def.ID, &createdAt, &updatedAt)
 		if err != nil {
 			tx.Rollback(context.Background())
 			return nil, err
@@ -82,11 +82,14 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 func (repository *DefinitionRepository) getRandomMeanings(definitionIdsToIgnore []int, limit int) ([]string, error) {
 	// all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
 	query := `
-		SELECT meaning FROM definitions def
-		JOIN word_definitions wd ON wd.definition_id = def.id
-		WHERE wd.word_id NOT IN (select word_id FROM word_definitions WHERE definition_id = ANY($1)) 
-		ORDER BY random() 
-		LIMIT $2;
+		WITH options AS (
+			SELECT DISTINCT meaning FROM definitions def
+			JOIN word_definitions wd ON wd.definition_id = def.id
+			WHERE wd.word_id NOT IN (select word_id FROM word_definitions WHERE definition_id = ANY($1)) 
+			-- in order to avoid same definition from different users
+			AND def.meaning NOT IN (select meaning FROM definitions WHERE id = ANY($1)) 
+		)
+		SELECT meaning FROM options ORDER BY random() LIMIT $2;
 	`
 
 	rows, err := repository.db.Query(context.Background(), query, definitionIdsToIgnore, limit)
