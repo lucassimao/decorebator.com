@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
+	"strconv"
+	"strings"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/definitions"
 	"decorebator.com/internal/definitions/openai"
-	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v5"
+	goredis "github.com/redis/go-redis/v9"
 )
 
 // Type alias for convenience
@@ -38,39 +39,50 @@ type WiktionaryData struct {
 	Senses       []WiktionarySense `json:"senses"`
 }
 
+var redisAddr = os.Getenv("REDIS_ADDR")
+var redis = goredis.NewClient(&goredis.Options{
+	Addr:     redisAddr,
+	Password: "", // no password set
+	DB:       0,  // use default DB
+})
+
 func GetDefinition(token string) ([]Definition, error) {
-	redisAddr, isRedisAddrSet := os.LookupEnv("REDIS_ADDR")
 
-	if isRedisAddrSet {
+	var wiktionaryIds []string
+	logger := common.Logger.With("token", token, "func", "GetDefinition")
 
-		cache := redis.NewClient(&redis.Options{
-			Addr:     redisAddr,
-			Password: "", // no password set
-			DB:       0,  // use default DB
-		})
-
-		result, err := cache.HGet(context.Background(), "wikitionary", token).Result()
-		if err == nil {
-			// extract definition ids here from 'result'
-		}
+	// extract definition ids from redis
+	result, err := redis.HGet(context.Background(), "wikitionary", token).Result()
+	if err == nil {
+		wiktionaryIds = strings.Split(result, ",")
 	}
-
-	log.Printf("searching %s definition in wiktionary\n", token)
 
 	db, err := common.GetDBConnection()
 	if err != nil {
 		return nil, fmt.Errorf("could not open db connection: %w", err)
 	}
 
-	rows, err := db.Query(context.Background(), "SELECT id,word,data FROM wiktionary WHERE word = $1", token)
+	var rows pgx.Rows
+
+	if wiktionaryIds != nil {
+		logger.Debug("indexes found in redis", "indexes", wiktionaryIds)
+		rows, err = db.Query(context.Background(), "SELECT id,word,data FROM wiktionary WHERE id = ANY($1)", wiktionaryIds)
+	} else {
+		logger.Debug("searching definition in db")
+		rows, err = db.Query(context.Background(), "SELECT id,word,data FROM wiktionary WHERE word = $1", token)
+	}
+
+	defer rows.Close()
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			fmt.Printf("no definition for %s in wiktionary\n", token)
+			logger.Debug("no definition found in db", "token", token)
 			return nil, nil
+		} else {
+			logger.Error("error reading from db", "error", err)
 		}
-		return nil, fmt.Errorf("error reading from wiktionary: %w", err)
+		return nil, fmt.Errorf("error reading from wiktionary")
 	}
-	defer rows.Close()
 
 	var definitions []Definition
 	for rows.Next() {
@@ -93,7 +105,7 @@ func GetDefinition(token string) ([]Definition, error) {
 			var glosses = sense.Glosses
 			var examples []string
 
-			// if the token is any form of a verb, then get the definition of the verb instead
+			// if the token is any form of a verb, then get the definition of the verb too
 			if len(sense.FormOf) > 0 && jsonData.PartOfSpeech == "verb" {
 				verbDefinitions, err := GetDefinition(sense.FormOf[0].Word)
 				if err != nil {
@@ -112,13 +124,13 @@ func GetDefinition(token string) ([]Definition, error) {
 				additionalExamples, err := openai.GetExamples(token, jsonData.PartOfSpeech, 5-len(examples), glosses[0])
 
 				if err != nil {
-					log.Fatalf("Error getting examples from OpenAI: %v", err)
+					logger.Error("Error getting examples from OpenAI", "error", err)
 				} else {
 					examples = append(examples, additionalExamples...)
 				}
 			}
 
-			fmt.Printf("Examples: %v\n", examples)
+			logger.Debug("Examples collected", "count", len(examples))
 
 			var definition Definition
 			definition.Token = token
@@ -127,11 +139,20 @@ func GetDefinition(token string) ([]Definition, error) {
 			definition.PartOfSpeech = jsonData.PartOfSpeech
 			definition.Language = jsonData.Language
 			definition.Source = "wiktionary"
+			definition.SourceId = strconv.Itoa(id)
 
 			definitions = append(definitions, definition)
 		}
 	}
 
-	log.Printf("%d definitions for %s found in wiktionary\n", len(definitions), token)
+	// serializing a set of definition ids as a comma-separated string of numbers
+	set := common.NewSet()
+	for _, v := range definitions {
+		set.Add(v.SourceId)
+	}
+	cachedValue := strings.Join(set.Values(), ",")
+	redis.HSet(context.Background(), "wikitionary", token, cachedValue).Result()
+
+	logger.Debug("finished GetDefinition", "count", len(definitions))
 	return definitions, nil
 }

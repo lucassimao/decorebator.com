@@ -2,7 +2,6 @@ package words
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -24,8 +23,8 @@ func (h *WordsHandlers) GetAll(c *gin.Context) {
 
 	words, err := GetWordsFromWordlist(wordlistId, userId)
 	if err != nil {
-		log.Println("Error in GetAll:", err)
-		c.String(http.StatusInternalServerError, "Couldn't get user words")
+		common.Logger.Error("failed to get words", "error", err, "userId", userId, "wordlistId", wordlistId)
+		c.String(http.StatusInternalServerError, "Could not get user words")
 		return
 	}
 	c.IndentedJSON(http.StatusOK, words)

@@ -22,7 +22,7 @@
         [x] delete wordlist associated to words
         [ ] (v2) allow custom algorithm
         [ ] (v2) display word tips based on links and topics in the wiktionary data ( lookup crease in wiktionary)
-    [ ] Setup redis and map each word in the wiktionary table to a list of primary key ids. 
+    [x] Setup redis and map each word in the wiktionary table to a list of primary key ids. 
         Use in api/internal/definitions/wiktionary/service.go
     [ ] use structured logging 
     [ ] add sentry   

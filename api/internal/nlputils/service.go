@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"decorebator.com/internal/common"
 	"github.com/xrash/smetrics"
 )
 
@@ -50,7 +51,7 @@ func FindTerm(word, phrase string) (int, int, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("received non-200 status code: %d\n", resp.StatusCode)
+		common.Logger.Debug("[nlputils] non-200 status code. Using Wagner-Fischer")
 		start, end := findClosestMatch(phrase, word)
 		return start, end, nil
 	}

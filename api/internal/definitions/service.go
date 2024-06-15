@@ -2,7 +2,7 @@ package definitions
 
 import (
 	"fmt"
-	"log"
+	"os"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/nlputils"
@@ -13,7 +13,8 @@ var repository *DefinitionRepository
 func init() {
 	db, err := common.GetDBConnection()
 	if err != nil {
-		log.Fatal("failed to open db connection: ", err)
+		common.Logger.Error("failed to open db connection: ", "error", err)
+		os.Exit(1)
 	}
 	repository = &DefinitionRepository{db}
 }
@@ -32,7 +33,7 @@ func FetchAndSave(token string, tokenId int64, definerFunc TokenDefiner) ([]Defi
 		for index, example := range definition.Examples {
 			start, end, err := nlputils.FindTerm(definition.Token, example)
 			if err != nil {
-				fmt.Printf("Failed to FindTerm: %v (%s in %s)\n", err, definition.Token, example)
+				common.Logger.Warn("failed to find term", "error", err, "token", definition.Token, "example", example)
 				continue
 			}
 

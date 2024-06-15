@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 
+	"decorebator.com/internal/common"
 	"decorebator.com/internal/definitions"
 )
 
@@ -46,8 +46,6 @@ func chatGPT(messages []map[string]string) (*ChatCompletionResponse, error) {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	// fmt.Printf("Response: %v\n", string(body))
-
 	var chatResponse ChatCompletionResponse
 	err = json.Unmarshal(body, &chatResponse)
 	if err != nil {
@@ -75,7 +73,8 @@ func GetExamples(token string, partOfSpeech string, number int, sense string) ([
 	}
 
 	chatResponse, err := chatGPT(messages)
-	// fmt.Printf("Response: %v\n", chatResponse)
+	debugCtx := []any{"token", token, "pos", partOfSpeech, "sense", sense, "number", number}
+	common.Logger.Debug("generating chatgpt examples", debugCtx...)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get examples from ChatGPT: %w", err)
@@ -95,7 +94,9 @@ func GetExamples(token string, partOfSpeech string, number int, sense string) ([
 }
 
 func GetDefinition(token string) ([]definitions.Definition, error) {
-	log.Printf("searching %s definition in chatGPT\n", token)
+	logger := common.Logger.With("token", token, "func", "GetDefinition", "package", "openai")
+
+	logger.Debug("searching definition using chatgpt")
 
 	userMessage := fmt.Sprintf("Give me the meaning, part of speech and 5 example phrases of the word %s.", token)
 	messages := []map[string]string{
@@ -120,9 +121,9 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 	var openAIDefinition OpenAPIDefinition
 	err = json.Unmarshal([]byte(firstDefinition), &openAIDefinition)
 	if err != nil {
-		log.Fatalf("Error unmarshalling definition: %v", err)
+		logger.Error("error unmarshalling definition", "error", err)
+		return nil, fmt.Errorf("failed to get definitions from ChatGPT: %w", err)
 	}
-	// log.Printf("%v\n", openAIDefinition)
 
 	for index := range openAIDefinition.Results {
 		openAIDefinition.Results[index].Language = "en"
@@ -130,6 +131,6 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 		openAIDefinition.Results[index].Source = "ChatGPT"
 	}
 
-	log.Printf("%d definitions found for %s in chatGPT\n", len(openAIDefinition.Results), token)
+	logger.Debug("definitions found in chatGPT", "count", len(openAIDefinition.Results))
 	return openAIDefinition.Results, nil
 }

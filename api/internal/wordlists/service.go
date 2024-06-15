@@ -2,7 +2,7 @@ package wordlists
 
 import (
 	"errors"
-	"log"
+	"os"
 
 	"decorebator.com/internal/common"
 )
@@ -12,7 +12,8 @@ var repository *WordlistRepository
 func init() {
 	db, err := common.GetDBConnection()
 	if err != nil {
-		log.Fatal("failed to open db connection: ", err)
+		common.Logger.Error("failed to open db connection", "error", err)
+		os.Exit(1)
 	}
 	repository = &WordlistRepository{db}
 }
@@ -23,8 +24,8 @@ func GetUserWordlists(userId int64) ([]*Wordlist, error) {
 	}
 	result, err := repository.find(args)
 	if err != nil {
-		log.Println("Failure at GetUserWordlists:", err)
-		return nil, errors.New("Could not get user wordlists")
+		common.Logger.Error("failed to get wordlists", "error", err, "userId", userId)
+		return nil, errors.New("could not get user wordlists")
 	}
 	return result, nil
 }
@@ -32,8 +33,8 @@ func GetUserWordlists(userId int64) ([]*Wordlist, error) {
 func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
 	wordlist, err := repository.save(newWordlist.Name, newWordlist.Description, newWordlist.UserID)
 	if err != nil {
-		log.Println("Failure at SaveWordlist:", err)
-		return nil, errors.New("Could not save your wordlist")
+		common.Logger.Error("failed to save wordlist", "error", err)
+		return nil, errors.New("could not save your wordlist")
 	}
 	return wordlist, nil
 }
@@ -45,8 +46,8 @@ func GetWordlistById(id, userId int64) (*Wordlist, error) {
 	}
 	result, err := repository.find(args)
 	if err != nil {
-		log.Println("Failure in GetWordlistById:", err)
-		return nil, errors.New("Failed to find wordlist")
+		common.Logger.Error("failed to get wordlist", "error", err, "wordlistId", id)
+		return nil, errors.New("failed to find wordlist")
 	}
 
 	if len(result) != 1 {
@@ -60,8 +61,8 @@ func GetWordlistById(id, userId int64) (*Wordlist, error) {
 func DeleteWordlist(id, userId int64) (int64, error) {
 	count, err := repository.delete(id, userId)
 	if err != nil {
-		log.Println("Failure in DeleteWordlist:", err)
-		return 0, errors.New("Failed to delete wordlist")
+		common.Logger.Error("failed to delete wordlist", "error", err, "wordlistId", id)
+		return 0, errors.New("gailed to delete wordlist")
 	}
 
 	if count == 0 {
@@ -74,8 +75,8 @@ func DeleteWordlist(id, userId int64) (int64, error) {
 func UpdateWordlist(wordlist *Wordlist) error {
 	count, err := repository.update(wordlist)
 	if err != nil {
-		log.Println("Failure in UpdateWordlist:", err)
-		return errors.New("Failed to update wordlist")
+		common.Logger.Error("failed to update wordlist", "error", err, "wordlistId", wordlist.ID)
+		return errors.New("failed to update wordlist")
 	}
 
 	if count == 0 {

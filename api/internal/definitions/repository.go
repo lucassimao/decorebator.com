@@ -2,7 +2,6 @@ package definitions
 
 import (
 	"context"
-	"log"
 
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -23,6 +22,7 @@ type Definition struct {
 	Examples     []string     `json:"examples"`
 	Inflections  []Inflection `json:"inflections"`
 	Source       string
+	SourceId     string
 
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
@@ -36,7 +36,6 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 	// Start a transaction
 	tx, err := repository.db.Begin(context.Background())
 	if err != nil {
-		log.Printf("Error while starting tx %v\n", err)
 		return nil, err
 	}
 
@@ -56,7 +55,6 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 		err := tx.QueryRow(context.Background(), definitionsInsert, def.Token, def.Language, def.PartOfSpeech, def.Meaning, def.Examples, def.Inflections, def.Source).Scan(&def.ID, &createdAt, &updatedAt)
 		if err != nil {
 			tx.Rollback(context.Background())
-			log.Printf("Failed definitions insert: %v\n", err)
 			return nil, err
 		}
 
@@ -69,15 +67,12 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 
 		if err != nil {
 			tx.Rollback(context.Background())
-			log.Printf("Failed to insert into word_definition %v %v %v\n", tokenId, def.ID, err)
 			return nil, err
 		}
 
 	}
 
-	// Commit the transaction
 	if err := tx.Commit(context.Background()); err != nil {
-		log.Printf("Failed word_definitions insert: %v\n", err)
 		return nil, err
 	}
 
@@ -95,11 +90,10 @@ func (repository *DefinitionRepository) getRandomMeanings(definitionIdsToIgnore 
 	`
 
 	rows, err := repository.db.Query(context.Background(), query, definitionIdsToIgnore, limit)
-	defer rows.Close()
 	if err != nil {
-		log.Printf("Failed to get random meanings: %v\n", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	var meanings []string
 	for rows.Next() {
@@ -134,7 +128,6 @@ func (repository *DefinitionRepository) getRandomExamples(filterOutIds []int, pa
 	`
 	rows, err := repository.db.Query(context.Background(), query, partOfSpeech, filterOutIds, limit)
 	if err != nil {
-		log.Printf("Failed to get random examples: %v\n", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -144,7 +137,6 @@ func (repository *DefinitionRepository) getRandomExamples(filterOutIds []int, pa
 		var example string
 		err = rows.Scan(&example)
 		if err != nil {
-			log.Printf("Failed to scan results from random meanings: %v\n", err)
 			return nil, err
 		}
 		examples = append(examples, example)
@@ -171,7 +163,6 @@ func (repository *DefinitionRepository) getRandomTokens(definitionIdsToIgnore []
 	`
 	rows, err := repository.db.Query(context.Background(), query, partOfSpeech, definitionIdsToIgnore, limit)
 	if err != nil {
-		log.Printf("Failed to get random tokens: %v\n", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -181,7 +172,6 @@ func (repository *DefinitionRepository) getRandomTokens(definitionIdsToIgnore []
 		var token string
 		err = rows.Scan(&token)
 		if err != nil {
-			log.Printf("Failed to scan results from random tokens: %v\n", err)
 			return nil, err
 		}
 		tokens = append(tokens, token)

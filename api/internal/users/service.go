@@ -3,7 +3,6 @@ package users
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -54,7 +53,8 @@ func generateJWT(user User) (string, error) {
 func init() {
 	db, err := common.GetDBConnection()
 	if err != nil {
-		log.Fatal("failed to open db connection: ", err)
+		common.Logger.Error("failed to open db connection", "error", err)
+		os.Exit(1)
 	}
 	repository = &UserRepository{db}
 }
@@ -62,7 +62,7 @@ func init() {
 func SaveUser(firstName, lastName, password, email string) (*User, error) {
 	user, err := repository.save(firstName, lastName, password, email)
 	if err != nil {
-		log.Println("failed to save new user:", err)
+		common.Logger.Error("failed to save new user", "error", err)
 		switch err.(type) {
 		case common.BusinessError:
 			return nil, err
@@ -81,8 +81,8 @@ func LoginUser(email, password string) (string, error) {
 	}
 	results, err := repository.find(args)
 	if err != nil {
-		log.Println("Failure at LoginUser:", err)
-		return "", errors.New("could not start process login. Try again later")
+		common.Logger.Error("failed to login user", "error", err)
+		return "", errors.New("could not process your request. Try again later")
 	}
 
 	if len(results) != 1 {

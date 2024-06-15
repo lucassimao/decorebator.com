@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"decorebator.com/internal/common"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -118,7 +119,7 @@ func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
 		c.SetCookie("Authorization", jwtToken, int(maxAge), path, domain, secure, httpOnly)
 	} else {
 		// clear cookie
-		fmt.Println("Clearing authorization cookie")
+		common.Logger.Debug("Clearing authorization cookie")
 		c.SetCookie("Authorization", "", int(-1), path, domain, secure, httpOnly)
 	}
 }

@@ -2,8 +2,8 @@ package spacedrepetion
 
 import (
 	"context"
-	"log"
 	"math/rand"
+	"os"
 	"regexp"
 	"time"
 
@@ -54,7 +54,8 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 
 	db, err := common.GetDBConnection()
 	if err != nil {
-		log.Fatal("failed to open db connection: ", err)
+		common.Logger.Error("failed to open db connection", "error", err)
+		os.Exit(1)
 	}
 
 	rows, err := db.Query(context.Background(), query, userID, wordlistID)
@@ -82,7 +83,8 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 func (LeitnerSystemAlgorithm) IncludeDefinitions(userID int64, definitions []definitions.Definition) error {
 	db, err := common.GetDBConnection()
 	if err != nil {
-		log.Fatal("failed to open db connection:", err)
+		common.Logger.Error("failed to open db connection", "error", err)
+		os.Exit(1)
 	}
 
 	tx, err := db.Begin(context.Background())
@@ -96,7 +98,6 @@ func (LeitnerSystemAlgorithm) IncludeDefinitions(userID int64, definitions []def
 
 		_, err := tx.Exec(context.Background(), query, userID, definition.ID, 1)
 		if err != nil {
-			log.Printf("Failed to insert definition %v into leitner_system_tracking: %v\n", definition, err)
 			tx.Rollback(context.Background())
 			return err
 		}
@@ -112,7 +113,6 @@ func (LeitnerSystemAlgorithm) IncludeDefinitions(userID int64, definitions []def
 func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challenge, error) {
 	definition, leitnerSystemID, boxID, err := getNextDefinition(userID, wordlistID)
 	if err != nil {
-		log.Println("Error in CreateChallenge:", err)
 		return nil, err
 	}
 
@@ -125,7 +125,6 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 	if boxID%2 == 1 {
 		randomMeanings, err := definitions.GetRandomMeanings([]int{int(definition.ID)}, 3)
 		if err != nil {
-			log.Println("Error getting random meanings:", err)
 			return nil, err
 		}
 
@@ -135,7 +134,6 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 	} else {
 		randomTokens, err := definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 		if err != nil {
-			log.Println("Error getting random tokens:", err)
 			return nil, err
 		}
 
@@ -177,7 +175,8 @@ func (LeitnerSystemAlgorithm) SaveChallengeResult(id int64, success bool) error 
 
 	db, err := common.GetDBConnection()
 	if err != nil {
-		log.Fatal("failed to open db connection:", err)
+		common.Logger.Error("failed to open db connection", "error", err)
+		os.Exit(1)
 	}
 
 	_, err = db.Exec(context.Background(), query, success, id)
