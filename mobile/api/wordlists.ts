@@ -1,5 +1,5 @@
-import * as SecureStore from "expo-secure-store";
-import { AUTH_REQUIRED_ERROR, DEFAULT_ERROR, getAuthorization } from "./users";
+import { AUTH_REQUIRED_ERROR, DEFAULT_ERROR, callAPI } from "./api";
+import { getAuthorization } from "./users";
 
 export type Wordlist = {
   createdAt: string;
@@ -29,28 +29,7 @@ export type CreateWordlistDTO = Pick<Wordlist, "description" | "name">;
 
 export async function getUserWordlists() {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/wordlists";
-  const authorization = getAuthorization();
-
-  if (!authorization) {
-    throw new Error(AUTH_REQUIRED_ERROR);
-  }
-
-  const response = await fetch(endpoint, {
-    method: "GET",
-    headers: {
-      authorization,
-    },
-
-    credentials: "include",
-  });
-  const body = await response.json();
-  if (!response.ok) {
-    const message =
-      body?.error ||
-      Object.values(body?.validationErrors)?.[0] ||
-      DEFAULT_ERROR;
-    throw new Error(message);
-  }
+  const body = await callAPI("GET", endpoint);
   return body;
 }
 

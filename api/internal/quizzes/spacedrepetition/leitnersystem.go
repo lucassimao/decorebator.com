@@ -2,6 +2,7 @@ package spacedrepetion
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"os"
 	"regexp"
@@ -36,7 +37,8 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 		),
 		earliest_per_box AS (
 			SELECT def.id, lst.id AS lst_id, def.token, 
-					def.part_of_speech,  def.meaning, def.examples, def.inflections , lst.box_id
+					def.part_of_speech,  def.meaning, def.examples, 
+					def.inflections , lst.box_id, def.sounds, def.phonetic_notations
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
 			JOIN word_definitions wd ON def.id = wd.definition_id
@@ -47,7 +49,7 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 			ORDER BY
 				lst.box_id ASC, lst.updated_at ASC NULLS FIRST, wd.word_id ASC
 		)
-		SELECT id, token, part_of_speech, meaning, examples, inflections, lst_id, box_id
+		SELECT id, token, part_of_speech, meaning, examples, inflections, lst_id, box_id, sounds,phonetic_notations
 		FROM earliest_per_box 
 		LIMIT 1;
 	`
@@ -71,7 +73,9 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 	var boxID int64
 
 	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
-		&definition.Meaning, &definition.Examples, &definition.Inflections, &leitnerSystemID, &boxID)
+		&definition.Meaning, &definition.Examples,
+		&definition.Inflections, &leitnerSystemID, &boxID, &definition.Sounds,
+		&definition.PhoneticNotations)
 
 	if err != nil {
 		return nil, -1, -1, err
@@ -122,6 +126,7 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 	var quizzType ChallengeType
 
 	// boxID been odd, will make each first quiz of a definition of type GUESS_MEANING, otherwise a COMPLETE_SENTENCE
+	fmt.Printf("box id %v leitnerSystemID %v", boxID, leitnerSystemID)
 	if boxID%2 == 1 {
 		randomMeanings, err := definitions.GetRandomMeanings([]int{int(definition.ID)}, 3)
 		if err != nil {
@@ -132,6 +137,7 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 		value = definition.Token
 		options = append(randomMeanings, definition.Meaning)
 	} else {
+		fmt.Println("def %v", definition)
 		randomTokens, err := definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
@@ -157,11 +163,14 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 	options[index] = lastItem
 
 	challenge := &Challenge{
-		Value:       value,
-		Options:     options,
-		AnswerIndex: index,
-		ID:          leitnerSystemID,
-		Type:        quizzType,
+		Value:        value,
+		Options:      options,
+		AnswerIndex:  index,
+		ID:           leitnerSystemID,
+		Type:         quizzType,
+		Sounds:       definition.Sounds,
+		Notations:    definition.PhoneticNotations,
+		PartOfSpeech: definition.PartOfSpeech,
 	}
 
 	return challenge, nil

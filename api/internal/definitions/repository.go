@@ -2,7 +2,10 @@ package definitions
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 
+	"decorebator.com/internal/common"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -13,16 +16,36 @@ type Inflection struct {
 	Examples   []string `json:"examples"`
 }
 
+type Accent string
+
+const (
+	US     Accent = "US"
+	CANADA Accent = "CA"
+	UK     Accent = "UK"
+)
+
+type Sound struct {
+	Accent Accent `json:"accent"`
+	Link   string `json:"link"`
+}
+
+type PhoneticNotation struct {
+	Ipa    string `json:"ipa"`
+	Accent Accent `json:"accent"`
+}
+
 type Definition struct {
-	ID           int64
-	Token        string
-	Language     string
-	Meaning      string       `json:"meaning"`
-	PartOfSpeech string       `json:"part_of_speech"`
-	Examples     []string     `json:"examples"`
-	Inflections  []Inflection `json:"inflections"`
-	Source       string
-	SourceId     string
+	ID                int64
+	Token             string
+	Language          string
+	Meaning           string       `json:"meaning"`
+	PartOfSpeech      string       `json:"part_of_speech"`
+	Examples          []string     `json:"examples"`
+	Inflections       []Inflection `json:"inflections"`
+	Source            string
+	SourceId          string
+	Sounds            []Sound
+	PhoneticNotations []PhoneticNotation
 
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
@@ -41,8 +64,10 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 
 	// Prepare the definitions insert
 	definitionsInsert := `
-        INSERT INTO definitions (token, language, part_of_speech, meaning, examples, inflections, created_at, source, source_id)
-        VALUES ($1, $2, $3, $4, $5, $6, now(), $7, $8)
+        INSERT INTO 
+			definitions (token, language, part_of_speech, meaning, 	examples, inflections, source, 
+						source_id,sounds,phonetic_notations)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,$10)
         RETURNING id, created_at, updated_at`
 
 	wordDefinitionsInsert := `INSERT INTO word_definitions (word_id, definition_id) VALUES ($1, $2)`
@@ -51,9 +76,21 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 		var createdAt pgtype.Timestamp
 		var updatedAt pgtype.Timestamp
 
+		// remove invalid utf8 chars
+		for index, example := range def.Examples {
+			def.Examples[index] = strings.ToValidUTF8(example, "")
+		}
+
+		meaning := strings.ToValidUTF8(def.Meaning, "")
+
 		// Execute the query within the transaction
-		err := tx.QueryRow(context.Background(), definitionsInsert, def.Token, def.Language, def.PartOfSpeech, def.Meaning, def.Examples, def.Inflections, def.Source, def.SourceId).Scan(&def.ID, &createdAt, &updatedAt)
+		err := tx.QueryRow(context.Background(), definitionsInsert, def.Token,
+			def.Language, def.PartOfSpeech, meaning, def.Examples, def.Inflections,
+			def.Source, def.SourceId, def.Sounds, def.PhoneticNotations).Scan(&def.ID, &createdAt, &updatedAt)
+
 		if err != nil {
+			jsonString, _ := json.Marshal(def)
+			common.Logger.Error("failed to insert definition", "definition", jsonString, "tokenId", tokenId)
 			tx.Rollback(context.Background())
 			return nil, err
 		}
@@ -66,6 +103,7 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 		_, err = tx.Exec(context.Background(), wordDefinitionsInsert, tokenId, def.ID)
 
 		if err != nil {
+			common.Logger.Error("failed to insert word_definition", "def.ID", def.ID, "tokenId", tokenId)
 			tx.Rollback(context.Background())
 			return nil, err
 		}

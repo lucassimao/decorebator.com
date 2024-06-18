@@ -1,6 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 import * as jwt from "./jwt";
 import { Platform } from "react-native";
+import { AUTH_REQUIRED_ERROR, DEFAULT_ERROR } from "./api";
 
 export type UserSignup = {
   firstName: string;
@@ -20,8 +21,6 @@ export type UserInfo = {
   id: number;
 };
 
-export const AUTH_REQUIRED_ERROR = "Authentication required.";
-export const DEFAULT_ERROR = "Could not process your request.";
 export const SIGN_IN_ERROR =
   "Invalid credentials. Are you using the correct email and password?";
 

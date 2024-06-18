@@ -20,6 +20,8 @@
         [x] quiz options are been returned more than once or even little than needed
         [x] for complete sentence quiz,  option to be replaced should be computed in the backend. Keep aware of suffixes
         [x] delete wordlist associated to words
+        [x] send pronounciation link, ipa and pos
+        [ ] new quiz: word from meaning
         [ ] check if References in examples can be removed. August 14, 1784 ...
         [ ] Image quiz
         [ ] (v2) allow custom algorithm
@@ -32,6 +34,8 @@
         [ ] integrate revenueCat
         [ ] free user is limited to create only X wordlists with Y words
         [ ] support paying user: limit-free account
+            [ ] monthly subscription
+            [ ] anual subscription
 
 - Mobile
     [ok] signup
@@ -45,6 +49,7 @@
         [x] toolbar button to signout
         [x] display custom screen if user doesn't have wordlists
         [ ] clicking on a word should open a modal defining the clicked word
+        [ ] add word modal - save and add more
         [ ] (v2) display word status: pending, error, no meaning found, etc
         [ ] (v2) display how strong is the definition of a word for an user 
     [x] quiz
@@ -54,8 +59,11 @@
         [x] refactoring
         [x] check keys of children components
         [ ] display part of speech
+        [ ] fast quiz
+        [ ] listen pronounciation
         [ ] (v2) report error
     [ ] add sentry    
+    [ ] use callApi instead of fetch directly
     [ ] recover password in the login screen
     [x] logout
 

@@ -63,9 +63,9 @@ func GetExamples(token string, partOfSpeech string, number int, sense string) ([
 	var userPrompt = fmt.Sprintf("Give me %d random different phrases exemplifying the usage of the word %s as a %s.", number, token, partOfSpeech)
 	var messages = []map[string]string{
 		{"role": "system", "content": "You are a creative dictionary assistant designed to output JSON."},
-		{"role": "system", "content": "The resulting JSON should be an object with single property named Examples."},
-		{"role": "system", "content": "The property Examples has as value an array of strings. Each string is a phrase."},
-		{"role": "system", "content": "Each phrase must have at least 3 words."},
+		{"role": "system", "content": "The resulting JSON should be an object with a single property named Examples."},
+		{"role": "system", "content": "The property Examples is an array of strings. Each string is a phrase."},
+		{"role": "system", "content": "Each phrase must be well structured, including subject and verb. Be creative."},
 		{"role": "system", "content": "The JSON must have the property examples which is an array of strings."},
 		{"role": "user", "content": userPrompt},
 		{"role": "user", "content": fmt.Sprintf("All phrases must include the word %s and convey the following sense: %s", token, sense)},

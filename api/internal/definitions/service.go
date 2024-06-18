@@ -43,7 +43,7 @@ func FetchAndSave(token string, tokenId int64, definerFunc TokenDefiner) ([]Defi
 
 	definitions, err = repository.save(tokenId, definitions)
 	if err != nil {
-		return nil, fmt.Errorf("faild to save definitions: %w", err)
+		return nil, fmt.Errorf("failed to save definitions: %w", err)
 	}
 
 	return definitions, nil

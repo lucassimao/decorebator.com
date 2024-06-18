@@ -18,6 +18,13 @@ import (
 
 // Type alias for convenience
 type Definition = definitions.Definition
+type PhoneticNotation = definitions.PhoneticNotation
+type Sound = definitions.Sound
+type Accent = definitions.Accent
+
+var US = definitions.US
+var CA = definitions.CANADA
+var UK = definitions.UK
 
 type WiktionaryExample struct {
 	Text string `json:"text"`
@@ -32,11 +39,24 @@ type WiktionarySense struct {
 	Examples []WiktionaryExample `json:"examples"`
 	FormOf   []FormOf            `json:"form_of"`
 }
+
+// represents an individual sound entry in the JSON
+type WiktionarySound struct {
+	IPA    string   `json:"ipa,omitempty"`
+	Rhymes string   `json:"rhymes,omitempty"`
+	Tags   []string `json:"tags,omitempty"`
+	Text   string   `json:"text,omitempty"`
+	Audio  string   `json:"audio,omitempty"`
+	MP3URL string   `json:"mp3_url,omitempty"`
+	OGGURL string   `json:"ogg_url,omitempty"`
+}
+
 type WiktionaryData struct {
 	PartOfSpeech string            `json:"pos"`
 	Language     string            `json:"lang"`
 	Word         string            `json:"word"`
 	Senses       []WiktionarySense `json:"senses"`
+	Sounds       []WiktionarySound `json:"sounds"`
 }
 
 var redisAddr = os.Getenv("REDIS_ADDR")
@@ -140,6 +160,32 @@ func GetDefinition(token string) ([]Definition, error) {
 			definition.Language = jsonData.Language
 			definition.Source = "wiktionary"
 			definition.SourceId = strconv.Itoa(id)
+
+			for _, v := range jsonData.Sounds {
+				logger.Debug("Processing sound", "sound", v)
+				var accent Accent
+				if len(v.Tags) > 0 {
+					switch v.Tags[0] {
+					case "Canada":
+						accent = CA
+					case "General-American", "US":
+						accent = US
+					case "Received-Pronunciation", "UK":
+						accent = UK
+					default:
+						logger.Warn("Invalid sound tag", "ipa", v.IPA, "tags", v.Tags)
+					}
+				}
+				if v.IPA != "" {
+					definition.PhoneticNotations = append(definition.PhoneticNotations, PhoneticNotation{Ipa: v.IPA, Accent: accent})
+				}
+				if v.MP3URL != "" {
+					definition.Sounds = append(definition.Sounds, Sound{Accent: accent, Link: v.MP3URL})
+				}
+				if v.OGGURL != "" {
+					definition.Sounds = append(definition.Sounds, Sound{Accent: accent, Link: v.OGGURL})
+				}
+			}
 
 			definitions = append(definitions, definition)
 		}
