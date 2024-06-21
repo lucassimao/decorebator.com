@@ -7,14 +7,20 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { Surface, TouchableRipple, useTheme } from "react-native-paper";
+import {
+  ActivityIndicator,
+  Surface,
+  TouchableRipple,
+  useTheme,
+} from "react-native-paper";
 
 type Props = {
   quiz: wordlistsApi.Quiz;
   onOptionSelected: (optionIndex: number) => void;
+  isAnsweringQuiz: boolean;
 };
 
-const Quiz = ({ quiz, onOptionSelected }: Props) => {
+const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
   const { fontScale } = useWindowDimensions();
   const styles = makeStyles(fontScale); // pass in fontScale to the StyleSheet
   const theme = useTheme();
@@ -56,6 +62,7 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
             {title}
           </Text>
 
+          {/* rendering option buttons */}
           {quiz.options.map((option, index) => (
             <Surface
               theme={theme}
@@ -78,21 +85,24 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
                 style={{ padding: 20 }}
                 disabled={selectedIndex != null}
                 theme={theme}
-                rippleColor={theme.colors.inversePrimary}
                 onPress={() => setSelectedIndex(index)}
               >
-                <Text
-                  style={[
-                    styles.buttonText,
-                    selectedIndex != null &&
-                    selectedIndex != index &&
-                    quiz.answerIndex == index
-                      ? { color: "green" }
-                      : null,
-                  ]}
-                >
-                  {option}
-                </Text>
+                {selectedIndex == index && isAnsweringQuiz ? (
+                  <ActivityIndicator animating={true} />
+                ) : (
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      selectedIndex != null &&
+                      selectedIndex != index &&
+                      quiz.answerIndex == index
+                        ? { color: "green" }
+                        : null,
+                    ]}
+                  >
+                    {option}
+                  </Text>
+                )}
               </TouchableRipple>
             </Surface>
           ))}

@@ -16,6 +16,9 @@ export default function QuizScreen() {
   const { wordlistId } = useLocalSearchParams();
   const theme = useTheme();
 
+  const [isNextButtonVisible, setButtonNextVisible] =
+    React.useState<boolean>(false);
+
   const [snackBarProps, setSnackBarProps] =
     React.useState<SnackBarProps | null>(null);
   const closeSnackBar = () => setSnackBarProps(null);
@@ -31,19 +34,22 @@ export default function QuizScreen() {
 
   const {
     data: quiz,
-    isError,
-    error,
+    error: fetchQuizError,
     isLoading: isLoadingQuiz,
+    isRefetching: isFetchingNewQuiz,
     refetch: getNewQuiz,
   } = useQuery<wordlistsApi.Quiz, Error>({
     queryFn: () => wordlistsApi.newQuiz(Number(wordlistId)),
     staleTime: 0,
-    queryKey: [],
-    networkMode: `always`,
+    queryKey: ["quiz"],
     refetchOnMount: false,
   });
 
-  const { mutate: answerQuiz } = useMutation<void, Error, boolean>({
+  const { mutate: answerQuiz, isPending: isAnsweringQuiz } = useMutation<
+    void,
+    Error,
+    boolean
+  >({
     mutationFn: (success) =>
       wordlistsApi.answerQuiz(Number(wordlistId), Number(quiz?.id), success),
     onError: (error) => {
@@ -56,18 +62,15 @@ export default function QuizScreen() {
     onSuccess: () => setButtonNextVisible(true),
   });
 
-  const [isNextButtonVisible, setButtonNextVisible] =
-    React.useState<boolean>(false);
-
   React.useEffect(() => {
-    if (isError) {
-      setSnackBarProps({
-        onDismiss: closeSnackBar,
-        message: error.message,
-        type: "error",
-      });
-    }
-  }, [isError, error]);
+    if (!fetchQuizError) return;
+
+    setSnackBarProps({
+      onDismiss: closeSnackBar,
+      message: fetchQuizError.message,
+      type: "error",
+    });
+  }, [fetchQuizError]);
 
   const onOptionSelected = (optionIndex: number) =>
     answerQuiz(optionIndex == quiz?.answerIndex);
@@ -77,7 +80,7 @@ export default function QuizScreen() {
     setButtonNextVisible(false);
   };
 
-  if (isLoadingQuiz) {
+  if (isLoadingQuiz || isFetchingNewQuiz) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size={"large"} animating={true} theme={theme} />
@@ -87,7 +90,13 @@ export default function QuizScreen() {
 
   return (
     <View style={styles.container}>
-      {quiz && <Quiz onOptionSelected={onOptionSelected} quiz={quiz} />}
+      {quiz && (
+        <Quiz
+          isAnsweringQuiz={isAnsweringQuiz}
+          onOptionSelected={onOptionSelected}
+          quiz={quiz}
+        />
+      )}
 
       {isNextButtonVisible && (
         <Surface

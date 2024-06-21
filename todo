@@ -1,5 +1,6 @@
 [x] (mobile) use callApi instead of fetch directly
 [x] Submit quiz answer once the option is clicked and not when clicking 'Next Quizz'
+[ ] investigate behaviour of useQuery and useMutation in Quiz screen 
 [ ] GetDefinition using chatGPT is not saving examples properly
 [ ] display part of speech in the quiz screen
 [ ] display ipa
