@@ -4,8 +4,13 @@ import Quiz from "@/components/quiz/Quiz";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import * as React from "react";
-import { StyleSheet, View } from "react-native";
-import { ActivityIndicator, useTheme } from "react-native-paper";
+import { StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Surface,
+  TouchableRipple,
+  useTheme,
+} from "react-native-paper";
 
 export default function QuizScreen() {
   const { wordlistId } = useLocalSearchParams();
@@ -28,8 +33,8 @@ export default function QuizScreen() {
     data: quiz,
     isError,
     error,
-    isLoading,
-    refetch,
+    isLoading: isLoadingQuiz,
+    refetch: getNewQuiz,
   } = useQuery<wordlistsApi.Quiz, Error>({
     queryFn: () => wordlistsApi.newQuiz(Number(wordlistId)),
     staleTime: 0,
@@ -38,7 +43,7 @@ export default function QuizScreen() {
     refetchOnMount: false,
   });
 
-  const { mutate: answerQuiz, isPending } = useMutation<void, Error, boolean>({
+  const { mutate: answerQuiz } = useMutation<void, Error, boolean>({
     mutationFn: (success) =>
       wordlistsApi.answerQuiz(Number(wordlistId), Number(quiz?.id), success),
     onError: (error) => {
@@ -48,10 +53,11 @@ export default function QuizScreen() {
         type: "error",
       });
     },
-    onSuccess: () => {
-      refetch();
-    },
+    onSuccess: () => setButtonNextVisible(true),
   });
+
+  const [isNextButtonVisible, setButtonNextVisible] =
+    React.useState<boolean>(false);
 
   React.useEffect(() => {
     if (isError) {
@@ -66,9 +72,12 @@ export default function QuizScreen() {
   const onOptionSelected = (optionIndex: number) =>
     answerQuiz(optionIndex == quiz?.answerIndex);
 
-  const isAnyRequestPending = isPending || isLoading;
+  const onNextQuizPressed = () => {
+    getNewQuiz();
+    setButtonNextVisible(false);
+  };
 
-  if (isAnyRequestPending) {
+  if (isLoadingQuiz) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size={"large"} animating={true} theme={theme} />
@@ -80,6 +89,23 @@ export default function QuizScreen() {
     <View style={styles.container}>
       {quiz && <Quiz onOptionSelected={onOptionSelected} quiz={quiz} />}
 
+      {isNextButtonVisible && (
+        <Surface
+          theme={theme}
+          style={[{ backgroundColor: theme.colors.primary }, styles.option]}
+          elevation={5}
+        >
+          <TouchableRipple
+            style={{ padding: 30 }}
+            theme={theme}
+            rippleColor={theme.colors.inversePrimary}
+            onPress={onNextQuizPressed}
+          >
+            <Text style={styles.buttonText}>Next Quizz</Text>
+          </TouchableRipple>
+        </Surface>
+      )}
+
       {snackBarProps && <Snackbar {...snackBarProps} />}
     </View>
   );
@@ -90,5 +116,21 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    width: "100%",
+    height: "100%",
+  },
+  buttonText: {
+    textAlign: "center",
+    fontSize: 20,
+    color: "#000",
+    width: "100%",
+  },
+  option: {
+    marginTop: 10,
+    marginBottom: 50,
+    padding: 0,
+    justifyContent: "center",
+    borderRadius: 10,
+    width: "90%",
   },
 });

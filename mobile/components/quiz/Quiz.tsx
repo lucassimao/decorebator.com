@@ -24,6 +24,10 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
     setSelectedIndex(null);
   }, [quiz.id]);
 
+  React.useEffect(() => {
+    if (selectedIndex != null) onOptionSelected(selectedIndex);
+  }, [selectedIndex]);
+
   let title: string;
   // Complete sentence quiz
   if (quiz.type == 1) {
@@ -94,26 +98,6 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
           ))}
         </ScrollView>
       </Surface>
-      {selectedIndex != null && (
-        <Surface
-          theme={theme}
-          style={[
-            { backgroundColor: theme.colors.primary },
-            styles.option,
-            styles.bottom,
-          ]}
-          elevation={5}
-        >
-          <TouchableRipple
-            style={{ padding: 20 }}
-            theme={theme}
-            rippleColor={theme.colors.inversePrimary}
-            onPress={() => onOptionSelected(selectedIndex)}
-          >
-            <Text style={styles.buttonText}>Next Quizz</Text>
-          </TouchableRipple>
-        </Surface>
-      )}
     </View>
   );
 };
@@ -131,11 +115,11 @@ const makeStyles = (fontScale: number) =>
     container: {
       backgroundColor: "#fff",
 
-      flex: 1,
-      height: "100%",
+      //flex: 1,//
+      height: 620,
       width: "100%",
-      alignItems: "center",
-      justifyContent: "space-between",
+      //  alignItems: "center",
+      //  justifyContent: "space-between",
       borderRadius: 10,
       padding: 20,
       paddingBottom: 0,
@@ -175,7 +159,6 @@ const makeStyles = (fontScale: number) =>
       width: "100%",
       color: "#000",
     },
-    bottom: {},
 
     correctOption: {
       backgroundColor: "#4caf50", // Green color for success

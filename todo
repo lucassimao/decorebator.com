@@ -1,6 +1,6 @@
 [x] (mobile) use callApi instead of fetch directly
+[x] Submit quiz answer once the option is clicked and not when clicking 'Next Quizz'
 [ ] GetDefinition using chatGPT is not saving examples properly
-[ ] Submit quiz answer once the option is clicked and not when clicking 'Next Quizz'
 [ ] display part of speech in the quiz screen
 [ ] display ipa
 [ ] fast quiz mode
