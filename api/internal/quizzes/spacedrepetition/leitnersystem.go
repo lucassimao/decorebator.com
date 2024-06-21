@@ -45,7 +45,8 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 			WHERE 
 				lst.user_id = $1
 				AND wd.word_id = (select word_id FROM words_queue)
-				AND def.meaning IS NOT NULL AND array_length(def.examples,1) > 0
+				AND def.meaning IS NOT NULL 
+				AND array_length(def.examples,1) > 0
 			ORDER BY
 				lst.box_id ASC, lst.updated_at ASC NULLS FIRST, wd.word_id ASC
 		)
@@ -77,6 +78,7 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 		&definition.Inflections, &leitnerSystemID, &boxID, &definition.Sounds,
 		&definition.PhoneticNotations)
 
+	fmt.Printf("%v\n", definition)
 	if err != nil {
 		return nil, -1, -1, err
 	}
@@ -137,7 +139,6 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 		value = definition.Token
 		options = append(randomMeanings, definition.Meaning)
 	} else {
-		fmt.Println("def %v", definition)
 		randomTokens, err := definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err

@@ -118,6 +118,7 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 	}
 
 	var firstDefinition = chatResponse.Choices[0].Message.Content
+	fmt.Printf("%v\n", firstDefinition)
 	var openAIDefinition OpenAPIDefinition
 	err = json.Unmarshal([]byte(firstDefinition), &openAIDefinition)
 	if err != nil {

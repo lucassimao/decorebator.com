@@ -1,84 +1,46 @@
-- Backend
-    [x] once a word is created:
-        [x] fetch and save definitions
-        [x] insert in the quiz engine
-        [x] save result
-        [x] increase box number automatically
-        [x] load options from the db
-        [x] load index of right option
-        [x] implement complete sentence quiz
-        [x] write script to load definitions from Wiktionary json file
-        [x] write Wiktionary definer in definitions/wiktionary package
-        [x] use openai to only get examples of usage of words
-        [x] use openai only as a fallback when the wiktionary strategy fails
-        [x] save words in lowercase
-        [x] remove calls to log.Fatal in api/internal/definitions/openai/service.go
-        [x] handle the case of form_of records in wiktionary
-    [ ] Quiz
-        [x] guess meaning quiz should have top priority
-        [x] avoid options from the same word when listing them in the meaning from word quiz
-        [x] quiz options are been returned more than once or even little than needed
-        [x] for complete sentence quiz,  option to be replaced should be computed in the backend. Keep aware of suffixes
-        [x] delete wordlist associated to words
-        [x] send pronounciation link, ipa and pos
-        [ ] new quiz: word from meaning
-        [ ] check if References in examples can be removed. August 14, 1784 ...
-        [ ] Image quiz
-        [ ] (v2) allow custom algorithm
-        [ ] (v2) display word tips based on links and topics in the wiktionary data ( lookup crease in wiktionary)
-    [x] Setup redis and map each word in the wiktionary table to a list of primary key ids. 
-        Use in api/internal/definitions/wiktionary/service.go
-    [x] use structured logging 
-    [ ] add sentry   
-    [ ] subscription
-        [ ] integrate revenueCat
-        [ ] free user is limited to create only X wordlists with Y words
-        [ ] support paying user: limit-free account
-            [ ] monthly subscription
-            [ ] anual subscription
+[x] (mobile) use callApi instead of fetch directly
+[ ] GetDefinition using chatGPT is not saving examples properly
+[ ] Submit quiz answer once the option is clicked and not when clicking 'Next Quizz'
+[ ] display part of speech in the quiz screen
+[ ] display ipa
+[ ] fast quiz mode
+[ ] listen to pronounciation
+[ ] add word modal - save and add more
+[ ] New quiz: word from meaning
+[ ] New quiz: word from image
+[ ] New quiz: word from pronounciation
+[ ] Allow to skip definition
+[ ] Allow to select specific quiz types
+[ ] display word status: pending, error, no meaning found, etc
+[ ] Allow to report problem
+[ ] Check if References in examples can be removed. August 14, 1784 ...
+[ ] Opções de palavras estão se repetindo como se fossem cacheados pelo banco
+[ ] add sentry on the backend
+[ ] add sentry on mobile  
+[ ] recover password 
+[ ] email confirmation
 
-- Mobile
-    [ok] signup
-        [x] store cookie via SecureStore
-        [x] externalize server ip address
-    [ok] login
-    [ ] dashboard
-        [x] list wordlists
-        [x] add word
-        [x] toolbar button to create a new wordlist
-        [x] toolbar button to signout
-        [x] display custom screen if user doesn't have wordlists
-        [ ] clicking on a word should open a modal defining the clicked word
-        [ ] add word modal - save and add more
-        [ ] (v2) display word status: pending, error, no meaning found, etc
-        [ ] (v2) display how strong is the definition of a word for an user 
-    [x] quiz
-        [x] make button red if clicking the wrong option
-        [x] make button green if clicking the rigth option
-        [x] button click effect with depth effects
-        [x] refactoring
-        [x] check keys of children components
-        [ ] display part of speech
-        [ ] fast quiz
-        [ ] listen pronounciation
-        [ ] (v2) report error
-    [ ] add sentry    
-    [ ] use callApi instead of fetch directly
-    [ ] recover password in the login screen
-    [x] logout
+[ ] subscription
+    [ ] integrate revenueCat
+    [ ] free user is limited to create only X wordlists with Y words
+    [ ] support paying user: limit-free account
+        [ ] monthly subscription
+        [ ] anual subscription
 
-- deploy
-    [ ] create a docker image
-    [ ] deploy api to heroku
-    [ ] continuos deployment from Github
-    [ ] mobile deployment
+[ ] Reuse definitions already fetched from wiktionary or chatgpt
+[ ] Settings - choose UK or US english
+[ ] clicking on a word should open a modal defining the clicked word
+[ ] automated tests
+[ ] When saving new word, move the goroutine calling FetchAndSave and IncludeDefinitions to a processing queue
+[ ] configurar honnef.co/go/tools/cmd/staticcheck
+[ ] configurar go vet as a pre-commit hook
+[ ] configure govulncheck golang.org/x/vuln/cmd/govulncheck@latest
+[ ] continuos deployment of the backend to ecs
+[ ] continuos deployment for mobile
 
+[ ] (v2) customize quiz algorithm based on user settings ( api/internal/quizzes/handlers.go )
+[ ] (v2) display word tips based on links and topics in the wiktionary data ( lookup crease in wiktionary)
+[ ] (v2) display how strong is the definition of a word for an user 
+[ ] (v2) upload profile image
+[ ] (v2) When saving word, check settings to decide which definer should be use for definitions.FetchAndSave
 
-- automated tests
-- [REFACTORING] When saving word, check settings to decide which definer should be use for definitions.FetchAndSave
-- When saving new word, move the goroutine calling FetchAndSave and IncludeDefinitions to a processing queue 
-- customize quiz algorithm based on user settings ( api/internal/quizzes/handlers.go )
-- Reuse entries already fetched from wiktionary or chatgpt
-- configurar honnef.co/go/tools/cmd/staticcheck
-- configurar go vet as a pre-commit hook
-- configure govulncheck golang.org/x/vuln/cmd/govulncheck@latest
