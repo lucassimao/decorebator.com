@@ -34,6 +34,13 @@ type PhoneticNotation struct {
 	Accent Accent `json:"accent"`
 }
 
+type DefinitionSource string
+
+const (
+	ChatGPT    DefinitionSource = "ChatGPT"
+	Wiktionary DefinitionSource = "wiktionary"
+)
+
 type Definition struct {
 	ID                int64
 	Token             string
@@ -42,7 +49,7 @@ type Definition struct {
 	PartOfSpeech      string       `json:"part_of_speech"`
 	Examples          []string     `json:"examples"`
 	Inflections       []Inflection `json:"inflections"`
-	Source            string
+	Source            DefinitionSource
 	SourceId          string
 	Sounds            []Sound
 	PhoneticNotations []PhoneticNotation
@@ -124,8 +131,10 @@ func (repository *DefinitionRepository) getRandomMeanings(definitionIdsToIgnore 
 			SELECT DISTINCT meaning FROM definitions def
 			JOIN word_definitions wd ON wd.definition_id = def.id
 			WHERE wd.word_id NOT IN (select word_id FROM word_definitions WHERE definition_id = ANY($1)) 
+			AND length(def.meaning) < 70
 			-- in order to avoid same definition from different users
 			AND def.meaning NOT IN (select meaning FROM definitions WHERE id = ANY($1)) 
+			AND part_of_speech IN (select part_of_speech FROM definitions WHERE id = ANY($1)) 
 		)
 		SELECT meaning FROM options ORDER BY random() LIMIT $2;
 	`

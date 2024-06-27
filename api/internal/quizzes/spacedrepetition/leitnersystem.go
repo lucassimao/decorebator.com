@@ -2,6 +2,7 @@ package spacedrepetion
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"os"
@@ -21,14 +22,15 @@ func init() {
 func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64, int64, error) {
 	// Grouping by box_id and getting the earliest updated_at
 	query := `
-		-- rouding robin by updated_at
+		-- rouding robin by max_lst_updated_at
+		
 		WITH words_queue AS (
 			SELECT wd.word_id, max(lst.updated_at) max_lst_updated_at
 			FROM leitner_system_tracking lst
 			JOIN word_definitions wd ON wd.definition_id = lst.definition_id
 			JOIN words w ON wd.word_id = w.id
 			WHERE 
-				w.user_id =$1 AND w.wordlist_id=$2 
+				w.wordlist_id=$2 
 			GROUP BY 
 				wd.word_id
 			ORDER BY
@@ -68,7 +70,11 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 
 	defer rows.Close()
 
-	rows.Next()
+	hasRow := rows.Next()
+	if !hasRow {
+		return nil, -1, -1, errors.New("no definitions found")
+	}
+
 	definition := definitions.Definition{}
 	var leitnerSystemID int64
 	var boxID int64

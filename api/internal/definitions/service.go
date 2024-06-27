@@ -3,6 +3,7 @@ package definitions
 import (
 	"fmt"
 	"os"
+	"regexp"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/nlputils"
@@ -31,6 +32,12 @@ func FetchAndSave(token string, tokenId int64, definerFunc TokenDefiner) ([]Defi
 	// wrapping token ocurrence within [ ] inside each example
 	for _, definition := range definitions {
 		for index, example := range definition.Examples {
+
+			// If coming from Chatgpt, examples might be already brackted
+			if containsBracketedWord(example) {
+				continue
+			}
+
 			start, end, err := nlputils.FindTerm(definition.Token, example)
 			if err != nil {
 				common.Logger.Warn("failed to find term", "error", err, "token", definition.Token, "example", example)
@@ -59,4 +66,12 @@ func GetRandomExamples(filterOutIds []int, partOfSpeech string, size int) ([]str
 
 func GetRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, size int) ([]string, error) {
 	return repository.getRandomTokens(definitionIdsToIgnore, partOfSpeech, size)
+}
+
+func containsBracketedWord(s string) bool {
+	// Compile the regular expression
+	re := regexp.MustCompile(`\[[^\]]+\]`)
+
+	// Check if the string matches the pattern
+	return re.MatchString(s)
 }

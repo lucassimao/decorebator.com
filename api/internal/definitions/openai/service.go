@@ -15,7 +15,7 @@ import (
 
 func chatGPT(messages []map[string]string) (*ChatCompletionResponse, error) {
 	var requestBodyStruct = map[string]any{
-		"model":           "gpt-3.5-turbo-1106",
+		"model":           "gpt-4-turbo",
 		"response_format": map[string]string{"type": "json_object"},
 		"messages":        messages,
 	}
@@ -49,6 +49,7 @@ func chatGPT(messages []map[string]string) (*ChatCompletionResponse, error) {
 	var chatResponse ChatCompletionResponse
 	err = json.Unmarshal(body, &chatResponse)
 	if err != nil {
+		common.Logger.Error("failed to unmarshall chatgpt response", "body", string(body), "error", err)
 		return nil, fmt.Errorf("failed to unmarshall response body: %w", err)
 	}
 
@@ -96,16 +97,16 @@ func GetExamples(token string, partOfSpeech string, number int, sense string) ([
 func GetDefinition(token string) ([]definitions.Definition, error) {
 	logger := common.Logger.With("token", token, "func", "GetDefinition", "package", "openai")
 
-	logger.Debug("searching definition using chatgpt")
+	logger.Debug("defining token using chatgpt", "token", token)
 
 	userMessage := fmt.Sprintf("Give me the meaning, part of speech and 5 example phrases of the word %s.", token)
 	messages := []map[string]string{
 		{"role": "system", "content": "You are a helpful dictionary assistant designed to output JSON."},
 		{"role": "system", "content": "The JSON must have the property results, which value is an array where each item should have three properties: meaning (string), part_of_speech (string) and examples (array of strings)."},
 		{"role": "user", "content": userMessage},
-		{"role": "assistant", "content": "The array items should represent all different parts of speech that the word can assume."},
-		{"role": "assistant", "content": "If the part of speech is a verb, then ignore the examples property and add instead a new one named inflections. The inflections will be an array of objects, each object has the properties: inflection (string), tense(string) and examples (array of strings). Tense been either present, past, past participle. Inflection been the verb in the tense. Examples been an array of 5 example phrases of the verb in that tense."},
-		{"role": "assistant", "content": "If the word can not be found, then the property results should be an empty array."},
+		{"role": "system", "content": "The array items should represent all different parts of speech that the word can assume."},
+		{"role": "system", "content": "If the part of speech is a verb or phrasal verb, then ignore the examples property and add instead a new one named inflections. The inflections will be an array of objects, each object has the properties: inflection (string), tense(string) and examples (array of strings). Tense been either present, past, past participle. Inflection been the verb in the tense. Examples been an array including 3 different examples of usages of the verb in that tense. In each example, wrap the word and any particle that might be part of the word into square brackets."},
+		{"role": "system", "content": "If the word can not be found, then the property results should be an empty array."},
 	}
 
 	var chatResponse, err = chatGPT(messages)
@@ -118,7 +119,6 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 	}
 
 	var firstDefinition = chatResponse.Choices[0].Message.Content
-	fmt.Printf("%v\n", firstDefinition)
 	var openAIDefinition OpenAPIDefinition
 	err = json.Unmarshal([]byte(firstDefinition), &openAIDefinition)
 	if err != nil {
@@ -127,9 +127,18 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 	}
 
 	for index := range openAIDefinition.Results {
-		openAIDefinition.Results[index].Language = "en"
-		openAIDefinition.Results[index].Token = token
-		openAIDefinition.Results[index].Source = "ChatGPT"
+		result := &openAIDefinition.Results[index]
+
+		result.Language = "en"
+		result.Token = token
+		result.Source = definitions.ChatGPT
+
+		// copying over inflection examples if no main examples
+		if len(result.Examples) == 0 {
+			for _, inflection := range result.Inflections {
+				result.Examples = append(result.Examples, inflection.Examples...)
+			}
+		}
 	}
 
 	logger.Debug("definitions found in chatGPT", "count", len(openAIDefinition.Results))

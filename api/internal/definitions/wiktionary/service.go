@@ -22,9 +22,10 @@ type PhoneticNotation = definitions.PhoneticNotation
 type Sound = definitions.Sound
 type Accent = definitions.Accent
 
-var US = definitions.US
-var CA = definitions.CANADA
-var UK = definitions.UK
+const Wiktionary = definitions.Wiktionary
+const US = definitions.US
+const CA = definitions.CANADA
+const UK = definitions.UK
 
 type WiktionaryExample struct {
 	Text string `json:"text"`
@@ -158,7 +159,7 @@ func GetDefinition(token string) ([]Definition, error) {
 			definition.Examples = examples
 			definition.PartOfSpeech = jsonData.PartOfSpeech
 			definition.Language = jsonData.Language
-			definition.Source = "wiktionary"
+			definition.Source = Wiktionary
 			definition.SourceId = strconv.Itoa(id)
 
 			for _, v := range jsonData.Sounds {
@@ -170,7 +171,7 @@ func GetDefinition(token string) ([]Definition, error) {
 						accent = CA
 					case "General-American", "US":
 						accent = US
-					case "Received-Pronunciation", "UK":
+					case "Received-Pronunciation", "UK", "Southern-England":
 						accent = UK
 					default:
 						logger.Warn("Invalid sound tag", "ipa", v.IPA, "tags", v.Tags)

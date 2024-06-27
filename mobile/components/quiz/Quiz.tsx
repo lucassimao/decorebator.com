@@ -61,6 +61,7 @@ const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
           >
             {title}
           </Text>
+          {quiz.type == 0 && <Text style={{textAlign:'center'}}>{quiz.pos}</Text>}
 
           {/* rendering option buttons */}
           {quiz.options.map((option, index) => (
@@ -87,9 +88,9 @@ const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
                 theme={theme}
                 onPress={() => setSelectedIndex(index)}
               >
-                {selectedIndex == index && isAnsweringQuiz ? (
+                {/* {selectedIndex == index && isAnsweringQuiz ? (
                   <ActivityIndicator animating={true} />
-                ) : (
+                ) : ( */}
                   <Text
                     style={[
                       styles.buttonText,
@@ -102,7 +103,7 @@ const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
                   >
                     {option}
                   </Text>
-                )}
+                {/* )} */}
               </TouchableRipple>
             </Surface>
           ))}

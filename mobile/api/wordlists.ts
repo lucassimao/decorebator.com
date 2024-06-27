@@ -21,6 +21,7 @@ export type Quiz = {
   answerIndex: number;
   id: number;
   type: number;
+  pos: string // part of speech
 };
 
 export type CreateWordDTO = Pick<Word, "wordlistId" | "name">;

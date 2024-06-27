@@ -24,7 +24,7 @@ func (h *QuizHandlers) Create(c *gin.Context) {
 	challenge, err := strategy.CreateChallenge(wordlistID, userId)
 
 	if err != nil {
-		common.Logger.Error("failed to create quiz", "error", err)
+		common.Logger.Error("failed to create quiz", "error", err, "wordlistID", wordlistID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
