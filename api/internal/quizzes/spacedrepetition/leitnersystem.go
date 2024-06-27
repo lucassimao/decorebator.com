@@ -3,7 +3,6 @@ package spacedrepetion
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/rand"
 	"os"
 	"regexp"
@@ -23,7 +22,7 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 	// Grouping by box_id and getting the earliest updated_at
 	query := `
 		-- rouding robin by max_lst_updated_at
-		
+
 		WITH words_queue AS (
 			SELECT wd.word_id, max(lst.updated_at) max_lst_updated_at
 			FROM leitner_system_tracking lst
@@ -84,7 +83,6 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 		&definition.Inflections, &leitnerSystemID, &boxID, &definition.Sounds,
 		&definition.PhoneticNotations)
 
-	fmt.Printf("%v\n", definition)
 	if err != nil {
 		return nil, -1, -1, err
 	}
@@ -133,8 +131,9 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 	var index int
 	var quizzType ChallengeType
 
+	common.Logger.Debug("CreateChallenge", "boxID", boxID, "leitnerSystemID", leitnerSystemID, "definition", definition.ID)
+
 	// boxID been odd, will make each first quiz of a definition of type GUESS_MEANING, otherwise a COMPLETE_SENTENCE
-	fmt.Printf("box id %v leitnerSystemID %v", boxID, leitnerSystemID)
 	if boxID%2 == 1 {
 		randomMeanings, err := definitions.GetRandomMeanings([]int{int(definition.ID)}, 3)
 		if err != nil {
@@ -186,7 +185,9 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 func (LeitnerSystemAlgorithm) SaveChallengeResult(id int64, success bool) error {
 
 	query := `UPDATE leitner_system_tracking 
-	SET updated_at=now(), box_id = CASE WHEN $1 THEN box_id + 1 ELSE box_id END 
+	SET 
+		updated_at = now(), 
+		box_id = CASE WHEN $1 THEN box_id + 1 ELSE 0 END 
 	WHERE id = $2`
 
 	db, err := common.GetDBConnection()

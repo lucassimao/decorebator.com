@@ -199,7 +199,7 @@ func (repository *DefinitionRepository) getRandomTokens(definitionIdsToIgnore []
 	query := `
 		WITH tokens AS (
 			SELECT 
-				token
+				DISTINCT token
 			FROM 
 				definitions def
 			JOIN 
@@ -207,9 +207,8 @@ func (repository *DefinitionRepository) getRandomTokens(definitionIdsToIgnore []
 			WHERE 
 				part_of_speech=$1 
 				AND wd.word_id NOT IN (select word_id FROM word_definitions WHERE definition_id = ANY($2)) 
-			ORDER BY random()
 		)
-		SELECT DISTINCT token FROM tokens LIMIT $3;
+		SELECT token FROM tokens ORDER BY random() LIMIT $3;
 	`
 	rows, err := repository.db.Query(context.Background(), query, partOfSpeech, definitionIdsToIgnore, limit)
 	if err != nil {

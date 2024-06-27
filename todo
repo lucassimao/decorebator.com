@@ -11,10 +11,10 @@
 [ ] New quiz: word from meaning
 [ ] New quiz: word from image
 [ ] New quiz: word from pronounciation
-[ ] GetDefinition using chatGPT is not saving examples properly
+[ ] listen to pronounciation
+[x] GetDefinition using chatGPT is not saving examples properly
 [ ] Reuse definitions already fetched from wiktionary or chatgpt
 [ ] display ipa
-[ ] listen to pronounciation
 [ ] Allow to skip definition
 [ ] Allow to select specific quiz types
 [ ] display word status: pending, error, no meaning found, etc

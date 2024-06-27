@@ -13,6 +13,21 @@ import (
 	"decorebator.com/internal/definitions"
 )
 
+func isValidPartOfSpeech(value string) bool {
+
+	var validPartOfSpeechs = []string{"noun", "pronoun", "verb", "phrasal verb",
+		"adjective", "adverb", "preposition",
+		"conjunction", "interjection"}
+
+	for _, v := range validPartOfSpeechs {
+		if v == value {
+			return true
+		}
+	}
+	return false
+
+}
+
 func chatGPT(messages []map[string]string) (*ChatCompletionResponse, error) {
 	var requestBodyStruct = map[string]any{
 		"model":           "gpt-4-turbo",
@@ -103,6 +118,7 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 	messages := []map[string]string{
 		{"role": "system", "content": "You are a helpful dictionary assistant designed to output JSON."},
 		{"role": "system", "content": "The JSON must have the property results, which value is an array where each item should have three properties: meaning (string), part_of_speech (string) and examples (array of strings)."},
+		{"role": "system", "content": "part_of_speech should be one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection."},
 		{"role": "user", "content": userMessage},
 		{"role": "system", "content": "The array items should represent all different parts of speech that the word can assume."},
 		{"role": "system", "content": "If the part of speech is a verb or phrasal verb, then ignore the examples property and add instead a new one named inflections. The inflections will be an array of objects, each object has the properties: inflection (string), tense(string) and examples (array of strings). Tense been either present, past, past participle. Inflection been the verb in the tense. Examples been an array including 3 different examples of usages of the verb in that tense. In each example, wrap the word and any particle that might be part of the word into square brackets."},
@@ -128,6 +144,10 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 
 	for index := range openAIDefinition.Results {
 		result := &openAIDefinition.Results[index]
+
+		if !isValidPartOfSpeech(result.PartOfSpeech) {
+			return nil, fmt.Errorf("unexpected part of speech: %s", result.PartOfSpeech)
+		}
 
 		result.Language = "en"
 		result.Token = token

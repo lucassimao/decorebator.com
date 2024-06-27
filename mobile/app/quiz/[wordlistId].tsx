@@ -41,7 +41,7 @@ export default function QuizScreen() {
   } = useQuery<wordlistsApi.Quiz, Error>({
     queryFn: () => wordlistsApi.newQuiz(Number(wordlistId)),
     staleTime: 0,
-    queryKey: ["quiz"],
+    queryKey: ["quiz",wordlistId],
     refetchOnMount: false,
   });
 
