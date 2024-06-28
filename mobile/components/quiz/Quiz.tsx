@@ -36,7 +36,7 @@ const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
 
   let title: string;
   // Complete sentence quiz
-  if (quiz.type == 1) {
+  if (quiz.type == 'COMPLETE_SENTENCE') {
     title = quiz.value.replace(/\[(.*?)\]/g, (_, p1) => "_".repeat(p1.length));
   } else {
     title = quiz.value;
@@ -54,14 +54,14 @@ const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
             numberOfLines={9}
             style={[
               styles.header,
-              quiz.type == 1
+              quiz.type == 'COMPLETE_SENTENCE'
                 ? styles.completeSentenceQuiz
                 : styles.guessMeaningQuiz,
             ]}
           >
             {title}
           </Text>
-          {quiz.type == 0 && <Text style={{textAlign:'center'}}>{quiz.pos}</Text>}
+          {quiz.type == 'GUESS_MEANING' && <Text style={{textAlign:'center'}}>{quiz.pos}</Text>}
 
           {/* rendering option buttons */}
           {quiz.options.map((option, index) => (

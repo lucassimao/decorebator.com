@@ -2,11 +2,11 @@ package spacedrepetion
 
 import "decorebator.com/internal/definitions"
 
-type ChallengeType int
+type ChallengeType string
 
 const (
-	GUESS_MEANING ChallengeType = iota
-	COMPLETE_SENTENCE
+	GUESS_MEANING     ChallengeType = "GUESS_MEANING"
+	COMPLETE_SENTENCE ChallengeType = "COMPLETE_SENTENCE"
 )
 
 type Challenge struct {

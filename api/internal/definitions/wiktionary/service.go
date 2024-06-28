@@ -127,12 +127,12 @@ func GetDefinition(token string) ([]Definition, error) {
 			var examples []string
 
 			// if the token is any form of a verb, then get the definition of the verb too
-			if len(sense.FormOf) > 0 && jsonData.PartOfSpeech == "verb" {
-				verbDefinitions, err := GetDefinition(sense.FormOf[0].Word)
+			if len(sense.FormOf) > 0 {
+				additionalDefinitions, err := GetDefinition(sense.FormOf[0].Word)
 				if err != nil {
 					return nil, fmt.Errorf("error searching %s definition: %w", sense.FormOf[0].Word, err)
 				}
-				definitions = append(definitions, verbDefinitions...)
+				definitions = append(definitions, additionalDefinitions...)
 				continue
 			}
 
@@ -157,10 +157,25 @@ func GetDefinition(token string) ([]Definition, error) {
 			definition.Token = token
 			definition.Meaning = glosses[0]
 			definition.Examples = examples
-			definition.PartOfSpeech = jsonData.PartOfSpeech
+
 			definition.Language = jsonData.Language
 			definition.Source = Wiktionary
 			definition.SourceId = strconv.Itoa(id)
+
+			var extededPos = map[string]string{
+				"pron": "pronoun",
+				"adj":  "adjective",
+				"adv":  "adverb",
+				"prep": "preposition",
+				"conj": "conjunction",
+				"intj": "interjection",
+			}
+
+			if value, exists := extededPos[jsonData.PartOfSpeech]; exists {
+				definition.PartOfSpeech = value
+			} else {
+				definition.PartOfSpeech = jsonData.PartOfSpeech
+			}
 
 			for _, v := range jsonData.Sounds {
 				logger.Debug("Processing sound", "sound", v)
