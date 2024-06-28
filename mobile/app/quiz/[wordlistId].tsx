@@ -14,8 +14,6 @@ import {
   useTheme,
 } from "react-native-paper";
 
-
-
 export default function QuizScreen() {
   const { wordlistId } = useLocalSearchParams();
   const theme = useTheme();
@@ -30,31 +28,30 @@ export default function QuizScreen() {
   const [isFastMode, setFastMode] = React.useState<boolean>();
 
   React.useEffect(() => {
-    
-    if (typeof isFastMode != 'boolean') return 
+    if (typeof isFastMode != "boolean") return;
 
     setSnackBarProps({
-      message: `Fast mode ${isFastMode ?  'enabled':'disabled'}`,
-      type: 'info',
-      onDismiss: closeSnackBar
-    })
-  }, [isFastMode])
+      message: `Fast mode ${isFastMode ? "enabled" : "disabled"}`,
+      type: "info",
+      onDismiss: closeSnackBar,
+    });
+  }, [isFastMode]);
 
   const navigation = useNavigation();
 
   React.useEffect(() => {
-
     const options: React.JSX.Element[] = [];
 
     options.push(
       <Tooltip title="Fast mode">
         <IconButton
-          icon={'clock-fast'}
-          iconColor={isFastMode  ?  theme.colors.primary :'#ccc' }
+          icon={"clock-fast"}
+          iconColor={isFastMode ? theme.colors.primary : "#ccc"}
           size={25}
           key={"fastMode"}
-          onPress={() => setFastMode(isFastMode => !isFastMode)}
-        /></Tooltip>,
+          onPress={() => setFastMode((isFastMode) => !isFastMode)}
+        />
+      </Tooltip>,
     );
 
     navigation.setOptions({
@@ -93,11 +90,11 @@ export default function QuizScreen() {
         type: "error",
       });
     },
-    onSuccess: (_,isAnswerCorrect) => {
+    onSuccess: (_, isAnswerCorrect) => {
       if (isFastMode && isAnswerCorrect) {
         setTimeout(getNewQuiz, 500);
       } else {
-        setButtonNextVisible(true)
+        setButtonNextVisible(true);
       }
     },
   });
@@ -119,7 +116,6 @@ export default function QuizScreen() {
     getNewQuiz();
     setButtonNextVisible(false);
   };
-
 
   if (isLoadingQuiz || isFetchingNewQuiz) {
     return (

@@ -66,11 +66,11 @@ export default function BottonBar({
   const displayDeleteWordlistDialog =
     selectedRoute == NavigationRouteKey.Delete;
 
-  const onDismissAddWordDialog = (success?: boolean) => {
-    if (success) {
-      onWordAdded();
+  const onDismissAddWordDialog = (dismiss?: boolean) => {
+    onWordAdded();
+    if (dismiss) {
+      setSelectedRoute(null);
     }
-    setSelectedRoute(null);
   };
 
   const onDismissDeleteWordlistDialog = (success?: boolean) => {
@@ -90,7 +90,8 @@ export default function BottonBar({
       {displayAddWordDialog && (
         <AddWordDialog
           wordlistId={wordlist.id}
-          onDismiss={onDismissAddWordDialog}
+          onDismiss={() => setSelectedRoute(null)}
+          onWordAdded={onDismissAddWordDialog}
         />
       )}
       {displayDeleteWordlistDialog && (

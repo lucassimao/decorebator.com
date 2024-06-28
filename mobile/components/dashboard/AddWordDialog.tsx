@@ -15,17 +15,18 @@ import {
 } from "react-native-paper";
 
 type Props = {
-  // success is true if word was created
-  onDismiss: (success?: boolean) => void;
+  onWordAdded: (dismiss: boolean) => void;
+  onDismiss: () => void;
   wordlistId: number;
 };
 
-const AddWordDialog = ({ onDismiss, wordlistId }: Props) => {
+const AddWordDialog = ({ onWordAdded, wordlistId, onDismiss }: Props) => {
   const theme = useTheme();
 
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -34,6 +35,7 @@ const AddWordDialog = ({ onDismiss, wordlistId }: Props) => {
   });
 
   const [error, setError] = React.useState<any>(null);
+  const [closeAfterSubmit, setCloseAfterSubmit] = React.useState(true);
 
   const { mutate: addWord, isPending } = useMutation<
     void,
@@ -45,11 +47,23 @@ const AddWordDialog = ({ onDismiss, wordlistId }: Props) => {
       setError(error);
     },
     onSuccess: () => {
-      onDismiss(true);
+      if (closeAfterSubmit) {
+        onWordAdded(true);
+      } else {
+        onWordAdded(false);
+        reset();
+      }
     },
   });
 
-  const onSubmit = (data: any) => addWord({ name: data.name });
+  const onSubmitAndClose = (data: any) => {
+    setCloseAfterSubmit(true);
+    addWord({ name: data.name });
+  };
+  const onSubmitAndAddMore = (data: any) => {
+    setCloseAfterSubmit(false);
+    addWord({ name: data.name });
+  };
 
   return (
     <Portal>
@@ -97,8 +111,11 @@ const AddWordDialog = ({ onDismiss, wordlistId }: Props) => {
           {errors.name && <HelperText type="error">Required</HelperText>}
         </Dialog.Content>
         <Dialog.Actions>
-          <Button onPress={() => onDismiss(false)}>Cancel</Button>
-          <Button onPress={handleSubmit(onSubmit)}>Add</Button>
+          <Button onPress={onDismiss}>Cancel</Button>
+          <Button onPress={handleSubmit(onSubmitAndClose)}>Save & Close</Button>
+          <Button onPress={handleSubmit(onSubmitAndAddMore)}>
+            Save & Add More
+          </Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>

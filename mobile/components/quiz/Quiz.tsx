@@ -20,7 +20,6 @@ type Props = {
   isAnsweringQuiz: boolean;
 };
 
-
 const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
   const { fontScale } = useWindowDimensions();
   const styles = makeStyles(fontScale); // pass in fontScale to the StyleSheet
@@ -37,7 +36,7 @@ const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
 
   let title: string;
   // Complete sentence quiz
-  if (quiz.type == 'COMPLETE_SENTENCE') {
+  if (quiz.type == "COMPLETE_SENTENCE") {
     title = quiz.value.replace(/\[(.*?)\]/g, (_, p1) => "_".repeat(p1.length));
   } else {
     title = quiz.value;
@@ -55,14 +54,16 @@ const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
             numberOfLines={9}
             style={[
               styles.header,
-              quiz.type == 'COMPLETE_SENTENCE'
+              quiz.type == "COMPLETE_SENTENCE"
                 ? styles.completeSentenceQuiz
                 : styles.guessMeaningQuiz,
             ]}
           >
             {title}
           </Text>
-          {quiz.type == 'GUESS_MEANING' && <Text style={{textAlign:'center'}}>{quiz.pos}</Text>}
+          {quiz.type == "GUESS_MEANING" && (
+            <Text style={{ textAlign: "center" }}>{quiz.pos}</Text>
+          )}
 
           {/* rendering option buttons */}
           {quiz.options.map((option, index) => (
@@ -92,18 +93,18 @@ const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
                 {/* {selectedIndex == index && isAnsweringQuiz ? (
                   <ActivityIndicator animating={true} />
                 ) : ( */}
-                  <Text
-                    style={[
-                      styles.buttonText,
-                      selectedIndex != null &&
-                      selectedIndex != index &&
-                      quiz.answerIndex == index
-                        ? { color: "green" }
-                        : null,
-                    ]}
-                  >
-                    {option}
-                  </Text>
+                <Text
+                  style={[
+                    styles.buttonText,
+                    selectedIndex != null &&
+                    selectedIndex != index &&
+                    quiz.answerIndex == index
+                      ? { color: "green" }
+                      : null,
+                  ]}
+                >
+                  {option}
+                </Text>
                 {/* )} */}
               </TouchableRipple>
             </Surface>
