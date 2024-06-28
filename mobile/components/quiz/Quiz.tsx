@@ -20,6 +20,7 @@ type Props = {
   isAnsweringQuiz: boolean;
 };
 
+
 const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
   const { fontScale } = useWindowDimensions();
   const styles = makeStyles(fontScale); // pass in fontScale to the StyleSheet

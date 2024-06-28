@@ -4,9 +4,9 @@
 [x] display part of speech in the quiz screen
 [x] quiz screen blinks after picking option
 [x] check if "plural of something" is fetching the something. eg perils
-[ ] refactor how the quiz type is represented. use string enum instead of int
-[ ] fast quiz mode
-[ ] Opções de palavras estão se repetindo como se fossem cacheados pelo banco
+[x] refactor how the quiz type is represented. use string enum instead of int
+[x] fast quiz mode
+[x] Opções de palavras estão se repetindo como se fossem cacheados pelo banco
 [ ] add word modal - save and add more
 [ ] New quiz: word from meaning
 [ ] New quiz: word from image
@@ -32,19 +32,23 @@
         [ ] monthly subscription
         [ ] anual subscription
 
-[ ] Settings - choose UK or US english
 [ ] clicking on a word should open a modal defining the clicked word
-[ ] automated tests
-[ ] When saving new word, move the goroutine calling FetchAndSave and IncludeDefinitions to a processing queue
-[ ] configurar honnef.co/go/tools/cmd/staticcheck
-[ ] configurar go vet as a pre-commit hook
-[ ] configure govulncheck golang.org/x/vuln/cmd/govulncheck@latest
 [ ] continuos deployment of the backend to ecs
 [ ] continuos deployment for mobile
 
-[ ] (v2) customize quiz algorithm based on user settings ( api/internal/quizzes/handlers.go )
-[ ] (v2) display word tips based on links and topics in the wiktionary data ( lookup crease in wiktionary)
-[ ] (v2) display how strong is the definition of a word for an user 
-[ ] (v2) upload profile image
-[ ] (v2) When saving word, check settings to decide which definer should be use for definitions.FetchAndSave
 
+# V2
+
+[ ] Settings - choose UK or US english
+[ ] automated tests
+[ ] configurar honnef.co/go/tools/cmd/staticcheck
+[ ] configurar go vet as a pre-commit hook
+[ ] configure govulncheck golang.org/x/vuln/cmd/govulncheck@latest
+[ ] When saving new word, move the goroutine calling FetchAndSave and IncludeDefinitions to a processing queue
+[ ] customize quiz algorithm based on user settings ( api/internal/quizzes/handlers.go )
+[ ] display word tips based on links and topics in the wiktionary data ( lookup crease in wiktionary)
+[ ] display how strong is the definition of a word for an user 
+[ ] upload profile image
+[ ] When saving word, check settings to decide which definer should be use for definitions.FetchAndSave
+[ ] New quiz: Ask chatgpt to create a small text using 5 or more words in a wordlist. Present the text hiding the words and ask the user to write the missing words.
+[ ] Crossword

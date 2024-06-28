@@ -3,7 +3,7 @@ import { Portal, Snackbar, Text } from "react-native-paper";
 
 export type SnackBarProps = {
   message: string;
-  type: "success" | "error";
+  type: "success" | "error"|'info';
   onDismiss: () => void;
 };
 export default function Component({ message, type, onDismiss }: SnackBarProps) {
@@ -15,7 +15,7 @@ export default function Component({ message, type, onDismiss }: SnackBarProps) {
         onDismiss={onDismiss}
         style={[
           styles.snackbar,
-          type === "success" ? styles.success : styles.error,
+          styles[type]
         ]}
         action={{
           label: "Hide",
@@ -40,4 +40,7 @@ const styles = StyleSheet.create({
   snackbarText: {
     color: "#ffffff", // White text color
   },
+  info:{
+
+  }
 });

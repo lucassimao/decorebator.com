@@ -29,7 +29,7 @@ export type CreateWordlistDTO = Pick<Wordlist, "description" | "name">;
 
 export async function getUserWordlists() {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/wordlists";
-  const body = await callAPI("GET", endpoint);
+  const body = await callAPI<Wordlist[]>("GET", endpoint);
   return body;
 }
 

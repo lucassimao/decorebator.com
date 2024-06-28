@@ -7,10 +7,14 @@ import * as React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import {
   ActivityIndicator,
+  IconButton,
   Surface,
+  Tooltip,
   TouchableRipple,
   useTheme,
 } from "react-native-paper";
+
+
 
 export default function QuizScreen() {
   const { wordlistId } = useLocalSearchParams();
@@ -23,14 +27,44 @@ export default function QuizScreen() {
     React.useState<SnackBarProps | null>(null);
   const closeSnackBar = () => setSnackBarProps(null);
 
+  const [isFastMode, setFastMode] = React.useState<boolean>();
+
+  React.useEffect(() => {
+    
+    if (typeof isFastMode != 'boolean') return 
+
+    setSnackBarProps({
+      message: `Fast mode ${isFastMode ?  'enabled':'disabled'}`,
+      type: 'info',
+      onDismiss: closeSnackBar
+    })
+  }, [isFastMode])
+
   const navigation = useNavigation();
 
   React.useEffect(() => {
+
+    const options: React.JSX.Element[] = [];
+
+    options.push(
+      <Tooltip title="Fast mode">
+        <IconButton
+          icon={'clock-fast'}
+          iconColor={isFastMode  ?  theme.colors.primary :'#ccc' }
+          size={25}
+          key={"fastMode"}
+          onPress={() => setFastMode(isFastMode => !isFastMode)}
+        /></Tooltip>,
+    );
+
     navigation.setOptions({
       headerShown: true,
       headerTitle: "Quiz",
+      headerRight: () => (
+        <View style={{ display: "flex", flexDirection: "row" }}>{options}</View>
+      ),
     });
-  }, [navigation]);
+  }, [navigation, isFastMode]);
 
   const {
     data: quiz,
@@ -41,7 +75,7 @@ export default function QuizScreen() {
   } = useQuery<wordlistsApi.Quiz, Error>({
     queryFn: () => wordlistsApi.newQuiz(Number(wordlistId)),
     staleTime: 0,
-    queryKey: ["quiz",wordlistId],
+    queryKey: ["quiz", wordlistId],
     refetchOnMount: false,
   });
 
@@ -59,7 +93,13 @@ export default function QuizScreen() {
         type: "error",
       });
     },
-    onSuccess: () => setButtonNextVisible(true),
+    onSuccess: (_,isAnswerCorrect) => {
+      if (isFastMode && isAnswerCorrect) {
+        setTimeout(getNewQuiz, 500);
+      } else {
+        setButtonNextVisible(true)
+      }
+    },
   });
 
   React.useEffect(() => {
@@ -79,6 +119,7 @@ export default function QuizScreen() {
     getNewQuiz();
     setButtonNextVisible(false);
   };
+
 
   if (isLoadingQuiz || isFetchingNewQuiz) {
     return (
