@@ -7,7 +7,7 @@
 [x] refactor how the quiz type is represented. use string enum instead of int
 [x] fast quiz mode
 [x] Opções de palavras estão se repetindo como se fossem cacheados pelo banco
-[ ] add word modal - save and add more
+[x] add word modal - save and add more
 [ ] New quiz: word from meaning
 [ ] New quiz: word from image
 [ ] New quiz: word from pronounciation

@@ -20,7 +20,7 @@ export type Quiz = {
   options: string[];
   answerIndex: number;
   id: number;
-  type: 'GUESS_MEANING' | 'COMPLETE_SENTENCE';
+  type: 'GUESS_MEANING' | 'COMPLETE_SENTENCE' | 'WORD_FROM_MEANING';
   pos: string // part of speech
 };
 

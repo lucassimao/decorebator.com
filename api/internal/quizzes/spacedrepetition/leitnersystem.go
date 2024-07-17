@@ -128,50 +128,62 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 
 	var options []string
 	var value string
-	var index int
 	var quizzType ChallengeType
+	var quizAnswer string
 
 	common.Logger.Debug("CreateChallenge", "boxID", boxID, "leitnerSystemID", leitnerSystemID, "definition", definition.ID)
 
-	// boxID been odd, will make each first quiz of a definition of type GUESS_MEANING, otherwise a COMPLETE_SENTENCE
-	if boxID%2 == 1 {
-		randomMeanings, err := definitions.GetRandomMeanings([]int{int(definition.ID)}, 3)
+	switch {
+	case boxID%3 == 0:
+		quizzType = WORD_FROM_MEANING
+		value = definition.Meaning
+		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
+
 		if err != nil {
 			return nil, err
 		}
 
-		quizzType = GUESS_MEANING
-		value = definition.Token
-		options = append(randomMeanings, definition.Meaning)
-	} else {
-		randomTokens, err := definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
-		if err != nil {
-			return nil, err
-		}
-
+		quizAnswer = definition.Token
+	case boxID%2 == 0:
 		quizzType = COMPLETE_SENTENCE
+		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
+		if err != nil {
+			return nil, err
+		}
+
 		i := rand.Intn(len(definition.Examples))
 		value = definition.Examples[i]
 
 		re := regexp.MustCompile(`\[(.*?)\]`)
 		matches := re.FindAllStringSubmatch(value, -1)
 		if len(matches) > 0 {
-			options = append(randomTokens, matches[0][1])
+			quizAnswer = matches[0][1]
 		} else {
-			options = append(randomTokens, definition.Token)
+			quizAnswer = definition.Token
+		}
+	default:
+		quizzType = GUESS_MEANING
+		options, err = definitions.GetRandomMeanings([]int{int(definition.ID)}, 3)
+		if err != nil {
+			return nil, err
 		}
 
+		value = definition.Token
+		quizAnswer = definition.Meaning
 	}
 
-	lastItem := options[len(options)-1]
-	index = rand.Intn(len(options))
-	copy(options[index+1:], options[index:])
-	options[index] = lastItem
+	// append the quiz answer to the final of the list.
+	options = append(options, quizAnswer)
+	// Then genrate a random position to move to it
+	var answerIndex = rand.Intn(len(options))
+	// shifts all elements from answerIndex to the end of the slice one position to the right, making space at answerIndex
+	copy(options[answerIndex+1:], options[answerIndex:])
+	options[answerIndex] = quizAnswer
 
 	challenge := &Challenge{
 		Value:        value,
 		Options:      options,
-		AnswerIndex:  index,
+		AnswerIndex:  answerIndex,
 		ID:           leitnerSystemID,
 		Type:         quizzType,
 		Sounds:       definition.Sounds,

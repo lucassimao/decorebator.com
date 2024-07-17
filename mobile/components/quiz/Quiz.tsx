@@ -54,14 +54,14 @@ const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
             numberOfLines={9}
             style={[
               styles.header,
-              quiz.type == "COMPLETE_SENTENCE"
-                ? styles.completeSentenceQuiz
-                : styles.guessMeaningQuiz,
+              ["COMPLETE_SENTENCE",'WORD_FROM_MEANING'].includes(quiz.type)
+                ? styles.defaultQuizTitle
+                : styles.biggerQuizTitle,
             ]}
           >
             {title}
           </Text>
-          {quiz.type == "GUESS_MEANING" && (
+          {["GUESS_MEANING",'WORD_FROM_MEANING'].includes(quiz.type) && (
             <Text style={{ textAlign: "center" }}>{quiz.pos}</Text>
           )}
 
@@ -143,11 +143,11 @@ const makeStyles = (fontScale: number) =>
       paddingTop: 10,
       marginBottom: 10,
     },
-    guessMeaningQuiz: {
+    biggerQuizTitle: {
       fontSize: 40 / fontScale,
       textTransform: "capitalize",
     },
-    completeSentenceQuiz: {
+    defaultQuizTitle: {
       fontSize: 25 / fontScale,
       marginBottom: 45,
     },

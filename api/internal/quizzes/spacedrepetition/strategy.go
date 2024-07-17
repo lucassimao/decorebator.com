@@ -7,6 +7,7 @@ type ChallengeType string
 const (
 	GUESS_MEANING     ChallengeType = "GUESS_MEANING"
 	COMPLETE_SENTENCE ChallengeType = "COMPLETE_SENTENCE"
+	WORD_FROM_MEANING ChallengeType = "WORD_FROM_MEANING"
 )
 
 type Challenge struct {
