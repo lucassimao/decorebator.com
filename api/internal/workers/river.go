@@ -7,6 +7,8 @@ import (
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 )
 
+const IMAGE_GENERATOR_QUEUE = "image_generator"
+
 func GetRiverClient() (*river.Client[pgx.Tx], error) {
 	db, err := common.GetDBConnection()
 
@@ -19,7 +21,8 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 
 	riverClient, err := river.NewClient(riverpgxv5.New(db), &river.Config{
 		Queues: map[string]river.QueueConfig{
-			river.QueueDefault: {MaxWorkers: 5},
+			river.QueueDefault:    {MaxWorkers: 100},
+			IMAGE_GENERATOR_QUEUE: {MaxWorkers: 5},
 		},
 		Workers: riverWorkers,
 		Logger:  common.Logger,

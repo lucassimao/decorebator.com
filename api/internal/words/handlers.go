@@ -21,7 +21,7 @@ func (h *WordsHandlers) GetAll(c *gin.Context) {
 	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 
-	words, err := GetWordsFromWordlist(wordlistId, userId)
+	words, err := FindByWordlist(wordlistId, userId)
 	if err != nil {
 		common.Logger.Error("failed to get words", "error", err, "userId", userId, "wordlistId", wordlistId)
 		c.String(http.StatusInternalServerError, "Could not get user words")
@@ -40,7 +40,7 @@ func (h *WordsHandlers) Create(c *gin.Context) {
 		return
 	}
 
-	saved, err := SaveWord(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistId})
+	saved, err := Save(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistId})
 
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
@@ -53,7 +53,7 @@ func (h *WordsHandlers) Delete(c *gin.Context) {
 	userId := c.GetInt64("userID")
 	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
 
-	_, err := DeleteWord(id, userId)
+	_, err := Delete(id, userId)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.String(http.StatusNotFound, err.Error())
@@ -76,7 +76,7 @@ func (h *WordsHandlers) Update(c *gin.Context) {
 		return
 	}
 
-	err := UpdateWord(&Word{ID: id, Name: input.Name, UserID: userId})
+	err := Update(&Word{ID: id, Name: input.Name, UserID: userId})
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.String(http.StatusNotFound, err.Error())

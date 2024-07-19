@@ -10,8 +10,8 @@
 [x] add word modal - save and add more
 [x] New quiz: word from meaning
 [ ] New quiz: word from image
-    - run in a specific queue, where a max of 5 workers are enabled.
-    - implement s3 upload if in production mode
+    ok run in a specific queue, where a max of 5 workers are enabled.
+    ok implement s3 upload if in production mode
     - frontend
 [ ] New quiz: word from pronounciation
     - save sounds in object store

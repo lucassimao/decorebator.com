@@ -2,7 +2,6 @@ package common
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
@@ -11,26 +10,20 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-func MinIOPUT(base64Image, bucketName, objectName string) (string, error) {
-	if Config.Env != Development {
+func MinIOPUT(data []byte, bucketName, objectName, contentType string) (string, error) {
+	if Env.Env != Development {
 		return "", errors.New("MinIO should be only used in development mode")
 	}
 
-	endpoint := fmt.Sprintf("%s:%s", Config.MinioHost, Config.MinioPort)
+	endpoint := fmt.Sprintf("%s:%s", Env.MinioHost, Env.MinioPort)
 
 	// Initialize minio client object
 	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(Config.MinioRootUser, Config.MinioRootPassword, ""),
+		Creds:  credentials.NewStaticV4(Env.MinioRootUser, Env.MinioRootPassword, ""),
 		Secure: false,
 	})
 	if err != nil {
 		return "", err
-	}
-
-	// Decode base64 string
-	imageData, err := base64.StdEncoding.DecodeString(base64Image)
-	if err != nil {
-		return "", nil
 	}
 
 	// Create a temporary file to store the decoded image
@@ -41,13 +34,13 @@ func MinIOPUT(base64Image, bucketName, objectName string) (string, error) {
 	defer tempFile.Close()
 
 	// Write decoded data to the temporary file
-	if _, err := tempFile.Write(imageData); err != nil {
+	if _, err := tempFile.Write(data); err != nil {
 		return "", err
 	}
 
 	// Upload the file to MinIO
 	_, err = minioClient.FPutObject(context.Background(), bucketName, objectName, tempFile.Name(), minio.PutObjectOptions{
-		ContentType: "image/png",
+		ContentType: contentType,
 	})
 	if err != nil {
 		return "", err
@@ -55,7 +48,7 @@ func MinIOPUT(base64Image, bucketName, objectName string) (string, error) {
 
 	// Generate a public URL for the uploaded object
 	// Assuming the bucket is configured to allow public access
-	publicURL := fmt.Sprintf("http://%s:%s/%s/%s", Config.MinioHost, Config.MinioPort, bucketName, objectName)
+	publicURL := fmt.Sprintf("http://%s:%s/%s/%s", Env.MinioHost, Env.MinioPort, bucketName, objectName)
 
 	return publicURL, nil
 }

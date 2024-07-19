@@ -9,7 +9,7 @@ const (
 	Development
 )
 
-var Config struct {
+var Env struct {
 	Env                              Environment
 	OpenaiImageGenerationApiEndpoint string
 	OpenaiChatCompletionApiEndpoint  string
@@ -27,29 +27,40 @@ var Config struct {
 	MinioPort                        string
 	MinioRootUser                    string
 	MinioRootPassword                string
+
+	Aws struct {
+		AccessKeyId     string
+		SecretAccessKey string
+		Region          string
+	}
 }
 
 func init() {
 	if os.Getenv("ENV") == "production" {
-		Config.Env = Production
+		Env.Env = Production
 	} else {
-		Config.Env = Development
+		Env.Env = Development
 	}
 
-	Config.OpenaiImageGenerationApiEndpoint = os.Getenv("OPENAI_IMAGE_GENERATION_API_ENDPOINT")
-	Config.OpenaiChatCompletionApiEndpoint = os.Getenv("OPENAI_CHAT_COMPLETION_API_ENDPOINT")
-	Config.OpenaiApiKey = os.Getenv("OPENAI_API_KEY")
-	Config.Port = os.Getenv("PORT")
-	Config.PostgresUser = os.Getenv("POSTGRES_USER")
-	Config.PostgresPassword = os.Getenv("POSTGRES_PASSWORD")
-	Config.PostgresDB = os.Getenv("POSTGRES_DB")
-	Config.PostgresPort = os.Getenv("POSTGRES_PORT")
-	Config.PostgresHost = os.Getenv("POSTGRES_HOST")
-	Config.GinMode = os.Getenv("GIN_MODE")
-	Config.JwtKey = os.Getenv("JWT_KEY")
-	Config.RedisAddr = os.Getenv("REDIS_ADDR")
-	Config.MinioHost = os.Getenv("MINIO_HOST")
-	Config.MinioPort = os.Getenv("MINIO_PORT")
-	Config.MinioRootUser = os.Getenv("MINIO_ROOT_USER")
-	Config.MinioRootPassword = os.Getenv("MINIO_ROOT_PASSWORD")
+	Env.OpenaiImageGenerationApiEndpoint = os.Getenv("OPENAI_IMAGE_GENERATION_API_ENDPOINT")
+	Env.OpenaiChatCompletionApiEndpoint = os.Getenv("OPENAI_CHAT_COMPLETION_API_ENDPOINT")
+	Env.OpenaiApiKey = os.Getenv("OPENAI_API_KEY")
+	Env.Port = os.Getenv("PORT")
+	Env.PostgresUser = os.Getenv("POSTGRES_USER")
+	Env.PostgresPassword = os.Getenv("POSTGRES_PASSWORD")
+	Env.PostgresDB = os.Getenv("POSTGRES_DB")
+	Env.PostgresPort = os.Getenv("POSTGRES_PORT")
+	Env.PostgresHost = os.Getenv("POSTGRES_HOST")
+	Env.GinMode = os.Getenv("GIN_MODE")
+	Env.JwtKey = os.Getenv("JWT_KEY")
+	Env.RedisAddr = os.Getenv("REDIS_ADDR")
+	Env.MinioHost = os.Getenv("MINIO_HOST")
+	Env.MinioPort = os.Getenv("MINIO_PORT")
+	Env.MinioRootUser = os.Getenv("MINIO_ROOT_USER")
+	Env.MinioRootPassword = os.Getenv("MINIO_ROOT_PASSWORD")
+
+	Env.Aws.AccessKeyId = os.Getenv("AWS_ACCESS_KEY_ID")
+	Env.Aws.SecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
+	Env.Aws.Region = os.Getenv("AWS_REGION")
+
 }

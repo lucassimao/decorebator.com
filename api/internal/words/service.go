@@ -23,11 +23,11 @@ func init() {
 	repository = &WordRepository{db}
 }
 
-func GetWordsFromWordlist(wordlistId, userId int64) ([]Word, error) {
+func FindByWordlist(wordlistId, userId int64) ([]Word, error) {
 	return repository.getAllFromWordlist(wordlistId, userId)
 }
 
-func SaveWord(dto *Word) (*Word, error) {
+func Save(dto *Word) (*Word, error) {
 	var lowerCasedName = strings.ToLower(dto.Name)
 	var trimmedName = strings.TrimSpace(lowerCasedName)
 	word, err := repository.save(trimmedName, dto.UserID, dto.WordlistID)
@@ -54,7 +54,9 @@ func SaveWord(dto *Word) (*Word, error) {
 			algorithm := spacedrepetion.LeitnerSystemAlgorithm{}
 			algorithm.IncludeDefinitions(dto.UserID, defs)
 
+			// trigerring image generation worker for each definition
 			riverClient, err := workers.GetRiverClient()
+
 			if err == nil {
 				for _, definition := range defs {
 					_, err = riverClient.Insert(context.Background(), workers.ImageGeneratorArgs{
@@ -77,7 +79,7 @@ func SaveWord(dto *Word) (*Word, error) {
 	return word, nil
 }
 
-func DeleteWord(id, userId int64) (int64, error) {
+func Delete(id, userId int64) (int64, error) {
 	count, err := repository.delete(userId, id)
 	if err != nil {
 		common.Logger.Error("failed to delete word", "error", err)
@@ -91,7 +93,7 @@ func DeleteWord(id, userId int64) (int64, error) {
 	return count, nil
 }
 
-func UpdateWord(word *Word) error {
+func Update(word *Word) error {
 	count, err := repository.update(word)
 	if err != nil {
 		common.Logger.Error("failed to update word", "error", err)
@@ -102,5 +104,4 @@ func UpdateWord(word *Word) error {
 		return common.NotFoundError{ID: word.ID, Entity: "Word"}
 	}
 	return nil
-
 }

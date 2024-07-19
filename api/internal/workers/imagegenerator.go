@@ -3,6 +3,7 @@ package workers
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,6 +23,12 @@ type ImageGeneratorArgs struct {
 }
 
 func (ImageGeneratorArgs) Kind() string { return "ImageGenerator" }
+
+func (ImageGeneratorArgs) InsertOpts() river.InsertOpts {
+	return river.InsertOpts{
+		Queue: IMAGE_GENERATOR_QUEUE,
+	}
+}
 
 type ImageGeneratorWorker struct {
 	river.WorkerDefaults[ImageGeneratorArgs]
@@ -63,12 +70,14 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	}
 
 	firstItem := *(response.Data)
-	var url string
-	if common.Config.Env == common.Development {
-		url, err = common.MinIOPUT(firstItem[0].Base64Json, "images", fmt.Sprintf("definition-%d-%d.png", definition.ID, time.Now().Unix()))
-	} else {
-		return errors.New("not implemented")
+	// Decode base64 data
+	data, err := base64.StdEncoding.DecodeString(firstItem[0].Base64Json)
+	if err != nil {
+		return fmt.Errorf("failed to decode base64 data: %v", err)
 	}
+
+	url, err := common.Upload(data, "images",
+		fmt.Sprintf("definition-%d-%d.png", definition.ID, time.Now().Unix()), "image/png")
 
 	if err != nil {
 		logger.Error("failed to upload image", "error", err)
@@ -108,13 +117,13 @@ func callOpenAIImageGeneration(prompt string) (*ImageGenerationResponse, error) 
 		return nil, fmt.Errorf("error marshalling request data: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", common.Config.OpenaiImageGenerationApiEndpoint, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", common.Env.OpenaiImageGenerationApiEndpoint, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", common.Config.OpenaiApiKey))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", common.Env.OpenaiApiKey))
 
 	client := &http.Client{}
 
