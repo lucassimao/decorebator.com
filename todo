@@ -8,9 +8,13 @@
 [x] fast quiz mode
 [x] Opções de palavras estão se repetindo como se fossem cacheados pelo banco
 [x] add word modal - save and add more
-[ ] New quiz: word from meaning
+[x] New quiz: word from meaning
 [ ] New quiz: word from image
+    - run in a specific queue, where a max of 5 workers are enabled.
+    - implement s3 upload if in production mode
+    - frontend
 [ ] New quiz: word from pronounciation
+    - save sounds in object store
 [ ] listen to pronounciation
 [x] GetDefinition using chatGPT is not saving examples properly
 [ ] Reuse definitions already fetched from wiktionary or chatgpt

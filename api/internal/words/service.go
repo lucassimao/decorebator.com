@@ -1,6 +1,7 @@
 package words
 
 import (
+	"context"
 	"errors"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"decorebator.com/internal/definitions/openai"
 	"decorebator.com/internal/definitions/wiktionary"
 	spacedrepetion "decorebator.com/internal/quizzes/spacedrepetition"
+	"decorebator.com/internal/workers"
 )
 
 var repository *WordRepository
@@ -51,6 +53,22 @@ func SaveWord(dto *Word) (*Word, error) {
 		if len(defs) > 0 {
 			algorithm := spacedrepetion.LeitnerSystemAlgorithm{}
 			algorithm.IncludeDefinitions(dto.UserID, defs)
+
+			riverClient, err := workers.GetRiverClient()
+			if err == nil {
+				for _, definition := range defs {
+					_, err = riverClient.Insert(context.Background(), workers.ImageGeneratorArgs{
+						DefinitionId: definition.ID,
+					}, nil)
+
+					if err != nil {
+						logger.Error("river failed to insert definition", "definitionId", definition.ID)
+					}
+				}
+			} else {
+				logger.Error("failed to get river client", "error", err)
+			}
+
 		}
 		logger.Info("definitions fetched", "count", len(defs))
 

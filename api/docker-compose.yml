@@ -1,6 +1,16 @@
 version: '3.9'
 
 services:
+  minio:
+    image: minio/minio:latest
+    env_file:
+      - .env  # Load environment variables from .env file    
+    ports:
+      - "${MINIO_PORT}:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001" 
   postgres:
     image: postgres:15.3
     restart: on-failure
@@ -13,3 +23,4 @@ services:
 
 volumes:
   postgres_data:
+  minio-data:

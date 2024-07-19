@@ -28,7 +28,7 @@ func isValidPartOfSpeech(value string) bool {
 
 }
 
-func chatGPT(messages []map[string]string) (*ChatCompletionResponse, error) {
+func chatCompletion(messages []map[string]string) (*ChatCompletionResponse, error) {
 	var requestBodyStruct = map[string]any{
 		"model":           "gpt-4-turbo",
 		"response_format": map[string]string{"type": "json_object"},
@@ -40,7 +40,7 @@ func chatGPT(messages []map[string]string) (*ChatCompletionResponse, error) {
 		return nil, fmt.Errorf("error marshalling request data: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", os.Getenv("OPENAI_API_ENDPOINT"), bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", os.Getenv("OPENAI_CHAT_COMPLETION_API_ENDPOINT"), bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
@@ -89,7 +89,7 @@ func GetExamples(token string, partOfSpeech string, number int, sense string) ([
 		{"role": "system", "content": fmt.Sprintf("If %s is a verb, then use its different tenses. If noum, you can use its plural or singular form.", token)},
 	}
 
-	chatResponse, err := chatGPT(messages)
+	chatResponse, err := chatCompletion(messages)
 	debugCtx := []any{"token", token, "pos", partOfSpeech, "sense", sense, "number", number}
 	common.Logger.Debug("generating chatgpt examples", debugCtx...)
 
@@ -126,7 +126,7 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 		{"role": "system", "content": "If the word can not be found, then the property results should be an empty array."},
 	}
 
-	var chatResponse, err = chatGPT(messages)
+	var chatResponse, err = chatCompletion(messages)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get definitions from ChatGPT: %w", err)
 	}

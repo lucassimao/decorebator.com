@@ -31,19 +31,19 @@ POST http://localhost:3000/wordlists
 authorization: {{authToken}}
 
 {
-"Name":"old man and the sea",
-"description":"book by Ernest Hemingway"
+"Name":"tests",
+"description":"tests only"
 }
 
 @wordlistId = {{wordlistRequest.response.body.id}} 
-@wordlistId = 27
+@wordlistId = 30
 
 ### Creating word
 POST http://localhost:3000/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
- "Name":"perils"  
+ "Name":"bearer"  
 }
 
 

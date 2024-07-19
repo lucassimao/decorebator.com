@@ -1,0 +1,1 @@
+ALTER table definitions ADD image_url text;

@@ -2,6 +2,7 @@ package definitions
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"strings"
 
@@ -53,6 +54,7 @@ type Definition struct {
 	SourceId          string
 	Sounds            []Sound
 	PhoneticNotations []PhoneticNotation
+	ImageUrl          string
 
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
@@ -226,4 +228,36 @@ func (repository *DefinitionRepository) getRandomTokens(definitionIdsToIgnore []
 		tokens = append(tokens, token)
 	}
 	return tokens, nil
+}
+
+func (repository *DefinitionRepository) getById(id int64) (*Definition, error) {
+
+	var query = `SELECT token, language, part_of_speech, meaning, examples, inflections, source, 
+						source_id,sounds,phonetic_notations, created_at, updated_at
+		FROM definitions WHERE id = $1`
+
+	var def Definition
+	def.ID = id
+
+	err := repository.db.QueryRow(context.Background(), query, id).Scan(
+		&def.Token, &def.Language, &def.PartOfSpeech, &def.Meaning, &def.Examples, &def.Inflections,
+		&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations, &def.CreatedAt, &def.UpdatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, common.NotFoundError{ID: id, Entity: "definition"}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &def, nil
+}
+
+func (repository *DefinitionRepository) setImage(id int64, imageUrl string) error {
+
+	query := `UPDATE definitions SET image_url = $1 WHERE id=$2`
+
+	_, err := repository.db.Exec(context.Background(), query, imageUrl, id)
+	return err
 }
