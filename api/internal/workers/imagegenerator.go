@@ -48,7 +48,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		return err
 	}
 
-	var prompt = fmt.Sprintf("Illustrate the %s %s based on the following meaning: %s", definition.PartOfSpeech, definition.Token, definition.Meaning)
+	var prompt = fmt.Sprintf("Illustrate %s: %s", definition.Token, definition.Meaning)
 	response, err := callOpenAIImageGeneration(prompt)
 
 	if err != nil {

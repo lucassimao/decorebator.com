@@ -1,6 +1,7 @@
 import * as wordlistsApi from "@/api/wordlists";
 import * as React from "react";
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -49,19 +50,24 @@ const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
           contentContainerStyle={{ alignItems: "stretch" }}
           style={styles.content}
         >
-          <Text
+
+          {quiz.type == 'WORD_FROM_IMAGE' ? <Image
+            source={{ uri: quiz.value }}
+            style={styles.image}
+          /> : <Text
             adjustsFontSizeToFit={true}
             numberOfLines={9}
             style={[
               styles.header,
-              ["COMPLETE_SENTENCE",'WORD_FROM_MEANING'].includes(quiz.type)
+              ["COMPLETE_SENTENCE", 'WORD_FROM_MEANING'].includes(quiz.type)
                 ? styles.defaultQuizTitle
                 : styles.biggerQuizTitle,
             ]}
           >
             {title}
-          </Text>
-          {["GUESS_MEANING",'WORD_FROM_MEANING'].includes(quiz.type) && (
+          </Text>}
+
+          {["GUESS_MEANING", 'WORD_FROM_MEANING'].includes(quiz.type) && (
             <Text style={{ textAlign: "center" }}>{quiz.pos}</Text>
           )}
 
@@ -97,8 +103,8 @@ const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
                   style={[
                     styles.buttonText,
                     selectedIndex != null &&
-                    selectedIndex != index &&
-                    quiz.answerIndex == index
+                      selectedIndex != index &&
+                      quiz.answerIndex == index
                       ? { color: "green" }
                       : null,
                   ]}
@@ -178,6 +184,12 @@ const makeStyles = (fontScale: number) =>
     },
     wrongOption: {
       backgroundColor: "#f44336", // Red color for error
+    },
+    image: {
+      width: 200,
+      height: 200,
+      marginLeft: 'auto',
+      marginRight:'auto'
     },
   });
 

@@ -30,7 +30,7 @@ func isValidPartOfSpeech(value string) bool {
 
 func chatCompletion(messages []map[string]string) (*ChatCompletionResponse, error) {
 	var requestBodyStruct = map[string]any{
-		"model":           "gpt-4-turbo",
+		"model":           "gpt-4o", //"gpt-4-turbo",
 		"response_format": map[string]string{"type": "json_object"},
 		"messages":        messages,
 	}
@@ -84,7 +84,7 @@ func GetExamples(token string, partOfSpeech string, number int, sense string) ([
 		{"role": "system", "content": "Each phrase must be well structured, including subject and verb. Be creative."},
 		{"role": "system", "content": "The JSON must have the property examples which is an array of strings."},
 		{"role": "user", "content": userPrompt},
-		{"role": "system", "content": "In each example phrase, wrap the word and any particle that might be part of the word into square brackets."},
+		{"role": "system", "content": "In each example phrase, wrap the word and any particle that might be part of the word into square brackets. Example: she was completely [torn up]."},
 		{"role": "system", "content": fmt.Sprintf("All phrases must include the word %s and convey the following sense: %s", token, sense)},
 		{"role": "system", "content": fmt.Sprintf("If %s is a verb, then use its different tenses. If noum, you can use its plural or singular form.", token)},
 	}
@@ -115,7 +115,7 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 
 	logger.Debug("defining token using chatgpt", "token", token)
 
-	userMessage := fmt.Sprintf("Give me the meaning, part of speech and 5 example phrases of the word %s.", token)
+	userMessage := fmt.Sprintf("Give all valid meanings, part of speech and 5 example phrases of the word %s in contemporary English.", token)
 	messages := []map[string]string{
 		{"role": "system", "content": "You are a helpful dictionary assistant designed to output JSON."},
 		{"role": "system", "content": "The JSON must have the property results, which value is an array where each item should have three properties: meaning (string), part_of_speech (string) and examples (array of strings)."},
@@ -147,7 +147,9 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 		result := &openAIDefinition.Results[index]
 
 		if !isValidPartOfSpeech(result.PartOfSpeech) {
-			return nil, fmt.Errorf("unexpected part of speech: %s", result.PartOfSpeech)
+			logger.Debug("ignoring result", "result", result)
+			continue
+			// return nil, fmt.Errorf("unexpected part of speech: %s", result.PartOfSpeech)
 		}
 
 		result.Language = "en"

@@ -39,6 +39,8 @@ func FetchAndSave(token string, tokenId int64, definerFunc TokenDefiner) ([]Defi
 				continue
 			}
 
+			common.Logger.Debug("Finding terms", "example", example)
+
 			start, end, err := nlputils.FindTerm(definition.Token, example)
 			if err != nil {
 				common.Logger.Warn("failed to find term", "error", err, "token", definition.Token, "example", example)

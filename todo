@@ -12,10 +12,12 @@
 [ ] New quiz: word from image
     ok run in a specific queue, where a max of 5 workers are enabled.
     ok implement s3 upload if in production mode
+    - endpoint to trigger a new image generation for a definition
     - frontend
 [ ] New quiz: word from pronounciation
     - save sounds in object store
 [ ] listen to pronounciation
+[ ] allow adding context for a word: example or exerpt
 [x] GetDefinition using chatGPT is not saving examples properly
 [ ] Reuse definitions already fetched from wiktionary or chatgpt
 [ ] display ipa

@@ -1,5 +1,10 @@
 version: '3.9'
+name: decorebator
 services:
+  redis:
+    image: redis/redis-stack-server:latest
+    ports:
+      - "6379:6379"
   minio:
     image: minio/minio:latest
     env_file:
@@ -12,7 +17,6 @@ services:
     command: server /data --console-address ":9001" 
   postgres:
     image: postgres:15.3
-    restart: on-failure
     env_file:
       - .env  # Load environment variables from .env file
     ports:
@@ -21,5 +25,9 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data:
-  minio-data:
+  postgres_data: 
+    name: api_postgres_data
+    external: true
+  minio-data: 
+    name: api_minio-data
+    external: true

@@ -8,7 +8,6 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/definitions"
 	"decorebator.com/internal/definitions/openai"
-	"decorebator.com/internal/definitions/wiktionary"
 	spacedrepetion "decorebator.com/internal/quizzes/spacedrepetition"
 	"decorebator.com/internal/workers"
 )
@@ -39,15 +38,22 @@ func Save(dto *Word) (*Word, error) {
 	}
 
 	go func() {
-		defs, err := definitions.FetchAndSave(word.Name, word.ID, wiktionary.GetDefinition)
+		// defs, err := definitions.FetchAndSave(word.Name, word.ID, wiktionary.GetDefinition)
+
+		// if err != nil || len(defs) == 0 {
+		// 	logger.Error("failed to fetch definitions using wiktionary. Falling back to chatgpt", "error", err)
+
+		// 	defs, err = definitions.FetchAndSave(word.Name, word.ID, openai.GetDefinition)
+		// 	if err != nil {
+		// 		logger.Error("failed to fetch definitions using chatgpt", "error", err)
+		// 	}
+		// }
+
+		defs, err := definitions.FetchAndSave(word.Name, word.ID, openai.GetDefinition)
 
 		if err != nil || len(defs) == 0 {
-			logger.Error("failed to fetch definitions using wiktionary. Falling back to chatgpt", "error", err)
-
-			defs, err = definitions.FetchAndSave(word.Name, word.ID, openai.GetDefinition)
-			if err != nil {
-				logger.Error("failed to fetch definitions using chatgpt", "error", err)
-			}
+			logger.Error("failed to fetch definitions using chatgpt", "error", err)
+			return
 		}
 
 		if len(defs) > 0 {

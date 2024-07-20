@@ -21,7 +21,7 @@ func (h *QuizHandlers) Create(c *gin.Context) {
 	wordlistID, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 
-	challenge, err := strategy.CreateChallenge(wordlistID, userId)
+	challenge, err := strategy.CreateQuiz(wordlistID, userId)
 
 	if err != nil {
 		common.Logger.Error("failed to create quiz", "error", err, "wordlistID", wordlistID)
@@ -46,7 +46,7 @@ func (h *QuizHandlers) Save(c *gin.Context) {
 		return
 	}
 
-	var err = strategy.SaveChallengeResult(input.Id, input.Success)
+	var err = strategy.SaveQuizResult(input.Id, input.Success)
 
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())

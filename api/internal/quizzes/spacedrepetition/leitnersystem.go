@@ -19,27 +19,26 @@ func init() {
 }
 
 func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64, int64, error) {
+
 	// Grouping by box_id and getting the earliest updated_at
 	query := `
-		-- rouding robin by max_lst_updated_at
-
 		WITH words_queue AS (
 			SELECT wd.word_id, max(lst.updated_at) max_lst_updated_at
-			FROM leitner_system_tracking lst
-			JOIN word_definitions wd ON wd.definition_id = lst.definition_id
-			JOIN words w ON wd.word_id = w.id
-			WHERE 
-				w.wordlist_id=$2 
-			GROUP BY 
-				wd.word_id
-			ORDER BY
-				max_lst_updated_at ASC NULLS FIRST
-			LIMIT 1
+				FROM leitner_system_tracking lst
+				JOIN word_definitions wd ON wd.definition_id = lst.definition_id
+				JOIN words w ON wd.word_id = w.id
+				WHERE 
+					w.wordlist_id=$2 
+				GROUP BY 
+					wd.word_id
+				ORDER BY
+					max_lst_updated_at ASC NULLS FIRST
+				LIMIT 1		
 		),
 		earliest_per_box AS (
 			SELECT def.id, lst.id AS lst_id, def.token, 
 					def.part_of_speech,  def.meaning, def.examples, 
-					def.inflections , lst.box_id, def.sounds, def.phonetic_notations
+					def.inflections , lst.box_id, def.sounds, def.phonetic_notations, def.image_url
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
 			JOIN word_definitions wd ON def.id = wd.definition_id
@@ -51,7 +50,8 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 			ORDER BY
 				lst.box_id ASC, lst.updated_at ASC NULLS FIRST, wd.word_id ASC
 		)
-		SELECT id, token, part_of_speech, meaning, examples, inflections, lst_id, box_id, sounds,phonetic_notations
+
+		SELECT id, token, part_of_speech, meaning, examples, inflections, lst_id, box_id, sounds,phonetic_notations, COALESCE(image_url,'')
 		FROM earliest_per_box 
 		LIMIT 1;
 	`
@@ -81,7 +81,7 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
 		&definition.Meaning, &definition.Examples,
 		&definition.Inflections, &leitnerSystemID, &boxID, &definition.Sounds,
-		&definition.PhoneticNotations)
+		&definition.PhoneticNotations, &definition.ImageUrl)
 
 	if err != nil {
 		return nil, -1, -1, err
@@ -120,7 +120,8 @@ func (LeitnerSystemAlgorithm) IncludeDefinitions(userID int64, definitions []def
 
 	return nil
 }
-func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challenge, error) {
+
+func (LeitnerSystemAlgorithm) CreateQuiz(wordlistID, userID int64) (*Quiz, error) {
 	definition, leitnerSystemID, boxID, err := getNextDefinition(userID, wordlistID)
 	if err != nil {
 		return nil, err
@@ -128,14 +129,25 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 
 	var options []string
 	var value string
-	var quizzType ChallengeType
+	var quizzType QuizType
 	var quizAnswer string
 
 	common.Logger.Debug("CreateChallenge", "boxID", boxID, "leitnerSystemID", leitnerSystemID, "definition", definition.ID)
 
 	switch {
+	case boxID%4 == 0 && definition.ImageUrl != "":
+		quizzType = WordFromImage
+		value = definition.ImageUrl
+		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
+
+		if err != nil {
+			return nil, err
+		}
+
+		quizAnswer = definition.Token
+
 	case boxID%3 == 0:
-		quizzType = WORD_FROM_MEANING
+		quizzType = WordFromMeaning
 		value = definition.Meaning
 		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 
@@ -145,7 +157,7 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 
 		quizAnswer = definition.Token
 	case boxID%2 == 0:
-		quizzType = COMPLETE_SENTENCE
+		quizzType = CompleteSentence
 		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
@@ -162,7 +174,7 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 			quizAnswer = definition.Token
 		}
 	default:
-		quizzType = GUESS_MEANING
+		quizzType = GuessMeaning
 		options, err = definitions.GetRandomMeanings([]int{int(definition.ID)}, 3)
 		if err != nil {
 			return nil, err
@@ -180,7 +192,7 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 	copy(options[answerIndex+1:], options[answerIndex:])
 	options[answerIndex] = quizAnswer
 
-	challenge := &Challenge{
+	challenge := &Quiz{
 		Value:        value,
 		Options:      options,
 		AnswerIndex:  answerIndex,
@@ -194,7 +206,7 @@ func (LeitnerSystemAlgorithm) CreateChallenge(wordlistID, userID int64) (*Challe
 	return challenge, nil
 }
 
-func (LeitnerSystemAlgorithm) SaveChallengeResult(id int64, success bool) error {
+func (LeitnerSystemAlgorithm) SaveQuizResult(id int64, success bool) error {
 
 	query := `UPDATE leitner_system_tracking 
 	SET 
