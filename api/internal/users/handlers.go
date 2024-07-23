@@ -176,6 +176,18 @@ func (h *UserHandlers) Authenticate(c *gin.Context) {
 	c.Next()
 }
 
+func (h *UserHandlers) AuthenticateStatic(c *gin.Context) {
+
+	authorization := c.GetHeader("Authorization")
+
+	if authorization == "" || authorization != common.Env.StaticAuthentication {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Wrong credentials"})
+		return
+	}
+
+	c.Next()
+}
+
 func canConvertToInt(n int64) bool {
 	return n >= int64(math.MinInt) && n <= int64(math.MaxInt)
 }

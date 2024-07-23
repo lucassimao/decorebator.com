@@ -1,7 +1,6 @@
 package words
 
 import (
-	"context"
 	"errors"
 	"strings"
 
@@ -60,21 +59,12 @@ func Save(dto *Word) (*Word, error) {
 			algorithm := spacedrepetion.LeitnerSystemAlgorithm{}
 			algorithm.IncludeDefinitions(dto.UserID, defs)
 
-			// trigerring image generation worker for each definition
-			riverClient, err := workers.GetRiverClient()
+			for _, definition := range defs {
+				_, err = workers.TriggerImageGenerator(definition.ID, "")
 
-			if err == nil {
-				for _, definition := range defs {
-					_, err = riverClient.Insert(context.Background(), workers.ImageGeneratorArgs{
-						DefinitionId: definition.ID,
-					}, nil)
-
-					if err != nil {
-						logger.Error("river failed to insert definition", "definitionId", definition.ID)
-					}
+				if err != nil {
+					logger.Error("failed to trigger image generator definition", "definitionId", definition.ID, "error", err)
 				}
-			} else {
-				logger.Error("failed to get river client", "error", err)
 			}
 
 		}

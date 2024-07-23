@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+
 	riverClient, err := workers.GetRiverClient()
 
 	if err != nil {

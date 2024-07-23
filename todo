@@ -8,24 +8,27 @@
 [x] fast quiz mode
 [x] Opções de palavras estão se repetindo como se fossem cacheados pelo banco
 [x] add word modal - save and add more
+[x] GetDefinition using chatGPT is not saving examples properly
 [x] New quiz: word from meaning
 [ ] New quiz: word from image
     ok run in a specific queue, where a max of 5 workers are enabled.
     ok implement s3 upload if in production mode
+    ok frontend
     - endpoint to trigger a new image generation for a definition
-    - frontend
 [ ] New quiz: word from pronounciation
     - save sounds in object store
+    - https://platform.openai.com/docs/guides/text-to-speech/overview
+    - display ipa
+[ ] move openapi call to the queue
+[ ] track quiz success and error timestamps
+[ ] integration test for leitner system
 [ ] listen to pronounciation
-[ ] allow adding context for a word: example or exerpt
-[x] GetDefinition using chatGPT is not saving examples properly
-[ ] Reuse definitions already fetched from wiktionary or chatgpt
-[ ] display ipa
-[ ] Allow to skip definition
+[ ] limit the length of words to 10
+[ ] Reuse definitions already fetched
 [ ] Allow to select specific quiz types
 [ ] display word status: pending, error, no meaning found, etc
-[ ] Allow to report problem
-[ ] Check if References in examples can be removed. August 14, 1784 ...
+[ ] use queue when fetching definitions from openai
+
 [ ] add sentry on the backend
 [ ] add sentry on mobile  
 [ ] recover password 
@@ -38,13 +41,17 @@
         [ ] monthly subscription
         [ ] anual subscription
 
-[ ] clicking on a word should open a modal defining the clicked word
 [ ] continuos deployment of the backend to ecs
 [ ] continuos deployment for mobile
-
+[ ] Notifications https://github.com/nikoksr/notify
 
 # V2
 
+[ ] Allow to report problem
+    - unrelated image
+    - wrong meaning
+[ ] clicking on a word should open a modal defining the clicked word
+[ ] allow adding context for a word: example or exerpt
 [ ] Settings - choose UK or US english
 [ ] automated tests
 [ ] configurar honnef.co/go/tools/cmd/staticcheck

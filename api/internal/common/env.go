@@ -27,6 +27,7 @@ var Env struct {
 	MinioPort                        string
 	MinioRootUser                    string
 	MinioRootPassword                string
+	StaticAuthentication             string
 
 	Aws struct {
 		AccessKeyId     string
@@ -58,6 +59,7 @@ func init() {
 	Env.MinioPort = os.Getenv("MINIO_PORT")
 	Env.MinioRootUser = os.Getenv("MINIO_ROOT_USER")
 	Env.MinioRootPassword = os.Getenv("MINIO_ROOT_PASSWORD")
+	Env.StaticAuthentication = os.Getenv("STATIC_AUTHENTICATION")
 
 	Env.Aws.AccessKeyId = os.Getenv("AWS_ACCESS_KEY_ID")
 	Env.Aws.SecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")

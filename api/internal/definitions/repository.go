@@ -130,13 +130,25 @@ func (repository *DefinitionRepository) getRandomMeanings(definitionIdsToIgnore 
 	// all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
 	query := `
 		WITH options AS (
-			SELECT DISTINCT meaning FROM definitions def
+			SELECT DISTINCT def.meaning 
+			FROM definitions def
 			JOIN word_definitions wd ON wd.definition_id = def.id
-			WHERE wd.word_id NOT IN (select word_id FROM word_definitions WHERE definition_id = ANY($1)) 
-			AND length(def.meaning) < 70
-			-- in order to avoid same definition from different users
-			AND def.meaning NOT IN (select meaning FROM definitions WHERE id = ANY($1)) 
-			AND part_of_speech IN (select part_of_speech FROM definitions WHERE id = ANY($1)) 
+			WHERE wd.word_id NOT IN (
+				SELECT word_id 
+				FROM word_definitions 
+				WHERE definition_id = ANY($1)
+			)
+			AND length(def.meaning) < 50
+			AND def.meaning NOT IN (
+				SELECT meaning 
+				FROM definitions 
+				WHERE id = ANY($1)
+			)
+			AND part_of_speech IN (
+				SELECT part_of_speech 
+				FROM definitions 
+				WHERE id = ANY($1)
+			)
 		)
 		SELECT meaning FROM options ORDER BY random() LIMIT $2;
 	`

@@ -1,4 +1,4 @@
-package workers
+package internal
 
 import (
 	"bytes"
@@ -16,19 +16,14 @@ import (
 	"github.com/riverqueue/river"
 )
 
-var logger = common.Logger.With("module", "imagegenerator")
-
 type ImageGeneratorArgs struct {
-	DefinitionId int64 `json:"definitionId"`
+	DefinitionId int64  `json:"definitionId"`
+	CustomPrompt string `json:"customPrompt"`
 }
 
 func (ImageGeneratorArgs) Kind() string { return "ImageGenerator" }
 
-func (ImageGeneratorArgs) InsertOpts() river.InsertOpts {
-	return river.InsertOpts{
-		Queue: IMAGE_GENERATOR_QUEUE,
-	}
-}
+var logger = common.Logger.With("module", "imagegenerator")
 
 type ImageGeneratorWorker struct {
 	river.WorkerDefaults[ImageGeneratorArgs]
@@ -36,19 +31,26 @@ type ImageGeneratorWorker struct {
 
 func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGeneratorArgs]) error {
 
-	definition, err := definitions.GetById(job.Args.DefinitionId)
-	if err != nil {
+	var prompt string
+	var definitionID = job.Args.DefinitionId
 
-		if errors.Is(err, &common.NotFoundError{}) {
-			logger.Error("skipping image generation: inexisting definition", "definitionId", job.Args.DefinitionId)
-			return nil
+	if job.Args.CustomPrompt != "" {
+		prompt = job.Args.CustomPrompt
+	} else {
+		definition, err := definitions.GetById(job.Args.DefinitionId)
+		if err != nil {
+
+			if errors.Is(err, &common.NotFoundError{}) {
+				logger.Error("skipping image generation: inexisting definition", "definitionId", job.Args.DefinitionId)
+				return nil
+			}
+
+			logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
+			return err
 		}
-
-		logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
-		return err
+		prompt = fmt.Sprintf("Illustrate %s: %s", definition.Token, definition.Meaning)
 	}
 
-	var prompt = fmt.Sprintf("Illustrate %s: %s", definition.Token, definition.Meaning)
 	response, err := callOpenAIImageGeneration(prompt)
 
 	if err != nil {
@@ -61,9 +63,20 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	if response.Error != nil {
 		logger.Error("failed to generate image", "body", response.Error)
 
-		if response.Error.Code == "billing_hard_limit_reached" {
-			// notification here elsewhere
+		switch response.Error.Code {
+		case "billing_hard_limit_reached":
+			// [TODO] notification here elsewhere
 			logger.Warn(response.Error.Message)
+		case "content_policy_violation":
+			jsonData, err := json.Marshal(response.Error)
+
+			if err != nil {
+				return river.JobCancel(err)
+			}
+
+			// aborting job
+			return river.JobCancel(
+				fmt.Errorf("content_policy_violation: %q", string(jsonData)))
 		}
 
 		return fmt.Errorf("OpenAI error: %s", response.Error.Message)
@@ -77,15 +90,15 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	}
 
 	url, err := common.Upload(data, "images",
-		fmt.Sprintf("definition-%d-%d.png", definition.ID, time.Now().Unix()), "image/png")
+		fmt.Sprintf("definition-%d-%d.png", definitionID, time.Now().Unix()), "image/png")
 
 	if err != nil {
 		logger.Error("failed to upload image", "error", err)
 		return err
 	}
 
-	logger.Debug("image generated", "definitionId", definition.ID, "url", url)
-	return definitions.SetImage(definition.ID, url)
+	logger.Debug("image generated", "definitionId", definitionID, "url", url)
+	return definitions.SetImage(definitionID, url)
 }
 
 type ImageGenerationResponse struct {

@@ -17,7 +17,7 @@ func isValidPartOfSpeech(value string) bool {
 
 	var validPartOfSpeechs = []string{"noun", "pronoun", "verb", "phrasal verb",
 		"adjective", "adverb", "preposition",
-		"conjunction", "interjection"}
+		"conjunction", "interjection", "num"}
 
 	for _, v := range validPartOfSpeechs {
 		if v == value {

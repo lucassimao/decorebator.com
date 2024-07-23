@@ -14,6 +14,7 @@ import (
 	"decorebator.com/internal/users"
 	"decorebator.com/internal/wordlists"
 	"decorebator.com/internal/words"
+	"decorebator.com/internal/workers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -71,6 +72,13 @@ func main() {
 		authenticatedRoutes.POST("/wordlists/:wordlistId/words", words.Handlers.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizzes.Handlers.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizzes.Handlers.Save)
+
+	}
+
+	workerRoutes := router.Group("/static/workers")
+	workerRoutes.Use(users.Handlers.AuthenticateStatic)
+	{
+		workerRoutes.POST("/imageGenerator/:definitionId", workers.Handlers.GenerateNewImage)
 	}
 
 	srv := &http.Server{

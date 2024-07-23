@@ -6,17 +6,12 @@ import (
 	"math/rand"
 	"os"
 	"regexp"
-	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/definitions"
 )
 
 type LeitnerSystemAlgorithm struct{}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64, int64, error) {
 
@@ -135,28 +130,7 @@ func (LeitnerSystemAlgorithm) CreateQuiz(wordlistID, userID int64) (*Quiz, error
 	common.Logger.Debug("CreateChallenge", "boxID", boxID, "leitnerSystemID", leitnerSystemID, "definition", definition.ID)
 
 	switch {
-	case boxID%4 == 0 && definition.ImageUrl != "":
-		quizzType = WordFromImage
-		value = definition.ImageUrl
-		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
-
-		if err != nil {
-			return nil, err
-		}
-
-		quizAnswer = definition.Token
-
-	case boxID%3 == 0:
-		quizzType = WordFromMeaning
-		value = definition.Meaning
-		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
-
-		if err != nil {
-			return nil, err
-		}
-
-		quizAnswer = definition.Token
-	case boxID%2 == 0:
+	case boxID%4 == 0:
 		quizzType = CompleteSentence
 		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 		if err != nil {
@@ -173,6 +147,26 @@ func (LeitnerSystemAlgorithm) CreateQuiz(wordlistID, userID int64) (*Quiz, error
 		} else {
 			quizAnswer = definition.Token
 		}
+	case boxID%3 == 0 && definition.ImageUrl != "":
+		quizzType = WordFromImage
+		value = definition.ImageUrl
+		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
+
+		if err != nil {
+			return nil, err
+		}
+
+		quizAnswer = definition.Token
+	case boxID%2 == 0:
+		quizzType = WordFromMeaning
+		value = definition.Meaning
+		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
+
+		if err != nil {
+			return nil, err
+		}
+
+		quizAnswer = definition.Token
 	default:
 		quizzType = GuessMeaning
 		options, err = definitions.GetRandomMeanings([]int{int(definition.ID)}, 3)
@@ -211,7 +205,7 @@ func (LeitnerSystemAlgorithm) SaveQuizResult(id int64, success bool) error {
 	query := `UPDATE leitner_system_tracking 
 	SET 
 		updated_at = now(), 
-		box_id = CASE WHEN $1 THEN box_id + 1 ELSE 1 END 
+		box_id = CASE WHEN $1 THEN LEAST(box_id + 1,4) ELSE 1 END 
 	WHERE id = $2`
 
 	db, err := common.GetDBConnection()
