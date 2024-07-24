@@ -1,35 +1,31 @@
-package users
+package http
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
+	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
-type SignupInput struct {
+type signupInput struct {
 	FirstName string `json:"firstName" binding:"required"`
 	LastName  string `json:"lastName" binding:"required"`
 	Email     string `json:"email" binding:"required,email"`
 	Password  string `json:"password" binding:"required,min=5"`
 }
 
-type LoginInput struct {
+type loginInput struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
 
-type UserHandlers struct{}
-
-var Handlers = &UserHandlers{}
+type UserRoutes struct{}
 
 func translateValidationErrors(errs validator.ValidationErrors) map[string]string {
 	var errors = make(map[string]string)
@@ -49,8 +45,8 @@ func translateValidationErrors(errs validator.ValidationErrors) map[string]strin
 	return errors
 }
 
-func (h *UserHandlers) SignUp(c *gin.Context) {
-	var input SignupInput
+func (h *UserRoutes) SignUp(c *gin.Context) {
+	var input signupInput
 	if err := c.BindJSON(&input); err != nil {
 		var ve validator.ValidationErrors
 		if errors.As(err, &ve) {
@@ -62,12 +58,12 @@ func (h *UserHandlers) SignUp(c *gin.Context) {
 		return
 	}
 
-	_, err := SaveUser(input.FirstName, input.LastName, input.Password, input.Email)
+	_, err := api.SaveUser(input.FirstName, input.LastName, input.Password, input.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	} else {
-		jwtToken, err := LoginUser(input.Email, input.Password)
+		jwtToken, err := api.LoginUser(input.Email, input.Password)
 		c.Header("authorization", jwtToken)
 		if err == nil {
 			writeAuthenticationCookie(c, jwtToken)
@@ -76,15 +72,15 @@ func (h *UserHandlers) SignUp(c *gin.Context) {
 	}
 }
 
-func (h *UserHandlers) Login(c *gin.Context) {
-	var input LoginInput
+func (h *UserRoutes) Login(c *gin.Context) {
+	var input loginInput
 
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	jwtToken, err := LoginUser(input.Email, input.Password)
+	jwtToken, err := api.LoginUser(input.Email, input.Password)
 	if err != nil {
 		c.Status(http.StatusBadRequest)
 	} else {
@@ -94,7 +90,7 @@ func (h *UserHandlers) Login(c *gin.Context) {
 	}
 }
 
-func (h *UserHandlers) Logout(c *gin.Context) {
+func (h *UserRoutes) Logout(c *gin.Context) {
 	writeAuthenticationCookie(c, "")
 	c.Status(http.StatusOK)
 }
@@ -103,7 +99,7 @@ func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
 	var maxAge, path, domain, secure, httpOnly, sameSite = int64(0), "/", "localhost", false, true, http.SameSiteStrictMode
 
 	if os.Getenv("ENV") == "production" {
-		maxAge = AUTH_TOKEN_DURATION.Milliseconds()
+		maxAge = api.AUTH_TOKEN_DURATION.Milliseconds()
 		domain = "decorebator.com"
 		// requires https
 		secure = true
@@ -122,70 +118,6 @@ func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
 		common.Logger.Debug("Clearing authorization cookie")
 		c.SetCookie("Authorization", "", int(-1), path, domain, secure, httpOnly)
 	}
-}
-
-func (h *UserHandlers) Authenticate(c *gin.Context) {
-
-	const BearerSchema = "Bearer "
-	authorization, err := c.Cookie("Authorization")
-
-	if err == http.ErrNoCookie {
-		// fallback to header
-		authorization = c.GetHeader("Authorization")
-	}
-
-	if authorization == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization missing"})
-		return
-	}
-
-	tokenString := strings.TrimPrefix(authorization, BearerSchema)
-
-	if tokenString == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token not found"})
-		return
-	}
-
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(os.Getenv("JWT_KEY")), nil
-	})
-
-	if err != nil || !token.Valid {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token vaidation error"})
-		return
-	}
-
-	claims, ok := token.Claims.(*jwt.StandardClaims)
-
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		return
-	}
-
-	userID, err := strconv.ParseInt(claims.Subject, 10, 64)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		return
-	}
-
-	c.Set("userID", userID)
-
-	c.Next()
-}
-
-func (h *UserHandlers) AuthenticateStatic(c *gin.Context) {
-
-	authorization := c.GetHeader("Authorization")
-
-	if authorization == "" || authorization != common.Env.StaticAuthentication {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Wrong credentials"})
-		return
-	}
-
-	c.Next()
 }
 
 func canConvertToInt(n int64) bool {

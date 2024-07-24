@@ -1,4 +1,4 @@
-package users
+package api
 
 import (
 	"context"
@@ -79,16 +79,16 @@ func (repository *UserRepository) save(firstName, lastName, password, email stri
 	return &User{userID, firstName, lastName, passwordHash, email, createdAt, updatedAt}, nil
 }
 
-type FindArgs struct {
-	email *string
+type FindUserArgs struct {
+	email string
 }
 
-func (repository *UserRepository) find(args FindArgs) ([]User, error) {
+func (repository *UserRepository) find(args FindUserArgs) ([]User, error) {
 	var builder strings.Builder
 	builder.WriteString(`SELECT id,first_name, last_name, password_hash, created_at, updated_at FROM users`)
 	var queryArgs []interface{}
 
-	if args.email != nil {
+	if args.email != "" {
 		builder.WriteString(` WHERE email = $1`)
 		queryArgs = append(queryArgs, args.email)
 	}

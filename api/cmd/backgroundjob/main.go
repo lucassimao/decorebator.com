@@ -7,13 +7,13 @@ import (
 	"syscall"
 	"time"
 
+	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
-	"decorebator.com/internal/workers"
 )
 
 func main() {
 
-	riverClient, err := workers.GetRiverClient()
+	riverClient, err := api.GetRiverClient()
 
 	if err != nil {
 		common.Logger.Error("failed to start river client")

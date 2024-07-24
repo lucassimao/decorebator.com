@@ -1,4 +1,4 @@
-package users
+package api
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var repository *UserRepository
+var userRepository *UserRepository
 
 const AUTH_TOKEN_DURATION = 24 * time.Hour
 
@@ -56,11 +56,11 @@ func init() {
 		common.Logger.Error("failed to open db connection", "error", err)
 		os.Exit(1)
 	}
-	repository = &UserRepository{db}
+	userRepository = &UserRepository{db}
 }
 
 func SaveUser(firstName, lastName, password, email string) (*User, error) {
-	user, err := repository.save(firstName, lastName, password, email)
+	user, err := userRepository.save(firstName, lastName, password, email)
 	if err != nil {
 		common.Logger.Error("failed to save new user", "error", err)
 		switch err.(type) {
@@ -76,10 +76,10 @@ func SaveUser(firstName, lastName, password, email string) (*User, error) {
 func LoginUser(email, password string) (string, error) {
 	lowerCaseEmail := strings.ToLower(email)
 
-	args := FindArgs{
-		email: &lowerCaseEmail,
+	args := FindUserArgs{
+		email: lowerCaseEmail,
 	}
-	results, err := repository.find(args)
+	results, err := userRepository.find(args)
 	if err != nil {
 		common.Logger.Error("failed to login user", "error", err)
 		return "", errors.New("could not process your request. Try again later")

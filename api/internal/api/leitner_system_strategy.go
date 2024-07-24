@@ -1,4 +1,4 @@
-package spacedrepetion
+package api
 
 import (
 	"context"
@@ -8,12 +8,14 @@ import (
 	"regexp"
 
 	"decorebator.com/internal/common"
-	"decorebator.com/internal/definitions"
+	"decorebator.com/internal/model"
 )
 
-type LeitnerSystemAlgorithm struct{}
+type LeitnerSystemStrategy struct{}
+type Quiz = model.Quiz
+type QuizType = model.QuizType
 
-func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64, int64, error) {
+func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, error) {
 
 	// Grouping by box_id and getting the earliest updated_at
 	query := `
@@ -44,11 +46,12 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 				AND array_length(def.examples,1) > 0
 			ORDER BY
 				lst.box_id ASC, lst.updated_at ASC NULLS FIRST, wd.word_id ASC
+			LIMIT 1
 		)
 
-		SELECT id, token, part_of_speech, meaning, examples, inflections, lst_id, box_id, sounds,phonetic_notations, COALESCE(image_url,'')
-		FROM earliest_per_box 
-		LIMIT 1;
+		SELECT id, token, part_of_speech, meaning, examples, inflections, lst_id, 
+				box_id, sounds,phonetic_notations, COALESCE(image_url,'')
+		FROM earliest_per_box;
 	`
 
 	db, err := common.GetDBConnection()
@@ -69,7 +72,7 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 		return nil, -1, -1, errors.New("no definitions found")
 	}
 
-	definition := definitions.Definition{}
+	definition := Definition{}
 	var leitnerSystemID int64
 	var boxID int64
 
@@ -85,7 +88,7 @@ func getNextDefinition(userID, wordlistID int64) (*definitions.Definition, int64
 	return &definition, leitnerSystemID, boxID, nil
 }
 
-func (LeitnerSystemAlgorithm) IncludeDefinitions(userID int64, definitions []definitions.Definition) error {
+func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []Definition) error {
 	db, err := common.GetDBConnection()
 	if err != nil {
 		common.Logger.Error("failed to open db connection", "error", err)
@@ -116,7 +119,7 @@ func (LeitnerSystemAlgorithm) IncludeDefinitions(userID int64, definitions []def
 	return nil
 }
 
-func (LeitnerSystemAlgorithm) CreateQuiz(wordlistID, userID int64) (*Quiz, error) {
+func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error) {
 	definition, leitnerSystemID, boxID, err := getNextDefinition(userID, wordlistID)
 	if err != nil {
 		return nil, err
@@ -131,8 +134,8 @@ func (LeitnerSystemAlgorithm) CreateQuiz(wordlistID, userID int64) (*Quiz, error
 
 	switch {
 	case boxID%4 == 0:
-		quizzType = CompleteSentence
-		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
+		quizzType = model.CompleteSentence
+		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
 		}
@@ -148,9 +151,9 @@ func (LeitnerSystemAlgorithm) CreateQuiz(wordlistID, userID int64) (*Quiz, error
 			quizAnswer = definition.Token
 		}
 	case boxID%3 == 0 && definition.ImageUrl != "":
-		quizzType = WordFromImage
+		quizzType = model.WordFromImage
 		value = definition.ImageUrl
-		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
+		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 
 		if err != nil {
 			return nil, err
@@ -158,9 +161,9 @@ func (LeitnerSystemAlgorithm) CreateQuiz(wordlistID, userID int64) (*Quiz, error
 
 		quizAnswer = definition.Token
 	case boxID%2 == 0:
-		quizzType = WordFromMeaning
+		quizzType = model.WordFromMeaning
 		value = definition.Meaning
-		options, err = definitions.GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
+		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 
 		if err != nil {
 			return nil, err
@@ -168,8 +171,8 @@ func (LeitnerSystemAlgorithm) CreateQuiz(wordlistID, userID int64) (*Quiz, error
 
 		quizAnswer = definition.Token
 	default:
-		quizzType = GuessMeaning
-		options, err = definitions.GetRandomMeanings([]int{int(definition.ID)}, 3)
+		quizzType = model.GuessMeaning
+		options, err = GetRandomMeanings([]int{int(definition.ID)}, 3)
 		if err != nil {
 			return nil, err
 		}
@@ -200,12 +203,12 @@ func (LeitnerSystemAlgorithm) CreateQuiz(wordlistID, userID int64) (*Quiz, error
 	return challenge, nil
 }
 
-func (LeitnerSystemAlgorithm) SaveQuizResult(id int64, success bool) error {
+func (LeitnerSystemStrategy) SaveQuizResult(id int64, success bool) error {
 
 	query := `UPDATE leitner_system_tracking 
 	SET 
 		updated_at = now(), 
-		box_id = CASE WHEN $1 THEN LEAST(box_id + 1,4) ELSE 1 END 
+		box_id = CASE WHEN $1 THEN box_id + 1 ELSE 1 END 
 	WHERE id = $2`
 
 	db, err := common.GetDBConnection()

@@ -10,11 +10,7 @@ import (
 	"time"
 
 	"decorebator.com/internal/common"
-	"decorebator.com/internal/quizzes"
-	"decorebator.com/internal/users"
-	"decorebator.com/internal/wordlists"
-	"decorebator.com/internal/words"
-	"decorebator.com/internal/workers"
+	decorebator "decorebator.com/internal/http"
 	"github.com/gin-gonic/gin"
 )
 
@@ -48,37 +44,43 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	var WordRoutes = decorebator.WordRoutes{}
+	var WorkerRoutes = decorebator.WorkerRoutes{}
+	var WordlistRoutes = decorebator.WordlistsRoutes{}
+	var UserRoutes = decorebator.UserRoutes{}
+	var QuizRoutes = decorebator.QuizRoutes{}
+
 	router := gin.Default()
 
 	router.Use(CORSMiddleware())
 
 	// Routes without authentication
-	router.POST("/users", users.Handlers.SignUp)
-	router.GET("/logout", users.Handlers.Logout)
-	router.POST("/login", users.Handlers.Login)
+	router.POST("/users", UserRoutes.SignUp)
+	router.GET("/logout", UserRoutes.Logout)
+	router.POST("/login", UserRoutes.Login)
 
 	// Routes with authentication
 	authenticatedRoutes := router.Group("/")
-	authenticatedRoutes.Use(users.Handlers.Authenticate)
+	authenticatedRoutes.Use(decorebator.Authenticate)
 	{
-		authenticatedRoutes.GET("/wordlists", wordlists.Handlers.GetAll)
-		authenticatedRoutes.POST("/wordlists", wordlists.Handlers.Create)
-		authenticatedRoutes.GET("/wordlists/:wordlistId", wordlists.Handlers.GetById)
-		authenticatedRoutes.PUT("/wordlists/:wordlistId", wordlists.Handlers.Update)
-		authenticatedRoutes.DELETE("/wordlists/:wordlistId", wordlists.Handlers.Delete)
-		authenticatedRoutes.GET("/wordlists/:wordlistId/words", words.Handlers.GetAll)
-		authenticatedRoutes.DELETE("/wordlists/:wordlistId/words/:wordId", words.Handlers.Delete)
-		authenticatedRoutes.PUT("/wordlists/:wordlistId/words/:wordId", words.Handlers.Update)
-		authenticatedRoutes.POST("/wordlists/:wordlistId/words", words.Handlers.Create)
-		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizzes.Handlers.Create)
-		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizzes.Handlers.Save)
+		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
+		authenticatedRoutes.POST("/wordlists", WordlistRoutes.Create)
+		authenticatedRoutes.GET("/wordlists/:wordlistId", WordlistRoutes.GetById)
+		authenticatedRoutes.PUT("/wordlists/:wordlistId", WordlistRoutes.Update)
+		authenticatedRoutes.DELETE("/wordlists/:wordlistId", WordlistRoutes.Delete)
+		authenticatedRoutes.GET("/wordlists/:wordlistId/words", WordRoutes.GetAll)
+		authenticatedRoutes.DELETE("/wordlists/:wordlistId/words/:wordId", WordRoutes.Delete)
+		authenticatedRoutes.PUT("/wordlists/:wordlistId/words/:wordId", WordRoutes.Update)
+		authenticatedRoutes.POST("/wordlists/:wordlistId/words", WordRoutes.Create)
+		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", QuizRoutes.Create)
+		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", QuizRoutes.Save)
 
 	}
 
 	workerRoutes := router.Group("/static/workers")
-	workerRoutes.Use(users.Handlers.AuthenticateStatic)
+	workerRoutes.Use(decorebator.AuthenticateStatic)
 	{
-		workerRoutes.POST("/imageGenerator/:definitionId", workers.Handlers.GenerateNewImage)
+		workerRoutes.POST("/imageGenerator/:definitionId", WorkerRoutes.GenerateNewImage)
 	}
 
 	srv := &http.Server{

@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"decorebator.com/internal/common"
-	"decorebator.com/internal/definitions"
+	"decorebator.com/internal/model"
 )
 
 func isValidPartOfSpeech(value string) bool {
@@ -110,7 +110,7 @@ func GetExamples(token string, partOfSpeech string, number int, sense string) ([
 	return result.Examples, nil
 }
 
-func GetDefinition(token string) ([]definitions.Definition, error) {
+func GetDefinition(token string) ([]model.Definition, error) {
 	logger := common.Logger.With("token", token, "func", "GetDefinition", "package", "openai")
 
 	logger.Debug("defining token using chatgpt", "token", token)
@@ -154,7 +154,7 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 
 		result.Language = "en"
 		result.Token = token
-		result.Source = definitions.ChatGPT
+		result.Source = model.ChatGPT
 
 		// copying over inflection examples if no main examples
 		if len(result.Examples) == 0 {
@@ -166,4 +166,43 @@ func GetDefinition(token string) ([]definitions.Definition, error) {
 
 	logger.Debug("definitions found in chatGPT", "count", len(openAIDefinition.Results))
 	return openAIDefinition.Results, nil
+}
+
+type ChatGPTError struct {
+	Message string `json:"message"`
+	Type    string `json:"type"`
+	Param   string `json:"param"`
+	Code    string `json:"code"`
+}
+type ChatCompletionResponse struct {
+	ID                string       `json:"id"`
+	Object            string       `json:"object"`
+	Created           int64        `json:"created"`
+	Model             string       `json:"model"`
+	SystemFingerprint string       `json:"system_fingerprint"`
+	Choices           []Choice     `json:"choices"`
+	Usage             Usage        `json:"usage"`
+	Error             ChatGPTError `json:"error"`
+}
+
+type Choice struct {
+	Index        int         `json:"index"`
+	Message      Message     `json:"message"`
+	LogProbs     interface{} `json:"logprobs"` // null in JSON; use interface{} in Go
+	FinishReason string      `json:"finish_reason"`
+}
+
+type Message struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type Usage struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
+}
+
+type OpenAPIDefinition struct {
+	Results []model.Definition `json:"results"`
 }

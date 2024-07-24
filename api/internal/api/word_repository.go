@@ -1,10 +1,12 @@
-package words
+package api
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
+	"decorebator.com/internal/common"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -86,6 +88,31 @@ func (repository *WordRepository) getAllFromWordlist(wordlistId, userId int64) (
 		return nil, err
 	}
 	return words, nil
+}
+
+func (repository *WordRepository) getById(wordId int64) (*Word, error) {
+	query := `SELECT id , name, created_at, updated_At, wordlist_id, user_id FROM words WHERE id=$1`
+	rows, err := repository.db.Query(context.Background(), query, wordId)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		w := Word{}
+		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.WordlistID, &w.UserID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return nil, common.NotFoundError{ID: wordId, Entity: "word"}
+			}
+
+			return nil, err
+		}
+		return &w, nil
+	}
+
+	return nil, nil
 }
 
 func (repository *WordRepository) delete(userId, wordID int64) (int64, error) {

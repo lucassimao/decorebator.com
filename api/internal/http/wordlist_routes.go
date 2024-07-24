@@ -1,27 +1,27 @@
-package wordlists
+package http
 
 import (
 	"errors"
 	"net/http"
 	"strconv"
 
+	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
 	"github.com/gin-gonic/gin"
 )
 
-type WordlistInput struct {
+type wordlistInput struct {
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
 }
 
-type WordlistsHandlers struct{}
+type WordlistsRoutes struct{}
+type Wordlist = api.Wordlist
 
-var Handlers = &WordlistsHandlers{}
-
-func (h *WordlistsHandlers) GetAll(c *gin.Context) {
+func (h *WordlistsRoutes) GetAll(c *gin.Context) {
 	var userId int64 = c.GetInt64("userID")
 
-	wordlists, err := GetUserWordlists(userId)
+	wordlists, err := api.GetUserWordlists(userId)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
@@ -29,8 +29,8 @@ func (h *WordlistsHandlers) GetAll(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, wordlists)
 }
 
-func (h *WordlistsHandlers) Create(c *gin.Context) {
-	var input WordlistInput
+func (h *WordlistsRoutes) Create(c *gin.Context) {
+	var input wordlistInput
 
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -39,7 +39,7 @@ func (h *WordlistsHandlers) Create(c *gin.Context) {
 
 	var userId int64 = c.GetInt64("userID")
 
-	saved, err := SaveWordlist(&Wordlist{Name: input.Name, Description: input.Description, UserID: userId})
+	saved, err := api.SaveWordlist(&Wordlist{Name: input.Name, Description: input.Description, UserID: userId})
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
@@ -48,11 +48,11 @@ func (h *WordlistsHandlers) Create(c *gin.Context) {
 	}
 }
 
-func (h *WordlistsHandlers) GetById(c *gin.Context) {
+func (h *WordlistsRoutes) GetById(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	var userId int64 = c.GetInt64("userID")
 
-	wordlist, err := GetWordlistById(id, userId)
+	wordlist, err := api.GetWordlistById(id, userId)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
@@ -64,11 +64,11 @@ func (h *WordlistsHandlers) GetById(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, wordlist)
 }
 
-func (h *WordlistsHandlers) Delete(c *gin.Context) {
+func (h *WordlistsRoutes) Delete(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	var userId int64 = c.GetInt64("userID")
 
-	_, err := DeleteWordlist(id, userId)
+	_, err := api.DeleteWordlist(id, userId)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
@@ -80,8 +80,8 @@ func (h *WordlistsHandlers) Delete(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (h *WordlistsHandlers) Update(c *gin.Context) {
-	var input WordlistInput
+func (h *WordlistsRoutes) Update(c *gin.Context) {
+	var input wordlistInput
 
 	id, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 
@@ -91,7 +91,7 @@ func (h *WordlistsHandlers) Update(c *gin.Context) {
 	}
 
 	var userId int64 = c.GetInt64("userID")
-	err := UpdateWordlist(&Wordlist{ID: id, Name: input.Name, Description: input.Description, UserID: userId})
+	err := api.UpdateWordlist(&Wordlist{ID: id, Name: input.Name, Description: input.Description, UserID: userId})
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)

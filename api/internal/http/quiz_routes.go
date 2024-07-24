@@ -1,22 +1,20 @@
-package quizzes
+package http
 
 import (
 	"net/http"
 	"strconv"
 
+	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
-	sr "decorebator.com/internal/quizzes/spacedrepetition"
 	"github.com/gin-gonic/gin"
 )
 
-type QuizHandlers struct{}
-
-var Handlers = &QuizHandlers{}
+type QuizRoutes struct{}
 
 // Using the LeitnerSystemAlgorithm as the default strategy. Should be replaced by a factory method based on user preferences.
-var strategy sr.SpacedRepetionStrategy = sr.LeitnerSystemAlgorithm{}
+var strategy api.SpacedRepetitionStrategy = api.LeitnerSystemStrategy{}
 
-func (h *QuizHandlers) Create(c *gin.Context) {
+func (h *QuizRoutes) Create(c *gin.Context) {
 
 	wordlistID, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
@@ -37,7 +35,7 @@ type SaveInput struct {
 	Id      int64 `json:"id"`
 }
 
-func (h *QuizHandlers) Save(c *gin.Context) {
+func (h *QuizRoutes) Save(c *gin.Context) {
 
 	var input SaveInput
 

@@ -1,6 +1,8 @@
 package common
 
-import "os"
+import (
+	"os"
+)
 
 type Environment int
 
@@ -64,5 +66,4 @@ func init() {
 	Env.Aws.AccessKeyId = os.Getenv("AWS_ACCESS_KEY_ID")
 	Env.Aws.SecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	Env.Aws.Region = os.Getenv("AWS_REGION")
-
 }

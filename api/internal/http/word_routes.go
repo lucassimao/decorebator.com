@@ -1,10 +1,11 @@
-package words
+package http
 
 import (
 	"errors"
 	"net/http"
 	"strconv"
 
+	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
 	"github.com/gin-gonic/gin"
 )
@@ -13,15 +14,15 @@ type WordInput struct {
 	Name string `json:"name" binding:"required"`
 }
 
-type WordsHandlers struct{}
+type WordRoutes struct{}
 
-var Handlers = &WordsHandlers{}
+type Word = api.Word
 
-func (h *WordsHandlers) GetAll(c *gin.Context) {
+func (h *WordRoutes) GetAll(c *gin.Context) {
 	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 
-	words, err := FindByWordlist(wordlistId, userId)
+	words, err := api.GetWordByWordlist(wordlistId, userId)
 	if err != nil {
 		common.Logger.Error("failed to get words", "error", err, "userId", userId, "wordlistId", wordlistId)
 		c.String(http.StatusInternalServerError, "Could not get user words")
@@ -30,7 +31,7 @@ func (h *WordsHandlers) GetAll(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, words)
 }
 
-func (h *WordsHandlers) Create(c *gin.Context) {
+func (h *WordRoutes) Create(c *gin.Context) {
 	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 	var input WordInput
@@ -40,7 +41,7 @@ func (h *WordsHandlers) Create(c *gin.Context) {
 		return
 	}
 
-	saved, err := Save(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistId})
+	saved, err := api.SaveWord(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistId})
 
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
@@ -49,11 +50,11 @@ func (h *WordsHandlers) Create(c *gin.Context) {
 	}
 }
 
-func (h *WordsHandlers) Delete(c *gin.Context) {
+func (h *WordRoutes) Delete(c *gin.Context) {
 	userId := c.GetInt64("userID")
 	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
 
-	_, err := Delete(id, userId)
+	_, err := api.DeleteWord(id, userId)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.String(http.StatusNotFound, err.Error())
@@ -65,7 +66,7 @@ func (h *WordsHandlers) Delete(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (h *WordsHandlers) Update(c *gin.Context) {
+func (h *WordRoutes) Update(c *gin.Context) {
 	var input WordInput
 
 	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
@@ -76,7 +77,7 @@ func (h *WordsHandlers) Update(c *gin.Context) {
 		return
 	}
 
-	err := Update(&Word{ID: id, Name: input.Name, UserID: userId})
+	err := api.UpdateWord(&Word{ID: id, Name: input.Name, UserID: userId})
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.String(http.StatusNotFound, err.Error())

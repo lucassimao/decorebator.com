@@ -1,18 +1,15 @@
-package internal
+package api
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"time"
 
 	"decorebator.com/internal/common"
-	"decorebator.com/internal/definitions"
+	"decorebator.com/internal/openai"
 	"github.com/riverqueue/river"
 )
 
@@ -23,13 +20,12 @@ type ImageGeneratorArgs struct {
 
 func (ImageGeneratorArgs) Kind() string { return "ImageGenerator" }
 
-var logger = common.Logger.With("module", "imagegenerator")
-
 type ImageGeneratorWorker struct {
 	river.WorkerDefaults[ImageGeneratorArgs]
 }
 
 func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGeneratorArgs]) error {
+	var logger = common.Logger.With("worker", "imagegenerator")
 
 	var prompt string
 	var definitionID = job.Args.DefinitionId
@@ -37,7 +33,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	if job.Args.CustomPrompt != "" {
 		prompt = job.Args.CustomPrompt
 	} else {
-		definition, err := definitions.GetById(job.Args.DefinitionId)
+		definition, err := GetDefinitionById(job.Args.DefinitionId)
 		if err != nil {
 
 			if errors.Is(err, &common.NotFoundError{}) {
@@ -51,7 +47,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		prompt = fmt.Sprintf("Illustrate %s: %s", definition.Token, definition.Meaning)
 	}
 
-	response, err := callOpenAIImageGeneration(prompt)
+	response, err := openai.GenerateImage(prompt)
 
 	if err != nil {
 		// track potential causes here and decide if return nil or not
@@ -98,65 +94,5 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	}
 
 	logger.Debug("image generated", "definitionId", definitionID, "url", url)
-	return definitions.SetImage(definitionID, url)
-}
-
-type ImageGenerationResponse struct {
-	Created *int64 `json:"created"`
-	Data    *[]struct {
-		Base64Json string `json:"b64_json"`
-	} `json:"data"`
-
-	Error *struct {
-		Code    string `json:"code"`
-		Message string `json:"message"`
-		Param   string `json:"param"`
-		Type    string `json:"type"`
-	} `json:"error"`
-}
-
-func callOpenAIImageGeneration(prompt string) (*ImageGenerationResponse, error) {
-	var requestBodyStruct = map[string]any{
-		"model":           "dall-e-3",
-		"prompt":          prompt,
-		"n":               1,
-		"size":            "1024x1024",
-		"style":           "natural",
-		"response_format": "b64_json",
-	}
-
-	var requestBody, err = json.Marshal(requestBodyStruct)
-	if err != nil {
-		return nil, fmt.Errorf("error marshalling request data: %w", err)
-	}
-
-	req, err := http.NewRequest("POST", common.Env.OpenaiImageGenerationApiEndpoint, bytes.NewBuffer(requestBody))
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", common.Env.OpenaiApiKey))
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to request API endpoint: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	var imageGenerationResponse ImageGenerationResponse
-	err = json.Unmarshal(body, &imageGenerationResponse)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshall response body: %w", err)
-	}
-
-	return &imageGenerationResponse, nil
+	return SetDefinitionImage(definitionID, url)
 }

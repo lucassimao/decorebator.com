@@ -1,9 +1,10 @@
-package workers
+package http
 
 import (
 	"net/http"
 	"strconv"
 
+	"decorebator.com/internal/api"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,11 +12,9 @@ type GenerateNewImageInput struct {
 	Prompt string `json:"prompt"`
 }
 
-type WorkerHandlers struct{}
+type WorkerRoutes struct{}
 
-var Handlers = &WorkerHandlers{}
-
-func (h *WorkerHandlers) GenerateNewImage(c *gin.Context) {
+func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 	definitionId, err := strconv.ParseInt(c.Param("definitionId"), 10, 64)
 
 	if err != nil {
@@ -30,7 +29,7 @@ func (h *WorkerHandlers) GenerateNewImage(c *gin.Context) {
 		return
 	}
 
-	jobId, err := TriggerImageGenerator(definitionId, input.Prompt)
+	jobId, err := api.TriggerImageGenerator(definitionId, input.Prompt)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "definitionId": definitionId})

@@ -1,4 +1,4 @@
-package definitions
+package api
 
 import (
 	"context"
@@ -7,58 +7,12 @@ import (
 	"strings"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Inflection struct {
-	Inflection string   `json:"inflection"`
-	Tense      string   `json:"tense"`
-	Examples   []string `json:"examples"`
-}
-
-type Accent string
-
-const (
-	US     Accent = "US"
-	CANADA Accent = "CA"
-	UK     Accent = "UK"
-)
-
-type Sound struct {
-	Accent Accent `json:"accent"`
-	Link   string `json:"link"`
-}
-
-type PhoneticNotation struct {
-	Ipa    string `json:"ipa"`
-	Accent Accent `json:"accent"`
-}
-
-type DefinitionSource string
-
-const (
-	ChatGPT    DefinitionSource = "ChatGPT"
-	Wiktionary DefinitionSource = "wiktionary"
-)
-
-type Definition struct {
-	ID                int64
-	Token             string
-	Language          string
-	Meaning           string       `json:"meaning"`
-	PartOfSpeech      string       `json:"part_of_speech"`
-	Examples          []string     `json:"examples"`
-	Inflections       []Inflection `json:"inflections"`
-	Source            DefinitionSource
-	SourceId          string
-	Sounds            []Sound
-	PhoneticNotations []PhoneticNotation
-	ImageUrl          string
-
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
-}
+type Definition = model.Definition
 
 type DefinitionRepository struct {
 	db *pgxpool.Pool
@@ -170,42 +124,6 @@ func (repository *DefinitionRepository) getRandomMeanings(definitionIdsToIgnore 
 	}
 
 	return meanings, nil
-}
-
-func (repository *DefinitionRepository) getRandomExamples(filterOutIds []int, partOfSpeech string, limit int) ([]string, error) {
-	query := `
-		WITH random_item AS (
-			SELECT
-			id,
-			examples,
-			floor(random() * array_length(examples, 1))::int + 1 AS random_index
-			FROM definitions
-			where array_length(examples, 1) > 0 AND part_of_speech=$1 AND id != ALL($2)
-			ORDER BY random()
-			LIMIT $3
-		)
-		SELECT
-			id,
-			examples[random_index] AS random_example,
-			random_index
-		FROM random_item;
-	`
-	rows, err := repository.db.Query(context.Background(), query, partOfSpeech, filterOutIds, limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var examples []string
-	for rows.Next() {
-		var example string
-		err = rows.Scan(&example)
-		if err != nil {
-			return nil, err
-		}
-		examples = append(examples, example)
-	}
-	return examples, nil
 }
 
 func (repository *DefinitionRepository) getRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, limit int) ([]string, error) {
