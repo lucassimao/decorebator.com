@@ -24,6 +24,7 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 	riverWorkers := river.NewWorkers()
 	river.AddWorker(riverWorkers, &ImageGeneratorWorker{})
 	river.AddWorker(riverWorkers, &TextToSpeechWorker{})
+	river.AddWorker(riverWorkers, &DefinitionFetcherWorker{})
 
 	riverClient, err := river.NewClient(riverpgxv5.New(db), &river.Config{
 		Queues: map[string]river.QueueConfig{

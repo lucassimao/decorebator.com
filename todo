@@ -16,9 +16,8 @@
     - https://platform.openai.com/docs/guides/text-to-speech/overview
     - display ipa
 
-[ ] use queue when fetching definitions from openai
+[x] use queue when fetching definitions from openai
 [ ] track quiz success and error timestamps
-[ ] integration test for leitner system
 [ ] listen to pronounciation
 [ ] limit the length of words to 10
 [ ] Reuse definitions already fetched
@@ -43,6 +42,8 @@
 [ ] continuos deployment of the backend to ecs
 [ ] continuos deployment for mobile
 [ ] Notifications https://github.com/nikoksr/notify
+
+[ ] integration test 
 
 # V2
 

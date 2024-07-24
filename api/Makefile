@@ -32,8 +32,8 @@ migrate-drop: ## Drop everything
 run: ## run ./cmd/web
 	$(GODOTENV_PATH) -f .env go run ./cmd/web
 
-run-workers:
-	$(GODOTENV_PATH) -f .env go run ./cmd/backgroundjob
+workers:
+	$(GODOTENV_PATH) -f .env go run ./cmd/workers
 
 
 wiktionary-loader: ## Load wiktionary data file by running ./cmd/wiktionaryLoader
