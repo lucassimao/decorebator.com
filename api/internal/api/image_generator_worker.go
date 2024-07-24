@@ -51,12 +51,12 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	response, err := openai.GenerateImage(prompt)
 
 	if err != nil {
-		// track potential causes here and decide if return nil or not
+		// [TODO] track potential causes here and decide if return nil or not
 		logger.Error("failed to generate image", "error", err)
 		return err
 	}
 
-	// track potential causes here and decide if return nil or not
+	// [TODO] track potential causes here and decide if return nil or not
 	if response.Error != nil {
 		logger.Error("failed to generate image", "body", response.Error)
 

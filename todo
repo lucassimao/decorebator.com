@@ -15,10 +15,9 @@
     - save sounds in object store
     - https://platform.openai.com/docs/guides/text-to-speech/overview
     - display ipa
-
+[ ] listen to pronounciation on meaning from word quiz
 [x] use queue when fetching definitions from openai
 [ ] track quiz success and error timestamps
-[ ] listen to pronounciation
 [ ] limit the length of words to 10
 [ ] Reuse definitions already fetched
 

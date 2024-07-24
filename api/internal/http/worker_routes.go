@@ -1,6 +1,7 @@
 package http
 
 import (
+	"io"
 	"net/http"
 	"strconv"
 
@@ -24,7 +25,8 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 
 	var input GenerateNewImageInput
 
-	if err := c.BindJSON(&input); err != nil {
+	// body is optional
+	if err := c.ShouldBind(&input); err != nil && err != io.EOF {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
