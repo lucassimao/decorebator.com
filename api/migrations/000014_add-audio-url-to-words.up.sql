@@ -1,0 +1,1 @@
+ALTER table words ADD audio_url text;

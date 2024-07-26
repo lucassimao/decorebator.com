@@ -45,7 +45,13 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 			logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
 			return err
 		}
-		prompt = fmt.Sprintf("Illustrate %s: %s", definition.Token, definition.Meaning)
+		var biggestExample string
+		for _, item := range definition.Examples {
+			if len(item) > len(biggestExample) {
+				biggestExample = item
+			}
+		}
+		prompt = fmt.Sprintf("Illustrate %s: %s. Example: %s", definition.Token, definition.Meaning, biggestExample)
 	}
 
 	response, err := openai.GenerateImage(prompt)

@@ -18,6 +18,7 @@ type Word struct {
 	UpdatedAt  pgtype.Timestamp `json:"updatedAt"`
 	WordlistID int64            `json:"wordlistId"`
 	UserID     int64            `json:"userId"`
+	AudioURL   string           `json:"audioUrl"`
 }
 
 type WordRepository struct {
@@ -62,11 +63,11 @@ func (repository *WordRepository) save(name string, userId, wordlistId int64) (*
 		return nil, err
 	}
 
-	return &Word{wordID, name, createdAt, updatedAt, wordlistId, userId}, nil
+	return &Word{wordID, name, createdAt, updatedAt, wordlistId, userId, ""}, nil
 }
 
 func (repository *WordRepository) getAllFromWordlist(wordlistId, userId int64) ([]Word, error) {
-	query := `SELECT id , name, created_at, updated_At FROM words WHERE wordlist_id=$1 AND user_id=$2 order by id desc`
+	query := `SELECT id , name, created_at, updated_At, COALESCE(audio_url,'') FROM words WHERE wordlist_id=$1 AND user_id=$2 order by id desc`
 	rows, err := repository.db.Query(context.Background(), query, wordlistId, userId)
 	if err != nil {
 		return nil, err
@@ -77,7 +78,7 @@ func (repository *WordRepository) getAllFromWordlist(wordlistId, userId int64) (
 	words := []Word{}
 	for rows.Next() {
 		w := Word{WordlistID: wordlistId, UserID: userId}
-		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt)
+		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.AudioURL)
 		if err != nil {
 			return nil, err
 		}
@@ -91,7 +92,7 @@ func (repository *WordRepository) getAllFromWordlist(wordlistId, userId int64) (
 }
 
 func (repository *WordRepository) getById(wordId int64) (*Word, error) {
-	query := `SELECT id , name, created_at, updated_At, wordlist_id, user_id FROM words WHERE id=$1`
+	query := `SELECT id , name, created_at, updated_At, wordlist_id, user_id, COALESCE(audio_url,'') FROM words WHERE id=$1`
 	rows, err := repository.db.Query(context.Background(), query, wordId)
 	if err != nil {
 		return nil, err
@@ -101,7 +102,7 @@ func (repository *WordRepository) getById(wordId int64) (*Word, error) {
 
 	for rows.Next() {
 		w := Word{}
-		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.WordlistID, &w.UserID)
+		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.WordlistID, &w.UserID, &w.AudioURL)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return nil, common.NotFoundError{ID: wordId, Entity: "word"}
@@ -126,8 +127,8 @@ func (repository *WordRepository) delete(userId, wordID int64) (int64, error) {
 }
 
 func (repository *WordRepository) update(word *Word) (int64, error) {
-	query := `UPDATE words SET name=$1, updated_at=NOW() WHERE user_id=$2 AND ID=$3`
-	result, err := repository.db.Exec(context.Background(), query, word.Name, word.UserID, word.ID)
+	query := `UPDATE words SET name=$1, updated_at=NOW(), audio_url=$4 WHERE user_id=$2 AND ID=$3`
+	result, err := repository.db.Exec(context.Background(), query, word.Name, word.UserID, word.ID, word.AudioURL)
 
 	if err != nil {
 		return 0, err

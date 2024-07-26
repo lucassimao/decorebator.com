@@ -12,9 +12,9 @@
 [x] New quiz: word from meaning
 [x] New quiz: word from image
 [ ] New quiz: word from pronounciation
-    - save sounds in object store
-    - https://platform.openai.com/docs/guides/text-to-speech/overview
-    - display ipa
+    ok save sounds in object store
+    frontend
+[ ] use images from usplash
 [ ] listen to pronounciation on meaning from word quiz
 [x] use queue when fetching definitions from openai
 [ ] track quiz success and error timestamps
@@ -46,6 +46,7 @@
 
 # V2
 
+[ ] Add word offline
 [ ] Allow to report problem
     - unrelated image
     - wrong meaning

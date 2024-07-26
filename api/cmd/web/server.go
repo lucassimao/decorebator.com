@@ -81,6 +81,7 @@ func main() {
 	workerRoutes.Use(decorebator.AuthenticateStatic)
 	{
 		workerRoutes.POST("/imageGenerator/:definitionId", WorkerRoutes.GenerateNewImage)
+		workerRoutes.POST("/textToAudio/:wordId", WorkerRoutes.GenerateNewAudio)
 	}
 
 	srv := &http.Server{

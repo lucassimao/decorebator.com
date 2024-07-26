@@ -208,7 +208,7 @@ func (LeitnerSystemStrategy) SaveQuizResult(id int64, success bool) error {
 	query := `UPDATE leitner_system_tracking 
 	SET 
 		updated_at = now(), 
-		box_id = CASE WHEN $1 THEN box_id + 1 ELSE 1 END 
+		box_id = CASE WHEN $1 THEN LEAST(box_id + 1,4) ELSE 1 END 
 	WHERE id = $2`
 
 	db, err := common.GetDBConnection()

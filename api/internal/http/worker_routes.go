@@ -40,3 +40,21 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"id": jobId})
 }
+
+func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
+	wordId, err := strconv.ParseInt(c.Param("wordId"), 10, 64)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid word"})
+		return
+	}
+
+	jobId, err := api.TriggerTextToSpeech(wordId)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordId})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"id": jobId})
+}

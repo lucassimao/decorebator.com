@@ -30,7 +30,7 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 		Queues: map[string]river.QueueConfig{
 			river.QueueDefault:       {MaxWorkers: 100},
 			IMAGE_GENERATOR_QUEUE:    {MaxWorkers: 5},
-			TEXT_TO_SPEECH_QUEUE:     {MaxWorkers: 5},
+			TEXT_TO_SPEECH_QUEUE:     {MaxWorkers: 30}, //max of 50 per openai docs
 			DEFINITION_FETCHER_QUEUE: {MaxWorkers: 50},
 		},
 		Workers: riverWorkers,

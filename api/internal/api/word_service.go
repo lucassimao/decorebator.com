@@ -37,6 +37,7 @@ func SaveWord(dto *Word) (*Word, error) {
 	}
 
 	TriggerDefinitionFetcher(word.ID)
+	TriggerTextToSpeech(word.ID)
 
 	return word, nil
 }
