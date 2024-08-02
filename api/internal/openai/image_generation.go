@@ -39,7 +39,7 @@ func GenerateImage(prompt string) (*ImageGenerationResponse, error) {
 		return nil, fmt.Errorf("error marshalling request data: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", common.Env.OpenaiImageGenerationApiEndpoint, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", "https://api.openai.com/v1/images/generations", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}

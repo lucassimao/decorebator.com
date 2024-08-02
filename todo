@@ -14,7 +14,8 @@
 [ ] New quiz: word from pronounciation
     ok save sounds in object store
     frontend
-[ ] use images from usplash
+[ ] use images from usplash 
+[ ] Generate openai image only for enabled users - mine for now. 
 [ ] listen to pronounciation on meaning from word quiz
 [x] use queue when fetching definitions from openai
 [ ] track quiz success and error timestamps
@@ -46,6 +47,8 @@
 
 # V2
 
+[ ] New quiz - Listen to example and detect which of the alternatives were pronounced
+[ ] support different voices when generating audio from text
 [ ] Add word offline
 [ ] Allow to report problem
     - unrelated image
@@ -65,3 +68,4 @@
 [ ] When saving word, check settings to decide which definer should be use for definitions.FetchAndSave
 [ ] New quiz: Ask chatgpt to create a small text using 5 or more words in a wordlist. Present the text hiding the words and ask the user to write the missing words.
 [ ] Crossword
+[ ] Sponsored quiz - pay for words and add sponsored examples and sentences and images

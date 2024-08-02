@@ -7,6 +7,8 @@ const (
 	CompleteSentence QuizType = "COMPLETE_SENTENCE"
 	WordFromMeaning  QuizType = "WORD_FROM_MEANING"
 	WordFromImage    QuizType = "WORD_FROM_IMAGE"
+	WordFromAudio    QuizType = "WORD_FROM_AUDIO"
+	MeaningFromAudio QuizType = "MEANING_FROM_AUDIO"
 )
 
 type Quiz struct {

@@ -15,7 +15,7 @@ type LeitnerSystemStrategy struct{}
 type Quiz = model.Quiz
 type QuizType = model.QuizType
 
-func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, error) {
+func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, int64, error) {
 
 	// Grouping by box_id and getting the earliest updated_at
 	query := `
@@ -35,7 +35,8 @@ func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, err
 		earliest_per_box AS (
 			SELECT def.id, lst.id AS lst_id, def.token, 
 					def.part_of_speech,  def.meaning, def.examples, 
-					def.inflections , lst.box_id, def.sounds, def.phonetic_notations, def.image_url
+					def.inflections , lst.box_id, def.sounds, def.phonetic_notations, def.image_url, 
+					wd.word_id AS word_id
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
 			JOIN word_definitions wd ON def.id = wd.definition_id
@@ -50,7 +51,7 @@ func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, err
 		)
 
 		SELECT id, token, part_of_speech, meaning, examples, inflections, lst_id, 
-				box_id, sounds,phonetic_notations, COALESCE(image_url,'')
+				box_id, sounds,phonetic_notations, COALESCE(image_url,''), word_id
 		FROM earliest_per_box;
 	`
 
@@ -62,30 +63,30 @@ func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, err
 
 	rows, err := db.Query(context.Background(), query, userID, wordlistID)
 	if err != nil {
-		return nil, -1, -1, err
+		return nil, -1, -1, -1, err
 	}
 
 	defer rows.Close()
 
 	hasRow := rows.Next()
 	if !hasRow {
-		return nil, -1, -1, errors.New("no definitions found")
+		return nil, -1, -1, -1, errors.New("no definitions found")
 	}
 
 	definition := Definition{}
 	var leitnerSystemID int64
-	var boxID int64
+	var boxID, wordID int64
 
 	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
 		&definition.Meaning, &definition.Examples,
 		&definition.Inflections, &leitnerSystemID, &boxID, &definition.Sounds,
-		&definition.PhoneticNotations, &definition.ImageUrl)
+		&definition.PhoneticNotations, &definition.ImageUrl, &wordID)
 
 	if err != nil {
-		return nil, -1, -1, err
+		return nil, -1, -1, -1, err
 	}
 
-	return &definition, leitnerSystemID, boxID, nil
+	return &definition, leitnerSystemID, boxID, wordID, nil
 }
 
 func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []Definition) error {
@@ -120,7 +121,7 @@ func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []Defi
 }
 
 func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error) {
-	definition, leitnerSystemID, boxID, err := getNextDefinition(userID, wordlistID)
+	definition, leitnerSystemID, boxID, wordID, err := getNextDefinition(userID, wordlistID)
 	if err != nil {
 		return nil, err
 	}
@@ -130,9 +131,43 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	var quizzType QuizType
 	var quizAnswer string
 
+	var word *Word
+
+	// [TODO] Refactor and create factory methods
+	if boxID%6 == 0 || boxID%5 == 0 {
+		word, err = GetWordById(wordID)
+		if err != nil {
+			return nil, err
+		}
+		// if no audio, jump to the GuessMeaning quiz
+		if word.AudioURL == "" {
+			boxID = 1
+		}
+	}
+
 	common.Logger.Debug("CreateChallenge", "boxID", boxID, "leitnerSystemID", leitnerSystemID, "definition", definition.ID)
 
 	switch {
+	case boxID%6 == 0:
+		quizzType = model.MeaningFromAudio
+		options, err = GetRandomMeanings([]int{int(definition.ID)}, 3)
+		if err != nil {
+			return nil, err
+		}
+
+		value = word.AudioURL
+		quizAnswer = definition.Meaning
+
+	case boxID%5 == 0:
+		quizzType = model.WordFromAudio
+		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
+		if err != nil {
+			return nil, err
+		}
+
+		value = word.AudioURL
+		quizAnswer = definition.Token
+
 	case boxID%4 == 0:
 		quizzType = model.CompleteSentence
 		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
@@ -190,13 +225,13 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	options[answerIndex] = quizAnswer
 
 	challenge := &Quiz{
-		Value:        value,
-		Options:      options,
-		AnswerIndex:  answerIndex,
-		ID:           leitnerSystemID,
-		Type:         quizzType,
-		Sounds:       definition.Sounds,
-		Notations:    definition.PhoneticNotations,
+		Value:       value,
+		Options:     options,
+		AnswerIndex: answerIndex,
+		ID:          leitnerSystemID,
+		Type:        quizzType,
+		// Sounds:       definition.Sounds,
+		// Notations:    definition.PhoneticNotations,
 		PartOfSpeech: definition.PartOfSpeech,
 	}
 
@@ -208,7 +243,7 @@ func (LeitnerSystemStrategy) SaveQuizResult(id int64, success bool) error {
 	query := `UPDATE leitner_system_tracking 
 	SET 
 		updated_at = now(), 
-		box_id = CASE WHEN $1 THEN LEAST(box_id + 1,4) ELSE 1 END 
+		box_id = CASE WHEN $1 THEN box_id + 1 ELSE 1 END 
 	WHERE id = $2`
 
 	db, err := common.GetDBConnection()

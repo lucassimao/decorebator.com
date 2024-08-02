@@ -12,29 +12,33 @@ const (
 )
 
 var Env struct {
-	Env                              Environment
-	OpenaiImageGenerationApiEndpoint string
-	OpenaiChatCompletionApiEndpoint  string
-	OpenaiApiKey                     string
-	Port                             string
-	PostgresUser                     string
-	PostgresPassword                 string
-	PostgresDB                       string
-	PostgresPort                     string
-	PostgresHost                     string
-	GinMode                          string
-	JwtKey                           string
-	RedisAddr                        string
-	MinioHost                        string
-	MinioPort                        string
-	MinioRootUser                    string
-	MinioRootPassword                string
-	StaticAuthentication             string
+	Env                  Environment
+	OpenaiApiKey         string
+	Port                 string
+	PostgresUser         string
+	PostgresPassword     string
+	PostgresDB           string
+	PostgresPort         string
+	PostgresHost         string
+	GinMode              string
+	JwtKey               string
+	RedisAddr            string
+	MinioHost            string
+	MinioPort            string
+	MinioRootUser        string
+	MinioRootPassword    string
+	StaticAuthentication string
 
 	Aws struct {
 		AccessKeyId     string
 		SecretAccessKey string
 		Region          string
+	}
+
+	Unsplash struct {
+		ApplicationId string
+		AccessKey     string
+		SecretKey     string
 	}
 }
 
@@ -45,8 +49,6 @@ func init() {
 		Env.Env = Development
 	}
 
-	Env.OpenaiImageGenerationApiEndpoint = os.Getenv("OPENAI_IMAGE_GENERATION_API_ENDPOINT")
-	Env.OpenaiChatCompletionApiEndpoint = os.Getenv("OPENAI_CHAT_COMPLETION_API_ENDPOINT")
 	Env.OpenaiApiKey = os.Getenv("OPENAI_API_KEY")
 	Env.Port = os.Getenv("PORT")
 	Env.PostgresUser = os.Getenv("POSTGRES_USER")
@@ -66,4 +68,8 @@ func init() {
 	Env.Aws.AccessKeyId = os.Getenv("AWS_ACCESS_KEY_ID")
 	Env.Aws.SecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	Env.Aws.Region = os.Getenv("AWS_REGION")
+
+	Env.Unsplash.ApplicationId = os.Getenv("UNSPLASH_APPLICATION_ID")
+	Env.Unsplash.AccessKey = os.Getenv("UNSPLASH_ACCESS_KEY")
+	Env.Unsplash.SecretKey = os.Getenv("UNSPLASH_SECRET_KEY")
 }

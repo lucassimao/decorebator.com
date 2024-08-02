@@ -40,7 +40,7 @@ func chatCompletion(messages []map[string]string) (*ChatCompletionResponse, erro
 		return nil, fmt.Errorf("error marshalling request data: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", os.Getenv("OPENAI_CHAT_COMPLETION_API_ENDPOINT"), bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}

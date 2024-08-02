@@ -10,6 +10,9 @@ import {
 } from "react-native";
 import {
   ActivityIndicator,
+  Button,
+  Icon,
+  IconButton,
   Surface,
   TouchableRipple,
   useTheme,
@@ -20,19 +23,41 @@ type Props = {
   onOptionSelected: (optionIndex: number) => void;
   isAnsweringQuiz: boolean;
 };
+import { Audio } from "expo-av";
 
-const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
+const Quiz = ({ quiz, onOptionSelected }: Props) => {
   const { fontScale } = useWindowDimensions();
   const styles = makeStyles(fontScale); // pass in fontScale to the StyleSheet
   const theme = useTheme();
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
+  const [sound, setSound] = React.useState<Audio.Sound | null>(null);
 
   React.useEffect(() => {
     setSelectedIndex(null);
+
+    if (["WORD_FROM_AUDIO", "MEANING_FROM_AUDIO"].includes(quiz.type)) {
+      Audio.Sound.createAsync({ uri: quiz.value })
+        .then((result) => {
+          console.log("Sound loaded");
+          setSound(result.sound);
+        })
+        .catch(console.log);
+    }
   }, [quiz.id]);
 
   React.useEffect(() => {
-    if (selectedIndex != null) onOptionSelected(selectedIndex);
+    return sound
+      ? () => {
+          console.log("Unloading Sound");
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
+
+  React.useEffect(() => {
+    if (selectedIndex != null) {
+      onOptionSelected(selectedIndex);
+    }
   }, [selectedIndex]);
 
   let title: string;
@@ -50,71 +75,97 @@ const Quiz = ({ quiz, onOptionSelected, isAnsweringQuiz }: Props) => {
           contentContainerStyle={{ alignItems: "stretch" }}
           style={styles.content}
         >
+          {quiz.type == "WORD_FROM_IMAGE" && (
+            <Image source={{ uri: quiz.value }} style={styles.image} />
+          )}
 
-          {quiz.type == 'WORD_FROM_IMAGE' ? <Image
-            source={{ uri: quiz.value }}
-            style={styles.image}
-          /> : <Text
-            adjustsFontSizeToFit={true}
-            numberOfLines={9}
-            style={[
-              styles.header,
-              ["COMPLETE_SENTENCE", 'WORD_FROM_MEANING'].includes(quiz.type)
-                ? styles.defaultQuizTitle
-                : styles.biggerQuizTitle,
-            ]}
-          >
-            {title}
-          </Text>}
+          {["WORD_FROM_AUDIO", "MEANING_FROM_AUDIO"].includes(quiz.type) && (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Button
+                icon={({ color }) => (
+                  <IconButton icon="play-circle" size={60} iconColor={color} />
+                )}
+                onPress={() => sound?.playAsync()}
+              >
+                <View />
+              </Button>
+              <Text>Press to hear word</Text>
+            </View>
+          )}
 
-          {["GUESS_MEANING", 'WORD_FROM_MEANING'].includes(quiz.type) && (
+          {["GUESS_MEANING", "COMPLETE_SENTENCE", "WORD_FROM_MEANING"].includes(
+            quiz.type,
+          ) && (
+            <Text
+              adjustsFontSizeToFit={true}
+              numberOfLines={9}
+              style={[
+                styles.header,
+                ["COMPLETE_SENTENCE", "WORD_FROM_MEANING"].includes(quiz.type)
+                  ? styles.defaultQuizTitle
+                  : styles.biggerQuizTitle,
+              ]}
+            >
+              {title}
+            </Text>
+          )}
+
+          {["GUESS_MEANING", "WORD_FROM_MEANING"].includes(quiz.type) && (
             <Text style={{ textAlign: "center" }}>{quiz.pos}</Text>
           )}
 
-          {/* rendering option buttons */}
-          {quiz.options.map((option, index) => (
-            <Surface
-              theme={theme}
-              style={[
-                {
-                  backgroundColor:
-                    selectedIndex == null ? theme.colors.primary : "#fff",
-                },
-                styles.option,
-                selectedIndex === index
-                  ? quiz.answerIndex == index
-                    ? styles.correctOption
-                    : styles.wrongOption
-                  : null,
-              ]}
-              key={`${option}-${index}`}
-              elevation={4}
-            >
-              <TouchableRipple
-                style={{ padding: 20 }}
-                disabled={selectedIndex != null}
+          <View style={{ marginTop: 15 }}>
+            {/* rendering option buttons */}
+            {quiz.options.map((option, index) => (
+              <Surface
                 theme={theme}
-                onPress={() => setSelectedIndex(index)}
+                style={[
+                  {
+                    backgroundColor:
+                      selectedIndex == null ? theme.colors.primary : "#fff",
+                  },
+                  styles.option,
+                  selectedIndex === index
+                    ? quiz.answerIndex == index
+                      ? styles.correctOption
+                      : styles.wrongOption
+                    : null,
+                ]}
+                key={`${option}-${index}`}
+                elevation={4}
               >
-                {/* {selectedIndex == index && isAnsweringQuiz ? (
+                <TouchableRipple
+                  style={{ padding: 20 }}
+                  disabled={selectedIndex != null}
+                  theme={theme}
+                  onPress={() => setSelectedIndex(index)}
+                >
+                  {/* {selectedIndex == index && isAnsweringQuiz ? (
                   <ActivityIndicator animating={true} />
                 ) : ( */}
-                <Text
-                  style={[
-                    styles.buttonText,
-                    selectedIndex != null &&
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      selectedIndex != null &&
                       selectedIndex != index &&
                       quiz.answerIndex == index
-                      ? { color: "green" }
-                      : null,
-                  ]}
-                >
-                  {option}
-                </Text>
-                {/* )} */}
-              </TouchableRipple>
-            </Surface>
-          ))}
+                        ? { color: "green" }
+                        : null,
+                    ]}
+                  >
+                    {option}
+                  </Text>
+                  {/* )} */}
+                </TouchableRipple>
+              </Surface>
+            ))}
+          </View>
         </ScrollView>
       </Surface>
     </View>
@@ -188,8 +239,8 @@ const makeStyles = (fontScale: number) =>
     image: {
       width: 200,
       height: 200,
-      marginLeft: 'auto',
-      marginRight:'auto'
+      marginLeft: "auto",
+      marginRight: "auto",
     },
   });
 

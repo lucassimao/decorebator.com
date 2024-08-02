@@ -1,7 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 import * as jwt from "./jwt";
 import { Platform } from "react-native";
-import { AUTH_REQUIRED_ERROR, DEFAULT_ERROR } from "./api";
+import { AUTH_REQUIRED_ERROR, DEFAULT_ERROR } from "./constants";
 
 export type UserSignup = {
   firstName: string;

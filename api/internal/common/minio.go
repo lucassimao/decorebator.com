@@ -26,6 +26,7 @@ func MinIOPUT(data []byte, bucketName, objectName, contentType string) (string, 
 		return "", err
 	}
 
+	// [TODO] remove
 	// Create a temporary file to store the decoded image
 	tempFile, err := os.CreateTemp(os.TempDir(), "upload-*.png")
 	if err != nil {

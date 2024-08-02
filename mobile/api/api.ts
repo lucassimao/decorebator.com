@@ -1,9 +1,7 @@
+import { AUTH_REQUIRED_ERROR, DEFAULT_ERROR, TOKEN_VALIDATION_ERROR } from "./constants";
 import { getAuthorization, sigout } from "./users";
 import { router } from "expo-router";
 
-export const AUTH_REQUIRED_ERROR = "Authentication required.";
-export const DEFAULT_ERROR = "Could not process your request.";
-export const TOKEN_VALIDATION_ERROR = "Token vaidation error";
 
 export async function callAPI<T>(
   method: "GET" | "POST" | "DELETE" | "PATCH",
