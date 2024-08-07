@@ -11,9 +11,7 @@
 [x] GetDefinition using chatGPT is not saving examples properly
 [x] New quiz: word from meaning
 [x] New quiz: word from image
-[ ] New quiz: word from pronounciation
-    ok save sounds in object store
-    frontend
+[x] New quiz: word from pronounciation
 [ ] use images from usplash 
 [ ] Generate openai image only for enabled users - mine for now. 
 [ ] listen to pronounciation on meaning from word quiz
@@ -44,6 +42,7 @@
 [ ] Notifications https://github.com/nikoksr/notify
 
 [ ] integration test 
+[ ] Refactor mobile/components/quiz/Quiz.tsx
 
 # V2
 

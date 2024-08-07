@@ -38,7 +38,6 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
     if (["WORD_FROM_AUDIO", "MEANING_FROM_AUDIO"].includes(quiz.type)) {
       Audio.Sound.createAsync({ uri: quiz.value })
         .then((result) => {
-          console.log("Sound loaded");
           setSound(result.sound);
         })
         .catch(console.log);
@@ -48,7 +47,6 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
   React.useEffect(() => {
     return sound
       ? () => {
-          console.log("Unloading Sound");
           sound.unloadAsync();
         }
       : undefined;
@@ -67,6 +65,8 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
   } else {
     title = quiz.value;
   }
+
+
 
   return (
     <View style={styles.container1}>
@@ -91,7 +91,7 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
                 icon={({ color }) => (
                   <IconButton icon="play-circle" size={60} iconColor={color} />
                 )}
-                onPress={() => sound?.playAsync()}
+                onPress={() => sound?.playFromPositionAsync(0)}
               >
                 <View />
               </Button>
