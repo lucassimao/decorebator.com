@@ -10,6 +10,8 @@ import (
 	"decorebator.com/internal/common"
 )
 
+// $0.040 / image as Aug 8 2024
+
 type ImageGenerationResponse struct {
 	Created *int64 `json:"created"`
 	Data    *[]struct {
@@ -32,6 +34,7 @@ func GenerateImage(prompt string) (*ImageGenerationResponse, error) {
 		"size":            "1024x1024",
 		"style":           "natural",
 		"response_format": "b64_json",
+		"quality":         "standard",
 	}
 
 	var requestBody, err = json.Marshal(requestBodyStruct)

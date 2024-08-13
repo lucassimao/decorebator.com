@@ -35,11 +35,7 @@ var Env struct {
 		Region          string
 	}
 
-	Unsplash struct {
-		ApplicationId string
-		AccessKey     string
-		SecretKey     string
-	}
+	StabilityAIApiKey string
 }
 
 func init() {
@@ -69,7 +65,5 @@ func init() {
 	Env.Aws.SecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	Env.Aws.Region = os.Getenv("AWS_REGION")
 
-	Env.Unsplash.ApplicationId = os.Getenv("UNSPLASH_APPLICATION_ID")
-	Env.Unsplash.AccessKey = os.Getenv("UNSPLASH_ACCESS_KEY")
-	Env.Unsplash.SecretKey = os.Getenv("UNSPLASH_SECRET_KEY")
+	Env.StabilityAIApiKey = os.Getenv("STABILITY_AI_API_KEY")
 }
