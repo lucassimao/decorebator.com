@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
 	"decorebator.com/internal/openai"
 	"decorebator.com/internal/stability_ai"
 	"github.com/riverqueue/river"
@@ -33,6 +34,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	var prompt string
 	var definitionID = job.Args.DefinitionId
+	var longestExample string
 
 	if job.Args.CustomPrompt != "" {
 		prompt = job.Args.CustomPrompt
@@ -48,7 +50,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 			logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
 			return err
 		}
-		var longestExample string
+
 		for _, item := range definition.Examples {
 			if len(item) > len(longestExample) {
 				longestExample = item
@@ -83,7 +85,17 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	}
 
 	logger.Debug("image generated", "definitionId", definitionID, "url", url)
-	return SetDefinitionImage(definitionID, url)
+
+	_, err = SaveDefinitionImage(model.CreateDefinitionImageDTO{
+		Api:          model.STABILITY_AI,
+		URL:          url,
+		Description:  longestExample,
+		Model:        "stable-image-core",
+		Prompt:       prompt,
+		DefinitionId: definitionID,
+	})
+
+	return err
 }
 
 func generateWithStabilityAI(prompt string) ([]byte, error) {

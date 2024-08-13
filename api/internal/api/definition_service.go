@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -49,15 +48,6 @@ func GetRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, size int)
 
 func GetDefinitionById(id int64) (*Definition, error) {
 	return definitionRepository.getById(id)
-}
-
-func SetDefinitionImage(id int64, imageUrl string) error {
-	err := definitionRepository.setImage(id, imageUrl)
-	if err != nil {
-		common.Logger.Error("failed to set image", "error", err)
-		return errors.New("failed to set image")
-	}
-	return nil
 }
 
 func containsBracketedWord(s string) bool {

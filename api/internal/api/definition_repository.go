@@ -183,11 +183,3 @@ func (repository *DefinitionRepository) getById(id int64) (*Definition, error) {
 
 	return &def, nil
 }
-
-func (repository *DefinitionRepository) setImage(id int64, imageUrl string) error {
-
-	query := `UPDATE definitions SET image_url = $1 WHERE id=$2`
-
-	_, err := repository.db.Exec(context.Background(), query, imageUrl, id)
-	return err
-}

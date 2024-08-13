@@ -14,11 +14,9 @@
 [x] New quiz: word from pronounciation
 [x] use queue when fetching definitions from openai
 [ ] integrate with stability AI image generation API
-    - only enable for my user 
-    - disable openai image generation for now 
+    ok disable openai image generation for now 
     ok use the stable-image/generate/core
-    - move images to a different table, so that we can map multiple images to a single definition
-    - keep track of 
+    ok move images to a different table, so that we can map multiple images to a single definition
         - api
         - description 
         - model

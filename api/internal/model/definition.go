@@ -45,7 +45,6 @@ type Definition struct {
 	SourceId          string
 	Sounds            []Sound
 	PhoneticNotations []PhoneticNotation
-	ImageUrl          string
 
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
