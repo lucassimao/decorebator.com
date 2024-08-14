@@ -122,7 +122,8 @@ func GetDefinition(token string) ([]model.Definition, error) {
 		{"role": "system", "content": "part_of_speech should be one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection."},
 		{"role": "user", "content": userMessage},
 		{"role": "system", "content": "The array items should represent all different parts of speech that the word can assume."},
-		{"role": "system", "content": "If the part of speech is a verb or phrasal verb, then ignore the examples property and add instead a new one named inflections. The inflections will be an array of objects, each object has the properties: inflection (string), tense(string) and examples (array of strings). Tense been either present, past, past participle. Inflection been the verb in the tense. Examples been an array including 3 different examples of usages of the verb in that tense. In each example, wrap the word and any particle that might be part of the word into square brackets."},
+		{"role": "system", "content": "If the part of speech is a verb or phrasal verb, then ignore the examples property and add instead a new one named inflections. The inflections will be an array of objects, each object has the properties: inflection (string), tense(string) and examples (array of strings). Tense been either present, past, past participle. Inflection been the verb in the tense. Examples been an array including 3 different examples of usages of the verb in that tense."},
+		{"role": "system", "content": "Each example must have " + token + " wrapped into square brackets."},
 		{"role": "system", "content": "If the word can not be found, then the property results should be an empty array."},
 	}
 

@@ -55,6 +55,7 @@
 
 # V2
 
+[ ] use ngrok to serve images
 [ ] New quiz - Listen to example and detect which of the alternatives were pronounced
 [ ] support different voices when generating audio from text
 [ ] Add word offline

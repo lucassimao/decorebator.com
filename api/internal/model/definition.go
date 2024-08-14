@@ -46,6 +46,7 @@ type Definition struct {
 	Sounds            []Sound
 	PhoneticNotations []PhoneticNotation
 
+
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
 }

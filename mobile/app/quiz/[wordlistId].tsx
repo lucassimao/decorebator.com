@@ -35,6 +35,7 @@ export default function QuizScreen() {
       type: "info",
       onDismiss: closeSnackBar,
     });
+
   }, [isFastMode]);
 
   const navigation = useNavigation();
@@ -81,8 +82,18 @@ export default function QuizScreen() {
     Error,
     boolean
   >({
-    mutationFn: (success) =>
-      wordlistsApi.answerQuiz(Number(wordlistId), Number(quiz?.id), success),
+    mutationFn: (success) =>{
+
+      if (isFastMode && success) {
+        setTimeout(getNewQuiz, 400);
+      } else {
+        setButtonNextVisible(true);
+      }
+
+      setSnackBarProps(null);
+
+      return wordlistsApi.answerQuiz(Number(wordlistId), Number(quiz?.id), success)
+    },
     onError: (error) => {
       setSnackBarProps({
         onDismiss: closeSnackBar,
@@ -90,13 +101,13 @@ export default function QuizScreen() {
         type: "error",
       });
     },
-    onSuccess: (_, isAnswerCorrect) => {
-      if (isFastMode && isAnswerCorrect) {
-        setTimeout(getNewQuiz, 500);
-      } else {
-        setButtonNextVisible(true);
-      }
-    },
+    // onSuccess: (_, isAnswerCorrect) => {
+    //   if (isFastMode && isAnswerCorrect) {
+    //     setTimeout(getNewQuiz, 300);
+    //   } else {
+    //     setButtonNextVisible(true);
+    //   }
+    // },
   });
 
   React.useEffect(() => {

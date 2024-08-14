@@ -15,7 +15,7 @@ type LeitnerSystemStrategy struct{}
 type Quiz = model.Quiz
 type QuizType = model.QuizType
 
-func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, int64, error) {
+func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, int64, string, error) {
 
 	// Grouping by box_id and getting the earliest updated_at
 	query := `
@@ -35,11 +35,12 @@ func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, int
 		earliest_per_box AS (
 			SELECT def.id, lst.id AS lst_id, def.token, 
 					def.part_of_speech,  def.meaning, def.examples, 
-					def.inflections , lst.box_id, def.sounds, def.phonetic_notations, def.image_url, 
+					def.inflections , lst.box_id, def.sounds, def.phonetic_notations, di.url as image_url, 
 					wd.word_id AS word_id
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
 			JOIN word_definitions wd ON def.id = wd.definition_id
+			LEFT JOIN definition_images di ON di.definition_id = def.id AND di.is_visible=TRUE
 			WHERE 
 				lst.user_id = $1
 				AND wd.word_id = (select word_id FROM words_queue)
@@ -63,30 +64,31 @@ func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, int
 
 	rows, err := db.Query(context.Background(), query, userID, wordlistID)
 	if err != nil {
-		return nil, -1, -1, -1, err
+		return nil, -1, -1, -1, "", err
 	}
 
 	defer rows.Close()
 
 	hasRow := rows.Next()
 	if !hasRow {
-		return nil, -1, -1, -1, errors.New("no definitions found")
+		return nil, -1, -1, -1, "", errors.New("no definitions found")
 	}
 
 	definition := Definition{}
 	var leitnerSystemID int64
 	var boxID, wordID int64
+	var imageUrl string
 
 	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
 		&definition.Meaning, &definition.Examples,
 		&definition.Inflections, &leitnerSystemID, &boxID, &definition.Sounds,
-		&definition.PhoneticNotations, &definition.ImageUrl, &wordID)
+		&definition.PhoneticNotations, &imageUrl, &wordID)
 
 	if err != nil {
-		return nil, -1, -1, -1, err
+		return nil, -1, -1, -1, "", err
 	}
 
-	return &definition, leitnerSystemID, boxID, wordID, nil
+	return &definition, leitnerSystemID, boxID, wordID, imageUrl, nil
 }
 
 func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []Definition) error {
@@ -121,7 +123,7 @@ func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []Defi
 }
 
 func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error) {
-	definition, leitnerSystemID, boxID, wordID, err := getNextDefinition(userID, wordlistID)
+	definition, leitnerSystemID, boxID, wordID, imageUrl, err := getNextDefinition(userID, wordlistID)
 	if err != nil {
 		return nil, err
 	}
@@ -185,9 +187,9 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		} else {
 			quizAnswer = definition.Token
 		}
-	case boxID%3 == 0 && definition.ImageUrl != "":
+	case boxID%3 == 0 && imageUrl != "":
 		quizzType = model.WordFromImage
-		value = definition.ImageUrl
+		value = imageUrl
 		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 
 		if err != nil {

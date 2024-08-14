@@ -31,18 +31,38 @@ func (repository *DefinitionImageRepository) save(dto CreateDefinitionImageDTO) 
 
 	var def DefinitionImage
 
+	// Start a transaction
+	tx, err := repository.db.Begin(context.Background())
+	if err != nil {
+		return DefinitionImage{}, err
+	}
+
+	// existing images will be hidden
+	_, err = tx.Exec(context.Background(), "UPDATE definition_images SET is_visible=$1 WHERE definition_id=$2", false, dto.DefinitionId)
+
+	if err != nil {
+		common.Logger.Error("failed to hide existing images", "definitionId", def.ID, "error", err)
+		tx.Rollback(context.Background())
+		return DefinitionImage{}, err
+	}
+
 	// Execute the query within the transaction
-	err := repository.db.QueryRow(context.Background(), definitionsInsert, dto.Api, dto.Description, dto.Model,
+	err = tx.QueryRow(context.Background(), definitionsInsert, dto.Api, dto.Description, dto.Model,
 		dto.Prompt, true, dto.DefinitionId, dto.URL).Scan(&def.ID, &createdAt)
 
 	if err != nil {
 		jsonString, _ := json.Marshal(dto)
 		common.Logger.Error("failed to insert definition", "definitionImage", jsonString, "error", err)
+		tx.Rollback(context.Background())
+		return DefinitionImage{}, err
+	}
+
+	if err := tx.Commit(context.Background()); err != nil {
 		return DefinitionImage{}, err
 	}
 
 	def.CreatedAt = createdAt
 	def.ID = id
 
-	return DefinitionImage{}, nil
+	return def, nil
 }
