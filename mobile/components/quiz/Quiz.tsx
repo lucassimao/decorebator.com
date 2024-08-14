@@ -66,8 +66,6 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
     title = quiz.value;
   }
 
-
-
   return (
     <View style={styles.container1}>
       <Surface theme={theme} elevation={5} style={styles.container}>
