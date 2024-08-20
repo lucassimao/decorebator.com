@@ -93,27 +93,19 @@ func (repository *WordRepository) getAllFromWordlist(wordlistId, userId int64) (
 
 func (repository *WordRepository) getById(wordId int64) (*Word, error) {
 	query := `SELECT id , name, created_at, updated_At, wordlist_id, user_id, COALESCE(audio_url,'') FROM words WHERE id=$1`
-	rows, err := repository.db.Query(context.Background(), query, wordId)
+	row := repository.db.QueryRow(context.Background(), query, wordId)
+	var w Word
+
+	err := row.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.WordlistID, &w.UserID, &w.AudioURL)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, common.NotFoundError{ID: wordId, Entity: "word"}
+		}
+
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	for rows.Next() {
-		w := Word{}
-		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.WordlistID, &w.UserID, &w.AudioURL)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				return nil, common.NotFoundError{ID: wordId, Entity: "word"}
-			}
-
-			return nil, err
-		}
-		return &w, nil
-	}
-
-	return nil, nil
+	return &w, nil
 }
 
 func (repository *WordRepository) delete(userId, wordID int64) (int64, error) {

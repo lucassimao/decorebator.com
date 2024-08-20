@@ -18,13 +18,13 @@
 
 [ ] limit the length of words to 10
 [ ] Display example copy as a hint for when doing the image quiz
-[ ] listen to pronounciation on meaning from word quiz
-[ ] Reuse definitions already fetched
+[ ] listen for pronounciation on meaning from word quiz
 [ ] Allow to report problem
     - unrelated image
     - wrong meaning
     - wrong example
 
+[ ] Reuse definitions already fetched
 [ ] Allow to select specific quiz types
 [ ] display word status: pending, error, no meaning found, etc
 
@@ -45,10 +45,10 @@
 [ ] Notifications https://github.com/nikoksr/notify
 
 [ ] integration test 
-[ ] Refactor mobile/components/quiz/Quiz.tsx
 
 # V2
 
+[ ] Refactor mobile/components/quiz/Quiz.tsx
 [ ] New quiz: complete sentece from audio. Read example and ask users to select words heard 
 [ ] New quiz: write word from definition
     - allow tips: meaning, letters, image
