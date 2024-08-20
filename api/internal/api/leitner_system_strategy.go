@@ -105,9 +105,21 @@ func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []Defi
 
 	for _, definition := range definitions {
 		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id)
-		VALUES ($1, $2, $3)`
+		VALUES ($1, $2, $3) RETURNING id`
 
-		_, err := tx.Exec(context.Background(), query, userID, definition.ID, 1)
+		row := tx.QueryRow(context.Background(), query, userID, definition.ID, 1)
+		var leitnerSystemTrackingId int64
+		err = row.Scan(&leitnerSystemTrackingId)
+
+		if err != nil {
+			tx.Rollback(context.Background())
+			return err
+		}
+
+		_, err = tx.Exec(context.Background(), `INSERT INTO 
+		leitner_system_history (at,box_id,leitner_system_tracking_id) 
+		VALUES (now(), $1, $2)`, 1, leitnerSystemTrackingId)
+
 		if err != nil {
 			tx.Rollback(context.Background())
 			return err
@@ -240,13 +252,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	return challenge, nil
 }
 
-func (LeitnerSystemStrategy) SaveQuizResult(id int64, success bool) error {
-
-	query := `UPDATE leitner_system_tracking 
-	SET 
-		updated_at = now(), 
-		box_id = CASE WHEN $1 THEN box_id + 1 ELSE 1 END 
-	WHERE id = $2`
+func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, success bool) error {
 
 	db, err := common.GetDBConnection()
 	if err != nil {
@@ -254,7 +260,37 @@ func (LeitnerSystemStrategy) SaveQuizResult(id int64, success bool) error {
 		os.Exit(1)
 	}
 
-	_, err = db.Exec(context.Background(), query, success, id)
+	tx, err := db.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+
+	query := `UPDATE leitner_system_tracking 
+	SET 
+		updated_at = now(), 
+		box_id = CASE WHEN $1 THEN box_id + 1 ELSE 1 END 
+	WHERE id = $2
+	RETURNING box_id`
+
+	var boxId int64
+	row := tx.QueryRow(context.Background(), query, success, leitnerSystemTrackingId)
+	err = row.Scan(&boxId)
+
+	if err != nil {
+		tx.Rollback(context.Background())
+		return err
+	}
+
+	_, err = tx.Exec(context.Background(), `INSERT INTO 
+		leitner_system_history (at,box_id,leitner_system_tracking_id) 
+		VALUES (now(), $1, $2)`, boxId, leitnerSystemTrackingId)
+
+	if err != nil {
+		tx.Rollback(context.Background())
+		return err
+	}
+
+	err = tx.Commit(context.Background())
 	if err != nil {
 		return err
 	}

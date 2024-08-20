@@ -35,10 +35,6 @@ run: ## run ./cmd/web
 workers:
 	$(GODOTENV_PATH) -f .env go run ./cmd/workers
 
-
-wiktionary-loader: ## Load wiktionary data file by running ./cmd/wiktionaryLoader
-	go run ./cmd/wiktionaryLoader ../raw-wiktextract-data.json
-
 watch:
 	@while true; do \
 		$(MAKE) run & \
