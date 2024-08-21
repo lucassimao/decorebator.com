@@ -2,12 +2,12 @@ package api
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"strings"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
+	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -82,9 +82,10 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 
 func (repository *DefinitionRepository) getRandomMeanings(definitionIdsToIgnore []int, limit int) ([]string, error) {
 	// all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
+	// selecting random() to avoid the error 'SELECT DISTINCT, ORDER BY expressions must appear in select list (SQLSTATE 42P10)'
 	query := `
 		WITH options AS (
-			SELECT DISTINCT def.meaning 
+			SELECT DISTINCT def.meaning, random()
 			FROM definitions def
 			JOIN word_definitions wd ON wd.definition_id = def.id
 			WHERE wd.word_id NOT IN (
@@ -103,8 +104,9 @@ func (repository *DefinitionRepository) getRandomMeanings(definitionIdsToIgnore 
 				FROM definitions 
 				WHERE id = ANY($1)
 			)
+			ORDER BY random() LIMIT $2
 		)
-		SELECT meaning FROM options ORDER BY random() LIMIT $2;
+		SELECT meaning FROM options;
 	`
 
 	rows, err := repository.db.Query(context.Background(), query, definitionIdsToIgnore, limit)
@@ -127,11 +129,11 @@ func (repository *DefinitionRepository) getRandomMeanings(definitionIdsToIgnore 
 }
 
 func (repository *DefinitionRepository) getRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, limit int) ([]string, error) {
-	// using CTE as DISTINCT couldn't be applied directly to the main query that's using ORDER BY random()
+	// selecting random() to avoid the error 'SELECT DISTINCT, ORDER BY expressions must appear in select list (SQLSTATE 42P10)'
 	query := `
 		WITH tokens AS (
 			SELECT 
-				DISTINCT token
+				DISTINCT token, random()
 			FROM 
 				definitions def
 			JOIN 
@@ -139,8 +141,9 @@ func (repository *DefinitionRepository) getRandomTokens(definitionIdsToIgnore []
 			WHERE 
 				part_of_speech=$1 
 				AND wd.word_id NOT IN (select word_id FROM word_definitions WHERE definition_id = ANY($2)) 
+			ORDER BY random() LIMIT $3
 		)
-		SELECT token FROM tokens ORDER BY random() LIMIT $3;
+		SELECT token FROM tokens ;
 	`
 	rows, err := repository.db.Query(context.Background(), query, partOfSpeech, definitionIdsToIgnore, limit)
 	if err != nil {
@@ -173,7 +176,7 @@ func (repository *DefinitionRepository) getById(id int64) (*Definition, error) {
 		&def.Token, &def.Language, &def.PartOfSpeech, &def.Meaning, &def.Examples, &def.Inflections,
 		&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations, &def.CreatedAt, &def.UpdatedAt)
 
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		return nil, common.NotFoundError{ID: id, Entity: "definition"}
 	}
 

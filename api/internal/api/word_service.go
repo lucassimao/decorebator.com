@@ -28,6 +28,11 @@ func GetWordById(id int64) (*Word, error) {
 func SaveWord(dto *Word) (*Word, error) {
 	var lowerCasedName = strings.ToLower(dto.Name)
 	var trimmedName = strings.TrimSpace(lowerCasedName)
+
+	if len(trimmedName) > 15 {
+		return nil, common.BusinessError{Message: "words must be limited to 15 chars"}
+	}
+
 	word, err := wordRepository.save(trimmedName, dto.UserID, dto.WordlistID)
 	logger := common.Logger.With("token", dto.Name, "userId", dto.UserID, "wordId", word.ID, "token", dto.Name, "func", "SaveWord")
 

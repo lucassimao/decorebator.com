@@ -2,11 +2,11 @@ package api
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 
 	"decorebator.com/internal/common"
+	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -98,7 +98,7 @@ func (repository *WordRepository) getById(wordId int64) (*Word, error) {
 
 	err := row.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.WordlistID, &w.UserID, &w.AudioURL)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, common.NotFoundError{ID: wordId, Entity: "word"}
 		}
 

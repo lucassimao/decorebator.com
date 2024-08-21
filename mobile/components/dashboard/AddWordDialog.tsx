@@ -2,7 +2,7 @@ import * as wordlistsApi from "@/api/wordlists";
 import { useMutation } from "@tanstack/react-query";
 import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
-import { StyleSheet } from "react-native";
+import { Keyboard, StyleSheet } from "react-native";
 import {
   ActivityIndicator,
   Button,
@@ -45,6 +45,7 @@ const AddWordDialog = ({ onWordAdded, wordlistId, onDismiss }: Props) => {
     mutationFn: ({ name }) => wordlistsApi.addWord({ wordlistId, name }),
     onError: (error) => {
       setError(error);
+      Keyboard.dismiss();
     },
     onSuccess: () => {
       if (closeAfterSubmit) {
@@ -102,7 +103,7 @@ const AddWordDialog = ({ onWordAdded, wordlistId, onDismiss }: Props) => {
                   onChangeText={onChange}
                   value={value}
                   error={!!errors.name}
-                  autoFocus={true}
+                  autoFocus={error == null}
                 />
               )}
               name="name"

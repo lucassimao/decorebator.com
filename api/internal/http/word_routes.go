@@ -44,7 +44,13 @@ func (h *WordRoutes) Create(c *gin.Context) {
 	saved, err := api.SaveWord(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistId})
 
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		switch err.(type) {
+		case common.BusinessError:
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		default:
+			c.Status(http.StatusInternalServerError)
+		}
+
 	} else {
 		c.JSON(http.StatusCreated, saved)
 	}

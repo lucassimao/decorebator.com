@@ -43,7 +43,7 @@ POST http://localhost:3000/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
- "Name":"bearer"  
+ "Name":"bearerbeareabcs"  
 }
 
 
