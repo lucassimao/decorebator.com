@@ -58,12 +58,29 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
     }
   }, [selectedIndex]);
 
-  let title: string;
-  // Complete sentence quiz
-  if (quiz.type == "COMPLETE_SENTENCE") {
-    title = quiz.value.replace(/\[(.*?)\]/g, (_, p1) => "_".repeat(p1.length));
-  } else {
-    title = quiz.value;
+  let title = "";
+  let quizTitleStyle;
+
+  switch (quiz.type) {
+    case "COMPLETE_SENTENCE":
+      title = quiz.value.replace(/\[(.*?)\]/g, (_, p1) =>
+        "_".repeat(p1.length),
+      );
+      quizTitleStyle = styles.defaultQuizTitle;
+      break;
+    case "WORD_FROM_MEANING":
+      quizTitleStyle = styles.defaultQuizTitle;
+      title = quiz.value;
+      break;
+    case "WORD_FROM_IMAGE":
+      title = quiz.imageDescription?.replace(/\[(.*?)\]/g, (_, p1) =>
+        "_".repeat(p1.length),
+      );
+      quizTitleStyle = styles.smallQuizTitle;
+      break;
+    case "GUESS_MEANING":
+      title = quiz.value;
+      quizTitleStyle = styles.biggerQuizTitle;
   }
 
   return (
@@ -97,18 +114,11 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
             </View>
           )}
 
-          {["GUESS_MEANING", "COMPLETE_SENTENCE", "WORD_FROM_MEANING"].includes(
-            quiz.type,
-          ) && (
+          {title && (
             <Text
               adjustsFontSizeToFit={true}
               numberOfLines={9}
-              style={[
-                styles.header,
-                ["COMPLETE_SENTENCE", "WORD_FROM_MEANING"].includes(quiz.type)
-                  ? styles.defaultQuizTitle
-                  : styles.biggerQuizTitle,
-              ]}
+              style={[styles.header, quizTitleStyle]}
             >
               {title}
             </Text>
@@ -201,6 +211,10 @@ const makeStyles = (fontScale: number) =>
     biggerQuizTitle: {
       fontSize: 40 / fontScale,
       textTransform: "capitalize",
+    },
+    smallQuizTitle: {
+      fontSize: 15 / fontScale,
+      marginBottom: 0,
     },
     defaultQuizTitle: {
       fontSize: 25 / fontScale,

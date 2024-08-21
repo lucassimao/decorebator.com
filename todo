@@ -17,7 +17,7 @@
 [x] track quiz success and error timestamps
 
 [x] limit the length of words to 15
-[ ] Display example copy as a hint for when doing the image quiz
+[x] Display example copy as a hint for when doing the image quiz
 [ ] listen for pronounciation on meaning from word quiz
 [ ] Allow to report problem
     - unrelated image

@@ -15,7 +15,16 @@ type LeitnerSystemStrategy struct{}
 type Quiz = model.Quiz
 type QuizType = model.QuizType
 
-func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, int64, string, error) {
+type NextDefinition struct {
+	Definition       *Definition
+	LeitnerSystemID  int64
+	BoxID            int64
+	WordID           int64
+	ImageUrl         string
+	ImageDescription string
+}
+
+func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 
 	// Grouping by box_id and getting the earliest updated_at
 	query := `
@@ -35,7 +44,8 @@ func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, int
 		earliest_per_box AS (
 			SELECT def.id, lst.id AS lst_id, def.token, 
 					def.part_of_speech,  def.meaning, def.examples, 
-					def.inflections , lst.box_id, def.sounds, def.phonetic_notations, di.url as image_url, 
+					def.inflections , lst.box_id, def.sounds, def.phonetic_notations, 
+					di.url as image_url, di.description as image_description, 
 					wd.word_id AS word_id
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
@@ -52,7 +62,7 @@ func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, int
 		)
 
 		SELECT id, token, part_of_speech, meaning, examples, inflections, lst_id, 
-				box_id, sounds,phonetic_notations, COALESCE(image_url,''), word_id
+				box_id, sounds,phonetic_notations, COALESCE(image_url,''), word_id, COALESCE(image_description,'')
 		FROM earliest_per_box;
 	`
 
@@ -64,31 +74,29 @@ func getNextDefinition(userID, wordlistID int64) (*Definition, int64, int64, int
 
 	rows, err := db.Query(context.Background(), query, userID, wordlistID)
 	if err != nil {
-		return nil, -1, -1, -1, "", err
+		return nil, err
 	}
 
 	defer rows.Close()
 
 	hasRow := rows.Next()
 	if !hasRow {
-		return nil, -1, -1, -1, "", errors.New("no definitions found")
+		return nil, errors.New("no definitions found")
 	}
 
 	definition := Definition{}
-	var leitnerSystemID int64
-	var boxID, wordID int64
-	var imageUrl string
+	result := NextDefinition{Definition: &definition}
 
 	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
 		&definition.Meaning, &definition.Examples,
-		&definition.Inflections, &leitnerSystemID, &boxID, &definition.Sounds,
-		&definition.PhoneticNotations, &imageUrl, &wordID)
+		&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
+		&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription)
 
 	if err != nil {
-		return nil, -1, -1, -1, "", err
+		return nil, err
 	}
 
-	return &definition, leitnerSystemID, boxID, wordID, imageUrl, nil
+	return &result, nil
 }
 
 func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []Definition) error {
@@ -135,7 +143,7 @@ func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []Defi
 }
 
 func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error) {
-	definition, leitnerSystemID, boxID, wordID, imageUrl, err := getNextDefinition(userID, wordlistID)
+	nextDefinition, err := getNextDefinition(userID, wordlistID)
 	if err != nil {
 		return nil, err
 	}
@@ -146,6 +154,11 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	var quizAnswer string
 
 	var word *Word
+	boxID := nextDefinition.BoxID
+	wordID := nextDefinition.WordID
+	definition := nextDefinition.Definition
+	leitnerSystemID := nextDefinition.LeitnerSystemID
+	imageUrl := nextDefinition.ImageUrl
 
 	// [TODO] Refactor and create factory methods
 	if boxID%6 == 0 || boxID%5 == 0 {
@@ -246,7 +259,8 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		Type:        quizzType,
 		// Sounds:       definition.Sounds,
 		// Notations:    definition.PhoneticNotations,
-		PartOfSpeech: definition.PartOfSpeech,
+		PartOfSpeech:     definition.PartOfSpeech,
+		ImageDescription: nextDefinition.ImageDescription,
 	}
 
 	return challenge, nil
