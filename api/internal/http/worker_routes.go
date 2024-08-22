@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"strconv"
@@ -57,4 +58,28 @@ func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"id": jobId})
+}
+
+func (h *WorkerRoutes) TriggerJob(c *gin.Context) {
+	jobId, err := strconv.ParseInt(c.Param("jobId"), 10, 64)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid job"})
+		return
+	}
+
+	riverClient, err := api.GetRiverClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "jobId": jobId})
+		return
+	}
+
+	_, err = riverClient.JobRetry(context.Background(), jobId)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "jobId": jobId})
+		return
+	}
+
+	c.Status(http.StatusOK)
 }

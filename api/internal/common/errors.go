@@ -16,7 +16,7 @@ type NotFoundError struct {
 }
 
 func (e NotFoundError) Is(target error) bool {
-	_, ok := target.(*NotFoundError)
+	_, ok := target.(NotFoundError)
 	return ok
 }
 

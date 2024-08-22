@@ -46,6 +46,10 @@
 
 # V2
 
+[ ] use structured JSON output
+    https://openai.com/index/introducing-structured-outputs-in-the-api/
+[ ] Spike: Investigate if GPT's Fine-tuning feature can improve examples and meanings
+    https://openai.com/index/gpt-4o-fine-tuning/
 [ ] Refactor mobile/components/quiz/Quiz.tsx
 [ ] New quiz: complete sentece from audio. Read example and ask users to select words heard 
 [ ] New quiz: write word from definition

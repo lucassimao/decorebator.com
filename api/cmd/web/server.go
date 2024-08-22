@@ -82,6 +82,7 @@ func main() {
 	{
 		workerRoutes.POST("/imageGenerator/:definitionId", WorkerRoutes.GenerateNewImage)
 		workerRoutes.POST("/textToAudio/:wordId", WorkerRoutes.GenerateNewAudio)
+		workerRoutes.POST("/retry/:jobId", WorkerRoutes.TriggerJob)
 	}
 
 	srv := &http.Server{

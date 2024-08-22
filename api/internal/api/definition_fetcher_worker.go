@@ -26,8 +26,8 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 
 	if err != nil {
 
-		if errors.Is(err, &common.NotFoundError{}) {
-			return river.JobCancel(errors.New("not found"))
+		if errors.Is(err, common.NotFoundError{}) {
+			return river.JobCancel(errors.New("word not found"))
 		}
 
 		return err

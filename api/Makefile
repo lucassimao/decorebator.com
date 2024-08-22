@@ -13,6 +13,7 @@ all: help
 
 setup: ## Install all dev and build dependencies
 	go install github.com/joho/godotenv/cmd/godotenv@latest
+	go install github.com/go-delve/delve/cmd/dlv@latest
 	curl -s https://packagecloud.io/install/repositories/golang-migrate/migrate/script.deb.sh | sudo bash
 	sudo apt install migrate
 	sudo apt install inotify-tools
@@ -56,6 +57,9 @@ build: clean ## Build restful api and save it to bin/main
 
 clean: ## Remove build related file
 	rm -fr ./bin
+
+debug-workers: ## Starts a delve session for workers
+	@$(GODOTENV_PATH) -f .env dlv debug cmd/workers/main.go
 
 create-migration: ## Create a new database migration file with the provided file name
 	@read -p "Enter the migration file name: " FILE_NAME; \

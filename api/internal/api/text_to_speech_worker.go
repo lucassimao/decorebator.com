@@ -29,7 +29,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 	word, err := GetWordById(job.Args.WordId)
 
 	if err != nil && errors.Is(err, common.NotFoundError{}) {
-		return nil
+		return river.JobCancel(errors.New("word not found"))
 	}
 
 	if err != nil || word == nil {
