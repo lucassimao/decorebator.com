@@ -20,8 +20,14 @@ export type Quiz = {
   options: string[];
   answerIndex: number;
   id: number;
-  type: 'GUESS_MEANING' | 'COMPLETE_SENTENCE' | 'WORD_FROM_MEANING'|'WORD_FROM_IMAGE' | 'WORD_FROM_AUDIO'|'MEANING_FROM_AUDIO';
-  pos: string // part of speech
+  type:
+    | "GUESS_MEANING"
+    | "COMPLETE_SENTENCE"
+    | "WORD_FROM_MEANING"
+    | "WORD_FROM_IMAGE"
+    | "WORD_FROM_AUDIO"
+    | "MEANING_FROM_AUDIO";
+  pos: string; // part of speech
   audioURL?: string; //only present in MeaningFromAudio, GUESS_MEANING and WordFromAudio quizes
   imageDescription: string;
 };

@@ -59,7 +59,9 @@ export default function Dashboard() {
         icon="logout-variant"
         size={25}
         key={"logout"}
-        onPress={() => usersApi.sigout().then(() => router.replace({pathname: "/signin"}))}
+        onPress={() =>
+          usersApi.sigout().then(() => router.replace({ pathname: "/signin" }))
+        }
       />,
     );
 
@@ -224,7 +226,7 @@ export default function Dashboard() {
                     <ActivityIndicator animating={true} theme={theme} />
                   </View>
                 )}
-                {words?.map((w,idx) => (
+                {words?.map((w, idx) => (
                   <TouchableRipple
                     centered
                     key={`wordlist-${wordlist.id}-${w.id}`}
