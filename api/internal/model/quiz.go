@@ -21,4 +21,5 @@ type Quiz struct {
 	// Notations    []PhoneticNotation `json:"notations"`
 	PartOfSpeech     string `json:"pos"`
 	ImageDescription string `json:"imageDescription,omitempty"` //only present in WordFromImage quiz
+	AudioURL         string `json:"audioURL,omitempty"`         //only present in MeaningFromAudio, GuessMeaning and WordFromAudio quizes
 }

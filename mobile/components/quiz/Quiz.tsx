@@ -13,6 +13,7 @@ import {
   Button,
   Icon,
   IconButton,
+  MD3Colors,
   Surface,
   TouchableRipple,
   useTheme,
@@ -31,17 +32,23 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
   const theme = useTheme();
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
   const [sound, setSound] = React.useState<Audio.Sound | null>(null);
+  const [textWidth, setTextWidth] = React.useState(0);
 
   React.useEffect(() => {
     setSelectedIndex(null);
 
-    if (["WORD_FROM_AUDIO", "MEANING_FROM_AUDIO"].includes(quiz.type)) {
-      Audio.Sound.createAsync({ uri: quiz.value })
-        .then((result) => {
-          setSound(result.sound);
-        })
-        .catch(console.log);
-    }
+    const shouldLoadAudio =
+      ["WORD_FROM_AUDIO", "MEANING_FROM_AUDIO", "GUESS_MEANING"].includes(
+        quiz.type,
+      ) && quiz.audioURL;
+
+    if (!shouldLoadAudio || !quiz.audioURL) return;
+
+    Audio.Sound.createAsync({ uri: quiz.audioURL })
+      .then((result) => {
+        setSound(result.sound);
+      })
+      .catch(console.log);
   }, [quiz.id]);
 
   React.useEffect(() => {
@@ -60,6 +67,7 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
 
   let title = "";
   let quizTitleStyle;
+  let displayPlayButton = false;
 
   switch (quiz.type) {
     case "COMPLETE_SENTENCE":
@@ -81,7 +89,15 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
     case "GUESS_MEANING":
       title = quiz.value;
       quizTitleStyle = styles.biggerQuizTitle;
+      displayPlayButton = true;
+      break;
+    case "MEANING_FROM_AUDIO":
+    case "WORD_FROM_AUDIO":
+      displayPlayButton = true;
+      break;
   }
+
+  const playSound = () => sound?.playFromPositionAsync(0);
 
   return (
     <View style={styles.container1}>
@@ -106,7 +122,7 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
                 icon={({ color }) => (
                   <IconButton icon="play-circle" size={60} iconColor={color} />
                 )}
-                onPress={() => sound?.playFromPositionAsync(0)}
+                onPress={playSound}
               >
                 <View />
               </Button>
@@ -115,13 +131,47 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
           )}
 
           {title && (
-            <Text
-              adjustsFontSizeToFit={true}
-              numberOfLines={9}
-              style={[styles.header, quizTitleStyle]}
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "row",
+              }}
             >
-              {title}
-            </Text>
+              <View
+                style={{
+                  position: "relative", // Allows absolute positioning for the icon
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  adjustsFontSizeToFit={true}
+                  numberOfLines={9}
+                  style={[styles.header, quizTitleStyle]}
+                  onPress={playSound}
+                  onLayout={(event) => {
+                    const { width } = event.nativeEvent.layout;
+                    setTextWidth(width); // Update text width dynamically
+                  }}
+                >
+                  {title}
+                </Text>
+                {displayPlayButton && (
+                  <IconButton
+                    onPress={playSound}
+                    icon="play-circle"
+                    iconColor={theme.colors.primary}
+                    size={30}
+                    loading={false}
+                    style={{
+                      position: "absolute",
+                      left: -(textWidth / title?.length + 25),
+                    }}
+                  />
+                )}
+              </View>
+            </View>
           )}
 
           {["GUESS_MEANING", "WORD_FROM_MEANING"].includes(quiz.type) && (

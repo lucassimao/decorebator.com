@@ -160,12 +160,13 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	leitnerSystemID := nextDefinition.LeitnerSystemID
 	imageUrl := nextDefinition.ImageUrl
 
+	word, err = GetWordById(wordID)
+	if err != nil {
+		return nil, err
+	}
+
 	// [TODO] Refactor and create factory methods
 	if boxID%6 == 0 || boxID%5 == 0 {
-		word, err = GetWordById(wordID)
-		if err != nil {
-			return nil, err
-		}
 		// if no audio, jump to the GuessMeaning quiz
 		if word.AudioURL == "" {
 			boxID = 1
@@ -181,10 +182,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		if err != nil {
 			return nil, err
 		}
-
-		value = word.AudioURL
 		quizAnswer = definition.Meaning
-
 	case boxID%5 == 0:
 		quizzType = model.WordFromAudio
 		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
@@ -192,9 +190,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 			return nil, err
 		}
 
-		value = word.AudioURL
 		quizAnswer = definition.Token
-
 	case boxID%4 == 0:
 		quizzType = model.CompleteSentence
 		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
@@ -206,9 +202,9 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		value = definition.Examples[i]
 
 		re := regexp.MustCompile(`\[(.*?)\]`)
-		matches := re.FindAllStringSubmatch(value, -1)
-		if len(matches) > 0 {
-			quizAnswer = matches[0][1]
+		matches := re.FindStringSubmatch(value)
+		if len(matches) > 1 {
+			quizAnswer = matches[1]
 		} else {
 			quizAnswer = definition.Token
 		}
@@ -221,7 +217,13 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 			return nil, err
 		}
 
-		quizAnswer = definition.Token
+		re := regexp.MustCompile(`\[(.*?)\]`)
+		matches := re.FindStringSubmatch(nextDefinition.ImageDescription)
+		if len(matches) > 1 {
+			quizAnswer = matches[1]
+		} else {
+			quizAnswer = definition.Token
+		}
 	case boxID%2 == 0:
 		quizzType = model.WordFromMeaning
 		value = definition.Meaning
@@ -261,6 +263,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		// Notations:    definition.PhoneticNotations,
 		PartOfSpeech:     definition.PartOfSpeech,
 		ImageDescription: nextDefinition.ImageDescription,
+		AudioURL:         word.AudioURL,
 	}
 
 	return challenge, nil
