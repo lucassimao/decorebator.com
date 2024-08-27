@@ -6,9 +6,11 @@ import (
 	"regexp"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
+	repo "decorebator.com/internal/repository"
 )
 
-var definitionRepository *DefinitionRepository
+var definitionRepository *repo.DefinitionRepository
 
 func init() {
 	db, err := common.GetDBConnection()
@@ -16,10 +18,10 @@ func init() {
 		common.Logger.Error("failed to open db connection: ", "error", err)
 		os.Exit(1)
 	}
-	definitionRepository = &DefinitionRepository{db}
+	definitionRepository = &repo.DefinitionRepository{Db: db}
 }
 
-func SaveDefinition(token string, tokenId int64, definitions []Definition) ([]Definition, error) {
+func SaveDefinition(token string, tokenId int64, definitions []model.Definition) ([]model.Definition, error) {
 
 	// wrapping token ocurrence within [ ] inside each example
 	for _, definition := range definitions {
@@ -30,7 +32,7 @@ func SaveDefinition(token string, tokenId int64, definitions []Definition) ([]De
 		}
 	}
 
-	definitions, err := definitionRepository.save(tokenId, definitions)
+	definitions, err := definitionRepository.Save(tokenId, definitions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save definitions: %w", err)
 	}
@@ -39,15 +41,28 @@ func SaveDefinition(token string, tokenId int64, definitions []Definition) ([]De
 }
 
 func GetRandomMeanings(definitionIdsToIgnore []int, size int) ([]string, error) {
-	return definitionRepository.getRandomMeanings(definitionIdsToIgnore, size)
+	return definitionRepository.GetRandomMeanings(definitionIdsToIgnore, size)
 }
 
 func GetRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, size int) ([]string, error) {
-	return definitionRepository.getRandomTokens(definitionIdsToIgnore, partOfSpeech, size)
+	return definitionRepository.GetRandomTokens(definitionIdsToIgnore, partOfSpeech, size)
 }
 
-func GetDefinitionById(id int64) (*Definition, error) {
-	return definitionRepository.getById(id)
+func GetDefinitionById(id int64) (*model.Definition, error) {
+	return definitionRepository.GetById(id)
+}
+
+func DeleteWordDefinitions(wordId int64) error {
+	return definitionRepository.DeleteWordDefinitions(wordId)
+}
+
+func IsValidWordDefinition(wordId, definitionId, userId int64) (bool, error) {
+	isValid, err := definitionRepository.IsValidWordDefinition(wordId, definitionId, userId)
+	if err != nil {
+		return false, fmt.Errorf("validation failed for tuple wordId, definitionId, userId. %w", err)
+	}
+
+	return isValid, nil
 }
 
 func containsBracketedWord(s string) bool {

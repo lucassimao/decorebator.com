@@ -1,13 +1,27 @@
 import * as wordlistsApi from "@/api/wordlists";
+import * as errorReportingApi from "@/api/errorReporting";
+import { ErrorType } from "@/api/errorReporting";
+
 import Snackbar, { SnackBarProps } from "@/components/SnackBar";
 import Quiz from "@/components/quiz/Quiz";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import * as React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import {
+  findNodeHandle,
+  LayoutChangeEvent,
+  StyleSheet,
+  Text,
+  UIManager,
+  View,
+} from "react-native";
 import {
   ActivityIndicator,
+  Appbar,
+  Button,
+  Divider,
   IconButton,
+  Menu,
   Surface,
   Tooltip,
   TouchableRipple,
@@ -35,13 +49,40 @@ export default function QuizScreen() {
       type: "info",
       onDismiss: closeSnackBar,
     });
-
   }, [isFastMode]);
 
   const navigation = useNavigation();
 
-  React.useEffect(() => {
+  const [isMenuVisible, setMenuVisible] = React.useState(false);
+  const menuAnchorRef = React.useRef<View>(null);
+
+  const openMenu = () => {
+    if (!menuAnchorRef.current) return;
+
+    menuAnchorRef.current.measure((x, y, width, height, pageX, pageY) => {
+      setMenuPosition({ x: pageX + width, y: pageY + height }); // Position menu below header button
+      setMenuVisible(true);
+    });
+  };
+  const closeMenu = () => setMenuVisible(false);
+
+  const [menuPosition, setMenuPosition] = React.useState({ x: 0, y: 0 });
+
+  React.useLayoutEffect(() => {
     const options: React.JSX.Element[] = [];
+
+    options.push(
+      <Tooltip title="Report error">
+        <IconButton
+          ref={menuAnchorRef}
+          icon={"bug"}
+          iconColor={theme.colors.primary}
+          size={25}
+          key={"reportError"}
+          onPress={isMenuVisible ? closeMenu : openMenu}
+        />
+      </Tooltip>,
+    );
 
     options.push(
       <Tooltip title="Fast mode">
@@ -82,8 +123,7 @@ export default function QuizScreen() {
     Error,
     boolean
   >({
-    mutationFn: (success) =>{
-
+    mutationFn: (success) => {
       if (isFastMode && success) {
         setTimeout(getNewQuiz, 400);
       } else {
@@ -92,7 +132,11 @@ export default function QuizScreen() {
 
       setSnackBarProps(null);
 
-      return wordlistsApi.answerQuiz(Number(wordlistId), Number(quiz?.id), success)
+      return wordlistsApi.answerQuiz(
+        Number(wordlistId),
+        Number(quiz?.id),
+        success,
+      );
     },
     onError: (error) => {
       setSnackBarProps({
@@ -108,6 +152,38 @@ export default function QuizScreen() {
     //     setButtonNextVisible(true);
     //   }
     // },
+  });
+
+  const { mutate: reportError, isPending: isReportErrorPending } = useMutation<
+    void,
+    Error,
+    ErrorType
+  >({
+    mutationFn: (errorType) => {
+      setMenuVisible(false);
+      if (!quiz) throw new Error("No quiz");
+
+      return errorReportingApi.reportError(errorType, quiz);
+    },
+    onError: (error) => {
+      setSnackBarProps({
+        onDismiss: closeSnackBar,
+        message: error.message,
+        type: "error",
+      });
+    },
+    onSuccess: () => {
+      // and then jump to the next screen
+      getNewQuiz();
+
+      setSnackBarProps({
+        duration: 5000,
+        onDismiss: closeSnackBar,
+        message:
+          "Thanks, your report will be analyzed and you will hear back from us soon.",
+        type: "info",
+      });
+    },
   });
 
   React.useEffect(() => {
@@ -164,6 +240,29 @@ export default function QuizScreen() {
       )}
 
       {snackBarProps && <Snackbar {...snackBarProps} />}
+
+      <Menu visible={isMenuVisible} onDismiss={closeMenu} anchor={menuPosition}>
+        <Menu.Item
+          onPress={() => reportError(ErrorType.UnrelatedImage)}
+          title="Unrelated image"
+        />
+        <Menu.Item
+          onPress={() => reportError(ErrorType.MissingImage)}
+          title="Missing image"
+        />
+        <Menu.Item
+          onPress={() => reportError(ErrorType.UnrelatedMeaning)}
+          title="Unrelated meaning"
+        />
+        <Menu.Item
+          onPress={() => reportError(ErrorType.UnrelatedExample)}
+          title="Unrelated example"
+        />
+        <Menu.Item
+          onPress={() => reportError(ErrorType.SoundNotPlaying)}
+          title="Sound not playing"
+        />
+      </Menu>
     </View>
   );
 }

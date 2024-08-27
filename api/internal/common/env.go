@@ -15,6 +15,7 @@ var Env struct {
 	Env                  Environment
 	OpenaiApiKey         string
 	Port                 string
+	DatabaseUrl          string // if set has precendence over  PostgresUser, PostgresPassword,PostgresDB,PostgresPort, and PostgresHost
 	PostgresUser         string
 	PostgresPassword     string
 	PostgresDB           string
@@ -47,6 +48,7 @@ func init() {
 
 	Env.OpenaiApiKey = os.Getenv("OPENAI_API_KEY")
 	Env.Port = os.Getenv("PORT")
+	Env.DatabaseUrl = os.Getenv("DATABASE_URL")
 	Env.PostgresUser = os.Getenv("POSTGRES_USER")
 	Env.PostgresPassword = os.Getenv("POSTGRES_PASSWORD")
 	Env.PostgresDB = os.Getenv("POSTGRES_DB")

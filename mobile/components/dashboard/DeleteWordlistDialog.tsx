@@ -52,7 +52,7 @@ const DeleteWordlistDialog = ({ onDismiss, wordlist }: Props) => {
         dismissable
         dismissableBackButton
       >
-        <Dialog.Title style={styles.title}>Add Word</Dialog.Title>
+        <Dialog.Title style={styles.title}>Delete wordlist</Dialog.Title>
         <Dialog.Content>
           {isPending ? (
             <ActivityIndicator size={"large"} animating={true} theme={theme} />

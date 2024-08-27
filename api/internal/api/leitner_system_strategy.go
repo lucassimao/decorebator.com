@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"regexp"
+	"strings"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -16,7 +17,7 @@ type Quiz = model.Quiz
 type QuizType = model.QuizType
 
 type NextDefinition struct {
-	Definition       *Definition
+	Definition       *model.Definition
 	LeitnerSystemID  int64
 	BoxID            int64
 	WordID           int64
@@ -84,7 +85,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 		return nil, errors.New("no definitions found")
 	}
 
-	definition := Definition{}
+	definition := model.Definition{}
 	result := NextDefinition{Definition: &definition}
 
 	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
@@ -99,7 +100,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	return &result, nil
 }
 
-func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []Definition) error {
+func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []model.Definition) error {
 	db, err := common.GetDBConnection()
 	if err != nil {
 		common.Logger.Error("failed to open db connection", "error", err)
@@ -153,7 +154,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	var quizzType QuizType
 	var quizAnswer string
 
-	var word *Word
+	var word *model.Word
 	boxID := nextDefinition.BoxID
 	wordID := nextDefinition.WordID
 	definition := nextDefinition.Definition
@@ -190,7 +191,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 			return nil, err
 		}
 
-		quizAnswer = definition.Token
+		quizAnswer = word.Name
 	case boxID%4 == 0:
 		quizzType = model.CompleteSentence
 		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
@@ -202,12 +203,22 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		value = definition.Examples[i]
 
 		re := regexp.MustCompile(`\[(.*?)\]`)
-		matches := re.FindStringSubmatch(value)
-		if len(matches) > 1 {
-			quizAnswer = matches[1]
+		matches := re.FindAllStringSubmatch(value, -1)
+		var tokens []string
+
+		// Iterate over matches and extract the content inside the brackets
+		for _, match := range matches {
+			if len(match) > 1 {
+				tokens = append(tokens, match[1]) // Append the extracted token to the slice
+			}
+		}
+
+		if len(tokens) > 0 {
+			quizAnswer = strings.Join(tokens, " ")
 		} else {
 			quizAnswer = definition.Token
 		}
+
 	case boxID%3 == 0 && imageUrl != "":
 		quizzType = model.WordFromImage
 		value = imageUrl
@@ -264,6 +275,8 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		PartOfSpeech:     definition.PartOfSpeech,
 		ImageDescription: nextDefinition.ImageDescription,
 		AudioURL:         word.AudioURL,
+		WordID:           wordID,
+		DefinitionID:     nextDefinition.Definition.ID,
 	}
 
 	return challenge, nil

@@ -8,11 +8,16 @@ import (
 	"time"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
+	repo "decorebator.com/internal/repository"
+
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var userRepository *UserRepository
+type User = model.User
+
+var userRepository *repo.UserRepository
 
 const AUTH_TOKEN_DURATION = 24 * time.Hour
 
@@ -56,11 +61,11 @@ func init() {
 		common.Logger.Error("failed to open db connection", "error", err)
 		os.Exit(1)
 	}
-	userRepository = &UserRepository{db}
+	userRepository = &repo.UserRepository{Db: db}
 }
 
 func SaveUser(firstName, lastName, password, email string) (*User, error) {
-	user, err := userRepository.save(firstName, lastName, password, email)
+	user, err := userRepository.Save(firstName, lastName, password, email)
 	if err != nil {
 		common.Logger.Error("failed to save new user", "error", err)
 		switch err.(type) {
@@ -76,10 +81,10 @@ func SaveUser(firstName, lastName, password, email string) (*User, error) {
 func LoginUser(email, password string) (string, error) {
 	lowerCaseEmail := strings.ToLower(email)
 
-	args := FindUserArgs{
-		email: lowerCaseEmail,
+	args := repo.FindUserArgs{
+		Email: lowerCaseEmail,
 	}
-	results, err := userRepository.find(args)
+	results, err := userRepository.Find(args)
 	if err != nil {
 		common.Logger.Error("failed to login user", "error", err)
 		return "", errors.New("could not process your request. Try again later")

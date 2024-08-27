@@ -3,11 +3,13 @@ package api
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"decorebator.com/internal/common"
+	rep "decorebator.com/internal/repository"
 )
 
-var definitionImageRepository *DefinitionImageRepository
+var definitionImageRepository *rep.DefinitionImageRepository
 
 func init() {
 	db, err := common.GetDBConnection()
@@ -15,14 +17,16 @@ func init() {
 		common.Logger.Error("failed to open db connection: ", "error", err)
 		os.Exit(1)
 	}
-	definitionImageRepository = &DefinitionImageRepository{db}
+	definitionImageRepository = rep.NewDefinitionImageRepository(db)
 }
 
-func SaveDefinitionImage(dto CreateDefinitionImageDTO) (DefinitionImage, error) {
+func SaveDefinitionImage(dto rep.CreateDefinitionImageDTO) (*rep.DefinitionImage, error) {
 
-	definitionImage, err := definitionImageRepository.save(dto)
+	definitionImage, err := definitionImageRepository.Save(dto)
 	if err != nil {
-		return DefinitionImage{}, fmt.Errorf("failed to save definitions: %w", err)
+		msg := "failed to save definition image"
+		common.Logger.Error(msg, "error", err, "stacktrace", string(debug.Stack()))
+		return nil, fmt.Errorf(msg+": %w", err)
 	}
 
 	return definitionImage, nil

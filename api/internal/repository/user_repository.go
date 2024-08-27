@@ -1,13 +1,12 @@
-package api
+package repository
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"strings"
-	"time"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -15,41 +14,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type User struct {
-	ID           int64            `json:"id"`
-	FirstName    string           `json:"firstName"`
-	LastName     string           `json:"lastName"`
-	PasswordHash string           `json:"passwordHash"`
-	Email        string           `json:"email"`
-	CreatedAt    pgtype.Timestamp `json:"createdAt"`
-	UpdatedAt    pgtype.Timestamp `json:"updatedAt"`
-}
-
-func (u User) MarshalJSON() ([]byte, error) {
-	userMap := map[string]interface{}{
-		"id":           u.ID,
-		"firstName":    u.FirstName,
-		"lastName":     u.LastName,
-		"passwordHash": u.PasswordHash,
-		"email":        u.Email,
-	}
-
-	if u.CreatedAt.Status == pgtype.Present {
-		userMap["createdAt"] = u.CreatedAt.Time.UTC().Format(time.RFC3339)
-	}
-
-	if u.UpdatedAt.Status == pgtype.Present {
-		userMap["updatedAt"] = u.UpdatedAt.Time.UTC().Format(time.RFC3339)
-	}
-
-	return json.Marshal(userMap)
-}
-
+type User = model.User
 type UserRepository struct {
-	db *pgxpool.Pool
+	Db *pgxpool.Pool
 }
 
-func (repository *UserRepository) save(firstName, lastName, password, email string) (*User, error) {
+func (repository *UserRepository) Save(firstName, lastName, password, email string) (*User, error) {
 	query := `
 		INSERT INTO users (first_name, last_name, password_hash, email)
 		VALUES ($1, $2, $3, $4)
@@ -65,7 +35,7 @@ func (repository *UserRepository) save(firstName, lastName, password, email stri
 		return nil, err
 	}
 
-	err = repository.db.QueryRow(context.Background(), query, firstName, lastName, passwordHash, email).Scan(&userID, &createdAt, &updatedAt)
+	err = repository.Db.QueryRow(context.Background(), query, firstName, lastName, passwordHash, email).Scan(&userID, &createdAt, &updatedAt)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if ok := errors.As(err, &pgErr); ok {
@@ -80,22 +50,22 @@ func (repository *UserRepository) save(firstName, lastName, password, email stri
 }
 
 type FindUserArgs struct {
-	email string
+	Email string
 }
 
-func (repository *UserRepository) find(args FindUserArgs) ([]User, error) {
+func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 	var builder strings.Builder
 	builder.WriteString(`SELECT id,first_name, last_name, password_hash, created_at, updated_at FROM users`)
 	var queryArgs []interface{}
 
-	if args.email != "" {
+	if args.Email != "" {
 		builder.WriteString(` WHERE email = $1`)
-		queryArgs = append(queryArgs, args.email)
+		queryArgs = append(queryArgs, args.Email)
 	}
 
 	users := []User{}
 	query := builder.String()
-	rows, err := repository.db.Query(context.Background(), query, queryArgs...)
+	rows, err := repository.Db.Query(context.Background(), query, queryArgs...)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return users, nil

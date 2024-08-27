@@ -5,13 +5,19 @@ export type SnackBarProps = {
   message: string;
   type: "success" | "error" | "info";
   onDismiss: () => void;
+  duration?: number;
 };
-export default function Component({ message, type, onDismiss }: SnackBarProps) {
+export default function Component({
+  message,
+  type,
+  onDismiss,
+  duration = 2000,
+}: SnackBarProps) {
   return (
     <Portal>
       <Snackbar
         visible={true}
-        duration={2000}
+        duration={duration}
         onDismiss={onDismiss}
         style={[styles.snackbar, styles[type]]}
         action={{
