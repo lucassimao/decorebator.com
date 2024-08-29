@@ -3,6 +3,7 @@ import { Quiz } from "./wordlists";
 
 export enum ErrorType {
   UnrelatedImage = "_unrelated_image",
+  MissingImage = "_missing_image",
   UnrelatedMeaning = "_unrelated_meaning",
   UnrelatedExample = "_unrelated_example",
   SoundNotPlaying = "_sound_not_playing",

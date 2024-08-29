@@ -22,4 +22,6 @@ type Quiz struct {
 	PartOfSpeech     string `json:"pos"`
 	ImageDescription string `json:"imageDescription,omitempty"` //only present in WordFromImage quiz
 	AudioURL         string `json:"audioURL,omitempty"`         //only present in MeaningFromAudio, GuessMeaning and WordFromAudio quizes
+	DefinitionID     int64  `json:"definitionId"`
+	WordID           int64  `json:"wordId"`
 }

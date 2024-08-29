@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"regexp"
+	"strings"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -190,7 +191,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 			return nil, err
 		}
 
-		quizAnswer = definition.Token
+		quizAnswer = word.Name
 	case boxID%4 == 0:
 		quizzType = model.CompleteSentence
 		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
@@ -202,12 +203,22 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		value = definition.Examples[i]
 
 		re := regexp.MustCompile(`\[(.*?)\]`)
-		matches := re.FindStringSubmatch(value)
-		if len(matches) > 1 {
-			quizAnswer = matches[1]
+		matches := re.FindAllStringSubmatch(value, -1)
+		var tokens []string
+
+		// Iterate over matches and extract the content inside the brackets
+		for _, match := range matches {
+			if len(match) > 1 {
+				tokens = append(tokens, match[1]) // Append the extracted token to the slice
+			}
+		}
+
+		if len(tokens) > 0 {
+			quizAnswer = strings.Join(tokens, " ")
 		} else {
 			quizAnswer = definition.Token
 		}
+
 	case boxID%3 == 0 && imageUrl != "":
 		quizzType = model.WordFromImage
 		value = imageUrl
@@ -264,6 +275,8 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		PartOfSpeech:     definition.PartOfSpeech,
 		ImageDescription: nextDefinition.ImageDescription,
 		AudioURL:         word.AudioURL,
+		WordID:           wordID,
+		DefinitionID:     nextDefinition.Definition.ID,
 	}
 
 	return challenge, nil

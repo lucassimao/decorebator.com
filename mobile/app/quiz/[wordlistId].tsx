@@ -173,7 +173,11 @@ export default function QuizScreen() {
       });
     },
     onSuccess: () => {
+      // and then jump to the next screen
+      getNewQuiz();
+
       setSnackBarProps({
+        duration: 5000,
         onDismiss: closeSnackBar,
         message:
           "Thanks, your report will be analyzed and you will hear back from us soon.",
@@ -241,6 +245,10 @@ export default function QuizScreen() {
         <Menu.Item
           onPress={() => reportError(ErrorType.UnrelatedImage)}
           title="Unrelated image"
+        />
+        <Menu.Item
+          onPress={() => reportError(ErrorType.MissingImage)}
+          title="Missing image"
         />
         <Menu.Item
           onPress={() => reportError(ErrorType.UnrelatedMeaning)}

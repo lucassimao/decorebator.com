@@ -34,10 +34,11 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	var prompt string
 	var definitionID = job.Args.DefinitionId
-	var longestExample string
+	var description string
 
 	if job.Args.CustomPrompt != "" {
 		prompt = job.Args.CustomPrompt
+		description = job.Args.CustomPrompt
 	} else {
 		definition, err := GetDefinitionById(job.Args.DefinitionId)
 		if err != nil {
@@ -51,17 +52,20 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 			return err
 		}
 
+		description = ""
+		// using the longest example as the image description
 		for _, item := range definition.Examples {
-			if len(item) > len(longestExample) {
-				longestExample = item
+			if len(item) > len(description) {
+				description = item
 			}
 		}
-		endWrappedToken := strings.Index(longestExample, "]")
+
+		endWrappedToken := strings.Index(description, "]")
 		if endWrappedToken == -1 { // no word between square brackets founds
-			prompt = fmt.Sprintf("%s. %s meaning %s.", longestExample, definition.Token, definition.Meaning)
+			prompt = fmt.Sprintf("%s. %s meaning %s.", description, definition.Token, definition.Meaning)
 		} else {
 			// removing the square brackets and adding the term's meaning close to the term and wrapped by parentheses"
-			prompt = longestExample
+			prompt = description
 			pos := strings.Index(prompt, "]")
 			prompt = fmt.Sprintf("%s (%s) %s", prompt[:pos+1], definition.Meaning, prompt[pos+1:])
 
@@ -89,7 +93,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	_, err = SaveDefinitionImage(model.CreateDefinitionImageDTO{
 		Api:          model.STABILITY_AI,
 		URL:          url,
-		Description:  longestExample,
+		Description:  description,
 		Model:        "stable-image-core",
 		Prompt:       prompt,
 		DefinitionId: definitionID,
