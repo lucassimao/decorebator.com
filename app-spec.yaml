@@ -1,0 +1,15 @@
+features:
+- buildpack-stack=ubuntu-22
+name: decorebator
+services:
+- environment_slug: go
+  github:
+    branch: master
+    deploy_on_push: true
+    repo: decorebator.com/api
+  http_port: 8080
+  instance_count: 1
+  name: api
+  source_dir: /api
+  build:
+     dockerfile_path: api/Dockerfile
