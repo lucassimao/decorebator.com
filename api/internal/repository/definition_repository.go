@@ -1,8 +1,10 @@
-package api
+package repository
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"strings"
 
 	"decorebator.com/internal/common"
@@ -15,12 +17,12 @@ import (
 type Definition = model.Definition
 
 type DefinitionRepository struct {
-	db *pgxpool.Pool
+	Db *pgxpool.Pool
 }
 
-func (repository *DefinitionRepository) save(tokenId int64, definitions []Definition) ([]Definition, error) {
+func (repository *DefinitionRepository) Save(tokenId int64, definitions []Definition) ([]Definition, error) {
 	// Start a transaction
-	tx, err := repository.db.Begin(context.Background())
+	tx, err := repository.Db.Begin(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +82,7 @@ func (repository *DefinitionRepository) save(tokenId int64, definitions []Defini
 	return definitions, nil
 }
 
-func (repository *DefinitionRepository) getRandomMeanings(definitionIdsToIgnore []int, limit int) ([]string, error) {
+func (repository *DefinitionRepository) GetRandomMeanings(definitionIdsToIgnore []int, limit int) ([]string, error) {
 	// all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
 	// selecting random() to avoid the error 'SELECT DISTINCT, ORDER BY expressions must appear in select list (SQLSTATE 42P10)'
 	query := `
@@ -109,7 +111,7 @@ func (repository *DefinitionRepository) getRandomMeanings(definitionIdsToIgnore 
 		SELECT meaning FROM options;
 	`
 
-	rows, err := repository.db.Query(context.Background(), query, definitionIdsToIgnore, limit)
+	rows, err := repository.Db.Query(context.Background(), query, definitionIdsToIgnore, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +130,7 @@ func (repository *DefinitionRepository) getRandomMeanings(definitionIdsToIgnore 
 	return meanings, nil
 }
 
-func (repository *DefinitionRepository) getRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, limit int) ([]string, error) {
+func (repository *DefinitionRepository) GetRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, limit int) ([]string, error) {
 	// selecting random() to avoid the error 'SELECT DISTINCT, ORDER BY expressions must appear in select list (SQLSTATE 42P10)'
 	query := `
 		WITH tokens AS (
@@ -145,7 +147,7 @@ func (repository *DefinitionRepository) getRandomTokens(definitionIdsToIgnore []
 		)
 		SELECT token FROM tokens ;
 	`
-	rows, err := repository.db.Query(context.Background(), query, partOfSpeech, definitionIdsToIgnore, limit)
+	rows, err := repository.Db.Query(context.Background(), query, partOfSpeech, definitionIdsToIgnore, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +165,7 @@ func (repository *DefinitionRepository) getRandomTokens(definitionIdsToIgnore []
 	return tokens, nil
 }
 
-func (repository *DefinitionRepository) getById(id int64) (*Definition, error) {
+func (repository *DefinitionRepository) GetById(id int64) (*Definition, error) {
 
 	var query = `SELECT token, language, part_of_speech, meaning, examples, inflections, source, 
 						source_id,sounds,phonetic_notations, created_at, updated_at
@@ -172,7 +174,7 @@ func (repository *DefinitionRepository) getById(id int64) (*Definition, error) {
 	var def Definition
 	def.ID = id
 
-	err := repository.db.QueryRow(context.Background(), query, id).Scan(
+	err := repository.Db.QueryRow(context.Background(), query, id).Scan(
 		&def.Token, &def.Language, &def.PartOfSpeech, &def.Meaning, &def.Examples, &def.Inflections,
 		&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations, &def.CreatedAt, &def.UpdatedAt)
 
@@ -185,4 +187,58 @@ func (repository *DefinitionRepository) getById(id int64) (*Definition, error) {
 	}
 
 	return &def, nil
+}
+
+// Delete definitions and word_definitions only if they are associated to a single word.
+// If associated to more than one word, then just dele word_definitions entries.
+func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64) error {
+	query := `SELECT count(distinct word_id) as count
+				FROM word_definitions 
+				WHERE definition_id IN (SELECT definition_id from word_definitions WHERE word_id=$1)`
+
+	db, err := common.GetDBConnection()
+	if err != nil {
+		common.Logger.Error("failed to open db connection", "error", err)
+	}
+
+	row := db.QueryRow(context.Background(), query, wordId)
+	var count int
+
+	err = row.Scan(&count)
+
+	if err != nil {
+		common.Logger.Error("failed to query how many words use the same definition", "error", err, "wordId", wordId)
+		return err
+	}
+
+	// just one word use these definitions. Drop them'll
+	if count == 1 {
+		// deleting from definitions table cascades to word_definitions and definition_images
+		_, err := db.Exec(context.Background(), "DELETE FROM definitions WHERE id in (SELECT definition_id from word_definitions WHERE word_id=$1)", wordId)
+		if err != nil {
+			fmt.Println(err)
+			return errors.New("failed to delete definitions")
+		}
+	} else {
+		// definitions are shared. will only delete entries in the many to many table
+		_, err := db.Exec(context.Background(), "DELETE from word_definitions WHERE word_id=$1", wordId)
+		if err != nil {
+			return errors.New("failed to delete word_definitions")
+		}
+	}
+
+	return nil
+}
+
+func (repository *DefinitionRepository) IsValidWordDefinition(wordId, definitionId, userId int64) (bool, error) {
+	query := `SELECT count(*) FROM word_definitions wd JOIN words w ON w.id=wd.word_id and word_id=$1 and definition_id=$2 and user_id=$3`
+	row := repository.Db.QueryRow(context.Background(), query, wordId, definitionId, userId)
+	var count int
+	err := row.Scan(&count)
+
+	if err != nil {
+		return false, err
+	}
+
+	return count == 1, nil
 }

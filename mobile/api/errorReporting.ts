@@ -13,6 +13,6 @@ export async function reportError(
   errorType: ErrorType,
   quiz: Quiz,
 ): Promise<void> {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + `/errorReport`;
+  const endpoint = process.env.EXPO_PUBLIC_API_URL + `/errorReports`;
   await callAPI("POST", endpoint, JSON.stringify({ errorType, quiz }));
 }

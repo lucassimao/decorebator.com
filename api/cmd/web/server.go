@@ -49,7 +49,7 @@ func main() {
 	var WordlistRoutes = decorebator.WordlistsRoutes{}
 	var UserRoutes = decorebator.UserRoutes{}
 	var QuizRoutes = decorebator.QuizRoutes{}
-	var ErrorReporting = decorebator.ErrorReportRoutes{}
+	var ErrorReportsRoutes = decorebator.ErrorReportRoutes{}
 
 	router := gin.Default()
 
@@ -75,7 +75,7 @@ func main() {
 		authenticatedRoutes.POST("/wordlists/:wordlistId/words", WordRoutes.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", QuizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", QuizRoutes.Save)
-		authenticatedRoutes.POST("/errorReport", ErrorReporting.Create)
+		authenticatedRoutes.POST("/errorReports", ErrorReportsRoutes.Create)
 
 	}
 

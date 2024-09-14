@@ -17,7 +17,7 @@ type Quiz = model.Quiz
 type QuizType = model.QuizType
 
 type NextDefinition struct {
-	Definition       *Definition
+	Definition       *model.Definition
 	LeitnerSystemID  int64
 	BoxID            int64
 	WordID           int64
@@ -85,7 +85,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 		return nil, errors.New("no definitions found")
 	}
 
-	definition := Definition{}
+	definition := model.Definition{}
 	result := NextDefinition{Definition: &definition}
 
 	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
@@ -100,7 +100,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	return &result, nil
 }
 
-func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []Definition) error {
+func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []model.Definition) error {
 	db, err := common.GetDBConnection()
 	if err != nil {
 		common.Logger.Error("failed to open db connection", "error", err)
@@ -154,7 +154,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	var quizzType QuizType
 	var quizAnswer string
 
-	var word *Word
+	var word *model.Word
 	boxID := nextDefinition.BoxID
 	wordID := nextDefinition.WordID
 	definition := nextDefinition.Definition

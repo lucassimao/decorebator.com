@@ -18,12 +18,13 @@ var (
 func GetDBConnection() (*pgxpool.Pool, error) {
 	// Initialize the database connection pool once
 	dbOnce.Do(func() {
-		url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-			os.Getenv("POSTGRES_USER"),
-			os.Getenv("POSTGRES_PASSWORD"),
-			os.Getenv("POSTGRES_HOST"),
-			os.Getenv("POSTGRES_PORT"),
-			os.Getenv("POSTGRES_DB"))
+		var url string
+		if Env.DatabaseUrl != "" {
+			url = Env.DatabaseUrl
+		} else {
+			url = fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+				Env.PostgresUser, Env.PostgresPassword, Env.PostgresHost, Env.PostgresPort, Env.PostgresDB)
+		}
 
 		var err error
 		db, err = pgxpool.New(context.Background(), url)

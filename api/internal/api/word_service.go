@@ -5,24 +5,28 @@ import (
 	"strings"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
+	repo "decorebator.com/internal/repository"
 )
 
-var wordRepository *WordRepository
+var wordRepository *repo.WordRepository
+
+type Word = model.Word
 
 func init() {
 	db, err := common.GetDBConnection()
 	if err != nil {
 		common.Logger.Error("failed to open db connection", "error", err)
 	}
-	wordRepository = &WordRepository{db}
+	wordRepository = &repo.WordRepository{Db: db}
 }
 
 func GetWordByWordlist(wordlistId, userId int64) ([]Word, error) {
-	return wordRepository.getAllFromWordlist(wordlistId, userId)
+	return wordRepository.GetAllFromWordlist(wordlistId, userId)
 }
 
 func GetWordById(id int64) (*Word, error) {
-	return wordRepository.getById(id)
+	return wordRepository.GetById(id)
 }
 
 func SaveWord(dto *Word) (*Word, error) {
@@ -33,7 +37,7 @@ func SaveWord(dto *Word) (*Word, error) {
 		return nil, common.BusinessError{Message: "words must be limited to 15 chars"}
 	}
 
-	word, err := wordRepository.save(trimmedName, dto.UserID, dto.WordlistID)
+	word, err := wordRepository.Save(trimmedName, dto.UserID, dto.WordlistID)
 	logger := common.Logger.With("token", dto.Name, "userId", dto.UserID, "wordId", word.ID, "token", dto.Name, "func", "SaveWord")
 
 	if err != nil {
@@ -48,7 +52,7 @@ func SaveWord(dto *Word) (*Word, error) {
 }
 
 func DeleteWord(id, userId int64) (int64, error) {
-	count, err := wordRepository.delete(userId, id)
+	count, err := wordRepository.Delete(userId, id)
 	if err != nil {
 		common.Logger.Error("failed to delete word", "error", err)
 		return 0, errors.New("failed to delete word")
@@ -62,7 +66,7 @@ func DeleteWord(id, userId int64) (int64, error) {
 }
 
 func UpdateWord(word *Word) error {
-	count, err := wordRepository.update(word)
+	count, err := wordRepository.Update(word)
 	if err != nil {
 		common.Logger.Error("failed to update word", "error", err)
 		return errors.New("failed to update word")

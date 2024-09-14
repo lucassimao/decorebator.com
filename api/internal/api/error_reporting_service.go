@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -17,38 +18,58 @@ const (
 	SoundNotPlaying  ErrorType = "_sound_not_playing"
 )
 
-func init() {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		common.Logger.Error("failed to open db connection", "error", err)
-	}
-	wordRepository = &WordRepository{db}
-}
-
 func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64) error {
+	logger := common.Logger.With("errorType", errorType, "quiz", quiz, "userId", userId)
 
-	fmt.Println(quiz, errorType)
+	isValid, err := IsValidWordDefinition(quiz.WordID, quiz.DefinitionID, userId)
 
-	if errorType == SoundNotPlaying {
-		word, err := GetWordById(quiz.WordID)
+	if err != nil || !isValid {
 		if err != nil {
+			logger.Error("validation failed", "error", err)
+		}
+		return errors.New("validation failed")
+	}
+
+	success := false
+
+	switch errorType {
+	case SoundNotPlaying:
+		_, err := TriggerTextToSpeech(quiz.WordID)
+		success = (err == nil)
+	case UnrelatedImage, MissingImage:
+		// default to the longest example
+		_, err = TriggerImageGenerator(quiz.DefinitionID, "")
+		success = (err == nil)
+	case UnrelatedExample, UnrelatedMeaning:
+		err := DeleteWordDefinitions(quiz.WordID)
+		fmt.Println(err)
+		if err == nil {
+			_, err = TriggerDefinitionFetcher(quiz.WordID)
 			fmt.Println(err)
-			return err
+			success = (err == nil)
 		}
-
-		if word.UserID != userId {
-			return errors.New("no word found for user")
-		}
-		TriggerTextToSpeech(quiz.WordID)
+	default:
+		return fmt.Errorf("invalid error type %s", errorType)
 	}
 
-	if errorType == UnrelatedImage {
-		TriggerImageGenerator(quiz.DefinitionID, "") // default to the longest example
-	}
-
+	// marking the quiz as failed
 	var strategy LeitnerSystemStrategy
 	strategy.SaveQuizResult(quiz.ID, false)
 
 	// persist report
+	db, err := common.GetDBConnection()
+	if err != nil {
+		common.Logger.Error("failed to open db connection", "error", err)
+		return err
+	}
+
+	_, err = db.Exec(context.Background(), `INSERT into 
+				error_reports (is_resolved,error_type,quiz,user_id) 
+				VALUES($1,$2,$3,$4)`, success, errorType, quiz, userId)
+
+	if err != nil {
+		common.Logger.Error("failed to save error report", "error", err)
+		return err
+	}
 	return nil
 }

@@ -26,12 +26,12 @@ func (h *ErrorReportRoutes) Create(c *gin.Context) {
 	}
 
 	userId := c.GetInt64("userID")
-	var err = api.SaveErrorReport(input.ErrorType, input.Quiz, userId)
+	err := api.SaveErrorReport(input.ErrorType, input.Quiz, userId)
 
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
-		return
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Please try again later."})
+	} else {
+		c.JSON(http.StatusOK, gin.H{})
 	}
 
-	c.Status(http.StatusOK)
 }
