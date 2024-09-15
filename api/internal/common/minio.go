@@ -10,12 +10,26 @@ import (
 )
 
 func MinIOPUT(data []byte, bucketName, objectName, contentType string) (string, error) {
-	endpoint := fmt.Sprintf("%s:%s", Env.MinioHost, Env.MinioPort)
+
+	var endpoint string
+	var useSecure bool
+
+	switch Env.Env {
+	case Development:
+		endpoint = fmt.Sprintf("%s:%s", Env.MinioHost, Env.MinioPort)
+		useSecure = false
+
+	case Production:
+		endpoint = Env.MinioHost
+		useSecure = true
+	default:
+		return "", fmt.Errorf("unsupported environment: %v", Env.Env)
+	}
 
 	// Initialize minio client object
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(Env.MinioRootUser, Env.MinioRootPassword, ""),
-		Secure: false,
+		Secure: useSecure,
 	})
 	if err != nil {
 		return "", err
@@ -28,7 +42,7 @@ func MinIOPUT(data []byte, bucketName, objectName, contentType string) (string, 
 		ContentType:  contentType,
 		UserMetadata: map[string]string{"x-amz-acl": "public-read"},
 	})
-	
+
 	if err != nil {
 		return "", err
 	}
