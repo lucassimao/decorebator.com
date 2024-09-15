@@ -18,7 +18,6 @@ func MinIOPUT(data []byte, bucketName, objectName, contentType string) (string, 
 	case Development:
 		endpoint = fmt.Sprintf("%s:%s", Env.MinioHost, Env.MinioPort)
 		useSecure = false
-
 	case Production:
 		endpoint = Env.MinioHost
 		useSecure = true
@@ -47,9 +46,16 @@ func MinIOPUT(data []byte, bucketName, objectName, contentType string) (string, 
 		return "", err
 	}
 
-	// Generate a public URL for the uploaded object
-	// Assuming the bucket is configured to allow public access
-	publicURL := fmt.Sprintf("http://%s:%s/%s/%s", Env.MinioHost, Env.MinioPort, bucketName, objectName)
+	var publicURL string
+
+	switch Env.Env {
+	case Development:
+		publicURL = fmt.Sprintf("http://%s:%s/%s/%s", Env.MinioHost, Env.MinioPort, bucketName, objectName)
+	case Production:
+		publicURL = fmt.Sprintf("https://%s.%s/%s", bucketName, Env.MinioHost, objectName)
+	default:
+		return "", fmt.Errorf("unsupported environment: %v", Env.Env)
+	}
 
 	return publicURL, nil
 }

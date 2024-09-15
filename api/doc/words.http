@@ -23,7 +23,7 @@ content-type: application/json
 "Password": {{password}}
 }
 
-@authToken = {{loginRequest.response.body.token}}
+@authToken = {{loginRequest.response.headers.Authorization}}
 
 ### Creating wordlist
 # @name wordlistRequest
@@ -43,7 +43,7 @@ POST http://localhost:3000/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
- "Name":"bearerbeareabcs"  
+ "Name":"bearer"  
 }
 
 

@@ -80,8 +80,8 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		return err
 	}
 
-	url, err := common.Upload(data, "images",
-		fmt.Sprintf("definition-%d-%d.png", definitionID, time.Now().Unix()), "image/png")
+	url, err := common.Upload(data, "decorebator",
+		fmt.Sprintf("images/definition-%d-%d.png", definitionID, time.Now().Unix()), "image/png")
 
 	if err != nil {
 		logger.Error("failed to upload image", "error", err)
