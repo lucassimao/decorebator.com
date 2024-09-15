@@ -29,14 +29,7 @@ var Env struct {
 	MinioRootUser        string
 	MinioRootPassword    string
 	StaticAuthentication string
-
-	Aws struct {
-		AccessKeyId     string
-		SecretAccessKey string
-		Region          string
-	}
-
-	StabilityAIApiKey string
+	StabilityAIApiKey    string
 }
 
 func init() {
@@ -62,10 +55,6 @@ func init() {
 	Env.MinioRootUser = os.Getenv("MINIO_ROOT_USER")
 	Env.MinioRootPassword = os.Getenv("MINIO_ROOT_PASSWORD")
 	Env.StaticAuthentication = os.Getenv("STATIC_AUTHENTICATION")
-
-	Env.Aws.AccessKeyId = os.Getenv("AWS_ACCESS_KEY_ID")
-	Env.Aws.SecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
-	Env.Aws.Region = os.Getenv("AWS_REGION")
 
 	Env.StabilityAIApiKey = os.Getenv("STABILITY_AI_API_KEY")
 }
