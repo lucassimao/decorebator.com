@@ -24,7 +24,7 @@ type Props = {
   onOptionSelected: (optionIndex: number) => void;
   isAnsweringQuiz: boolean;
 };
-import { Audio } from "expo-av";
+import { Audio, InterruptionModeAndroid } from "expo-av";
 
 const Quiz = ({ quiz, onOptionSelected }: Props) => {
   const { fontScale } = useWindowDimensions();
@@ -43,6 +43,13 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
       ) && quiz.audioURL;
 
     if (!shouldLoadAudio || !quiz.audioURL) return;
+
+    Audio.setAudioModeAsync({
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: false,
+      interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+      shouldDuckAndroid: false,
+    });
 
     Audio.Sound.createAsync({ uri: quiz.audioURL })
       .then((result) => {

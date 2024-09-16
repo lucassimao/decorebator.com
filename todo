@@ -20,27 +20,28 @@
 [x] Display example copy as a hint for when doing the image quiz
 
 [x] listen for pronounciation on meaning from word quiz
-[ ] Allow to report problem
-    - unrelated image
-    - wrong meaning
-    - wrong example
+[x] Allow to report problem
+
 [ ] Reuse definitions already fetched
 [ ] Allow to select specific quiz types
 [ ] display word status: pending, error, no meaning found, etc
-[ ] recover password 
 [ ] email confirmation
-
+[ ] recover password 
+[ ] Notifications https://github.com/nikoksr/notify
+    - new user
+    - new subscription
+    
 [ ] subscription
     [ ] integrate revenueCat
     [ ] free user is limited to create only X wordlists with Y words
     [ ] support paying user: limit-free account
         [ ] monthly subscription
         [ ] anual subscription
+
 [ ] add sentry on the backend
 [ ] add sentry on mobile  
-[ ] continuos deployment of the backend to ecs
+[x] continuos deployment of the backend
 [ ] continuos deployment for mobile
-[ ] Notifications https://github.com/nikoksr/notify
 
 [ ] integration test 
 
