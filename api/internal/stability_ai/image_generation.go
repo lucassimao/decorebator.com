@@ -23,11 +23,12 @@ type ImageGenerationResponse struct {
 }
 
 var (
-	ErrInvalidParams  = errors.New("invalid parameter(s)")
-	ErrContentFlagged = errors.New("request flagged by content moderation system")
-	ErrRejected       = errors.New("well-formed request, but rejected")
-	ErrTooManyRequets = errors.New("more than 150 requests in 10 seconds")
-	ErrInternalError  = errors.New("internal error")
+	ErrInvalidParams       = errors.New("invalid parameter(s)")
+	ErrContentFlagged      = errors.New("request flagged by content moderation system")
+	ErrRejected            = errors.New("well-formed request, but rejected")
+	ErrTooManyRequets      = errors.New("more than 150 requests in 10 seconds")
+	ErrInternalError       = errors.New("internal error")
+	ErrInsufficientCredits = errors.New("insufficient credits")
 )
 
 func GenerateImage(prompt string) (*ImageGenerationResponse, error) {
@@ -93,6 +94,8 @@ func GenerateImage(prompt string) (*ImageGenerationResponse, error) {
 		return &imageGenerationResponse, nil
 	case 400:
 		return &imageGenerationResponse, ErrInvalidParams
+	case 402:
+		return &imageGenerationResponse, ErrInsufficientCredits
 	case 403:
 		return &imageGenerationResponse, ErrContentFlagged
 	case 422:

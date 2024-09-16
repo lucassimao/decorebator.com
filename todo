@@ -24,12 +24,12 @@
 
 [ ] Reuse definitions already fetched
 [ ] Allow to select specific quiz types
-[ ] display word status: pending, error, no meaning found, etc
 [ ] email confirmation
 [ ] recover password 
 [ ] Notifications https://github.com/nikoksr/notify
     - new user
     - new subscription
+    - new error report
     
 [ ] subscription
     [ ] integrate revenueCat
@@ -37,16 +37,19 @@
     [ ] support paying user: limit-free account
         [ ] monthly subscription
         [ ] anual subscription
+        [ ] no stability.ai credits
+        [ ] no openai credits
 
 [ ] add sentry on the backend
 [ ] add sentry on mobile  
 [x] continuos deployment of the backend
 [ ] continuos deployment for mobile
-
+[ ] integrate with microsoft clarity
 [ ] integration test 
 
 # V2
 
+[ ] display word status: pending, error, no meaning found, etc
 [ ] use structured JSON output
     https://openai.com/index/introducing-structured-outputs-in-the-api/
 [ ] Spike: Investigate if GPT's Fine-tuning feature can improve examples and meanings

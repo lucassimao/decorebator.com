@@ -9,7 +9,8 @@
     "web": "expo start --web",
     "test": "jest --watchAll",
     "prepare": "husky",
-    "expo:update": "expo install --fix"
+    "expo:update": "expo install --fix",
+    "droplet:sync":"rsync -avz /home/lucas/workspace/decorebator-v2/mobile root@142.93.53.183:/root/mobile/"
   },
   "prepare": "cd .. && husky mobile/.husky",
   "jest": {
