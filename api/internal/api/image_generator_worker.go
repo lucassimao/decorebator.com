@@ -119,6 +119,9 @@ func generateWithStabilityAI(prompt string) ([]byte, error) {
 		case stability_ai.ErrTooManyRequets:
 			// snoozing between 1 and 2min
 			return nil, river.JobSnooze(time.Minute + (time.Duration(rand.Intn(60)) * time.Second))
+		case stability_ai.ErrInsufficientCredits:
+			// snoozing 1 hour to allows to buy credits
+			return nil, river.JobSnooze(time.Hour * 1)
 		case stability_ai.ErrInternalError:
 			// snoozing between 1 and 2min
 			return nil, river.JobSnooze(time.Minute + (time.Duration(rand.Intn(60)) * time.Second))
