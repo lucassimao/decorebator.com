@@ -21,7 +21,7 @@ func init() {
 	definitionRepository = &repo.DefinitionRepository{Db: db}
 }
 
-func SaveDefinition(token string, tokenId int64, definitions []model.Definition) ([]model.Definition, error) {
+func SaveDefinition(token string, tokenId int64, definitions []*model.Definition) ([]*model.Definition, error) {
 
 	// wrapping token ocurrence within [ ] inside each example
 	for _, definition := range definitions {
@@ -49,7 +49,15 @@ func GetRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, size int)
 }
 
 func GetDefinitionById(id int64) (*model.Definition, error) {
-	return definitionRepository.GetById(id)
+	results, err := definitionRepository.Find(repo.FindArgs{Id: &id})
+	if err != nil || len(results) == 0 {
+		return nil, nil
+	}
+	return results[0], nil
+}
+
+func FindDefinitionsByName(name string) ([]*model.Definition, error) {
+	return definitionRepository.Find(repo.FindArgs{Name: &name})
 }
 
 func DeleteWordDefinitions(wordId int64) error {

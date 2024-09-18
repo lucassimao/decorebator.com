@@ -33,11 +33,16 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		return err
 	}
 
-	definitions, err := openai.GetDefinition(word.Name)
+	// first we check if there are definitions for this word already
+	definitions, err := FindDefinitionsByName(word.Name)
 
-	if err != nil || len(definitions) == 0 {
-		logger.Error("failed to fetch definitions using openai", "error", err)
-		return err
+	if err == nil || len(definitions) == 0 {
+		// if no existing defintions, then fall back to ai
+		definitions, err = openai.GetDefinition(word.Name)
+		if err != nil || len(definitions) == 0 {
+			logger.Error("failed to fetch definitions using openai", "error", err)
+			return err
+		}
 	}
 
 	defs, err := SaveDefinition(word.Name, word.ID, definitions)

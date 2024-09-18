@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"decorebator.com/internal/common"
@@ -20,7 +21,7 @@ type DefinitionRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *DefinitionRepository) Save(tokenId int64, definitions []Definition) ([]Definition, error) {
+func (repository *DefinitionRepository) Save(tokenId int64, definitions []*Definition) ([]*Definition, error) {
 	// Start a transaction
 	tx, err := repository.Db.Begin(context.Background())
 	if err != nil {
@@ -165,28 +166,49 @@ func (repository *DefinitionRepository) GetRandomTokens(definitionIdsToIgnore []
 	return tokens, nil
 }
 
-func (repository *DefinitionRepository) GetById(id int64) (*Definition, error) {
+func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, error) {
 
-	var query = `SELECT token, language, part_of_speech, meaning, examples, inflections, source, 
+	var query = `SELECT id, token, language, part_of_speech, meaning, examples, inflections, source, 
 						source_id,sounds,phonetic_notations, created_at, updated_at
 		FROM definitions WHERE id = $1`
 
-	var def Definition
-	def.ID = id
+	queryArgs := []string{}
 
-	err := repository.Db.QueryRow(context.Background(), query, id).Scan(
-		&def.Token, &def.Language, &def.PartOfSpeech, &def.Meaning, &def.Examples, &def.Inflections,
-		&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations, &def.CreatedAt, &def.UpdatedAt)
-
-	if err == pgx.ErrNoRows {
-		return nil, common.NotFoundError{ID: id, Entity: "definition"}
+	if args.Id != nil {
+		queryArgs = append(queryArgs, strconv.FormatInt(*args.Id, 10))
 	}
 
+	if args.Name != nil {
+		queryArgs = append(queryArgs, *args.Name)
+	}
+
+	rows, err := repository.Db.Query(context.Background(), query, queryArgs)
+
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return []*Definition{}, nil
+		}
 		return nil, err
 	}
 
-	return &def, nil
+	results := []*Definition{}
+
+	for rows.Next() {
+		var def Definition
+
+		err = rows.Scan(&def.ID,
+			&def.Token, &def.Language, &def.PartOfSpeech, &def.Meaning, &def.Examples, &def.Inflections,
+			&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations,
+			&def.CreatedAt, &def.UpdatedAt)
+
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, &def)
+	}
+
+	return results, nil
 }
 
 // Delete definitions and word_definitions only if they are associated to a single word.
@@ -241,4 +263,9 @@ func (repository *DefinitionRepository) IsValidWordDefinition(wordId, definition
 	}
 
 	return count == 1, nil
+}
+
+type FindArgs struct {
+	Id   *int64
+	Name *string
 }

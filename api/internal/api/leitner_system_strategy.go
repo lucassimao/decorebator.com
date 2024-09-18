@@ -100,7 +100,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	return &result, nil
 }
 
-func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []model.Definition) error {
+func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []*model.Definition) error {
 	db, err := common.GetDBConnection()
 	if err != nil {
 		common.Logger.Error("failed to open db connection", "error", err)

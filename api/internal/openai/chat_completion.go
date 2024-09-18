@@ -110,7 +110,7 @@ func GetExamples(token string, partOfSpeech string, number int, sense string) ([
 	return result.Examples, nil
 }
 
-func GetDefinition(token string) ([]model.Definition, error) {
+func GetDefinition(token string) ([]*model.Definition, error) {
 	logger := common.Logger.With("token", token, "func", "GetDefinition", "package", "openai")
 
 	logger.Debug("defining token using chatgpt", "token", token)
@@ -166,7 +166,11 @@ func GetDefinition(token string) ([]model.Definition, error) {
 	}
 
 	logger.Debug("definitions found in chatGPT", "count", len(openAIDefinition.Results))
-	return openAIDefinition.Results, nil
+	var results []*model.Definition
+	for _, result := range openAIDefinition.Results {
+		results = append(results, &result)
+	}
+	return results, nil
 }
 
 type ChatGPTError struct {

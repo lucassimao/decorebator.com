@@ -49,6 +49,9 @@
 
 # V2
 
+[ ] bulk create words
+[ ] create wordlist from song name
+[ ] quiz from all wordlists
 [ ] display word status: pending, error, no meaning found, etc
 [ ] use structured JSON output
     https://openai.com/index/introducing-structured-outputs-in-the-api/
