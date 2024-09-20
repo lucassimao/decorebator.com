@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"decorebator.com/internal/model"
@@ -24,15 +25,20 @@ func (repository *WordlistRepository) Save(name, description string, userID int6
 		RETURNING id, created_at, updated_at`
 
 	var wordlistID int64
-	var createdAt pgtype.Timestamp
-	var updatedAt pgtype.Timestamp
+	var createdAt pgtype.Timestamptz
+	var updatedAt pgtype.Timestamptz
 
-	err := repository.Db.QueryRow(context.Background(), query, name, description, userID).Scan(&wordlistID, &createdAt, &updatedAt)
+	err := repository.Db.
+		QueryRow(context.Background(), query, name, description, userID).
+		Scan(&wordlistID, &createdAt, &updatedAt)
+
+	fmt.Println(createdAt, updatedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Wordlist{wordlistID, name, description, createdAt, updatedAt, userID}, nil
+	return &Wordlist{ID: wordlistID, Name: name, Description: description,
+		CreatedAt: createdAt, UpdatedAt: updatedAt, UserID: userID}, nil
 }
 
 type FindWordlistArgs struct {

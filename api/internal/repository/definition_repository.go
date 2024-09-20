@@ -168,21 +168,35 @@ func (repository *DefinitionRepository) GetRandomTokens(definitionIdsToIgnore []
 
 func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, error) {
 
-	var query = `SELECT id, token, language, part_of_speech, meaning, examples, inflections, source, 
-						source_id,sounds,phonetic_notations, created_at, updated_at
-		FROM definitions WHERE id = $1`
+	var builder strings.Builder
 
-	queryArgs := []string{}
+	builder.WriteString(`SELECT id, token, language, part_of_speech, meaning, examples, inflections, source, 
+						source_id,sounds,phonetic_notations, created_at, updated_at
+		FROM definitions`)
+
+	queryArgs := []any{}
+	filters := []string{}
+	index := 1
 
 	if args.Id != nil {
+		filters = append(filters, fmt.Sprintf("id = $%d", index))
+		index++
 		queryArgs = append(queryArgs, strconv.FormatInt(*args.Id, 10))
 	}
 
 	if args.Name != nil {
+		filters = append(filters, fmt.Sprintf("token = $%d", index))
+		index++
 		queryArgs = append(queryArgs, *args.Name)
 	}
 
-	rows, err := repository.Db.Query(context.Background(), query, queryArgs)
+	if len(filters) > 0 {
+		builder.WriteString(" WHERE ")
+		builder.WriteString(strings.Join(filters, " AND "))
+	}
+
+	query := builder.String()
+	rows, err := repository.Db.Query(context.Background(), query, queryArgs...)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -263,6 +277,33 @@ func (repository *DefinitionRepository) IsValidWordDefinition(wordId, definition
 	}
 
 	return count == 1, nil
+}
+
+func (repository *DefinitionRepository) LinkDefinitions(tokenId int64, definitionIds []int64) error {
+
+	var strBuilder strings.Builder
+
+	strBuilder.WriteString("INSERT INTO word_definitions (word_id, definition_id) VALUES ")
+	parameters := []string{}
+	values := []any{}
+	index := 0
+
+	for _, definitionId := range definitionIds {
+		parameters = append(parameters, fmt.Sprintf("($%d, $%d)", index+1, index+2))
+		values = append(values, tokenId, definitionId)
+		index = index + 2
+	}
+
+	strBuilder.WriteString(strings.Join(parameters, ","))
+	sql := strBuilder.String()
+
+	_, err := repository.Db.Exec(context.Background(), sql, values...)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type FindArgs struct {

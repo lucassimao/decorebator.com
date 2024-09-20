@@ -1,0 +1,28 @@
+name: decorebator-test
+services:
+  redis:
+    image: redis/redis-stack-server:latest
+  minio:
+    image: minio/minio:latest
+    env_file:
+      - .env.test
+    command: server /data --console-address ":9001" 
+  main:
+    image: golang:1.23.1
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    volumes:
+      - .:/app    
+    working_dir: /app
+    command: >
+      sh -c "
+        go test -v ./...
+      "
+    env_file:
+      - .env.test
+  postgres:
+    image: postgres:15.3
+    env_file:
+      - .env.test 

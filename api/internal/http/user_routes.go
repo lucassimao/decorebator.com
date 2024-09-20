@@ -13,7 +13,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type signupInput struct {
+type SignupInput struct {
 	FirstName string `json:"firstName" binding:"required"`
 	LastName  string `json:"lastName" binding:"required"`
 	Email     string `json:"email" binding:"required,email"`
@@ -46,7 +46,7 @@ func translateValidationErrors(errs validator.ValidationErrors) map[string]strin
 }
 
 func (h *UserRoutes) SignUp(c *gin.Context) {
-	var input signupInput
+	var input SignupInput
 	if err := c.BindJSON(&input); err != nil {
 		var ve validator.ValidationErrors
 		if errors.As(err, &ve) {

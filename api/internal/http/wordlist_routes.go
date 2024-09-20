@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type wordlistInput struct {
+type WordlistInput struct {
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
 }
@@ -30,7 +30,7 @@ func (h *WordlistsRoutes) GetAll(c *gin.Context) {
 }
 
 func (h *WordlistsRoutes) Create(c *gin.Context) {
-	var input wordlistInput
+	var input WordlistInput
 
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -42,7 +42,6 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 	saved, err := api.SaveWordlist(&Wordlist{Name: input.Name, Description: input.Description, UserID: userId})
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
-		return
 	} else {
 		c.IndentedJSON(http.StatusCreated, saved)
 	}
@@ -81,7 +80,7 @@ func (h *WordlistsRoutes) Delete(c *gin.Context) {
 }
 
 func (h *WordlistsRoutes) Update(c *gin.Context) {
-	var input wordlistInput
+	var input WordlistInput
 
 	id, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 

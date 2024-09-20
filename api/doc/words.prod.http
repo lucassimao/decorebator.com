@@ -15,7 +15,7 @@ content-type: application/json
 
 ### Login
 # @name loginRequest
-POST http://localhost:3000/login
+POST https://dolphin-app-3u25d.ondigitalocean.app/decorebator-com-api2/login
 content-type: application/json
 
 {
@@ -23,12 +23,12 @@ content-type: application/json
 "Password": {{password}}
 }
 
-@authToken = {{loginRequest.response.headers.Authorization}}
+@authToken = {{loginRequest.response.headers.authorization}}
 
-### Get wordlists
-GET http://localhost:3000/wordlists
+### Listing wordlists
+# @name wordlistRequest
+GET https://dolphin-app-3u25d.ondigitalocean.app/decorebator-com-api2/wordlists
 authorization: {{authToken}}
-
 
 
 ### Creating wordlist
@@ -42,14 +42,14 @@ authorization: {{authToken}}
 }
 
 @wordlistId = {{wordlistRequest.response.body.id}} 
-@wordlistId = 29
+@wordlistId = 34
 
 ### Creating word
-POST http://localhost:3000/wordlists/{{wordlistId}}/words
+POST https://dolphin-app-3u25d.ondigitalocean.app/decorebator-com-api2/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
- "Name":"thwart"  
+ "Name":"Slip up"  
 }
 
 

@@ -23,6 +23,10 @@
 [x] Allow to report problem
 
 [ ] Reuse definitions already fetched
+[ ] integration test 
+    - use http expect
+    - use gim httptest support
+    - 
 [ ] Allow to select specific quiz types
 [ ] email confirmation
 [ ] recover password 
@@ -45,7 +49,6 @@
 [x] continuos deployment of the backend
 [ ] continuos deployment for mobile
 [ ] integrate with microsoft clarity
-[ ] integration test 
 
 # V2
 

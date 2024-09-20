@@ -30,6 +30,11 @@ migrate-drop: ## Drop everything
 	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable'); \
 	migrate -database $$POSTGRESQL_URL -path migrations drop
 
+test: ##
+	docker compose -f docker-compose.test.yml up --exit-code-from main
+	docker compose -f docker-compose.test.yml down
+
+
 run: ## run ./cmd/web
 	$(GODOTENV_PATH) -f .env go run ./cmd/web
 

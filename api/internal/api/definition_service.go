@@ -64,6 +64,16 @@ func DeleteWordDefinitions(wordId int64) error {
 	return definitionRepository.DeleteWordDefinitions(wordId)
 }
 
+func LinkDefinitions(tokenId int64, definitionIds []int64) error {
+
+	err := definitionRepository.LinkDefinitions(tokenId, definitionIds)
+	if err != nil {
+		return fmt.Errorf("failed to link definitions: %w", err)
+	}
+
+	return nil
+}
+
 func IsValidWordDefinition(wordId, definitionId, userId int64) (bool, error) {
 	isValid, err := definitionRepository.IsValidWordDefinition(wordId, definitionId, userId)
 	if err != nil {

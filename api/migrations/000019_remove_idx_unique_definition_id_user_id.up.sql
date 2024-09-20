@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS idx_unique_definition_id_user_id;

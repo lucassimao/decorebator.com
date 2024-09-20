@@ -25,37 +25,40 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	word, err := GetWordById(wordID)
 
 	if err != nil {
-
 		if errors.Is(err, common.NotFoundError{}) {
 			return river.JobCancel(errors.New("word not found"))
 		}
-
 		return err
 	}
 
 	// first we check if there are definitions for this word already
-	definitions, err := FindDefinitionsByName(word.Name)
+	definitions, _ := FindDefinitionsByName(word.Name)
 
-	if err == nil || len(definitions) == 0 {
+	if len(definitions) > 0 {
+		ids := []int64{}
+		for _, def := range definitions {
+			ids = append(ids, def.ID)
+		}
+		LinkDefinitions(word.ID, ids)
+	} else {
 		// if no existing defintions, then fall back to ai
-		definitions, err = openai.GetDefinition(word.Name)
-		if err != nil || len(definitions) == 0 {
+		openAiDefinitions, err := openai.GetDefinition(word.Name)
+		if err != nil || len(openAiDefinitions) == 0 {
 			logger.Error("failed to fetch definitions using openai", "error", err)
+			return err
+		}
+		definitions, err = SaveDefinition(word.Name, word.ID, openAiDefinitions)
+
+		if err != nil {
+			logger.Error("failed to save definitions", "error", err)
 			return err
 		}
 	}
 
-	defs, err := SaveDefinition(word.Name, word.ID, definitions)
-
-	if err != nil {
-		logger.Error("failed to save definitions", "error", err)
-		return err
-	}
-
 	algorithm := LeitnerSystemStrategy{}
-	algorithm.IncludeDefinitions(word.UserID, defs)
+	algorithm.IncludeDefinitions(word.UserID, definitions)
 
-	for _, definition := range defs {
+	for _, definition := range definitions {
 		_, err = TriggerImageGenerator(definition.ID, "")
 
 		if err != nil {
@@ -63,6 +66,6 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 	}
 
-	logger.Info("definitions fetched", "count", len(defs))
+	logger.Info("definitions fetched", "count", len(definitions))
 	return nil
 }
