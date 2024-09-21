@@ -3,6 +3,7 @@ module decorebator.com
 go 1.23.1
 
 require (
+	github.com/brianvoe/gofakeit/v7 v7.0.4
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gavv/httpexpect/v2 v2.16.0
 	github.com/gin-gonic/gin v1.9.1
@@ -12,13 +13,14 @@ require (
 	github.com/minio/minio-go/v7 v7.0.74
 	github.com/riverqueue/river v0.9.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.9.0
+	go.uber.org/dig v1.18.0
+	go.uber.org/mock v0.4.0
 )
 
 require (
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
-	github.com/brianvoe/gofakeit/v7 v7.0.4 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/docker v27.2.1+incompatible // indirect

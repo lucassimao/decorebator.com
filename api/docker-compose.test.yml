@@ -15,6 +15,7 @@ services:
       - minio
     volumes:
       - .:/app    
+      - /home/lucas/go/pkg/mod:/go/pkg/mod # go env GOMODCACHE
     working_dir: /app
     command: >
       sh -c "

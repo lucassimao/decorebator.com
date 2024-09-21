@@ -7,6 +7,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/openai"
 	"github.com/riverqueue/river"
+	"go.uber.org/dig"
 )
 
 type DefinitionFetcherArgs struct {
@@ -59,7 +60,11 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	algorithm.IncludeDefinitions(word.UserID, definitions)
 
 	for _, definition := range definitions {
-		_, err = TriggerImageGenerator(definition.ID, "")
+		container := dig.New()
+		err := container.Invoke(func(trigger common.WorkerTrigger) error {
+			_, err = trigger.TriggerImageGenerator(definition.ID, "")
+			return err
+		})
 
 		if err != nil {
 			logger.Error("failed to trigger image generator", "definitionId", definition.ID, "error", err)

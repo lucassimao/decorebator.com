@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"strings"
 
@@ -29,7 +30,7 @@ func GetWordById(id int64) (*Word, error) {
 	return wordRepository.GetById(id)
 }
 
-func SaveWord(dto *Word) (*Word, error) {
+func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 	var lowerCasedName = strings.ToLower(dto.Name)
 	var trimmedName = strings.TrimSpace(lowerCasedName)
 
@@ -38,15 +39,20 @@ func SaveWord(dto *Word) (*Word, error) {
 	}
 
 	word, err := wordRepository.Save(trimmedName, dto.UserID, dto.WordlistID)
-	logger := common.Logger.With("token", dto.Name, "userId", dto.UserID, "wordId", word.ID, "token", dto.Name, "func", "SaveWord")
 
 	if err != nil {
-		logger.Error("failed to save word", "error", err)
-		return nil, errors.New("could not save word")
+		return nil, err
 	}
 
-	TriggerDefinitionFetcher(word.ID)
-	TriggerTextToSpeech(word.ID)
+	container, ok := common.GetDigContainerFromContext(ctx)
+	if !ok {
+		return nil, errors.New("dig container not found")
+	}
+
+	container.Invoke(func(trigger common.WorkerTrigger) {
+		trigger.TriggerDefinitionFetcher(word.ID)
+		trigger.TriggerTextToSpeech(word.ID)
+	})
 
 	return word, nil
 }

@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"decorebator.com/internal/model"
@@ -32,7 +31,6 @@ func (repository *WordlistRepository) Save(name, description string, userID int6
 		QueryRow(context.Background(), query, name, description, userID).
 		Scan(&wordlistID, &createdAt, &updatedAt)
 
-	fmt.Println(createdAt, updatedAt)
 	if err != nil {
 		return nil, err
 	}

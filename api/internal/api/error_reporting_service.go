@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"decorebator.com/internal/common"
+	"go.uber.org/dig"
 )
 
 type ErrorType string
@@ -32,25 +33,31 @@ func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64) error {
 
 	success := false
 
-	switch errorType {
-	case SoundNotPlaying:
-		_, err := TriggerTextToSpeech(quiz.WordID)
-		success = (err == nil)
-	case UnrelatedImage, MissingImage:
-		// default to the longest example
-		_, err = TriggerImageGenerator(quiz.DefinitionID, "")
-		success = (err == nil)
-	case UnrelatedExample, UnrelatedMeaning:
-		err := DeleteWordDefinitions(quiz.WordID)
-		fmt.Println(err)
-		if err == nil {
-			_, err = TriggerDefinitionFetcher(quiz.WordID)
-			fmt.Println(err)
-			success = (err == nil)
+	container := dig.New()
+	
+	err = container.Invoke(func(trigger common.WorkerTrigger) error {
+		switch errorType {
+		case SoundNotPlaying:
+			_, err = trigger.TriggerTextToSpeech(quiz.WordID)
+			return err
+
+		case UnrelatedImage, MissingImage:
+			// default to the longest example
+			_, err = trigger.TriggerImageGenerator(quiz.DefinitionID, "")
+			return err
+		case UnrelatedExample, UnrelatedMeaning:
+			err := DeleteWordDefinitions(quiz.WordID)
+			if err != nil {
+				return err
+			}
+			_, err = trigger.TriggerDefinitionFetcher(quiz.WordID)
+			return err
+		default:
+			return fmt.Errorf("invalid error type %s", errorType)
 		}
-	default:
-		return fmt.Errorf("invalid error type %s", errorType)
-	}
+	})
+
+	success = (err == nil)
 
 	// marking the quiz as failed
 	var strategy LeitnerSystemStrategy

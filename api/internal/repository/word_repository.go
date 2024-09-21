@@ -22,8 +22,8 @@ func (repository *WordRepository) Save(name string, userId, wordlistId int64) (*
 		VALUES ($1, $2,$3, now())
 		RETURNING id, created_at, updated_at`
 
-	var createdAt pgtype.Timestamp
-	var updatedAt pgtype.Timestamp
+	var createdAt pgtype.Timestamptz
+	var updatedAt pgtype.Timestamptz
 	var wordID int64
 
 	err := repository.Db.QueryRow(context.Background(), query, name, wordlistId, userId).Scan(&wordID, &createdAt, &updatedAt)

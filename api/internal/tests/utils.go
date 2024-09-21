@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -69,4 +70,22 @@ func (testUtils TestUtils) NewWordlist(authorization string, newWordlist *decore
 		Decode(&wordlist)
 
 	return &wordlist
+}
+
+func (testUtils TestUtils) NewWord(authorization string, wordlistId int64, dto decorebator.WordInput) *decorebator.Word {
+	var serverURL = testUtils.serverURL
+	var t = testUtils.t
+
+	var word decorebator.Word
+
+	httpexpect.Default(t, serverURL).
+		POST(fmt.Sprintf("/wordlists/%d/words", wordlistId)).
+		WithHeader("authorization", authorization).
+		WithJSON(dto).
+		Expect().
+		Status(http.StatusCreated).
+		JSON().
+		Decode(&word)
+
+	return &word
 }

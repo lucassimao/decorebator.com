@@ -31,28 +31,29 @@ func (h *WordRoutes) GetAll(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, words)
 }
 
-func (h *WordRoutes) Create(c *gin.Context) {
-	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	userId := c.GetInt64("userID")
+func (h *WordRoutes) Create(ctx *gin.Context) {
+	var wordlistId, _ = strconv.ParseInt(ctx.Param("wordlistId"), 10, 64)
+	var userId = ctx.GetInt64("userID")
 	var input WordInput
 
-	if err := c.BindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := ctx.BindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	saved, err := api.SaveWord(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistId})
+	var saved, err = api.SaveWord(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistId}, ctx.Request.Context())
+	var logger = common.Logger.With("word", input.Name, "userId", userId, "endpoint", ctx.Request.URL.Path)
 
 	if err != nil {
 		switch err.(type) {
 		case common.BusinessError:
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		default:
-			c.Status(http.StatusInternalServerError)
+			logger.Error("failed to create word", "error", err)
+			ctx.Status(http.StatusInternalServerError)
 		}
-
 	} else {
-		c.JSON(http.StatusCreated, saved)
+		ctx.JSON(http.StatusCreated, saved)
 	}
 }
 

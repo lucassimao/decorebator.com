@@ -43,7 +43,7 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 	return riverClient, nil
 }
 
-func TriggerImageGenerator(definitionId int64, customPrompt string) (int64, error) {
+func (*WorkerTriggerImpl) TriggerImageGenerator(definitionId int64, customPrompt string) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: IMAGE_GENERATOR_QUEUE,
 	}
@@ -54,7 +54,9 @@ func TriggerImageGenerator(definitionId int64, customPrompt string) (int64, erro
 	})
 }
 
-func TriggerTextToSpeech(wordId int64) (int64, error) {
+type WorkerTriggerImpl struct{}
+
+func (*WorkerTriggerImpl) TriggerTextToSpeech(wordId int64) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: TEXT_TO_SPEECH_QUEUE,
 	}
@@ -64,7 +66,7 @@ func TriggerTextToSpeech(wordId int64) (int64, error) {
 	})
 }
 
-func TriggerDefinitionFetcher(wordId int64) (int64, error) {
+func (*WorkerTriggerImpl) TriggerDefinitionFetcher(wordId int64) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: DEFINITION_FETCHER_QUEUE,
 	}
@@ -72,6 +74,10 @@ func TriggerDefinitionFetcher(wordId int64) (int64, error) {
 	return triggerWorker(&opts, DefinitionFetcherArgs{
 		WordId: wordId,
 	})
+}
+
+func NewWorkerTrigger() common.WorkerTrigger {
+	return &WorkerTriggerImpl{}
 }
 
 func triggerWorker(opts *river.InsertOpts, args river.JobArgs) (int64, error) {

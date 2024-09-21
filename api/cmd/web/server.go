@@ -9,11 +9,12 @@ import (
 	"syscall"
 	"time"
 
+	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
 	decorebator "decorebator.com/internal/http"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/dig"
 )
-
 
 func main() {
 
@@ -21,9 +22,12 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	var container = dig.New()
+	container.Provide(api.NewWorkerTrigger)
+
 	srv := &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),
-		Handler: decorebator.SetupHandlers(),
+		Handler: decorebator.SetupHandlers(container),
 	}
 
 	// Run server in a goroutine so that it doesn't block

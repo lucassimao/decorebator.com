@@ -7,7 +7,9 @@ import (
 	"strconv"
 
 	"decorebator.com/internal/api"
+	"decorebator.com/internal/common"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/dig"
 )
 
 type GenerateNewImageInput struct {
@@ -32,7 +34,13 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 		return
 	}
 
-	jobId, err := api.TriggerImageGenerator(definitionId, input.Prompt)
+	container := dig.New()
+	var jobId int64
+
+	err = container.Invoke(func(trigger common.WorkerTrigger) error {
+		jobId, err = trigger.TriggerImageGenerator(definitionId, input.Prompt)
+		return err
+	})
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "definitionId": definitionId})
@@ -50,7 +58,13 @@ func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
 		return
 	}
 
-	jobId, err := api.TriggerTextToSpeech(wordId)
+	container := dig.New()
+	var jobId int64
+
+	err = container.Invoke(func(trigger common.WorkerTrigger) error {
+		jobId, err = trigger.TriggerTextToSpeech(wordId)
+		return err
+	})
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordId})
