@@ -11,7 +11,7 @@ type ctxKey struct{}
 
 var digContextKey = &ctxKey{}
 
-// Middleware to add the dig container to the context
+// Gin Middleware to add the dig container in the http request
 func InjectDigContainer(container *dig.Container) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Store the dig container in Gin's context
@@ -23,7 +23,11 @@ func InjectDigContainer(container *dig.Container) gin.HandlerFunc {
 	}
 }
 
-// Retrieve the dig container from the Gin context
+// stores a dig container instance in any context
+func SetDigContainerInContext(ctx context.Context, container *dig.Container) context.Context {
+	return context.WithValue(ctx, digContextKey, container)
+}
+
 func GetDigContainerFromContext(ctx context.Context) (*dig.Container, bool) {
 	container, ok := ctx.Value(digContextKey).(*dig.Container)
 	return container, ok

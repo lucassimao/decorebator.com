@@ -61,8 +61,8 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 
 	for _, definition := range definitions {
 		container := dig.New()
-		err := container.Invoke(func(trigger common.WorkerTrigger) error {
-			_, err = trigger.TriggerImageGenerator(definition.ID, "")
+		err := container.Invoke(func(trigger common.ContentGenerationService) error {
+			_, err = trigger.GenerateImage(definition.ID, "")
 			return err
 		})
 

@@ -43,7 +43,9 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 	return riverClient, nil
 }
 
-func (*WorkerTriggerImpl) TriggerImageGenerator(definitionId int64, customPrompt string) (int64, error) {
+type ContentGenerationServiceImpl struct{}
+
+func (*ContentGenerationServiceImpl) GenerateImage(definitionId int64, customPrompt string) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: IMAGE_GENERATOR_QUEUE,
 	}
@@ -54,9 +56,7 @@ func (*WorkerTriggerImpl) TriggerImageGenerator(definitionId int64, customPrompt
 	})
 }
 
-type WorkerTriggerImpl struct{}
-
-func (*WorkerTriggerImpl) TriggerTextToSpeech(wordId int64) (int64, error) {
+func (*ContentGenerationServiceImpl) TextToSpeech(wordId int64) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: TEXT_TO_SPEECH_QUEUE,
 	}
@@ -66,7 +66,7 @@ func (*WorkerTriggerImpl) TriggerTextToSpeech(wordId int64) (int64, error) {
 	})
 }
 
-func (*WorkerTriggerImpl) TriggerDefinitionFetcher(wordId int64) (int64, error) {
+func (*ContentGenerationServiceImpl) FetchDefinition(wordId int64) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: DEFINITION_FETCHER_QUEUE,
 	}
@@ -76,8 +76,8 @@ func (*WorkerTriggerImpl) TriggerDefinitionFetcher(wordId int64) (int64, error) 
 	})
 }
 
-func NewWorkerTrigger() common.WorkerTrigger {
-	return &WorkerTriggerImpl{}
+func NewContentGenerationService() common.ContentGenerationService {
+	return &ContentGenerationServiceImpl{}
 }
 
 func triggerWorker(opts *river.InsertOpts, args river.JobArgs) (int64, error) {

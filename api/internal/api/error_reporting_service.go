@@ -34,23 +34,23 @@ func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64) error {
 	success := false
 
 	container := dig.New()
-	
-	err = container.Invoke(func(trigger common.WorkerTrigger) error {
+
+	err = container.Invoke(func(trigger common.ContentGenerationService) error {
 		switch errorType {
 		case SoundNotPlaying:
-			_, err = trigger.TriggerTextToSpeech(quiz.WordID)
+			_, err = trigger.TextToSpeech(quiz.WordID)
 			return err
 
 		case UnrelatedImage, MissingImage:
 			// default to the longest example
-			_, err = trigger.TriggerImageGenerator(quiz.DefinitionID, "")
+			_, err = trigger.GenerateImage(quiz.DefinitionID, "")
 			return err
 		case UnrelatedExample, UnrelatedMeaning:
 			err := DeleteWordDefinitions(quiz.WordID)
 			if err != nil {
 				return err
 			}
-			_, err = trigger.TriggerDefinitionFetcher(quiz.WordID)
+			_, err = trigger.FetchDefinition(quiz.WordID)
 			return err
 		default:
 			return fmt.Errorf("invalid error type %s", errorType)

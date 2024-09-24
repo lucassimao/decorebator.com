@@ -49,9 +49,9 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		return nil, errors.New("dig container not found")
 	}
 
-	container.Invoke(func(trigger common.WorkerTrigger) {
-		trigger.TriggerDefinitionFetcher(word.ID)
-		trigger.TriggerTextToSpeech(word.ID)
+	container.Invoke(func(trigger common.ContentGenerationService) {
+		trigger.FetchDefinition(word.ID)
+		trigger.TextToSpeech(word.ID)
 	})
 
 	return word, nil

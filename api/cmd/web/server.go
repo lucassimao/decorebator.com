@@ -22,10 +22,12 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	var container = dig.New()
-	container.Provide(api.NewWorkerTrigger)
+	// Setup dependency injection
 
-	srv := &http.Server{
+	var container = dig.New()
+	container.Provide(api.NewContentGenerationService)
+
+	var srv = &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),
 		Handler: decorebator.SetupHandlers(container),
 	}

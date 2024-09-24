@@ -37,8 +37,8 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 	container := dig.New()
 	var jobId int64
 
-	err = container.Invoke(func(trigger common.WorkerTrigger) error {
-		jobId, err = trigger.TriggerImageGenerator(definitionId, input.Prompt)
+	err = container.Invoke(func(trigger common.ContentGenerationService) error {
+		jobId, err = trigger.GenerateImage(definitionId, input.Prompt)
 		return err
 	})
 
@@ -61,8 +61,8 @@ func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
 	container := dig.New()
 	var jobId int64
 
-	err = container.Invoke(func(trigger common.WorkerTrigger) error {
-		jobId, err = trigger.TriggerTextToSpeech(wordId)
+	err = container.Invoke(func(trigger common.ContentGenerationService) error {
+		jobId, err = trigger.TextToSpeech(wordId)
 		return err
 	})
 
