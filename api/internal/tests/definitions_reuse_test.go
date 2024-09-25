@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
 	decorebator "decorebator.com/internal/http"
+	"decorebator.com/internal/workers"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 	"github.com/riverqueue/river/rivertest"
 	"go.uber.org/dig"
@@ -23,7 +23,7 @@ func TestCanReuseDefinition(t *testing.T) {
 	// var mockWorkerTrigger = mocks.NewMockWorkerTrigger(ctrl)
 
 	var container = dig.New()
-	container.Provide(api.NewContentGenerationService)
+	container.Provide(workers.NewContentGenerationService)
 
 	// mockWorkerTrigger.
 	// 	EXPECT().
@@ -58,7 +58,7 @@ func TestCanReuseDefinition(t *testing.T) {
 
 	ctx := common.SetDigContainerInContext(context.Background(), container)
 	var db, _ = common.GetDBConnection()
-	job := rivertest.RequireInserted(ctx, t, riverpgxv5.New(db), &api.DefinitionFetcherArgs{}, nil)
+	job := rivertest.RequireInserted(ctx, t, riverpgxv5.New(db), &workers.DefinitionFetcherArgs{}, nil)
 	fmt.Println(job)
 
 	// second user

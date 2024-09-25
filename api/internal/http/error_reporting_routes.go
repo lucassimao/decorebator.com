@@ -3,8 +3,8 @@ package http
 import (
 	"net/http"
 
-	"decorebator.com/internal/api"
 	"decorebator.com/internal/model"
+	service "decorebator.com/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,8 +12,8 @@ import (
 type ErrorReportRoutes struct{}
 
 type ErrorReportInput struct {
-	Quiz      model.Quiz    `json:"quiz"`
-	ErrorType api.ErrorType `json:"errorType"`
+	Quiz      model.Quiz        `json:"quiz"`
+	ErrorType service.ErrorType `json:"errorType"`
 }
 
 func (h *ErrorReportRoutes) Create(c *gin.Context) {
@@ -26,7 +26,7 @@ func (h *ErrorReportRoutes) Create(c *gin.Context) {
 	}
 
 	userId := c.GetInt64("userID")
-	err := api.SaveErrorReport(input.ErrorType, input.Quiz, userId)
+	err := service.SaveErrorReport(input.ErrorType, input.Quiz, userId, c.Request.Context())
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Please try again later."})

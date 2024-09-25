@@ -7,21 +7,26 @@ import (
 	"syscall"
 	"time"
 
-	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/workers"
+	"go.uber.org/dig"
 )
 
 func main() {
 
-	riverClient, err := api.GetRiverClient()
+	riverClient, err := workers.GetRiverClient()
 
 	if err != nil {
 		common.Logger.Error("failed to start river client")
 		panic(err)
 	}
 
+	var container = dig.New()
+	container.Provide(workers.NewContentGenerationService)
+	var jobsContext = common.SetDigContainerInContext(context.Background(), container)
+
 	// Run the client inline. All executed jobs will inherit from ctx:
-	if err := riverClient.Start(context.Background()); err != nil {
+	if err := riverClient.Start(jobsContext); err != nil {
 		common.Logger.Error("failed to start river client")
 		panic(err)
 	}
@@ -37,7 +42,7 @@ func main() {
 	common.Logger.Debug("Starting backgroundjob shutdown")
 
 	if os.Getenv("ENV") == "production" {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(jobsContext, 5*time.Second)
 		defer cancel()
 
 		// catching ctx.Done(). timeout of 5 seconds.
@@ -46,7 +51,7 @@ func main() {
 			common.Logger.Debug("timeout of 5 seconds.")
 		}
 	} else {
-		if err := riverClient.Stop(context.Background()); err != nil {
+		if err := riverClient.Stop(jobsContext); err != nil {
 			common.Logger.Error("failed to stop river client", "error", err)
 			panic(err)
 		}

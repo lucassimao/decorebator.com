@@ -1,4 +1,4 @@
-package api
+package service
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"decorebator.com/internal/common"
-	"go.uber.org/dig"
 )
 
 type ErrorType string
@@ -19,7 +18,7 @@ const (
 	SoundNotPlaying  ErrorType = "_sound_not_playing"
 )
 
-func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64) error {
+func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64, ctx context.Context) error {
 	logger := common.Logger.With("errorType", errorType, "quiz", quiz, "userId", userId)
 
 	isValid, err := IsValidWordDefinition(quiz.WordID, quiz.DefinitionID, userId)
@@ -33,7 +32,10 @@ func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64) error {
 
 	success := false
 
-	container := dig.New()
+	var container, ok = common.GetDigContainerFromContext(ctx)
+	if !ok {
+		return errors.New("dig container not found")
+	}
 
 	err = container.Invoke(func(trigger common.ContentGenerationService) error {
 		switch errorType {

@@ -4,15 +4,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
 type QuizRoutes struct{}
 
 // Using the LeitnerSystemAlgorithm as the default strategy. Should be replaced by a factory method based on user preferences.
-var strategy api.SpacedRepetitionStrategy = api.LeitnerSystemStrategy{}
+var strategy service.SpacedRepetitionStrategy = service.LeitnerSystemStrategy{}
 
 func (h *QuizRoutes) Create(c *gin.Context) {
 

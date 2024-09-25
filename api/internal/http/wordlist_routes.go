@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,12 +16,12 @@ type WordlistInput struct {
 }
 
 type WordlistsRoutes struct{}
-type Wordlist = api.Wordlist
+type Wordlist = service.Wordlist
 
 func (h *WordlistsRoutes) GetAll(c *gin.Context) {
 	var userId int64 = c.GetInt64("userID")
 
-	wordlists, err := api.GetUserWordlists(userId)
+	wordlists, err := service.GetUserWordlists(userId)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
@@ -39,7 +39,7 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 
 	var userId int64 = c.GetInt64("userID")
 
-	saved, err := api.SaveWordlist(&Wordlist{Name: input.Name, Description: input.Description, UserID: userId})
+	saved, err := service.SaveWordlist(&Wordlist{Name: input.Name, Description: input.Description, UserID: userId})
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 	} else {
@@ -51,7 +51,7 @@ func (h *WordlistsRoutes) GetById(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	var userId int64 = c.GetInt64("userID")
 
-	wordlist, err := api.GetWordlistById(id, userId)
+	wordlist, err := service.GetWordlistById(id, userId)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
@@ -67,7 +67,7 @@ func (h *WordlistsRoutes) Delete(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	var userId int64 = c.GetInt64("userID")
 
-	_, err := api.DeleteWordlist(id, userId)
+	_, err := service.DeleteWordlist(id, userId)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
@@ -90,7 +90,7 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 	}
 
 	var userId int64 = c.GetInt64("userID")
-	err := api.UpdateWordlist(&Wordlist{ID: id, Name: input.Name, Description: input.Description, UserID: userId})
+	err := service.UpdateWordlist(&Wordlist{ID: id, Name: input.Name, Description: input.Description, UserID: userId})
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)

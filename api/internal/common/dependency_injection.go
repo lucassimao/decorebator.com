@@ -14,8 +14,8 @@ var digContextKey = &ctxKey{}
 // Gin Middleware to add the dig container in the http request
 func InjectDigContainer(container *dig.Container) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Store the dig container in Gin's context
-		ctx := context.WithValue(c.Request.Context(), digContextKey, container)
+		// Store the dig container in Gin's request context
+		ctx := SetDigContainerInContext(c.Request.Context(), container)
 		c.Request = c.Request.WithContext(ctx)
 
 		// Call the next handler

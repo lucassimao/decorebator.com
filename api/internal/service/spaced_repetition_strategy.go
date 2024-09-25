@@ -1,4 +1,4 @@
-package api
+package service
 
 import "decorebator.com/internal/model"
 

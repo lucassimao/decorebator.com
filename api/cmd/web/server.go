@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
 	decorebator "decorebator.com/internal/http"
+	"decorebator.com/internal/workers"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/dig"
 )
@@ -25,7 +25,7 @@ func main() {
 	// Setup dependency injection
 
 	var container = dig.New()
-	container.Provide(api.NewContentGenerationService)
+	container.Provide(workers.NewContentGenerationService)
 
 	var srv = &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),

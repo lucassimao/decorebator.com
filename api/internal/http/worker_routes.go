@@ -6,10 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/workers"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/dig"
 )
 
 type GenerateNewImageInput struct {
@@ -34,11 +33,15 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 		return
 	}
 
-	container := dig.New()
+	var container, ok = common.GetDigContainerFromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "no dig context"})
+		return
+	}
 	var jobId int64
 
-	err = container.Invoke(func(trigger common.ContentGenerationService) error {
-		jobId, err = trigger.GenerateImage(definitionId, input.Prompt)
+	err = container.Invoke(func(srv common.ContentGenerationService) error {
+		jobId, err = srv.GenerateImage(definitionId, input.Prompt)
 		return err
 	})
 
@@ -58,11 +61,16 @@ func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
 		return
 	}
 
-	container := dig.New()
+	var container, ok = common.GetDigContainerFromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "no dig context"})
+		return
+	}
+
 	var jobId int64
 
-	err = container.Invoke(func(trigger common.ContentGenerationService) error {
-		jobId, err = trigger.TextToSpeech(wordId)
+	err = container.Invoke(func(srv common.ContentGenerationService) error {
+		jobId, err = srv.TextToSpeech(wordId)
 		return err
 	})
 
@@ -82,7 +90,7 @@ func (h *WorkerRoutes) TriggerJob(c *gin.Context) {
 		return
 	}
 
-	riverClient, err := api.GetRiverClient()
+	riverClient, err := workers.GetRiverClient()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "jobId": jobId})
 		return
