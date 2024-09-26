@@ -35,7 +35,7 @@ func TestCanReuseDefinition(t *testing.T) {
 	// 	TriggerTextToSpeech(gomock.Any()).
 	// 	Times(2)
 
-	handlers := decorebator.SetupHandlers(container)
+	handlers := decorebator.SetupRoutes(container)
 	server := httptest.NewServer(handlers)
 	defer server.Close()
 

@@ -23,13 +23,9 @@
 [x] Allow to report problem
 
 [ ] Reuse definitions already fetched
-[ ] Allow to select specific quiz types
 [ ] email confirmation
 [ ] recover password 
-[ ] Notifications https://github.com/nikoksr/notify
-    - new user
-    - new subscription
-    - new error report
+[ ] rate limiting
     
 [ ] subscription
     [ ] integrate revenueCat
@@ -40,14 +36,18 @@
         [ ] no stability.ai credits
         [ ] no openai credits
 
-[ ] add sentry on the backend
-[ ] add sentry on mobile  
+[ ] Setup sentry: mobile and backend
 [x] continuos deployment of the backend
 [ ] continuos deployment for mobile
 [ ] integrate with microsoft clarity
 
 # V2
 
+[ ] Notifications https://github.com/nikoksr/notify
+    - new user
+    - new subscription
+    - new error report
+[ ] Allow to select specific quiz types
 [ ] bulk create words
 [ ] create wordlist from song name
 [ ] quiz from all wordlists

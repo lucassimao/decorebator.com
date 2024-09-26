@@ -50,6 +50,7 @@ func TestMain(m *testing.M) {
 		os.Exit(-1)
 	}
 
+	// project is copied to folder /app
 	migrator, err := migrate.NewWithDatabaseInstance("file:///app/migrations", "postgres", driver)
 
 	// Attach the custom logger

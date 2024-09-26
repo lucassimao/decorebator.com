@@ -29,7 +29,7 @@ func main() {
 
 	var srv = &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),
-		Handler: decorebator.SetupHandlers(container),
+		Handler: decorebator.SetupRoutes(container),
 	}
 
 	// Run server in a goroutine so that it doesn't block

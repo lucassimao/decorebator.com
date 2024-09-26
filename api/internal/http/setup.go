@@ -6,7 +6,7 @@ import (
 	"go.uber.org/dig"
 )
 
-func SetupHandlers(container *dig.Container) *gin.Engine {
+func SetupRoutes(container *dig.Container) *gin.Engine {
 
 	var WordRoutes = WordRoutes{}
 	var WorkerRoutes = WorkerRoutes{}
