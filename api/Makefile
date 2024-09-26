@@ -14,12 +14,10 @@ all: help
 setup: ## Install all dev and build dependencies
 	go install github.com/joho/godotenv/cmd/godotenv@latest
 	go install github.com/go-delve/delve/cmd/dlv@latest
-	curl -s https://packagecloud.io/install/repositories/golang-migrate/migrate/script.deb.sh | bash
-	apt install migrate
-	apt install inotify-tools
+	sudo apt-get install -y inotify-tools migrate
 
 migrate-up: ## Run database migrations
-	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable'); \
+    @POSTGRESQL_URL=$${DATABASE_URL:-$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable')}; \
 	migrate -database $$POSTGRESQL_URL -path migrations up
 
 migrate-down: ## Rollback the last database migration executed
