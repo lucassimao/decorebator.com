@@ -100,7 +100,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	return &result, nil
 }
 
-func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []*model.Definition) error {
+func (LeitnerSystemStrategy) IncludeDefinitions(wordId, userId int64, definitionIds []int64) error {
 	db, err := common.GetDBConnection()
 	if err != nil {
 		common.Logger.Error("failed to open db connection", "error", err)
@@ -112,11 +112,11 @@ func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []*mod
 		return err
 	}
 
-	for _, definition := range definitions {
-		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id)
-		VALUES ($1, $2, $3) RETURNING id`
+	for _, definitionId := range definitionIds {
+		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id, word_id)
+		VALUES ($1, $2, $3, $4) RETURNING id`
 
-		row := tx.QueryRow(context.Background(), query, userID, definition.ID, 1)
+		row := tx.QueryRow(context.Background(), query, userId, definitionId, 1, wordId)
 		var leitnerSystemTrackingId int64
 		err = row.Scan(&leitnerSystemTrackingId)
 

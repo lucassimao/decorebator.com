@@ -32,32 +32,24 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		return err
 	}
 
-	// first we check if there are definitions for this word already
-	definitions, _ := service.FindDefinitionsByName(word.Name)
+	openAiDefinitions, err := openai.GetDefinition(word.Name)
+	if err != nil || len(openAiDefinitions) == 0 {
+		logger.Error("failed to fetch definitions using openai", "error", err)
+		return err
+	}
+	definitions, err := service.SaveDefinition(word.Name, word.ID, openAiDefinitions)
 
-	if len(definitions) > 0 {
-		ids := []int64{}
-		for _, def := range definitions {
-			ids = append(ids, def.ID)
-		}
-		service.LinkDefinitions(word.ID, ids)
-	} else {
-		// if no existing defintions, then fall back to ai
-		openAiDefinitions, err := openai.GetDefinition(word.Name)
-		if err != nil || len(openAiDefinitions) == 0 {
-			logger.Error("failed to fetch definitions using openai", "error", err)
-			return err
-		}
-		definitions, err = service.SaveDefinition(word.Name, word.ID, openAiDefinitions)
-
-		if err != nil {
-			logger.Error("failed to save definitions", "error", err)
-			return err
-		}
+	if err != nil {
+		logger.Error("failed to save definitions", "error", err)
+		return err
 	}
 
-	algorithm := service.LeitnerSystemStrategy{}
-	algorithm.IncludeDefinitions(word.UserID, definitions)
+	definitionIds := []int64{}
+	for _, definition := range definitions {
+		definitionIds = append(definitionIds, definition.ID)
+	}
+	quizStrategy := service.LeitnerSystemStrategy{}
+	quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds)
 
 	var container, ok = common.GetDigContainerFromContext(ctx)
 	if !ok {

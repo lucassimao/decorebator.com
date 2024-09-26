@@ -44,15 +44,32 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		return nil, err
 	}
 
+	// check if there are definitions for this word already
+	definitions, _ := FindDefinitionsByName(word.Name)
 	container, ok := common.GetDigContainerFromContext(ctx)
 	if !ok {
 		return nil, errors.New("dig container not found")
 	}
 
-	container.Invoke(func(trigger common.ContentGenerationService) {
-		trigger.FetchDefinition(word.ID)
-		trigger.TextToSpeech(word.ID)
-	})
+	if len(definitions) > 0 {
+		definitionIds := []int64{}
+		for _, def := range definitions {
+			definitionIds = append(definitionIds, def.ID)
+		}
+		ReuseDefinitions(word.ID, definitionIds)
+
+		quizStrategy := LeitnerSystemStrategy{}
+		quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds)
+
+		container.Invoke(func(trigger common.ContentGenerationService) {
+			trigger.TextToSpeech(word.ID)
+		})
+	} else {
+		container.Invoke(func(trigger common.ContentGenerationService) {
+			trigger.FetchDefinition(word.ID)
+			trigger.TextToSpeech(word.ID)
+		})
+	}
 
 	return word, nil
 }

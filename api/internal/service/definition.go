@@ -64,9 +64,10 @@ func DeleteWordDefinitions(wordId int64) error {
 	return definitionRepository.DeleteWordDefinitions(wordId)
 }
 
-func LinkDefinitions(wordId int64, definitionIds []int64) error {
+// Link word to existing definitions
+func ReuseDefinitions(wordId int64, definitionIds []int64) error {
 
-	err := definitionRepository.LinkDefinitions(wordId, definitionIds)
+	err := definitionRepository.ReuseDefinitions(wordId, definitionIds)
 	if err != nil {
 		return fmt.Errorf("failed to link definitions: %w", err)
 	}

@@ -12,7 +12,7 @@ import (
 type QuizRoutes struct{}
 
 // Using the LeitnerSystemAlgorithm as the default strategy. Should be replaced by a factory method based on user preferences.
-var strategy service.SpacedRepetitionStrategy = service.LeitnerSystemStrategy{}
+var strategy common.SpacedRepetitionStrategy = service.LeitnerSystemStrategy{}
 
 func (h *QuizRoutes) Create(c *gin.Context) {
 

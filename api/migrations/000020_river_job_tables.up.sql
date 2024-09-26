@@ -1,7 +1,7 @@
 BEGIN;
 
 -- River migration 001 [up]
-CREATE TABLE river_migration(
+CREATE TABLE IF NOT EXISTS river_migration(
   id bigserial PRIMARY KEY,
   created_at timestamptz NOT NULL DEFAULT NOW(),
   version bigint NOT NULL,
@@ -21,7 +21,7 @@ CREATE TYPE river_job_state AS ENUM(
   'scheduled'
 );
 
-CREATE TABLE river_job(
+CREATE TABLE IF NOT EXISTS river_job(
   -- 8 bytes
   id bigserial PRIMARY KEY,
 

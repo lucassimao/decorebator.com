@@ -252,7 +252,6 @@ func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64) erro
 		// deleting from definitions table cascades to word_definitions and definition_images
 		_, err := db.Exec(context.Background(), "DELETE FROM definitions WHERE id in (SELECT definition_id from word_definitions WHERE word_id=$1)", wordId)
 		if err != nil {
-			fmt.Println(err)
 			return errors.New("failed to delete definitions")
 		}
 	} else {
@@ -279,7 +278,7 @@ func (repository *DefinitionRepository) IsValidWordDefinition(wordId, definition
 	return count == 1, nil
 }
 
-func (repository *DefinitionRepository) LinkDefinitions(tokenId int64, definitionIds []int64) error {
+func (repository *DefinitionRepository) ReuseDefinitions(wordId int64, definitionIds []int64) error {
 
 	var strBuilder strings.Builder
 
@@ -290,7 +289,7 @@ func (repository *DefinitionRepository) LinkDefinitions(tokenId int64, definitio
 
 	for _, definitionId := range definitionIds {
 		parameters = append(parameters, fmt.Sprintf("($%d, $%d)", index+1, index+2))
-		values = append(values, tokenId, definitionId)
+		values = append(values, wordId, definitionId)
 		index = index + 2
 	}
 

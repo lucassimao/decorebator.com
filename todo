@@ -23,6 +23,7 @@
 [x] Allow to report problem
 
 [ ] Reuse definitions already fetched
+[ ] improve quiz algorithm
 [ ] email confirmation
 [ ] recover password 
 [ ] rate limiting
