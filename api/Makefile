@@ -14,7 +14,7 @@ all: help
 setup: ## Install all dev and build dependencies
 	go install github.com/joho/godotenv/cmd/godotenv@latest
 	go install github.com/go-delve/delve/cmd/dlv@latest
-	apt-get install -y inotify-tools migrate
+	sudo apt-get install -y inotify-tools migrate
 
 migrate-up: ## Run database migrations
     @POSTGRESQL_URL=$${DATABASE_URL:-$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable')}; \
