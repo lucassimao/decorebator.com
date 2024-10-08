@@ -56,7 +56,7 @@ func GetDefinitionById(id int64) (*model.Definition, error) {
 	return results[0], nil
 }
 
-func FindDefinitionsByName(name string) ([]*model.Definition, error) {
+func findDefinitionsByName(name string) ([]*model.Definition, error) {
 	return definitionRepository.Find(repo.FindArgs{Name: &name})
 }
 
@@ -65,7 +65,7 @@ func DeleteWordDefinitions(wordId int64) error {
 }
 
 // Link word to existing definitions
-func ReuseDefinitions(wordId int64, definitionIds []int64) error {
+func reuseDefinitions(wordId int64, definitionIds []int64) error {
 
 	err := definitionRepository.ReuseDefinitions(wordId, definitionIds)
 	if err != nil {

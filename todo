@@ -27,6 +27,7 @@
 [ ] email confirmation
 [ ] recover password 
 [ ] rate limiting
+[ ] use <Pressabel hitSlop> to wrap icon buttons 
     
 [ ] subscription
     [ ] integrate revenueCat

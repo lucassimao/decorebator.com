@@ -45,7 +45,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 	}
 
 	// check if there are definitions for this word already
-	definitions, _ := FindDefinitionsByName(word.Name)
+	definitions, _ := findDefinitionsByName(word.Name)
 	container, ok := common.GetDigContainerFromContext(ctx)
 	if !ok {
 		return nil, errors.New("dig container not found")
@@ -56,7 +56,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		for _, def := range definitions {
 			definitionIds = append(definitionIds, def.ID)
 		}
-		ReuseDefinitions(word.ID, definitionIds)
+		reuseDefinitions(word.ID, definitionIds)
 
 		quizStrategy := LeitnerSystemStrategy{}
 		quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds)
