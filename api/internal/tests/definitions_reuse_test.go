@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,10 +12,10 @@ import (
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/workers"
 	"github.com/h2non/gock"
+	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 	"github.com/riverqueue/river/rivertest"
 	"go.uber.org/dig"
-	"go.uber.org/mock/gomock"
 )
 
 func TestCanReuseDefinition(t *testing.T) {
@@ -28,33 +29,42 @@ func TestCanReuseDefinition(t *testing.T) {
 	server := httptest.NewServer(handlers)
 	defer server.Close()
 
+	// setup http mock
 	defer gock.Off() // Flush pending mocks after test execution
+	// mock OpenAI
 	gock.New("https://api.openai.com").
 		Post("/v1/chat/completions").
 		Reply(200).
 		JSON(chatCompletionResponse)
 
+	// mock Stability AI
+	gock.New("https://api.stability.ai").
+		Post("/v2beta/stable-image/generate/core").
+		Persist().
+		Reply(200).
+		// 1x1 pixel transparent image
+		JSON(`{"image":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgUBAOjcxr0AAAAASUVORK5CYII="}`)
+
+	openAIRequestsCount := 0
+	stabilityAIRequestsCount := 0
+	gock.Observe(func(r *http.Request, m gock.Mock) {
+		if r.Method != "POST" {
+			return
+		}
+
+		if r.URL.Path == "/v1/chat/completions" {
+			openAIRequestsCount++
+		}
+
+		if r.URL.Path == "/v2beta/stable-image/generate/core" {
+			stabilityAIRequestsCount++
+		}
+	})
 	gock.EnableNetworking()
-	// Disable gock for requests to "localhost"
 	gock.NetworkingFilter(func(req *http.Request) bool {
-		// Only allow real calls to localhost
+		// Only allow real calls to the api server under tests
 		return "http://"+req.URL.Host == server.URL
 	})
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	// var mockWorkerTrigger = mocks.NewMockWorkerTrigger(ctrl)
-
-	// mockWorkerTrigger.
-	// 	EXPECT().
-	// 	TriggerDefinitionFetcher(gomock.Any()).
-	// 	Times(2)
-
-	// mockWorkerTrigger.
-	// 	EXPECT().
-	// 	TriggerTextToSpeech(gomock.Any()).
-	// 	Times(2)
 
 	testUtils := TestUtils{t, server.URL}
 
@@ -75,11 +85,38 @@ func TestCanReuseDefinition(t *testing.T) {
 
 	ctx := common.SetDigContainerInContext(context.Background(), container)
 	var db, _ = common.GetDBConnection()
-	job := rivertest.RequireInserted(ctx, t, riverpgxv5.New(db), workers.DefinitionFetcherArgs{}, nil)
+	definitionJobFetcher := rivertest.RequireInserted(ctx, t, riverpgxv5.New(db), workers.DefinitionFetcherArgs{}, nil)
+	if definitionJobFetcher == nil {
+		t.Error("no definition job inserted")
+	}
 
-	err := (&workers.DefinitionFetcherWorker{}).Work(ctx, job)
+	err := (&workers.DefinitionFetcherWorker{}).Work(ctx, definitionJobFetcher)
 	if err != nil {
 		t.Error("failed to run definition worker")
+	}
+
+	imageGeneratorJobs := rivertest.RequireManyInserted(ctx, t, riverpgxv5.New(db), []rivertest.ExpectedJob{
+		{Args: &workers.ImageGeneratorArgs{}},
+		{Args: &workers.ImageGeneratorArgs{}},
+		{Args: &workers.ImageGeneratorArgs{}},
+	})
+
+	if len(imageGeneratorJobs) != 3 {
+		t.Errorf("expected 3 image generator jobs. Only %d found", len(imageGeneratorJobs))
+	}
+
+	for _, jobRow := range imageGeneratorJobs {
+		var args workers.ImageGeneratorArgs
+		err = json.Unmarshal(jobRow.EncodedArgs, &args)
+		if err != nil {
+			t.Error("failed to unmarshal encoded args")
+		}
+		err = (&workers.ImageGeneratorWorker{}).Work(ctx, &river.Job[workers.ImageGeneratorArgs]{
+			Args: args, JobRow: jobRow,
+		})
+		if err != nil {
+			t.Error("failed to run image generator worker")
+		}
 	}
 
 	// second user
@@ -95,6 +132,11 @@ func TestCanReuseDefinition(t *testing.T) {
 		if user2Word == nil {
 			t.Error("failed to create user 2 word")
 		}
+
+		// if more than 1 is found, error will be thrown
+		rivertest.RequireManyInserted(ctx, t, riverpgxv5.New(db), []rivertest.ExpectedJob{
+			{Args: &workers.DefinitionFetcherArgs{}},
+		})
 	}
 
 	definitionRepository := repository.DefinitionRepository{Db: db}
@@ -105,6 +147,14 @@ func TestCanReuseDefinition(t *testing.T) {
 	}
 	if len(def1) != 3 {
 		t.Errorf("expected only 3 definitions. Found %d", len(def1))
+	}
+
+	if openAIRequestsCount != 1 {
+		t.Errorf("Expected only 1 call to /v1/chat/completions. %d found", openAIRequestsCount)
+	}
+
+	if stabilityAIRequestsCount != 3 {
+		t.Errorf("Expected only 3 calls to /v2beta/stable-image/generate/core. %d found", stabilityAIRequestsCount)
 	}
 
 }

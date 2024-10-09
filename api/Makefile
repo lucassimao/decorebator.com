@@ -29,8 +29,11 @@ migrate-drop: ## Drop everything
 	migrate -database $$POSTGRESQL_URL -path migrations drop
 
 test: ## run containerized integration tests
-	docker compose -f docker-compose.test.yml up --exit-code-from main; \
-	docker compose -f docker-compose.test.yml down
+	rm -rf coverage.out coverage.html &&\
+	docker compose -f docker-compose.test.yml rm -f -s -v &&\
+	docker compose -f docker-compose.test.yml up --force-recreate --build --exit-code-from main; \
+	docker compose -f docker-compose.test.yml down -v; \
+	go tool cover -html=coverage.out -o=coverage.html
 
 run: ## run ./cmd/web
 	$(GODOTENV_PATH) -f .env go run ./cmd/web
