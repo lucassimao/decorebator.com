@@ -23,7 +23,6 @@ func main() {
 	}
 
 	// Setup dependency injection
-
 	var container = dig.New()
 	container.Provide(workers.NewContentGenerationService)
 

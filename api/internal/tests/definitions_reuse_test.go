@@ -31,6 +31,7 @@ func TestCanReuseDefinition(t *testing.T) {
 
 	// setup http mock
 	defer gock.Off() // Flush pending mocks after test execution
+
 	// mock OpenAI
 	gock.New("https://api.openai.com").
 		Post("/v1/chat/completions").

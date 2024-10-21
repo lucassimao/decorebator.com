@@ -5,7 +5,9 @@ import (
 	"errors"
 
 	"decorebator.com/internal/common"
+	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
+	"github.com/riverqueue/river/rivertype"
 )
 
 const IMAGE_GENERATOR_QUEUE = "image_generator"
@@ -14,7 +16,7 @@ const DEFINITION_FETCHER_QUEUE = "definition_fetcher"
 
 type ContentGenerationServiceImpl struct{}
 
-func (*ContentGenerationServiceImpl) GenerateImage(definitionId int64, customPrompt string) (int64, error) {
+func (*ContentGenerationServiceImpl) GenerateImage(definitionId int64, customPrompt string, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: IMAGE_GENERATOR_QUEUE,
 	}
@@ -22,34 +24,34 @@ func (*ContentGenerationServiceImpl) GenerateImage(definitionId int64, customPro
 	return triggerWorker(&opts, ImageGeneratorArgs{
 		DefinitionId: definitionId,
 		CustomPrompt: customPrompt,
-	})
+	}, tx)
 }
 
-func (*ContentGenerationServiceImpl) TextToSpeech(wordId int64) (int64, error) {
+func (*ContentGenerationServiceImpl) TextToSpeech(wordId int64, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: TEXT_TO_SPEECH_QUEUE,
 	}
 
 	return triggerWorker(&opts, TextToSpeechArgs{
 		WordId: wordId,
-	})
+	}, tx)
 }
 
-func (*ContentGenerationServiceImpl) FetchDefinition(wordId int64) (int64, error) {
+func (*ContentGenerationServiceImpl) FetchDefinition(wordId int64, tx pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: DEFINITION_FETCHER_QUEUE,
 	}
 
 	return triggerWorker(&opts, DefinitionFetcherArgs{
 		WordId: wordId,
-	})
+	}, &tx)
 }
 
 func NewContentGenerationService() common.ContentGenerationService {
 	return &ContentGenerationServiceImpl{}
 }
 
-func triggerWorker(opts *river.InsertOpts, args river.JobArgs) (int64, error) {
+func triggerWorker(opts *river.InsertOpts, args river.JobArgs, tx *pgx.Tx) (int64, error) {
 	logger := common.Logger.With("func", "triggerWorker", "Kind", args.Kind())
 
 	riverClient, err := GetRiverClient()
@@ -58,7 +60,12 @@ func triggerWorker(opts *river.InsertOpts, args river.JobArgs) (int64, error) {
 		return -1, errors.New("could not open river client")
 	}
 
-	result, err := riverClient.Insert(context.Background(), args, opts)
+	var result *rivertype.JobInsertResult
+	if tx != nil {
+		result, err = riverClient.InsertTx(context.Background(), *tx, args, opts)
+	} else {
+		result, err = riverClient.Insert(context.Background(), args, opts)
+	}
 
 	if err != nil {
 		logger.Error("failed to trigger river job", "error", err)

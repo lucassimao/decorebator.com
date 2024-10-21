@@ -23,11 +23,7 @@
 [x] Allow to report problem
 
 [ ] Reuse definitions already fetched
-[ ] improve quiz algorithm
-[ ] email confirmation
-[ ] recover password 
 [ ] rate limiting
-[ ] use <Pressabel hitSlop> to wrap icon buttons 
     
 [ ] subscription
     [ ] integrate revenueCat
@@ -38,13 +34,26 @@
         [ ] no stability.ai credits
         [ ] no openai credits
 
+[ ] Klavyio
+    [ ] email confirmation
+    [ ] recover password 
+    [ ] subscription emails
+        - due date is close
+        - confirming payment
+
 [ ] Setup sentry: mobile and backend
 [x] continuos deployment of the backend
+[ ] run db migrations
 [ ] continuos deployment for mobile
-[ ] integrate with microsoft clarity
+[ ] Mobile UI improvements
+    [ ] Splash screen
+    [ ] Icon
+    [ ] use <Pressabel hitSlop> to wrap icon buttons 
+    [ ] integrate with microsoft clarity
+
 
 # V2
-
+[ ] improve quiz algorithm
 [ ] Notifications https://github.com/nikoksr/notify
     - new user
     - new subscription

@@ -37,7 +37,25 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		logger.Error("failed to fetch definitions using openai", "error", err)
 		return err
 	}
-	definitions, err := service.SaveDefinition(word.Name, word.ID, openAiDefinitions)
+
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return err
+	}
+
+	tx, err := db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == nil {
+			tx.Commit(ctx)
+		} else {
+			tx.Rollback(ctx)
+		}
+	}()
+
+	definitions, err := service.SaveDefinition(word.Name, word.ID, openAiDefinitions, tx)
 
 	if err != nil {
 		logger.Error("failed to save definitions", "error", err)
@@ -49,7 +67,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		definitionIds = append(definitionIds, definition.ID)
 	}
 	quizStrategy := service.LeitnerSystemStrategy{}
-	quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds)
+	quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
 
 	var container, ok = common.GetDigContainerFromContext(ctx)
 	if !ok {
@@ -58,7 +76,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 
 	for _, definition := range definitions {
 		err := container.Invoke(func(srv common.ContentGenerationService) error {
-			_, err = srv.GenerateImage(definition.ID, "")
+			_, err = srv.GenerateImage(definition.ID, "", &tx)
 			return err
 		})
 

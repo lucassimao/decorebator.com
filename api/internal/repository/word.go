@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -16,7 +18,7 @@ type WordRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *WordRepository) Save(name string, userId, wordlistId int64) (*Word, error) {
+func (repository *WordRepository) Save(name string, userId, wordlistId int64, tx *pgx.Tx) (*Word, error) {
 	query := `
 		INSERT INTO words (name, wordlist_id, user_id, created_at)
 		VALUES ($1, $2,$3, now())
@@ -26,13 +28,48 @@ func (repository *WordRepository) Save(name string, userId, wordlistId int64) (*
 	var updatedAt pgtype.Timestamptz
 	var wordID int64
 
-	err := repository.Db.QueryRow(context.Background(), query, name, wordlistId, userId).Scan(&wordID, &createdAt, &updatedAt)
+	var row pgx.Row
+	if tx != nil {
+		row = (*tx).QueryRow(context.Background(), query, name, wordlistId, userId)
+	} else {
+		row = repository.Db.QueryRow(context.Background(), query, name, wordlistId, userId)
+	}
+
+	err := row.Scan(&wordID, &createdAt, &updatedAt)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &Word{wordID, name, createdAt, updatedAt, wordlistId, userId, ""}, nil
+	return &Word{ID: wordID, Name: name, CreatedAt: createdAt,
+		UpdatedAt: updatedAt, WordlistID: wordlistId, UserID: userId, AudioURL: ""}, nil
+}
+
+func (repository *WordRepository) ReuseDefinitions(wordId int64, definitionIds []int64, tx pgx.Tx) error {
+
+	var strBuilder strings.Builder
+
+	strBuilder.WriteString("INSERT INTO word_definitions (word_id, definition_id) VALUES ")
+	parameters := []string{}
+	values := []any{}
+	index := 0
+
+	for _, definitionId := range definitionIds {
+		parameters = append(parameters, fmt.Sprintf("($%d, $%d)", index+1, index+2))
+		values = append(values, wordId, definitionId)
+		index = index + 2
+	}
+
+	strBuilder.WriteString(strings.Join(parameters, ","))
+	sql := strBuilder.String()
+
+	_, err := tx.Exec(context.Background(), sql, values...)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (repository *WordRepository) GetAllFromWordlist(wordlistId, userId int64) ([]Word, error) {

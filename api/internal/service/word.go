@@ -38,7 +38,19 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		return nil, common.BusinessError{Message: "words must be limited to 15 chars"}
 	}
 
-	word, err := wordRepository.Save(trimmedName, dto.UserID, dto.WordlistID)
+	tx, err := wordRepository.Db.Begin(ctx)
+	defer func() {
+		if err == nil {
+			tx.Commit(ctx)
+		} else {
+			tx.Rollback(ctx)
+		}
+	}()
+
+	if err != nil {
+		return nil, err
+	}
+	word, err := wordRepository.Save(trimmedName, dto.UserID, dto.WordlistID, &tx)
 
 	if err != nil {
 		return nil, err
@@ -56,19 +68,23 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		for _, def := range definitions {
 			definitionIds = append(definitionIds, def.ID)
 		}
-		reuseDefinitions(word.ID, definitionIds)
+		wordRepository.ReuseDefinitions(word.ID, definitionIds, tx)
 
 		quizStrategy := LeitnerSystemStrategy{}
-		quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds)
+		quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
 
-		container.Invoke(func(trigger common.ContentGenerationService) {
-			trigger.TextToSpeech(word.ID)
+		err = container.Invoke(func(trigger common.ContentGenerationService) {
+			trigger.TextToSpeech(word.ID, &tx)
 		})
 	} else {
-		container.Invoke(func(trigger common.ContentGenerationService) {
-			trigger.FetchDefinition(word.ID)
-			trigger.TextToSpeech(word.ID)
+		err = container.Invoke(func(trigger common.ContentGenerationService) {
+			trigger.FetchDefinition(word.ID, tx)
+			trigger.TextToSpeech(word.ID, &tx)
 		})
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return word, nil

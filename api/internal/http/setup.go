@@ -29,7 +29,6 @@ func SetupRoutes(container *dig.Container) *gin.Engine {
 	// Routes with authentication
 	authenticatedRoutes := router.Group("/")
 	authenticatedRoutes.Use(Authenticate)
-	// authenticatedRoutes.Use(common.InjectDigContainer(container))
 	{
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
 		authenticatedRoutes.POST("/wordlists", WordlistRoutes.Create)
@@ -48,7 +47,6 @@ func SetupRoutes(container *dig.Container) *gin.Engine {
 
 	workerRoutes := router.Group("/static/workers")
 	workerRoutes.Use(AuthenticateStatic)
-	// workerRoutes.Use(common.InjectDigContainer(container))
 	{
 		workerRoutes.POST("/imageGenerator/:definitionId", WorkerRoutes.GenerateNewImage)
 		workerRoutes.POST("/textToAudio/:wordId", WorkerRoutes.GenerateNewAudio)

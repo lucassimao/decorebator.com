@@ -41,7 +41,7 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 	var jobId int64
 
 	err = container.Invoke(func(srv common.ContentGenerationService) error {
-		jobId, err = srv.GenerateImage(definitionId, input.Prompt)
+		jobId, err = srv.GenerateImage(definitionId, input.Prompt, nil)
 		return err
 	})
 
@@ -70,7 +70,7 @@ func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
 	var jobId int64
 
 	err = container.Invoke(func(srv common.ContentGenerationService) error {
-		jobId, err = srv.TextToSpeech(wordId)
+		jobId, err = srv.TextToSpeech(wordId, nil)
 		return err
 	})
 

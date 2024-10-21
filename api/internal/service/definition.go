@@ -8,6 +8,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	repo "decorebator.com/internal/repository"
+	"github.com/jackc/pgx/v5"
 )
 
 var definitionRepository *repo.DefinitionRepository
@@ -21,7 +22,7 @@ func init() {
 	definitionRepository = &repo.DefinitionRepository{Db: db}
 }
 
-func SaveDefinition(token string, tokenId int64, definitions []*model.Definition) ([]*model.Definition, error) {
+func SaveDefinition(token string, tokenId int64, definitions []*model.Definition, tx pgx.Tx) ([]*model.Definition, error) {
 
 	// wrapping token ocurrence within [ ] inside each example
 	for _, definition := range definitions {
@@ -32,7 +33,7 @@ func SaveDefinition(token string, tokenId int64, definitions []*model.Definition
 		}
 	}
 
-	definitions, err := definitionRepository.Save(tokenId, definitions)
+	definitions, err := definitionRepository.Save(tokenId, definitions, tx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save definitions: %w", err)
 	}
@@ -60,19 +61,8 @@ func findDefinitionsByName(name string) ([]*model.Definition, error) {
 	return definitionRepository.Find(repo.FindArgs{Name: &name})
 }
 
-func DeleteWordDefinitions(wordId int64) error {
-	return definitionRepository.DeleteWordDefinitions(wordId)
-}
-
-// Link word to existing definitions
-func reuseDefinitions(wordId int64, definitionIds []int64) error {
-
-	err := definitionRepository.ReuseDefinitions(wordId, definitionIds)
-	if err != nil {
-		return fmt.Errorf("failed to link definitions: %w", err)
-	}
-
-	return nil
+func DeleteWordDefinitions(wordId int64, tx pgx.Tx) error {
+	return definitionRepository.DeleteWordDefinitions(wordId, tx)
 }
 
 func IsValidWordDefinition(wordId, definitionId, userId int64) (bool, error) {

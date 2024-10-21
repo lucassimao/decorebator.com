@@ -37,22 +37,39 @@ func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64, ctx context.C
 		return errors.New("dig container not found")
 	}
 
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return err
+	}
+
+	tx, err := db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == nil {
+			tx.Commit(ctx)
+		} else {
+			tx.Rollback(ctx)
+		}
+	}()
+
 	err = container.Invoke(func(trigger common.ContentGenerationService) error {
 		switch errorType {
 		case SoundNotPlaying:
-			_, err = trigger.TextToSpeech(quiz.WordID)
+			_, err = trigger.TextToSpeech(quiz.WordID, &tx)
 			return err
 
 		case UnrelatedImage, MissingImage:
 			// default to the longest example
-			_, err = trigger.GenerateImage(quiz.DefinitionID, "")
+			_, err = trigger.GenerateImage(quiz.DefinitionID, "", &tx)
 			return err
 		case UnrelatedExample, UnrelatedMeaning:
-			err := DeleteWordDefinitions(quiz.WordID)
+			err := DeleteWordDefinitions(quiz.WordID, tx)
 			if err != nil {
 				return err
 			}
-			_, err = trigger.FetchDefinition(quiz.WordID)
+			_, err = trigger.FetchDefinition(quiz.WordID, tx)
 			return err
 		default:
 			return fmt.Errorf("invalid error type %s", errorType)
@@ -63,16 +80,12 @@ func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64, ctx context.C
 
 	// marking the quiz as failed
 	var strategy LeitnerSystemStrategy
-	strategy.SaveQuizResult(quiz.ID, false)
+	err = strategy.SaveQuizResult(quiz.ID, false, &tx)
 
-	// persist report
-	db, err := common.GetDBConnection()
 	if err != nil {
-		common.Logger.Error("failed to open db connection", "error", err)
-		return err
+		return nil
 	}
-
-	_, err = db.Exec(context.Background(), `INSERT into 
+	_, err = tx.Exec(context.Background(), `INSERT into 
 				error_reports (is_resolved,error_type,quiz,user_id) 
 				VALUES($1,$2,$3,$4)`, success, errorType, quiz, userId)
 
