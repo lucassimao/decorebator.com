@@ -69,5 +69,5 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 
 	logger.Debug("audio generated", "wordId", word.ID, "url", word.AudioURL, "word", word.Name)
 
-	return service.UpdateWord(word)
+	return service.UpdateWord(word, nil)
 }

@@ -84,7 +84,7 @@ func (h *WordRoutes) Update(c *gin.Context) {
 		return
 	}
 
-	err := service.UpdateWord(&Word{ID: id, Name: input.Name, UserID: userId})
+	err := service.UpdateWord(&Word{ID: id, Name: input.Name, UserID: userId}, nil)
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.String(http.StatusNotFound, err.Error())

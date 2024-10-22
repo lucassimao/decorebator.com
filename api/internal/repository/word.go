@@ -9,6 +9,7 @@ import (
 	"decorebator.com/internal/model"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -124,13 +125,35 @@ func (repository *WordRepository) Delete(userId, wordID int64) (int64, error) {
 	return result.RowsAffected(), nil
 }
 
-func (repository *WordRepository) Update(word *Word) (int64, error) {
-	query := `UPDATE words SET name=$1, updated_at=NOW(), audio_url=$4 WHERE user_id=$2 AND ID=$3`
-	result, err := repository.Db.Exec(context.Background(), query, word.Name, word.UserID, word.ID, word.AudioURL)
+func (repository *WordRepository) Update(word *Word, tx *pgx.Tx) (int64, error) {
+	query := `UPDATE words SET name=$1, updated_at=NOW(), audio_url=$4, wordlist_id=$5 WHERE user_id=$2 AND ID=$3`
+
+	var result pgconn.CommandTag
+	var err error
+
+	exec := repository.Db.Exec
+	if tx != nil {
+		exec = (*tx).Exec
+	}
+	result, err = exec(context.Background(), query, word.Name, word.UserID, word.ID, word.AudioURL, word.WordlistID)
 
 	if err != nil {
 		return 0, err
 	}
 
 	return result.RowsAffected(), nil
+}
+
+func (repository *WordRepository) GetLatestAudioUrl(word string) (string, error) {
+	query := `SELECT audio_url
+			  FROM words 
+			  WHERE name=$1 AND audio_url is not null AND LENGTH(audio_url) > 0 order by id desc`
+
+	var audioURL string
+	err := repository.Db.QueryRow(context.Background(), query, word).Scan(&audioURL)
+
+	if err != nil {
+		return "", err
+	}
+	return audioURL, nil
 }

@@ -8,6 +8,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	repo "decorebator.com/internal/repository"
+	"github.com/jackc/pgx/v5"
 )
 
 var wordRepository *repo.WordRepository
@@ -39,6 +40,12 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 	}
 
 	tx, err := wordRepository.Db.Begin(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// db transaction mgmt
 	defer func() {
 		if err == nil {
 			tx.Commit(ctx)
@@ -47,9 +54,6 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		}
 	}()
 
-	if err != nil {
-		return nil, err
-	}
 	word, err := wordRepository.Save(trimmedName, dto.UserID, dto.WordlistID, &tx)
 
 	if err != nil {
@@ -73,9 +77,16 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		quizStrategy := LeitnerSystemStrategy{}
 		quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
 
-		err = container.Invoke(func(trigger common.ContentGenerationService) {
-			trigger.TextToSpeech(word.ID, &tx)
-		})
+		latestAudioURL, err := wordRepository.GetLatestAudioUrl(trimmedName)
+		if err != nil {
+			container.Invoke(func(trigger common.ContentGenerationService) {
+				trigger.TextToSpeech(word.ID, &tx)
+			})
+		} else {
+			word.AudioURL = latestAudioURL
+			UpdateWord(word, &tx)
+		}
+
 	} else {
 		err = container.Invoke(func(trigger common.ContentGenerationService) {
 			trigger.FetchDefinition(word.ID, tx)
@@ -104,8 +115,8 @@ func DeleteWord(id, userId int64) (int64, error) {
 	return count, nil
 }
 
-func UpdateWord(word *Word) error {
-	count, err := wordRepository.Update(word)
+func UpdateWord(word *Word, tx *pgx.Tx) error {
+	count, err := wordRepository.Update(word, tx)
 	if err != nil {
 		common.Logger.Error("failed to update word", "error", err)
 		return errors.New("failed to update word")
