@@ -1,6 +1,6 @@
 module decorebator.com
 
-go 1.23.1
+go 1.22.0
 
 require (
 	github.com/brianvoe/gofakeit/v7 v7.0.4
@@ -8,13 +8,14 @@ require (
 	github.com/gavv/httpexpect/v2 v2.16.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-migrate/migrate/v4 v4.18.1
+	github.com/h2non/gock v1.2.0
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/lib/pq v1.10.9
 	github.com/minio/minio-go/v7 v7.0.74
 	github.com/riverqueue/river v0.9.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.9.0
+	github.com/riverqueue/river/rivertype v0.9.0
 	go.uber.org/dig v1.18.0
-	go.uber.org/mock v0.4.0
 )
 
 require (
@@ -34,7 +35,6 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/h2non/gock v1.2.0 // indirect
 	github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -51,7 +51,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/riverqueue/river/riverdriver v0.9.0 // indirect
-	github.com/riverqueue/river/rivertype v0.9.0 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/sanity-io/litter v1.5.5 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect

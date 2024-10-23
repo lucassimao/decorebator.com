@@ -21,7 +21,7 @@ services:
       mc anonymous set download myminio/decorebator;
       sleep infinity;"
   main:
-    image: golang:1.23.1
+    image: golang:1.22
     depends_on:
       - postgres
       - redis
