@@ -46,7 +46,8 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 		return nil, err
 	}
 
-	return &User{userID, firstName, lastName, passwordHash, email, createdAt, updatedAt}, nil
+	return &User{ID: userID, FirstName: firstName, LastName: lastName, PasswordHash: passwordHash, Email: email,
+		CreatedAt: createdAt, UpdatedAt: updatedAt}, nil
 }
 
 type FindUserArgs struct {
