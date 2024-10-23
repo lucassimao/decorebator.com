@@ -15,7 +15,7 @@ type Word struct {
 	UpdatedAt  pgtype.Timestamptz `json:"updatedAt"`
 	WordlistID int64              `json:"wordlistId"`
 	UserID     int64              `json:"userId"`
-	AudioURL   string             `json:"audioUrl"`
+	AudioURL   string             `json:"audioURL"`
 }
 
 func (w Word) MarshalJSON() ([]byte, error) {
@@ -30,14 +30,20 @@ func (w Word) MarshalJSON() ([]byte, error) {
 		updatedAt = `"` + w.UpdatedAt.Time.UTC().Format(time.RFC3339) + `"`
 	}
 
+	audioURL := ""
+	if w.AudioURL != "" {
+		audioURL = w.AudioURL
+	}
+
 	return []byte(fmt.Sprintf(`{
         "id": %d,
         "name": "%s",
         "createdAt": %s,
+        "audioURL": "%s",
         "updatedAt": %s,
         "wordlistId": %d,
         "userId": %d
-    }`, w.ID, w.Name, createdAt, updatedAt, w.WordlistID, w.UserID)), nil
+    }`, w.ID, w.Name, createdAt, audioURL, updatedAt, w.WordlistID, w.UserID)), nil
 }
 
 func (w *Word) UnmarshalJSON(data []byte) error {

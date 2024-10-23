@@ -78,6 +78,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
 
 		latestAudioURL, err := wordRepository.GetLatestAudioUrl(trimmedName)
+
 		if err != nil {
 			container.Invoke(func(trigger common.ContentGenerationService) {
 				trigger.TextToSpeech(word.ID, &tx)
@@ -86,7 +87,6 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 			word.AudioURL = latestAudioURL
 			UpdateWord(word, &tx)
 		}
-
 	} else {
 		err = container.Invoke(func(trigger common.ContentGenerationService) {
 			trigger.FetchDefinition(word.ID, tx)
@@ -118,8 +118,7 @@ func DeleteWord(id, userId int64) (int64, error) {
 func UpdateWord(word *Word, tx *pgx.Tx) error {
 	count, err := wordRepository.Update(word, tx)
 	if err != nil {
-		common.Logger.Error("failed to update word", "error", err)
-		return errors.New("failed to update word")
+		return err
 	}
 
 	if count == 0 {
