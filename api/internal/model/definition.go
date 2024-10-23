@@ -42,10 +42,9 @@ type Definition struct {
 	Examples          []string     `json:"examples"`
 	Inflections       []Inflection `json:"inflections"`
 	Source            DefinitionSource
-	SourceId          string
+	SourceId          *string
 	Sounds            []Sound
 	PhoneticNotations []PhoneticNotation
-
 
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp

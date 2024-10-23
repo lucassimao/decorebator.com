@@ -7,7 +7,7 @@ BEGIN
         WHERE c.relname = 'users_email_unique'
           AND n.nspname = 'public'
     ) THEN
-        CREATE UNIQUE INDEX users_email_unique ON your_schema.users (email);
+        CREATE UNIQUE INDEX users_email_unique ON public.users (email);
     END IF;
 END
 $$;

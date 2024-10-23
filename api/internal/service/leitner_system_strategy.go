@@ -1,4 +1,4 @@
-package api
+package service
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
+	"github.com/jackc/pgx/v5"
 )
 
 type LeitnerSystemStrategy struct{}
@@ -100,28 +101,17 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	return &result, nil
 }
 
-func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []model.Definition) error {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		common.Logger.Error("failed to open db connection", "error", err)
-		os.Exit(1)
-	}
+func (LeitnerSystemStrategy) IncludeDefinitions(wordId, userId int64, definitionIds []int64, tx pgx.Tx) error {
 
-	tx, err := db.Begin(context.Background())
-	if err != nil {
-		return err
-	}
+	for _, definitionId := range definitionIds {
+		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id, word_id)
+		VALUES ($1, $2, $3, $4) RETURNING id`
 
-	for _, definition := range definitions {
-		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id)
-		VALUES ($1, $2, $3) RETURNING id`
-
-		row := tx.QueryRow(context.Background(), query, userID, definition.ID, 1)
+		row := tx.QueryRow(context.Background(), query, userId, definitionId, 1, wordId)
 		var leitnerSystemTrackingId int64
-		err = row.Scan(&leitnerSystemTrackingId)
+		err := row.Scan(&leitnerSystemTrackingId)
 
 		if err != nil {
-			tx.Rollback(context.Background())
 			return err
 		}
 
@@ -130,14 +120,8 @@ func (LeitnerSystemStrategy) IncludeDefinitions(userID int64, definitions []mode
 		VALUES (now(), $1, $2)`, 1, leitnerSystemTrackingId)
 
 		if err != nil {
-			tx.Rollback(context.Background())
 			return err
 		}
-	}
-
-	err = tx.Commit(context.Background())
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -282,17 +266,33 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	return challenge, nil
 }
 
-func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, success bool) error {
+func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, success bool, transactionPtr *pgx.Tx) error {
 
-	db, err := common.GetDBConnection()
-	if err != nil {
-		common.Logger.Error("failed to open db connection", "error", err)
-		os.Exit(1)
-	}
+	var tx pgx.Tx
 
-	tx, err := db.Begin(context.Background())
-	if err != nil {
-		return err
+	if transactionPtr == nil {
+
+		db, err := common.GetDBConnection()
+		if err != nil {
+			return err
+		}
+
+		ctx := context.Background()
+
+		transaction, err := db.Begin(ctx)
+		if err != nil {
+			return err
+		}
+		// only handle transaction if created internally
+		defer func() {
+			if err == nil {
+				transaction.Commit(ctx)
+			} else {
+				transaction.Rollback(ctx)
+			}
+		}()
+	} else {
+		tx = *transactionPtr
 	}
 
 	query := `UPDATE leitner_system_tracking 
@@ -304,23 +304,12 @@ func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, succe
 
 	var boxId int64
 	row := tx.QueryRow(context.Background(), query, success, leitnerSystemTrackingId)
-	err = row.Scan(&boxId)
-
-	if err != nil {
-		tx.Rollback(context.Background())
-		return err
-	}
+	err := row.Scan(&boxId)
 
 	_, err = tx.Exec(context.Background(), `INSERT INTO 
 		leitner_system_history (at,box_id,leitner_system_tracking_id) 
 		VALUES (now(), $1, $2)`, boxId, leitnerSystemTrackingId)
 
-	if err != nil {
-		tx.Rollback(context.Background())
-		return err
-	}
-
-	err = tx.Commit(context.Background())
 	if err != nil {
 		return err
 	}

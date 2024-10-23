@@ -1,4 +1,4 @@
-package api
+package workers
 
 import (
 	"context"
@@ -13,11 +13,10 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/openai"
+	"decorebator.com/internal/service"
 	"decorebator.com/internal/stability_ai"
 	"github.com/riverqueue/river"
 )
-
-var logger = common.Logger.With("worker", "imagegenerator")
 
 type ImageGeneratorArgs struct {
 	DefinitionId int64  `json:"definitionId"`
@@ -31,6 +30,7 @@ type ImageGeneratorWorker struct {
 }
 
 func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGeneratorArgs]) error {
+	var logger = common.Logger.With("worker", "imagegenerator")
 
 	var prompt string
 	var definitionID = job.Args.DefinitionId
@@ -40,7 +40,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		prompt = job.Args.CustomPrompt
 		description = job.Args.CustomPrompt
 	} else {
-		definition, err := GetDefinitionById(job.Args.DefinitionId)
+		definition, err := service.GetDefinitionById(job.Args.DefinitionId)
 		if err != nil {
 
 			if errors.Is(err, &common.NotFoundError{}) {
@@ -90,7 +90,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	logger.Debug("image generated", "definitionId", definitionID, "url", url)
 
-	_, err = SaveDefinitionImage(model.CreateDefinitionImageDTO{
+	_, err = service.SaveDefinitionImage(model.CreateDefinitionImageDTO{
 		Api:          model.STABILITY_AI,
 		URL:          url,
 		Description:  description,
@@ -103,6 +103,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 }
 
 func generateWithStabilityAI(prompt string) ([]byte, error) {
+	var logger = common.Logger.With("func", "generateWithStabilityAI")
 
 	response, err := stability_ai.GenerateImage(prompt)
 
@@ -139,6 +140,7 @@ func generateWithStabilityAI(prompt string) ([]byte, error) {
 }
 
 func generateWithOpenAI(prompt string) ([]byte, error) {
+	var logger = common.Logger.With("func", "generateWithOpenAI")
 
 	response, err := openai.GenerateImage(prompt)
 

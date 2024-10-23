@@ -21,34 +21,46 @@
 
 [x] listen for pronounciation on meaning from word quiz
 [x] Allow to report problem
-
-[ ] Reuse definitions already fetched
-[ ] Allow to select specific quiz types
-[ ] email confirmation
-[ ] recover password 
-[ ] Notifications https://github.com/nikoksr/notify
-    - new user
-    - new subscription
-    - new error report
+[x] continuos deployment of the backend
+[x] Reuse definitions already fetched
     
+[ ] Klavyio
+    [ ] email confirmation
+    [ ] recover password 
+
+[ ] Setup sentry: mobile and backend
+[ ] run db migrations  before deployment
+[ ] Mobile UI improvements
+    [ ] Splash screen
+    [ ] Icon
+    [ ] use <Pressabel hitSlop> to wrap icon buttons 
+    [ ] integrate with microsoft clarity
+
 [ ] subscription
     [ ] integrate revenueCat
-    [ ] free user is limited to create only X wordlists with Y words
+    [ ] rate limiting
+        [ ] free user is limited to create only X wordlists with Y words
     [ ] support paying user: limit-free account
         [ ] monthly subscription
         [ ] anual subscription
         [ ] no stability.ai credits
         [ ] no openai credits
+    [ ] Klavyio
+        [ ] due date is close
+        [ ] confirm payment 
 
-[ ] add sentry on the backend
-[ ] add sentry on mobile  
-[x] continuos deployment of the backend
-[ ] continuos deployment for mobile
-[ ] integrate with microsoft clarity
-[ ] integration test 
 
 # V2
-
+[ ] continuos deployment for mobile
+[ ] improve quiz algorithm
+[ ] Notifications https://github.com/nikoksr/notify
+    - new user
+    - new subscription
+    - new error report
+[ ] Allow to select specific quiz types
+[ ] bulk create words
+[ ] create wordlist from song name
+[ ] quiz from all wordlists
 [ ] display word status: pending, error, no meaning found, etc
 [ ] use structured JSON output
     https://openai.com/index/introducing-structured-outputs-in-the-api/

@@ -1,0 +1,128 @@
+package service
+
+import (
+	"context"
+	"errors"
+	"strings"
+
+	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
+	repo "decorebator.com/internal/repository"
+	"github.com/jackc/pgx/v5"
+)
+
+var wordRepository *repo.WordRepository
+
+type Word = model.Word
+
+func init() {
+	db, err := common.GetDBConnection()
+	if err != nil {
+		common.Logger.Error("failed to open db connection", "error", err)
+	}
+	wordRepository = &repo.WordRepository{Db: db}
+}
+
+func GetWordByWordlist(wordlistId, userId int64) ([]Word, error) {
+	return wordRepository.GetAllFromWordlist(wordlistId, userId)
+}
+
+func GetWordById(id int64) (*Word, error) {
+	return wordRepository.GetById(id)
+}
+
+func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
+	var lowerCasedName = strings.ToLower(dto.Name)
+	var trimmedName = strings.TrimSpace(lowerCasedName)
+
+	if len(trimmedName) > 15 {
+		return nil, common.BusinessError{Message: "words must be limited to 15 chars"}
+	}
+
+	tx, err := wordRepository.Db.Begin(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// db transaction mgmt
+	defer func() {
+		if err == nil {
+			tx.Commit(ctx)
+		} else {
+			tx.Rollback(ctx)
+		}
+	}()
+
+	word, err := wordRepository.Save(trimmedName, dto.UserID, dto.WordlistID, &tx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// check if there are definitions for this word already
+	definitions, _ := findDefinitionsByName(word.Name)
+	container, ok := common.GetDigContainerFromContext(ctx)
+	if !ok {
+		return nil, errors.New("dig container not found")
+	}
+
+	if len(definitions) > 0 {
+		definitionIds := []int64{}
+		for _, def := range definitions {
+			definitionIds = append(definitionIds, def.ID)
+		}
+		wordRepository.ReuseDefinitions(word.ID, definitionIds, tx)
+
+		quizStrategy := LeitnerSystemStrategy{}
+		quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
+
+		latestAudioURL, err := wordRepository.GetLatestAudioUrl(trimmedName)
+
+		if err != nil {
+			container.Invoke(func(trigger common.ContentGenerationService) {
+				trigger.TextToSpeech(word.ID, &tx)
+			})
+		} else {
+			word.AudioURL = latestAudioURL
+			UpdateWord(word, &tx)
+		}
+	} else {
+		err = container.Invoke(func(trigger common.ContentGenerationService) {
+			trigger.FetchDefinition(word.ID, tx)
+			trigger.TextToSpeech(word.ID, &tx)
+		})
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return word, nil
+}
+
+func DeleteWord(id, userId int64) (int64, error) {
+	count, err := wordRepository.Delete(userId, id)
+	if err != nil {
+		common.Logger.Error("failed to delete word", "error", err)
+		return 0, errors.New("failed to delete word")
+	}
+
+	if count == 0 {
+		return 0, common.NotFoundError{ID: id, Entity: "Word"}
+	}
+
+	return count, nil
+}
+
+func UpdateWord(word *Word, tx *pgx.Tx) error {
+	count, err := wordRepository.Update(word, tx)
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		return common.NotFoundError{ID: word.ID, Entity: "Word"}
+	}
+	return nil
+}

@@ -7,13 +7,13 @@ import (
 	"os"
 	"strings"
 
-	"decorebator.com/internal/api"
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
-type signupInput struct {
+type SignupInput struct {
 	FirstName string `json:"firstName" binding:"required"`
 	LastName  string `json:"lastName" binding:"required"`
 	Email     string `json:"email" binding:"required,email"`
@@ -46,7 +46,7 @@ func translateValidationErrors(errs validator.ValidationErrors) map[string]strin
 }
 
 func (h *UserRoutes) SignUp(c *gin.Context) {
-	var input signupInput
+	var input SignupInput
 	if err := c.BindJSON(&input); err != nil {
 		var ve validator.ValidationErrors
 		if errors.As(err, &ve) {
@@ -58,12 +58,12 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		return
 	}
 
-	_, err := api.SaveUser(input.FirstName, input.LastName, input.Password, input.Email)
+	_, err := service.SaveUser(input.FirstName, input.LastName, input.Password, input.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	} else {
-		jwtToken, err := api.LoginUser(input.Email, input.Password)
+		jwtToken, err := service.LoginUser(input.Email, input.Password)
 		c.Header("authorization", jwtToken)
 		if err == nil {
 			writeAuthenticationCookie(c, jwtToken)
@@ -80,7 +80,7 @@ func (h *UserRoutes) Login(c *gin.Context) {
 		return
 	}
 
-	jwtToken, err := api.LoginUser(input.Email, input.Password)
+	jwtToken, err := service.LoginUser(input.Email, input.Password)
 	if err != nil {
 		c.Status(http.StatusBadRequest)
 	} else {
@@ -99,7 +99,7 @@ func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
 	var maxAge, path, domain, secure, httpOnly, sameSite = int64(0), "/", "localhost", false, true, http.SameSiteStrictMode
 
 	if os.Getenv("ENV") == "production" {
-		maxAge = api.AUTH_TOKEN_DURATION.Milliseconds()
+		maxAge = service.AUTH_TOKEN_DURATION.Milliseconds()
 		domain = "decorebator.com"
 		// requires https
 		secure = true

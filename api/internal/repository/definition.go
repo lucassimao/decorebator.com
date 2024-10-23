@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
-	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -20,12 +21,7 @@ type DefinitionRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *DefinitionRepository) Save(tokenId int64, definitions []Definition) ([]Definition, error) {
-	// Start a transaction
-	tx, err := repository.Db.Begin(context.Background())
-	if err != nil {
-		return nil, err
-	}
+func (repository *DefinitionRepository) Save(tokenId int64, definitions []*Definition, tx pgx.Tx) ([]*Definition, error) {
 
 	// Prepare the definitions insert
 	definitionsInsert := `
@@ -56,7 +52,6 @@ func (repository *DefinitionRepository) Save(tokenId int64, definitions []Defini
 		if err != nil {
 			jsonString, _ := json.Marshal(def)
 			common.Logger.Error("failed to insert definition", "definition", jsonString, "tokenId", tokenId)
-			tx.Rollback(context.Background())
 			return nil, err
 		}
 
@@ -69,14 +64,9 @@ func (repository *DefinitionRepository) Save(tokenId int64, definitions []Defini
 
 		if err != nil {
 			common.Logger.Error("failed to insert word_definition", "def.ID", def.ID, "tokenId", tokenId)
-			tx.Rollback(context.Background())
 			return nil, err
 		}
 
-	}
-
-	if err := tx.Commit(context.Background()); err != nil {
-		return nil, err
 	}
 
 	return definitions, nil
@@ -165,46 +155,76 @@ func (repository *DefinitionRepository) GetRandomTokens(definitionIdsToIgnore []
 	return tokens, nil
 }
 
-func (repository *DefinitionRepository) GetById(id int64) (*Definition, error) {
+func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, error) {
 
-	var query = `SELECT token, language, part_of_speech, meaning, examples, inflections, source, 
+	var builder strings.Builder
+
+	builder.WriteString(`SELECT id, token, language, part_of_speech, meaning, examples, inflections, source, 
 						source_id,sounds,phonetic_notations, created_at, updated_at
-		FROM definitions WHERE id = $1`
+		FROM definitions`)
 
-	var def Definition
-	def.ID = id
+	queryArgs := []any{}
+	filters := []string{}
+	index := 1
 
-	err := repository.Db.QueryRow(context.Background(), query, id).Scan(
-		&def.Token, &def.Language, &def.PartOfSpeech, &def.Meaning, &def.Examples, &def.Inflections,
-		&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations, &def.CreatedAt, &def.UpdatedAt)
-
-	if err == pgx.ErrNoRows {
-		return nil, common.NotFoundError{ID: id, Entity: "definition"}
+	if args.Id != nil {
+		filters = append(filters, fmt.Sprintf("id = $%d", index))
+		index++
+		queryArgs = append(queryArgs, strconv.FormatInt(*args.Id, 10))
 	}
 
+	if args.Name != nil {
+		filters = append(filters, fmt.Sprintf("token = $%d", index))
+		index++
+		queryArgs = append(queryArgs, *args.Name)
+	}
+
+	if len(filters) > 0 {
+		builder.WriteString(" WHERE ")
+		builder.WriteString(strings.Join(filters, " AND "))
+	}
+
+	query := builder.String()
+	rows, err := repository.Db.Query(context.Background(), query, queryArgs...)
+
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return []*Definition{}, nil
+		}
 		return nil, err
 	}
 
-	return &def, nil
+	results := []*Definition{}
+
+	for rows.Next() {
+		var def Definition
+
+		err = rows.Scan(&def.ID,
+			&def.Token, &def.Language, &def.PartOfSpeech, &def.Meaning, &def.Examples, &def.Inflections,
+			&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations,
+			&def.CreatedAt, &def.UpdatedAt)
+
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, &def)
+	}
+
+	return results, nil
 }
 
 // Delete definitions and word_definitions only if they are associated to a single word.
 // If associated to more than one word, then just dele word_definitions entries.
-func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64) error {
+func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64, tx pgx.Tx) error {
 	query := `SELECT count(distinct word_id) as count
 				FROM word_definitions 
 				WHERE definition_id IN (SELECT definition_id from word_definitions WHERE word_id=$1)`
 
-	db, err := common.GetDBConnection()
-	if err != nil {
-		common.Logger.Error("failed to open db connection", "error", err)
-	}
-
-	row := db.QueryRow(context.Background(), query, wordId)
+	row := tx.QueryRow(context.Background(), query, wordId)
 	var count int
 
-	err = row.Scan(&count)
+	err := row.Scan(&count)
 
 	if err != nil {
 		common.Logger.Error("failed to query how many words use the same definition", "error", err, "wordId", wordId)
@@ -214,14 +234,13 @@ func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64) erro
 	// just one word use these definitions. Drop them'll
 	if count == 1 {
 		// deleting from definitions table cascades to word_definitions and definition_images
-		_, err := db.Exec(context.Background(), "DELETE FROM definitions WHERE id in (SELECT definition_id from word_definitions WHERE word_id=$1)", wordId)
+		_, err := tx.Exec(context.Background(), "DELETE FROM definitions WHERE id in (SELECT definition_id from word_definitions WHERE word_id=$1)", wordId)
 		if err != nil {
-			fmt.Println(err)
 			return errors.New("failed to delete definitions")
 		}
 	} else {
 		// definitions are shared. will only delete entries in the many to many table
-		_, err := db.Exec(context.Background(), "DELETE from word_definitions WHERE word_id=$1", wordId)
+		_, err := tx.Exec(context.Background(), "DELETE from word_definitions WHERE word_id=$1", wordId)
 		if err != nil {
 			return errors.New("failed to delete word_definitions")
 		}
@@ -241,4 +260,9 @@ func (repository *DefinitionRepository) IsValidWordDefinition(wordId, definition
 	}
 
 	return count == 1, nil
+}
+
+type FindArgs struct {
+	Id   *int64
+	Name *string
 }

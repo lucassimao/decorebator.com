@@ -17,7 +17,7 @@ setup: ## Install all dev and build dependencies
 	sudo apt-get install -y inotify-tools migrate
 
 migrate-up: ## Run database migrations
-    @POSTGRESQL_URL=$${DATABASE_URL:-$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable')}; \
+	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable'); \
 	migrate -database $$POSTGRESQL_URL -path migrations up
 
 migrate-down: ## Rollback the last database migration executed
@@ -27,6 +27,13 @@ migrate-down: ## Rollback the last database migration executed
 migrate-drop: ## Drop everything
 	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable'); \
 	migrate -database $$POSTGRESQL_URL -path migrations drop
+
+test: ## run containerized integration tests
+	rm -rf coverage.out coverage.html &&\
+	docker compose -f docker-compose.test.yml rm -f -s -v &&\
+	docker compose -f docker-compose.test.yml up --force-recreate --build --exit-code-from main; \
+	docker compose -f docker-compose.test.yml down -v; \
+	go tool cover -html=coverage.out -o=coverage.html
 
 run: ## run ./cmd/web
 	$(GODOTENV_PATH) -f .env go run ./cmd/web
