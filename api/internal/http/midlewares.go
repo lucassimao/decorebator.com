@@ -80,11 +80,11 @@ func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var origin string
 
-		if os.Getenv("ENV") == "production" {
-			origin = "https://decorebator.com"
-		} else {
-			origin = c.Request.Header.Get("Origin")
-		}
+		// if os.Getenv("ENV") == "production" {
+		// 	origin = "https://decorebator.com"
+		// } else {
+		origin = c.Request.Header.Get("Origin")
+		// }
 		c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Type, Content-Length, Authorization, Cookie")
