@@ -20,7 +20,7 @@ services:
       mc mb myminio/decorebator;
       mc anonymous set download myminio/decorebator;
       sleep infinity;"
-  main:
+  main:                         
     image: golang:1.22
     depends_on:
       - postgres

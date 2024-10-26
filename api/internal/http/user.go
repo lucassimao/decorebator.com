@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/mail"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -58,7 +59,8 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		return
 	}
 
-	_, err := service.SaveUser(input.FirstName, input.LastName, input.Password, input.Email)
+	user, err := service.SaveUser(input.FirstName, input.LastName, input.Password, input.Email)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -69,6 +71,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 			writeAuthenticationCookie(c, jwtToken)
 		}
 		c.Status(http.StatusCreated)
+		go mail.AddContactToList(user)
 	}
 }
 

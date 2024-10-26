@@ -15,6 +15,7 @@ require (
 	github.com/riverqueue/river v0.9.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.9.0
 	github.com/riverqueue/river/rivertype v0.9.0
+	github.com/sendgrid/sendgrid-go v3.16.0+incompatible
 	go.uber.org/dig v1.18.0
 )
 
@@ -53,6 +54,7 @@ require (
 	github.com/riverqueue/river/riverdriver v0.9.0 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/sanity-io/litter v1.5.5 // indirect
+	github.com/sendgrid/rest v2.6.9+incompatible // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect

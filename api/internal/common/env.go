@@ -30,6 +30,7 @@ var Env struct {
 	MinioRootPassword    string
 	StaticAuthentication string
 	StabilityAIApiKey    string
+	SendGridApiKey       string
 }
 
 func init() {
@@ -57,4 +58,7 @@ func init() {
 	Env.StaticAuthentication = os.Getenv("STATIC_AUTHENTICATION")
 
 	Env.StabilityAIApiKey = os.Getenv("STABILITY_AI_API_KEY")
+
+	Env.SendGridApiKey = os.Getenv("SENDGRID_API_KEY")
+
 }
