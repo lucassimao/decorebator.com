@@ -11,6 +11,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type LeitnerSystemStrategy struct{}
@@ -269,28 +270,30 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, success bool, transactionPtr *pgx.Tx) error {
 
 	var tx pgx.Tx
+	var err error
 
 	if transactionPtr == nil {
-
-		db, err := common.GetDBConnection()
+		var db *pgxpool.Pool
+		db, err = common.GetDBConnection()
 		if err != nil {
 			return err
 		}
 
 		ctx := context.Background()
 
-		transaction, err := db.Begin(ctx)
+		tx, err = db.Begin(ctx)
 		if err != nil {
 			return err
 		}
 		// only handle transaction if created internally
 		defer func() {
 			if err == nil {
-				transaction.Commit(ctx)
+				tx.Commit(ctx)
 			} else {
-				transaction.Rollback(ctx)
+				tx.Rollback(ctx)
 			}
 		}()
+
 	} else {
 		tx = *transactionPtr
 	}
@@ -304,7 +307,11 @@ func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, succe
 
 	var boxId int64
 	row := tx.QueryRow(context.Background(), query, success, leitnerSystemTrackingId)
-	err := row.Scan(&boxId)
+	err = row.Scan(&boxId)
+
+	if err != nil {
+		return err
+	}
 
 	_, err = tx.Exec(context.Background(), `INSERT INTO 
 		leitner_system_history (at,box_id,leitner_system_tracking_id) 
