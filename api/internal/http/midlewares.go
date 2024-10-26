@@ -78,14 +78,14 @@ func AuthenticateStatic(c *gin.Context) {
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var origin string
 
-		// if os.Getenv("ENV") == "production" {
-		// 	origin = "https://decorebator.com"
-		// } else {
-		origin = c.Request.Header.Get("Origin")
-		// }
-		c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		if os.Getenv("ENV") == "production" {
+			c.Writer.Header().Add("Access-Control-Allow-Origin", "https://decorebator.com")
+			c.Writer.Header().Add("Access-Control-Allow-Origin", "https://dolphin-app-3u25d.ondigitalocean.app")
+		} else {
+			origin := c.Request.Header.Get("Origin")
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		}
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Type, Content-Length, Authorization, Cookie")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Cookie")
