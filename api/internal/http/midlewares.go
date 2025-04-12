@@ -1,9 +1,12 @@
 package http
 
 import (
+	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"strconv"
 	"strings"
 
@@ -96,6 +99,59 @@ func CORSMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		c.Next()
+	}
+}
+
+func ErrorMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func() {
+			if rec := recover(); rec != nil {
+
+				var err error
+				switch v := rec.(type) {
+				case string:
+					err = errors.New(v)
+				case error:
+					err = v
+				default:
+					err = fmt.Errorf("unknown panic: %v", v)
+				}
+
+				stackTrace := string(debug.Stack())
+				origErr := errors.Unwrap(err)
+
+				attrs := []any{
+					slog.Any("error", err),
+					slog.Any("original_error", origErr),
+					slog.String("path", c.FullPath()),
+					slog.String("method", c.Request.Method),
+					slog.String("url", c.Request.URL.String()),
+				}
+
+				// optionally include userID
+				if val, exists := c.Get("userID"); exists {
+					if userID, ok := val.(int64); ok {
+						attrs = append(attrs, slog.Int64("userId", userID))
+					}
+				}
+
+				if common.Env.Env == common.Production {
+					attrs = append(attrs, slog.Any("stack_trace", stackTrace))
+				} else {
+					fmt.Println(stackTrace)
+				}
+
+				common.Logger.Error("Recovered from panic", attrs...)
+
+				// Return a 500 error in JSON format
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+					"error": "We could not process your request at this time.",
+				})
+			}
+		}()
+
+		// Continue to the next handler
 		c.Next()
 	}
 }

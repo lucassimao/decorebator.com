@@ -14,6 +14,7 @@ func (e BusinessError) Error() string {
 type NotFoundError struct {
 	ID     int64
 	Entity string
+	Err    error
 }
 
 func (e NotFoundError) Is(target error) bool {
@@ -23,6 +24,10 @@ func (e NotFoundError) Is(target error) bool {
 
 func (e NotFoundError) Error() string {
 	return fmt.Sprintf("%s #%d not found", e.Entity, e.ID)
+}
+
+func (e NotFoundError) Unwrap() error {
+	return e.Err
 }
 
 // Internal only. Service layer must handle, log and translate it

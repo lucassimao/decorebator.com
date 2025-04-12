@@ -15,7 +15,9 @@ func SetupRoutes(container *dig.Container) *gin.Engine {
 	var QuizRoutes = QuizRoutes{}
 	var ErrorReportsRoutes = ErrorReportRoutes{}
 
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Logger()) //  request logging
+	router.Use(ErrorMiddleware())
 	router.Use(common.InjectDigContainer(container))
 	router.Use(CORSMiddleware())
 

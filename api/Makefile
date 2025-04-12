@@ -35,8 +35,8 @@ test: ## run containerized integration tests
 	docker compose -f docker-compose.test.yml down -v; \
 	go tool cover -html=coverage.out -o=coverage.html
 
-run: ## run ./cmd/web
-	$(GODOTENV_PATH) -f .env go run ./cmd/web
+run: ## run ./cmd/api
+	$(GODOTENV_PATH) -f .env go run ./cmd/api
 
 workers:
 	$(GODOTENV_PATH) -f .env go run ./cmd/workers

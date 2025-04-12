@@ -31,6 +31,8 @@ var Env struct {
 	StaticAuthentication string
 	StabilityAIApiKey    string
 	SendGridApiKey       string
+
+	ResetPasswordPrivateKey string
 }
 
 func init() {
@@ -61,4 +63,5 @@ func init() {
 
 	Env.SendGridApiKey = os.Getenv("SENDGRID_API_KEY")
 
+	Env.ResetPasswordPrivateKey = os.Getenv("RESET_PASSWORD_PRIVATE_KEY")
 }

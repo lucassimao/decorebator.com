@@ -23,8 +23,7 @@ func (h *WordlistsRoutes) GetAll(c *gin.Context) {
 
 	wordlists, err := service.GetUserWordlists(userId)
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
-		return
+		panic(err)
 	}
 	c.IndentedJSON(http.StatusOK, wordlists)
 }
@@ -38,13 +37,13 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 	}
 
 	var userId int64 = c.GetInt64("userID")
-
 	saved, err := service.SaveWordlist(&Wordlist{Name: input.Name, Description: input.Description, UserID: userId})
+
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
-	} else {
-		c.IndentedJSON(http.StatusCreated, saved)
+		panic(err)
 	}
+
+	c.IndentedJSON(http.StatusCreated, saved)
 }
 
 func (h *WordlistsRoutes) GetById(c *gin.Context) {
@@ -56,7 +55,7 @@ func (h *WordlistsRoutes) GetById(c *gin.Context) {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
 		} else {
-			c.String(http.StatusInternalServerError, err.Error())
+			panic(err)
 		}
 		return
 	}
@@ -72,7 +71,7 @@ func (h *WordlistsRoutes) Delete(c *gin.Context) {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
 		} else {
-			c.String(http.StatusInternalServerError, err.Error())
+			panic(err)
 		}
 		return
 	}
@@ -95,7 +94,7 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
 		} else {
-			c.String(http.StatusInternalServerError, err.Error())
+			panic(err)
 		}
 		return
 	}
