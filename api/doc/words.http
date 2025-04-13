@@ -42,14 +42,14 @@ authorization: {{authToken}}
 }
 
 @wordlistId = {{wordlistRequest.response.body.id}} 
-@wordlistId = 29
+@wordlistId = 32
 
 ### Creating word
 POST http://localhost:3000/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
- "Name":"thwart"  
+ "Name":"Lukewarm"  
 }
 
 

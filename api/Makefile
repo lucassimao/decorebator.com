@@ -35,10 +35,10 @@ test: ## run containerized integration tests
 	docker compose -f docker-compose.test.yml down -v; \
 	go tool cover -html=coverage.out -o=coverage.html
 
-run: ## run ./cmd/api
+run: ## HTTP server
 	$(GODOTENV_PATH) -f .env go run ./cmd/api
 
-workers:
+workers: ## Start background workers
 	$(GODOTENV_PATH) -f .env go run ./cmd/workers
 
 watch:

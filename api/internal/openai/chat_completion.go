@@ -28,10 +28,10 @@ func isValidPartOfSpeech(value string) bool {
 
 }
 
-func chatCompletion(messages []map[string]string) (*ChatCompletionResponse, error) {
+func chatCompletion(messages []map[string]string, schema map[string]any) (*ChatCompletionResponse, error) {
 	var requestBodyStruct = map[string]any{
-		"model":           "gpt-4o", //"gpt-4-turbo",
-		"response_format": map[string]string{"type": "json_object"},
+		"model":           "gpt-4o",
+		"response_format": map[string]any{"type": "json_schema", "json_schema": schema},
 		"messages":        messages,
 	}
 
@@ -76,20 +76,36 @@ func chatCompletion(messages []map[string]string) (*ChatCompletionResponse, erro
 }
 
 func GetExamples(token string, partOfSpeech string, number int, sense string) ([]string, error) {
-	var userPrompt = fmt.Sprintf("Give me %d random different phrases exemplifying the usage of the word %s as a %s.", number, token, partOfSpeech)
-	var messages = []map[string]string{
-		{"role": "system", "content": "You are a creative dictionary assistant designed to output JSON."},
-		{"role": "system", "content": "The resulting JSON should be an object with a single property named Examples."},
-		{"role": "system", "content": "The property Examples is an array of strings. Each string is a phrase."},
-		{"role": "system", "content": "Each phrase must be well structured, including subject and verb. Be creative."},
-		{"role": "system", "content": "The JSON must have the property examples which is an array of strings."},
-		{"role": "user", "content": userPrompt},
-		{"role": "system", "content": "In each example phrase, wrap the word and any particle that might be part of the word into square brackets. Example: she was completely [torn up]."},
-		{"role": "system", "content": fmt.Sprintf("All phrases must include the word %s and convey the following sense: %s", token, sense)},
-		{"role": "system", "content": fmt.Sprintf("If %s is a verb, then use its different tenses. If noum, you can use its plural or singular form.", token)},
+	userPrompt := fmt.Sprintf("Give me %d creative phrases using the word \"%s\" as a %s.", number, token, partOfSpeech)
+
+	messages := []map[string]string{
+		{
+			"role":    "system",
+			"content": "You are a creative dictionary assistant. Always respond with a JSON object containing one property: 'examples', which must be an array of strings.",
+		},
+		{
+			"role":    "system",
+			"content": "Each string should be a well-structured, imaginative phrase that includes a subject and verb. Be grammatically correct.",
+		},
+		{
+			"role":    "system",
+			"content": fmt.Sprintf("Each phrase must include the word \"%s\" (and any accompanying particles if it's a phrasal verb), wrapped in square brackets. Example: 'She was completely [torn up]'.", token),
+		},
+		{
+			"role":    "system",
+			"content": fmt.Sprintf("All phrases must reflect the following meaning of \"%s\": %s.", token, sense),
+		},
+		{
+			"role":    "system",
+			"content": fmt.Sprintf("If \"%s\" is a verb, use different tenses. If it's a noun, vary between singular and plural forms.", token),
+		},
+		{
+			"role":    "user",
+			"content": userPrompt,
+		},
 	}
 
-	chatResponse, err := chatCompletion(messages)
+	chatResponse, err := chatCompletion(messages, EXAMPLES_RESPONSE_SCHEMA)
 	debugCtx := []any{"token", token, "pos", partOfSpeech, "sense", sense, "number", number}
 	common.Logger.Debug("generating chatgpt examples", debugCtx...)
 
@@ -115,19 +131,37 @@ func GetDefinition(token string) ([]*model.Definition, error) {
 
 	logger.Debug("defining token using chatgpt", "token", token)
 
-	userMessage := fmt.Sprintf("Give all valid meanings, part of speech and 5 example phrases of the word %s in contemporary English.", token)
+	userMessage := fmt.Sprintf("Define the word \"%s\" in contemporary English.", token)
+
 	messages := []map[string]string{
-		{"role": "system", "content": "You are a helpful dictionary assistant designed to output JSON."},
-		{"role": "system", "content": "The JSON must have the property results, which value is an array where each item should have three properties: meaning (string), part_of_speech (string) and examples (array of strings)."},
-		{"role": "system", "content": "part_of_speech should be one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection."},
-		{"role": "user", "content": userMessage},
-		{"role": "system", "content": "The array items should represent all different parts of speech that the word can assume."},
-		{"role": "system", "content": "If the part of speech is a verb or phrasal verb, then ignore the examples property and add instead a new one named inflections. The inflections will be an array of objects, each object has the properties: inflection (string), tense(string) and examples (array of strings). Tense been either present, past, past participle. Inflection been the verb in the tense. Examples been an array including 3 different examples of usages of the verb in that tense."},
-		{"role": "system", "content": "Each example must have " + token + " wrapped into square brackets."},
-		{"role": "system", "content": "If the word can not be found, then the property results should be an empty array."},
+		{
+			"role": "system",
+			"content": "You are a dictionary assistant. Always respond with a JSON object containing a 'results' array. " +
+				"Each item in 'results' must include: part_of_speech (one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection), meaning (string), examples and inflections ( only if phrasal verb or verb. empty array otherwise).",
+		},
+		{
+			"role":    "system",
+			"content": "Each example must include the word " + token + " wrapped in square brackets.",
+		},
+		{
+			"role":    "system",
+			"content": "If part_of_speech is 'verb' or 'phrasal verb', the 'inflections' array must be present. Each inflection must have: inflection (string), tense (present, past, or past participle), and examples (3 strings using the inflection, each with " + token + " in square brackets).",
+		},
+		{
+			"role":    "system",
+			"content": "Include one item in the array for each valid part_of_speech the word can take. If the word is not found, return results as an empty array.",
+		},
+		{
+			"role":    "system",
+			"content": "the 'results' array should be empty if the word was incorrectly informed.",
+		},
+		{
+			"role":    "user",
+			"content": userMessage,
+		},
 	}
 
-	var chatResponse, err = chatCompletion(messages)
+	var chatResponse, err = chatCompletion(messages, DEFINITION_RESPONSE_SCHEMA)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get definitions from ChatGPT: %w", err)
 	}
@@ -141,7 +175,7 @@ func GetDefinition(token string) ([]*model.Definition, error) {
 	err = json.Unmarshal([]byte(firstDefinition), &openAIDefinition)
 	if err != nil {
 		logger.Error("error unmarshalling definition", "error", err)
-		return nil, fmt.Errorf("failed to get definitions from ChatGPT: %w", err)
+		return nil, fmt.Errorf("failed to unmarshall ChatGPT response: %w", err)
 	}
 
 	for index := range openAIDefinition.Results {
@@ -165,7 +199,8 @@ func GetDefinition(token string) ([]*model.Definition, error) {
 		}
 	}
 
-	logger.Debug("definitions found in chatGPT", "count", len(openAIDefinition.Results))
+	logger.Debug("definitions returned.", "count", len(openAIDefinition.Results))
+
 	var results []*model.Definition
 	for _, result := range openAIDefinition.Results {
 		results = append(results, &result)
@@ -210,4 +245,101 @@ type Usage struct {
 
 type OpenAPIDefinition struct {
 	Results []model.Definition `json:"results"`
+}
+
+var EXAMPLES_RESPONSE_SCHEMA = map[string]any{
+	"name":   "ExamplesResponse",
+	"strict": true,
+	"schema": map[string]any{
+		"type":                 "object",
+		"required":             []string{"examples"},
+		"additionalProperties": false,
+		"properties": map[string]any{
+			"examples": map[string]any{
+				"type":        "array",
+				"description": "An array of well-structured, creative phrases that include the word, matching the intended part of speech and sense.",
+				"items": map[string]string{
+					"type":        "string",
+					"description": "Each phrase must be a complete sentence with a subject and verb. The word should be wrapped in square brackets, e.g., 'He [tore up] the letter.'",
+				},
+			},
+		},
+	},
+}
+
+var DEFINITION_RESPONSE_SCHEMA = map[string]any{
+	"name":   "DefinitionResponse",
+	"strict": true,
+	"schema": map[string]any{
+		"additionalProperties": false,
+		"type":                 "object",
+		"required":             []string{"results"},
+		"properties": map[string]any{
+			"results": map[string]any{
+				"type":        "array",
+				"description": "Array containing definitions of the word for each part of speech it can assume. If the word cannot be found, this array should be empty.",
+				"items": map[string]any{
+					"type":                 "object",
+					"additionalProperties": false,
+					"required": []any{
+						"part_of_speech",
+						"meaning",
+						"examples",
+						"inflections",
+					},
+					"properties": map[string]any{
+						"part_of_speech": map[string]any{
+							"type": "string",
+							"enum": []string{
+								"noun", "pronoun", "verb", "phrasal verb", "adjective",
+								"adverb", "preposition", "conjunction", "interjection",
+							},
+							"description": "The grammatical category of the word usage.",
+						},
+						"meaning": map[string]string{
+							"type":        "string",
+							"description": "A clear and concise definition of the word for this part of speech.",
+						},
+						"examples": map[string]any{
+							"type":        "array",
+							"description": "A list of example sentences showing usage of the word. Should be an empty array if part_of_speech is NOT verb or phrasal verb.",
+							"items": map[string]string{
+								"type":        "string",
+								"description": "Each sentence must include the word wrapped in square brackets. Example: 'He [runs] every morning.'",
+							},
+						},
+						"inflections": map[string]any{
+							"type":        "array",
+							"description": "List of verb inflections. Return an empty array if part_of_speech is verb or phrasal verb.",
+							"items": map[string]any{
+								"type":                 "object",
+								"additionalProperties": false,
+								"description":          "Details for a single verb form, including the inflected verb and usage examples.",
+								"required":             []any{"inflection", "tense", "examples"},
+								"properties": map[string]any{
+									"inflection": map[string]any{
+										"type":        "string",
+										"description": "The verb form for the specified tense.",
+									},
+									"tense": map[string]any{
+										"type":        "string",
+										"enum":        []string{"present", "past", "past participle"},
+										"description": "The grammatical tense of the verb inflection.",
+									},
+									"examples": map[string]any{
+										"type":        "array",
+										"description": "Exactly 3 different usage examples of the verb in this tense.",
+										"items": map[string]any{
+											"type":        "string",
+											"description": "Example sentence using the inflection. Must contain the word wrapped in square brackets.",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
 }

@@ -33,9 +33,13 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	}
 
 	openAiDefinitions, err := openai.GetDefinition(word.Name)
-	if err != nil || len(openAiDefinitions) == 0 {
+	if err != nil {
 		logger.Error("failed to fetch definitions using openai", "error", err)
 		return err
+	}
+
+	if len(openAiDefinitions) == 0 {
+		return river.JobCancel(errors.New("no definition found"))
 	}
 
 	db, err := common.GetDBConnection()

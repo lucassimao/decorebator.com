@@ -77,10 +77,11 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		quizStrategy := LeitnerSystemStrategy{}
 		quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
 
-		latestAudioURL, err := wordRepository.GetLatestAudioUrl(trimmedName)
+		var latestAudioURL string
+		latestAudioURL, err = wordRepository.GetLatestAudioUrl(trimmedName)
 
 		if err != nil {
-			container.Invoke(func(trigger common.ContentGenerationService) {
+			err = container.Invoke(func(trigger common.ContentGenerationService) {
 				trigger.TextToSpeech(word.ID, &tx)
 			})
 		} else {
