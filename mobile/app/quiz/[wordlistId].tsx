@@ -68,7 +68,7 @@ export default function QuizScreen() {
 
   const [menuPosition, setMenuPosition] = React.useState({ x: 0, y: 0 });
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     const options: React.JSX.Element[] = [];
 
     options.push(

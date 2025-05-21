@@ -1,12 +1,10 @@
 package http
 
 import (
-	"decorebator.com/internal/common"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/dig"
 )
 
-func SetupRoutes(container *dig.Container) *gin.Engine {
+func SetupRoutes() *gin.Engine {
 
 	var WordRoutes = WordRoutes{}
 	var WorkerRoutes = WorkerRoutes{}
@@ -18,7 +16,6 @@ func SetupRoutes(container *dig.Container) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger()) //  request logging
 	router.Use(ErrorMiddleware())
-	router.Use(common.InjectDigContainer(container))
 	router.Use(CORSMiddleware())
 
 	// Routes without authentication

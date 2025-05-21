@@ -44,6 +44,10 @@ const CombinedDefaultTheme = {
     ...LightTheme.colors,
     ...colorSchemes.lightThemeColors,
   },
+  fonts: {
+     ...MD3LightTheme.fonts,
+    ...LightTheme.fonts,
+  }
 };
 const CombinedDarkTheme = {
   ...MD3DarkTheme,
@@ -53,6 +57,10 @@ const CombinedDarkTheme = {
     ...DarkTheme.colors,
     ...colorSchemes.darkThemeColors,
   },
+  fonts: {
+     ...MD3DarkTheme.fonts,
+    ...DarkTheme.fonts,
+  }
 };
 
 export {

@@ -11,9 +11,7 @@ import (
 
 	"decorebator.com/internal/common"
 	decorebator "decorebator.com/internal/http"
-	"decorebator.com/internal/workers"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/dig"
 )
 
 func main() {
@@ -22,14 +20,11 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	// Setup dependency injection
-	var container = dig.New()
-	container.Provide(workers.NewContentGenerationService)
-
 	var srv = &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),
-		Handler: decorebator.SetupRoutes(container),
+		Handler: decorebator.SetupRoutes(),
 	}
+	defer common.CloseDBConnection()
 
 	// Run server in a goroutine so that it doesn't block
 	go func() {
@@ -64,5 +59,4 @@ func main() {
 	}
 
 	log.Println("Server exiting")
-	defer common.CloseDBConnection()
 }

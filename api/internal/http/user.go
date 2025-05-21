@@ -50,12 +50,15 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	var input SignupInput
 	if err := c.BindJSON(&input); err != nil {
 		var ve validator.ValidationErrors
+		var body any
+
 		if errors.As(err, &ve) {
-			c.JSON(http.StatusBadRequest, gin.H{"validationErrors": translateValidationErrors(ve)})
-			return
+			body = gin.H{"validationErrors": translateValidationErrors(ve)}
+		} else {
+			body = gin.H{"error": err.Error()}
 		}
 
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, body)
 		return
 	}
 
@@ -66,10 +69,13 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		return
 	} else {
 		jwtToken, err := service.LoginUser(input.Email, input.Password)
-		c.Header("authorization", jwtToken)
-		if err == nil {
-			writeAuthenticationCookie(c, jwtToken)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
+
+		c.Header("authorization", jwtToken)
+		writeAuthenticationCookie(c, jwtToken)
 		c.Status(http.StatusCreated)
 		go mail.AddContactToList(user)
 	}

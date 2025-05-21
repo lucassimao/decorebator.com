@@ -1,4 +1,4 @@
-package workers
+package service
 
 import (
 	"decorebator.com/internal/common"
@@ -6,6 +6,10 @@ import (
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 )
+
+const IMAGE_GENERATOR_QUEUE = "image_generator"
+const TEXT_TO_SPEECH_QUEUE = "text_to_speech"
+const DEFINITION_FETCHER_QUEUE = "definition_fetcher"
 
 func GetRiverClient() (*river.Client[pgx.Tx], error) {
 	db, err := common.GetDBConnection()

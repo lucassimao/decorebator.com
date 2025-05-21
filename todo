@@ -37,7 +37,9 @@
     [ ] integrate with microsoft clarity
 
 [ ] subscription
+    [ ] https://docs.stripe.com/mobile/digital-goods
     [ ] integrate revenueCat
+    [ ] integrate Stripe
     [ ] rate limiting
         [ ] free user is limited to create only X wordlists with Y words
     [ ] support paying user: limit-free account

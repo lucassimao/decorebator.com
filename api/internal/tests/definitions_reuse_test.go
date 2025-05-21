@@ -12,22 +12,16 @@ import (
 	"decorebator.com/internal/openai"
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/service"
-	"decorebator.com/internal/workers"
 	"github.com/h2non/gock"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 	"github.com/riverqueue/river/rivertest"
-	"go.uber.org/dig"
 )
 
 func TestCanReuseDefinition(t *testing.T) {
 
-	// setup injection container
-	var container = dig.New()
-	container.Provide(workers.NewContentGenerationService)
-
 	// setup http server
-	handlers := decorebator.SetupRoutes(container)
+	handlers := decorebator.SetupRoutes()
 	server := httptest.NewServer(handlers)
 	defer server.Close()
 
@@ -105,15 +99,15 @@ func TestCanReuseDefinition(t *testing.T) {
 
 	}
 
-	ctx := common.SetDigContainerInContext(context.Background(), container)
+	ctx := context.Background()
 	var db, _ = common.GetDBConnection()
 
-	definitionJobFetcher := rivertest.RequireInserted(ctx, t, riverpgxv5.New(db), workers.DefinitionFetcherArgs{}, nil)
+	definitionJobFetcher := rivertest.RequireInserted(ctx, t, riverpgxv5.New(db), service.DefinitionFetcherArgs{}, nil)
 	if definitionJobFetcher == nil {
 		t.Error("no definition job inserted")
 	}
 
-	err := (&workers.DefinitionFetcherWorker{}).Work(ctx, definitionJobFetcher)
+	err := (&service.DefinitionFetcherWorker{}).Work(ctx, definitionJobFetcher)
 	if err != nil {
 		t.Error("failed to run definition worker")
 	}
@@ -123,20 +117,20 @@ func TestCanReuseDefinition(t *testing.T) {
 		t.Error("failed to load user1Word")
 	}
 
-	textToSpeechJob := rivertest.RequireInserted(ctx, t, riverpgxv5.New(db), workers.TextToSpeechArgs{}, nil)
+	textToSpeechJob := rivertest.RequireInserted(ctx, t, riverpgxv5.New(db), service.TextToSpeechArgs{}, nil)
 	if textToSpeechJob == nil {
 		t.Error("no text to speech job inserted")
 	}
 
-	err = (&workers.TextToSpeechWorker{}).Work(ctx, textToSpeechJob)
+	err = (&service.TextToSpeechWorker{}).Work(ctx, textToSpeechJob)
 	if err != nil {
 		t.Error("failed to run TextToSpeechWorker")
 	}
 
 	imageGeneratorJobs := rivertest.RequireManyInserted(ctx, t, riverpgxv5.New(db), []rivertest.ExpectedJob{
-		{Args: &workers.ImageGeneratorArgs{}},
-		{Args: &workers.ImageGeneratorArgs{}},
-		{Args: &workers.ImageGeneratorArgs{}},
+		{Args: &service.ImageGeneratorArgs{}},
+		{Args: &service.ImageGeneratorArgs{}},
+		{Args: &service.ImageGeneratorArgs{}},
 	})
 
 	if len(imageGeneratorJobs) != 3 {
@@ -144,12 +138,12 @@ func TestCanReuseDefinition(t *testing.T) {
 	}
 
 	for _, jobRow := range imageGeneratorJobs {
-		var args workers.ImageGeneratorArgs
+		var args service.ImageGeneratorArgs
 		err = json.Unmarshal(jobRow.EncodedArgs, &args)
 		if err != nil {
 			t.Error("failed to unmarshal encoded args")
 		}
-		err = (&workers.ImageGeneratorWorker{}).Work(ctx, &river.Job[workers.ImageGeneratorArgs]{
+		err = (&service.ImageGeneratorWorker{}).Work(ctx, &river.Job[service.ImageGeneratorArgs]{
 			Args: args, JobRow: jobRow,
 		})
 		if err != nil {
@@ -186,7 +180,7 @@ func TestCanReuseDefinition(t *testing.T) {
 
 		// if more than 1 is found, error will be thrown
 		rivertest.RequireManyInserted(ctx, t, riverpgxv5.New(db), []rivertest.ExpectedJob{
-			{Args: &workers.DefinitionFetcherArgs{}},
+			{Args: &service.DefinitionFetcherArgs{}},
 		})
 	}
 

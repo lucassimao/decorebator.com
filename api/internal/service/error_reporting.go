@@ -32,11 +32,6 @@ func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64, ctx context.C
 
 	success := false
 
-	var container, ok = common.GetDigContainerFromContext(ctx)
-	if !ok {
-		return errors.New("dig container not found")
-	}
-
 	db, err := common.GetDBConnection()
 	if err != nil {
 		return err
@@ -54,27 +49,21 @@ func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64, ctx context.C
 		}
 	}()
 
-	err = container.Invoke(func(trigger common.ContentGenerationService) error {
-		switch errorType {
-		case SoundNotPlaying:
-			_, err = trigger.TextToSpeech(quiz.WordID, &tx)
-			return err
+	switch errorType {
+	case SoundNotPlaying:
+		_, err = TriggerTextToSpeechWorker(quiz.WordID, &tx)
 
-		case UnrelatedImage, MissingImage:
-			// default to the longest example
-			_, err = trigger.GenerateImage(quiz.DefinitionID, "", &tx)
-			return err
-		case UnrelatedExample, UnrelatedMeaning:
-			err := DeleteWordDefinitions(quiz.WordID, tx)
-			if err != nil {
-				return err
-			}
-			_, err = trigger.FetchDefinition(quiz.WordID, tx)
-			return err
-		default:
-			return fmt.Errorf("invalid error type %s", errorType)
+	case UnrelatedImage, MissingImage:
+		// default to the longest example
+		_, err = TriggerGenerateImageWorker(quiz.DefinitionID, "", &tx)
+	case UnrelatedExample, UnrelatedMeaning:
+		err := DeleteWordDefinitions(quiz.WordID, tx)
+		if err == nil {
+			_, err = TriggerFetchDefinitionWorker(quiz.WordID, tx)
 		}
-	})
+	default:
+		return fmt.Errorf("invalid error type %s", errorType)
+	}
 
 	success = (err == nil)
 
@@ -83,8 +72,10 @@ func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64, ctx context.C
 	err = strategy.SaveQuizResult(quiz.ID, false, &tx)
 
 	if err != nil {
-		return nil
+		common.Logger.Error("failed to flag quiz as failed", "error", err)
+		return err
 	}
+
 	_, err = tx.Exec(context.Background(), `INSERT into 
 				error_reports (is_resolved,error_type,quiz,user_id) 
 				VALUES($1,$2,$3,$4)`, success, errorType, quiz, userId)

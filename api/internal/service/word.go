@@ -62,10 +62,6 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 
 	// check if there are definitions for this word already
 	definitions, _ := findDefinitionsByName(word.Name)
-	container, ok := common.GetDigContainerFromContext(ctx)
-	if !ok {
-		return nil, errors.New("dig container not found")
-	}
 
 	if len(definitions) > 0 {
 		definitionIds := []int64{}
@@ -81,18 +77,14 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		latestAudioURL, err = wordRepository.GetLatestAudioUrl(trimmedName)
 
 		if err != nil {
-			err = container.Invoke(func(trigger common.ContentGenerationService) {
-				trigger.TextToSpeech(word.ID, &tx)
-			})
+			TriggerTextToSpeechWorker(word.ID, &tx)
 		} else {
 			word.AudioURL = latestAudioURL
 			UpdateWord(word, &tx)
 		}
 	} else {
-		err = container.Invoke(func(trigger common.ContentGenerationService) {
-			trigger.FetchDefinition(word.ID, tx)
-			trigger.TextToSpeech(word.ID, &tx)
-		})
+		TriggerFetchDefinitionWorker(word.ID, tx)
+		TriggerTextToSpeechWorker(word.ID, &tx)
 	}
 
 	if err != nil {

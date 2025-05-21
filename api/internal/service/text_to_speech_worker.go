@@ -1,4 +1,4 @@
-package workers
+package service
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/openai"
-	"decorebator.com/internal/service"
 	"github.com/riverqueue/river"
 )
 
@@ -27,7 +26,7 @@ type TextToSpeechWorker struct {
 func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpeechArgs]) error {
 	logger := common.Logger.With("worker", "texttospeech", "WordId", job.Args.WordId)
 
-	word, err := service.GetWordById(job.Args.WordId)
+	word, err := GetWordById(job.Args.WordId)
 
 	if err != nil && errors.Is(err, common.NotFoundError{}) {
 		return river.JobCancel(errors.New("word not found"))
@@ -69,5 +68,5 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 
 	logger.Debug("audio generated", "wordId", word.ID, "url", word.AudioURL, "word", word.Name)
 
-	return service.UpdateWord(word, nil)
+	return UpdateWord(word, nil)
 }

@@ -30,12 +30,11 @@ type Claims struct {
 }
 
 func generateJWT(user User) (string, error) {
-	ginMode := os.Getenv("GIN_MODE")
 
 	claims := &Claims{
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
-		Environment: ginMode,
+		Environment: os.Getenv("ENV"),
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "Decorebator",
 			ExpiresAt: time.Now().Add(AUTH_TOKEN_DURATION).Unix(), // Token is valid for 24 hour
@@ -82,7 +81,7 @@ func LoginUser(email, password string) (string, error) {
 	lowerCaseEmail := strings.ToLower(email)
 
 	args := repo.FindUserArgs{
-		Email: lowerCaseEmail,
+		Email: &lowerCaseEmail,
 	}
 	results, err := userRepository.Find(args)
 	if err != nil {

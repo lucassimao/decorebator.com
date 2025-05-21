@@ -51,7 +51,7 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 }
 
 type FindUserArgs struct {
-	Email string
+	Email *string
 }
 
 func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
@@ -59,7 +59,7 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 	builder.WriteString(`SELECT id,first_name, last_name, password_hash, created_at, updated_at FROM users`)
 	var queryArgs []interface{}
 
-	if args.Email != "" {
+	if args.Email != nil {
 		builder.WriteString(` WHERE email = $1`)
 		queryArgs = append(queryArgs, args.Email)
 	}
