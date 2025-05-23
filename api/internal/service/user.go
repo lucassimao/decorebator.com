@@ -98,6 +98,7 @@ func LoginUser(email, password string) (string, error) {
 		return "", errors.New("could not process your request. Try again later")
 	}
 
+	fmt.Println(results)
 	if len(results) != 1 {
 		return "", errors.New("invalid combination of email and/or password")
 	}

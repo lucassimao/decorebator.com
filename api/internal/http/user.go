@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"net/http"
 	"os"
@@ -78,6 +79,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		return
 	} else {
 		jwtToken, err := service.LoginUser(input.Email, input.Password)
+
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -87,6 +89,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		writeAuthenticationCookie(c, jwtToken)
 		c.Status(http.StatusCreated)
 		go mail.AddContactToList(user)
+		go mail.SendWelcomeEmail(input.Email)
 	}
 }
 
@@ -134,6 +137,7 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 	payload, err := mail.ValidateResetPasswordPayload(input.Token)
 	if err != nil {
 		c.Status(http.StatusBadRequest)
+		fmt.Println(err)
 		return
 	}
 

@@ -119,3 +119,53 @@ func SendResetPasswordEmail(email string) error {
 
 	return nil
 }
+
+//go:embed welcome.html
+var welcomeEmailTemplate string
+
+func SendWelcomeEmail(email string) error {
+
+	result, err := userRepository.Find(repository.FindUserArgs{Email: &email})
+
+	if err != nil || len(result) != 1 {
+		return fmt.Errorf("no user found")
+	}
+
+	user := result[0]
+
+	tmpl, err := template.New("email").Parse(welcomeEmailTemplate)
+	if err != nil {
+		return err
+	}
+
+	data := map[string]string{
+		"FirstName": user.FirstName,
+	}
+	var sb strings.Builder
+	err = tmpl.Execute(&sb, data)
+	if err != nil {
+		return err
+	}
+
+	from := mail.NewEmail("Decorebator", "support@decorebator.com")
+	subject := "Welcome to Decorebator!"
+	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
+	to := mail.NewEmail(fullName, user.Email)
+
+	plainTextContent := sb.String()
+	htmlContent := sb.String()
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	response, err := client.Send(message)
+
+	if err != nil {
+		return err
+	}
+
+	// 202 status meaning Accepted
+	if response.StatusCode != 202 {
+		return fmt.Errorf("failed to send email: %v", response.Body)
+	}
+
+	return nil
+}

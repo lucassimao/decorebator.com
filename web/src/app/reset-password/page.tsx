@@ -42,7 +42,7 @@ const ResetPasswordForm: React.FC = () => {
 
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_BASE;
-      const res = await fetch(`${apiBase}/users/password/reset`, {
+      const res = await fetch(`${apiBase}/password/reset`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -100,7 +100,7 @@ const ResetPasswordForm: React.FC = () => {
               required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+              className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
               placeholder="Enter new password"
             />
           </div>

@@ -60,7 +60,7 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 	var queryArgs []interface{}
 
 	if args.Email != nil {
-		builder.WriteString(` WHERE email = $1`)
+		builder.WriteString(` WHERE LOWER(email) = LOWER($1)`)
 		queryArgs = append(queryArgs, args.Email)
 	}
 

@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Link, router } from "expo-router";
 import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
-import { StyleSheet, Text, View } from "react-native";
+import { Keyboard, StyleSheet, Text, View } from "react-native";
 import {
   Button,
   HelperText,
@@ -50,7 +50,10 @@ export default function SignInScreen() {
 
   const hasErrors = errors.email || errors.password;
 
-  const onSubmit = (data: any) => signup(data);
+  const onSubmit = (data: any) => {
+    Keyboard.dismiss()
+    signup(data)
+  };
   const toggleSecureTextEntry = () => setSecureTextEntry(!secureTextEntry);
 
   return (
