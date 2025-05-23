@@ -26,6 +26,15 @@ type loginInput struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type ResetPasswordInput struct {
+	Password string `json:"password" binding:"required"`
+	Token    string `json:"token" binding:"required"`
+}
+
+type RequestResetPasswordEmailInput struct {
+	Email string `json:"email" binding:"required"`
+}
+
 type UserRoutes struct{}
 
 func translateValidationErrors(errs validator.ValidationErrors) map[string]string {
@@ -101,6 +110,59 @@ func (h *UserRoutes) Login(c *gin.Context) {
 
 func (h *UserRoutes) Logout(c *gin.Context) {
 	writeAuthenticationCookie(c, "")
+	c.Status(http.StatusOK)
+}
+
+func (h *UserRoutes) ResetPassword(c *gin.Context) {
+
+	var input ResetPasswordInput
+
+	if err := c.BindJSON(&input); err != nil {
+		var ve validator.ValidationErrors
+		var body any
+
+		if errors.As(err, &ve) {
+			body = gin.H{"validationErrors": translateValidationErrors(ve)}
+		} else {
+			body = gin.H{"error": err.Error()}
+		}
+
+		c.JSON(http.StatusBadRequest, body)
+		return
+	}
+
+	payload, err := mail.ValidateResetPasswordPayload(input.Token)
+	if err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	service.UpdatePassword(payload.UserId, input.Password)
+	c.Status(http.StatusOK)
+}
+
+func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
+
+	var input RequestResetPasswordEmailInput
+
+	if err := c.BindJSON(&input); err != nil {
+		var ve validator.ValidationErrors
+		var body any
+
+		if errors.As(err, &ve) {
+			body = gin.H{"validationErrors": translateValidationErrors(ve)}
+		} else {
+			body = gin.H{"error": err.Error()}
+		}
+
+		c.JSON(http.StatusBadRequest, body)
+		return
+	}
+
+	err := mail.SendResetPasswordEmail(input.Email)
+	if err != nil {
+		common.Logger.Error("failed to send reset password email", "error", err)
+	}
 	c.Status(http.StatusOK)
 }
 

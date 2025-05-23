@@ -14,7 +14,7 @@ func SetupRoutes() *gin.Engine {
 	var ErrorReportsRoutes = ErrorReportRoutes{}
 
 	router := gin.New()
-	router.Use(gin.Logger()) //  request logging
+	router.Use(gin.Logger())
 	router.Use(ErrorMiddleware())
 	router.Use(CORSMiddleware())
 
@@ -23,6 +23,9 @@ func SetupRoutes() *gin.Engine {
 		router.POST("/users", UserRoutes.SignUp)
 		router.GET("/logout", UserRoutes.Logout)
 		router.POST("/login", UserRoutes.Login)
+		router.PATCH("/password/reset", UserRoutes.ResetPassword)
+		router.POST("/password/send-reset-email", UserRoutes.SendResetPasswordEmail)
+
 	}
 
 	// Routes with authentication
@@ -41,7 +44,6 @@ func SetupRoutes() *gin.Engine {
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", QuizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", QuizRoutes.Save)
 		authenticatedRoutes.POST("/errorReports", ErrorReportsRoutes.Create)
-
 	}
 
 	workerRoutes := router.Group("/static/workers")

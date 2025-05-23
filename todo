@@ -26,8 +26,8 @@
 [x] run db migrations  before deployment
     
 [ ] Marketing
-    [x] Welcome email
     [ ] recover password 
+    [ ] Welcome email
 
 [ ] Setup sentry: mobile and backend
 [ ] Mobile UI improvements

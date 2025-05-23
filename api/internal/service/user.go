@@ -77,6 +77,15 @@ func SaveUser(firstName, lastName, password, email string) (*User, error) {
 	return user, nil
 }
 
+func UpdatePassword(userId int64, password string) error {
+	err := userRepository.UpdatePassword(userId, password)
+	if err != nil {
+		common.Logger.Error("failed to save new user", "error", err)
+		return errors.New("could not update the password")
+	}
+	return nil
+}
+
 func LoginUser(email, password string) (string, error) {
 	lowerCaseEmail := strings.ToLower(email)
 

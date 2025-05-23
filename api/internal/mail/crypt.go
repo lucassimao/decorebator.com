@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"io"
 	"time"
+
+	"decorebator.com/internal/common"
 )
 
 func encryptAES(key []byte, plaintext string) (string, error) {
@@ -55,21 +57,47 @@ func decryptAES(key []byte, encrypted string) (string, error) {
 	return string(plaintext), nil
 }
 
-type TokenPayload struct {
-	UserID   int       `json:"userId"`
-	ValidTil time.Time `json:"valid_til"`
+type ResetPasswordPayload struct {
+	UserId    int64     `json:"userId"`
+	ExpiresAt time.Time `json:"expiresAt"`
 }
 
-func validateToken(decrypted string) (bool, error) {
-	var payload TokenPayload
-	err := json.Unmarshal([]byte(decrypted), &payload)
+func createResetPasswordToken(userId int64) (encryptedPayload string, err error) {
+
+	futureTime := time.Now().Add(time.Duration(30) * time.Minute)
+	payload := ResetPasswordPayload{UserId: userId, ExpiresAt: futureTime}
+	encodedPayload, err := json.Marshal(payload)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
-	if time.Now().After(payload.ValidTil) {
-		return false, fmt.Errorf("token expired")
+	key := []byte(common.Env.ResetPasswordPrivateKey)
+	encryptedPayload, err = encryptAES([]byte(key), string(encodedPayload))
+	if err != nil {
+		return "", err
 	}
 
-	return true, nil
+	return encryptedPayload, nil
+}
+
+func ValidateResetPasswordPayload(encrypted string) (*ResetPasswordPayload, error) {
+
+	key := []byte(common.Env.ResetPasswordPrivateKey)
+
+	decrypted, err := decryptAES(key, encrypted)
+	if err != nil {
+		return nil, err
+	}
+
+	var payload ResetPasswordPayload
+	err = json.Unmarshal([]byte(decrypted), &payload)
+	if err != nil {
+		return nil, err
+	}
+
+	if time.Now().After(payload.ExpiresAt) {
+		return nil, fmt.Errorf("token expired")
+	}
+
+	return &payload, nil
 }

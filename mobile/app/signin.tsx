@@ -119,12 +119,14 @@ export default function SignInScreen() {
         Sign In
       </Button>
 
-      <Text style={{ ...styles.signInHelper }}>
-        Don't have an account?{" "}
-        <Link replace style={{ color: theme.colors.primary }} href={"/signup"}>
+      <View style={styles.bottom}>
+        <Link replace style={{ color: theme.colors.primary,fontSize:18 }} href={"/resetPassword"}>
+          Forgot your password?
+        </Link>
+        <Link replace style={{ color: theme.colors.primary,fontSize:18 }} href={"/signup"}>
           Sign up
         </Link>
-      </Text>
+      </View>
 
       <Snackbar
         visible={!!signInError}
@@ -160,7 +162,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 10,
   },
-  signInHelper: {
+  bottom: {
     fontSize: 20,
+    width: "80%",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
 });

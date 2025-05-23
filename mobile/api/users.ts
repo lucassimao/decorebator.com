@@ -82,6 +82,31 @@ export async function signin(data: UserSignin) {
   }
 }
 
+export async function requestResetEmailPassword(email: string) {
+  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/password/send-reset-email";
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    body: JSON.stringify({
+      email
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+   if (!response.ok) {
+    const body = await response.json();
+    const message =
+      body?.error ||
+      Object.values(body?.validationErrors)?.[0] ||
+      DEFAULT_ERROR;
+    throw new Error(message);
+  }
+
+}
+
 export function getUserInfo(): UserInfo | null {
   const authorization = getAuthorization();
 

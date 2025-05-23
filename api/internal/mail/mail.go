@@ -1,21 +1,31 @@
 package mail
 
 import (
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"log/slog"
-	"math/rand"
+	"os"
 	"strings"
-	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
+	"decorebator.com/internal/repository"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 
 	_ "embed"
 )
+
+var userRepository *repository.UserRepository
+
+func init() {
+	db, err := common.GetDBConnection()
+	if err != nil {
+		common.Logger.Error("failed to open db connection", "error", err)
+		os.Exit(1)
+	}
+	userRepository = &repository.UserRepository{Db: db}
+}
 
 // https://www.twilio.com/docs/sendgrid/api-reference/contacts/add-or-update-a-contact
 func AddContactToList(user *model.User) {
@@ -42,6 +52,7 @@ func AddContactToList(user *model.User) {
 	`, user.Email, user.ID, user.FirstName, user.LastName))
 
 	response, err := sendgrid.API(request)
+	// Status code 202 indicates that the contacts are queued for processing
 	if err != nil || response.StatusCode != 202 {
 		attrs := []any{}
 		if err != nil {
@@ -54,32 +65,19 @@ func AddContactToList(user *model.User) {
 	}
 }
 
-type ResetPasswordPayload struct {
-	UserId    int64     `json:"userId"`
-	ExpiresAt time.Time `json:"expiresAt"`
-}
-
 //go:embed reset_password.html
 var resetPasswordEmailTemplate string
 
-func ResetPassword(user *model.User) error {
-	logger := common.Logger.With("func", "ResetPassword", "user", user.ID)
-	key := []byte(common.Env.ResetPasswordPrivateKey)
+func SendResetPasswordEmail(email string) error {
 
-	rand.Seed(time.Now().UnixNano())
-	// Intn(10) gives a number between 0 and 9, so +1 makes it between 1 and 10
-	randomNum := rand.Intn(10) + 1
+	result, err := userRepository.Find(repository.FindUserArgs{Email: &email})
 
-	now := time.Now()
-	// between 31 and 40 min from now
-	futureTime := now.Add(time.Duration(30+randomNum) * time.Minute)
-	payload := ResetPasswordPayload{UserId: user.ID, ExpiresAt: futureTime}
-	encodedPayload, err := json.Marshal(payload)
-	if err != nil {
-		return err
+	if err != nil || len(result) != 1 {
+		return fmt.Errorf("no user found")
 	}
 
-	encryptedPayload, err := encryptAES([]byte(key), string(encodedPayload))
+	user := result[0]
+	encryptedPayload, err := createResetPasswordToken(user.ID)
 	if err != nil {
 		return err
 	}
@@ -91,7 +89,7 @@ func ResetPassword(user *model.User) error {
 
 	data := map[string]string{
 		"FirstName": user.FirstName,
-		"ResetLink": fmt.Sprintf("https://decorebator.com/reset?token=%s", encryptedPayload),
+		"ResetLink": fmt.Sprintf("https://decorebator.com/reset-password?token=%s", encryptedPayload),
 	}
 	var sb strings.Builder
 	err = tmpl.Execute(&sb, data)
@@ -110,34 +108,13 @@ func ResetPassword(user *model.User) error {
 	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
 	response, err := client.Send(message)
 
-	if err != nil || response.StatusCode != 202 {
-		attrs := []any{}
-		if err != nil {
-			attrs = append(attrs, slog.String("error", err.Error()))
-		} else {
-			attrs = append(attrs, slog.Int("StatusCode", response.StatusCode))
-			attrs = append(attrs, slog.String("Body", response.Body))
-		}
-		logger.Error("failed to sent reset password email", attrs...)
-	}
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	encrypted := ""
-	fmt.Println("Encrypted:", encrypted)
-
-	// Usage
-	decrypted, err := decryptAES(key, encrypted)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	fmt.Println("Decrypted:", decrypted)
 
-	// Usage
-	isValid, err := validateToken(decrypted)
-	if !isValid {
-		fmt.Println("Invalid or expired token")
-	} else {
-		fmt.Println("Token is valid")
+	// 202 status meaning Accepted
+	if response.StatusCode != 202 {
+		return fmt.Errorf("failed to send email: %v", response.Body)
 	}
 
 	return nil
