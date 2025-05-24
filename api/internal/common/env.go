@@ -2,6 +2,8 @@ package common
 
 import (
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Environment int
@@ -21,6 +23,7 @@ var Env struct {
 	PostgresDB           string
 	PostgresPort         string
 	PostgresHost         string
+	PostgresSSLMode      string
 	GinMode              string
 	JwtKey               string
 	RedisAddr            string
@@ -29,10 +32,14 @@ var Env struct {
 	MinioRootUser        string
 	MinioRootPassword    string
 	StaticAuthentication string
-	StabilityAIApiKey    string
+	SendGridApiKey       string
+
+	ResetPasswordPrivateKey string
 }
 
 func init() {
+	_ = godotenv.Load()
+
 	if os.Getenv("ENV") == "production" {
 		Env.Env = Production
 	} else {
@@ -47,6 +54,7 @@ func init() {
 	Env.PostgresDB = os.Getenv("POSTGRES_DB")
 	Env.PostgresPort = os.Getenv("POSTGRES_PORT")
 	Env.PostgresHost = os.Getenv("POSTGRES_HOST")
+	Env.PostgresSSLMode = os.Getenv("POSTGRES_SSL_MODE")
 	Env.GinMode = os.Getenv("GIN_MODE")
 	Env.JwtKey = os.Getenv("JWT_KEY")
 	Env.RedisAddr = os.Getenv("REDIS_ADDR")
@@ -56,5 +64,6 @@ func init() {
 	Env.MinioRootPassword = os.Getenv("MINIO_ROOT_PASSWORD")
 	Env.StaticAuthentication = os.Getenv("STATIC_AUTHENTICATION")
 
-	Env.StabilityAIApiKey = os.Getenv("STABILITY_AI_API_KEY")
+	Env.SendGridApiKey = os.Getenv("SENDGRID_API_KEY")
+	Env.ResetPasswordPrivateKey = os.Getenv("RESET_PASSWORD_PRIVATE_KEY")
 }

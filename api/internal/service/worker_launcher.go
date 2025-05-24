@@ -1,4 +1,4 @@
-package workers
+package service
 
 import (
 	"context"
@@ -10,13 +10,7 @@ import (
 	"github.com/riverqueue/river/rivertype"
 )
 
-const IMAGE_GENERATOR_QUEUE = "image_generator"
-const TEXT_TO_SPEECH_QUEUE = "text_to_speech"
-const DEFINITION_FETCHER_QUEUE = "definition_fetcher"
-
-type ContentGenerationServiceImpl struct{}
-
-func (*ContentGenerationServiceImpl) GenerateImage(definitionId int64, customPrompt string, tx *pgx.Tx) (int64, error) {
+func TriggerGenerateImageWorker(definitionId int64, customPrompt string, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: IMAGE_GENERATOR_QUEUE,
 	}
@@ -27,7 +21,7 @@ func (*ContentGenerationServiceImpl) GenerateImage(definitionId int64, customPro
 	}, tx)
 }
 
-func (*ContentGenerationServiceImpl) TextToSpeech(wordId int64, tx *pgx.Tx) (int64, error) {
+func TriggerTextToSpeechWorker(wordId int64, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: TEXT_TO_SPEECH_QUEUE,
 	}
@@ -37,7 +31,7 @@ func (*ContentGenerationServiceImpl) TextToSpeech(wordId int64, tx *pgx.Tx) (int
 	}, tx)
 }
 
-func (*ContentGenerationServiceImpl) FetchDefinition(wordId int64, tx pgx.Tx) (int64, error) {
+func TriggerFetchDefinitionWorker(wordId int64, tx pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: DEFINITION_FETCHER_QUEUE,
 	}
@@ -45,10 +39,6 @@ func (*ContentGenerationServiceImpl) FetchDefinition(wordId int64, tx pgx.Tx) (i
 	return triggerWorker(&opts, DefinitionFetcherArgs{
 		WordId: wordId,
 	}, &tx)
-}
-
-func NewContentGenerationService() common.ContentGenerationService {
-	return &ContentGenerationServiceImpl{}
 }
 
 func triggerWorker(opts *river.InsertOpts, args river.JobArgs, tx *pgx.Tx) (int64, error) {

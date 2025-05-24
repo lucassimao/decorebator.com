@@ -1,12 +1,10 @@
 package http
 
 import (
-	"decorebator.com/internal/common"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/dig"
 )
 
-func SetupRoutes(container *dig.Container) *gin.Engine {
+func SetupRoutes() *gin.Engine {
 
 	var WordRoutes = WordRoutes{}
 	var WorkerRoutes = WorkerRoutes{}
@@ -15,8 +13,9 @@ func SetupRoutes(container *dig.Container) *gin.Engine {
 	var QuizRoutes = QuizRoutes{}
 	var ErrorReportsRoutes = ErrorReportRoutes{}
 
-	router := gin.Default()
-	router.Use(common.InjectDigContainer(container))
+	router := gin.New()
+	router.Use(gin.Logger())
+	router.Use(ErrorMiddleware())
 	router.Use(CORSMiddleware())
 
 	// Routes without authentication
@@ -24,6 +23,9 @@ func SetupRoutes(container *dig.Container) *gin.Engine {
 		router.POST("/users", UserRoutes.SignUp)
 		router.GET("/logout", UserRoutes.Logout)
 		router.POST("/login", UserRoutes.Login)
+		router.PATCH("/password/reset", UserRoutes.ResetPassword)
+		router.POST("/password/send-reset-email", UserRoutes.SendResetPasswordEmail)
+
 	}
 
 	// Routes with authentication
@@ -42,7 +44,6 @@ func SetupRoutes(container *dig.Container) *gin.Engine {
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", QuizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", QuizRoutes.Save)
 		authenticatedRoutes.POST("/errorReports", ErrorReportsRoutes.Create)
-
 	}
 
 	workerRoutes := router.Group("/static/workers")

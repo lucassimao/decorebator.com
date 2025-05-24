@@ -30,12 +30,11 @@ type Claims struct {
 }
 
 func generateJWT(user User) (string, error) {
-	ginMode := os.Getenv("GIN_MODE")
 
 	claims := &Claims{
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
-		Environment: ginMode,
+		Environment: os.Getenv("ENV"),
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "Decorebator",
 			ExpiresAt: time.Now().Add(AUTH_TOKEN_DURATION).Unix(), // Token is valid for 24 hour
@@ -78,11 +77,20 @@ func SaveUser(firstName, lastName, password, email string) (*User, error) {
 	return user, nil
 }
 
+func UpdatePassword(userId int64, password string) error {
+	err := userRepository.UpdatePassword(userId, password)
+	if err != nil {
+		common.Logger.Error("failed to save new user", "error", err)
+		return errors.New("could not update the password")
+	}
+	return nil
+}
+
 func LoginUser(email, password string) (string, error) {
 	lowerCaseEmail := strings.ToLower(email)
 
 	args := repo.FindUserArgs{
-		Email: lowerCaseEmail,
+		Email: &lowerCaseEmail,
 	}
 	results, err := userRepository.Find(args)
 	if err != nil {
@@ -90,6 +98,7 @@ func LoginUser(email, password string) (string, error) {
 		return "", errors.New("could not process your request. Try again later")
 	}
 
+	fmt.Println(results)
 	if len(results) != 1 {
 		return "", errors.New("invalid combination of email and/or password")
 	}

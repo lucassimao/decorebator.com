@@ -35,10 +35,10 @@ test: ## run containerized integration tests
 	docker compose -f docker-compose.test.yml down -v; \
 	go tool cover -html=coverage.out -o=coverage.html
 
-run: ## run ./cmd/web
-	$(GODOTENV_PATH) -f .env go run ./cmd/web
+run: ## HTTP server
+	$(GODOTENV_PATH) -f .env go run ./cmd/api
 
-workers:
+workers: ## Start background workers
 	$(GODOTENV_PATH) -f .env go run ./cmd/workers
 
 watch:
@@ -56,9 +56,7 @@ psql: ## Start psql session to development database
 	@$(GODOTENV_PATH) -f .env sh -c 'PGPASSWORD=$(POSTGRES_PASSWORD) psql -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -h localhost -d $(POSTGRES_DB)'
 
 build: clean ## Build restful api and save it to bin/main
-	go build -o bin/main ./cmd/web
-	go build -o bin/wiktionaryLoader ./cmd/wiktionaryLoader
-
+	go build -o bin/main ./cmd/api
 
 clean: ## Remove build related file
 	rm -fr ./bin

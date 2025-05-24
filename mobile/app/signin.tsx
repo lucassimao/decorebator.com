@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Link, router } from "expo-router";
 import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
-import { StyleSheet, Text, View } from "react-native";
+import { Keyboard, StyleSheet, Text, View } from "react-native";
 import {
   Button,
   HelperText,
@@ -50,7 +50,10 @@ export default function SignInScreen() {
 
   const hasErrors = errors.email || errors.password;
 
-  const onSubmit = (data: any) => signup(data);
+  const onSubmit = (data: any) => {
+    Keyboard.dismiss()
+    signup(data)
+  };
   const toggleSecureTextEntry = () => setSecureTextEntry(!secureTextEntry);
 
   return (
@@ -119,12 +122,14 @@ export default function SignInScreen() {
         Sign In
       </Button>
 
-      <Text style={{ ...styles.signInHelper }}>
-        Don't have an account?{" "}
-        <Link replace style={{ color: theme.colors.primary }} href={"/signup"}>
+      <View style={styles.bottom}>
+        <Link replace style={{ color: theme.colors.primary,fontSize:18 }} href={"/resetPassword"}>
+          Forgot your password?
+        </Link>
+        <Link replace style={{ color: theme.colors.primary,fontSize:18 }} href={"/signup"}>
           Sign up
         </Link>
-      </Text>
+      </View>
 
       <Snackbar
         visible={!!signInError}
@@ -160,7 +165,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 10,
   },
-  signInHelper: {
+  bottom: {
     fontSize: 20,
+    width: "80%",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
 });

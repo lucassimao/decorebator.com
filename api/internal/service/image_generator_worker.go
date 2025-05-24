@@ -1,4 +1,4 @@
-package workers
+package service
 
 import (
 	"context"
@@ -7,14 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"strings"
+	"regexp"
 	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/openai"
-	"decorebator.com/internal/service"
-	"decorebator.com/internal/stability_ai"
 	"github.com/riverqueue/river"
 )
 
@@ -34,13 +32,13 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	var prompt string
 	var definitionID = job.Args.DefinitionId
-	var description string
+	var longestExample string
 
 	if job.Args.CustomPrompt != "" {
 		prompt = job.Args.CustomPrompt
-		description = job.Args.CustomPrompt
+		longestExample = job.Args.CustomPrompt
 	} else {
-		definition, err := service.GetDefinitionById(job.Args.DefinitionId)
+		definition, err := GetDefinitionById(job.Args.DefinitionId)
 		if err != nil {
 
 			if errors.Is(err, &common.NotFoundError{}) {
@@ -52,29 +50,36 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 			return err
 		}
 
-		description = ""
+		longestExample = ""
 		// using the longest example as the image description
 		for _, item := range definition.Examples {
-			if len(item) > len(description) {
-				description = item
+			if len(item) > len(longestExample) {
+				longestExample = item
 			}
 		}
 
-		endWrappedToken := strings.Index(description, "]")
-		if endWrappedToken == -1 { // no word between square brackets founds
-			prompt = fmt.Sprintf("%s. %s meaning %s.", description, definition.Token, definition.Meaning)
-		} else {
-			// removing the square brackets and adding the term's meaning close to the term and wrapped by parentheses"
-			prompt = description
-			pos := strings.Index(prompt, "]")
-			prompt = fmt.Sprintf("%s (%s) %s", prompt[:pos+1], definition.Meaning, prompt[pos+1:])
+		// Regular expression to find text within square brackets
+		re := regexp.MustCompile(`\[(.*?)\]`)
+		// Replace [word] with word (without brackets)
+		result := re.ReplaceAllString(longestExample, "$1")
 
-			prompt = strings.Replace(prompt, "[", "", 1)
-			prompt = strings.Replace(prompt, "]", "", 1)
+		matches := re.FindStringSubmatch(longestExample)
+		var token string
+		if matches != nil {
+			token = matches[1]
+		} else {
+			token = definition.Token
 		}
+
+		prompt = fmt.Sprintf(`
+			Render an image representing the following sentence: %s
+			In that sentence, the word %s must convey %s
+			You MUST NOT include any references to that sentence neither to the word %s in the generated image.
+			`, result, token, definition.Meaning, token)
+		fmt.Println(prompt)
 	}
 
-	data, err := generateWithStabilityAI(prompt)
+	data, err := generateWithOpenAI(prompt)
 
 	if err != nil {
 		return err
@@ -90,53 +95,16 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	logger.Debug("image generated", "definitionId", definitionID, "url", url)
 
-	_, err = service.SaveDefinitionImage(model.CreateDefinitionImageDTO{
+	_, err = SaveDefinitionImage(model.CreateDefinitionImageDTO{
 		Api:          model.STABILITY_AI,
 		URL:          url,
-		Description:  description,
+		Description:  longestExample,
 		Model:        "stable-image-core",
 		Prompt:       prompt,
 		DefinitionId: definitionID,
 	})
 
 	return err
-}
-
-func generateWithStabilityAI(prompt string) ([]byte, error) {
-	var logger = common.Logger.With("func", "generateWithStabilityAI")
-
-	response, err := stability_ai.GenerateImage(prompt)
-
-	if err != nil {
-		logger.Error("failed to generate image", "error", err, "details", response.Errors)
-
-		switch err {
-		case stability_ai.ErrInvalidParams:
-			return nil, river.JobCancel(err)
-		case stability_ai.ErrContentFlagged:
-			return nil, river.JobCancel(err)
-		case stability_ai.ErrRejected:
-			return nil, river.JobCancel(err)
-		case stability_ai.ErrTooManyRequets:
-			// snoozing between 1 and 2min
-			return nil, river.JobSnooze(time.Minute + (time.Duration(rand.Intn(60)) * time.Second))
-		case stability_ai.ErrInsufficientCredits:
-			// snoozing 1 hour to allows to buy credits
-			return nil, river.JobSnooze(time.Hour * 1)
-		case stability_ai.ErrInternalError:
-			// snoozing between 1 and 2min
-			return nil, river.JobSnooze(time.Minute + (time.Duration(rand.Intn(60)) * time.Second))
-		default:
-			return nil, river.JobCancel(err)
-		}
-	}
-
-	data, err := base64.StdEncoding.DecodeString(*response.Image)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode base64 data: %v", err)
-	}
-
-	return data, nil
 }
 
 func generateWithOpenAI(prompt string) ([]byte, error) {

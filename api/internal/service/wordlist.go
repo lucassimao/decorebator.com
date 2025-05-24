@@ -1,7 +1,7 @@
 package service
 
 import (
-	"errors"
+	"fmt"
 	"os"
 
 	"decorebator.com/internal/model"
@@ -29,8 +29,10 @@ func GetUserWordlists(userId int64) ([]*Wordlist, error) {
 	}
 	result, err := wordlistRepository.Find(args)
 	if err != nil {
-		common.Logger.Error("failed to get wordlists", "error", err, "userId", userId)
-		return nil, errors.New("could not get user wordlists")
+		wrappedErr := fmt.Errorf(
+			"failed to get all wordlists: %w", err,
+		)
+		return nil, wrappedErr
 	}
 	return result, nil
 }
@@ -38,8 +40,10 @@ func GetUserWordlists(userId int64) ([]*Wordlist, error) {
 func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
 	wordlist, err := wordlistRepository.Save(newWordlist.Name, newWordlist.Description, newWordlist.UserID)
 	if err != nil {
-		common.Logger.Error("failed to save wordlist", "error", err)
-		return nil, errors.New("could not save your wordlist")
+		wrappedErr := fmt.Errorf(
+			"failed to save wordlist: %w", err,
+		)
+		return nil, wrappedErr
 	}
 	return wordlist, nil
 }
@@ -51,8 +55,10 @@ func GetWordlistById(id, userId int64) (*Wordlist, error) {
 	}
 	result, err := wordlistRepository.Find(args)
 	if err != nil {
-		common.Logger.Error("failed to get wordlist", "error", err, "wordlistId", id)
-		return nil, errors.New("failed to find wordlist")
+		wrappedErr := fmt.Errorf(
+			"failed to get wordlist %d by id: %w", id, err,
+		)
+		return nil, wrappedErr
 	}
 
 	if len(result) != 1 {
@@ -66,8 +72,10 @@ func GetWordlistById(id, userId int64) (*Wordlist, error) {
 func DeleteWordlist(id, userId int64) (int64, error) {
 	count, err := wordlistRepository.Delete(id, userId)
 	if err != nil {
-		common.Logger.Error("failed to delete wordlist", "error", err, "wordlistId", id)
-		return 0, errors.New("gailed to delete wordlist")
+		wrappedErr := fmt.Errorf(
+			"failed to delete wordlist %d : %w", id, err,
+		)
+		return 0, wrappedErr
 	}
 
 	if count == 0 {
@@ -80,8 +88,10 @@ func DeleteWordlist(id, userId int64) (int64, error) {
 func UpdateWordlist(wordlist *Wordlist) error {
 	count, err := wordlistRepository.Update(wordlist)
 	if err != nil {
-		common.Logger.Error("failed to update wordlist", "error", err, "wordlistId", wordlist.ID)
-		return errors.New("failed to update wordlist")
+		wrappedErr := fmt.Errorf(
+			"failed to update wordlist %d : %w", wordlist.ID, err,
+		)
+		return wrappedErr
 	}
 
 	if count == 0 {

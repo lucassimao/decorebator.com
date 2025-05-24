@@ -35,6 +35,7 @@ type SaveInput struct {
 	Id      int64 `json:"id"`
 }
 
+// Save if the users answered correctly or not
 func (h *QuizRoutes) Save(c *gin.Context) {
 
 	var input SaveInput

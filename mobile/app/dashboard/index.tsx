@@ -24,7 +24,7 @@ type Dialog = "new-wordlist" | "delete-word" | null;
 
 export default function Dashboard() {
   const theme = useTheme();
-  const navigation = useNavigation();
+  // const navigation = useNavigation();
   const user = usersApi.getUserInfo();
 
   const [expandedWordlistId, setExpandedWordlistId] = React.useState<
@@ -65,13 +65,13 @@ export default function Dashboard() {
       />,
     );
 
-    navigation.setOptions({
-      headerRight: () => (
-        <View style={{ display: "flex", flexDirection: "row" }}>{options}</View>
-      ),
-      headerLeft: null,
-    });
-  }, [navigation, expandedWordlistId]);
+    // navigation.setOptions({
+    //   headerRight: () => (
+    //     <View style={{ display: "flex", flexDirection: "row" }}>{options}</View>
+    //   ),
+    //   headerLeft: null,
+    // });
+  }, [/*navigation,*/ expandedWordlistId]);
 
   useEffect(() => {
     setModal(wordToDelete ? "delete-word" : null);

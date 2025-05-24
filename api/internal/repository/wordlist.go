@@ -46,7 +46,7 @@ type FindWordlistArgs struct {
 
 func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, error) {
 	var builder strings.Builder
-	builder.WriteString(`SELECT id,name, description, user_id, created_at, updated_at FROM wordlists`)
+	builder.WriteString(`SELECT id, name, description, user_id, created_at, updated_at FROM wordlists`)
 	var queryArgs []interface{}
 
 	if args.Id != nil {

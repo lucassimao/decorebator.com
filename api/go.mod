@@ -15,6 +15,7 @@ require (
 	github.com/riverqueue/river v0.9.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.9.0
 	github.com/riverqueue/river/rivertype v0.9.0
+	github.com/sendgrid/sendgrid-go v3.16.0+incompatible
 	go.uber.org/dig v1.18.0
 )
 
@@ -53,6 +54,7 @@ require (
 	github.com/riverqueue/river/riverdriver v0.9.0 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/sanity-io/litter v1.5.5 // indirect
+	github.com/sendgrid/rest v2.6.9+incompatible // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
@@ -82,6 +84,7 @@ require (
 	github.com/go-playground/validator/v10 v10.14.1
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/jackc/pgx/v5 v5.6.0
+	github.com/joho/godotenv v1.5.1
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect

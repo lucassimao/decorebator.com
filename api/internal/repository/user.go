@@ -51,16 +51,16 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 }
 
 type FindUserArgs struct {
-	Email string
+	Email *string
 }
 
 func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 	var builder strings.Builder
-	builder.WriteString(`SELECT id,first_name, last_name, password_hash, created_at, updated_at FROM users`)
+	builder.WriteString(`SELECT id,email,first_name, last_name, password_hash, created_at, updated_at FROM users`)
 	var queryArgs []interface{}
 
-	if args.Email != "" {
-		builder.WriteString(` WHERE email = $1`)
+	if args.Email != nil {
+		builder.WriteString(` WHERE LOWER(email) = LOWER($1)`)
 		queryArgs = append(queryArgs, args.Email)
 	}
 
@@ -78,7 +78,7 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 
 	for rows.Next() {
 		user := User{}
-		err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
+		err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -89,4 +89,21 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 		return nil, err
 	}
 	return users, nil
+}
+
+func (repository *UserRepository) UpdatePassword(userId int64, newPassword string) error {
+	query := `UPDATE users SET password_hash = $1, updated_at=NOW() WHERE ID = $2`
+
+	bytes, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	passwordHash := string(bytes)
+	if err != nil {
+		return err
+	}
+
+	_, err = repository.Db.Exec(context.Background(), query, passwordHash, userId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
