@@ -1,4 +1,5 @@
 import * as wordlistsApi from "@/api/wordlists";
+import { useAudioPlayer } from "expo-audio";
 import * as React from "react";
 import {
   Image,
@@ -9,14 +10,11 @@ import {
   useWindowDimensions,
 } from "react-native";
 import {
-  ActivityIndicator,
   Button,
-  Icon,
   IconButton,
-  MD3Colors,
   Surface,
   TouchableRipple,
-  useTheme,
+  useTheme
 } from "react-native-paper";
 
 type Props = {
@@ -24,14 +22,13 @@ type Props = {
   onOptionSelected: (optionIndex: number) => void;
   isAnsweringQuiz: boolean;
 };
-import { Audio, InterruptionModeAndroid } from "expo-av";
 
 const Quiz = ({ quiz, onOptionSelected }: Props) => {
   const { fontScale } = useWindowDimensions();
   const styles = makeStyles(fontScale); // pass in fontScale to the StyleSheet
   const theme = useTheme();
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
-  const [sound, setSound] = React.useState<Audio.Sound | null>(null);
+  const player = useAudioPlayer();
   const [textWidth, setTextWidth] = React.useState(0);
 
   React.useEffect(() => {
@@ -44,27 +41,11 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
 
     if (!shouldLoadAudio || !quiz.audioURL) return;
 
-    Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: false,
-      interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
-      shouldDuckAndroid: false,
-    });
+    player.replace(quiz.audioURL);
+    player.seekTo(0)
 
-    Audio.Sound.createAsync({ uri: quiz.audioURL })
-      .then((result) => {
-        setSound(result.sound);
-      })
-      .catch(console.log);
-  }, [quiz.id]);
+  }, [quiz.id,player]);
 
-  React.useEffect(() => {
-    return sound
-      ? () => {
-          sound.unloadAsync();
-        }
-      : undefined;
-  }, [sound]);
 
   React.useEffect(() => {
     if (selectedIndex != null) {
@@ -104,7 +85,8 @@ const Quiz = ({ quiz, onOptionSelected }: Props) => {
       break;
   }
 
-  const playSound = () => sound?.playFromPositionAsync(0);
+  const playSound = () => player.play()
+
 
   return (
     <View style={styles.container1}>

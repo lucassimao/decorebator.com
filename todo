@@ -37,7 +37,7 @@
     [ ] Quiz
     [ ] Wordlist CRUD
     [ ] Fix session expiration
-    [ ] Replace expo-av with expo-audio
+    [x] Replace expo-av with expo-audio
     [ ] use <Pressabel hitSlop> to wrap icon buttons 
     [ ] App icon
     [ ] Splash screen
