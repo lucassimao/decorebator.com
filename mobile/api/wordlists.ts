@@ -7,6 +7,7 @@ export type Wordlist = {
   name: string;
   updatedAt: string;
   userId: number;
+  language:string
 };
 
 export type Word = {
@@ -33,7 +34,7 @@ export type Quiz = {
 };
 
 export type CreateWordDTO = Pick<Word, "wordlistId" | "name">;
-export type CreateWordlistDTO = Pick<Wordlist, "description" | "name">;
+export type CreateWordlistDTO = Pick<Wordlist, "description" | "name"|"language">;
 
 export async function getUserWordlists() {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/wordlists";

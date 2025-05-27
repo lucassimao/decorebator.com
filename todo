@@ -31,16 +31,16 @@
 [x] subscription
 
 [ ] Mobile UI improvements
-    [ ] Splash screen
-    [ ] Icon
-    [ ] use <Pressabel hitSlop> to wrap icon buttons 
-    [ ] Sign Up
-    [ ] Sign In
     [ ] Dashboard
+    [x] Sign Up
+    [ ] Sign In
     [ ] Quiz
     [ ] Wordlist CRUD
     [ ] Fix session expiration
     [ ] Replace expo-av with expo-audio
+    [ ] use <Pressabel hitSlop> to wrap icon buttons 
+    [ ] App icon
+    [ ] Splash screen
 
 [ ] MVP Release Checklist
     [ ]  CI/CD pipelines (GitHub Actions → Cloud Run / Expo)

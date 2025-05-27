@@ -1,5 +1,5 @@
-import * as wordlistsApi from "@/api/wordlists";
 import * as usersApi from "@/api/users";
+import * as wordlistsApi from "@/api/wordlists";
 
 import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
@@ -11,16 +11,15 @@ import {
   TouchableRipple,
   useTheme,
 } from "react-native-paper";
-
 import SnackBar, { SnackBarProps } from "@/components/SnackBar";
 import BottonBar from "@/components/dashboard/BottonBar";
 import DeleteWordDialog from "@/components/dashboard/DeleteWordDialog";
-import EmptyDashboard from "@/components/dashboard/EmptyDashboard";
 import LoadingIndicator from "@/components/dashboard/LoadingIndicator";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import NewWordlistDialog from "@/components/dashboard/NewWordlistDialog";
 import UpgradePromptDialog from "@/components/dashboard/UpgradePromptDialog";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { isLoading } from "expo-font";
 import { router } from "expo-router";
+import CreateWordlistModal from "@/components/dashboard/CreateWordlistModal";
 type Dialog = "new-wordlist" | "delete-word" | "upgrade-prompt" | null;
 
 export default function Dashboard() {
@@ -54,7 +53,7 @@ export default function Dashboard() {
       };
 
       refreshUserSession();
-    }, [])
+    }, []),
   );
 
   React.useEffect(() => {
@@ -70,8 +69,9 @@ export default function Dashboard() {
           onPress={() => {
             // Check if user has reached free plan limit
             const wordlistCount = wordlists?.length || 0;
-            const isFreePlan = !user?.subscriptionPlan || user.subscriptionPlan === 'free';
-            
+            const isFreePlan =
+              !user?.subscriptionPlan || user.subscriptionPlan === "free";
+
             if (isFreePlan && wordlistCount >= 1) {
               setModal("upgrade-prompt");
             } else {
@@ -90,7 +90,7 @@ export default function Dashboard() {
         onPress={() => router.push({ pathname: "/subscription" })}
       />,
     );
-    
+
     options.push(
       <IconButton
         icon="logout-variant"
@@ -133,6 +133,16 @@ export default function Dashboard() {
     queryKey: ["wordlists"],
   });
 
+  useEffect(() => {
+    if (isLoadingWordlists) return;
+
+    const isEmpty = !wordlists || wordlists.length == 0;
+
+    if (isEmpty) {
+      router.push("/dashboard/welcome");
+    }
+  }, [wordlists, isLoading, router]);
+
   const {
     data: words,
     refetch: getWords,
@@ -168,15 +178,6 @@ export default function Dashboard() {
 
   if (isLoadingWordlists) return <LoadingIndicator />;
 
-  if (!wordlists?.length)
-    return (
-      <EmptyDashboard
-        subtitle="It's time for a new challenge!"
-        onWordlistCreated={getWordlists}
-        title={`Hey, ${user?.firstName}`}
-      />
-    );
-
   const onListAccordionPressed = (wordlistId: number) => {
     // user pressed same item. Closing it
     if (expandedWordlistId == wordlistId) {
@@ -186,8 +187,6 @@ export default function Dashboard() {
     setExpandedWordlistId(wordlistId);
     getWords();
   };
-
-  const currentWordlist = wordlists.find((w) => w.id == expandedWordlistId);
 
   const onWordAdded = () => {
     getWords();
@@ -232,6 +231,12 @@ export default function Dashboard() {
     clearModal();
   };
 
+  if (!wordlists) {
+    return null;
+  }
+
+  const currentWordlist = wordlists.find((w) => w.id == expandedWordlistId);
+
   return (
     <View style={styles.container}>
       {modal == "delete-word" && wordToDelete && (
@@ -241,13 +246,14 @@ export default function Dashboard() {
         />
       )}
       {modal == "new-wordlist" && (
-        <NewWordlistDialog onDismiss={onDismissCreateWordlistDialog} />
+        <CreateWordlistModal
+          visible
+          onClose={onDismissCreateWordlistDialog}
+          onSuccess={() => onDismissCreateWordlistDialog(true)}
+        />
       )}
       {modal == "upgrade-prompt" && (
-        <UpgradePromptDialog
-          visible={true}
-          onDismiss={() => setModal(null)}
-        />
+        <UpgradePromptDialog visible={true} onDismiss={() => setModal(null)} />
       )}
 
       {snackBarProps && <SnackBar {...snackBarProps} />}
