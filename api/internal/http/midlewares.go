@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
+	"decorebator.com/internal/service"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
@@ -37,7 +39,7 @@ func Authenticate(c *gin.Context) {
 		return
 	}
 
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &service.Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -45,11 +47,11 @@ func Authenticate(c *gin.Context) {
 	})
 
 	if err != nil || !token.Valid {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token vaidation error"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token validation error"})
 		return
 	}
 
-	claims, ok := token.Claims.(*jwt.StandardClaims)
+	claims, ok := token.Claims.(*service.Claims)
 
 	if !ok {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
@@ -62,7 +64,17 @@ func Authenticate(c *gin.Context) {
 		return
 	}
 
+	// Set userID for backward compatibility
 	c.Set("userID", userID)
+
+	// Also set user object with subscription info
+	user := &model.User{
+		ID:               userID,
+		FirstName:        claims.FirstName,
+		LastName:         claims.LastName,
+		SubscriptionPlan: claims.SubscriptionPlan,
+	}
+	c.Set("user", user)
 
 	c.Next()
 }

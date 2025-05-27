@@ -1,4 +1,5 @@
 import * as wordlistsApi from "@/api/wordlists";
+import * as usersApi from "@/api/users";
 import { router, useFocusEffect } from "expo-router";
 import * as React from "react";
 import { StyleSheet, View } from "react-native";
@@ -45,12 +46,18 @@ type Props = {
   wordlist: wordlistsApi.Wordlist;
   onWordAdded: () => void;
   onWordlistDeleted: () => void;
+  words?: wordlistsApi.Word[];
+  onUpgradePrompt?: () => void;
+  user?: usersApi.UserInfo|null;
 };
 
 export default function BottonBar({
   wordlist,
   onWordAdded,
   onWordlistDeleted,
+  words,
+  onUpgradePrompt,
+  user,
 }: Props) {
   const [selectedRoute, setSelectedRoute] =
     React.useState<NavigationRouteKey | null>(null);
@@ -104,7 +111,21 @@ export default function BottonBar({
       <BottomNavigation.Bar
         shifting={false}
         navigationState={{ index, routes: NAVIGATION_ROUTES }}
-        onTabPress={({ route }) => setSelectedRoute(route.key)}
+        onTabPress={({ route }) => {
+          // Check word limit for free users
+          if (route.key === NavigationRouteKey.New) {
+            const currentUser = user || usersApi.getUserInfo();
+            const isFreePlan = !currentUser?.subscriptionPlan || currentUser.subscriptionPlan === 'free';
+            const wordCount = words?.length || 0;
+            
+            if (isFreePlan && wordCount >= 10) {
+              // Free users can only have 10 words per wordlist
+              onUpgradePrompt?.();
+              return;
+            }
+          }
+          setSelectedRoute(route.key);
+        }}
       />
     </View>
   );

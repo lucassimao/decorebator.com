@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Cancelled</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            background-color: #f44336;
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 10px;
+        }
+        .info-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #6200ee;
+            color: white;
+            padding: 14px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Subscription Cancelled</h1>
+    </div>
+    
+    <div class="content">
+        <p>Hi {{.FirstName}},</p>
+        
+        <p>We're sorry to see you go! Your Decorebator {{.PlanName}} subscription has been cancelled.</p>
+        
+        <div class="info-box">
+            <h3>What This Means:</h3>
+            <ul>
+                <li>✅ You'll continue to have premium access until <strong>{{.AccessUntil}}</strong></li>
+                <li>❌ After this date, your account will revert to the free plan</li>
+                <li>💾 All your wordlists and progress will be saved</li>
+                <li>🔒 Free plan limits will apply (1 wordlist, 10 words max)</li>
+            </ul>
+        </div>
+        
+        <p>We'd love to have you back! If you change your mind, you can resubscribe at any time to regain unlimited access.</p>
+        
+        <p style="text-align: center;">
+            <a href="https://decorebator.com/subscription" class="cta-button">Reactivate Subscription</a>
+        </p>
+        
+        <p>If you have feedback about why you're leaving, we'd love to hear from you. Your input helps us improve Decorebator for everyone.</p>
+        
+        <p>Thank you for being part of our community!<br>
+        The Decorebator Team</p>
+    </div>
+    
+    <div class="footer">
+        <p>You're receiving this email because you cancelled your Decorebator subscription.<br>
+        © Decorebator. All rights reserved.</p>
+    </div>
+</body>
+</html>

@@ -16,7 +16,7 @@ require (
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.9.0
 	github.com/riverqueue/river/rivertype v0.9.0
 	github.com/sendgrid/sendgrid-go v3.16.0+incompatible
-	go.uber.org/dig v1.18.0
+	github.com/stripe/stripe-go/v82 v82.1.0
 )
 
 require (

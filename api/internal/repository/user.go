@@ -3,7 +3,9 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
+	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -23,11 +25,15 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 	query := `
 		INSERT INTO users (first_name, last_name, password_hash, email)
 		VALUES ($1, $2, $3, $4)
-		RETURNING id, created_at, updated_at`
+		RETURNING id, created_at, updated_at, subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at`
 
 	var userID int64
 	var createdAt pgtype.Timestamp
 	var updatedAt pgtype.Timestamp
+	var subscriptionPlan model.SubscriptionPlan
+	var subscriptionStatus *model.SubscriptionStatus
+	var stripeCustomerID *string
+	var subscriptionEndsAt *time.Time
 
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	passwordHash := string(bytes)
@@ -35,7 +41,8 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 		return nil, err
 	}
 
-	err = repository.Db.QueryRow(context.Background(), query, firstName, lastName, passwordHash, email).Scan(&userID, &createdAt, &updatedAt)
+	err = repository.Db.QueryRow(context.Background(), query, firstName, lastName, passwordHash, email).Scan(
+		&userID, &createdAt, &updatedAt, &subscriptionPlan, &subscriptionStatus, &stripeCustomerID, &subscriptionEndsAt)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if ok := errors.As(err, &pgErr); ok {
@@ -46,22 +53,50 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 		return nil, err
 	}
 
-	return &User{ID: userID, FirstName: firstName, LastName: lastName, PasswordHash: passwordHash, Email: email,
-		CreatedAt: createdAt, UpdatedAt: updatedAt}, nil
+	return &User{
+		ID: userID, FirstName: firstName, LastName: lastName, PasswordHash: passwordHash, Email: email,
+		SubscriptionPlan: subscriptionPlan, SubscriptionStatus: subscriptionStatus,
+		StripeCustomerID: stripeCustomerID, SubscriptionEndsAt: subscriptionEndsAt,
+		CreatedAt: createdAt, UpdatedAt: updatedAt,
+	}, nil
 }
 
 type FindUserArgs struct {
-	Email *string
+	Email            *string
+	ID               *int64
+	StripeCustomerID *string
 }
 
 func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 	var builder strings.Builder
-	builder.WriteString(`SELECT id,email,first_name, last_name, password_hash, created_at, updated_at FROM users`)
+	builder.WriteString(`SELECT id, email, first_name, last_name, password_hash, 
+		subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at,
+		created_at, updated_at FROM users`)
 	var queryArgs []interface{}
+	var whereConditions []string
 
+	argIndex := 1
 	if args.Email != nil {
-		builder.WriteString(` WHERE LOWER(email) = LOWER($1)`)
+		whereConditions = append(whereConditions, fmt.Sprintf("LOWER(email) = LOWER($%d)", argIndex))
 		queryArgs = append(queryArgs, args.Email)
+		argIndex++
+	}
+
+	if args.ID != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf("id = $%d", argIndex))
+		queryArgs = append(queryArgs, args.ID)
+		argIndex++
+	}
+
+	if args.StripeCustomerID != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf("stripe_customer_id = $%d", argIndex))
+		queryArgs = append(queryArgs, args.StripeCustomerID)
+		argIndex++
+	}
+
+	if len(whereConditions) > 0 {
+		builder.WriteString(" WHERE ")
+		builder.WriteString(strings.Join(whereConditions, " AND "))
 	}
 
 	users := []User{}
@@ -78,7 +113,9 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 
 	for rows.Next() {
 		user := User{}
-		err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
+		err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
+			&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt,
+			&user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}

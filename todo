@@ -28,29 +28,28 @@
 [x] Marketing
     [x] recover password 
     [x] Welcome email
+[x] subscription
 
-[ ] subscription
-    [ ] https://docs.stripe.com/mobile/digital-goods
-    [ ] integrate revenueCat
-    [ ] integrate Stripe
-    [ ] rate limiting
-        [ ] free user is limited to create only X wordlists with Y words
-    [ ] support paying user: limit-free account
-        [ ] monthly subscription
-        [ ] anual subscription
-        [ ] no stability.ai credits
-        [ ] no openai credits
-    [ ] Klavyio
-        [ ] due date is close
-        [ ] confirm payment 
-
-[ ] Setup sentry: mobile and backend
 [ ] Mobile UI improvements
     [ ] Splash screen
     [ ] Icon
     [ ] use <Pressabel hitSlop> to wrap icon buttons 
-    [ ] integrate with microsoft clarity
-    [ ] integrate with posthog
+    [ ] Sign Up
+    [ ] Sign In
+    [ ] Dashboard
+    [ ] Quiz
+    [ ] Wordlist CRUD
+    [ ] Fix session expiration
+    [ ] Replace expo-av with expo-audio
+
+[ ] MVP Release Checklist
+    [ ]  CI/CD pipelines (GitHub Actions → Cloud Run / Expo)
+    [ ]  Sentry for error tracking
+    [ ]  Data backup strategy for PostgreSQL
+    [ ]  Vercel-hosted page with SEO meta tags
+    [ ]  Beta-tester invitation flow
+    [ ]  Microsoft clarity integration
+    [ ]  PostHog integration
 
 # V2
 [ ] how to rollback db migrations?

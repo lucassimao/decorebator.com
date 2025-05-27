@@ -23,18 +23,20 @@ const AUTH_TOKEN_DURATION = 24 * time.Hour
 
 // jwt.StandardClaims is an embedded type to provide expiry time, issued at time, etc.
 type Claims struct {
-	FirstName   string `json:"firstName"`
-	LastName    string `json:"lastName"`
-	Environment string `json:"environment"`
+	FirstName        string                   `json:"firstName"`
+	LastName         string                   `json:"lastName"`
+	Environment      string                   `json:"environment"`
+	SubscriptionPlan model.SubscriptionPlan   `json:"subscriptionPlan"`
 	jwt.StandardClaims
 }
 
-func generateJWT(user User) (string, error) {
+func GenerateJWT(user User) (string, error) {
 
 	claims := &Claims{
-		FirstName:   user.FirstName,
-		LastName:    user.LastName,
-		Environment: os.Getenv("ENV"),
+		FirstName:        user.FirstName,
+		LastName:         user.LastName,
+		Environment:      os.Getenv("ENV"),
+		SubscriptionPlan: user.SubscriptionPlan,
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "Decorebator",
 			ExpiresAt: time.Now().Add(AUTH_TOKEN_DURATION).Unix(), // Token is valid for 24 hour
@@ -107,7 +109,7 @@ func LoginUser(email, password string) (string, error) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err == nil {
-		return generateJWT(user)
+		return GenerateJWT(user)
 	} else {
 		return "", errors.New("invalid combination of email and/or password")
 	}

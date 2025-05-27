@@ -19,6 +19,7 @@ export type UserInfo = {
   firstName: string;
   lastName: string;
   id: number;
+  subscriptionPlan?: 'free' | 'monthly' | 'annual';
 };
 
 export const SIGN_IN_ERROR =
@@ -119,6 +120,7 @@ export function getUserInfo(): UserInfo | null {
     firstName: decoded.payload?.firstName,
     lastName: decoded.payload?.lastName,
     id: +decoded.payload?.sub,
+    subscriptionPlan: decoded.payload?.subscriptionPlan || 'free',
   };
 }
 
@@ -140,4 +142,35 @@ export function getAuthorization() {
   } else {
     throw new Error("Unsupported platform: " + Platform.OS);
   }
+}
+
+export async function refreshToken(): Promise<UserInfo> {
+  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/auth/refresh";
+  const authorization = getAuthorization();
+
+  if (!authorization) {
+    throw new Error(AUTH_REQUIRED_ERROR);
+  }
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Authorization": authorization,
+    },
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to refresh token");
+  }
+
+  const data = await response.json();
+  
+  // Save the new token
+  if (data.token) {
+    saveAuthorization(data.token);
+  }
+  
+  // Return updated user info
+  return data.user as UserInfo;
 }

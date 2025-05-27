@@ -1,0 +1,138 @@
+package model
+
+import (
+	"database/sql/driver"
+	"fmt"
+	"time"
+)
+
+// SubscriptionPlan represents the subscription tier
+type SubscriptionPlan string
+
+const (
+	PlanFree    SubscriptionPlan = "free"
+	PlanMonthly SubscriptionPlan = "monthly"
+	PlanAnnual  SubscriptionPlan = "annual"
+)
+
+// Scan implements the sql.Scanner interface
+func (p *SubscriptionPlan) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		*p = SubscriptionPlan(v)
+	case []byte:
+		*p = SubscriptionPlan(v)
+	default:
+		return fmt.Errorf("cannot scan type %T into SubscriptionPlan", value)
+	}
+	return nil
+}
+
+// Value implements the driver.Valuer interface
+func (p SubscriptionPlan) Value() (driver.Value, error) {
+	return string(p), nil
+}
+
+// SubscriptionStatus represents the subscription state
+type SubscriptionStatus string
+
+const (
+	StatusActive   SubscriptionStatus = "active"
+	StatusCanceled SubscriptionStatus = "cancelled"
+	StatusPastDue  SubscriptionStatus = "past_due"
+	StatusTrialing SubscriptionStatus = "trialing"
+	StatusUnpaid   SubscriptionStatus = "unpaid"
+)
+
+// Scan implements the sql.Scanner interface
+func (s *SubscriptionStatus) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		*s = SubscriptionStatus(v)
+	case []byte:
+		*s = SubscriptionStatus(v)
+	default:
+		return fmt.Errorf("cannot scan type %T into SubscriptionStatus", value)
+	}
+	return nil
+}
+
+// Value implements the driver.Valuer interface
+func (s SubscriptionStatus) Value() (driver.Value, error) {
+	return string(s), nil
+}
+
+// Subscription represents a user's subscription
+type Subscription struct {
+	ID                   int64              `json:"id"`
+	UserID               int64              `json:"userId"`
+	StripeSubscriptionID string             `json:"stripeSubscriptionId"`
+	StripeCustomerID     string             `json:"stripeCustomerId"`
+	Plan                 SubscriptionPlan   `json:"plan"`
+	Status               SubscriptionStatus `json:"status"`
+	CurrentPeriodStart   time.Time          `json:"currentPeriodStart"`
+	CurrentPeriodEnd     time.Time          `json:"currentPeriodEnd"`
+	CancelAtPeriodEnd    bool               `json:"cancelAtPeriodEnd"`
+	CancelledAt          *time.Time         `json:"cancelledAt,omitempty"`
+	TrialEnd             *time.Time         `json:"trialEnd,omitempty"`
+	AmountCents          int                `json:"amountCents"`
+	Currency             string             `json:"currency"`
+	CreatedAt            time.Time          `json:"createdAt"`
+	UpdatedAt            time.Time          `json:"updatedAt"`
+}
+
+// SubscriptionEvent represents a Stripe webhook event
+type SubscriptionEvent struct {
+	ID             int64     `json:"id"`
+	SubscriptionID int64     `json:"subscriptionId"`
+	StripeEventID  string    `json:"stripeEventId"`
+	EventType      string    `json:"eventType"`
+	EventData      string    `json:"eventData"` // JSON string
+	ProcessedAt    time.Time `json:"processedAt"`
+}
+
+// Pricing configuration
+var SubscriptionPrices = map[SubscriptionPlan]struct {
+	AmountCents int
+	Interval    string
+}{
+	PlanMonthly: {
+		AmountCents: 1200, // $12.00
+		Interval:    "month",
+	},
+	PlanAnnual: {
+		AmountCents: 10000, // $100.00
+		Interval:    "year",
+	},
+}
+
+// Subscription limits
+const (
+	FreeWordlistLimit = 1
+	FreeWordsPerList  = 10
+)
+
+// IsActive returns true if the subscription is in a valid state
+func (s *Subscription) IsActive() bool {
+	return s.Status == StatusActive || s.Status == StatusTrialing
+}
+
+// HasAccess checks if the user has access based on subscription
+func (s *Subscription) HasAccess() bool {
+	if !s.IsActive() {
+		return false
+	}
+	
+	// Check if subscription has expired
+	if time.Now().After(s.CurrentPeriodEnd) {
+		return false
+	}
+	
+	return true
+}

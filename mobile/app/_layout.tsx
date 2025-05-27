@@ -43,6 +43,20 @@ const CombinedDefaultTheme = {
     ...MD3LightTheme.colors,
     ...LightTheme.colors,
     ...colorSchemes.lightThemeColors,
+
+       // ✅ Primary brand colors
+    primary: '#2A5D4D',
+    background: '#FFF9F1',
+    surface: '#FFFFFF',
+    text: '#1D3B29',
+
+     error: '#c60000', // Darker red for text, icon, and borders
+     onError: '#c60000',
+     errorContainer: '#C60000', // Light red-ish for container if needed
+     onErrorContainer: '#C60000',
+
+    // // ✅ Outline colors (borders)
+     outline: '#E0E0E0', // Default border color when not focused
   },
   fonts: {
      ...MD3LightTheme.fonts,
@@ -121,6 +135,13 @@ function RootLayoutNav() {
             name="dashboard/welcome"
             options={{
               headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="subscription"
+            options={{
+              headerShown: true,
+              headerTitle: "Subscription",
             }}
           />
         </Stack>

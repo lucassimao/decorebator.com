@@ -17,15 +17,16 @@ import BottonBar from "@/components/dashboard/BottonBar";
 import DeleteWordDialog from "@/components/dashboard/DeleteWordDialog";
 import EmptyDashboard from "@/components/dashboard/EmptyDashboard";
 import LoadingIndicator from "@/components/dashboard/LoadingIndicator";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import NewWordlistDialog from "@/components/dashboard/NewWordlistDialog";
+import UpgradePromptDialog from "@/components/dashboard/UpgradePromptDialog";
 import { router } from "expo-router";
-type Dialog = "new-wordlist" | "delete-word" | null;
+type Dialog = "new-wordlist" | "delete-word" | "upgrade-prompt" | null;
 
 export default function Dashboard() {
   const theme = useTheme();
-  // const navigation = useNavigation();
-  const user = usersApi.getUserInfo();
+  const navigation = useNavigation();
+  const [user, setUser] = React.useState(usersApi.getUserInfo());
 
   const [expandedWordlistId, setExpandedWordlistId] = React.useState<
     number | null
@@ -39,6 +40,23 @@ export default function Dashboard() {
 
   const clearModal = () => setModal(null);
 
+  // Refresh user session when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      const refreshUserSession = async () => {
+        try {
+          const updatedUser = await usersApi.refreshToken();
+          setUser(updatedUser);
+        } catch (error) {
+          // If refresh fails, just use the cached user info
+          console.error("Failed to refresh user session:", error);
+        }
+      };
+
+      refreshUserSession();
+    }, [])
+  );
+
   React.useEffect(() => {
     const options: React.JSX.Element[] = [];
 
@@ -49,11 +67,30 @@ export default function Dashboard() {
           icon="notebook-plus"
           size={25}
           key={"new-wordlist"}
-          onPress={() => setModal("new-wordlist")}
+          onPress={() => {
+            // Check if user has reached free plan limit
+            const wordlistCount = wordlists?.length || 0;
+            const isFreePlan = !user?.subscriptionPlan || user.subscriptionPlan === 'free';
+            
+            if (isFreePlan && wordlistCount >= 1) {
+              setModal("upgrade-prompt");
+            } else {
+              setModal("new-wordlist");
+            }
+          }}
         />,
       );
     }
 
+    options.push(
+      <IconButton
+        icon="crown"
+        size={25}
+        key={"subscription"}
+        onPress={() => router.push({ pathname: "/subscription" })}
+      />,
+    );
+    
     options.push(
       <IconButton
         icon="logout-variant"
@@ -65,13 +102,13 @@ export default function Dashboard() {
       />,
     );
 
-    // navigation.setOptions({
-    //   headerRight: () => (
-    //     <View style={{ display: "flex", flexDirection: "row" }}>{options}</View>
-    //   ),
-    //   headerLeft: null,
-    // });
-  }, [/*navigation,*/ expandedWordlistId]);
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={{ display: "flex", flexDirection: "row" }}>{options}</View>
+      ),
+      headerLeft: null,
+    });
+  }, [navigation, expandedWordlistId]);
 
   useEffect(() => {
     setModal(wordToDelete ? "delete-word" : null);
@@ -206,6 +243,12 @@ export default function Dashboard() {
       {modal == "new-wordlist" && (
         <NewWordlistDialog onDismiss={onDismissCreateWordlistDialog} />
       )}
+      {modal == "upgrade-prompt" && (
+        <UpgradePromptDialog
+          visible={true}
+          onDismiss={() => setModal(null)}
+        />
+      )}
 
       {snackBarProps && <SnackBar {...snackBarProps} />}
 
@@ -245,6 +288,9 @@ export default function Dashboard() {
           onWordAdded={onWordAdded}
           onWordlistDeleted={onWordlistDeleted}
           wordlist={currentWordlist}
+          words={words}
+          onUpgradePrompt={() => setModal("upgrade-prompt")}
+          user={user}
         />
       )}
     </View>

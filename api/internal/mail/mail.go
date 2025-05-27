@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"html/template"
 	"log/slog"
-	"os"
 	"strings"
+	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -16,15 +16,17 @@ import (
 	_ "embed"
 )
 
-var userRepository *repository.UserRepository
+// Package-level functions for backward compatibility
+// These are used by services that don't have access to MailService
 
-func init() {
+// GetUserRepositoryForMail returns a user repository for mail operations
+// This is a temporary solution to maintain backward compatibility
+func GetUserRepositoryForMail() (*repository.UserRepository, error) {
 	db, err := common.GetDBConnection()
 	if err != nil {
-		common.Logger.Error("failed to open db connection", "error", err)
-		os.Exit(1)
+		return nil, err
 	}
-	userRepository = &repository.UserRepository{Db: db}
+	return &repository.UserRepository{Db: db}, nil
 }
 
 // https://www.twilio.com/docs/sendgrid/api-reference/contacts/add-or-update-a-contact
@@ -69,8 +71,12 @@ func AddContactToList(user *model.User) {
 var resetPasswordEmailTemplate string
 
 func SendResetPasswordEmail(email string) error {
+	userRepo, err := GetUserRepositoryForMail()
+	if err != nil {
+		return fmt.Errorf("failed to get user repository: %w", err)
+	}
 
-	result, err := userRepository.Find(repository.FindUserArgs{Email: &email})
+	result, err := userRepo.Find(repository.FindUserArgs{Email: &email})
 
 	if err != nil || len(result) != 1 {
 		return fmt.Errorf("no user found")
@@ -120,12 +126,290 @@ func SendResetPasswordEmail(email string) error {
 	return nil
 }
 
+//go:embed subscription_activated.html
+var subscriptionActivatedTemplate string
+
+//go:embed subscription_renewed.html
+var subscriptionRenewedTemplate string
+
+//go:embed subscription_renewal_reminder.html
+var subscriptionRenewalReminderTemplate string
+
+//go:embed subscription_cancelled.html
+var subscriptionCancelledTemplate string
+
+//go:embed payment_failed.html
+var paymentFailedTemplate string
+
+type SubscriptionEmailData struct {
+	FirstName        string
+	PlanName         string
+	AmountCents      int
+	Currency         string
+	NextBillingDate  time.Time
+	RenewalDate      time.Time
+	CancellationDate time.Time
+	NextRetryDate    time.Time
+	SubscriptionID   string
+	PaymentError     string
+}
+
+func SendSubscriptionActivatedEmail(user *model.User, data SubscriptionEmailData) error {
+	logger := common.Logger.With("func", "SendSubscriptionActivatedEmail", "user", user.ID)
+
+	tmpl, err := template.New("email").Parse(subscriptionActivatedTemplate)
+	if err != nil {
+		logger.Error("failed to parse template", "error", err)
+		return err
+	}
+
+	fmt.Println(data)
+	// Format template data
+	templateData := map[string]string{
+		"FirstName":       user.FirstName,
+		"PlanName":        data.PlanName,
+		"Amount":          fmt.Sprintf("$%.2f", float64(data.AmountCents)/100),
+		"NextBillingDate": data.NextBillingDate.Format("January 2, 2006"),
+	}
+
+	var sb strings.Builder
+	err = tmpl.Execute(&sb, templateData)
+	if err != nil {
+		logger.Error("failed to execute template", "error", err)
+		return err
+	}
+
+	from := mail.NewEmail("Decorebator", "support@decorebator.com")
+	subject := "Welcome to Decorebator Premium! 🎉"
+	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
+	to := mail.NewEmail(fullName, user.Email)
+
+	plainTextContent := "Your Decorebator subscription is now active!"
+	htmlContent := sb.String()
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	response, err := client.Send(message)
+
+	if err != nil {
+		logger.Error("failed to send email", "error", err)
+		return err
+	}
+
+	if response.StatusCode != 202 {
+		logger.Error("failed to send email", "statusCode", response.StatusCode, "body", response.Body)
+		return fmt.Errorf("failed to send email: %v", response.Body)
+	}
+
+	logger.Info("subscription activated email sent successfully")
+	return nil
+}
+
+func SendSubscriptionRenewedEmail(user *model.User, data SubscriptionEmailData) error {
+	logger := common.Logger.With("func", "SendSubscriptionRenewedEmail", "user", user.ID)
+
+	tmpl, err := template.New("email").Parse(subscriptionRenewedTemplate)
+	if err != nil {
+		logger.Error("failed to parse template", "error", err)
+		return err
+	}
+
+	// Format template data
+	templateData := map[string]string{
+		"FirstName":       user.FirstName,
+		"PlanName":        data.PlanName,
+		"Amount":          fmt.Sprintf("$%.2f", float64(data.AmountCents)/100),
+		"NextBillingDate": data.NextBillingDate.Format("January 2, 2006"),
+	}
+
+	var sb strings.Builder
+	err = tmpl.Execute(&sb, templateData)
+	if err != nil {
+		logger.Error("failed to execute template", "error", err)
+		return err
+	}
+
+	from := mail.NewEmail("Decorebator", "support@decorebator.com")
+	subject := "Subscription Renewed Successfully ✅"
+	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
+	to := mail.NewEmail(fullName, user.Email)
+
+	plainTextContent := "Your Decorebator subscription has been renewed."
+	htmlContent := sb.String()
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	response, err := client.Send(message)
+
+	if err != nil {
+		logger.Error("failed to send email", "error", err)
+		return err
+	}
+
+	if response.StatusCode != 202 {
+		logger.Error("failed to send email", "statusCode", response.StatusCode, "body", response.Body)
+		return fmt.Errorf("failed to send email: %v", response.Body)
+	}
+
+	logger.Info("subscription renewed email sent successfully")
+	return nil
+}
+
+func SendRenewalReminderEmail(user *model.User, data SubscriptionEmailData) error {
+	logger := common.Logger.With("func", "SendRenewalReminderEmail", "user", user.ID)
+
+	tmpl, err := template.New("email").Parse(subscriptionRenewalReminderTemplate)
+	if err != nil {
+		logger.Error("failed to parse template", "error", err)
+		return err
+	}
+
+	// Format template data
+	templateData := map[string]string{
+		"FirstName":   user.FirstName,
+		"PlanName":    data.PlanName,
+		"Amount":      fmt.Sprintf("$%.2f", float64(data.AmountCents)/100),
+		"RenewalDate": data.NextBillingDate.Format("January 2, 2006"),
+	}
+
+	var sb strings.Builder
+	err = tmpl.Execute(&sb, templateData)
+	if err != nil {
+		logger.Error("failed to execute template", "error", err)
+		return err
+	}
+
+	from := mail.NewEmail("Decorebator", "support@decorebator.com")
+	subject := "Subscription Renewal Reminder ⏰"
+	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
+	to := mail.NewEmail(fullName, user.Email)
+
+	plainTextContent := fmt.Sprintf("Your Decorebator subscription will renew on %s", templateData["RenewalDate"])
+	htmlContent := sb.String()
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	response, err := client.Send(message)
+
+	if err != nil {
+		logger.Error("failed to send email", "error", err)
+		return err
+	}
+
+	if response.StatusCode != 202 {
+		logger.Error("failed to send email", "statusCode", response.StatusCode, "body", response.Body)
+		return fmt.Errorf("failed to send email: %v", response.Body)
+	}
+
+	logger.Info("subscription renewal reminder email sent successfully")
+	return nil
+}
+
+func SendSubscriptionCancelledEmail(user *model.User, data SubscriptionEmailData) error {
+	logger := common.Logger.With("func", "SendSubscriptionCancelledEmail", "user", user.ID)
+
+	tmpl, err := template.New("email").Parse(subscriptionCancelledTemplate)
+	if err != nil {
+		logger.Error("failed to parse template", "error", err)
+		return err
+	}
+
+	// Format template data
+	templateData := map[string]string{
+		"FirstName":   user.FirstName,
+		"PlanName":    data.PlanName,
+		"AccessUntil": data.CancellationDate.Format("January 2, 2006"),
+	}
+
+	var sb strings.Builder
+	err = tmpl.Execute(&sb, templateData)
+	if err != nil {
+		logger.Error("failed to execute template", "error", err)
+		return err
+	}
+
+	from := mail.NewEmail("Decorebator", "support@decorebator.com")
+	subject := "Subscription Cancelled"
+	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
+	to := mail.NewEmail(fullName, user.Email)
+
+	plainTextContent := fmt.Sprintf("Your subscription has been cancelled. You'll have access until %s", templateData["AccessUntil"])
+	htmlContent := sb.String()
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	response, err := client.Send(message)
+
+	if err != nil {
+		logger.Error("failed to send email", "error", err)
+		return err
+	}
+
+	if response.StatusCode != 202 {
+		logger.Error("failed to send email", "statusCode", response.StatusCode, "body", response.Body)
+		return fmt.Errorf("failed to send email: %v", response.Body)
+	}
+
+	logger.Info("subscription cancelled email sent successfully")
+	return nil
+}
+
+func SendPaymentFailedEmail(user *model.User, data SubscriptionEmailData) error {
+	logger := common.Logger.With("func", "SendPaymentFailedEmail", "user", user.ID)
+
+	tmpl, err := template.New("email").Parse(paymentFailedTemplate)
+	if err != nil {
+		logger.Error("failed to parse template", "error", err)
+		return err
+	}
+
+	// Format template data
+	templateData := map[string]string{
+		"FirstName":      user.FirstName,
+		"PlanName":       data.PlanName,
+		"Amount":         fmt.Sprintf("$%.2f", float64(data.AmountCents)/100),
+		"AttemptDate":    data.NextRetryDate.Format("January 2, 2006"),
+		"GracePeriodEnd": data.NextRetryDate.AddDate(0, 0, 7).Format("January 2, 2006"), // 7 days grace period
+	}
+
+	var sb strings.Builder
+	err = tmpl.Execute(&sb, templateData)
+	if err != nil {
+		logger.Error("failed to execute template", "error", err)
+		return err
+	}
+
+	from := mail.NewEmail("Decorebator", "support@decorebator.com")
+	subject := "Payment Failed - Action Required ⚠️"
+	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
+	to := mail.NewEmail(fullName, user.Email)
+
+	plainTextContent := "Your payment failed. Please update your payment method to avoid service interruption."
+	htmlContent := sb.String()
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	response, err := client.Send(message)
+
+	if err != nil {
+		logger.Error("failed to send email", "error", err)
+		return err
+	}
+
+	if response.StatusCode != 202 {
+		logger.Error("failed to send email", "statusCode", response.StatusCode, "body", response.Body)
+		return fmt.Errorf("failed to send email: %v", response.Body)
+	}
+
+	logger.Info("payment failed email sent successfully")
+	return nil
+}
+
 //go:embed welcome.html
 var welcomeEmailTemplate string
 
 func SendWelcomeEmail(email string) error {
+	userRepo, err := GetUserRepositoryForMail()
+	if err != nil {
+		return fmt.Errorf("failed to get user repository: %w", err)
+	}
 
-	result, err := userRepository.Find(repository.FindUserArgs{Email: &email})
+	result, err := userRepo.Find(repository.FindUserArgs{Email: &email})
 
 	if err != nil || len(result) != 1 {
 		return fmt.Errorf("no user found")
