@@ -46,7 +46,7 @@ type FindWordlistArgs struct {
 
 func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, error) {
 	var builder strings.Builder
-	builder.WriteString(`SELECT id, name, description, user_id, created_at, updated_at, language_code FROM wordlists`)
+	builder.WriteString(`SELECT id, name, description, user_id, created_at, updated_at, language_code, words_count FROM wordlists`)
 	var queryArgs []interface{}
 
 	if args.Id != nil {
@@ -71,7 +71,7 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 
 	for rows.Next() {
 		w := Wordlist{}
-		err := rows.Scan(&w.ID, &w.Name, &w.Description, &w.UserID, &w.CreatedAt, &w.UpdatedAt, &w.LanguageCode)
+		err := rows.Scan(&w.ID, &w.Name, &w.Description, &w.UserID, &w.CreatedAt, &w.UpdatedAt, &w.LanguageCode, &w.WordsCount)
 		if err != nil {
 			return nil, err
 		}
@@ -103,4 +103,26 @@ func (repository *WordlistRepository) Update(wordlist *Wordlist) (int64, error) 
 	}
 
 	return result.RowsAffected(), nil
+}
+
+func (repository *WordlistRepository) updateWordCount(wordlistId int64, count int, tx *pgx.Tx) error {
+	query := `UPDATE wordlists SET words_count = words_count + $1, updated_at=NOW() WHERE ID=$2`
+
+	var err error
+
+	if tx != nil {
+		_, err = (*tx).Exec(context.Background(), query, count, wordlistId)
+	} else {
+		_, err = repository.Db.Exec(context.Background(), query, count, wordlistId)
+	}
+
+	return err
+}
+
+func (repository *WordlistRepository) IncWordCount(wordlistId int64, tx *pgx.Tx) error {
+	return repository.updateWordCount(wordlistId, 1, tx)
+}
+
+func (repository *WordlistRepository) DecWordCount(wordlistId int64, tx *pgx.Tx) error {
+	return repository.updateWordCount(wordlistId, -1, tx)
 }

@@ -19,9 +19,10 @@ import { useRouter } from "expo-router";
 type WordlistItemProps = { 
   item: Wordlist;
   onQuizStart?: (wordlist: Wordlist) => void;
+  onPressed?: () => void;
 };
 
-const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart }) => {
+const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed}) => {
   const queryClient = useQueryClient();
   const [showMenu, setShowMenu] = useState(false);
   const router = useRouter()
@@ -42,9 +43,6 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart }) => {
     },
   });
 
-  const handleWordlistPress = () => {
-        router.push(`/quiz/${item.id}`);
-  };
 
   const handleDelete = () => {
     setShowMenu(false);
@@ -99,7 +97,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart }) => {
     <>
       <TouchableOpacity
         style={styles.wordlistCard}
-        onPress={handleWordlistPress}
+        onPress={onPressed}
         activeOpacity={0.7}
         onLongPress={() => setShowMenu(true)}
       >

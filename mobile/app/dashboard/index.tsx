@@ -1,9 +1,9 @@
-
 import * as usersApi from "@/api/users";
 import * as wordlistsApi from "@/api/wordlists";
 import { Wordlist } from "@/api/wordlists";
 import { CreateWordlistModal } from "@/components/dashboard/CreateWordlistModal";
 import DashboardStats from "@/components/dashboard/Stats";
+import { WordlistDetailModal } from "@/components/dashboard/WordlistDetailModal";
 import Wordlistitem from "@/components/dashboard/WordlistItem";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
@@ -26,16 +26,16 @@ import {
 
 const { width, height } = Dimensions.get("window");
 
-
-
-interface DashboardProps {
-}
+interface DashboardProps {}
 
 const Dashboard: React.FC<DashboardProps> = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [user, setUser] = React.useState(usersApi.getUserInfo());
-  const router = useRouter()
+  const [selectedWordlist, setSelectedWordlist] =
+    React.useState<Wordlist | null>(null);
+
+  const router = useRouter();
 
   const {
     data: wordlists,
@@ -62,8 +62,6 @@ const Dashboard: React.FC<DashboardProps> = () => {
     setRefreshing(false);
   };
 
-
-
   const handleSettingsPress = () => {
     // navigation.navigate('Settings');
   };
@@ -89,7 +87,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
     }, []),
   );
 
-  const renderWordlistItem = ({ item }: { item: any }) => <Wordlistitem item={item}/>
+  const renderWordlistItem = ({ item }: { item: Wordlist }) => (
+    <Wordlistitem item={item} onPressed={() => setSelectedWordlist(item)} />
+  );
+  const hideWordlistDetailModal = () => setSelectedWordlist(null);
 
   const renderHeader = () => (
     <>
@@ -121,7 +122,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
       </View>
 
       {/* Stats */}
-     <DashboardStats />
+      <DashboardStats />
 
       {/* Section Header */}
       <View style={styles.sectionHeader}>
@@ -199,6 +200,14 @@ const Dashboard: React.FC<DashboardProps> = () => {
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => setShowCreateModal(false)}
       />
+
+      {selectedWordlist && (
+        <WordlistDetailModal
+          visible
+          onClose={hideWordlistDetailModal}
+          wordlist={selectedWordlist}
+        />
+      )}
     </>
   );
 };

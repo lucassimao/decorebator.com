@@ -1,6 +1,6 @@
-import * as wordlistsApi from "@/api/wordlists";
 import * as errorReportingApi from "@/api/errorReporting";
 import { ErrorType } from "@/api/errorReporting";
+import * as wordlistsApi from "@/api/wordlists";
 
 import Snackbar, { SnackBarProps } from "@/components/SnackBar";
 import Quiz from "@/components/quiz/Quiz";
@@ -8,24 +8,18 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import * as React from "react";
 import {
-  findNodeHandle,
-  LayoutChangeEvent,
   StyleSheet,
   Text,
-  UIManager,
-  View,
+  View
 } from "react-native";
 import {
   ActivityIndicator,
-  Appbar,
-  Button,
-  Divider,
   IconButton,
   Menu,
   Surface,
   Tooltip,
   TouchableRipple,
-  useTheme,
+  useTheme
 } from "react-native-paper";
 
 export default function QuizScreen() {
@@ -72,25 +66,24 @@ export default function QuizScreen() {
     const options: React.JSX.Element[] = [];
 
     options.push(
-      <Tooltip title="Report error">
+      <Tooltip title="Report error"  key={"reportError"}>
         <IconButton
           ref={menuAnchorRef}
           icon={"bug"}
           iconColor={theme.colors.primary}
           size={25}
-          key={"reportError"}
           onPress={isMenuVisible ? closeMenu : openMenu}
         />
       </Tooltip>,
     );
 
     options.push(
-      <Tooltip title="Fast mode">
+      <Tooltip title="Fast mode" key={"fastMode"}>
         <IconButton
           icon={"clock-fast"}
           iconColor={isFastMode ? theme.colors.primary : "#ccc"}
           size={25}
-          key={"fastMode"}
+          
           onPress={() => setFastMode((isFastMode) => !isFastMode)}
         />
       </Tooltip>,

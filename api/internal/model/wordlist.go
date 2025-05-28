@@ -16,6 +16,7 @@ type Wordlist struct {
 	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
 	UserID       int64              `json:"userId"`
 	LanguageCode string             `json:"languageCode"`
+	WordsCount   int                `json:"wordsCount"`
 }
 
 func (w Wordlist) MarshalJSON() ([]byte, error) {
@@ -32,13 +33,14 @@ func (w Wordlist) MarshalJSON() ([]byte, error) {
 
 	return []byte(fmt.Sprintf(`{
         "id": %d,
+        "wordsCount": %d,
         "name": %q,
         "description": %q,
         "languageCode": %q,
         "createdAt": %q,
         "updatedAt": %q,
         "userId": %d
-    }`, w.ID, w.Name, w.Description, w.LanguageCode, createdAt, updatedAt, w.UserID)), nil
+    }`, w.ID, w.WordsCount, w.Name, w.Description, w.LanguageCode, createdAt, updatedAt, w.UserID)), nil
 }
 
 func (w *Wordlist) UnmarshalJSON(data []byte) error {

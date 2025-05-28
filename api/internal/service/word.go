@@ -60,6 +60,9 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		return nil, err
 	}
 
+	wordlistRepository := repo.WordlistRepository{Db: wordRepository.Db}
+	wordlistRepository.IncWordCount(dto.WordlistID, &tx)
+
 	// check if there are definitions for this word already
 	definitions, _ := findDefinitionsByName(word.Name)
 
@@ -95,15 +98,23 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 }
 
 func DeleteWord(id, userId int64) (int64, error) {
+	word, err := GetWordById(id)
+	if err != nil {
+		return 0, err
+	}
+
+	if word == nil {
+		return 0, common.NotFoundError{ID: id, Entity: "Word"}
+	}
+
 	count, err := wordRepository.Delete(userId, id)
 	if err != nil {
 		common.Logger.Error("failed to delete word", "error", err)
 		return 0, errors.New("failed to delete word")
 	}
 
-	if count == 0 {
-		return 0, common.NotFoundError{ID: id, Entity: "Word"}
-	}
+	wordlistRepository := repo.WordlistRepository{Db: wordRepository.Db}
+	wordlistRepository.DecWordCount(word.WordlistID, nil)
 
 	return count, nil
 }

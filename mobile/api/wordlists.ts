@@ -73,7 +73,7 @@ export async function addWord(dto: CreateWordDTO): Promise<void> {
   await callAPI("POST", endpoint, JSON.stringify(dto));
 }
 
-export async function deleteWord(word: Word): Promise<void> {
+export async function deleteWord(word: Pick<Word,'id'|'wordlistId'>): Promise<void> {
   const { wordlistId, id: wordId } = word;
 
   const endpoint =
