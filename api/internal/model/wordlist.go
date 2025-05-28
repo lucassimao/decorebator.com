@@ -9,12 +9,13 @@ import (
 )
 
 type Wordlist struct {
-	ID          int64              `json:"id"`
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
-	UserID      int64              `json:"userId"`
+	ID           int64              `json:"id"`
+	Name         string             `json:"name"`
+	Description  string             `json:"description"`
+	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
+	UserID       int64              `json:"userId"`
+	LanguageCode string             `json:"languageCode"`
 }
 
 func (w Wordlist) MarshalJSON() ([]byte, error) {
@@ -22,21 +23,22 @@ func (w Wordlist) MarshalJSON() ([]byte, error) {
 	updatedAt := "null"
 
 	if w.CreatedAt.Status == pgtype.Present {
-		createdAt = `"` + w.CreatedAt.Time.UTC().Format(time.RFC3339) + `"`
+		createdAt = w.CreatedAt.Time.UTC().Format(time.RFC3339)
 	}
 
 	if w.UpdatedAt.Status == pgtype.Present {
-		updatedAt = `"` + w.UpdatedAt.Time.UTC().Format(time.RFC3339) + `"`
+		updatedAt = w.UpdatedAt.Time.UTC().Format(time.RFC3339)
 	}
 
 	return []byte(fmt.Sprintf(`{
         "id": %d,
-        "name": "%s",
-        "description": "%s",
-        "createdAt": %s,
-        "updatedAt": %s,
+        "name": %q,
+        "description": %q,
+        "languageCode": %q,
+        "createdAt": %q,
+        "updatedAt": %q,
         "userId": %d
-    }`, w.ID, w.Name, w.Description, createdAt, updatedAt, w.UserID)), nil
+    }`, w.ID, w.Name, w.Description, w.LanguageCode, createdAt, updatedAt, w.UserID)), nil
 }
 
 func (w *Wordlist) UnmarshalJSON(data []byte) error {

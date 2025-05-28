@@ -2,25 +2,12 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { Link, router } from "expo-router";
 
-import { useEffect, useState } from "react";
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
-import {
-  Button,
-  IconButton,
-  MD3Colors,
-  PaperProvider,
-} from "react-native-paper";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { PaperProvider } from "react-native-paper";
 
 import {
-  NavigationContainer,
   DarkTheme as NavigationDarkTheme,
   DefaultTheme as NavigationDefaultTheme,
 } from "@react-navigation/native";
@@ -34,7 +21,6 @@ const { LightTheme, DarkTheme } = adaptNavigationTheme({
 });
 
 import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
-import NewWordlistDialog from "@/components/dashboard/NewWordlistDialog";
 
 const CombinedDefaultTheme = {
   ...MD3LightTheme,
@@ -44,24 +30,24 @@ const CombinedDefaultTheme = {
     ...LightTheme.colors,
     ...colorSchemes.lightThemeColors,
 
-       // ✅ Primary brand colors
-    primary: '#2A5D4D',
-    background: '#FFF9F1',
-    surface: '#FFFFFF',
-    text: '#1D3B29',
+    // ✅ Primary brand colors
+    primary: "#2A5D4D",
+    background: "#FFF9F1",
+    surface: "#FFFFFF",
+    text: "#1D3B29",
 
-     error: '#c60000', // Darker red for text, icon, and borders
-     onError: '#c60000',
-     errorContainer: '#C60000', // Light red-ish for container if needed
-     onErrorContainer: '#C60000',
+    error: "#c60000", // Darker red for text, icon, and borders
+    onError: "#c60000",
+    errorContainer: "#C60000", // Light red-ish for container if needed
+    onErrorContainer: "#C60000",
 
     // // ✅ Outline colors (borders)
-     outline: '#E0E0E0', // Default border color when not focused
+    outline: "#E0E0E0", // Default border color when not focused
   },
   fonts: {
-     ...MD3LightTheme.fonts,
+    ...MD3LightTheme.fonts,
     ...LightTheme.fonts,
-  }
+  },
 };
 const CombinedDarkTheme = {
   ...MD3DarkTheme,
@@ -72,9 +58,9 @@ const CombinedDarkTheme = {
     ...colorSchemes.darkThemeColors,
   },
   fonts: {
-     ...MD3DarkTheme.fonts,
+    ...MD3DarkTheme.fonts,
     ...DarkTheme.fonts,
-  }
+  },
 };
 
 export {
@@ -127,7 +113,7 @@ function RootLayoutNav() {
           <Stack.Screen
             name="dashboard/index"
             options={{
-              headerShown: true,
+              headerShown: false,
               headerTitle: "Dashboard",
             }}
           />

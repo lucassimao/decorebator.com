@@ -1,0 +1,2 @@
+ALTER TABLE wordlists
+ADD COLUMN language_code VARCHAR NOT NULL DEFAULT 'en';

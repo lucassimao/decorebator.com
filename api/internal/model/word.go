@@ -23,11 +23,11 @@ func (w Word) MarshalJSON() ([]byte, error) {
 	updatedAt := "null"
 
 	if w.CreatedAt.Status == pgtype.Present {
-		createdAt = `"` + w.CreatedAt.Time.UTC().Format(time.RFC3339) + `"`
+		createdAt = w.CreatedAt.Time.UTC().Format(time.RFC3339)
 	}
 
 	if w.UpdatedAt.Status == pgtype.Present {
-		updatedAt = `"` + w.UpdatedAt.Time.UTC().Format(time.RFC3339) + `"`
+		updatedAt = w.UpdatedAt.Time.UTC().Format(time.RFC3339)
 	}
 
 	audioURL := ""
@@ -37,10 +37,10 @@ func (w Word) MarshalJSON() ([]byte, error) {
 
 	return []byte(fmt.Sprintf(`{
         "id": %d,
-        "name": "%s",
-        "createdAt": %s,
-        "audioURL": "%s",
-        "updatedAt": %s,
+        "name": %q,
+        "createdAt": %q,
+        "audioURL": %q,
+        "updatedAt": %q,
         "wordlistId": %d,
         "userId": %d
     }`, w.ID, w.Name, createdAt, audioURL, updatedAt, w.WordlistID, w.UserID)), nil

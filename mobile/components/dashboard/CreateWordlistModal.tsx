@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,51 +13,85 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CreateWordlistDTO, Wordlist } from "@/api/wordlists";
+import { useForm, Controller } from "react-hook-form";
+import { CreateWordlistDTO } from "@/api/wordlists";
 import * as wordlistsApi from "@/api/wordlists";
-
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-type Language = { code: string; name: string; flag: string };
+type Language = {
+  code: string;
+  name: string;
+  flag: string;
+};
 
-// Top 10 languages for language learning
-const LANGUAGES: Language[] = [
+export const LANGUAGES: Language[] = [
   { code: "en", name: "English", flag: "🇬🇧" },
   { code: "es", name: "Spanish", flag: "🇪🇸" },
   { code: "fr", name: "French", flag: "🇫🇷" },
   { code: "de", name: "German", flag: "🇩🇪" },
   { code: "it", name: "Italian", flag: "🇮🇹" },
   { code: "pt", name: "Portuguese", flag: "🇵🇹" },
-  { code: "zh", name: "Chinese", flag: "🇨🇳" },
-  { code: "ja", name: "Japanese", flag: "🇯🇵" },
-  { code: "ko", name: "Korean", flag: "🇰🇷" },
-  { code: "ar", name: "Arabic", flag: "🇸🇦" },
 ];
 
-type CreateWordlistModalProps = {
+interface CreateWordlistModalProps {
   visible: boolean;
   onClose: () => void;
-  onSuccess: (wordlistName: string) => void;
-};
+  onSuccess?: (wordlist: wordlistsApi.Wordlist) => void;
+  onError?: (error: Error) => void;
+}
 
-const CreateWordlistModal = ({
+export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   visible,
   onClose,
   onSuccess,
-}: CreateWordlistModalProps) => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(
-    null,
-  );
-  const [errors, setErrors] = useState<Record<string, string|null>>({});
-
+  onError
+}) => {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const queryClient = useQueryClient();
+
+  const mutation = useMutation<
+    wordlistsApi.Wordlist,
+    Error,
+    wordlistsApi.CreateWordlistDTO
+  >({
+    mutationFn: (dto) => wordlistsApi.addWordlist(dto),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["wordlists"] });
+
+      Alert.alert(
+        "Success!",
+        `Your wordlist "${data.name}" has been created.`,
+        [
+          {
+            text: "OK",
+            onPress: () => onSuccess?.(data),
+          },
+        ],
+      );
+    },
+    onError: (error) => {
+      console.log(error);
+      onError?.(error)
+    },
+  });
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<CreateWordlistDTO>({
+    defaultValues: {
+      name: "",
+      description: "",
+      languageCode: undefined,
+    },
+  });
 
   // Animation effect
   useEffect(() => {
@@ -86,61 +120,13 @@ const CreateWordlistModal = ({
           duration: 300,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start(() => {
+        reset(); // Reset form when modal is fully closed
+      });
     }
   }, [visible]);
 
-  const { mutate: createWordlist, isPending: isCreateWordlistPending } = useMutation<
-    void,
-    Error,
-    CreateWordlistDTO
-  >({
-    mutationFn: (dto) => wordlistsApi.addWordlist(dto),
-    onError: (error) => {
-        setErrors({ submit: "Failed to create wordlist. Please try again." });
-        console.error(error);
-    },
-    onSuccess: (_, dto) => {
-      queryClient.invalidateQueries({queryKey:["wordlists"]});
-      onSuccess?.(dto.name);
-      handleClose();
-    },
-  });
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!name.trim()) {
-      newErrors.name = "Wordlist name is required";
-    } else if (name.trim().length < 3) {
-      newErrors.name = "Name must be at least 3 characters";
-    }
-
-    if (!selectedLanguage) {
-      newErrors.language = "Please select a language";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (validateForm()) {
-      createWordlist({
-        name: name.trim(),
-        description: description.trim(),
-        language: selectedLanguage!.code,
-      });
-    }
-  };
-
-  const handleClose = () => {
-    setName("");
-    setDescription("");
-    setSelectedLanguage(null);
-    setErrors({});
-    onClose();
-  };
+  const handleFormSubmit = (data: CreateWordlistDTO) => mutation.mutateAsync(data);
 
   if (!visible) return null;
 
@@ -149,9 +135,9 @@ const CreateWordlistModal = ({
       transparent
       visible={visible}
       animationType="none"
-      onRequestClose={handleClose}
+      onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={handleClose}>
+      <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View
           style={[
             styles.backdrop,
@@ -178,7 +164,7 @@ const CreateWordlistModal = ({
           <View style={styles.header}>
             <View style={styles.handle} />
             <Text style={styles.title}>Create New Wordlist</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Ionicons name="close" size={24} color="#636E72" />
             </TouchableOpacity>
           </View>
@@ -189,38 +175,69 @@ const CreateWordlistModal = ({
               <Text style={styles.label}>
                 Wordlist Name <Text style={styles.required}>*</Text>
               </Text>
-              <TextInput
-                style={[styles.input, errors.name && styles.inputError]}
-                placeholder="e.g., Travel Essentials"
-                placeholderTextColor="#B2BEC3"
-                value={name}
-                onChangeText={(text) => {
-                  setName(text);
-                  if (errors.name) {
-                    setErrors({ ...errors, name: null });
-                  }
+              <Controller
+                control={control}
+                name="name"
+                rules={{
+                  required: "Wordlist name is required",
+                  minLength: {
+                    value: 3,
+                    message: "Name must be at least 3 characters",
+                  },
+                  maxLength: {
+                    value: 50,
+                    message: "Name must be less than 50 characters",
+                  },
                 }}
-                autoCapitalize="words"
-                maxLength={50}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, errors.name && styles.inputError]}
+                    placeholder="e.g., Travel Essentials"
+                    placeholderTextColor="#B2BEC3"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="words"
+                    maxLength={50}
+                  />
+                )}
               />
               {errors.name && (
-                <Text style={styles.errorText}>{errors.name}</Text>
+                <Text style={styles.errorText}>{errors.name.message}</Text>
               )}
             </View>
 
             {/* Description Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Description (Optional)</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Add a description for your wordlist"
-                placeholderTextColor="#B2BEC3"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                numberOfLines={3}
-                maxLength={200}
+              <Controller
+                control={control}
+                name="description"
+                rules={{
+                  maxLength: {
+                    value: 200,
+                    message: "Description must be less than 200 characters",
+                  },
+                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Add a description for your wordlist"
+                    placeholderTextColor="#B2BEC3"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    multiline
+                    numberOfLines={3}
+                    maxLength={200}
+                  />
+                )}
               />
+              {errors.description && (
+                <Text style={styles.errorText}>
+                  {errors.description.message}
+                </Text>
+              )}
             </View>
 
             {/* Language Selection */}
@@ -228,48 +245,54 @@ const CreateWordlistModal = ({
               <Text style={styles.label}>
                 Language <Text style={styles.required}>*</Text>
               </Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.languageScroll}
-              >
-                {LANGUAGES.map((lang) => (
-                  <TouchableOpacity
-                    key={lang.code}
-                    style={[
-                      styles.languageItem,
-                      selectedLanguage?.code === lang.code &&
-                        styles.languageItemSelected,
-                    ]}
-                    onPress={() => {
-                      setSelectedLanguage(lang);
-                      if (errors.language) {
-                        setErrors({ ...errors, language: null });
-                      }
-                    }}
+              <Controller
+                control={control}
+                name="languageCode"
+                rules={{
+                  required: "Please select a language",
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.languageScroll}
                   >
-                    <Text style={styles.languageFlag}>{lang.flag}</Text>
-                    <Text
-                      style={[
-                        styles.languageName,
-                        selectedLanguage?.code === lang.code &&
-                          styles.languageNameSelected,
-                      ]}
-                    >
-                      {lang.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-              {errors.language && (
-                <Text style={styles.errorText}>{errors.language}</Text>
+                    {LANGUAGES.map((lang) => (
+                      <TouchableOpacity
+                        key={lang.code}
+                        style={[
+                          styles.languageItem,
+                          value === lang.code && styles.languageItemSelected,
+                        ]}
+                        onPress={() => {
+                          onChange(lang.code)
+                        }}
+                      >
+                        <Text style={styles.languageFlag}>{lang.flag}</Text>
+                        <Text
+                          style={[
+                            styles.languageName,
+                            value === lang.code && styles.languageNameSelected,
+                          ]}
+                        >
+                          {lang.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+              />
+              {errors.languageCode && (
+                <Text style={styles.errorText}>{errors.languageCode.message}</Text>
               )}
             </View>
 
             {/* Submit Error */}
-            {errors.submit && (
+            {mutation.error && (
               <View style={styles.submitError}>
-                <Text style={styles.errorText}>{errors.submit}</Text>
+                <Text style={styles.errorText}>
+                  Failed to create wordlist. Please try again.
+                </Text>
               </View>
             )}
           </ScrollView>
@@ -278,7 +301,7 @@ const CreateWordlistModal = ({
           <View style={styles.actions}>
             <TouchableOpacity
               style={[styles.button, styles.cancelButton]}
-              onPress={handleClose}
+              onPress={onClose}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
@@ -287,12 +310,12 @@ const CreateWordlistModal = ({
               style={[
                 styles.button,
                 styles.createButton,
-                isCreateWordlistPending && styles.buttonDisabled,
+                mutation.isPending && styles.buttonDisabled,
               ]}
-              onPress={handleSubmit}
-              disabled={isCreateWordlistPending}
+              onPress={handleSubmit(handleFormSubmit)}
+              disabled={mutation.isPending}
             >
-              {isCreateWordlistPending ? (
+              {mutation.isPending ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <>
@@ -486,5 +509,3 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 });
-
-export default CreateWordlistModal;

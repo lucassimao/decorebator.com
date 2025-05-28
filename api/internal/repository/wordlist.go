@@ -17,10 +17,10 @@ type WordlistRepository struct {
 
 type Wordlist = model.Wordlist
 
-func (repository *WordlistRepository) Save(name, description string, userID int64) (*Wordlist, error) {
+func (repository *WordlistRepository) Save(name, description, languageCode string, userID int64) (*Wordlist, error) {
 	query := `
-		INSERT INTO wordlists (name, description, user_id)
-		VALUES ($1, $2, $3)
+		INSERT INTO wordlists (name, description, user_id,language_code)
+		VALUES ($1, $2, $3,$4)
 		RETURNING id, created_at, updated_at`
 
 	var wordlistID int64
@@ -28,7 +28,7 @@ func (repository *WordlistRepository) Save(name, description string, userID int6
 	var updatedAt pgtype.Timestamptz
 
 	err := repository.Db.
-		QueryRow(context.Background(), query, name, description, userID).
+		QueryRow(context.Background(), query, name, description, userID, languageCode).
 		Scan(&wordlistID, &createdAt, &updatedAt)
 
 	if err != nil {
@@ -46,7 +46,7 @@ type FindWordlistArgs struct {
 
 func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, error) {
 	var builder strings.Builder
-	builder.WriteString(`SELECT id, name, description, user_id, created_at, updated_at FROM wordlists`)
+	builder.WriteString(`SELECT id, name, description, user_id, created_at, updated_at, language_code FROM wordlists`)
 	var queryArgs []interface{}
 
 	if args.Id != nil {
@@ -71,7 +71,7 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 
 	for rows.Next() {
 		w := Wordlist{}
-		err := rows.Scan(&w.ID, &w.Name, &w.Description, &w.UserID, &w.CreatedAt, &w.UpdatedAt)
+		err := rows.Scan(&w.ID, &w.Name, &w.Description, &w.UserID, &w.CreatedAt, &w.UpdatedAt, &w.LanguageCode)
 		if err != nil {
 			return nil, err
 		}
@@ -95,8 +95,8 @@ func (repository *WordlistRepository) Delete(wordlistID, userId int64) (int64, e
 }
 
 func (repository *WordlistRepository) Update(wordlist *Wordlist) (int64, error) {
-	query := `UPDATE wordlists SET name=$1, description=$2, updated_at=NOW() WHERE user_id=$3 AND ID=$4`
-	result, err := repository.Db.Exec(context.Background(), query, wordlist.Name, wordlist.Description, wordlist.UserID, wordlist.ID)
+	query := `UPDATE wordlists SET name=$1, description=$2,language_code=$3 updated_at=NOW() WHERE user_id=$4 AND ID=$5`
+	result, err := repository.Db.Exec(context.Background(), query, wordlist.Name, wordlist.Description, wordlist.LanguageCode, wordlist.UserID, wordlist.ID)
 
 	if err != nil {
 		return 0, err

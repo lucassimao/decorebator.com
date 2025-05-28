@@ -18,15 +18,15 @@ setup: ## Install all dev and build dependencies
 
 migrate-up: ## Run database migrations
 	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable'); \
-	migrate -database $$POSTGRESQL_URL -path migrations up
+	migrate -database $$POSTGRESQL_URL -path cmd/migrate/migrations up
 
 migrate-down: ## Rollback the last database migration executed
 	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable'); \
-	migrate -database $$POSTGRESQL_URL -path migrations down 1
+	migrate -database $$POSTGRESQL_URL -path cmd/migrate/migrations down 1
 
 migrate-drop: ## Drop everything
 	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable'); \
-	migrate -database $$POSTGRESQL_URL -path migrations drop
+	migrate -database $$POSTGRESQL_URL -path cmd/migrate/migrations drop
 
 test: ## run containerized integration tests
 	rm -rf coverage.out coverage.html &&\

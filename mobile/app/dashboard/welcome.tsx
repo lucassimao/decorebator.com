@@ -1,22 +1,22 @@
+import * as usersApi from "@/api/users";
+import { CreateWordlistModal } from "@/components/dashboard/CreateWordlistModal";
+import DashboardStats from "@/components/dashboard/Stats";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
+  Alert,
+  Dimensions,
   Image,
   ImageBackground,
-  Dimensions,
+  SafeAreaView,
   ScrollView,
-  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { Avatar } from "react-native-paper";
-import * as usersApi from "@/api/users";
-import { router } from "expo-router";
-import { Wordlist } from "@/api/wordlists";
-import CreateWordlistModal from "@/components/dashboard/CreateWordlistModal";
 
 const { width, height } = Dimensions.get("window");
 
@@ -28,21 +28,11 @@ const EmptyDashboard = () => {
     if (!user) router.push("/signin");
   }, [user]);
 
-  const handleCreateSuccess = (wordlistName: string) => {
-    // Handle successful creation
-    Alert.alert(
-      "Success!",
-      `Your wordlist "${wordlistName}" has been created.`,
-      [
-        {
-          text: "OK",
-          onPress: () => {
-            router.push("/dashboard");
-          },
-        },
-      ],
-    );
-  };
+  const handleCreateSuccess = () => {
+    setShowCreateModal(false)
+    router.dismissAll();
+    router.replace("/dashboard")
+  }
 
   return (
     <ImageBackground
@@ -82,20 +72,7 @@ const EmptyDashboard = () => {
             </View>
 
             {/* Stats */}
-            <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Total Words</Text>
-                <Text style={styles.statValue}>0</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Wordlists</Text>
-                <Text style={styles.statValue}>0</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Words Learned</Text>
-                <Text style={styles.statValue}>0</Text>
-              </View>
-            </View>
+            <DashboardStats/>
           </View>
 
           {/* Illustration Image */}
@@ -132,7 +109,6 @@ const EmptyDashboard = () => {
         </ScrollView>
       </SafeAreaView>
 
-      {/* Create Wordlist Modal */}
       <CreateWordlistModal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}

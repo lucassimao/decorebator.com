@@ -1,43 +1,76 @@
+
 import * as usersApi from "@/api/users";
 import * as wordlistsApi from "@/api/wordlists";
-
+import { Wordlist } from "@/api/wordlists";
+import { CreateWordlistModal } from "@/components/dashboard/CreateWordlistModal";
+import DashboardStats from "@/components/dashboard/Stats";
+import Wordlistitem from "@/components/dashboard/WordlistItem";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
-  IconButton,
-  List,
-  TouchableRipple,
-  useTheme,
-} from "react-native-paper";
-import SnackBar, { SnackBarProps } from "@/components/SnackBar";
-import BottonBar from "@/components/dashboard/BottonBar";
-import DeleteWordDialog from "@/components/dashboard/DeleteWordDialog";
-import LoadingIndicator from "@/components/dashboard/LoadingIndicator";
-import UpgradePromptDialog from "@/components/dashboard/UpgradePromptDialog";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { isLoading } from "expo-font";
-import { router } from "expo-router";
-import CreateWordlistModal from "@/components/dashboard/CreateWordlistModal";
-type Dialog = "new-wordlist" | "delete-word" | "upgrade-prompt" | null;
+  Dimensions,
+  FlatList,
+  Image,
+  ImageBackground,
+  RefreshControl,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-export default function Dashboard() {
-  const theme = useTheme();
-  const navigation = useNavigation();
+const { width, height } = Dimensions.get("window");
+
+
+
+interface DashboardProps {
+}
+
+const Dashboard: React.FC<DashboardProps> = () => {
+  const [refreshing, setRefreshing] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [user, setUser] = React.useState(usersApi.getUserInfo());
+  const router = useRouter()
 
-  const [expandedWordlistId, setExpandedWordlistId] = React.useState<
-    number | null
-  >(null);
-  const [wordToDelete, setWordToDelete] =
-    React.useState<wordlistsApi.Word | null>(null);
-  const [snackBarProps, setSnackBarProps] =
-    React.useState<SnackBarProps | null>(null);
+  const {
+    data: wordlists,
+    isLoading,
+    refetch,
+  } = useQuery<wordlistsApi.Wordlist[], Error>({
+    queryFn: () => wordlistsApi.getUserWordlists(),
+    queryKey: ["wordlists"],
+  });
 
-  const [modal, setModal] = useState<Dialog>(null);
+  useEffect(() => {
+    if (isLoading) return;
 
-  const clearModal = () => setModal(null);
+    const isEmpty = !wordlists || wordlists.length == 0;
+
+    if (isEmpty) {
+      router.push("/dashboard/welcome");
+    }
+  }, [wordlists, isLoading, router]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
+
+
+
+  const handleSettingsPress = () => {
+    // navigation.navigate('Settings');
+  };
+
+  const handleProfilePress = () => {
+    // navigation.navigate('Profile');
+  };
 
   // Refresh user session when screen comes into focus
   useFocusEffect(
@@ -56,270 +89,270 @@ export default function Dashboard() {
     }, []),
   );
 
-  React.useEffect(() => {
-    const options: React.JSX.Element[] = [];
+  const renderWordlistItem = ({ item }: { item: any }) => <Wordlistitem item={item}/>
 
-    const isNewWordlistButtonVisible = !expandedWordlistId;
-    if (isNewWordlistButtonVisible) {
-      options.push(
-        <IconButton
-          icon="notebook-plus"
-          size={25}
-          key={"new-wordlist"}
-          onPress={() => {
-            // Check if user has reached free plan limit
-            const wordlistCount = wordlists?.length || 0;
-            const isFreePlan =
-              !user?.subscriptionPlan || user.subscriptionPlan === "free";
+  const renderHeader = () => (
+    <>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={handleSettingsPress}
+        >
+          <Ionicons name="settings-outline" size={24} color="#2D3436" />
+        </TouchableOpacity>
 
-            if (isFreePlan && wordlistCount >= 1) {
-              setModal("upgrade-prompt");
-            } else {
-              setModal("new-wordlist");
-            }
-          }}
-        />,
-      );
-    }
+        <TouchableOpacity
+          style={styles.profileButton}
+          onPress={handleProfilePress}
+        >
+          <Image
+            source={{ uri: "https://via.placeholder.com/40" }}
+            style={styles.profileImage}
+          />
+        </TouchableOpacity>
+      </View>
 
-    options.push(
-      <IconButton
-        icon="crown"
-        size={25}
-        key={"subscription"}
-        onPress={() => router.push({ pathname: "/subscription" })}
-      />,
+      {/* Greeting */}
+      <View style={styles.greetingContainer}>
+        <Text style={styles.greeting}>Good Morning,</Text>
+        <Text style={styles.userName}>{user?.firstName}!</Text>
+        <Text style={styles.subtitle}>Ready to learn something new today?</Text>
+      </View>
+
+      {/* Stats */}
+     <DashboardStats />
+
+      {/* Section Header */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>My Wordlists</Text>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setShowCreateModal(true)}
+        >
+          <Ionicons name="add-circle" size={24} color="#FF7B54" />
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+
+  if (isLoading && !wordlists) {
+    return (
+      <ImageBackground
+        source={require("@/assets/images/dashboard-bg.png")}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FF7B54" />
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
     );
-
-    options.push(
-      <IconButton
-        icon="logout-variant"
-        size={25}
-        key={"logout"}
-        onPress={() =>
-          usersApi.sigout().then(() => router.replace({ pathname: "/signin" }))
-        }
-      />,
-    );
-
-    navigation.setOptions({
-      headerRight: () => (
-        <View style={{ display: "flex", flexDirection: "row" }}>{options}</View>
-      ),
-      headerLeft: null,
-    });
-  }, [navigation, expandedWordlistId]);
-
-  useEffect(() => {
-    setModal(wordToDelete ? "delete-word" : null);
-  }, [wordToDelete]);
-
-  // useFocusEffect(
-  //     React.useCallback(() => {
-  //         // refetch wordlists when focusing
-  //         refetchWordlists()
-  //     }, [])
-  //   );
-
-  const closeSnackBar = () => setSnackBarProps(null);
-
-  const {
-    data: wordlists,
-    error: wordlistsError,
-    isLoading: isLoadingWordlists,
-    refetch: getWordlists,
-  } = useQuery<wordlistsApi.Wordlist[], Error>({
-    queryFn: () => wordlistsApi.getUserWordlists(),
-    queryKey: ["wordlists"],
-  });
-
-  useEffect(() => {
-    if (isLoadingWordlists) return;
-
-    const isEmpty = !wordlists || wordlists.length == 0;
-
-    if (isEmpty) {
-      router.push("/dashboard/welcome");
-    }
-  }, [wordlists, isLoading, router]);
-
-  const {
-    data: words,
-    refetch: getWords,
-    isLoading: isLoadingWords,
-    error: wordsError,
-  } = useQuery<wordlistsApi.Word[], Error>({
-    queryFn: () =>
-      expandedWordlistId ? wordlistsApi.getWords(expandedWordlistId) : [],
-    queryKey: ["words", `wordlist-${expandedWordlistId}`],
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: !!expandedWordlistId, // Only run the query if wordlistId is not null
-  });
-
-  React.useEffect(() => {
-    if (wordlistsError) {
-      setSnackBarProps({
-        message: "Could not fetch your wordlists at this moment.",
-        type: "error",
-        onDismiss: closeSnackBar,
-      });
-      return;
-    }
-
-    if (wordsError) {
-      setSnackBarProps({
-        message: "Could not fetch words at this moment.",
-        type: "error",
-        onDismiss: closeSnackBar,
-      });
-      return;
-    }
-  }, [wordlistsError, wordsError]);
-
-  if (isLoadingWordlists) return <LoadingIndicator />;
-
-  const onListAccordionPressed = (wordlistId: number) => {
-    // user pressed same item. Closing it
-    if (expandedWordlistId == wordlistId) {
-      setExpandedWordlistId(null);
-      return;
-    }
-    setExpandedWordlistId(wordlistId);
-    getWords();
-  };
-
-  const onWordAdded = () => {
-    getWords();
-    setSnackBarProps({
-      message: "word added",
-      type: "success",
-      onDismiss: closeSnackBar,
-    });
-  };
-
-  const onWordlistDeleted = () => {
-    getWordlists();
-    setSnackBarProps({
-      message: "wordlist deleted",
-      type: "success",
-      onDismiss: closeSnackBar,
-    });
-    setExpandedWordlistId(null);
-  };
-
-  const onDismissDeleteWordDialog = (success?: boolean) => {
-    if (success) {
-      setSnackBarProps({
-        message: "word deleted",
-        type: "success",
-        onDismiss: closeSnackBar,
-      });
-      getWords();
-    }
-    setWordToDelete(null);
-  };
-
-  const onDismissCreateWordlistDialog = (success?: boolean) => {
-    if (success) {
-      setSnackBarProps({
-        message: "wordlist created",
-        type: "success",
-        onDismiss: closeSnackBar,
-      });
-      getWordlists();
-    }
-    clearModal();
-  };
-
-  if (!wordlists) {
-    return null;
   }
 
-  const currentWordlist = wordlists.find((w) => w.id == expandedWordlistId);
-
   return (
-    <View style={styles.container}>
-      {modal == "delete-word" && wordToDelete && (
-        <DeleteWordDialog
-          word={wordToDelete}
-          onDismiss={onDismissDeleteWordDialog}
-        />
-      )}
-      {modal == "new-wordlist" && (
-        <CreateWordlistModal
-          visible
-          onClose={onDismissCreateWordlistDialog}
-          onSuccess={() => onDismissCreateWordlistDialog(true)}
-        />
-      )}
-      {modal == "upgrade-prompt" && (
-        <UpgradePromptDialog visible={true} onDismiss={() => setModal(null)} />
-      )}
+    <>
+      <ImageBackground
+        source={require("@/assets/images/dashboard-bg.png")}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <SafeAreaView style={styles.container}>
+          <FlatList
+            data={wordlists}
+            renderItem={renderWordlistItem}
+            keyExtractor={(item) => String(item.id)}
+            ListHeaderComponent={renderHeader}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={["#FF7B54"]}
+                tintColor="#FF7B54"
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No wordlists yet</Text>
+                <TouchableOpacity
+                  style={styles.ctaButton}
+                  onPress={() => setShowCreateModal(true)}
+                >
+                  <Text style={styles.ctaButtonText}>
+                    Create your first wordlist
+                  </Text>
+                  <Ionicons name="add-circle" size={24} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            }
+          />
+        </SafeAreaView>
+      </ImageBackground>
 
-      {snackBarProps && <SnackBar {...snackBarProps} />}
-
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <List.Section>
-          {wordlists.map((wordlist) => {
-            return (
-              <List.Accordion
-                expanded={wordlist.id == expandedWordlistId}
-                onPress={() => onListAccordionPressed(wordlist.id)}
-                key={`wordlists-${wordlist.id}`}
-                title={wordlist.name}
-                description={wordlist.description}
-                left={(props) => <List.Icon {...props} icon="folder" />}
-              >
-                {isLoadingWords && (
-                  <View style={styles.wordsActivityIndicator}>
-                    <ActivityIndicator animating={true} theme={theme} />
-                  </View>
-                )}
-                {words?.map((w, idx) => (
-                  <TouchableRipple
-                    centered
-                    key={`wordlist-${wordlist.id}-${w.id}`}
-                    onLongPress={() => setWordToDelete(w)}
-                  >
-                    <List.Item title={w.name} />
-                  </TouchableRipple>
-                ))}
-              </List.Accordion>
-            );
-          })}
-        </List.Section>
-      </ScrollView>
-      {currentWordlist && (
-        <BottonBar
-          onWordAdded={onWordAdded}
-          onWordlistDeleted={onWordlistDeleted}
-          wordlist={currentWordlist}
-          words={words}
-          onUpgradePrompt={() => setModal("upgrade-prompt")}
-          user={user}
-        />
-      )}
-    </View>
+      {/* Create Wordlist Modal */}
+      <CreateWordlistModal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => setShowCreateModal(false)}
+      />
+    </>
   );
-}
+};
+
+export default Dashboard;
 
 const styles = StyleSheet.create({
-  loadingContainer: {
+  backgroundImage: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    width: width,
+    height: height,
   },
   container: {
     flex: 1,
   },
-  scrollViewContent: {
-    paddingBottom: 56, // Ensure there's enough space for the BottomNavigation
-    margin: 10,
-  },
-  wordsActivityIndicator: {
+  loadingContainer: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
-    height: 50,
+    alignItems: "center",
+  },
+  listContent: {
+    paddingBottom: 30,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 10,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  settingsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  profileButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    backgroundColor: "#FFFFFF",
+  },
+  profileImage: {
+    width: "100%",
+    height: "100%",
+  },
+  greetingContainer: {
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  greeting: {
+    fontSize: 28,
+    fontWeight: "600",
+    color: "#2D3436",
+    marginBottom: 4,
+  },
+  userName: {
+    fontSize: 28,
+    fontWeight: "600",
+    color: "#2D3436",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#636E72",
+    marginTop: 4,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    marginHorizontal: 20,
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: "#636E72",
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 36,
+    fontWeight: "700",
+    color: "#2D3436",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#2D3436",
+  },
+  addButton: {
+    padding: 4,
+  },
+
+  emptyContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 18,
+    color: "#636E72",
+    marginBottom: 20,
+  },
+  ctaButton: {
+    backgroundColor: "#FF7B54",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#FF7B54",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+    gap: 8,
+  },
+  ctaButtonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "600",
   },
 });

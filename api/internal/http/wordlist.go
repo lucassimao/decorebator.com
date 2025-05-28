@@ -11,8 +11,9 @@ import (
 )
 
 type WordlistInput struct {
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description"`
+	Name         string `json:"name" binding:"required"`
+	Description  string `json:"description"`
+	LanguageCode string `json:"languageCode" binding:"required"`
 }
 
 type WordlistsRoutes struct{}
@@ -37,7 +38,7 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 	}
 
 	var userId int64 = c.GetInt64("userID")
-	saved, err := service.SaveWordlist(&Wordlist{Name: input.Name, Description: input.Description, UserID: userId})
+	saved, err := service.SaveWordlist(&Wordlist{Name: input.Name, Description: input.Description, UserID: userId, LanguageCode: input.LanguageCode})
 
 	if err != nil {
 		panic(err)
@@ -48,6 +49,11 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 
 func (h *WordlistsRoutes) GetById(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	if err != nil {
+		c.Status(http.StatusNotFound)
+		return
+	}
+
 	var userId int64 = c.GetInt64("userID")
 
 	wordlist, err := service.GetWordlistById(id, userId)
@@ -89,7 +95,7 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 	}
 
 	var userId int64 = c.GetInt64("userID")
-	err := service.UpdateWordlist(&Wordlist{ID: id, Name: input.Name, Description: input.Description, UserID: userId})
+	err := service.UpdateWordlist(&Wordlist{ID: id, Name: input.Name, Description: input.Description, LanguageCode: input.LanguageCode, UserID: userId})
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)

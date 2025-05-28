@@ -38,8 +38,7 @@
     [ ] Wordlist CRUD
     [ ] Fix session expiration
     [x] Replace expo-av with expo-audio
-    [ ] use <Pressabel hitSlop> to wrap icon buttons 
-    [ ] App icon
+    [x] App icon
     [ ] Splash screen
 
 [ ] MVP Release Checklist

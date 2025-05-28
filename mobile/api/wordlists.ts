@@ -7,7 +7,8 @@ export type Wordlist = {
   name: string;
   updatedAt: string;
   userId: number;
-  language:string
+  languageCode:string
+  wordCount:number
 };
 
 export type Word = {
@@ -34,7 +35,7 @@ export type Quiz = {
 };
 
 export type CreateWordDTO = Pick<Word, "wordlistId" | "name">;
-export type CreateWordlistDTO = Pick<Wordlist, "description" | "name"|"language">;
+export type CreateWordlistDTO = Pick<Wordlist, "description" | "name"|"languageCode">;
 
 export async function getUserWordlists() {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/wordlists";
@@ -60,9 +61,9 @@ export async function getWordlist(wordlistId: number): Promise<Wordlist> {
   return await callAPI<Wordlist>("GET", endpoint);
 }
 
-export async function addWordlist(dto: CreateWordlistDTO): Promise<void> {
+export async function addWordlist(dto: CreateWordlistDTO): Promise<Wordlist> {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + `/wordlists`;
-  await callAPI("POST", endpoint, JSON.stringify(dto));
+  return await callAPI<Wordlist>("POST", endpoint, JSON.stringify(dto));
 }
 
 export async function addWord(dto: CreateWordDTO): Promise<void> {
