@@ -29,6 +29,16 @@ func (h *WordlistsRoutes) GetAll(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, wordlists)
 }
 
+func (h *WordlistsRoutes) GetStats(c *gin.Context) {
+	var userId int64 = c.GetInt64("userID")
+
+	wordlists, err := service.GetStats(userId)
+	if err != nil {
+		panic(err)
+	}
+	c.IndentedJSON(http.StatusOK, wordlists)
+}
+
 func (h *WordlistsRoutes) Create(c *gin.Context) {
 	var input WordlistInput
 

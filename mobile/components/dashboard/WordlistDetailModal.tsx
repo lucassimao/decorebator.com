@@ -5,29 +5,26 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-    ActivityIndicator,
-    Alert,
-    Animated,
-    Dimensions,
-    FlatList,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  FlatList,
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
 import { LANGUAGES } from "./CreateWordlistModal";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
-
-type  WordFormData = {
-  term: string;
-  pronunciation?: string;
-  notes?: string;
-}
 
 const toggleWordLearned = async (
   wordlistId: number,
@@ -70,10 +67,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<WordFormData>({
+  } = useForm<wordlistsApi.CreateWordDTO>({
     defaultValues: {
-      term: "",
-      pronunciation: "",
+      name: "",
       notes: "",
     },
   });
@@ -87,7 +83,8 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
 
   // Add word mutation
   const addWordMutation = useMutation({
-    mutationFn: (data: WordFormData) => wordlistsApi.addWord({name: data.term,wordlistId: wordlist.id}),
+    mutationFn: (data: wordlistsApi.CreateWordDTO) =>
+      wordlistsApi.addWord({ ...data,wordlistId: wordlist.id,  }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["words", wordlist.id] });
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
@@ -150,8 +147,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
 
   // Filter words
   const filteredWords = words.filter((word) => {
-    const matchesSearch =
-      word.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = word.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
 
     const matchesFilter =
       filterLearned === "all" ||
@@ -176,7 +174,8 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     );
   };
 
-  const handleAddWord = (data: WordFormData) => {
+  const handleAddWord = (data: wordlistsApi.CreateWordDTO) => {
+    Keyboard.dismiss();
     addWordMutation.mutate(data);
   };
 
@@ -361,11 +360,11 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
             ) : (
               <FlatList
                 data={filteredWords}
-                  keyboardShouldPersistTaps="handled"
+                keyboardShouldPersistTaps="handled"
                 renderItem={renderWordItem}
                 keyExtractor={(item) => String(item.id)}
                 contentContainerStyle={styles.listContent}
-                 style={{ flex: 1 }} 
+                style={{ flex: 1 }}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                   <View style={styles.emptyState}>
@@ -390,81 +389,105 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
 
           {/* Add Word Form */}
           {showAddForm && (
-            <View style={styles.addFormContainer}>
-              <View style={styles.formHeader}>
-                <Text style={styles.formTitle}>Add New Word</Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowAddForm(false);
-                    reset();
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+              style={styles.keyboardAvoidingView}
+            >
+              <View style={styles.addFormContainer}>
+                <View style={styles.formHeader}>
+                  <Text style={styles.formTitle}>Add New Word</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowAddForm(false);
+                      reset();
+                    }}
+                  >
+                    <Ionicons name="close" size={24} color="#636E72" />
+                  </TouchableOpacity>
+                </View>
+
+                <Controller
+                  control={control}
+                  name="name"
+                  rules={{
+                    required: "Term is required",
+                    minLength: { value: 1, message: "Term is too short" },
                   }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Word/Phrase *</Text>
+                      <TextInput
+                      autoFocus
+                        style={[styles.input, errors.name && styles.inputError]}
+                        placeholder="e.g., Hello"
+                        placeholderTextColor="#B2BEC3"
+                        value={value}
+                        onChangeText={(text) => {
+                          onChange(text);
+                          addWordMutation.reset();
+                        }}
+                        onBlur={onBlur}
+                      />
+                      {errors.name && (
+                        <Text style={styles.errorText}>
+                          {errors.name.message}
+                        </Text>
+                      )}
+                    </View>
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="notes"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Notes (Optional)</Text>
+                      <TextInput
+                        style={[styles.input, styles.textArea]}
+                        placeholder="e.g., Used in formal situations"
+                        placeholderTextColor="#B2BEC3"
+                        value={value}
+                        onChangeText={(text) => {
+                          onChange(text);
+                          addWordMutation.reset();
+                        }}
+                        onBlur={onBlur}
+                        multiline
+                        numberOfLines={3}
+                        textAlignVertical="top"
+                      />
+                    </View>
+                  )}
+                />
+
+                {addWordMutation.error && (
+                  <View style={styles.errorContainer}>
+                    <MaterialIcons
+                      name="error-outline"
+                      size={20}
+                      color="#FF6B6B"
+                    />
+                    <Text style={styles.errorMessage}>Failed to add word. Please try again.</Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={[
+                    styles.submitButton,
+                    addWordMutation.isPending && styles.buttonDisabled,
+                  ]}
+                  onPress={handleSubmit(handleAddWord)}
+                  disabled={addWordMutation.isPending}
                 >
-                  <Ionicons name="close" size={24} color="#636E72" />
+                  {addWordMutation.isPending ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Text style={styles.submitButtonText}>Add Word</Text>
+                  )}
                 </TouchableOpacity>
               </View>
-
-              <Controller
-                control={control}
-                name="term"
-                rules={{
-                  required: "Term is required",
-                  minLength: { value: 1, message: "Term is too short" },
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Word/Phrase *</Text>
-                    <TextInput
-                      style={[styles.input, errors.term && styles.inputError]}
-                      placeholder="e.g., Hello"
-                      placeholderTextColor="#B2BEC3"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                    />
-                    {errors.term && (
-                      <Text style={styles.errorText}>
-                        {errors.term.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="notes"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>
-                      Notes (Optional)
-                    </Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="e.g., Found on page 10"
-                      placeholderTextColor="#B2BEC3"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                    />
-                  </View>
-                )}
-              />
-
-              <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  addWordMutation.isPending && styles.buttonDisabled,
-                ]}
-                onPress={handleSubmit(handleAddWord)}
-                disabled={addWordMutation.isPending}
-              >
-                {addWordMutation.isPending ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Add Word</Text>
-                )}
-              </TouchableOpacity>
-            </View>
+            </KeyboardAvoidingView>
           )}
 
           {/* FAB */}
@@ -623,7 +646,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 100,
-      paddingTop: 10,  // Add this
+    paddingTop: 10, // Add this
   },
   wordCard: {
     flexDirection: "row",
@@ -704,7 +727,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   addFormContainer: {
-    position: "absolute",
+    // position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
@@ -718,6 +741,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 8,
+  },
+  keyboardAvoidingView: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   formHeader: {
     flexDirection: "row",
@@ -738,6 +767,10 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#2D3436",
     marginBottom: 8,
+  },
+  textArea: {
+    height: 80,
+    paddingTop: 12,
   },
   input: {
     borderWidth: 1,
@@ -771,5 +804,21 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.7,
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF5F5",
+    borderWidth: 1,
+    borderColor: "#FFE0E0",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+  errorMessage: {
+    flex: 1,
+    color: "#FF6B6B",
+    fontSize: 14,
   },
 });

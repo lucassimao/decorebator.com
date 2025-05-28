@@ -43,8 +43,8 @@ export default function SignInScreen() {
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: __DEV__ ? process.env.EXPO_PUBLIC_TEST_USER_EMAIL : '',
+      password: __DEV__ ? process.env.EXPO_PUBLIC_TEST_USER_PASSWORD : '',
     },
   });
 

@@ -122,7 +122,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
       </View>
 
       {/* Stats */}
-      <DashboardStats />
+      <DashboardStats  />
 
       {/* Section Header */}
       <View style={styles.sectionHeader}>
@@ -131,7 +131,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
           style={styles.addButton}
           onPress={() => setShowCreateModal(true)}
         >
-          <Ionicons name="add-circle" size={24} color="#FF7B54" />
+          <Ionicons name="add-circle" size={34} color="#FF7B54" />
         </TouchableOpacity>
       </View>
     </>

@@ -8,15 +8,20 @@ export type Wordlist = {
   updatedAt: string;
   userId: number;
   languageCode:string
-  wordCount:number
+  wordsCount:number
 };
+
+export type UserStats =  {
+  totalWords: number;
+  wordlists: number;
+  wordsLearned: number;
+  currentStreak?:number
+}
 
 export type Word = {
   id: number;
   name: string;
   wordlistId: number;
-
-  // TODO
   learned: boolean
   pronunciation?: string
   notes?:string
@@ -39,13 +44,22 @@ export type Quiz = {
   imageDescription: string;
 };
 
-export type CreateWordDTO = Pick<Word, "wordlistId" | "name">;
+export type CreateWordDTO = Pick<Word, "wordlistId" | "name"|"notes">;
 export type CreateWordlistDTO = Pick<Wordlist, "description" | "name"|"languageCode">;
 
 export async function getUserWordlists() {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/wordlists";
   const body = await callAPI<Wordlist[]>("GET", endpoint);
   return body;
+}
+
+export async function getUserStats(): Promise<UserStats> {
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL + `/wordlists/stats`;
+
+  const body = await callAPI<UserStats>("GET", endpoint);
+
+  return {...body,currentStreak:10}
 }
 
 export async function getWords(wordlistId: number): Promise<Word[]> {

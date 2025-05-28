@@ -103,11 +103,11 @@ var SubscriptionPrices = map[SubscriptionPlan]struct {
 	Interval    string
 }{
 	PlanMonthly: {
-		AmountCents: 1200, // $12.00
+		AmountCents: 699, // $6.99
 		Interval:    "month",
 	},
 	PlanAnnual: {
-		AmountCents: 10000, // $100.00
+		AmountCents: 6990, // $69.90
 		Interval:    "year",
 	},
 }
@@ -128,11 +128,11 @@ func (s *Subscription) HasAccess() bool {
 	if !s.IsActive() {
 		return false
 	}
-	
+
 	// Check if subscription has expired
 	if time.Now().After(s.CurrentPeriodEnd) {
 		return false
 	}
-	
+
 	return true
 }

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"decorebator.com/internal/model"
@@ -59,6 +60,7 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 
 	wordlists := []*Wordlist{}
 	query := builder.String()
+	query = query + " ORDER BY ID DESC"
 	rows, err := repository.Db.Query(context.Background(), query, queryArgs...)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -125,4 +127,20 @@ func (repository *WordlistRepository) IncWordCount(wordlistId int64, tx *pgx.Tx)
 
 func (repository *WordlistRepository) DecWordCount(wordlistId int64, tx *pgx.Tx) error {
 	return repository.updateWordCount(wordlistId, -1, tx)
+}
+
+func (repository *WordlistRepository) GetStats(userId int64) (*model.UserStats, error) {
+	const statsQuery = `
+    SELECT
+      (SELECT COUNT(*) FROM words WHERE user_id = $1)             AS total_words,
+      (SELECT COUNT(*) FROM wordlists WHERE user_id = $1)         AS wordlists,
+      (SELECT COUNT(*) FROM words WHERE user_id = $1 AND learned) AS words_learned;
+    `
+
+	var s model.UserStats
+	row := repository.Db.QueryRow(context.Background(), statsQuery, userId)
+	if err := row.Scan(&s.TotalWords, &s.Wordlists, &s.WordsLearned); err != nil {
+		return nil, fmt.Errorf("GetUserStats: scan failed: %w", err)
+	}
+	return &s, nil
 }

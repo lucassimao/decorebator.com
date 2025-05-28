@@ -70,7 +70,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed
   };
 
   const handleQuizStart = () => {
-    if (item.wordCount === 0) {
+    setShowMenu(false);
+
+    if (item.wordsCount === 0) {
       Alert.alert(
         'No Words Yet',
         'Add some words to this wordlist before starting a quiz.',
@@ -88,7 +90,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed
 
   const handleEdit = () => {
     setShowMenu(false);
-    // navigation.navigate('EditWordlist', { wordlistId: item.id });
+    onPressed?.()
   };
 
   const progressPercentage = Math.random() * 100; // Replace with actual progress
@@ -137,7 +139,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed
         <View style={styles.cardStats}>
           <View style={styles.cardStat}>
             <MaterialIcons name="library-books" size={16} color="#636E72" />
-            <Text style={styles.cardStatText}>{item.wordCount} words</Text>
+            <Text style={styles.cardStatText}>{item.wordsCount} words</Text>
           </View>
           <View style={styles.cardStat}>
             <Text style={styles.languageName}>{language.name}</Text>
@@ -187,17 +189,6 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed
                 >
                   <MaterialIcons name="edit" size={24} color="#FF7B54" />
                   <Text style={styles.menuItemText}>Edit Wordlist</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() => {
-                    setShowMenu(false);
-                    // navigation.navigate('WordlistDetail', { wordlistId: item.id });
-                  }}
-                >
-                  <MaterialIcons name="visibility" size={24} color="#2196F3" />
-                  <Text style={styles.menuItemText}>View Words</Text>
                 </TouchableOpacity>
 
                 <View style={styles.menuDivider} />

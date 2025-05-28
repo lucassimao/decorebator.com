@@ -54,7 +54,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		}
 	}()
 
-	word, err := wordRepository.Save(trimmedName, dto.UserID, dto.WordlistID, &tx)
+	word, err := wordRepository.Save(trimmedName, dto.Notes, dto.UserID, dto.WordlistID, &tx)
 	if err != nil {
 		return nil, err
 	}

@@ -55,6 +55,7 @@ func SetupRoutes() *gin.Engine {
 	authenticatedRoutes.Use(Authenticate)
 	{
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
+		authenticatedRoutes.GET("/wordlists/stats", WordlistRoutes.GetStats)
 		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(subService, "create_wordlist"), WordlistRoutes.Create)
 		authenticatedRoutes.GET("/wordlists/:wordlistId", WordlistRoutes.GetById)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId", WordlistRoutes.Update)

@@ -11,7 +11,8 @@ import (
 )
 
 type WordInput struct {
-	Name string `json:"name" binding:"required"`
+	Name  string `json:"name" binding:"required"`
+	Notes string `json:"notes"`
 }
 
 type WordRoutes struct{}
@@ -41,7 +42,7 @@ func (h *WordRoutes) Create(ctx *gin.Context) {
 		return
 	}
 
-	var saved, err = service.SaveWord(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistId}, ctx.Request.Context())
+	var saved, err = service.SaveWord(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistId, Notes: input.Notes}, ctx.Request.Context())
 	var logger = common.Logger.With("word", input.Name, "userId", userId, "endpoint", ctx.Request.URL.Path)
 
 	if err != nil {

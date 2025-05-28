@@ -9,16 +9,20 @@ import (
 )
 
 type Word struct {
-	ID         int64              `json:"id"`
-	Name       string             `json:"name"`
-	CreatedAt  pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt  pgtype.Timestamptz `json:"updatedAt"`
-	WordlistID int64              `json:"wordlistId"`
-	UserID     int64              `json:"userId"`
-	AudioURL   string             `json:"audioURL"`
+	ID            int64              `json:"id"`
+	Name          string             `json:"name"`
+	CreatedAt     pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt     pgtype.Timestamptz `json:"updatedAt"`
+	WordlistID    int64              `json:"wordlistId"`
+	UserID        int64              `json:"userId"`
+	AudioURL      string             `json:"audioURL"`
+	Notes         string             `json:"notes"`
+	Pronunciation string             `json:"pronunciation"`
+	Learned       bool               `json:"learned"`
 }
 
 func (w Word) MarshalJSON() ([]byte, error) {
+
 	createdAt := "null"
 	updatedAt := "null"
 
@@ -40,12 +44,13 @@ func (w Word) MarshalJSON() ([]byte, error) {
         "name": %q,
         "createdAt": %q,
         "audioURL": %q,
+        "learned": %v,
         "updatedAt": %q,
         "wordlistId": %d,
-        "notes": "Found on page 10",
-		"pronunciation": "GRAH-see-ahs",
+        "notes": %q,
+		"pronunciation": %q,
         "userId": %d
-    }`, w.ID, w.Name, createdAt, audioURL, updatedAt, w.WordlistID, w.UserID)), nil
+    }`, w.ID, w.Name, createdAt, audioURL, w.Learned, updatedAt, w.WordlistID, w.Notes, w.Pronunciation, w.UserID)), nil
 }
 
 func (w *Word) UnmarshalJSON(data []byte) error {

@@ -32,10 +32,14 @@
 
 [ ] Mobile UI improvements
     [ ] Dashboard
+        - currentStreak
+        - Learnning Progress %
+        - User pic
+        - settings ( subscription )
     [x] Sign Up
+    [x] Wordlist CRUD
     [ ] Sign In
     [ ] Quiz
-    [ ] Wordlist CRUD
     [ ] Fix session expiration
     [x] Replace expo-av with expo-audio
     [x] App icon

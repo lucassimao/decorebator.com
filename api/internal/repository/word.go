@@ -19,21 +19,23 @@ type WordRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *WordRepository) Save(name string, userId, wordlistId int64, tx *pgx.Tx) (*Word, error) {
+func (repository *WordRepository) Save(name, notes string, userId, wordlistId int64, tx *pgx.Tx) (*Word, error) {
 	query := `
-		INSERT INTO words (name, wordlist_id, user_id, created_at)
-		VALUES ($1, $2,$3, now())
+		INSERT INTO words (name, wordlist_id, user_id, created_at, notes)
+		VALUES ($1, $2,$3, now(),$4)
 		RETURNING id, created_at, updated_at`
 
 	var createdAt pgtype.Timestamptz
 	var updatedAt pgtype.Timestamptz
 	var wordID int64
 
+	args := []any{name, wordlistId, userId, notes}
+
 	var row pgx.Row
 	if tx != nil {
-		row = (*tx).QueryRow(context.Background(), query, name, wordlistId, userId)
+		row = (*tx).QueryRow(context.Background(), query, args...)
 	} else {
-		row = repository.Db.QueryRow(context.Background(), query, name, wordlistId, userId)
+		row = repository.Db.QueryRow(context.Background(), query, args...)
 	}
 
 	err := row.Scan(&wordID, &createdAt, &updatedAt)
@@ -42,7 +44,7 @@ func (repository *WordRepository) Save(name string, userId, wordlistId int64, tx
 		return nil, err
 	}
 
-	return &Word{ID: wordID, Name: name, CreatedAt: createdAt,
+	return &Word{ID: wordID, Name: name, CreatedAt: createdAt, Notes: notes,
 		UpdatedAt: updatedAt, WordlistID: wordlistId, UserID: userId, AudioURL: ""}, nil
 }
 
@@ -74,7 +76,9 @@ func (repository *WordRepository) ReuseDefinitions(wordId int64, definitionIds [
 }
 
 func (repository *WordRepository) GetAllFromWordlist(wordlistId, userId int64) ([]Word, error) {
-	query := `SELECT id , name, created_at, updated_At, COALESCE(audio_url,'') FROM words WHERE wordlist_id=$1 AND user_id=$2 order by id desc`
+	query := `SELECT id , name, created_at, updated_At, COALESCE(audio_url,'') 
+				, COALESCE(notes,''), COALESCE(pronunciation,'')  , learned
+				FROM words WHERE wordlist_id=$1 AND user_id=$2 order by id desc`
 	rows, err := repository.Db.Query(context.Background(), query, wordlistId, userId)
 	if err != nil {
 		return nil, err
@@ -85,7 +89,7 @@ func (repository *WordRepository) GetAllFromWordlist(wordlistId, userId int64) (
 	words := []Word{}
 	for rows.Next() {
 		w := Word{WordlistID: wordlistId, UserID: userId}
-		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.AudioURL)
+		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.AudioURL, &w.Notes, &w.Pronunciation, &w.Learned)
 		if err != nil {
 			return nil, err
 		}
@@ -99,11 +103,13 @@ func (repository *WordRepository) GetAllFromWordlist(wordlistId, userId int64) (
 }
 
 func (repository *WordRepository) GetById(wordId int64) (*Word, error) {
-	query := `SELECT id , name, created_at, updated_At, wordlist_id, user_id, COALESCE(audio_url,'') FROM words WHERE id=$1`
+	query := `SELECT id , name, created_at, updated_At, wordlist_id, user_id, 
+				COALESCE(audio_url,'') , COALESCE(notes,''), COALESCE(pronunciation,'') ,learned
+			FROM words WHERE id=$1`
 	row := repository.Db.QueryRow(context.Background(), query, wordId)
 	var w Word
 
-	err := row.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.WordlistID, &w.UserID, &w.AudioURL)
+	err := row.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.WordlistID, &w.UserID, &w.AudioURL, &w.Notes, &w.Pronunciation, &w.Learned)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, common.NotFoundError{ID: wordId, Entity: "word"}
@@ -126,7 +132,7 @@ func (repository *WordRepository) Delete(userId, wordID int64) (int64, error) {
 }
 
 func (repository *WordRepository) Update(word *Word, tx *pgx.Tx) (int64, error) {
-	query := `UPDATE words SET name=$1, updated_at=NOW(), audio_url=$4, wordlist_id=$5 WHERE user_id=$2 AND ID=$3`
+	query := `UPDATE words SET name=$1, updated_at=NOW(), audio_url=$4, wordlist_id=$5, notes=$6 WHERE user_id=$2 AND ID=$3`
 
 	var result pgconn.CommandTag
 	var err error
@@ -135,7 +141,7 @@ func (repository *WordRepository) Update(word *Word, tx *pgx.Tx) (int64, error) 
 	if tx != nil {
 		exec = (*tx).Exec
 	}
-	result, err = exec(context.Background(), query, word.Name, word.UserID, word.ID, word.AudioURL, word.WordlistID)
+	result, err = exec(context.Background(), query, word.Name, word.UserID, word.ID, word.AudioURL, word.WordlistID, word.Notes)
 
 	if err != nil {
 		return 0, err

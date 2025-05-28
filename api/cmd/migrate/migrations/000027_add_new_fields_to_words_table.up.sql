@@ -1,0 +1,9 @@
+ALTER TABLE words
+  ADD COLUMN learned BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE words
+  ADD COLUMN pronunciation VARCHAR ;
+
+ALTER TABLE words
+  ADD COLUMN notes TEXT ;
+
