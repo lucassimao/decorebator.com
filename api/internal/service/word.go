@@ -55,7 +55,6 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 	}()
 
 	word, err := wordRepository.Save(trimmedName, dto.UserID, dto.WordlistID, &tx)
-
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +67,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 
 	if len(definitions) > 0 {
 		definitionIds := []int64{}
+
 		for _, def := range definitions {
 			definitionIds = append(definitionIds, def.ID)
 		}
@@ -81,9 +81,10 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 
 		if err != nil {
 			TriggerTextToSpeechWorker(word.ID, &tx)
+			err = nil // fine if triggering the worker fails somehow
 		} else {
 			word.AudioURL = latestAudioURL
-			UpdateWord(word, &tx)
+			err = UpdateWord(word, &tx)
 		}
 	} else {
 		TriggerFetchDefinitionWorker(word.ID, tx)

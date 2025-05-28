@@ -42,6 +42,8 @@ func (w Word) MarshalJSON() ([]byte, error) {
         "audioURL": %q,
         "updatedAt": %q,
         "wordlistId": %d,
+        "notes": "Found on page 10",
+		"pronunciation": "GRAH-see-ahs",
         "userId": %d
     }`, w.ID, w.Name, createdAt, audioURL, updatedAt, w.WordlistID, w.UserID)), nil
 }

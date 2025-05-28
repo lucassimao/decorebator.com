@@ -64,6 +64,9 @@ clean: ## Remove build related file
 debug-workers: ## Starts a delve session for workers
 	@$(GODOTENV_PATH) -f .env dlv debug cmd/workers/main.go
 
+debug-api: ## Starts a delve session for api
+	@$(GODOTENV_PATH) -f .env dlv debug cmd/api/server.go	
+
 create-migration: ## Create a new database migration file with the provided file name
 	@read -p "Enter the migration file name: " FILE_NAME; \
 	if [ -z "$$FILE_NAME" ]; then \

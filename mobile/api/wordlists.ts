@@ -15,6 +15,11 @@ export type Word = {
   id: number;
   name: string;
   wordlistId: number;
+
+  // TODO
+  learned: boolean
+  pronunciation?: string
+  notes?:string
 };
 
 export type Quiz = {
