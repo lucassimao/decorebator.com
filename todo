@@ -34,12 +34,14 @@
     [ ] Dashboard
         - currentStreak
         - Learnning Progress %
-        - User pic
+        - User profile settings
         - settings ( subscription )
     [x] Sign Up
     [x] Wordlist CRUD
-    [ ] Sign In
-    [ ] Quiz
+    [x] Sign In
+    [x] Recover password
+    [x] Quiz
+    [ ] remove react native paper depndency
     [ ] Fix session expiration
     [x] Replace expo-av with expo-audio
     [x] App icon

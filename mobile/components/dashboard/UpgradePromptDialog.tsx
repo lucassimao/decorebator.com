@@ -1,12 +1,6 @@
 import React from "react";
 import { StyleSheet } from "react-native";
-import {
-  Button,
-  Dialog,
-  Portal,
-  Text,
-  useTheme,
-} from "react-native-paper";
+import { Button, Dialog, Portal, Text, useTheme } from "react-native-paper";
 import { router } from "expo-router";
 
 type Props = {
@@ -26,15 +20,14 @@ const UpgradePromptDialog = ({ visible, onDismiss }: Props) => {
     <Portal>
       <Dialog visible={visible} onDismiss={onDismiss}>
         <Dialog.Icon icon="crown" size={48} />
-        <Dialog.Title style={styles.title}>
-          Enjoying Decorebator?
-        </Dialog.Title>
+        <Dialog.Title style={styles.title}>Enjoying Decorebator?</Dialog.Title>
         <Dialog.Content>
           <Text variant="bodyMedium" style={styles.content}>
             You've reached the free plan limit of 1 wordlist.
           </Text>
           <Text variant="bodyMedium" style={styles.content}>
-            Upgrade to Premium to create unlimited wordlists and unlock all learning features!
+            Upgrade to Premium to create unlimited wordlists and unlock all
+            learning features!
           </Text>
         </Dialog.Content>
         <Dialog.Actions>

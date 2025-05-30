@@ -84,7 +84,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   // Add word mutation
   const addWordMutation = useMutation({
     mutationFn: (data: wordlistsApi.CreateWordDTO) =>
-      wordlistsApi.addWord({ ...data,wordlistId: wordlist.id,  }),
+      wordlistsApi.addWord({ ...data, wordlistId: wordlist.id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["words", wordlist.id] });
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
@@ -418,7 +418,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>Word/Phrase *</Text>
                       <TextInput
-                      autoFocus
+                        autoFocus
                         style={[styles.input, errors.name && styles.inputError]}
                         placeholder="e.g., Hello"
                         placeholderTextColor="#B2BEC3"
@@ -469,7 +469,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                       size={20}
                       color="#FF6B6B"
                     />
-                    <Text style={styles.errorMessage}>Failed to add word. Please try again.</Text>
+                    <Text style={styles.errorMessage}>
+                      Failed to add word. Please try again.
+                    </Text>
                   </View>
                 )}
                 <TouchableOpacity

@@ -1,10 +1,11 @@
 import { useUserInfo } from "@/hooks/users";
+import { useSnackbar } from "@/hooks/useSnackbar";
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { Snackbar } from "react-native-paper";
 
 export default function Index() {
   const { userInfo, error, loading } = useUserInfo();
+  const snackbar = useSnackbar();
 
   useEffect(() => {
     if (loading) return;
@@ -16,19 +17,11 @@ export default function Index() {
     }
   }, [userInfo, loading]);
 
-  {
-    error && (
-      <Snackbar
-        visible
-        onDismiss={() => router.replace("/signin")}
-        action={{
-          label: "Hide",
-        }}
-      >
-        {error.message}
-      </Snackbar>
-    );
-  }
+  useEffect(() => {
+    if (error) {
+      snackbar.show(error.message, "error", 500);
+    }
+  }, [error, snackbar]);
 
   return null;
 }

@@ -21,7 +21,6 @@ type Wordlist = service.Wordlist
 
 func (h *WordlistsRoutes) GetAll(c *gin.Context) {
 	var userId int64 = c.GetInt64("userID")
-
 	wordlists, err := service.GetUserWordlists(userId)
 	if err != nil {
 		panic(err)

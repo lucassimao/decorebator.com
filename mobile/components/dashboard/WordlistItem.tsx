@@ -1,70 +1,73 @@
 import { Wordlist } from "@/api/wordlists";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { 
-  StyleSheet, 
-  Text, 
-  TouchableOpacity, 
-  View, 
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
   Alert,
   ActivityIndicator,
   Modal,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LANGUAGES } from "./CreateWordlistModal";
 import * as wordlistsApi from "@/api/wordlists";
 import { useRouter } from "expo-router";
 
-type WordlistItemProps = { 
+type WordlistItemProps = {
   item: Wordlist;
   onQuizStart?: (wordlist: Wordlist) => void;
   onPressed?: () => void;
 };
 
-const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed}) => {
+const WordlistItem: React.FC<WordlistItemProps> = ({
+  item,
+  onQuizStart,
+  onPressed,
+}) => {
   const queryClient = useQueryClient();
   const [showMenu, setShowMenu] = useState(false);
-  const router = useRouter()
-  
-  const language = LANGUAGES.find(l => (item.languageCode) === l.code)!;
+  const router = useRouter();
+
+  const language = LANGUAGES.find((l) => item.languageCode === l.code)!;
 
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: () => wordlistsApi.deleteWordlist(item.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wordlists'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboardStats'] });
-      Alert.alert('Success', 'Wordlist deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ["wordlists"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      Alert.alert("Success", "Wordlist deleted successfully");
     },
     onError: (error) => {
       console.error(error);
-      Alert.alert('Error', 'Failed to delete wordlist. Please try again.');
+      Alert.alert("Error", "Failed to delete wordlist. Please try again.");
     },
   });
 
-
   const handleDelete = () => {
     setShowMenu(false);
-    
+
     setTimeout(() => {
       Alert.alert(
-        'Delete Wordlist',
+        "Delete Wordlist",
         `Are you sure you want to delete "${item.name}"? This action cannot be undone.`,
         [
           {
-            text: 'Cancel',
-            style: 'cancel',
+            text: "Cancel",
+            style: "cancel",
           },
           {
-            text: 'Delete',
-            style: 'destructive',
+            text: "Delete",
+            style: "destructive",
             onPress: () => {
               deleteMutation.mutate();
             },
           },
         ],
-        { cancelable: true }
+        { cancelable: true },
       );
     }, 100);
   };
@@ -74,9 +77,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed
 
     if (item.wordsCount === 0) {
       Alert.alert(
-        'No Words Yet',
-        'Add some words to this wordlist before starting a quiz.',
-        [{ text: 'OK' }]
+        "No Words Yet",
+        "Add some words to this wordlist before starting a quiz.",
+        [{ text: "OK" }],
       );
       return;
     }
@@ -84,13 +87,13 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed
     if (onQuizStart) {
       onQuizStart(item);
     } else {
-        router.push(`/quiz/${item.id}`);
+      router.push(`/quiz?wordlistId=${item.id}&wordlistName=${item.name}`);
     }
   };
 
   const handleEdit = () => {
     setShowMenu(false);
-    onPressed?.()
+    onPressed?.();
   };
 
   const progressPercentage = Math.random() * 100; // Replace with actual progress
@@ -115,7 +118,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed
               </Text>
             )}
           </View>
-          
+
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
             <TouchableOpacity
@@ -123,9 +126,13 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed
               onPress={handleQuizStart}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <MaterialIcons name="play-circle-filled" size={28} color="#4CAF50" />
+              <MaterialIcons
+                name="play-circle-filled"
+                size={28}
+                color="#4CAF50"
+              />
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => setShowMenu(true)}
@@ -147,17 +154,16 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed
           {progressPercentage > 0 && (
             <View style={styles.cardStat}>
               <MaterialIcons name="school" size={16} color="#636E72" />
-              <Text style={styles.cardStatText}>{Math.round(progressPercentage)}% learned</Text>
+              <Text style={styles.cardStatText}>
+                {Math.round(progressPercentage)}% learned
+              </Text>
             </View>
           )}
         </View>
 
         <View style={styles.progressBar}>
           <View
-            style={[
-              styles.progressFill,
-              { width: `${progressPercentage}%` },
-            ]}
+            style={[styles.progressFill, { width: `${progressPercentage}%` }]}
           />
         </View>
       </TouchableOpacity>
@@ -174,7 +180,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed
             <TouchableWithoutFeedback>
               <View style={styles.menuContainer}>
                 <Text style={styles.menuTitle}>{item.name}</Text>
-                
+
                 <TouchableOpacity
                   style={styles.menuItem}
                   onPress={handleQuizStart}
@@ -183,10 +189,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed
                   <Text style={styles.menuItemText}>Start Quiz</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={handleEdit}
-                >
+                <TouchableOpacity style={styles.menuItem} onPress={handleEdit}>
                   <MaterialIcons name="edit" size={24} color="#FF7B54" />
                   <Text style={styles.menuItemText}>Edit Wordlist</Text>
                 </TouchableOpacity>
@@ -203,7 +206,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({ item, onQuizStart,onPressed
                   ) : (
                     <Ionicons name="trash-outline" size={24} color="#FF6B6B" />
                   )}
-                  <Text style={[styles.menuItemText, styles.deleteMenuItemText]}>
+                  <Text
+                    style={[styles.menuItemText, styles.deleteMenuItemText]}
+                  >
                     Delete Wordlist
                   </Text>
                 </TouchableOpacity>

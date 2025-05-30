@@ -2,10 +2,11 @@ import * as usersApi from "@/api/users";
 import * as wordlistsApi from "@/api/wordlists";
 import { Wordlist } from "@/api/wordlists";
 import { CreateWordlistModal } from "@/components/dashboard/CreateWordlistModal";
+import { Header } from "@/components/dashboard/Header";
 import DashboardStats from "@/components/dashboard/Stats";
 import { WordlistDetailModal } from "@/components/dashboard/WordlistDetailModal";
 import Wordlistitem from "@/components/dashboard/WordlistItem";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -14,7 +15,6 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
-  Image,
   ImageBackground,
   RefreshControl,
   SafeAreaView,
@@ -46,12 +46,12 @@ const Dashboard: React.FC<DashboardProps> = () => {
     queryKey: ["wordlists"],
   });
 
+  const hasNoWordlist = wordlists && wordlists.length == 0;
+
   useEffect(() => {
     if (isLoading) return;
 
-    const isEmpty = !wordlists || wordlists.length == 0;
-
-    if (isEmpty) {
+    if (hasNoWordlist) {
       router.push("/dashboard/welcome");
     }
   }, [wordlists, isLoading, router]);
@@ -60,14 +60,6 @@ const Dashboard: React.FC<DashboardProps> = () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
-  };
-
-  const handleSettingsPress = () => {
-    // navigation.navigate('Settings');
-  };
-
-  const handleProfilePress = () => {
-    // navigation.navigate('Profile');
   };
 
   // Refresh user session when screen comes into focus
@@ -94,25 +86,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
   const renderHeader = () => (
     <>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.settingsButton}
-          onPress={handleSettingsPress}
-        >
-          <Ionicons name="settings-outline" size={24} color="#2D3436" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.profileButton}
-          onPress={handleProfilePress}
-        >
-          <Image
-            source={{ uri: "https://via.placeholder.com/40" }}
-            style={styles.profileImage}
-          />
-        </TouchableOpacity>
-      </View>
+      <Header />
 
       {/* Greeting */}
       <View style={styles.greetingContainer}>
@@ -122,7 +96,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
       </View>
 
       {/* Stats */}
-      <DashboardStats  />
+      <DashboardStats />
 
       {/* Section Header */}
       <View style={styles.sectionHeader}>
@@ -137,7 +111,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
     </>
   );
 
-  if (isLoading && !wordlists) {
+  // so that we keep the loader till we trigger the redirect to /dashboard/welcome
+  if (isLoading || hasNoWordlist) {
     return (
       <ImageBackground
         source={require("@/assets/images/dashboard-bg.png")}

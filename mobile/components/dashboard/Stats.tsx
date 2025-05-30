@@ -163,7 +163,14 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
               </Text>
             </View>
 
-            <View style={{ flexDirection: "row",justifyContent:"space-between",alignItems:"center" ,paddingTop:6}}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingTop: 6,
+              }}
+            >
               <Text style={styles.motivationalText}>
                 {getMotivationalMessage()}
               </Text>
@@ -337,7 +344,7 @@ const styles = StyleSheet.create({
   motivationalText: {
     fontSize: 13,
     color: "#636E72",
-   
+
     fontStyle: "italic",
   },
   statsGrid: {

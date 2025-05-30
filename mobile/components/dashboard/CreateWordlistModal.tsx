@@ -48,7 +48,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   visible,
   onClose,
   onSuccess,
-  onError
+  onError,
 }) => {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -76,7 +76,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
     },
     onError: (error) => {
       console.log(error);
-      onError?.(error)
+      onError?.(error);
     },
   });
 
@@ -126,7 +126,8 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
     }
   }, [visible]);
 
-  const handleFormSubmit = (data: CreateWordlistDTO) => mutation.mutateAsync(data);
+  const handleFormSubmit = (data: CreateWordlistDTO) =>
+    mutation.mutateAsync(data);
 
   if (!visible) return null;
 
@@ -191,7 +192,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                  autoFocus
+                    autoFocus
                     style={[styles.input, errors.name && styles.inputError]}
                     placeholder="e.g., Travel Essentials"
                     placeholderTextColor="#B2BEC3"
@@ -266,7 +267,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                           value === lang.code && styles.languageItemSelected,
                         ]}
                         onPress={() => {
-                          onChange(lang.code)
+                          onChange(lang.code);
                         }}
                       >
                         <Text style={styles.languageFlag}>{lang.flag}</Text>
@@ -284,7 +285,9 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                 )}
               />
               {errors.languageCode && (
-                <Text style={styles.errorText}>{errors.languageCode.message}</Text>
+                <Text style={styles.errorText}>
+                  {errors.languageCode.message}
+                </Text>
               )}
             </View>
 

@@ -1,11 +1,10 @@
 import * as usersApi from "@/api/users";
 import { CreateWordlistModal } from "@/components/dashboard/CreateWordlistModal";
-import DashboardStats from "@/components/dashboard/Stats";
+import { Header } from "@/components/dashboard/Header";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
   Dimensions,
   Image,
   ImageBackground,
@@ -16,7 +15,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Avatar } from "react-native-paper";
 
 const { width, height } = Dimensions.get("window");
 
@@ -29,10 +27,10 @@ const EmptyDashboard = () => {
   }, [user]);
 
   const handleCreateSuccess = () => {
-    setShowCreateModal(false)
+    setShowCreateModal(false);
     router.dismissAll();
-    router.replace("/dashboard")
-  }
+    router.replace("/dashboard");
+  };
 
   return (
     <ImageBackground
@@ -45,20 +43,7 @@ const EmptyDashboard = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.settingsButton}>
-              <Ionicons name="settings-outline" size={24} color="#2D3436" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.profileButton}>
-              <Avatar.Image
-                size={36}
-                source={{ uri: "https://i.pravatar.cc/100" }}
-                style={styles.profileImage}
-              />
-            </TouchableOpacity>
-          </View>
+          <Header />
 
           {/* Top Content Container */}
           <View style={styles.topContent}>
@@ -70,9 +55,6 @@ const EmptyDashboard = () => {
                 Ready to learn something new today?
               </Text>
             </View>
-
-            {/* Stats */}
-            <DashboardStats/>
           </View>
 
           {/* Illustration Image */}
