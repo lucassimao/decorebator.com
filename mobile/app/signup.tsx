@@ -1,5 +1,4 @@
 import * as usersApi from "@/api/users";
-import SnackBar from "@/components/SnackBar";
 import { useSnackbar } from "@/hooks/useSnackbar";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,7 +50,7 @@ const ErrorMessage = ({ error, style }: ErrorMessageProps) => {
 
 export default function SignUpScreen() {
   const [secureTextEntry, setSecureTextEntry] = React.useState(true);
-  const [signUpError, setSignUpError] = React.useState<string | null>(null);
+  const [signUpError, setSignUpError] = React.useState<Error | null>(null);
   const snackbar = useSnackbar();
 
   const scrollViewRef = React.useRef<ScrollView>(null);
@@ -65,14 +64,14 @@ export default function SignUpScreen() {
   // Viewport constraint (max visible area)
   const maxViewportHeight = screenHeight * 0.7;
 
-  const [keyboardVisible, setKeyboardVisible] = React.useState(false);
+  const [, setKeyboardVisible] = React.useState(false);
   const imageHeight = React.useRef(
     new Animated.Value(maxViewportHeight),
   ).current;
 
   React.useEffect(() => {
     if (signUpError) {
-      snackbar.show(signUpError, "error", 2000);
+      snackbar.show(signUpError.message, "error", 2000);
     }
   }, [signUpError, snackbar]);
 
@@ -110,7 +109,7 @@ export default function SignUpScreen() {
   const { mutate: signup } = useMutation<void, Error, usersApi.UserSignup>({
     mutationFn: (userData) => usersApi.signup(userData),
     onError: (error) => {
-      setSignUpError(error.message);
+      setSignUpError(error);
     },
     onSuccess: () => {
       router.replace("/dashboard/welcome");

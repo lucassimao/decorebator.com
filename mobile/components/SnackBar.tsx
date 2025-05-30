@@ -27,6 +27,7 @@ export default function SnackBar({
   const opacity = useRef(new Animated.Value(0)).current;
   const timeoutRef = useRef<number>(0);
 
+
   useEffect(() => {
     if (visible) {
       // Show animation

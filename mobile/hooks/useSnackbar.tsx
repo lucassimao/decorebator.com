@@ -1,6 +1,6 @@
 
 import SnackBar from '@/components/SnackBar';
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
 
 interface SnackbarContextType {
   show: (message: string, type: 'success' | 'error', duration?: number) => void;
@@ -31,21 +31,23 @@ export const SnackbarProvider: React.FC<{ children: ReactNode }> = ({ children }
     duration: 2000,
   });
 
-  const show = (message: string, type: 'success' | 'error' = 'success', duration = 2000) => {
-    setSnackbar({
-      visible: true,
-      message,
-      type,
-      duration,
-    });
-  };
+  const show = useCallback((
+    message: string,
+    type: 'success' | 'error' = 'success',
+    duration = 2000
+  ) => {
+    setSnackbar({ visible: true, message, type, duration });
+  }, []);
 
-  const hide = () => {
+  const hide = useCallback(() => {
     setSnackbar(prev => ({ ...prev, visible: false }));
-  };
+  }, []);
+
+  // now this object identity won’t change unless `show` changes
+  const contextValue = useMemo(() => ({ show }), [show]);
 
   return (
-    <SnackbarContext.Provider value={{ show }}>
+    <SnackbarContext.Provider value={contextValue}>
       {children}
       <SnackBar
         visible={snackbar.visible}
