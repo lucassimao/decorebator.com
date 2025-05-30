@@ -72,18 +72,11 @@ function RootLayoutNav() {
             }}
           />
           <Stack.Screen
-            name="subscription"
-            options={{
-              headerShown: true,
-              headerTitle: "Subscription",
-            }}
-          />
-          <Stack.Screen
-            name="settings/index"
+            name="settings"
             options={{ headerShown: false }}
           />
           <Stack.Screen
-            name="profileSettings/index"
+            name="profileSettings"
             options={{ headerShown: false }}
           />
         </Stack>
