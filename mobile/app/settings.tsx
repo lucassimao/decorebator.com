@@ -1,5 +1,7 @@
+type PlanRecurrence = "annual" | "monthly";
+
 export interface PricingPlan {
-  id: string;
+  id: PlanRecurrence;
   name: string;
   price: number;
   currency: string;
@@ -9,54 +11,35 @@ export interface PricingPlan {
   savings?: string;
 }
 
-export interface CheckoutResponse {
-  checkoutUrl: string;
-  sessionId: string;
-}
-
-// screens/SettingsScreen.tsx
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-  TouchableOpacity,
-  ImageBackground,
-  Dimensions,
-  Alert,
-  ActivityIndicator,
-  Linking,
-} from "react-native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import * as WebBrowser from "expo-web-browser";
 import * as subscriptionsApi from "@/api/subscriptions";
 import * as usersApi from "@/api/users";
-import { router } from "expo-router";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as AuthSession from "expo-auth-session";
 import * as MailComposer from "expo-mail-composer";
+import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
+import React, { useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  ImageBackground,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const createCheckoutSession = async (
-  planId: string,
-): Promise<CheckoutResponse> => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // Mock response - replace with actual API call
-  return {
-    checkoutUrl: "https://checkout.stripe.com/pay/cs_test_123",
-    sessionId: "cs_test_123",
-  };
-};
-
-// Pricing plans
 const PRICING_PLANS: PricingPlan[] = [
   {
     id: "monthly",
     name: "Monthly",
-    price: 4.99,
+    price: 6.99,
     currency: "USD",
     interval: "month",
     features: [
@@ -68,9 +51,9 @@ const PRICING_PLANS: PricingPlan[] = [
     ],
   },
   {
-    id: "yearly",
+    id: "annual",
     name: "Yearly",
-    price: 49.99,
+    price: 69.99,
     currency: "USD",
     interval: "year",
     popular: true,
@@ -88,7 +71,7 @@ const PRICING_PLANS: PricingPlan[] = [
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<PlanRecurrence | null>(null);
 
   // Fetch subscription
   const {
@@ -98,20 +81,38 @@ const SettingsScreen: React.FC = () => {
   } = useQuery({
     queryKey: ["subscription"],
     queryFn: subscriptionsApi.getSubscriptionStatus,
+
+    // ---- make everything immediately stale & un-cached ----
+    staleTime: 0, // data is stale as soon as it arrives
+
+    // ---- always refetch on mount or when window regains focus ----
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
   });
 
-  // Create checkout session mutation
   const checkoutMutation = useMutation({
-    mutationFn: createCheckoutSession,
+    mutationFn: async (plan: PlanRecurrence) => {
+      const redirectUri = AuthSession.makeRedirectUri({
+        scheme: "decorerbator",
+        path: "stripe",
+      });
+
+      const res = await subscriptionsApi.createCheckoutSession(
+        plan,
+        redirectUri,
+      );
+
+      return { checkoutUrl: res.checkoutUrl, redirectUri };
+    },
     onSuccess: async (data) => {
       const result = await WebBrowser.openAuthSessionAsync(
         data.checkoutUrl,
-        "yourapp://subscription-success", // Replace with your app's redirect URL
+        data.redirectUri,
       );
 
       if (result.type === "success") {
         // Refresh subscription data
-        queryClient.invalidateQueries({ queryKey: ["subscription"] });
+        refetchSubscription();
         Alert.alert("Success", "Subscription activated successfully!");
       }
     },
@@ -125,7 +126,6 @@ const SettingsScreen: React.FC = () => {
     mutationFn: subscriptionsApi.cancelSubscription,
     onSuccess: () => {
       refetchSubscription();
-      //   queryClient.invalidateQueries({ queryKey: ['subscription'] });
       Alert.alert(
         "Success",
         "Your subscription will be canceled at the end of the current period.",
@@ -135,10 +135,6 @@ const SettingsScreen: React.FC = () => {
       Alert.alert("Error", "Failed to cancel subscription. Please try again.");
     },
   });
-
-  const handleSubscribe = (planId: string) => {
-    checkoutMutation.mutate(planId);
-  };
 
   const signOut = () => {
     usersApi.sigout();
@@ -380,7 +376,9 @@ const SettingsScreen: React.FC = () => {
                   styles.subscribeButton,
                   !selectedPlan && styles.subscribeButtonDisabled,
                 ]}
-                onPress={() => selectedPlan && handleSubscribe(selectedPlan)}
+                onPress={() =>
+                  selectedPlan && checkoutMutation.mutateAsync(selectedPlan)
+                }
                 disabled={!selectedPlan || checkoutMutation.isPending}
                 activeOpacity={0.8}
               >

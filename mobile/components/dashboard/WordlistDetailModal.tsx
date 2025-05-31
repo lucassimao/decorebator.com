@@ -1,5 +1,6 @@
 import * as wordlistsApi from "@/api/wordlists";
 import { Wordlist } from "@/api/wordlists";
+import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
@@ -24,22 +25,9 @@ import {
 } from "react-native";
 import { LANGUAGES } from "./CreateWordlistModal";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-const toggleWordLearned = async (
-  wordlistId: number,
-  wordId: number,
-  learned: boolean,
-): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, 300));
 
-  // Replace with actual API call
-  // await fetch(`/api/wordlists/${wordlistId}/words/${wordId}`, {
-  //   method: 'PATCH',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ learned }),
-  // });
-};
 
 interface WordlistDetailModalProps {
   visible: boolean;
@@ -61,6 +49,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     "all" | "learned" | "unlearned"
   >("all");
   const language = LANGUAGES.find((l) => wordlist.languageCode === l.code)!;
+  const updatePromptDialog= useUpgradePromptDialog()
 
   const {
     control,
@@ -92,6 +81,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       reset();
       setShowAddForm(false);
     },
+    onError: console.error
   });
 
   const deleteWordMutation = useMutation({
@@ -102,16 +92,17 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
+    onError: console.error
+
   });
 
-  // Toggle learned mutation
   const toggleLearnedMutation = useMutation({
-    mutationFn: ({ wordId, learned }: { wordId: number; learned: boolean }) =>
-      toggleWordLearned(wordlist.id, wordId, learned),
+    mutationFn: (word: wordlistsApi.Word) => wordlistsApi.updateWord({  ...word}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["words", wordlist.id] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
+    onError: console.error
   });
 
   // Animation
@@ -179,13 +170,22 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     addWordMutation.mutate(data);
   };
 
+  const onPressAddWord = ()=>{
+    if (words.length >= 10){
+      onClose()
+      updatePromptDialog.show()
+    } else {
+      setShowAddForm(true)
+    }
+  }
+
   const renderWordItem = ({ item }: { item: wordlistsApi.Word }) => (
     <View style={styles.wordCard}>
       <TouchableOpacity
         style={styles.learnedToggle}
         onPress={() =>
           toggleLearnedMutation.mutate({
-            wordId: item.id,
+            ...item,
             learned: !item.learned,
           })
         }
@@ -496,12 +496,13 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
           {!showAddForm && (
             <TouchableOpacity
               style={styles.fab}
-              onPress={() => setShowAddForm(true)}
+              onPress={onPressAddWord}
               activeOpacity={0.8}
             >
               <Ionicons name="add" size={28} color="#FFFFFF" />
             </TouchableOpacity>
           )}
+
         </Animated.View>
       </View>
     </Modal>

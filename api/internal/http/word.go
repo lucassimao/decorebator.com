@@ -11,8 +11,9 @@ import (
 )
 
 type WordInput struct {
-	Name  string `json:"name" binding:"required"`
-	Notes string `json:"notes"`
+	Name    string `json:"name" binding:"required"`
+	Notes   string `json:"notes"`
+	Learned bool   `json:"learned"`
 }
 
 type WordRoutes struct{}
@@ -78,6 +79,7 @@ func (h *WordRoutes) Update(c *gin.Context) {
 	var input WordInput
 
 	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
+	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 
 	if err := c.BindJSON(&input); err != nil {
@@ -85,12 +87,12 @@ func (h *WordRoutes) Update(c *gin.Context) {
 		return
 	}
 
-	err := service.UpdateWord(&Word{ID: id, Name: input.Name, UserID: userId}, nil)
+	err := service.UpdateWord(&Word{ID: id, Name: input.Name, UserID: userId, Learned: input.Learned, WordlistID: wordlistId}, nil)
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.String(http.StatusNotFound, err.Error())
 		} else {
-			c.String(http.StatusInternalServerError, "Couldn't update word #%d", id)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update word"})
 		}
 		return
 	}

@@ -1,4 +1,4 @@
-import * as usersApi from "@/api/users";
+import * as subscriptionsApi from "@/api/subscriptions";
 import * as wordlistsApi from "@/api/wordlists";
 import { Wordlist } from "@/api/wordlists";
 import { CreateWordlistModal } from "@/components/dashboard/CreateWordlistModal";
@@ -6,8 +6,8 @@ import { Header } from "@/components/dashboard/Header";
 import DashboardStats from "@/components/dashboard/Stats";
 import { WordlistDetailModal } from "@/components/dashboard/WordlistDetailModal";
 import Wordlistitem from "@/components/dashboard/WordlistItem";
+import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -31,12 +31,24 @@ interface DashboardProps {}
 const Dashboard: React.FC<DashboardProps> = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [user, setUser] = React.useState(usersApi.getUserInfo());
   const [selectedWordlist, setSelectedWordlist] =
     React.useState<Wordlist | null>(null);
-
+  const upgradeDialog = useUpgradePromptDialog()
   const router = useRouter();
 
+    // Fetch subscription
+    const {
+      data: subscription,
+    } = useQuery({
+      queryKey: ["subscription"],
+      queryFn: subscriptionsApi.getSubscriptionStatus,
+      staleTime: 0, // data is stale as soon as it arrives
+      // ---- always refetch on mount or when window regains focus ----
+      refetchOnMount: "always",
+      refetchOnWindowFocus: "always",
+    });
+
+    // Fetch wordlists
   const {
     data: wordlists,
     isLoading,
@@ -62,38 +74,26 @@ const Dashboard: React.FC<DashboardProps> = () => {
     setRefreshing(false);
   };
 
-  // Refresh user session when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      const refreshUserSession = async () => {
-        try {
-          const updatedUser = await usersApi.refreshToken();
-          setUser(updatedUser);
-        } catch (error) {
-          // If refresh fails, just use the cached user info
-          console.error("Failed to refresh user session:", error);
-        }
-      };
-
-      refreshUserSession();
-    }, []),
-  );
-
   const renderWordlistItem = ({ item }: { item: Wordlist }) => (
     <Wordlistitem item={item} onPressed={() => setSelectedWordlist(item)} />
   );
   const hideWordlistDetailModal = () => setSelectedWordlist(null);
 
+  const handleAddNewWordlist = () => {
+    const wordlistCount = wordlists?.length || 0;
+    const isFreePlan = !subscription || subscription.plan == 'free'
+    
+    // Check if user has reached free plan limit
+    if (isFreePlan && wordlistCount >= 1) {
+      upgradeDialog.show()
+    } else {
+      setShowCreateModal(true);
+    }
+  };
+
   const renderHeader = () => (
     <>
       <Header />
-
-      {/* Greeting */}
-      <View style={styles.greetingContainer}>
-        <Text style={styles.greeting}>Good Morning,</Text>
-        <Text style={styles.userName}>{user?.firstName}!</Text>
-        <Text style={styles.subtitle}>Ready to learn something new today?</Text>
-      </View>
 
       {/* Stats */}
       <DashboardStats />
@@ -103,7 +103,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
         <Text style={styles.sectionTitle}>My Wordlists</Text>
         <TouchableOpacity
           style={styles.addButton}
-          onPress={() => setShowCreateModal(true)}
+          onPress={handleAddNewWordlist}
         >
           <Ionicons name="add-circle" size={34} color="#FF7B54" />
         </TouchableOpacity>
@@ -183,6 +183,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
           wordlist={selectedWordlist}
         />
       )}
+
     </>
   );
 };
@@ -242,27 +243,6 @@ const styles = StyleSheet.create({
   profileImage: {
     width: "100%",
     height: "100%",
-  },
-  greetingContainer: {
-    marginBottom: 20,
-    paddingHorizontal: 20,
-  },
-  greeting: {
-    fontSize: 28,
-    fontWeight: "600",
-    color: "#2D3436",
-    marginBottom: 4,
-  },
-  userName: {
-    fontSize: 28,
-    fontWeight: "600",
-    color: "#2D3436",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#636E72",
-    marginTop: 4,
   },
   statsContainer: {
     flexDirection: "row",

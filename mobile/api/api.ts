@@ -7,7 +7,7 @@ import { getAuthorization, sigout } from "./users";
 import { router } from "expo-router";
 
 export async function callAPI<T>(
-  method: "GET" | "POST" | "DELETE" | "PATCH",
+  method: "GET" | "POST" | "DELETE" | "PATCH"|'PUT',
   endpoint: string,
   body?: string,
 ): Promise<T> {
@@ -25,13 +25,12 @@ export async function callAPI<T>(
     body,
     credentials: "include",
   });
-  let responseBody;
-  try {
+
+  let responseBody: any
+
+  if (response.status != 204) {
     responseBody = await response.json();
-  } catch (error) {
-    // no response. ignoring
-    responseBody = {};
-  }
+  } 
   if (!response.ok) {
     const message =
       responseBody?.error ||
@@ -40,6 +39,7 @@ export async function callAPI<T>(
 
     if (message == TOKEN_VALIDATION_ERROR) {
       await sigout();
+      router.dismissAll()
       router.replace("/signin");
     } else {
       throw new Error(message);

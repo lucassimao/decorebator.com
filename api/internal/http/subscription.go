@@ -120,6 +120,8 @@ func GetSubscriptionStatus(subRepo *repository.SubscriptionRepository) gin.Handl
 			response["currentPeriodEnd"] = subscription.CurrentPeriodEnd
 			response["cancelAtPeriodEnd"] = subscription.CancelAtPeriodEnd
 			response["trialEnd"] = subscription.TrialEnd
+			response["plan"] = subscription.Plan
+			response["status"] = subscription.Status
 		}
 
 		c.JSON(http.StatusOK, response)

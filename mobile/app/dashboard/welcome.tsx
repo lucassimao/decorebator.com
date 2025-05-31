@@ -45,18 +45,6 @@ const EmptyDashboard = () => {
         >
           <Header />
 
-          {/* Top Content Container */}
-          <View style={styles.topContent}>
-            {/* Greeting */}
-            <View style={styles.greetingContainer}>
-              <Text style={styles.greeting}>Good Morning,</Text>
-              <Text style={styles.userName}>{user?.firstName}!</Text>
-              <Text style={styles.subtitle}>
-                Ready to learn something new today?
-              </Text>
-            </View>
-          </View>
-
           {/* Illustration Image */}
           <View style={styles.illustrationContainer}>
             <Image
@@ -149,29 +137,6 @@ const styles = StyleSheet.create({
   profileImage: {
     width: "100%",
     height: "100%",
-  },
-  topContent: {
-    paddingHorizontal: 20,
-  },
-  greetingContainer: {
-    marginBottom: 20,
-  },
-  greeting: {
-    fontSize: 28,
-    fontWeight: "600",
-    color: "#2D3436",
-    marginBottom: 4,
-  },
-  userName: {
-    fontSize: 28,
-    fontWeight: "600",
-    color: "#2D3436",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#636E72",
-    marginTop: 4,
   },
   statsContainer: {
     flexDirection: "row",

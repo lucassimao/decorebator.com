@@ -54,6 +54,8 @@ type DashboardStatsProps = {
   onStatsPress?: () => void;
 };
 
+const PROGRESS_OVERVIEW_ENABLED = false;
+
 const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
@@ -145,7 +147,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
           end={{ x: 1, y: 1 }}
         >
           {/* Progress Overview */}
-          <View style={styles.progressOverview}>
+          { PROGRESS_OVERVIEW_ENABLED && <View style={styles.progressOverview}>
             <Text style={styles.progressLabel}>Learning Progress</Text>
             <View style={styles.progressBarContainer}>
               <View style={styles.progressBarBackground}>
@@ -187,7 +189,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
                 </View>
               )}
             </View>
-          </View>
+          </View>}
 
           {/* Stats Grid */}
           <View style={styles.statsGrid}>

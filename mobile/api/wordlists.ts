@@ -95,13 +95,16 @@ export async function addWord(dto: CreateWordDTO): Promise<void> {
 export async function deleteWord(word: Pick<Word,'id'|'wordlistId'>): Promise<void> {
   const { wordlistId, id: wordId } = word;
 
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL +
+  const endpoint =  process.env.EXPO_PUBLIC_API_URL +
     `/wordlists/${wordlistId}/words/${wordId}`;
 
   await callAPI("DELETE", endpoint);
 }
 
+export async function updateWord(dto: Pick<Word,'id'|'wordlistId'|'learned'|'name'|'notes'>) {
+   const endpoint =  process.env.EXPO_PUBLIC_API_URL + `/wordlists/${dto.wordlistId}/words/${dto.id}`;
+   await callAPI("PUT", endpoint, JSON.stringify(dto));
+}
 export async function newQuiz(wordlistId: number): Promise<Quiz> {
   const endpoint =
     process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/quizzes`;

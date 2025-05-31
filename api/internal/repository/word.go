@@ -132,7 +132,7 @@ func (repository *WordRepository) Delete(userId, wordID int64) (int64, error) {
 }
 
 func (repository *WordRepository) Update(word *Word, tx *pgx.Tx) (int64, error) {
-	query := `UPDATE words SET name=$1, updated_at=NOW(), audio_url=$4, wordlist_id=$5, notes=$6 WHERE user_id=$2 AND ID=$3`
+	query := `UPDATE words SET name=$1, updated_at=NOW(), audio_url=$4, wordlist_id=$5, notes=$6, learned=$7 WHERE user_id=$2 AND ID=$3`
 
 	var result pgconn.CommandTag
 	var err error
@@ -141,7 +141,8 @@ func (repository *WordRepository) Update(word *Word, tx *pgx.Tx) (int64, error) 
 	if tx != nil {
 		exec = (*tx).Exec
 	}
-	result, err = exec(context.Background(), query, word.Name, word.UserID, word.ID, word.AudioURL, word.WordlistID, word.Notes)
+	result, err = exec(context.Background(), query, word.Name, word.UserID,
+		word.ID, word.AudioURL, word.WordlistID, word.Notes, word.Learned)
 
 	if err != nil {
 		return 0, err

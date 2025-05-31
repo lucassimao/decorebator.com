@@ -32,16 +32,13 @@
 
 [ ] Mobile UI improvements
     [ ] Dashboard
-        - currentStreak
-        - Learnning Progress %
         - User profile settings
-        - settings ( subscription )
     [x] Sign Up
     [x] Wordlist CRUD
     [x] Sign In
     [x] Recover password
     [x] Quiz
-    [ ] remove react native paper depndency
+    [x] remove react native paper dependency
     [ ] Fix session expiration
     [x] Replace expo-av with expo-audio
     [x] App icon
@@ -57,6 +54,8 @@
     [ ]  PostHog integration
 
 # V2
+[ ] Remove the trigger in subscription table and drop user.subscription_* fields. Move logic to the service layer
+[ ] Progress overview and currentStreak in the DashboardStats component
 [ ] how to rollback db migrations?
 [ ] continuos deployment for mobile
 [ ] improve quiz algorithm

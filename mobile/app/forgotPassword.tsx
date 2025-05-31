@@ -224,7 +224,6 @@ const ForgotPasswordScreen: React.FC = () => {
                         keyboardType="email-address"
                         autoComplete="email"
                         editable={!resetMutation.isPending}
-                        autoFocus
                       />
                     )}
                   />

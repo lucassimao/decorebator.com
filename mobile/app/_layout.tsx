@@ -6,6 +6,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { SnackbarProvider } from "@/hooks/useSnackbar";
+import { UpgradePromptDialogProvider } from "@/hooks/useUpgradePromptDialog";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -50,6 +51,7 @@ function RootLayoutNav() {
   return (
     <QueryClientProvider client={queryClient}>
       <SnackbarProvider>
+        <UpgradePromptDialogProvider>
         <Stack>
           <Stack.Screen name="signup" options={{ headerShown: false }} />
           <Stack.Screen name="quiz" options={{ headerShown: false }} />
@@ -80,6 +82,7 @@ function RootLayoutNav() {
             options={{ headerShown: false }}
           />
         </Stack>
+        </UpgradePromptDialogProvider>
       </SnackbarProvider>
     </QueryClientProvider>
   );
