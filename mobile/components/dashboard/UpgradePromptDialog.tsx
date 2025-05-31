@@ -64,7 +64,7 @@ const UpgradePromptDialog = ({ visible, onDismiss }: Props) => {
       onRequestClose={onDismiss}
     >
       <TouchableWithoutFeedback onPress={onDismiss}>
-        <Animated.View 
+        <Animated.View
           style={[
             styles.overlay,
             {
@@ -85,7 +85,11 @@ const UpgradePromptDialog = ({ visible, onDismiss }: Props) => {
               {/* Icon */}
               <View style={styles.iconContainer}>
                 <View style={styles.iconBackground}>
-                  <MaterialIcons name="workspace-premium" size={32} color="#FFD700" />
+                  <MaterialIcons
+                    name="workspace-premium"
+                    size={32}
+                    color="#FFD700"
+                  />
                 </View>
               </View>
 
@@ -95,11 +99,12 @@ const UpgradePromptDialog = ({ visible, onDismiss }: Props) => {
               {/* Content */}
               <View style={styles.content}>
                 <Text style={styles.contentText}>
-                  You've reached the free plan limit of 1 wordlist with up to 10 words.
+                  You've reached the free plan limit of 1 wordlist with up to 10
+                  words.
                 </Text>
                 <Text style={styles.contentText}>
-                  Upgrade to Premium to create unlimited wordlists and unlock all
-                  learning features!
+                  Upgrade to Premium to create unlimited wordlists and unlock
+                  all learning features!
                 </Text>
               </View>
 

@@ -1,11 +1,11 @@
 import { getAuthorization } from "./users";
-import {  DEFAULT_ERROR } from "./constants";
+import { DEFAULT_ERROR } from "./constants";
 
-const API_URL =process.env.EXPO_PUBLIC_API_URL
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export type SubscriptionStatus = {
-  plan: 'free' | 'monthly' | 'annual';
-  status?: 'active' | 'cancelled' | 'past_due' | 'trialing' | 'unpaid';
+  plan: "free" | "monthly" | "annual";
+  status?: "active" | "cancelled" | "past_due" | "trialing" | "unpaid";
   currentPeriodEnd?: string;
   cancelAtPeriodEnd?: boolean;
   trialEnd?: string;
@@ -16,7 +16,10 @@ export type CheckoutSessionResponse = {
   sessionId: string;
 };
 
-export async function createCheckoutSession(plan: 'monthly' | 'annual',expoUri:string): Promise<CheckoutSessionResponse> {
+export async function createCheckoutSession(
+  plan: "monthly" | "annual",
+  expoUri: string,
+): Promise<CheckoutSessionResponse> {
   const endpoint = `${process.env.EXPO_PUBLIC_API_URL}/subscription/checkout-session`;
   const authorization = getAuthorization();
 
@@ -28,7 +31,7 @@ export async function createCheckoutSession(plan: 'monthly' | 'annual',expoUri:s
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": authorization,
+      Authorization: authorization,
     },
     body: JSON.stringify({ plan, expoUri }),
   });
@@ -52,7 +55,7 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
   const response = await fetch(endpoint, {
     method: "GET",
     headers: {
-      "Authorization": authorization,
+      Authorization: authorization,
     },
   });
 
@@ -75,7 +78,7 @@ export async function cancelSubscription(): Promise<void> {
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
-      "Authorization": authorization,
+      Authorization: authorization,
     },
   });
 

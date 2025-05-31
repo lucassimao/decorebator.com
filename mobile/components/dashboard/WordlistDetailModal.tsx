@@ -27,8 +27,6 @@ import { LANGUAGES } from "./CreateWordlistModal";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-
-
 interface WordlistDetailModalProps {
   visible: boolean;
   onClose: () => void;
@@ -49,7 +47,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     "all" | "learned" | "unlearned"
   >("all");
   const language = LANGUAGES.find((l) => wordlist.languageCode === l.code)!;
-  const updatePromptDialog= useUpgradePromptDialog()
+  const updatePromptDialog = useUpgradePromptDialog();
 
   const {
     control,
@@ -81,7 +79,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       reset();
       setShowAddForm(false);
     },
-    onError: console.error
+    onError: console.error,
   });
 
   const deleteWordMutation = useMutation({
@@ -92,17 +90,17 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
-    onError: console.error
-
+    onError: console.error,
   });
 
   const toggleLearnedMutation = useMutation({
-    mutationFn: (word: wordlistsApi.Word) => wordlistsApi.updateWord({  ...word}),
+    mutationFn: (word: wordlistsApi.Word) =>
+      wordlistsApi.updateWord({ ...word }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["words", wordlist.id] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
-    onError: console.error
+    onError: console.error,
   });
 
   // Animation
@@ -170,14 +168,14 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     addWordMutation.mutate(data);
   };
 
-  const onPressAddWord = ()=>{
-    if (words.length >= 10){
-      onClose()
-      updatePromptDialog.show()
+  const onPressAddWord = () => {
+    if (words.length >= 10) {
+      onClose();
+      updatePromptDialog.show();
     } else {
-      setShowAddForm(true)
+      setShowAddForm(true);
     }
-  }
+  };
 
   const renderWordItem = ({ item }: { item: wordlistsApi.Word }) => (
     <View style={styles.wordCard}>
@@ -502,7 +500,6 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
               <Ionicons name="add" size={28} color="#FFFFFF" />
             </TouchableOpacity>
           )}
-
         </Animated.View>
       </View>
     </Modal>

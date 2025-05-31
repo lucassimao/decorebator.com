@@ -33,22 +33,20 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedWordlist, setSelectedWordlist] =
     React.useState<Wordlist | null>(null);
-  const upgradeDialog = useUpgradePromptDialog()
+  const upgradeDialog = useUpgradePromptDialog();
   const router = useRouter();
 
-    // Fetch subscription
-    const {
-      data: subscription,
-    } = useQuery({
-      queryKey: ["subscription"],
-      queryFn: subscriptionsApi.getSubscriptionStatus,
-      staleTime: 0, // data is stale as soon as it arrives
-      // ---- always refetch on mount or when window regains focus ----
-      refetchOnMount: "always",
-      refetchOnWindowFocus: "always",
-    });
+  // Fetch subscription
+  const { data: subscription } = useQuery({
+    queryKey: ["subscription"],
+    queryFn: subscriptionsApi.getSubscriptionStatus,
+    staleTime: 0, // data is stale as soon as it arrives
+    // ---- always refetch on mount or when window regains focus ----
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
+  });
 
-    // Fetch wordlists
+  // Fetch wordlists
   const {
     data: wordlists,
     isLoading,
@@ -81,11 +79,11 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
   const handleAddNewWordlist = () => {
     const wordlistCount = wordlists?.length || 0;
-    const isFreePlan = !subscription || subscription.plan == 'free'
-    
+    const isFreePlan = !subscription || subscription.plan == "free";
+
     // Check if user has reached free plan limit
     if (isFreePlan && wordlistCount >= 1) {
-      upgradeDialog.show()
+      upgradeDialog.show();
     } else {
       setShowCreateModal(true);
     }
@@ -183,7 +181,6 @@ const Dashboard: React.FC<DashboardProps> = () => {
           wordlist={selectedWordlist}
         />
       )}
-
     </>
   );
 };

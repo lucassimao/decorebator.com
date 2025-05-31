@@ -147,49 +147,51 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
           end={{ x: 1, y: 1 }}
         >
           {/* Progress Overview */}
-          { PROGRESS_OVERVIEW_ENABLED && <View style={styles.progressOverview}>
-            <Text style={styles.progressLabel}>Learning Progress</Text>
-            <View style={styles.progressBarContainer}>
-              <View style={styles.progressBarBackground}>
-                <Animated.View
-                  style={[
-                    styles.progressBarFill,
-                    {
-                      width: `${getProgressPercentage()}%`,
-                    },
-                  ]}
-                />
-              </View>
-              <Text style={styles.progressPercentage}>
-                {getProgressPercentage()}%
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingTop: 6,
-              }}
-            >
-              <Text style={styles.motivationalText}>
-                {getMotivationalMessage()}
-              </Text>
-              {stats?.currentStreak && stats.currentStreak > 0 && (
-                <View style={styles.streakContainer}>
-                  <MaterialIcons
-                    name="local-fire-department"
-                    size={20}
-                    color="#FF6B3D"
+          {PROGRESS_OVERVIEW_ENABLED && (
+            <View style={styles.progressOverview}>
+              <Text style={styles.progressLabel}>Learning Progress</Text>
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBarBackground}>
+                  <Animated.View
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        width: `${getProgressPercentage()}%`,
+                      },
+                    ]}
                   />
-                  <Text style={styles.streakText}>
-                    {stats.currentStreak} day streak!
-                  </Text>
                 </View>
-              )}
+                <Text style={styles.progressPercentage}>
+                  {getProgressPercentage()}%
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingTop: 6,
+                }}
+              >
+                <Text style={styles.motivationalText}>
+                  {getMotivationalMessage()}
+                </Text>
+                {stats?.currentStreak && stats.currentStreak > 0 && (
+                  <View style={styles.streakContainer}>
+                    <MaterialIcons
+                      name="local-fire-department"
+                      size={20}
+                      color="#FF6B3D"
+                    />
+                    <Text style={styles.streakText}>
+                      {stats.currentStreak} day streak!
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
-          </View>}
+          )}
 
           {/* Stats Grid */}
           <View style={styles.statsGrid}>

@@ -22,7 +22,7 @@ export function decode(token: string) {
   // Decode the header and payload
   const header = JSON.parse(base64UrlDecode(parts[0]));
   const payload = JSON.parse(base64UrlDecode(parts[1]));
-  
+
   // Return the decoded header and payload
   return {
     header,

@@ -19,7 +19,7 @@ export type UserInfo = {
   firstName: string;
   lastName: string;
   id: number;
-  subscriptionPlan?: 'free' | 'monthly' | 'annual';
+  subscriptionPlan?: "free" | "monthly" | "annual";
 };
 
 export const SIGN_IN_ERROR =
@@ -84,12 +84,13 @@ export async function signin(data: UserSignin) {
 }
 
 export async function requestResetEmailPassword(email: string) {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/password/send-reset-email";
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL + "/password/send-reset-email";
 
   const response = await fetch(endpoint, {
     method: "POST",
     body: JSON.stringify({
-      email
+      email,
     }),
     headers: {
       "Content-Type": "application/json",
@@ -97,7 +98,7 @@ export async function requestResetEmailPassword(email: string) {
     credentials: "include",
   });
 
-   if (!response.ok) {
+  if (!response.ok) {
     const body = await response.json();
     const message =
       body?.error ||
@@ -105,7 +106,6 @@ export async function requestResetEmailPassword(email: string) {
       DEFAULT_ERROR;
     throw new Error(message);
   }
-
 }
 
 export function getUserInfo(): UserInfo | null {
@@ -120,7 +120,7 @@ export function getUserInfo(): UserInfo | null {
     firstName: decoded.payload?.firstName,
     lastName: decoded.payload?.lastName,
     id: +decoded.payload?.sub,
-    subscriptionPlan: decoded.payload?.subscriptionPlan || 'free',
+    subscriptionPlan: decoded.payload?.subscriptionPlan || "free",
   };
 }
 
@@ -155,7 +155,7 @@ export async function refreshToken(): Promise<UserInfo> {
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
-      "Authorization": authorization,
+      Authorization: authorization,
     },
     credentials: "include",
   });
@@ -165,12 +165,12 @@ export async function refreshToken(): Promise<UserInfo> {
   }
 
   const data = await response.json();
-  
+
   // Save the new token
   if (data.token) {
     saveAuthorization(data.token);
   }
-  
+
   // Return updated user info
   return data.user as UserInfo;
 }

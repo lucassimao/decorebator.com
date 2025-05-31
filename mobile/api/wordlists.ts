@@ -7,24 +7,24 @@ export type Wordlist = {
   name: string;
   updatedAt: string;
   userId: number;
-  languageCode:string
-  wordsCount:number
+  languageCode: string;
+  wordsCount: number;
 };
 
-export type UserStats =  {
+export type UserStats = {
   totalWords: number;
   wordlists: number;
   wordsLearned: number;
-  currentStreak?:number
-}
+  currentStreak?: number;
+};
 
 export type Word = {
   id: number;
   name: string;
   wordlistId: number;
-  learned: boolean
-  pronunciation?: string
-  notes?:string
+  learned: boolean;
+  pronunciation?: string;
+  notes?: string;
 };
 
 export type Quiz = {
@@ -44,8 +44,11 @@ export type Quiz = {
   imageDescription: string;
 };
 
-export type CreateWordDTO = Pick<Word, "wordlistId" | "name"|"notes">;
-export type CreateWordlistDTO = Pick<Wordlist, "description" | "name"|"languageCode">;
+export type CreateWordDTO = Pick<Word, "wordlistId" | "name" | "notes">;
+export type CreateWordlistDTO = Pick<
+  Wordlist,
+  "description" | "name" | "languageCode"
+>;
 
 export async function getUserWordlists() {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/wordlists";
@@ -54,12 +57,11 @@ export async function getUserWordlists() {
 }
 
 export async function getUserStats(): Promise<UserStats> {
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL + `/wordlists/stats`;
+  const endpoint = process.env.EXPO_PUBLIC_API_URL + `/wordlists/stats`;
 
   const body = await callAPI<UserStats>("GET", endpoint);
 
-  return {...body,currentStreak:10}
+  return { ...body, currentStreak: 10 };
 }
 
 export async function getWords(wordlistId: number): Promise<Word[]> {
@@ -92,18 +94,25 @@ export async function addWord(dto: CreateWordDTO): Promise<void> {
   await callAPI("POST", endpoint, JSON.stringify(dto));
 }
 
-export async function deleteWord(word: Pick<Word,'id'|'wordlistId'>): Promise<void> {
+export async function deleteWord(
+  word: Pick<Word, "id" | "wordlistId">,
+): Promise<void> {
   const { wordlistId, id: wordId } = word;
 
-  const endpoint =  process.env.EXPO_PUBLIC_API_URL +
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL +
     `/wordlists/${wordlistId}/words/${wordId}`;
 
   await callAPI("DELETE", endpoint);
 }
 
-export async function updateWord(dto: Pick<Word,'id'|'wordlistId'|'learned'|'name'|'notes'>) {
-   const endpoint =  process.env.EXPO_PUBLIC_API_URL + `/wordlists/${dto.wordlistId}/words/${dto.id}`;
-   await callAPI("PUT", endpoint, JSON.stringify(dto));
+export async function updateWord(
+  dto: Pick<Word, "id" | "wordlistId" | "learned" | "name" | "notes">,
+) {
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL +
+    `/wordlists/${dto.wordlistId}/words/${dto.id}`;
+  await callAPI("PUT", endpoint, JSON.stringify(dto));
 }
 export async function newQuiz(wordlistId: number): Promise<Quiz> {
   const endpoint =

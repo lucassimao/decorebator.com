@@ -1,13 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import React from "react";
-import { 
-  TouchableOpacity, 
-  View, 
-  StyleSheet, 
-  Text, 
-  Image 
-} from "react-native";
+import { TouchableOpacity, View, StyleSheet, Text, Image } from "react-native";
 import * as usersApi from "@/api/users";
 
 export const Header = () => {
@@ -29,7 +23,7 @@ export const Header = () => {
       refreshUserSession();
     }, []),
   );
-  
+
   const handleSettingsPress = () => {
     router.push("/settings");
   };
@@ -46,7 +40,7 @@ export const Header = () => {
     return "Good Evening";
   };
 
-  const profilePicture = 'https://i.pravatar.cc/100'
+  const profilePicture = "https://i.pravatar.cc/100";
 
   return (
     <>
@@ -71,7 +65,7 @@ export const Header = () => {
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarText}>
-                  {user?.firstName?.[0]?.toUpperCase() || 'U'}
+                  {user?.firstName?.[0]?.toUpperCase() || "U"}
                 </Text>
               </View>
             )}
@@ -81,7 +75,7 @@ export const Header = () => {
       {/* Greeting */}
       <View style={styles.greetingContainer}>
         <Text style={styles.greeting}>{getGreeting()},</Text>
-        <Text style={styles.userName}>{user?.firstName || 'User'}!</Text>
+        <Text style={styles.userName}>{user?.firstName || "User"}!</Text>
         <Text style={styles.subtitle}>Ready to learn something new today?</Text>
       </View>
     </>
