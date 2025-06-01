@@ -154,6 +154,12 @@ func (repository *UserRepository) UpdatePassword(userId int64, newPassword strin
 	return nil
 }
 
+func (repository *UserRepository) Delete(userId int64) error {
+	query := `DELETE FROM users WHERE ID = $1`
+	_, err := repository.Db.Exec(context.Background(), query, userId)
+	return err
+}
+
 type UpdateUserProfileArgs struct {
 	ID                int64
 	FirstName         *string

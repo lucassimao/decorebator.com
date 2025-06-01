@@ -148,7 +148,6 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 	payload, err := mail.ValidateResetPasswordPayload(input.Token)
 	if err != nil {
 		c.Status(http.StatusBadRequest)
-		fmt.Println(err)
 		return
 	}
 
@@ -257,7 +256,6 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 
 		objectName := fmt.Sprintf("users/%d-%d.%s", userIDInt64, time.Now().Unix(), *input.ProfilePictureFileExtension)
 		uploadResult, err := common.Upload(imgBytes, "decorebator", objectName, mimeType)
-		fmt.Println(err)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload profile picture."})
 			return
@@ -316,4 +314,24 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 	user.StripeCustomerID = nil
 
 	c.JSON(http.StatusOK, user)
+}
+
+func (h *UserRoutes) DeleteProfile(c *gin.Context) {
+
+	// Get user from context (set by auth middleware)
+	userIDAny, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found."})
+		return
+	}
+
+	userID := userIDAny.(int64)
+
+	err := service.Delete(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User could not be deleted."})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

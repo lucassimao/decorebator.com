@@ -86,3 +86,19 @@ func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64, ctx context.C
 	}
 	return nil
 }
+
+func DeleteUserErrorReports(userId int64) (int64, error) {
+
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return 0, err
+	}
+
+	query := `DELETE FROM error_reports WHERE user_id=$1`
+	result, err := db.Exec(context.Background(), query, userId)
+	if err != nil {
+		return 0, err
+	}
+
+	return result.RowsAffected(), nil
+}

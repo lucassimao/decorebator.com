@@ -1,28 +1,29 @@
-import React, { useState, useEffect } from "react";
+import * as userApi from "@/api/users";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useNavigation } from "@react-navigation/native";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as ImagePicker from "expo-image-picker";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
-  View,
-  Text,
-  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   SafeAreaView,
   ScrollView,
-  TouchableOpacity,
-  ImageBackground,
-  Dimensions,
-  Alert,
-  ActivityIndicator,
+  StyleSheet,
+  Text,
   TextInput,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Modal,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm, Controller } from "react-hook-form";
-import * as ImagePicker from "expo-image-picker";
-import * as userApi from "@/api/users";
-import DateTimePicker from "@react-native-community/datetimepicker";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -75,11 +76,6 @@ const uploadProfilePicture = async (uri: string): Promise<string> => {
   });
 
   return res.profilePictureUrl;
-};
-
-const deleteAccount = async (): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  // API call to delete account
 };
 
 const ProfileSettingsScreen: React.FC = () => {
@@ -156,13 +152,15 @@ const ProfileSettingsScreen: React.FC = () => {
 
   // Delete account mutation
   const deleteAccountMutation = useMutation({
-    mutationFn: deleteAccount,
+    mutationFn: userApi.deleteProfile,
     onSuccess: () => {
-      // Navigate to login/auth screen
       Alert.alert(
         "Account Deleted",
         "Your account has been permanently deleted.",
       );
+      userApi.sigout();
+      router.dismissAll();
+      router.replace("/signup");
     },
     onError: () => {
       Alert.alert("Error", "Failed to delete account. Please try again.");

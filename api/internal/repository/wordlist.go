@@ -96,6 +96,16 @@ func (repository *WordlistRepository) Delete(wordlistID, userId int64) (int64, e
 	return result.RowsAffected(), nil
 }
 
+func (repository *WordlistRepository) DeleteAll(userId int64) (int64, error) {
+	query := `DELETE FROM wordlists WHERE user_id=$1`
+	result, err := repository.Db.Exec(context.Background(), query, userId)
+	if err != nil {
+		return 0, err
+	}
+
+	return result.RowsAffected(), nil
+}
+
 func (repository *WordlistRepository) Update(wordlist *Wordlist) (int64, error) {
 	query := `UPDATE wordlists SET name=$1, description=$2,language_code=$3 updated_at=NOW() WHERE user_id=$4 AND ID=$5`
 	result, err := repository.Db.Exec(context.Background(), query, wordlist.Name, wordlist.Description, wordlist.LanguageCode, wordlist.UserID, wordlist.ID)

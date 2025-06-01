@@ -185,6 +185,31 @@ export async function getProfile(): Promise<UserProfile> {
   return body;
 }
 
+export async function deleteProfile(): Promise<void> {
+  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/users";
+  const authorization = getAuthorization();
+
+  if (!authorization) {
+    throw new Error("Authentication required");
+  }
+
+  const response = await fetch(endpoint, {
+    method: "DELETE",
+    headers: {
+      Authorization: authorization,
+    },
+  });
+
+  if (!response.ok) {
+    const body = await response.json();
+    const message =
+      body?.error ||
+      Object.values(body?.validationErrors)?.[0] ||
+      DEFAULT_ERROR;
+    throw new Error(message);
+  }
+}
+
 function saveAuthorization(authorization: string) {
   if (Platform.OS === "web") {
     localStorage.setItem("authorization", authorization);

@@ -80,6 +80,7 @@ func SetupRoutes() *gin.Engine {
 		// User profile routes
 		authenticatedRoutes.GET("/users", UserRoutes.GetProfile)
 		authenticatedRoutes.PATCH("/users", UserRoutes.UpdateProfile)
+		authenticatedRoutes.DELETE("/users", UserRoutes.DeleteProfile)
 
 	}
 

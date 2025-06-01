@@ -32,14 +32,13 @@
 
 [ ] Mobile UI improvements
     [ ] Dashboard
-        - User profile settings
+        - User profile settings: change password
     [x] Sign Up
     [x] Wordlist CRUD
     [x] Sign In
     [x] Recover password
     [x] Quiz
     [x] remove react native paper dependency
-    [ ] Fix session expiration
     [x] Replace expo-av with expo-audio
     [x] App icon
     [ ] Splash screen
@@ -54,6 +53,7 @@
     [ ]  PostHog integration
 
 # V2
+[ ] Properly handle session expiration
 [ ] Remove the trigger in subscription table and drop user.subscription_* fields. Move logic to the service layer
 [ ] Progress overview and currentStreak in the DashboardStats component
 [ ] how to rollback db migrations?

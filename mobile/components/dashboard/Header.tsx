@@ -1,24 +1,24 @@
-import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
-import React from "react";
-import { TouchableOpacity, View, StyleSheet, Text, Image } from "react-native";
 import * as usersApi from "@/api/users";
+import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
+import { router } from "expo-router";
+import React from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export const Header = () => {
-
   // Fetch user profile
-  const { data: user, isLoading,refetch } = useQuery({
+  const { data: user, isLoading } = useQuery({
     queryKey: ["userProfile"],
     queryFn: usersApi.getProfile,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Refresh user session when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      refetch();
-    }, []),
-  );
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     refetch();
+  //   }, []),
+  // );
 
   const handleSettingsPress = () => {
     router.push("/settings");
@@ -37,9 +37,9 @@ export const Header = () => {
   };
 
   // TODO improve this
-  if (isLoading) return null
+  if (isLoading) return null;
 
-  const profilePicture = user?.profilePictureUrl
+  const profilePicture = user?.profilePictureUrl;
 
   return (
     <>

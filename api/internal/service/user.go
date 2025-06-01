@@ -101,7 +101,6 @@ func LoginUser(email, password string) (string, error) {
 		return "", errors.New("could not process your request. Try again later")
 	}
 
-	fmt.Println(results)
 	if len(results) != 1 {
 		return "", errors.New("invalid combination of email and/or password")
 	}
@@ -126,6 +125,13 @@ func GetProfile(userID int64) (*User, error) {
 	}
 
 	return &users[0], nil
+}
+
+func Delete(userID int64) error {
+	DeleteUserErrorReports(userID)
+	wordlistRepository.DeleteAll(userID)
+	err := userRepository.Delete(userID)
+	return err
 }
 
 func UpdateProfile(userID int64, firstName, lastName, country, preferredLanguage, profilePictureUrl *string, dateOfBirth *time.Time) (*User, error) {
