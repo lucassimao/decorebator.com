@@ -76,6 +76,11 @@ func SetupRoutes() *gin.Engine {
 
 		// Auth routes
 		authenticatedRoutes.POST("/auth/refresh", RefreshToken(userRepo))
+
+		// User profile routes
+		authenticatedRoutes.GET("/users", UserRoutes.GetProfile)
+		authenticatedRoutes.PATCH("/users", UserRoutes.UpdateProfile)
+
 	}
 
 	workerRoutes := router.Group("/static/workers")

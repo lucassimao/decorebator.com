@@ -9,6 +9,7 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
+	"decorebator.com/internal/repository"
 	repo "decorebator.com/internal/repository"
 
 	"github.com/dgrijalva/jwt-go"
@@ -19,14 +20,14 @@ type User = model.User
 
 var userRepository *repo.UserRepository
 
-const AUTH_TOKEN_DURATION = 24 * time.Hour
+const AUTH_TOKEN_DURATION = (24 * time.Hour) * 365 // 1 year
 
 // jwt.StandardClaims is an embedded type to provide expiry time, issued at time, etc.
 type Claims struct {
-	FirstName        string                   `json:"firstName"`
-	LastName         string                   `json:"lastName"`
-	Environment      string                   `json:"environment"`
-	SubscriptionPlan model.SubscriptionPlan   `json:"subscriptionPlan"`
+	FirstName        string                 `json:"firstName"`
+	LastName         string                 `json:"lastName"`
+	Environment      string                 `json:"environment"`
+	SubscriptionPlan model.SubscriptionPlan `json:"subscriptionPlan"`
 	jwt.StandardClaims
 }
 
@@ -39,7 +40,7 @@ func GenerateJWT(user User) (string, error) {
 		SubscriptionPlan: user.SubscriptionPlan,
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "Decorebator",
-			ExpiresAt: time.Now().Add(AUTH_TOKEN_DURATION).Unix(), // Token is valid for 24 hour
+			ExpiresAt: time.Now().Add(AUTH_TOKEN_DURATION).Unix(), // Token is valid for 1 year
 			Subject:   fmt.Sprint(user.ID),
 			IssuedAt:  time.Now().Unix(),
 		},
@@ -114,4 +115,57 @@ func LoginUser(email, password string) (string, error) {
 		return "", errors.New("invalid combination of email and/or password")
 	}
 
+}
+
+func GetProfile(userID int64) (*User, error) {
+	users, err := userRepository.Find(repository.FindUserArgs{
+		ID: &userID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &users[0], nil
+}
+
+func UpdateProfile(userID int64, firstName, lastName, country, preferredLanguage, profilePictureUrl *string, dateOfBirth *time.Time) (*User, error) {
+	// Validate required fields
+	if firstName != nil && strings.TrimSpace(*firstName) == "" {
+		return nil, common.BusinessError{Message: "First name is required"}
+	}
+
+	if lastName != nil && strings.TrimSpace(*lastName) == "" {
+		return nil, common.BusinessError{Message: "Last name is required"}
+	}
+
+	// Validate preferred language if provided
+	if preferredLanguage != nil && *preferredLanguage != "" {
+		// Basic validation for language code (should be 2-letter ISO code)
+		if len(*preferredLanguage) != 2 {
+			return nil, common.BusinessError{Message: "Preferred language must be a 2-letter language code"}
+		}
+	}
+
+	args := repo.UpdateUserProfileArgs{
+		ID:                userID,
+		FirstName:         firstName,
+		LastName:          lastName,
+		Country:           country,
+		DateOfBirth:       dateOfBirth,
+		PreferredLanguage: preferredLanguage,
+		ProfilePictureURL: profilePictureUrl,
+	}
+
+	user, err := userRepository.UpdateUserProfile(args)
+	if err != nil {
+		common.Logger.Error("failed to update user profile", "error", err, "userID", userID)
+		switch err.(type) {
+		case common.BusinessError:
+			return nil, err
+		default:
+			return nil, errors.New("could not update user profile")
+		}
+	}
+
+	return user, nil
 }

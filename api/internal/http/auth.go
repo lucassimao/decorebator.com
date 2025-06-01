@@ -15,7 +15,7 @@ func RefreshToken(userRepo *repository.UserRepository) gin.HandlerFunc {
 		// Get user from context (set by auth middleware)
 		userAny, exists := c.Get("user")
 		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found."})
 			return
 		}
 		user := userAny.(*model.User)

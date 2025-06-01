@@ -1,23 +1,3 @@
-// types/user.types.ts
-export interface UserProfile {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  profilePicture?: string;
-  country?: string;
-  dateOfBirth?: string;
-  createdAt: string;
-}
-
-export interface UpdateProfileData {
-  firstName?: string;
-  lastName?: string;
-  country?: string;
-  dateOfBirth?: string;
-}
-
-// screens/ProfileSettingsScreen.tsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -34,12 +14,14 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import * as ImagePicker from "expo-image-picker";
+import * as userApi from "@/api/users";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -59,40 +41,40 @@ const COUNTRIES = [
   // Add more countries as needed
 ];
 
-// Mock API calls
-const fetchUserProfile = async (): Promise<UserProfile> => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  // Mock data - replace with actual API call
-  return {
-    id: "user_123",
-    email: "lucas@example.com",
-    firstName: "Lucas",
-    lastName: "Smith",
-    profilePicture: "https://via.placeholder.com/150",
-    country: "US",
-    dateOfBirth: "1990-01-15",
-    createdAt: "2024-01-01T00:00:00Z",
-  };
-};
-
-const updateProfile = async (data: UpdateProfileData): Promise<UserProfile> => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // Mock response - replace with actual API call
-  return {
-    id: "user_123",
-    email: "lucas@example.com",
-    ...data,
-    createdAt: "2024-01-01T00:00:00Z",
-  } as UserProfile;
-};
+async function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => {
+      reader.abort();
+      reject(new Error("Problem reading blob as base64"));
+    };
+    reader.onload = () => {
+      // reader.result is something like "data:image/png;base64,iVBORw0KGgoAAAANS…"
+      // If you only need the raw base64 (no data: prefix), split it out:
+      const dataUrl = reader.result as string;
+      const base64 = dataUrl.split(",")[1];
+      resolve(base64);
+    };
+    reader.readAsDataURL(blob);
+  });
+}
 
 const uploadProfilePicture = async (uri: string): Promise<string> => {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+
   await new Promise((resolve) => setTimeout(resolve, 1500));
 
-  // Mock response - replace with actual upload
-  return "https://via.placeholder.com/150/new";
+  const base64String = await blobToBase64(blob);
+
+  const parts = uri.split(".");
+  const ext = parts[parts.length - 1].toLowerCase();
+  const res = await userApi.update({
+    profilePicture: base64String,
+    profilePictureFileExtension: ext,
+  });
+
+  return res.profilePictureUrl;
 };
 
 const deleteAccount = async (): Promise<void> => {
@@ -112,7 +94,7 @@ const ProfileSettingsScreen: React.FC = () => {
   // Fetch user profile
   const { data: profile, isLoading } = useQuery({
     queryKey: ["userProfile"],
-    queryFn: fetchUserProfile,
+    queryFn: userApi.getProfile,
   });
 
   // Form setup
@@ -123,7 +105,7 @@ const ProfileSettingsScreen: React.FC = () => {
     setValue,
     watch,
     formState: { errors, isDirty },
-  } = useForm<UpdateProfileData>({
+  } = useForm<userApi.UpdateInput>({
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -146,7 +128,7 @@ const ProfileSettingsScreen: React.FC = () => {
 
   // Update profile mutation
   const updateMutation = useMutation({
-    mutationFn: updateProfile,
+    mutationFn: userApi.update,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       Alert.alert("Success", "Profile updated successfully");
@@ -240,7 +222,7 @@ const ProfileSettingsScreen: React.FC = () => {
     ]);
   };
 
-  const handleSubmitProfile = (data: UpdateProfileData) => {
+  const handleSubmitProfile = (data: userApi.UpdateInput) => {
     updateMutation.mutate(data);
   };
 
@@ -300,7 +282,7 @@ const ProfileSettingsScreen: React.FC = () => {
   }
 
   const watchedDateOfBirth = watch("dateOfBirth");
-  const profilePictureUri = tempProfilePicture || profile?.profilePicture;
+  const profilePictureUri = tempProfilePicture || profile?.profilePictureUrl;
 
   return (
     <ImageBackground
@@ -544,8 +526,60 @@ const ProfileSettingsScreen: React.FC = () => {
           </ScrollView>
         </KeyboardAvoidingView>
 
-        {/* Date Picker Modal */}
-        {showDatePicker && (
+        {/* Date Picker Modal for iOS */}
+        {showDatePicker && Platform.OS === "ios" && (
+          <Modal
+            transparent
+            visible={showDatePicker}
+            animationType="slide"
+            onRequestClose={() => setShowDatePicker(false)}
+          >
+            <View style={styles.datePickerModal}>
+              <TouchableOpacity
+                style={styles.datePickerBackdrop}
+                onPress={() => setShowDatePicker(false)}
+                activeOpacity={1}
+              />
+              <View style={styles.datePickerContent}>
+                <View style={styles.datePickerHeader}>
+                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                    <Text style={styles.datePickerCancel}>Cancel</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.datePickerTitle}>Date of Birth</Text>
+                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                    <Text style={styles.datePickerDone}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.datePickerWrapper}>
+                  <DateTimePicker
+                    value={
+                      watchedDateOfBirth
+                        ? new Date(watchedDateOfBirth)
+                        : new Date()
+                    }
+                    mode="date"
+                    display="spinner"
+                    maximumDate={new Date()}
+                    onChange={(event, selectedDate) => {
+                      if (selectedDate) {
+                        setValue(
+                          "dateOfBirth",
+                          selectedDate.toISOString().split("T")[0],
+                          { shouldDirty: true },
+                        );
+                      }
+                    }}
+                    style={styles.datePicker}
+                    textColor="#000000" // Ensure text is visible
+                  />
+                </View>
+              </View>
+            </View>
+          </Modal>
+        )}
+        {/* Android DatePicker */}
+        {showDatePicker && Platform.OS === "android" && (
           <DateTimePicker
             value={
               watchedDateOfBirth ? new Date(watchedDateOfBirth) : new Date()
@@ -565,7 +599,6 @@ const ProfileSettingsScreen: React.FC = () => {
             }}
           />
         )}
-
         {/* Country Picker Modal */}
         {showCountryPicker && (
           <View style={styles.modalOverlay}>
@@ -820,5 +853,63 @@ const styles = StyleSheet.create({
   countryName: {
     fontSize: 16,
     color: "#2D3436",
+  },
+  datePickerContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    marginTop: 12,
+    marginBottom: 20,
+    overflow: "hidden",
+  },
+  datePickerModal: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.3)", // Move backdrop color here
+  },
+  datePickerBackdrop: {
+    flex: 1,
+  },
+  datePickerContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: Platform.OS === "ios" ? 34 : 20, // Account for safe area
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  datePickerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  datePickerTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#000000",
+  },
+  datePickerDone: {
+    fontSize: 17,
+    color: "#FF7B54",
+    fontWeight: "600",
+  },
+  datePickerCancel: {
+    fontSize: 17,
+    color: "#636E72",
+  },
+  datePickerWrapper: {
+    height: 216, // Standard iOS picker height
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  datePicker: {
+    width: "100%",
+    backgroundColor: "#FFFFFF",
   },
 });

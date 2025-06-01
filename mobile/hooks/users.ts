@@ -1,4 +1,4 @@
-import { UserInfo, getUserInfo } from "@/api/users";
+import { UserInfo, getUserJwtPayload } from "@/api/users";
 import { useEffect, useState } from "react";
 
 export const useUserInfo = () => {
@@ -9,7 +9,7 @@ export const useUserInfo = () => {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const user = await getUserInfo();
+        const user = await getUserJwtPayload();
         setUserInfo(user);
       } catch (err) {
         setError(err);

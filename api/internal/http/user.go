@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/mail"
@@ -34,6 +35,16 @@ type ResetPasswordInput struct {
 
 type RequestResetPasswordEmailInput struct {
 	Email string `json:"email" binding:"required"`
+}
+
+type UpdateProfileInput struct {
+	FirstName                   *string `json:"firstName"`
+	LastName                    *string `json:"lastName"`
+	Country                     *string `json:"country"`
+	DateOfBirth                 *string `json:"dateOfBirth"` // Expect ISO format: YYYY-MM-DD
+	PreferredLanguage           *string `json:"preferredLanguage"`
+	ProfilePicture              *string `json:"profilePicture"` // base64 encoded
+	ProfilePictureFileExtension *string `json:"profilePictureFileExtension"`
 }
 
 type UserRoutes struct{}
@@ -197,4 +208,112 @@ func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
 
 func canConvertToInt(n int64) bool {
 	return n >= int64(math.MinInt) && n <= int64(math.MaxInt)
+}
+
+func (h *UserRoutes) UpdateProfile(c *gin.Context) {
+	var input UpdateProfileInput
+
+	if err := c.BindJSON(&input); err != nil {
+		var ve validator.ValidationErrors
+		var body any
+
+		if errors.As(err, &ve) {
+			body = gin.H{"validationErrors": translateValidationErrors(ve)}
+		} else {
+			body = gin.H{"error": err.Error()}
+		}
+
+		c.JSON(http.StatusBadRequest, body)
+		return
+	}
+
+	// Get user ID from context (set by auth middleware)
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	userIDInt64, ok := userID.(int64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// Upload profile picture if provided
+	var url *string
+	if input.ProfilePicture != nil && *input.ProfilePicture != "" {
+
+		if input.ProfilePictureFileExtension == nil || *input.ProfilePictureFileExtension == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Profile picture file extension required."})
+			return
+		}
+
+		imgBytes, mimeType, err := common.DecodeImageBase64(*input.ProfilePicture)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image format."})
+			return
+		}
+
+		objectName := fmt.Sprintf("users/%d-%d.%s", userIDInt64, time.Now().Unix(), *input.ProfilePictureFileExtension)
+		uploadResult, err := common.Upload(imgBytes, "decorebator", objectName, mimeType)
+		fmt.Println(err)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload profile picture."})
+			return
+		}
+		url = &uploadResult
+	}
+
+	// Parse date of birth if provided
+	var dateOfBirth *time.Time
+	if input.DateOfBirth != nil && *input.DateOfBirth != "" {
+		parsedDate, err := time.Parse("2006-01-02", *input.DateOfBirth)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format. Expected: YYYY-MM-DD"})
+			return
+		}
+		dateOfBirth = &parsedDate
+	}
+
+	// Update user profile
+	updatedUser, err := service.UpdateProfile(userIDInt64, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, dateOfBirth)
+	if err != nil {
+		switch err.(type) {
+		case common.BusinessError:
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+		}
+		return
+	}
+
+	// Remove password hash from response
+	updatedUser.PasswordHash = ""
+
+	c.JSON(http.StatusOK, updatedUser)
+}
+
+func (h *UserRoutes) GetProfile(c *gin.Context) {
+
+	// Get user from context (set by auth middleware)
+	userIDAny, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found."})
+		return
+	}
+
+	userID := userIDAny.(int64)
+
+	user, err := service.GetProfile(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found."})
+		return
+	}
+
+	// hide unecessary data
+	user.PasswordHash = ""
+	user.StripeCustomerID = nil
+
+	c.JSON(http.StatusOK, user)
 }

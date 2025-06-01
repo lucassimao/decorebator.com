@@ -1,9 +1,8 @@
-import * as usersApi from "@/api/users";
 import { CreateWordlistModal } from "@/components/dashboard/CreateWordlistModal";
 import { Header } from "@/components/dashboard/Header";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dimensions,
   Image,
@@ -19,12 +18,7 @@ import {
 const { width, height } = Dimensions.get("window");
 
 const EmptyDashboard = () => {
-  const user = usersApi.getUserInfo();
   const [showCreateModal, setShowCreateModal] = useState(false);
-
-  useEffect(() => {
-    if (!user) router.push("/signin");
-  }, [user]);
 
   const handleCreateSuccess = () => {
     setShowCreateModal(false);

@@ -25,11 +25,16 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 	query := `
 		INSERT INTO users (first_name, last_name, password_hash, email)
 		VALUES ($1, $2, $3, $4)
-		RETURNING id, created_at, updated_at, subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at`
+		RETURNING id, created_at, updated_at, profile_picture_url, country, date_of_birth, preferred_language,
+			subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at`
 
 	var userID int64
 	var createdAt pgtype.Timestamp
 	var updatedAt pgtype.Timestamp
+	var profilePictureURL *string
+	var country *string
+	var dateOfBirth *time.Time
+	var preferredLanguage *string
 	var subscriptionPlan model.SubscriptionPlan
 	var subscriptionStatus *model.SubscriptionStatus
 	var stripeCustomerID *string
@@ -42,7 +47,8 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 	}
 
 	err = repository.Db.QueryRow(context.Background(), query, firstName, lastName, passwordHash, email).Scan(
-		&userID, &createdAt, &updatedAt, &subscriptionPlan, &subscriptionStatus, &stripeCustomerID, &subscriptionEndsAt)
+		&userID, &createdAt, &updatedAt, &profilePictureURL, &country, &dateOfBirth, &preferredLanguage,
+		&subscriptionPlan, &subscriptionStatus, &stripeCustomerID, &subscriptionEndsAt)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if ok := errors.As(err, &pgErr); ok {
@@ -55,6 +61,7 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 
 	return &User{
 		ID: userID, FirstName: firstName, LastName: lastName, PasswordHash: passwordHash, Email: email,
+		ProfilePictureURL: profilePictureURL, Country: country, DateOfBirth: dateOfBirth, PreferredLanguage: preferredLanguage,
 		SubscriptionPlan: subscriptionPlan, SubscriptionStatus: subscriptionStatus,
 		StripeCustomerID: stripeCustomerID, SubscriptionEndsAt: subscriptionEndsAt,
 		CreatedAt: createdAt, UpdatedAt: updatedAt,
@@ -70,6 +77,7 @@ type FindUserArgs struct {
 func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 	var builder strings.Builder
 	builder.WriteString(`SELECT id, email, first_name, last_name, password_hash, 
+		profile_picture_url, country, date_of_birth, preferred_language,
 		subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at,
 		created_at, updated_at FROM users`)
 	var queryArgs []interface{}
@@ -114,6 +122,7 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 	for rows.Next() {
 		user := User{}
 		err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
+			&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
 			&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt,
 			&user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
@@ -143,4 +152,47 @@ func (repository *UserRepository) UpdatePassword(userId int64, newPassword strin
 	}
 
 	return nil
+}
+
+type UpdateUserProfileArgs struct {
+	ID                int64
+	FirstName         *string
+	LastName          *string
+	Country           *string
+	DateOfBirth       *time.Time
+	PreferredLanguage *string
+	ProfilePictureURL *string
+}
+
+func (repository *UserRepository) UpdateUserProfile(args UpdateUserProfileArgs) (*User, error) {
+	query := `UPDATE users 
+		SET first_name = COALESCE($2,first_name),
+		    last_name = COALESCE($3,last_name), 
+		    country = COALESCE($4,country), 
+		    date_of_birth = COALESCE($5,date_of_birth), 
+		    preferred_language = COALESCE($6,preferred_language),
+		    updated_at = NOW(),
+			profile_picture_url = COALESCE($7,profile_picture_url)
+		WHERE id = $1
+		RETURNING id, email, first_name, last_name, password_hash, 
+			profile_picture_url, country, date_of_birth, preferred_language,
+			subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at,
+			created_at, updated_at`
+
+	user := User{}
+	err := repository.Db.QueryRow(context.Background(), query,
+		args.ID, args.FirstName, args.LastName, args.Country, args.DateOfBirth, args.PreferredLanguage, args.ProfilePictureURL).Scan(
+		&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
+		&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
+		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt,
+		&user.CreatedAt, &user.UpdatedAt)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, common.BusinessError{Message: "User not found"}
+		}
+		return nil, err
+	}
+
+	return &user, nil
 }

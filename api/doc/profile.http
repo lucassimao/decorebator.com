@@ -1,0 +1,59 @@
+@email="lsimaocosta@gmail.com"
+@password= "12345"
+
+
+### Login
+# @name loginRequest
+POST http://localhost:3000/login
+content-type: application/json
+
+{
+"Email": {{email}},
+"Password": {{password}}
+}
+
+@authToken = {{loginRequest.response.headers.Authorization}}
+
+### Get User Profile
+GET http://localhost:3000/users
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+### Update User Profile
+PUT http://localhost:3000/users/profile
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "firstName": "Lucas",
+  "lastName": "Silva",
+  "country":"Brazil",
+  "dateOfBirth":"1990-06-17",
+  "preferredLanguage":"pt",
+  "profilePicture":"jjjj",
+  "profilePictureFileExtension":"jjjj"
+}
+
+### Update User Profile (Required fields only)
+PUT http://localhost:3000/users/profile
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN
+
+{
+  "firstName": "Jane",
+  "lastName": "Smith"
+}
+
+### Update User Profile (With null values to clear fields)
+PUT http://localhost:3000/users/profile
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN
+
+{
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "country": null,
+  "dateOfBirth": null,
+  "preferredLanguage": null
+}

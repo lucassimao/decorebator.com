@@ -3,24 +3,20 @@ import { router, useFocusEffect } from "expo-router";
 import React from "react";
 import { TouchableOpacity, View, StyleSheet, Text, Image } from "react-native";
 import * as usersApi from "@/api/users";
+import { useQuery } from "@tanstack/react-query";
 
 export const Header = () => {
-  const [user, setUser] = React.useState(usersApi.getUserInfo());
+
+  // Fetch user profile
+  const { data: user, isLoading,refetch } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: usersApi.getProfile,
+  });
 
   // Refresh user session when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      const refreshUserSession = async () => {
-        try {
-          const updatedUser = await usersApi.refreshToken();
-          setUser(updatedUser);
-        } catch (error) {
-          // If refresh fails, just use the cached user info
-          console.error("Failed to refresh user session:", error);
-        }
-      };
-
-      refreshUserSession();
+      refetch();
     }, []),
   );
 
@@ -40,7 +36,10 @@ export const Header = () => {
     return "Good Evening";
   };
 
-  const profilePicture = "https://i.pravatar.cc/100";
+  // TODO improve this
+  if (isLoading) return null
+
+  const profilePicture = user?.profilePictureUrl
 
   return (
     <>

@@ -13,6 +13,10 @@ type User struct {
 	LastName           string              `json:"lastName"`
 	PasswordHash       string              `json:"passwordHash"`
 	Email              string              `json:"email"`
+	ProfilePictureURL  *string             `json:"profilePictureUrl,omitempty"`
+	Country            *string             `json:"country,omitempty"`
+	DateOfBirth        *time.Time          `json:"dateOfBirth,omitempty"`
+	PreferredLanguage  *string             `json:"preferredLanguage,omitempty"`
 	SubscriptionPlan   SubscriptionPlan    `json:"subscriptionPlan"`
 	SubscriptionStatus *SubscriptionStatus `json:"subscriptionStatus,omitempty"`
 	StripeCustomerID   *string             `json:"stripeCustomerId,omitempty"`
@@ -29,6 +33,22 @@ func (u User) MarshalJSON() ([]byte, error) {
 		"passwordHash":     u.PasswordHash,
 		"email":            u.Email,
 		"subscriptionPlan": u.SubscriptionPlan,
+	}
+	
+	if u.ProfilePictureURL != nil {
+		userMap["profilePictureUrl"] = *u.ProfilePictureURL
+	}
+	
+	if u.Country != nil {
+		userMap["country"] = *u.Country
+	}
+	
+	if u.DateOfBirth != nil {
+		userMap["dateOfBirth"] = u.DateOfBirth.UTC().Format("2006-01-02")
+	}
+	
+	if u.PreferredLanguage != nil {
+		userMap["preferredLanguage"] = *u.PreferredLanguage
 	}
 	
 	if u.SubscriptionStatus != nil {

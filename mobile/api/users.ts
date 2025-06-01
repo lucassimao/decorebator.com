@@ -3,6 +3,16 @@ import * as jwt from "./jwt";
 import { Platform } from "react-native";
 import { AUTH_REQUIRED_ERROR, DEFAULT_ERROR } from "./constants";
 
+type UserProfile = {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  profilePictureUrl?: string;
+  country?: string;
+  dateOfBirth?: string; // YYYY-MM-DD
+  createdAt: string;
+};
 export type UserSignup = {
   firstName: string;
   lastName: string;
@@ -20,6 +30,15 @@ export type UserInfo = {
   lastName: string;
   id: number;
   subscriptionPlan?: "free" | "monthly" | "annual";
+};
+
+export type UpdateInput = {
+  firstName?: string;
+  lastName?: string;
+  profilePicture?: string;
+  profilePictureFileExtension?: string;
+  country?: string;
+  dateOfBirth?: string;
 };
 
 export const SIGN_IN_ERROR =
@@ -108,20 +127,62 @@ export async function requestResetEmailPassword(email: string) {
   }
 }
 
-export function getUserInfo(): UserInfo | null {
+export async function update(updates: UpdateInput) {
+  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/users";
   const authorization = getAuthorization();
 
   if (!authorization) {
-    throw new Error(AUTH_REQUIRED_ERROR);
+    throw new Error("Authentication required");
   }
 
-  const decoded = jwt.decode(authorization);
-  return {
-    firstName: decoded.payload?.firstName,
-    lastName: decoded.payload?.lastName,
-    id: +decoded.payload?.sub,
-    subscriptionPlan: decoded.payload?.subscriptionPlan || "free",
-  };
+  const response = await fetch(endpoint, {
+    method: "PATCH",
+    body: JSON.stringify(updates),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: authorization,
+    },
+    credentials: "include",
+  });
+
+  const body = await response.json();
+
+  if (!response.ok) {
+    const message =
+      body?.error ||
+      Object.values(body?.validationErrors)?.[0] ||
+      DEFAULT_ERROR;
+    throw new Error(message);
+  }
+
+  return body;
+}
+
+export async function getProfile(): Promise<UserProfile> {
+  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/users";
+  const authorization = getAuthorization();
+
+  if (!authorization) {
+    throw new Error("Authentication required");
+  }
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      Authorization: authorization,
+    },
+  });
+
+  const body = await response.json();
+  if (!response.ok) {
+    const message =
+      body?.error ||
+      Object.values(body?.validationErrors)?.[0] ||
+      DEFAULT_ERROR;
+    throw new Error(message);
+  }
+
+  return body;
 }
 
 function saveAuthorization(authorization: string) {
