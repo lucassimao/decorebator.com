@@ -1,12 +1,14 @@
 import * as errorReportingApi from "@/api/errorReporting";
 import { ErrorType } from "@/api/errorReporting";
-import * as quizApi from "@/api/wordlists";
+import * as offlineQuizApi from "@/api/offlineWordlists";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { useOffline } from "@/hooks/useOffline";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { useLocalSearchParams } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -30,6 +32,7 @@ const QuizScreen: React.FC = () => {
   const navigation = useNavigation();
   const { wordlistId, wordlistName } = useLocalSearchParams();
   const { t } = useTranslation();
+  const { isOnline, isOfflineAvailable } = useOffline();
 
   // State
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -57,9 +60,11 @@ const QuizScreen: React.FC = () => {
     data: quiz,
     isLoading,
     refetch,
+    error,
   } = useQuery({
     queryKey: ["quiz", wordlistId],
-    queryFn: () => quizApi.newQuiz(Number(wordlistId)),
+    queryFn: () => offlineQuizApi.newQuiz(Number(wordlistId)),
+    retry: isOnline ? 3 : 0, // Don't retry in offline mode
   });
 
   // handle image changes
@@ -73,7 +78,7 @@ const QuizScreen: React.FC = () => {
   // Answer mutation
   const answerMutation = useMutation<void, Error, { success: boolean }>({
     mutationFn: ({ success }) =>
-      quizApi.answerQuiz(Number(wordlistId), quiz!.id, success),
+      offlineQuizApi.answerQuiz(Number(wordlistId), quiz!.id, success),
     onSuccess: () => {
       if (fastMode) {
         // Auto advance in fast mode
@@ -85,12 +90,19 @@ const QuizScreen: React.FC = () => {
 
   // Report error mutation
   const reportMutation = useMutation({
-    mutationFn: ({ errorType }: { errorType: errorReportingApi.ErrorType }) =>
-      errorReportingApi.reportError(errorType, quiz!),
+    mutationFn: ({ errorType }: { errorType: errorReportingApi.ErrorType }) => {
+      if (!isOnline) {
+        throw new Error('Reporting not available in offline mode');
+      }
+      return errorReportingApi.reportError(errorType, quiz!);
+    },
     onSuccess: () => {
       Alert.alert(t("common.success"), t("quiz.reportSubmitted"));
       setShowReportModal(false);
       handleNextQuiz();
+    },
+    onError: (error) => {
+      Alert.alert(t("common.error"), t("offline.featureUnavailable"));
     },
   });
 
@@ -226,7 +238,7 @@ const QuizScreen: React.FC = () => {
               {imageLoading && (
                 <View style={styles.imageLoadingContainer}>
                   <ActivityIndicator size="large" color="#FF7B54" />
-                  <Text style={styles.imageLoadingText}>Loading image...</Text>
+                  <Text style={styles.imageLoadingText}>{t("quiz.loadingImage")}</Text>
                 </View>
               )}
               <Image
@@ -240,7 +252,7 @@ const QuizScreen: React.FC = () => {
                 onLoadEnd={() => setImageLoading(false)}
                 onError={() => {
                   setImageLoading(false);
-                  Alert.alert("Error", "Failed to load image");
+                  Alert.alert(t("common.error"), t("quiz.imageLoadError"));
                 }}
               />
             </View>
@@ -266,7 +278,7 @@ const QuizScreen: React.FC = () => {
                 color="#FF7B54"
               />
               <Text style={styles.audioText}>
-                {isPlaying ? "Playing..." : "Tap to play"}
+                {isPlaying ? t("quiz.audioPlaying") : t("quiz.audioTapToPlay")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -291,7 +303,7 @@ const QuizScreen: React.FC = () => {
                       correctAnswer.toLowerCase() &&
                     styles.incorrectInput,
                 ]}
-                placeholder="Type your answer here"
+                placeholder={t("quiz.typeAnswerPlaceholder")}
                 placeholderTextColor="#B2BEC3"
                 value={userInput}
                 onChangeText={setUserInput}
@@ -309,7 +321,7 @@ const QuizScreen: React.FC = () => {
                   onPress={handleWriteAnswer}
                   disabled={!userInput.trim()}
                 >
-                  <Text style={styles.submitAnswerText}>Submit</Text>
+                  <Text style={styles.submitAnswerText}>{t("quiz.submit")}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -323,13 +335,13 @@ const QuizScreen: React.FC = () => {
                       size={24}
                       color="#4CAF50"
                     />
-                    <Text style={styles.correctFeedback}>Correct!</Text>
+                    <Text style={styles.correctFeedback}>{t("quiz.correctAnswer")}</Text>
                   </>
                 ) : (
                   <>
                     <Ionicons name="close-circle" size={24} color="#FF6B6B" />
                     <Text style={styles.incorrectFeedback}>
-                      Incorrect. The answer is: {correctAnswer}
+                      {t("quiz.incorrectAnswer", { answer: correctAnswer })}
                     </Text>
                   </>
                 )}
@@ -379,6 +391,33 @@ const QuizScreen: React.FC = () => {
     );
   }
 
+  // Handle offline error state
+  if (error && !isOnline && !isOfflineAvailable) {
+    return (
+      <ImageBackground
+        source={require("@/assets/images/dashboard-bg.png")}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <SafeAreaView style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color="#2D3436" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.errorContainer}>
+            <MaterialIcons name="cloud-off" size={64} color="#636E72" />
+            <Text style={styles.errorTitle}>{t("offline.premiumRequired")}</Text>
+            <Text style={styles.errorMessage}>{t("offline.premiumRequiredMessage")}</Text>
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
+    );
+  }
+
   return (
     <ImageBackground
       source={require("@/assets/images/dashboard-bg.png")}
@@ -386,6 +425,7 @@ const QuizScreen: React.FC = () => {
       resizeMode="cover"
     >
       <SafeAreaView style={styles.container}>
+        <OfflineIndicator />
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -403,10 +443,11 @@ const QuizScreen: React.FC = () => {
           </View>
 
           <TouchableOpacity
-            style={styles.settingsButton}
-            onPress={() => setShowReportModal(true)}
+            style={[styles.settingsButton, !isOnline && styles.disabledButton]}
+            onPress={() => isOnline && setShowReportModal(true)}
+            disabled={!isOnline}
           >
-            <MaterialIcons name="flag" size={24} color="#636E72" />
+            <MaterialIcons name="flag" size={24} color={isOnline ? "#636E72" : "#DFE6E9"} />
           </TouchableOpacity>
         </View>
 
@@ -915,5 +956,27 @@ const styles = StyleSheet.create({
     color: "#FF6B6B",
     fontSize: 16,
     textAlign: "center",
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 40,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#2D3436",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 16,
+    color: "#636E72",
+    textAlign: "center",
+    lineHeight: 22,
   },
 });

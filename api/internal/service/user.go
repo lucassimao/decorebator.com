@@ -146,14 +146,6 @@ func UpdateProfile(userID int64, firstName, lastName, country, preferredLanguage
 		return nil, common.BusinessError{Message: "Password is required"}
 	}
 
-	// Validate preferred language if provided
-	if preferredLanguage != nil && *preferredLanguage != "" {
-		// Basic validation for language code (should be 2-letter ISO code)
-		if len(*preferredLanguage) != 2 {
-			return nil, common.BusinessError{Message: "Preferred language must be a 2-letter language code"}
-		}
-	}
-
 	args := repo.UpdateUserProfileArgs{
 		ID:                userID,
 		FirstName:         firstName,

@@ -1,16 +1,21 @@
-import { UserInfo, getUserJwtPayload } from "@/api/users";
+import { UserProfile, getProfile } from "@/api/users";
 import { useEffect, useState } from "react";
+import offlineManager from "@/utils/offlineManager";
 
 export const useUserInfo = () => {
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const user = await getUserJwtPayload();
+        const user = await getProfile();
         setUserInfo(user);
+        
+        // Update offline manager with premium status
+        const isPremium = user?.subscriptionPlan === 'monthly' || user?.subscriptionPlan === 'annual';
+        offlineManager.setUserPremiumStatus(isPremium);
       } catch (err) {
         setError(err);
       } finally {

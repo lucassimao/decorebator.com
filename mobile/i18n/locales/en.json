@@ -121,7 +121,8 @@
       "selectLanguage": "Select Language",
       "namePlaceholder": "Enter wordlist name",
       "confirmDelete": "Are you sure you want to delete this wordlist?",
-      "deleteConfirmation": "This action cannot be undone. All words in this list will be permanently deleted."
+      "deleteConfirmation": "This action cannot be undone. All words in this list will be permanently deleted.",
+      "addFirstWord": "Add your first word to get started"
     },
     "languages": {
       "english": "English",
@@ -170,6 +171,14 @@
       "wrongExample": "Wrong example",
       "soundNotPlaying": "Sound not playing"
     },
+    "audioPlaying": "Playing...",
+    "audioTapToPlay": "Tap to play",
+    "typeAnswerPlaceholder": "Type your answer here",
+    "submit": "Submit",
+    "correctAnswer": "Correct!",
+    "incorrectAnswer": "Incorrect. The answer is: {{answer}}",
+    "loadingImage": "Loading image...",
+    "imageLoadError": "Failed to load image",
     "modes": {
       "flashcards": "Flashcards",
       "multipleChoice": "Multiple Choice",
@@ -342,5 +351,72 @@
     "wordRemoved": "Word removed successfully",
     "profileUpdated": "Profile updated successfully",
     "passwordChanged": "Password changed successfully"
+  },
+  "offline": {
+    "indicator": "Offline Mode",
+    "availableMessage": "Offline mode active - Premium feature",
+    "unavailableMessage": "Offline mode requires a premium subscription",
+    "premiumRequired": "Premium Required",
+    "premiumRequiredMessage": "Offline quiz access is only available for premium subscribers. Upgrade to access your wordlists without an internet connection.",
+    "featureUnavailable": "This feature is not available in offline mode"
+  },
+  "wordDetail": {
+    "deleteWord": "Delete Word",
+    "deleteWordConfirm": "Are you sure you want to delete \"{{word}}\"?",
+    "total": "Total",
+    "learned": "Learned",
+    "progress": "Progress",
+    "searchPlaceholder": "Search words...",
+    "filterAll": "All ({{count}})",
+    "filterLearned": "Learned ({{count}})",
+    "filterToLearn": "To Learn ({{count}})",
+    "noWordsFound": "No words found",
+    "noWordsYet": "No words yet",
+    "addNewWord": "Add New Word",
+    "addWordError": "Failed to add word. Please try again.",
+    "termRequired": "Term is required",
+    "termTooShort": "Term is too short",
+    "wordPhraseLabel": "Word/Phrase *",
+    "wordPhrasePlaceholder": "e.g., Hello",
+    "notesLabel": "Notes (Optional)",
+    "notesPlaceholder": "e.g., Used in formal situations",
+    "addWordButton": "Add Word"
+  },
+  "createWordlist": {
+    "title": "Create New Wordlist",
+    "successMessage": "Your wordlist \"{{name}}\" has been created.",
+    "nameLabel": "Wordlist Name",
+    "nameRequired": "Wordlist name is required",
+    "nameMinLength": "Name must be at least 3 characters",
+    "nameMaxLength": "Name must be less than 50 characters",
+    "namePlaceholder": "e.g., Travel Essentials",
+    "descriptionLabel": "Description (Optional)",
+    "descriptionMaxLength": "Description must be less than 200 characters",
+    "descriptionPlaceholder": "Add a description for your wordlist",
+    "languageLabel": "Language",
+    "languageRequired": "Please select a language",
+    "errorMessage": "Failed to create wordlist. Please try again.",
+    "createButton": "Create Wordlist"
+  },
+  "upgradePrompt": {
+    "title": "Enjoying Decorebator?",
+    "limitReached": "You've reached the free plan limit of 1 wordlist with up to 10 words.",
+    "upgradeMessage": "Upgrade to Premium to create unlimited wordlists and unlock all learning features!",
+    "maybeLater": "Maybe Later",
+    "viewPlans": "View Plans"
+  },
+  "wordlistItem": {
+    "deleteSuccess": "Wordlist deleted successfully",
+    "deleteError": "Failed to delete wordlist. Please try again.",
+    "deleteTitle": "Delete Wordlist",
+    "deleteConfirmMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "noWordsTitle": "No Words Yet",
+    "noWordsMessage": "Add some words to this wordlist before starting a quiz.",
+    "wordCount": "{{count}} word",
+    "wordCount_plural": "{{count}} words",
+    "percentLearned": "{{percent}}% learned",
+    "startQuiz": "Start Quiz",
+    "editWordlist": "Edit Wordlist",
+    "deleteWordlist": "Delete Wordlist"
   }
 }

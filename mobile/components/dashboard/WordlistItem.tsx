@@ -15,6 +15,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LANGUAGES } from "./CreateWordlistModal";
 import * as wordlistsApi from "@/api/wordlists";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 type WordlistItemProps = {
   item: Wordlist;
@@ -30,6 +31,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const queryClient = useQueryClient();
   const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
+  const { t } = useTranslation();
 
   const language = LANGUAGES.find((l) => item.languageCode === l.code)!;
 
@@ -39,11 +41,11 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
-      Alert.alert("Success", "Wordlist deleted successfully");
+      Alert.alert(t("common.success"), t("wordlistItem.deleteSuccess"));
     },
     onError: (error) => {
       console.error(error);
-      Alert.alert("Error", "Failed to delete wordlist. Please try again.");
+      Alert.alert(t("common.error"), t("wordlistItem.deleteError"));
     },
   });
 
@@ -52,15 +54,15 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
     setTimeout(() => {
       Alert.alert(
-        "Delete Wordlist",
-        `Are you sure you want to delete "${item.name}"? This action cannot be undone.`,
+        t("wordlistItem.deleteTitle"),
+        t("wordlistItem.deleteConfirmMessage", { name: item.name }),
         [
           {
-            text: "Cancel",
+            text: t("common.cancel"),
             style: "cancel",
           },
           {
-            text: "Delete",
+            text: t("common.delete"),
             style: "destructive",
             onPress: () => {
               deleteMutation.mutate();
@@ -77,9 +79,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
     if (item.wordsCount === 0) {
       Alert.alert(
-        "No Words Yet",
-        "Add some words to this wordlist before starting a quiz.",
-        [{ text: "OK" }],
+        t("wordlistItem.noWordsTitle"),
+        t("wordlistItem.noWordsMessage"),
+        [{ text: t("common.ok") }],
       );
       return;
     }
@@ -97,6 +99,8 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   };
 
   const progressPercentage = Math.random() * 100; // Replace with actual progress
+
+
 
   return (
     <>
@@ -146,16 +150,20 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         <View style={styles.cardStats}>
           <View style={styles.cardStat}>
             <MaterialIcons name="library-books" size={16} color="#636E72" />
-            <Text style={styles.cardStatText}>{item.wordsCount} words</Text>
+            <Text style={styles.cardStatText}>
+              {t("wordlistItem.wordCount", { count: item.wordsCount ?? 0 })}
+            </Text>
           </View>
           <View style={styles.cardStat}>
-            <Text style={styles.languageName}>{language.name}</Text>
+            <Text style={styles.languageName}>
+              {t(`dashboard.languages.${language.name.toLowerCase()}`)}
+            </Text>
           </View>
           {progressPercentage > 0 && (
             <View style={styles.cardStat}>
               <MaterialIcons name="school" size={16} color="#636E72" />
               <Text style={styles.cardStatText}>
-                {Math.round(progressPercentage)}% learned
+                {t("wordlistItem.percentLearned", { percent: Math.round(progressPercentage) })}
               </Text>
             </View>
           )}
@@ -186,12 +194,12 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   onPress={handleQuizStart}
                 >
                   <MaterialIcons name="quiz" size={24} color="#4CAF50" />
-                  <Text style={styles.menuItemText}>Start Quiz</Text>
+                  <Text style={styles.menuItemText}>{t("wordlistItem.startQuiz")}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.menuItem} onPress={handleEdit}>
                   <MaterialIcons name="edit" size={24} color="#FF7B54" />
-                  <Text style={styles.menuItemText}>Edit Wordlist</Text>
+                  <Text style={styles.menuItemText}>{t("wordlistItem.editWordlist")}</Text>
                 </TouchableOpacity>
 
                 <View style={styles.menuDivider} />
@@ -209,7 +217,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   <Text
                     style={[styles.menuItemText, styles.deleteMenuItemText]}
                   >
-                    Delete Wordlist
+                    {t("wordlistItem.deleteWordlist")}
                   </Text>
                 </TouchableOpacity>
               </View>

@@ -47,14 +47,14 @@ type FindWordlistArgs struct {
 
 func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, error) {
 	var builder strings.Builder
-	builder.WriteString(`SELECT id, name, description, user_id, created_at, updated_at, language_code, words_count FROM wordlists`)
+	builder.WriteString(`SELECT wordlists.id, name, description, user_id, created_at, updated_at, language_code FROM wordlists`)
 	var queryArgs []interface{}
 
 	if args.Id != nil {
-		builder.WriteString(` WHERE id = $1`)
+		builder.WriteString(` WHERE wordlists.id = $1`)
 		queryArgs = append(queryArgs, args.Id)
 	} else if args.OwnerId != nil {
-		builder.WriteString(` WHERE user_id = $1`)
+		builder.WriteString(` WHERE wordlists.user_id = $1`)
 		queryArgs = append(queryArgs, args.OwnerId)
 	}
 
@@ -73,7 +73,7 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 
 	for rows.Next() {
 		w := Wordlist{}
-		err := rows.Scan(&w.ID, &w.Name, &w.Description, &w.UserID, &w.CreatedAt, &w.UpdatedAt, &w.LanguageCode, &w.WordsCount)
+		err := rows.Scan(&w.ID, &w.Name, &w.Description, &w.UserID, &w.CreatedAt, &w.UpdatedAt, &w.LanguageCode)
 		if err != nil {
 			return nil, err
 		}
@@ -115,28 +115,6 @@ func (repository *WordlistRepository) Update(wordlist *Wordlist) (int64, error) 
 	}
 
 	return result.RowsAffected(), nil
-}
-
-func (repository *WordlistRepository) updateWordCount(wordlistId int64, count int, tx *pgx.Tx) error {
-	query := `UPDATE wordlists SET words_count = words_count + $1, updated_at=NOW() WHERE ID=$2`
-
-	var err error
-
-	if tx != nil {
-		_, err = (*tx).Exec(context.Background(), query, count, wordlistId)
-	} else {
-		_, err = repository.Db.Exec(context.Background(), query, count, wordlistId)
-	}
-
-	return err
-}
-
-func (repository *WordlistRepository) IncWordCount(wordlistId int64, tx *pgx.Tx) error {
-	return repository.updateWordCount(wordlistId, 1, tx)
-}
-
-func (repository *WordlistRepository) DecWordCount(wordlistId int64, tx *pgx.Tx) error {
-	return repository.updateWordCount(wordlistId, -1, tx)
 }
 
 func (repository *WordlistRepository) GetStats(userId int64) (*model.UserStats, error) {

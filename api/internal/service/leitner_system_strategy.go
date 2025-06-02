@@ -37,7 +37,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				JOIN word_definitions wd ON wd.definition_id = lst.definition_id
 				JOIN words w ON wd.word_id = w.id
 				WHERE 
-					w.wordlist_id=$2 
+					w.wordlist_id=$2 AND w.learned = FALSE
 				GROUP BY 
 					wd.word_id
 				ORDER BY
@@ -152,7 +152,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	}
 
 	// [TODO] Refactor and create factory methods
-	if boxID%6 == 0 || boxID%5 == 0 {
+	if boxID%6 == 0 || boxID%7 == 0 {
 		// if no audio, jump to the GuessMeaning quiz
 		if word.AudioURL == "" {
 			boxID = 1
@@ -163,23 +163,23 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 
 	switch {
 	case boxID%7 == 0:
-		quizzType = model.WriteWordFromDefinition
-		value = definition.Meaning
-		quizAnswer = word.Name
-	case boxID%6 == 0:
 		quizzType = model.MeaningFromAudio
 		options, err = GetRandomMeanings([]int{int(definition.ID)}, 3)
 		if err != nil {
 			return nil, err
 		}
 		quizAnswer = definition.Meaning
-	case boxID%5 == 0:
+	case boxID%6 == 0:
 		quizzType = model.WordFromAudio
 		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
 		}
 
+		quizAnswer = word.Name
+	case boxID%5 == 0:
+		quizzType = model.WriteWordFromDefinition
+		value = definition.Meaning
 		quizAnswer = word.Name
 	case boxID%4 == 0:
 		quizzType = model.CompleteSentence

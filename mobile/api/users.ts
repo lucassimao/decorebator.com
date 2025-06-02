@@ -1,8 +1,10 @@
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 import { DEFAULT_ERROR } from "./constants";
+import { decode } from "./jwt";
+import offlineManager from "@/utils/offlineManager";
 
-type UserProfile = {
+export type UserProfile = {
   id: number;
   email: string;
   firstName: string;
@@ -12,6 +14,7 @@ type UserProfile = {
   dateOfBirth?: string; // YYYY-MM-DD
   createdAt: string;
   preferredLanguage: string
+  subscriptionPlan: 'free' | 'monthly' | 'annual'
 };
 export type UserSignup = {
   firstName: string;
@@ -28,8 +31,6 @@ export type UserSignin = {
 export type UpdateInput = {
   firstName?: string;
   lastName?: string;
-  profilePicture?: string;
-  profilePictureFileExtension?: string;
   country?: string;
   dateOfBirth?: string;
   preferredLanguage?: string;
@@ -38,6 +39,12 @@ export type UpdateInput = {
   updatePassword?: {
     currentPassword: string;
     newPassword: String;
+  };
+
+    // if set, triggers profile pic update
+  updateProfilePicture?: {
+    base64Data: string;
+    extension: String;
   };
 };
 
@@ -74,6 +81,13 @@ export async function signup(data: UserSignup) {
 }
 
 export async function sigout() {
+  // Clear offline cache when signing out
+  try {
+    await offlineManager.clearCache();
+  } catch (error) {
+    console.error('Error clearing offline cache:', error);
+  }
+  
   if (Platform.OS === "web") {
     localStorage.removeItem("authorization");
   } else if (Platform.OS === "ios" || Platform.OS === "android") {
@@ -213,12 +227,22 @@ export async function deleteProfile(): Promise<void> {
 }
 
 function saveAuthorization(authorization: string) {
+  // Save the authorization token
   if (Platform.OS === "web") {
     localStorage.setItem("authorization", authorization);
   } else if (Platform.OS === "ios" || Platform.OS === "android") {
     SecureStore.setItem("authorization", authorization);
   } else {
     throw new Error("Unknown platform: " + Platform.OS);
+  }
+  
+  // Update offline manager with premium status from JWT
+  try {
+    const decoded = decode(authorization);
+    const isPremium = decoded.payload.subscriptionPlan === 'monthly' || decoded.payload.subscriptionPlan === 'annual';
+    offlineManager.setUserPremiumStatus(isPremium);
+  } catch (error) {
+    console.error('Error updating offline manager:', error);
   }
 }
 

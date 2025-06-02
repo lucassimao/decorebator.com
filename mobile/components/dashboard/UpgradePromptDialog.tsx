@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   visible: boolean;
@@ -19,6 +20,7 @@ type Props = {
 const UpgradePromptDialog = ({ visible, onDismiss }: Props) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (visible) {
@@ -94,17 +96,15 @@ const UpgradePromptDialog = ({ visible, onDismiss }: Props) => {
               </View>
 
               {/* Title */}
-              <Text style={styles.title}>Enjoying Decorebator ?</Text>
+              <Text style={styles.title}>{t("upgradePrompt.title")}</Text>
 
               {/* Content */}
               <View style={styles.content}>
                 <Text style={styles.contentText}>
-                  You've reached the free plan limit of 1 wordlist with up to 10
-                  words.
+                  {t("upgradePrompt.limitReached")}
                 </Text>
                 <Text style={styles.contentText}>
-                  Upgrade to Premium to create unlimited wordlists and unlock
-                  all learning features!
+                  {t("upgradePrompt.upgradeMessage")}
                 </Text>
               </View>
 
@@ -115,7 +115,7 @@ const UpgradePromptDialog = ({ visible, onDismiss }: Props) => {
                   onPress={onDismiss}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.laterButtonText}>Maybe Later</Text>
+                  <Text style={styles.laterButtonText}>{t("upgradePrompt.maybeLater")}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -123,7 +123,7 @@ const UpgradePromptDialog = ({ visible, onDismiss }: Props) => {
                   onPress={handleUpgrade}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.upgradeButtonText}>View Plans</Text>
+                  <Text style={styles.upgradeButtonText}>{t("upgradePrompt.viewPlans")}</Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>

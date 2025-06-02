@@ -20,6 +20,7 @@ import { useForm, Controller } from "react-hook-form";
 import { CreateWordlistDTO } from "@/api/wordlists";
 import * as wordlistsApi from "@/api/wordlists";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type Language = {
@@ -35,6 +36,7 @@ export const LANGUAGES: Language[] = [
   { code: "de", name: "German", flag: "🇩🇪" },
   { code: "it", name: "Italian", flag: "🇮🇹" },
   { code: "pt", name: "Portuguese", flag: "🇵🇹" },
+  { code: "ja", name: "Japanese", flag: "🇯🇵" },
 ];
 
 interface CreateWordlistModalProps {
@@ -53,6 +55,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const mutation = useMutation<
     wordlistsApi.Wordlist,
@@ -64,11 +67,11 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
 
       Alert.alert(
-        "Success!",
-        `Your wordlist "${data.name}" has been created.`,
+        t("common.success"),
+        t("createWordlist.successMessage", { name: data.name }),
         [
           {
-            text: "OK",
+            text: t("common.ok"),
             onPress: () => onSuccess?.(data),
           },
         ],
@@ -164,7 +167,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.handle} />
-            <Text style={styles.title}>Create New Wordlist</Text>
+            <Text style={styles.title}>{t("createWordlist.title")}</Text>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Ionicons name="close" size={24} color="#636E72" />
             </TouchableOpacity>
@@ -174,27 +177,27 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
             {/* Name Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Wordlist Name <Text style={styles.required}>*</Text>
+                {t("createWordlist.nameLabel")} <Text style={styles.required}>*</Text>
               </Text>
               <Controller
                 control={control}
                 name="name"
                 rules={{
-                  required: "Wordlist name is required",
+                  required: t("createWordlist.nameRequired"),
                   minLength: {
                     value: 3,
-                    message: "Name must be at least 3 characters",
+                    message: t("createWordlist.nameMinLength"),
                   },
                   maxLength: {
                     value: 50,
-                    message: "Name must be less than 50 characters",
+                    message: t("createWordlist.nameMaxLength"),
                   },
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     autoFocus
                     style={[styles.input, errors.name && styles.inputError]}
-                    placeholder="e.g., Travel Essentials"
+                    placeholder={t("createWordlist.namePlaceholder")}
                     placeholderTextColor="#B2BEC3"
                     value={value}
                     onChangeText={onChange}
@@ -211,20 +214,20 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
 
             {/* Description Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Description (Optional)</Text>
+              <Text style={styles.label}>{t("createWordlist.descriptionLabel")}</Text>
               <Controller
                 control={control}
                 name="description"
                 rules={{
                   maxLength: {
                     value: 200,
-                    message: "Description must be less than 200 characters",
+                    message: t("createWordlist.descriptionMaxLength"),
                   },
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     style={[styles.input, styles.textArea]}
-                    placeholder="Add a description for your wordlist"
+                    placeholder={t("createWordlist.descriptionPlaceholder")}
                     placeholderTextColor="#B2BEC3"
                     value={value}
                     onChangeText={onChange}
@@ -245,13 +248,13 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
             {/* Language Selection */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Language <Text style={styles.required}>*</Text>
+                {t("createWordlist.languageLabel")} <Text style={styles.required}>*</Text>
               </Text>
               <Controller
                 control={control}
                 name="languageCode"
                 rules={{
-                  required: "Please select a language",
+                  required: t("createWordlist.languageRequired"),
                 }}
                 render={({ field: { onChange, value } }) => (
                   <ScrollView
@@ -277,7 +280,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                             value === lang.code && styles.languageNameSelected,
                           ]}
                         >
-                          {lang.name}
+                          {t(`dashboard.languages.${lang.name.toLowerCase()}`)}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -295,7 +298,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
             {mutation.error && (
               <View style={styles.submitError}>
                 <Text style={styles.errorText}>
-                  Failed to create wordlist. Please try again.
+                  {t("createWordlist.errorMessage")}
                 </Text>
               </View>
             )}
@@ -307,7 +310,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
               style={[styles.button, styles.cancelButton]}
               onPress={onClose}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -323,7 +326,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <>
-                  <Text style={styles.createButtonText}>Create Wordlist</Text>
+                  <Text style={styles.createButtonText}>{t("createWordlist.createButton")}</Text>
                   <Ionicons
                     name="add-circle"
                     size={20}

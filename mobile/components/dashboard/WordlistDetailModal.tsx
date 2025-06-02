@@ -1,10 +1,14 @@
 import * as wordlistsApi from "@/api/wordlists";
+import * as offlineWordsApi from "@/api/offlineWords";
 import { Wordlist } from "@/api/wordlists";
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
+import { useOffline } from "@/hooks/useOffline";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -48,6 +52,8 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   >("all");
   const language = LANGUAGES.find((l) => wordlist.languageCode === l.code)!;
   const updatePromptDialog = useUpgradePromptDialog();
+  const { isOnline } = useOffline();
+  const { t } = useTranslation();
 
   const {
     control,
@@ -61,11 +67,12 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     },
   });
 
-  // Fetch words
+  // Fetch words (with offline support)
   const { data: words = [], isLoading } = useQuery({
     queryKey: ["words", wordlist.id],
-    queryFn: () => wordlistsApi.getWords(wordlist.id),
+    queryFn: () => offlineWordsApi.getWords(wordlist.id),
     enabled: visible,
+    retry: isOnline ? 3 : 0, // Don't retry in offline mode
   });
 
   // Add word mutation
@@ -150,12 +157,12 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
 
   const handleDeleteWord = (word: wordlistsApi.Word) => {
     Alert.alert(
-      "Delete Word",
-      `Are you sure you want to delete "${word.name}"?`,
+      t("wordDetail.deleteWord"),
+      t("wordDetail.deleteWordConfirm", { word: word.name }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("common.delete"),
           style: "destructive",
           onPress: () => deleteWordMutation.mutate(word.id),
         },
@@ -180,13 +187,14 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   const renderWordItem = ({ item }: { item: wordlistsApi.Word }) => (
     <View style={styles.wordCard}>
       <TouchableOpacity
-        style={styles.learnedToggle}
+        style={[styles.learnedToggle, !isOnline && styles.disabledButton]}
         onPress={() =>
-          toggleLearnedMutation.mutate({
+          isOnline && toggleLearnedMutation.mutate({
             ...item,
             learned: !item.learned,
           })
         }
+        disabled={!isOnline}
       >
         <MaterialIcons
           name={item.learned ? "check-circle" : "radio-button-unchecked"}
@@ -204,12 +212,14 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
         {item.notes && <Text style={styles.wordNotes}>{item.notes}</Text>}
       </View>
 
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => handleDeleteWord(item)}
-      >
-        <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
-      </TouchableOpacity>
+      {isOnline && (
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteWord(item)}
+        >
+          <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -242,6 +252,8 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
             { transform: [{ translateY: slideAnim }] },
           ]}
         >
+          <OfflineIndicator />
+          
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.handle} />
@@ -263,19 +275,19 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
           <View style={styles.statsRow}>
             <View style={styles.stat}>
               <Text style={styles.statValue}>{stats.total}</Text>
-              <Text style={styles.statLabel}>Total</Text>
+              <Text style={styles.statLabel}>{t("wordDetail.total")}</Text>
             </View>
             <View style={styles.stat}>
               <Text style={[styles.statValue, { color: "#4CAF50" }]}>
                 {stats.learned}
               </Text>
-              <Text style={styles.statLabel}>Learned</Text>
+              <Text style={styles.statLabel}>{t("wordDetail.learned")}</Text>
             </View>
             <View style={styles.stat}>
               <Text style={[styles.statValue, { color: "#FF7B54" }]}>
                 {Math.round(stats.progress)}%
               </Text>
-              <Text style={styles.statLabel}>Progress</Text>
+              <Text style={styles.statLabel}>{t("wordDetail.progress")}</Text>
             </View>
           </View>
 
@@ -286,7 +298,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                 <Ionicons name="search" size={20} color="#636E72" />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Search words..."
+                  placeholder={t("wordDetail.searchPlaceholder")}
                   placeholderTextColor="#B2BEC3"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -312,7 +324,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                     filterLearned === "all" && styles.filterChipTextActive,
                   ]}
                 >
-                  All ({words.length})
+                  {t("wordDetail.filterAll", { count: words.length })}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -328,7 +340,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                     filterLearned === "learned" && styles.filterChipTextActive,
                   ]}
                 >
-                  Learned ({words.filter((w) => w.learned).length})
+                  {t("wordDetail.filterLearned", { count: words.filter((w) => w.learned).length })}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -345,7 +357,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                       styles.filterChipTextActive,
                   ]}
                 >
-                  To Learn ({words.filter((w) => !w.learned).length})
+                  {t("wordDetail.filterToLearn", { count: words.filter((w) => !w.learned).length })}
                 </Text>
               </TouchableOpacity>
             </ScrollView>
@@ -372,11 +384,16 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                       color="#DFE6E9"
                     />
                     <Text style={styles.emptyText}>
-                      {searchQuery ? "No words found" : "No words yet"}
+                      {searchQuery ? t("wordDetail.noWordsFound") : t("wordDetail.noWordsYet")}
                     </Text>
-                    {!searchQuery && (
+                    {!searchQuery && isOnline && (
                       <Text style={styles.emptySubtext}>
-                        Add your first word to get started
+                        {t("dashboard.wordlists.addFirstWord")}
+                      </Text>
+                    )}
+                    {!isOnline && (
+                      <Text style={styles.emptySubtext}>
+                        {t("offline.featureUnavailable")}
                       </Text>
                     )}
                   </View>
@@ -394,7 +411,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
             >
               <View style={styles.addFormContainer}>
                 <View style={styles.formHeader}>
-                  <Text style={styles.formTitle}>Add New Word</Text>
+                  <Text style={styles.formTitle}>{t("wordDetail.addNewWord")}</Text>
                   <TouchableOpacity
                     onPress={() => {
                       setShowAddForm(false);
@@ -409,16 +426,16 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                   control={control}
                   name="name"
                   rules={{
-                    required: "Term is required",
-                    minLength: { value: 1, message: "Term is too short" },
+                    required: t("wordDetail.termRequired"),
+                    minLength: { value: 1, message: t("wordDetail.termTooShort") },
                   }}
                   render={({ field: { onChange, onBlur, value } }) => (
                     <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>Word/Phrase *</Text>
+                      <Text style={styles.inputLabel}>{t("wordDetail.wordPhraseLabel")}</Text>
                       <TextInput
                         autoFocus
                         style={[styles.input, errors.name && styles.inputError]}
-                        placeholder="e.g., Hello"
+                        placeholder={t("wordDetail.wordPhrasePlaceholder")}
                         placeholderTextColor="#B2BEC3"
                         value={value}
                         onChangeText={(text) => {
@@ -441,10 +458,10 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                   name="notes"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>Notes (Optional)</Text>
+                      <Text style={styles.inputLabel}>{t("wordDetail.notesLabel")}</Text>
                       <TextInput
                         style={[styles.input, styles.textArea]}
-                        placeholder="e.g., Used in formal situations"
+                        placeholder={t("wordDetail.notesPlaceholder")}
                         placeholderTextColor="#B2BEC3"
                         value={value}
                         onChangeText={(text) => {
@@ -468,7 +485,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                       color="#FF6B6B"
                     />
                     <Text style={styles.errorMessage}>
-                      Failed to add word. Please try again.
+                      {t("wordDetail.addWordError")}
                     </Text>
                   </View>
                 )}
@@ -483,7 +500,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                   {addWordMutation.isPending ? (
                     <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
-                    <Text style={styles.submitButtonText}>Add Word</Text>
+                    <Text style={styles.submitButtonText}>{t("wordDetail.addWordButton")}</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -491,7 +508,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
           )}
 
           {/* FAB */}
-          {!showAddForm && (
+          {!showAddForm && isOnline && (
             <TouchableOpacity
               style={styles.fab}
               onPress={onPressAddWord}
@@ -820,5 +837,8 @@ const styles = StyleSheet.create({
     flex: 1,
     color: "#FF6B6B",
     fontSize: 14,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });

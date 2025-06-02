@@ -121,7 +121,8 @@
       "selectLanguage": "Seleziona Lingua",
       "namePlaceholder": "Inserisci il nome della lista",
       "confirmDelete": "Sei sicuro di voler eliminare questa lista?",
-      "deleteConfirmation": "Questa azione non può essere annullata. Tutte le parole in questa lista saranno eliminate permanentemente."
+      "deleteConfirmation": "Questa azione non può essere annullata. Tutte le parole in questa lista saranno eliminate permanentemente.",
+      "addFirstWord": "Aggiungi la tua prima parola per iniziare"
     },
     "languages": {
       "english": "Inglese",
@@ -170,6 +171,14 @@
       "wrongExample": "Esempio sbagliato",
       "soundNotPlaying": "Il suono non viene riprodotto"
     },
+    "audioPlaying": "In riproduzione...",
+    "audioTapToPlay": "Tocca per riprodurre",
+    "typeAnswerPlaceholder": "Scrivi qui la tua risposta",
+    "submit": "Invia",
+    "correctAnswer": "Corretto!",
+    "incorrectAnswer": "Sbagliato. La risposta è: {{answer}}",
+    "loadingImage": "Caricamento immagine...",
+    "imageLoadError": "Impossibile caricare l'immagine",
     "modes": {
       "flashcards": "Flashcard",
       "multipleChoice": "Scelta Multipla",
@@ -342,5 +351,72 @@
     "wordRemoved": "Parola rimossa con successo",
     "profileUpdated": "Profilo aggiornato con successo",
     "passwordChanged": "Password cambiata con successo"
+  },
+  "offline": {
+    "indicator": "Modalità Offline",
+    "availableMessage": "Modalità offline attiva - Funzione premium",
+    "unavailableMessage": "La modalità offline richiede un abbonamento premium",
+    "premiumRequired": "Premium Richiesto",
+    "premiumRequiredMessage": "L'accesso ai quiz offline è disponibile solo per gli abbonati premium. Esegui l'upgrade per accedere alle tue liste di parole senza connessione internet.",
+    "featureUnavailable": "Questa funzione non è disponibile in modalità offline"
+  },
+  "wordDetail": {
+    "deleteWord": "Elimina Parola",
+    "deleteWordConfirm": "Sei sicuro di voler eliminare \"{{word}}\"?",
+    "total": "Totale",
+    "learned": "Imparate",
+    "progress": "Progresso",
+    "searchPlaceholder": "Cerca parole...",
+    "filterAll": "Tutte ({{count}})",
+    "filterLearned": "Imparate ({{count}})",
+    "filterToLearn": "Da imparare ({{count}})",
+    "noWordsFound": "Nessuna parola trovata",
+    "noWordsYet": "Ancora nessuna parola",
+    "addNewWord": "Aggiungi Nuova Parola",
+    "addWordError": "Impossibile aggiungere la parola. Riprova.",
+    "termRequired": "Il termine è obbligatorio",
+    "termTooShort": "Termine troppo breve",
+    "wordPhraseLabel": "Parola/Frase *",
+    "wordPhrasePlaceholder": "es. Ciao",
+    "notesLabel": "Note (Opzionale)",
+    "notesPlaceholder": "es. Usato in situazioni formali",
+    "addWordButton": "Aggiungi Parola"
+  },
+  "createWordlist": {
+    "title": "Crea Nuova Lista",
+    "successMessage": "La tua lista \"{{name}}\" è stata creata.",
+    "nameLabel": "Nome della Lista",
+    "nameRequired": "Il nome della lista è obbligatorio",
+    "nameMinLength": "Il nome deve avere almeno 3 caratteri",
+    "nameMaxLength": "Il nome deve avere meno di 50 caratteri",
+    "namePlaceholder": "es. Essenziali di Viaggio",
+    "descriptionLabel": "Descrizione (Opzionale)",
+    "descriptionMaxLength": "La descrizione deve avere meno di 200 caratteri",
+    "descriptionPlaceholder": "Aggiungi una descrizione per la tua lista",
+    "languageLabel": "Lingua",
+    "languageRequired": "Seleziona una lingua",
+    "errorMessage": "Impossibile creare la lista. Riprova.",
+    "createButton": "Crea Lista"
+  },
+  "upgradePrompt": {
+    "title": "Ti piace Decorebator?",
+    "limitReached": "Hai raggiunto il limite del piano gratuito di 1 lista con fino a 10 parole.",
+    "upgradeMessage": "Passa a Premium per creare liste illimitate e sbloccare tutte le funzionalità di apprendimento!",
+    "maybeLater": "Forse più tardi",
+    "viewPlans": "Vedi i piani"
+  },
+  "wordlistItem": {
+    "deleteSuccess": "Lista eliminata con successo",
+    "deleteError": "Impossibile eliminare la lista. Riprova.",
+    "deleteTitle": "Elimina Lista",
+    "deleteConfirmMessage": "Sei sicuro di voler eliminare \"{{name}}\"? Questa azione non può essere annullata.",
+    "noWordsTitle": "Ancora Nessuna Parola",
+    "noWordsMessage": "Aggiungi alcune parole a questa lista prima di iniziare un quiz.",
+    "wordCount": "{{count}} parola",
+    "wordCount_plural": "{{count}} parole",
+    "percentLearned": "{{percent}}% imparato",
+    "startQuiz": "Inizia Quiz",
+    "editWordlist": "Modifica Lista",
+    "deleteWordlist": "Elimina Lista"
   }
 }

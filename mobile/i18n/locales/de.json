@@ -121,7 +121,8 @@
       "selectLanguage": "Sprache auswählen",
       "namePlaceholder": "Geben Sie den Listennamen ein",
       "confirmDelete": "Sind Sie sicher, dass Sie diese Liste löschen möchten?",
-      "deleteConfirmation": "Diese Aktion kann nicht rückgängig gemacht werden. Alle Wörter in dieser Liste werden dauerhaft gelöscht."
+      "deleteConfirmation": "Diese Aktion kann nicht rückgängig gemacht werden. Alle Wörter in dieser Liste werden dauerhaft gelöscht.",
+      "addFirstWord": "Fügen Sie Ihr erstes Wort hinzu, um zu beginnen"
     },
     "languages": {
       "english": "Englisch",
@@ -170,6 +171,14 @@
       "wrongExample": "Falsches Beispiel",
       "soundNotPlaying": "Ton wird nicht abgespielt"
     },
+    "audioPlaying": "Wird abgespielt...",
+    "audioTapToPlay": "Zum Abspielen tippen",
+    "typeAnswerPlaceholder": "Geben Sie Ihre Antwort hier ein",
+    "submit": "Absenden",
+    "correctAnswer": "Richtig!",
+    "incorrectAnswer": "Falsch. Die Antwort ist: {{answer}}",
+    "loadingImage": "Bild wird geladen...",
+    "imageLoadError": "Fehler beim Laden des Bildes",
     "modes": {
       "flashcards": "Karteikarten",
       "multipleChoice": "Multiple Choice",
@@ -342,5 +351,72 @@
     "wordRemoved": "Wort erfolgreich entfernt",
     "profileUpdated": "Profil erfolgreich aktualisiert",
     "passwordChanged": "Passwort erfolgreich geändert"
+  },
+  "offline": {
+    "indicator": "Offline-Modus",
+    "availableMessage": "Offline-Modus aktiv - Premium-Funktion",
+    "unavailableMessage": "Offline-Modus erfordert ein Premium-Abonnement",
+    "premiumRequired": "Premium Erforderlich",
+    "premiumRequiredMessage": "Der Offline-Quiz-Zugriff ist nur für Premium-Abonnenten verfügbar. Führen Sie ein Upgrade durch, um ohne Internetverbindung auf Ihre Wortlisten zuzugreifen.",
+    "featureUnavailable": "Diese Funktion ist im Offline-Modus nicht verfügbar"
+  },
+  "wordDetail": {
+    "deleteWord": "Wort löschen",
+    "deleteWordConfirm": "Möchten Sie \"{{word}}\" wirklich löschen?",
+    "total": "Gesamt",
+    "learned": "Gelernt",
+    "progress": "Fortschritt",
+    "searchPlaceholder": "Wörter suchen...",
+    "filterAll": "Alle ({{count}})",
+    "filterLearned": "Gelernt ({{count}})",
+    "filterToLearn": "Zu lernen ({{count}})",
+    "noWordsFound": "Keine Wörter gefunden",
+    "noWordsYet": "Noch keine Wörter",
+    "addNewWord": "Neues Wort hinzufügen",
+    "addWordError": "Fehler beim Hinzufügen des Wortes. Bitte versuchen Sie es erneut.",
+    "termRequired": "Begriff ist erforderlich",
+    "termTooShort": "Begriff ist zu kurz",
+    "wordPhraseLabel": "Wort/Phrase *",
+    "wordPhrasePlaceholder": "z.B. Hallo",
+    "notesLabel": "Notizen (Optional)",
+    "notesPlaceholder": "z.B. In formellen Situationen verwendet",
+    "addWordButton": "Wort hinzufügen"
+  },
+  "createWordlist": {
+    "title": "Neue Wortliste erstellen",
+    "successMessage": "Ihre Wortliste \"{{name}}\" wurde erstellt.",
+    "nameLabel": "Name der Wortliste",
+    "nameRequired": "Name der Wortliste ist erforderlich",
+    "nameMinLength": "Name muss mindestens 3 Zeichen lang sein",
+    "nameMaxLength": "Name muss weniger als 50 Zeichen haben",
+    "namePlaceholder": "z.B. Reise-Grundlagen",
+    "descriptionLabel": "Beschreibung (Optional)",
+    "descriptionMaxLength": "Beschreibung muss weniger als 200 Zeichen haben",
+    "descriptionPlaceholder": "Fügen Sie eine Beschreibung für Ihre Wortliste hinzu",
+    "languageLabel": "Sprache",
+    "languageRequired": "Bitte wählen Sie eine Sprache",
+    "errorMessage": "Fehler beim Erstellen der Wortliste. Bitte versuchen Sie es erneut.",
+    "createButton": "Wortliste erstellen"
+  },
+  "upgradePrompt": {
+    "title": "Gefällt Ihnen Decorebator?",
+    "limitReached": "Sie haben das Limit des kostenlosen Plans von 1 Wortliste mit bis zu 10 Wörtern erreicht.",
+    "upgradeMessage": "Upgraden Sie auf Premium, um unbegrenzte Wortlisten zu erstellen und alle Lernfunktionen freizuschalten!",
+    "maybeLater": "Vielleicht später",
+    "viewPlans": "Pläne ansehen"
+  },
+  "wordlistItem": {
+    "deleteSuccess": "Wortliste erfolgreich gelöscht",
+    "deleteError": "Fehler beim Löschen der Wortliste. Bitte versuchen Sie es erneut.",
+    "deleteTitle": "Wortliste löschen",
+    "deleteConfirmMessage": "Möchten Sie \"{{name}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "noWordsTitle": "Noch keine Wörter",
+    "noWordsMessage": "Fügen Sie dieser Liste einige Wörter hinzu, bevor Sie ein Quiz starten.",
+    "wordCount": "{{count}} Wort",
+    "wordCount_plural": "{{count}} Wörter",
+    "percentLearned": "{{percent}}% gelernt",
+    "startQuiz": "Quiz starten",
+    "editWordlist": "Wortliste bearbeiten",
+    "deleteWordlist": "Wortliste löschen"
   }
 }

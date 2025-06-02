@@ -39,19 +39,23 @@ type RequestResetPasswordEmailInput struct {
 }
 
 type UpdateProfileInput struct {
-	FirstName                   *string              `json:"firstName"`
-	LastName                    *string              `json:"lastName"`
-	Country                     *string              `json:"country"`
-	DateOfBirth                 *string              `json:"dateOfBirth"` // Expect ISO format: YYYY-MM-DD
-	PreferredLanguage           *string              `json:"preferredLanguage"`
-	ProfilePicture              *string              `json:"profilePicture"` // base64 encoded
-	ProfilePictureFileExtension *string              `json:"profilePictureFileExtension"`
-	UpdatePasswordInput         *UpdatePasswordInput `json:"updatePassword"`
+	FirstName                 *string                    `json:"firstName"`
+	LastName                  *string                    `json:"lastName"`
+	Country                   *string                    `json:"country"`
+	DateOfBirth               *string                    `json:"dateOfBirth"` // Expect ISO format: YYYY-MM-DD
+	PreferredLanguage         *string                    `json:"preferredLanguage"`
+	UpdateProfilePictureInput *UpdateProfilePictureInput `json:"updateProfilePicture"`
+	UpdatePasswordInput       *UpdatePasswordInput       `json:"updatePassword"`
 }
 
 type UpdatePasswordInput struct {
 	CurrentPassword string `json:"currentPassword"`
 	NewPassword     string `json:"newPassword"`
+}
+
+type UpdateProfilePictureInput struct {
+	Base64Data string `json:"base64Data"`
+	Extension  string `json:"extension"`
 }
 
 type UserRoutes struct{}
@@ -259,20 +263,17 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 
 	// Upload profile picture if provided
 	var url *string
-	if input.ProfilePicture != nil && *input.ProfilePicture != "" {
+	if input.UpdateProfilePictureInput != nil {
 
-		if input.ProfilePictureFileExtension == nil || *input.ProfilePictureFileExtension == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Profile picture file extension required."})
-			return
-		}
+		cmd := input.UpdateProfilePictureInput
 
-		imgBytes, mimeType, err := common.DecodeImageBase64(*input.ProfilePicture)
+		imgBytes, mimeType, err := common.DecodeImageBase64(cmd.Base64Data)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image format."})
 			return
 		}
 
-		objectName := fmt.Sprintf("users/%d-%d.%s", user.ID, time.Now().Unix(), *input.ProfilePictureFileExtension)
+		objectName := fmt.Sprintf("users/%d-%d.%s", user.ID, time.Now().Unix(), cmd.Extension)
 		uploadResult, err := common.Upload(imgBytes, "decorebator", objectName, mimeType)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload profile picture."})

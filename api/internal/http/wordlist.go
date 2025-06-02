@@ -25,7 +25,7 @@ func (h *WordlistsRoutes) GetAll(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	c.IndentedJSON(http.StatusOK, wordlists)
+	c.JSON(http.StatusOK, wordlists)
 }
 
 func (h *WordlistsRoutes) GetStats(c *gin.Context) {
@@ -35,7 +35,7 @@ func (h *WordlistsRoutes) GetStats(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	c.IndentedJSON(http.StatusOK, wordlists)
+	c.JSON(http.StatusOK, wordlists)
 }
 
 func (h *WordlistsRoutes) Create(c *gin.Context) {
@@ -53,7 +53,7 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 		panic(err)
 	}
 
-	c.IndentedJSON(http.StatusCreated, saved)
+	c.JSON(http.StatusCreated, saved)
 }
 
 func (h *WordlistsRoutes) GetById(c *gin.Context) {
@@ -74,7 +74,7 @@ func (h *WordlistsRoutes) GetById(c *gin.Context) {
 		}
 		return
 	}
-	c.IndentedJSON(http.StatusOK, wordlist)
+	c.JSON(http.StatusOK, wordlist)
 }
 
 func (h *WordlistsRoutes) Delete(c *gin.Context) {

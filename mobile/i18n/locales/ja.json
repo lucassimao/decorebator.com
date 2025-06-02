@@ -121,7 +121,8 @@
       "selectLanguage": "言語を選択",
       "namePlaceholder": "リスト名を入力",
       "confirmDelete": "このリストを削除してもよろしいですか？",
-      "deleteConfirmation": "この操作は取り消せません。このリストのすべての単語が完全に削除されます。"
+      "deleteConfirmation": "この操作は取り消せません。このリストのすべての単語が完全に削除されます。",
+      "addFirstWord": "最初の単語を追加して始めましょう"
     },
     "languages": {
       "english": "英語",
@@ -170,6 +171,14 @@
       "wrongExample": "間違った例",
       "soundNotPlaying": "音が再生されません"
     },
+    "audioPlaying": "再生中...",
+    "audioTapToPlay": "タップして再生",
+    "typeAnswerPlaceholder": "ここに答えを入力してください",
+    "submit": "送信",
+    "correctAnswer": "正解！",
+    "incorrectAnswer": "不正解。答えは：{{answer}}",
+    "loadingImage": "画像を読み込んでいます...",
+    "imageLoadError": "画像の読み込みに失敗しました",
     "modes": {
       "flashcards": "フラッシュカード",
       "multipleChoice": "選択問題",
@@ -342,5 +351,72 @@
     "wordRemoved": "単語が正常に削除されました",
     "profileUpdated": "プロフィールが正常に更新されました",
     "passwordChanged": "パスワードが正常に変更されました"
+  },
+  "offline": {
+    "indicator": "オフラインモード",
+    "availableMessage": "オフラインモード有効 - プレミアム機能",
+    "unavailableMessage": "オフラインモードにはプレミアムサブスクリプションが必要です",
+    "premiumRequired": "プレミアムが必要",
+    "premiumRequiredMessage": "オフラインクイズへのアクセスはプレミアムサブスクライバーのみ利用可能です。インターネット接続なしで単語リストにアクセスするにはアップグレードしてください。",
+    "featureUnavailable": "この機能はオフラインモードでは利用できません"
+  },
+  "wordDetail": {
+    "deleteWord": "単語を削除",
+    "deleteWordConfirm": "「{{word}}」を削除してもよろしいですか？",
+    "total": "合計",
+    "learned": "学習済み",
+    "progress": "進捗",
+    "searchPlaceholder": "単語を検索...",
+    "filterAll": "すべて ({{count}})",
+    "filterLearned": "学習済み ({{count}})",
+    "filterToLearn": "未学習 ({{count}})",
+    "noWordsFound": "単語が見つかりません",
+    "noWordsYet": "まだ単語がありません",
+    "addNewWord": "新しい単語を追加",
+    "addWordError": "単語の追加に失敗しました。もう一度お試しください。",
+    "termRequired": "用語は必須です",
+    "termTooShort": "用語が短すぎます",
+    "wordPhraseLabel": "単語/フレーズ *",
+    "wordPhrasePlaceholder": "例: こんにちは",
+    "notesLabel": "メモ（任意）",
+    "notesPlaceholder": "例: フォーマルな場面で使用",
+    "addWordButton": "単語を追加"
+  },
+  "createWordlist": {
+    "title": "新しいリストを作成",
+    "successMessage": "「{{name}}」リストが作成されました。",
+    "nameLabel": "リスト名",
+    "nameRequired": "リスト名は必須です",
+    "nameMinLength": "名前は3文字以上必要です",
+    "nameMaxLength": "名前は50文字未満にしてください",
+    "namePlaceholder": "例: 旅行必需品",
+    "descriptionLabel": "説明（任意）",
+    "descriptionMaxLength": "説明は200文字未満にしてください",
+    "descriptionPlaceholder": "リストの説明を追加",
+    "languageLabel": "言語",
+    "languageRequired": "言語を選択してください",
+    "errorMessage": "リストの作成に失敗しました。もう一度お試しください。",
+    "createButton": "リストを作成"
+  },
+  "upgradePrompt": {
+    "title": "Decorebatorを楽しんでいますか？",
+    "limitReached": "無料プランの制限（1リスト、最大10単語）に達しました。",
+    "upgradeMessage": "プレミアムにアップグレードして、無制限のリストを作成し、すべての学習機能をアンロックしましょう！",
+    "maybeLater": "後で",
+    "viewPlans": "プランを見る"
+  },
+  "wordlistItem": {
+    "deleteSuccess": "リストが正常に削除されました",
+    "deleteError": "リストの削除に失敗しました。もう一度お試しください。",
+    "deleteTitle": "リストを削除",
+    "deleteConfirmMessage": "「{{name}}」を削除してもよろしいですか？この操作は元に戻せません。",
+    "noWordsTitle": "まだ単語がありません",
+    "noWordsMessage": "クイズを開始する前に、このリストに単語を追加してください。",
+    "wordCount": "{{count}}個の単語",
+    "wordCount_plural": "{{count}}個の単語",
+    "percentLearned": "{{percent}}% 学習済み",
+    "startQuiz": "クイズを開始",
+    "editWordlist": "リストを編集",
+    "deleteWordlist": "リストを削除"
   }
 }

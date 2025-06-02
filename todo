@@ -39,9 +39,9 @@
     [x] Replace expo-av with expo-audio
     [x] App icon
     [x] New quiz: write word from definition
-    [ ] UI translation
-    [ ] Offline support
-    [ ] Remove learned words from quiz
+    [x] UI translation
+    [x] Offline support
+    [x] Remove learned words from quiz
     [ ] Fix % learned in the ItemUi
     [ ] Use all examples
     [ ] Splash screen

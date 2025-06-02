@@ -29,6 +29,7 @@ func GetUserWordlists(userId int64) ([]*Wordlist, error) {
 	}
 	result, err := wordlistRepository.Find(args)
 	if err != nil {
+
 		wrappedErr := fmt.Errorf(
 			"failed to get all wordlists: %w", err,
 		)

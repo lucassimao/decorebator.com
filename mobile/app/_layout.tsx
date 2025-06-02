@@ -11,6 +11,11 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "@/i18n";
 import { useI18n } from "@/hooks/useI18n";
 
+// Import offline test utility in development
+if (__DEV__) {
+  import("@/utils/offlineTest");
+}
+
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,

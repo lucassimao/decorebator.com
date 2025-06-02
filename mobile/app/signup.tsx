@@ -6,6 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Link, router } from "expo-router";
 import * as React from "react";
 import { Controller, FieldError, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   Dimensions,
@@ -52,6 +53,7 @@ export default function SignUpScreen() {
   const [secureTextEntry, setSecureTextEntry] = React.useState(true);
   const [signUpError, setSignUpError] = React.useState<Error | null>(null);
   const snackbar = useSnackbar();
+  const { t } = useTranslation();
 
   const scrollViewRef = React.useRef<ScrollView>(null);
 
@@ -116,7 +118,6 @@ export default function SignUpScreen() {
     },
   });
 
-  const schema = React.useMemo(() => createSchema(t), [t]);
   
   const {
     control,

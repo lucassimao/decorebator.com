@@ -69,13 +69,15 @@ const uploadProfilePicture = async (uri: string): Promise<string> => {
 
   await new Promise((resolve) => setTimeout(resolve, 1500));
 
-  const base64String = await blobToBase64(blob);
+  const base64Data = await blobToBase64(blob);
 
   const parts = uri.split(".");
-  const ext = parts[parts.length - 1].toLowerCase();
+  const extension = parts[parts.length - 1].toLowerCase();
   const res = await userApi.update({
-    profilePicture: base64String,
-    profilePictureFileExtension: ext,
+    updateProfilePicture:{
+      base64Data,
+      extension
+    }
   });
 
   return res.profilePictureUrl;
@@ -347,7 +349,7 @@ const ProfileSettingsScreen: React.FC = () => {
                     </View>
                   </>
                 )}
-              </TouchableOpacity>``
+              </TouchableOpacity>
               <Text style={styles.emailText}>{profile?.email}</Text>
             </View>
 
