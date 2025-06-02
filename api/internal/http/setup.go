@@ -29,7 +29,6 @@ func SetupRoutes() *gin.Engine {
 
 	subService := service.NewSubscriptionService(db)
 	subRepo := repository.NewSubscriptionRepository(db)
-	userRepo := &repository.UserRepository{Db: db}
 
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -73,9 +72,6 @@ func SetupRoutes() *gin.Engine {
 		authenticatedRoutes.GET("/subscription/status", GetSubscriptionStatus(subRepo))
 		authenticatedRoutes.POST("/subscription/cancel", CancelSubscription(subService))
 		authenticatedRoutes.GET("/subscription/history", GetSubscriptionHistory(subRepo))
-
-		// Auth routes
-		authenticatedRoutes.POST("/auth/refresh", RefreshToken(userRepo))
 
 		// User profile routes
 		authenticatedRoutes.GET("/users", UserRoutes.GetProfile)

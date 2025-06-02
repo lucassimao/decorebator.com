@@ -44,7 +44,9 @@
     [x] New quiz: write word from definition
     [ ] Use all examples
     [ ] New quiz: complete sentece from audio. Read example and ask users to select words heard 
-    [ ] New quiz - Listen to example and detect which of the alternatives were pronounced
+    [ ] UI translation
+    [ ] Offline support
+
 
 [ ] MVP Release Checklist
     [ ]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
@@ -62,37 +64,30 @@
 [ ] Progress overview and currentStreak in the DashboardStats component
 [ ] how to rollback db migrations?
 [ ] improve quiz algorithm
+[ ] Crossword
+[ ] Sponsored quiz - pay for words and add sponsored examples and sentences and images
 [ ] Notifications https://github.com/nikoksr/notify
     - new user
     - new subscription
     - new error report
+[ ] New quiz: Ask chatgpt to create a small text using 5 or more words in a wordlist. 
+    Present the text hiding the words and ask the user to write the missing words.
 [ ] Allow to select specific quiz types
 [ ] bulk create words
 [ ] create wordlist from song name
 [ ] quiz from all wordlists
 [ ] display word status: pending, error, no meaning found, etc
-[ ] leverage prompt caching
-    https://openai.com/index/api-prompt-caching/
-[ ] use structured JSON output
-    https://openai.com/index/introducing-structured-outputs-in-the-api/
+[ ] leverage prompt caching  https://openai.com/index/api-prompt-caching/
 [ ] Spike: Investigate if GPT's Fine-tuning feature can improve examples and meanings
     https://openai.com/index/gpt-4o-fine-tuning/
 
 [ ] support different voices when generating audio from text
 [ ] Add word offline
 [ ] clicking on a word should open a modal defining the clicked word
-[ ] allow adding context for a word: example or exerpt
-[ ] Settings - choose UK or US english
 [ ] automated tests
 [ ] configurar honnef.co/go/tools/cmd/staticcheck
 [ ] configurar go vet as a pre-commit hook
 [ ] configure govulncheck golang.org/x/vuln/cmd/govulncheck@latest
-[ ] When saving new word, move the goroutine calling FetchAndSave and IncludeDefinitions to a processing queue
 [ ] customize quiz algorithm based on user settings ( api/internal/quizzes/handlers.go )
-[ ] display word tips based on links and topics in the wiktionary data ( lookup crease in wiktionary)
 [ ] display how strong is the definition of a word for an user 
-[ ] upload profile image
-[ ] When saving word, check settings to decide which definer should be use for definitions.FetchAndSave
-[ ] New quiz: Ask chatgpt to create a small text using 5 or more words in a wordlist. Present the text hiding the words and ask the user to write the missing words.
-[ ] Crossword
-[ ] Sponsored quiz - pay for words and add sponsored examples and sentences and images
+
