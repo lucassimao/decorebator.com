@@ -138,7 +138,7 @@ const QuizScreen: React.FC = () => {
     setIsSubmitted(true);
     setShowResult(true);
 
-    const isCorrect = userInput.toLowerCase() === quiz.value?.toLowerCase();
+    const isCorrect = userInput.toLowerCase().trim() === quiz.value?.toLowerCase();
     setQuizCount((prev) => prev + 1);
     if (isCorrect) {
       setCorrectCount((prev) => prev + 1);
@@ -297,10 +297,10 @@ const QuizScreen: React.FC = () => {
                 style={[
                   styles.writeInput,
                   isSubmitted &&
-                    userInput.toLowerCase() === correctAnswer.toLowerCase() &&
+                    userInput.toLowerCase().trim() === correctAnswer.toLowerCase() &&
                     styles.correctInput,
                   isSubmitted &&
-                    userInput.toLowerCase() !== correctAnswer.toLowerCase() &&
+                    userInput.toLowerCase().trim() !== correctAnswer.toLowerCase() &&
                     styles.incorrectInput,
                 ]}
                 placeholder={t("quiz.typeAnswerPlaceholder")}

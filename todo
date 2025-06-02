@@ -42,22 +42,43 @@
     [x] UI translation
     [x] Offline support
     [x] Remove learned words from quiz
-    [ ] Fix % learned in the ItemUi
+    [x] Fix % learned in the ItemUi
+    [ ] Display pronunciation if available
+    [ ] Multilanguage quizes
     [ ] Use all examples
     [ ] Splash screen
-    [ ] Multilanguage quizes
 
 
 [ ] MVP Release Checklist
-    [ ]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
+    [ ]  PostHog integration
     [ ]  Sentry for error tracking
     [ ]  Vercel-hosted page with SEO meta tags
-    [ ]  Microsoft clarity integration
-    [ ]  PostHog integration
+    [ ]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
     [ ]  browserstack testing
+    [ ]  Microsoft clarity integration for website
 
 # V2
-[ ] New quiz: complete sentece from audio. Read example and ask users to select words heard 
+
+[ ] Gamification
+    XP points & leveling for completing activities.
+    Streak system (daily learning).
+    Badges/Achievements (e.g., "100 words learned").
+    Leaderboard (optional, but adds virality).
+
+[ ] User Feedback Loop
+        In-app feedback feature ("I don’t agree with this definition", “This quiz was confusing”).
+        Satisfaction ratings after quiz rounds
+
+[ ] Community / Social Features
+        Wordlist sharing (with friends, study groups).
+        Comment section or notes on wordlists or quizzes.
+        Challenges (e.g., weekly vocab battle).
+[ ] Push notification system (reminders, streaks, review alerts).
+[ ] Progress tracking dashboard (XP, mastered words, streaks, review due).
+[ ] New quiz
+    complete sentece from audio
+    drag-and-drop, word building
+    Voice practice (repeat the word aloud and get AI feedback).
 [ ] Support promotion codes in the settings page 
 [ ] Support invite friend to unlock premium features - 1 subscribed friend grants 1 week for the enviter
 [ ] Properly handle session expiration
