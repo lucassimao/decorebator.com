@@ -94,9 +94,7 @@ const LoginScreen: React.FC = () => {
             {/* Logo/App Name */}
             <View style={styles.logoContainer}>
               <Text style={styles.appName}>{t("common.appName")}</Text>
-              <Text style={styles.tagline}>
-                {t("auth.tagline")}
-              </Text>
+              <Text style={styles.tagline}>{t("auth.tagline")}</Text>
             </View>
 
             {/* Foreground Illustration */}
@@ -119,7 +117,9 @@ const LoginScreen: React.FC = () => {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={styles.welcomeText}>{t("auth.signin.welcomeBack")}</Text>
+                <Text style={styles.welcomeText}>
+                  {t("auth.signin.welcomeBack")}
+                </Text>
                 <Text style={styles.subtitleText}>
                   {t("auth.signin.subtitle")}
                 </Text>
@@ -128,7 +128,9 @@ const LoginScreen: React.FC = () => {
                 <View style={styles.inputGroup}>
                   <View style={styles.inputLabelRow}>
                     <MaterialIcons name="email" size={20} color="#636E72" />
-                    <Text style={styles.inputLabel}>{t("auth.signin.email")}</Text>
+                    <Text style={styles.inputLabel}>
+                      {t("auth.signin.email")}
+                    </Text>
                   </View>
                   <Controller
                     control={control}
@@ -167,7 +169,9 @@ const LoginScreen: React.FC = () => {
                 <View style={styles.inputGroup}>
                   <View style={styles.inputLabelRow}>
                     <MaterialIcons name="lock" size={20} color="#636E72" />
-                    <Text style={styles.inputLabel}>{t("auth.signin.password")}</Text>
+                    <Text style={styles.inputLabel}>
+                      {t("auth.signin.password")}
+                    </Text>
                   </View>
                   <View style={styles.passwordContainer}>
                     <Controller
@@ -237,7 +241,9 @@ const LoginScreen: React.FC = () => {
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <>
-                      <Text style={styles.loginButtonText}>{t("auth.signin.signInButton")}</Text>
+                      <Text style={styles.loginButtonText}>
+                        {t("auth.signin.signInButton")}
+                      </Text>
                       <Ionicons
                         name="arrow-forward"
                         size={20}
@@ -272,12 +278,16 @@ const LoginScreen: React.FC = () => {
 
                 {/* Sign Up Link */}
                 <View style={styles.signUpContainer}>
-                  <Text style={styles.signUpText}>{t("auth.signin.noAccount")} </Text>
+                  <Text style={styles.signUpText}>
+                    {t("auth.signin.noAccount")}{" "}
+                  </Text>
                   <TouchableOpacity
                     onPress={handleSignUp}
                     disabled={loginMutation.isPending}
                   >
-                    <Text style={styles.signUpLink}>{t("auth.signin.signUp")}</Text>
+                    <Text style={styles.signUpLink}>
+                      {t("auth.signin.signUp")}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </LinearGradient>

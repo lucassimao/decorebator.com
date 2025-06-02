@@ -41,40 +41,85 @@ func (repository *WordlistRepository) Save(name, description, languageCode strin
 }
 
 type FindWordlistArgs struct {
-	Id      *int64
-	OwnerId *int64
+	Id                       *int64
+	OwnerId                  *int64
+	ComputeWordsCount        bool
+	ComputeWordsLearnedCount bool
 }
 
 func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, error) {
-	var builder strings.Builder
-	builder.WriteString(`SELECT wordlists.id, name, description, user_id, created_at, updated_at, language_code FROM wordlists`)
-	var queryArgs []interface{}
+	var (
+		builder   strings.Builder
+		queryArgs []interface{}
+	)
 
-	if args.Id != nil {
-		builder.WriteString(` WHERE wordlists.id = $1`)
-		queryArgs = append(queryArgs, args.Id)
-	} else if args.OwnerId != nil {
-		builder.WriteString(` WHERE wordlists.user_id = $1`)
-		queryArgs = append(queryArgs, args.OwnerId)
+	// Build SELECT clause
+	builder.WriteString("SELECT wordlists.id, wordlists.name, wordlists.description, wordlists.user_id, wordlists.created_at, wordlists.updated_at, wordlists.language_code")
+	if args.ComputeWordsCount || args.ComputeWordsLearnedCount {
+		if args.ComputeWordsCount {
+			builder.WriteString(", COUNT(words.id) AS word_count")
+		}
+		if args.ComputeWordsLearnedCount {
+			builder.WriteString(", COUNT(words.id) FILTER (WHERE words.learned = true) AS word_learned_count")
+		}
+		builder.WriteString(" FROM wordlists")
+		builder.WriteString(" LEFT JOIN words ON words.wordlist_id = wordlists.id")
+	} else {
+		builder.WriteString(" FROM wordlists")
 	}
 
-	wordlists := []*Wordlist{}
+	// Build WHERE clause
+	if args.Id != nil {
+		builder.WriteString(" WHERE wordlists.id = $1")
+		queryArgs = append(queryArgs, *args.Id)
+	} else if args.OwnerId != nil {
+		builder.WriteString(" WHERE wordlists.user_id = $1")
+		queryArgs = append(queryArgs, *args.OwnerId)
+	}
+
+	// Add GROUP BY if aggregating
+	if args.ComputeWordsCount || args.ComputeWordsLearnedCount {
+		builder.WriteString(" GROUP BY wordlists.id")
+	}
+
+	// Add ORDER BY
+	builder.WriteString(" ORDER BY wordlists.id DESC")
+
 	query := builder.String()
-	query = query + " ORDER BY ID DESC"
 	rows, err := repository.Db.Query(context.Background(), query, queryArgs...)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return wordlists, nil
+			return []*Wordlist{}, nil
 		}
 		return nil, err
 	}
-
 	defer rows.Close()
 
+	var wordlists []*Wordlist
 	for rows.Next() {
 		w := Wordlist{}
-		err := rows.Scan(&w.ID, &w.Name, &w.Description, &w.UserID, &w.CreatedAt, &w.UpdatedAt, &w.LanguageCode)
-		if err != nil {
+
+		var dest []any
+		dest = append(dest,
+			&w.ID,
+			&w.Name,
+			&w.Description,
+			&w.UserID,
+			&w.CreatedAt,
+			&w.UpdatedAt,
+			&w.LanguageCode,
+		)
+
+		if args.ComputeWordsCount {
+			w.WordsCount = new(int)
+			dest = append(dest, w.WordsCount)
+		}
+		if args.ComputeWordsLearnedCount {
+			w.WordsLearnedCount = new(int)
+			dest = append(dest, w.WordsLearnedCount)
+		}
+
+		if err := rows.Scan(dest...); err != nil {
 			return nil, err
 		}
 		wordlists = append(wordlists, &w)

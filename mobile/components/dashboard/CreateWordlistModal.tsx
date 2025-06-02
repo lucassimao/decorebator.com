@@ -65,6 +65,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
     mutationFn: (dto) => wordlistsApi.addWordlist(dto),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
 
       Alert.alert(
         t("common.success"),
@@ -177,7 +178,8 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
             {/* Name Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                {t("createWordlist.nameLabel")} <Text style={styles.required}>*</Text>
+                {t("createWordlist.nameLabel")}{" "}
+                <Text style={styles.required}>*</Text>
               </Text>
               <Controller
                 control={control}
@@ -214,7 +216,9 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
 
             {/* Description Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t("createWordlist.descriptionLabel")}</Text>
+              <Text style={styles.label}>
+                {t("createWordlist.descriptionLabel")}
+              </Text>
               <Controller
                 control={control}
                 name="description"
@@ -248,7 +252,8 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
             {/* Language Selection */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                {t("createWordlist.languageLabel")} <Text style={styles.required}>*</Text>
+                {t("createWordlist.languageLabel")}{" "}
+                <Text style={styles.required}>*</Text>
               </Text>
               <Controller
                 control={control}
@@ -326,7 +331,9 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <>
-                  <Text style={styles.createButtonText}>{t("createWordlist.createButton")}</Text>
+                  <Text style={styles.createButtonText}>
+                    {t("createWordlist.createButton")}
+                  </Text>
                   <Ionicons
                     name="add-circle"
                     size={20}

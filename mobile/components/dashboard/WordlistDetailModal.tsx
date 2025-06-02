@@ -106,6 +106,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["words", wordlist.id] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["wordlists"] });
     },
     onError: console.error,
   });
@@ -189,7 +190,8 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       <TouchableOpacity
         style={[styles.learnedToggle, !isOnline && styles.disabledButton]}
         onPress={() =>
-          isOnline && toggleLearnedMutation.mutate({
+          isOnline &&
+          toggleLearnedMutation.mutate({
             ...item,
             learned: !item.learned,
           })
@@ -253,7 +255,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
           ]}
         >
           <OfflineIndicator />
-          
+
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.handle} />
@@ -340,7 +342,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                     filterLearned === "learned" && styles.filterChipTextActive,
                   ]}
                 >
-                  {t("wordDetail.filterLearned", { count: words.filter((w) => w.learned).length })}
+                  {t("wordDetail.filterLearned", {
+                    count: words.filter((w) => w.learned).length,
+                  })}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -357,7 +361,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                       styles.filterChipTextActive,
                   ]}
                 >
-                  {t("wordDetail.filterToLearn", { count: words.filter((w) => !w.learned).length })}
+                  {t("wordDetail.filterToLearn", {
+                    count: words.filter((w) => !w.learned).length,
+                  })}
                 </Text>
               </TouchableOpacity>
             </ScrollView>
@@ -384,7 +390,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                       color="#DFE6E9"
                     />
                     <Text style={styles.emptyText}>
-                      {searchQuery ? t("wordDetail.noWordsFound") : t("wordDetail.noWordsYet")}
+                      {searchQuery
+                        ? t("wordDetail.noWordsFound")
+                        : t("wordDetail.noWordsYet")}
                     </Text>
                     {!searchQuery && isOnline && (
                       <Text style={styles.emptySubtext}>
@@ -411,7 +419,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
             >
               <View style={styles.addFormContainer}>
                 <View style={styles.formHeader}>
-                  <Text style={styles.formTitle}>{t("wordDetail.addNewWord")}</Text>
+                  <Text style={styles.formTitle}>
+                    {t("wordDetail.addNewWord")}
+                  </Text>
                   <TouchableOpacity
                     onPress={() => {
                       setShowAddForm(false);
@@ -427,11 +437,16 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                   name="name"
                   rules={{
                     required: t("wordDetail.termRequired"),
-                    minLength: { value: 1, message: t("wordDetail.termTooShort") },
+                    minLength: {
+                      value: 1,
+                      message: t("wordDetail.termTooShort"),
+                    },
                   }}
                   render={({ field: { onChange, onBlur, value } }) => (
                     <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>{t("wordDetail.wordPhraseLabel")}</Text>
+                      <Text style={styles.inputLabel}>
+                        {t("wordDetail.wordPhraseLabel")}
+                      </Text>
                       <TextInput
                         autoFocus
                         style={[styles.input, errors.name && styles.inputError]}
@@ -458,7 +473,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                   name="notes"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>{t("wordDetail.notesLabel")}</Text>
+                      <Text style={styles.inputLabel}>
+                        {t("wordDetail.notesLabel")}
+                      </Text>
                       <TextInput
                         style={[styles.input, styles.textArea]}
                         placeholder={t("wordDetail.notesPlaceholder")}
@@ -500,7 +517,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                   {addWordMutation.isPending ? (
                     <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
-                    <Text style={styles.submitButtonText}>{t("wordDetail.addWordButton")}</Text>
+                    <Text style={styles.submitButtonText}>
+                      {t("wordDetail.addWordButton")}
+                    </Text>
                   )}
                 </TouchableOpacity>
               </View>

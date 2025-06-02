@@ -127,7 +127,9 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
     return (
       <TouchableOpacity onPress={() => refetch()} style={styles.errorContainer}>
         <MaterialIcons name="error-outline" size={24} color="#FF6B6B" />
-        <Text style={styles.errorText}>{t("dashboard.stats.failedToLoad")}</Text>
+        <Text style={styles.errorText}>
+          {t("dashboard.stats.failedToLoad")}
+        </Text>
         <Text style={styles.retryText}>{t("dashboard.stats.tapToRetry")}</Text>
       </TouchableOpacity>
     );
@@ -151,7 +153,9 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
           {/* Progress Overview */}
           {PROGRESS_OVERVIEW_ENABLED && (
             <View style={styles.progressOverview}>
-              <Text style={styles.progressLabel}>{t("dashboard.stats.learningProgress")}</Text>
+              <Text style={styles.progressLabel}>
+                {t("dashboard.stats.learningProgress")}
+              </Text>
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBackground}>
                   <Animated.View
@@ -187,7 +191,9 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
                       color="#FF6B3D"
                     />
                     <Text style={styles.streakText}>
-                      {t("dashboard.stats.dayStreak", { count: stats.currentStreak })}
+                      {t("dashboard.stats.dayStreak", {
+                        count: stats.currentStreak,
+                      })}
                     </Text>
                   </View>
                 )}
@@ -201,7 +207,9 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
               <View style={styles.iconContainer}>
                 <MaterialIcons name="library-books" size={24} color="#FF7B54" />
               </View>
-              <Text style={styles.statLabel}>{t("dashboard.stats.totalWords")}</Text>
+              <Text style={styles.statLabel}>
+                {t("dashboard.stats.totalWords")}
+              </Text>
               <AnimatedCounter
                 value={stats?.totalWords || 0}
                 style={styles.statValue}
@@ -215,7 +223,9 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
               <View style={styles.iconContainer}>
                 <Ionicons name="list" size={24} color="#4CAF50" />
               </View>
-              <Text style={styles.statLabel}>{t("dashboard.stats.wordlists")}</Text>
+              <Text style={styles.statLabel}>
+                {t("dashboard.stats.wordlists")}
+              </Text>
               <AnimatedCounter
                 value={stats?.wordlists || 0}
                 style={styles.statValue}
@@ -229,7 +239,9 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
               <View style={styles.iconContainer}>
                 <MaterialIcons name="school" size={24} color="#2196F3" />
               </View>
-              <Text style={styles.statLabel}>{t("dashboard.stats.learned")}</Text>
+              <Text style={styles.statLabel}>
+                {t("dashboard.stats.learned")}
+              </Text>
               <AnimatedCounter
                 value={stats?.wordsLearned || 0}
                 style={[styles.statValue, { color: "#4CAF50" }]}

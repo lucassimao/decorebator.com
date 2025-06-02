@@ -74,10 +74,10 @@ const uploadProfilePicture = async (uri: string): Promise<string> => {
   const parts = uri.split(".");
   const extension = parts[parts.length - 1].toLowerCase();
   const res = await userApi.update({
-    updateProfilePicture:{
+    updateProfilePicture: {
       base64Data,
-      extension
-    }
+      extension,
+    },
   });
 
   return res.profilePictureUrl;
@@ -93,7 +93,7 @@ const ProfileSettingsScreen: React.FC = () => {
   );
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const { t } = useTranslation();
-  
+
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
 
   // Fetch user profile
@@ -152,10 +152,7 @@ const ProfileSettingsScreen: React.FC = () => {
       setTempProfilePicture(null);
     },
     onError: () => {
-      Alert.alert(
-        t("common.error"),
-        t("errors.general"),
-      );
+      Alert.alert(t("common.error"), t("errors.general"));
       setTempProfilePicture(null);
     },
   });
@@ -206,7 +203,10 @@ const ProfileSettingsScreen: React.FC = () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permissionResult.granted) {
-      Alert.alert(t("profile.permissionRequired"), t("profile.cameraPermission"));
+      Alert.alert(
+        t("profile.permissionRequired"),
+        t("profile.cameraPermission"),
+      );
       return;
     }
 
@@ -421,7 +421,9 @@ const ProfileSettingsScreen: React.FC = () => {
 
               {/* Country */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>{t("profile.country")} ({t("profile.optional")})</Text>
+                <Text style={styles.inputLabel}>
+                  {t("profile.country")} ({t("profile.optional")})
+                </Text>
                 <Controller
                   control={control}
                   name="country"
@@ -436,7 +438,9 @@ const ProfileSettingsScreen: React.FC = () => {
                           !value && styles.placeholderText,
                         ]}
                       >
-                        {value ? getCountryName(value) : t("profile.selectCountry")}
+                        {value
+                          ? getCountryName(value)
+                          : t("profile.selectCountry")}
                       </Text>
                       <Ionicons name="chevron-down" size={20} color="#636E72" />
                     </TouchableOpacity>
@@ -446,7 +450,9 @@ const ProfileSettingsScreen: React.FC = () => {
 
               {/* Language Preference */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>{t("settings.preferences.language")}</Text>
+                <Text style={styles.inputLabel}>
+                  {t("settings.preferences.language")}
+                </Text>
                 <Controller
                   control={control}
                   name="preferredLanguage"
@@ -461,7 +467,11 @@ const ProfileSettingsScreen: React.FC = () => {
                           !value && styles.placeholderText,
                         ]}
                       >
-                        {value ? supportedLanguages.find(lang => lang.code === value)?.nativeName || value : t("dashboard.wordlists.selectLanguage")}
+                        {value
+                          ? supportedLanguages.find(
+                              (lang) => lang.code === value,
+                            )?.nativeName || value
+                          : t("dashboard.wordlists.selectLanguage")}
                       </Text>
                       <Ionicons name="chevron-down" size={20} color="#636E72" />
                     </TouchableOpacity>
@@ -471,7 +481,9 @@ const ProfileSettingsScreen: React.FC = () => {
 
               {/* Date of Birth */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>{t("profile.dateOfBirth")}</Text>
+                <Text style={styles.inputLabel}>
+                  {t("profile.dateOfBirth")}
+                </Text>
                 <Controller
                   control={control}
                   name="dateOfBirth"
@@ -486,9 +498,7 @@ const ProfileSettingsScreen: React.FC = () => {
                           !value && styles.placeholderText,
                         ]}
                       >
-                        {value
-                          ? formatDate(value)
-                          : t("profile.dateOfBirth")}
+                        {value ? formatDate(value) : t("profile.dateOfBirth")}
                       </Text>
                       <Ionicons
                         name="calendar-outline"
@@ -513,7 +523,9 @@ const ProfileSettingsScreen: React.FC = () => {
                   {updateMutation.isPending ? (
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
-                    <Text style={styles.saveButtonText}>{t("profile.saveChanges")}</Text>
+                    <Text style={styles.saveButtonText}>
+                      {t("profile.saveChanges")}
+                    </Text>
                   )}
                 </TouchableOpacity>
               )}
@@ -526,7 +538,9 @@ const ProfileSettingsScreen: React.FC = () => {
                 onPress={handleChangePassword}
               >
                 <MaterialIcons name="lock-outline" size={24} color="#636E72" />
-                <Text style={styles.actionText}>{t("profile.changePassword.title")}</Text>
+                <Text style={styles.actionText}>
+                  {t("profile.changePassword.title")}
+                </Text>
                 <Ionicons name="chevron-forward" size={20} color="#636E72" />
               </TouchableOpacity>
 
@@ -549,11 +563,11 @@ const ProfileSettingsScreen: React.FC = () => {
             {/* Member Since */}
             <View style={styles.memberInfo}>
               <Text style={styles.memberText}>
-                {t("profile.memberSince", { 
+                {t("profile.memberSince", {
                   date: new Date(profile?.createdAt || "").toLocaleDateString(
-                    i18n.language.startsWith('en') ? 'en-US' : i18n.language,
-                    { year: "numeric", month: "long" }
-                  )
+                    i18n.language.startsWith("en") ? "en-US" : i18n.language,
+                    { year: "numeric", month: "long" },
+                  ),
                 })}
               </Text>
             </View>
@@ -577,11 +591,17 @@ const ProfileSettingsScreen: React.FC = () => {
               <View style={styles.datePickerContent}>
                 <View style={styles.datePickerHeader}>
                   <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                    <Text style={styles.datePickerCancel}>{t("common.cancel")}</Text>
+                    <Text style={styles.datePickerCancel}>
+                      {t("common.cancel")}
+                    </Text>
                   </TouchableOpacity>
-                  <Text style={styles.datePickerTitle}>{t("profile.dateOfBirth")}</Text>
+                  <Text style={styles.datePickerTitle}>
+                    {t("profile.dateOfBirth")}
+                  </Text>
                   <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                    <Text style={styles.datePickerDone}>{t("common.done")}</Text>
+                    <Text style={styles.datePickerDone}>
+                      {t("common.done")}
+                    </Text>
                   </TouchableOpacity>
                 </View>
 
@@ -642,7 +662,9 @@ const ProfileSettingsScreen: React.FC = () => {
             />
             <View style={styles.countryPickerModal}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{t("profile.selectCountry")}</Text>
+                <Text style={styles.modalTitle}>
+                  {t("profile.selectCountry")}
+                </Text>
                 <TouchableOpacity onPress={() => setShowCountryPicker(false)}>
                   <Ionicons name="close" size={24} color="#636E72" />
                 </TouchableOpacity>
@@ -675,7 +697,9 @@ const ProfileSettingsScreen: React.FC = () => {
             />
             <View style={styles.countryPickerModal}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{t("settings.preferences.language")}</Text>
+                <Text style={styles.modalTitle}>
+                  {t("settings.preferences.language")}
+                </Text>
                 <TouchableOpacity onPress={() => setShowLanguagePicker(false)}>
                   <Ionicons name="close" size={24} color="#636E72" />
                 </TouchableOpacity>
@@ -686,11 +710,15 @@ const ProfileSettingsScreen: React.FC = () => {
                     key={language.code}
                     style={styles.countryItem}
                     onPress={() => {
-                      setValue("preferredLanguage", language.code, { shouldDirty: true });
+                      setValue("preferredLanguage", language.code, {
+                        shouldDirty: true,
+                      });
                       setShowLanguagePicker(false);
                     }}
                   >
-                    <Text style={styles.countryName}>{language.nativeName}</Text>
+                    <Text style={styles.countryName}>
+                      {language.nativeName}
+                    </Text>
                     <Text style={styles.languageCode}>({language.name})</Text>
                   </TouchableOpacity>
                 ))}

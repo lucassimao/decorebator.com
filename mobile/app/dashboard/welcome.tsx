@@ -53,7 +53,9 @@ const EmptyDashboard = () => {
           {/* Bottom content */}
           <View style={styles.bottomContent}>
             {/* No wordlists message */}
-            <Text style={styles.noWordlistsText}>{t("dashboard.wordlists.noWordlistsYet")}</Text>
+            <Text style={styles.noWordlistsText}>
+              {t("dashboard.wordlists.noWordlistsYet")}
+            </Text>
 
             {/* CTA Button */}
             <TouchableOpacity

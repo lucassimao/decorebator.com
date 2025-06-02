@@ -40,7 +40,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     mutationFn: () => wordlistsApi.deleteWordlist(item.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });``
       Alert.alert(t("common.success"), t("wordlistItem.deleteSuccess"));
     },
     onError: (error) => {
@@ -98,9 +98,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     onPressed?.();
   };
 
-  const progressPercentage = Math.random() * 100; // Replace with actual progress
-
-
+  const progressPercentage = (item.wordsLearnedCount / item.wordsCount)*100;
 
   return (
     <>
@@ -163,7 +161,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             <View style={styles.cardStat}>
               <MaterialIcons name="school" size={16} color="#636E72" />
               <Text style={styles.cardStatText}>
-                {t("wordlistItem.percentLearned", { percent: Math.round(progressPercentage) })}
+                {t("wordlistItem.percentLearned", {
+                  percent: Math.round(progressPercentage),
+                })}
               </Text>
             </View>
           )}
@@ -194,12 +194,16 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   onPress={handleQuizStart}
                 >
                   <MaterialIcons name="quiz" size={24} color="#4CAF50" />
-                  <Text style={styles.menuItemText}>{t("wordlistItem.startQuiz")}</Text>
+                  <Text style={styles.menuItemText}>
+                    {t("wordlistItem.startQuiz")}
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.menuItem} onPress={handleEdit}>
                   <MaterialIcons name="edit" size={24} color="#FF7B54" />
-                  <Text style={styles.menuItemText}>{t("wordlistItem.editWordlist")}</Text>
+                  <Text style={styles.menuItemText}>
+                    {t("wordlistItem.editWordlist")}
+                  </Text>
                 </TouchableOpacity>
 
                 <View style={styles.menuDivider} />

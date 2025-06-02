@@ -102,7 +102,9 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
       {/* Section Header */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{t("dashboard.wordlists.myWordlists")}</Text>
+        <Text style={styles.sectionTitle}>
+          {t("dashboard.wordlists.myWordlists")}
+        </Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={handleAddNewWordlist}
@@ -156,7 +158,9 @@ const Dashboard: React.FC<DashboardProps> = () => {
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>{t("dashboard.wordlists.noWordlistsYet")}</Text>
+                <Text style={styles.emptyText}>
+                  {t("dashboard.wordlists.noWordlistsYet")}
+                </Text>
                 <TouchableOpacity
                   style={styles.ctaButton}
                   onPress={() => setShowCreateModal(true)}

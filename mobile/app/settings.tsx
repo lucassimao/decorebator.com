@@ -75,7 +75,7 @@ const SettingsScreen: React.FC = () => {
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<PlanRecurrence | null>(null);
   const { t } = useTranslation();
-  
+
   const PRICING_PLANS = React.useMemo(() => getPricingPlans(t), [t]);
 
   // Fetch subscription
@@ -118,7 +118,10 @@ const SettingsScreen: React.FC = () => {
       if (result.type === "success") {
         // Refresh subscription data
         refetchSubscription();
-        Alert.alert(t("common.success"), t("settings.subscription.activatedSuccess"));
+        Alert.alert(
+          t("common.success"),
+          t("settings.subscription.activatedSuccess"),
+        );
       }
     },
     onError: () => {
@@ -152,9 +155,7 @@ const SettingsScreen: React.FC = () => {
   const support = async () => {
     const isAvailable = await MailComposer.isAvailableAsync();
     if (!isAvailable) {
-      Alert.alert(
-        t("settings.noEmailClient"),
-      );
+      Alert.alert(t("settings.noEmailClient"));
       return;
     }
 
@@ -184,11 +185,14 @@ const SettingsScreen: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString(i18n.language.startsWith('en') ? 'en-US' : i18n.language, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    return date.toLocaleDateString(
+      i18n.language.startsWith("en") ? "en-US" : i18n.language,
+      {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      },
+    );
   };
 
   const isPremium = subscription?.plan !== "free";
@@ -218,7 +222,9 @@ const SettingsScreen: React.FC = () => {
 
           {/* Current Subscription */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("settings.subscription.currentPlan")}</Text>
+            <Text style={styles.sectionTitle}>
+              {t("settings.subscription.currentPlan")}
+            </Text>
 
             {isLoading ? (
               <View style={styles.loadingContainer}>
@@ -316,7 +322,9 @@ const SettingsScreen: React.FC = () => {
 
               {/* Premium Features */}
               <View style={styles.featuresCard}>
-                <Text style={styles.featuresTitle}>{t("settings.subscription.premiumFeatures")}</Text>
+                <Text style={styles.featuresTitle}>
+                  {t("settings.subscription.premiumFeatures")}
+                </Text>
                 {PRICING_PLANS[0].features.map((feature, index) => (
                   <View key={index} style={styles.featureRow}>
                     <MaterialIcons
@@ -344,7 +352,9 @@ const SettingsScreen: React.FC = () => {
                   >
                     {plan.popular && (
                       <View style={styles.popularBadge}>
-                        <Text style={styles.popularText}>{t("settings.subscription.bestValue")}</Text>
+                        <Text style={styles.popularText}>
+                          {t("settings.subscription.bestValue")}
+                        </Text>
                       </View>
                     )}
 
@@ -392,7 +402,9 @@ const SettingsScreen: React.FC = () => {
                 ) : (
                   <>
                     <Text style={styles.subscribeButtonText}>
-                      {selectedPlan ? t("settings.subscription.continueToPayment") : t("settings.subscription.selectPlan")}
+                      {selectedPlan
+                        ? t("settings.subscription.continueToPayment")
+                        : t("settings.subscription.selectPlan")}
                     </Text>
                     <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
                   </>
@@ -403,14 +415,18 @@ const SettingsScreen: React.FC = () => {
 
           {/* Other Settings */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("settings.otherSettings")}</Text>
+            <Text style={styles.sectionTitle}>
+              {t("settings.otherSettings")}
+            </Text>
 
             <TouchableOpacity
               style={styles.settingItem}
               onPress={profileSettings}
             >
               <MaterialIcons name="person-outline" size={24} color="#636E72" />
-              <Text style={styles.settingText}>{t("settings.account.title")}</Text>
+              <Text style={styles.settingText}>
+                {t("settings.account.title")}
+              </Text>
               <Ionicons name="chevron-forward" size={20} color="#636E72" />
             </TouchableOpacity>
 
@@ -426,7 +442,9 @@ const SettingsScreen: React.FC = () => {
 
             <TouchableOpacity style={styles.settingItem} onPress={support}>
               <MaterialIcons name="help-outline" size={24} color="#636E72" />
-              <Text style={styles.settingText}>{t("settings.helpAndSupport")}</Text>
+              <Text style={styles.settingText}>
+                {t("settings.helpAndSupport")}
+              </Text>
               <Ionicons name="chevron-forward" size={20} color="#636E72" />
             </TouchableOpacity>
 

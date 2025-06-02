@@ -23,9 +23,12 @@ func init() {
 	wordlistRepository = &repo.WordlistRepository{Db: db}
 }
 
-func GetUserWordlists(userId int64) ([]*Wordlist, error) {
+// include wordsCount and WordsLearnedCount for each scholarship
+func GetUserWordlistsWithWordStats(userId int64) ([]*Wordlist, error) {
 	args := repo.FindWordlistArgs{
-		OwnerId: &userId,
+		OwnerId:                  &userId,
+		ComputeWordsCount:        true,
+		ComputeWordsLearnedCount: true,
 	}
 	result, err := wordlistRepository.Find(args)
 	if err != nil {

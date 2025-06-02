@@ -115,7 +115,9 @@ const UpgradePromptDialog = ({ visible, onDismiss }: Props) => {
                   onPress={onDismiss}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.laterButtonText}>{t("upgradePrompt.maybeLater")}</Text>
+                  <Text style={styles.laterButtonText}>
+                    {t("upgradePrompt.maybeLater")}
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -123,7 +125,9 @@ const UpgradePromptDialog = ({ visible, onDismiss }: Props) => {
                   onPress={handleUpgrade}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.upgradeButtonText}>{t("upgradePrompt.viewPlans")}</Text>
+                  <Text style={styles.upgradeButtonText}>
+                    {t("upgradePrompt.viewPlans")}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>

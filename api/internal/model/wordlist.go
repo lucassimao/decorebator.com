@@ -2,7 +2,6 @@ package model
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/pgtype"
@@ -22,29 +21,42 @@ type Wordlist struct {
 	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
 	UserID       int64              `json:"userId"`
 	LanguageCode string             `json:"languageCode"`
+
+	// Computed dinamically based on words table
+	WordsCount        *int `json:"wordsCount"`
+	WordsLearnedCount *int `json:"wordsLearnedCount"`
 }
 
 func (w Wordlist) MarshalJSON() ([]byte, error) {
-	createdAt := "null"
-	updatedAt := "null"
-
+	var (
+		createdAtValue any
+		updatedAtValue any
+	)
 	if w.CreatedAt.Status == pgtype.Present {
-		createdAt = w.CreatedAt.Time.UTC().Format(time.RFC3339)
+		createdAtValue = w.CreatedAt.Time.UTC().Format(time.RFC3339)
 	}
-
 	if w.UpdatedAt.Status == pgtype.Present {
-		updatedAt = w.UpdatedAt.Time.UTC().Format(time.RFC3339)
+		updatedAtValue = w.UpdatedAt.Time.UTC().Format(time.RFC3339)
 	}
 
-	return []byte(fmt.Sprintf(`{
-        "id": %d,
-        "name": %q,
-        "description": %q,
-        "languageCode": %q,
-        "createdAt": %q,
-        "updatedAt": %q,
-        "userId": %d
-    }`, w.ID, w.Name, w.Description, w.LanguageCode, createdAt, updatedAt, w.UserID)), nil
+	m := map[string]any{
+		"id":           w.ID,
+		"name":         w.Name,
+		"description":  w.Description,
+		"languageCode": w.LanguageCode,
+		"createdAt":    createdAtValue, // será string ou nil → "null"
+		"updatedAt":    updatedAtValue, // será string ou nil → "null"
+		"userId":       w.UserID,
+	}
+
+	if w.WordsCount != nil {
+		m["wordsCount"] = *w.WordsCount
+	}
+	if w.WordsLearnedCount != nil {
+		m["wordsLearnedCount"] = *w.WordsLearnedCount
+	}
+
+	return json.Marshal(m)
 }
 
 func (w *Wordlist) UnmarshalJSON(data []byte) error {

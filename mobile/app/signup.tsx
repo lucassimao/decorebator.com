@@ -118,7 +118,6 @@ export default function SignUpScreen() {
     },
   });
 
-  
   const {
     control,
     handleSubmit,
@@ -330,7 +329,9 @@ export default function SignUpScreen() {
               onPress={handleSubmit(onSubmit)}
               activeOpacity={0.8}
             >
-              <Text style={styles.buttonText}>{t("auth.signup.signUpButton")}</Text>
+              <Text style={styles.buttonText}>
+                {t("auth.signup.signUpButton")}
+              </Text>
             </TouchableOpacity>
 
             <Text style={styles.footer}>

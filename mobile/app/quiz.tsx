@@ -92,7 +92,7 @@ const QuizScreen: React.FC = () => {
   const reportMutation = useMutation({
     mutationFn: ({ errorType }: { errorType: errorReportingApi.ErrorType }) => {
       if (!isOnline) {
-        throw new Error('Reporting not available in offline mode');
+        throw new Error("Reporting not available in offline mode");
       }
       return errorReportingApi.reportError(errorType, quiz!);
     },
@@ -238,7 +238,9 @@ const QuizScreen: React.FC = () => {
               {imageLoading && (
                 <View style={styles.imageLoadingContainer}>
                   <ActivityIndicator size="large" color="#FF7B54" />
-                  <Text style={styles.imageLoadingText}>{t("quiz.loadingImage")}</Text>
+                  <Text style={styles.imageLoadingText}>
+                    {t("quiz.loadingImage")}
+                  </Text>
                 </View>
               )}
               <Image
@@ -284,8 +286,8 @@ const QuizScreen: React.FC = () => {
           </View>
         );
       // Add this case to renderQuizContent
-      case "WRITE_WORD_FROM_DEFINITION":{
-        const correctAnswer = quiz.options[quiz.answerIndex]
+      case "WRITE_WORD_FROM_DEFINITION": {
+        const correctAnswer = quiz.options[quiz.answerIndex];
         return (
           <View style={styles.questionContainer}>
             <Text style={styles.meaningText}>{quiz.value}</Text>
@@ -295,12 +297,10 @@ const QuizScreen: React.FC = () => {
                 style={[
                   styles.writeInput,
                   isSubmitted &&
-                    userInput.toLowerCase() ===
-                      correctAnswer.toLowerCase() &&
+                    userInput.toLowerCase() === correctAnswer.toLowerCase() &&
                     styles.correctInput,
                   isSubmitted &&
-                    userInput.toLowerCase() !==
-                      correctAnswer.toLowerCase() &&
+                    userInput.toLowerCase() !== correctAnswer.toLowerCase() &&
                     styles.incorrectInput,
                 ]}
                 placeholder={t("quiz.typeAnswerPlaceholder")}
@@ -321,21 +321,24 @@ const QuizScreen: React.FC = () => {
                   onPress={handleWriteAnswer}
                   disabled={!userInput.trim()}
                 >
-                  <Text style={styles.submitAnswerText}>{t("quiz.submit")}</Text>
+                  <Text style={styles.submitAnswerText}>
+                    {t("quiz.submit")}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
             {isSubmitted && (
               <View style={styles.answerFeedback}>
-                {userInput.toLowerCase() ===
-                correctAnswer.toLowerCase() ? (
+                {userInput.toLowerCase() === correctAnswer.toLowerCase() ? (
                   <>
                     <Ionicons
                       name="checkmark-circle"
                       size={24}
                       color="#4CAF50"
                     />
-                    <Text style={styles.correctFeedback}>{t("quiz.correctAnswer")}</Text>
+                    <Text style={styles.correctFeedback}>
+                      {t("quiz.correctAnswer")}
+                    </Text>
                   </>
                 ) : (
                   <>
@@ -410,8 +413,12 @@ const QuizScreen: React.FC = () => {
           </View>
           <View style={styles.errorContainer}>
             <MaterialIcons name="cloud-off" size={64} color="#636E72" />
-            <Text style={styles.errorTitle}>{t("offline.premiumRequired")}</Text>
-            <Text style={styles.errorMessage}>{t("offline.premiumRequiredMessage")}</Text>
+            <Text style={styles.errorTitle}>
+              {t("offline.premiumRequired")}
+            </Text>
+            <Text style={styles.errorMessage}>
+              {t("offline.premiumRequiredMessage")}
+            </Text>
           </View>
         </SafeAreaView>
       </ImageBackground>
@@ -447,7 +454,11 @@ const QuizScreen: React.FC = () => {
             onPress={() => isOnline && setShowReportModal(true)}
             disabled={!isOnline}
           >
-            <MaterialIcons name="flag" size={24} color={isOnline ? "#636E72" : "#DFE6E9"} />
+            <MaterialIcons
+              name="flag"
+              size={24}
+              color={isOnline ? "#636E72" : "#DFE6E9"}
+            />
           </TouchableOpacity>
         </View>
 
@@ -534,7 +545,9 @@ const QuizScreen: React.FC = () => {
                   style={styles.nextButton}
                   onPress={handleNextQuiz}
                 >
-                  <Text style={styles.nextButtonText}>{t("quiz.nextQuestion")}</Text>
+                  <Text style={styles.nextButtonText}>
+                    {t("quiz.nextQuestion")}
+                  </Text>
                   <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
               )}
@@ -557,7 +570,9 @@ const QuizScreen: React.FC = () => {
                 onPress={() => handleReportError(ErrorType.UnrelatedImage)}
               >
                 <MaterialIcons name="image" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>{t("quiz.reportOptions.imageDoesntMatch")}</Text>
+                <Text style={styles.reportOptionText}>
+                  {t("quiz.reportOptions.imageDoesntMatch")}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -565,7 +580,9 @@ const QuizScreen: React.FC = () => {
                 onPress={() => handleReportError(ErrorType.MissingImage)}
               >
                 <MaterialIcons name="broken-image" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>{t("quiz.reportOptions.imageNotLoading")}</Text>
+                <Text style={styles.reportOptionText}>
+                  {t("quiz.reportOptions.imageNotLoading")}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -573,7 +590,9 @@ const QuizScreen: React.FC = () => {
                 onPress={() => handleReportError(ErrorType.UnrelatedMeaning)}
               >
                 <MaterialIcons name="help-outline" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>{t("quiz.reportOptions.wrongMeaning")}</Text>
+                <Text style={styles.reportOptionText}>
+                  {t("quiz.reportOptions.wrongMeaning")}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -581,7 +600,9 @@ const QuizScreen: React.FC = () => {
                 onPress={() => handleReportError(ErrorType.UnrelatedExample)}
               >
                 <MaterialIcons name="format-quote" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>{t("quiz.reportOptions.wrongExample")}</Text>
+                <Text style={styles.reportOptionText}>
+                  {t("quiz.reportOptions.wrongExample")}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -589,14 +610,18 @@ const QuizScreen: React.FC = () => {
                 onPress={() => handleReportError(ErrorType.SoundNotPlaying)}
               >
                 <MaterialIcons name="volume-off" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>{t("quiz.reportOptions.soundNotPlaying")}</Text>
+                <Text style={styles.reportOptionText}>
+                  {t("quiz.reportOptions.soundNotPlaying")}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={() => setShowReportModal(false)}
               >
-                <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
+                <Text style={styles.cancelButtonText}>
+                  {t("common.cancel")}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

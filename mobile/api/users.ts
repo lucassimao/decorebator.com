@@ -13,8 +13,8 @@ export type UserProfile = {
   country?: string;
   dateOfBirth?: string; // YYYY-MM-DD
   createdAt: string;
-  preferredLanguage: string
-  subscriptionPlan: 'free' | 'monthly' | 'annual'
+  preferredLanguage: string;
+  subscriptionPlan: "free" | "monthly" | "annual";
 };
 export type UserSignup = {
   firstName: string;
@@ -41,7 +41,7 @@ export type UpdateInput = {
     newPassword: String;
   };
 
-    // if set, triggers profile pic update
+  // if set, triggers profile pic update
   updateProfilePicture?: {
     base64Data: string;
     extension: String;
@@ -85,9 +85,9 @@ export async function sigout() {
   try {
     await offlineManager.clearCache();
   } catch (error) {
-    console.error('Error clearing offline cache:', error);
+    console.error("Error clearing offline cache:", error);
   }
-  
+
   if (Platform.OS === "web") {
     localStorage.removeItem("authorization");
   } else if (Platform.OS === "ios" || Platform.OS === "android") {
@@ -235,14 +235,16 @@ function saveAuthorization(authorization: string) {
   } else {
     throw new Error("Unknown platform: " + Platform.OS);
   }
-  
+
   // Update offline manager with premium status from JWT
   try {
     const decoded = decode(authorization);
-    const isPremium = decoded.payload.subscriptionPlan === 'monthly' || decoded.payload.subscriptionPlan === 'annual';
+    const isPremium =
+      decoded.payload.subscriptionPlan === "monthly" ||
+      decoded.payload.subscriptionPlan === "annual";
     offlineManager.setUserPremiumStatus(isPremium);
   } catch (error) {
-    console.error('Error updating offline manager:', error);
+    console.error("Error updating offline manager:", error);
   }
 }
 

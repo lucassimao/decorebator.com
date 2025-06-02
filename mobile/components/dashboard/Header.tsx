@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 
 export const Header = () => {
   const { t } = useTranslation();
-  
+
   // Fetch user profile
   const { data: user, isLoading } = useQuery({
     queryKey: ["userProfile"],
@@ -77,7 +77,9 @@ export const Header = () => {
       {/* Greeting */}
       <View style={styles.greetingContainer}>
         <Text style={styles.greeting}>{getGreeting()},</Text>
-        <Text style={styles.userName}>{user?.firstName || t("common.user")}!</Text>
+        <Text style={styles.userName}>
+          {user?.firstName || t("common.user")}!
+        </Text>
         <Text style={styles.subtitle}>{t("dashboard.header.subtitle")}</Text>
       </View>
     </>
