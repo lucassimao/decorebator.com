@@ -162,6 +162,10 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	common.Logger.Debug("CreateChallenge", "boxID", boxID, "leitnerSystemID", leitnerSystemID, "definition", definition.ID)
 
 	switch {
+	case boxID%7 == 0:
+		quizzType = model.WriteWordFromDefinition
+		value = definition.Meaning
+		quizAnswer = word.Name
 	case boxID%6 == 0:
 		quizzType = model.MeaningFromAudio
 		options, err = GetRandomMeanings([]int{int(definition.ID)}, 3)

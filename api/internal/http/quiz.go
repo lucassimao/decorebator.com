@@ -52,5 +52,5 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusOK)
+	c.Status(http.StatusNoContent)
 }

@@ -38,7 +38,8 @@ export type Quiz = {
     | "WORD_FROM_MEANING"
     | "WORD_FROM_IMAGE"
     | "WORD_FROM_AUDIO"
-    | "MEANING_FROM_AUDIO";
+    | "MEANING_FROM_AUDIO"
+    | 'WRITE_WORD_FROM_DEFINITION'
   pos: string; // part of speech
   audioURL?: string; //only present in MeaningFromAudio, GUESS_MEANING and WordFromAudio quizes
   imageDescription: string;

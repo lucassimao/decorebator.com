@@ -4,7 +4,7 @@ import * as quizApi from "@/api/wordlists";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useAudioPlayer } from "expo-audio";
+import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -18,6 +18,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -34,11 +35,20 @@ const QuizScreen: React.FC = () => {
   const [fastMode, setFastMode] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const player = useAudioPlayer();
-  const [isPlaying, setIsPlaying] = useState(false);
+  const { playing: isPlaying, didJustFinish } = useAudioPlayerStatus(player);
   const [quizCount, setQuizCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+  const [userInput, setUserInput] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const timeoutRef = useRef<number>(null);
+  // Reset player
+  useEffect(() => {
+    if (didJustFinish) {
+      player.seekTo(0);
+    }
+  }, [didJustFinish, player]);
 
   // Fetch quiz
   const {
@@ -50,18 +60,25 @@ const QuizScreen: React.FC = () => {
     queryFn: () => quizApi.newQuiz(Number(wordlistId)),
   });
 
+  // handle image changes
+  useEffect(() => {
+    if (quiz?.type === "WORD_FROM_IMAGE" && quiz.value !== currentImageUrl) {
+      setImageLoading(true);
+      setCurrentImageUrl(quiz.value);
+    }
+  }, [quiz?.value, quiz?.type]);
+
   // Answer mutation
-  const answerMutation = useMutation({
-    mutationFn: ({ success }: { success: boolean }) =>
+  const answerMutation = useMutation<void, Error, { success: boolean }>({
+    mutationFn: ({ success }) =>
       quizApi.answerQuiz(Number(wordlistId), quiz!.id, success),
     onSuccess: () => {
-      if (!fastMode) return;
-
-      // Auto advance in fast mode
-      timeoutRef.current = setTimeout(() => {
-        handleNextQuiz();
-      }, 1500);
+      if (fastMode) {
+        // Auto advance in fast mode
+        setTimeout(handleNextQuiz, 600);
+      }
     },
+    onError: console.error,
   });
 
   // Report error mutation
@@ -100,10 +117,27 @@ const QuizScreen: React.FC = () => {
     answerMutation.mutate({ success: isCorrect });
   };
 
+  // Add this function
+  const handleWriteAnswer = () => {
+    if (!userInput.trim() || !quiz) return;
+
+    setIsSubmitted(true);
+    setShowResult(true);
+
+    const isCorrect = userInput.toLowerCase() === quiz.value?.toLowerCase();
+    setQuizCount((prev) => prev + 1);
+    if (isCorrect) {
+      setCorrectCount((prev) => prev + 1);
+    }
+
+    answerMutation.mutate({ success: isCorrect });
+  };
+
   const handleNextQuiz = () => {
     setSelectedAnswer(null);
     setShowResult(false);
-    setIsPlaying(false);
+    setUserInput(""); // Add this
+    setIsSubmitted(false); // Add this
     refetch();
   };
 
@@ -111,8 +145,19 @@ const QuizScreen: React.FC = () => {
     reportMutation.mutate({ errorType });
   };
 
+  const onPressFastModeToggle = () => {
+    setFastMode((v) => !v);
+
+    // If toggled on while seem the quiz result, jump to the next quiz
+    if (!fastMode && showResult) {
+      handleNextQuiz();
+    }
+  };
+
   const getQuizTitle = () => {
     switch (quiz?.type) {
+      case "WRITE_WORD_FROM_DEFINITION":
+        return "Write the word for this definition";
       case "GUESS_MEANING":
         return "What does this word mean?";
       case "COMPLETE_SENTENCE":
@@ -128,6 +173,11 @@ const QuizScreen: React.FC = () => {
       default:
         return "Quiz";
     }
+  };
+
+  const hideSquareBracketContent = (text: string): string => {
+    // Replace content between square brackets with underscores
+    return text.replace(/\[([^\]]+)\]/g, "_____");
   };
 
   const renderQuizContent = () => {
@@ -154,7 +204,9 @@ const QuizScreen: React.FC = () => {
       case "COMPLETE_SENTENCE":
         return (
           <View style={styles.questionContainer}>
-            <Text style={styles.sentenceText}>{quiz.value}</Text>
+            <Text style={styles.sentenceText}>
+              {hideSquareBracketContent(quiz.value)}
+            </Text>
           </View>
         );
 
@@ -168,14 +220,31 @@ const QuizScreen: React.FC = () => {
       case "WORD_FROM_IMAGE":
         return (
           <View style={styles.questionContainer}>
-            <Image
-              source={{ uri: quiz.value }}
-              style={styles.questionImage}
-              resizeMode="contain"
-            />
-            {quiz.imageDescription && (
+            <View style={styles.imageContainer}>
+              {imageLoading && (
+                <View style={styles.imageLoadingContainer}>
+                  <ActivityIndicator size="large" color="#FF7B54" />
+                  <Text style={styles.imageLoadingText}>Loading image...</Text>
+                </View>
+              )}
+              <Image
+                source={{ uri: quiz.value }}
+                style={[
+                  styles.questionImage,
+                  imageLoading && styles.hiddenImage,
+                ]}
+                resizeMode="contain"
+                onLoadStart={() => setImageLoading(true)}
+                onLoadEnd={() => setImageLoading(false)}
+                onError={() => {
+                  setImageLoading(false);
+                  Alert.alert("Error", "Failed to load image");
+                }}
+              />
+            </View>
+            {quiz.imageDescription && !imageLoading && (
               <Text style={styles.imageDescription}>
-                {quiz.imageDescription}
+                {hideSquareBracketContent(quiz.imageDescription)}
               </Text>
             )}
           </View>
@@ -200,6 +269,73 @@ const QuizScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         );
+      // Add this case to renderQuizContent
+      case "WRITE_WORD_FROM_DEFINITION":{
+        const correctAnswer = quiz.options[quiz.answerIndex]
+        return (
+          <View style={styles.questionContainer}>
+            <Text style={styles.meaningText}>{quiz.value}</Text>
+            {quiz.pos && <Text style={styles.posText}>({quiz.pos})</Text>}
+            <View style={styles.writeInputContainer}>
+              <TextInput
+                style={[
+                  styles.writeInput,
+                  isSubmitted &&
+                    userInput.toLowerCase() ===
+                      correctAnswer.toLowerCase() &&
+                    styles.correctInput,
+                  isSubmitted &&
+                    userInput.toLowerCase() !==
+                      correctAnswer.toLowerCase() &&
+                    styles.incorrectInput,
+                ]}
+                placeholder="Type your answer here"
+                placeholderTextColor="#B2BEC3"
+                value={userInput}
+                onChangeText={setUserInput}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isSubmitted}
+                onSubmitEditing={() => handleWriteAnswer()}
+              />
+              {!isSubmitted && (
+                <TouchableOpacity
+                  style={[
+                    styles.submitAnswerButton,
+                    !userInput.trim() && styles.submitButtonDisabled,
+                  ]}
+                  onPress={handleWriteAnswer}
+                  disabled={!userInput.trim()}
+                >
+                  <Text style={styles.submitAnswerText}>Submit</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {isSubmitted && (
+              <View style={styles.answerFeedback}>
+                {userInput.toLowerCase() ===
+                correctAnswer.toLowerCase() ? (
+                  <>
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={24}
+                      color="#4CAF50"
+                    />
+                    <Text style={styles.correctFeedback}>Correct!</Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="close-circle" size={24} color="#FF6B6B" />
+                    <Text style={styles.incorrectFeedback}>
+                      Incorrect. The answer is: {correctAnswer}
+                    </Text>
+                  </>
+                )}
+              </View>
+            )}
+          </View>
+        );
+      }
     }
   };
 
@@ -291,7 +427,7 @@ const QuizScreen: React.FC = () => {
           <Text style={styles.modeText}>Fast Mode</Text>
           <TouchableOpacity
             style={[styles.modeToggle, fastMode && styles.modeToggleActive]}
-            onPress={() => setFastMode(!fastMode)}
+            onPress={onPressFastModeToggle}
           >
             <View
               style={[
@@ -313,42 +449,52 @@ const QuizScreen: React.FC = () => {
             {renderQuizContent()}
 
             {/* Options */}
-            <View style={styles.optionsContainer}>
-              {quiz?.options.map((option, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={getOptionStyle(index)}
-                  onPress={() => handleAnswerSelect(index)}
-                  disabled={showResult}
-                  activeOpacity={0.7}
-                >
-                  <Text style={getOptionTextStyle(index)}>{option}</Text>
-                  {showResult && index === quiz.answerIndex && (
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={24}
-                      color="#4CAF50"
-                    />
-                  )}
-                  {showResult &&
-                    selectedAnswer === index &&
-                    index !== quiz.answerIndex && (
-                      <Ionicons name="close-circle" size={24} color="#FF6B6B" />
+            {quiz?.type !== "WRITE_WORD_FROM_DEFINITION" && (
+              <View style={styles.optionsContainer}>
+                {quiz?.options.map((option, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={getOptionStyle(index)}
+                    onPress={() => handleAnswerSelect(index)}
+                    disabled={showResult}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={getOptionTextStyle(index)}>{option}</Text>
+                    {showResult && index === quiz.answerIndex && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={24}
+                        color="#4CAF50"
+                      />
                     )}
-                </TouchableOpacity>
-              ))}
-            </View>
+                    {showResult &&
+                      selectedAnswer === index &&
+                      index !== quiz.answerIndex && (
+                        <Ionicons
+                          name="close-circle"
+                          size={24}
+                          color="#FF6B6B"
+                        />
+                      )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
             {/* Next Button */}
-            {showResult && !fastMode && (
-              <TouchableOpacity
-                style={styles.nextButton}
-                onPress={handleNextQuiz}
-              >
-                <Text style={styles.nextButtonText}>Next Question</Text>
-                <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
-            )}
+            {showResult &&
+              !fastMode &&
+              (quiz?.type === "WRITE_WORD_FROM_DEFINITION"
+                ? isSubmitted
+                : true) && (
+                <TouchableOpacity
+                  style={styles.nextButton}
+                  onPress={handleNextQuiz}
+                >
+                  <Text style={styles.nextButtonText}>Next Question</Text>
+                  <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                </TouchableOpacity>
+              )}
           </View>
         </ScrollView>
 
@@ -683,5 +829,89 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#636E72",
     fontWeight: "500",
+  },
+
+  imageContainer: {
+    width: SCREEN_WIDTH - 80,
+    height: 200,
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imageLoadingContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1,
+  },
+  imageLoadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#636E72",
+  },
+  hiddenImage: {
+    opacity: 0,
+  },
+  writeInputContainer: {
+    marginTop: 24,
+    width: "100%",
+  },
+  writeInput: {
+    backgroundColor: "#FAFAFA",
+    borderWidth: 2,
+    borderColor: "#E0E0E0",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 18,
+    color: "#2D3436",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  correctInput: {
+    borderColor: "#4CAF50",
+    backgroundColor: "#E8F5E9",
+  },
+  incorrectInput: {
+    borderColor: "#FF6B6B",
+    backgroundColor: "#FFEBEE",
+  },
+  submitAnswerButton: {
+    backgroundColor: "#FF7B54",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#DFE6E9",
+    opacity: 0.6,
+  },
+  submitAnswerText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  answerFeedback: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+    gap: 8,
+  },
+  correctFeedback: {
+    color: "#4CAF50",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  incorrectFeedback: {
+    color: "#FF6B6B",
+    fontSize: 16,
+    textAlign: "center",
   },
 });

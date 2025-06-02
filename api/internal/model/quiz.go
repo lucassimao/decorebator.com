@@ -3,12 +3,13 @@ package model
 type QuizType string
 
 const (
-	GuessMeaning     QuizType = "GUESS_MEANING"
-	CompleteSentence QuizType = "COMPLETE_SENTENCE"
-	WordFromMeaning  QuizType = "WORD_FROM_MEANING"
-	WordFromImage    QuizType = "WORD_FROM_IMAGE"
-	WordFromAudio    QuizType = "WORD_FROM_AUDIO"
-	MeaningFromAudio QuizType = "MEANING_FROM_AUDIO"
+	GuessMeaning            QuizType = "GUESS_MEANING"
+	CompleteSentence        QuizType = "COMPLETE_SENTENCE"
+	WordFromMeaning         QuizType = "WORD_FROM_MEANING"
+	WordFromImage           QuizType = "WORD_FROM_IMAGE"
+	WordFromAudio           QuizType = "WORD_FROM_AUDIO"
+	MeaningFromAudio        QuizType = "MEANING_FROM_AUDIO"
+	WriteWordFromDefinition QuizType = "WRITE_WORD_FROM_DEFINITION"
 )
 
 type Quiz struct {
