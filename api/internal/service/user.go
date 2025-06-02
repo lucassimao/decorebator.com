@@ -24,8 +24,7 @@ const AUTH_TOKEN_DURATION = (24 * time.Hour) * 365 // 1 year
 
 // jwt.StandardClaims is an embedded type to provide expiry time, issued at time, etc.
 type Claims struct {
-	FirstName        string                 `json:"firstName"`
-	LastName         string                 `json:"lastName"`
+	Email            string                 `json:"email"`
 	Environment      string                 `json:"environment"`
 	SubscriptionPlan model.SubscriptionPlan `json:"subscriptionPlan"`
 	jwt.StandardClaims
@@ -34,8 +33,7 @@ type Claims struct {
 func GenerateJWT(user User) (string, error) {
 
 	claims := &Claims{
-		FirstName:        user.FirstName,
-		LastName:         user.LastName,
+		Email:            user.Email,
 		Environment:      os.Getenv("ENV"),
 		SubscriptionPlan: user.SubscriptionPlan,
 		StandardClaims: jwt.StandardClaims{
@@ -134,7 +132,7 @@ func Delete(userID int64) error {
 	return err
 }
 
-func UpdateProfile(userID int64, firstName, lastName, country, preferredLanguage, profilePictureUrl *string, dateOfBirth *time.Time) (*User, error) {
+func UpdateProfile(userID int64, firstName, lastName, country, preferredLanguage, profilePictureUrl, password *string, dateOfBirth *time.Time) (*User, error) {
 	// Validate required fields
 	if firstName != nil && strings.TrimSpace(*firstName) == "" {
 		return nil, common.BusinessError{Message: "First name is required"}
@@ -142,6 +140,10 @@ func UpdateProfile(userID int64, firstName, lastName, country, preferredLanguage
 
 	if lastName != nil && strings.TrimSpace(*lastName) == "" {
 		return nil, common.BusinessError{Message: "Last name is required"}
+	}
+
+	if password != nil && strings.TrimSpace(*password) == "" {
+		return nil, common.BusinessError{Message: "Password is required"}
 	}
 
 	// Validate preferred language if provided
@@ -160,6 +162,7 @@ func UpdateProfile(userID int64, firstName, lastName, country, preferredLanguage
 		DateOfBirth:       dateOfBirth,
 		PreferredLanguage: preferredLanguage,
 		ProfilePictureURL: profilePictureUrl,
+		Password:          password,
 	}
 
 	user, err := userRepository.UpdateUserProfile(args)

@@ -1,4 +1,5 @@
 import * as userApi from "@/api/users";
+import { ChangePasswordModal } from "@/components/profileSettings/ChangePasswordModal";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
@@ -86,6 +87,7 @@ const ProfileSettingsScreen: React.FC = () => {
   const [tempProfilePicture, setTempProfilePicture] = useState<string | null>(
     null,
   );
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   // Fetch user profile
   const { data: profile, isLoading } = useQuery({
@@ -225,7 +227,7 @@ const ProfileSettingsScreen: React.FC = () => {
   };
 
   const handleChangePassword = () => {
-    // Navigate to change password screen
+    setShowChangePasswordModal(true);
   };
 
   const handleDeleteAccount = () => {
@@ -628,6 +630,13 @@ const ProfileSettingsScreen: React.FC = () => {
               </ScrollView>
             </View>
           </View>
+        )}
+
+        {showChangePasswordModal && (
+          <ChangePasswordModal
+            visible
+            onClose={() => setShowChangePasswordModal(false)}
+          />
         )}
       </SafeAreaView>
     </ImageBackground>

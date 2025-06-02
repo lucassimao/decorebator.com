@@ -168,9 +168,11 @@ type UpdateUserProfileArgs struct {
 	DateOfBirth       *time.Time
 	PreferredLanguage *string
 	ProfilePictureURL *string
+	Password          *string
 }
 
 func (repository *UserRepository) UpdateUserProfile(args UpdateUserProfileArgs) (*User, error) {
+	// The COALESCE defaults to the existing value if the new value is NULL
 	query := `UPDATE users 
 		SET first_name = COALESCE($2,first_name),
 		    last_name = COALESCE($3,last_name), 
@@ -178,16 +180,28 @@ func (repository *UserRepository) UpdateUserProfile(args UpdateUserProfileArgs) 
 		    date_of_birth = COALESCE($5,date_of_birth), 
 		    preferred_language = COALESCE($6,preferred_language),
 		    updated_at = NOW(),
-			profile_picture_url = COALESCE($7,profile_picture_url)
+			profile_picture_url = COALESCE($7,profile_picture_url),
+			password_hash = COALESCE($8,password_hash)
 		WHERE id = $1
 		RETURNING id, email, first_name, last_name, password_hash, 
 			profile_picture_url, country, date_of_birth, preferred_language,
 			subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at,
 			created_at, updated_at`
 
+	var passwordHash *string
+	if args.Password != nil {
+		bytes, err := bcrypt.GenerateFromPassword([]byte(*args.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, err
+		}
+		hash := string(bytes)
+		passwordHash = &hash
+	}
+
 	user := User{}
 	err := repository.Db.QueryRow(context.Background(), query,
-		args.ID, args.FirstName, args.LastName, args.Country, args.DateOfBirth, args.PreferredLanguage, args.ProfilePictureURL).Scan(
+		args.ID, args.FirstName, args.LastName, args.Country, args.DateOfBirth, args.PreferredLanguage,
+		args.ProfilePictureURL, passwordHash).Scan(
 		&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
 		&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
 		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt,

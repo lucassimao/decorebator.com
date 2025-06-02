@@ -11,6 +11,7 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/mail"
+	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -38,13 +39,19 @@ type RequestResetPasswordEmailInput struct {
 }
 
 type UpdateProfileInput struct {
-	FirstName                   *string `json:"firstName"`
-	LastName                    *string `json:"lastName"`
-	Country                     *string `json:"country"`
-	DateOfBirth                 *string `json:"dateOfBirth"` // Expect ISO format: YYYY-MM-DD
-	PreferredLanguage           *string `json:"preferredLanguage"`
-	ProfilePicture              *string `json:"profilePicture"` // base64 encoded
-	ProfilePictureFileExtension *string `json:"profilePictureFileExtension"`
+	FirstName                   *string              `json:"firstName"`
+	LastName                    *string              `json:"lastName"`
+	Country                     *string              `json:"country"`
+	DateOfBirth                 *string              `json:"dateOfBirth"` // Expect ISO format: YYYY-MM-DD
+	PreferredLanguage           *string              `json:"preferredLanguage"`
+	ProfilePicture              *string              `json:"profilePicture"` // base64 encoded
+	ProfilePictureFileExtension *string              `json:"profilePictureFileExtension"`
+	UpdatePasswordInput         *UpdatePasswordInput `json:"updatePassword"`
+}
+
+type UpdatePasswordInput struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
 }
 
 type UserRoutes struct{}
@@ -226,17 +233,28 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	// Get user ID from context (set by auth middleware)
-	userID, exists := c.Get("userID")
+	// Get user from context (set by auth middleware)
+	userAsAny, exists := c.Get("user")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	userIDInt64, ok := userID.(int64)
+	user, ok := userAsAny.(*model.User)
 	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user"})
 		return
+	}
+
+	var newPassword *string
+	if input.UpdatePasswordInput != nil {
+		_, err := service.LoginUser(user.Email, input.UpdatePasswordInput.CurrentPassword)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Could not update password."})
+			return
+		}
+
+		newPassword = &input.UpdatePasswordInput.NewPassword
 	}
 
 	// Upload profile picture if provided
@@ -254,7 +272,7 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 			return
 		}
 
-		objectName := fmt.Sprintf("users/%d-%d.%s", userIDInt64, time.Now().Unix(), *input.ProfilePictureFileExtension)
+		objectName := fmt.Sprintf("users/%d-%d.%s", user.ID, time.Now().Unix(), *input.ProfilePictureFileExtension)
 		uploadResult, err := common.Upload(imgBytes, "decorebator", objectName, mimeType)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload profile picture."})
@@ -275,7 +293,7 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 	}
 
 	// Update user profile
-	updatedUser, err := service.UpdateProfile(userIDInt64, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, dateOfBirth)
+	updatedUser, err := service.UpdateProfile(user.ID, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, newPassword, dateOfBirth)
 	if err != nil {
 		switch err.(type) {
 		case common.BusinessError:

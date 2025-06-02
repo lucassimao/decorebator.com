@@ -70,8 +70,7 @@ func Authenticate(c *gin.Context) {
 	// Also set user object with subscription info
 	user := &model.User{
 		ID:               userID,
-		FirstName:        claims.FirstName,
-		LastName:         claims.LastName,
+		Email:            claims.Email,
 		SubscriptionPlan: claims.SubscriptionPlan,
 	}
 	c.Set("user", user)

@@ -39,7 +39,15 @@ export type UpdateInput = {
   profilePictureFileExtension?: string;
   country?: string;
   dateOfBirth?: string;
+
+  // if set, triggers a password update
+  updatePassword?: {
+    currentPassword: string;
+    newPassword: String;
+  };
 };
+
+export type UpdatePasswordPayload = NonNullable<UpdateInput["updatePassword"]>;
 
 export const SIGN_IN_ERROR =
   "Invalid credentials. Are you using the correct email and password?";
