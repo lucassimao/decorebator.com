@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Dimensions,
@@ -35,6 +36,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
     React.useState<Wordlist | null>(null);
   const upgradeDialog = useUpgradePromptDialog();
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Fetch subscription
   const { data: subscription } = useQuery({
@@ -98,7 +100,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
       {/* Section Header */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>My Wordlists</Text>
+        <Text style={styles.sectionTitle}>{t("dashboard.wordlists.myWordlists")}</Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={handleAddNewWordlist}
@@ -151,13 +153,13 @@ const Dashboard: React.FC<DashboardProps> = () => {
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No wordlists yet</Text>
+                <Text style={styles.emptyText}>{t("dashboard.wordlists.noWordlistsYet")}</Text>
                 <TouchableOpacity
                   style={styles.ctaButton}
                   onPress={() => setShowCreateModal(true)}
                 >
                   <Text style={styles.ctaButtonText}>
-                    Create your first wordlist
+                    {t("dashboard.wordlists.createFirstWordlist")}
                   </Text>
                   <Ionicons name="add-circle" size={24} color="#FFFFFF" />
                 </TouchableOpacity>

@@ -7,6 +7,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { SnackbarProvider } from "@/hooks/useSnackbar";
 import { UpgradePromptDialogProvider } from "@/hooks/useUpgradePromptDialog";
+import { I18nextProvider } from "react-i18next";
+import i18n from "@/i18n";
+import { useI18n } from "@/hooks/useI18n";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -49,38 +52,47 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <SnackbarProvider>
-        <UpgradePromptDialogProvider>
-          <Stack>
-            <Stack.Screen name="signup" options={{ headerShown: false }} />
-            <Stack.Screen name="quiz" options={{ headerShown: false }} />
-            <Stack.Screen name="signin" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="forgotPassword"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="dashboard/index"
-              options={{
-                headerShown: false,
-                headerTitle: "Dashboard",
-              }}
-            />
-            <Stack.Screen
-              name="dashboard/welcome"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen name="settings" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="profileSettings"
-              options={{ headerShown: false }}
-            />
-          </Stack>
-        </UpgradePromptDialogProvider>
-      </SnackbarProvider>
-    </QueryClientProvider>
+    <I18nextProvider i18n={i18n}>
+      <QueryClientProvider client={queryClient}>
+        <LanguageInitializer />
+        <SnackbarProvider>
+          <UpgradePromptDialogProvider>
+            <Stack>
+              <Stack.Screen name="signup" options={{ headerShown: false }} />
+              <Stack.Screen name="quiz" options={{ headerShown: false }} />
+              <Stack.Screen name="signin" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="forgotPassword"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="dashboard/index"
+                options={{
+                  headerShown: false,
+                  headerTitle: "Dashboard",
+                }}
+              />
+              <Stack.Screen
+                name="dashboard/welcome"
+                options={{
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen name="settings" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="profileSettings"
+                options={{ headerShown: false }}
+              />
+            </Stack>
+          </UpgradePromptDialogProvider>
+        </SnackbarProvider>
+      </QueryClientProvider>
+    </I18nextProvider>
   );
+}
+
+// Component to initialize language from user profile
+function LanguageInitializer() {
+  useI18n(); // This hook will handle language initialization
+  return null;
 }

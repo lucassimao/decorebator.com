@@ -116,6 +116,8 @@ export default function SignUpScreen() {
     },
   });
 
+  const schema = React.useMemo(() => createSchema(t), [t]);
+  
   const {
     control,
     handleSubmit,
@@ -297,7 +299,7 @@ export default function SignUpScreen() {
                           styles.passwordInput,
                           errors.password && styles.inputError,
                         ]}
-                        placeholder="Enter your password"
+                        placeholder={t("auth.signup.passwordPlaceholder")}
                         placeholderTextColor="#B2BEC3"
                         value={value}
                         onChangeText={onChange}
@@ -327,13 +329,13 @@ export default function SignUpScreen() {
               onPress={handleSubmit(onSubmit)}
               activeOpacity={0.8}
             >
-              <Text style={styles.buttonText}>Create Account</Text>
+              <Text style={styles.buttonText}>{t("auth.signup.signUpButton")}</Text>
             </TouchableOpacity>
 
             <Text style={styles.footer}>
-              Already have an account?{" "}
+              {t("auth.signup.alreadyHaveAccount")}{" "}
               <Link replace style={styles.link} href={"/signin"}>
-                <Text style={styles.link}>Sign in</Text>
+                <Text style={styles.link}>{t("auth.signup.signIn")}</Text>
               </Link>
             </Text>
           </View>

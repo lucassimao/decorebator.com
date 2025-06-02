@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export type SnackBarProps = {
   message: string;
@@ -26,6 +27,7 @@ export default function SnackBar({
   const translateY = useRef(new Animated.Value(100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const timeoutRef = useRef<number>(0);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (visible) {
@@ -101,7 +103,7 @@ export default function SnackBar({
           onPress={hide}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Text style={styles.actionText}>HIDE</Text>
+          <Text style={styles.actionText}>{t("common.hide")}</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>

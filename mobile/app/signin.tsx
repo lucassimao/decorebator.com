@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -32,6 +33,7 @@ interface LoginFormData {
 
 const LoginScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const { t } = useTranslation();
 
   const {
     control,
@@ -53,10 +55,10 @@ const LoginScreen: React.FC = () => {
     },
     onError: (error: Error) => {
       if (error.message === usersApi.SIGN_IN_ERROR) {
-        setError("email", { message: "Invalid email or password" });
-        setError("password", { message: "Invalid email or password" });
+        setError("email", { message: t("auth.signin.invalidCredentials") });
+        setError("password", { message: t("auth.signin.invalidCredentials") });
       } else {
-        Alert.alert("Error", "Something went wrong. Please try again.");
+        Alert.alert(t("common.error"), t("auth.signin.somethingWentWrong"));
       }
     },
   });
@@ -91,9 +93,9 @@ const LoginScreen: React.FC = () => {
           >
             {/* Logo/App Name */}
             <View style={styles.logoContainer}>
-              <Text style={styles.appName}>Decorebator</Text>
+              <Text style={styles.appName}>{t("common.appName")}</Text>
               <Text style={styles.tagline}>
-                Learn languages, connect worlds
+                {t("auth.tagline")}
               </Text>
             </View>
 
@@ -117,25 +119,25 @@ const LoginScreen: React.FC = () => {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={styles.welcomeText}>Welcome back!</Text>
+                <Text style={styles.welcomeText}>{t("auth.signin.welcomeBack")}</Text>
                 <Text style={styles.subtitleText}>
-                  Sign in to continue learning
+                  {t("auth.signin.subtitle")}
                 </Text>
 
                 {/* Email Input */}
                 <View style={styles.inputGroup}>
                   <View style={styles.inputLabelRow}>
                     <MaterialIcons name="email" size={20} color="#636E72" />
-                    <Text style={styles.inputLabel}>Email</Text>
+                    <Text style={styles.inputLabel}>{t("auth.signin.email")}</Text>
                   </View>
                   <Controller
                     control={control}
                     name="email"
                     rules={{
-                      required: "Email is required",
+                      required: t("errors.emailRequired"),
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: "Invalid email address",
+                        message: t("errors.invalidEmail"),
                       },
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
@@ -144,7 +146,7 @@ const LoginScreen: React.FC = () => {
                           styles.input,
                           errors.email && styles.inputError,
                         ]}
-                        placeholder="Enter your email"
+                        placeholder={t("auth.signin.emailPlaceholder")}
                         placeholderTextColor="#B2BEC3"
                         value={value}
                         onChangeText={onChange}
@@ -165,14 +167,14 @@ const LoginScreen: React.FC = () => {
                 <View style={styles.inputGroup}>
                   <View style={styles.inputLabelRow}>
                     <MaterialIcons name="lock" size={20} color="#636E72" />
-                    <Text style={styles.inputLabel}>Password</Text>
+                    <Text style={styles.inputLabel}>{t("auth.signin.password")}</Text>
                   </View>
                   <View style={styles.passwordContainer}>
                     <Controller
                       control={control}
                       name="password"
                       rules={{
-                        required: "Password is required",
+                        required: t("errors.passwordRequired"),
                       }}
                       render={({ field: { onChange, onBlur, value } }) => (
                         <TextInput
@@ -181,7 +183,7 @@ const LoginScreen: React.FC = () => {
                             styles.passwordInput,
                             errors.password && styles.inputError,
                           ]}
-                          placeholder="Enter your password"
+                          placeholder={t("auth.signin.passwordPlaceholder")}
                           placeholderTextColor="#B2BEC3"
                           value={value}
                           onChangeText={onChange}
@@ -217,7 +219,7 @@ const LoginScreen: React.FC = () => {
                   disabled={loginMutation.isPending}
                 >
                   <Text style={styles.forgotPasswordText}>
-                    Forgot password?
+                    {t("auth.signin.forgotPassword")}
                   </Text>
                 </TouchableOpacity>
 
@@ -235,7 +237,7 @@ const LoginScreen: React.FC = () => {
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <>
-                      <Text style={styles.loginButtonText}>Sign In</Text>
+                      <Text style={styles.loginButtonText}>{t("auth.signin.signInButton")}</Text>
                       <Ionicons
                         name="arrow-forward"
                         size={20}
@@ -248,7 +250,7 @@ const LoginScreen: React.FC = () => {
                 {/* Divider */}
                 <View style={styles.dividerContainer}>
                   <View style={styles.divider} />
-                  <Text style={styles.dividerText}>OR</Text>
+                  <Text style={styles.dividerText}>{t("common.or")}</Text>
                   <View style={styles.divider} />
                 </View>
 
@@ -270,12 +272,12 @@ const LoginScreen: React.FC = () => {
 
                 {/* Sign Up Link */}
                 <View style={styles.signUpContainer}>
-                  <Text style={styles.signUpText}>Don't have an account? </Text>
+                  <Text style={styles.signUpText}>{t("auth.signin.noAccount")} </Text>
                   <TouchableOpacity
                     onPress={handleSignUp}
                     disabled={loginMutation.isPending}
                   >
-                    <Text style={styles.signUpLink}>Sign Up</Text>
+                    <Text style={styles.signUpLink}>{t("auth.signin.signUp")}</Text>
                   </TouchableOpacity>
                 </View>
               </LinearGradient>

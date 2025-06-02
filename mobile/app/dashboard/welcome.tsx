@@ -3,6 +3,7 @@ import { Header } from "@/components/dashboard/Header";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dimensions,
   Image,
@@ -19,6 +20,7 @@ const { width, height } = Dimensions.get("window");
 
 const EmptyDashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const { t } = useTranslation();
 
   const handleCreateSuccess = () => {
     setShowCreateModal(false);
@@ -51,7 +53,7 @@ const EmptyDashboard = () => {
           {/* Bottom content */}
           <View style={styles.bottomContent}>
             {/* No wordlists message */}
-            <Text style={styles.noWordlistsText}>No wordlists yet</Text>
+            <Text style={styles.noWordlistsText}>{t("dashboard.wordlists.noWordlistsYet")}</Text>
 
             {/* CTA Button */}
             <TouchableOpacity
@@ -60,7 +62,7 @@ const EmptyDashboard = () => {
               activeOpacity={0.8}
             >
               <Text style={styles.ctaButtonText}>
-                Create your first wordlist
+                {t("dashboard.wordlists.createFirstWordlist")}
               </Text>
               <Ionicons
                 name="add-circle"

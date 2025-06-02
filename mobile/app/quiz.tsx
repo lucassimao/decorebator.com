@@ -7,6 +7,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -28,6 +29,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const QuizScreen: React.FC = () => {
   const navigation = useNavigation();
   const { wordlistId, wordlistName } = useLocalSearchParams();
+  const { t } = useTranslation();
 
   // State
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -86,7 +88,7 @@ const QuizScreen: React.FC = () => {
     mutationFn: ({ errorType }: { errorType: errorReportingApi.ErrorType }) =>
       errorReportingApi.reportError(errorType, quiz!),
     onSuccess: () => {
-      Alert.alert("Thank you", "Your report has been submitted.");
+      Alert.alert(t("common.success"), t("quiz.reportSubmitted"));
       setShowReportModal(false);
       handleNextQuiz();
     },
@@ -157,21 +159,21 @@ const QuizScreen: React.FC = () => {
   const getQuizTitle = () => {
     switch (quiz?.type) {
       case "WRITE_WORD_FROM_DEFINITION":
-        return "Write the word for this definition";
+        return t("quiz.writeWordFromDefinition");
       case "GUESS_MEANING":
-        return "What does this word mean?";
+        return t("quiz.whatDoesThisWordMean");
       case "COMPLETE_SENTENCE":
-        return "Complete the sentence";
+        return t("quiz.completeSentence");
       case "WORD_FROM_MEANING":
-        return "Which word matches this meaning?";
+        return t("quiz.whichWordMatchesMeaning");
       case "WORD_FROM_IMAGE":
-        return "What word describes this image?";
+        return t("quiz.whatWordDescribesImage");
       case "WORD_FROM_AUDIO":
-        return "Which word did you hear?";
+        return t("quiz.whichWordDidYouHear");
       case "MEANING_FROM_AUDIO":
-        return "What does the word you heard mean?";
+        return t("quiz.whatDoesWordYouHeardMean");
       default:
-        return "Quiz";
+        return t("quiz.title");
     }
   };
 
@@ -424,7 +426,7 @@ const QuizScreen: React.FC = () => {
 
         {/* Fast Mode Toggle */}
         <View style={styles.modeContainer}>
-          <Text style={styles.modeText}>Fast Mode</Text>
+          <Text style={styles.modeText}>{t("quiz.fastMode")}</Text>
           <TouchableOpacity
             style={[styles.modeToggle, fastMode && styles.modeToggleActive]}
             onPress={onPressFastModeToggle}
@@ -491,7 +493,7 @@ const QuizScreen: React.FC = () => {
                   style={styles.nextButton}
                   onPress={handleNextQuiz}
                 >
-                  <Text style={styles.nextButtonText}>Next Question</Text>
+                  <Text style={styles.nextButtonText}>{t("quiz.nextQuestion")}</Text>
                   <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
               )}
@@ -507,14 +509,14 @@ const QuizScreen: React.FC = () => {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Report an Issue</Text>
+              <Text style={styles.modalTitle}>{t("quiz.reportIssue")}</Text>
 
               <TouchableOpacity
                 style={styles.reportOption}
                 onPress={() => handleReportError(ErrorType.UnrelatedImage)}
               >
                 <MaterialIcons name="image" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>Image doesn't match</Text>
+                <Text style={styles.reportOptionText}>{t("quiz.reportOptions.imageDoesntMatch")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -522,7 +524,7 @@ const QuizScreen: React.FC = () => {
                 onPress={() => handleReportError(ErrorType.MissingImage)}
               >
                 <MaterialIcons name="broken-image" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>Image not loading</Text>
+                <Text style={styles.reportOptionText}>{t("quiz.reportOptions.imageNotLoading")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -530,7 +532,7 @@ const QuizScreen: React.FC = () => {
                 onPress={() => handleReportError(ErrorType.UnrelatedMeaning)}
               >
                 <MaterialIcons name="help-outline" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>Wrong meaning</Text>
+                <Text style={styles.reportOptionText}>{t("quiz.reportOptions.wrongMeaning")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -538,7 +540,7 @@ const QuizScreen: React.FC = () => {
                 onPress={() => handleReportError(ErrorType.UnrelatedExample)}
               >
                 <MaterialIcons name="format-quote" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>Wrong example</Text>
+                <Text style={styles.reportOptionText}>{t("quiz.reportOptions.wrongExample")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -546,14 +548,14 @@ const QuizScreen: React.FC = () => {
                 onPress={() => handleReportError(ErrorType.SoundNotPlaying)}
               >
                 <MaterialIcons name="volume-off" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>Sound not playing</Text>
+                <Text style={styles.reportOptionText}>{t("quiz.reportOptions.soundNotPlaying")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={() => setShowReportModal(false)}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
               </TouchableOpacity>
             </View>
           </View>

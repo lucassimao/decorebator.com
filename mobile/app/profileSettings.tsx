@@ -8,6 +8,8 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import i18n, { supportedLanguages } from "@/i18n";
 import {
   ActivityIndicator,
   Alert,
@@ -88,6 +90,9 @@ const ProfileSettingsScreen: React.FC = () => {
     null,
   );
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const { t } = useTranslation();
+  
+  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
 
   // Fetch user profile
   const { data: profile, isLoading } = useQuery({
@@ -120,6 +125,7 @@ const ProfileSettingsScreen: React.FC = () => {
         lastName: profile.lastName,
         country: profile.country,
         dateOfBirth: profile.dateOfBirth,
+        preferredLanguage: profile.preferredLanguage || "en",
       });
     }
   }, [profile, reset]);
@@ -129,10 +135,10 @@ const ProfileSettingsScreen: React.FC = () => {
     mutationFn: userApi.update,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      Alert.alert("Success", "Profile updated successfully");
+      Alert.alert(t("common.success"), t("profile.changesSaved"));
     },
     onError: () => {
-      Alert.alert("Error", "Failed to update profile. Please try again.");
+      Alert.alert(t("common.error"), t("errors.general"));
     },
   });
 
@@ -145,8 +151,8 @@ const ProfileSettingsScreen: React.FC = () => {
     },
     onError: () => {
       Alert.alert(
-        "Error",
-        "Failed to upload profile picture. Please try again.",
+        t("common.error"),
+        t("errors.general"),
       );
       setTempProfilePicture(null);
     },
@@ -157,15 +163,15 @@ const ProfileSettingsScreen: React.FC = () => {
     mutationFn: userApi.deleteProfile,
     onSuccess: () => {
       Alert.alert(
-        "Account Deleted",
-        "Your account has been permanently deleted.",
+        t("profile.accountDeleted"),
+        t("profile.accountDeletedMessage"),
       );
       userApi.sigout();
       router.dismissAll();
       router.replace("/signup");
     },
     onError: () => {
-      Alert.alert("Error", "Failed to delete account. Please try again.");
+      Alert.alert(t("common.error"), t("profile.deleteAccountError"));
     },
   });
 
@@ -175,8 +181,8 @@ const ProfileSettingsScreen: React.FC = () => {
 
     if (!permissionResult.granted) {
       Alert.alert(
-        "Permission Required",
-        "Please allow access to your photo library.",
+        t("profile.permissionRequired"),
+        t("profile.photoLibraryPermission"),
       );
       return;
     }
@@ -198,7 +204,7 @@ const ProfileSettingsScreen: React.FC = () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permissionResult.granted) {
-      Alert.alert("Permission Required", "Please allow access to your camera.");
+      Alert.alert(t("profile.permissionRequired"), t("profile.cameraPermission"));
       return;
     }
 
@@ -215,10 +221,10 @@ const ProfileSettingsScreen: React.FC = () => {
   };
 
   const handleProfilePicturePress = () => {
-    Alert.alert("Change Profile Picture", "Choose an option", [
-      { text: "Take Photo", onPress: handleTakePhoto },
-      { text: "Choose from Library", onPress: handlePickImage },
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("profile.changePhoto"), t("profile.chooseOption"), [
+      { text: t("profile.takePhoto"), onPress: handleTakePhoto },
+      { text: t("profile.chooseFromLibrary"), onPress: handlePickImage },
+      { text: t("common.cancel"), style: "cancel" },
     ]);
   };
 
@@ -232,21 +238,21 @@ const ProfileSettingsScreen: React.FC = () => {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      "Delete Account",
-      "Are you sure you want to delete your account? This action cannot be undone and you will lose all your data.",
+      t("settings.account.deleteAccount"),
+      t("settings.account.deleteWarning"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete Account",
+          text: t("settings.account.deleteAccount"),
           style: "destructive",
           onPress: () => {
             Alert.alert(
-              "Confirm Deletion",
-              'Please type "DELETE" to confirm account deletion.',
+              t("profile.confirmDeletion"),
+              t("profile.typeDeleteToConfirm"),
               [
-                { text: "Cancel", style: "cancel" },
+                { text: t("common.cancel"), style: "cancel" },
                 {
-                  text: "Confirm",
+                  text: t("profile.confirm"),
                   style: "destructive",
                   onPress: () => deleteAccountMutation.mutate(),
                 },
@@ -307,7 +313,7 @@ const ProfileSettingsScreen: React.FC = () => {
               >
                 <Ionicons name="arrow-back" size={24} color="#2D3436" />
               </TouchableOpacity>
-              <Text style={styles.headerTitle}>Profile Settings</Text>
+              <Text style={styles.headerTitle}>{t("profile.title")}</Text>
               <View style={{ width: 40 }} />
             </View>
 
@@ -341,7 +347,7 @@ const ProfileSettingsScreen: React.FC = () => {
                     </View>
                   </>
                 )}
-              </TouchableOpacity>
+              </TouchableOpacity>``
               <Text style={styles.emailText}>{profile?.email}</Text>
             </View>
 
@@ -349,13 +355,13 @@ const ProfileSettingsScreen: React.FC = () => {
             <View style={styles.formSection}>
               {/* First Name */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>First Name</Text>
+                <Text style={styles.inputLabel}>{t("profile.firstName")}</Text>
                 <Controller
                   control={control}
                   name="firstName"
                   rules={{
-                    required: "First name is required",
-                    minLength: { value: 2, message: "Too short" },
+                    required: t("errors.fieldRequired"),
+                    minLength: { value: 2, message: t("errors.fieldRequired") },
                   }}
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
@@ -363,7 +369,7 @@ const ProfileSettingsScreen: React.FC = () => {
                         styles.input,
                         errors.firstName && styles.inputError,
                       ]}
-                      placeholder="Enter your first name"
+                      placeholder={t("profile.firstNamePlaceholder")}
                       placeholderTextColor="#B2BEC3"
                       value={value}
                       onChangeText={onChange}
@@ -381,13 +387,13 @@ const ProfileSettingsScreen: React.FC = () => {
 
               {/* Last Name */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Last Name</Text>
+                <Text style={styles.inputLabel}>{t("profile.lastName")}</Text>
                 <Controller
                   control={control}
                   name="lastName"
                   rules={{
-                    required: "Last name is required",
-                    minLength: { value: 2, message: "Too short" },
+                    required: t("errors.fieldRequired"),
+                    minLength: { value: 2, message: t("errors.fieldRequired") },
                   }}
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
@@ -395,7 +401,7 @@ const ProfileSettingsScreen: React.FC = () => {
                         styles.input,
                         errors.lastName && styles.inputError,
                       ]}
-                      placeholder="Enter your last name"
+                      placeholder={t("profile.lastNamePlaceholder")}
                       placeholderTextColor="#B2BEC3"
                       value={value}
                       onChangeText={onChange}
@@ -413,7 +419,7 @@ const ProfileSettingsScreen: React.FC = () => {
 
               {/* Country */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Country (Optional)</Text>
+                <Text style={styles.inputLabel}>{t("profile.country")} ({t("profile.optional")})</Text>
                 <Controller
                   control={control}
                   name="country"
@@ -428,7 +434,32 @@ const ProfileSettingsScreen: React.FC = () => {
                           !value && styles.placeholderText,
                         ]}
                       >
-                        {value ? getCountryName(value) : "Select your country"}
+                        {value ? getCountryName(value) : t("profile.selectCountry")}
+                      </Text>
+                      <Ionicons name="chevron-down" size={20} color="#636E72" />
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
+
+              {/* Language Preference */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>{t("settings.preferences.language")}</Text>
+                <Controller
+                  control={control}
+                  name="preferredLanguage"
+                  render={({ field: { value } }) => (
+                    <TouchableOpacity
+                      style={styles.input}
+                      onPress={() => setShowLanguagePicker(true)}
+                    >
+                      <Text
+                        style={[
+                          styles.inputText,
+                          !value && styles.placeholderText,
+                        ]}
+                      >
+                        {value ? supportedLanguages.find(lang => lang.code === value)?.nativeName || value : t("dashboard.wordlists.selectLanguage")}
                       </Text>
                       <Ionicons name="chevron-down" size={20} color="#636E72" />
                     </TouchableOpacity>
@@ -438,7 +469,7 @@ const ProfileSettingsScreen: React.FC = () => {
 
               {/* Date of Birth */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Date of Birth (Optional)</Text>
+                <Text style={styles.inputLabel}>{t("profile.dateOfBirth")}</Text>
                 <Controller
                   control={control}
                   name="dateOfBirth"
@@ -455,7 +486,7 @@ const ProfileSettingsScreen: React.FC = () => {
                       >
                         {value
                           ? formatDate(value)
-                          : "Select your date of birth"}
+                          : t("profile.dateOfBirth")}
                       </Text>
                       <Ionicons
                         name="calendar-outline"
@@ -480,7 +511,7 @@ const ProfileSettingsScreen: React.FC = () => {
                   {updateMutation.isPending ? (
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
-                    <Text style={styles.saveButtonText}>Save Changes</Text>
+                    <Text style={styles.saveButtonText}>{t("profile.saveChanges")}</Text>
                   )}
                 </TouchableOpacity>
               )}
@@ -493,7 +524,7 @@ const ProfileSettingsScreen: React.FC = () => {
                 onPress={handleChangePassword}
               >
                 <MaterialIcons name="lock-outline" size={24} color="#636E72" />
-                <Text style={styles.actionText}>Change Password</Text>
+                <Text style={styles.actionText}>{t("profile.changePassword.title")}</Text>
                 <Ionicons name="chevron-forward" size={20} color="#636E72" />
               </TouchableOpacity>
 
@@ -507,7 +538,7 @@ const ProfileSettingsScreen: React.FC = () => {
                   color="#FF6B6B"
                 />
                 <Text style={[styles.actionText, { color: "#FF6B6B" }]}>
-                  Delete Account
+                  {t("settings.account.deleteAccount")}
                 </Text>
                 <Ionicons name="chevron-forward" size={20} color="#FF6B6B" />
               </TouchableOpacity>
@@ -516,11 +547,12 @@ const ProfileSettingsScreen: React.FC = () => {
             {/* Member Since */}
             <View style={styles.memberInfo}>
               <Text style={styles.memberText}>
-                Member since{" "}
-                {new Date(profile?.createdAt || "").toLocaleDateString(
-                  "en-US",
-                  { year: "numeric", month: "long" },
-                )}
+                {t("profile.memberSince", { 
+                  date: new Date(profile?.createdAt || "").toLocaleDateString(
+                    i18n.language.startsWith('en') ? 'en-US' : i18n.language,
+                    { year: "numeric", month: "long" }
+                  )
+                })}
               </Text>
             </View>
           </ScrollView>
@@ -543,11 +575,11 @@ const ProfileSettingsScreen: React.FC = () => {
               <View style={styles.datePickerContent}>
                 <View style={styles.datePickerHeader}>
                   <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                    <Text style={styles.datePickerCancel}>Cancel</Text>
+                    <Text style={styles.datePickerCancel}>{t("common.cancel")}</Text>
                   </TouchableOpacity>
-                  <Text style={styles.datePickerTitle}>Date of Birth</Text>
+                  <Text style={styles.datePickerTitle}>{t("profile.dateOfBirth")}</Text>
                   <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                    <Text style={styles.datePickerDone}>Done</Text>
+                    <Text style={styles.datePickerDone}>{t("common.done")}</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -608,7 +640,7 @@ const ProfileSettingsScreen: React.FC = () => {
             />
             <View style={styles.countryPickerModal}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Country</Text>
+                <Text style={styles.modalTitle}>{t("profile.selectCountry")}</Text>
                 <TouchableOpacity onPress={() => setShowCountryPicker(false)}>
                   <Ionicons name="close" size={24} color="#636E72" />
                 </TouchableOpacity>
@@ -625,6 +657,39 @@ const ProfileSettingsScreen: React.FC = () => {
                   >
                     <Text style={styles.countryFlag}>{country.flag}</Text>
                     <Text style={styles.countryName}>{country.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        )}
+
+        {/* Language Picker Modal */}
+        {showLanguagePicker && (
+          <View style={styles.modalOverlay}>
+            <TouchableOpacity
+              style={styles.modalBackdrop}
+              onPress={() => setShowLanguagePicker(false)}
+            />
+            <View style={styles.countryPickerModal}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{t("settings.preferences.language")}</Text>
+                <TouchableOpacity onPress={() => setShowLanguagePicker(false)}>
+                  <Ionicons name="close" size={24} color="#636E72" />
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={styles.countryList}>
+                {supportedLanguages.map((language) => (
+                  <TouchableOpacity
+                    key={language.code}
+                    style={styles.countryItem}
+                    onPress={() => {
+                      setValue("preferredLanguage", language.code, { shouldDirty: true });
+                      setShowLanguagePicker(false);
+                    }}
+                  >
+                    <Text style={styles.countryName}>{language.nativeName}</Text>
+                    <Text style={styles.languageCode}>({language.name})</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -860,6 +925,12 @@ const styles = StyleSheet.create({
   countryName: {
     fontSize: 16,
     color: "#2D3436",
+    flex: 1,
+  },
+  languageCode: {
+    fontSize: 14,
+    color: "#636E72",
+    marginLeft: 8,
   },
   datePickerContainer: {
     backgroundColor: "#FFFFFF",

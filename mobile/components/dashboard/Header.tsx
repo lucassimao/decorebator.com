@@ -4,8 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export const Header = () => {
+  const { t } = useTranslation();
+  
   // Fetch user profile
   const { data: user, isLoading } = useQuery({
     queryKey: ["userProfile"],
@@ -31,9 +34,9 @@ export const Header = () => {
   // Get time-based greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 18) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return t("dashboard.greetings.morning");
+    if (hour < 18) return t("dashboard.greetings.afternoon");
+    return t("dashboard.greetings.evening");
   };
 
   // TODO improve this
@@ -74,8 +77,8 @@ export const Header = () => {
       {/* Greeting */}
       <View style={styles.greetingContainer}>
         <Text style={styles.greeting}>{getGreeting()},</Text>
-        <Text style={styles.userName}>{user?.firstName || "User"}!</Text>
-        <Text style={styles.subtitle}>Ready to learn something new today?</Text>
+        <Text style={styles.userName}>{user?.firstName || t("common.user")}!</Text>
+        <Text style={styles.subtitle}>{t("dashboard.header.subtitle")}</Text>
       </View>
     </>
   );

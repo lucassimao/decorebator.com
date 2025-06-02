@@ -38,25 +38,26 @@
     [x] remove react native paper dependency
     [x] Replace expo-av with expo-audio
     [x] App icon
-    [ ] Splash screen
-    [ ] Remove learned words from quiz
-    [ ] Fix % learned in the ItemUi
     [x] New quiz: write word from definition
-    [ ] Use all examples
-    [ ] New quiz: complete sentece from audio. Read example and ask users to select words heard 
     [ ] UI translation
     [ ] Offline support
+    [ ] Remove learned words from quiz
+    [ ] Fix % learned in the ItemUi
+    [ ] Use all examples
+    [ ] Splash screen
+    [ ] Multilanguage quizes
 
 
 [ ] MVP Release Checklist
     [ ]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
     [ ]  Sentry for error tracking
     [ ]  Vercel-hosted page with SEO meta tags
-    [ ]  Beta-tester invitation flow
     [ ]  Microsoft clarity integration
     [ ]  PostHog integration
+    [ ]  browserstack testing
 
 # V2
+[ ] New quiz: complete sentece from audio. Read example and ask users to select words heard 
 [ ] Support promotion codes in the settings page 
 [ ] Support invite friend to unlock premium features - 1 subscribed friend grants 1 week for the enviter
 [ ] Properly handle session expiration

@@ -19,6 +19,7 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useMutation } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import * as userApi from "@/api/users";
+import { useTranslation } from "react-i18next";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -40,6 +41,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 }) => {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
+  const { t } = useTranslation();
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -69,9 +71,9 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       });
     },
     onSuccess: () => {
-      Alert.alert("Success", "Your password has been changed successfully.", [
+      Alert.alert(t("common.success"), t("profile.changePassword.passwordChanged"), [
         {
-          text: "OK",
+          text: t("common.ok"),
           onPress: () => {
             reset();
             onClose();
@@ -81,8 +83,8 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     },
     onError: (error: Error) => {
       Alert.alert(
-        "Error",
-        error.message || "Failed to change password. Please try again.",
+        t("common.error"),
+        error.message || t("profile.changePassword.changeError"),
       );
     },
   });
@@ -143,10 +145,10 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     if (/[^a-zA-Z\d]/.test(password)) strength++;
 
     if (strength <= 2)
-      return { text: "Weak", color: "#FF6B6B", percentage: 33 };
+      return { text: t("profile.changePassword.passwordStrength.weak"), color: "#FF6B6B", percentage: 33 };
     if (strength <= 4)
-      return { text: "Good", color: "#FF7B54", percentage: 66 };
-    return { text: "Strong", color: "#4CAF50", percentage: 100 };
+      return { text: t("profile.changePassword.passwordStrength.good"), color: "#FF7B54", percentage: 66 };
+    return { text: t("profile.changePassword.passwordStrength.strong"), color: "#4CAF50", percentage: 100 };
   };
 
   const passwordStrength = getPasswordStrength(newPassword);
@@ -178,7 +180,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           <View style={styles.header}>
             <View style={styles.handle} />
             <View style={styles.titleRow}>
-              <Text style={styles.title}>Change Password</Text>
+              <Text style={styles.title}>{t("profile.changePassword.title")}</Text>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                 <Ionicons name="close" size={24} color="#636E72" />
               </TouchableOpacity>
@@ -192,12 +194,12 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           >
             {/* Current Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Current Password</Text>
+              <Text style={styles.inputLabel}>{t("profile.changePassword.currentPassword")}</Text>
               <Controller
                 control={control}
                 name="currentPassword"
                 rules={{
-                  required: "Current password is required",
+                  required: t("profile.changePassword.currentPasswordRequired"),
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View style={styles.passwordContainer}>
@@ -206,7 +208,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                         styles.input,
                         errors.currentPassword && styles.inputError,
                       ]}
-                      placeholder="Enter current password"
+                      placeholder={t("profile.changePassword.enterCurrentPassword")}
                       placeholderTextColor="#B2BEC3"
                       value={value}
                       onChangeText={onChange}
@@ -239,19 +241,19 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
             {/* New Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>New Password</Text>
+              <Text style={styles.inputLabel}>{t("profile.changePassword.newPassword")}</Text>
               <Controller
                 control={control}
                 name="newPassword"
                 rules={{
-                  required: "New password is required",
+                  required: t("profile.changePassword.newPasswordRequired"),
                   minLength: {
                     value: 8,
-                    message: "Password must be at least 8 characters",
+                    message: t("profile.changePassword.minLength", { min: 8 }),
                   },
                   validate: (value) => {
                     if (value === watch("currentPassword")) {
-                      return "New password must be different from current password";
+                      return t("profile.changePassword.mustBeDifferent");
                     }
                     return true;
                   },
@@ -263,7 +265,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                         styles.input,
                         errors.newPassword && styles.inputError,
                       ]}
-                      placeholder="Enter new password"
+                      placeholder={t("profile.changePassword.enterNewPassword")}
                       placeholderTextColor="#B2BEC3"
                       value={value}
                       onChangeText={onChange}
@@ -319,14 +321,14 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
             {/* Confirm Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Confirm New Password</Text>
+              <Text style={styles.inputLabel}>{t("profile.changePassword.confirmPassword")}</Text>
               <Controller
                 control={control}
                 name="confirmPassword"
                 rules={{
-                  required: "Please confirm your password",
+                  required: t("profile.changePassword.confirmPasswordRequired"),
                   validate: (value) =>
-                    value === newPassword || "Passwords do not match",
+                    value === newPassword || t("profile.changePassword.passwordMismatch"),
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View style={styles.passwordContainer}>
@@ -335,7 +337,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                         styles.input,
                         errors.confirmPassword && styles.inputError,
                       ]}
-                      placeholder="Confirm new password"
+                      placeholder={t("profile.changePassword.confirmNewPassword")}
                       placeholderTextColor="#B2BEC3"
                       value={value}
                       onChangeText={onChange}
@@ -369,7 +371,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
             {/* Password Requirements */}
             <View style={styles.requirementsContainer}>
               <Text style={styles.requirementsTitle}>
-                Password Requirements:
+                {t("profile.changePassword.passwordRequirements")}
               </Text>
               <View style={styles.requirement}>
                 <MaterialIcons
@@ -378,7 +380,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   color={newPassword?.length >= 8 ? "#4CAF50" : "#DFE6E9"}
                 />
                 <Text style={styles.requirementText}>
-                  At least 8 characters
+                  {t("profile.changePassword.atLeast8Characters")}
                 </Text>
               </View>
               <View style={styles.requirement}>
@@ -392,7 +394,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   }
                 />
                 <Text style={styles.requirementText}>
-                  Upper and lowercase letters
+                  {t("profile.changePassword.upperAndLowercase")}
                 </Text>
               </View>
               <View style={styles.requirement}>
@@ -401,7 +403,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   size={16}
                   color={/\d/.test(newPassword) ? "#4CAF50" : "#DFE6E9"}
                 />
-                <Text style={styles.requirementText}>At least one number</Text>
+                <Text style={styles.requirementText}>{t("profile.changePassword.atLeastOneNumber")}</Text>
               </View>
             </View>
           </ScrollView>
@@ -409,7 +411,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           {/* Action Buttons */}
           <View style={styles.actions}>
             <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -423,7 +425,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               {changePasswordMutation.isPending ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={styles.submitButtonText}>Change Password</Text>
+                <Text style={styles.submitButtonText}>{t("profile.changePassword.title")}</Text>
               )}
             </TouchableOpacity>
           </View>

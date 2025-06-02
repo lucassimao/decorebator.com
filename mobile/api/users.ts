@@ -11,6 +11,7 @@ type UserProfile = {
   country?: string;
   dateOfBirth?: string; // YYYY-MM-DD
   createdAt: string;
+  preferredLanguage: string
 };
 export type UserSignup = {
   firstName: string;
@@ -31,6 +32,7 @@ export type UpdateInput = {
   profilePictureFileExtension?: string;
   country?: string;
   dateOfBirth?: string;
+  preferredLanguage?: string;
 
   // if set, triggers a password update
   updatePassword?: {

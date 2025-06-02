@@ -21,6 +21,8 @@ import * as MailComposer from "expo-mail-composer";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import {
   ActivityIndicator,
   Alert,
@@ -35,35 +37,35 @@ import {
 } from "react-native";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const PRICING_PLANS: PricingPlan[] = [
+const getPricingPlans = (t: any): PricingPlan[] => [
   {
     id: "monthly",
-    name: "Monthly",
+    name: t("settings.subscription.monthly"),
     price: 6.99,
     currency: "USD",
     interval: "month",
     features: [
-      "Unlimited wordlists",
-      "AI-powered word enrichment",
-      "All quiz modes unlocked",
-      "Progress tracking",
-      "Priority support",
+      t("settings.subscription.features.unlimitedWordlists"),
+      t("settings.subscription.features.aiEnrichment"),
+      t("settings.subscription.features.allQuizModes"),
+      t("settings.subscription.features.progressTracking"),
+      t("settings.subscription.features.prioritySupport"),
     ],
   },
   {
     id: "annual",
-    name: "Yearly",
+    name: t("settings.subscription.yearly"),
     price: 69.99,
     currency: "USD",
     interval: "year",
     popular: true,
-    savings: "Save 17%",
+    savings: t("settings.subscription.savePercent", { percent: 17 }),
     features: [
-      "Unlimited wordlists",
-      "AI-powered word enrichment",
-      "All quiz modes unlocked",
-      "Progress tracking",
-      "Priority support",
+      t("settings.subscription.features.unlimitedWordlists"),
+      t("settings.subscription.features.aiEnrichment"),
+      t("settings.subscription.features.allQuizModes"),
+      t("settings.subscription.features.progressTracking"),
+      t("settings.subscription.features.prioritySupport"),
     ],
   },
 ];
@@ -72,6 +74,9 @@ const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<PlanRecurrence | null>(null);
+  const { t } = useTranslation();
+  
+  const PRICING_PLANS = React.useMemo(() => getPricingPlans(t), [t]);
 
   // Fetch subscription
   const {
@@ -113,11 +118,11 @@ const SettingsScreen: React.FC = () => {
       if (result.type === "success") {
         // Refresh subscription data
         refetchSubscription();
-        Alert.alert("Success", "Subscription activated successfully!");
+        Alert.alert(t("common.success"), t("settings.subscription.activatedSuccess"));
       }
     },
     onError: () => {
-      Alert.alert("Error", "Failed to open checkout. Please try again.");
+      Alert.alert(t("common.error"), t("settings.subscription.checkoutError"));
     },
   });
 
@@ -127,12 +132,12 @@ const SettingsScreen: React.FC = () => {
     onSuccess: () => {
       refetchSubscription();
       Alert.alert(
-        "Success",
-        "Your subscription will be canceled at the end of the current period.",
+        t("common.success"),
+        t("settings.subscription.cancelSuccess"),
       );
     },
     onError: () => {
-      Alert.alert("Error", "Failed to cancel subscription. Please try again.");
+      Alert.alert(t("common.error"), t("settings.subscription.cancelError"));
     },
   });
 
@@ -148,14 +153,14 @@ const SettingsScreen: React.FC = () => {
     const isAvailable = await MailComposer.isAvailableAsync();
     if (!isAvailable) {
       Alert.alert(
-        "No email client available. Could you please email us at support@decorerbator.com ?",
+        t("settings.noEmailClient"),
       );
       return;
     }
 
     MailComposer.composeAsync({
       recipients: ["support@decorerbator.com"],
-      subject: "Support request",
+      subject: t("settings.supportEmailSubject"),
       body: "",
     });
   };
@@ -164,12 +169,12 @@ const SettingsScreen: React.FC = () => {
 
   const handleCancelSubscription = () => {
     Alert.alert(
-      "Cancel Subscription",
-      "Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your current billing period.",
+      t("settings.subscription.cancelSubscription"),
+      t("settings.subscription.cancelConfirmMessage"),
       [
-        { text: "Keep Subscription", style: "cancel" },
+        { text: t("settings.subscription.keepSubscription"), style: "cancel" },
         {
-          text: "Cancel Subscription",
+          text: t("settings.subscription.cancelSubscription"),
           style: "destructive",
           onPress: () => cancelMutation.mutate(),
         },
@@ -179,7 +184,7 @@ const SettingsScreen: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(i18n.language.startsWith('en') ? 'en-US' : i18n.language, {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -207,13 +212,13 @@ const SettingsScreen: React.FC = () => {
             >
               <Ionicons name="arrow-back" size={24} color="#2D3436" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Settings</Text>
+            <Text style={styles.headerTitle}>{t("settings.title")}</Text>
             <View style={{ width: 40 }} />
           </View>
 
           {/* Current Subscription */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Current Subscription</Text>
+            <Text style={styles.sectionTitle}>{t("settings.subscription.currentPlan")}</Text>
 
             {isLoading ? (
               <View style={styles.loadingContainer}>
@@ -232,16 +237,16 @@ const SettingsScreen: React.FC = () => {
                   <View style={styles.subscriptionInfo}>
                     <Text style={styles.planName}>
                       {subscription?.plan === "free"
-                        ? "Free Plan"
+                        ? t("settings.subscription.freePlan")
                         : subscription?.plan === "monthly"
-                          ? "Monthly Premium"
-                          : "Yearly Premium"}
+                          ? t("settings.subscription.monthlyPremium")
+                          : t("settings.subscription.yearlyPremium")}
                     </Text>
                     <Text style={styles.planStatus}>
                       {subscription?.status === "active"
-                        ? "Active"
+                        ? t("settings.subscription.statusActive")
                         : subscription?.status === "cancelled"
-                          ? "Canceling"
+                          ? t("settings.subscription.statusCanceling")
                           : subscription?.status}
                     </Text>
                   </View>
@@ -252,8 +257,8 @@ const SettingsScreen: React.FC = () => {
                     <View style={styles.detailRow}>
                       <Text style={styles.detailLabel}>
                         {subscription.cancelAtPeriodEnd
-                          ? "Expires on"
-                          : "Renews on"}
+                          ? t("settings.subscription.expiresOn")
+                          : t("settings.subscription.renewsOn")}
                       </Text>
                       <Text style={styles.detailValue}>
                         {formatDate(subscription.currentPeriodEnd)}
@@ -276,7 +281,7 @@ const SettingsScreen: React.FC = () => {
                               color="#FF6B6B"
                             />
                             <Text style={styles.cancelButtonText}>
-                              Cancel Subscription
+                              {t("settings.subscription.cancelSubscription")}
                             </Text>
                           </>
                         )}
@@ -293,7 +298,7 @@ const SettingsScreen: React.FC = () => {
                         size={16}
                         color="#636E72"
                       />{" "}
-                      Limited to 1 wordlist with up to 10 words
+                      {t("settings.subscription.freePlanLimit")}
                     </Text>
                   </View>
                 )}
@@ -304,14 +309,14 @@ const SettingsScreen: React.FC = () => {
           {/* Upgrade Section */}
           {!isPremium && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Upgrade to Premium</Text>
+              <Text style={styles.sectionTitle}>{t("upgrade.title")}</Text>
               <Text style={styles.sectionSubtitle}>
-                Unlock unlimited learning potential
+                {t("upgrade.subtitle")}
               </Text>
 
               {/* Premium Features */}
               <View style={styles.featuresCard}>
-                <Text style={styles.featuresTitle}>Premium Features</Text>
+                <Text style={styles.featuresTitle}>{t("settings.subscription.premiumFeatures")}</Text>
                 {PRICING_PLANS[0].features.map((feature, index) => (
                   <View key={index} style={styles.featureRow}>
                     <MaterialIcons
@@ -339,7 +344,7 @@ const SettingsScreen: React.FC = () => {
                   >
                     {plan.popular && (
                       <View style={styles.popularBadge}>
-                        <Text style={styles.popularText}>BEST VALUE</Text>
+                        <Text style={styles.popularText}>{t("settings.subscription.bestValue")}</Text>
                       </View>
                     )}
 
@@ -387,7 +392,7 @@ const SettingsScreen: React.FC = () => {
                 ) : (
                   <>
                     <Text style={styles.subscribeButtonText}>
-                      {selectedPlan ? "Continue to Payment" : "Select a Plan"}
+                      {selectedPlan ? t("settings.subscription.continueToPayment") : t("settings.subscription.selectPlan")}
                     </Text>
                     <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
                   </>
@@ -398,14 +403,14 @@ const SettingsScreen: React.FC = () => {
 
           {/* Other Settings */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Other Settings</Text>
+            <Text style={styles.sectionTitle}>{t("settings.otherSettings")}</Text>
 
             <TouchableOpacity
               style={styles.settingItem}
               onPress={profileSettings}
             >
               <MaterialIcons name="person-outline" size={24} color="#636E72" />
-              <Text style={styles.settingText}>Account</Text>
+              <Text style={styles.settingText}>{t("settings.account.title")}</Text>
               <Ionicons name="chevron-forward" size={20} color="#636E72" />
             </TouchableOpacity>
 
@@ -421,14 +426,14 @@ const SettingsScreen: React.FC = () => {
 
             <TouchableOpacity style={styles.settingItem} onPress={support}>
               <MaterialIcons name="help-outline" size={24} color="#636E72" />
-              <Text style={styles.settingText}>Help & Support</Text>
+              <Text style={styles.settingText}>{t("settings.helpAndSupport")}</Text>
               <Ionicons name="chevron-forward" size={20} color="#636E72" />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.settingItem} onPress={signOut}>
               <MaterialIcons name="logout" size={24} color="#FF6B6B" />
               <Text style={[styles.settingText, { color: "#FF6B6B" }]}>
-                Sign Out
+                {t("settings.account.logOut")}
               </Text>
               <Ionicons name="chevron-forward" size={20} color="#FF6B6B" />
             </TouchableOpacity>
