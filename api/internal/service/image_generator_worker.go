@@ -96,10 +96,10 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	logger.Debug("image generated", "definitionId", definitionID, "url", url)
 
 	_, err = SaveDefinitionImage(model.CreateDefinitionImageDTO{
-		Api:          model.STABILITY_AI,
+		Api:          model.OPENAI,
 		URL:          url,
 		Description:  longestExample,
-		Model:        "stable-image-core",
+		Model:        "gpt-image-1",
 		Prompt:       prompt,
 		DefinitionId: definitionID,
 	})

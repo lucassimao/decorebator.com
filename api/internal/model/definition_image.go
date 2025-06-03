@@ -5,8 +5,7 @@ import "github.com/jackc/pgx/pgtype"
 type Api string
 
 const (
-	OPENAI       Api = "openai"
-	STABILITY_AI Api = "stability.ai"
+	OPENAI Api = "openai"
 )
 
 type DefinitionImage struct {

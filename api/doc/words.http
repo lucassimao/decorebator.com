@@ -1,21 +1,21 @@
-@email="abc1234@gmail.com"
+@email="lsimaocosta@gmail.com"
 @password= "12345"
 
 
 ### Creating user
-POST http://localhost:3000/users
+POST https://api.decorebator.com/users
 content-type: application/json
 
 {
-"FirstName":"Test 1",
-"LastName":"xpto",
+"FirstName":"Lucas",
+"LastName":"Simao",
 "Email": {{email}},
 "Password": {{password}}
 }
 
 ### Login
 # @name loginRequest
-POST http://localhost:3000/login
+POST https://api.decorebator.com/login
 content-type: application/json
 
 {
@@ -26,30 +26,29 @@ content-type: application/json
 @authToken = {{loginRequest.response.headers.Authorization}}
 
 ### Get wordlists
-GET http://localhost:3000/wordlists
+GET https://api.decorebator.com/wordlists
 authorization: {{authToken}}
 
 
 
 ### Creating wordlist
 # @name wordlistRequest
-POST http://localhost:3000/wordlists
+POST https://api.decorebator.com/wordlists
 authorization: {{authToken}}
 
 {
-"Name":"tests",
-"description":"tests only"
+"Name":"Deep Utopia",
+"LanguageCode":"en"
 }
 
 @wordlistId = {{wordlistRequest.response.body.id}} 
-@wordlistId = 32
 
 ### Creating word
-POST http://localhost:3000/wordlists/{{wordlistId}}/words
+POST https://api.decorebator.com/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
- "Name":"Agape"  
+ "Name":"wherefore"  
 }
 
 
