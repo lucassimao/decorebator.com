@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -45,8 +44,6 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	fmt.Println(input)
 
 	var err = strategy.SaveQuizResult(input.Id, input.Success, nil)
 
