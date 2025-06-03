@@ -21,8 +21,8 @@ const TermsOfServicePage: React.FC = () => {
 
         <TosSection title="1. Acceptance of Terms">
           <p className="mb-4">
-            By accessing or using the Decorebator application (the "App") and any related services (collectively, the "Services"), 
-            you agree to be bound by these Terms of Service ("Terms"). If you do not agree to all of these Terms, do not use the Services.
+            By accessing or using the Decorebator application (the &quot;App&quot;) and any related services (collectively, the &quot;Services&quot;), 
+            you agree to be bound by these Terms of Service (&quot;Terms&quot;). If you do not agree to all of these Terms, do not use the Services.
           </p>
           <p>
             We may modify the Terms at any time, and such modifications will be effective immediately upon posting. 
@@ -32,12 +32,12 @@ const TermsOfServicePage: React.FC = () => {
 
         <TosSection title="2. Use of the App">
           <p className="mb-2"><strong>User Accounts:</strong> You may be required to create an account to access certain features of the App. You are responsible for maintaining the confidentiality of your account information and for all activities that occur under your account.</p>
-          <p className="mb-2"><strong>Acceptable Use:</strong> You agree not to use the Services for any unlawful purpose or in any way that could harm, disable, overburden, or impair the Services. You agree not to attempt to gain unauthorized access to any part of the Services or to any other user's account.</p>
+          <p className="mb-2"><strong>Acceptable Use:</strong> You agree not to use the Services for any unlawful purpose or in any way that could harm, disable, overburden, or impair the Services. You agree not to attempt to gain unauthorized access to any part of the Services or to any other user&pos;s account.</p>
         </TosSection>
 
         <TosSection title="3. User Content">
           <p className="mb-4">
-            If you create, upload, or share content (e.g., custom wordlists) through the App ("User Content"), you retain ownership of your User Content. 
+            If you create, upload, or share content (e.g., custom wordlists) through the App (&quot;User Content&quot;), you retain ownership of your User Content. 
             However, by submitting User Content, you grant Decorebator a worldwide, non-exclusive, royalty-free license to use, reproduce, modify, and distribute your User Content solely for the purpose of operating and providing the Services to you.
           </p>
         </TosSection>
@@ -55,7 +55,7 @@ const TermsOfServicePage: React.FC = () => {
 
         <TosSection title="5. Subscription and Payment">
           <p className="mb-4">
-            Certain features of the App may be available through a subscription plan ("Subscription"). Details of current subscription plans and pricing are available within the App or on our Website.
+            Certain features of the App may be available through a subscription plan (&quot;Subscription&quot;). Details of current subscription plans and pricing are available within the App or on our Website.
             By purchasing a Subscription, you agree to pay the applicable fees. All fees are non-refundable except as required by law or as explicitly stated in our refund policy.
           </p>
           <p>
@@ -70,7 +70,7 @@ const TermsOfServicePage: React.FC = () => {
         </TosSection>
 
         <TosSection title="7. Disclaimers and Limitation of Liability">
-          <p className="mb-2">THE SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.</p>
+          <p className="mb-2">THE SERVICES ARE PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.</p>
           <p className="mb-2">DECOREBATOR DOES NOT WARRANT THAT THE SERVICES WILL BE UNINTERRUPTED, ERROR-FREE, OR FREE OF VIRUSES OR OTHER HARMFUL COMPONENTS.</p>
           <p>TO THE FULLEST EXTENT PERMITTED BY LAW, IN NO EVENT SHALL DECOREBATOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR RELATED TO YOUR USE OF THE SERVICES.</p>
         </TosSection>
@@ -90,7 +90,7 @@ const TermsOfServicePage: React.FC = () => {
 
         <TosSection title="10. Changes to Terms">
           <p className="mb-4">
-            We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material, we will provide at least 30 days' notice prior to any new terms taking effect. 
+            We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material, we will provide at least 30 days&apos; notice prior to any new terms taking effect. 
             What constitutes a material change will be determined at our sole discretion.
           </p>
           <p className="mt-2"><em>Last updated: {new Date().toLocaleDateString()}</em></p>
@@ -102,7 +102,7 @@ const TermsOfServicePage: React.FC = () => {
           </p>
           <p className="mt-2">
             Decorebator Project<br />
-            [Your Address, if applicable, or "Online Service"]
+            [Your Address, if applicable, or &quot;Online Service&quot;]
           </p>
         </TosSection>
 

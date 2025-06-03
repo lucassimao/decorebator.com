@@ -35,9 +35,9 @@ const PolicyPage: React.FC = () => {
           </ul>
           <p>
             In this privacy notice, if we refer to:
-            "App," we are referring to any application of ours that references or links to this policy, including any listed above.
-            "Website," we are referring to our website.
-            "Services," we are referring to our App, Website, and other related services, including any sales, marketing, or events.
+            &quot;App,&quot; we are referring to any application of ours that references or links to this policy, including any listed above.
+            &quot;Website,&quot; we are referring to our website.
+            &quot;Services,&quot; we are referring to our App, Website, and other related services, including any sales, marketing, or events.
           </p>
         </PolicySection>
 
@@ -106,7 +106,7 @@ const PolicyPage: React.FC = () => {
 
         <PolicySection title="7. Changes to This Privacy Policy">
           <p>
-            We may update this privacy notice from time to time. The updated version will be indicated by an updated "Revised" date and the 
+            We may update this privacy notice from time to time. The updated version will be indicated by an updated &quot;Revised&quot; date and the 
             updated version will be effective as soon as it is accessible. We encourage you to review this privacy notice frequently to be 
             informed of how we are protecting your information.
           </p>

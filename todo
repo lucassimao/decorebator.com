@@ -53,11 +53,11 @@
 [ ] MVP Release Checklist
     [x]  PostHog integration
     [x]  Sentry for error tracking
-    [ ]  Vercel-hosted page with SEO meta tags
+    [x]  Set up Stripe
     [x]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
+    [ ]  Vercel-hosted page with SEO meta tags
     [ ]  browserstack testing
     [ ]  Microsoft clarity integration for website
-    [ ] Set up Stripe
 
 # V2
 

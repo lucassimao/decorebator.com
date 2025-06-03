@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, Suspense } from "react";
 import {
   LockClosedIcon,
   CheckCircleIcon,
@@ -8,7 +8,8 @@ import {
 } from "@heroicons/react/24/solid";
 import { useSearchParams } from "next/navigation";
 
-const ResetPasswordForm: React.FC = () => {
+// Separate component that uses useSearchParams
+const ResetPasswordFormContent: React.FC = () => {
   const [newPassword, setNewPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +81,7 @@ const ResetPasswordForm: React.FC = () => {
             Reset Your Password
           </h2>
           <p className="text-sm text-gray-600 mt-2 text-center">
-            Enter your new password below. Make sure it's strong and memorable.
+            Enter your new password below. Make sure it&apos;s strong and memorable.
           </p>
         </div>
 
@@ -190,11 +191,40 @@ const ResetPasswordForm: React.FC = () => {
 
         {!successMessage && (
           <p className="mt-6 text-center text-xs text-gray-500">
-            Remember to choose a strong password you haven't used before.
+            Remember to choose a strong password you haven&apos;t used before.
           </p>
         )}
       </div>
     </div>
+  );
+};
+
+// Loading fallback component
+const ResetPasswordFormSkeleton: React.FC = () => {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-4">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-2xl">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse mb-4" />
+          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="h-4 w-64 bg-gray-200 rounded animate-pulse" />
+        </div>
+        <div className="space-y-4">
+          <div className="h-10 bg-gray-200 rounded animate-pulse" />
+          <div className="h-10 bg-gray-200 rounded animate-pulse" />
+          <div className="h-10 bg-gray-200 rounded animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main component with Suspense boundary
+const ResetPasswordForm: React.FC = () => {
+  return (
+    <Suspense fallback={<ResetPasswordFormSkeleton />}>
+      <ResetPasswordFormContent />
+    </Suspense>
   );
 };
 
