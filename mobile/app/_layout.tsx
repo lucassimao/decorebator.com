@@ -67,6 +67,7 @@ function RootLayoutNav() {
               options={{ host: "https://us.i.posthog.com" }}
             >
               <Stack>
+                <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen name="signup" options={{ headerShown: false }} />
                 <Stack.Screen name="quiz" options={{ headerShown: false }} />
                 <Stack.Screen name="signin" options={{ headerShown: false }} />
