@@ -18,16 +18,8 @@ var (
 func GetDBConnection() (*pgxpool.Pool, error) {
 	// Initialize the database connection pool once
 	dbOnce.Do(func() {
-		var url string
-		if Env.DatabaseUrl != "" {
-			url = Env.DatabaseUrl
-		} else {
-			url = fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-				Env.PostgresUser, Env.PostgresPassword, Env.PostgresHost, Env.PostgresPort, Env.PostgresDB)
-		}
-
 		var err error
-		db, err = pgxpool.New(context.Background(), url)
+		db, err = pgxpool.New(context.Background(), Env.DatabaseUrl)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 			os.Exit(1)

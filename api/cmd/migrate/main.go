@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strconv"
 
 	"embed"
 
@@ -30,22 +29,8 @@ func (*verboseLogger) Verbose() bool {
 
 func main() {
 
-	sslMode := common.Env.PostgresSSLMode
-	dbUser := common.Env.PostgresUser
-	dbPassword := common.Env.PostgresPassword
-	dbName := common.Env.PostgresDB
-	dbHost := common.Env.PostgresHost
-	dbPort, err := strconv.Atoi(common.Env.PostgresPort)
-	if err != nil {
-		log.Fatalf("Invalid DB_PORT: %v", err)
-	}
-
-	// e.g., postgres://user:pass@host:5432/dbname
-	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s", dbUser, dbPassword,
-		dbHost, dbPort, dbName, sslMode)
-
 	// Use database/sql
-	db, err := sql.Open("postgres", dbURL)
+	db, err := sql.Open("postgres", common.Env.DatabaseUrl)
 	if err != nil {
 		log.Fatalf("Failed to open DB: %v", err)
 	}
