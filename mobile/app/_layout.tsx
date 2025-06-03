@@ -10,7 +10,7 @@ import { UpgradePromptDialogProvider } from "@/hooks/useUpgradePromptDialog";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/i18n";
 import { useI18n } from "@/hooks/useI18n";
-
+import { usePostHog, PostHogProvider } from "posthog-react-native";
 // Import offline test utility in development
 if (__DEV__) {
   import("@/utils/offlineTest");
@@ -62,33 +62,41 @@ function RootLayoutNav() {
         <LanguageInitializer />
         <SnackbarProvider>
           <UpgradePromptDialogProvider>
-            <Stack>
-              <Stack.Screen name="signup" options={{ headerShown: false }} />
-              <Stack.Screen name="quiz" options={{ headerShown: false }} />
-              <Stack.Screen name="signin" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="forgotPassword"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="dashboard/index"
-                options={{
-                  headerShown: false,
-                  headerTitle: "Dashboard",
-                }}
-              />
-              <Stack.Screen
-                name="dashboard/welcome"
-                options={{
-                  headerShown: false,
-                }}
-              />
-              <Stack.Screen name="settings" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="profileSettings"
-                options={{ headerShown: false }}
-              />
-            </Stack>
+            <PostHogProvider
+              apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
+              options={{ host: "https://us.i.posthog.com" }}
+            >
+              <Stack>
+                <Stack.Screen name="signup" options={{ headerShown: false }} />
+                <Stack.Screen name="quiz" options={{ headerShown: false }} />
+                <Stack.Screen name="signin" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="forgotPassword"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="dashboard/index"
+                  options={{
+                    headerShown: false,
+                    headerTitle: "Dashboard",
+                  }}
+                />
+                <Stack.Screen
+                  name="dashboard/welcome"
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="settings"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="profileSettings"
+                  options={{ headerShown: false }}
+                />
+              </Stack>
+            </PostHogProvider>
           </UpgradePromptDialogProvider>
         </SnackbarProvider>
       </QueryClientProvider>

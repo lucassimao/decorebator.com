@@ -4,6 +4,7 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Link, router } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 import * as React from "react";
 import { Controller, FieldError, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -54,6 +55,7 @@ export default function SignUpScreen() {
   const [signUpError, setSignUpError] = React.useState<Error | null>(null);
   const snackbar = useSnackbar();
   const { t } = useTranslation();
+  const posthog = usePostHog();
 
   const scrollViewRef = React.useRef<ScrollView>(null);
 
@@ -113,7 +115,10 @@ export default function SignUpScreen() {
     onError: (error) => {
       setSignUpError(error);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      posthog.capture("user_signed_up", {
+        email: variables.email,
+      });
       router.replace("/dashboard/welcome");
     },
   });

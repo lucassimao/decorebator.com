@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useMutation } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -34,6 +35,7 @@ interface LoginFormData {
 const LoginScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { t } = useTranslation();
+  const posthog = usePostHog();
 
   const {
     control,
@@ -50,7 +52,10 @@ const LoginScreen: React.FC = () => {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: usersApi.signin,
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      posthog.capture("user_signed_in", {
+        email: variables.email,
+      });
       router.replace("/dashboard");
     },
     onError: (error: Error) => {

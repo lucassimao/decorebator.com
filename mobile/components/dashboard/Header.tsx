@@ -2,12 +2,14 @@ import * as usersApi from "@/api/users";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { usePostHog } from "posthog-react-native";
 
 export const Header = () => {
   const { t } = useTranslation();
+  const posthog = usePostHog();
 
   // Fetch user profile
   const { data: user, isLoading } = useQuery({
@@ -15,6 +17,17 @@ export const Header = () => {
     queryFn: usersApi.getProfile,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  useEffect(() => {
+    if (!user) return;
+
+    posthog.identify(String(user.id), {
+      $set: {
+        email: user.email,
+        name: user.firstName + ` ` + user.lastName,
+      },
+    });
+  }, [user]);
 
   // Refresh user session when screen comes into focus
   // useFocusEffect(

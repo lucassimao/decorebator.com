@@ -53,7 +53,7 @@
     [x]  PostHog integration
     [x]  Sentry for error tracking
     [ ]  Vercel-hosted page with SEO meta tags
-    [ ]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
+    [x]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
     [ ]  browserstack testing
     [ ]  Microsoft clarity integration for website
 

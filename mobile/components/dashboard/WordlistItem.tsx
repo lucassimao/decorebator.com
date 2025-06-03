@@ -40,7 +40,8 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     mutationFn: () => wordlistsApi.deleteWordlist(item.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });``
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      ``;
       Alert.alert(t("common.success"), t("wordlistItem.deleteSuccess"));
     },
     onError: (error) => {
@@ -98,7 +99,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     onPressed?.();
   };
 
-  const progressPercentage = (item.wordsLearnedCount / item.wordsCount)*100;
+  const progressPercentage = (item.wordsLearnedCount / item.wordsCount) * 100;
 
   return (
     <>
