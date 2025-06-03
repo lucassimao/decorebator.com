@@ -139,8 +139,9 @@ const QuizScreen: React.FC = () => {
     setShowResult(true);
 
     const isCorrect =
-      userInput.toLowerCase().trim() === quiz.options[quiz.answerIndex]?.toLowerCase();
-      
+      userInput.toLowerCase().trim() ===
+      quiz.options[quiz.answerIndex]?.toLowerCase();
+
     setQuizCount((prev) => prev + 1);
     if (isCorrect) {
       setCorrectCount((prev) => prev + 1);

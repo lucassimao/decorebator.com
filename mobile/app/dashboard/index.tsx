@@ -7,7 +7,6 @@ import DashboardStats from "@/components/dashboard/Stats";
 import { WordlistDetailModal } from "@/components/dashboard/WordlistDetailModal";
 import Wordlistitem from "@/components/dashboard/WordlistItem";
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
-import { useOffline } from "@/hooks/useOffline";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
