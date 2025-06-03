@@ -85,8 +85,9 @@ func (s *SubscriptionService) CreateCheckoutSession(ctx context.Context, userID 
 
 	// Create checkout session params
 	params := &stripe.CheckoutSessionParams{
-		Customer: stripe.String(stripeCustomerID),
-		Mode:     stripe.String(string(stripe.CheckoutSessionModeSubscription)),
+		Customer:            stripe.String(stripeCustomerID),
+		AllowPromotionCodes: stripe.Bool(true),
+		Mode:                stripe.String(string(stripe.CheckoutSessionModeSubscription)),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				Price:    stripe.String(priceID),

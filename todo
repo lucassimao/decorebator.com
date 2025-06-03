@@ -47,6 +47,7 @@
     [ ] Multilanguage quizes
     [ ] Use all examples
     [ ] Splash screen
+    [ ] Support Stripe cupoms
 
 
 [ ] MVP Release Checklist
@@ -56,6 +57,7 @@
     [x]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
     [ ]  browserstack testing
     [ ]  Microsoft clarity integration for website
+    [ ] Set up Stripe
 
 # V2
 
