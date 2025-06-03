@@ -369,7 +369,7 @@
     "searchPlaceholder": "Pesquisar palavras...",
     "filterAll": "Todas ({{count}})",
     "filterLearned": "Aprendidas ({{count}})",
-    "filterToLearn": "Para Aprender ({{count}})",
+    "filterToLearn": "Aprender ({{count}})",
     "noWordsFound": "Nenhuma palavra encontrada",
     "noWordsYet": "Ainda sem palavras",
     "addNewWord": "Adicionar Nova Palavra",

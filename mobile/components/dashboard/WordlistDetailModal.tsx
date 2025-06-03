@@ -28,6 +28,7 @@ import {
   View,
 } from "react-native";
 import { LANGUAGES } from "./CreateWordlistModal";
+import { useUserInfo } from "@/hooks/users";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -54,6 +55,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   const updatePromptDialog = useUpgradePromptDialog();
   const { isOnline } = useOffline();
   const { t } = useTranslation();
+  const { isPremium } = useUserInfo();
 
   const {
     control,
@@ -177,7 +179,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   };
 
   const onPressAddWord = () => {
-    if (words.length >= 10) {
+    if (words.length >= 10 && !isPremium) {
       onClose();
       updatePromptDialog.show();
     } else {

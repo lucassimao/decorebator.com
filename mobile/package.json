@@ -11,8 +11,8 @@
     "prepare": "husky",
     "expo:update": "expo install --fix",
     "lint": "eslint .",
-    "update:local":  "dotenv -e .env.local -- eas update",
-    "update:prod":    "dotenv -e .env.production -- eas update --branch master"
+    "update:local": "eas update --clear-cache",
+    "update:prod": "eas update --environment production --clear-cache --branch master"
   },
   "prepare": "cd .. && husky mobile/.husky",
   "jest": {
@@ -69,7 +69,6 @@
     "@tanstack/eslint-plugin-query": "^5.35.6",
     "@types/react": "~19.0.10",
     "@types/react-native-vector-icons": "^6.4.18",
-    "dotenv-cli": "^8.0.0",
     "eslint-config-expo": "~9.2.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",

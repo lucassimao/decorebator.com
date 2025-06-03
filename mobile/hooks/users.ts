@@ -1,30 +1,24 @@
-import { UserProfile, getProfile } from "@/api/users";
-import { useEffect, useState } from "react";
+import { getProfile } from "@/api/users";
 import offlineManager from "@/utils/offlineManager";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 export const useUserInfo = () => {
-  const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
+
+  const { data: user, isLoading,error } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: getProfile,
+  });  
+
+    // derive isPremium whenever `user` changes
+  const isPremium = !!user && (user.subscriptionPlan === "monthly" || user.subscriptionPlan === "annual");
 
   useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const user = await getProfile();
-        setUserInfo(user);
-        
-        // Update offline manager with premium status
-        const isPremium = user?.subscriptionPlan === 'monthly' || user?.subscriptionPlan === 'annual';
-        offlineManager.setUserPremiumStatus(isPremium);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (user){
+      offlineManager.setUserPremiumStatus(isPremium);
+    }
 
-    fetchUserInfo();
-  }, []);
+  }, [user,isPremium]);
 
-  return { userInfo, loading, error };
+  return { userInfo: user, loading: isLoading, error, isPremium };
 };
