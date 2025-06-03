@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"os"
 	"regexp"
@@ -151,25 +152,28 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		return nil, err
 	}
 
-	// [TODO] Refactor and create factory methods
-	if boxID%6 == 0 || boxID%7 == 0 {
+	if boxID == 3 && imageUrl == "" {
+		// if no IMAGE, jump to the CompleteSentence quiz
+		boxID = 4
+	}
+
+	if (boxID == 6 || boxID == 7) && word.AudioURL == "" {
 		// if no audio, jump to the GuessMeaning quiz
-		if word.AudioURL == "" {
-			boxID = 1
-		}
+		boxID = 1
 	}
 
 	common.Logger.Debug("CreateChallenge", "boxID", boxID, "leitnerSystemID", leitnerSystemID, "definition", definition.ID)
 
+	// When adding new boxes, make sure to update the wrap-around logic in SaveQuizResult func
 	switch {
-	case boxID%7 == 0:
+	case boxID == 7:
 		quizzType = model.MeaningFromAudio
 		options, err = GetRandomMeanings([]int{int(definition.ID)}, 3)
 		if err != nil {
 			return nil, err
 		}
 		quizAnswer = definition.Meaning
-	case boxID%6 == 0:
+	case boxID == 6:
 		quizzType = model.WordFromAudio
 		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 		if err != nil {
@@ -177,11 +181,11 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		}
 
 		quizAnswer = word.Name
-	case boxID%5 == 0:
+	case boxID == 5:
 		quizzType = model.WriteWordFromDefinition
 		value = definition.Meaning
 		quizAnswer = word.Name
-	case boxID%4 == 0:
+	case boxID == 4:
 		quizzType = model.CompleteSentence
 		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
 		if err != nil {
@@ -208,7 +212,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 			quizAnswer = definition.Token
 		}
 
-	case boxID%3 == 0 && imageUrl != "":
+	case boxID == 3:
 		quizzType = model.WordFromImage
 		value = imageUrl
 		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
@@ -224,7 +228,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		} else {
 			quizAnswer = definition.Token
 		}
-	case boxID%2 == 0:
+	case boxID == 2:
 		quizzType = model.WordFromMeaning
 		value = definition.Meaning
 		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
@@ -234,7 +238,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		}
 
 		quizAnswer = definition.Token
-	default:
+	case boxID == 1:
 		quizzType = model.GuessMeaning
 		options, err = GetRandomMeanings([]int{int(definition.ID)}, 3)
 		if err != nil {
@@ -243,6 +247,8 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 
 		value = definition.Token
 		quizAnswer = definition.Meaning
+	default:
+		return nil, fmt.Errorf("unexpected box id: %d wordlist %d definition %d", boxID, wordlistID, definition.ID)
 	}
 
 	// append the quiz answer to the final of the list.
@@ -305,7 +311,10 @@ func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, succe
 	query := `UPDATE leitner_system_tracking 
 	SET 
 		updated_at = now(), 
-		box_id = CASE WHEN $1 THEN box_id + 1 ELSE 1 END 
+		box_id = CASE 
+			WHEN $1 THEN (box_id % 7) + 1 -- on success, will cycle 1→2→…→7→1. 
+			ELSE 1 
+		END
 	WHERE id = $2
 	RETURNING box_id`
 

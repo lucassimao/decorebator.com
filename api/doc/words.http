@@ -61,10 +61,10 @@ authorization: {{authToken}}
 }
 
 ### Saving quiz result
-PATCH http://localhost:3000/wordlists/{{wordlistId}}/quizzes
+PATCH https://api.decorebator.com/wordlists/{{wordlistId}}/quizzes
 authorization: {{authToken}}
 
 {
     "success": true,
-    "id":30
+    "id":2
 }
