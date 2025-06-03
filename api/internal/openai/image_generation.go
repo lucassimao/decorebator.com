@@ -28,12 +28,13 @@ type ImageGenerationResponse struct {
 
 func GenerateImage(prompt string) (*ImageGenerationResponse, error) {
 	var requestBodyStruct = map[string]any{
-		"model":      "gpt-image-1",
-		"prompt":     prompt,
-		"n":          1,
-		"size":       "1024x1024",
-		"quality":    "medium",
-		"moderation": "low",
+		"model":              "gpt-image-1",
+		"prompt":             prompt,
+		"n":                  1,
+		"size":               "1024x1024",
+		"quality":            "low",
+		"moderation":         "low",
+		"output_compression": 50,
 	}
 
 	var requestBody, err = json.Marshal(requestBodyStruct)

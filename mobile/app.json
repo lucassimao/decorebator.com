@@ -29,6 +29,8 @@
       },
       "permissions": [
         "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "package": "com.lsimaocosta.decorebator"
@@ -61,6 +63,12 @@
         "projectId": "882f0434-5dcf-448c-92ac-47e70c9a8d84"
       }
     },
-    "owner": "lsimaocosta"
+    "owner": "lsimaocosta",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/882f0434-5dcf-448c-92ac-47e70c9a8d84"
+    }
   }
 }
