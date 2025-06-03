@@ -26,7 +26,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "package": "com.lsimaocosta.decorebator"
     },
     "web": {
       "bundler": "metro",
@@ -39,7 +44,7 @@
       "expo-audio",
       "expo-secure-store",
       "expo-mail-composer",
-       [
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you set your profile picture."
@@ -48,6 +53,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "882f0434-5dcf-448c-92ac-47e70c9a8d84"
+      }
+    },
+    "owner": "lsimaocosta"
   }
 }

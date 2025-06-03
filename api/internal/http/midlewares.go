@@ -14,6 +14,8 @@ import (
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 )
 
@@ -151,6 +153,13 @@ func ErrorMiddleware() gin.HandlerFunc {
 					attrs = append(attrs, slog.Any("stack_trace", stackTrace))
 				} else {
 					fmt.Println(stackTrace)
+				}
+
+				if hub := sentrygin.GetHubFromContext(c); hub != nil {
+					hub.WithScope(func(scope *sentry.Scope) {
+						scope.SetExtra("uri", c.Request.URL.Path)
+						// hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
+					})
 				}
 
 				common.Logger.Error("Recovered from panic", attrs...)

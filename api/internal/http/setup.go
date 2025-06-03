@@ -7,8 +7,24 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/service"
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 )
+
+func init() {
+	sentryDsn, exists := os.LookupEnv("SENTRY_DSN")
+	if common.Env.Env == common.Production && !exists {
+		panic("SENTRY_DSN not found")
+	}
+
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn: sentryDsn,
+	}); err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
+
+}
 
 func SetupRoutes() *gin.Engine {
 
@@ -31,6 +47,12 @@ func SetupRoutes() *gin.Engine {
 	subRepo := repository.NewSubscriptionRepository(db)
 
 	router := gin.New()
+	if common.Env.Env == common.Production {
+		router.Use(sentrygin.New(sentrygin.Options{
+			Repanic:         true,
+			WaitForDelivery: false,
+		}))
+	}
 	router.Use(gin.Logger())
 	router.Use(ErrorMiddleware())
 	router.Use(CORSMiddleware())

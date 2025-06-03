@@ -50,8 +50,8 @@
 
 
 [ ] MVP Release Checklist
-    [ ]  PostHog integration
-    [ ]  Sentry for error tracking
+    [x]  PostHog integration
+    [x]  Sentry for error tracking
     [ ]  Vercel-hosted page with SEO meta tags
     [ ]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
     [ ]  browserstack testing

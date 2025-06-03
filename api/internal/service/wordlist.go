@@ -53,6 +53,7 @@ func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
 		)
 		return nil, wrappedErr
 	}
+
 	return wordlist, nil
 }
 

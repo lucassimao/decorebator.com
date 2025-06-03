@@ -112,6 +112,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		c.Status(http.StatusCreated)
 		go mail.AddContactToList(user)
 		go mail.SendWelcomeEmail(input.Email)
+
 	}
 }
 
@@ -124,12 +125,13 @@ func (h *UserRoutes) Login(c *gin.Context) {
 	}
 
 	jwtToken, err := service.LoginUser(input.Email, input.Password)
-	if err != nil {
-		c.Status(http.StatusBadRequest)
-	} else {
+	if err == nil {
 		c.Header("authorization", jwtToken)
 		writeAuthenticationCookie(c, jwtToken)
 		c.Status(http.StatusOK)
+
+	} else {
+		c.Status(http.StatusBadRequest)
 	}
 }
 
