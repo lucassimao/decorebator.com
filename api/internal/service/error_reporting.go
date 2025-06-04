@@ -8,17 +8,17 @@ import (
 	"decorebator.com/internal/common"
 )
 
-type ErrorType string
+type ErrorReportType string
 
 const (
-	UnrelatedImage   ErrorType = "_unrelated_image"
-	MissingImage     ErrorType = "_missing_image"
-	UnrelatedMeaning ErrorType = "_unrelated_meaning"
-	UnrelatedExample ErrorType = "_unrelated_example"
-	SoundNotPlaying  ErrorType = "_sound_not_playing"
+	UnrelatedImage   ErrorReportType = "_unrelated_image"
+	MissingImage     ErrorReportType = "_missing_image"
+	UnrelatedMeaning ErrorReportType = "_unrelated_meaning"
+	UnrelatedExample ErrorReportType = "_unrelated_example"
+	SoundNotPlaying  ErrorReportType = "_sound_not_playing"
 )
 
-func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64, ctx context.Context) error {
+func ReportError(errorType ErrorReportType, quiz Quiz, userId int64, ctx context.Context) error {
 	logger := common.Logger.With("errorType", errorType, "quiz", quiz, "userId", userId)
 
 	isValid, err := IsValidWordDefinition(quiz.WordID, quiz.DefinitionID, userId)
@@ -29,8 +29,6 @@ func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64, ctx context.C
 		}
 		return errors.New("validation failed")
 	}
-
-	success := false
 
 	db, err := common.GetDBConnection()
 	if err != nil {
@@ -49,36 +47,52 @@ func SaveErrorReport(errorType ErrorType, quiz Quiz, userId int64, ctx context.C
 		}
 	}()
 
+	var report ErrorReport
+
 	switch errorType {
 	case SoundNotPlaying:
-		_, err = TriggerTextToSpeechWorker(quiz.WordID, &tx)
+		report = ErrorReport{WordId: &quiz.WordID, UserId: userId}
+		_, err = TriggerTextToSpeechWorker(quiz.WordID, &report, &tx)
 
 	case UnrelatedImage, MissingImage:
-		// default to the longest example
-		_, err = TriggerGenerateImageWorker(quiz.DefinitionID, "", &tx)
+		report = ErrorReport{DefinitionId: &quiz.DefinitionID, UserId: userId}
+		_, err = TriggerGenerateImageWorker(quiz.DefinitionID, "", &report, &tx)
+
 	case UnrelatedExample, UnrelatedMeaning:
-		err := DeleteWordDefinitions(quiz.WordID, tx)
+		err = DeleteWordDefinitions(quiz.WordID, tx)
 		if err == nil {
-			_, err = TriggerFetchDefinitionWorker(quiz.WordID, tx)
+			report = ErrorReport{WordId: &quiz.WordID, UserId: userId}
+			_, err = TriggerFetchDefinitionWorker(quiz.WordID, &report, tx)
 		}
 	default:
-		return fmt.Errorf("invalid error type %s", errorType)
+		err = fmt.Errorf("invalid error type %s", errorType)
 	}
 
-	success = (err == nil)
-
-	// marking the quiz as failed
-	var strategy LeitnerSystemStrategy
-	err = strategy.SaveQuizResult(quiz.ID, false, &tx)
-
 	if err != nil {
-		common.Logger.Error("failed to flag quiz as failed", "error", err)
+		common.Logger.Error("failed to trigger jobs", "error", err)
 		return err
 	}
 
-	_, err = tx.Exec(context.Background(), `INSERT into 
-				error_reports (is_resolved,error_type,quiz,user_id) 
-				VALUES($1,$2,$3,$4)`, success, errorType, quiz, userId)
+	// marking the definition temporarily as unavailable
+	var strategy LeitnerSystemStrategy
+	err = strategy.ReportError(userId, report, tx, ctx)
+
+	if err != nil {
+		common.Logger.Error("failed to report error", "error", err)
+		return err
+	}
+
+	// Insert error report
+	_, err = tx.Exec(ctx, `
+		INSERT INTO error_reports 
+		(user_id, definition_id,word_id, error_type, reported_at, status) 
+		VALUES ($1, $2, $3, $4, NOW(), 'pending')
+		ON CONFLICT (user_id, definition_id, word_id) 
+		DO UPDATE SET 
+			error_type = EXCLUDED.error_type,
+			reported_at = NOW(),
+			status = 'pending'`,
+		userId, quiz.DefinitionID, quiz.WordID, string(errorType))
 
 	if err != nil {
 		common.Logger.Error("failed to save error report", "error", err)

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"decorebator.com/internal/common"
-	"decorebator.com/internal/model"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -24,17 +23,7 @@ func NewAnalyticsService() (*AnalyticsService, error) {
 }
 
 // QuizResult contains the data needed to track quiz performance
-type QuizResult struct {
-	UserID                  int64
-	WordlistID              int64
-	WordID                  int64
-	DefinitionID            int64
-	LeitnerSystemTrackingID int64
-	QuizType                model.QuizType
-	BoxID                   int64
-	IsCorrect               bool
-	ResponseTimeMs          int
-}
+type QuizResult = common.QuizResult
 
 // TrackQuizPerformance records the result of a quiz attempt
 func (as *AnalyticsService) TrackQuizPerformance(ctx context.Context, result QuizResult, tx pgx.Tx) error {

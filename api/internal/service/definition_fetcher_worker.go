@@ -10,7 +10,8 @@ import (
 )
 
 type DefinitionFetcherArgs struct {
-	WordId int64 `json:"wordId"`
+	WordId      int64        `json:"wordId"`
+	ErrorReport *ErrorReport `json:"errorReport"`
 }
 
 func (DefinitionFetcherArgs) Kind() string { return "DefinitionFetcher" }
@@ -69,14 +70,19 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	for _, definition := range definitions {
 		definitionIds = append(definitionIds, definition.ID)
 
-		_, err = TriggerGenerateImageWorker(definition.ID, "", &tx)
+		_, err = TriggerGenerateImageWorker(definition.ID, "", nil, &tx)
 
 		if err != nil {
 			logger.Error("failed to trigger image generator", "definitionId", definition.ID, "error", err)
 		}
 	}
-	quizStrategy := LeitnerSystemStrategy{}
-	quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
+	strategy := LeitnerSystemStrategy{}
+	strategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
+
+	// if this job was triggered by an error report, then mark the issue as solved
+	if job.Args.ErrorReport != nil {
+		return strategy.MarkErrorResolved(*job.Args.ErrorReport)
+	}
 
 	logger.Info("definitions fetched", "count", len(definitions))
 	return nil

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -31,8 +32,13 @@ func (h *QuizRoutes) Create(c *gin.Context) {
 }
 
 type SaveInput struct {
-	Success bool  `json:"success"`
-	Id      int64 `json:"id"`
+	WordlistID              int64  `json:"wordlistID" binding:"required"`
+	WordID                  int64  `json:"wordID" binding:"required"`
+	DefinitionID            int64  `json:"definitionID" binding:"required"`
+	LeitnerSystemTrackingID int64  `json:"leitnerSystemTrackingID" binding:"required"`
+	QuizType                string `json:"quizType" binding:"required"`
+	IsCorrect               bool   `json:"isCorrect" binding:"required"`
+	ResponseTimeMs          int    `json:"responseTimeMs" binding:"required"`
 }
 
 // Save if the users answered correctly or not
@@ -45,7 +51,18 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 		return
 	}
 
-	var err = strategy.SaveQuizResult(input.Id, input.Success, nil)
+	userId := c.GetInt64("userID")
+
+	var err = strategy.SaveQuizResult(common.QuizResult{
+		WordlistID:              input.WordlistID,
+		WordID:                  input.WordID,
+		DefinitionID:            input.DefinitionID,
+		LeitnerSystemTrackingID: input.LeitnerSystemTrackingID,
+		QuizType:                model.QuizType(input.QuizType),
+		IsCorrect:               input.IsCorrect,
+		UserID:                  userId,
+		ResponseTimeMs:          input.ResponseTimeMs,
+	}, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

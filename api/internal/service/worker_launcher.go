@@ -10,7 +10,7 @@ import (
 	"github.com/riverqueue/river/rivertype"
 )
 
-func TriggerGenerateImageWorker(definitionId int64, customPrompt string, tx *pgx.Tx) (int64, error) {
+func TriggerGenerateImageWorker(definitionId int64, customPrompt string, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: IMAGE_GENERATOR_QUEUE,
 	}
@@ -18,26 +18,29 @@ func TriggerGenerateImageWorker(definitionId int64, customPrompt string, tx *pgx
 	return triggerWorker(&opts, ImageGeneratorArgs{
 		DefinitionId: definitionId,
 		CustomPrompt: customPrompt,
+		ErrorReport:  errorReport,
 	}, tx)
 }
 
-func TriggerTextToSpeechWorker(wordId int64, tx *pgx.Tx) (int64, error) {
+func TriggerTextToSpeechWorker(wordId int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: TEXT_TO_SPEECH_QUEUE,
 	}
 
 	return triggerWorker(&opts, TextToSpeechArgs{
-		WordId: wordId,
+		WordId:      wordId,
+		ErrorReport: errorReport,
 	}, tx)
 }
 
-func TriggerFetchDefinitionWorker(wordId int64, tx pgx.Tx) (int64, error) {
+func TriggerFetchDefinitionWorker(wordId int64, errorReport *ErrorReport, tx pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: DEFINITION_FETCHER_QUEUE,
 	}
 
 	return triggerWorker(&opts, DefinitionFetcherArgs{
-		WordId: wordId,
+		WordId:      wordId,
+		ErrorReport: errorReport,
 	}, &tx)
 }
 

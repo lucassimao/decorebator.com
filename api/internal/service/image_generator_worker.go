@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"regexp"
@@ -17,8 +16,10 @@ import (
 )
 
 type ImageGeneratorArgs struct {
-	DefinitionId int64  `json:"definitionId"`
-	CustomPrompt string `json:"customPrompt"`
+	DefinitionId int64        `json:"definitionId"`
+	UserId       *int64       `json:"userId"`
+	CustomPrompt string       `json:"customPrompt"`
+	ErrorReport  *ErrorReport `json:"errorReport"`
 }
 
 func (ImageGeneratorArgs) Kind() string { return "ImageGenerator" }
@@ -30,26 +31,21 @@ type ImageGeneratorWorker struct {
 func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGeneratorArgs]) error {
 	var logger = common.Logger.With("worker", "imagegenerator")
 
-	var prompt string
-	var definitionID = job.Args.DefinitionId
-	var longestExample string
+	var (
+		prompt, longestExample string
+		definitionID           = job.Args.DefinitionId
+	)
+
+	definition, err := GetDefinitionById(job.Args.DefinitionId)
+	if err != nil {
+		logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
+		return river.JobCancel(err)
+	}
 
 	if job.Args.CustomPrompt != "" {
 		prompt = job.Args.CustomPrompt
 		longestExample = job.Args.CustomPrompt
 	} else {
-		definition, err := GetDefinitionById(job.Args.DefinitionId)
-		if err != nil {
-
-			if errors.Is(err, &common.NotFoundError{}) {
-				logger.Error("skipping image generation: inexisting definition", "definitionId", job.Args.DefinitionId)
-				return nil
-			}
-
-			logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
-			return err
-		}
-
 		longestExample = ""
 		// using the longest example as the image description
 		for _, item := range definition.Examples {
@@ -104,7 +100,17 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		DefinitionId: definitionID,
 	})
 
-	return err
+	if err != nil {
+		logger.Error("failed to save definition image", "err", err)
+		return err
+	}
+
+	// if this job was triggered by an error report, then mark the issue as solved
+	if job.Args.ErrorReport != nil {
+		var strategy LeitnerSystemStrategy
+		return strategy.MarkErrorResolved(*job.Args.ErrorReport)
+	}
+	return nil
 }
 
 func generateWithOpenAI(prompt string) ([]byte, error) {

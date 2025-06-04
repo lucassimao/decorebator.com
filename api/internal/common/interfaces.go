@@ -5,8 +5,20 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+type QuizResult struct {
+	UserID                  int64
+	WordlistID              int64
+	WordID                  int64
+	DefinitionID            int64
+	LeitnerSystemTrackingID int64
+	QuizType                model.QuizType
+	BoxID                   int64
+	IsCorrect               bool
+	ResponseTimeMs          int
+}
+
 type SpacedRepetitionStrategy interface {
 	CreateQuiz(wordlistID, userID int64) (*model.Quiz, error)
-	SaveQuizResult(id int64, success bool, tx *pgx.Tx) error
+	SaveQuizResult(result QuizResult, tx *pgx.Tx) error
 	IncludeDefinitions(wordId, userId int64, definitionIds []int64, tx pgx.Tx) error
 }

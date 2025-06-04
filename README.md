@@ -8,10 +8,12 @@ Decorebator is a comprehensive vocabulary learning application that uses AI-powe
 - **Build Vocabulary Lists**: Create and manage multiple wordlists for any language
 - **AI-Powered Enrichment**: Automatically generates definitions, images, audio pronunciations, and example sentences
 - **Multiple Quiz Modes**:
-  - Word ↔ Meaning matching
-  - Visual word association (identify words from images)
-  - Audio comprehension (guess words from pronunciation)
-  - Contextual learning (complete sentences)
+  - **Guess Meaning**: Choose the correct meaning for a given word
+  - **Word from Meaning**: Select the word that matches a given definition
+  - **Word from Image**: Identify words from AI-generated visual associations
+  - **Audio Comprehension**: Recognize words and meanings from pronunciation
+  - **Sentence Completion**: Complete sentences with the correct word
+  - **Write from Definition**: Type the word based on its meaning (active recall)
 - **Spaced Repetition**: Uses the Leitner system to optimize learning retention
 - **Progress Tracking**: Monitor your learning journey with detailed statistics
 
@@ -22,12 +24,13 @@ Decorebator is a comprehensive vocabulary learning application that uses AI-powe
   - Basic quiz modes
 - **Premium Plans**:
   - **Monthly**: $6.99/month
-  - **Annual**: $69.9/year (save $13.98)
+  - **Annual**: $69.90/year (save $13.98)
   - Unlimited wordlists
   - Unlimited words
   - All quiz modes
+  - AI-powered content generation
+  - Analytics and progress tracking
   - Priority support
-  - Early access to features
 
 ## 🏗️ Architecture Overview
 
@@ -41,12 +44,14 @@ Located in `/api`, the backend follows a 3-tier layered architecture:
 
 **Key Technologies**:
 - Go with Gin web framework
-- PostgreSQL database with pgx driver
-- River queue system for background jobs
+- PostgreSQL 15+ database with pgx/v5 driver and materialized views
+- River queue system for background jobs with PostgreSQL backend
 - MinIO for S3-compatible object storage
 - SendGrid for email services
-- OpenAI API for AI features
-- Stripe for subscription payments
+- OpenAI API for AI features (DALL-E, TTS, GPT)
+- Stripe for subscription payments with webhook integration
+- Sentry for error monitoring and logging
+- Structured logging with slog
 
 ### 2. Mobile Application (React Native/Expo)
 Located in `/mobile`, cross-platform mobile app with:
@@ -226,27 +231,34 @@ npm run lint          # Run linter
 ## 📊 Database Schema
 
 Key tables:
-- `users`: User accounts, authentication, and subscription status
-- `subscriptions`: Subscription history and details
+- `users`: User accounts, authentication, subscription status, and profile data (profile picture, country, date of birth, preferred language)
+- `subscriptions`: Subscription history and details with Stripe integration
 - `subscription_events`: Stripe webhook event audit trail & email notification tracking
-- `wordlists`: User's vocabulary lists
-- `words`: Individual words in wordlists
-- `definitions`: AI-generated definitions with multimedia
+- `wordlists`: User's vocabulary lists with language field and word counts
+- `words`: Individual words in wordlists with audio URLs and learning status
+- `definitions`: AI-generated definitions with multimedia, sources, and example sentences
 - `definition_images`: Images associated with definitions
-- `leitner_system_tracking`: Spaced repetition progress
-- `leitner_system_history`: Learning history
+- `leitner_system_tracking`: Spaced repetition progress with temporary skip functionality
+- `leitner_system_history`: Learning history with success tracking and quiz types
+- `error_reports`: User-reported errors for definitions and AI-generated content
+- `quiz_performance`: Individual quiz attempts with performance metrics
+- `word_mastery`: Overall mastery tracking for each word per user
+- `learning_progress`: Daily aggregated learning statistics
+- `quiz_type_analytics`: Performance metrics grouped by quiz type
+- `box_distribution_snapshot`: Daily snapshots of word distribution across Leitner boxes
 - `river_job`: Background job queue
 
 ## 💳 Subscription System
 
 ### Features
-- **Stripe Integration**: Secure payment processing
-- **Flexible Plans**: Monthly ($12) and Annual ($100) subscriptions
-- **Free Trial**: 7-day trial for new subscribers
-- **Automatic Limits**: Enforced at API level
-- **Webhook Processing**: Real-time subscription updates
+- **Stripe Integration**: Secure payment processing with webhook event tracking
+- **Flexible Plans**: Monthly ($6.99) and Annual ($69.90) subscriptions
+- **Free Plan**: 1 wordlist with 10 words maximum
+- **Automatic Limits**: Enforced at API level with subscription-aware middleware
+- **Webhook Processing**: Real-time subscription updates with event deduplication
 - **Seamless Activation**: Automatic session refresh after checkout
 - **Instant Access**: Premium features unlock immediately upon payment
+- **Customer Management**: Automatic Stripe customer creation and tracking
 
 ### Subscription Limits
 Free users are limited to:
@@ -269,9 +281,13 @@ Premium users get:
    - `customer.subscription.deleted`
    - `invoice.payment_succeeded`
    - `invoice.payment_failed`
-4. Set redirect URLs in environment variables:
-   - Success URL: `https://yourapp.com/subscription?status=success`
-   - Cancel URL: `https://yourapp.com/subscription?status=cancel`
+4. Set environment variables:
+   - `STRIPE_API_KEY`: Your secret API key
+   - `STRIPE_WEBHOOK_SECRET`: Webhook endpoint secret for verification
+   - `STRIPE_PRICE_ID_MONTHLY`: Price ID for monthly plan
+   - `STRIPE_PRICE_ID_ANNUAL`: Price ID for annual plan
+   - `STRIPE_SUCCESS_URL`: Success redirect URL
+   - `STRIPE_CANCEL_URL`: Cancel redirect URL
 
 ### Subscription Flow
 1. User initiates checkout from mobile app
@@ -310,8 +326,127 @@ Workers can be scaled independently with configurable concurrency:
 - Definition Fetcher: Max 50 workers
 - Subscription Reminder: Max 10 workers
 
-The system also includes periodic jobs:
+The system includes periodic jobs:
 - **Daily Renewal Reminder Check**: Runs daily to identify subscriptions renewing in 3-4 days
+- Worker processes include error reporting and retry logic for failed AI generations
+
+### Queue Management
+- River-based PostgreSQL queue system with transaction safety
+- Job retry logic with exponential backoff
+- Queue-specific worker limits for optimal resource usage
+- Background job monitoring and error handling
+
+## 📊 Analytics & Performance Tracking
+
+The system includes comprehensive analytics for tracking learning progress:
+
+### Learning Analytics
+- **Word Mastery Tracking**: Individual word mastery levels with streak counting
+- **Daily Progress**: Aggregated daily learning statistics per wordlist
+- **Quiz Performance**: Performance metrics by quiz type (word meaning, visual, audio, contextual)
+- **Box Distribution**: Historical snapshots of word distribution across Leitner boxes
+- **Response Time Analysis**: Tracks average response times for performance optimization
+
+### Analytics Features
+- Real-time mastery calculation with accuracy rates
+- Materialized views for optimized query performance
+- Historical trend analysis for learning progress
+- Dashboard statistics with comprehensive user metrics
+- Automated analytics updates triggered by quiz completion
+
+### Error Reporting System
+- User-reported error tracking for AI-generated content
+- Temporary skip functionality for problematic definitions
+- Error resolution workflow with status tracking
+- Automatic retry mechanisms for failed AI generations
+
+## 🧠 Leitner System for Spaced Repetition
+
+Decorebator implements a sophisticated Leitner system for optimal vocabulary retention through spaced repetition.
+
+### How the Leitner System Works
+
+The system uses **7 boxes** with increasing review intervals:
+
+| Box | Review Interval | Purpose |
+|-----|----------------|---------|
+| **Box 1** | Immediate | New words, failed reviews |
+| **Box 2** | 1 hour | Recent learning |
+| **Box 3** | 1 day | Short-term retention |
+| **Box 4** | 3 days | Medium-term retention |
+| **Box 5** | 1 week | Long-term retention |
+| **Box 6** | 2 weeks | Extended retention |
+| **Box 7** | 1 month | Mastered words |
+
+### Progression Rules
+- **Correct Answer**: Word moves to the next box (up to Box 7)
+- **Incorrect Answer**: Word resets to Box 1 regardless of current box
+- **Box 7**: Words stay in Box 7 when answered correctly (mastered state)
+
+### Quiz Type Progression
+
+Different quiz types are introduced based on the word's box level to increase difficulty:
+
+| Box | Quiz Types | Learning Focus |
+|-----|------------|----------------|
+| **1** | Guess Meaning | Basic recognition |
+| **2** | Word from Meaning | Basic recall |
+| **3** | Word from Image, Guess Meaning | Visual association |
+| **4** | Complete Sentence, Word from Meaning | Contextual understanding |
+| **5** | Write Word from Definition, Complete Sentence | Active recall |
+| **6** | Word from Audio, Write Word from Definition | Audio recognition |
+| **7** | Meaning from Audio, Word from Audio | Advanced audio comprehension |
+
+### Intelligent Quiz Selection
+
+The system dynamically selects appropriate quiz types based on available content:
+
+- **Audio Quizzes**: Only shown if audio URL is available
+- **Image Quizzes**: Only shown if definition has associated images
+- **Sentence Completion**: Only shown if examples with brackets `[word]` exist
+- **Fallback**: Always falls back to basic "Guess Meaning" if specialized content unavailable
+
+### Quiz Generation Algorithm
+
+1. **Due Definition Selection**: 
+   - Prioritizes definitions that are due for review based on box intervals
+   - Orders by box level (lower boxes first) then by oldest review time
+   - Excludes temporarily skipped definitions (error reporting system)
+
+2. **Quiz Type Selection**:
+   - Randomly selects from available quiz types for the word's current box
+   - Validates content availability (audio, images, examples)
+   - Ensures quiz can be properly generated with sufficient options
+
+3. **Multiple Choice Generation**:
+   - Generates 3 distractor options from definitions with same part of speech
+   - Excludes words from the same root/family to avoid confusion
+   - Filters options by length (< 50 characters) for readability
+   - Randomizes answer position within options
+
+### Error Reporting Integration
+
+- **Temporary Skip**: Problematic definitions are skipped for 1 hour when errors reported
+- **Error Resolution**: Once errors are resolved, definitions return to normal rotation
+- **Content Quality**: Ensures users aren't repeatedly shown faulty AI-generated content
+
+### Analytics Integration
+
+The Leitner system feeds into comprehensive analytics:
+
+- **Word Mastery Calculation**: Based on box progression and accuracy
+- **Learning Progress Tracking**: Daily statistics per wordlist
+- **Response Time Analysis**: Tracks improvement over time
+- **Box Distribution**: Historical snapshots of learning progress
+
+### Advanced Features
+
+- **Smart Fallback**: When no due definitions exist, selects oldest reviewed definitions
+- **Transaction Safety**: All quiz results and box updates are atomic operations
+- **Content Validation**: Ensures definitions have required content before quiz generation
+- **Performance Optimization**: Uses efficient SQL queries with proper indexing
+
+This implementation ensures optimal learning efficiency by presenting words at scientifically-backed intervals while adapting to individual learning patterns and content availability.
 
 ## 🔐 Security
 
@@ -356,23 +491,26 @@ npm start
 ## 🔌 API Endpoints
 
 ### Authentication
-- `POST /users` - Create new account
-- `POST /login` - User login
+- `POST /users` - Create new account with validation
+- `POST /login` - User login with JWT token
 - `GET /logout` - User logout
 - `POST /password/send-reset-email` - Request password reset
-- `PATCH /password/reset` - Reset password
-- `POST /auth/refresh` - Refresh JWT with updated user data
+- `PATCH /password/reset` - Reset password with token
+- `GET /users` - Get user profile (authenticated)
+- `PATCH /users` - Update user profile (authenticated)
+- `DELETE /users` - Delete user account (authenticated)
 
 ### Subscription Management
 - `POST /subscription/checkout-session` - Create Stripe checkout session
-- `POST /subscription/checkout-redirect` - Handle Stripe checkout redirects
+- `GET /subscription/checkout-redirect` - Handle Stripe checkout redirects
 - `GET /subscription/status` - Get current subscription status
-- `POST /subscription/cancel` - Cancel subscription
+- `POST /subscription/cancel` - Cancel subscription at period end
 - `GET /subscription/history` - View subscription history
-- `POST /webhook/stripe` - Stripe webhook handler (no auth)
+- `POST /webhook/stripe` - Stripe webhook handler (no auth required)
 
 ### Wordlists & Words
-- `GET /wordlists` - Get user's wordlists
+- `GET /wordlists` - Get user's wordlists with stats
+- `GET /wordlists/stats` - Get user's wordlist statistics
 - `POST /wordlists` - Create new wordlist (subscription check)
 - `GET /wordlists/:id` - Get specific wordlist
 - `PUT /wordlists/:id` - Update wordlist
@@ -383,8 +521,23 @@ npm start
 - `DELETE /wordlists/:id/words/:wordId` - Delete word
 
 ### Quiz & Learning
-- `POST /wordlists/:id/quizzes` - Create new quiz
-- `PATCH /wordlists/:id/quizzes` - Save quiz progress
+- `POST /wordlists/:id/quizzes` - Create new quiz with Leitner system
+- `PATCH /wordlists/:id/quizzes` - Save quiz progress and performance
+
+### Analytics
+- `GET /analytics/wordlists/:id/mastery` - Word mastery statistics
+- `GET /analytics/wordlists/:id/progress` - Learning progress (daily)
+- `GET /analytics/wordlists/:id/distribution` - Box distribution history
+- `GET /analytics/quiz-performance` - Quiz type performance stats
+- `GET /analytics/dashboard` - Overall dashboard statistics
+
+### Error Reporting
+- `POST /errorReports` - Report errors in AI-generated content
+
+### Worker Management (Static Authentication)
+- `POST /static/workers/imageGenerator/:definitionId` - Trigger image generation
+- `POST /static/workers/textToAudio/:wordId` - Trigger audio generation
+- `POST /static/workers/retry/:jobId` - Retry failed job
 
 ## 🤝 Contributing
 

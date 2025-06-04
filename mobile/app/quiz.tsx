@@ -8,7 +8,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -47,6 +47,7 @@ const QuizScreen: React.FC = () => {
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [userInput, setUserInput] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const quizDisplayedAtRef = useRef(0);
 
   // Reset player
   useEffect(() => {
@@ -67,8 +68,12 @@ const QuizScreen: React.FC = () => {
     retry: isOnline ? 3 : 0, // Don't retry in offline mode
   });
 
-  console.log(quiz);
-  
+  useEffect(()=>{
+    if (quiz?.id){
+            quizDisplayedAtRef.current = Date.now();
+    }
+  },[quiz?.id])
+
 
   // handle image changes
   useEffect(() => {
@@ -81,7 +86,15 @@ const QuizScreen: React.FC = () => {
   // Answer mutation
   const answerMutation = useMutation<void, Error, { success: boolean }>({
     mutationFn: ({ success }) =>
-      offlineQuizApi.answerQuiz(Number(wordlistId), quiz!.id, success),
+      offlineQuizApi.answerQuiz({
+        definitionID: quiz!.definitionId,
+        isCorrect: !!success,
+        leitnerSystemTrackingID: quiz!.id,
+        quizType: quiz!.type,
+        responseTimeMs: Date.now() - quizDisplayedAtRef.current,
+        wordID: quiz!.wordId,
+        wordlistID: Number(wordlistId)
+      }),
     onSuccess: () => {
       if (fastMode) {
         // Auto advance in fast mode

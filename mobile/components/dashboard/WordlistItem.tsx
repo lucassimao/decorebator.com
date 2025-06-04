@@ -91,6 +91,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
       onQuizStart(item);
     } else {
       router.push(`/quiz?wordlistId=${item.id}&wordlistName=${item.name}`);
+      // router.push(`/analytics?wordlistId=${item.id}`);
     }
   };
 

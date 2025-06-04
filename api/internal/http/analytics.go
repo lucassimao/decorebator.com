@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"decorebator.com/internal/common"
-	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -194,51 +193,4 @@ func getDashboardStats(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"stats": stats,
 	})
-}
-
-// Update the quiz handler to include analytics
-func saveQuizResultWithAnalytics(c *gin.Context) {
-	var req struct {
-		LeitnerSystemTrackingID int64  `json:"leitner_system_tracking_id" binding:"required"`
-		Success                 bool   `json:"success"`
-		ResponseTimeMs          int    `json:"response_time_ms"`
-		QuizType                string `json:"quiz_type" binding:"required"`
-		WordID                  int64  `json:"word_id" binding:"required"`
-		DefinitionID            int64  `json:"definition_id" binding:"required"`
-		WordlistID              int64  `json:"wordlist_id" binding:"required"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	userID := c.GetInt64("user_id")
-
-	// Create quiz result for analytics
-	quizResult := service.QuizResult{
-		UserID:                  userID,
-		WordlistID:              req.WordlistID,
-		WordID:                  req.WordID,
-		DefinitionID:            req.DefinitionID,
-		LeitnerSystemTrackingID: req.LeitnerSystemTrackingID,
-		QuizType:                model.QuizType(req.QuizType),
-		IsCorrect:               req.Success,
-		ResponseTimeMs:          req.ResponseTimeMs,
-	}
-
-	strategy := service.LeitnerSystemStrategy{}
-	err := strategy.SaveQuizResultWithAnalytics(
-		req.LeitnerSystemTrackingID,
-		req.Success,
-		quizResult,
-		nil,
-	)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save quiz result"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"success": true})
 }

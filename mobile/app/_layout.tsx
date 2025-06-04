@@ -64,10 +64,11 @@ function RootLayoutNav() {
           <UpgradePromptDialogProvider>
             <PostHogProvider
               apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
-              options={{ host: "https://us.i.posthog.com" }}
+              options={{ host: "https://us.i.posthog.com",disabled: __DEV__ }}
             >
               <Stack>
                 <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="analytics" options={{ headerShown: false }} />
                 <Stack.Screen name="signup" options={{ headerShown: false }} />
                 <Stack.Screen name="quiz" options={{ headerShown: false }} />
                 <Stack.Screen name="signin" options={{ headerShown: false }} />

@@ -34,9 +34,7 @@ export async function newQuiz(wordlistId: number): Promise<wordlistsApi.Quiz> {
 }
 
 export async function answerQuiz(
-  wordlistId: number,
-  quizId: number,
-  success: boolean,
+  input: wordlistsApi.AnswerQuizInput
 ): Promise<void> {
   const isOnline = offlineManager.getNetworkStatus();
 
@@ -46,5 +44,5 @@ export async function answerQuiz(
     return;
   }
 
-  return wordlistsApi.answerQuiz(wordlistId, quizId, success);
+  return wordlistsApi.answerQuiz(input);
 }

@@ -12,6 +12,8 @@ import {
 import { useTranslation } from "react-i18next";
 
 import * as wordlistsApi from "@/api/wordlists";
+import { useUserInfo } from "@/hooks/users";
+import { useRouter } from "expo-router";
 
 // Animated Counter Component
 interface AnimatedCounterProps {
@@ -52,16 +54,20 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
 
 // Main Component
 type DashboardStatsProps = {
-  onStatsPress?: () => void;
+  onUpgradePress?: () => void;
 };
 
 const PROGRESS_OVERVIEW_ENABLED = false;
 
-const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
+const DashboardStats: React.FC<DashboardStatsProps> = ({ 
+  onUpgradePress 
+}) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const { t } = useTranslation();
-
+  const { isPremium } = useUserInfo();
+    const router = useRouter();
+  
   const {
     data: stats,
     isLoading,
@@ -96,6 +102,10 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
     if (!stats || stats.totalWords === 0) return 0;
     return Math.round((stats.wordsLearned / stats.totalWords) * 100);
   };
+
+  const onStatsPress = () =>{
+      // router.push(`/analytics?wordlistId=${item.id}`);
+  }
 
   const getMotivationalMessage = () => {
     const progress = getProgressPercentage();
@@ -140,9 +150,9 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
       style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
     >
       <TouchableOpacity
-        onPress={onStatsPress}
-        activeOpacity={0.9}
-        disabled={!onStatsPress}
+        onPress={isPremium ? onStatsPress : undefined}
+        activeOpacity={isPremium ? 0.9 : 1}
+        disabled={!isPremium}
       >
         <LinearGradient
           colors={["rgba(255, 255, 255, 0.9)", "rgba(255, 255, 255, 0.7)"]}
@@ -249,6 +259,56 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onStatsPress }) => {
               />
             </View>
           </View>
+
+          {/* Premium Analytics Upsell */}
+          {!isPremium && (
+            <TouchableOpacity
+              style={styles.premiumUpsellContainer}
+              onPress={onUpgradePress}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={["#FFD700", "#FFA500"]}
+                style={styles.premiumGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <View style={styles.premiumContent}>
+                  <View style={styles.premiumLeft}>
+                    <View style={styles.premiumIconContainer}>
+                      <MaterialIcons name="analytics" size={20} color="#FFF" />
+                    </View>
+                    <View style={styles.premiumTextContainer}>
+                      <Text style={styles.premiumTitle}>
+                        {t("dashboard.stats.premium.title")}
+                      </Text>
+                      <Text style={styles.premiumSubtitle}>
+                        {t("dashboard.stats.premium.subtitle")}
+                      </Text>
+                    </View>
+                  </View>
+                  <MaterialIcons name="chevron-right" size={24} color="#FFF" />
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
+          {/* Premium Analytics Access Indicator */}
+          {isPremium && (
+            <TouchableOpacity
+              style={styles.analyticsAccessContainer}
+              onPress={onStatsPress}
+              activeOpacity={0.8}
+            >
+              <View style={styles.analyticsAccessContent}>
+                <MaterialIcons name="analytics" size={20} color="#FFD700" />
+                <Text style={styles.analyticsAccessText}>
+                  {t("dashboard.stats.premium.viewAnalytics")}
+                </Text>
+                <MaterialIcons name="chevron-right" size={20} color="#636E72" />
+              </View>
+            </TouchableOpacity>
+          )}
         </LinearGradient>
       </TouchableOpacity>
     </Animated.View>
@@ -362,7 +422,6 @@ const styles = StyleSheet.create({
   motivationalText: {
     fontSize: 13,
     color: "#636E72",
-
     fontStyle: "italic",
   },
   statsGrid: {
@@ -410,15 +469,75 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    // marginTop: 16,
-    // paddingTop: 16,
-    // borderTopWidth: 1,
-    // borderTopColor: "#F0F0F0",
-    // gap: 6,
   },
   streakText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#FF6B3D",
+  },
+  // Premium Upsell Styles
+  premiumUpsellContainer: {
+    marginTop: 16,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  premiumGradient: {
+    padding: 1,
+    borderRadius: 12,
+  },
+  premiumContent: {
+    backgroundColor: "rgba(255, 215, 0, 0.1)",
+    borderRadius: 11,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  premiumLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  premiumIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FFD700",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  premiumTextContainer: {
+    flex: 1,
+  },
+  premiumTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#2D3436",
+    marginBottom: 2,
+  },
+  premiumSubtitle: {
+    fontSize: 13,
+    color: "#636E72",
+  },
+  // Analytics Access Styles (for premium users)
+  analyticsAccessContainer: {
+    marginTop: 16,
+    backgroundColor: "rgba(255, 215, 0, 0.1)",
+    borderRadius: 12,
+    padding: 12,
+  },
+  analyticsAccessContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  analyticsAccessText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#636E72",
+    flex: 1,
+    textAlign: "center",
   },
 });

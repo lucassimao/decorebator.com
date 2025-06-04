@@ -32,7 +32,7 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 		return
 	}
 
-	jobId, err := service.TriggerGenerateImageWorker(definitionId, input.Prompt, nil)
+	jobId, err := service.TriggerGenerateImageWorker(definitionId, input.Prompt, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "definitionId": definitionId})
@@ -50,7 +50,7 @@ func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
 		return
 	}
 
-	jobId, err := service.TriggerTextToSpeechWorker(wordId, nil)
+	jobId, err := service.TriggerTextToSpeechWorker(wordId, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordId})

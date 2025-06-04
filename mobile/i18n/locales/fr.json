@@ -84,25 +84,25 @@
       "evening": "Bonsoir"
     },
     "stats": {
-      "wordsLearned": "Mots Appris",
-      "streak": "Jours Consécutifs",
-      "accuracy": "Précision",
       "failedToLoad": "Échec du chargement des statistiques",
       "tapToRetry": "Appuyez pour réessayer",
-      "learningProgress": "Progression d'apprentissage",
-      "dayStreak": "{{count}} jour de série !",
-      "dayStreak_one": "{{count}} jour de série !",
-      "dayStreak_other": "{{count}} jours de série !",
+      "learningProgress": "Progrès d'Apprentissage",
       "totalWords": "Total de Mots",
       "wordlists": "Listes",
       "learned": "Appris",
+      "dayStreak": "{{count}} jours consécutifs",
       "progress": {
-        "ready": "Prêt à commencer à apprendre ! 🚀",
-        "greatStart": "Excellent début ! Continuez ainsi ! 💪",
-        "makingProgress": "Vous progressez ! 📈",
-        "halfwayThere": "Plus de la moitié du chemin ! 🎯",
-        "almostThere": "Presque arrivé ! Vous pouvez le faire ! 🔥",
-        "congratulations": "Félicitations ! 🎉"
+        "ready": "Prêt à commencer votre parcours d'apprentissage !",
+        "greatStart": "Excellent début ! Continuez !",
+        "makingProgress": "Vous faites d'excellents progrès !",
+        "halfwayThere": "À mi-chemin ! Vous vous en sortez très bien !",
+        "almostThere": "Presque là ! Encore un peu !",
+        "congratulations": "Félicitations ! Vous avez maîtrisé tous les mots !"
+      },
+      "premium": {
+        "title": "Débloquez les Analyses Détaillées",
+        "subtitle": "Suivez progrès, niveaux de maîtrise et plus",
+        "viewAnalytics": "Voir les Analyses Détaillées"
       }
     },
     "wordlists": {
@@ -418,5 +418,51 @@
     "startQuiz": "Démarrer le quiz",
     "editWordlist": "Modifier la liste",
     "deleteWordlist": "Supprimer la liste"
+  },
+    "analytics": {
+    "header": {
+      "title": "Analyse d'Apprentissage",
+      "subtitle": "Suivez vos progrès et votre maîtrise"
+    },
+    "stats": {
+      "wordsToday": "Mots Aujourd'hui",
+      "dayStreak": "Série de Jours",
+      "mastered": "Maîtrisés",
+      "accuracy": "Précision"
+    },
+    "charts": {
+      "wordMastery": {
+        "title": "Niveaux de Maîtrise",
+        "subtitle": "Vos meilleurs mots par maîtrise"
+      },
+      "progress": {
+        "title": "Progrès sur 7 Jours",
+        "subtitle": "Mots étudiés par jour"
+      },
+      "quizPerformance": {
+        "title": "Performance aux Quiz",
+        "subtitle": "Taux de réussite par type de quiz"
+      },
+      "topWords": {
+        "title": "Mots les Plus Maîtrisés",
+        "subtitle": "Vos mots les plus performants"
+      }
+    },
+    "empty": {
+      "noData": "Pas encore de données. Commencez à apprendre !",
+      "noProgress": "Pas encore de données de progrès",
+      "noQuizzes": "Complétez d'abord quelques quiz",
+      "noMastered": "Pas encore de mots maîtrisés"
+    },
+    "box": "Boîte {{number}}",
+    "quizTypes": {
+      "guess_meaning": "Deviner le Sens",
+      "word_from_meaning": "Mot par le Sens",
+      "word_from_image": "Mot par l'Image",
+      "complete_sentence": "Compléter la Phrase",
+      "write_word_from_definition": "Écrire le Mot",
+      "word_from_audio": "Mot par l'Audio",
+      "meaning_from_audio": "Sens par l'Audio"
+    }
   }
 }

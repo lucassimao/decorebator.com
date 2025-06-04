@@ -44,6 +44,8 @@ export type Quiz = {
   pos: string; // part of speech
   audioURL?: string; //only present in MeaningFromAudio, GUESS_MEANING and WordFromAudio quizes
   imageDescription: string;
+  definitionId:number
+  wordId:number
 };
 
 export type CreateWordDTO = Pick<Word, "wordlistId" | "name" | "notes">;
@@ -122,20 +124,18 @@ export async function newQuiz(wordlistId: number): Promise<Quiz> {
   return await callAPI<Quiz>("POST", endpoint);
 }
 
-export async function answerQuiz(
-  wordlistId: number,
-  quizId: number,
-  success: boolean,
-): Promise<void> {
+export type AnswerQuizInput = {
+  wordlistID: number;
+  wordID: number;
+  definitionID: number;
+  leitnerSystemTrackingID: number;
+  quizType: string;
+  isCorrect: boolean;
+  responseTimeMs: number;
+};
+export async function answerQuiz(input: AnswerQuizInput): Promise<void> {
   const endpoint =
-    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/quizzes`;
+    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${input.wordlistID}/quizzes`;
 
-  await callAPI<Quiz>(
-    "PATCH",
-    endpoint,
-    JSON.stringify({
-      id: quizId,
-      success,
-    }),
-  );
+  await callAPI<Quiz>("PATCH", endpoint, JSON.stringify(input));
 }

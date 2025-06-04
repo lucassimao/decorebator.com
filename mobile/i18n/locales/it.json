@@ -84,25 +84,25 @@
       "evening": "Buonasera"
     },
     "stats": {
-      "wordsLearned": "Parole Imparate",
-      "streak": "Giorni Consecutivi",
-      "accuracy": "Precisione",
       "failedToLoad": "Impossibile caricare le statistiche",
       "tapToRetry": "Tocca per riprovare",
-      "learningProgress": "Progresso di apprendimento",
-      "dayStreak": "{{count}} giorno di serie!",
-      "dayStreak_one": "{{count}} giorno di serie!",
-      "dayStreak_other": "{{count}} giorni di serie!",
+      "learningProgress": "Progresso di Apprendimento",
       "totalWords": "Parole Totali",
       "wordlists": "Liste",
-      "learned": "Apprese",
+      "learned": "Imparate",
+      "dayStreak": "{{count}} giorni consecutivi",
       "progress": {
-        "ready": "Pronto per iniziare a imparare! 🚀",
-        "greatStart": "Ottimo inizio! Continua così! 💪",
-        "makingProgress": "Stai facendo progressi! 📈",
-        "halfwayThere": "Più di metà strada! 🎯",
-        "almostThere": "Quasi arrivato! Ce la puoi fare! 🔥",
-        "congratulations": "Congratulazioni! 🎉"
+        "ready": "Pronto per iniziare il tuo percorso di apprendimento!",
+        "greatStart": "Ottimo inizio! Continua così!",
+        "makingProgress": "Stai facendo progressi eccellenti!",
+        "halfwayThere": "Sei a metà strada! Stai andando benissimo!",
+        "almostThere": "Ci sei quasi! Solo ancora un po'!",
+        "congratulations": "Congratulazioni! Hai padroneggiato tutte le parole!"
+      },
+      "premium": {
+        "title": "Sblocca Analisi Dettagliate",
+        "subtitle": "Monitora progressi, livelli di padronanza e altro",
+        "viewAnalytics": "Visualizza Analisi Dettagliate"
       }
     },
     "wordlists": {
@@ -418,5 +418,51 @@
     "startQuiz": "Inizia Quiz",
     "editWordlist": "Modifica Lista",
     "deleteWordlist": "Elimina Lista"
+  },
+    "analytics": {
+    "header": {
+      "title": "Analisi dell'Apprendimento",
+      "subtitle": "Monitora i tuoi progressi e la padronanza"
+    },
+    "stats": {
+      "wordsToday": "Parole Oggi",
+      "dayStreak": "Serie Giorni",
+      "mastered": "Padroneggiate",
+      "accuracy": "Precisione"
+    },
+    "charts": {
+      "wordMastery": {
+        "title": "Livelli di Padronanza",
+        "subtitle": "Le tue parole migliori per padronanza"
+      },
+      "progress": {
+        "title": "Progresso 7 Giorni",
+        "subtitle": "Parole studiate al giorno"
+      },
+      "quizPerformance": {
+        "title": "Prestazioni Quiz",
+        "subtitle": "Tasso di successo per tipo di quiz"
+      },
+      "topWords": {
+        "title": "Parole Più Padroneggiate",
+        "subtitle": "Le tue parole con migliori prestazioni"
+      }
+    },
+    "empty": {
+      "noData": "Ancora nessun dato. Inizia a imparare!",
+      "noProgress": "Ancora nessun dato di progresso",
+      "noQuizzes": "Completa prima alcuni quiz",
+      "noMastered": "Ancora nessuna parola padroneggiata"
+    },
+    "box": "Casella {{number}}",
+    "quizTypes": {
+      "guess_meaning": "Indovina Significato",
+      "word_from_meaning": "Parola dal Significato",
+      "word_from_image": "Parola dall'Immagine",
+      "complete_sentence": "Completa Frase",
+      "write_word_from_definition": "Scrivi Parola",
+      "word_from_audio": "Parola dall'Audio",
+      "meaning_from_audio": "Significato dall'Audio"
+    }
   }
 }

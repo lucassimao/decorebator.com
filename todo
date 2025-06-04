@@ -45,6 +45,8 @@
     [x] Fix % learned in the ItemUi
     [x] Support Stripe cupoms
     [ ] Try SaveQuizResultWithAnalytics and Add new stats dashboard
+    [ ] Leitner system - problem with single word stuck at lowest box
+    [ ] Flashcards
     [ ] Display pronunciation if available
     [ ] Multilanguage quizes
     [ ] Use all examples
@@ -58,7 +60,7 @@
     [x]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
     [x]  Vercel-hosted page with SEO meta tags
     [ ]  browserstack testing
-    [ ] Update landing page
+    [ ]  Decorebator Landing Page Redesign
 
 # V2
 

@@ -84,25 +84,25 @@
       "evening": "Buenas Noches"
     },
     "stats": {
-      "wordsLearned": "Palabras Aprendidas",
-      "streak": "Días Consecutivos",
-      "accuracy": "Precisión",
       "failedToLoad": "Error al cargar estadísticas",
       "tapToRetry": "Toca para reintentar",
       "learningProgress": "Progreso de Aprendizaje",
-      "dayStreak": "¡{{count}} día de racha!",
-      "dayStreak_one": "¡{{count}} día de racha!",
-      "dayStreak_other": "¡{{count}} días de racha!",
-      "totalWords": "Total de Palabras",
+      "totalWords": "Palabras Totales",
       "wordlists": "Listas",
       "learned": "Aprendidas",
+      "dayStreak": "{{count}} días seguidos",
       "progress": {
-        "ready": "¡Listo para empezar a aprender! 🚀",
-        "greatStart": "¡Excelente comienzo! ¡Sigue así! 💪",
-        "makingProgress": "¡Haciendo progreso! 📈",
-        "halfwayThere": "¡Más de la mitad del camino! 🎯",
-        "almostThere": "¡Casi llegas! ¡Tú puedes! 🔥",
-        "congratulations": "¡Felicitaciones! 🎉"
+        "ready": "¡Listo para comenzar tu viaje de aprendizaje!",
+        "greatStart": "¡Excelente comienzo! ¡Sigue así!",
+        "makingProgress": "¡Estás haciendo un progreso excelente!",
+        "halfwayThere": "¡A mitad de camino! ¡Lo estás haciendo genial!",
+        "almostThere": "¡Casi llegas! ¡Solo un poco más!",
+        "congratulations": "¡Felicitaciones! ¡Has dominado todas las palabras!"
+      },
+      "premium": {
+        "title": "Desbloquea Análisis Detallados",
+        "subtitle": "Rastrea progreso, niveles de dominio y más",
+        "viewAnalytics": "Ver Análisis Detallados"
       }
     },
     "wordlists": {
@@ -418,5 +418,51 @@
     "startQuiz": "Iniciar Cuestionario",
     "editWordlist": "Editar Lista",
     "deleteWordlist": "Eliminar Lista"
+  },
+    "analytics": {
+    "header": {
+      "title": "Análisis de Aprendizaje",
+      "subtitle": "Sigue tu progreso y dominio"
+    },
+    "stats": {
+      "wordsToday": "Palabras Hoy",
+      "dayStreak": "Racha de Días",
+      "mastered": "Dominadas",
+      "accuracy": "Precisión"
+    },
+    "charts": {
+      "wordMastery": {
+        "title": "Niveles de Dominio",
+        "subtitle": "Tus mejores palabras por dominio"
+      },
+      "progress": {
+        "title": "Progreso de 7 Días",
+        "subtitle": "Palabras estudiadas por día"
+      },
+      "quizPerformance": {
+        "title": "Rendimiento en Pruebas",
+        "subtitle": "Tasa de éxito por tipo de prueba"
+      },
+      "topWords": {
+        "title": "Palabras Más Dominadas",
+        "subtitle": "Tus palabras con mejor rendimiento"
+      }
+    },
+    "empty": {
+      "noData": "Sin datos aún. ¡Empieza a aprender!",
+      "noProgress": "Aún sin datos de progreso",
+      "noQuizzes": "Completa algunas pruebas primero",
+      "noMastered": "Aún sin palabras dominadas"
+    },
+    "box": "Caja {{number}}",
+    "quizTypes": {
+      "guess_meaning": "Adivinar Significado",
+      "word_from_meaning": "Palabra por Significado",
+      "word_from_image": "Palabra por Imagen",
+      "complete_sentence": "Completar Oración",
+      "write_word_from_definition": "Escribir Palabra",
+      "word_from_audio": "Palabra por Audio",
+      "meaning_from_audio": "Significado por Audio"
+    }
   }
 }

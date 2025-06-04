@@ -84,25 +84,25 @@
       "evening": "Guten Abend"
     },
     "stats": {
-      "wordsLearned": "Gelernte Wörter",
-      "streak": "Tage in Folge",
-      "accuracy": "Genauigkeit",
       "failedToLoad": "Fehler beim Laden der Statistiken",
       "tapToRetry": "Zum Wiederholen tippen",
       "learningProgress": "Lernfortschritt",
-      "dayStreak": "{{count}} Tag Serie!",
-      "dayStreak_one": "{{count}} Tag Serie!",
-      "dayStreak_other": "{{count}} Tage Serie!",
-      "totalWords": "Gesamt Wörter",
-      "wordlists": "Listen",
+      "totalWords": "Gesamtwörter",
+      "wordlists": "Wortlisten",
       "learned": "Gelernt",
+      "dayStreak": "{{count}} Tage Serie",
       "progress": {
-        "ready": "Bereit zum Lernen! 🚀",
-        "greatStart": "Guter Start! Weiter so! 💪",
-        "makingProgress": "Fortschritte machen! 📈",
-        "halfwayThere": "Mehr als die Hälfte geschafft! 🎯",
-        "almostThere": "Fast geschafft! Du schaffst das! 🔥",
-        "congratulations": "Herzlichen Glückwunsch! 🎉"
+        "ready": "Bereit, Ihre Lernreise zu beginnen!",
+        "greatStart": "Großartiger Start! Weiter so!",
+        "makingProgress": "Sie machen ausgezeichnete Fortschritte!",
+        "halfwayThere": "Halbzeit! Sie machen das großartig!",
+        "almostThere": "Fast geschafft! Nur noch ein bisschen!",
+        "congratulations": "Herzlichen Glückwunsch! Sie haben alle Wörter gemeistert!"
+      },
+      "premium": {
+        "title": "Detaillierte Analysen freischalten",
+        "subtitle": "Fortschritt, Beherrschungsgrade & mehr verfolgen",
+        "viewAnalytics": "Detaillierte Analysen anzeigen"
       }
     },
     "wordlists": {
@@ -418,5 +418,51 @@
     "startQuiz": "Quiz starten",
     "editWordlist": "Wortliste bearbeiten",
     "deleteWordlist": "Wortliste löschen"
+  },
+   "analytics": {
+    "header": {
+      "title": "Lernanalyse",
+      "subtitle": "Verfolgen Sie Ihren Fortschritt und Ihre Beherrschung"
+    },
+    "stats": {
+      "wordsToday": "Wörter Heute",
+      "dayStreak": "Tage-Serie",
+      "mastered": "Beherrscht",
+      "accuracy": "Genauigkeit"
+    },
+    "charts": {
+      "wordMastery": {
+        "title": "Wortbeherrschungsgrade",
+        "subtitle": "Ihre besten Wörter nach Beherrschung"
+      },
+      "progress": {
+        "title": "7-Tage-Fortschritt",
+        "subtitle": "Täglich gelernte Wörter"
+      },
+      "quizPerformance": {
+        "title": "Quiz-Leistung",
+        "subtitle": "Erfolgsrate nach Quiz-Typ"
+      },
+      "topWords": {
+        "title": "Bestbeherrschte Wörter",
+        "subtitle": "Ihre leistungsstärksten Wörter"
+      }
+    },
+    "empty": {
+      "noData": "Noch keine Daten. Beginnen Sie zu lernen!",
+      "noProgress": "Noch keine Fortschrittsdaten",
+      "noQuizzes": "Absolvieren Sie zuerst einige Quizze",
+      "noMastered": "Noch keine beherrschten Wörter"
+    },
+    "box": "Box {{number}}",
+    "quizTypes": {
+      "guess_meaning": "Bedeutung erraten",
+      "word_from_meaning": "Wort aus Bedeutung",
+      "word_from_image": "Wort aus Bild",
+      "complete_sentence": "Satz vervollständigen",
+      "write_word_from_definition": "Wort schreiben",
+      "word_from_audio": "Wort aus Audio",
+      "meaning_from_audio": "Bedeutung aus Audio"
+    }
   }
 }

@@ -1,5 +1,4 @@
 import { useUserInfo } from "@/hooks/users";
-import { router } from "expo-router";
 import React, { useEffect } from "react";
 import {
   ActivityIndicator,
@@ -10,9 +9,11 @@ import {
   View,
 } from "react-native";
 import * as usersApi from "@/api/users";
+import { useRouter } from "expo-router";
 
 export default function Index() {
   const { userInfo, error, loading } = useUserInfo();
+    const router = useRouter();
 
   useEffect(() => {
     if (loading) return;

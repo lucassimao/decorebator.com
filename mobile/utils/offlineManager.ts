@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import * as FileSystem from 'expo-file-system';
 import { Quiz, Word } from '@/api/wordlists';
+import { Platform } from 'react-native';
 
 const CACHE_PREFIX = 'decorebator_offline_';
 const QUIZ_CACHE_KEY = `${CACHE_PREFIX}quiz_`;
@@ -37,6 +38,8 @@ class OfflineManager {
   }
 
   private async ensureAssetDirectory() {
+    if (Platform.OS =='web') return 
+    
     const dirInfo = await FileSystem.getInfoAsync(ASSET_CACHE_DIR);
     if (!dirInfo.exists) {
       await FileSystem.makeDirectoryAsync(ASSET_CACHE_DIR, { intermediates: true });

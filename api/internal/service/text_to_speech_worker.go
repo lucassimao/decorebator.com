@@ -14,7 +14,8 @@ import (
 )
 
 type TextToSpeechArgs struct {
-	WordId int64 `json:"wordId"`
+	WordId      int64        `json:"wordId"`
+	ErrorReport *ErrorReport `json:"errorReport"`
 }
 
 func (TextToSpeechArgs) Kind() string { return "TextToSpeech" }
@@ -68,5 +69,16 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 
 	logger.Debug("audio generated", "wordId", word.ID, "url", word.AudioURL, "word", word.Name)
 
-	return UpdateWord(word, nil)
+	err = UpdateWord(word, nil)
+	if err != nil {
+		return err
+	}
+
+	// if this job was triggered by an error report, then mark the issue as solved
+	if job.Args.ErrorReport != nil {
+		var strategy LeitnerSystemStrategy
+		return strategy.MarkErrorResolved(*job.Args.ErrorReport)
+	}
+
+	return nil
 }

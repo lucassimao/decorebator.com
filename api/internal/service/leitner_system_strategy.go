@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"regexp"
 	"strings"
+	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -51,7 +52,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				lst.updated_at,
 				-- Calculate if definition is due for review
 				CASE 
-					WHEN lst.box_id = 1 THEN TRUE															-- Immediate review
+					WHEN lst.box_id = 1 THEN TRUE														-- Immediate review
 					WHEN lst.box_id = 2 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 1 	-- 1 hours  
 					WHEN lst.box_id = 3 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 24 	-- 1 day
 					WHEN lst.box_id = 4 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 72 	-- 3 days
@@ -69,6 +70,8 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				AND w.wordlist_id = $2
 				AND w.learned = FALSE
 				AND def.meaning IS NOT NULL
+				-- Exclude temporarily skipped definitions
+				AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())
 		)
 		SELECT 
 			id, token, part_of_speech, meaning, examples, inflections, 
@@ -115,7 +118,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 }
 
 func getOldestDefinition(userID, wordlistID int64) (*NextDefinition, error) {
-	// Fallback query when no definitions are due
+	// Enhanced fallback query that also excludes temporarily skipped definitions
 	query := `
 		SELECT 
 			def.id,def.token, 
@@ -133,6 +136,8 @@ func getOldestDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 			AND w.wordlist_id = $2
 			AND w.learned = FALSE
 			AND def.meaning IS NOT NULL
+			-- Exclude temporarily skipped definitions
+			AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())
 		ORDER BY lst.updated_at ASC NULLS FIRST
 		LIMIT 1;
 	`
@@ -342,7 +347,7 @@ func extractAnswerFromImageDescription(description, defaultToken string) string 
 	return defaultToken
 }
 
-func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, success bool, transactionPtr *pgx.Tx) error {
+func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId int64, success bool, transactionPtr *pgx.Tx) error {
 	var tx pgx.Tx
 	var err error
 
@@ -396,9 +401,7 @@ func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, succe
 	return err
 }
 
-func (s LeitnerSystemStrategy) SaveQuizResultWithAnalytics(
-	leitnerSystemTrackingId int64,
-	success bool,
+func (s LeitnerSystemStrategy) SaveQuizResult(
 	quizResult QuizResult,
 	transactionPtr *pgx.Tx) error {
 
@@ -430,21 +433,19 @@ func (s LeitnerSystemStrategy) SaveQuizResultWithAnalytics(
 
 	// First, get the current box_id before update
 	var currentBoxId int64
-	err = tx.QueryRow(ctx, "SELECT box_id FROM leitner_system_tracking WHERE id = $1", leitnerSystemTrackingId).Scan(&currentBoxId)
+	err = tx.QueryRow(ctx, "SELECT box_id FROM leitner_system_tracking WHERE id = $1", quizResult.LeitnerSystemTrackingID).Scan(&currentBoxId)
 	if err != nil {
 		return err
 	}
 
 	// Update the Leitner system tracking
-	err = s.SaveQuizResult(leitnerSystemTrackingId, success, &tx)
+	err = s.updateLeitnerSystemTracking(quizResult.LeitnerSystemTrackingID, quizResult.IsCorrect, &tx)
 	if err != nil {
 		return err
 	}
 
 	// Set the quiz result data
-	quizResult.IsCorrect = success
 	quizResult.BoxID = currentBoxId
-	quizResult.LeitnerSystemTrackingID = leitnerSystemTrackingId
 
 	// Track analytics
 	analyticsService, err := NewAnalyticsService()
@@ -479,6 +480,182 @@ func (LeitnerSystemStrategy) IncludeDefinitions(wordId, userId int64, definition
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// GetSkippedDefinitions returns definitions that are temporarily skipped due to error reports
+func (s LeitnerSystemStrategy) GetSkippedDefinitions(userID, wordlistID int64) ([]NextDefinition, error) {
+	query := `
+		SELECT 
+			def.id, def.token, def.part_of_speech, def.meaning, def.examples, 
+			def.inflections, lst.id AS lst_id, lst.box_id, def.sounds, def.phonetic_notations, 
+			COALESCE(di.url,'') as image_url, COALESCE(di.description,'') as image_description, 
+			wd.word_id AS word_id,
+			der.error_type, der.description as error_description, der.reported_at
+		FROM leitner_system_tracking lst 
+		JOIN definitions def ON lst.definition_id = def.id
+		JOIN word_definitions wd ON def.id = wd.definition_id
+		JOIN words w ON wd.word_id = w.id
+		LEFT JOIN definition_images di ON di.definition_id = def.id AND di.is_visible=TRUE
+		LEFT JOIN error_reports der ON der.definition_id = def.id AND der.status = 'pending'
+		WHERE 
+			lst.user_id = $1
+			AND w.wordlist_id = $2
+			AND w.learned = FALSE
+			AND lst.temporarily_skipped_until > NOW()
+		ORDER BY der.reported_at DESC;
+	`
+
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := db.Query(context.Background(), query, userID, wordlistID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []NextDefinition
+	for rows.Next() {
+		definition := model.Definition{}
+		result := NextDefinition{Definition: &definition}
+		var errorType, errorDescription string
+		var reportedAt time.Time
+
+		err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
+			&definition.Meaning, &definition.Examples,
+			&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
+			&definition.PhoneticNotations, &result.ImageUrl, &result.ImageDescription, &result.WordID,
+			&errorType, &errorDescription, &reportedAt)
+
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, result)
+	}
+
+	return results, nil
+}
+
+// MarkErrorResolved removes the temporary skip and marks the error as resolved
+func (s LeitnerSystemStrategy) MarkErrorResolved(report ErrorReport) error {
+
+	if report.DefinitionId == nil && report.WordId == nil {
+		return errors.New("definition or word missing")
+	}
+
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	tx, err := db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == nil {
+			tx.Commit(ctx)
+		} else {
+			tx.Rollback(ctx)
+		}
+	}()
+
+	leitnerSystemTrackingUpdate := `UPDATE leitner_system_tracking SET temporarily_skipped_until = NULL `
+	selection, queryArgs, err := buildQuerySelectionFromErrorReport(report)
+
+	if err != nil {
+		return err
+	}
+
+	leitnerSystemTrackingUpdate = leitnerSystemTrackingUpdate + selection
+
+	// Remove temporary skip
+	_, err = tx.Exec(ctx, leitnerSystemTrackingUpdate, queryArgs...)
+
+	if err != nil {
+		return err
+	}
+
+	errorReportsUpdate := `UPDATE error_reports SET status = 'resolved', resolved_at = NOW() `
+	selection, queryArgs, err = buildQuerySelectionFromErrorReport(report)
+	if err != nil {
+		return err
+	}
+	errorReportsUpdate = errorReportsUpdate + selection
+
+	// Mark error reports as resolved
+	_, err = tx.Exec(ctx, errorReportsUpdate, queryArgs...)
+
+	return err
+}
+
+type ErrorReport struct {
+	DefinitionId *int64 `json:"definitionId"`
+	WordId       *int64 `json:"wordId"`
+	UserId       int64  `json:"userId"`
+}
+
+func buildQuerySelectionFromErrorReport(report ErrorReport) (string, []any, error) {
+
+	if report.DefinitionId == nil && report.WordId == nil {
+		return "", nil, errors.New("definition or word missing")
+	}
+
+	var builder strings.Builder
+
+	var queryArgs []any
+	var whereConditions []string
+
+	whereConditions = append(whereConditions, "user_id = $1")
+	queryArgs = append(queryArgs, report.UserId)
+	argIndex := 2
+
+	if report.DefinitionId != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf("definition_id = $%d", argIndex))
+		queryArgs = append(queryArgs, report.DefinitionId)
+		argIndex++
+	}
+
+	if report.WordId != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf("word_id = $%d", argIndex))
+		queryArgs = append(queryArgs, report.WordId)
+		argIndex++
+	}
+
+	builder.WriteString(" WHERE ")
+	builder.WriteString(strings.Join(whereConditions, " AND "))
+
+	return builder.String(), queryArgs, nil
+
+}
+
+// Temporarily skip this definition by updating its next review time
+// This prevents it from being selected again until the error is resolved
+func (s LeitnerSystemStrategy) ReportError(userID int64, report ErrorReport, tx pgx.Tx, ctx context.Context) error {
+
+	if report.DefinitionId == nil && report.WordId == nil {
+		return errors.New("definition or word missing")
+	}
+
+	query := `UPDATE leitner_system_tracking SET temporarily_skipped_until = NOW() + INTERVAL '1 hour' `
+	selection, queryArgs, err := buildQuerySelectionFromErrorReport(report)
+
+	if err != nil {
+		return err
+	}
+
+	query = query + selection
+	_, err = tx.Exec(ctx, query, queryArgs...)
+
+	if err != nil {
+		return err
 	}
 
 	return nil

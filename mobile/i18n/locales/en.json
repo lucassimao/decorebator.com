@@ -84,25 +84,25 @@
       "evening": "Good Evening"
     },
     "stats": {
-      "wordsLearned": "Words Learned",
-      "streak": "Day Streak",
-      "accuracy": "Accuracy",
       "failedToLoad": "Failed to load stats",
       "tapToRetry": "Tap to retry",
       "learningProgress": "Learning Progress",
-      "dayStreak": "{{count}} day streak!",
-      "dayStreak_one": "{{count}} day streak!",
-      "dayStreak_other": "{{count}} days streak!",
       "totalWords": "Total Words",
       "wordlists": "Wordlists",
       "learned": "Learned",
+      "dayStreak": "{{count}} day streak",
       "progress": {
-        "ready": "Ready to start learning! 🚀",
-        "greatStart": "Great start! Keep going! 💪",
-        "makingProgress": "Making progress! 📈",
-        "halfwayThere": "More than halfway there! 🎯",
-        "almostThere": "Almost there! You got this! 🔥",
-        "congratulations": "Congratulations! 🎉"
+        "ready": "Ready to start your learning journey!",
+        "greatStart": "Great start! Keep going!",
+        "makingProgress": "You're making excellent progress!",
+        "halfwayThere": "Halfway there! You're doing amazing!",
+        "almostThere": "Almost there! Just a little more!",
+        "congratulations": "Congratulations! You've mastered all words!"
+      },
+      "premium": {
+        "title": "Unlock Detailed Analytics",
+        "subtitle": "Track progress, mastery levels & more",
+        "viewAnalytics": "View Detailed Analytics"
       }
     },
     "wordlists": {
@@ -418,5 +418,51 @@
     "startQuiz": "Start Quiz",
     "editWordlist": "Edit Wordlist",
     "deleteWordlist": "Delete Wordlist"
+  },
+  "analytics": {
+    "header": {
+      "title": "Learning Analytics",
+      "subtitle": "Track your progress and mastery"
+    },
+    "stats": {
+      "wordsToday": "Words Today",
+      "dayStreak": "Day Streak",
+      "mastered": "Mastered",
+      "accuracy": "Accuracy"
+    },
+    "charts": {
+      "wordMastery": {
+        "title": "Word Mastery Levels",
+        "subtitle": "Your top words by mastery"
+      },
+      "progress": {
+        "title": "7-Day Progress",
+        "subtitle": "Words studied per day"
+      },
+      "quizPerformance": {
+        "title": "Quiz Performance",
+        "subtitle": "Success rate by quiz type"
+      },
+      "topWords": {
+        "title": "Top Mastered Words",
+        "subtitle": "Your best performing words"
+      }
+    },
+    "empty": {
+      "noData": "No data yet. Start learning!",
+      "noProgress": "No progress data yet",
+      "noQuizzes": "Complete some quizzes first",
+      "noMastered": "No mastered words yet"
+    },
+    "box": "Box {{number}}",
+    "quizTypes": {
+      "guess_meaning": "Guess Meaning",
+      "word_from_meaning": "Word from Meaning",
+      "word_from_image": "Word from Image",
+      "complete_sentence": "Complete Sentence",
+      "write_word_from_definition": "Write Word",
+      "word_from_audio": "Word from Audio",
+      "meaning_from_audio": "Meaning from Audio"
+    }
   }
 }

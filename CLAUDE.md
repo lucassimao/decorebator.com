@@ -38,6 +38,7 @@ make debug-workers     # Debug workers with delve
 make debug-api         # Debug API with delve
 make clean            # Remove build artifacts
 make help             # Show all available commands
+make migrate-drop      # Drop all database tables (destructive)
 ```
 
 ### Mobile App (in `/mobile` directory)
@@ -57,6 +58,10 @@ npm run test          # Run Jest tests in watch mode
 
 # Update Expo dependencies
 npm run expo:update
+
+# EAS Updates
+npm run update:local   # Update local development build
+npm run update:prod    # Update production build
 ```
 
 ### Web Frontend (in `/web` directory)
@@ -87,11 +92,12 @@ The API follows a 3-tier layered architecture:
 
 Key architectural decisions:
 - Singleton pattern for database connections using `sync.Once`
-- Manual dependency injection without frameworks
+- Manual dependency injection without frameworks (modernization planned)
 - JWT-based authentication with automatic session refresh
 - River queue system for background jobs (PostgreSQL-backed)
 - MinIO for object storage (images, audio)
 - Stripe integration for subscription management
+- Structured logging with `slog` (enhancement planned)
 
 ### Background Job Processing
 
@@ -119,6 +125,8 @@ Key tables:
 - `users` - User accounts, authentication, and subscription status
 - `subscriptions` - Subscription history and details
 - `subscription_events` - Stripe webhook event audit trail & email tracking
+- `analytics` - User analytics and engagement metrics
+- `error_reports` - Application error tracking and reporting
 - `wordlists` - User's vocabulary lists with language field
 - `words` - Individual words in wordlists
 - `definitions` - Word definitions with images and audio
@@ -153,10 +161,12 @@ Key tables:
 - Test database with Docker Compose (`docker-compose.test.yml`)
 - Coverage reports generated with `go test -cover`
 - Run single test: `go test -v -run TestName`
+- Run tests with coverage: `make test` (containerized with HTML report)
 
 ### Mobile Tests
 - Jest with Expo preset
 - Run with `npm test` (runs in watch mode)
+- Run single test: `npm test -- --testNamePattern="test name"`
 
 ## External Services
 
@@ -173,8 +183,10 @@ Key tables:
 2. Run `docker-compose up` to start PostgreSQL, MinIO, and Redis
 3. Apply database migrations before starting the API
 4. Start workers separately when testing background jobs
-5. Mobile app connects to API (configure API URL in constants)
+5. Mobile app connects to API (configure API URL in `mobile/api/constants.ts`)
 6. For subscription testing, configure Stripe webhook endpoint and test keys
+7. Use `make watch` for API development with auto-reload
+8. Run `make test` before committing to ensure tests pass
 
 ## Important Notes
 
@@ -183,3 +195,9 @@ Key tables:
 - Background jobs use River queue (PostgreSQL-backed) instead of traditional queue systems
 - Email templates are located in `internal/mail/` directory
 - API endpoints are documented in `doc/words.http` and `doc/words.prod.http`
+- Recent architecture improvements planned in `api/DEPENDENCY_INJECTION_MODERNIZATION_PLAN.md` and `api/LOGGING_IMPROVEMENT_PLAN.md`
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

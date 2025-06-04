@@ -83,26 +83,26 @@
       "afternoon": "こんにちは",
       "evening": "こんばんは"
     },
-    "stats": {
-      "wordsLearned": "学習した単語",
-      "streak": "連続日数",
-      "accuracy": "正確率",
+        "stats": {
       "failedToLoad": "統計の読み込みに失敗しました",
       "tapToRetry": "タップして再試行",
       "learningProgress": "学習進捗",
-      "dayStreak": "{{count}}日連続！",
-      "dayStreak_one": "{{count}}日連続！",
-      "dayStreak_other": "{{count}}日連続！",
-      "totalWords": "合計単語数",
-      "wordlists": "リスト",
-      "learned": "学習済み",
+      "totalWords": "総単語数",
+      "wordlists": "単語リスト",
+      "learned": "習得済み",
+      "dayStreak": "{{count}}日連続",
       "progress": {
-        "ready": "学習を始める準備ができました！ 🚀",
-        "greatStart": "素晴らしいスタート！その調子！ 💪",
-        "makingProgress": "進歩しています！ 📈",
-        "halfwayThere": "半分以上進みました！ 🎯",
-        "almostThere": "もうすぐ！できますよ！ 🔥",
-        "congratulations": "おめでとうございます！ 🎉"
+        "ready": "学習の旅を始める準備ができました！",
+        "greatStart": "素晴らしいスタート！その調子です！",
+        "makingProgress": "素晴らしい進歩を遂げています！",
+        "halfwayThere": "半分まで来ました！とても良い調子です！",
+        "almostThere": "もうすぐです！あと少し！",
+        "congratulations": "おめでとうございます！すべての単語を習得しました！"
+      },
+      "premium": {
+        "title": "詳細な分析をアンロック",
+        "subtitle": "進捗、習熟度レベルなどを追跡",
+        "viewAnalytics": "詳細な分析を表示"
       }
     },
     "wordlists": {
@@ -418,5 +418,51 @@
     "startQuiz": "クイズを開始",
     "editWordlist": "リストを編集",
     "deleteWordlist": "リストを削除"
+  },
+  "analytics": {
+    "header": {
+      "title": "学習分析",
+      "subtitle": "進捗と習熟度を追跡"
+    },
+    "stats": {
+      "wordsToday": "今日の単語",
+      "dayStreak": "連続日数",
+      "mastered": "習得済み",
+      "accuracy": "正確度"
+    },
+    "charts": {
+      "wordMastery": {
+        "title": "単語習熟度レベル",
+        "subtitle": "習熟度別の上位単語"
+      },
+      "progress": {
+        "title": "7日間の進捗",
+        "subtitle": "1日あたりの学習単語数"
+      },
+      "quizPerformance": {
+        "title": "クイズの成績",
+        "subtitle": "クイズタイプ別の成功率"
+      },
+      "topWords": {
+        "title": "最も習得した単語",
+        "subtitle": "最高の成績を収めた単語"
+      }
+    },
+    "empty": {
+      "noData": "まだデータがありません。学習を始めましょう！",
+      "noProgress": "まだ進捗データがありません",
+      "noQuizzes": "まずクイズを完了してください",
+      "noMastered": "まだ習得した単語がありません"
+    },
+    "box": "ボックス {{number}}",
+    "quizTypes": {
+      "guess_meaning": "意味を推測",
+      "word_from_meaning": "意味から単語",
+      "word_from_image": "画像から単語",
+      "complete_sentence": "文を完成",
+      "write_word_from_definition": "単語を書く",
+      "word_from_audio": "音声から単語",
+      "meaning_from_audio": "音声から意味"
+    }
   }
 }
