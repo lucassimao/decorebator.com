@@ -67,6 +67,28 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 				RunOnStart: true, // Run immediately on startup
 			},
 		),
+		// refresh materialized views
+		river.NewPeriodicJob(
+			river.PeriodicInterval(1*time.Hour), // Run daily
+			func() (river.JobArgs, *river.InsertOpts) {
+
+				db, err := common.GetDBConnection()
+
+				if err == nil {
+					ctx := context.Background()
+					db.Exec(ctx, `REFRESH MATERIALIZED VIEW CONCURRENTLY mv_word_mastery_current`)
+					db.Exec(ctx, "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_quiz_type_performance")
+				} else {
+					common.Logger.Error("Could not refresh materialized views", "error", err)
+				}
+
+				// Return a no-op job
+				return NoOpJobArgs{}, nil
+			},
+			&river.PeriodicJobOpts{
+				RunOnStart: false,
+			},
+		),
 	}
 
 	riverClient, err := river.NewClient(riverpgxv5.New(db), &river.Config{
