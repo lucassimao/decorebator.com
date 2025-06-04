@@ -72,7 +72,7 @@ create-migration: ## Create a new database migration file with the provided file
 	if [ -z "$$FILE_NAME" ]; then \
 		echo "Migration file name is required."; \
 	else \
-		migrate create -ext sql -dir migrations -seq $$FILE_NAME; \
+		migrate create -ext sql -dir cmd/migrate/migrations -seq $$FILE_NAME; \
 	fi	
 
 help: ## Show this help.

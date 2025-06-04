@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"os"
 	"regexp"
 	"strings"
 
@@ -28,64 +27,76 @@ type NextDefinition struct {
 	ImageDescription string
 }
 
-func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
+// Quiz difficulty progression
+var boxToQuizTypes = map[int64][]model.QuizType{
+	1: {model.GuessMeaning},                                    // Basic recognition
+	2: {model.WordFromMeaning},                                 // Basic recall
+	3: {model.WordFromImage, model.GuessMeaning},               // Visual association
+	4: {model.CompleteSentence, model.WordFromMeaning},         // Contextual understanding
+	5: {model.WriteWordFromDefinition, model.CompleteSentence}, // Active recall
+	6: {model.WordFromAudio, model.WriteWordFromDefinition},    // Audio recognition
+	7: {model.MeaningFromAudio, model.WordFromAudio},           // Advanced audio
+}
 
-	// Grouping by box_id and getting the earliest updated_at
+func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
+	// Improved query that respects Leitner intervals
 	query := `
-		WITH words_queue AS (
-			SELECT wd.word_id, max(lst.updated_at) max_lst_updated_at
-				FROM leitner_system_tracking lst
-				JOIN word_definitions wd ON wd.definition_id = lst.definition_id
-				JOIN words w ON wd.word_id = w.id
-				WHERE 
-					w.wordlist_id=$2 AND w.learned = FALSE
-				GROUP BY 
-					wd.word_id
-				ORDER BY
-					max_lst_updated_at ASC NULLS FIRST
-				LIMIT 1		
-		),
-		earliest_per_box AS (
-			SELECT def.id, lst.id AS lst_id, def.token, 
-					def.part_of_speech,  def.meaning, def.examples, 
-					def.inflections , lst.box_id, def.sounds, def.phonetic_notations, 
-					di.url as image_url, di.description as image_description, 
-					wd.word_id AS word_id
+		WITH due_definitions AS (
+			SELECT 
+				def.id, lst.id AS lst_id, def.token, 
+				def.part_of_speech, def.meaning, def.examples, 
+				def.inflections, lst.box_id, def.sounds, def.phonetic_notations, 
+				di.url as image_url, di.description as image_description, 
+				wd.word_id AS word_id,
+				lst.updated_at,
+				-- Calculate if definition is due for review
+				CASE 
+					WHEN lst.box_id = 1 THEN FALSE															-- Immediate review
+					WHEN lst.box_id = 2 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 1 	-- 1 hours  
+					WHEN lst.box_id = 3 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 24 	-- 1 day
+					WHEN lst.box_id = 4 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 72 	-- 3 days
+					WHEN lst.box_id = 5 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 168 	-- 1 week
+					WHEN lst.box_id = 6 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 336 	-- 2 weeks
+					WHEN lst.box_id = 7 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 720	-- 1 month
+				END AS is_due
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
 			JOIN word_definitions wd ON def.id = wd.definition_id
+			JOIN words w ON wd.word_id = w.id
 			LEFT JOIN definition_images di ON di.definition_id = def.id AND di.is_visible=TRUE
 			WHERE 
 				lst.user_id = $1
-				AND wd.word_id = (select word_id FROM words_queue)
-				AND def.meaning IS NOT NULL 
-				AND array_length(def.examples,1) > 0
-			ORDER BY
-				lst.box_id ASC, lst.updated_at ASC NULLS FIRST, wd.word_id ASC
-			LIMIT 1
+				AND w.wordlist_id = $2
+				AND w.learned = FALSE
+				AND def.meaning IS NOT NULL
 		)
-
-		SELECT id, token, part_of_speech, meaning, examples, inflections, lst_id, 
-				box_id, sounds,phonetic_notations, COALESCE(image_url,''), word_id, COALESCE(image_description,'')
-		FROM earliest_per_box;
+		SELECT 
+			id, token, part_of_speech, meaning, examples, inflections, 
+			lst_id, box_id, sounds, phonetic_notations, 
+			COALESCE(image_url,''), word_id, COALESCE(image_description,'')
+		FROM due_definitions
+		WHERE is_due = TRUE
+		ORDER BY 
+			box_id ASC,           -- Prioritize lower boxes
+			updated_at ASC        -- Then by oldest review
+		LIMIT 1;
 	`
 
 	db, err := common.GetDBConnection()
 	if err != nil {
 		common.Logger.Error("failed to open db connection", "error", err)
-		os.Exit(1)
+		return nil, err
 	}
 
 	rows, err := db.Query(context.Background(), query, userID, wordlistID)
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 
-	hasRow := rows.Next()
-	if !hasRow {
-		return nil, errors.New("no definitions found")
+	if !rows.Next() {
+		// No due definitions, get the oldest reviewed one
+		return getOldestDefinition(userID, wordlistID)
 	}
 
 	definition := model.Definition{}
@@ -103,30 +114,57 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	return &result, nil
 }
 
-func (LeitnerSystemStrategy) IncludeDefinitions(wordId, userId int64, definitionIds []int64, tx pgx.Tx) error {
+func getOldestDefinition(userID, wordlistID int64) (*NextDefinition, error) {
+	// Fallback query when no definitions are due
+	query := `
+		SELECT 
+			def.id,def.token, 
+			def.part_of_speech, def.meaning, def.examples, 
+			def.inflections,  lst.id AS lst_id, lst.box_id, def.sounds, def.phonetic_notations, 
+			COALESCE(di.url,'') as image_url, COALESCE(di.description,'') as image_description, 
+			wd.word_id AS word_id
+		FROM leitner_system_tracking lst 
+		JOIN definitions def ON lst.definition_id = def.id
+		JOIN word_definitions wd ON def.id = wd.definition_id
+		JOIN words w ON wd.word_id = w.id
+		LEFT JOIN definition_images di ON di.definition_id = def.id AND di.is_visible=TRUE
+		WHERE 
+			lst.user_id = $1
+			AND w.wordlist_id = $2
+			AND w.learned = FALSE
+			AND def.meaning IS NOT NULL
+		ORDER BY lst.updated_at ASC NULLS FIRST
+		LIMIT 1;
+	`
 
-	for _, definitionId := range definitionIds {
-		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id, word_id)
-		VALUES ($1, $2, $3, $4) RETURNING id`
-
-		row := tx.QueryRow(context.Background(), query, userId, definitionId, 1, wordId)
-		var leitnerSystemTrackingId int64
-		err := row.Scan(&leitnerSystemTrackingId)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.Exec(context.Background(), `INSERT INTO 
-		leitner_system_history (at,box_id,leitner_system_tracking_id) 
-		VALUES (now(), $1, $2)`, 1, leitnerSystemTrackingId)
-
-		if err != nil {
-			return err
-		}
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	rows, err := db.Query(context.Background(), query, userID, wordlistID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		return nil, errors.New("no definitions found")
+	}
+
+	definition := model.Definition{}
+	result := NextDefinition{Definition: &definition}
+
+	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
+		&definition.Meaning, &definition.Examples,
+		&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
+		&definition.PhoneticNotations, &result.ImageUrl, &result.ImageDescription, &result.WordID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error) {
@@ -135,150 +173,176 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		return nil, err
 	}
 
-	var options []string
-	var value string
-	var quizzType QuizType
-	var quizAnswer string
-
-	var word *model.Word
-	boxID := nextDefinition.BoxID
-	wordID := nextDefinition.WordID
-	definition := nextDefinition.Definition
-	leitnerSystemID := nextDefinition.LeitnerSystemID
-	imageUrl := nextDefinition.ImageUrl
-
-	word, err = GetWordById(wordID)
+	word, err := GetWordById(nextDefinition.WordID)
 	if err != nil {
 		return nil, err
 	}
 
-	if boxID == 3 && imageUrl == "" {
-		// if no IMAGE, jump to the CompleteSentence quiz
-		boxID = 4
+	// Select appropriate quiz type based on box and available content
+	quizType, err := selectQuizType(nextDefinition, word)
+	if err != nil {
+		return nil, err
 	}
 
-	if (boxID == 6 || boxID == 7) && word.AudioURL == "" {
-		// if no audio, jump to the GuessMeaning quiz
-		boxID = 1
+	// Create quiz based on selected type
+	return createQuizForType(quizType, nextDefinition, word)
+}
+
+func selectQuizType(def *NextDefinition, word *model.Word) (model.QuizType, error) {
+	possibleTypes := boxToQuizTypes[def.BoxID]
+
+	// Filter out quiz types that require unavailable content
+	var availableTypes []model.QuizType
+	for _, qt := range possibleTypes {
+		if isQuizTypeAvailable(qt, def, word) {
+			availableTypes = append(availableTypes, qt)
+		}
 	}
 
-	common.Logger.Debug("CreateChallenge", "boxID", boxID, "leitnerSystemID", leitnerSystemID, "definition", definition.ID)
+	if len(availableTypes) == 0 {
+		// Fallback to basic quiz if no appropriate quiz available
+		return model.GuessMeaning, nil
+	}
 
-	// When adding new boxes, make sure to update the wrap-around logic in SaveQuizResult func
-	switch {
-	case boxID == 7:
-		quizzType = model.MeaningFromAudio
-		options, err = GetRandomMeanings([]int{int(definition.ID)}, 3)
-		if err != nil {
-			return nil, err
-		}
-		quizAnswer = definition.Meaning
-	case boxID == 6:
-		quizzType = model.WordFromAudio
-		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
-		if err != nil {
-			return nil, err
-		}
+	// Randomly select from available types
+	return availableTypes[rand.Intn(len(availableTypes))], nil
+}
 
-		quizAnswer = word.Name
-	case boxID == 5:
-		quizzType = model.WriteWordFromDefinition
-		value = definition.Meaning
-		quizAnswer = word.Name
-	case boxID == 4:
-		quizzType = model.CompleteSentence
-		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
-		if err != nil {
-			return nil, err
-		}
-
-		i := rand.Intn(len(definition.Examples))
-		value = definition.Examples[i]
-
-		re := regexp.MustCompile(`\[(.*?)\]`)
-		matches := re.FindAllStringSubmatch(value, -1)
-		var tokens []string
-
-		// Iterate over matches and extract the content inside the brackets
-		for _, match := range matches {
-			if len(match) > 1 {
-				tokens = append(tokens, match[1]) // Append the extracted token to the slice
-			}
-		}
-
-		if len(tokens) > 0 {
-			quizAnswer = strings.Join(tokens, " ")
-		} else {
-			quizAnswer = definition.Token
-		}
-
-	case boxID == 3:
-		quizzType = model.WordFromImage
-		value = imageUrl
-		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
-
-		if err != nil {
-			return nil, err
-		}
-
-		re := regexp.MustCompile(`\[(.*?)\]`)
-		matches := re.FindStringSubmatch(nextDefinition.ImageDescription)
-		if len(matches) > 1 {
-			quizAnswer = matches[1]
-		} else {
-			quizAnswer = definition.Token
-		}
-	case boxID == 2:
-		quizzType = model.WordFromMeaning
-		value = definition.Meaning
-		options, err = GetRandomTokens([]int{int(definition.ID)}, definition.PartOfSpeech, 3)
-
-		if err != nil {
-			return nil, err
-		}
-
-		quizAnswer = definition.Token
-	case boxID == 1:
-		quizzType = model.GuessMeaning
-		options, err = GetRandomMeanings([]int{int(definition.ID)}, 3)
-		if err != nil {
-			return nil, err
-		}
-
-		value = definition.Token
-		quizAnswer = definition.Meaning
+func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Word) bool {
+	switch qt {
+	case model.WordFromImage:
+		return def.ImageUrl != ""
+	case model.CompleteSentence:
+		return len(def.Definition.Examples) > 0
+	case model.WordFromAudio, model.MeaningFromAudio:
+		return word.AudioURL != ""
+	case model.WriteWordFromDefinition:
+		return def.Definition.Meaning != ""
 	default:
-		return nil, fmt.Errorf("unexpected box id: %d wordlist %d definition %d", boxID, wordlistID, definition.ID)
+		return true
+	}
+}
+
+func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model.Word) (*Quiz, error) {
+	var options []string
+	var value string
+	var quizAnswer string
+	var err error
+
+	switch quizType {
+	case model.MeaningFromAudio:
+		options, err = GetRandomMeanings([]int{int(def.Definition.ID)}, 3)
+		if err != nil {
+			return nil, err
+		}
+		quizAnswer = def.Definition.Meaning
+		value = ""
+
+	case model.WordFromAudio:
+		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		if err != nil {
+			return nil, err
+		}
+		quizAnswer = word.Name
+		value = ""
+
+	case model.WriteWordFromDefinition:
+		value = def.Definition.Meaning
+		quizAnswer = word.Name
+		// No options for write-in quiz
+
+	case model.CompleteSentence:
+		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		if err != nil {
+			return nil, err
+		}
+
+		// Select random example
+		i := rand.Intn(len(def.Definition.Examples))
+		value = def.Definition.Examples[i]
+
+		// Extract answer from brackets
+		quizAnswer = extractAnswerFromExample(value, def.Definition.Token)
+
+	case model.WordFromImage:
+		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		if err != nil {
+			return nil, err
+		}
+		value = def.ImageUrl
+		quizAnswer = extractAnswerFromImageDescription(def.ImageDescription, def.Definition.Token)
+
+	case model.WordFromMeaning:
+		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		if err != nil {
+			return nil, err
+		}
+		value = def.Definition.Meaning
+		quizAnswer = def.Definition.Token
+
+	case model.GuessMeaning:
+		options, err = GetRandomMeanings([]int{int(def.Definition.ID)}, 3)
+		if err != nil {
+			return nil, err
+		}
+		value = def.Definition.Token
+		quizAnswer = def.Definition.Meaning
+
+	default:
+		return nil, fmt.Errorf("unexpected quiz type: %v", quizType)
 	}
 
-	// append the quiz answer to the final of the list.
+	// Add correct answer to options and fshuffle
 	options = append(options, quizAnswer)
-	// Then genrate a random position to move to it
-	var answerIndex = rand.Intn(len(options))
-	// shifts all elements from answerIndex to the end of the slice one position to the right, making space at answerIndex
+	answerIndex := rand.Intn(len(options))
 	copy(options[answerIndex+1:], options[answerIndex:])
 	options[answerIndex] = quizAnswer
 
-	challenge := &Quiz{
-		Value:       value,
-		Options:     options,
-		AnswerIndex: answerIndex,
-		ID:          leitnerSystemID,
-		Type:        quizzType,
-		// Sounds:       definition.Sounds,
-		// Notations:    definition.PhoneticNotations,
-		PartOfSpeech:     definition.PartOfSpeech,
-		ImageDescription: nextDefinition.ImageDescription,
+	return &Quiz{
+		Value:            value,
+		Options:          options,
+		AnswerIndex:      answerIndex,
+		ID:               def.LeitnerSystemID,
+		Type:             quizType,
+		PartOfSpeech:     def.Definition.PartOfSpeech,
+		ImageDescription: def.ImageDescription,
 		AudioURL:         word.AudioURL,
-		WordID:           wordID,
-		DefinitionID:     nextDefinition.Definition.ID,
+		WordID:           def.WordID,
+		DefinitionID:     def.Definition.ID,
+	}, nil
+}
+
+func extractAnswerFromExample(example, defaultToken string) string {
+	re := regexp.MustCompile(`\[(.*?)\]`)
+	matches := re.FindAllStringSubmatch(example, -1)
+
+	var tokens []string
+	for _, match := range matches {
+		if len(match) > 1 {
+			tokens = append(tokens, match[1])
+		}
 	}
 
-	return challenge, nil
+	if len(tokens) > 0 {
+		return strings.Join(tokens, " ")
+	}
+
+	// If no brackets found, return the default token
+	return defaultToken
+}
+
+func extractAnswerFromImageDescription(description, defaultToken string) string {
+	re := regexp.MustCompile(`\[(.*?)\]`)
+	matches := re.FindStringSubmatch(description)
+
+	if len(matches) > 1 {
+		return matches[1]
+	}
+
+	return defaultToken
 }
 
 func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, success bool, transactionPtr *pgx.Tx) error {
-
 	var tx pgx.Tx
 	var err error
 
@@ -290,12 +354,10 @@ func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, succe
 		}
 
 		ctx := context.Background()
-
 		tx, err = db.Begin(ctx)
 		if err != nil {
 			return err
 		}
-		// only handle transaction if created internally
 		defer func() {
 			if err == nil {
 				tx.Commit(ctx)
@@ -303,17 +365,18 @@ func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, succe
 				tx.Rollback(ctx)
 			}
 		}()
-
 	} else {
 		tx = *transactionPtr
 	}
 
+	// Proper Leitner system logic
 	query := `UPDATE leitner_system_tracking 
 	SET 
 		updated_at = now(), 
 		box_id = CASE 
-			WHEN $1 THEN (box_id % 7) + 1 -- on success, will cycle 1→2→…→7→1. 
-			ELSE 1 
+			WHEN $1 AND box_id < 7 THEN box_id + 1  -- Move to next box on success
+			WHEN $1 AND box_id = 7 THEN 7           -- Stay at max box
+			ELSE 1                                   -- Reset to box 1 on failure
 		END
 	WHERE id = $2
 	RETURNING box_id`
@@ -321,17 +384,101 @@ func (LeitnerSystemStrategy) SaveQuizResult(leitnerSystemTrackingId int64, succe
 	var boxId int64
 	row := tx.QueryRow(context.Background(), query, success, leitnerSystemTrackingId)
 	err = row.Scan(&boxId)
-
 	if err != nil {
 		return err
 	}
 
+	// Record history
 	_, err = tx.Exec(context.Background(), `INSERT INTO 
-		leitner_system_history (at,box_id,leitner_system_tracking_id) 
-		VALUES (now(), $1, $2)`, boxId, leitnerSystemTrackingId)
+		leitner_system_history (at, box_id, leitner_system_tracking_id, success) 
+		VALUES (now(), $1, $2, $3)`, boxId, leitnerSystemTrackingId, success)
 
+	return err
+}
+
+func (s LeitnerSystemStrategy) SaveQuizResultWithAnalytics(
+	leitnerSystemTrackingId int64,
+	success bool,
+	quizResult QuizResult,
+	transactionPtr *pgx.Tx) error {
+
+	var tx pgx.Tx
+	var err error
+	ctx := context.Background()
+
+	if transactionPtr == nil {
+		var db *pgxpool.Pool
+		db, err = common.GetDBConnection()
+		if err != nil {
+			return err
+		}
+
+		tx, err = db.Begin(ctx)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if err == nil {
+				tx.Commit(ctx)
+			} else {
+				tx.Rollback(ctx)
+			}
+		}()
+	} else {
+		tx = *transactionPtr
+	}
+
+	// First, get the current box_id before update
+	var currentBoxId int64
+	err = tx.QueryRow(ctx, "SELECT box_id FROM leitner_system_tracking WHERE id = $1", leitnerSystemTrackingId).Scan(&currentBoxId)
 	if err != nil {
 		return err
+	}
+
+	// Update the Leitner system tracking
+	err = s.SaveQuizResult(leitnerSystemTrackingId, success, &tx)
+	if err != nil {
+		return err
+	}
+
+	// Set the quiz result data
+	quizResult.IsCorrect = success
+	quizResult.BoxID = currentBoxId
+	quizResult.LeitnerSystemTrackingID = leitnerSystemTrackingId
+
+	// Track analytics
+	analyticsService, err := NewAnalyticsService()
+	if err != nil {
+		return err
+	}
+
+	err = analyticsService.TrackQuizPerformance(ctx, quizResult, tx)
+	if err != nil {
+		// Log error but don't fail the transaction
+		common.Logger.Error("failed to track quiz performance", "error", err)
+	}
+
+	return nil
+}
+
+func (LeitnerSystemStrategy) IncludeDefinitions(wordId, userId int64, definitionIds []int64, tx pgx.Tx) error {
+	for _, definitionId := range definitionIds {
+		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id, word_id)
+		VALUES ($1, $2, $3, $4) RETURNING id`
+
+		row := tx.QueryRow(context.Background(), query, userId, definitionId, 1, wordId)
+		var leitnerSystemTrackingId int64
+		err := row.Scan(&leitnerSystemTrackingId)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Exec(context.Background(), `INSERT INTO 
+		leitner_system_history (at, box_id, leitner_system_tracking_id, success) 
+		VALUES (now(), $1, $2, NULL)`, 1, leitnerSystemTrackingId)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

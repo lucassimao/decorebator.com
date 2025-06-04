@@ -48,7 +48,7 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 	var err = strategy.SaveQuizResult(input.Id, input.Success, nil)
 
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

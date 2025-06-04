@@ -61,11 +61,14 @@
 
 # V2
 
+[ ] Migrate local PostgreSQL container from 15 to 17
 [ ] Gamification
     XP points & leveling for completing activities.
+    XP points based on mastery improvements
+    Achievements for streaks and milestones
     Streak system (daily learning).
     Badges/Achievements (e.g., "100 words learned").
-    Leaderboard (optional, but adds virality).
+    Leaderboards for competitive learners
 
 [ ] User Feedback Loop
         In-app feedback feature ("I don’t agree with this definition", “This quiz was confusing”).

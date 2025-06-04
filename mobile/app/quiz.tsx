@@ -67,6 +67,9 @@ const QuizScreen: React.FC = () => {
     retry: isOnline ? 3 : 0, // Don't retry in offline mode
   });
 
+  console.log(quiz);
+  
+
   // handle image changes
   useEffect(() => {
     if (quiz?.type === "WORD_FROM_IMAGE" && quiz.value !== currentImageUrl) {

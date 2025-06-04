@@ -89,6 +89,8 @@ func SetupRoutes() *gin.Engine {
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", QuizRoutes.Save)
 		authenticatedRoutes.POST("/errorReports", ErrorReportsRoutes.Create)
 
+		RegisterAnalyticsRoutes(authenticatedRoutes)
+
 		// Subscription routes
 		authenticatedRoutes.POST("/subscription/checkout-session", CreateCheckoutSession(subService))
 		authenticatedRoutes.GET("/subscription/status", GetSubscriptionStatus(subRepo))
