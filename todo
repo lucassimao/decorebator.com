@@ -55,9 +55,9 @@
     [x]  Sentry for error tracking
     [x]  Set up Stripe
     [x]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
-    [ ]  Vercel-hosted page with SEO meta tags
+    [x]  Vercel-hosted page with SEO meta tags
     [ ]  browserstack testing
-    [ ]  Microsoft clarity integration for website
+    [ ] Update landing page
 
 # V2
 
