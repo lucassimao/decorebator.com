@@ -51,7 +51,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				lst.updated_at,
 				-- Calculate if definition is due for review
 				CASE 
-					WHEN lst.box_id = 1 THEN FALSE															-- Immediate review
+					WHEN lst.box_id = 1 THEN TRUE															-- Immediate review
 					WHEN lst.box_id = 2 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 1 	-- 1 hours  
 					WHEN lst.box_id = 3 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 24 	-- 1 day
 					WHEN lst.box_id = 4 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 72 	-- 3 days

@@ -43,11 +43,12 @@
     [x] Offline support
     [x] Remove learned words from quiz
     [x] Fix % learned in the ItemUi
+    [x] Support Stripe cupoms
+    [ ] Try SaveQuizResultWithAnalytics and Add new stats dashboard
     [ ] Display pronunciation if available
     [ ] Multilanguage quizes
     [ ] Use all examples
     [ ] Splash screen
-    [x] Support Stripe cupoms
 
 
 [ ] MVP Release Checklist
