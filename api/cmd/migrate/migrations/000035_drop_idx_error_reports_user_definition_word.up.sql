@@ -1,0 +1,1 @@
+drop INDEX idx_error_reports_user_definition_word;

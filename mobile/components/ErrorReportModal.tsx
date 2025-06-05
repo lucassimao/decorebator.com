@@ -18,6 +18,7 @@ interface ErrorReportModalProps {
   isLoading?: boolean;
   context?: "quiz" | "flashcards";
   wordName?: string;
+  errorTypes?: ErrorType[];
 }
 
 export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
@@ -27,6 +28,7 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
   isLoading = false,
   context = "quiz",
   wordName,
+  errorTypes,
 }) => {
   const { t } = useTranslation();
 
@@ -37,6 +39,17 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
     lightBackground: "#FAFAFA",
     primary: "#FF7B54",
   };
+
+  const isUnrelatedImageOptionAvailable =
+    !errorTypes || errorTypes.includes(ErrorType.UnrelatedImage);
+  const isMissingImageOptionAvailable =
+    !errorTypes || errorTypes.includes(ErrorType.MissingImage);
+  const isSoundNotPlayingOptionAvailable =
+    !errorTypes || errorTypes.includes(ErrorType.SoundNotPlaying);
+  const isUnrelatedExampleOptionAvailable =
+    !errorTypes || errorTypes.includes(ErrorType.UnrelatedExample);
+  const isUnrelatedMeaningOptionAvailable =
+    !errorTypes || errorTypes.includes(ErrorType.UnrelatedMeaning);
 
   return (
     <Modal
@@ -57,76 +70,90 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
           )}
 
           <View style={styles.reportOptions}>
-            <TouchableOpacity
-              style={styles.reportOption}
-              onPress={() => onReportError(ErrorType.UnrelatedImage)}
-              disabled={isLoading}
-            >
-              <MaterialIcons name="image" size={24} color={colors.textMedium} />
-              <Text style={styles.reportOptionText}>
-                {t(`${context}.reportOptions.imageDoesntMatch`)}
-              </Text>
-            </TouchableOpacity>
+            {isUnrelatedImageOptionAvailable && (
+              <TouchableOpacity
+                style={styles.reportOption}
+                onPress={() => onReportError(ErrorType.UnrelatedImage)}
+                disabled={isLoading}
+              >
+                <MaterialIcons
+                  name="image"
+                  size={24}
+                  color={colors.textMedium}
+                />
+                <Text style={styles.reportOptionText}>
+                  {t(`${context}.reportOptions.imageDoesntMatch`)}
+                </Text>
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={styles.reportOption}
-              onPress={() => onReportError(ErrorType.MissingImage)}
-              disabled={isLoading}
-            >
-              <MaterialIcons
-                name="broken-image"
-                size={24}
-                color={colors.textMedium}
-              />
-              <Text style={styles.reportOptionText}>
-                {t(`${context}.reportOptions.imageNotLoading`)}
-              </Text>
-            </TouchableOpacity>
+            {isMissingImageOptionAvailable && (
+              <TouchableOpacity
+                style={styles.reportOption}
+                onPress={() => onReportError(ErrorType.MissingImage)}
+                disabled={isLoading}
+              >
+                <MaterialIcons
+                  name="broken-image"
+                  size={24}
+                  color={colors.textMedium}
+                />
+                <Text style={styles.reportOptionText}>
+                  {t(`${context}.reportOptions.imageNotLoading`)}
+                </Text>
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={styles.reportOption}
-              onPress={() => onReportError(ErrorType.UnrelatedMeaning)}
-              disabled={isLoading}
-            >
-              <MaterialIcons
-                name="help-outline"
-                size={24}
-                color={colors.textMedium}
-              />
-              <Text style={styles.reportOptionText}>
-                {t(`${context}.reportOptions.wrongMeaning`)}
-              </Text>
-            </TouchableOpacity>
+            {isUnrelatedMeaningOptionAvailable && (
+              <TouchableOpacity
+                style={styles.reportOption}
+                onPress={() => onReportError(ErrorType.UnrelatedMeaning)}
+                disabled={isLoading}
+              >
+                <MaterialIcons
+                  name="help-outline"
+                  size={24}
+                  color={colors.textMedium}
+                />
+                <Text style={styles.reportOptionText}>
+                  {t(`${context}.reportOptions.wrongMeaning`)}
+                </Text>
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={styles.reportOption}
-              onPress={() => onReportError(ErrorType.UnrelatedExample)}
-              disabled={isLoading}
-            >
-              <MaterialIcons
-                name="format-quote"
-                size={24}
-                color={colors.textMedium}
-              />
-              <Text style={styles.reportOptionText}>
-                {t(`${context}.reportOptions.wrongExample`)}
-              </Text>
-            </TouchableOpacity>
+            {isUnrelatedExampleOptionAvailable && (
+              <TouchableOpacity
+                style={styles.reportOption}
+                onPress={() => onReportError(ErrorType.UnrelatedExample)}
+                disabled={isLoading}
+              >
+                <MaterialIcons
+                  name="format-quote"
+                  size={24}
+                  color={colors.textMedium}
+                />
+                <Text style={styles.reportOptionText}>
+                  {t(`${context}.reportOptions.wrongExample`)}
+                </Text>
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={styles.reportOption}
-              onPress={() => onReportError(ErrorType.SoundNotPlaying)}
-              disabled={isLoading}
-            >
-              <MaterialIcons
-                name="volume-off"
-                size={24}
-                color={colors.textMedium}
-              />
-              <Text style={styles.reportOptionText}>
-                {t(`${context}.reportOptions.soundNotPlaying`)}
-              </Text>
-            </TouchableOpacity>
+            {isSoundNotPlayingOptionAvailable && (
+              <TouchableOpacity
+                style={styles.reportOption}
+                onPress={() => onReportError(ErrorType.SoundNotPlaying)}
+                disabled={isLoading}
+              >
+                <MaterialIcons
+                  name="volume-off"
+                  size={24}
+                  color={colors.textMedium}
+                />
+                <Text style={styles.reportOptionText}>
+                  {t(`${context}.reportOptions.soundNotPlaying`)}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.reportModalActions}>

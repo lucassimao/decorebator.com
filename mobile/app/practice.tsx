@@ -632,6 +632,7 @@ const FlashcardPractice: React.FC = () => {
           isLoading={reportMutation.isPending}
           context="flashcards"
           wordName={currentWord?.name}
+          errorTypes={[ErrorType.SoundNotPlaying, ErrorType.UnrelatedMeaning]}
         />
       </SafeAreaView>
     </LinearGradient>

@@ -66,6 +66,7 @@
   the required changes without doing any change and then put together a html file outiline your approach. We should support all wordlists for languages 
   English,Spanish,French,German,Italian,Portuguese,Japanese and thus our prompt needs to be adjusted to take that into account and also the specifities of all those languages
 
+    [ ] Remove 3 dots from Wordlist Items and only show these 4 options: Analytics, Flash cards, Quiz, add words.
     [ ] Splash screen
 
 
