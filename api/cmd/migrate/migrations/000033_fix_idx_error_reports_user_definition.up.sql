@@ -1,0 +1,10 @@
+-- Fix the unique index to match the conflict resolution:
+DROP INDEX idx_error_reports_user_definition;
+
+CREATE UNIQUE INDEX idx_error_reports_user_definition_word 
+ON error_reports(
+    user_id, 
+    COALESCE(definition_id, -1), 
+    COALESCE(word_id, -1)
+) 
+WHERE status = 'pending';

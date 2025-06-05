@@ -57,6 +57,8 @@
         offiline.availableOffline , offiline.preloadWhenOnline , offiline.downloadForOffline, offline.cacheProgress . They only exist in mobile/i18n/locales/en.json and should be replicated across all i18n files in the same dir
     [x] Update mobile/components/dashboard/WordlistItem.tsx to show the full name of the wordlist  in the first line. Then the buttons (flash card, stats, quiz) need to be reworked and moved elsewhere inside the component layout cuz the are very small right now to be used in mobile screens.
     [ ] mobile/app/analytics.tsx BarChart seems broken
+    [ ] useOffline logic seems to not be working. When triggered the reportMutation in mobile/app/quiz.tsx always throws the Reporting not available in offline mode error
+    
     [ ] error_reporting_analysis.html
     [ ] Multilanguage quizes
 
