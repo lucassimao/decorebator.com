@@ -81,7 +81,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = () => {
   // Prepare data for charts
   const progressChartData = {
     labels: wordMastery?.slice(0, 6).map((w) => w.word.substring(0, 8)) || [],
-    data: wordMastery?.slice(0, 6).map((w) => w.mastery_level) || [],
+    data: wordMastery?.slice(0, 6).map((w) => w.masteryLevel) || [],
   };
 
   const lineChartData = {
@@ -92,7 +92,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = () => {
       }) || [],
     datasets: [
       {
-        data: learningProgress?.slice(-7).map((p) => p.words_studied) || [],
+        data: learningProgress?.slice(-7).map((p) => p.wordsStudied) || [],
         color: (opacity = 1) => `rgba(255, 123, 84, ${opacity})`, // Primary orange
         strokeWidth: 3,
       },
@@ -106,12 +106,12 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = () => {
   };
 
   const quizTypeLabels =
-    quizPerformance?.map((q) => translateQuizType(q.quiz_type)) || [];
+    quizPerformance?.map((q) => translateQuizType(q.quizType)) || [];
   const quizTypeData = {
     labels: quizTypeLabels.map((label) => label.substring(0, 10)),
     datasets: [
       {
-        data: quizPerformance?.map((q) => q.success_rate) || [],
+        data: quizPerformance?.map((q) => q.successRate) || [],
       },
     ],
   };
@@ -172,7 +172,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = () => {
                 <Text style={styles.statIcon}>📚</Text>
               </View>
               <Text style={styles.statValue}>
-                {dashboardStats?.words_studied_today || 0}
+                {dashboardStats?.wordsStudiedToday || 0}
               </Text>
               <Text style={styles.statLabel}>
                 {t("analytics.stats.wordsToday")}
@@ -184,7 +184,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = () => {
                 <Text style={styles.statIcon}>🔥</Text>
               </View>
               <Text style={[styles.statValue, styles.statValueHighlight]}>
-                {dashboardStats?.current_streak || 0}
+                {dashboardStats?.currentStreak || 0}
               </Text>
               <Text style={styles.statLabel}>
                 {t("analytics.stats.dayStreak")}
@@ -196,7 +196,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = () => {
                 <Text style={styles.statIcon}>🏆</Text>
               </View>
               <Text style={[styles.statValue, styles.statValueSuccess]}>
-                {dashboardStats?.words_mastered || 0}
+                {dashboardStats?.wordsMastered || 0}
               </Text>
               <Text style={styles.statLabel}>
                 {t("analytics.stats.mastered")}
@@ -208,7 +208,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = () => {
                 <Text style={styles.statIcon}>🎯</Text>
               </View>
               <Text style={styles.statValue}>
-                {Math.round(dashboardStats?.accuracy_today || 0)}%
+                {Math.round(dashboardStats?.accuracyToday || 0)}%
               </Text>
               <Text style={styles.statLabel}>
                 {t("analytics.stats.accuracy")}
@@ -344,11 +344,11 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = () => {
                           ]}
                         />
                         <Text style={styles.barLegendText} numberOfLines={1}>
-                          {translateQuizType(quiz.quiz_type)}
+                          {translateQuizType(quiz.quizType)}
                         </Text>
                       </View>
                       <Text style={styles.barLegendValue}>
-                        {Math.round(quiz.success_rate)}%
+                        {Math.round(quiz.successRate)}%
                       </Text>
                     </View>
                   ))}
@@ -374,7 +374,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = () => {
             {wordMastery && wordMastery.length > 0 ? (
               <View style={styles.wordsList}>
                 {wordMastery.slice(0, 5).map((word, index) => (
-                  <View key={word.word_id} style={styles.wordItem}>
+                  <View key={word.wordId} style={styles.wordItem}>
                     <View style={styles.wordItemLeft}>
                       <View
                         style={[
@@ -396,12 +396,12 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = () => {
                     <View style={styles.wordStats}>
                       <View style={styles.masteryBadge}>
                         <Text style={styles.wordMastery}>
-                          {Math.round(word.mastery_level * 100)}%
+                          {Math.round(word.masteryLevel * 100)}%
                         </Text>
                       </View>
                       <View style={styles.boxBadge}>
                         <Text style={styles.wordBox}>
-                          {t("analytics.box", { number: word.highest_box })}
+                          {t("analytics.box", { number: word.highestBox })}
                         </Text>
                       </View>
                     </View>

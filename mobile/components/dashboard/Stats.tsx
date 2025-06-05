@@ -2,6 +2,7 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   StyleSheet,
@@ -9,7 +10,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTranslation } from "react-i18next";
 
 import * as wordlistsApi from "@/api/wordlists";
 import { useUserInfo } from "@/hooks/users";
@@ -53,18 +53,15 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
 };
 
 // Main Component
-type DashboardStatsProps = {
-  onUpgradePress?: () => void;
-};
+type DashboardStatsProps = {};
 
 const PROGRESS_OVERVIEW_ENABLED = false;
 
-const DashboardStats: React.FC<DashboardStatsProps> = ({ onUpgradePress }) => {
+const DashboardStats: React.FC<DashboardStatsProps> = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const { t } = useTranslation();
   const { isPremium } = useUserInfo();
-  const router = useRouter();
 
   const {
     data: stats,
@@ -99,10 +96,6 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onUpgradePress }) => {
   const getProgressPercentage = () => {
     if (!stats || stats.totalWords === 0) return 0;
     return Math.round((stats.wordsLearned / stats.totalWords) * 100);
-  };
-
-  const onStatsPress = () => {
-    // router.push(`/analytics?wordlistId=${item.id}`);
   };
 
   const getMotivationalMessage = () => {
@@ -147,11 +140,6 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onUpgradePress }) => {
     <Animated.View
       style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
     >
-      <TouchableOpacity
-        onPress={isPremium ? onStatsPress : undefined}
-        activeOpacity={isPremium ? 0.9 : 1}
-        disabled={!isPremium}
-      >
         <LinearGradient
           colors={["rgba(255, 255, 255, 0.9)", "rgba(255, 255, 255, 0.7)"]}
           style={styles.statsContainer}
@@ -215,9 +203,11 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onUpgradePress }) => {
               <View style={styles.iconContainer}>
                 <MaterialIcons name="library-books" size={24} color="#FF7B54" />
               </View>
-              <Text style={styles.statLabel}>
-                {t("dashboard.stats.totalWords")}
-              </Text>
+              <View style={styles.labelContainer}>
+                <Text style={styles.statLabel}>
+                  {t("dashboard.stats.totalWords")}
+                </Text>
+              </View>
               <AnimatedCounter
                 value={stats?.totalWords || 0}
                 style={styles.statValue}
@@ -231,9 +221,11 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onUpgradePress }) => {
               <View style={styles.iconContainer}>
                 <Ionicons name="list" size={24} color="#4CAF50" />
               </View>
-              <Text style={styles.statLabel}>
-                {t("dashboard.stats.wordlists")}
-              </Text>
+              <View style={styles.labelContainer}>
+                <Text style={styles.statLabel}>
+                  {t("dashboard.stats.wordlists")}
+                </Text>
+              </View>
               <AnimatedCounter
                 value={stats?.wordlists || 0}
                 style={styles.statValue}
@@ -247,9 +239,11 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onUpgradePress }) => {
               <View style={styles.iconContainer}>
                 <MaterialIcons name="school" size={24} color="#2196F3" />
               </View>
-              <Text style={styles.statLabel}>
-                {t("dashboard.stats.learned")}
-              </Text>
+              <View style={styles.labelContainer}>
+                <Text style={styles.statLabel}>
+                  {t("dashboard.stats.learned")}
+                </Text>
+              </View>
               <AnimatedCounter
                 value={stats?.wordsLearned || 0}
                 style={[styles.statValue, { color: "#4CAF50" }]}
@@ -258,57 +252,8 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ onUpgradePress }) => {
             </View>
           </View>
 
-          {/* Premium Analytics Upsell */}
-          {!isPremium && (
-            <TouchableOpacity
-              style={styles.premiumUpsellContainer}
-              onPress={onUpgradePress}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={["#FFD700", "#FFA500"]}
-                style={styles.premiumGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <View style={styles.premiumContent}>
-                  <View style={styles.premiumLeft}>
-                    <View style={styles.premiumIconContainer}>
-                      <MaterialIcons name="analytics" size={20} color="#FFF" />
-                    </View>
-                    <View style={styles.premiumTextContainer}>
-                      <Text style={styles.premiumTitle}>
-                        {t("dashboard.stats.premium.title")}
-                      </Text>
-                      <Text style={styles.premiumSubtitle}>
-                        {t("dashboard.stats.premium.subtitle")}
-                      </Text>
-                    </View>
-                  </View>
-                  <MaterialIcons name="chevron-right" size={24} color="#FFF" />
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
 
-          {/* Premium Analytics Access Indicator */}
-          {isPremium && (
-            <TouchableOpacity
-              style={styles.analyticsAccessContainer}
-              onPress={onStatsPress}
-              activeOpacity={0.8}
-            >
-              <View style={styles.analyticsAccessContent}>
-                <MaterialIcons name="analytics" size={20} color="#FFD700" />
-                <Text style={styles.analyticsAccessText}>
-                  {t("dashboard.stats.premium.viewAnalytics")}
-                </Text>
-                <MaterialIcons name="chevron-right" size={20} color="#636E72" />
-              </View>
-            </TouchableOpacity>
-          )}
         </LinearGradient>
-      </TouchableOpacity>
     </Animated.View>
   );
 };
@@ -424,12 +369,14 @@ const styles = StyleSheet.create({
   },
   statsGrid: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "stretch",
+    minHeight: 120,
   },
   statItem: {
     alignItems: "center",
     flex: 1,
     paddingVertical: 8,
+    justifyContent: "space-between",
   },
   statItemFirst: {
     paddingLeft: 0,
@@ -452,11 +399,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
+  labelContainer: {
+    minHeight: 32,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 4,
+    paddingHorizontal: 4,
+  },
   statLabel: {
     fontSize: 13,
     color: "#636E72",
-    marginBottom: 4,
     fontWeight: "500",
+    textAlign: "center",
+    lineHeight: 16,
   },
   statValue: {
     fontSize: 28,
@@ -472,70 +427,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#FF6B3D",
-  },
-  // Premium Upsell Styles
-  premiumUpsellContainer: {
-    marginTop: 16,
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  premiumGradient: {
-    padding: 1,
-    borderRadius: 12,
-  },
-  premiumContent: {
-    backgroundColor: "rgba(255, 215, 0, 0.1)",
-    borderRadius: 11,
-    padding: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  premiumLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  premiumIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#FFD700",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  premiumTextContainer: {
-    flex: 1,
-  },
-  premiumTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#2D3436",
-    marginBottom: 2,
-  },
-  premiumSubtitle: {
-    fontSize: 13,
-    color: "#636E72",
-  },
-  // Analytics Access Styles (for premium users)
-  analyticsAccessContainer: {
-    marginTop: 16,
-    backgroundColor: "rgba(255, 215, 0, 0.1)",
-    borderRadius: 12,
-    padding: 12,
-  },
-  analyticsAccessContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  analyticsAccessText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#636E72",
-    flex: 1,
-    textAlign: "center",
   },
 });

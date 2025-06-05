@@ -1,35 +1,35 @@
 import { callAPI } from "./api";
 
 export interface DashboardStats {
-  total_words: number;
-  words_mastered: number;
-  average_mastery: number;
-  best_streak: number;
-  current_streak: number;
-  words_studied_today: number;
-  quizzes_today: number;
-  accuracy_today: number;
+  totalWords: number;
+  wordsMastered: number;
+  averageMastery: number;
+  bestStreak: number;
+  currentStreak: number;
+  wordsStudiedToday: number;
+  quizzesToday: number;
+  accuracyToday: number;
 }
 
 export interface WordMasteryStats {
-  word_id: number;
+  wordId: number;
   word: string;
-  mastery_level: number;
+  masteryLevel: number;
   accuracy: number;
-  streak_count: number;
-  highest_box: number;
+  streakCount: number;
+  highestBox: number;
 }
 
 export interface LearningProgress {
   date: string;
-  words_studied: number;
-  accuracy_rate: number;
+  wordsStudied: number;
+  accuracyRate: number;
 }
 
 export interface QuizTypePerformance {
-  quiz_type: string;
-  success_rate: number;
-  total_attempts: number;
+  quizType: string;
+  successRate: number;
+  totalAttempts: number;
 }
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -71,4 +71,40 @@ export async function getQuizPerformance(): Promise<QuizTypePerformance[]> {
     endpoint,
   );
   return payload.quiz_performance;
+}
+
+// 5) Get wordlist progress summary with mastery-based calculations
+export interface WordlistProgressSummary {
+  wordlistId: number;
+  totalWords: number;
+  wordsMastered: number;
+  averageMastery: number;
+  progressPercentage: number;
+}
+
+export async function getWordlistProgressSummary(
+  wordlistId: number,
+): Promise<WordlistProgressSummary> {
+  const wordMasteryStats = await getWordMastery(wordlistId);
+  
+  const totalWords = wordMasteryStats.length;
+  const wordsMastered = wordMasteryStats.filter(
+    (word) => word.masteryLevel >= 0.8 // Consider 80%+ as mastered
+  ).length;
+  
+  const averageMastery = totalWords > 0 
+    ? wordMasteryStats.reduce((sum, word) => sum + word.masteryLevel, 0) / totalWords
+    : 0;
+  
+  const progressPercentage = totalWords > 0 
+    ? Math.round((wordsMastered / totalWords) * 100)
+    : 0;
+
+  return {
+    wordlistId: wordlistId,
+    totalWords: totalWords,
+    wordsMastered: wordsMastered,
+    averageMastery: averageMastery,
+    progressPercentage: progressPercentage,
+  };
 }

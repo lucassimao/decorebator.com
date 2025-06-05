@@ -165,13 +165,13 @@ func (as *AnalyticsService) updateQuizTypeAnalytics(ctx context.Context, result 
 // Analytics Query Methods
 
 type WordMasteryStats struct {
-	WordID       int64      `json:"word_id"`
+	WordID       int64      `json:"wordId"`
 	Word         string     `json:"word"`
-	MasteryLevel float64    `json:"mastery_level"`
+	MasteryLevel float64    `json:"masteryLevel"`
 	Accuracy     float64    `json:"accuracy"`
-	StreakCount  int        `json:"streak_count"`
-	LastSeenAt   *time.Time `json:"last_seen_at"`
-	HighestBox   int        `json:"highest_box"`
+	StreakCount  int        `json:"streakCount"`
+	LastSeenAt   *time.Time `json:"lastSeenAt"`
+	HighestBox   int        `json:"highestBox"`
 }
 
 // GetWordMastery retrieves mastery stats for all words in a wordlist
@@ -205,11 +205,11 @@ func (as *AnalyticsService) GetWordMastery(ctx context.Context, userID, wordlist
 }
 
 type QuizTypePerformance struct {
-	QuizType      string    `json:"quiz_type"`
-	TotalAttempts int       `json:"total_attempts"`
-	SuccessRate   float64   `json:"success_rate"`
-	AvgResponseMs int       `json:"avg_response_ms"`
-	LastUpdated   time.Time `json:"last_updated"`
+	QuizType      string    `json:"quizType"`
+	TotalAttempts int       `json:"totalAttempts"`
+	SuccessRate   float64   `json:"successRate"`
+	AvgResponseMs int       `json:"avgResponseMs"`
+	LastUpdated   time.Time `json:"lastUpdated"`
 }
 
 // GetQuizTypePerformance retrieves performance stats by quiz type
@@ -244,12 +244,12 @@ func (as *AnalyticsService) GetQuizTypePerformance(ctx context.Context, userID i
 
 type LearningProgressStats struct {
 	Date             time.Time `json:"date"`
-	WordsStudied     int       `json:"words_studied"`
-	WordsMastered    int       `json:"words_mastered"`
-	TotalAttempts    int       `json:"total_attempts"`
-	AccuracyRate     float64   `json:"accuracy_rate"`
-	AvgResponseMs    int       `json:"avg_response_ms"`
-	StudyTimeSeconds int       `json:"study_time_seconds"`
+	WordsStudied     int       `json:"wordsStudied"`
+	WordsMastered    int       `json:"wordsMastered"`
+	TotalAttempts    int       `json:"totalAttempts"`
+	AccuracyRate     float64   `json:"accuracyRate"`
+	AvgResponseMs    int       `json:"avgResponseMs"`
+	StudyTimeSeconds int       `json:"studyTimeSeconds"`
 }
 
 // GetLearningProgress retrieves daily learning progress
@@ -370,14 +370,14 @@ func (as *AnalyticsService) GetBoxDistributionHistory(ctx context.Context, userI
 
 // DashboardStats holds all the pieces of data we need for the dashboard.
 type DashboardStats struct {
-	TotalWords        int      `json:"total_words"`
-	WordsMastered     int      `json:"words_mastered"`
-	AverageMastery    *float64 `json:"average_mastery"` // could be nil if no rows
-	BestStreak        *int     `json:"best_streak"`     // could be nil if no data
-	WordsStudiedToday int      `json:"words_studied_today"`
-	QuizzesToday      int      `json:"quizzes_today"`
-	AccuracyToday     float64  `json:"accuracy_today"`
-	CurrentStreak     int      `json:"current_streak"`
+	TotalWords        int      `json:"totalWords"`
+	WordsMastered     int      `json:"wordsMastered"`
+	AverageMastery    *float64 `json:"averageMastery"` // could be nil if no rows
+	BestStreak        *int     `json:"bestStreak"`     // could be nil if no data
+	WordsStudiedToday int      `json:"wordsStudiedToday"`
+	QuizzesToday      int      `json:"quizzesToday"`
+	AccuracyToday     float64  `json:"accuracyToday"`
+	CurrentStreak     int      `json:"currentStreak"`
 }
 
 // GetDashboardStats fetches and returns all pieces of data for a given user.

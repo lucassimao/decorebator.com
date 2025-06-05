@@ -4,9 +4,11 @@ import {
   getLearningProgress,
   getQuizPerformance,
   getWordMastery,
+  getWordlistProgressSummary,
   LearningProgress,
   QuizTypePerformance,
   WordMasteryStats,
+  WordlistProgressSummary,
 } from '@/api/analytics';
 import { useQuery } from '@tanstack/react-query';
 
@@ -26,6 +28,11 @@ type UseAnalyticsResult = {
   quizPerformance?: QuizTypePerformance[];
   quizPerfLoading: boolean;
   quizPerfError?: unknown;
+
+  wordlistProgress?: WordlistProgressSummary;
+  wordlistProgressLoading: boolean;
+  wordlistProgressError?: unknown;
+  progressPercentage: number;
 
   isPending:boolean
 }
@@ -73,6 +80,18 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     queryFn: getQuizPerformance,
   });
 
+  // 5) Wordlist progress summary
+  const {
+    data: wordlistProgress,
+    isLoading: wordlistProgressLoading,
+    error: wordlistProgressError,
+  } = useQuery<WordlistProgressSummary, unknown>({
+    queryKey: ['analytics', 'wordlistProgress', wordlistId],
+    queryFn: () => getWordlistProgressSummary(wordlistId),
+    enabled: Boolean(wordlistId),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   
   return {
     dashboardStats,
@@ -91,6 +110,12 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     quizPerfLoading,
     quizPerfError,
 
-    isPending: statsLoading || masteryLoading ||progressLoading||quizPerfLoading
+    wordlistProgress,
+    wordlistProgressLoading,
+    wordlistProgressError,
+    progressPercentage: wordlistProgress?.progressPercentage ?? 0,
+
+    isPending: statsLoading || masteryLoading ||progressLoading||quizPerfLoading||wordlistProgressLoading
   };
 }
+

@@ -75,8 +75,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
     setRefreshing(false);
   };
 
+  const onUpgradePress = ()=> router.push(`/settings`)
+
   const renderWordlistItem = ({ item }: { item: Wordlist }) => (
-    <Wordlistitem item={item} onPressed={() => setSelectedWordlist(item)} />
+    <Wordlistitem item={item} onPressed={() => setSelectedWordlist(item)} onUpgradePress={onUpgradePress} />
   );
   const hideWordlistDetailModal = () => setSelectedWordlist(null);
 

@@ -16,24 +16,33 @@ import { LANGUAGES } from "./CreateWordlistModal";
 import * as wordlistsApi from "@/api/wordlists";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { useUserInfo } from "@/hooks/users";
+import { LinearGradient } from "expo-linear-gradient";
 
 type WordlistItemProps = {
   item: Wordlist;
   onQuizStart?: (wordlist: Wordlist) => void;
   onPressed?: () => void;
+  onUpgradePress?: () => void;
 };
 
 const WordlistItem: React.FC<WordlistItemProps> = ({
   item,
   onQuizStart,
   onPressed,
+  onUpgradePress,
 }) => {
   const queryClient = useQueryClient();
   const [showMenu, setShowMenu] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
-
+  const { isPremium } = useUserInfo();
   const language = LANGUAGES.find((l) => item.languageCode === l.code)!;
+  
+  // Use analytics-based progress calculation
+  const { progressPercentage } = useAnalytics(item.id);
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -110,6 +119,12 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
   const handleAnalytics = () => {
     setShowMenu(false);
+    
+    if (!isPremium) {
+      setShowPremiumModal(true);
+      return;
+    }
+    
     router.push(`/analytics?wordlistId=${item.id}`);
   };
 
@@ -118,7 +133,6 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     onPressed?.();
   };
 
-  const progressPercentage = (item.wordsLearnedCount / item.wordsCount) * 100;
 
   return (
     <>
@@ -288,6 +302,64 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+      {/* Premium Analytics Upsell Modal */}
+      <Modal
+        visible={showPremiumModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPremiumModal(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowPremiumModal(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.premiumModalContainer}>
+                <LinearGradient
+                  colors={["#FFD700", "#FFA500"]}
+                  style={styles.premiumGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <View style={styles.premiumContent}>
+                    <View style={styles.premiumIconContainer}>
+                      <MaterialIcons name="analytics" size={32} color="#FFF" />
+                    </View>
+                    <Text style={styles.premiumTitle}>
+                      {t("dashboard.stats.premium.title")}
+                    </Text>
+                    <Text style={styles.premiumSubtitle}>
+                      {t("dashboard.stats.premium.subtitle")}
+                    </Text>
+                    
+                    <View style={styles.premiumButtons}>
+                      <TouchableOpacity
+                        style={styles.upgradeButton}
+                        onPress={() => {
+                          setShowPremiumModal(false);
+                          onUpgradePress?.();
+                        }}
+                      >
+                        <Text style={styles.upgradeButtonText}>
+                          {t("settings.subscription.upgradeButton")}
+                        </Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => setShowPremiumModal(false)}
+                      >
+                        <Text style={styles.cancelButtonText}>
+                          {t("upgradePrompt.maybeLater")}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </LinearGradient>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </>
   );
 };
@@ -420,5 +492,77 @@ const styles = StyleSheet.create({
   },
   deleteMenuItemText: {
     color: "#FF6B6B",
+  },
+  // Premium Modal Styles
+  premiumModalContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    margin: 20,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  premiumGradient: {
+    padding: 2,
+  },
+  premiumContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 24,
+    alignItems: "center",
+  },
+  premiumIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#FFD700",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  premiumTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#2D3436",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  premiumSubtitle: {
+    fontSize: 14,
+    color: "#636E72",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  premiumButtons: {
+    width: "100%",
+    gap: 12,
+  },
+  upgradeButton: {
+    backgroundColor: "#FFD700",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: "center",
+  },
+  upgradeButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2D3436",
+  },
+  cancelButton: {
+    backgroundColor: "transparent",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#636E72",
   },
 });
