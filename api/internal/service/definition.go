@@ -65,13 +65,13 @@ func DeleteWordDefinitions(wordId int64, tx *pgx.Tx) error {
 	return definitionRepository.DeleteWordDefinitions(wordId, tx)
 }
 
-func IsValidWordDefinition(wordId, definitionId, userId int64) (bool, error) {
-	isValid, err := definitionRepository.IsValidWordDefinition(wordId, definitionId, userId)
+func didUserCreateWord(wordId, userId int64) (bool, error) {
+	res, err := definitionRepository.DidUserCreateWord(wordId, userId)
 	if err != nil {
-		return false, fmt.Errorf("validation failed for tuple wordId, definitionId, userId. %w", err)
+		return false, fmt.Errorf("validation failed for tuple wordId, userId. %w", err)
 	}
 
-	return isValid, nil
+	return res, nil
 }
 
 func GetDefinitionsByWordId(wordId, userId int64) ([]*model.Definition, error) {

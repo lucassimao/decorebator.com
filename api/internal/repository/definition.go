@@ -221,7 +221,7 @@ func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64, tx *
 	var managedTx pgx.Tx
 	var err error
 	ctx := context.Background()
-	
+
 	// If no transaction provided, create and manage our own
 	if tx == nil {
 		managedTx, err = repository.Db.Begin(ctx)
@@ -271,9 +271,9 @@ func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64, tx *
 	return nil
 }
 
-func (repository *DefinitionRepository) IsValidWordDefinition(wordId, definitionId, userId int64) (bool, error) {
-	query := `SELECT count(*) FROM word_definitions wd JOIN words w ON w.id=wd.word_id and word_id=$1 and definition_id=$2 and user_id=$3`
-	row := repository.Db.QueryRow(context.Background(), query, wordId, definitionId, userId)
+func (repository *DefinitionRepository) DidUserCreateWord(wordId, userId int64) (bool, error) {
+	query := `SELECT count(*) FROM words w WHERE w.id=$1 and user_id=$2`
+	row := repository.Db.QueryRow(context.Background(), query, wordId, userId)
 	var count int
 	err := row.Scan(&count)
 

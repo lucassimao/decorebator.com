@@ -21,7 +21,8 @@ const (
 func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, userId int64, ctx context.Context) error {
 	logger := common.Logger.With("errorType", errorType, "wordID", wordID, "definitionID", definitionID, "userId", userId)
 
-	isValid, err := IsValidWordDefinition(wordID, definitionID, userId)
+	logger.Info("olar")
+	isValid, err := didUserCreateWord(wordID, userId)
 
 	if err != nil || !isValid {
 		if err != nil {
@@ -82,23 +83,40 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 		return err
 	}
 
-	// Insert error report
-	_, err = tx.Exec(ctx, `
-		INSERT INTO error_reports 
-		(user_id, definition_id,word_id, error_type, reported_at, status) 
-		VALUES ($1, $2, $3, $4, NOW(), 'pending')
-		ON CONFLICT (user_id, definition_id, word_id) 
-		DO UPDATE SET 
-			error_type = EXCLUDED.error_type,
-			reported_at = NOW(),
-			status = 'pending'`,
-		userId, definitionID, wordID, string(errorType))
-
+	// First, try to update an existing row matching (user_id, definition_id, word_id).
+	tag, err := tx.Exec(ctx, `
+        UPDATE error_reports
+        SET
+            error_type = $4,
+            reported_at = NOW(),
+            status = 'pending'
+        WHERE
+            user_id       = $1
+            AND definition_id = $2
+            AND word_id       = $3
+			AND status	='pending'
+    `, userId, definitionID, wordID, string(errorType))
 	if err != nil {
-		common.Logger.Error("failed to save error report", "error", err)
+		common.Logger.Error("failed to update existing error_report", "error", err)
 		return err
 	}
+
+	// If no row was updated, insert a new one.
+	if tag.RowsAffected() == 0 {
+		_, err = tx.Exec(ctx, `
+            INSERT INTO error_reports
+                (user_id, definition_id, word_id, error_type, reported_at, status)
+            VALUES
+                ($1, $2, $3, $4, NOW(), 'pending')
+        `, userId, definitionID, wordID, errorType)
+		if err != nil {
+			common.Logger.Error("failed to insert new error_report", "error", err)
+			return err
+		}
+	}
+
 	return nil
+
 }
 
 func DeleteUserErrorReports(userId int64) (int64, error) {

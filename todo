@@ -56,10 +56,8 @@
     [x] Update all i18n json files in mobile/i18n/locales to include the keys offiline.preloading , 
         offiline.availableOffline , offiline.preloadWhenOnline , offiline.downloadForOffline, offline.cacheProgress . They only exist in mobile/i18n/locales/en.json and should be replicated across all i18n files in the same dir
     [x] Update mobile/components/dashboard/WordlistItem.tsx to show the full name of the wordlist  in the first line. Then the buttons (flash card, stats, quiz) need to be reworked and moved elsewhere inside the component layout cuz the are very small right now to be used in mobile screens.
+    [x] error_reporting_analysis.html
     [ ] mobile/app/analytics.tsx BarChart seems broken
-    [ ] useOffline logic seems to not be working. When triggered the reportMutation in mobile/app/quiz.tsx always throws the Reporting not available in offline mode error
-    
-    [ ] error_reporting_analysis.html
     [ ] Multilanguage quizes
 
      now go over how we fetch definitions. The logic is triggered by running this job api/internal/service/definition_fetcher_worker.go. Right now the implementation assumes that the 
@@ -67,7 +65,6 @@
   are created by users. So basically what i need is to ajust the prompt to generate the definitions based on the wordlist language instead of assuming it as always english. Plan around 
   the required changes without doing any change and then put together a html file outiline your approach. We should support all wordlists for languages 
   English,Spanish,French,German,Italian,Portuguese,Japanese and thus our prompt needs to be adjusted to take that into account and also the specifities of all those languages
-
 
     [ ] Splash screen
 
