@@ -27,7 +27,7 @@ func main() {
 		log.Fatal("Batch size must be between 1 and 100")
 	}
 
-	fmt.Printf("Starting regeneration of verb inflections in batches of %d...\n", batchSize)
+	fmt.Printf("Starting regeneration of definitions for words without definitions or with empty part_of_speech in batches of %d...\n", batchSize)
 
 	db, err := common.GetDBConnection()
 	if err != nil {
@@ -35,14 +35,28 @@ func main() {
 	}
 	defer db.Close()
 
-	// Find words with verb definitions that have no inflections
+	// Find words that either have no definitions or have definitions with empty part_of_speech
 	query := `
 		SELECT DISTINCT w.id, w.name
 		FROM words w
-		JOIN word_definitions wd ON wd.word_id = w.id  
-		JOIN definitions d ON d.id = wd.definition_id
-		WHERE d.part_of_speech IN ('verb', 'phrasal verb')
-		AND (d.inflections IS NULL OR jsonb_array_length(d.inflections) = 0)
+		WHERE w.id IN (
+			-- Words with no definitions at all
+			SELECT w1.id 
+			FROM words w1 
+			LEFT JOIN word_definitions wd1 ON wd1.word_id = w1.id
+			WHERE wd1.word_id IS NULL
+			
+			UNION
+			
+			-- Words with definitions that have empty or null part_of_speech
+			SELECT w2.id
+			FROM words w2
+			JOIN word_definitions wd2 ON wd2.word_id = w2.id  
+			JOIN definitions d2 ON d2.id = wd2.definition_id
+			WHERE d2.part_of_speech IS NULL 
+			   OR d2.part_of_speech = '' 
+			   OR trim(d2.part_of_speech) = ''
+		)
 		ORDER BY w.id
 		LIMIT $1
 	`
@@ -73,11 +87,11 @@ func main() {
 	}
 
 	if len(wordsToProcess) == 0 {
-		fmt.Println("No words found that need inflection regeneration.")
+		fmt.Println("No words found that need definition regeneration.")
 		return
 	}
 
-	fmt.Printf("Found %d words that need inflection regeneration:\n", len(wordsToProcess))
+	fmt.Printf("Found %d words that need definition regeneration:\n", len(wordsToProcess))
 	for _, word := range wordsToProcess {
 		fmt.Printf("- ID %d: %s\n", word.ID, word.Name)
 	}
@@ -85,7 +99,7 @@ func main() {
 	fmt.Print("\nProceed with regeneration? (y/n): ")
 	var response string
 	fmt.Scanln(&response)
-	
+
 	if response != "y" && response != "Y" {
 		fmt.Println("Aborted.")
 		return
@@ -102,7 +116,7 @@ func main() {
 			continue
 		}
 
-		// Delete existing verb/phrasal verb definitions that don't have inflections
+		// Delete existing definitions with empty part_of_speech (if any)
 		_, err = tx.Exec(context.Background(), `
 			DELETE FROM definitions 
 			WHERE id IN (
@@ -110,8 +124,7 @@ func main() {
 				FROM definitions d
 				JOIN word_definitions wd ON wd.definition_id = d.id
 				WHERE wd.word_id = $1 
-				AND d.part_of_speech IN ('verb', 'phrasal verb')
-				AND (d.inflections IS NULL OR jsonb_array_length(d.inflections) = 0)
+				AND (d.part_of_speech IS NULL OR d.part_of_speech = '' OR trim(d.part_of_speech) = '')
 			)
 		`, word.ID)
 
@@ -122,7 +135,7 @@ func main() {
 		}
 
 		// Trigger the definition fetcher worker for this word
-		_, err = service.TriggerFetchDefinitionWorker(word.ID, nil, &tx)
+		_, err = service.TriggerFetchDefinitionWorker(word.ID, nil, tx)
 		if err != nil {
 			log.Printf("Failed to trigger definition fetch for word %s: %v", word.Name, err)
 			tx.Rollback(context.Background())
@@ -139,6 +152,6 @@ func main() {
 	}
 
 	fmt.Printf("\nCompleted! Processed %d words.\n", len(wordsToProcess))
-	fmt.Println("Note: The definition fetcher workers will run asynchronously to generate new definitions with inflections.")
+	fmt.Println("Note: The definition fetcher workers will run asynchronously to generate new definitions.")
 	fmt.Println("You can run this script again to process more words in batches.")
 }
