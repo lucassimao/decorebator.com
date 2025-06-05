@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import offlineManager from '@/utils/offlineManager';
-import * as userApi from '@/api/users';
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import offlineManager from "@/utils/offlineManager";
+import * as userApi from "@/api/users";
 
 export function useOffline() {
   const [isOnline, setIsOnline] = useState(true);
@@ -9,7 +9,7 @@ export function useOffline() {
 
   // Get user profile to check premium status
   const { data: profile } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ["userProfile"],
     queryFn: userApi.getProfile,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -28,7 +28,9 @@ export function useOffline() {
 
   useEffect(() => {
     // Update premium status in offline manager
-    const isPremium = profile?.subscriptionPlan === 'monthly' || profile?.subscriptionPlan === 'annual';
+    const isPremium =
+      profile?.subscriptionPlan === "monthly" ||
+      profile?.subscriptionPlan === "annual";
     offlineManager.setUserPremiumStatus(isPremium);
     setIsOfflineAvailable(isPremium && !isOnline);
   }, [profile?.subscriptionPlan, isOnline]);
@@ -36,6 +38,8 @@ export function useOffline() {
   return {
     isOnline,
     isOfflineAvailable,
-    isPremium: profile?.subscriptionPlan === 'monthly' || profile?.subscriptionPlan === 'annual',
+    isPremium:
+      profile?.subscriptionPlan === "monthly" ||
+      profile?.subscriptionPlan === "annual",
   };
 }

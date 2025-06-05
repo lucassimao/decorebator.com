@@ -38,13 +38,13 @@ export type UpdateInput = {
   // if set, triggers a password update
   updatePassword?: {
     currentPassword: string;
-    newPassword: String;
+    newPassword: string;
   };
 
   // if set, triggers profile pic update
   updateProfilePicture?: {
     base64Data: string;
-    extension: String;
+    extension: string;
   };
 };
 

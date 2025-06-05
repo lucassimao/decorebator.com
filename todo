@@ -55,7 +55,7 @@
   reuse whatever is already been expected to be show in the current implementation of the component - nothing else more
     [x] Update all i18n json files in mobile/i18n/locales to include the keys offiline.preloading , 
         offiline.availableOffline , offiline.preloadWhenOnline , offiline.downloadForOffline, offline.cacheProgress . They only exist in mobile/i18n/locales/en.json and should be replicated across all i18n files in the same dir
-    [ ] Update mobile/components/dashboard/WordlistItem.tsx to show the full name of the wordlist  in the first line. Then the buttons (flash card, stats, quiz) need to be reworked and moved elsewhere inside the component layout cuz the are very small right now to be used in mobile screens.
+    [x] Update mobile/components/dashboard/WordlistItem.tsx to show the full name of the wordlist  in the first line. Then the buttons (flash card, stats, quiz) need to be reworked and moved elsewhere inside the component layout cuz the are very small right now to be used in mobile screens.
     [ ] mobile/app/analytics.tsx BarChart seems broken
     [ ] error_reporting_analysis.html
     [ ] Multilanguage quizes

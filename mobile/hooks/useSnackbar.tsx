@@ -1,17 +1,25 @@
-
-import SnackBar from '@/components/SnackBar';
-import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
+import SnackBar from "@/components/SnackBar";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+  useMemo,
+} from "react";
 
 interface SnackbarContextType {
-  show: (message: string, type: 'success' | 'error', duration?: number) => void;
+  show: (message: string, type: "success" | "error", duration?: number) => void;
 }
 
-const SnackbarContext = createContext<SnackbarContextType | undefined>(undefined);
+const SnackbarContext = createContext<SnackbarContextType | undefined>(
+  undefined,
+);
 
 export const useSnackbar = () => {
   const context = useContext(SnackbarContext);
   if (!context) {
-    throw new Error('useSnackbar must be used within SnackbarProvider');
+    throw new Error("useSnackbar must be used within SnackbarProvider");
   }
   return context;
 };
@@ -19,28 +27,33 @@ export const useSnackbar = () => {
 interface SnackbarState {
   visible: boolean;
   message: string;
-  type: 'success' | 'error';
+  type: "success" | "error";
   duration: number;
 }
 
-export const SnackbarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const SnackbarProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [snackbar, setSnackbar] = useState<SnackbarState>({
     visible: false,
-    message: '',
-    type: 'success',
+    message: "",
+    type: "success",
     duration: 2000,
   });
 
-  const show = useCallback((
-    message: string,
-    type: 'success' | 'error' = 'success',
-    duration = 2000
-  ) => {
-    setSnackbar({ visible: true, message, type, duration });
-  }, []);
+  const show = useCallback(
+    (
+      message: string,
+      type: "success" | "error" = "success",
+      duration = 2000,
+    ) => {
+      setSnackbar({ visible: true, message, type, duration });
+    },
+    [],
+  );
 
   const hide = useCallback(() => {
-    setSnackbar(prev => ({ ...prev, visible: false }));
+    setSnackbar((prev) => ({ ...prev, visible: false }));
   }, []);
 
   // now this object identity won’t change unless `show` changes

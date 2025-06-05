@@ -9,8 +9,8 @@ import {
   QuizTypePerformance,
   WordMasteryStats,
   WordlistProgressSummary,
-} from '@/api/analytics';
-import { useQuery } from '@tanstack/react-query';
+} from "@/api/analytics";
+import { useQuery } from "@tanstack/react-query";
 
 type UseAnalyticsResult = {
   dashboardStats?: DashboardStats;
@@ -34,8 +34,8 @@ type UseAnalyticsResult = {
   wordlistProgressError?: unknown;
   progressPercentage: number;
 
-  isPending:boolean
-}
+  isPending: boolean;
+};
 
 export function useAnalytics(wordlistId: number): UseAnalyticsResult {
   // 1) Dashboard stats
@@ -44,7 +44,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     isLoading: statsLoading,
     error: statsError,
   } = useQuery<DashboardStats, unknown>({
-    queryKey: ['analytics', 'dashboard'],
+    queryKey: ["analytics", "dashboard"],
     queryFn: getDashboardStats,
   });
 
@@ -54,7 +54,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     isLoading: masteryLoading,
     error: masteryError,
   } = useQuery<WordMasteryStats[], unknown>({
-    queryKey: ['analytics', 'mastery', wordlistId],
+    queryKey: ["analytics", "mastery", wordlistId],
     queryFn: () => getWordMastery(wordlistId),
     enabled: Boolean(wordlistId),
   });
@@ -65,7 +65,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     isLoading: progressLoading,
     error: progressError,
   } = useQuery<LearningProgress[], unknown>({
-    queryKey: ['analytics', 'progress', wordlistId],
+    queryKey: ["analytics", "progress", wordlistId],
     queryFn: () => getLearningProgress(wordlistId, 7),
     enabled: Boolean(wordlistId),
   });
@@ -76,7 +76,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     isLoading: quizPerfLoading,
     error: quizPerfError,
   } = useQuery<QuizTypePerformance[], unknown>({
-    queryKey: ['analytics', 'quiz-performance'],
+    queryKey: ["analytics", "quiz-performance"],
     queryFn: getQuizPerformance,
   });
 
@@ -86,13 +86,12 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     isLoading: wordlistProgressLoading,
     error: wordlistProgressError,
   } = useQuery<WordlistProgressSummary, unknown>({
-    queryKey: ['analytics', 'wordlistProgress', wordlistId],
+    queryKey: ["analytics", "wordlistProgress", wordlistId],
     queryFn: () => getWordlistProgressSummary(wordlistId),
     enabled: Boolean(wordlistId),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  
   return {
     dashboardStats,
     statsLoading,
@@ -115,7 +114,11 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     wordlistProgressError,
     progressPercentage: wordlistProgress?.progressPercentage ?? 0,
 
-    isPending: statsLoading || masteryLoading ||progressLoading||quizPerfLoading||wordlistProgressLoading
+    isPending:
+      statsLoading ||
+      masteryLoading ||
+      progressLoading ||
+      quizPerfLoading ||
+      wordlistProgressLoading,
   };
 }
-

@@ -25,7 +25,8 @@
     "user": "Utente",
     "ok": "OK",
     "hide": "NASCONDI",
-    "goBack": "Indietro"
+    "goBack": "Indietro",
+    "more": "Più"
   },
   "auth": {
     "signin": {
@@ -428,7 +429,10 @@
     "editWordlist": "Modifica Lista",
     "deleteWordlist": "Elimina Lista",
     "practiceFlashcards": "Pratica con le Flashcard",
-    "viewAnalytics": "Visualizza Analisi"
+    "viewAnalytics": "Visualizza Analisi",
+    "analytics": "Analisi",
+    "practice": "Pratica",
+    "quiz": "Quiz"
   },
     "analytics": {
     "header": {

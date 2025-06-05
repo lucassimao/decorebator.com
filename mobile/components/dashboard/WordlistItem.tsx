@@ -144,53 +144,12 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         <View style={styles.cardHeader}>
           <Text style={styles.languageFlag}>{language.flag}</Text>
           <View style={styles.cardTitleContainer}>
-            <Text style={styles.wordlistTitle} numberOfLines={1}>
-              {item.name}
-            </Text>
+            <Text style={styles.wordlistTitle}>{item.name}</Text>
             {item.description && (
               <Text style={styles.wordlistDescription} numberOfLines={2}>
                 {item.description}
               </Text>
             )}
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleAnalytics}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <MaterialIcons name="bar-chart" size={26} color="#FFD700" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handlePractice}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <MaterialIcons name="style" size={26} color="#2196F3" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleQuizStart}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <MaterialIcons
-                name="play-circle-filled"
-                size={28}
-                color="#4CAF50"
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => setShowMenu(true)}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <MaterialIcons name="more-vert" size={24} color="#636E72" />
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -222,6 +181,51 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           <View
             style={[styles.progressFill, { width: `${progressPercentage}%` }]}
           />
+        </View>
+
+        {/* Action Buttons Row */}
+        <View style={styles.actionButtonsRow}>
+          <TouchableOpacity
+            style={styles.actionButtonLarge}
+            onPress={handleAnalytics}
+          >
+            <MaterialIcons name="bar-chart" size={20} color="#FFD700" />
+            <Text style={styles.actionButtonText}>
+              {t("wordlistItem.analytics")}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionButtonLarge}
+            onPress={handlePractice}
+          >
+            <MaterialIcons name="style" size={20} color="#2196F3" />
+            <Text style={styles.actionButtonText}>
+              {t("wordlistItem.practice")}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionButtonLarge}
+            onPress={handleQuizStart}
+          >
+            <MaterialIcons
+              name="play-circle-filled"
+              size={20}
+              color="#4CAF50"
+            />
+            <Text style={styles.actionButtonText}>
+              {t("wordlistItem.quiz")}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionButtonLarge}
+            onPress={() => setShowMenu(true)}
+          >
+            <MaterialIcons name="more-horiz" size={20} color="#636E72" />
+            <Text style={styles.actionButtonText}>{t("common.more")}</Text>
+          </TouchableOpacity>
         </View>
       </TouchableOpacity>
 
@@ -401,13 +405,29 @@ const styles = StyleSheet.create({
     color: "#636E72",
     lineHeight: 20,
   },
-  actionButtons: {
+  actionButtonsRow: {
     flexDirection: "row",
+    marginTop: 12,
+    gap: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#F0F0F0",
+  },
+  actionButtonLarge: {
+    flex: 1,
+    flexDirection: "column",
     alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: "#FAFAFA",
     gap: 4,
   },
-  actionButton: {
-    padding: 4,
+  actionButtonText: {
+    fontSize: 12,
+    color: "#636E72",
+    fontWeight: "500",
+    textAlign: "center",
   },
   cardStats: {
     flexDirection: "row",

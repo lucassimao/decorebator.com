@@ -166,6 +166,16 @@ npm install
 EXPO_PUBLIC_API_URL=http://localhost:8080
 ```
 
+**Supported Languages**: The mobile app includes full internationalization support for:
+- English (en)
+- German (de) 
+- Spanish (es)
+- French (fr)
+- Italian (it)
+- Japanese (ja)
+- Portuguese - Brazil (pt-BR)
+- Portuguese - Portugal (pt-PT)
+
 4. Start the development server:
 ```bash
 npm start
@@ -230,6 +240,12 @@ npm run lint          # Run ESLint
 npm run expo:update   # Update Expo dependencies
 npm run test          # Run Jest tests
 ```
+
+**Code Quality Improvements**:
+- Reusable error reporting modal component (`components/ErrorReportModal.tsx`)
+- Internationalization support with React i18next
+- Consistent TypeScript interfaces and error handling
+- Comprehensive test coverage for core features
 
 ### Web Frontend
 ```bash
@@ -505,12 +521,24 @@ The Leitner system feeds into comprehensive analytics:
 - **Response Time Analysis**: Tracks improvement over time
 - **Box Distribution**: Historical snapshots of learning progress
 
+### Flashcard Integration
+
+The Leitner system is seamlessly integrated with the interactive flashcard feature:
+
+- **Study Mode**: Flashcards provide passive review without affecting box progression
+- **Rich Content Display**: Shows definitions, pronunciations, part-of-speech, and contextual examples
+- **Verb Inflection Support**: Special handling for verb forms with tense-specific examples
+- **Error Reporting**: Direct reporting of content issues from flashcard interface
+- **Progress Tracking**: View word mastery and learning statistics while studying
+
 ### Advanced Features
 
 - **Smart Fallback**: When no due definitions exist, selects oldest reviewed definitions
 - **Transaction Safety**: All quiz results and box updates are atomic operations
 - **Content Validation**: Ensures definitions have required content before quiz generation
 - **Performance Optimization**: Uses efficient SQL queries with proper indexing
+- **Error Recovery**: Automatic handling of problematic content with temporary skip functionality
+- **Multi-Modal Learning**: Supports both active testing (quizzes) and passive review (flashcards)
 
 This implementation ensures optimal learning efficiency by presenting words at scientifically-backed intervals while adapting to individual learning patterns and content availability.
 

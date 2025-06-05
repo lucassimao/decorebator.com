@@ -1,16 +1,3 @@
-type PlanRecurrence = "annual" | "monthly";
-
-export interface PricingPlan {
-  id: PlanRecurrence;
-  name: string;
-  price: number;
-  currency: string;
-  interval: "month" | "year";
-  features: string[];
-  popular?: boolean;
-  savings?: string;
-}
-
 import * as subscriptionsApi from "@/api/subscriptions";
 import * as usersApi from "@/api/users";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -35,6 +22,19 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+type PlanRecurrence = "annual" | "monthly";
+
+export interface PricingPlan {
+  id: PlanRecurrence;
+  name: string;
+  price: number;
+  currency: string;
+  interval: "month" | "year";
+  features: string[];
+  popular?: boolean;
+  savings?: string;
+}
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const getPricingPlans = (t: any): PricingPlan[] => [

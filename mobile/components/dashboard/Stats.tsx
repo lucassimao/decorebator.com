@@ -79,12 +79,14 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
   });
 
   // Transform analytics data to match the expected UserStats interface
-  const stats = dashboardStats ? {
-    totalWords: dashboardStats.totalWords,
-    wordlists: wordlists?.length || 0,
-    wordsLearned: dashboardStats.wordsMastered,
-    currentStreak: dashboardStats.currentStreak,
-  } : null;
+  const stats = dashboardStats
+    ? {
+        totalWords: dashboardStats.totalWords,
+        wordlists: wordlists?.length || 0,
+        wordsLearned: dashboardStats.wordsMastered,
+        currentStreak: dashboardStats.currentStreak,
+      }
+    : null;
 
   const isLoading = statsLoading || wordlistsLoading;
   const isError = statsError || wordlistsError;

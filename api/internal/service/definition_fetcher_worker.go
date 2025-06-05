@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -48,6 +49,13 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	// Validate the definitions received from ChatGPT
 	validationErrors := validateDefinitions(word.Name, definitionData.Definitions)
 	if len(validationErrors) > 0 {
+		json, err := json.Marshal(definitionData)
+		if err != nil {
+			logger.Debug(string(json))
+		} else {
+			logger.Error("fail", "err", err)
+		}
+
 		for _, validationErr := range validationErrors {
 			logger.Warn("definition validation warning", "word", word.Name, "issue", validationErr)
 		}

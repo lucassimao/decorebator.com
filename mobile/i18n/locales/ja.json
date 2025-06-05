@@ -25,7 +25,8 @@
     "user": "ユーザー",
     "ok": "OK",
     "hide": "非表示",
-    "goBack": "戻る"
+    "goBack": "戻る",
+    "more": "もっと"
   },
   "auth": {
     "signin": {
@@ -428,7 +429,10 @@
     "editWordlist": "リストを編集",
     "deleteWordlist": "リストを削除",
     "practiceFlashcards": "フラッシュカードで練習",
-    "viewAnalytics": "分析を表示"
+    "viewAnalytics": "分析を表示",
+    "analytics": "分析",
+    "practice": "練習",
+    "quiz": "クイズ"
   },
   "analytics": {
     "header": {

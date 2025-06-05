@@ -79,7 +79,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   });
 
   // Get analytics data for this wordlist
-  const { wordlistProgress, wordlistProgressLoading } = useAnalytics(wordlist.id);
+  const { wordlistProgress, wordlistProgressLoading } = useAnalytics(
+    wordlist.id,
+  );
 
   // Add word mutation
   const addWordMutation = useMutation({
@@ -234,11 +236,11 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   // Use analytics data for learned count if available, fallback to local calculation
   const learnedFromAnalytics = wordlistProgress?.wordsMastered ?? 0;
   const progressFromAnalytics = wordlistProgress?.progressPercentage ?? 0;
-  
+
   const stats = {
     total: words.length,
     learned: learnedFromAnalytics,
-    progress: progressFromAnalytics
+    progress: progressFromAnalytics,
   };
 
   if (!visible) return null;
@@ -291,10 +293,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                 {stats.learned}
               </Text>
               <Text style={styles.statLabel}>
-                {learnedFromAnalytics !== null 
+                {learnedFromAnalytics !== null
                   ? t("wordDetail.mastered")
-                  : t("wordDetail.learned")
-                }
+                  : t("wordDetail.learned")}
               </Text>
             </View>
             <View style={styles.stat}>
@@ -302,10 +303,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                 {Math.round(stats.progress)}%
               </Text>
               <Text style={styles.statLabel}>
-                {progressFromAnalytics !== null 
+                {progressFromAnalytics !== null
                   ? t("wordDetail.masteryProgress")
-                  : t("wordDetail.progress")
-                }
+                  : t("wordDetail.progress")}
               </Text>
             </View>
           </View>
@@ -322,7 +322,11 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
 
           {/* Learned Toggle Explanation */}
           <View style={styles.toggleExplanation}>
-            <MaterialIcons name="check-circle-outline" size={16} color="#636E72" />
+            <MaterialIcons
+              name="check-circle-outline"
+              size={16}
+              color="#636E72"
+            />
             <Text style={styles.explanationText}>
               {t("wordDetail.learnedToggleExplanation")}
             </Text>
