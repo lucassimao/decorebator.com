@@ -13,7 +13,6 @@ import {
 
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useUserInfo } from "@/hooks/users";
-import { useQuery } from "@tanstack/react-query";
 import * as wordlistsApi from "@/api/wordlists";
 
 // Animated Counter Component
