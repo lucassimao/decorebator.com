@@ -45,9 +45,9 @@
     [x] Fix % learned in the ItemUi
     [x] Support Stripe cupoms
     [x] Try SaveQuizResultWithAnalytics and Add new stats dashboard
-    [ ] Leitner system - problem with single word stuck at lowest box
     [x] Flashcards
-    [ ] Display pronunciation if available
+    [ ] Leitner system - problem with single word stuck at lowest box
+    [ ] Display pronunciation if available (missing quiz screens)
     [ ] Multilanguage quizes
     [ ] Use all examples
     [ ] Splash screen

@@ -412,12 +412,11 @@ const FlashcardPractice: React.FC = () => {
                         {definition.meaning}
                       </Text>
 
-                      {definition.phoneticNotations &&
-                        definition.phoneticNotations.length > 0 && (
-                          <Text style={styles.phoneticText}>
-                            /{definition.phoneticNotations[0].ipa}/
-                          </Text>
-                        )}
+                      {currentWord?.pronunciation && (
+                        <Text style={styles.phoneticText}>
+                          /{currentWord?.pronunciation}/
+                        </Text>
+                      )}
 
                       {definition.examples &&
                         definition.examples.length > 0 && (

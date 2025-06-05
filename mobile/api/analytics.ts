@@ -86,19 +86,20 @@ export async function getWordlistProgressSummary(
   wordlistId: number,
 ): Promise<WordlistProgressSummary> {
   const wordMasteryStats = await getWordMastery(wordlistId);
-  
+
   const totalWords = wordMasteryStats.length;
   const wordsMastered = wordMasteryStats.filter(
-    (word) => word.masteryLevel >= 0.8 // Consider 80%+ as mastered
+    (word) => word.masteryLevel >= 0.8, // Consider 80%+ as mastered
   ).length;
-  
-  const averageMastery = totalWords > 0 
-    ? wordMasteryStats.reduce((sum, word) => sum + word.masteryLevel, 0) / totalWords
-    : 0;
-  
-  const progressPercentage = totalWords > 0 
-    ? Math.round((wordsMastered / totalWords) * 100)
-    : 0;
+
+  const averageMastery =
+    totalWords > 0
+      ? wordMasteryStats.reduce((sum, word) => sum + word.masteryLevel, 0) /
+        totalWords
+      : 0;
+
+  const progressPercentage =
+    totalWords > 0 ? Math.round((wordsMastered / totalWords) * 100) : 0;
 
   return {
     wordlistId: wordlistId,

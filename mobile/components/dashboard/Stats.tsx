@@ -140,120 +140,118 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
     <Animated.View
       style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
     >
-        <LinearGradient
-          colors={["rgba(255, 255, 255, 0.9)", "rgba(255, 255, 255, 0.7)"]}
-          style={styles.statsContainer}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          {/* Progress Overview */}
-          {PROGRESS_OVERVIEW_ENABLED && (
-            <View style={styles.progressOverview}>
-              <Text style={styles.progressLabel}>
-                {t("dashboard.stats.learningProgress")}
+      <LinearGradient
+        colors={["rgba(255, 255, 255, 0.9)", "rgba(255, 255, 255, 0.7)"]}
+        style={styles.statsContainer}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        {/* Progress Overview */}
+        {PROGRESS_OVERVIEW_ENABLED && (
+          <View style={styles.progressOverview}>
+            <Text style={styles.progressLabel}>
+              {t("dashboard.stats.learningProgress")}
+            </Text>
+            <View style={styles.progressBarContainer}>
+              <View style={styles.progressBarBackground}>
+                <Animated.View
+                  style={[
+                    styles.progressBarFill,
+                    {
+                      width: `${getProgressPercentage()}%`,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressPercentage}>
+                {getProgressPercentage()}%
               </Text>
-              <View style={styles.progressBarContainer}>
-                <View style={styles.progressBarBackground}>
-                  <Animated.View
-                    style={[
-                      styles.progressBarFill,
-                      {
-                        width: `${getProgressPercentage()}%`,
-                      },
-                    ]}
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingTop: 6,
+              }}
+            >
+              <Text style={styles.motivationalText}>
+                {getMotivationalMessage()}
+              </Text>
+              {stats?.currentStreak && stats.currentStreak > 0 && (
+                <View style={styles.streakContainer}>
+                  <MaterialIcons
+                    name="local-fire-department"
+                    size={20}
+                    color="#FF6B3D"
                   />
+                  <Text style={styles.streakText}>
+                    {t("dashboard.stats.dayStreak", {
+                      count: stats.currentStreak,
+                    })}
+                  </Text>
                 </View>
-                <Text style={styles.progressPercentage}>
-                  {getProgressPercentage()}%
-                </Text>
-              </View>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  paddingTop: 6,
-                }}
-              >
-                <Text style={styles.motivationalText}>
-                  {getMotivationalMessage()}
-                </Text>
-                {stats?.currentStreak && stats.currentStreak > 0 && (
-                  <View style={styles.streakContainer}>
-                    <MaterialIcons
-                      name="local-fire-department"
-                      size={20}
-                      color="#FF6B3D"
-                    />
-                    <Text style={styles.streakText}>
-                      {t("dashboard.stats.dayStreak", {
-                        count: stats.currentStreak,
-                      })}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          )}
-
-          {/* Stats Grid */}
-          <View style={styles.statsGrid}>
-            <View style={[styles.statItem, styles.statItemFirst]}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="library-books" size={24} color="#FF7B54" />
-              </View>
-              <View style={styles.labelContainer}>
-                <Text style={styles.statLabel}>
-                  {t("dashboard.stats.totalWords")}
-                </Text>
-              </View>
-              <AnimatedCounter
-                value={stats?.totalWords || 0}
-                style={styles.statValue}
-                delay={0}
-              />
-            </View>
-
-            <View style={styles.statDivider} />
-
-            <View style={styles.statItem}>
-              <View style={styles.iconContainer}>
-                <Ionicons name="list" size={24} color="#4CAF50" />
-              </View>
-              <View style={styles.labelContainer}>
-                <Text style={styles.statLabel}>
-                  {t("dashboard.stats.wordlists")}
-                </Text>
-              </View>
-              <AnimatedCounter
-                value={stats?.wordlists || 0}
-                style={styles.statValue}
-                delay={200}
-              />
-            </View>
-
-            <View style={styles.statDivider} />
-
-            <View style={[styles.statItem, styles.statItemLast]}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="school" size={24} color="#2196F3" />
-              </View>
-              <View style={styles.labelContainer}>
-                <Text style={styles.statLabel}>
-                  {t("dashboard.stats.learned")}
-                </Text>
-              </View>
-              <AnimatedCounter
-                value={stats?.wordsLearned || 0}
-                style={[styles.statValue, { color: "#4CAF50" }]}
-                delay={400}
-              />
+              )}
             </View>
           </View>
+        )}
 
+        {/* Stats Grid */}
+        <View style={styles.statsGrid}>
+          <View style={[styles.statItem, styles.statItemFirst]}>
+            <View style={styles.iconContainer}>
+              <MaterialIcons name="library-books" size={24} color="#FF7B54" />
+            </View>
+            <View style={styles.labelContainer}>
+              <Text style={styles.statLabel}>
+                {t("dashboard.stats.totalWords")}
+              </Text>
+            </View>
+            <AnimatedCounter
+              value={stats?.totalWords || 0}
+              style={styles.statValue}
+              delay={0}
+            />
+          </View>
 
-        </LinearGradient>
+          <View style={styles.statDivider} />
+
+          <View style={styles.statItem}>
+            <View style={styles.iconContainer}>
+              <Ionicons name="list" size={24} color="#4CAF50" />
+            </View>
+            <View style={styles.labelContainer}>
+              <Text style={styles.statLabel}>
+                {t("dashboard.stats.wordlists")}
+              </Text>
+            </View>
+            <AnimatedCounter
+              value={stats?.wordlists || 0}
+              style={styles.statValue}
+              delay={200}
+            />
+          </View>
+
+          <View style={styles.statDivider} />
+
+          <View style={[styles.statItem, styles.statItemLast]}>
+            <View style={styles.iconContainer}>
+              <MaterialIcons name="school" size={24} color="#2196F3" />
+            </View>
+            <View style={styles.labelContainer}>
+              <Text style={styles.statLabel}>
+                {t("dashboard.stats.learned")}
+              </Text>
+            </View>
+            <AnimatedCounter
+              value={stats?.wordsLearned || 0}
+              style={[styles.statValue, { color: "#4CAF50" }]}
+              delay={400}
+            />
+          </View>
+        </View>
+      </LinearGradient>
     </Animated.View>
   );
 };

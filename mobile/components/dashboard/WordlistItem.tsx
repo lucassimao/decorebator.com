@@ -40,7 +40,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const { t } = useTranslation();
   const { isPremium } = useUserInfo();
   const language = LANGUAGES.find((l) => item.languageCode === l.code)!;
-  
+
   // Use analytics-based progress calculation
   const { progressPercentage } = useAnalytics(item.id);
 
@@ -119,12 +119,12 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
   const handleAnalytics = () => {
     setShowMenu(false);
-    
+
     if (!isPremium) {
       setShowPremiumModal(true);
       return;
     }
-    
+
     router.push(`/analytics?wordlistId=${item.id}`);
   };
 
@@ -132,7 +132,6 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     setShowMenu(false);
     onPressed?.();
   };
-
 
   return (
     <>
@@ -330,7 +329,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                     <Text style={styles.premiumSubtitle}>
                       {t("dashboard.stats.premium.subtitle")}
                     </Text>
-                    
+
                     <View style={styles.premiumButtons}>
                       <TouchableOpacity
                         style={styles.upgradeButton}
@@ -343,7 +342,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                           {t("settings.subscription.upgradeButton")}
                         </Text>
                       </TouchableOpacity>
-                      
+
                       <TouchableOpacity
                         style={styles.cancelButton}
                         onPress={() => setShowPremiumModal(false)}

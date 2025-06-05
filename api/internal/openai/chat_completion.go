@@ -126,7 +126,12 @@ func GetExamples(token string, partOfSpeech string, number int, sense string) ([
 	return result.Examples, nil
 }
 
-func GetDefinition(token string) ([]*model.Definition, error) {
+type DefinitionWithPronunciation struct {
+	Definitions   []*model.Definition
+	Pronunciation string
+}
+
+func GetDefinition(token string) (*DefinitionWithPronunciation, error) {
 	logger := common.Logger.With("token", token, "func", "GetDefinition", "package", "openai")
 
 	logger.Debug("defining token using chatgpt", "token", token)
@@ -136,8 +141,9 @@ func GetDefinition(token string) ([]*model.Definition, error) {
 	messages := []map[string]string{
 		{
 			"role": "system",
-			"content": "You are a dictionary assistant. Always respond with a JSON object containing a 'results' array. " +
-				"Each item in 'results' must include: part_of_speech (one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection), meaning (string), examples and inflections ( only if phrasal verb or verb. empty array otherwise).",
+			"content": "You are a dictionary assistant. Always respond with a JSON object containing a 'results' array and a 'pronunciation' field. " +
+				"Each item in 'results' must include: part_of_speech (one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection), meaning (string), examples and inflections ( only if phrasal verb or verb. empty array otherwise). " +
+				"The 'pronunciation' field should contain the IPA (International Phonetic Alphabet) notation for the word.",
 		},
 		{
 			"role":    "system",
@@ -205,7 +211,11 @@ func GetDefinition(token string) ([]*model.Definition, error) {
 	for _, result := range openAIDefinition.Results {
 		results = append(results, &result)
 	}
-	return results, nil
+
+	return &DefinitionWithPronunciation{
+		Definitions:   results,
+		Pronunciation: openAIDefinition.Pronunciation,
+	}, nil
 }
 
 type ChatGPTError struct {
@@ -244,7 +254,8 @@ type Usage struct {
 }
 
 type OpenAPIDefinition struct {
-	Results []model.Definition `json:"results"`
+	Results       []model.Definition `json:"results"`
+	Pronunciation string             `json:"pronunciation"`
 }
 
 var EXAMPLES_RESPONSE_SCHEMA = map[string]any{
@@ -273,7 +284,7 @@ var DEFINITION_RESPONSE_SCHEMA = map[string]any{
 	"schema": map[string]any{
 		"additionalProperties": false,
 		"type":                 "object",
-		"required":             []string{"results"},
+		"required":             []string{"results", "pronunciation"},
 		"properties": map[string]any{
 			"results": map[string]any{
 				"type":        "array",
@@ -339,6 +350,10 @@ var DEFINITION_RESPONSE_SCHEMA = map[string]any{
 						},
 					},
 				},
+			},
+			"pronunciation": map[string]any{
+				"type":        "string",
+				"description": "IPA (International Phonetic Alphabet) notation for the pronunciation of the word.",
 			},
 		},
 	},

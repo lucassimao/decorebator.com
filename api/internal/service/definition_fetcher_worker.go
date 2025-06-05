@@ -32,13 +32,13 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		return err
 	}
 
-	openAiDefinitions, err := openai.GetDefinition(word.Name)
+	definitionData, err := openai.GetDefinition(word.Name)
 	if err != nil {
 		logger.Error("failed to fetch definitions using openai", "error", err)
 		return err
 	}
 
-	if len(openAiDefinitions) == 0 {
+	if len(definitionData.Definitions) == 0 {
 		return river.JobCancel(errors.New("no definition found"))
 	}
 
@@ -59,11 +59,21 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 	}()
 
-	definitions, err := SaveDefinition(word.Name, word.ID, openAiDefinitions, tx)
+	definitions, err := SaveDefinition(word.Name, word.ID, definitionData.Definitions, tx)
 
 	if err != nil {
 		logger.Error("failed to save definitions", "error", err)
 		return err
+	}
+
+	// Save pronunciation to word table
+	if definitionData.Pronunciation != "" {
+		_, err = tx.Exec(ctx, "UPDATE words SET pronunciation = $1 WHERE id = $2", definitionData.Pronunciation, word.ID)
+		if err != nil {
+			logger.Error("failed to save pronunciation", "error", err)
+			return err
+		}
+		logger.Info("pronunciation saved", "pronunciation", definitionData.Pronunciation, "wordId", word.ID)
 	}
 
 	definitionIds := []int64{}
