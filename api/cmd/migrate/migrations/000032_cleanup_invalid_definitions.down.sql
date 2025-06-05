@@ -1,0 +1,3 @@
+-- This migration removes invalid data and cannot be rolled back
+-- The down migration is intentionally left empty as removing invalid definitions
+-- is a cleanup operation that doesn't need to be reverted

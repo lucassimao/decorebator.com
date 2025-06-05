@@ -418,19 +418,51 @@ const FlashcardPractice: React.FC = () => {
                         </Text>
                       )}
 
-                      {definition.examples &&
-                        definition.examples.length > 0 && (
-                          <View style={styles.examplesContainer}>
-                            <Text style={styles.examplesTitle}>
-                              {t("flashcards.examples")}:
-                            </Text>
-                            {definition.examples.map((example, idx) => (
-                              <Text key={idx} style={styles.exampleText}>
-                                • {example.replace(/\[|\]/g, "")}
+                      {/* Show examples - use inflections for verbs, regular examples for other parts of speech */}
+                      {(() => {
+                        const isVerb = definition.partOfSpeech === "verb" || definition.partOfSpeech === "phrasal verb";
+                        const hasInflections = definition.inflections && definition.inflections.length > 0;
+                        const hasExamples = definition.examples && definition.examples.length > 0;
+                        
+                        if (isVerb && hasInflections) {
+                          // For verbs, show examples from inflections
+                          const allInflectionExamples = definition.inflections!.flatMap(inf => 
+                            inf.examples.map(ex => ({ example: ex, tense: inf.tense }))
+                          );
+                          
+                          return allInflectionExamples.length > 0 && (
+                            <View style={styles.examplesContainer}>
+                              <Text style={styles.examplesTitle}>
+                                {t("flashcards.examples")}:
                               </Text>
-                            ))}
-                          </View>
-                        )}
+                              {allInflectionExamples.map((item, idx) => (
+                                <View key={idx} style={styles.inflectionExampleContainer}>
+                                  <Text style={styles.exampleText}>
+                                    • {item.example.replace(/\[|\]/g, "")}
+                                  </Text>
+                                  <Text style={styles.tenseLabel}>({item.tense})</Text>
+                                </View>
+                              ))}
+                            </View>
+                          );
+                        } else if (hasExamples) {
+                          // For non-verbs or verbs without inflections, show regular examples
+                          return (
+                            <View style={styles.examplesContainer}>
+                              <Text style={styles.examplesTitle}>
+                                {t("flashcards.examples")}:
+                              </Text>
+                              {definition.examples!.map((example, idx) => (
+                                <Text key={idx} style={styles.exampleText}>
+                                  • {example.replace(/\[|\]/g, "")}
+                                </Text>
+                              ))}
+                            </View>
+                          );
+                        }
+                        
+                        return null;
+                      })()}
                     </View>
                   ))
                 ) : shouldFetchDefinitions ? (
@@ -712,6 +744,19 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 6,
     paddingLeft: 8,
+  },
+  inflectionExampleContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 6,
+    paddingLeft: 8,
+  },
+  tenseLabel: {
+    fontSize: 12,
+    color: colors.textMedium,
+    fontStyle: "italic",
+    marginLeft: 8,
+    marginTop: 2,
   },
   navigationContainer: {
     flexDirection: "row",

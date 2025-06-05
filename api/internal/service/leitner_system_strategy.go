@@ -218,6 +218,17 @@ func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Wor
 	case model.WordFromImage:
 		return def.ImageUrl != ""
 	case model.CompleteSentence:
+		// For verbs and phrasal verbs, check inflections; for others, check examples
+		isVerb := def.Definition.PartOfSpeech == "verb" || def.Definition.PartOfSpeech == "phrasal verb"
+		if isVerb {
+			// Check if inflections have examples
+			for _, inflection := range def.Definition.Inflections {
+				if len(inflection.Examples) > 0 {
+					return true
+				}
+			}
+			return false
+		}
 		return len(def.Definition.Examples) > 0
 	case model.WordFromAudio, model.MeaningFromAudio:
 		return word.AudioURL != ""
@@ -262,9 +273,22 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 			return nil, err
 		}
 
-		// Select random example
-		i := rand.Intn(len(def.Definition.Examples))
-		value = def.Definition.Examples[i]
+		// For verbs and phrasal verbs, use inflection examples; for others, use regular examples
+		isVerb := def.Definition.PartOfSpeech == "verb" || def.Definition.PartOfSpeech == "phrasal verb"
+		var availableExamples []string
+		
+		if isVerb {
+			// Collect all examples from inflections
+			for _, inflection := range def.Definition.Inflections {
+				availableExamples = append(availableExamples, inflection.Examples...)
+			}
+		} else {
+			availableExamples = def.Definition.Examples
+		}
+
+		// Select random example from available examples
+		i := rand.Intn(len(availableExamples))
+		value = availableExamples[i]
 
 		// Extract answer from brackets
 		quizAnswer = extractAnswerFromExample(value, def.Definition.Token)

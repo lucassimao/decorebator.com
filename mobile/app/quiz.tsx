@@ -239,6 +239,12 @@ const QuizScreen: React.FC = () => {
             <Text style={styles.sentenceText}>
               {hideSquareBracketContent(quiz.value)}
             </Text>
+            {quiz.pos && (
+              <Text style={styles.posText}>
+                ({quiz.pos}
+                {(quiz.pos === "verb" || quiz.pos === "phrasal verb") && " - using inflections"})
+              </Text>
+            )}
           </View>
         );
 

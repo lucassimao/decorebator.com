@@ -15,6 +15,7 @@ const IMAGE_GENERATOR_QUEUE = "image_generator"
 const TEXT_TO_SPEECH_QUEUE = "text_to_speech"
 const DEFINITION_FETCHER_QUEUE = "definition_fetcher"
 const SUBSCRIPTION_REMINDER_QUEUE = "subscription_reminder"
+const BACKFILL_INFLECTIONS_QUEUE = "backfill_inflections"
 
 // NoOpJobArgs is a no-op job used for periodic jobs that execute inline
 type NoOpJobArgs struct{}
@@ -46,6 +47,7 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 		subRepo:  repository.NewSubscriptionRepository(db),
 		userRepo: &repository.UserRepository{Db: db},
 	})
+	river.AddWorker(riverWorkers, &BackfillInflectionsWorker{})
 	river.AddWorker(riverWorkers, &NoOpWorker{})
 
 	// Create periodic jobs for renewal reminders
@@ -97,7 +99,8 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 			IMAGE_GENERATOR_QUEUE:       {MaxWorkers: 5},
 			TEXT_TO_SPEECH_QUEUE:        {MaxWorkers: 30}, //max of 50 per openai docs
 			DEFINITION_FETCHER_QUEUE:    {MaxWorkers: 50},
-			SUBSCRIPTION_REMINDER_QUEUE: {MaxWorkers: 10},
+			SUBSCRIPTION_REMINDER_QUEUE:  {MaxWorkers: 10},
+			BACKFILL_INFLECTIONS_QUEUE:   {MaxWorkers: 1}, // Single worker to respect API rate limits
 		},
 		Workers:      riverWorkers,
 		Logger:       common.Logger,

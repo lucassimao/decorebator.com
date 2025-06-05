@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -142,7 +143,8 @@ func GetDefinition(token string) (*DefinitionWithPronunciation, error) {
 		{
 			"role": "system",
 			"content": "You are a dictionary assistant. Always respond with a JSON object containing a 'results' array and a 'pronunciation' field. " +
-				"Each item in 'results' must include: part_of_speech (one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection), meaning (string), examples and inflections ( only if phrasal verb or verb. empty array otherwise). " +
+				`Each item in 'results' must include: part_of_speech (exactly one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection, num), meaning 
+  (string), examples and inflections ( only if phrasal verb or verb. empty array otherwise). ` +
 				"The 'pronunciation' field should contain the IPA (International Phonetic Alphabet) notation for the word.",
 		},
 		{
@@ -188,9 +190,18 @@ func GetDefinition(token string) (*DefinitionWithPronunciation, error) {
 		result := &openAIDefinition.Results[index]
 
 		if !isValidPartOfSpeech(result.PartOfSpeech) {
-			logger.Debug("ignoring result", "result", result)
-			continue
-			// return nil, fmt.Errorf("unexpected part of speech: %s", result.PartOfSpeech)
+			logger.Warn("unexpected part of speech received from ChatGPT",
+				"partOfSpeech", result.PartOfSpeech,
+				"token", token,
+				"meaning", result.Meaning)
+			// Convert to lowercase and try again
+			result.PartOfSpeech = strings.ToLower(result.PartOfSpeech)
+			if !isValidPartOfSpeech(result.PartOfSpeech) {
+				logger.Warn("skipping definition with invalid part of speech",
+					"partOfSpeech", result.PartOfSpeech,
+					"token", token)
+				continue
+			}
 		}
 
 		result.Language = "en"
@@ -321,7 +332,7 @@ var DEFINITION_RESPONSE_SCHEMA = map[string]any{
 						},
 						"inflections": map[string]any{
 							"type":        "array",
-							"description": "List of verb inflections. Return an empty array if part_of_speech is verb or phrasal verb.",
+							"description": "List of verb inflections. Return an empty array if part_of_speech is NOT a verb or phrasal verb.",
 							"items": map[string]any{
 								"type":                 "object",
 								"additionalProperties": false,
