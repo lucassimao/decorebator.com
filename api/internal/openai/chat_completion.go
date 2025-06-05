@@ -62,6 +62,8 @@ func chatCompletion(messages []map[string]string, schema map[string]any) (*ChatC
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
+	fmt.Println(string(body))
+
 	var chatResponse ChatCompletionResponse
 	err = json.Unmarshal(body, &chatResponse)
 	if err != nil {
@@ -150,11 +152,11 @@ func GetDefinition(token string) (*DefinitionWithPronunciation, error) {
 				" • The response must be a top-level object with exactly two keys:  “results” (an array) and “pronunciation” (a string).  " +
 				" • Always emit “results” (even if empty) and always emit “pronunciation” (IPA text or an empty string).  " +
 				" • Do NOT include any extra properties.  “additionalProperties” must be false.  " +
-				" • Each item inside “results” must be an object with exactly these required fields:  “part_of_speech”, “meaning”, “examples”, and “inflections”.  " +
-				"  – “part_of_speech” must be one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection, num.  " +
+				" • Each item inside “results” must be an object with exactly these required fields:  “partOfSpeech”, “meaning”, “examples”, and “inflections”.  " +
+				"  – “partOfSpeech” must be one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection, num.  " +
 				"  – “meaning” must be a non-empty string.  " +
-				"  – “examples” must be an array of strings.  Each string must include the original token wrapped in square brackets.  If the part_of_speech is NOT “verb” or “phrasal verb”, “examples” should be an empty array.  " +
-				"  – “inflections” must be an array.  If part_of_speech is “verb” or “phrasal verb”, you must include one item for each valid verb tense (present, past, past participle).  Otherwise, “inflections” must be an empty array.  " +
+				"  – “examples” must be an array of strings.  Each string must include the original token wrapped in square brackets.  If the partOfSpeech is NOT “verb” or “phrasal verb”, “examples” should be an empty array.  " +
+				"  – “inflections” must be an array.  If partOfSpeech is “verb” or “phrasal verb”, you must include one item for each valid verb tense (present, past, past participle).  Otherwise, “inflections” must be an empty array.  " +
 				"   • Each inflection object must have exactly these required keys: “inflection” (string), “tense” (one of: present, past, past participle), and “examples” (an array of exactly 3 strings).  " +
 				"   • Each of the 3 example strings inside “inflection.examples” must contain that inflected form wrapped in square brackets.  " +
 				"  • You may include multiple “results” items if the word can function in multiple parts of speech, but only one object per POS.  " +
@@ -309,13 +311,13 @@ var DEFINITION_RESPONSE_SCHEMA = map[string]any{
 					"type":                 "object",
 					"additionalProperties": false,
 					"required": []any{
-						"part_of_speech",
+						"partOfSpeech",
 						"meaning",
 						"examples",
 						"inflections",
 					},
 					"properties": map[string]any{
-						"part_of_speech": map[string]any{
+						"partOfSpeech": map[string]any{
 							"type": "string",
 							"enum": []string{
 								"noun", "pronoun", "verb", "phrasal verb", "adjective",
@@ -329,7 +331,7 @@ var DEFINITION_RESPONSE_SCHEMA = map[string]any{
 						},
 						"examples": map[string]any{
 							"type":        "array",
-							"description": "A list of example sentences showing usage of the word. Should be an empty array if part_of_speech is NOT verb or phrasal verb.",
+							"description": "A list of example sentences showing usage of the word. Should be an empty array if partOfSpeech is NOT verb or phrasal verb.",
 							"items": map[string]string{
 								"type":        "string",
 								"description": "Each sentence must include the word wrapped in square brackets. Example: 'He [runs] every morning.'",
@@ -337,7 +339,7 @@ var DEFINITION_RESPONSE_SCHEMA = map[string]any{
 						},
 						"inflections": map[string]any{
 							"type":        "array",
-							"description": "List of verb inflections. Return an empty array if part_of_speech is NOT a verb or phrasal verb.",
+							"description": "List of verb inflections. Return an empty array if partOfSpeech is NOT a verb or phrasal verb.",
 							"items": map[string]any{
 								"type":                 "object",
 								"additionalProperties": false,
