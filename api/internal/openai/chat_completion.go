@@ -62,8 +62,6 @@ func chatCompletion(messages []map[string]string, schema map[string]any) (*ChatC
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	fmt.Println(string(body))
-
 	var chatResponse ChatCompletionResponse
 	err = json.Unmarshal(body, &chatResponse)
 	if err != nil {
@@ -155,7 +153,7 @@ func GetDefinition(token string) (*DefinitionWithPronunciation, error) {
 				" • Each item inside “results” must be an object with exactly these required fields:  “partOfSpeech”, “meaning”, “examples”, and “inflections”.  " +
 				"  – “partOfSpeech” must be one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection, num.  " +
 				"  – “meaning” must be a non-empty string.  " +
-				"  – “examples” must be an array of strings.  Each string must include the original token wrapped in square brackets.  If the partOfSpeech is NOT “verb” or “phrasal verb”, “examples” should be an empty array.  " +
+				"  – “examples” must be an array of strings.  Each string must include the original token wrapped in square brackets.  If the partOfSpeech is “verb” or “phrasal verb”, “examples” should be an empty array.  " +
 				"  – “inflections” must be an array.  If partOfSpeech is “verb” or “phrasal verb”, you must include one item for each valid verb tense (present, past, past participle).  Otherwise, “inflections” must be an empty array.  " +
 				"   • Each inflection object must have exactly these required keys: “inflection” (string), “tense” (one of: present, past, past participle), and “examples” (an array of exactly 3 strings).  " +
 				"   • Each of the 3 example strings inside “inflection.examples” must contain that inflected form wrapped in square brackets.  " +
