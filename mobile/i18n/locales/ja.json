@@ -358,7 +358,12 @@
     "unavailableMessage": "オフラインモードにはプレミアムサブスクリプションが必要です",
     "premiumRequired": "プレミアムが必要",
     "premiumRequiredMessage": "オフラインクイズへのアクセスはプレミアムサブスクライバーのみ利用可能です。インターネット接続なしで単語リストにアクセスするにはアップグレードしてください。",
-    "featureUnavailable": "この機能はオフラインモードでは利用できません"
+    "featureUnavailable": "この機能はオフラインモードでは利用できません",
+    "preloading": "オフライン用にダウンロード中...",
+    "availableOffline": "オフライン利用可能",
+    "preloadWhenOnline": "接続してダウンロード",
+    "downloadForOffline": "オフライン用にダウンロード",
+    "cacheProgress": "{{cached}}/{{total}} 単語をキャッシュ済み ({{percentage}}%)"
   },
   "wordDetail": {
     "deleteWord": "単語を削除",

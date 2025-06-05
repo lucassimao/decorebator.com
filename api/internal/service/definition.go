@@ -61,7 +61,7 @@ func findDefinitionsByName(name string) ([]*model.Definition, error) {
 	return definitionRepository.Find(repo.FindArgs{Name: &name})
 }
 
-func DeleteWordDefinitions(wordId int64, tx pgx.Tx) error {
+func DeleteWordDefinitions(wordId int64, tx *pgx.Tx) error {
 	return definitionRepository.DeleteWordDefinitions(wordId, tx)
 }
 

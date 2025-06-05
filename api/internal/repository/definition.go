@@ -216,15 +216,37 @@ func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, erro
 
 // Delete definitions and word_definitions only if they are associated to a single word.
 // If associated to more than one word, then just dele word_definitions entries.
-func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64, tx pgx.Tx) error {
+// If tx is nil, a new transaction is created and managed internally.
+func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64, tx *pgx.Tx) error {
+	var managedTx pgx.Tx
+	var err error
+	ctx := context.Background()
+	
+	// If no transaction provided, create and manage our own
+	if tx == nil {
+		managedTx, err = repository.Db.Begin(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to begin transaction: %w", err)
+		}
+		defer func() {
+			if err == nil {
+				managedTx.Commit(ctx)
+			} else {
+				managedTx.Rollback(ctx)
+			}
+		}()
+	} else {
+		managedTx = *tx
+	}
+
 	query := `SELECT count(distinct word_id) as count
 				FROM word_definitions 
 				WHERE definition_id IN (SELECT definition_id from word_definitions WHERE word_id=$1)`
 
-	row := tx.QueryRow(context.Background(), query, wordId)
+	row := managedTx.QueryRow(ctx, query, wordId)
 	var count int
 
-	err := row.Scan(&count)
+	err = row.Scan(&count)
 
 	if err != nil {
 		common.Logger.Error("failed to query how many words use the same definition", "error", err, "wordId", wordId)
@@ -234,13 +256,13 @@ func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64, tx p
 	// just one word use these definitions. Drop them'll
 	if count == 1 {
 		// deleting from definitions table cascades to word_definitions and definition_images
-		_, err := tx.Exec(context.Background(), "DELETE FROM definitions WHERE id in (SELECT definition_id from word_definitions WHERE word_id=$1)", wordId)
+		_, err = managedTx.Exec(ctx, "DELETE FROM definitions WHERE id in (SELECT definition_id from word_definitions WHERE word_id=$1)", wordId)
 		if err != nil {
 			return errors.New("failed to delete definitions")
 		}
 	} else {
 		// definitions are shared. will only delete entries in the many to many table
-		_, err := tx.Exec(context.Background(), "DELETE from word_definitions WHERE word_id=$1", wordId)
+		_, err = managedTx.Exec(ctx, "DELETE from word_definitions WHERE word_id=$1", wordId)
 		if err != nil {
 			return errors.New("failed to delete word_definitions")
 		}

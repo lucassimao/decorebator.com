@@ -358,7 +358,12 @@
     "unavailableMessage": "El modo sin conexión requiere una suscripción premium",
     "premiumRequired": "Premium Requerido",
     "premiumRequiredMessage": "El acceso a cuestionarios sin conexión solo está disponible para suscriptores premium. Actualiza para acceder a tus listas de palabras sin conexión a internet.",
-    "featureUnavailable": "Esta función no está disponible en modo sin conexión"
+    "featureUnavailable": "Esta función no está disponible en modo sin conexión",
+    "preloading": "Descargando para uso sin conexión...",
+    "availableOffline": "Disponible sin conexión",
+    "preloadWhenOnline": "Conectar para descargar",
+    "downloadForOffline": "Descargar para uso sin conexión",
+    "cacheProgress": "{{cached}}/{{total}} palabras almacenadas ({{percentage}}%)"
   },
   "wordDetail": {
     "deleteWord": "Eliminar Palabra",

@@ -11,9 +11,10 @@ import {
   View,
 } from "react-native";
 
-import * as wordlistsApi from "@/api/wordlists";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import { useUserInfo } from "@/hooks/users";
-import { useRouter } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
+import * as wordlistsApi from "@/api/wordlists";
 
 // Animated Counter Component
 interface AnimatedCounterProps {
@@ -63,16 +64,34 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
   const { t } = useTranslation();
   const { isPremium } = useUserInfo();
 
+  // Get analytics data (using wordlistId: 0 to get global stats)
+  const { dashboardStats, statsLoading, statsError } = useAnalytics(0);
+
+  // Get wordlists count separately to match the existing interface
   const {
-    data: stats,
-    isLoading,
-    isError,
-    refetch,
+    data: wordlists,
+    isLoading: wordlistsLoading,
+    isError: wordlistsError,
   } = useQuery({
-    queryKey: ["dashboardStats"],
-    queryFn: wordlistsApi.getUserStats,
+    queryKey: ["wordlists"],
+    queryFn: wordlistsApi.getUserWordlists,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // Transform analytics data to match the expected UserStats interface
+  const stats = dashboardStats ? {
+    totalWords: dashboardStats.totalWords,
+    wordlists: wordlists?.length || 0,
+    wordsLearned: dashboardStats.wordsMastered,
+    currentStreak: dashboardStats.currentStreak,
+  } : null;
+
+  const isLoading = statsLoading || wordlistsLoading;
+  const isError = statsError || wordlistsError;
+
+  const refetch = () => {
+    // Note: analytics data will refetch automatically based on React Query config
+  };
 
   // Animation on load
   useEffect(() => {

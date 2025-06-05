@@ -358,7 +358,12 @@
     "unavailableMessage": "La modalità offline richiede un abbonamento premium",
     "premiumRequired": "Premium Richiesto",
     "premiumRequiredMessage": "L'accesso ai quiz offline è disponibile solo per gli abbonati premium. Esegui l'upgrade per accedere alle tue liste di parole senza connessione internet.",
-    "featureUnavailable": "Questa funzione non è disponibile in modalità offline"
+    "featureUnavailable": "Questa funzione non è disponibile in modalità offline",
+    "preloading": "Download per uso offline...",
+    "availableOffline": "Disponibile offline",
+    "preloadWhenOnline": "Connetti per scaricare",
+    "downloadForOffline": "Scarica per uso offline",
+    "cacheProgress": "{{cached}}/{{total}} parole memorizzate ({{percentage}}%)"
   },
   "wordDetail": {
     "deleteWord": "Elimina Parola",

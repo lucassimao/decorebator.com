@@ -358,7 +358,12 @@
     "unavailableMessage": "Modo offline requer uma subscrição premium",
     "premiumRequired": "Premium Necessário",
     "premiumRequiredMessage": "O acesso ao quiz offline está disponível apenas para subscritores premium. Faça upgrade para aceder às suas listas de palavras sem ligação à internet.",
-    "featureUnavailable": "Esta funcionalidade não está disponível no modo offline"
+    "featureUnavailable": "Esta funcionalidade não está disponível no modo offline",
+    "preloading": "A transferir para uso offline...",
+    "availableOffline": "Disponível offline",
+    "preloadWhenOnline": "Ligar para transferir",
+    "downloadForOffline": "Transferir para uso offline",
+    "cacheProgress": "{{cached}}/{{total}} palavras armazenadas ({{percentage}}%)"
   },
   "wordDetail": {
     "deleteWord": "Eliminar Palavra",

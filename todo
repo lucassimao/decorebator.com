@@ -52,9 +52,10 @@
     [ ] Update mobile/components/dashboard/WordlistDetailModal.tsx to use analytics details
     [ ] Update mobile/components/dashboard/WordlistItem.tsx to show the title in the first line and improve buttons - so small right now
     [ ] mobile/app/analytics.tsx BarChart seems broken
-    [ ] Lets update mobile/components/dashboard/Stats.tsx so that we replace wordlistsApi.getUserStats with the stats we are already computing in the mobile/   hooks/useAnalytics.ts hook. Only 
+    [x] Lets update mobile/components/dashboard/Stats.tsx so that we replace wordlistsApi.getUserStats with the stats we are already computing in the mobile/   hooks/useAnalytics.ts hook. Only 
   reuse whatever is already been expected to be show in the current implementation of the component - nothing else more
-
+    [x] Update all i18n json files in mobile/i18n/locales to include the keys offiline.preloading , 
+        offiline.availableOffline , offiline.preloadWhenOnline , offiline.downloadForOffline, offline.cacheProgress . They only exist in mobile/i18n/locales/en.json and should be replicated across all i18n files in the same dir
     [ ] error_reporting_analysis.html
     [ ] Multilanguage quizes
     [ ] Use all examples

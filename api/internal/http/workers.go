@@ -68,6 +68,7 @@ func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
 		return
 	}
 
+	service.DeleteWordDefinitions(wordId, nil)
 	jobId, err := service.TriggerFetchDefinitionWorker(wordId, nil, nil)
 
 	if err != nil {

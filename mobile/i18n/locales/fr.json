@@ -358,7 +358,12 @@
     "unavailableMessage": "Le mode hors ligne nécessite un abonnement premium",
     "premiumRequired": "Premium Requis",
     "premiumRequiredMessage": "L'accès aux quiz hors ligne est disponible uniquement pour les abonnés premium. Passez à premium pour accéder à vos listes de mots sans connexion internet.",
-    "featureUnavailable": "Cette fonctionnalité n'est pas disponible en mode hors ligne"
+    "featureUnavailable": "Cette fonctionnalité n'est pas disponible en mode hors ligne",
+    "preloading": "Téléchargement pour utilisation hors ligne...",
+    "availableOffline": "Disponible hors ligne",
+    "preloadWhenOnline": "Se connecter pour télécharger",
+    "downloadForOffline": "Télécharger pour utilisation hors ligne",
+    "cacheProgress": "{{cached}}/{{total}} mots mis en cache ({{percentage}}%)"
   },
   "wordDetail": {
     "deleteWord": "Supprimer le mot",
