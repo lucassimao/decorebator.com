@@ -84,7 +84,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 			err = UpdateWord(word, &tx)
 		}
 	} else {
-		TriggerFetchDefinitionWorker(word.ID, nil, tx)
+		TriggerFetchDefinitionWorker(word.ID, nil, &tx)
 		TriggerTextToSpeechWorker(word.ID, nil, &tx)
 	}
 

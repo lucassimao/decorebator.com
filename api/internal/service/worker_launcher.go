@@ -33,7 +33,7 @@ func TriggerTextToSpeechWorker(wordId int64, errorReport *ErrorReport, tx *pgx.T
 	}, tx)
 }
 
-func TriggerFetchDefinitionWorker(wordId int64, errorReport *ErrorReport, tx pgx.Tx) (int64, error) {
+func TriggerFetchDefinitionWorker(wordId int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: DEFINITION_FETCHER_QUEUE,
 	}
@@ -41,7 +41,7 @@ func TriggerFetchDefinitionWorker(wordId int64, errorReport *ErrorReport, tx pgx
 	return triggerWorker(&opts, DefinitionFetcherArgs{
 		WordId:      wordId,
 		ErrorReport: errorReport,
-	}, &tx)
+	}, tx)
 }
 
 func triggerWorker(opts *river.InsertOpts, args river.JobArgs, tx *pgx.Tx) (int64, error) {

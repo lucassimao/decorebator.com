@@ -385,7 +385,11 @@
     "wordPhrasePlaceholder": "es. Ciao",
     "notesLabel": "Note (Opzionale)",
     "notesPlaceholder": "es. Usato in situazioni formali",
-    "addWordButton": "Aggiungi Parola"
+    "addWordButton": "Aggiungi Parola",
+    "mastered": "Padroneggiato",
+    "masteryProgress": "Padronanza",
+    "masteryExplanation": "Le parole padroneggiate sono quelle con 80%+ di precisione nei quiz basata sulle tue prestazioni di apprendimento.",
+    "learnedToggleExplanation": "Attiva/disattiva i segni di spunta per nascondere/mostrare parole nei quiz e flashcard senza eliminarle."
   },
   "createWordlist": {
     "title": "Crea Nuova Lista",
@@ -480,6 +484,16 @@
     "tapToFlip": "Tocca per vedere la definizione",
     "tapToFlipBack": "Tocca per vedere la parola",
     "examples": "Esempi",
-    "navigationHint": "Usa le frecce per navigare"
+    "navigationHint": "Usa le frecce per navigare",
+    "reportIssue": "Segnala un Problema",
+    "reportSubmitted": "La tua segnalazione è stata inviata.",
+    "reportWord": "Segnala problema con \"{{word}}\"",
+    "reportOptions": {
+      "imageDoesntMatch": "L'immagine non corrisponde",
+      "imageNotLoading": "L'immagine non si carica",
+      "wrongMeaning": "Significato sbagliato",
+      "wrongExample": "Esempio sbagliato",
+      "soundNotPlaying": "Il suono non si riproduce"
+    }
   }
 }

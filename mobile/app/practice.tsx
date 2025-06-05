@@ -9,18 +9,22 @@ import {
   ScrollView,
   ActivityIndicator,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { ErrorReportModal } from "@/components/ErrorReportModal";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 
 import { useRouter, useLocalSearchParams } from "expo-router";
 
 import * as offlineWordlistsApi from "@/api/offlineWordlists";
 import { useOffline } from "@/hooks/useOffline";
+import * as errorReportingApi from "@/api/errorReporting";
+import { ErrorType } from "@/api/errorReporting";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -44,16 +48,6 @@ const colors = {
   divider: "#F0F0F0",
 };
 
-interface Word {
-  id: number;
-  name: string;
-  wordlistId: number;
-  learned: boolean;
-  pronunciation?: string;
-  notes?: string;
-  audioURL?: string;
-}
-
 const FlashcardPractice: React.FC = () => {
   const { t } = useTranslation();
   const router = useRouter();
@@ -66,8 +60,9 @@ const FlashcardPractice: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [shouldFetchDefinitions, setShouldFetchDefinitions] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const player = useAudioPlayer();
-  const { playing: isPlaying, didJustFinish } = useAudioPlayerStatus(player);
+  const { didJustFinish } = useAudioPlayerStatus(player);
 
   // Reset player
   useEffect(() => {
@@ -94,6 +89,32 @@ const FlashcardPractice: React.FC = () => {
   });
 
   const currentWord = words?.[currentIndex];
+
+  // Error reporting mutation
+  const reportMutation = useMutation({
+    mutationFn: ({ errorType }: { errorType: ErrorType }) => {
+      if (!isOnline) {
+        throw new Error("Reporting not available in offline mode");
+      }
+      return errorReportingApi.reportError(errorType, {
+        wordId: currentWord!.id,
+        wordlistId: Number(wordlistId),
+        word: currentWord!.name,
+        definitions: definitions,
+      });
+    },
+    onSuccess: () => {
+      Alert.alert(t("common.success"), t("flashcards.reportSubmitted"));
+      setShowReportModal(false);
+    },
+    onError: (error) => {
+      Alert.alert(t("common.error"), t("offline.featureUnavailable"));
+    },
+  });
+
+  const handleReportError = (errorType: ErrorType) => {
+    reportMutation.mutate({ errorType });
+  };
 
   // Fetch definitions using React Query with offline support
   const {
@@ -338,7 +359,17 @@ const FlashcardPractice: React.FC = () => {
             </Text>
           </View>
 
-          <View style={styles.headerRight} />
+          <TouchableOpacity
+            style={styles.reportButton}
+            onPress={() => setShowReportModal(true)}
+            disabled={!isOnline}
+          >
+            <MaterialIcons
+              name="flag"
+              size={24}
+              color={isOnline ? colors.textMedium : colors.borderGray}
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Progress Bar */}
@@ -592,6 +623,16 @@ const FlashcardPractice: React.FC = () => {
             />
           </TouchableOpacity>
         </View>
+
+        {/* Error Reporting Modal */}
+        <ErrorReportModal
+          visible={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          onReportError={handleReportError}
+          isLoading={reportMutation.isPending}
+          context="flashcards"
+          wordName={currentWord?.name}
+        />
       </SafeAreaView>
     </LinearGradient>
   );
@@ -668,8 +709,11 @@ const styles = StyleSheet.create({
     color: colors.textMedium,
     marginTop: 2,
   },
-  headerRight: {
+  reportButton: {
     width: 44,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
   },
   progressContainer: {
     paddingHorizontal: 20,

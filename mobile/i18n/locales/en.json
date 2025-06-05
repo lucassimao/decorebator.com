@@ -385,7 +385,11 @@
     "wordPhrasePlaceholder": "e.g., Hello",
     "notesLabel": "Notes (Optional)",
     "notesPlaceholder": "e.g., Used in formal situations",
-    "addWordButton": "Add Word"
+    "addWordButton": "Add Word",
+    "mastered": "Mastered",
+    "masteryProgress": "Mastery",
+    "masteryExplanation": "Mastered words are those with 80%+ quiz accuracy based on your learning performance.",
+    "learnedToggleExplanation": "Toggle checkmarks to hide/show words in quizzes and flashcards without deleting them."
   },
   "createWordlist": {
     "title": "Create New Wordlist",
@@ -479,6 +483,16 @@
     "tapToFlip": "Tap to see definition",
     "tapToFlipBack": "Tap to see word",
     "examples": "Examples",
-    "navigationHint": "Use arrows to navigate"
+    "navigationHint": "Use arrows to navigate",
+    "reportIssue": "Report an Issue",
+    "reportSubmitted": "Your report has been submitted.",
+    "reportWord": "Report issue with \"{{word}}\"",
+    "reportOptions": {
+      "imageDoesntMatch": "Image doesn't match",
+      "imageNotLoading": "Image not loading",
+      "wrongMeaning": "Wrong meaning",
+      "wrongExample": "Wrong example",
+      "soundNotPlaying": "Sound not playing"
+    }
   }
 }

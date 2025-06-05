@@ -59,10 +59,10 @@ func ReportError(errorType ErrorReportType, quiz Quiz, userId int64, ctx context
 		_, err = TriggerGenerateImageWorker(quiz.DefinitionID, "", &report, &tx)
 
 	case UnrelatedExample, UnrelatedMeaning:
-		err = DeleteWordDefinitions(quiz.WordID, tx)
+		err = DeleteWordDefinitions(quiz.WordID, &tx)
 		if err == nil {
 			report = ErrorReport{WordId: &quiz.WordID, UserId: userId}
-			_, err = TriggerFetchDefinitionWorker(quiz.WordID, &report, tx)
+			_, err = TriggerFetchDefinitionWorker(quiz.WordID, &report, &tx)
 		}
 	default:
 		err = fmt.Errorf("invalid error type %s", errorType)

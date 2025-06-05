@@ -385,7 +385,11 @@
     "wordPhrasePlaceholder": "例: こんにちは",
     "notesLabel": "メモ（任意）",
     "notesPlaceholder": "例: フォーマルな場面で使用",
-    "addWordButton": "単語を追加"
+    "addWordButton": "単語を追加",
+    "mastered": "習得済み",
+    "masteryProgress": "習得度",
+    "masteryExplanation": "習得済みの単語は、学習パフォーマンスに基づいてクイズの正答率が80%以上の単語です。",
+    "learnedToggleExplanation": "チェックマークを切り替えて、削除せずにクイズとフラッシュカードで単語を非表示/表示します。"
   },
   "createWordlist": {
     "title": "新しいリストを作成",
@@ -479,6 +483,16 @@
     "tapToFlip": "タップして定義を表示",
     "tapToFlipBack": "タップして単語を表示",
     "examples": "例文",
-    "navigationHint": "矢印で移動"
+    "navigationHint": "矢印で移動",
+    "reportIssue": "問題を報告",
+    "reportSubmitted": "レポートが送信されました。",
+    "reportWord": "\"{{word}}\"の問題を報告",
+    "reportOptions": {
+      "imageDoesntMatch": "画像が一致しません",
+      "imageNotLoading": "画像が読み込まれません",
+      "wrongMeaning": "間違った意味",
+      "wrongExample": "間違った例",
+      "soundNotPlaying": "音が再生されません"
+    }
   }
 }

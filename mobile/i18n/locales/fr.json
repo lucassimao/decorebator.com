@@ -385,7 +385,11 @@
     "wordPhrasePlaceholder": "ex. Bonjour",
     "notesLabel": "Notes (Optionnel)",
     "notesPlaceholder": "ex. Utilisé dans des situations formelles",
-    "addWordButton": "Ajouter le mot"
+    "addWordButton": "Ajouter le mot",
+    "mastered": "Maîtrisé",
+    "masteryProgress": "Maîtrise",
+    "masteryExplanation": "Les mots maîtrisés sont ceux avec 80%+ de précision aux quiz basée sur vos performances d'apprentissage.",
+    "learnedToggleExplanation": "Basculez les coches pour masquer/afficher les mots dans les quiz et cartes mémoire sans les supprimer."
   },
   "createWordlist": {
     "title": "Créer une nouvelle liste",
@@ -480,6 +484,16 @@
     "tapToFlip": "Appuyez pour voir la définition",
     "tapToFlipBack": "Appuyez pour voir le mot",
     "examples": "Exemples",
-    "navigationHint": "Utilisez les flèches pour naviguer"
+    "navigationHint": "Utilisez les flèches pour naviguer",
+    "reportIssue": "Signaler un Problème",
+    "reportSubmitted": "Votre rapport a été soumis.",
+    "reportWord": "Signaler un problème avec \"{{word}}\"",
+    "reportOptions": {
+      "imageDoesntMatch": "L'image ne correspond pas",
+      "imageNotLoading": "L'image ne se charge pas",
+      "wrongMeaning": "Mauvaise signification",
+      "wrongExample": "Mauvais exemple",
+      "soundNotPlaying": "Le son ne joue pas"
+    }
   }
 }

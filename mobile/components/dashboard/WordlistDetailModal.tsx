@@ -4,6 +4,7 @@ import { Wordlist } from "@/api/wordlists";
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
 import { useOffline } from "@/hooks/useOffline";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
@@ -76,6 +77,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     enabled: visible,
     retry: isOnline ? 3 : 0, // Don't retry in offline mode
   });
+
+  // Get analytics data for this wordlist
+  const { wordlistProgress, wordlistProgressLoading } = useAnalytics(wordlist.id);
 
   // Add word mutation
   const addWordMutation = useMutation({
@@ -227,13 +231,14 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     </View>
   );
 
+  // Use analytics data for learned count if available, fallback to local calculation
+  const learnedFromAnalytics = wordlistProgress?.wordsMastered ?? 0;
+  const progressFromAnalytics = wordlistProgress?.progressPercentage ?? 0;
+  
   const stats = {
     total: words.length,
-    learned: words.filter((w) => w.learned).length,
-    progress:
-      words.length > 0
-        ? (words.filter((w) => w.learned).length / words.length) * 100
-        : 0,
+    learned: learnedFromAnalytics,
+    progress: progressFromAnalytics
   };
 
   if (!visible) return null;
@@ -285,14 +290,42 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
               <Text style={[styles.statValue, { color: "#4CAF50" }]}>
                 {stats.learned}
               </Text>
-              <Text style={styles.statLabel}>{t("wordDetail.learned")}</Text>
+              <Text style={styles.statLabel}>
+                {learnedFromAnalytics !== null 
+                  ? t("wordDetail.mastered")
+                  : t("wordDetail.learned")
+                }
+              </Text>
             </View>
             <View style={styles.stat}>
               <Text style={[styles.statValue, { color: "#FF7B54" }]}>
                 {Math.round(stats.progress)}%
               </Text>
-              <Text style={styles.statLabel}>{t("wordDetail.progress")}</Text>
+              <Text style={styles.statLabel}>
+                {progressFromAnalytics !== null 
+                  ? t("wordDetail.masteryProgress")
+                  : t("wordDetail.progress")
+                }
+              </Text>
             </View>
+          </View>
+
+          {/* Stats Explanation */}
+          {learnedFromAnalytics !== null && (
+            <View style={styles.statsExplanation}>
+              <MaterialIcons name="info-outline" size={16} color="#636E72" />
+              <Text style={styles.explanationText}>
+                {t("wordDetail.masteryExplanation")}
+              </Text>
+            </View>
+          )}
+
+          {/* Learned Toggle Explanation */}
+          <View style={styles.toggleExplanation}>
+            <MaterialIcons name="check-circle-outline" size={16} color="#636E72" />
+            <Text style={styles.explanationText}>
+              {t("wordDetail.learnedToggleExplanation")}
+            </Text>
           </View>
 
           {/* Search and Filter */}
@@ -636,6 +669,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#636E72",
     marginTop: 4,
+  },
+  statsExplanation: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: "#F8F9FA",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+    gap: 8,
+  },
+  toggleExplanation: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: "#F8F9FA",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+    gap: 8,
+  },
+  explanationText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#636E72",
+    lineHeight: 18,
   },
   searchContainer: {
     padding: 20,

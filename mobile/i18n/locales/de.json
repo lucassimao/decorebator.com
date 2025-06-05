@@ -385,7 +385,11 @@
     "wordPhrasePlaceholder": "z.B. Hallo",
     "notesLabel": "Notizen (Optional)",
     "notesPlaceholder": "z.B. In formellen Situationen verwendet",
-    "addWordButton": "Wort hinzufügen"
+    "addWordButton": "Wort hinzufügen",
+    "mastered": "Beherrscht",
+    "masteryProgress": "Beherrschung",
+    "masteryExplanation": "Beherrschte Wörter sind solche mit 80%+ Quiz-Genauigkeit basierend auf Ihrer Lernleistung.",
+    "learnedToggleExplanation": "Häkchen umschalten, um Wörter in Quiz und Lernkarten ein-/auszublenden, ohne sie zu löschen."
   },
   "createWordlist": {
     "title": "Neue Wortliste erstellen",
@@ -479,6 +483,16 @@
     "tapToFlip": "Tippen für Definition",
     "tapToFlipBack": "Tippen für Wort",
     "examples": "Beispiele",
-    "navigationHint": "Mit Pfeilen navigieren"
+    "navigationHint": "Mit Pfeilen navigieren",
+    "reportIssue": "Problem melden",
+    "reportSubmitted": "Ihr Bericht wurde übermittelt.",
+    "reportWord": "Problem mit \"{{word}}\" melden",
+    "reportOptions": {
+      "imageDoesntMatch": "Bild passt nicht",
+      "imageNotLoading": "Bild lädt nicht",
+      "wrongMeaning": "Falsche Bedeutung",
+      "wrongExample": "Falsches Beispiel",
+      "soundNotPlaying": "Ton wird nicht abgespielt"
+    }
   }
 }

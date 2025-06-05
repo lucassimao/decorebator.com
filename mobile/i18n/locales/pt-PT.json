@@ -385,7 +385,11 @@
     "wordPhrasePlaceholder": "ex: Olá",
     "notesLabel": "Notas (Opcional)",
     "notesPlaceholder": "ex: Usado em situações formais",
-    "addWordButton": "Adicionar Palavra"
+    "addWordButton": "Adicionar Palavra",
+    "mastered": "Dominado",
+    "masteryProgress": "Domínio",
+    "masteryExplanation": "Palavras dominadas são aquelas com 80%+ de precisão nos questionários baseada no seu desempenho de aprendizagem.",
+    "learnedToggleExplanation": "Alterne as marcações para ocultar/mostrar palavras em questionários e cartões de estudo sem as eliminar."
   },
   "createWordlist": {
     "title": "Criar Nova Lista",
@@ -479,6 +483,16 @@
     "tapToFlip": "Toque para ver a definição",
     "tapToFlipBack": "Toque para ver a palavra",
     "examples": "Exemplos",
-    "navigationHint": "Use as setas para navegar"
+    "navigationHint": "Use as setas para navegar",
+    "reportIssue": "Reportar um Problema",
+    "reportSubmitted": "O seu relatório foi enviado.",
+    "reportWord": "Reportar problema com \"{{word}}\"",
+    "reportOptions": {
+      "imageDoesntMatch": "Imagem não corresponde",
+      "imageNotLoading": "Imagem não carrega",
+      "wrongMeaning": "Significado errado",
+      "wrongExample": "Exemplo errado",
+      "soundNotPlaying": "Som não está a tocar"
+    }
   }
 }

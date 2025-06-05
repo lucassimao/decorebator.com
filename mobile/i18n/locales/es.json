@@ -385,7 +385,11 @@
     "wordPhrasePlaceholder": "ej. Hola",
     "notesLabel": "Notas (Opcional)",
     "notesPlaceholder": "ej. Usado en situaciones formales",
-    "addWordButton": "Añadir Palabra"
+    "addWordButton": "Añadir Palabra",
+    "mastered": "Dominado",
+    "masteryProgress": "Dominio",
+    "masteryExplanation": "Las palabras dominadas son aquellas con 80%+ de precisión en los cuestionarios basada en tu rendimiento de aprendizaje.",
+    "learnedToggleExplanation": "Alterna las marcas para ocultar/mostrar palabras en cuestionarios y tarjetas de estudio sin eliminarlas."
   },
   "createWordlist": {
     "title": "Crear Nueva Lista",
@@ -479,6 +483,16 @@
     "tapToFlip": "Toca para ver la definición",
     "tapToFlipBack": "Toca para ver la palabra",
     "examples": "Ejemplos",
-    "navigationHint": "Usa las flechas para navegar"
+    "navigationHint": "Usa las flechas para navegar",
+    "reportIssue": "Reportar un Problema",
+    "reportSubmitted": "Su reporte ha sido enviado.",
+    "reportWord": "Reportar problema con \"{{word}}\"",
+    "reportOptions": {
+      "imageDoesntMatch": "La imagen no corresponde",
+      "imageNotLoading": "La imagen no carga",
+      "wrongMeaning": "Significado incorrecto",
+      "wrongExample": "Ejemplo incorrecto",
+      "soundNotPlaying": "El sonido no se reproduce"
+    }
   }
 }
