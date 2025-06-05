@@ -5,8 +5,10 @@ import (
 	"errors"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
 	"decorebator.com/internal/openai"
 	"github.com/riverqueue/river"
+	"github.com/riverqueue/river/rivertype"
 )
 
 type BackfillInflectionsArgs struct {
@@ -22,7 +24,7 @@ type BackfillInflectionsWorker struct {
 func (w *BackfillInflectionsWorker) Work(ctx context.Context, job *river.Job[BackfillInflectionsArgs]) error {
 	logger := common.Logger.With("worker", "BackfillInflections")
 	batchSize := job.Args.BatchSize
-	
+
 	if batchSize <= 0 || batchSize > 20 {
 		batchSize = 5 // Default safe batch size for API rate limits
 	}
@@ -100,11 +102,7 @@ func (w *BackfillInflectionsWorker) Work(ctx context.Context, job *river.Job[Bac
 		}
 
 		// Find verb definitions with inflections in the response
-		var verbInflections []struct {
-			Inflection string   `json:"inflection"`
-			Tense      string   `json:"tense"`
-			Examples   []string `json:"examples"`
-		}
+		var verbInflections []model.Inflection
 
 		for _, def := range definitionData.Definitions {
 			if (def.PartOfSpeech == "verb" || def.PartOfSpeech == "phrasal verb") && len(def.Inflections) > 0 {
@@ -169,7 +167,7 @@ func (w *BackfillInflectionsWorker) Work(ctx context.Context, job *river.Job[Bac
 }
 
 // TriggerBackfillInflectionsWorker queues a backfill job
-func TriggerBackfillInflectionsWorker(batchSize int) (*river.JobInsertResult, error) {
+func TriggerBackfillInflectionsWorker(batchSize int) (*rivertype.JobInsertResult, error) {
 	client, err := GetRiverClient()
 	if err != nil {
 		return nil, err
