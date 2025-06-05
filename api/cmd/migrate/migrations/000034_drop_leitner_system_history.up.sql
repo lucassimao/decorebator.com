@@ -1,0 +1,1 @@
+drop table leitner_system_history;

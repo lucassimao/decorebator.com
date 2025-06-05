@@ -309,7 +309,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 		// For verbs and phrasal verbs, use inflection examples; for others, use regular examples
 		isVerb := def.Definition.PartOfSpeech == "verb" || def.Definition.PartOfSpeech == "phrasal verb"
 		var availableExamples []string
-		
+
 		if isVerb {
 			// Collect all examples from inflections
 			for _, inflection := range def.Definition.Inflections {
@@ -594,12 +594,7 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 		return err
 	}
 
-	// Record history
-	_, err = tx.Exec(context.Background(), `INSERT INTO 
-		leitner_system_history (at, box_id, leitner_system_tracking_id, success) 
-		VALUES (now(), $1, $2, $3)`, boxId, leitnerSystemTrackingId, success)
-
-	return err
+	return nil
 }
 
 // SaveQuizResult processes the user's quiz answer and updates the Leitner system accordingly.
@@ -607,7 +602,6 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 // - Moves words to higher boxes on correct answers (increasing review intervals)
 // - Resets words to box 1 on incorrect answers (immediate review)
 // - Temporarily skips incorrectly answered words for 10 minutes to prevent repetition
-// - Records the result in leitner_system_history for analytics
 //
 // The Leitner box progression determines when words are reviewed again:
 // Box 1: immediate, Box 2: 1 hour, Box 3: 1 day, Box 4: 3 days, Box 5: 1 week, Box 6: 2 weeks, Box 7: 1 month
@@ -692,18 +686,9 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 func (LeitnerSystemStrategy) IncludeDefinitions(wordId, userId int64, definitionIds []int64, tx pgx.Tx) error {
 	for _, definitionId := range definitionIds {
 		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id, word_id)
-		VALUES ($1, $2, $3, $4) RETURNING id`
+		VALUES ($1, $2, $3, $4)`
 
-		row := tx.QueryRow(context.Background(), query, userId, definitionId, 1, wordId)
-		var leitnerSystemTrackingId int64
-		err := row.Scan(&leitnerSystemTrackingId)
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.Exec(context.Background(), `INSERT INTO 
-		leitner_system_history (at, box_id, leitner_system_tracking_id, success) 
-		VALUES (now(), $1, $2, NULL)`, 1, leitnerSystemTrackingId)
+		_, err := tx.Exec(context.Background(), query, userId, definitionId, 1, wordId)
 		if err != nil {
 			return err
 		}
