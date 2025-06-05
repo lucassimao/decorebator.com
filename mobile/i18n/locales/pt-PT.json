@@ -24,7 +24,8 @@
     "no": "Não",
     "user": "Utilizador",
     "ok": "OK",
-    "hide": "OCULTAR"
+    "hide": "OCULTAR",
+    "goBack": "Voltar"
   },
   "auth": {
     "signin": {
@@ -407,22 +408,25 @@
   },
   "wordlistItem": {
     "deleteSuccess": "Lista eliminada com sucesso",
-    "deleteError": "Falha ao eliminar lista. Por favor, tente novamente.",
+    "deleteError": "Falha ao eliminar lista",
     "deleteTitle": "Eliminar Lista",
     "deleteConfirmMessage": "Tem a certeza que deseja eliminar \"{{name}}\"? Esta ação não pode ser desfeita.",
-    "noWordsTitle": "Ainda Sem Palavras",
-    "noWordsMessage": "Adicione algumas palavras a esta lista antes de iniciar um quiz.",
-    "wordCount": "{{count}} palavra",
+    "noWordsTitle": "Sem Palavras",
+    "noWordsMessage": "Adicione algumas palavras a esta lista primeiro",
+    "wordCount": "{{count}} palavras",
     "wordCount_plural": "{{count}} palavras",
     "percentLearned": "{{percent}}% aprendido",
     "startQuiz": "Iniciar Quiz",
     "editWordlist": "Editar Lista",
-    "deleteWordlist": "Eliminar Lista"
+    "deleteWordlist": "Eliminar Lista",
+    "practiceFlashcards": "Praticar com Flashcards",
+    "viewAnalytics": "Ver Análises"
   },
     "analytics": {
     "header": {
       "title": "Análise de Aprendizagem",
-      "subtitle": "Acompanhe o seu progresso e domínio"
+      "subtitle": "Acompanhe o seu progresso e domínio",
+      "updateNote": "Estatísticas atualizadas a cada hora"
     },
     "stats": {
       "wordsToday": "Palavras Hoje",
@@ -464,5 +468,13 @@
       "word_from_audio": "Palavra pelo Áudio",
       "meaning_from_audio": "Significado pelo Áudio"
     }
+  },
+  "flashcards": {
+    "noWordsFound": "Nenhuma palavra encontrada nesta lista",
+    "cardCounter": "{{current}} / {{total}}",
+    "tapToFlip": "Toque para ver a definição",
+    "tapToFlipBack": "Toque para ver a palavra",
+    "examples": "Exemplos",
+    "navigationHint": "Use as setas para navegar"
   }
 }

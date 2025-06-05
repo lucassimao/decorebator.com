@@ -34,18 +34,18 @@ const (
 )
 
 type Definition struct {
-	ID                int64
-	Token             string
-	Language          string
-	Meaning           string       `json:"meaning"`
-	PartOfSpeech      string       `json:"part_of_speech"`
-	Examples          []string     `json:"examples"`
-	Inflections       []Inflection `json:"inflections"`
-	Source            DefinitionSource
-	SourceId          *string
-	Sounds            []Sound
-	PhoneticNotations []PhoneticNotation
+	ID                int64                  `json:"id"`
+	Token             string                 `json:"token"`
+	Language          string                 `json:"language"`
+	Meaning           string                 `json:"meaning"`
+	PartOfSpeech      string                 `json:"partOfSpeech"`
+	Examples          []string               `json:"examples"`
+	Inflections       []Inflection           `json:"inflections"`
+	Source            DefinitionSource       `json:"source"`
+	SourceId          *string                `json:"sourceId"`
+	Sounds            []Sound                `json:"sounds"`
+	PhoneticNotations []PhoneticNotation     `json:"phoneticNotations"`
 
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	CreatedAt pgtype.Timestamp `json:"createdAt"`
+	UpdatedAt pgtype.Timestamp `json:"updatedAt"`
 }

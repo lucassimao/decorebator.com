@@ -262,6 +262,41 @@ func (repository *DefinitionRepository) IsValidWordDefinition(wordId, definition
 	return count == 1, nil
 }
 
+func (repository *DefinitionRepository) GetDefinitionsByWordId(wordId, userId int64) ([]*Definition, error) {
+	query := `
+		SELECT d.id, d.token, d.language, d.part_of_speech, d.meaning, d.examples, d.inflections, 
+			   d.source, d.source_id, d.sounds, d.phonetic_notations, d.created_at, d.updated_at
+		FROM definitions d
+		JOIN word_definitions wd ON wd.definition_id = d.id
+		JOIN words w ON w.id = wd.word_id
+		WHERE w.id = $1 AND w.user_id = $2
+		ORDER BY d.id ASC`
+
+	rows, err := repository.Db.Query(context.Background(), query, wordId, userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var definitions []*Definition
+	for rows.Next() {
+		var def Definition
+
+		err = rows.Scan(&def.ID,
+			&def.Token, &def.Language, &def.PartOfSpeech, &def.Meaning, &def.Examples, &def.Inflections,
+			&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations,
+			&def.CreatedAt, &def.UpdatedAt)
+
+		if err != nil {
+			return nil, err
+		}
+
+		definitions = append(definitions, &def)
+	}
+
+	return definitions, nil
+}
+
 type FindArgs struct {
 	Id   *int64
 	Name *string

@@ -24,7 +24,8 @@
     "no": "No",
     "user": "Usuario",
     "ok": "OK",
-    "hide": "OCULTAR"
+    "hide": "OCULTAR",
+    "goBack": "Volver"
   },
   "auth": {
     "signin": {
@@ -417,12 +418,15 @@
     "percentLearned": "{{percent}}% aprendido",
     "startQuiz": "Iniciar Cuestionario",
     "editWordlist": "Editar Lista",
-    "deleteWordlist": "Eliminar Lista"
+    "deleteWordlist": "Eliminar Lista",
+    "practiceFlashcards": "Practicar con Tarjetas",
+    "viewAnalytics": "Ver Análisis"
   },
     "analytics": {
     "header": {
       "title": "Análisis de Aprendizaje",
-      "subtitle": "Sigue tu progreso y dominio"
+      "subtitle": "Sigue tu progreso y dominio",
+"updateNote":"Estadísticas actualizadas cada hora"
     },
     "stats": {
       "wordsToday": "Palabras Hoy",
@@ -464,5 +468,13 @@
       "word_from_audio": "Palabra por Audio",
       "meaning_from_audio": "Significado por Audio"
     }
+  },
+  "flashcards": {
+    "noWordsFound": "No se encontraron palabras en esta lista",
+    "cardCounter": "{{current}} / {{total}}",
+    "tapToFlip": "Toca para ver la definición",
+    "tapToFlipBack": "Toca para ver la palabra",
+    "examples": "Ejemplos",
+    "navigationHint": "Usa las flechas para navegar"
   }
 }

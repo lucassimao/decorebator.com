@@ -37,7 +37,7 @@ type SaveInput struct {
 	DefinitionID            int64  `json:"definitionID" binding:"required"`
 	LeitnerSystemTrackingID int64  `json:"leitnerSystemTrackingID" binding:"required"`
 	QuizType                string `json:"quizType" binding:"required"`
-	IsCorrect               bool   `json:"isCorrect" binding:"required"`
+	IsCorrect               bool   `json:"isCorrect"`
 	ResponseTimeMs          int    `json:"responseTimeMs" binding:"required"`
 }
 

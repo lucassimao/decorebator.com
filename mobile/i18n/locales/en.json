@@ -24,7 +24,8 @@
     "no": "No",
     "user": "User",
     "ok": "OK",
-    "hide": "HIDE"
+    "hide": "HIDE",
+    "goBack": "Go Back"
   },
   "auth": {
     "signin": {
@@ -410,19 +411,22 @@
     "deleteError": "Failed to delete wordlist. Please try again.",
     "deleteTitle": "Delete Wordlist",
     "deleteConfirmMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
-    "noWordsTitle": "No Words Yet",
-    "noWordsMessage": "Add some words to this wordlist before starting a quiz.",
-    "wordCount": "{{count}} word",
+    "noWordsTitle": "No Words",
+    "noWordsMessage": "Add some words to this wordlist first",
+    "wordCount": "{{count}} words",
     "wordCount_plural": "{{count}} words",
     "percentLearned": "{{percent}}% learned",
     "startQuiz": "Start Quiz",
     "editWordlist": "Edit Wordlist",
-    "deleteWordlist": "Delete Wordlist"
+    "deleteWordlist": "Delete Wordlist",
+    "practiceFlashcards": "Practice with Flashcards",
+    "viewAnalytics": "View Analytics"
   },
   "analytics": {
     "header": {
       "title": "Learning Analytics",
-      "subtitle": "Track your progress and mastery"
+      "subtitle": "Track your progress and mastery",
+      "updateNote": "Stats updated hourly"
     },
     "stats": {
       "wordsToday": "Words Today",
@@ -464,5 +468,13 @@
       "word_from_audio": "Word from Audio",
       "meaning_from_audio": "Meaning from Audio"
     }
+  },
+  "flashcards": {
+    "noWordsFound": "No words found in this wordlist",
+    "cardCounter": "{{current}} / {{total}}",
+    "tapToFlip": "Tap to see definition",
+    "tapToFlipBack": "Tap to see word",
+    "examples": "Examples",
+    "navigationHint": "Use arrows to navigate"
   }
 }

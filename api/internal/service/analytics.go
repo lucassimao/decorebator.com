@@ -243,13 +243,13 @@ func (as *AnalyticsService) GetQuizTypePerformance(ctx context.Context, userID i
 }
 
 type LearningProgressStats struct {
-	Date             string  `json:"date"`
-	WordsStudied     int     `json:"words_studied"`
-	WordsMastered    int     `json:"words_mastered"`
-	TotalAttempts    int     `json:"total_attempts"`
-	AccuracyRate     float64 `json:"accuracy_rate"`
-	AvgResponseMs    int     `json:"avg_response_ms"`
-	StudyTimeSeconds int     `json:"study_time_seconds"`
+	Date             time.Time `json:"date"`
+	WordsStudied     int       `json:"words_studied"`
+	WordsMastered    int       `json:"words_mastered"`
+	TotalAttempts    int       `json:"total_attempts"`
+	AccuracyRate     float64   `json:"accuracy_rate"`
+	AvgResponseMs    int       `json:"avg_response_ms"`
+	StudyTimeSeconds int       `json:"study_time_seconds"`
 }
 
 // GetLearningProgress retrieves daily learning progress

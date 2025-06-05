@@ -24,7 +24,8 @@
     "no": "No",
     "user": "Utente",
     "ok": "OK",
-    "hide": "NASCONDI"
+    "hide": "NASCONDI",
+    "goBack": "Indietro"
   },
   "auth": {
     "signin": {
@@ -417,12 +418,16 @@
     "percentLearned": "{{percent}}% imparato",
     "startQuiz": "Inizia Quiz",
     "editWordlist": "Modifica Lista",
-    "deleteWordlist": "Elimina Lista"
+    "deleteWordlist": "Elimina Lista",
+    "practiceFlashcards": "Pratica con le Flashcard",
+    "viewAnalytics": "Visualizza Analisi"
   },
     "analytics": {
     "header": {
       "title": "Analisi dell'Apprendimento",
-      "subtitle": "Monitora i tuoi progressi e la padronanza"
+      "subtitle": "Monitora i tuoi progressi e la padronanza",
+"updateNote":"Statistiche aggiornate ogni ora"
+
     },
     "stats": {
       "wordsToday": "Parole Oggi",
@@ -464,5 +469,13 @@
       "word_from_audio": "Parola dall'Audio",
       "meaning_from_audio": "Significato dall'Audio"
     }
+  },
+  "flashcards": {
+    "noWordsFound": "Nessuna parola trovata in questa lista",
+    "cardCounter": "{{current}} / {{total}}",
+    "tapToFlip": "Tocca per vedere la definizione",
+    "tapToFlipBack": "Tocca per vedere la parola",
+    "examples": "Esempi",
+    "navigationHint": "Usa le frecce per navigare"
   }
 }

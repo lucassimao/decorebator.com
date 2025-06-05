@@ -457,6 +457,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	if err != nil {
 		// Log error but don't fail the transaction
 		common.Logger.Error("failed to track quiz performance", "error", err)
+		fmt.Print(err)
 	}
 
 	return nil

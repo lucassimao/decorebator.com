@@ -41,7 +41,6 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
-      ``;
       Alert.alert(t("common.success"), t("wordlistItem.deleteSuccess"));
     },
     onError: (error) => {
@@ -91,8 +90,27 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
       onQuizStart(item);
     } else {
       router.push(`/quiz?wordlistId=${item.id}&wordlistName=${item.name}`);
-      // router.push(`/analytics?wordlistId=${item.id}`);
     }
+  };
+
+  const handlePractice = () => {
+    setShowMenu(false);
+
+    if (item.wordsCount === 0) {
+      Alert.alert(
+        t("wordlistItem.noWordsTitle"),
+        t("wordlistItem.noWordsMessage"),
+        [{ text: t("common.ok") }],
+      );
+      return;
+    }
+
+    router.push(`/practice?wordlistId=${item.id}&wordlistName=${item.name}`);
+  };
+
+  const handleAnalytics = () => {
+    setShowMenu(false);
+    router.push(`/analytics?wordlistId=${item.id}`);
   };
 
   const handleEdit = () => {
@@ -125,6 +143,22 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleAnalytics}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialIcons name="bar-chart" size={26} color="#FFD700" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handlePractice}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialIcons name="style" size={26} color="#2196F3" />
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.actionButton}
               onPress={handleQuizStart}
@@ -190,6 +224,29 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             <TouchableWithoutFeedback>
               <View style={styles.menuContainer}>
                 <Text style={styles.menuTitle}>{item.name}</Text>
+
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.push(`/analytics?wordlistId=${item.id}`);
+                  }}
+                >
+                  <MaterialIcons name="analytics" size={24} color="#FFD700" />
+                  <Text style={styles.menuItemText}>
+                    {t("wordlistItem.viewAnalytics")}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={handlePractice}
+                >
+                  <MaterialIcons name="style" size={24} color="#2196F3" />
+                  <Text style={styles.menuItemText}>
+                    {t("wordlistItem.practiceFlashcards")}
+                  </Text>
+                </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.menuItem}

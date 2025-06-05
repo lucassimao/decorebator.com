@@ -98,3 +98,21 @@ func (h *WordRoutes) Update(c *gin.Context) {
 	}
 	c.Status(http.StatusNoContent)
 }
+
+func (h *WordRoutes) GetDefinitions(c *gin.Context) {
+	userId := c.GetInt64("userID")
+	wordId, err := strconv.ParseInt(c.Param("wordId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid word ID"})
+		return
+	}
+
+	definitions, err := service.GetDefinitionsByWordId(wordId, userId)
+	if err != nil {
+		common.Logger.Error("failed to get definitions", "error", err, "userId", userId, "wordId", wordId)
+		c.String(http.StatusInternalServerError, "Could not get word definitions")
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, definitions)
+}

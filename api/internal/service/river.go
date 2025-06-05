@@ -69,7 +69,7 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 		),
 		// refresh materialized views
 		river.NewPeriodicJob(
-			river.PeriodicInterval(1*time.Hour), // Run daily
+			river.PeriodicInterval(1*time.Hour), // Run hourly
 			func() (river.JobArgs, *river.InsertOpts) {
 
 				db, err := common.GetDBConnection()

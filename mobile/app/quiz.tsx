@@ -68,12 +68,11 @@ const QuizScreen: React.FC = () => {
     retry: isOnline ? 3 : 0, // Don't retry in offline mode
   });
 
-  useEffect(()=>{
-    if (quiz?.id){
-            quizDisplayedAtRef.current = Date.now();
+  useEffect(() => {
+    if (quiz?.id) {
+      quizDisplayedAtRef.current = Date.now();
     }
-  },[quiz?.id])
-
+  }, [quiz?.id]);
 
   // handle image changes
   useEffect(() => {
@@ -93,7 +92,7 @@ const QuizScreen: React.FC = () => {
         quizType: quiz!.type,
         responseTimeMs: Date.now() - quizDisplayedAtRef.current,
         wordID: quiz!.wordId,
-        wordlistID: Number(wordlistId)
+        wordlistID: Number(wordlistId),
       }),
     onSuccess: () => {
       if (fastMode) {

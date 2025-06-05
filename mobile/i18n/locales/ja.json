@@ -24,7 +24,8 @@
     "no": "いいえ",
     "user": "ユーザー",
     "ok": "OK",
-    "hide": "非表示"
+    "hide": "非表示",
+    "goBack": "戻る"
   },
   "auth": {
     "signin": {
@@ -417,12 +418,15 @@
     "percentLearned": "{{percent}}% 学習済み",
     "startQuiz": "クイズを開始",
     "editWordlist": "リストを編集",
-    "deleteWordlist": "リストを削除"
+    "deleteWordlist": "リストを削除",
+    "practiceFlashcards": "フラッシュカードで練習",
+    "viewAnalytics": "分析を表示"
   },
   "analytics": {
     "header": {
       "title": "学習分析",
-      "subtitle": "進捗と習熟度を追跡"
+      "subtitle": "進捗と習熟度を追跡",
+      "updateNote":"統計は毎時更新されます"
     },
     "stats": {
       "wordsToday": "今日の単語",
@@ -464,5 +468,13 @@
       "word_from_audio": "音声から単語",
       "meaning_from_audio": "音声から意味"
     }
+  },
+  "flashcards": {
+    "noWordsFound": "このリストに単語が見つかりません",
+    "cardCounter": "{{current}} / {{total}}",
+    "tapToFlip": "タップして定義を表示",
+    "tapToFlipBack": "タップして単語を表示",
+    "examples": "例文",
+    "navigationHint": "矢印で移動"
   }
 }

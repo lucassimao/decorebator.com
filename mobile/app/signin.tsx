@@ -1,6 +1,5 @@
 import * as usersApi from "@/api/users";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import { useMutation } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -17,10 +16,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
-  TextInput,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";

@@ -13,7 +13,7 @@ import { useRouter } from "expo-router";
 
 export default function Index() {
   const { userInfo, error, loading } = useUserInfo();
-    const router = useRouter();
+  const router = useRouter();
 
   useEffect(() => {
     if (loading) return;

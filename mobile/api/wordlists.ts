@@ -26,6 +26,33 @@ export type Word = {
   learned: boolean;
   pronunciation?: string;
   notes?: string;
+  audioURL?: string;
+};
+
+export type Definition = {
+  id: number;
+  token: string;
+  language: string;
+  meaning: string;
+  partOfSpeech?: string;
+  examples?: string[];
+  inflections?: Array<{
+    inflection: string;
+    tense: string;
+    examples: string[];
+  }>;
+  source: string;
+  sourceId?: string;
+  sounds?: Array<{
+    accent: string;
+    link: string;
+  }>;
+  phoneticNotations?: Array<{
+    ipa: string;
+    accent: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Quiz = {
@@ -44,8 +71,8 @@ export type Quiz = {
   pos: string; // part of speech
   audioURL?: string; //only present in MeaningFromAudio, GUESS_MEANING and WordFromAudio quizes
   imageDescription: string;
-  definitionId:number
-  wordId:number
+  definitionId: number;
+  wordId: number;
 };
 
 export type CreateWordDTO = Pick<Word, "wordlistId" | "name" | "notes">;
@@ -138,4 +165,16 @@ export async function answerQuiz(input: AnswerQuizInput): Promise<void> {
     process.env.EXPO_PUBLIC_API_URL + `/wordlists/${input.wordlistID}/quizzes`;
 
   await callAPI<Quiz>("PATCH", endpoint, JSON.stringify(input));
+}
+
+export async function getWordDefinitions(
+  wordlistId: number,
+  wordId: number,
+): Promise<Definition[]> {
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL +
+    `/wordlists/${wordlistId}/words/${wordId}/definitions`;
+
+  const body = await callAPI<Definition[]>("GET", endpoint);
+  return body;
 }

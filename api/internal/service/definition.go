@@ -74,6 +74,10 @@ func IsValidWordDefinition(wordId, definitionId, userId int64) (bool, error) {
 	return isValid, nil
 }
 
+func GetDefinitionsByWordId(wordId, userId int64) ([]*model.Definition, error) {
+	return definitionRepository.GetDefinitionsByWordId(wordId, userId)
+}
+
 func containsBracketedWord(s string) bool {
 	// Compile the regular expression
 	re := regexp.MustCompile(`\[[^\]]+\]`)

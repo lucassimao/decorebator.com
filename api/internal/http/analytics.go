@@ -28,7 +28,7 @@ func getWordMastery(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt64("user_id")
+	userID := c.GetInt64("userID")
 
 	// Verify wordlist ownership
 	wordlist, err := service.GetWordlistById(wordlistID, userID)
@@ -71,7 +71,7 @@ func getLearningProgress(c *gin.Context) {
 		}
 	}
 
-	userID := c.GetInt64("user_id")
+	userID := c.GetInt64("userID")
 
 	// Verify wordlist ownership
 	wordlist, err := service.GetWordlistById(wordlistID, userID)
@@ -115,7 +115,7 @@ func getBoxDistribution(c *gin.Context) {
 		}
 	}
 
-	userID := c.GetInt64("user_id")
+	userID := c.GetInt64("userID")
 
 	// Verify wordlist ownership
 	wordlist, err := service.GetWordlistById(wordlistID, userID)
@@ -152,7 +152,7 @@ func getBoxDistribution(c *gin.Context) {
 
 // getQuizTypePerformance returns performance statistics by quiz type
 func getQuizTypePerformance(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := c.GetInt64("userID")
 
 	analyticsService, err := service.NewAnalyticsService()
 	if err != nil {
@@ -173,7 +173,7 @@ func getQuizTypePerformance(c *gin.Context) {
 
 // getDashboardStats returns overall dashboard statistics
 func getDashboardStats(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := c.GetInt64("userID")
 
 	analyticsService, err := service.NewAnalyticsService()
 	if err != nil {

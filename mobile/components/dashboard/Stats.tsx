@@ -59,15 +59,13 @@ type DashboardStatsProps = {
 
 const PROGRESS_OVERVIEW_ENABLED = false;
 
-const DashboardStats: React.FC<DashboardStatsProps> = ({ 
-  onUpgradePress 
-}) => {
+const DashboardStats: React.FC<DashboardStatsProps> = ({ onUpgradePress }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const { t } = useTranslation();
   const { isPremium } = useUserInfo();
-    const router = useRouter();
-  
+  const router = useRouter();
+
   const {
     data: stats,
     isLoading,
@@ -103,9 +101,9 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
     return Math.round((stats.wordsLearned / stats.totalWords) * 100);
   };
 
-  const onStatsPress = () =>{
-      // router.push(`/analytics?wordlistId=${item.id}`);
-  }
+  const onStatsPress = () => {
+    // router.push(`/analytics?wordlistId=${item.id}`);
+  };
 
   const getMotivationalMessage = () => {
     const progress = getProgressPercentage();
