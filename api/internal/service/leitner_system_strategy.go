@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/rand"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -15,20 +18,31 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// LeitnerSystemStrategy implements the Leitner spaced repetition algorithm for vocabulary learning.
+// The Leitner system uses boxes with increasing intervals to optimize long-term retention:
+// - Words start in box 1 (immediate review)
+// - Correct answers move words to higher boxes (longer intervals)
+// - Incorrect answers reset words to box 1 (immediate review)
+// - Each box has different quiz types to progressively increase difficulty
 type LeitnerSystemStrategy struct{}
 type Quiz = model.Quiz
 type QuizType = model.QuizType
 
+// NextDefinition represents a word definition selected for quiz generation
+// along with its current Leitner system state and associated metadata.
 type NextDefinition struct {
-	Definition       *model.Definition
-	LeitnerSystemID  int64
-	BoxID            int64
-	WordID           int64
-	ImageUrl         string
-	ImageDescription string
+	Definition       *model.Definition // The definition content (meaning, examples, inflections, etc.)
+	LeitnerSystemID  int64             // The tracking ID for this definition in the Leitner system
+	BoxID            int64             // Current Leitner box (1-7, determines review interval)
+	WordID           int64             // The word this definition belongs to
+	ImageUrl         string            // URL of associated image (if any)
+	ImageDescription string            // Description of the associated image
 }
 
-// Quiz difficulty progression
+// boxToQuizTypes defines the quiz difficulty progression through Leitner boxes.
+// Each box introduces more challenging quiz types as the user demonstrates mastery:
+// - Lower boxes focus on recognition and basic recall
+// - Higher boxes require active recall, contextual understanding, and audio recognition
 var boxToQuizTypes = map[int64][]model.QuizType{
 	1: {model.GuessMeaning},                                    // Basic recognition
 	2: {model.WordFromMeaning},                                 // Basic recall
@@ -37,6 +51,12 @@ var boxToQuizTypes = map[int64][]model.QuizType{
 	5: {model.WriteWordFromDefinition, model.CompleteSentence}, // Active recall
 	6: {model.WordFromAudio, model.WriteWordFromDefinition},    // Audio recognition
 	7: {model.MeaningFromAudio, model.WordFromAudio},           // Advanced audio
+}
+
+// ExampleUsage tracks when examples were last used for fair distribution
+type ExampleUsage struct {
+	ExampleHash string    `db:"example_hash"`
+	LastUsedAt  time.Time `db:"last_used_at"`
 }
 
 func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
@@ -176,6 +196,15 @@ func getOldestDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	return &result, nil
 }
 
+// CreateQuiz generates a new quiz question for the user based on the Leitner spaced repetition system.
+// It selects the most appropriate word/definition that is due for review, considering:
+// - Leitner box intervals (box 1: immediate, box 2: 1 hour, box 3: 1 day, etc.)
+// - Word difficulty progression (different quiz types for different boxes)
+// - Temporarily skipped words (to avoid immediate repetition)
+// - Available content (images, audio, examples, inflections)
+//
+// Returns a Quiz object with the question, options, correct answer, and metadata.
+// Returns an error if no words are available for review or if database operations fail.
 func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error) {
 	nextDefinition, err := getNextDefinition(userID, wordlistID)
 	if err != nil {
@@ -290,9 +319,15 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 			availableExamples = def.Definition.Examples
 		}
 
-		// Select random example from available examples
-		i := rand.Intn(len(availableExamples))
-		value = availableExamples[i]
+		// Select example using fair distribution to avoid repetition
+		selectedExample, err := selectFairExample(def.Definition.ID, def.WordID, availableExamples)
+		if err != nil {
+			// Fallback to random selection if fair selection fails
+			common.Logger.Warn("fair example selection failed, using random", "definitionId", def.Definition.ID, "error", err)
+			i := rand.Intn(len(availableExamples))
+			selectedExample = availableExamples[i]
+		}
+		value = selectedExample
 
 		// Extract answer from brackets
 		quizAnswer = extractAnswerFromExample(value, def.Definition.Token)
@@ -376,6 +411,139 @@ func extractAnswerFromImageDescription(description, defaultToken string) string 
 	return defaultToken
 }
 
+// selectFairExample implements a fair distribution algorithm to select examples that haven't been used recently.
+// This prevents the same examples from appearing repeatedly and ensures a better learning experience.
+//
+// Algorithm:
+// 1. Create hash for each example to track usage
+// 2. Check database for recently used examples (within last 24 hours)
+// 3. Prioritize unused examples, then least recently used
+// 4. Record the selected example usage in the database
+//
+// Parameters:
+// - definitionID: The definition these examples belong to
+// - wordID: The word being quizzed (for additional context)
+// - availableExamples: Slice of example sentences to choose from
+//
+// Returns the selected example string and any database error
+func selectFairExample(definitionID, wordID int64, availableExamples []string) (string, error) {
+	if len(availableExamples) == 0 {
+		return "", errors.New("no examples available")
+	}
+
+	if len(availableExamples) == 1 {
+		// Only one example, record its usage and return it
+		err := recordExampleUsage(definitionID, availableExamples[0])
+		return availableExamples[0], err
+	}
+
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return "", fmt.Errorf("failed to get database connection: %w", err)
+	}
+
+	// Create a map of example hashes to examples and their usage info
+	type exampleInfo struct {
+		example    string
+		hash       string
+		lastUsedAt *time.Time
+	}
+
+	exampleInfos := make([]exampleInfo, len(availableExamples))
+	hashes := make([]string, len(availableExamples))
+
+	for i, example := range availableExamples {
+		hash := hashExample(example)
+		exampleInfos[i] = exampleInfo{
+			example: example,
+			hash:    hash,
+		}
+		hashes[i] = hash
+	}
+
+	// Query for recent usage of these examples
+	query := `
+		SELECT example_hash, last_used_at 
+		FROM example_usage 
+		WHERE definition_id = $1 AND example_hash = ANY($2)
+		AND last_used_at > NOW() - INTERVAL '24 hours'`
+
+	rows, err := db.Query(context.Background(), query, definitionID, hashes)
+	if err != nil {
+		return "", fmt.Errorf("failed to query example usage: %w", err)
+	}
+	defer rows.Close()
+
+	// Create a map of hash -> last used time
+	usageMap := make(map[string]time.Time)
+	for rows.Next() {
+		var hash string
+		var lastUsedAt time.Time
+		if err = rows.Scan(&hash, &lastUsedAt); err != nil {
+			return "", fmt.Errorf("failed to scan usage row: %w", err)
+		}
+		usageMap[hash] = lastUsedAt
+	}
+
+	// Update exampleInfos with usage data
+	for i := range exampleInfos {
+		if lastUsedAt, exists := usageMap[exampleInfos[i].hash]; exists {
+			exampleInfos[i].lastUsedAt = &lastUsedAt
+		}
+	}
+
+	// Sort by usage: unused first, then by oldest usage
+	sort.Slice(exampleInfos, func(i, j int) bool {
+		if exampleInfos[i].lastUsedAt == nil && exampleInfos[j].lastUsedAt == nil {
+			return false // Both unused, maintain order
+		}
+		if exampleInfos[i].lastUsedAt == nil {
+			return true // i is unused, prioritize it
+		}
+		if exampleInfos[j].lastUsedAt == nil {
+			return false // j is unused, prioritize it
+		}
+		// Both used, prioritize older usage
+		return exampleInfos[i].lastUsedAt.Before(*exampleInfos[j].lastUsedAt)
+	})
+
+	// Select the first (best) example
+	selectedExample := exampleInfos[0].example
+
+	// Record the usage
+	err = recordExampleUsage(definitionID, selectedExample)
+	if err != nil {
+		common.Logger.Error("failed to record example usage", "definitionId", definitionID, "error", err)
+		// Don't fail the quiz generation if usage recording fails
+	}
+
+	return selectedExample, nil
+}
+
+// hashExample creates a consistent hash for an example to track its usage
+func hashExample(example string) string {
+	hash := md5.Sum([]byte(strings.TrimSpace(strings.ToLower(example))))
+	return hex.EncodeToString(hash[:])
+}
+
+// recordExampleUsage records when an example was used to prevent immediate repetition
+func recordExampleUsage(definitionID int64, example string) error {
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return err
+	}
+
+	hash := hashExample(example)
+	query := `
+		INSERT INTO example_usage (definition_id, example_hash, last_used_at)
+		VALUES ($1, $2, NOW())
+		ON CONFLICT (definition_id, example_hash)
+		DO UPDATE SET last_used_at = NOW()`
+
+	_, err = db.Exec(context.Background(), query, definitionID, hash)
+	return err
+}
+
 func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId int64, success bool, transactionPtr *pgx.Tx) error {
 	var tx pgx.Tx
 	var err error
@@ -434,6 +602,19 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 	return err
 }
 
+// SaveQuizResult processes the user's quiz answer and updates the Leitner system accordingly.
+// This is the core of the spaced repetition algorithm that:
+// - Moves words to higher boxes on correct answers (increasing review intervals)
+// - Resets words to box 1 on incorrect answers (immediate review)
+// - Temporarily skips incorrectly answered words for 10 minutes to prevent repetition
+// - Records the result in leitner_system_history for analytics
+//
+// The Leitner box progression determines when words are reviewed again:
+// Box 1: immediate, Box 2: 1 hour, Box 3: 1 day, Box 4: 3 days, Box 5: 1 week, Box 6: 2 weeks, Box 7: 1 month
+//
+// Parameters:
+// - quizResult: Contains the quiz response details (correct/incorrect, timing, etc.)
+// - transactionPtr: Optional database transaction (if nil, creates a new one)
 func (s LeitnerSystemStrategy) SaveQuizResult(
 	quizResult QuizResult,
 	transactionPtr *pgx.Tx) error {
@@ -496,6 +677,18 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	return nil
 }
 
+// IncludeDefinitions adds new word definitions to the Leitner system for spaced repetition tracking.
+// This function is called when new definitions are fetched for a word (e.g., from ChatGPT).
+// Each definition starts in box 1 (immediate review) and will progress through the Leitner boxes
+// based on the user's quiz performance.
+//
+// Parameters:
+// - wordId: The ID of the word these definitions belong to
+// - userId: The ID of the user who will be quizzed on these definitions
+// - definitionIds: Array of definition IDs to include in the Leitner system
+// - tx: Database transaction to ensure atomicity
+//
+// Returns an error if any database operations fail.
 func (LeitnerSystemStrategy) IncludeDefinitions(wordId, userId int64, definitionIds []int64, tx pgx.Tx) error {
 	for _, definitionId := range definitionIds {
 		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id, word_id)
@@ -519,7 +712,20 @@ func (LeitnerSystemStrategy) IncludeDefinitions(wordId, userId int64, definition
 	return nil
 }
 
-// GetSkippedDefinitions returns definitions that are temporarily skipped due to error reports
+// GetSkippedDefinitions retrieves all definitions that are currently being skipped due to error reports.
+// These are definitions that users have reported as having issues (wrong images, incorrect meanings, etc.)
+// and are temporarily excluded from quiz generation until the issues are resolved.
+//
+// This function is useful for:
+// - Admin interfaces to review reported issues
+// - Analytics to understand content quality problems
+// - Debugging quiz generation issues
+//
+// Parameters:
+// - userID: The ID of the user whose skipped definitions to retrieve
+// - wordlistID: The ID of the wordlist to check for skipped definitions
+//
+// Returns a slice of NextDefinition objects with error reporting details.
 func (s LeitnerSystemStrategy) GetSkippedDefinitions(userID, wordlistID int64) ([]NextDefinition, error) {
 	query := `
 		SELECT 
@@ -576,7 +782,19 @@ func (s LeitnerSystemStrategy) GetSkippedDefinitions(userID, wordlistID int64) (
 	return results, nil
 }
 
-// MarkErrorResolved removes the temporary skip and marks the error as resolved
+// MarkErrorResolved removes the temporary skip status from definitions and marks error reports as resolved.
+// This function is called when:
+// - New definitions are successfully fetched for a word (resolving missing/incorrect content)
+// - New images are generated for definitions (resolving image-related issues)
+// - Content issues are manually resolved by administrators
+//
+// The function clears the temporarily_skipped_until timestamp, allowing the definitions
+// to be included in quiz generation again.
+//
+// Parameters:
+// - report: ErrorReport containing either DefinitionId or WordId to resolve
+//
+// Returns an error if the database operations fail.
 func (s LeitnerSystemStrategy) MarkErrorResolved(report ErrorReport) error {
 
 	if report.DefinitionId == nil && report.WordId == nil {
@@ -670,8 +888,25 @@ func buildQuerySelectionFromErrorReport(report ErrorReport) (string, []any, erro
 
 }
 
-// Temporarily skip this definition by updating its next review time
-// This prevents it from being selected again until the error is resolved
+// ReportError records a user-reported issue with quiz content and temporarily excludes it from quiz generation.
+// This function handles user feedback about problematic content such as:
+// - Images that don't match the word meaning
+// - Incorrect or confusing definitions
+// - Audio that doesn't play or is unclear
+// - Examples that are inappropriate or wrong
+//
+// The function:
+// 1. Records the error report in the database for tracking and analytics
+// 2. Temporarily skips the affected definition(s) by setting temporarily_skipped_until
+// 3. Ensures the problematic content won't appear in future quizzes until resolved
+//
+// Parameters:
+// - userID: The ID of the user reporting the error
+// - report: ErrorReport object containing error details and affected content IDs
+// - tx: Database transaction to ensure atomicity
+// - ctx: Context for the database operations
+//
+// Returns an error if the database operations fail.
 func (s LeitnerSystemStrategy) ReportError(userID int64, report ErrorReport, tx pgx.Tx, ctx context.Context) error {
 
 	if report.DefinitionId == nil && report.WordId == nil {

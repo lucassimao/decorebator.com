@@ -139,29 +139,34 @@ func GetDefinition(token string) (*DefinitionWithPronunciation, error) {
 
 	userMessage := fmt.Sprintf("Define the word \"%s\" in contemporary English.", token)
 
+	// ---- Step 1: the revised “messages” array ----
+
 	messages := []map[string]string{
 		{
 			"role": "system",
-			"content": "You are a dictionary assistant. Always respond with a JSON object containing a 'results' array and a 'pronunciation' field. " +
-				`Each item in 'results' must include: part_of_speech (exactly one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection, num), meaning 
-  (string), examples and inflections ( only if phrasal verb or verb. empty array otherwise). ` +
-				"The 'pronunciation' field should contain the IPA (International Phonetic Alphabet) notation for the word.",
+			"content": "" +
+				"You are a dictionary assistant.  " +
+				"Your job is to look up exactly one English token (word or phrase) provided by the user and respond ONLY with a JSON object that matches this schema exactly.  " +
+				" • The response must be a top-level object with exactly two keys:  “results” (an array) and “pronunciation” (a string).  " +
+				" • Always emit “results” (even if empty) and always emit “pronunciation” (IPA text or an empty string).  " +
+				" • Do NOT include any extra properties.  “additionalProperties” must be false.  " +
+				" • Each item inside “results” must be an object with exactly these required fields:  “part_of_speech”, “meaning”, “examples”, and “inflections”.  " +
+				"  – “part_of_speech” must be one of: noun, pronoun, verb, phrasal verb, adjective, adverb, preposition, conjunction, interjection, num.  " +
+				"  – “meaning” must be a non-empty string.  " +
+				"  – “examples” must be an array of strings.  Each string must include the original token wrapped in square brackets.  If the part_of_speech is NOT “verb” or “phrasal verb”, “examples” should be an empty array.  " +
+				"  – “inflections” must be an array.  If part_of_speech is “verb” or “phrasal verb”, you must include one item for each valid verb tense (present, past, past participle).  Otherwise, “inflections” must be an empty array.  " +
+				"   • Each inflection object must have exactly these required keys: “inflection” (string), “tense” (one of: present, past, past participle), and “examples” (an array of exactly 3 strings).  " +
+				"   • Each of the 3 example strings inside “inflection.examples” must contain that inflected form wrapped in square brackets.  " +
+				"  • You may include multiple “results” items if the word can function in multiple parts of speech, but only one object per POS.  " +
+				" • If the token is not found (or the user provided an invalid word), respond with:\n" +
+				"  { \"results\": [], \"pronunciation\": \"\" }\n" +
+				" • Under no circumstances should you output any text other than valid JSON that matches the schema exactly.  " +
+				" • When you do provide “pronunciation”, it must be the IPA (International Phonetic Alphabet) string for the token.  " +
+				"If any rule above cannot be satisfied, still respond with an empty “results” array and an empty “pronunciation” string so that your response validates against the schema.  ",
 		},
 		{
 			"role":    "system",
-			"content": "Each example must include the word " + token + " wrapped in square brackets.",
-		},
-		{
-			"role":    "system",
-			"content": "If part_of_speech is 'verb' or 'phrasal verb', the 'inflections' array must be present. Each inflection must have: inflection (string), tense (present, past, or past participle), and examples (3 strings using the inflection, each with " + token + " in square brackets).",
-		},
-		{
-			"role":    "system",
-			"content": "Include one item in the array for each valid part_of_speech the word can take. If the word is not found, return results as an empty array.",
-		},
-		{
-			"role":    "system",
-			"content": "the 'results' array should be empty if the word was incorrectly informed.",
+			"content": `The user’s token is: "` + token + `".  When you write example sentences anywhere (either in “examples” or in each inflection’s “examples”), you must wrap the user’s original token (or its inflected form) in square brackets.  For example:  “He [runs] every day.”`,
 		},
 		{
 			"role":    "user",
