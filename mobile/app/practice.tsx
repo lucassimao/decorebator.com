@@ -96,11 +96,11 @@ const FlashcardPractice: React.FC = () => {
       if (!isOnline) {
         throw new Error("Reporting not available in offline mode");
       }
-      return errorReportingApi.reportError(errorType, {
+
+      return errorReportingApi.reportError({
         wordId: currentWord!.id,
-        wordlistId: Number(wordlistId),
-        word: currentWord!.name,
-        definitions: definitions,
+        definitionId: definitions[0]?.id || 0,
+        errorType,
       });
     },
     onSuccess: () => {
@@ -146,7 +146,7 @@ const FlashcardPractice: React.FC = () => {
 
     // Reset definitions fetch state when word changes
     setShouldFetchDefinitions(false);
-  }, [currentIndex, words]);
+  }, [currentIndex, words, player]);
 
   // Reset flip state when word changes
   useEffect(() => {
@@ -154,7 +154,7 @@ const FlashcardPractice: React.FC = () => {
     flipAnimation.setValue(0);
     scaleAnimation.setValue(1);
     slideAnimation.setValue(0);
-  }, [currentIndex]);
+  }, [currentIndex, flipAnimation, scaleAnimation, slideAnimation]);
 
   // Flip animation interpolation
   const frontInterpolate = flipAnimation.interpolate({

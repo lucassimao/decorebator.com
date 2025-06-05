@@ -1,5 +1,4 @@
 import { callAPI } from "./api";
-import { Quiz } from "./wordlists";
 
 export enum ErrorType {
   UnrelatedImage = "_unrelated_image",
@@ -9,10 +8,13 @@ export enum ErrorType {
   SoundNotPlaying = "_sound_not_playing",
 }
 
-export async function reportError(
-  errorType: ErrorType,
-  quiz: Quiz,
-): Promise<void> {
+export interface ErrorReportRequest {
+  wordId: number;
+  definitionId: number;
+  errorType: ErrorType;
+}
+
+export async function reportError(request: ErrorReportRequest): Promise<void> {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + `/errorReports`;
-  await callAPI("POST", endpoint, JSON.stringify({ errorType, quiz }));
+  await callAPI("POST", endpoint, JSON.stringify(request));
 }

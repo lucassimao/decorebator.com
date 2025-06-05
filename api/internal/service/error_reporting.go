@@ -18,10 +18,10 @@ const (
 	SoundNotPlaying  ErrorReportType = "_sound_not_playing"
 )
 
-func ReportError(errorType ErrorReportType, quiz Quiz, userId int64, ctx context.Context) error {
-	logger := common.Logger.With("errorType", errorType, "quiz", quiz, "userId", userId)
+func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, userId int64, ctx context.Context) error {
+	logger := common.Logger.With("errorType", errorType, "wordID", wordID, "definitionID", definitionID, "userId", userId)
 
-	isValid, err := IsValidWordDefinition(quiz.WordID, quiz.DefinitionID, userId)
+	isValid, err := IsValidWordDefinition(wordID, definitionID, userId)
 
 	if err != nil || !isValid {
 		if err != nil {
@@ -51,18 +51,18 @@ func ReportError(errorType ErrorReportType, quiz Quiz, userId int64, ctx context
 
 	switch errorType {
 	case SoundNotPlaying:
-		report = ErrorReport{WordId: &quiz.WordID, UserId: userId}
-		_, err = TriggerTextToSpeechWorker(quiz.WordID, &report, &tx)
+		report = ErrorReport{WordId: &wordID, UserId: userId}
+		_, err = TriggerTextToSpeechWorker(wordID, &report, &tx)
 
 	case UnrelatedImage, MissingImage:
-		report = ErrorReport{DefinitionId: &quiz.DefinitionID, UserId: userId}
-		_, err = TriggerGenerateImageWorker(quiz.DefinitionID, "", &report, &tx)
+		report = ErrorReport{DefinitionId: &definitionID, UserId: userId}
+		_, err = TriggerGenerateImageWorker(definitionID, "", &report, &tx)
 
 	case UnrelatedExample, UnrelatedMeaning:
-		err = DeleteWordDefinitions(quiz.WordID, &tx)
+		err = DeleteWordDefinitions(wordID, &tx)
 		if err == nil {
-			report = ErrorReport{WordId: &quiz.WordID, UserId: userId}
-			_, err = TriggerFetchDefinitionWorker(quiz.WordID, &report, &tx)
+			report = ErrorReport{WordId: &wordID, UserId: userId}
+			_, err = TriggerFetchDefinitionWorker(wordID, &report, &tx)
 		}
 	default:
 		err = fmt.Errorf("invalid error type %s", errorType)
@@ -92,7 +92,7 @@ func ReportError(errorType ErrorReportType, quiz Quiz, userId int64, ctx context
 			error_type = EXCLUDED.error_type,
 			reported_at = NOW(),
 			status = 'pending'`,
-		userId, quiz.DefinitionID, quiz.WordID, string(errorType))
+		userId, definitionID, wordID, string(errorType))
 
 	if err != nil {
 		common.Logger.Error("failed to save error report", "error", err)

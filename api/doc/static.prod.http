@@ -1,0 +1,7 @@
+@authToken="4e83f09a85da7c8ab5f29acf555139ea"
+
+
+### Asking for new definition
+POST https://api.decorebator.com/static/workers/definition/44
+Authorization: 4e83f09a85da7c8ab5f29acf555139ea
+

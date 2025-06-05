@@ -2,6 +2,7 @@ import * as errorReportingApi from "@/api/errorReporting";
 import { ErrorType } from "@/api/errorReporting";
 import * as offlineQuizApi from "@/api/offlineWordlists";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { ErrorReportModal } from "@/components/ErrorReportModal";
 import { useOffline } from "@/hooks/useOffline";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -16,7 +17,6 @@ import {
   Dimensions,
   Image,
   ImageBackground,
-  Modal,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -80,7 +80,7 @@ const QuizScreen: React.FC = () => {
       setImageLoading(true);
       setCurrentImageUrl(quiz.value);
     }
-  }, [quiz?.value, quiz?.type]);
+  }, [quiz?.value, quiz?.type, currentImageUrl]);
 
   // Answer mutation
   const answerMutation = useMutation<void, Error, { success: boolean }>({
@@ -109,7 +109,11 @@ const QuizScreen: React.FC = () => {
       if (!isOnline) {
         throw new Error("Reporting not available in offline mode");
       }
-      return errorReportingApi.reportError(errorType, quiz!);
+      return errorReportingApi.reportError({
+        wordId: quiz!.wordId,
+        definitionId: quiz!.definitionId,
+        errorType,
+      });
     },
     onSuccess: () => {
       Alert.alert(t("common.success"), t("quiz.reportSubmitted"));
@@ -592,78 +596,14 @@ const QuizScreen: React.FC = () => {
           </View>
         </ScrollView>
 
-        {/* Report Modal */}
-        <Modal
+        {/* Error Reporting Modal */}
+        <ErrorReportModal
           visible={showReportModal}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setShowReportModal(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{t("quiz.reportIssue")}</Text>
-
-              <TouchableOpacity
-                style={styles.reportOption}
-                onPress={() => handleReportError(ErrorType.UnrelatedImage)}
-              >
-                <MaterialIcons name="image" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>
-                  {t("quiz.reportOptions.imageDoesntMatch")}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.reportOption}
-                onPress={() => handleReportError(ErrorType.MissingImage)}
-              >
-                <MaterialIcons name="broken-image" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>
-                  {t("quiz.reportOptions.imageNotLoading")}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.reportOption}
-                onPress={() => handleReportError(ErrorType.UnrelatedMeaning)}
-              >
-                <MaterialIcons name="help-outline" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>
-                  {t("quiz.reportOptions.wrongMeaning")}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.reportOption}
-                onPress={() => handleReportError(ErrorType.UnrelatedExample)}
-              >
-                <MaterialIcons name="format-quote" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>
-                  {t("quiz.reportOptions.wrongExample")}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.reportOption}
-                onPress={() => handleReportError(ErrorType.SoundNotPlaying)}
-              >
-                <MaterialIcons name="volume-off" size={24} color="#636E72" />
-                <Text style={styles.reportOptionText}>
-                  {t("quiz.reportOptions.soundNotPlaying")}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowReportModal(false)}
-              >
-                <Text style={styles.cancelButtonText}>
-                  {t("common.cancel")}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+          onClose={() => setShowReportModal(false)}
+          onReportError={handleReportError}
+          isLoading={reportMutation.isPending}
+          context="quiz"
+        />
       </SafeAreaView>
     </ImageBackground>
   );
@@ -903,47 +843,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 40,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#2D3436",
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  reportOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 16,
-    gap: 16,
-  },
-  reportOptionText: {
-    fontSize: 16,
-    color: "#2D3436",
-    flex: 1,
-  },
-  cancelButton: {
-    alignItems: "center",
-    paddingVertical: 16,
-    marginTop: 16,
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    color: "#636E72",
-    fontWeight: "500",
-  },
-
   imageContainer: {
     width: SCREEN_WIDTH - 80,
     height: 200,

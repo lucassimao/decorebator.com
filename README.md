@@ -12,24 +12,30 @@ Decorebator is a comprehensive vocabulary learning application that uses AI-powe
   - **Word from Meaning**: Select the word that matches a given definition
   - **Word from Image**: Identify words from AI-generated visual associations
   - **Audio Comprehension**: Recognize words and meanings from pronunciation
-  - **Sentence Completion**: Complete sentences with the correct word
+  - **Sentence Completion**: Complete sentences with the correct word using grammatical context
   - **Write from Definition**: Type the word based on its meaning (active recall)
-- **Spaced Repetition**: Uses the Leitner system to optimize learning retention
-- **Progress Tracking**: Monitor your learning journey with detailed statistics
+- **Interactive Flashcards**: Study definitions with examples, pronunciation, and grammatical context
+- **Spaced Repetition**: Uses the advanced 7-box Leitner system to optimize learning retention
+- **Progress Tracking**: Monitor your learning journey with comprehensive analytics and detailed statistics
+- **Error Reporting**: Report issues with AI-generated content (images, audio, definitions) for continuous improvement
+- **Offline Support**: Premium users can access wordlists and practice offline
 
 ### Subscription Tiers
 - **Free Plan**:
   - 1 wordlist
   - Up to 10 words per wordlist
   - Basic quiz modes
+  - Online-only access
 - **Premium Plans**:
   - **Monthly**: $6.99/month
   - **Annual**: $69.90/year (save $13.98)
   - Unlimited wordlists
   - Unlimited words
-  - All quiz modes
+  - All quiz modes and flashcards
   - AI-powered content generation
-  - Analytics and progress tracking
+  - Comprehensive analytics and progress tracking
+  - Offline support for wordlists and practice
+  - Error reporting system
   - Priority support
 
 ## 🏗️ Architecture Overview
@@ -56,12 +62,16 @@ Located in `/api`, the backend follows a 3-tier layered architecture:
 ### 2. Mobile Application (React Native/Expo)
 Located in `/mobile`, cross-platform mobile app with:
 - Expo Router for navigation
-- React Query for API state management
+- React Query for API state management with offline caching
 - React Hook Form with Zod validation
 - React Native Paper UI components
 - Secure storage for JWT tokens
 - Automatic session refresh on focus
 - Real-time subscription status updates
+- Internationalization (i18n) support for 8 languages
+- Offline support for premium users with local storage
+- Error reporting modal for AI-generated content issues
+- Interactive flashcard system with flip animations
 
 ### 3. Web Frontend (Next.js)
 Located in `/web`, marketing website and web app with:
@@ -228,6 +238,58 @@ npm run start         # Start production server
 npm run lint          # Run linter
 ```
 
+## 🆕 Recent Features & Improvements
+
+### Enhanced Grammar Support for Verbs
+- **Verb Inflection System**: Automatic generation of verb forms (past tense, present tense, gerund, participle)
+- **Contextual Examples**: Smart example sentences showing verbs in different grammatical contexts
+- **Part-of-Speech Intelligence**: Enhanced definition fetching with proper grammatical categorization
+- **Quiz Integration**: Sentence completion quizzes now use verb inflections for realistic practice
+
+### Advanced Error Reporting System
+- **User-Driven Quality Control**: Users can report issues with AI-generated content
+- **5 Error Types Supported**:
+  - Image doesn't match word meaning
+  - Image not loading properly
+  - Wrong or inaccurate definition
+  - Irrelevant example sentences
+  - Audio pronunciation not playing
+- **Automatic Content Regeneration**: Reported errors trigger background jobs to fix issues
+- **Temporary Skip Logic**: Problematic content is temporarily removed from quiz rotation
+- **Multi-Language Support**: Error reporting available in 8 languages
+
+### Interactive Flashcard System
+- **Immersive Learning Experience**: Full-screen flashcards with smooth flip animations
+- **Rich Content Display**: Definitions, pronunciations, examples, and part-of-speech information
+- **Verb-Specific Features**: Special handling for verb inflections and tense examples
+- **Progress Tracking**: Integrated with Leitner system for spaced repetition
+- **Error Reporting Integration**: Report issues directly from flashcard interface
+
+### Comprehensive Analytics Platform
+- **Word Mastery Tracking**: Individual word progress with accuracy calculations
+- **Learning Progress Visualization**: Daily statistics and progress charts
+- **Quiz Performance Analysis**: Performance metrics by quiz type and difficulty
+- **Box Distribution Insights**: Historical snapshots of Leitner system progression
+- **Materialized Views**: Optimized database performance for real-time analytics
+
+### Offline Support for Premium Users
+- **Local Data Caching**: Wordlists and definitions cached for offline access
+- **Seamless Synchronization**: Automatic sync when connection is restored
+- **Offline Quiz Support**: Complete quiz functionality without internet
+- **Progress Preservation**: Offline learning progress saved and synced
+
+### Internationalization (i18n)
+- **8 Language Support**: English, German, Spanish, French, Italian, Japanese, Portuguese (BR), Portuguese (PT)
+- **Dynamic Language Switching**: Real-time language changes without app restart
+- **Comprehensive Translation Coverage**: All UI elements, error messages, and features translated
+- **Cultural Localization**: Currency symbols, date formats, and cultural adaptations
+
+### Enhanced Leitner System
+- **Improved Box Progression**: Refined algorithm prevents immediate repetition of failed words
+- **Intelligent Quiz Type Selection**: Dynamic quiz types based on word difficulty and available content
+- **Pronunciation Integration**: Word pronunciation display in quiz and flashcard interfaces
+- **Error Recovery**: Automatic handling of content validation and fallback mechanisms
+
 ## 📊 Database Schema
 
 Key tables:
@@ -354,11 +416,15 @@ The system includes comprehensive analytics for tracking learning progress:
 - Dashboard statistics with comprehensive user metrics
 - Automated analytics updates triggered by quiz completion
 
-### Error Reporting System
-- User-reported error tracking for AI-generated content
-- Temporary skip functionality for problematic definitions
-- Error resolution workflow with status tracking
-- Automatic retry mechanisms for failed AI generations
+### Advanced Error Reporting System
+- **User-Driven Quality Control**: Comprehensive error reporting for all AI-generated content
+- **5 Structured Error Types**: Image mismatch, loading issues, wrong definitions, irrelevant examples, audio problems
+- **Multi-Modal Support**: Error reporting available in both quiz and flashcard interfaces
+- **Automatic Content Regeneration**: Background jobs triggered by error reports to fix problematic content
+- **Temporary Skip Logic**: Problematic definitions temporarily removed from quiz rotation during error resolution
+- **Error Resolution Workflow**: Complete lifecycle tracking from report to resolution
+- **Multi-Language Support**: Error reporting interface available in 8 languages
+- **Reusable Component Architecture**: Shared error reporting modal across quiz and flashcard features
 
 ## 🧠 Leitner System for Spaced Repetition
 
@@ -531,8 +597,8 @@ npm start
 - `GET /analytics/quiz-performance` - Quiz type performance stats
 - `GET /analytics/dashboard` - Overall dashboard statistics
 
-### Error Reporting
-- `POST /errorReports` - Report errors in AI-generated content
+### Error Reporting & Content Quality
+- `POST /errorReports` - Report errors in AI-generated content with structured error types
 
 ### Worker Management (Static Authentication)
 - `POST /static/workers/imageGenerator/:definitionId` - Trigger image generation
