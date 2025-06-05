@@ -48,6 +48,13 @@
     [x] Flashcards
     [x] Display pronunciation if available (missing quiz screens)
     [x] Leitner system - problem with single word stuck at lowest box
+    [ ] Report errors on flash card screen 
+    [ ] Update mobile/components/dashboard/WordlistDetailModal.tsx to use analytics details
+    [ ] Update mobile/components/dashboard/WordlistItem.tsx to show the title in the first line and improve buttons - so small right now
+    [ ] mobile/app/analytics.tsx BarChart seems broken
+    [ ] Lets update mobile/components/dashboard/Stats.tsx so that we replace wordlistsApi.getUserStats with the stats we are already computing in the mobile/   hooks/useAnalytics.ts hook. Only 
+  reuse whatever is already been expected to be show in the current implementation of the component - nothing else more
+
     [ ] error_reporting_analysis.html
     [ ] Multilanguage quizes
     [ ] Use all examples
@@ -65,6 +72,8 @@
 
 # V2
 
+[ ] Add words in bulk
+[ ] Convert wordlist to another language
 [ ] Migrate local PostgreSQL container from 15 to 17
 [ ] Gamification
     XP points & leveling for completing activities.

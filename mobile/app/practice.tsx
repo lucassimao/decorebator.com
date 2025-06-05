@@ -14,11 +14,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 
 import { useRouter, useLocalSearchParams } from "expo-router";
 
-import * as wordlistsApi from "@/api/wordlists";
+import * as offlineWordlistsApi from "@/api/offlineWordlists";
+import { useOffline } from "@/hooks/useOffline";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -55,6 +57,7 @@ interface Word {
 const FlashcardPractice: React.FC = () => {
   const { t } = useTranslation();
   const router = useRouter();
+  const { isOnline, isOfflineAvailable } = useOffline();
   const { wordlistId, wordlistName } = useLocalSearchParams<{
     wordlistId: string;
     wordlistName: string;
@@ -78,20 +81,21 @@ const FlashcardPractice: React.FC = () => {
   const slideAnimation = useRef(new Animated.Value(0)).current;
   const scaleAnimation = useRef(new Animated.Value(1)).current;
 
-  // Fetch words
+  // Fetch words with offline support
   const {
     data: words,
     isLoading,
     error,
   } = useQuery({
     queryKey: ["words", wordlistId],
-    queryFn: () => wordlistsApi.getWords(Number(wordlistId)),
+    queryFn: () => offlineWordlistsApi.getWords(Number(wordlistId)),
     enabled: !!wordlistId,
+    retry: isOnline ? 3 : 0, // Don't retry in offline mode
   });
 
   const currentWord = words?.[currentIndex];
 
-  // Fetch definitions using React Query
+  // Fetch definitions using React Query with offline support
   const {
     data: definitions = [],
     isLoading: loadingDefinitions,
@@ -100,10 +104,13 @@ const FlashcardPractice: React.FC = () => {
   } = useQuery({
     queryKey: ["definitions", wordlistId, currentWord?.id],
     queryFn: () =>
-      wordlistsApi.getWordDefinitions(Number(wordlistId), currentWord!.id),
+      offlineWordlistsApi.getWordDefinitions(
+        Number(wordlistId),
+        currentWord!.id,
+      ),
     enabled: !!wordlistId && !!currentWord?.id && shouldFetchDefinitions,
     staleTime: 5 * 60 * 1000, // 5 minutes - definitions don't change often
-    retry: 2, // Retry failed requests up to 2 times
+    retry: isOnline ? 2 : 0, // Don't retry in offline mode
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
@@ -237,6 +244,40 @@ const FlashcardPractice: React.FC = () => {
     );
   }
 
+  // Handle offline error state
+  if (error && !isOnline && !isOfflineAvailable) {
+    return (
+      <LinearGradient
+        colors={[
+          colors.backgroundLight,
+          colors.backgroundPeach,
+          colors.backgroundSage,
+        ]}
+        style={styles.container}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.errorContainer}>
+            <MaterialIcons
+              name="cloud-off"
+              size={64}
+              color={colors.textMedium}
+            />
+            <Text style={styles.errorText}>{t("offline.premiumRequired")}</Text>
+            <Text style={styles.errorSubText}>
+              {t("offline.premiumRequiredMessage")}
+            </Text>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.backButtonText}>{t("common.goBack")}</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
+
   if (error || !words || words.length === 0) {
     return (
       <LinearGradient
@@ -277,6 +318,7 @@ const FlashcardPractice: React.FC = () => {
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>
+        <OfflineIndicator />
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -420,30 +462,46 @@ const FlashcardPractice: React.FC = () => {
 
                       {/* Show examples - use inflections for verbs, regular examples for other parts of speech */}
                       {(() => {
-                        const isVerb = definition.partOfSpeech === "verb" || definition.partOfSpeech === "phrasal verb";
-                        const hasInflections = definition.inflections && definition.inflections.length > 0;
-                        const hasExamples = definition.examples && definition.examples.length > 0;
-                        
+                        const isVerb =
+                          definition.partOfSpeech === "verb" ||
+                          definition.partOfSpeech === "phrasal verb";
+                        const hasInflections =
+                          definition.inflections &&
+                          definition.inflections.length > 0;
+                        const hasExamples =
+                          definition.examples && definition.examples.length > 0;
+
                         if (isVerb && hasInflections) {
                           // For verbs, show examples from inflections
-                          const allInflectionExamples = definition.inflections!.flatMap(inf => 
-                            inf.examples.map(ex => ({ example: ex, tense: inf.tense }))
-                          );
-                          
-                          return allInflectionExamples.length > 0 && (
-                            <View style={styles.examplesContainer}>
-                              <Text style={styles.examplesTitle}>
-                                {t("flashcards.examples")}:
-                              </Text>
-                              {allInflectionExamples.map((item, idx) => (
-                                <View key={idx} style={styles.inflectionExampleContainer}>
-                                  <Text style={styles.exampleText}>
-                                    • {item.example.replace(/\[|\]/g, "")}
-                                  </Text>
-                                  <Text style={styles.tenseLabel}>({item.tense})</Text>
-                                </View>
-                              ))}
-                            </View>
+                          const allInflectionExamples =
+                            definition.inflections!.flatMap((inf) =>
+                              inf.examples.map((ex) => ({
+                                example: ex,
+                                tense: inf.tense,
+                              })),
+                            );
+
+                          return (
+                            allInflectionExamples.length > 0 && (
+                              <View style={styles.examplesContainer}>
+                                <Text style={styles.examplesTitle}>
+                                  {t("flashcards.examples")}:
+                                </Text>
+                                {allInflectionExamples.map((item, idx) => (
+                                  <View
+                                    key={idx}
+                                    style={styles.inflectionExampleContainer}
+                                  >
+                                    <Text style={styles.exampleText}>
+                                      • {item.example.replace(/\[|\]/g, "")}
+                                    </Text>
+                                    <Text style={styles.tenseLabel}>
+                                      ({item.tense})
+                                    </Text>
+                                  </View>
+                                ))}
+                              </View>
+                            )
                           );
                         } else if (hasExamples) {
                           // For non-verbs or verbs without inflections, show regular examples
@@ -460,7 +518,7 @@ const FlashcardPractice: React.FC = () => {
                             </View>
                           );
                         }
-                        
+
                         return null;
                       })()}
                     </View>
@@ -565,6 +623,13 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 32,
     textAlign: "center",
+  },
+  errorSubText: {
+    fontSize: 14,
+    color: colors.textMedium,
+    marginBottom: 32,
+    textAlign: "center",
+    lineHeight: 20,
   },
   backButton: {
     backgroundColor: colors.primary,

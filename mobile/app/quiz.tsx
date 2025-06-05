@@ -221,7 +221,11 @@ const QuizScreen: React.FC = () => {
           <View style={styles.questionContainer}>
             <Text style={styles.wordText}>{quiz.value}</Text>
             {quiz.pos && <Text style={styles.posText}>({quiz.pos})</Text>}
-            {quiz.pronunciation && <Text style={styles.pronunciationText}>/{quiz.pronunciation}/</Text>}
+            {quiz.pronunciation && (
+              <Text style={styles.pronunciationText}>
+                /{quiz.pronunciation}/
+              </Text>
+            )}
             {quiz.audioURL && (
               <TouchableOpacity style={styles.audioButton} onPress={playAudio}>
                 <Ionicons
@@ -243,7 +247,9 @@ const QuizScreen: React.FC = () => {
             {quiz.pos && (
               <Text style={styles.posText}>
                 ({quiz.pos}
-                {(quiz.pos === "verb" || quiz.pos === "phrasal verb") && " - using inflections"})
+                {(quiz.pos === "verb" || quiz.pos === "phrasal verb") &&
+                  " - using inflections"}
+                )
               </Text>
             )}
           </View>
@@ -317,7 +323,11 @@ const QuizScreen: React.FC = () => {
           <View style={styles.questionContainer}>
             <Text style={styles.meaningText}>{quiz.value}</Text>
             {quiz.pos && <Text style={styles.posText}>({quiz.pos})</Text>}
-            {quiz.pronunciation && <Text style={styles.pronunciationText}>/{quiz.pronunciation}/</Text>}
+            {quiz.pronunciation && (
+              <Text style={styles.pronunciationText}>
+                /{quiz.pronunciation}/
+              </Text>
+            )}
             <View style={styles.writeInputContainer}>
               <TextInput
                 style={[

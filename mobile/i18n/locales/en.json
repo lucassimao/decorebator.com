@@ -358,7 +358,12 @@
     "unavailableMessage": "Offline mode requires a premium subscription",
     "premiumRequired": "Premium Required",
     "premiumRequiredMessage": "Offline quiz access is only available for premium subscribers. Upgrade to access your wordlists without an internet connection.",
-    "featureUnavailable": "This feature is not available in offline mode"
+    "featureUnavailable": "This feature is not available in offline mode",
+    "preloading": "Downloading for offline...",
+    "availableOffline": "Available offline",
+    "preloadWhenOnline": "Connect to download",
+    "downloadForOffline": "Download for offline",
+    "cacheProgress": "{{cached}}/{{total}} words cached ({{percentage}}%)"
   },
   "wordDetail": {
     "deleteWord": "Delete Word",

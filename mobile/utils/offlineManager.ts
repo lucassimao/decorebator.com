@@ -1,12 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import * as FileSystem from 'expo-file-system';
-import { Quiz, Word } from '@/api/wordlists';
+import { Quiz, Word, Definition } from '@/api/wordlists';
 import { Platform } from 'react-native';
 
 const CACHE_PREFIX = 'decorebator_offline_';
 const QUIZ_CACHE_KEY = `${CACHE_PREFIX}quiz_`;
 const WORDS_CACHE_KEY = `${CACHE_PREFIX}words_`;
+const DEFINITIONS_CACHE_KEY = `${CACHE_PREFIX}definitions_`;
 const ASSET_CACHE_DIR = `${FileSystem.documentDirectory}decorebator_assets/`;
 const CACHE_EXPIRY_HOURS = 72; // 3 days
 
@@ -25,6 +26,13 @@ interface CachedWords {
   words: Word[];
   timestamp: number;
   wordlistId: number;
+}
+
+interface CachedDefinitions {
+  definitions: Definition[];
+  timestamp: number;
+  wordlistId: number;
+  wordId: number;
 }
 
 class OfflineManager {
@@ -244,25 +252,35 @@ class OfflineManager {
     return quizzes;
   }
   
-  // Clean up expired quizzes (can be called periodically)
-  public async cleanupExpiredQuizzes(): Promise<void> {
+  // Clean up expired cache data (can be called periodically)
+  public async cleanupExpiredCache(): Promise<void> {
     try {
       const allKeys = await AsyncStorage.getAllKeys();
-      const quizKeys = allKeys.filter(key => key.startsWith(QUIZ_CACHE_KEY));
+      const cacheKeys = allKeys.filter(key => key.startsWith(CACHE_PREFIX));
       
-      for (const cacheKey of quizKeys) {
+      for (const cacheKey of cacheKeys) {
         const cachedDataStr = await AsyncStorage.getItem(cacheKey);
         if (!cachedDataStr) continue;
         
-        const cachedData: CachedQuiz = JSON.parse(cachedDataStr);
-        
-        if (this.isCacheExpired(cachedData.timestamp)) {
+        try {
+          const cachedData = JSON.parse(cachedDataStr);
+          
+          if (cachedData.timestamp && this.isCacheExpired(cachedData.timestamp)) {
+            await AsyncStorage.removeItem(cacheKey);
+          }
+        } catch (parseError) {
+          // If we can't parse the data, remove it
           await AsyncStorage.removeItem(cacheKey);
         }
       }
     } catch (error) {
-      console.error('Error cleaning up expired quizzes:', error);
+      console.error('Error cleaning up expired cache:', error);
     }
+  }
+
+  // Legacy method for backwards compatibility
+  public async cleanupExpiredQuizzes(): Promise<void> {
+    return this.cleanupExpiredCache();
   }
 
   private async validateQuizAssets(quiz: Quiz): Promise<Quiz | null> {
@@ -373,6 +391,221 @@ class OfflineManager {
     } catch (error) {
       console.error('Error retrieving cached words:', error);
       return null;
+    }
+  }
+
+  // Definitions caching methods
+  public async cacheDefinitions(wordlistId: number, wordId: number, definitions: Definition[]): Promise<void> {
+    if (!this.isPremium) return;
+    
+    const cacheKey = `${DEFINITIONS_CACHE_KEY}${wordlistId}-${wordId}`;
+    const cachedData: CachedDefinitions = {
+      definitions,
+      timestamp: Date.now(),
+      wordlistId,
+      wordId,
+    };
+    
+    try {
+      await AsyncStorage.setItem(cacheKey, JSON.stringify(cachedData));
+      
+      // Cache any images referenced in definitions
+      await this.cacheDefinitionAssets(definitions);
+    } catch (error) {
+      console.error('Error caching definitions:', error);
+    }
+  }
+  
+  private async cacheDefinitionAssets(definitions: Definition[]): Promise<void> {
+    const assetPromises: Promise<void>[] = [];
+    
+    for (const definition of definitions) {
+      // Cache sounds if present
+      if (definition.sounds && definition.sounds.length > 0) {
+        for (const sound of definition.sounds) {
+          if (sound.link) {
+            assetPromises.push(this.cacheAsset(sound.link, 'audio'));
+          }
+        }
+      }
+    }
+    
+    await Promise.allSettled(assetPromises);
+  }
+  
+  public async getCachedDefinitions(wordlistId: number, wordId: number): Promise<Definition[] | null> {
+    if (!this.isPremium) return null;
+    
+    try {
+      const cacheKey = `${DEFINITIONS_CACHE_KEY}${wordlistId}-${wordId}`;
+      const cachedDataStr = await AsyncStorage.getItem(cacheKey);
+      
+      if (!cachedDataStr) return null;
+      
+      const cachedData: CachedDefinitions = JSON.parse(cachedDataStr);
+      
+      // Check if cache is expired
+      if (this.isCacheExpired(cachedData.timestamp)) {
+        await AsyncStorage.removeItem(cacheKey);
+        return null;
+      }
+      
+      // Validate and update asset URLs to local paths if offline
+      const validatedDefinitions = await this.validateDefinitionAssets(cachedData.definitions);
+      
+      return validatedDefinitions;
+    } catch (error) {
+      console.error('Error retrieving cached definitions:', error);
+      return null;
+    }
+  }
+  
+  private async validateDefinitionAssets(definitions: Definition[]): Promise<Definition[]> {
+    const validatedDefinitions: Definition[] = [];
+    
+    for (const definition of definitions) {
+      const validatedDefinition = { ...definition };
+      
+      // Update sound URLs to local paths if available
+      if (definition.sounds && definition.sounds.length > 0) {
+        const validatedSounds = await Promise.all(
+          definition.sounds.map(async (sound) => {
+            if (sound.link) {
+              const localUri = await this.getLocalAssetUri(sound.link);
+              return {
+                ...sound,
+                link: localUri || sound.link, // Keep original if local not available
+              };
+            }
+            return sound;
+          })
+        );
+        validatedDefinition.sounds = validatedSounds;
+      }
+      
+      validatedDefinitions.push(validatedDefinition);
+    }
+    
+    return validatedDefinitions;
+  }
+  
+  // Get all cached definitions for a wordlist (useful for pre-loading)
+  public async getAllCachedDefinitions(wordlistId: number): Promise<{ wordId: number; definitions: Definition[] }[]> {
+    if (!this.isPremium) return [];
+    
+    const result: { wordId: number; definitions: Definition[] }[] = [];
+    
+    try {
+      const allKeys = await AsyncStorage.getAllKeys();
+      const definitionKeys = allKeys.filter(key => 
+        key.startsWith(`${DEFINITIONS_CACHE_KEY}${wordlistId}-`)
+      );
+      
+      for (const cacheKey of definitionKeys) {
+        const cachedDataStr = await AsyncStorage.getItem(cacheKey);
+        if (!cachedDataStr) continue;
+        
+        const cachedData: CachedDefinitions = JSON.parse(cachedDataStr);
+        
+        if (!this.isCacheExpired(cachedData.timestamp)) {
+          const validatedDefinitions = await this.validateDefinitionAssets(cachedData.definitions);
+          result.push({
+            wordId: cachedData.wordId,
+            definitions: validatedDefinitions,
+          });
+        } else {
+          // Clean up expired definitions
+          await AsyncStorage.removeItem(cacheKey);
+        }
+      }
+    } catch (error) {
+      console.error('Error retrieving all cached definitions:', error);
+    }
+    
+    return result;
+  }
+
+  // Bulk caching methods for flash cards
+  public async preloadWordlistForOffline(wordlistId: number, words: Word[], getDefinitions: (wordId: number) => Promise<Definition[]>): Promise<void> {
+    if (!this.isPremium) return;
+    
+    try {
+      // Cache the words list
+      await this.cacheWords(wordlistId, words);
+      
+      // Cache definitions for each word (with some throttling to avoid overwhelming the API)
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        
+        try {
+          const definitions = await getDefinitions(word.id);
+          await this.cacheDefinitions(wordlistId, word.id, definitions);
+          
+          // Small delay to avoid overwhelming the server
+          if (i < words.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        } catch (error) {
+          console.error(`Error caching definitions for word ${word.name}:`, error);
+          // Continue with other words even if one fails
+        }
+      }
+    } catch (error) {
+      console.error('Error preloading wordlist for offline:', error);
+    }
+  }
+
+  // Check if a wordlist is fully cached for offline use
+  public async isWordlistCachedForOffline(wordlistId: number): Promise<boolean> {
+    if (!this.isPremium) return false;
+    
+    try {
+      // Check if words are cached
+      const cachedWords = await this.getCachedWords(wordlistId);
+      if (!cachedWords || cachedWords.length === 0) return false;
+      
+      // Check if definitions are cached for all words
+      const cachedDefinitions = await this.getAllCachedDefinitions(wordlistId);
+      const cachedWordIds = new Set(cachedDefinitions.map(item => item.wordId));
+      
+      // All words should have cached definitions
+      const allWordsCached = cachedWords.every(word => cachedWordIds.has(word.id));
+      
+      return allWordsCached;
+    } catch (error) {
+      console.error('Error checking wordlist cache status:', error);
+      return false;
+    }
+  }
+
+  // Get cache statistics for a wordlist
+  public async getWordlistCacheStats(wordlistId: number): Promise<{
+    totalWords: number;
+    cachedWords: number;
+    cachedDefinitions: number;
+    cachePercentage: number;
+  }> {
+    if (!this.isPremium) {
+      return { totalWords: 0, cachedWords: 0, cachedDefinitions: 0, cachePercentage: 0 };
+    }
+    
+    try {
+      const cachedWords = await this.getCachedWords(wordlistId);
+      const cachedDefinitions = await this.getAllCachedDefinitions(wordlistId);
+      
+      const totalWords = cachedWords?.length || 0;
+      const cachedDefinitionsCount = cachedDefinitions.length;
+      const cachePercentage = totalWords > 0 ? (cachedDefinitionsCount / totalWords) * 100 : 0;
+      
+      return {
+        totalWords,
+        cachedWords: totalWords,
+        cachedDefinitions: cachedDefinitionsCount,
+        cachePercentage: Math.round(cachePercentage),
+      };
+    } catch (error) {
+      console.error('Error getting cache stats:', error);
+      return { totalWords: 0, cachedWords: 0, cachedDefinitions: 0, cachePercentage: 0 };
     }
   }
 
