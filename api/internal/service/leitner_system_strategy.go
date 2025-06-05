@@ -80,8 +80,9 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 		FROM due_definitions
 		WHERE is_due = TRUE
 		ORDER BY 
-			box_id ASC,           -- Prioritize lower boxes
-			updated_at ASC        -- Then by oldest review
+			box_id ASC,                                    -- Prioritize lower boxes
+			EXTRACT(EPOCH FROM (NOW() - updated_at)) DESC, -- Prioritize older reviews
+			RANDOM()                                       -- Add randomization for ties
 		LIMIT 1;
 	`
 
@@ -138,7 +139,10 @@ func getOldestDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 			AND def.meaning IS NOT NULL
 			-- Exclude temporarily skipped definitions
 			AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())
-		ORDER BY lst.updated_at ASC NULLS FIRST
+		ORDER BY 
+			lst.box_id ASC,                                    -- Prioritize lower boxes
+			lst.updated_at ASC NULLS FIRST,                    -- Then by oldest review
+			RANDOM()                                           -- Add randomization for ties
 		LIMIT 1;
 	`
 
@@ -334,6 +338,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 		ID:               def.LeitnerSystemID,
 		Type:             quizType,
 		PartOfSpeech:     def.Definition.PartOfSpeech,
+		Pronunciation:    word.Pronunciation,
 		ImageDescription: def.ImageDescription,
 		AudioURL:         word.AudioURL,
 		WordID:           def.WordID,
@@ -398,7 +403,7 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 		tx = *transactionPtr
 	}
 
-	// Proper Leitner system logic
+	// Proper Leitner system logic with temporary skip on incorrect answers
 	query := `UPDATE leitner_system_tracking 
 	SET 
 		updated_at = now(), 
@@ -406,6 +411,10 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 			WHEN $1 AND box_id < 7 THEN box_id + 1  -- Move to next box on success
 			WHEN $1 AND box_id = 7 THEN 7           -- Stay at max box
 			ELSE 1                                   -- Reset to box 1 on failure
+		END,
+		temporarily_skipped_until = CASE 
+			WHEN NOT $1 THEN NOW() + INTERVAL '10 minutes'  -- Skip for 10 minutes on incorrect answer
+			ELSE NULL                                        -- Clear skip on correct answer
 		END
 	WHERE id = $2
 	RETURNING box_id`

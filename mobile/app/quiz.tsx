@@ -221,6 +221,7 @@ const QuizScreen: React.FC = () => {
           <View style={styles.questionContainer}>
             <Text style={styles.wordText}>{quiz.value}</Text>
             {quiz.pos && <Text style={styles.posText}>({quiz.pos})</Text>}
+            {quiz.pronunciation && <Text style={styles.pronunciationText}>/{quiz.pronunciation}/</Text>}
             {quiz.audioURL && (
               <TouchableOpacity style={styles.audioButton} onPress={playAudio}>
                 <Ionicons
@@ -316,6 +317,7 @@ const QuizScreen: React.FC = () => {
           <View style={styles.questionContainer}>
             <Text style={styles.meaningText}>{quiz.value}</Text>
             {quiz.pos && <Text style={styles.posText}>({quiz.pos})</Text>}
+            {quiz.pronunciation && <Text style={styles.pronunciationText}>/{quiz.pronunciation}/</Text>}
             <View style={styles.writeInputContainer}>
               <TextInput
                 style={[
@@ -793,6 +795,13 @@ const styles = StyleSheet.create({
     color: "#636E72",
     fontStyle: "italic",
     marginBottom: 16,
+  },
+  pronunciationText: {
+    fontSize: 14,
+    color: "#636E72",
+    fontStyle: "italic",
+    marginBottom: 16,
+    textAlign: "center",
   },
   sentenceText: {
     fontSize: 18,

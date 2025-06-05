@@ -69,6 +69,7 @@ export type Quiz = {
     | "MEANING_FROM_AUDIO"
     | "WRITE_WORD_FROM_DEFINITION";
   pos: string; // part of speech
+  pronunciation?: string; // IPA pronunciation
   audioURL?: string; //only present in MeaningFromAudio, GUESS_MEANING and WordFromAudio quizes
   imageDescription: string;
   definitionId: number;

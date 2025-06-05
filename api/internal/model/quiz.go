@@ -21,6 +21,7 @@ type Quiz struct {
 	// Sounds      []Sound  `json:"sounds"`
 	// Notations    []PhoneticNotation `json:"notations"`
 	PartOfSpeech     string `json:"pos"`
+	Pronunciation    string `json:"pronunciation,omitempty"`    //IPA pronunciation from the word
 	ImageDescription string `json:"imageDescription,omitempty"` //only present in WordFromImage quiz
 	AudioURL         string `json:"audioURL,omitempty"`         //only present in MeaningFromAudio, GuessMeaning and WordFromAudio quizes
 	DefinitionID     int64  `json:"definitionId"`

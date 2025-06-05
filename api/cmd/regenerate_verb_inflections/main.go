@@ -4,30 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"strconv"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/service"
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run cmd/regenerate_verb_inflections/main.go <batch_size>")
-		fmt.Println("Example: go run cmd/regenerate_verb_inflections/main.go 10")
-		os.Exit(1)
-	}
 
-	batchSize, err := strconv.Atoi(os.Args[1])
-	if err != nil {
-		log.Fatal("Invalid batch size:", err)
-	}
-
-	if batchSize <= 0 || batchSize > 100 {
-		log.Fatal("Batch size must be between 1 and 100")
-	}
-
-	fmt.Printf("Starting regeneration of definitions for words without definitions or with empty part_of_speech in batches of %d...\n", batchSize)
+	fmt.Printf("Starting regeneration of definitions for words without definitions or with empty part_of_speech\n")
 
 	db, err := common.GetDBConnection()
 	if err != nil {
@@ -58,10 +42,9 @@ func main() {
 			   OR trim(d2.part_of_speech) = ''
 		)
 		ORDER BY w.id
-		LIMIT $1
 	`
 
-	rows, err := db.Query(context.Background(), query, batchSize)
+	rows, err := db.Query(context.Background(), query)
 	if err != nil {
 		log.Fatal("Query failed:", err)
 	}
@@ -94,15 +77,6 @@ func main() {
 	fmt.Printf("Found %d words that need definition regeneration:\n", len(wordsToProcess))
 	for _, word := range wordsToProcess {
 		fmt.Printf("- ID %d: %s\n", word.ID, word.Name)
-	}
-
-	fmt.Print("\nProceed with regeneration? (y/n): ")
-	var response string
-	fmt.Scanln(&response)
-
-	if response != "y" && response != "Y" {
-		fmt.Println("Aborted.")
-		return
 	}
 
 	// Process each word

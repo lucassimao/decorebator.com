@@ -46,8 +46,8 @@
     [x] Support Stripe cupoms
     [x] Try SaveQuizResultWithAnalytics and Add new stats dashboard
     [x] Flashcards
-    [ ] Leitner system - problem with single word stuck at lowest box
-    [ ] Display pronunciation if available (missing quiz screens)
+    [x] Display pronunciation if available (missing quiz screens)
+    [x] Leitner system - problem with single word stuck at lowest box
     [ ] error_reporting_analysis.html
     [ ] Multilanguage quizes
     [ ] Use all examples
