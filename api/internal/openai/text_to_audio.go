@@ -21,11 +21,31 @@ type GenerateAudioResponse struct {
 	} `json:"error"`
 }
 
-func GenerateAudio(text string) (*GenerateAudioResponse, error) {
+// getVoiceForLanguage returns the optimal voice for the given language
+func getVoiceForLanguage(languageCode string) string {
+	voiceMap := map[string]string{
+		"en": "alloy",  // English - clear and neutral
+		"es": "nova",   // Spanish - warm and natural
+		"fr": "shimmer", // French - elegant pronunciation
+		"de": "echo",   // German - clear consonants
+		"it": "fable", // Italian - expressive
+		"pt": "onyx",  // Portuguese - deep and clear
+		"ja": "alloy", // Japanese - works well with alloy
+	}
+	
+	if voice, exists := voiceMap[languageCode]; exists {
+		return voice
+	}
+	return "alloy" // default fallback
+}
+
+func GenerateAudio(text string, languageCode string) (*GenerateAudioResponse, error) {
+	voice := getVoiceForLanguage(languageCode)
+	
 	var requestBodyStruct = map[string]any{
 		"model": "tts-1",
 		"input": text,
-		"voice": "alloy",
+		"voice": voice,
 	}
 
 	var requestBody, err = json.Marshal(requestBodyStruct)

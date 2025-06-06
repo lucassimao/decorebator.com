@@ -2,17 +2,12 @@ package http
 
 import (
 	"context"
-	"io"
 	"net/http"
 	"strconv"
 
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 )
-
-type GenerateNewImageInput struct {
-	Prompt string `json:"prompt"`
-}
 
 type WorkerRoutes struct{}
 
@@ -24,15 +19,7 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 		return
 	}
 
-	var input GenerateNewImageInput
-
-	// body is optional
-	if err := c.ShouldBind(&input); err != nil && err != io.EOF {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	jobId, err := service.TriggerGenerateImageWorker(definitionId, input.Prompt, nil, nil)
+	jobId, err := service.TriggerGenerateImageWorker(definitionId, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "definitionId": definitionId})

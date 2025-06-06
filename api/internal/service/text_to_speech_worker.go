@@ -38,7 +38,14 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 		return err
 	}
 
-	response, err := openai.GenerateAudio(word.Name)
+	// Get wordlist language for language-specific audio generation
+	languageCode, err := getWordlistLanguage(job.Args.WordId)
+	if err != nil {
+		logger.Error("failed to get wordlist language", "error", err)
+		return err
+	}
+
+	response, err := openai.GenerateAudio(word.Name, languageCode)
 	if err != nil {
 		logger.Error("failed to generate audio", "error", err)
 		return err

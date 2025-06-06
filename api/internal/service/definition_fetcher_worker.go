@@ -24,6 +24,28 @@ type DefinitionFetcherWorker struct {
 	river.WorkerDefaults[DefinitionFetcherArgs]
 }
 
+// getWordlistLanguage retrieves the language code for a wordlist from a word ID
+func getWordlistLanguage(wordID int64) (string, error) {
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return "", err
+	}
+
+	query := `
+		SELECT w.language_code 
+		FROM words wd 
+		JOIN wordlists w ON wd.wordlist_id = w.id 
+		WHERE wd.id = $1`
+
+	var languageCode string
+	err = db.QueryRow(context.Background(), query, wordID).Scan(&languageCode)
+	if err != nil {
+		return "", err
+	}
+
+	return languageCode, nil
+}
+
 func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[DefinitionFetcherArgs]) error {
 	logger := common.Logger.With("worker", "DefinitionFetcher")
 	wordID := job.Args.WordId
@@ -36,7 +58,16 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		return err
 	}
 
-	definitionData, err := openai.GetDefinition(word.Name)
+	// Get wordlist language
+	languageCode, err := getWordlistLanguage(wordID)
+	if err != nil {
+		logger.Error("failed to get wordlist language", "error", err)
+		return river.JobCancel(err)
+	}
+
+	logger.Info("fetching definitions", "word", word.Name, "language", languageCode)
+
+	definitionData, err := openai.GetDefinition(word.Name, languageCode)
 	if err != nil {
 		logger.Error("failed to fetch definitions using openai", "error", err)
 		return err
@@ -49,30 +80,17 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	// Validate the definitions received from ChatGPT
 	validationErrors := validateDefinitions(word.Name, definitionData.Definitions)
 	if len(validationErrors) > 0 {
-		json, err := json.Marshal(definitionData)
+		details := map[string]any{
+			"definitionData":   definitionData,
+			"validationErrors": validationErrors,
+		}
+
+		json, err := json.Marshal(details)
 		if err != nil {
-			logger.Debug(string(json))
-		} else {
-			logger.Error("fail", "err", err)
+			return err
 		}
 
-		for _, validationErr := range validationErrors {
-			logger.Warn("definition validation warning", "word", word.Name, "issue", validationErr)
-		}
-	}
-
-	// Check if we have at least one valid definition
-	hasValidDefinition := false
-	for _, def := range definitionData.Definitions {
-		if def.PartOfSpeech != "" && def.Meaning != "" {
-			hasValidDefinition = true
-			break
-		}
-	}
-
-	if !hasValidDefinition {
-		logger.Error("no valid definitions received from ChatGPT", "word", word.Name)
-		return errors.New("all definitions received are invalid")
+		return errors.New(string(json))
 	}
 
 	db, err := common.GetDBConnection()
@@ -113,7 +131,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	for _, definition := range definitions {
 		definitionIds = append(definitionIds, definition.ID)
 
-		_, err = TriggerGenerateImageWorker(definition.ID, "", nil, &tx)
+		_, err = TriggerGenerateImageWorker(definition.ID, nil, &tx)
 
 		if err != nil {
 			logger.Error("failed to trigger image generator", "definitionId", definition.ID, "error", err)
@@ -143,6 +161,10 @@ func validateDefinitions(word string, definitions []*model.Definition) []string 
 
 		if def.Meaning == "" {
 			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: missing meaning", i+1))
+		}
+
+		if def.Language == "" {
+			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: missing language", i+1))
 		}
 
 		if def.Token == "" {
@@ -211,13 +233,8 @@ func validateDefinitions(word string, definitions []*model.Definition) []string 
 		}
 
 		// Check that the token matches the word being defined (case insensitive)
-		if def.Token != "" && strings.ToLower(def.Token) != strings.ToLower(word) {
+		if def.Token != "" && !strings.EqualFold(def.Token, word) {
 			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: token mismatch - expected '%s', got '%s'", i+1, word, def.Token))
-		}
-
-		// Check that meaning is not too short
-		if len(def.Meaning) < 10 {
-			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: meaning too short (%d chars)", i+1, len(def.Meaning)))
 		}
 	}
 

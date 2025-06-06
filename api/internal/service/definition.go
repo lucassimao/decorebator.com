@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 	"os"
-	"regexp"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -23,15 +22,6 @@ func init() {
 }
 
 func SaveDefinition(token string, tokenId int64, definitions []*model.Definition, tx pgx.Tx) ([]*model.Definition, error) {
-
-	// wrapping token ocurrence within [ ] inside each example
-	for _, definition := range definitions {
-		for _, example := range definition.Examples {
-			if !containsBracketedWord(example) {
-				return nil, fmt.Errorf("example not wrapped into brackets: %s", example)
-			}
-		}
-	}
 
 	definitions, err := definitionRepository.Save(tokenId, definitions, tx)
 	if err != nil {
@@ -76,12 +66,4 @@ func didUserCreateWord(wordId, userId int64) (bool, error) {
 
 func GetDefinitionsByWordId(wordId, userId int64) ([]*model.Definition, error) {
 	return definitionRepository.GetDefinitionsByWordId(wordId, userId)
-}
-
-func containsBracketedWord(s string) bool {
-	// Compile the regular expression
-	re := regexp.MustCompile(`\[[^\]]+\]`)
-
-	// Check if the string matches the pattern
-	return re.MatchString(s)
 }

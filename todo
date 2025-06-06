@@ -57,18 +57,14 @@
         offiline.availableOffline , offiline.preloadWhenOnline , offiline.downloadForOffline, offline.cacheProgress . They only exist in mobile/i18n/locales/en.json and should be replicated across all i18n files in the same dir
     [x] Update mobile/components/dashboard/WordlistItem.tsx to show the full name of the wordlist  in the first line. Then the buttons (flash card, stats, quiz) need to be reworked and moved elsewhere inside the component layout cuz the are very small right now to be used in mobile screens.
     [x] error_reporting_analysis.html
+    [x] Multilanguage quizes
     [ ] mobile/app/analytics.tsx BarChart seems broken
-    [ ] Multilanguage quizes
-
-     now go over how we fetch definitions. The logic is triggered by running this job api/internal/service/definition_fetcher_worker.go. Right now the implementation assumes that the 
-  wordlist language is english but as you can see in the api/internal/model/wordlist.go we have a language code. mobile/components/dashboard/CreateWordlistModal.tsx is where wordlists 
-  are created by users. So basically what i need is to ajust the prompt to generate the definitions based on the wordlist language instead of assuming it as always english. Plan around 
-  the required changes without doing any change and then put together a html file outiline your approach. We should support all wordlists for languages 
-  English,Spanish,French,German,Italian,Portuguese,Japanese and thus our prompt needs to be adjusted to take that into account and also the specifities of all those languages
-
-    [ ] Remove 3 dots from Wordlist Items and only show these 4 options: Analytics, Flash cards, Quiz, add words.
+    [ ] Security abuse of api calls: Controlar quão frequente user pode reportar erro
+    [ ] O quiz pra escrever a palavra tem que ter um botão “não lembro” que deve levar imediatamente para o box 1 da mesma definição    
+    [ ] Quando selecionar opções evitar outras que possam ter a mesma palavra do quiz
+    [ ] Palavras com múltiplos definitions devem ser espaçadas no quiz
+    [ ] New quiz: read example and ask to write or pick heard words
     [ ] Splash screen
-
 
 [ ] MVP Release Checklist
     [x]  PostHog integration
@@ -76,11 +72,12 @@
     [x]  Set up Stripe
     [x]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
     [x]  Vercel-hosted page with SEO meta tags
+    [x]  Decorebator Landing Page Redesign
     [ ]  browserstack testing
-    [ ]  Decorebator Landing Page Redesign
 
 # V2
 
+[ ] Configurar Dashboard do river
 [ ] Add words in bulk
 [ ] Convert wordlist to another language
 [ ] Migrate local PostgreSQL container from 15 to 17

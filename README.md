@@ -176,6 +176,15 @@ EXPO_PUBLIC_API_URL=http://localhost:8080
 - Portuguese - Brazil (pt-BR)
 - Portuguese - Portugal (pt-PT)
 
+**AI Content Languages**: The system supports comprehensive AI-powered content generation in 7 languages:
+- English (en) - Complete grammar support with phrasal verbs, "alloy" voice for TTS
+- Spanish (es) - Gender-aware definitions with formal/informal variations, "nova" voice for natural pronunciation
+- French (fr) - Proper accent handling and liaison considerations, "shimmer" voice for elegant pronunciation
+- German (de) - Four-case system support with separable verbs, "echo" voice for clear consonants
+- Italian (it) - Verb group conjugations and gender agreement, "fable" voice for expressive speech
+- Portuguese (pt) - Brazilian and European variations, "onyx" voice for deep, clear pronunciation
+- Japanese (ja) - Hiragana, katakana, and kanji with keigo support, "alloy" voice optimized for Japanese
+
 4. Start the development server:
 ```bash
 npm start
@@ -255,6 +264,17 @@ npm run lint          # Run linter
 ```
 
 ## 🆕 Recent Features & Improvements
+
+### Multi-Language Definition Support
+- **7 Supported Languages**: English, Spanish, French, German, Italian, Portuguese, Japanese
+- **Native Language Processing**: AI generates definitions in the target language with proper grammar
+- **Language-Specific Prompts**: ChatGPT receives instructions in the wordlist's language for authentic content
+- **Dynamic Part-of-Speech Validation**: Grammar rules adapted for each language (e.g., German cases, Spanish gender)
+- **Automatic Language Detection**: System detects wordlist language and adapts content generation accordingly
+- **Comprehensive Verb Systems**: Language-appropriate verb tenses and inflections (presente, passé composé, Präteritum, etc.)
+- **Cultural Linguistic Accuracy**: Regional variations supported (Brazilian vs European Portuguese)
+- **Language-Optimized Audio**: Voice selection optimized per language for natural pronunciation
+- **Culturally-Aware Images**: Image generation prompts in native language for cultural relevance
 
 ### Enhanced Grammar Support for Verbs
 - **Verb Inflection System**: Automatic generation of verb forms (past tense, present tense, gerund, participle)
@@ -393,9 +413,9 @@ Email notifications are powered by SendGrid and include:
 ## 🔄 Background Jobs
 
 The system uses River (PostgreSQL-based queue) for processing:
-- **Image Generation**: Creates relevant images using DALL-E
-- **Text-to-Speech**: Generates pronunciation audio
-- **Definition Fetching**: Retrieves word definitions from external sources
+- **Image Generation**: Creates relevant images using DALL-E with language-specific prompts for cultural accuracy
+- **Text-to-Speech**: Generates pronunciation audio using OpenAI TTS with language-optimized voice selection
+- **Definition Fetching**: Multi-language AI-powered definition generation with native language prompts and grammar rules
 - **Subscription Renewal Reminders**: Automatically sends email reminders 3 days before renewal
 
 Workers can be scaled independently with configurable concurrency:
@@ -403,6 +423,23 @@ Workers can be scaled independently with configurable concurrency:
 - Text-to-Speech: Max 30 workers
 - Definition Fetcher: Max 50 workers
 - Subscription Reminder: Max 10 workers
+
+### Multi-Language Worker Features
+
+**Text-to-Speech Worker**:
+- **Language-Specific Voices**: Automatically selects optimal OpenAI TTS voice per language
+- **Voice Mapping**: English (alloy), Spanish (nova), French (shimmer), German (echo), Italian (fable), Portuguese (onyx), Japanese (alloy)
+- **Natural Pronunciation**: Each language uses voices optimized for that language's phonetics
+
+**Image Generator Worker**:
+- **Native Language Prompts**: DALL-E receives image generation instructions in the target language
+- **Cultural Context**: Language-specific prompts ensure culturally appropriate visual representations
+- **7-Language Support**: Full prompt templates in English, Spanish, French, German, Italian, Portuguese, Japanese
+
+**Definition Fetcher Worker**:
+- **Automatic Language Detection**: Detects wordlist language and adapts all AI processing accordingly
+- **Native Grammar Rules**: Uses language-specific part-of-speech lists and verb tense systems
+- **Fallback Mechanisms**: Robust error handling with English fallbacks for unsupported languages
 
 The system includes periodic jobs:
 - **Daily Renewal Reminder Check**: Runs daily to identify subscriptions renewing in 3-4 days

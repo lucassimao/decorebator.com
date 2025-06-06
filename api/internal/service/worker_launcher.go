@@ -10,14 +10,13 @@ import (
 	"github.com/riverqueue/river/rivertype"
 )
 
-func TriggerGenerateImageWorker(definitionId int64, customPrompt string, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
+func TriggerGenerateImageWorker(definitionId int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: IMAGE_GENERATOR_QUEUE,
 	}
 
 	return triggerWorker(&opts, ImageGeneratorArgs{
 		DefinitionId: definitionId,
-		CustomPrompt: customPrompt,
 		ErrorReport:  errorReport,
 	}, tx)
 }

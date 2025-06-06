@@ -167,6 +167,7 @@ Key tables:
 - Jest with Expo preset
 - Run with `npm test` (runs in watch mode)
 - Run single test: `npm test -- --testNamePattern="test name"`
+- To run tests without watch mode: `jest` (directly)
 
 ## External Services
 
@@ -196,6 +197,23 @@ Key tables:
 - Email templates are located in `internal/mail/` directory
 - API endpoints are documented in `doc/words.http` and `doc/words.prod.http`
 - Recent architecture improvements planned in `api/DEPENDENCY_INJECTION_MODERNIZATION_PLAN.md` and `api/LOGGING_IMPROVEMENT_PLAN.md`
+
+## Multi-Language Support
+
+The application provides comprehensive multi-language support:
+
+### Mobile App Internationalization
+- 8 supported languages: English, German, Spanish, French, Italian, Japanese, Portuguese (Brazil), Portuguese (Portugal)
+- Real-time language switching without app restart
+- All UI elements, error messages, and features fully translated
+- Cultural localization including currency symbols and date formats
+
+### AI Content Generation
+- 7 languages for AI-powered content: English, Spanish, French, German, Italian, Portuguese, Japanese
+- Native language processing with language-specific grammar rules
+- Culturally-aware image generation prompts
+- Language-optimized voice selection for text-to-speech
+- Dynamic part-of-speech validation per language
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.

@@ -57,7 +57,7 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 
 	case UnrelatedImage, MissingImage:
 		report = ErrorReport{DefinitionId: &definitionID, UserId: userId}
-		_, err = TriggerGenerateImageWorker(definitionID, "", &report, &tx)
+		_, err = TriggerGenerateImageWorker(definitionID, &report, &tx)
 
 	case UnrelatedExample, UnrelatedMeaning:
 		err = DeleteWordDefinitions(wordID, &tx)

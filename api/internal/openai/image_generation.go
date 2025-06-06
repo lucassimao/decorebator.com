@@ -35,6 +35,7 @@ func GenerateImage(prompt string) (*ImageGenerationResponse, error) {
 		"quality":            "low",
 		"moderation":         "low",
 		"output_compression": 50,
+		"output_format":      "jpeg",
 	}
 
 	var requestBody, err = json.Marshal(requestBodyStruct)
