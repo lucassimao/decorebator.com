@@ -298,6 +298,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 	var value string
 	var quizAnswer string
 	var audioURL string
+	var answerIndex int
 	var err error
 
 	// Default audioURL to word's audio (only overridden for specific quiz types)
@@ -305,19 +306,19 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 
 	switch quizType {
 	case model.MeaningFromAudio:
+		quizAnswer = def.Definition.Meaning
 		options, err = GetRandomMeanings([]int{int(def.Definition.ID)}, 3)
 		if err != nil {
 			return nil, err
 		}
-		quizAnswer = def.Definition.Meaning
 		value = ""
 
 	case model.WordFromAudio:
+		quizAnswer = word.Name
 		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
 		}
-		quizAnswer = word.Name
 		value = ""
 
 	case model.WriteWordFromDefinition:
@@ -326,11 +327,6 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 		// No options for write-in quiz
 
 	case model.CompleteSentence:
-		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
-		if err != nil {
-			return nil, err
-		}
-
 		// For verbs and phrasal verbs, use inflection examples; for others, use regular examples
 		isVerb := def.Definition.PartOfSpeech == "verb" || def.Definition.PartOfSpeech == "phrasal verb"
 		var availableExamples []string
@@ -356,32 +352,39 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 
 		// Extract answer from brackets
 		quizAnswer = extractAnswerFromExample(value, def.Definition.Token)
+		
+		// Get random options (database automatically excludes tokens from ignored definition IDs)
+		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		if err != nil {
+			return nil, err
+		}
 
 	case model.WordFromImage:
+		quizAnswer = extractAnswerFromImageDescription(def.ImageDescription, def.Definition.Token)
 		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
 		}
 		value = def.ImageUrl
-		quizAnswer = extractAnswerFromImageDescription(def.ImageDescription, def.Definition.Token)
 
 	case model.WordFromMeaning:
+		quizAnswer = def.Definition.Token
 		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
 		}
 		value = def.Definition.Meaning
-		quizAnswer = def.Definition.Token
 
 	case model.GuessMeaning:
+		quizAnswer = def.Definition.Meaning
 		options, err = GetRandomMeanings([]int{int(def.Definition.ID)}, 3)
 		if err != nil {
 			return nil, err
 		}
 		value = def.Definition.Token
-		quizAnswer = def.Definition.Meaning
 
 	case model.WordFromExampleAudio:
+		quizAnswer = def.Definition.Token
 		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
@@ -401,17 +404,25 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 
 		value = ""                               // No visual value needed for audio quiz
 		audioURL = selectedExampleAudio.AudioURL // Example audio URL
-		quizAnswer = def.Definition.Token
 
 	default:
 		return nil, fmt.Errorf("unexpected quiz type: %v", quizType)
 	}
 
-	// Add correct answer to options and fshuffle
-	options = append(options, quizAnswer)
-	answerIndex := rand.Intn(len(options))
-	copy(options[answerIndex+1:], options[answerIndex:])
-	options[answerIndex] = quizAnswer
+	// Add correct answer to options at random position (for multiple choice quizzes)
+	if quizType != model.WriteWordFromDefinition {
+		// Insert correct answer at random position among the 3 incorrect options
+		answerIndex = rand.Intn(4)
+		
+		// Insert the correct answer at the random position
+		options = append(options, "")
+		copy(options[answerIndex+1:], options[answerIndex:])
+		options[answerIndex] = quizAnswer
+	} else {
+		// For write-in quizzes, no options are needed
+		answerIndex = 0
+		options = []string{quizAnswer}
+	}
 
 	return &Quiz{
 		Value:            value,

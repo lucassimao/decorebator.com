@@ -133,7 +133,8 @@ func (repository *DefinitionRepository) GetRandomTokens(definitionIdsToIgnore []
 				word_definitions wd ON wd.definition_id = def.id
 			WHERE 
 				part_of_speech=$1 
-				AND wd.word_id NOT IN (select word_id FROM word_definitions WHERE definition_id = ANY($2)) 
+				AND wd.word_id NOT IN (select word_id FROM word_definitions WHERE definition_id = ANY($2))
+				AND token NOT IN (SELECT token FROM definitions WHERE id = ANY($2))
 			ORDER BY random() LIMIT $3
 		)
 		SELECT token FROM tokens ;
