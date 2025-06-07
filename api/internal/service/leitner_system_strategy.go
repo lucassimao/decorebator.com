@@ -45,13 +45,13 @@ type NextDefinition struct {
 // - Lower boxes focus on recognition and basic recall
 // - Higher boxes require active recall, contextual understanding, and audio recognition
 var boxToQuizTypes = map[int64][]model.QuizType{
-	1: {model.GuessMeaning},         // Basic recognition
-	2: {model.WordFromExampleAudio}, //{model.WordFromMeaning},                                                          // Basic recall
-	3: {model.WordFromExampleAudio}, //{model.WordFromImage, model.GuessMeaning},                                        // Visual association
-	4: {model.WordFromExampleAudio}, //{model.CompleteSentence, model.WordFromMeaning},                                  // Contextual understanding
-	5: {model.WordFromExampleAudio}, //{model.WriteWordFromDefinition, model.CompleteSentence},                          // Active recall
-	6: {model.WordFromExampleAudio}, //{model.WordFromAudio, model.WriteWordFromDefinition, model.WordFromExampleAudio}, // Audio recognition
-	7: {model.WordFromExampleAudio}, //{model.MeaningFromAudio, model.WordFromAudio, model.WordFromExampleAudio},        // Advanced audio
+	1: {model.GuessMeaning},                                                                                                                                                                             // Basic recognition
+	2: {model.WordFromMeaning},                                                                                                                                                                          // Basic recall
+	3: {model.WordFromImage, model.GuessMeaning},                                                                                                                                                        // Visual association
+	4: {model.CompleteSentence, model.WordFromMeaning},                                                                                                                                                  // Contextual understanding
+	5: {model.WriteWordFromDefinition, model.CompleteSentence},                                                                                                                                          // Active recall
+	6: {model.WordFromAudio, model.WriteWordFromDefinition, model.WordFromExampleAudio},                                                                                                                 // Audio recognition
+	7: {model.WordFromExampleAudio, model.WriteWordFromDefinition, model.WordFromAudio, model.GuessMeaning, model.WordFromMeaning, model.WordFromImage, model.CompleteSentence, model.MeaningFromAudio}, // All
 }
 
 // ExampleUsage tracks when examples were last used for fair distribution
