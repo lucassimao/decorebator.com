@@ -118,7 +118,7 @@ class OfflineManager {
       assetPromises.push(this.cacheAsset(quiz.value, "image"));
     }
 
-    // Cache audio URL if present
+    // Cache audio URL if present (for audio-based quiz types)
     if (quiz.audioURL) {
       assetPromises.push(this.cacheAsset(quiz.audioURL, "audio"));
     }
@@ -313,13 +313,16 @@ class OfflineManager {
       }
     }
 
-    // Check audio availability
+    // Check audio availability for audio-based quiz types
     if (quiz.audioURL) {
       const localUri = await this.getLocalAssetUri(quiz.audioURL);
       if (localUri) {
         validatedQuiz.audioURL = localUri;
       } else {
-        isValid = false;
+        // Audio is required for audio-based quiz types
+        if (quiz.type === "WORD_FROM_AUDIO" || quiz.type === "MEANING_FROM_AUDIO" || quiz.type === "WORD_FROM_EXAMPLE_AUDIO") {
+          isValid = false;
+        }
       }
     }
 

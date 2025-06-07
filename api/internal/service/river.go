@@ -16,6 +16,7 @@ const TEXT_TO_SPEECH_QUEUE = "text_to_speech"
 const DEFINITION_FETCHER_QUEUE = "definition_fetcher"
 const SUBSCRIPTION_REMINDER_QUEUE = "subscription_reminder"
 const BACKFILL_INFLECTIONS_QUEUE = "backfill_inflections"
+const EXAMPLE_AUDIO_QUEUE = "example_audio"
 
 // NoOpJobArgs is a no-op job used for periodic jobs that execute inline
 type NoOpJobArgs struct{}
@@ -42,6 +43,7 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 	river.AddWorker(riverWorkers, &ImageGeneratorWorker{})
 	river.AddWorker(riverWorkers, &TextToSpeechWorker{})
 	river.AddWorker(riverWorkers, &DefinitionFetcherWorker{})
+	river.AddWorker(riverWorkers, &ExampleAudioWorker{})
 	river.AddWorker(riverWorkers, &SubscriptionReminderWorker{
 		db:       db,
 		subRepo:  repository.NewSubscriptionRepository(db),
@@ -100,6 +102,7 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 			DEFINITION_FETCHER_QUEUE:    {MaxWorkers: 50},
 			SUBSCRIPTION_REMINDER_QUEUE: {MaxWorkers: 10},
 			BACKFILL_INFLECTIONS_QUEUE:  {MaxWorkers: 1}, // Single worker to respect API rate limits
+				EXAMPLE_AUDIO_QUEUE:         {MaxWorkers: 20},
 		},
 		Workers:      riverWorkers,
 		Logger:       common.Logger,

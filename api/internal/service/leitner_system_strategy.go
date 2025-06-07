@@ -14,6 +14,7 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
+	"decorebator.com/internal/repository"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -44,13 +45,13 @@ type NextDefinition struct {
 // - Lower boxes focus on recognition and basic recall
 // - Higher boxes require active recall, contextual understanding, and audio recognition
 var boxToQuizTypes = map[int64][]model.QuizType{
-	1: {model.GuessMeaning},                                    // Basic recognition
-	2: {model.WordFromMeaning},                                 // Basic recall
-	3: {model.WordFromImage, model.GuessMeaning},               // Visual association
-	4: {model.CompleteSentence, model.WordFromMeaning},         // Contextual understanding
-	5: {model.WriteWordFromDefinition, model.CompleteSentence}, // Active recall
-	6: {model.WordFromAudio, model.WriteWordFromDefinition},    // Audio recognition
-	7: {model.MeaningFromAudio, model.WordFromAudio},           // Advanced audio
+	1: {model.GuessMeaning},         // Basic recognition
+	2: {model.WordFromExampleAudio}, //{model.WordFromMeaning},                                                          // Basic recall
+	3: {model.WordFromExampleAudio}, //{model.WordFromImage, model.GuessMeaning},                                        // Visual association
+	4: {model.WordFromExampleAudio}, //{model.CompleteSentence, model.WordFromMeaning},                                  // Contextual understanding
+	5: {model.WordFromExampleAudio}, //{model.WriteWordFromDefinition, model.CompleteSentence},                          // Active recall
+	6: {model.WordFromExampleAudio}, //{model.WordFromAudio, model.WriteWordFromDefinition, model.WordFromExampleAudio}, // Audio recognition
+	7: {model.WordFromExampleAudio}, //{model.MeaningFromAudio, model.WordFromAudio, model.WordFromExampleAudio},        // Advanced audio
 }
 
 // ExampleUsage tracks when examples were last used for fair distribution
@@ -135,6 +136,15 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 		return nil, err
 	}
 
+	// Load example audio files for this definition
+	definitionRepo := repository.NewDefinitionRepository(db)
+	exampleAudioFiles, err := definitionRepo.GetExampleAudioByDefinitionID(definition.ID)
+	if err != nil {
+		// Log the error but don't fail the quiz generation
+		common.Logger.Error("failed to load example audio files", "definitionID", definition.ID, "error", err)
+	}
+	definition.ExampleAudioFiles = exampleAudioFiles
+
 	return &result, nil
 }
 
@@ -192,6 +202,15 @@ func getOldestDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Load example audio files for this definition
+	definitionRepo := repository.NewDefinitionRepository(db)
+	exampleAudioFiles, err := definitionRepo.GetExampleAudioByDefinitionID(definition.ID)
+	if err != nil {
+		// Log the error but don't fail the quiz generation
+		common.Logger.Error("failed to load example audio files", "definitionID", definition.ID, "error", err)
+	}
+	definition.ExampleAudioFiles = exampleAudioFiles
 
 	return &result, nil
 }
@@ -265,6 +284,8 @@ func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Wor
 		return len(def.Definition.Examples) > 0
 	case model.WordFromAudio, model.MeaningFromAudio:
 		return word.AudioURL != ""
+	case model.WordFromExampleAudio:
+		return len(def.Definition.ExampleAudioFiles) > 0
 	case model.WriteWordFromDefinition:
 		return def.Definition.Meaning != ""
 	default:
@@ -276,7 +297,11 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 	var options []string
 	var value string
 	var quizAnswer string
+	var audioURL string
 	var err error
+
+	// Default audioURL to word's audio (only overridden for specific quiz types)
+	audioURL = word.AudioURL
 
 	switch quizType {
 	case model.MeaningFromAudio:
@@ -356,6 +381,28 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 		value = def.Definition.Token
 		quizAnswer = def.Definition.Meaning
 
+	case model.WordFromExampleAudio:
+		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		if err != nil {
+			return nil, err
+		}
+
+		// Get least used example audio for fair distribution
+		db, err := common.GetDBConnection()
+		if err != nil {
+			return nil, err
+		}
+
+		definitionRepo := repository.NewDefinitionRepository(db)
+		selectedExampleAudio, err := definitionRepo.GetLeastUsedExampleAudio(def.Definition.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		value = ""                               // No visual value needed for audio quiz
+		audioURL = selectedExampleAudio.AudioURL // Example audio URL
+		quizAnswer = def.Definition.Token
+
 	default:
 		return nil, fmt.Errorf("unexpected quiz type: %v", quizType)
 	}
@@ -375,7 +422,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 		PartOfSpeech:     def.Definition.PartOfSpeech,
 		Pronunciation:    word.Pronunciation,
 		ImageDescription: def.ImageDescription,
-		AudioURL:         word.AudioURL,
+		AudioURL:         audioURL,
 		WordID:           def.WordID,
 		DefinitionID:     def.Definition.ID,
 	}, nil

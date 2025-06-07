@@ -10,6 +10,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/openai"
+	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 )
 
@@ -136,6 +137,12 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		if err != nil {
 			logger.Error("failed to trigger image generator", "definitionId", definition.ID, "error", err)
 		}
+
+		// Queue example audio generation job
+		err = QueueExampleAudioJob(definition.ID, word.ID, &tx)
+		if err != nil {
+			logger.Error("failed to queue example audio job", "definitionId", definition.ID, "wordId", word.ID, "error", err)
+		}
 	}
 	strategy := LeitnerSystemStrategy{}
 	strategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
@@ -239,4 +246,29 @@ func validateDefinitions(word string, definitions []*model.Definition) []string 
 	}
 
 	return validationErrors
+}
+
+// QueueExampleAudioJob queues a job to generate example audio for a definition
+func QueueExampleAudioJob(definitionID int64, wordID int64, tx *pgx.Tx) error {
+	client, err := GetRiverClient()
+	if err != nil {
+		return err
+	}
+
+	args := ExampleAudioArgs{
+		DefinitionID: definitionID,
+		WordID:       wordID,
+	}
+
+	opts := &river.InsertOpts{
+		Queue: EXAMPLE_AUDIO_QUEUE,
+	}
+
+	if tx != nil {
+		_, err = client.InsertTx(context.Background(), *tx, args, opts)
+	} else {
+		_, err = client.Insert(context.Background(), args, opts)
+	}
+
+	return err
 }

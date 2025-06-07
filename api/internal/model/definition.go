@@ -1,6 +1,10 @@
 package model
 
-import "github.com/jackc/pgx/pgtype"
+import (
+	"time"
+
+	"github.com/jackc/pgx/pgtype"
+)
 
 type Inflection struct {
 	Inflection string   `json:"inflection"`
@@ -33,18 +37,29 @@ const (
 	Wiktionary DefinitionSource = "wiktionary"
 )
 
+type DefinitionExampleAudio struct {
+	ID             int64     `json:"id"`
+	DefinitionID   int64     `json:"definitionId"`
+	ExampleText    string    `json:"exampleText"`
+	ExampleHash    string    `json:"exampleHash"`
+	AudioURL       string    `json:"audioUrl"`
+	InflectionType string    `json:"inflectionType,omitempty"`
+	CreatedAt      time.Time `json:"createdAt"`
+}
+
 type Definition struct {
-	ID                int64                  `json:"id"`
-	Token             string                 `json:"token"`
-	Language          string                 `json:"language"`
-	Meaning           string                 `json:"meaning"`
-	PartOfSpeech      string                 `json:"partOfSpeech"`
-	Examples          []string               `json:"examples"`
-	Inflections       []Inflection           `json:"inflections"`
-	Source            DefinitionSource       `json:"source"`
-	SourceId          *string                `json:"sourceId"`
-	Sounds            []Sound                `json:"sounds"`
-	PhoneticNotations []PhoneticNotation     `json:"phoneticNotations"`
+	ID                int64                    `json:"id"`
+	Token             string                   `json:"token"`
+	Language          string                   `json:"language"`
+	Meaning           string                   `json:"meaning"`
+	PartOfSpeech      string                   `json:"partOfSpeech"`
+	Examples          []string                 `json:"examples"`
+	Inflections       []Inflection             `json:"inflections"`
+	Source            DefinitionSource         `json:"source"`
+	SourceId          *string                  `json:"sourceId"`
+	Sounds            []Sound                  `json:"sounds"`
+	PhoneticNotations []PhoneticNotation       `json:"phoneticNotations"`
+	ExampleAudioFiles []DefinitionExampleAudio `json:"exampleAudioFiles"`
 
 	CreatedAt pgtype.Timestamp `json:"createdAt"`
 	UpdatedAt pgtype.Timestamp `json:"updatedAt"`

@@ -68,6 +68,7 @@ const QuizScreen: React.FC = () => {
     retry: isOnline ? 3 : 0, // Don't retry in offline mode
   });
 
+
   useEffect(() => {
     if (quiz?.id) {
       quizDisplayedAtRef.current = Date.now();
@@ -206,6 +207,8 @@ const QuizScreen: React.FC = () => {
         return t("quiz.whichWordDidYouHear");
       case "MEANING_FROM_AUDIO":
         return t("quiz.whatDoesWordYouHeardMean");
+      case "WORD_FROM_EXAMPLE_AUDIO":
+        return t("quiz.whichWordFromExample");
       default:
         return t("quiz.title");
     }
@@ -303,6 +306,7 @@ const QuizScreen: React.FC = () => {
 
       case "WORD_FROM_AUDIO":
       case "MEANING_FROM_AUDIO":
+        case 'WORD_FROM_EXAMPLE_AUDIO':
         return (
           <View style={styles.questionContainer}>
             <TouchableOpacity

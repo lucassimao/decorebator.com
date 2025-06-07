@@ -165,6 +165,7 @@
     "whatWordDescribesImage": "¿Qué palabra describe esta imagen?",
     "whichWordDidYouHear": "¿Qué palabra escuchaste?",
     "whatDoesWordYouHeardMean": "¿Qué significa la palabra que escuchaste?",
+    "whichWordFromExample": "¿Qué palabra de este ejemplo?",
     "reportOptions": {
       "imageDoesntMatch": "La imagen no coincide",
       "imageNotLoading": "La imagen no carga",
@@ -478,7 +479,8 @@
       "complete_sentence": "Completar Oración",
       "write_word_from_definition": "Escribir Palabra",
       "word_from_audio": "Palabra por Audio",
-      "meaning_from_audio": "Significado por Audio"
+      "meaning_from_audio": "Significado por Audio",
+      "word_from_example_audio": "Palabra por Audio de Ejemplo"
     }
   },
   "flashcards": {

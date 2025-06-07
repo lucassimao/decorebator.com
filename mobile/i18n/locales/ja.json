@@ -165,6 +165,7 @@
     "whatWordDescribesImage": "この画像を表す単語は何ですか？",
     "whichWordDidYouHear": "どの単語が聞こえましたか？",
     "whatDoesWordYouHeardMean": "聞こえた単語の意味は何ですか？",
+    "whichWordFromExample": "この例文の単語は何ですか？",
     "reportOptions": {
       "imageDoesntMatch": "画像が一致しません",
       "imageNotLoading": "画像が読み込まれません",
@@ -478,7 +479,8 @@
       "complete_sentence": "文を完成",
       "write_word_from_definition": "単語を書く",
       "word_from_audio": "音声から単語",
-      "meaning_from_audio": "音声から意味"
+      "meaning_from_audio": "音声から意味",
+      "word_from_example_audio": "例文音声から単語"
     }
   },
   "flashcards": {

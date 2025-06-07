@@ -10,6 +10,7 @@ const (
 	WordFromAudio           QuizType = "WORD_FROM_AUDIO"
 	MeaningFromAudio        QuizType = "MEANING_FROM_AUDIO"
 	WriteWordFromDefinition QuizType = "WRITE_WORD_FROM_DEFINITION"
+	WordFromExampleAudio    QuizType = "WORD_FROM_EXAMPLE_AUDIO"
 )
 
 type Quiz struct {

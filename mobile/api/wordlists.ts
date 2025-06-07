@@ -67,10 +67,11 @@ export type Quiz = {
     | "WORD_FROM_IMAGE"
     | "WORD_FROM_AUDIO"
     | "MEANING_FROM_AUDIO"
-    | "WRITE_WORD_FROM_DEFINITION";
+    | "WRITE_WORD_FROM_DEFINITION"
+    | "WORD_FROM_EXAMPLE_AUDIO";
   pos: string; // part of speech
   pronunciation?: string; // IPA pronunciation
-  audioURL?: string; //only present in MeaningFromAudio, GUESS_MEANING and WordFromAudio quizes
+  audioURL?: string; //only present in MeaningFromAudio, GUESS_MEANING, WordFromAudio, and WordFromExampleAudio quizes
   imageDescription: string;
   definitionId: number;
   wordId: number;

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"unicode/utf8"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -35,7 +36,8 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 	var lowerCasedName = strings.ToLower(dto.Name)
 	var trimmedName = strings.TrimSpace(lowerCasedName)
 
-	if len(trimmedName) > 15 {
+	// count runes (Unicode characters), not bytes
+	if utf8.RuneCountInString(trimmedName) > 15 {
 		return nil, common.BusinessError{Message: "words must be limited to 15 chars"}
 	}
 

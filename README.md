@@ -7,13 +7,14 @@ Decorebator is a comprehensive vocabulary learning application that uses AI-powe
 ### Core Learning Features
 - **Build Vocabulary Lists**: Create and manage multiple wordlists for any language
 - **AI-Powered Enrichment**: Automatically generates definitions, images, audio pronunciations, and example sentences
-- **Multiple Quiz Modes**:
+- **Multiple Quiz Modes** (8 Different Types):
   - **Guess Meaning**: Choose the correct meaning for a given word
   - **Word from Meaning**: Select the word that matches a given definition
   - **Word from Image**: Identify words from AI-generated visual associations
   - **Audio Comprehension**: Recognize words and meanings from pronunciation
   - **Sentence Completion**: Complete sentences with the correct word using grammatical context
   - **Write from Definition**: Type the word based on its meaning (active recall)
+  - **Example Audio Recognition**: Identify words from contextual example sentence audio
 - **Interactive Flashcards**: Study definitions with examples, pronunciation, and grammatical context
 - **Spaced Repetition**: Uses the advanced 7-box Leitner system to optimize learning retention
 - **Progress Tracking**: Monitor your learning journey with comprehensive analytics and detailed statistics
@@ -336,8 +337,9 @@ Key tables:
 - `words`: Individual words in wordlists with audio URLs and learning status
 - `definitions`: AI-generated definitions with multimedia, sources, and example sentences
 - `definition_images`: Images associated with definitions
+- `definition_example_audio`: Audio files for example sentences with fair usage tracking
+- `example_audio_usage`: Usage tracking for example audio to ensure variety in quizzes
 - `leitner_system_tracking`: Spaced repetition progress with temporary skip functionality
-- `leitner_system_history`: Learning history with success tracking and quiz types
 - `error_reports`: User-reported errors for definitions and AI-generated content
 - `quiz_performance`: Individual quiz attempts with performance metrics
 - `word_mastery`: Overall mastery tracking for each word per user
@@ -416,12 +418,14 @@ The system uses River (PostgreSQL-based queue) for processing:
 - **Image Generation**: Creates relevant images using DALL-E with language-specific prompts for cultural accuracy
 - **Text-to-Speech**: Generates pronunciation audio using OpenAI TTS with language-optimized voice selection
 - **Definition Fetching**: Multi-language AI-powered definition generation with native language prompts and grammar rules
+- **Example Audio Generation**: Creates contextual audio for example sentences with smart selection (longest examples for verbs)
 - **Subscription Renewal Reminders**: Automatically sends email reminders 3 days before renewal
 
 Workers can be scaled independently with configurable concurrency:
 - Image Generator: Max 5 workers
 - Text-to-Speech: Max 30 workers
 - Definition Fetcher: Max 50 workers
+- Example Audio Generator: Max 20 workers
 - Subscription Reminder: Max 10 workers
 
 ### Multi-Language Worker Features
@@ -440,6 +444,13 @@ Workers can be scaled independently with configurable concurrency:
 - **Automatic Language Detection**: Detects wordlist language and adapts all AI processing accordingly
 - **Native Grammar Rules**: Uses language-specific part-of-speech lists and verb tense systems
 - **Fallback Mechanisms**: Robust error handling with English fallbacks for unsupported languages
+
+**Example Audio Generator Worker**:
+- **Smart Example Selection**: Cost-optimized processing - generates audio only for longest examples of verbs/phrasal verbs (60-80% TTS cost savings)
+- **Language-Aware Voice Selection**: Automatically selects appropriate TTS voice based on wordlist language
+- **Fair Distribution**: Tracks usage of each example audio to ensure variety in quiz selection
+- **Batch Processing**: Processes multiple examples per definition efficiently
+- **Inflection Support**: Handles both main examples and verb inflection examples with proper categorization
 
 The system includes periodic jobs:
 - **Daily Renewal Reminder Check**: Runs daily to identify subscriptions renewing in 3-4 days

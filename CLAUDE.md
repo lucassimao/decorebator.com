@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Decorebator is a vocabulary learning application with spaced repetition using the Leitner system. It consists of:
-- **API Backend** (Go/Gin) - RESTful API with PostgreSQL database
-- **Mobile App** (React Native/Expo) - Cross-platform mobile application
+Decorebator is an AI-powered vocabulary learning platform that uses AI-powered enrichment and the Leitner spaced repetition system to help users master new languages effectively. It consists of:
+- **API Backend** (Go/Gin) - RESTful API with PostgreSQL database, River queue system, and AI integrations
+- **Mobile App** (React Native/Expo) - Cross-platform mobile application with offline support
 - **Web Frontend** (Next.js) - Landing page and web application
 
 ## Common Development Commands
@@ -95,8 +95,11 @@ Key architectural decisions:
 - Manual dependency injection without frameworks (modernization planned)
 - JWT-based authentication with automatic session refresh
 - River queue system for background jobs (PostgreSQL-backed)
-- MinIO for object storage (images, audio)
-- Stripe integration for subscription management
+- MinIO for S3-compatible object storage (images, audio)
+- OpenAI API integration (DALL-E, TTS, GPT) for AI-powered content generation
+- Stripe integration for subscription management with webhook processing
+- SendGrid for email services (subscription notifications)
+- Sentry for error monitoring and logging
 - Structured logging with `slog` (enhancement planned)
 
 ### Background Job Processing
@@ -112,29 +115,35 @@ Workers run as a separate process and include retry logic, rate limiting, and er
 ### Mobile App Architecture
 
 - Expo Router for navigation
-- React Query for API state management
+- React Query for API state management with offline caching
 - React Hook Form with Zod validation
 - React Native Paper for UI components
-- Secure storage for JWT tokens
+- Secure storage for JWT tokens (Keychain/Keystore)
 - Automatic session refresh on focus
 - Real-time subscription status updates
+- Internationalization (i18n) support for 8 languages
+- Offline support for premium users with local storage
+- Error reporting modal for AI-generated content issues
+- Interactive flashcard system with flip animations
 
 ### Database Schema
 
 Key tables:
-- `users` - User accounts, authentication, and subscription status
-- `subscriptions` - Subscription history and details
-- `subscription_events` - Stripe webhook event audit trail & email tracking
-- `analytics` - User analytics and engagement metrics
-- `error_reports` - Application error tracking and reporting
-- `wordlists` - User's vocabulary lists with language field
-- `words` - Individual words in wordlists
-- `definitions` - Word definitions with images and audio
+- `users` - User accounts, authentication, subscription status, and profile data
+- `subscriptions` - Subscription history and details with Stripe integration
+- `subscription_events` - Stripe webhook event audit trail & email notification tracking
+- `wordlists` - User's vocabulary lists with language field and word counts
+- `words` - Individual words in wordlists with audio URLs and learning status
+- `definitions` - AI-generated definitions with multimedia, sources, and example sentences
 - `definition_images` - Images associated with definitions
-- `leitner_system_tracking` - Spaced repetition tracking
-- `leitner_system_history` - Learning history
+- `leitner_system_tracking` - Spaced repetition progress with temporary skip functionality
+- `error_reports` - User-reported errors for definitions and AI-generated content
+- `quiz_performance` - Individual quiz attempts with performance metrics
+- `word_mastery` - Overall mastery tracking for each word per user
+- `learning_progress` - Daily aggregated learning statistics
+- `quiz_type_analytics` - Performance metrics grouped by quiz type
+- `box_distribution_snapshot` - Daily snapshots of word distribution across Leitner boxes
 - `river_job` - Background job queue
-- `error_reports` - Application error tracking
 
 ## Subscription System
 
@@ -171,12 +180,13 @@ Key tables:
 
 ## External Services
 
-- **PostgreSQL** - Primary database
-- **MinIO** - S3-compatible object storage
+- **PostgreSQL 15+** - Primary database with materialized views and pgx/v5 driver
+- **MinIO** - S3-compatible object storage for images and audio
 - **Redis** - Caching (configured but usage unclear)
-- **SendGrid** - Email delivery
-- **OpenAI API** - Image generation and text-to-speech
-- **Stripe** - Payment processing and subscription management
+- **SendGrid** - Email delivery for subscription notifications
+- **OpenAI API** - Image generation (DALL-E), text-to-speech (TTS), and AI content generation (GPT)
+- **Stripe** - Payment processing and subscription management with webhook integration
+- **Sentry** - Error monitoring and logging
 
 ## Development Workflow
 
@@ -210,12 +220,27 @@ The application provides comprehensive multi-language support:
 
 ### AI Content Generation
 - 7 languages for AI-powered content: English, Spanish, French, German, Italian, Portuguese, Japanese
-- Native language processing with language-specific grammar rules
-- Culturally-aware image generation prompts
-- Language-optimized voice selection for text-to-speech
+- Native language processing with language-specific grammar rules and verb systems
+- Culturally-aware image generation prompts in target language
+- Language-optimized voice selection for text-to-speech (alloy, nova, shimmer, echo, fable, onyx)
 - Dynamic part-of-speech validation per language
+- Automatic language detection and content adaptation
+- Multi-modal AI features: definitions, images, audio, and example sentences
+
+## Core Features
+
+- **Multiple Quiz Modes**: Guess meaning, word from meaning, visual association, audio comprehension, sentence completion, active recall
+- **Interactive Flashcards**: Full-screen study mode with rich content display and flip animations
+- **Advanced Leitner System**: 7-box spaced repetition with intelligent quiz type progression
+- **Error Reporting System**: User-driven quality control for AI-generated content with automatic regeneration
+- **Comprehensive Analytics**: Word mastery tracking, learning progress visualization, and performance metrics
+- **Offline Support**: Premium users can access wordlists and practice offline with seamless sync
+- **Subscription Tiers**: Free plan (1 wordlist, 10 words) and Premium plans ($6.99/month, $69.90/year)
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+## Memories
+- read README.md for more additional context on decorebator project

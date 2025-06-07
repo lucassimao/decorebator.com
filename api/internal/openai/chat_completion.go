@@ -137,7 +137,7 @@ func buildLanguageSpecificPrompt(token string, languageCode string) ([]map[strin
 			" • \"language\" must be exactly: %s. "+
 			" • \"partOfSpeech\" must be one of: %s. "+
 			" • \"meaning\" must be a non-empty string in %s. "+
-			" • \"examples\" must be an array of strings. Each string must include the original token wrapped in square brackets. If the partOfSpeech is NOT \"verb\" or equivalent, \"examples\" should be an empty array. "+
+			" • \"examples\" must be an array of strings. Each string must include the original token wrapped in square brackets. If the partOfSpeech is \"verb\" or equivalent, \"examples\" should be an empty array. "+
 			" • \"inflections\" must be an array. If partOfSpeech is \"verb\" or equivalent, you must include one item for each valid verb tense (%s). Otherwise, \"inflections\" must be an empty array. "+
 			" • Each inflection object must have exactly these required keys: \"inflection\" (string), \"tense\" (one of: %s), and \"examples\" (an array of exactly 3 strings). "+
 			" • Each of the 3 example strings inside \"inflection.examples\" must contain that inflected form wrapped in square brackets. "+

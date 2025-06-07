@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -322,4 +323,105 @@ func (repository *DefinitionRepository) GetDefinitionsByWordId(wordId, userId in
 type FindArgs struct {
 	Id   *int64
 	Name *string
+}
+
+func NewDefinitionRepository(db *pgxpool.Pool) *DefinitionRepository {
+	return &DefinitionRepository{Db: db}
+}
+
+func (repository *DefinitionRepository) GetDefinitionByID(definitionID int64) (*Definition, error) {
+	query := `
+		SELECT id, token, language, part_of_speech, meaning, examples, inflections, 
+			   source, source_id, sounds, phonetic_notations, created_at, updated_at
+		FROM definitions 
+		WHERE id = $1`
+
+	var def Definition
+	err := repository.Db.QueryRow(context.Background(), query, definitionID).Scan(
+		&def.ID, &def.Token, &def.Language, &def.PartOfSpeech, &def.Meaning,
+		&def.Examples, &def.Inflections, &def.Source, &def.SourceId,
+		&def.Sounds, &def.PhoneticNotations, &def.CreatedAt, &def.UpdatedAt)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, common.NotFoundError{}
+		}
+		return nil, err
+	}
+
+	return &def, nil
+}
+
+func (repository *DefinitionRepository) CreateExampleAudio(definitionID int64, exampleText, audioURL, inflectionType string) error {
+	// Generate hash for the example text
+	exampleHash := fmt.Sprintf("%x", md5.Sum([]byte(exampleText)))[:32]
+
+	query := `INSERT INTO definition_example_audio (definition_id, example_text, example_hash, audio_url, inflection_type) 
+			  VALUES ($1, $2, $3, $4, NULLIF($5, ''))`
+
+	_, err := repository.Db.Exec(context.Background(), query, definitionID, exampleText, exampleHash, audioURL, inflectionType)
+	return err
+}
+
+func (repository *DefinitionRepository) GetLeastUsedExampleAudio(definitionID int64) (*model.DefinitionExampleAudio, error) {
+	query := `
+		SELECT dea.id, dea.definition_id, dea.example_text, dea.audio_url, COALESCE(dea.inflection_type,''), dea.created_at
+		FROM definition_example_audio dea
+		LEFT JOIN example_audio_usage eau ON dea.id = eau.example_audio_id
+		WHERE dea.definition_id = $1
+		ORDER BY COALESCE(eau.usage_count, 0), COALESCE(eau.last_used_at, '1970-01-01')
+		LIMIT 1`
+
+	var audio model.DefinitionExampleAudio
+	err := repository.Db.QueryRow(context.Background(), query, definitionID).Scan(
+		&audio.ID, &audio.DefinitionID, &audio.ExampleText, &audio.AudioURL,
+		&audio.InflectionType, &audio.CreatedAt)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, common.NotFoundError{}
+		}
+		return nil, err
+	}
+
+	// Update usage tracking
+	updateQuery := `
+		INSERT INTO example_audio_usage (definition_id, example_audio_id, last_used_at, usage_count)
+		VALUES ($1, $2, NOW(), 1)
+		ON CONFLICT (definition_id, example_audio_id)
+		DO UPDATE SET last_used_at = NOW(), usage_count = example_audio_usage.usage_count + 1`
+
+	_, err = repository.Db.Exec(context.Background(), updateQuery, definitionID, audio.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &audio, nil
+}
+
+func (repository *DefinitionRepository) GetExampleAudioByDefinitionID(definitionID int64) ([]model.DefinitionExampleAudio, error) {
+	query := `
+		SELECT id, definition_id, example_text, audio_url, COALESCE(inflection_type,''), created_at
+		FROM definition_example_audio
+		WHERE definition_id = $1
+		ORDER BY created_at DESC`
+
+	rows, err := repository.Db.Query(context.Background(), query, definitionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var audioFiles []model.DefinitionExampleAudio
+	for rows.Next() {
+		var audio model.DefinitionExampleAudio
+		err := rows.Scan(&audio.ID, &audio.DefinitionID, &audio.ExampleText,
+			&audio.AudioURL, &audio.InflectionType, &audio.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		audioFiles = append(audioFiles, audio)
+	}
+
+	return audioFiles, rows.Err()
 }
