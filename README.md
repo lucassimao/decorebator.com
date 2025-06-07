@@ -327,6 +327,19 @@ npm run lint          # Run linter
 - **Pronunciation Integration**: Word pronunciation display in quiz and flashcard interfaces
 - **Error Recovery**: Automatic handling of content validation and fallback mechanisms
 
+### Modular Flashcard Architecture (December 2024)
+- **Component-Based Refactoring**: Broke down 962-line flashcard component into 4 focused, reusable components
+- **Smart Content Filtering**: API enhancement to only fetch words with definitions, preventing broken flashcard experiences
+- **Improved Data Integrity**: New `onlyWithDefinitions` API parameter ensures flashcards always have content to display
+- **Component Modularity**: 
+  - `FlashcardHeader`: Title, progress counter, and error reporting controls
+  - `FlashcardProgressBar`: Visual learning progress indicator
+  - `FlashcardContent`: Complex card flip animations and rich content display
+  - `FlashcardNavigation`: Previous/next navigation with keyboard support
+- **Enhanced User Experience**: Eliminates empty flashcard states caused by async definition processing
+- **Maintainable Codebase**: Easier to modify and extend individual flashcard features
+- **Backward Compatible**: Existing API endpoints maintain full compatibility
+
 ## 📊 Database Schema
 
 Key tables:
@@ -658,9 +671,11 @@ npm start
 - `PUT /wordlists/:id` - Update wordlist
 - `DELETE /wordlists/:id` - Delete wordlist
 - `GET /wordlists/:id/words` - Get words in wordlist
+- `GET /wordlists/:id/words?onlyWithDefinitions=true` - Get words with definitions only (flashcard optimization)
 - `POST /wordlists/:id/words` - Add word (subscription check)
 - `PUT /wordlists/:id/words/:wordId` - Update word
 - `DELETE /wordlists/:id/words/:wordId` - Delete word
+- `GET /wordlists/:id/words/:wordId/definitions` - Get word definitions
 
 ### Quiz & Learning
 - `POST /wordlists/:id/quizzes` - Create new quiz with Leitner system

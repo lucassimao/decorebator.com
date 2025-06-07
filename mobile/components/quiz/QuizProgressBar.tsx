@@ -10,7 +10,8 @@ export const QuizProgressBar: React.FC<QuizProgressBarProps> = ({
   correctCount,
   quizCount,
 }) => {
-  const progressPercentage = quizCount > 0 ? (correctCount / quizCount) * 100 : 0;
+  const progressPercentage =
+    quizCount > 0 ? (correctCount / quizCount) * 100 : 0;
 
   return (
     <View style={styles.progressContainer}>

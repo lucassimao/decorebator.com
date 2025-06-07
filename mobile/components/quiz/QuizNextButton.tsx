@@ -20,7 +20,7 @@ export const QuizNextButton: React.FC<QuizNextButtonProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const shouldShowButton = 
+  const shouldShowButton =
     showResult &&
     !fastMode &&
     (quizType === "WRITE_WORD_FROM_DEFINITION" ? isSubmitted : true);

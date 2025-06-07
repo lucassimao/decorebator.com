@@ -264,7 +264,8 @@ export const QuizContent: React.FC<QuizContentProps> = ({
             </View>
             {isSubmitted && (
               <View style={styles.answerFeedback}>
-                {userInput.toLowerCase().trim() === correctAnswer.toLowerCase() ? (
+                {userInput.toLowerCase().trim() ===
+                correctAnswer.toLowerCase() ? (
                   <>
                     <Ionicons
                       name="checkmark-circle"

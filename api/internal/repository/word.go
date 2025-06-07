@@ -102,6 +102,41 @@ func (repository *WordRepository) GetAllFromWordlist(wordlistId, userId int64) (
 	return words, nil
 }
 
+// GetWordsWithDefinitions returns only words that have associated definitions with meanings
+// This is useful for flashcard functionality to avoid showing words without content
+func (repository *WordRepository) GetWordsWithDefinitions(wordlistId, userId int64) ([]Word, error) {
+	query := `SELECT DISTINCT w.id, w.name, w.created_at, w.updated_at, 
+				COALESCE(w.audio_url,''), COALESCE(w.notes,''), 
+				COALESCE(w.pronunciation,''), w.learned
+			FROM words w
+			INNER JOIN word_definitions wd ON w.id = wd.word_id
+			INNER JOIN definitions d ON wd.definition_id = d.id
+			WHERE w.wordlist_id=$1 AND w.user_id=$2 AND d.meaning IS NOT NULL AND d.meaning != ''
+			ORDER BY w.id DESC`
+	
+	rows, err := repository.Db.Query(context.Background(), query, wordlistId, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	words := []Word{}
+	for rows.Next() {
+		w := Word{WordlistID: wordlistId, UserID: userId}
+		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.AudioURL, &w.Notes, &w.Pronunciation, &w.Learned)
+		if err != nil {
+			return nil, err
+		}
+		words = append(words, w)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return words, nil
+}
+
 func (repository *WordRepository) GetById(wordId int64) (*Word, error) {
 	query := `SELECT id , name, created_at, updated_At, wordlist_id, user_id, 
 				COALESCE(audio_url,'') , COALESCE(notes,''), COALESCE(pronunciation,'') ,learned

@@ -24,7 +24,12 @@ func init() {
 	wordRepository = &repo.WordRepository{Db: db}
 }
 
-func GetWordByWordlist(wordlistId, userId int64) ([]Word, error) {
+// GetWordByWordlist returns words from wordlist with optional filtering
+// onlyWithDefinitions: if true, returns only words that have definitions with meanings
+func GetWordByWordlist(wordlistId, userId int64, onlyWithDefinitions bool) ([]Word, error) {
+	if onlyWithDefinitions {
+		return wordRepository.GetWordsWithDefinitions(wordlistId, userId)
+	}
 	return wordRepository.GetAllFromWordlist(wordlistId, userId)
 }
 

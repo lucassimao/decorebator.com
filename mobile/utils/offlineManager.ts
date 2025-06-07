@@ -320,7 +320,11 @@ class OfflineManager {
         validatedQuiz.audioURL = localUri;
       } else {
         // Audio is required for audio-based quiz types
-        if (quiz.type === "WORD_FROM_AUDIO" || quiz.type === "MEANING_FROM_AUDIO" || quiz.type === "WORD_FROM_EXAMPLE_AUDIO") {
+        if (
+          quiz.type === "WORD_FROM_AUDIO" ||
+          quiz.type === "MEANING_FROM_AUDIO" ||
+          quiz.type === "WORD_FROM_EXAMPLE_AUDIO"
+        ) {
           isValid = false;
         }
       }

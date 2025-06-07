@@ -241,7 +241,7 @@ const QuizScreen: React.FC = () => {
     >
       <SafeAreaView style={styles.container}>
         <OfflineIndicator />
-        
+
         <QuizHeader
           wordlistName={String(wordlistName)}
           correctCount={correctCount}
@@ -251,15 +251,9 @@ const QuizScreen: React.FC = () => {
           onReportPress={() => setShowReportModal(true)}
         />
 
-        <QuizProgressBar
-          correctCount={correctCount}
-          quizCount={quizCount}
-        />
+        <QuizProgressBar correctCount={correctCount} quizCount={quizCount} />
 
-        <QuizModeToggle
-          fastMode={fastMode}
-          onToggle={onPressFastModeToggle}
-        />
+        <QuizModeToggle fastMode={fastMode} onToggle={onPressFastModeToggle} />
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}

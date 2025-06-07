@@ -105,6 +105,17 @@ export async function getWords(wordlistId: number): Promise<Word[]> {
   return body;
 }
 
+export async function getWordsWithDefinitions(
+  wordlistId: number,
+): Promise<Word[]> {
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL +
+    `/wordlists/${wordlistId}/words?onlyWithDefinitions=true`;
+
+  const body = await callAPI<Word[]>("GET", endpoint);
+  return body;
+}
+
 export async function deleteWordlist(wordlistId: number): Promise<void> {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}`;
   await callAPI("DELETE", endpoint);

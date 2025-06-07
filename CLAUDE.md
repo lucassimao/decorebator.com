@@ -244,3 +244,4 @@ NEVER proactively create documentation files (*.md) or README files. Only create
 
 ## Memories
 - read README.md for more additional context on decorebator project
+- Update README.md right after introducing major features or refactorings

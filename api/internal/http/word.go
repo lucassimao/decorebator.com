@@ -25,9 +25,12 @@ func (h *WordRoutes) GetAll(c *gin.Context) {
 	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 
-	words, err := service.GetWordByWordlist(wordlistId, userId)
+	// Parse optional query parameter for filtering words with definitions
+	onlyWithDefinitions := c.Query("onlyWithDefinitions") == "true"
+
+	words, err := service.GetWordByWordlist(wordlistId, userId, onlyWithDefinitions)
 	if err != nil {
-		common.Logger.Error("failed to get words", "error", err, "userId", userId, "wordlistId", wordlistId)
+		common.Logger.Error("failed to get words", "error", err, "userId", userId, "wordlistId", wordlistId, "onlyWithDefinitions", onlyWithDefinitions)
 		c.String(http.StatusInternalServerError, "Could not get user words")
 		return
 	}
