@@ -30,7 +30,7 @@
     "expo-application": "~6.1.4",
     "expo-audio": "~0.4.6",
     "expo-auth-session": "~6.2.0",
-    "expo-crypto": "~14.1.4",
+    "expo-crypto": "~14.1.5",
     "expo-dev-client": "~5.2.0",
     "expo-device": "~7.1.4",
     "expo-file-system": "~18.1.10",
@@ -75,7 +75,7 @@
     "eslint-plugin-prettier": "^5.2.1",
     "husky": "^9.0.11",
     "jest": "^29.2.1",
-    "jest-expo": "~53.0.6",
+    "jest-expo": "~53.0.7",
     "lint-staged": "^15.2.5",
     "prettier": "3.2.5",
     "typescript": "~5.8.3"

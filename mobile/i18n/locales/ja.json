@@ -152,6 +152,7 @@
     "correct": "正解！",
     "incorrect": "不正解",
     "tryAgain": "もう一度",
+    "skipQuestion": "質問をスキップ",
     "quizComplete": "クイズ完了！",
     "score": "スコア: {{score}}%",
     "noWordsAvailable": "クイズに使用できる単語がありません",

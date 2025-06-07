@@ -152,6 +152,7 @@
     "correct": "Correct!",
     "incorrect": "Incorrect",
     "tryAgain": "Try Again",
+    "skipQuestion": "Skip Question",
     "quizComplete": "Quiz Complete!",
     "score": "Score: {{score}}%",
     "noWordsAvailable": "No words available for quiz",

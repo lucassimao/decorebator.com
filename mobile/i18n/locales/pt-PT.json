@@ -152,6 +152,7 @@
     "correct": "Correto!",
     "incorrect": "Incorreto",
     "tryAgain": "Tente Novamente",
+    "skipQuestion": "Saltar Pergunta",
     "quizComplete": "Quiz Completo!",
     "score": "Pontuação: {{score}}%",
     "noWordsAvailable": "Sem palavras disponíveis para o quiz",

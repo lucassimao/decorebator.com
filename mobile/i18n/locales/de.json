@@ -152,6 +152,7 @@
     "correct": "Richtig!",
     "incorrect": "Falsch",
     "tryAgain": "Erneut versuchen",
+    "skipQuestion": "Frage überspringen",
     "quizComplete": "Quiz abgeschlossen!",
     "score": "Punktzahl: {{score}}%",
     "noWordsAvailable": "Keine Wörter für das Quiz verfügbar",

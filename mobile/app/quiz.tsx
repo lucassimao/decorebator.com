@@ -170,6 +170,20 @@ const QuizScreen: React.FC = () => {
     answerMutation.mutate({ success: isCorrect });
   };
 
+  // Skip question function - marks answer as wrong to move back to Box 1
+  const handleSkipQuestion = () => {
+    if (!quiz) return;
+
+    setIsSubmitted(true);
+    setShowResult(true);
+
+    // Set quiz count but don't increment correct count (marking as wrong)
+    setQuizCount((prev) => prev + 1);
+
+    // Mark as incorrect to move word back to Box 1 in Leitner system
+    answerMutation.mutate({ success: false });
+  };
+
   const handleNextQuiz = () => {
     setSelectedAnswer(null);
     setShowResult(false);
@@ -359,23 +373,33 @@ const QuizScreen: React.FC = () => {
                 onSubmitEditing={() => handleWriteAnswer()}
               />
               {!isSubmitted && (
-                <TouchableOpacity
-                  style={[
-                    styles.submitAnswerButton,
-                    !userInput.trim() && styles.submitButtonDisabled,
-                  ]}
-                  onPress={handleWriteAnswer}
-                  disabled={!userInput.trim()}
-                >
-                  <Text style={styles.submitAnswerText}>
-                    {t("quiz.submit")}
-                  </Text>
-                </TouchableOpacity>
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.submitAnswerButton,
+                      !userInput.trim() && styles.submitButtonDisabled,
+                    ]}
+                    onPress={handleWriteAnswer}
+                    disabled={!userInput.trim()}
+                  >
+                    <Text style={styles.submitAnswerText}>
+                      {t("quiz.submit")}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.skipButton}
+                    onPress={handleSkipQuestion}
+                  >
+                    <Text style={styles.skipButtonText}>
+                      {t("quiz.skipQuestion")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
             {isSubmitted && (
               <View style={styles.answerFeedback}>
-                {userInput.toLowerCase() === correctAnswer.toLowerCase() ? (
+                {userInput.toLowerCase().trim() === correctAnswer.toLowerCase() ? (
                   <>
                     <Ionicons
                       name="checkmark-circle"
@@ -390,7 +414,10 @@ const QuizScreen: React.FC = () => {
                   <>
                     <Ionicons name="close-circle" size={24} color="#FF6B6B" />
                     <Text style={styles.incorrectFeedback}>
-                      {t("quiz.incorrectAnswer", { answer: correctAnswer })}
+                      {userInput.trim() === "" 
+                        ? t("quiz.incorrectAnswer", { answer: correctAnswer })
+                        : t("quiz.incorrectAnswer", { answer: correctAnswer })
+                      }
                     </Text>
                   </>
                 )}
@@ -912,6 +939,22 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  buttonContainer: {
+    gap: 12,
+  },
+  skipButton: {
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: "#E0E0E0",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  skipButtonText: {
+    color: "#636E72",
+    fontSize: 16,
+    fontWeight: "500",
   },
   answerFeedback: {
     flexDirection: "row",
