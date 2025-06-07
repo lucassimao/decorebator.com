@@ -3,8 +3,14 @@ import { ErrorType } from "@/api/errorReporting";
 import * as offlineQuizApi from "@/api/offlineWordlists";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { ErrorReportModal } from "@/components/ErrorReportModal";
+import { QuizHeader } from "@/components/quiz/QuizHeader";
+import { QuizProgressBar } from "@/components/quiz/QuizProgressBar";
+import { QuizModeToggle } from "@/components/quiz/QuizModeToggle";
+import { QuizContent } from "@/components/quiz/QuizContent";
+import { QuizOptions } from "@/components/quiz/QuizOptions";
+import { QuizNextButton } from "@/components/quiz/QuizNextButton";
 import { useOffline } from "@/hooks/useOffline";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
@@ -15,18 +21,29 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
-  Image,
   ImageBackground,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+interface Quiz {
+  id: number;
+  type: string;
+  value: string;
+  options: string[];
+  answerIndex: number;
+  pos?: string;
+  pronunciation?: string;
+  audioURL?: string;
+  imageDescription?: string;
+  wordId: number;
+  definitionId: number;
+}
 
 const QuizScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -40,11 +57,9 @@ const QuizScreen: React.FC = () => {
   const [fastMode, setFastMode] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const player = useAudioPlayer();
-  const { playing: isPlaying, didJustFinish } = useAudioPlayerStatus(player);
+  const { didJustFinish } = useAudioPlayerStatus(player);
   const [quizCount, setQuizCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
-  const [imageLoading, setImageLoading] = useState(false);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [userInput, setUserInput] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const quizDisplayedAtRef = useRef(0);
@@ -65,23 +80,14 @@ const QuizScreen: React.FC = () => {
   } = useQuery({
     queryKey: ["quiz", wordlistId],
     queryFn: () => offlineQuizApi.newQuiz(Number(wordlistId)),
-    retry: isOnline ? 3 : 0, // Don't retry in offline mode
+    retry: isOnline ? 3 : 0,
   });
-
 
   useEffect(() => {
     if (quiz?.id) {
       quizDisplayedAtRef.current = Date.now();
     }
   }, [quiz?.id]);
-
-  // handle image changes
-  useEffect(() => {
-    if (quiz?.type === "WORD_FROM_IMAGE" && quiz.value !== currentImageUrl) {
-      setImageLoading(true);
-      setCurrentImageUrl(quiz.value);
-    }
-  }, [quiz?.value, quiz?.type, currentImageUrl]);
 
   // Answer mutation
   const answerMutation = useMutation<void, Error, { success: boolean }>({
@@ -97,7 +103,6 @@ const QuizScreen: React.FC = () => {
       }),
     onSuccess: () => {
       if (fastMode) {
-        // Auto advance in fast mode
         setTimeout(handleNextQuiz, 600);
       }
     },
@@ -126,16 +131,6 @@ const QuizScreen: React.FC = () => {
     },
   });
 
-  // Audio setup
-  useEffect(() => {
-    if (quiz?.audioURL) {
-      player.replace(quiz.audioURL);
-      player.seekTo(0);
-    }
-  }, [quiz?.audioURL, player]);
-
-  const playAudio = () => player.play();
-
   const handleAnswerSelect = (index: number) => {
     if (showResult) return;
 
@@ -151,7 +146,6 @@ const QuizScreen: React.FC = () => {
     answerMutation.mutate({ success: isCorrect });
   };
 
-  // Add this function
   const handleWriteAnswer = () => {
     if (!userInput.trim() || !quiz) return;
 
@@ -170,25 +164,21 @@ const QuizScreen: React.FC = () => {
     answerMutation.mutate({ success: isCorrect });
   };
 
-  // Skip question function - marks answer as wrong to move back to Box 1
   const handleSkipQuestion = () => {
     if (!quiz) return;
 
     setIsSubmitted(true);
     setShowResult(true);
 
-    // Set quiz count but don't increment correct count (marking as wrong)
     setQuizCount((prev) => prev + 1);
-
-    // Mark as incorrect to move word back to Box 1 in Leitner system
     answerMutation.mutate({ success: false });
   };
 
   const handleNextQuiz = () => {
     setSelectedAnswer(null);
     setShowResult(false);
-    setUserInput(""); // Add this
-    setIsSubmitted(false); // Add this
+    setUserInput("");
+    setIsSubmitted(false);
     refetch();
   };
 
@@ -199,264 +189,9 @@ const QuizScreen: React.FC = () => {
   const onPressFastModeToggle = () => {
     setFastMode((v) => !v);
 
-    // If toggled on while seem the quiz result, jump to the next quiz
     if (!fastMode && showResult) {
       handleNextQuiz();
     }
-  };
-
-  const getQuizTitle = () => {
-    switch (quiz?.type) {
-      case "WRITE_WORD_FROM_DEFINITION":
-        return t("quiz.writeWordFromDefinition");
-      case "GUESS_MEANING":
-        return t("quiz.whatDoesThisWordMean");
-      case "COMPLETE_SENTENCE":
-        return t("quiz.completeSentence");
-      case "WORD_FROM_MEANING":
-        return t("quiz.whichWordMatchesMeaning");
-      case "WORD_FROM_IMAGE":
-        return t("quiz.whatWordDescribesImage");
-      case "WORD_FROM_AUDIO":
-        return t("quiz.whichWordDidYouHear");
-      case "MEANING_FROM_AUDIO":
-        return t("quiz.whatDoesWordYouHeardMean");
-      case "WORD_FROM_EXAMPLE_AUDIO":
-        return t("quiz.whichWordFromExample");
-      default:
-        return t("quiz.title");
-    }
-  };
-
-  const hideSquareBracketContent = (text: string): string => {
-    // Replace content between square brackets with underscores
-    return text.replace(/\[([^\]]+)\]/g, "_____");
-  };
-
-  const renderQuizContent = () => {
-    if (!quiz) return null;
-
-    switch (quiz.type) {
-      case "GUESS_MEANING":
-        return (
-          <View style={styles.questionContainer}>
-            <Text style={styles.wordText}>{quiz.value}</Text>
-            {quiz.pos && <Text style={styles.posText}>({quiz.pos})</Text>}
-            {quiz.pronunciation && (
-              <Text style={styles.pronunciationText}>
-                /{quiz.pronunciation}/
-              </Text>
-            )}
-            {quiz.audioURL && (
-              <TouchableOpacity style={styles.audioButton} onPress={playAudio}>
-                <Ionicons
-                  name={isPlaying ? "pause-circle" : "play-circle"}
-                  size={48}
-                  color="#FF7B54"
-                />
-              </TouchableOpacity>
-            )}
-          </View>
-        );
-
-      case "COMPLETE_SENTENCE":
-        return (
-          <View style={styles.questionContainer}>
-            <Text style={styles.sentenceText}>
-              {hideSquareBracketContent(quiz.value)}
-            </Text>
-            {quiz.pos && (
-              <Text style={styles.posText}>
-                ({quiz.pos}
-                {(quiz.pos === "verb" || quiz.pos === "phrasal verb") &&
-                  " - using inflections"}
-                )
-              </Text>
-            )}
-          </View>
-        );
-
-      case "WORD_FROM_MEANING":
-        return (
-          <View style={styles.questionContainer}>
-            <Text style={styles.meaningText}>{quiz.value}</Text>
-          </View>
-        );
-
-      case "WORD_FROM_IMAGE":
-        return (
-          <View style={styles.questionContainer}>
-            <View style={styles.imageContainer}>
-              {imageLoading && (
-                <View style={styles.imageLoadingContainer}>
-                  <ActivityIndicator size="large" color="#FF7B54" />
-                  <Text style={styles.imageLoadingText}>
-                    {t("quiz.loadingImage")}
-                  </Text>
-                </View>
-              )}
-              <Image
-                source={{ uri: quiz.value }}
-                style={[
-                  styles.questionImage,
-                  imageLoading && styles.hiddenImage,
-                ]}
-                resizeMode="contain"
-                onLoadStart={() => setImageLoading(true)}
-                onLoadEnd={() => setImageLoading(false)}
-                onError={() => {
-                  setImageLoading(false);
-                  Alert.alert(t("common.error"), t("quiz.imageLoadError"));
-                }}
-              />
-            </View>
-            {quiz.imageDescription && !imageLoading && (
-              <Text style={styles.imageDescription}>
-                {hideSquareBracketContent(quiz.imageDescription)}
-              </Text>
-            )}
-          </View>
-        );
-
-      case "WORD_FROM_AUDIO":
-      case "MEANING_FROM_AUDIO":
-        case 'WORD_FROM_EXAMPLE_AUDIO':
-        return (
-          <View style={styles.questionContainer}>
-            <TouchableOpacity
-              style={styles.largeAudioButton}
-              onPress={playAudio}
-            >
-              <Ionicons
-                name={isPlaying ? "pause-circle" : "play-circle"}
-                size={80}
-                color="#FF7B54"
-              />
-              <Text style={styles.audioText}>
-                {isPlaying ? t("quiz.audioPlaying") : t("quiz.audioTapToPlay")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        );
-      // Add this case to renderQuizContent
-      case "WRITE_WORD_FROM_DEFINITION": {
-        const correctAnswer = quiz.options[quiz.answerIndex];
-        return (
-          <View style={styles.questionContainer}>
-            <Text style={styles.meaningText}>{quiz.value}</Text>
-            {quiz.pos && <Text style={styles.posText}>({quiz.pos})</Text>}
-            {quiz.pronunciation && (
-              <Text style={styles.pronunciationText}>
-                /{quiz.pronunciation}/
-              </Text>
-            )}
-            <View style={styles.writeInputContainer}>
-              <TextInput
-                style={[
-                  styles.writeInput,
-                  isSubmitted &&
-                    userInput.toLowerCase().trim() ===
-                      correctAnswer.toLowerCase() &&
-                    styles.correctInput,
-                  isSubmitted &&
-                    userInput.toLowerCase().trim() !==
-                      correctAnswer.toLowerCase() &&
-                    styles.incorrectInput,
-                ]}
-                placeholder={t("quiz.typeAnswerPlaceholder")}
-                placeholderTextColor="#B2BEC3"
-                value={userInput}
-                onChangeText={setUserInput}
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!isSubmitted}
-                onSubmitEditing={() => handleWriteAnswer()}
-              />
-              {!isSubmitted && (
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity
-                    style={[
-                      styles.submitAnswerButton,
-                      !userInput.trim() && styles.submitButtonDisabled,
-                    ]}
-                    onPress={handleWriteAnswer}
-                    disabled={!userInput.trim()}
-                  >
-                    <Text style={styles.submitAnswerText}>
-                      {t("quiz.submit")}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.skipButton}
-                    onPress={handleSkipQuestion}
-                  >
-                    <Text style={styles.skipButtonText}>
-                      {t("quiz.skipQuestion")}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-            {isSubmitted && (
-              <View style={styles.answerFeedback}>
-                {userInput.toLowerCase().trim() === correctAnswer.toLowerCase() ? (
-                  <>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={24}
-                      color="#4CAF50"
-                    />
-                    <Text style={styles.correctFeedback}>
-                      {t("quiz.correctAnswer")}
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Ionicons name="close-circle" size={24} color="#FF6B6B" />
-                    <Text style={styles.incorrectFeedback}>
-                      {userInput.trim() === "" 
-                        ? t("quiz.incorrectAnswer", { answer: correctAnswer })
-                        : t("quiz.incorrectAnswer", { answer: correctAnswer })
-                      }
-                    </Text>
-                  </>
-                )}
-              </View>
-            )}
-          </View>
-        );
-      }
-    }
-  };
-
-  const getOptionStyle = (index: number) => {
-    if (!showResult) return styles.optionButton;
-
-    const isSelected = selectedAnswer === index;
-    const isCorrect = index === quiz?.answerIndex;
-
-    if (isCorrect) {
-      return [styles.optionButton, styles.correctOption];
-    } else if (isSelected && !isCorrect) {
-      return [styles.optionButton, styles.incorrectOption];
-    }
-
-    return [styles.optionButton, styles.disabledOption];
-  };
-
-  const getOptionTextStyle = (index: number) => {
-    if (!showResult) return styles.optionText;
-
-    const isCorrect = index === quiz?.answerIndex;
-    const isSelected = selectedAnswer === index;
-
-    if (isCorrect) {
-      return [styles.optionText, styles.correctOptionText];
-    } else if (isSelected && !isCorrect) {
-      return [styles.optionText, styles.incorrectOptionText];
-    }
-
-    return [styles.optionText, styles.disabledOptionText];
   };
 
   if (isLoading && quizCount === 0) {
@@ -476,14 +211,14 @@ const QuizScreen: React.FC = () => {
         resizeMode="cover"
       >
         <SafeAreaView style={styles.container}>
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="arrow-back" size={24} color="#2D3436" />
-            </TouchableOpacity>
-          </View>
+          <QuizHeader
+            wordlistName={String(wordlistName)}
+            correctCount={correctCount}
+            quizCount={quizCount}
+            isOnline={isOnline}
+            onBackPress={() => navigation.goBack()}
+            onReportPress={() => setShowReportModal(true)}
+          />
           <View style={styles.errorContainer}>
             <MaterialIcons name="cloud-off" size={64} color="#636E72" />
             <Text style={styles.errorTitle}>
@@ -506,128 +241,59 @@ const QuizScreen: React.FC = () => {
     >
       <SafeAreaView style={styles.container}>
         <OfflineIndicator />
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#2D3436" />
-          </TouchableOpacity>
+        
+        <QuizHeader
+          wordlistName={String(wordlistName)}
+          correctCount={correctCount}
+          quizCount={quizCount}
+          isOnline={isOnline}
+          onBackPress={() => navigation.goBack()}
+          onReportPress={() => setShowReportModal(true)}
+        />
 
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>{wordlistName || "Quiz"}</Text>
-            <Text style={styles.headerSubtitle}>
-              {correctCount}/{quizCount} correct
-            </Text>
-          </View>
+        <QuizProgressBar
+          correctCount={correctCount}
+          quizCount={quizCount}
+        />
 
-          <TouchableOpacity
-            style={[styles.settingsButton, !isOnline && styles.disabledButton]}
-            onPress={() => isOnline && setShowReportModal(true)}
-            disabled={!isOnline}
-          >
-            <MaterialIcons
-              name="flag"
-              size={24}
-              color={isOnline ? "#636E72" : "#DFE6E9"}
-            />
-          </TouchableOpacity>
-        </View>
+        <QuizModeToggle
+          fastMode={fastMode}
+          onToggle={onPressFastModeToggle}
+        />
 
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  width: `${quizCount > 0 ? (correctCount / quizCount) * 100 : 0}%`,
-                },
-              ]}
-            />
-          </View>
-        </View>
-
-        {/* Fast Mode Toggle */}
-        <View style={styles.modeContainer}>
-          <Text style={styles.modeText}>{t("quiz.fastMode")}</Text>
-          <TouchableOpacity
-            style={[styles.modeToggle, fastMode && styles.modeToggleActive]}
-            onPress={onPressFastModeToggle}
-          >
-            <View
-              style={[
-                styles.modeToggleCircle,
-                fastMode && styles.modeToggleCircleActive,
-              ]}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Quiz Content */}
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.quizCard}>
-            <Text style={styles.quizTitle}>{getQuizTitle()}</Text>
-
-            {renderQuizContent()}
-
-            {/* Options */}
-            {quiz?.type !== "WRITE_WORD_FROM_DEFINITION" && (
-              <View style={styles.optionsContainer}>
-                {quiz?.options.map((option, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={getOptionStyle(index)}
-                    onPress={() => handleAnswerSelect(index)}
-                    disabled={showResult}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={getOptionTextStyle(index)}>{option}</Text>
-                    {showResult && index === quiz.answerIndex && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={24}
-                        color="#4CAF50"
-                      />
-                    )}
-                    {showResult &&
-                      selectedAnswer === index &&
-                      index !== quiz.answerIndex && (
-                        <Ionicons
-                          name="close-circle"
-                          size={24}
-                          color="#FF6B6B"
-                        />
-                      )}
-                  </TouchableOpacity>
-                ))}
-              </View>
+            {quiz && (
+              <QuizContent
+                quiz={quiz}
+                userInput={userInput}
+                setUserInput={setUserInput}
+                isSubmitted={isSubmitted}
+                onSubmitAnswer={handleWriteAnswer}
+                onSkipQuestion={handleSkipQuestion}
+              />
             )}
 
-            {/* Next Button */}
-            {showResult &&
-              !fastMode &&
-              (quiz?.type === "WRITE_WORD_FROM_DEFINITION"
-                ? isSubmitted
-                : true) && (
-                <TouchableOpacity
-                  style={styles.nextButton}
-                  onPress={handleNextQuiz}
-                >
-                  <Text style={styles.nextButtonText}>
-                    {t("quiz.nextQuestion")}
-                  </Text>
-                  <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-                </TouchableOpacity>
-              )}
+            <QuizOptions
+              quiz={quiz!}
+              selectedAnswer={selectedAnswer}
+              showResult={showResult}
+              onAnswerSelect={handleAnswerSelect}
+            />
+
+            <QuizNextButton
+              showResult={showResult}
+              fastMode={fastMode}
+              quizType={quiz?.type || ""}
+              isSubmitted={isSubmitted}
+              onNextQuiz={handleNextQuiz}
+            />
           </View>
         </ScrollView>
 
-        {/* Error Reporting Modal */}
         <ErrorReportModal
           visible={showReportModal}
           onClose={() => setShowReportModal(false)}
@@ -639,6 +305,7 @@ const QuizScreen: React.FC = () => {
     </ImageBackground>
   );
 };
+
 export default QuizScreen;
 
 const styles = StyleSheet.create({
@@ -656,90 +323,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FDF6E3",
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: "center",
-    marginHorizontal: 16,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#2D3436",
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: "#636E72",
-    marginTop: 2,
-  },
-  settingsButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  progressContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: "#4CAF50",
-    borderRadius: 4,
-  },
-  modeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-    gap: 12,
-  },
-  modeText: {
-    fontSize: 16,
-    color: "#2D3436",
-    fontWeight: "500",
-  },
-  modeToggle: {
-    width: 50,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#E0E0E0",
-    padding: 3,
-  },
-  modeToggleActive: {
-    backgroundColor: "#FF7B54",
-  },
-  modeToggleCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
-  },
-  modeToggleCircleActive: {
-    transform: [{ translateX: 20 }],
-  },
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -753,228 +336,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 5,
-  },
-  quizTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#2D3436",
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  questionContainer: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  wordText: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#FF7B54",
-    marginBottom: 8,
-  },
-  posText: {
-    fontSize: 16,
-    color: "#636E72",
-    fontStyle: "italic",
-    marginBottom: 16,
-  },
-  pronunciationText: {
-    fontSize: 14,
-    color: "#636E72",
-    fontStyle: "italic",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  sentenceText: {
-    fontSize: 18,
-    color: "#2D3436",
-    lineHeight: 28,
-    textAlign: "center",
-  },
-  meaningText: {
-    fontSize: 18,
-    color: "#2D3436",
-    lineHeight: 26,
-    textAlign: "center",
-  },
-  questionImage: {
-    width: SCREEN_WIDTH - 80,
-    height: 200,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  imageDescription: {
-    fontSize: 14,
-    color: "#636E72",
-    fontStyle: "italic",
-  },
-  audioButton: {
-    marginTop: 16,
-  },
-  largeAudioButton: {
-    alignItems: "center",
-    gap: 12,
-  },
-  audioText: {
-    fontSize: 16,
-    color: "#636E72",
-  },
-  optionsContainer: {
-    gap: 12,
-  },
-  optionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#FAFAFA",
-    borderWidth: 2,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-  },
-  correctOption: {
-    borderColor: "#4CAF50",
-    backgroundColor: "#E8F5E9",
-  },
-  incorrectOption: {
-    borderColor: "#FF6B6B",
-    backgroundColor: "#FFEBEE",
-  },
-  disabledOption: {
-    opacity: 0.6,
-  },
-  optionText: {
-    fontSize: 16,
-    color: "#2D3436",
-    flex: 1,
-  },
-  correctOptionText: {
-    color: "#2E7D32",
-    fontWeight: "600",
-  },
-  incorrectOptionText: {
-    color: "#C62828",
-    fontWeight: "600",
-  },
-  disabledOptionText: {
-    color: "#636E72",
-  },
-  nextButton: {
-    backgroundColor: "#FF7B54",
-    borderRadius: 12,
-    paddingVertical: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginTop: 24,
-  },
-  nextButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  imageContainer: {
-    width: SCREEN_WIDTH - 80,
-    height: 200,
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  imageLoadingContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1,
-  },
-  imageLoadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: "#636E72",
-  },
-  hiddenImage: {
-    opacity: 0,
-  },
-  writeInputContainer: {
-    marginTop: 24,
-    width: "100%",
-  },
-  writeInput: {
-    backgroundColor: "#FAFAFA",
-    borderWidth: 2,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 18,
-    color: "#2D3436",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  correctInput: {
-    borderColor: "#4CAF50",
-    backgroundColor: "#E8F5E9",
-  },
-  incorrectInput: {
-    borderColor: "#FF6B6B",
-    backgroundColor: "#FFEBEE",
-  },
-  submitAnswerButton: {
-    backgroundColor: "#FF7B54",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#DFE6E9",
-    opacity: 0.6,
-  },
-  submitAnswerText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  buttonContainer: {
-    gap: 12,
-  },
-  skipButton: {
-    backgroundColor: "transparent",
-    borderWidth: 2,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  skipButtonText: {
-    color: "#636E72",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  answerFeedback: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 16,
-    gap: 8,
-  },
-  correctFeedback: {
-    color: "#4CAF50",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  incorrectFeedback: {
-    color: "#FF6B6B",
-    fontSize: 16,
-    textAlign: "center",
-  },
-  disabledButton: {
-    opacity: 0.5,
   },
   errorContainer: {
     flex: 1,
