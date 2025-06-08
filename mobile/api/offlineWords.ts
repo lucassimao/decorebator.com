@@ -3,13 +3,17 @@ import * as wordlistsApi from "./wordlists";
 
 export async function getWords(
   wordlistId: number,
+  onlyWithDefinitions = false,
 ): Promise<wordlistsApi.Word[]> {
   const isOnline = offlineManager.getNetworkStatus();
 
   if (isOnline) {
     // Online mode: fetch from API and cache
     try {
-      const words = await wordlistsApi.getWords(wordlistId);
+      const words = await wordlistsApi.getWords(
+        wordlistId,
+        onlyWithDefinitions,
+      );
 
       // Cache for offline use (async, don't wait)
       offlineManager.cacheWords(wordlistId, words).catch(console.error);

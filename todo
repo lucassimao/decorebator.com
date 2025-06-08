@@ -61,17 +61,16 @@
     [x] New quiz: read example and ask to write or pick heard words
     [x] O quiz pra escrever a palavra tem que ter um botão “não lembro” que deve levar imediatamente para o box 1 da mesma definição    
     [x] Quando selecionar opções evitar outras que possam ter a mesma palavra do quiz
-    [ ] No flash card usar apenas lavaras com definitions
-    [ ] merge GetWordsWithDefinitions and GetAllFromWordlist em api/internal/service/word.go - getWordsWithDefinitions and getWords in mobile/api/wordlists.ts
+    [x] No flash card usar apenas lavaras com definitions
+    [x] Unify part of speech constants across different languages
+    [x] merge GetWordsWithDefinitions and GetAllFromWordlist em api/internal/service/word.go - getWordsWithDefinitions and getWords in mobile/api/wordlists.ts
     [ ] Security abuse of api calls: Controlar quão frequente user pode reportar erro
     [ ] O click no flash card deve mudar o lado dele
-    [ ] Unify part of speech constants across different languages
     [ ] Mover componentes do Dashboard pra o índex do móbile
-    [ ] Why sloth  doesn’t show images in the quiz?
-    [ ] Revisar como stats são computaras e exibidas
     [ ] Need to ignore temporarily_skipped_until if all words are skipped
+    [ ] Revisar como stats são computaras e exibidas
+    [ ] Why sloth  doesn’t show images in the quiz?
     [ ] Splash screen
-    [ ] Palavras com múltiplos definitions devem ser espaçadas no quiz
     [ ] mobile/app/analytics.tsx BarChart seems broken
 
 [ ] MVP Release Checklist

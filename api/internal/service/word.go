@@ -27,10 +27,7 @@ func init() {
 // GetWordByWordlist returns words from wordlist with optional filtering
 // onlyWithDefinitions: if true, returns only words that have definitions with meanings
 func GetWordByWordlist(wordlistId, userId int64, onlyWithDefinitions bool) ([]Word, error) {
-	if onlyWithDefinitions {
-		return wordRepository.GetWordsWithDefinitions(wordlistId, userId)
-	}
-	return wordRepository.GetAllFromWordlist(wordlistId, userId)
+	return wordRepository.GetWordsByWordlist(wordlistId, userId, onlyWithDefinitions)
 }
 
 func GetWordById(id int64) (*Word, error) {

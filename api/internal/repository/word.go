@@ -75,44 +75,25 @@ func (repository *WordRepository) ReuseDefinitions(wordId int64, definitionIds [
 	return nil
 }
 
-func (repository *WordRepository) GetAllFromWordlist(wordlistId, userId int64) ([]Word, error) {
-	query := `SELECT id , name, created_at, updated_At, COALESCE(audio_url,'') 
-				, COALESCE(notes,''), COALESCE(pronunciation,'')  , learned
-				FROM words WHERE wordlist_id=$1 AND user_id=$2 order by id desc`
-	rows, err := repository.Db.Query(context.Background(), query, wordlistId, userId)
-	if err != nil {
-		return nil, err
+// GetWordsByWordlist returns words from wordlist with optional filtering
+// onlyWithDefinitions: if true, returns only words that have definitions with meanings
+func (repository *WordRepository) GetWordsByWordlist(wordlistId, userId int64, onlyWithDefinitions bool) ([]Word, error) {
+	var query string
+	
+	if onlyWithDefinitions {
+		query = `SELECT DISTINCT w.id, w.name, w.created_at, w.updated_at, 
+					COALESCE(w.audio_url,''), COALESCE(w.notes,''), 
+					COALESCE(w.pronunciation,''), w.learned
+				FROM words w
+				INNER JOIN word_definitions wd ON w.id = wd.word_id
+				INNER JOIN definitions d ON wd.definition_id = d.id
+				WHERE w.wordlist_id=$1 AND w.user_id=$2 AND d.meaning IS NOT NULL AND d.meaning != ''
+				ORDER BY w.id DESC`
+	} else {
+		query = `SELECT id, name, created_at, updated_at, COALESCE(audio_url,''), 
+					COALESCE(notes,''), COALESCE(pronunciation,''), learned
+				FROM words WHERE wordlist_id=$1 AND user_id=$2 ORDER BY id DESC`
 	}
-
-	defer rows.Close()
-
-	words := []Word{}
-	for rows.Next() {
-		w := Word{WordlistID: wordlistId, UserID: userId}
-		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.AudioURL, &w.Notes, &w.Pronunciation, &w.Learned)
-		if err != nil {
-			return nil, err
-		}
-		words = append(words, w)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-	return words, nil
-}
-
-// GetWordsWithDefinitions returns only words that have associated definitions with meanings
-// This is useful for flashcard functionality to avoid showing words without content
-func (repository *WordRepository) GetWordsWithDefinitions(wordlistId, userId int64) ([]Word, error) {
-	query := `SELECT DISTINCT w.id, w.name, w.created_at, w.updated_at, 
-				COALESCE(w.audio_url,''), COALESCE(w.notes,''), 
-				COALESCE(w.pronunciation,''), w.learned
-			FROM words w
-			INNER JOIN word_definitions wd ON w.id = wd.word_id
-			INNER JOIN definitions d ON wd.definition_id = d.id
-			WHERE w.wordlist_id=$1 AND w.user_id=$2 AND d.meaning IS NOT NULL AND d.meaning != ''
-			ORDER BY w.id DESC`
 	
 	rows, err := repository.Db.Query(context.Background(), query, wordlistId, userId)
 	if err != nil {
@@ -138,8 +119,8 @@ func (repository *WordRepository) GetWordsWithDefinitions(wordlistId, userId int
 }
 
 func (repository *WordRepository) GetById(wordId int64) (*Word, error) {
-	query := `SELECT id , name, created_at, updated_At, wordlist_id, user_id, 
-				COALESCE(audio_url,'') , COALESCE(notes,''), COALESCE(pronunciation,'') ,learned
+	query := `SELECT id, name, created_at, updated_at, wordlist_id, user_id, 
+				COALESCE(audio_url,''), COALESCE(notes,''), COALESCE(pronunciation,''), learned
 			FROM words WHERE id=$1`
 	row := repository.Db.QueryRow(context.Background(), query, wordId)
 	var w Word

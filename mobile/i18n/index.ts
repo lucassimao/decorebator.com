@@ -48,7 +48,7 @@ i18n.use(initReactI18next).init({
   interpolation: {
     escapeValue: false, // React already escapes values
   },
-  compatibilityJSON: "v3", // For React Native
+  compatibilityJSON: "v4", // For React Native
 });
 
 export default i18n;

@@ -50,13 +50,17 @@ export async function answerQuiz(
 // Words API with offline support
 export async function getWords(
   wordlistId: number,
+  onlyWithDefinitions = false,
 ): Promise<wordlistsApi.Word[]> {
   const isOnline = offlineManager.getNetworkStatus();
 
   if (isOnline) {
     // Online mode: fetch from API and cache
     try {
-      const words = await wordlistsApi.getWords(wordlistId);
+      const words = await wordlistsApi.getWords(
+        wordlistId,
+        onlyWithDefinitions,
+      );
 
       // Cache for offline use (async, don't wait)
       offlineManager.cacheWords(wordlistId, words).catch(console.error);
@@ -72,41 +76,6 @@ export async function getWords(
     }
   } else {
     // Offline mode: get from cache
-    const cachedWords = await offlineManager.getCachedWords(wordlistId);
-
-    if (!cachedWords) {
-      throw new Error("No cached words available for offline use");
-    }
-
-    return cachedWords;
-  }
-}
-
-// Words with definitions API with offline support
-export async function getWordsWithDefinitions(
-  wordlistId: number,
-): Promise<wordlistsApi.Word[]> {
-  const isOnline = offlineManager.getNetworkStatus();
-
-  if (isOnline) {
-    // Online mode: fetch from API and cache
-    try {
-      const words = await wordlistsApi.getWordsWithDefinitions(wordlistId);
-
-      // Cache for offline use (async, don't wait)
-      offlineManager.cacheWords(wordlistId, words).catch(console.error);
-
-      return words;
-    } catch (error) {
-      // If online request fails, try offline (fallback to regular words)
-      const cachedWords = await offlineManager.getCachedWords(wordlistId);
-      if (cachedWords) {
-        return cachedWords;
-      }
-      throw error;
-    }
-  } else {
-    // Offline mode: get from cache (fallback to regular words)
     const cachedWords = await offlineManager.getCachedWords(wordlistId);
 
     if (!cachedWords) {

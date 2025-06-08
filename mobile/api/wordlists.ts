@@ -99,20 +99,15 @@ export async function getUserStats(): Promise<UserStats> {
   return { ...body, currentStreak: 10 };
 }
 
-export async function getWords(wordlistId: number): Promise<Word[]> {
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/words`;
-
-  const body = await callAPI<Word[]>("GET", endpoint);
-  return body;
-}
-
-export async function getWordsWithDefinitions(
+export async function getWords(
   wordlistId: number,
+  onlyWithDefinitions = false,
 ): Promise<Word[]> {
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL +
-    `/wordlists/${wordlistId}/words?onlyWithDefinitions=true`;
+  const baseEndpoint =
+    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/words`;
+  const endpoint = onlyWithDefinitions
+    ? `${baseEndpoint}?onlyWithDefinitions=true`
+    : baseEndpoint;
 
   const body = await callAPI<Word[]>("GET", endpoint);
   return body;

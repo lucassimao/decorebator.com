@@ -86,8 +86,7 @@ const FlashcardPractice: React.FC = () => {
     error,
   } = useQuery({
     queryKey: ["words", wordlistId, "withDefinitions"],
-    queryFn: () =>
-      offlineWordlistsApi.getWordsWithDefinitions(Number(wordlistId)),
+    queryFn: () => offlineWordlistsApi.getWords(Number(wordlistId), true),
     enabled: !!wordlistId,
     retry: isOnline ? 3 : 0, // Don't retry in offline mode
   });
