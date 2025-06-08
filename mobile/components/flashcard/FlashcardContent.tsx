@@ -10,24 +10,7 @@ import {
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-
-interface Word {
-  id: number;
-  name: string;
-  audioURL?: string;
-  pronunciation?: string;
-}
-
-interface Definition {
-  id: number;
-  meaning: string;
-  partOfSpeech?: string;
-  examples?: string[];
-  inflections?: {
-    tense: string;
-    examples: string[];
-  }[];
-}
+import { Definition, Word } from "../../api/wordlists";
 
 interface FlashcardContentProps {
   currentWord: Word;
@@ -154,9 +137,7 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
           )}
 
           {(() => {
-            const isVerb =
-              definition.partOfSpeech === "verb" ||
-              definition.partOfSpeech === "phrasal verb";
+            const isVerb = definition.isVerbType || false;
             const hasInflections =
               definition.inflections && definition.inflections.length > 0;
             const hasExamples =

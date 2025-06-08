@@ -13,22 +13,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Quiz } from "../../api/wordlists";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-interface Quiz {
-  id: number;
-  type: string;
-  value: string;
-  options: string[];
-  answerIndex: number;
-  pos?: string;
-  pronunciation?: string;
-  audioURL?: string;
-  imageDescription?: string;
-  wordId: number;
-  definitionId: number;
-}
 
 interface QuizContentProps {
   quiz: Quiz;
@@ -133,9 +120,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
             {quiz.pos && (
               <Text style={styles.posText}>
                 ({quiz.pos}
-                {(quiz.pos === "verb" || quiz.pos === "phrasal verb") &&
-                  " - using inflections"}
-                )
+                {quiz.isVerbType && " - using inflections"})
               </Text>
             )}
           </View>

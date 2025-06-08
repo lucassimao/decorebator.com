@@ -27,9 +27,9 @@ func (repository *DefinitionRepository) Save(tokenId int64, definitions []*Defin
 	// Prepare the definitions insert
 	definitionsInsert := `
         INSERT INTO 
-			definitions (token, language, part_of_speech, meaning, 	examples, inflections, source, 
+			definitions (token, language, part_of_speech, part_of_speech_normalized, meaning, examples, inflections, source, 
 						source_id,sounds,phonetic_notations)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,$10)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING id, created_at, updated_at`
 
 	wordDefinitionsInsert := `INSERT INTO word_definitions (word_id, definition_id) VALUES ($1, $2)`
@@ -47,7 +47,7 @@ func (repository *DefinitionRepository) Save(tokenId int64, definitions []*Defin
 
 		// Execute the query within the transaction
 		err := tx.QueryRow(context.Background(), definitionsInsert, def.Token,
-			def.Language, def.PartOfSpeech, meaning, def.Examples, def.Inflections,
+			def.Language, def.PartOfSpeech, def.PartOfSpeechNormalized, meaning, def.Examples, def.Inflections,
 			def.Source, def.SourceId, def.Sounds, def.PhoneticNotations).Scan(&def.ID, &createdAt, &updatedAt)
 
 		if err != nil {
@@ -161,7 +161,7 @@ func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, erro
 
 	var builder strings.Builder
 
-	builder.WriteString(`SELECT id, token, language, part_of_speech, meaning, examples, inflections, source, 
+	builder.WriteString(`SELECT id, token, language, part_of_speech, part_of_speech_normalized, is_verb_type, meaning, examples, inflections, source, 
 						source_id,sounds,phonetic_notations, created_at, updated_at
 		FROM definitions`)
 
@@ -202,7 +202,7 @@ func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, erro
 		var def Definition
 
 		err = rows.Scan(&def.ID,
-			&def.Token, &def.Language, &def.PartOfSpeech, &def.Meaning, &def.Examples, &def.Inflections,
+			&def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning, &def.Examples, &def.Inflections,
 			&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations,
 			&def.CreatedAt, &def.UpdatedAt)
 
@@ -288,7 +288,7 @@ func (repository *DefinitionRepository) DidUserCreateWord(wordId, userId int64) 
 
 func (repository *DefinitionRepository) GetDefinitionsByWordId(wordId, userId int64) ([]*Definition, error) {
 	query := `
-		SELECT d.id, d.token, d.language, d.part_of_speech, d.meaning, d.examples, d.inflections, 
+		SELECT d.id, d.token, d.language, d.part_of_speech, d.part_of_speech_normalized, d.is_verb_type, d.meaning, d.examples, d.inflections, 
 			   d.source, d.source_id, d.sounds, d.phonetic_notations, d.created_at, d.updated_at
 		FROM definitions d
 		JOIN word_definitions wd ON wd.definition_id = d.id
@@ -307,7 +307,7 @@ func (repository *DefinitionRepository) GetDefinitionsByWordId(wordId, userId in
 		var def Definition
 
 		err = rows.Scan(&def.ID,
-			&def.Token, &def.Language, &def.PartOfSpeech, &def.Meaning, &def.Examples, &def.Inflections,
+			&def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning, &def.Examples, &def.Inflections,
 			&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations,
 			&def.CreatedAt, &def.UpdatedAt)
 
@@ -332,14 +332,14 @@ func NewDefinitionRepository(db *pgxpool.Pool) *DefinitionRepository {
 
 func (repository *DefinitionRepository) GetDefinitionByID(definitionID int64) (*Definition, error) {
 	query := `
-		SELECT id, token, language, part_of_speech, meaning, examples, inflections, 
+		SELECT id, token, language, part_of_speech, part_of_speech_normalized, is_verb_type, meaning, examples, inflections, 
 			   source, source_id, sounds, phonetic_notations, created_at, updated_at
 		FROM definitions 
 		WHERE id = $1`
 
 	var def Definition
 	err := repository.Db.QueryRow(context.Background(), query, definitionID).Scan(
-		&def.ID, &def.Token, &def.Language, &def.PartOfSpeech, &def.Meaning,
+		&def.ID, &def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning,
 		&def.Examples, &def.Inflections, &def.Source, &def.SourceId,
 		&def.Sounds, &def.PhoneticNotations, &def.CreatedAt, &def.UpdatedAt)
 

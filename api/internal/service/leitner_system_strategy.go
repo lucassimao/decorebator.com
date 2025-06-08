@@ -66,7 +66,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 		WITH due_definitions AS (
 			SELECT 
 				def.id, lst.id AS lst_id, def.token, 
-				def.part_of_speech, def.meaning, def.examples, 
+				def.part_of_speech, def.language, def.is_verb_type, def.meaning, def.examples, 
 				def.inflections, lst.box_id, def.sounds, def.phonetic_notations, 
 				di.url as image_url, di.description as image_description, 
 				wd.word_id AS word_id,
@@ -95,7 +95,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())
 		)
 		SELECT 
-			id, token, part_of_speech, meaning, examples, inflections, 
+			id, token, part_of_speech, language, is_verb_type, meaning, examples, inflections, 
 			lst_id, box_id, sounds, phonetic_notations, 
 			COALESCE(image_url,''), word_id, COALESCE(image_description,'')
 		FROM due_definitions
@@ -127,7 +127,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	definition := model.Definition{}
 	result := NextDefinition{Definition: &definition}
 
-	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
+	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
 		&definition.Meaning, &definition.Examples,
 		&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
 		&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription)
@@ -153,7 +153,7 @@ func getOldestDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	query := `
 		SELECT 
 			def.id,def.token, 
-			def.part_of_speech, def.meaning, def.examples, 
+			def.part_of_speech, def.language, def.is_verb_type, def.meaning, def.examples, 
 			def.inflections,  lst.id AS lst_id, lst.box_id, def.sounds, def.phonetic_notations, 
 			COALESCE(di.url,'') as image_url, COALESCE(di.description,'') as image_description, 
 			wd.word_id AS word_id
@@ -194,7 +194,7 @@ func getOldestDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	definition := model.Definition{}
 	result := NextDefinition{Definition: &definition}
 
-	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
+	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
 		&definition.Meaning, &definition.Examples,
 		&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
 		&definition.PhoneticNotations, &result.ImageUrl, &result.ImageDescription, &result.WordID)
@@ -271,8 +271,7 @@ func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Wor
 		return def.ImageUrl != ""
 	case model.CompleteSentence:
 		// For verbs and phrasal verbs, check inflections; for others, check examples
-		isVerb := def.Definition.PartOfSpeech == "verb" || def.Definition.PartOfSpeech == "phrasal verb"
-		if isVerb {
+		if def.Definition.IsVerbType {
 			// Check if inflections have examples
 			for _, inflection := range def.Definition.Inflections {
 				if len(inflection.Examples) > 0 {
@@ -328,10 +327,9 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 
 	case model.CompleteSentence:
 		// For verbs and phrasal verbs, use inflection examples; for others, use regular examples
-		isVerb := def.Definition.PartOfSpeech == "verb" || def.Definition.PartOfSpeech == "phrasal verb"
 		var availableExamples []string
 
-		if isVerb {
+		if def.Definition.IsVerbType {
 			// Collect all examples from inflections
 			for _, inflection := range def.Definition.Inflections {
 				availableExamples = append(availableExamples, inflection.Examples...)
@@ -431,6 +429,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 		ID:               def.LeitnerSystemID,
 		Type:             quizType,
 		PartOfSpeech:     def.Definition.PartOfSpeech,
+		IsVerbType:       def.Definition.IsVerbType,
 		Pronunciation:    word.Pronunciation,
 		ImageDescription: def.ImageDescription,
 		AudioURL:         audioURL,

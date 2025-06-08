@@ -3,9 +3,11 @@ package service
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
+	"decorebator.com/internal/openai"
 	repo "decorebator.com/internal/repository"
 	"github.com/jackc/pgx/v5"
 )
@@ -22,6 +24,10 @@ func init() {
 }
 
 func SaveDefinition(token string, tokenId int64, definitions []*model.Definition, tx pgx.Tx) ([]*model.Definition, error) {
+	// Set normalized part-of-speech for each definition before saving
+	for _, def := range definitions {
+		def.PartOfSpeechNormalized = NormalizePartOfSpeech(def.PartOfSpeech, def.Language)
+	}
 
 	definitions, err := definitionRepository.Save(tokenId, definitions, tx)
 	if err != nil {
@@ -66,4 +72,36 @@ func didUserCreateWord(wordId, userId int64) (bool, error) {
 
 func GetDefinitionsByWordId(wordId, userId int64) ([]*model.Definition, error) {
 	return definitionRepository.GetDefinitionsByWordId(wordId, userId)
+}
+
+// NormalizePartOfSpeech converts a language-specific part-of-speech to normalized English
+// This function uses the PartOfSpeechMappings from LANGUAGE_CONFIGS as the single source of truth
+func NormalizePartOfSpeech(partOfSpeech, languageCode string) string {
+	// Handle empty or nil cases
+	if partOfSpeech == "" || languageCode == "" {
+		return partOfSpeech
+	}
+
+	// Get language configuration
+	config, exists := openai.LANGUAGE_CONFIGS[languageCode]
+	if !exists {
+		// Fallback to original value for unsupported languages
+		return partOfSpeech
+	}
+
+	// Try exact match first
+	if normalized, exists := config.PartOfSpeechMappings[partOfSpeech]; exists {
+		return normalized
+	}
+
+	// Try case-insensitive match
+	partOfSpeechLower := strings.ToLower(partOfSpeech)
+	for original, normalized := range config.PartOfSpeechMappings {
+		if strings.ToLower(original) == partOfSpeechLower {
+			return normalized
+		}
+	}
+
+	// Return original if no mapping found
+	return partOfSpeech
 }

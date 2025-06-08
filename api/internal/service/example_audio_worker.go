@@ -119,7 +119,7 @@ func (w *ExampleAudioWorker) selectExamplesForAudio(definition *model.Definition
 	var selectedExamples []ExampleAudioItem
 
 	// Smart selection based on part of speech
-	if definition.PartOfSpeech == "verb" || definition.PartOfSpeech == "phrasal verb" {
+	if definition.IsVerbType {
 		// For verbs: Only select the longest example from main examples
 		if longestExample := findLongestExample(definition.Examples); longestExample != "" {
 			selectedExamples = append(selectedExamples, ExampleAudioItem{

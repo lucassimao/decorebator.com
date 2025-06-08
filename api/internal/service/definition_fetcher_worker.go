@@ -179,7 +179,8 @@ func validateDefinitions(word string, definitions []*model.Definition) []string 
 		}
 
 		// Check part of speech specific requirements
-		if def.PartOfSpeech == "verb" || def.PartOfSpeech == "phrasal verb" {
+		normalizedPos := NormalizePartOfSpeech(def.PartOfSpeech, def.Language)
+		if normalizedPos == "verb" || normalizedPos == "phrasal verb" {
 			if len(def.Inflections) == 0 {
 				validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb missing inflections", i+1))
 			} else {
