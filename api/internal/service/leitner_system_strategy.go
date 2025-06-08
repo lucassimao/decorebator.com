@@ -120,8 +120,8 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	defer rows.Close()
 
 	if !rows.Next() {
-		// No due definitions, get the oldest reviewed one
-		return getOldestDefinition(userID, wordlistID)
+		// No due definitions (respecting skip condition), try fallback
+		return getOldestDefinition(userID, wordlistID, true)
 	}
 
 	definition := model.Definition{}
@@ -148,13 +148,16 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	return &result, nil
 }
 
-func getOldestDefinition(userID, wordlistID int64) (*NextDefinition, error) {
-	// Enhanced fallback query that also excludes temporarily skipped definitions
-	query := `
+func getOldestDefinition(userID, wordlistID int64, respectSkipCondition bool) (*NextDefinition, error) {
+	// Build query intelligently based on parameters
+	var queryBuilder strings.Builder
+	
+	// SELECT clause - common for both cases
+	queryBuilder.WriteString(`
 		SELECT 
-			def.id,def.token, 
+			def.id, def.token, 
 			def.part_of_speech, def.language, def.is_verb_type, def.meaning, def.examples, 
-			def.inflections,  lst.id AS lst_id, lst.box_id, def.sounds, def.phonetic_notations, 
+			def.inflections, lst.id AS lst_id, lst.box_id, def.sounds, def.phonetic_notations, 
 			COALESCE(di.url,'') as image_url, COALESCE(di.description,'') as image_description, 
 			wd.word_id AS word_id
 		FROM leitner_system_tracking lst 
@@ -166,15 +169,25 @@ func getOldestDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 			lst.user_id = $1
 			AND w.wordlist_id = $2
 			AND w.learned = FALSE
-			AND def.meaning IS NOT NULL
-			-- Exclude temporarily skipped definitions
-			AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())
+			AND def.meaning IS NOT NULL`)
+	
+	// Conditionally add skip condition
+	if respectSkipCondition {
+		queryBuilder.WriteString(`
+			AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())`)
+	} else {
+		common.Logger.Info("ignoring skip condition for quiz generation", "userID", userID, "wordlistID", wordlistID)
+	}
+	
+	// ORDER BY and LIMIT clauses - common for both cases
+	queryBuilder.WriteString(`
 		ORDER BY 
-			lst.box_id ASC,                                    -- Prioritize lower boxes
-			lst.updated_at ASC NULLS FIRST,                    -- Then by oldest review
-			RANDOM()                                           -- Add randomization for ties
-		LIMIT 1;
-	`
+			lst.box_id ASC,                     -- Prioritize lower boxes
+			lst.updated_at ASC NULLS FIRST,     -- Then by oldest review
+			RANDOM()                            -- Add randomization for ties
+		LIMIT 1`)
+	
+	query := queryBuilder.String()
 
 	db, err := common.GetDBConnection()
 	if err != nil {
@@ -188,6 +201,11 @@ func getOldestDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	defer rows.Close()
 
 	if !rows.Next() {
+		if respectSkipCondition {
+			// First attempt failed, try again ignoring skip condition
+			return getOldestDefinition(userID, wordlistID, false)
+		}
+		// Second attempt also failed
 		return nil, errors.New("no definitions found")
 	}
 
@@ -350,7 +368,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 
 		// Extract answer from brackets
 		quizAnswer = extractAnswerFromExample(value, def.Definition.Token)
-		
+
 		// Get random options (database automatically excludes tokens from ignored definition IDs)
 		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
@@ -411,7 +429,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 	if quizType != model.WriteWordFromDefinition {
 		// Insert correct answer at random position among the 3 incorrect options
 		answerIndex = rand.Intn(4)
-		
+
 		// Insert the correct answer at the random position
 		options = append(options, "")
 		copy(options[answerIndex+1:], options[answerIndex:])

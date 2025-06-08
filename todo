@@ -64,12 +64,12 @@
     [x] No flash card usar apenas lavaras com definitions
     [x] Unify part of speech constants across different languages
     [x] merge GetWordsWithDefinitions and GetAllFromWordlist em api/internal/service/word.go - getWordsWithDefinitions and getWords in mobile/api/wordlists.ts
+    [x] Need to ignore temporarily_skipped_until if all words are skipped
     [ ] Security abuse of api calls: Controlar quão frequente user pode reportar erro
     [ ] O click no flash card deve mudar o lado dele
-    [ ] Mover componentes do Dashboard pra o índex do móbile
-    [ ] Need to ignore temporarily_skipped_until if all words are skipped
     [ ] Revisar como stats são computaras e exibidas
-    [ ] Why sloth  doesn’t show images in the quiz?
+    [ ] Mover componentes do Dashboard pra o índex do móbile
+    [ ] Intehtation test plan
     [ ] Splash screen
     [ ] mobile/app/analytics.tsx BarChart seems broken
 
