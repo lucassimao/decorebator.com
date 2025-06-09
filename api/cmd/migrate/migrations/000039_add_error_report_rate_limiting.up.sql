@@ -7,15 +7,24 @@ ADD COLUMN regeneration_count INT DEFAULT 0;
 
 -- Create cooldown tracking table
 CREATE TABLE error_report_cooldowns (
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    word_id BIGINT,
-    definition_id BIGINT,
-    error_type VARCHAR(50) NOT NULL,
-    cooldown_until TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (user_id, COALESCE(word_id, -1), COALESCE(definition_id, -1), error_type)
+  user_id        BIGINT     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  word_id        BIGINT,
+  definition_id  BIGINT,
+  error_type     VARCHAR(50) NOT NULL,
+  cooldown_until TIMESTAMPTZ NOT NULL,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- enforce one row per (user, wordId-or--1, definitionId-or--1, error_type)
+CREATE UNIQUE INDEX uq_error_report_cooldowns
+  ON error_report_cooldowns (
+    user_id,
+    COALESCE(word_id, -1),
+    COALESCE(definition_id, -1),
+    error_type
+  );
+
 
 -- Create indexes for efficient querying
 CREATE INDEX idx_error_report_cooldowns_user_id ON error_report_cooldowns(user_id);

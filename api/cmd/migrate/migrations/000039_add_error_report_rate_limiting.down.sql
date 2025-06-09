@@ -11,6 +11,7 @@ ALTER TABLE definitions
 DROP COLUMN IF EXISTS last_regenerated_at;
 
 -- Drop cooldown tracking table
+DROP INDEX uq_error_report_cooldowns;
 DROP TABLE IF EXISTS error_report_cooldowns;
 
 -- Remove tracking columns from error_reports
