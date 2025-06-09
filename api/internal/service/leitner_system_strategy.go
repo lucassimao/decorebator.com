@@ -124,7 +124,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				di.url as image_url, di.description as image_description, 
 				wd.word_id AS word_id,
 				lst.updated_at,
-				EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 as hours_since_review,
+				COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/3600, 0) as hours_since_review,
 				-- Calculate selection probability based on box and time
 				CASE 
 					-- Box 1: Always 100% probability (immediate review)
@@ -132,27 +132,27 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 					
 					-- Box 2: 70% minimum, reaches 100% at 1 hour
 					WHEN lst.box_id = 2 THEN 
-						GREATEST(0.7, LEAST(1.0, 0.7 + (0.3 * EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600)))
+						GREATEST(0.7, LEAST(1.0, 0.7 + (0.3 * COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/3600, 0))))
 					
 					-- Box 3: 50% minimum, reaches 100% at 24 hours
 					WHEN lst.box_id = 3 THEN 
-						GREATEST(0.5, LEAST(1.0, 0.5 + (0.5 * EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/(3600 * 24))))
+						GREATEST(0.5, LEAST(1.0, 0.5 + (0.5 * COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/(3600 * 24), 0))))
 					
 					-- Box 4: 30% minimum, reaches 100% at 72 hours (3 days)
 					WHEN lst.box_id = 4 THEN 
-						GREATEST(0.3, LEAST(1.0, 0.3 + (0.7 * EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/(3600 * 72))))
+						GREATEST(0.3, LEAST(1.0, 0.3 + (0.7 * COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/(3600 * 72), 0))))
 					
 					-- Box 5: 20% minimum, reaches 100% at 168 hours (1 week)
 					WHEN lst.box_id = 5 THEN 
-						GREATEST(0.2, LEAST(1.0, 0.2 + (0.8 * EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/(3600 * 168))))
+						GREATEST(0.2, LEAST(1.0, 0.2 + (0.8 * COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/(3600 * 168), 0))))
 					
 					-- Box 6: 10% minimum, reaches 100% at 336 hours (2 weeks)
 					WHEN lst.box_id = 6 THEN 
-						GREATEST(0.1, LEAST(1.0, 0.1 + (0.9 * EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/(3600 * 336))))
+						GREATEST(0.1, LEAST(1.0, 0.1 + (0.9 * COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/(3600 * 336), 0))))
 					
 					-- Box 7: 5% minimum, reaches 100% at 720 hours (1 month)
 					WHEN lst.box_id = 7 THEN 
-						GREATEST(0.05, LEAST(1.0, 0.05 + (0.95 * EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/(3600 * 720))))
+						GREATEST(0.05, LEAST(1.0, 0.05 + (0.95 * COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/(3600 * 720), 0))))
 				END AS selection_probability,
 				-- Random value for this query execution
 				RANDOM() AS roll
@@ -843,7 +843,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	err = analyticsService.TrackQuizPerformance(ctx, quizResult, tx)
 	if err != nil {
 		// Log error but don't fail the transaction
-		common.Logger.Error("failed to track quiz performance", 
+		common.Logger.Error("failed to track quiz performance",
 			"error", err,
 			"userId", quizResult.UserID,
 			"wordId", quizResult.WordID,
@@ -867,8 +867,8 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 // Returns an error if any database operations fail.
 func (LeitnerSystemStrategy) IncludeDefinitions(wordId, userId int64, definitionIds []int64, tx pgx.Tx) error {
 	for _, definitionId := range definitionIds {
-		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id, word_id)
-		VALUES ($1, $2, $3, $4)`
+		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id, word_id, updated_at)
+		VALUES ($1, $2, $3, $4, NOW())`
 
 		_, err := tx.Exec(context.Background(), query, userId, definitionId, 1, wordId)
 		if err != nil {
