@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import PageLayout from '../../../../components/layout/PageLayout';
 
 const SignUpSuccessContent: React.FC = () => {
@@ -158,9 +159,11 @@ const SignUpSuccessContent: React.FC = () => {
                     rel="noopener noreferrer"
                     className="group transform hover:scale-105 transition-transform duration-300"
                   >
-                    <img 
+                    <Image 
                       src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
                       alt="Download on App Store" 
+                      width={168}
+                      height={56}
                       className="h-14"
                     />
                   </a>
@@ -170,9 +173,11 @@ const SignUpSuccessContent: React.FC = () => {
                     rel="noopener noreferrer"
                     className="group transform hover:scale-105 transition-transform duration-300"
                   >
-                    <img 
+                    <Image 
                       src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
                       alt="Get it on Google Play" 
+                      width={168}
+                      height={56}
                       className="h-14"
                     />
                   </a>

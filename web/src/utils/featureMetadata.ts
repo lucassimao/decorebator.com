@@ -8,13 +8,28 @@ export interface FeatureMetadataConfig {
   ogImage?: string;
 }
 
+// Map kebab-case URLs to camelCase JSON keys
+const featureKeyMap: Record<string, string> = {
+  'ai-content': 'aiContent',
+  'spaced-repetition': 'spacedRepetition',
+  'quiz-modes': 'quizModes',
+  'visual-learning': 'visualLearning',
+  'audio-learning': 'audioLearning',
+  'analytics': 'analytics',
+  'multi-language': 'multiLanguage',
+  'flashcards': 'flashcards',
+  'error-reporting': 'errorReporting',
+  'offline-support': 'offlineSupport'
+};
+
 export async function generateFeatureMetadata({
   featureKey,
   locale,
   keywords,
   ogImage = 'https://decorebator.com/og-features.jpg'
 }: FeatureMetadataConfig): Promise<Metadata> {
-  const t = await getTranslations({ locale, namespace: `featurePages.${featureKey}` });
+  const translationKey = featureKeyMap[featureKey] || featureKey;
+  const t = await getTranslations({ locale, namespace: `featurePages.${translationKey}` });
   
   return {
     title: `${t('title')} | Decorebator`,

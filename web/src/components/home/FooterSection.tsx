@@ -25,7 +25,7 @@ const FooterSection: React.FC = () => {
             <ul className="space-y-2">
               <li><a href="#" className="hover:text-slate-100">Blog</a></li>
               <li><Link href="/help" className="hover:text-slate-100">Help Center</Link></li>
-              <li><a href="/#faq" className="hover:text-slate-100">FAQ</a></li>
+              <li><Link href="/#faq" className="hover:text-slate-100">FAQ</Link></li>
             </ul>
           </div>
           <div>

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
+import Image from 'next/image';
 import VideoModal from '../common/VideoModal';
 
 const EnhancedHeroSection: React.FC = () => {
@@ -66,23 +67,27 @@ const EnhancedHeroSection: React.FC = () => {
                 className="group bg-white/80 backdrop-blur px-8 py-4 rounded-full font-semibold text-lg border-2 border-gray-200 hover:border-[#FF7B54] transition-all duration-300 flex items-center justify-center"
               >
                 <i className="fas fa-play-circle mr-2 text-[#FF7B54] group-hover:scale-110 transition-transform"></i>
-                {t('watchDemo', {}, { fallback: 'Watch Demo' })}
+                {t('watchDemo')}
               </button>
             </div>
 
             {/* App Store Buttons */}
             <div className="flex flex-wrap gap-4 pt-4">
               <a href="#" className="group">
-                <img 
+                <Image 
                   src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
                   alt="Download on App Store" 
+                  width={144}
+                  height={48}
                   className="h-12 transform group-hover:scale-105 transition-transform duration-300"
                 />
               </a>
               <a href="#" className="group">
-                <img 
+                <Image 
                   src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
                   alt="Get it on Google Play" 
+                  width={144}
+                  height={48}
                   className="h-12 transform group-hover:scale-105 transition-transform duration-300"
                 />
               </a>

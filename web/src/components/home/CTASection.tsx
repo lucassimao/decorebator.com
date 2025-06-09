@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import VideoModal from '../common/VideoModal';
 
 const CTASection: React.FC = () => {
@@ -23,10 +25,10 @@ const CTASection: React.FC = () => {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-          <a href="/signup?plan=free" className="group bg-white text-[#FF7B54] px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 inline-block">
+          <Link href="/signup?plan=free" className="group bg-white text-[#FF7B54] px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 inline-block">
             <span>Start Your Free Trial</span>
             <i className="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-          </a>
+          </Link>
           <button 
             onClick={() => setIsVideoModalOpen(true)}
             className="group bg-white/20 backdrop-blur text-white px-8 py-4 rounded-full font-semibold text-lg border-2 border-white/50 hover:bg-white/30 transition-all duration-300"
@@ -39,16 +41,20 @@ const CTASection: React.FC = () => {
         {/* App Store Buttons */}
         <div className="flex flex-wrap gap-4 justify-center">
           <a href="#" className="transform hover:scale-105 transition-transform duration-300">
-            <img 
+            <Image 
               src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
               alt="Download on App Store" 
+              width={168}
+              height={56}
               className="h-14"
             />
           </a>
           <a href="#" className="transform hover:scale-105 transition-transform duration-300">
-            <img 
+            <Image 
               src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
               alt="Get it on Google Play" 
+              width={168}
+              height={56}
               className="h-14"
             />
           </a>

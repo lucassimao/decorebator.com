@@ -98,7 +98,7 @@ const Header: React.FC = () => {
             </a>
             <LanguageSwitcher />
             <Link href={`/${locale}/signup?plan=free`} className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 inline-block">
-              {t('getStartedFree', {}, { fallback: 'Start Free Trial' })}
+              {t('getStartedFree')}
             </Link>
           </nav>
 
@@ -162,7 +162,7 @@ const Header: React.FC = () => {
               <LanguageSwitcher />
             </div>
             <Link href={`/${locale}/signup?plan=free`} className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-3 rounded-full font-semibold inline-block text-center" onClick={() => setIsMobileMenuOpen(false)}>
-              {t('getStartedFree', {}, { fallback: 'Start Free Trial' })}
+              {t('getStartedFree')}
             </Link>
           </nav>
         </div>

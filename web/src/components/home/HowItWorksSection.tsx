@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 const HowItWorksSection: React.FC = () => {
   return (
@@ -110,10 +111,10 @@ const HowItWorksSection: React.FC = () => {
 
         {/* CTA */}
         <div className="text-center mt-16">
-          <a href="/signup?plan=free" className="group bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-10 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 inline-block">
+          <Link href="/signup?plan=free" className="group bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-10 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 inline-block">
             <span>Start Your Learning Journey</span>
             <i className="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-          </a>
+          </Link>
         </div>
       </div>
     </section>

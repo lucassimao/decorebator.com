@@ -6,10 +6,11 @@ import FeaturePageLayout from '../../../../components/features/FeaturePageLayout
 import PageLayout from '../../../../components/layout/PageLayout';
 
 interface Props {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
-export async function generateMetadata({ params: { locale } }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
   return generateFeatureMetadata({
     featureKey: 'multiLanguage',
     locale,

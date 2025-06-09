@@ -6,10 +6,11 @@ import PageLayout from '../../../../components/layout/PageLayout';
 import { generateFeatureMetadata, generateFeatureStructuredData } from '../../../../utils/featureMetadata';
 
 interface Props {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
-export async function generateMetadata({ params: { locale } }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
   return generateFeatureMetadata({
     featureKey: 'ai-content',
     locale,
@@ -21,7 +22,7 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
 const AIContentFeaturePage: React.FC = () => {
   const t = useTranslations('featurePages.aiContent');
 
-  const structuredData = generateFeatureStructuredData('ai-content', t);
+  const structuredData = generateFeatureStructuredData('aiContent', t);
 
   return (
     <PageLayout>

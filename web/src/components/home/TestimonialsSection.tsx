@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 const TestimonialsSection: React.FC = () => {
   return (
@@ -18,9 +19,11 @@ const TestimonialsSection: React.FC = () => {
           {/* Testimonial 1 */}
           <div className="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
             <div className="flex items-center mb-4">
-              <img 
+              <Image 
                 src="https://ui-avatars.com/api/?name=Sarah+Chen&background=FF7B54&color=fff&size=48&rounded=true" 
                 alt="Sarah Chen" 
+                width={48}
+                height={48}
                 className="w-12 h-12 rounded-full mr-4"
               />
               <div>
@@ -43,9 +46,11 @@ const TestimonialsSection: React.FC = () => {
           {/* Testimonial 2 */}
           <div className="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
             <div className="flex items-center mb-4">
-              <img 
+              <Image 
                 src="https://ui-avatars.com/api/?name=Marcus+Rodriguez&background=4CAF50&color=fff&size=48&rounded=true" 
                 alt="Marcus Rodriguez" 
+                width={48}
+                height={48}
                 className="w-12 h-12 rounded-full mr-4"
               />
               <div>
@@ -68,9 +73,11 @@ const TestimonialsSection: React.FC = () => {
           {/* Testimonial 3 */}
           <div className="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
             <div className="flex items-center mb-4">
-              <img 
+              <Image 
                 src="https://ui-avatars.com/api/?name=Emma+Thompson&background=9C27B0&color=fff&size=48&rounded=true" 
                 alt="Emma Thompson" 
+                width={48}
+                height={48}
                 className="w-12 h-12 rounded-full mr-4"
               />
               <div>
