@@ -503,6 +503,98 @@ The system includes comprehensive analytics for tracking learning progress:
 - **Multi-Language Support**: Error reporting interface available in 8 languages
 - **Reusable Component Architecture**: Shared error reporting modal across quiz and flashcard features
 
+### Error Report Rate Limiting & Abuse Prevention
+
+To prevent abuse and control OpenAI API costs, the error reporting system implements comprehensive rate limiting:
+
+#### Rate Limits by Subscription Tier
+
+| Tier | Hourly Limit | Daily Limit |
+|------|--------------|-------------|
+| **Free** | 3 reports | 5 reports |
+| **Premium** | 10 reports | 30 reports |
+
+#### Protection Mechanisms
+
+1. **Dual-Layer Rate Limiting**:
+   - **Global Rate Limits**: Enforced at middleware level before requests reach handlers
+   - **Per-Error Cooldowns**: 1-hour cooldown for reporting the same error on the same word
+   - **PostgreSQL-Based**: No Redis dependency, uses efficient database queries with sliding windows
+
+2. **Smart Cooldown System**:
+   - Prevents spam reporting of the same issue
+   - Tracks cooldowns per user + word + error type combination
+   - Returns precise retry times to users
+   - Automatically clears after 1 hour
+
+3. **User Experience Features**:
+   - Clear error messages with retry times
+   - Status endpoint to check remaining quota
+   - Differentiated responses for rate limits vs cooldowns
+   - Localized error messages in all 8 supported languages
+
+4. **Monitoring & Analytics**:
+   - Comprehensive logging of all rate limit hits
+   - Admin endpoint for viewing error report statistics
+   - Tracks patterns by user, error type, and subscription tier
+   - Identifies potential abuse patterns
+
+#### Implementation Architecture
+
+```
+Request Flow:
+1. POST /errorReports → RateLimitErrorReports() middleware
+2. Check hourly/daily limits → Block if exceeded (429 status)
+3. If passed → ErrorReportsRoutes.Create handler
+4. Check cooldowns → Block if too recent (429 status)
+5. If passed → Process error report & trigger regeneration
+```
+
+#### Database Schema Additions
+
+- `error_report_cooldowns`: Tracks per-error cooldowns with expiration
+- `error_report_limits`: Backup tracking for rate limit analytics
+- `last_regenerated_at`: Timestamps on words/definitions for cooldown grace periods
+
+#### API Response Formats
+
+**Rate Limit Exceeded**:
+```json
+{
+  "error": "Daily limit exceeded. You can report 5 errors per day.",
+  "retryAfter": 3600,
+  "limit": 5,
+  "remaining": 0,
+  "windowType": "daily"
+}
+```
+
+**Cooldown Active**:
+```json
+{
+  "error": "Please wait before reporting this error again. You can retry in 45 minutes.",
+  "cooldownUntil": 1234567890,
+  "retryAfter": 2700,
+  "windowType": "cooldown"
+}
+```
+
+#### Mobile App Integration
+
+The mobile app gracefully handles rate limiting with:
+- **Automatic error type detection**: Distinguishes between rate limits and cooldowns using `windowType` field
+- **Differentiated error messages**:
+  - Rate limits: "Too many reports submitted. Please try again later."
+  - Cooldowns: "You've already reported this error recently. Please wait a moment before reporting again."
+- **Proper 429 status code handling**: Both rate limits and cooldowns return 429 with different response data
+- **Smart retry time display**: Shows remaining minutes calculated from `retryAfter` field
+- **Fallback for offline mode**: Displays appropriate offline message when network unavailable
+- **Localized messages**: All error messages available in 8 supported languages
+
+The implementation in both quiz and flashcard screens (`quiz.tsx` and `practice.tsx`) properly handles the `ErrorReportRateLimitError` class, checking the `windowType` to provide context-appropriate feedback to users.
+
+This system ensures legitimate users can report genuine issues while preventing abuse that could lead to excessive API costs.
+
 ## 🧠 Leitner System for Spaced Repetition
 
 Decorebator implements a sophisticated Leitner system for optimal vocabulary retention through spaced repetition.
@@ -689,7 +781,11 @@ npm start
 - `GET /analytics/dashboard` - Overall dashboard statistics
 
 ### Error Reporting & Content Quality
-- `POST /errorReports` - Report errors in AI-generated content with structured error types
+- `POST /errorReports` - Report errors in AI-generated content with structured error types (rate limited)
+- `GET /errorReports/status` - Get current rate limit status and active cooldowns
+
+### Admin Endpoints (Static Authentication)
+- `GET /static/admin/errorReports/stats` - Get error reporting statistics and patterns
 
 ### Worker Management (Static Authentication)
 - `POST /static/workers/imageGenerator/:definitionId` - Trigger image generation

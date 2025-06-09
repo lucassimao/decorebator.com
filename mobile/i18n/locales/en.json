@@ -159,6 +159,8 @@
     "fastMode": "Fast Mode",
     "reportIssue": "Report an Issue",
     "reportSubmitted": "Your report has been submitted.",
+    "rateLimitError": "Too many reports submitted. Please try again later.",
+    "cooldownError": "You've already reported this error recently. Please wait a moment before reporting again.",
     "writeWordFromDefinition": "Write the word for this definition",
     "whatDoesThisWordMean": "What does this word mean?",
     "completeSentence": "Complete the sentence",
@@ -500,6 +502,8 @@
       "wrongMeaning": "Wrong meaning",
       "wrongExample": "Wrong example",
       "soundNotPlaying": "Sound not playing"
-    }
+    },
+    "rateLimitError": "Too many reports submitted. Please try again later.",
+    "cooldownError": "You've already reported this error recently. Please wait a moment before reporting again."
   }
 }

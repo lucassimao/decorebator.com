@@ -55,19 +55,22 @@ npm run web
 # Code quality
 npm run lint
 npm run test          # Run Jest tests in watch mode
+npm run prepare       # Setup Husky git hooks
 
 # Update Expo dependencies
 npm run expo:update
 
-# EAS Updates
+# EAS Updates (over-the-air updates)
 npm run update:local   # Update local development build
 npm run update:prod    # Update production build
 ```
 
 ### Web Frontend (in `/web` directory)
 
+Next.js 15 application with internationalization:
+
 ```bash
-# Start development server with Turbopack
+# Start development server (uses Turbopack for fast refresh)
 npm run dev
 
 # Build for production
@@ -79,6 +82,13 @@ npm start
 # Lint code
 npm run lint
 ```
+
+#### Internationalization Setup
+- Uses `next-intl` for i18n with 7 supported languages
+- Dynamic routing with locale prefixes (`/[locale]/...`)
+- Middleware for automatic locale detection
+- Localized feature showcase pages
+- Messages stored in `/messages/*.json`
 
 ## Architecture Overview
 
@@ -104,11 +114,12 @@ Key architectural decisions:
 
 ### Background Job Processing
 
-Four worker queues process asynchronous tasks:
+Five worker queues process asynchronous tasks:
 - `image_generator` - Generates images using OpenAI DALL-E (max 5 workers)
 - `text_to_speech` - Converts text to audio using OpenAI TTS (max 30 workers)
 - `definition_fetcher` - Fetches word definitions from external sources (max 50 workers)
 - `subscription_reminder` - Sends renewal reminder emails (max 10 workers)
+- `example_audio_generator` - Generates audio for example sentences with fair usage distribution (max 20 workers)
 
 Workers run as a separate process and include retry logic, rate limiting, and error handling.
 
@@ -122,19 +133,20 @@ Workers run as a separate process and include retry logic, rate limiting, and er
 - Automatic session refresh on focus
 - Real-time subscription status updates
 - Internationalization (i18n) support for 8 languages
+- PostHog integration for analytics tracking
 - Offline support for premium users with local storage
 - Error reporting modal for AI-generated content issues
 - Interactive flashcard system with flip animations
 
 ### Database Schema
 
-Key tables:
+Key tables with recent enhancements:
 - `users` - User accounts, authentication, subscription status, and profile data
 - `subscriptions` - Subscription history and details with Stripe integration
 - `subscription_events` - Stripe webhook event audit trail & email notification tracking
 - `wordlists` - User's vocabulary lists with language field and word counts
-- `words` - Individual words in wordlists with audio URLs and learning status
-- `definitions` - AI-generated definitions with multimedia, sources, and example sentences
+- `words` - Individual words with audio URLs, learning status, and `part_of_speech_normalized` for language-agnostic grammar
+- `definitions` - AI-generated definitions with multimedia, sources, example sentences, and `is_verb_type` virtual column
 - `definition_images` - Images associated with definitions
 - `leitner_system_tracking` - Spaced repetition progress with temporary skip functionality
 - `error_reports` - User-reported errors for definitions and AI-generated content
@@ -143,7 +155,13 @@ Key tables:
 - `learning_progress` - Daily aggregated learning statistics
 - `quiz_type_analytics` - Performance metrics grouped by quiz type
 - `box_distribution_snapshot` - Daily snapshots of word distribution across Leitner boxes
+- `definition_example_audio` - Audio files for example sentences
+- `example_audio_usage` - Tracks audio generation for fair usage distribution
+- `example_usage` - Ensures variety in quiz example selection
 - `river_job` - Background job queue
+- Materialized views refreshed hourly:
+  - `mv_word_mastery_current` - Current word mastery state
+  - `mv_quiz_type_performance` - Quiz performance analytics
 
 ## Subscription System
 
@@ -206,7 +224,10 @@ Key tables:
 - Background jobs use River queue (PostgreSQL-backed) instead of traditional queue systems
 - Email templates are located in `internal/mail/` directory
 - API endpoints are documented in `doc/words.http` and `doc/words.prod.http`
-- Recent architecture improvements planned in `api/DEPENDENCY_INJECTION_MODERNIZATION_PLAN.md` and `api/LOGGING_IMPROVEMENT_PLAN.md`
+- Recent architecture improvements planned in:
+  - `api/DEPENDENCY_INJECTION_MODERNIZATION_PLAN.md` - DI framework adoption
+  - `api/LOGGING_IMPROVEMENT_PLAN.md` - Enhanced structured logging
+  - `api/ANALYTICS_REVIEW_REPORT.md` - Performance and bug fixes for analytics
 
 ## Multi-Language Support
 

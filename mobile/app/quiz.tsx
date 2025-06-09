@@ -1,5 +1,5 @@
 import * as errorReportingApi from "@/api/errorReporting";
-import { ErrorType } from "@/api/errorReporting";
+import { ErrorType, ErrorReportRateLimitError } from "@/api/errorReporting";
 import * as offlineQuizApi from "@/api/offlineWordlists";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { ErrorReportModal } from "@/components/ErrorReportModal";
@@ -127,7 +127,25 @@ const QuizScreen: React.FC = () => {
       handleNextQuiz();
     },
     onError: (error) => {
-      Alert.alert(t("common.error"), t("offline.featureUnavailable"));
+      if (error instanceof ErrorReportRateLimitError) {
+        let message: string;
+        
+        if (error.windowType === "cooldown") {
+          // Cooldown for specific error on this word
+          message = error.retryAfter 
+            ? t("quiz.cooldownError", { minutes: Math.ceil(error.retryAfter / 60) })
+            : error.message;
+        } else {
+          // Rate limit (hourly/daily)
+          message = error.retryAfter 
+            ? t("quiz.rateLimitError", { minutes: Math.ceil(error.retryAfter / 60) })
+            : error.message;
+        }
+        
+        Alert.alert(t("common.error"), message);
+      } else {
+        Alert.alert(t("common.error"), t("offline.featureUnavailable"));
+      }
     },
   });
 

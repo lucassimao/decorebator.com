@@ -159,6 +159,8 @@
     "fastMode": "高速モード",
     "reportIssue": "問題を報告",
     "reportSubmitted": "レポートが送信されました。",
+    "rateLimitError": "レポートの送信回数が多すぎます。後でもう一度お試しください。",
+    "cooldownError": "このエラーは最近報告されています。しばらく待ってから再度報告してください。",
     "writeWordFromDefinition": "この定義に対応する単語を書いてください",
     "whatDoesThisWordMean": "この単語の意味は何ですか？",
     "completeSentence": "文を完成させてください",
@@ -500,6 +502,8 @@
       "wrongMeaning": "間違った意味",
       "wrongExample": "間違った例",
       "soundNotPlaying": "音が再生されません"
-    }
+    },
+    "rateLimitError": "レポートの送信が多すぎます。後でもう一度お試しください。",
+    "cooldownError": "このエラーは最近報告されています。しばらく待ってから再度報告してください。"
   }
 }

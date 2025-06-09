@@ -159,6 +159,8 @@
     "fastMode": "Schnellmodus",
     "reportIssue": "Problem melden",
     "reportSubmitted": "Ihr Bericht wurde gesendet.",
+    "rateLimitError": "Zu viele Berichte eingereicht. Bitte versuchen Sie es später erneut.",
+    "cooldownError": "Sie haben diesen Fehler kürzlich bereits gemeldet. Bitte warten Sie einen Moment, bevor Sie erneut melden.",
     "writeWordFromDefinition": "Schreiben Sie das Wort für diese Definition",
     "whatDoesThisWordMean": "Was bedeutet dieses Wort?",
     "completeSentence": "Vervollständigen Sie den Satz",
@@ -500,6 +502,8 @@
       "wrongMeaning": "Falsche Bedeutung",
       "wrongExample": "Falsches Beispiel",
       "soundNotPlaying": "Ton wird nicht abgespielt"
-    }
+    },
+    "rateLimitError": "Zu viele Meldungen eingereicht. Bitte versuchen Sie es später erneut.",
+    "cooldownError": "Sie haben diesen Fehler kürzlich bereits gemeldet. Bitte warten Sie einen Moment, bevor Sie erneut melden."
   }
 }

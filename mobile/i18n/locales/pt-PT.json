@@ -159,6 +159,8 @@
     "fastMode": "Modo Rápido",
     "reportIssue": "Reportar um Problema",
     "reportSubmitted": "O seu relatório foi enviado.",
+    "rateLimitError": "Demasiados relatórios enviados. Por favor, tente novamente mais tarde.",
+    "cooldownError": "Já reportou este erro recentemente. Por favor, aguarde um momento antes de reportar novamente.",
     "writeWordFromDefinition": "Escreva a palavra para esta definição",
     "whatDoesThisWordMean": "O que significa esta palavra?",
     "completeSentence": "Complete a frase",
@@ -500,6 +502,8 @@
       "wrongMeaning": "Significado errado",
       "wrongExample": "Exemplo errado",
       "soundNotPlaying": "Som não está a tocar"
-    }
+    },
+    "rateLimitError": "Demasiados relatórios enviados. Por favor, tente novamente mais tarde.",
+    "cooldownError": "Já reportou este erro recentemente. Por favor, aguarde um momento antes de reportar novamente."
   }
 }

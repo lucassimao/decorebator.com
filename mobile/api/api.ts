@@ -42,6 +42,13 @@ export async function callAPI<T>(
       router.dismissAll();
       router.replace("/signin");
     } else {
+      // For rate limit errors, we want to pass the full response body
+      if (response.status === 429) {
+        const error: any = new Error(message);
+        error.status = response.status;
+        error.data = responseBody;
+        throw error;
+      }
       throw new Error(message);
     }
   }

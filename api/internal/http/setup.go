@@ -88,7 +88,8 @@ func SetupRoutes() *gin.Engine {
 		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(subService, "add_word"), WordRoutes.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", QuizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", QuizRoutes.Save)
-		authenticatedRoutes.POST("/errorReports", ErrorReportsRoutes.Create)
+		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(), ErrorReportsRoutes.Create)
+		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus())
 
 		RegisterAnalyticsRoutes(authenticatedRoutes)
 
@@ -112,6 +113,13 @@ func SetupRoutes() *gin.Engine {
 		workerRoutes.POST("/textToAudio/:wordId", WorkerRoutes.GenerateNewAudio)
 		workerRoutes.POST("/definition/:wordId", WorkerRoutes.GenerateNewDefinition)
 		workerRoutes.POST("/retry/:jobId", WorkerRoutes.TriggerJob)
+	}
+
+	// Admin routes with static authentication
+	adminRoutes := router.Group("/static/admin")
+	adminRoutes.Use(AuthenticateStatic)
+	{
+		adminRoutes.GET("/errorReports/stats", GetErrorReportStats())
 	}
 
 	return router

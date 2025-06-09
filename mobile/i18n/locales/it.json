@@ -159,6 +159,8 @@
     "fastMode": "Modalità Veloce",
     "reportIssue": "Segnala un Problema",
     "reportSubmitted": "La tua segnalazione è stata inviata.",
+    "rateLimitError": "Troppe segnalazioni inviate. Riprova più tardi.",
+    "cooldownError": "Hai già segnalato questo errore di recente. Attendi un momento prima di segnalare di nuovo.",
     "writeWordFromDefinition": "Scrivi la parola per questa definizione",
     "whatDoesThisWordMean": "Cosa significa questa parola?",
     "completeSentence": "Completa la frase",
@@ -501,6 +503,8 @@
       "wrongMeaning": "Significato sbagliato",
       "wrongExample": "Esempio sbagliato",
       "soundNotPlaying": "Il suono non si riproduce"
-    }
+    },
+    "rateLimitError": "Troppi rapporti inviati. Riprova più tardi.",
+    "cooldownError": "Hai già segnalato questo errore di recente. Attendi un momento prima di segnalare di nuovo."
   }
 }

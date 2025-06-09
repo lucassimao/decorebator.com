@@ -23,7 +23,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import * as offlineWordlistsApi from "@/api/offlineWordlists";
 import { useOffline } from "@/hooks/useOffline";
 import * as errorReportingApi from "@/api/errorReporting";
-import { ErrorType } from "@/api/errorReporting";
+import { ErrorType, ErrorReportRateLimitError } from "@/api/errorReporting";
 
 import { FlashcardHeader } from "@/components/flashcard/FlashcardHeader";
 import { FlashcardProgressBar } from "@/components/flashcard/FlashcardProgressBar";
@@ -111,7 +111,25 @@ const FlashcardPractice: React.FC = () => {
       setShowReportModal(false);
     },
     onError: (error) => {
-      Alert.alert(t("common.error"), t("offline.featureUnavailable"));
+      if (error instanceof ErrorReportRateLimitError) {
+        let message: string;
+        
+        if (error.windowType === "cooldown") {
+          // Cooldown for specific error on this word
+          message = error.retryAfter 
+            ? t("flashcards.cooldownError", { minutes: Math.ceil(error.retryAfter / 60) })
+            : error.message;
+        } else {
+          // Rate limit (hourly/daily)
+          message = error.retryAfter 
+            ? t("flashcards.rateLimitError", { minutes: Math.ceil(error.retryAfter / 60) })
+            : error.message;
+        }
+        
+        Alert.alert(t("common.error"), message);
+      } else {
+        Alert.alert(t("common.error"), t("offline.featureUnavailable"));
+      }
     },
   });
 

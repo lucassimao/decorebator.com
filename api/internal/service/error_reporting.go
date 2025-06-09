@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/repository"
 )
 
 type ErrorReportType string
@@ -20,8 +22,13 @@ const (
 
 func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, userId int64, ctx context.Context) error {
 	logger := common.Logger.With("errorType", errorType, "wordID", wordID, "definitionID", definitionID, "userId", userId)
+	
+	// Log error report attempt for monitoring
+	logger.Info("Error report attempt",
+		"action", "error_report_attempt",
+		"timestamp", time.Now().Unix(),
+	)
 
-	logger.Info("olar")
 	isValid, err := didUserCreateWord(wordID, userId)
 
 	if err != nil || !isValid {
@@ -34,6 +41,29 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 	db, err := common.GetDBConnection()
 	if err != nil {
 		return err
+	}
+
+	// Create repository
+	repo := repository.NewErrorReportRepository(db)
+
+	// Check cooldown period
+	cooldownUntil, err := repo.CheckCooldown(ctx, userId, wordID, definitionID, string(errorType))
+	if err != nil {
+		logger.Error("failed to check cooldown", "error", err)
+		return err
+	}
+	
+	if cooldownUntil != nil {
+		retryAfter := cooldownUntil.Sub(time.Now())
+		logger.Warn("Error report blocked by cooldown",
+			"action", "error_report_cooldown_blocked",
+			"timestamp", time.Now().Unix(),
+		)
+		return CooldownError{
+			Message:       fmt.Sprintf("Please wait before reporting this error again. You can retry in %d minutes.", int(retryAfter.Minutes())),
+			CooldownUntil: *cooldownUntil,
+			RetryAfter:    retryAfter,
+		}
 	}
 
 	tx, err := db.Begin(ctx)
@@ -74,6 +104,29 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 		return err
 	}
 
+	// Update last regenerated timestamp
+	switch errorType {
+	case SoundNotPlaying:
+		err = repo.UpdateWordAudioLastRegeneratedAt(ctx, tx, wordID)
+	case UnrelatedImage, MissingImage, UnrelatedExample, UnrelatedMeaning:
+		if definitionID > 0 {
+			err = repo.UpdateDefinitionLastRegeneratedAt(ctx, tx, definitionID)
+		}
+	}
+	if err != nil {
+		logger.Error("failed to update last regenerated timestamp", "error", err)
+		// Don't fail the whole operation for this
+	}
+
+	// Set cooldown for this error report
+	cooldownDuration := time.Hour // 1 hour cooldown as agreed
+	cooldownUntilTime := time.Now().Add(cooldownDuration)
+	err = repo.SetCooldown(ctx, tx, userId, wordID, definitionID, string(errorType), cooldownUntilTime)
+	if err != nil {
+		logger.Error("failed to set cooldown", "error", err)
+		// Don't fail the whole operation for this
+	}
+
 	// marking the definition temporarily as unavailable
 	var strategy LeitnerSystemStrategy
 	err = strategy.ReportError(userId, report, tx, ctx)
@@ -83,54 +136,40 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 		return err
 	}
 
-	// First, try to update an existing row matching (user_id, definition_id, word_id).
-	tag, err := tx.Exec(ctx, `
-        UPDATE error_reports
-        SET
-            error_type = $4,
-            reported_at = NOW(),
-            status = 'pending'
-        WHERE
-            user_id       = $1
-            AND definition_id = $2
-            AND word_id       = $3
-			AND status	='pending'
-    `, userId, definitionID, wordID, string(errorType))
+	// Upsert error report
+	err = repo.UpsertErrorReport(ctx, tx, userId, definitionID, wordID, string(errorType))
 	if err != nil {
-		common.Logger.Error("failed to update existing error_report", "error", err)
+		common.Logger.Error("failed to save error report", "error", err)
 		return err
 	}
-
-	// If no row was updated, insert a new one.
-	if tag.RowsAffected() == 0 {
-		_, err = tx.Exec(ctx, `
-            INSERT INTO error_reports
-                (user_id, definition_id, word_id, error_type, reported_at, status)
-            VALUES
-                ($1, $2, $3, $4, NOW(), 'pending')
-        `, userId, definitionID, wordID, errorType)
-		if err != nil {
-			common.Logger.Error("failed to insert new error_report", "error", err)
-			return err
-		}
-	}
+	
+	// Log successful error report for monitoring
+	logger.Info("Error report processed successfully",
+		"action", "error_report_success",
+		"timestamp", time.Now().Unix(),
+		"regeneration_type", errorType,
+	)
 
 	return nil
-
 }
 
 func DeleteUserErrorReports(userId int64) (int64, error) {
-
 	db, err := common.GetDBConnection()
 	if err != nil {
 		return 0, err
 	}
 
-	query := `DELETE FROM error_reports WHERE user_id=$1`
-	result, err := db.Exec(context.Background(), query, userId)
-	if err != nil {
-		return 0, err
-	}
+	repo := repository.NewErrorReportRepository(db)
+	return repo.DeleteUserErrorReports(context.Background(), userId)
+}
 
-	return result.RowsAffected(), nil
+// CooldownError represents an error when a cooldown is active
+type CooldownError struct {
+	Message      string
+	CooldownUntil time.Time
+	RetryAfter   time.Duration
+}
+
+func (e CooldownError) Error() string {
+	return e.Message
 }

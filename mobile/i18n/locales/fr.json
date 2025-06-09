@@ -159,6 +159,8 @@
     "fastMode": "Mode Rapide",
     "reportIssue": "Signaler un Problème",
     "reportSubmitted": "Votre rapport a été envoyé.",
+    "rateLimitError": "Trop de rapports soumis. Veuillez réessayer plus tard.",
+    "cooldownError": "Vous avez déjà signalé cette erreur récemment. Veuillez attendre un moment avant de signaler à nouveau.",
     "writeWordFromDefinition": "Écrivez le mot pour cette définition",
     "whatDoesThisWordMean": "Que signifie ce mot ?",
     "completeSentence": "Complétez la phrase",
@@ -501,6 +503,8 @@
       "wrongMeaning": "Mauvaise signification",
       "wrongExample": "Mauvais exemple",
       "soundNotPlaying": "Le son ne joue pas"
-    }
+    },
+    "rateLimitError": "Trop de rapports soumis. Veuillez réessayer plus tard.",
+    "cooldownError": "Vous avez déjà signalé cette erreur récemment. Veuillez attendre un moment avant de signaler à nouveau."
   }
 }
