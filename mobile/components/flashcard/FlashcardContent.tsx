@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   StyleSheet,
+  Pressable,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -257,11 +258,12 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
             isFlipped ? styles.cardBackVisible : null,
           ]}
         >
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={onFlip}
-            style={styles.cardTouchArea}
-          >
+          <View style={styles.cardTouchArea}>
+            <TouchableOpacity
+              style={styles.backgroundTouchArea}
+              activeOpacity={1}
+              onPress={onFlip}
+            />
             <ScrollView
               style={styles.definitionsScroll}
               contentContainerStyle={styles.definitionsScrollContent}
@@ -273,7 +275,7 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
             >
               {renderDefinitionsContent()}
             </ScrollView>
-          </TouchableOpacity>
+          </View>
           <TouchableOpacity
             style={styles.flipHintTouchable}
             onPress={onFlip}
@@ -349,6 +351,15 @@ const styles = StyleSheet.create({
   cardTouchArea: {
     flex: 1,
     marginBottom: 40,
+    position: "relative",
+  },
+  backgroundTouchArea: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
   },
   flipHintTouchable: {
     position: "absolute",
@@ -361,6 +372,7 @@ const styles = StyleSheet.create({
   },
   definitionsScroll: {
     flex: 1,
+    zIndex: 2,
   },
   definitionsScrollContent: {
     flexGrow: 1,
