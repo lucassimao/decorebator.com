@@ -843,8 +843,11 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	err = analyticsService.TrackQuizPerformance(ctx, quizResult, tx)
 	if err != nil {
 		// Log error but don't fail the transaction
-		common.Logger.Error("failed to track quiz performance", "error", err)
-		fmt.Print(err)
+		common.Logger.Error("failed to track quiz performance", 
+			"error", err,
+			"userId", quizResult.UserID,
+			"wordId", quizResult.WordID,
+			"quizType", quizResult.QuizType)
 	}
 
 	return nil
