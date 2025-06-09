@@ -3,14 +3,14 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useI18n } from "@/hooks/useI18n";
 import { SnackbarProvider } from "@/hooks/useSnackbar";
 import { UpgradePromptDialogProvider } from "@/hooks/useUpgradePromptDialog";
-import { I18nextProvider } from "react-i18next";
 import i18n from "@/i18n";
-import { useI18n } from "@/hooks/useI18n";
-import { usePostHog, PostHogProvider } from "posthog-react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PostHogProvider } from "posthog-react-native";
+import { useEffect } from "react";
+import { I18nextProvider } from "react-i18next";
 // Import offline test utility in development
 if (__DEV__) {
   import("@/utils/offlineTest");
@@ -18,12 +18,12 @@ if (__DEV__) {
 
 export {
   // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
+   ErrorBoundary 
 } from "expo-router";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: "signin",
+  initialRouteName: "index",
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -58,14 +58,14 @@ const queryClient = new QueryClient();
 function RootLayoutNav() {
   return (
     <I18nextProvider i18n={i18n}>
-      <QueryClientProvider client={queryClient}>
-        <LanguageInitializer />
-        <SnackbarProvider>
-          <UpgradePromptDialogProvider>
-            <PostHogProvider
-              apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
-              options={{ host: "https://us.i.posthog.com", disabled: __DEV__ }}
-            >
+        <QueryClientProvider client={queryClient}>
+          <LanguageInitializer />
+          <SnackbarProvider>
+            <UpgradePromptDialogProvider>
+              <PostHogProvider
+                apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
+                options={{ host: "https://us.i.posthog.com", disabled: __DEV__ }}
+              >
               <Stack>
                 <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen
@@ -105,10 +105,10 @@ function RootLayoutNav() {
                   options={{ headerShown: false }}
                 />
               </Stack>
-            </PostHogProvider>
-          </UpgradePromptDialogProvider>
-        </SnackbarProvider>
-      </QueryClientProvider>
+              </PostHogProvider>
+            </UpgradePromptDialogProvider>
+          </SnackbarProvider>
+        </QueryClientProvider>
     </I18nextProvider>
   );
 }

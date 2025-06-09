@@ -57,6 +57,9 @@ const Dashboard: React.FC<DashboardProps> = () => {
   } = useQuery<wordlistsApi.Wordlist[], Error>({
     queryFn: () => wordlistsApi.getUserWordlists(),
     queryKey: ["wordlists"],
+    // Ensure fresh data on mount
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const hasNoWordlist = wordlists && wordlists.length == 0;
@@ -65,7 +68,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
     if (isLoading) return;
 
     if (hasNoWordlist) {
-      router.push("/dashboard/welcome");
+      router.replace("/dashboard/welcome");
     }
   }, [wordlists, isLoading, router]);
 
@@ -120,21 +123,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
     </>
   );
 
-  // so that we keep the loader till we trigger the redirect to /dashboard/welcome
-  if (isLoading || hasNoWordlist) {
-    return (
-      <ImageBackground
-        source={require("@/assets/images/dashboard-bg.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.container}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF7B54" />
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
-    );
+  // Redirect to welcome screen if no wordlists
+  if (!isLoading && hasNoWordlist) {
+    router.replace("/dashboard/welcome");
+    return null;
   }
 
   return (
@@ -147,7 +139,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
         <SafeAreaView style={styles.container}>
           <OfflineIndicator />
           <FlatList
-            data={wordlists}
+            data={isLoading ? [] : wordlists}
             renderItem={renderWordlistItem}
             keyExtractor={(item) => String(item.id)}
             ListHeaderComponent={renderHeader}
@@ -162,20 +154,29 @@ const Dashboard: React.FC<DashboardProps> = () => {
               />
             }
             ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  {t("dashboard.wordlists.noWordlistsYet")}
-                </Text>
-                <TouchableOpacity
-                  style={styles.ctaButton}
-                  onPress={() => setShowCreateModal(true)}
-                >
-                  <Text style={styles.ctaButtonText}>
-                    {t("dashboard.wordlists.createFirstWordlist")}
+              isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#FF7B54" />
+                  <Text style={styles.loadingText}>
+                    {t("common.loading")}
                   </Text>
-                  <Ionicons name="add-circle" size={24} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
+                </View>
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>
+                    {t("dashboard.wordlists.noWordlistsYet")}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.ctaButton}
+                    onPress={() => setShowCreateModal(true)}
+                  >
+                    <Text style={styles.ctaButtonText}>
+                      {t("dashboard.wordlists.createFirstWordlist")}
+                    </Text>
+                    <Ionicons name="add-circle" size={24} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              )
             }
           />
         </SafeAreaView>
@@ -211,9 +212,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   loadingContainer: {
-    flex: 1,
+    paddingVertical: 60,
     justifyContent: "center",
     alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#636E72",
   },
   listContent: {
     paddingBottom: 30,

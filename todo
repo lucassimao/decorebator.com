@@ -67,10 +67,10 @@
     [x] Need to ignore temporarily_skipped_until if all words are skipped
     [x] Security abuse of api calls: Controlar quão frequente user pode reportar erro
     [x] O click no flash card deve mudar o lado dele
-    [ ] Mover componentes do Dashboard pra o índex do móbile
-    [ ] Intehtation test plan
-    [ ] Revisar como stats são computaras e exibidas
+    [x] Revisar como stats são computaras e exibidas
+    [x] Fix navigation
     [ ] Splash screen
+    [ ] Intehtation test plan
 
 [ ] MVP Release Checklist
     [x]  PostHog integration
