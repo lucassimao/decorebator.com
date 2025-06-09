@@ -78,6 +78,20 @@ const FlashcardPractice: React.FC = () => {
     }
   }, [didJustFinish, player]);
 
+    // Fetch words with definitions only to avoid broken flashcards
+  const {
+    data: words,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["words", wordlistId, "withDefinitions"],
+    queryFn: () => offlineWordlistsApi.getWords(Number(wordlistId), true),
+    enabled: !!wordlistId,
+    retry: isOnline ? 3 : 0, // Don't retry in offline mode
+  });
+
+  const currentWord = words?.[currentIndex];
+  
   // Load saved position on mount
   useEffect(() => {
     const loadSavedPosition = async () => {
@@ -153,19 +167,7 @@ const FlashcardPractice: React.FC = () => {
   const slideAnimation = useRef(new Animated.Value(0)).current;
   const scaleAnimation = useRef(new Animated.Value(1)).current;
 
-  // Fetch words with definitions only to avoid broken flashcards
-  const {
-    data: words,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["words", wordlistId, "withDefinitions"],
-    queryFn: () => offlineWordlistsApi.getWords(Number(wordlistId), true),
-    enabled: !!wordlistId,
-    retry: isOnline ? 3 : 0, // Don't retry in offline mode
-  });
 
-  const currentWord = words?.[currentIndex];
 
   // Error reporting mutation
   const reportMutation = useMutation({
