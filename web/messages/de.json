@@ -1,0 +1,927 @@
+{
+  "common": {
+    "appName": "Decorebator",
+    "loading": "Lädt...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "continue": "Fortfahren",
+    "getStarted": "Loslegen",
+    "learnMore": "Mehr erfahren",
+    "watchDemo": "Demo ansehen",
+    "signUp": "Registrieren",
+    "signIn": "Anmelden",
+    "contactUs": "Kontakt"
+  },
+  "navigation": {
+    "home": "Startseite",
+    "features": "Funktionen",
+    "pricing": "Preise",
+    "howItWorks": "Wie es funktioniert",
+    "helpCenter": "Hilfezentrum",
+    "faq": "FAQ",
+    "about": "Über uns",
+    "contact": "Kontakt",
+    "blog": "Blog",
+    "careers": "Karriere",
+    "privacy": "Datenschutz",
+    "terms": "Nutzungsbedingungen",
+    "getStartedFree": "Kostenlose Testversion"
+  },
+  "hero": {
+    "title": "Sprachen meistern mit",
+    "rotatingWords": {
+      "aiIntelligence": "KI-Intelligenz",
+      "spacedRepetition": "Verteilter Wiederholung",
+      "visualLearning": "Visuellem Lernen",
+      "smartQuizzes": "Intelligenten Quiz"
+    },
+    "subtitle": "Transformieren Sie Ihr Vokabellernen mit KI-generiertem Inhalt, wissenschaftlich bewiesener verteilter Wiederholung und 7 ansprechenden Quiz-Modi. Schließen Sie sich {count}+ Lernenden an, die effektiv neue Sprachen meistern.",
+    "startLearningFree": "Kostenlos lernen starten",
+    "watchDemo": "Demo Ansehen",
+    "stats": {
+      "rating": "4,9/5",
+      "activeLearnersCount": "10.000+ aktive Lernende",
+      "languagesCount": "7 native KI-Sprachen"
+    }
+  },
+  "features": {
+    "title": "Mächtige Funktionen für Sprachbeherrschung",
+    "subtitle": "Alles was Sie brauchen, um Ihre Vokabellernreise zu beschleunigen",
+    "aiPowered": {
+      "title": "KI-gestützte Inhaltsgenerierung",
+      "description": "Generieren Sie sofort Definitionen, Bilder, Audio und Beispiele für jedes Wort mit fortschrittlicher KI-Technologie."
+    },
+    "spacedRepetition": {
+      "title": "Wissenschaftliche Verteilte Wiederholung",
+      "description": "Meistern Sie Vokabeln effizient mit unserem 7-Box-Leitner-System, das nachweislich die Behaltensrate um 85% steigert."
+    },
+    "multipleQuizModes": {
+      "title": "7 Interaktive Quiz-Modi",
+      "description": "Von visueller Erkennung bis Hörverständnis - üben Sie mit verschiedenen Quiz-Typen für umfassendes Lernen."
+    },
+    "visualLearning": {
+      "title": "Visuelles Lernen mit KI-Bildern",
+      "description": "KI-generierte Bilder helfen dabei, stärkere Gedächtnisverbindungen für schnellere Vokabelbehaltung zu schaffen."
+    },
+    "audioLearning": {
+      "title": "Audio in Muttersprachqualität",
+      "description": "Perfekte Aussprache mit KI-generiertem Audio in Muttersprachqualität für alle unterstützten Sprachen."
+    },
+    "progressTracking": {
+      "title": "Erweiterte Analysen",
+      "description": "Verfolgen Sie Ihren Fortschritt mit detaillierten Analysen, Beherrschungsgraden und personalisierten Lerneinblicken."
+    },
+    "multiLanguage": {
+      "title": "7 Native Sprachen",
+      "description": "Vollständige KI-Unterstützung für Englisch, Spanisch, Französisch, Deutsch, Italienisch, Portugiesisch und Japanisch."
+    },
+    "offlineSupport": {
+      "title": "Offline-Lernen",
+      "description": "Premium-Nutzer können Wortlisten herunterladen und ohne Internetverbindung weiterlernen."
+    },
+    "errorReporting": {
+      "title": "Inhaltsqualitätskontrolle",
+      "description": "Melden Sie KI-Inhaltsprobleme und helfen Sie dabei, die Lernerfahrung für alle zu verbessern."
+    },
+    "mobileFirst": {
+      "title": "Plattformübergreifendes Lernen",
+      "description": "Nahtlose Erfahrung auf Handy, Tablet und Web mit automatischer Synchronisation."
+    }
+  },
+  "showcase": {
+    "title": "Sehen Sie Decorebator in Aktion",
+    "subtitle": "Erleben Sie das komplette Lernökosystem für moderne Sprachlernende",
+    "features": {
+      "aiContent": {
+        "title": "KI-generierte Inhalte",
+        "description": "Jedes Wort kommt mit KI-generierten Definitionen, Bildern, Audioaussprachen und kontextuellen Beispielen in Ihrer Zielsprache."
+      },
+      "smartQuizzes": {
+        "title": "Adaptives Quiz-System",
+        "description": "7 verschiedene Quiz-Modi, die sich an Ihren Lernfortschritt anpassen, von grundlegender Erkennung bis zu fortgeschrittenem Verständnis."
+      },
+      "analytics": {
+        "title": "Lernanalysen",
+        "description": "Verfolgen Sie Ihren Fortschritt mit detaillierten Analysen, die Beherrschungsgrade, Lerngeschwindigkeit und Behaltensraten zeigen."
+      }
+    }
+  },
+  "howItWorks": {
+    "title": "Wie Es Funktioniert",
+    "subtitle": "Meistern Sie Vokabeln in drei einfachen Schritten",
+    "step1": {
+      "title": "Erstellen & Wörter Hinzufügen",
+      "description": "Erstellen Sie Wortlisten und fügen Sie Wörter hinzu, die Sie lernen möchten. KI generiert automatisch reichhaltigen Inhalt für jedes Wort."
+    },
+    "step2": {
+      "title": "Intelligentes Üben",
+      "description": "Üben Sie mit 7 interaktiven Quiz-Modi. Unser Leitner-System optimiert die Wiederholungszeiten für maximale Behaltung."
+    },
+    "step3": {
+      "title": "Fortschritt Verfolgen",
+      "description": "Überwachen Sie Ihre Lernreise mit detaillierten Analysen und erreichen Sie schneller Vokabelbeherrschung."
+    }
+  },
+  "testimonials": {
+    "title": "Geliebt von Sprachlernenden Weltweit",
+    "subtitle": "Schließen Sie sich Tausenden erfolgreichen Lernenden an, die ihr Vokabular transformiert haben",
+    "stats": {
+      "wordsLearned": "2,5M+ gelernte Wörter",
+      "retentionRate": "85% Behaltensrate",
+      "satisfaction": "4,9/5 Zufriedenheit"
+    },
+    "testimonial1": {
+      "text": "Decorebator hat komplett verändert, wie ich Vokabeln lerne. Die KI-generierten Bilder und das System der verteilten Wiederholung halfen mir, über 500 spanische Wörter in nur 2 Monaten zu meistern!",
+      "author": "Sarah Chen",
+      "role": "Spanisch-Lernende"
+    },
+    "testimonial2": {
+      "text": "Als Sprachlehrer empfehle ich Decorebator allen meinen Schülern. Die Analysefunktion hilft mir, ihren Fortschritt zu verfolgen und die verschiedenen Quiz-Modi halten sie engagiert.",
+      "author": "Dr. Marcus Weber",
+      "role": "Sprachprofessor"
+    },
+    "testimonial3": {
+      "text": "Die Offline-Funktion ist perfekt für meine Fahrt zur Arbeit. Ich kann Vokabeln in der U-Bahn üben, ohne mir Sorgen über die Internetverbindung zu machen. Die KI-Inhaltsqualität ist beeindruckend!",
+      "author": "Yuki Tanaka",
+      "role": "Geschäftsprofi"
+    }
+  },
+  "faq": {
+    "title": "Häufig Gestellte Fragen",
+    "subtitle": "Alles was Sie über Decorebator wissen müssen",
+    "question1": {
+      "question": "Welche Sprachen unterstützt Decorebator?",
+      "answer": "Decorebator bietet vollständige KI-gestützte Unterstützung für 7 Sprachen: Englisch, Spanisch, Französisch, Deutsch, Italienisch, Portugiesisch und Japanisch. Jede Sprache hat muttersprachliche Inhaltsgenerierung, kulturell relevante Bilder und optimierte Stimmauswahl."
+    },
+    "question2": {
+      "question": "Wie funktioniert das Leitner-System?",
+      "answer": "Unser 7-Box-Leitner-System verwendet wissenschaftlich bewiesene verteilte Wiederholung. Wörter bewegen sich zwischen Boxen basierend auf Ihrer Leistung, mit Wiederholungsintervallen von sofort (Box 1) bis monatlich (Box 7). Dies optimiert Lerneffizienz und langfristige Behaltung."
+    },
+    "question3": {
+      "question": "Was ist im Premium-Plan enthalten?",
+      "answer": "Premium beinhaltet unbegrenzte Wortlisten und Wörter, alle 7 Quiz-Modi, KI-generierten Inhalt für jedes Wort, erweiterte Analysen, Offline-Unterstützung und priorisierten Kundensupport. Kostenlose Nutzer erhalten 1 Wortliste mit bis zu 10 Wörtern."
+    },
+    "question4": {
+      "question": "Kann ich Decorebator offline verwenden?",
+      "answer": "Ja! Premium-Abonnenten können ihre Wortlisten für Offline-Zugang herunterladen. Sie können Quiz üben und Karteikarten ohne Internetverbindung durchgehen, mit Fortschrittssynchronisation wenn Sie wieder online sind."
+    },
+    "question5": {
+      "question": "Wie genau ist der KI-generierte Inhalt?",
+      "answer": "Unser KI-Inhalt ist hochpräzise und verbessert sich kontinuierlich. Wir verwenden fortschrittliche Sprachmodelle, die auf umfangreichen Datensätzen trainiert wurden. Zusätzlich ermöglicht unser Fehlermeldungssystem Nutzern, Probleme zu markieren und hilft uns, die Inhaltsqualität zu erhalten und zu verbessern."
+    },
+    "question6": {
+      "question": "Gibt es eine mobile App?",
+      "answer": "Ja! Decorebator ist auf iOS und Android mit vollständiger Funktionsparität verfügbar. Ihr Fortschritt synchronisiert sich nahtlos zwischen der mobilen App und der Web-Plattform, sodass Sie überall lernen können."
+    }
+  },
+  "pricing": {
+    "title": "Wählen Sie Ihren Lernplan",
+    "subtitle": "Starten Sie kostenlos, upgraden Sie wenn Sie bereit sind, Ihr Lernen zu beschleunigen",
+    "free": {
+      "title": "Kostenloser Plan",
+      "price": "0€",
+      "period": "",
+      "description": "Perfekt um die Plattform auszuprobieren",
+      "features": {
+        "wordlists": "1 Wortliste",
+        "words": "Bis zu 10 Wörter",
+        "quizModes": "Basis-Quiz-Modi",
+        "access": "Nur Online-Zugang"
+      },
+      "cta": "Kostenlos starten"
+    },
+    "monthly": {
+      "title": "Monatlich Premium",
+      "price": "6,99€",
+      "period": "/Monat",
+      "description": "Vollzugang zu allen Premium-Funktionen",
+      "badge": "Am Beliebtesten",
+      "features": {
+        "wordlists": "Unbegrenzte Wortlisten",
+        "words": "Unbegrenzte Wörter",
+        "quizModes": "Alle 7 Quiz-Modi",
+        "analytics": "Erweiterte Analysen",
+        "offline": "Offline-Unterstützung",
+        "support": "Prioritätssupport"
+      },
+      "cta": "Monatlich starten"
+    },
+    "annual": {
+      "title": "Jährlich Premium",
+      "price": "69,90€",
+      "period": "/Jahr",
+      "description": "Bester Wert für engagierte Lernende",
+      "savings": "Sparen Sie 13,98€!",
+      "features": {
+        "everything": "Alles in Monatlich",
+        "value": "Bestes Preis-Leistungs-Verhältnis",
+        "support": "Prioritäts-Kundensupport",
+        "earlyAccess": "Früher Zugang zu Funktionen"
+      },
+      "cta": "Jährlich starten"
+    }
+  },
+  "cta": {
+    "title": "Bereit, Ihr Sprachenlernen zu Transformieren?",
+    "subtitle": "Schließen Sie sich 10.000+ Lernenden an, die neue Sprachen mit KI-gestütztem Vokabellernen und verteilter Wiederholung meistern.",
+    "startFreeTrial": "Starten Sie Ihre Kostenlose Testversion"
+  },
+  "contact": {
+    "title": "Kontakt Aufnehmen",
+    "subtitle": "Haben Sie Fragen? Wir würden gerne von Ihnen hören.",
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Ihr Name",
+      "email": "E-Mail",
+      "emailPlaceholder": "ihre@email.com",
+      "subject": "Betreff",
+      "subjectPlaceholder": "Worum geht es?",
+      "message": "Nachricht",
+      "messagePlaceholder": "Erzählen Sie uns mehr...",
+      "send": "Nachricht Senden",
+      "sending": "Wird gesendet...",
+      "success": "Nachricht erfolgreich gesendet!",
+      "error": "Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut."
+    },
+    "info": {
+      "email": "support@decorebator.com",
+      "response": "Wir antworten normalerweise innerhalb von 24 Stunden",
+      "social": "Folgen Sie uns in sozialen Medien für Updates"
+    }
+  },
+  "footer": {
+    "copyright": "© {year} Decorebator. Alle Rechte vorbehalten.",
+    "about": {
+      "title": "Über uns",
+      "soloEntrepreneur": "Solo-Unternehmer",
+      "location": "Brasilien 🇧🇷",
+      "description": "Verantwortlich für die Architektur, vollständige Implementierung und das Design dieses Projekts. Lösung eines persönlichen Problems und dachte, es wäre interessant, es mit anderen zu teilen.",
+      "followTwitter": "Auf Twitter folgen"
+    },
+    "social": {
+      "facebook": "Decorebator auf Facebook",
+      "twitter": "Decorebator auf Twitter",
+      "instagram": "Decorebator auf Instagram",
+      "linkedin": "Decorebator auf LinkedIn"
+    }
+  },
+  "help": {
+    "title": "Hilfezentrum",
+    "subtitle": "Alles was Sie über Decorebator wissen müssen - KI-gestütztes Vokabellernen",
+    "quickNavigation": "Schnelle Navigation",
+    "gettingStarted": {
+      "title": "Erste Schritte",
+      "createAccount": {
+        "title": "1. Erstellen Sie Ihr Konto",
+        "steps": [
+          "Registrieren Sie sich mit E-Mail und Passwort",
+          "Wählen Sie Ihren Lernplan (Kostenlos oder Premium)",
+          "Laden Sie die mobile App aus Ihrem App Store herunter",
+          "Melden Sie sich mit denselben Anmeldedaten an"
+        ]
+      },
+      "startLearning": {
+        "title": "2. Mit dem Lernen Beginnen",
+        "steps": [
+          "Erstellen Sie Ihre erste Wortliste",
+          "Fügen Sie Wörter hinzu, die Sie lernen möchten",
+          "KI generiert automatisch Definitionen und Inhalte",
+          "Beginnen Sie mit interaktiven Quiz zu üben"
+        ]
+      },
+      "proTip": "Beginnen Sie mit 5-10 Wörtern in Ihrer ersten Wortliste, um sich mit dem System vertraut zu machen, bevor Sie mehr hinzufügen!"
+    },
+    "coreFeatures": {
+      "title": "Kernfunktionen",
+      "aiPowered": {
+        "title": "KI-gestützte Inhalte",
+        "description": "Generiert automatisch Definitionen, Bilder, Audioaussprachen und Beispielsätze für jedes Wort, das Sie hinzufügen."
+      },
+      "quizModes": {
+        "title": "7 Quiz-Modi",
+        "modes": [
+          "Bedeutung Erraten",
+          "Wort aus Bedeutung",
+          "Bildassoziation",
+          "Hörverständnis",
+          "Satzvervollständigung",
+          "Aus Definition Schreiben",
+          "Audioerkennung"
+        ]
+      },
+      "spacedRepetition": {
+        "title": "Verteilte Wiederholung",
+        "description": "Verwendet das wissenschaftlich bewiesene Leitner-System mit 7 Boxen, um zu optimieren, wann Sie Wörter für maximale Behaltung wiederholen."
+      },
+      "analytics": {
+        "title": "Erweiterte Analysen",
+        "description": "Verfolgen Sie Ihren Fortschritt mit detaillierten Statistiken, Wortbeherrschungsgraden, Lerngeschwindigkeit und Behaltensraten."
+      },
+      "multiLanguage": {
+        "title": "Mehrsprachige Unterstützung",
+        "description": "Native KI-Unterstützung für 7 Sprachen: Englisch, Spanisch, Französisch, Deutsch, Italienisch, Portugiesisch und Japanisch."
+      },
+      "offline": {
+        "title": "Offline-Unterstützung",
+        "description": "Premium-Nutzer können Wortlisten für Offline-Zugang herunterladen und ohne Internetverbindung weiterlernen."
+      }
+    },
+    "leitnerSystem": {
+      "title": "Wie das Leitner-System Funktioniert",
+      "description": "Decorebator verwendet ein ausgeklügeltes 7-Box-Leitner-System für optimale Vokabelbehaltung durch verteilte Wiederholung.",
+      "table": {
+        "box": "Box",
+        "interval": "Wiederholungsintervall",
+        "purpose": "Zweck",
+        "boxes": [
+          {"box": "Box 1", "interval": "Sofort", "purpose": "Neue Wörter, fehlgeschlagene Wiederholungen"},
+          {"box": "Box 2", "interval": "1 Stunde", "purpose": "Kürzliches Lernen"},
+          {"box": "Box 3", "interval": "1 Tag", "purpose": "Kurzfristige Behaltung"},
+          {"box": "Box 4", "interval": "3 Tage", "purpose": "Mittelfristige Behaltung"},
+          {"box": "Box 5", "interval": "1 Woche", "purpose": "Langfristige Behaltung"},
+          {"box": "Box 6", "interval": "2 Wochen", "purpose": "Erweiterte Behaltung"},
+          {"box": "Box 7", "interval": "1 Monat", "purpose": "Beherrschte Wörter"}
+        ]
+      },
+      "progressionRules": {
+        "title": "Fortschrittsregeln",
+        "correct": "Richtige Antwort: Wort geht zur nächsten Box",
+        "incorrect": "Falsche Antwort: Wort kehrt zu Box 1 zurück",
+        "mastered": "Box 7: Wörter bleiben in Box 7 wenn richtig (beherrscht)"
+      },
+      "quizProgression": {
+        "title": "Quiz-Typ Fortschritt",
+        "description": "Verschiedene Quiz-Typen werden basierend auf dem Box-Level des Wortes eingeführt, um die Schwierigkeit progressiv zu steigern, während Sie jedes Wort meistern."
+      }
+    },
+    "subscriptionPlans": {
+      "title": "Abonnement-Pläne"
+    },
+    "languageSupport": {
+      "title": "Mehrsprachige Unterstützung",
+      "description": "Decorebator bietet umfassende mehrsprachige Unterstützung mit nativer KI-Verarbeitung für authentische Lernerfahrungen.",
+      "supportedLanguages": "Unterstützte Sprachen (7)",
+      "aiFeatures": "KI-Funktionen pro Sprache",
+      "features": [
+        "Native Grammatik: Sprachspezifische Regeln und Strukturen",
+        "Kultureller Kontext: Kulturell relevante Bilder und Beispiele",
+        "Optimiertes Audio: Muttersprachliche Stimmauswahl pro Sprache",
+        "Verbsysteme: Sprachgerechte Zeiten und Beugungen"
+      ]
+    },
+    "troubleshooting": {
+      "title": "Fehlerbehebung & Support",
+      "commonIssues": "Häufige Probleme",
+      "audioNotPlaying": {
+        "title": "Audio wird nicht abgespielt",
+        "solution": "Überprüfen Sie die Lautstärke Ihres Geräts und stellen Sie sicher, dass Sie eine stabile Internetverbindung haben. Audio wird von KI generiert und erfordert Online-Zugang."
+      },
+      "imagesNotLoading": {
+        "title": "Bilder laden nicht",
+        "solution": "Bilder werden von KI generiert und können einige Momente brauchen, um zu erscheinen. Aktualisieren Sie das Quiz oder verwenden Sie die Fehlermeldungsfunktion, wenn Probleme bestehen bleiben."
+      },
+      "subscriptionNotUpdating": {
+        "title": "Abonnement wird nicht aktualisiert",
+        "solution": "Schließen Sie nach Abschluss der Zahlung die App und öffnen Sie sie erneut, um Ihren Abonnementstatus zu aktualisieren. Änderungen sollten innerhalb weniger Minuten erscheinen."
+      },
+      "errorReporting": {
+        "title": "Fehlermeldung",
+        "description": "Wenn Sie Probleme mit KI-generierten Inhalten haben, verwenden Sie unser integriertes Fehlermeldungssystem:",
+        "types": [
+          "Falsche Definitionen melden",
+          "Unpassende Bilder markieren",
+          "Audio-Wiedergabeprobleme melden",
+          "Irrelevante Beispiele einreichen",
+          "Ladeprobleme markieren"
+        ]
+      },
+      "needHelp": {
+        "title": "Brauchen Sie Mehr Hilfe?",
+        "description": "Unser Support-Team ist hier, um Ihnen zu helfen, das Beste aus Decorebator herauszuholen.",
+        "email": "Support Kontaktieren: support@decorebator.com"
+      }
+    },
+    "stillNeedHelp": {
+      "title": "Brauchen Sie Noch Hilfe?",
+      "subtitle": "Unser Support-Team ist bereit, Sie bei allen Fragen oder Problemen zu unterstützen.",
+      "emailSupport": "E-Mail Support",
+      "contactForm": "Kontaktformular"
+    }
+  },
+  "signup": {
+    "title": "Treten Sie Decorebator Bei",
+    "subtitle": "Starten Sie heute Ihre Sprachlernreise",
+    "planSelection": {
+      "free": "Sie melden sich für den kostenlosen Plan an",
+      "monthly": "Sie melden sich für den Monatlichen Premium-Plan an (6,99€/Monat)",
+      "annual": "Sie melden sich für den Jährlichen Premium-Plan an (69,90€/Jahr)"
+    },
+    "form": {
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail-Adresse",
+      "password": "Passwort",
+      "confirmPassword": "Passwort Bestätigen",
+      "firstNamePlaceholder": "Geben Sie Ihren Vornamen ein",
+      "lastNamePlaceholder": "Geben Sie Ihren Nachnamen ein",
+      "emailPlaceholder": "Geben Sie Ihre E-Mail-Adresse ein",
+      "passwordPlaceholder": "Erstellen Sie ein sicheres Passwort",
+      "confirmPasswordPlaceholder": "Bestätigen Sie Ihr Passwort"
+    },
+    "features": {
+      "title": "Was Sie bekommen werden:",
+      "free": [
+        "1 Wortliste mit bis zu 10 Wörtern",
+        "Basis-Quiz-Modi",
+        "KI-generierte Inhalte",
+        "Mobiler und Web-Zugang"
+      ],
+      "premium": [
+        "Unbegrenzte Wortlisten und Wörter",
+        "Alle 7 Quiz-Modi",
+        "Erweiterte Analysen",
+        "Offline-Unterstützung",
+        "Prioritätssupport"
+      ]
+    },
+    "terms": "Durch die Anmeldung stimmen Sie unseren {termsLink} und {privacyLink} zu",
+    "createAccount": "Konto Erstellen",
+    "creating": "Konto wird erstellt...",
+    "alreadyHaveAccount": "Haben Sie bereits ein Konto? {signInLink}",
+    "errors": {
+      "firstNameRequired": "Vorname ist erforderlich",
+      "lastNameRequired": "Nachname ist erforderlich",
+      "emailRequired": "E-Mail ist erforderlich",
+      "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+      "passwordRequired": "Passwort ist erforderlich",
+      "passwordTooShort": "Passwort muss mindestens 8 Zeichen lang sein",
+      "passwordsMismatch": "Passwörter stimmen nicht überein",
+      "signupFailed": "Konto konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
+    }
+  },
+  "signupSuccess": {
+    "title": "Willkommen bei Decorebator!",
+    "subtitle": "Ihr Konto wurde erfolgreich erstellt",
+    "freeFlow": {
+      "title": "Sie sind bereit mit dem kostenlosen Plan!",
+      "description": "Laden Sie die mobile App herunter, um mit dem Vokabellernen mit KI-gestützten Inhalten und verteilter Wiederholung zu beginnen.",
+      "nextSteps": "Nächste Schritte:",
+      "steps": [
+        "Laden Sie die Decorebator App herunter",
+        "Melden Sie sich mit Ihrem Konto an",
+        "Erstellen Sie Ihre erste Wortliste",
+        "Beginnen Sie zu lernen!"
+      ]
+    },
+    "premiumFlow": {
+      "title": "Vervollständigen Sie Ihr Premium-Setup",
+      "description": "Sie sind nur einen Schritt davon entfernt, unbegrenztes Lernpotential freizuschalten.",
+      "redirecting": "Weiterleitung zur sicheren Zahlung...",
+      "manualRedirect": "Falls Sie nicht automatisch weitergeleitet werden, {clickHere}.",
+      "clickHere": "klicken Sie hier",
+      "afterPayment": "Nach Abschluss der Zahlung:",
+      "steps": [
+        "Laden Sie die mobile App herunter",
+        "Melden Sie sich an, um Ihre Premium-Funktionen zu sehen",
+        "Erstellen Sie unbegrenzte Wortlisten",
+        "Greifen Sie auf alle 7 Quiz-Modi und Offline-Support zu"
+      ],
+      "premiumFeatures": "Premium-Funktionen, Die Sie Freischalten:",
+      "features": [
+        "Unbegrenzte Wortlisten und Wörter",
+        "Alle 7 interaktiven Quiz-Modi",
+        "Erweiterte Lernanalysen",
+        "Offline-Lernunterstützung",
+        "Prioritäts-Kundensupport"
+      ]
+    },
+    "downloadApp": "App Herunterladen",
+    "appStore": "Im App Store Herunterladen",
+    "googlePlay": "Bei Google Play Herunterladen",
+    "webVersion": "Oder mit der Web-Version fortfahren",
+    "continueToApp": "Zur App Fortfahren"
+  },
+  "featurePages": {
+    "aiContent": {
+      "title": "KI-gestützte Inhaltsgenerierung",
+      "subtitle": "Reichern Sie Ihr Vokabular automatisch mit Definitionen, Beispielen, Bildern und Audio an",
+      "description": "Verwandeln Sie jedes Wort in eine reichhaltige Lernerfahrung mit unserer fortschrittlichen KI-Technologie, die umfassenden Inhalt für jedes Wort generiert, das Sie zu Ihren Wortlisten hinzufügen.",
+      "hero": {
+        "title": "Erweitern Sie Jedes Wort mit KI",
+        "subtitle": "Erleben Sie die Kraft von KI-generierten Definitionen, kontextuellen Beispielen, visuellen Assoziationen und muttersprachlicher Aussprache für beschleunigtes Vokabellernen."
+      },
+      "benefits": {
+        "title": "Vorteile des KI-gestützten Lernens",
+        "items": [
+          "Sofortige umfassende Definitionen für jedes Wort",
+          "Kontextuelle Beispiele in Ihrer Zielsprache",
+          "KI-generierte Bilder für visuelle Gedächtnisassoziation",
+          "Muttersprachliche Audio-Aussprache",
+          "Grammatik- und Verwendungseinsichten",
+          "Kultureller Kontext und Nuancen"
+        ]
+      },
+      "howItWorks": {
+        "title": "Wie KI-Inhaltsgenerierung Funktioniert",
+        "steps": [
+          {
+            "title": "Wörter Hinzufügen",
+            "description": "Fügen Sie einfach jedes Wort zu Ihrer Wortliste hinzu - keine manuelle Recherche erforderlich."
+          },
+          {
+            "title": "KI-Verarbeitung",
+            "description": "Unsere fortschrittlichen KI-Modelle analysieren das Wort und generieren umfassenden Inhalt."
+          },
+          {
+            "title": "Reichhaltiges Lernen",
+            "description": "Erhalten Sie sofort Definitionen, Beispiele, Bilder und Audio für effektives Lernen."
+          }
+        ]
+      },
+      "features": {
+        "title": "KI-Inhaltsfunktionen",
+        "definitions": "Umfassende Definitionen mit mehreren Bedeutungen und Kontexten",
+        "examples": "Reale Verwendungsbeispiele in Ihrer Zielsprache",
+        "images": "Visuelle Assoziationen zur Stärkung der Gedächtnisbehaltung",
+        "audio": "Perfekte Aussprache in muttersprachlicher Qualität",
+        "grammar": "Wortart und grammatische Informationen",
+        "culture": "Kultureller Kontext und Verwendungshinweise"
+      }
+    },
+    "spacedRepetition": {
+      "title": "Leitner Verteilte Wiederholung System",
+      "subtitle": "Meistern Sie Vokabeln mit wissenschaftlich bewiesener Lernoptimierung",
+      "description": "Unser fortschrittliches 7-Box-Leitner-System optimiert, wann Sie jedes Wort wiederholen, für maximale Behaltung und langfristige Gedächtnisbildung.",
+      "hero": {
+        "title": "Wissenschaftliche Lernoptimierung",
+        "subtitle": "Steigern Sie die Vokabelbehaltung um 85% mit unserem bewährten verteilten Wiederholungssystem basierend auf kognitiver Wissenschaftsforschung."
+      },
+      "benefits": {
+        "title": "Warum Verteilte Wiederholung Funktioniert",
+        "items": [
+          "85% Verbesserung der langfristigen Behaltung",
+          "Optimierte Wiederholungszeiten für jedes Wort",
+          "Verhindert Pauken und Vergessenszyklen",
+          "Baut starke neuronale Bahnen auf",
+          "Maximiert Lerneffizienz",
+          "Wissenschaftlich fundierte Methodik"
+        ]
+      },
+      "system": {
+        "title": "7-Box-Leitner-System",
+        "description": "Wörter durchlaufen 7 Boxen basierend auf Ihrer Leistung, mit zunehmenden Wiederholungsintervallen:",
+        "boxes": [
+          { "box": "Box 1", "interval": "Sofort", "purpose": "Neue Wörter, fehlgeschlagene Wiederholungen" },
+          { "box": "Box 2", "interval": "1 Stunde", "purpose": "Kürzliches Lernen" },
+          { "box": "Box 3", "interval": "1 Tag", "purpose": "Kurzfristige Behaltung" },
+          { "box": "Box 4", "interval": "3 Tage", "purpose": "Mittelfristige Behaltung" },
+          { "box": "Box 5", "interval": "1 Woche", "purpose": "Langfristige Behaltung" },
+          { "box": "Box 6", "interval": "2 Wochen", "purpose": "Erweiterte Behaltung" },
+          { "box": "Box 7", "interval": "1 Monat", "purpose": "Beherrschte Wörter" }
+        ]
+      },
+      "progression": {
+        "title": "Intelligente Fortschrittsregeln",
+        "correct": "Richtige Antworten bewegen Wörter zur nächsten Box mit längeren Intervallen",
+        "incorrect": "Falsche Antworten setzen Wörter zurück zu Box 1 für sofortige Wiederholung",
+        "mastered": "Wörter in Box 7 bleiben beherrscht mit monatlichen Wartungswiederholungen"
+      }
+    },
+    "quizModes": {
+      "title": "7 Ansprechende Quiz-Modi",
+      "subtitle": "Umfassendes Testen mit mehreren Lernansätzen",
+      "description": "Fordern Sie sich selbst mit 7 verschiedenen Quiz-Typen heraus, die entwickelt wurden, um verschiedene Aspekte des Vokabelwissens und Abrufs zu testen und zu stärken.",
+      "hero": {
+        "title": "Multi-Modale Lernerfahrung",
+        "subtitle": "Aktivieren Sie verschiedene Lernwege mit abwechslungsreichen Quiz-Modi, die Erkennung, Abruf, Verständnis und Anwendung testen."
+      },
+      "modes": {
+        "title": "Verfügbare Quiz-Modi",
+        "guessMeaning": {
+          "title": "Bedeutung Erraten",
+          "description": "Wählen Sie die richtige Definition aus mehreren Optionen, um das Verständnis zu testen"
+        },
+        "wordFromMeaning": {
+          "title": "Wort aus Bedeutung",
+          "description": "Wählen Sie das richtige Wort, das zu einer gegebenen Definition passt"
+        },
+        "imageAssociation": {
+          "title": "Bildassoziation",
+          "description": "Identifizieren Sie Wörter aus KI-generierten visuellen Darstellungen"
+        },
+        "audioComprehension": {
+          "title": "Hörverständnis",
+          "description": "Erkennen Sie Wörter und Bedeutungen aus der Aussprache"
+        },
+        "sentenceCompletion": {
+          "title": "Satzvervollständigung",
+          "description": "Vervollständigen Sie Sätze mit grammatischen und kontextuellen Hinweisen"
+        },
+        "writeFromDefinition": {
+          "title": "Aus Definition Schreiben",
+          "description": "Tippen Sie das richtige Wort basierend auf seiner Bedeutung (aktiver Abruf)"
+        },
+        "audioRecognition": {
+          "title": "Audioerkennung",
+          "description": "Ordnen Sie gesprochene Wörter ihren geschriebenen Formen zu"
+        }
+      },
+      "benefits": {
+        "title": "Vorteile Mehrerer Quiz-Modi",
+        "items": [
+          "Aktiviert verschiedene Lernwege",
+          "Verhindert Monotonie und Langeweile",
+          "Testet verschiedene Aspekte des Wissens",
+          "Baut umfassendes Verständnis auf",
+          "Passt sich an verschiedene Lernstile an",
+          "Erhöht Behaltung durch Vielfalt"
+        ]
+      }
+    },
+    "visualLearning": {
+      "title": "Visuelles Lernen mit KI-Bildern",
+      "subtitle": "Stärken Sie das Gedächtnis mit kraftvollen visuellen Assoziationen",
+      "description": "Nutzen Sie die Kraft des visuellen Gedächtnisses mit KI-generierten Bildern, die starke mentale Assoziationen für jedes Wort in Ihrem Vokabular schaffen.",
+      "hero": {
+        "title": "Sehen, Lernen, Erinnern",
+        "subtitle": "Verwandeln Sie abstrakte Wörter in einprägsame visuelle Erfahrungen mit KI-generierten Bildern, die auf die Verbesserung Ihres Lernens zugeschnitten sind."
+      },
+      "benefits": {
+        "title": "Kraft des Visuellen Lernens",
+        "items": [
+          "Visuelles Gedächtnis ist 6x stärker als Text allein",
+          "Schafft dauerhafte mentale Assoziationen",
+          "Aktiviert mehrere Lernwege",
+          "Verbessert Abrufgeschwindigkeit und -genauigkeit",
+          "Macht abstrakte Konzepte konkret",
+          "Verbessert langfristige Behaltung"
+        ]
+      },
+      "features": {
+        "title": "KI-Bildfunktionen",
+        "generation": "Maßgeschneiderte Bilder für jedes Wort generiert",
+        "context": "Kontextuell relevante visuelle Darstellungen",
+        "culture": "Kulturell angemessene Bildsprache",
+        "quality": "Hochwertige KI-generierte Visuals",
+        "association": "Für optimale Gedächtnisassoziation entwickelt",
+        "variety": "Vielfältige visuelle Stile und Ansätze"
+      },
+      "science": {
+        "title": "Die Wissenschaft Hinter Visuellem Lernen",
+        "description": "Forschung zeigt, dass visuelles Lernen Behaltung und Abruf erheblich verbessert. Unsere KI-generierten Bilder sind speziell darauf ausgelegt, die stärkstmöglichen Gedächtnisassoziationen zu schaffen."
+      }
+    },
+    "audioLearning": {
+      "title": "Mehrsprachiges Audio-Lernen",
+      "subtitle": "Perfekte Aussprache mit muttersprachlichen Stimmen",
+      "description": "Meistern Sie die Aussprache mit unserer fortschrittlichen Text-zu-Sprache-Technologie mit sprachoptimierten Stimmen für authentisches, muttersprachlich klingendes Audio.",
+      "hero": {
+        "title": "Richtig Hören, Richtig Sprechen",
+        "subtitle": "Erleben Sie authentische Aussprache mit KI-gestütztem Audio, das sich an die einzigartigen Eigenschaften und Klänge jeder Sprache anpasst."
+      },
+      "features": {
+        "title": "Audio-Lernfunktionen",
+        "quality": "Muttersprachliche Qualität für alle 7 unterstützten Sprachen",
+        "optimization": "Sprachspezifische Stimmauswahl und -optimierung",
+        "clarity": "Kristallklare Aussprache für jedes Wort",
+        "speed": "Verstellbare Wiedergabegeschwindigkeit zum Lernen",
+        "repetition": "Unbegrenzte Audio-Wiederholung zum Üben",
+        "offline": "Heruntergeladenes Audio funktioniert offline (Premium)"
+      },
+      "languages": {
+        "title": "Unterstützte Sprachen",
+        "description": "Muttersprachliche Audio-Generierung für:",
+        "list": [
+          "Englisch - Mehrere Akzentvariationen",
+          "Spanisch - Lateinamerikanisch und Europäisch",
+          "Französisch - Standard-Französische Aussprache",
+          "Deutsch - Hochdeutscher Standard",
+          "Italienisch - Standard-Italienisch",
+          "Portugiesisch - Brasilianisches Portugiesisch",
+          "Japanisch - Tokyo-Standard-Aussprache"
+        ]
+      },
+      "benefits": {
+        "title": "Vorteile des Audio-Lernens",
+        "items": [
+          "Aussprachepräzision verbessern",
+          "Hörverständnis entwickeln",
+          "Richtige Wortbetonung und Intonation lernen",
+          "Selbstvertrauen beim Sprechen aufbauen",
+          "Auditives Gedächtnis stärken",
+          "Authentische Aussprache üben"
+        ]
+      }
+    },
+    "analytics": {
+      "title": "Erweiterte Lernanalysen",
+      "subtitle": "Verfolgen Sie Fortschritte mit umfassenden Einsichten und Statistiken",
+      "description": "Überwachen Sie Ihre Vokabellernreise mit detaillierten Analysen, die umsetzbare Einsichten in Ihren Fortschritt, Stärken und Verbesserungsbereiche bieten.",
+      "hero": {
+        "title": "Datengestützter Lernerfolg",
+        "subtitle": "Treffen Sie informierte Entscheidungen über Ihre Lerngewohnheiten mit umfassenden Analysen, die jeden Aspekt Ihres Vokabellernens verfolgen."
+      },
+      "metrics": {
+        "title": "Wichtige Analytische Kennzahlen",
+        "retention": "Behaltungsraten nach Wort und Kategorie",
+        "speed": "Lerngeschwindigkeit und Verbesserungstrends",
+        "mastery": "Wortbeherrschungsgrade und Fortschritt",
+        "accuracy": "Quiz-Genauigkeit über verschiedene Modi",
+        "time": "Lernzeit und Sitzungsanalysen",
+        "streaks": "Lernsträhnen und Konsistenz"
+      },
+      "insights": {
+        "title": "Umsetzbare Einsichten",
+        "items": [
+          "Identifizieren Sie Ihre stärksten Lernzeiten",
+          "Entdecken Sie, welche Quiz-Modi am besten für Sie funktionieren",
+          "Verfolgen Sie langfristige Behaltungsmuster",
+          "Optimieren Sie die Länge der Lernsitzungen",
+          "Überwachen Sie Lerngeschwindigkeitstrends",
+          "Setzen Sie Vokabelziele und erreichen Sie sie"
+        ]
+      },
+      "features": {
+        "title": "Analytikfunktionen",
+        "dashboard": "Umfassendes Fortschritts-Dashboard",
+        "trends": "Visuelle Lerntrendanalyse",
+        "goals": "Zielsetzung und -verfolgung",
+        "reports": "Detaillierte Leistungsberichte",
+        "comparison": "Fortschrittsvergleich über Zeit",
+        "export": "Analytikdaten exportieren (Premium)"
+      }
+    },
+    "multiLanguage": {
+      "title": "7 Native KI-Sprachen",
+      "subtitle": "Vollständige KI-Unterstützung mit sprachspezifischer Verarbeitung",
+      "description": "Erleben Sie authentisches Sprachenlernen mit nativer KI-Verarbeitung, die die einzigartige Grammatik, Kultur und Nuancen jeder unterstützten Sprache versteht.",
+      "hero": {
+        "title": "Echte Mehrsprachige KI",
+        "subtitle": "Jede Sprache erhält dedizierte KI-Verarbeitung mit nativen Grammatikregeln, kulturellem Kontext und sprachlicher Genauigkeit."
+      },
+      "languages": {
+        "title": "Unterstützte Sprachen",
+        "english": "Englisch - Globale Variationen und Kontexte",
+        "spanish": "Spanisch - Lateinamerikanische und europäische Varianten",
+        "french": "Französisch - Standard-Französisch mit kulturellen Nuancen",
+        "german": "Deutsch - Hochdeutsch mit Unterstützung für zusammengesetzte Wörter",
+        "italian": "Italienisch - Standard-Italienisch mit regionalem Bewusstsein",
+        "portuguese": "Portugiesisch - Schwerpunkt auf brasilianischem Portugiesisch",
+        "japanese": "Japanisch - Hiragana-, Katakana- und Kanji-Unterstützung"
+      },
+      "features": {
+        "title": "Sprachspezifische Funktionen",
+        "grammar": "Native Grammatikregeln und Strukturen",
+        "culture": "Kultureller Kontext und angemessene Verwendung",
+        "pronunciation": "Sprachoptimierte Stimmauswahl",
+        "examples": "Authentische Beispiele in der Zielsprache",
+        "nuances": "Idiomatische Ausdrücke und Nuancen",
+        "variations": "Regionale und dialektale Variationen"
+      },
+      "benefits": {
+        "title": "Vorteile der Nativen KI-Verarbeitung",
+        "items": [
+          "Präzise Grammatik- und Verwendungsmuster",
+          "Kulturell angemessene Inhalte",
+          "Authentische Sprachbeispiele",
+          "Richtige Aussprachehilfen",
+          "Kontextbewusste Übersetzungen",
+          "Inhalte in muttersprachlicher Qualität"
+        ]
+      }
+    },
+    "flashcards": {
+      "title": "Interaktive Karteikarten",
+      "subtitle": "Immersives Vollbild-Lernen mit reichhaltigen Inhalten",
+      "description": "Lernen Sie mit wunderschön gestalteten interaktiven Karteikarten, die umfassende Wortinformationen in einem ansprechenden, ablenkungsfreien Format präsentieren.",
+      "hero": {
+        "title": "Konzentrieren Sie Sich auf Das Wesentliche",
+        "subtitle": "Tauchen Sie ins Lernen ein mit Vollbild-Karteikarten, die Ablenkungen eliminieren und die Behaltung maximieren."
+      },
+      "features": {
+        "title": "Karteikarten-Funktionen",
+        "fullscreen": "Immersive Vollbild-Erfahrung",
+        "animations": "Flüssige Wende-Animationen und Übergänge",
+        "content": "Reichhaltige Inhalte mit Definitionen, Beispielen und Audio",
+        "images": "KI-generierte visuelle Assoziationen",
+        "audio": "Integrierte Aussprache-Wiedergabe",
+        "reporting": "Eingebautes Fehlermeldungssystem"
+      },
+      "design": {
+        "title": "Durchdachtes Design",
+        "items": [
+          "Saubere, ablenkungsfreie Benutzeroberfläche",
+          "Für Fokus und Konzentration optimiert",
+          "Flüssige Animationen verbessern die Erfahrung",
+          "Konsistentes Design über alle Geräte",
+          "Barrierefreie Funktionen",
+          "Anpassbare Lerneinstellungen"
+        ]
+      },
+      "integration": {
+        "title": "Nahtlose Integration",
+        "description": "Karteikarten funktionieren nahtlos mit dem Leitner-System und planen automatisch Wiederholungssitzungen basierend auf Ihrem Lernfortschritt und Behaltensmuster."
+      }
+    },
+    "errorReporting": {
+      "title": "Fehlermeldungssystem",
+      "subtitle": "Nutzergesteuerte Qualitätskontrolle für kontinuierliche Verbesserung",
+      "description": "Helfen Sie mit, die Plattform für alle zu verbessern, indem Sie Probleme mit KI-generierten Inhalten über unser umfassendes Fehlermeldungssystem melden.",
+      "hero": {
+        "title": "Community-Gestützte Qualität",
+        "subtitle": "Tragen Sie zu besseren Lernerfahrungen bei, indem Sie Inhaltsprobleme melden und uns helfen, unsere KI-Modelle kontinuierlich zu verbessern."
+      },
+      "types": {
+        "title": "Fehlertypen, Die Sie Melden Können",
+        "definition": "Falsche oder unvollständige Definitionen",
+        "image": "Unpassende oder irrelevante Bilder",
+        "audio": "Audio-Wiedergabe- oder Aussprachprobleme",
+        "example": "Irrelevante oder falsche Beispielsätze",
+        "loading": "Inhaltsladeprobleme oder Anzeigeprobleme"
+      },
+      "process": {
+        "title": "Wie Fehlermeldung Funktioniert",
+        "steps": [
+          {
+            "title": "Problem Identifizieren",
+            "description": "Bemerken Sie ein Problem mit KI-generierten Inhalten während Ihrer Lernsitzung."
+          },
+          {
+            "title": "Fehler Melden",
+            "description": "Verwenden Sie das eingebaute Meldesystem, um das Problem zu kategorisieren und zu beschreiben."
+          },
+          {
+            "title": "Automatische Verarbeitung",
+            "description": "Unser System regeneriert automatisch Inhalte und verbessert KI-Modelle."
+          }
+        ]
+      },
+      "benefits": {
+        "title": "Vorteile der Fehlermeldung",
+        "items": [
+          "Verbessert Inhaltsqualität für alle Nutzer",
+          "Hilft beim Training und Verfeinern von KI-Modellen",
+          "Gewährleistet kulturelle und sprachliche Genauigkeit",
+          "Bietet Feedback für kontinuierliche Verbesserung",
+          "Schafft eine bessere Lernerfahrung",
+          "Baut eine community-gestützte Plattform auf"
+        ]
+      }
+    },
+    "offlineSupport": {
+      "title": "Offline-Lernunterstützung",
+      "subtitle": "Lernen Sie überall, jederzeit ohne Internetverbindung",
+      "description": "Premium-Nutzer können Wortlisten herunterladen und mit vollständiger Quiz-Funktionalität und Fortschrittsverfolgung offline weiterlernen.",
+      "hero": {
+        "title": "Lernen Ohne Grenzen",
+        "subtitle": "Nehmen Sie Ihr Vokabellernen überall mit durch Offline-Zugang zu Wortlisten, Quiz und allen Ihren Lernmaterialien."
+      },
+      "features": {
+        "title": "Offline-Funktionen",
+        "download": "Wortlisten für Offline-Zugang herunterladen",
+        "quizzes": "Vollständige Quiz-Funktionalität ohne Internet",
+        "flashcards": "Offline-Karteikarten-Lernen",
+        "audio": "Heruntergeladene Audio-Aussprache",
+        "progress": "Lokale Fortschrittsverfolgung",
+        "sync": "Automatische Synchronisation bei Online-Rückkehr"
+      },
+      "benefits": {
+        "title": "Vorteile des Offline-Lernens",
+        "items": [
+          "Lernen während Pendeln und Reisen",
+          "Keine Unterbrechung durch schlechte Verbindung",
+          "Sparen Sie mobile Datennutzung",
+          "Lernen an abgelegenen Orten",
+          "Konsistente Lernerfahrung",
+          "Verlieren Sie nie den Lernimpuls"
+        ]
+      },
+      "howItWorks": {
+        "title": "Wie Offline-Unterstützung Funktioniert",
+        "steps": [
+          {
+            "title": "Inhalt Herunterladen",
+            "description": "Laden Sie Ihre Wortlisten herunter, während Sie mit dem Internet verbunden sind."
+          },
+          {
+            "title": "Offline Lernen",
+            "description": "Greifen Sie auf alle Inhalte und Quiz-Modi ohne Internetverbindung zu."
+          },
+          {
+            "title": "Fortschritt Synchronisieren",
+            "description": "Fortschritt synchronisiert sich automatisch, wenn Sie sich wieder mit dem Internet verbinden."
+          }
+        ]
+      },
+      "premium": {
+        "title": "Premium-Funktion",
+        "description": "Offline-Unterstützung ist für Premium-Abonnenten verfügbar. Upgraden Sie, um unbegrenzte Offline-Lernmöglichkeiten freizuschalten."
+      }
+    }
+  }
+}

@@ -1,0 +1,134 @@
+/* Custom animations for the landing page */
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+@keyframes slide-in-left {
+    from { opacity: 0; transform: translateX(-50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-up {
+    from { opacity: 0; transform: translateY(50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes word-rotate {
+    0%, 25% { opacity: 1; transform: translateY(0); }
+    33%, 100% { opacity: 0; transform: translateY(-20px); }
+}
+
+/* Animation classes */
+.float-animation {
+    animation: float 6s ease-in-out infinite;
+}
+
+.pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.slide-in-left {
+    animation: slide-in-left 0.8s ease-out forwards;
+}
+
+.slide-in-right {
+    animation: slide-in-right 0.8s ease-out forwards;
+}
+
+.slide-in-up {
+    animation: slide-in-up 0.8s ease-out forwards;
+}
+
+.gradient-animation {
+    background: linear-gradient(270deg, #FF7B54, #FFD700, #FF7B54);
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+}
+
+/* Glassmorphism effects */
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Word rotation animation */
+.word-rotate {
+    position: relative;
+    height: 1.2em;
+    overflow: hidden;
+}
+
+.word-rotate span {
+    position: absolute;
+    opacity: 0;
+    animation: word-rotate 12s infinite;
+}
+
+.word-rotate span:nth-child(1) { animation-delay: 0s; }
+.word-rotate span:nth-child(2) { animation-delay: 3s; }
+.word-rotate span:nth-child(3) { animation-delay: 6s; }
+.word-rotate span:nth-child(4) { animation-delay: 9s; }
+
+/* 3D card effect */
+.card-3d {
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+}
+
+.card-3d:hover {
+    transform: rotateY(10deg) rotateX(10deg);
+}
+
+/* Parallax scrolling effect */
+.parallax {
+    will-change: transform;
+}
+
+/* Smooth reveal on scroll */
+.reveal {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: all 0.8s ease-out;
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #FDF6E3;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #FF7B54;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #ff6347;
+}

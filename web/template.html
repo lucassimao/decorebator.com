@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decorebator - AI-Powered Vocabulary Learning</title>
+    <meta name="description" content="Master any language with AI-powered vocabulary learning, spaced repetition, and 7 engaging quiz modes. Join 10,000+ learners today!">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+        
+        @keyframes slide-in-left {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes slide-in-right {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes slide-in-up {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes word-rotate {
+            0%, 25% { opacity: 1; transform: translateY(0); }
+            33%, 100% { opacity: 0; transform: translateY(-20px); }
+        }
+        
+        /* Animation classes */
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+        
+        .slide-in-left {
+            animation: slide-in-left 0.8s ease-out forwards;
+        }
+        
+        .slide-in-right {
+            animation: slide-in-right 0.8s ease-out forwards;
+        }
+        
+        .slide-in-up {
+            animation: slide-in-up 0.8s ease-out forwards;
+        }
+        
+        .gradient-animation {
+            background: linear-gradient(270deg, #FF7B54, #FFD700, #FF7B54);
+            background-size: 200% 200%;
+            animation: gradient-shift 8s ease infinite;
+        }
+        
+        /* Glassmorphism effects */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #FDF6E3;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #FF7B54;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff6347;
+        }
+        
+        /* Word rotation animation */
+        .word-rotate {
+            position: relative;
+            height: 1.2em;
+            overflow: hidden;
+        }
+        
+        .word-rotate span {
+            position: absolute;
+            opacity: 0;
+            animation: word-rotate 12s infinite;
+        }
+        
+        .word-rotate span:nth-child(1) { animation-delay: 0s; }
+        .word-rotate span:nth-child(2) { animation-delay: 3s; }
+        .word-rotate span:nth-child(3) { animation-delay: 6s; }
+        .word-rotate span:nth-child(4) { animation-delay: 9s; }
+        
+        /* 3D card effect */
+        .card-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        
+        .card-3d:hover {
+            transform: rotateY(10deg) rotateX(10deg);
+        }
+        
+        /* Parallax scrolling effect */
+        .parallax {
+            will-change: transform;
+        }
+        
+        /* Smooth reveal on scroll */
+        .reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease-out;
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-[#FDF6E3] text-[#2D3436] overflow-x-hidden">
+    <!-- Animated Background Elements -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-20 left-10 w-64 h-64 bg-orange-300 rounded-full opacity-20 blur-3xl float-animation"></div>
+        <div class="absolute bottom-20 right-10 w-96 h-96 bg-yellow-300 rounded-full opacity-20 blur-3xl float-animation" style="animation-delay: 3s;"></div>
+        <div class="absolute top-1/2 left-1/2 w-80 h-80 bg-amber-300 rounded-full opacity-10 blur-3xl pulse-glow"></div>
+    </div>
+
+    <!-- Header/Navigation -->
+    <header class="fixed top-0 left-0 right-0 z-50 glass transition-all duration-300" id="header">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3 group cursor-pointer">
+                    <div class="w-10 h-10 bg-gradient-to-br from-[#FF7B54] to-orange-600 rounded-xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300">
+                        <i class="fas fa-book-open text-white text-lg"></i>
+                    </div>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-[#FF7B54] to-orange-600 bg-clip-text text-transparent">Decorebator</span>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#features" class="text-[#636E72] hover:text-[#FF7B54] transition-colors duration-300 font-medium">Features</a>
+                    <a href="#how-it-works" class="text-[#636E72] hover:text-[#FF7B54] transition-colors duration-300 font-medium">How It Works</a>
+                    <a href="#pricing" class="text-[#636E72] hover:text-[#FF7B54] transition-colors duration-300 font-medium">Pricing</a>
+                    <a href="#contact" class="text-[#636E72] hover:text-[#FF7B54] transition-colors duration-300 font-medium">Contact</a>
+                    <button class="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300">
+                        Start Free Trial
+                    </button>
+                </nav>
+
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden p-2" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars text-2xl text-[#2D3436]"></i>
+                </button>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div id="mobileMenu" class="hidden md:hidden absolute top-16 left-0 right-0 bg-white/95 backdrop-blur-lg shadow-xl rounded-b-2xl">
+                <nav class="flex flex-col p-6 space-y-4">
+                    <a href="#features" class="text-[#636E72] hover:text-[#FF7B54] transition-colors font-medium">Features</a>
+                    <a href="#how-it-works" class="text-[#636E72] hover:text-[#FF7B54] transition-colors font-medium">How It Works</a>
+                    <a href="#pricing" class="text-[#636E72] hover:text-[#FF7B54] transition-colors font-medium">Pricing</a>
+                    <a href="#testimonials" class="text-[#636E72] hover:text-[#FF7B54] transition-colors font-medium">Reviews</a>
+                    <button class="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-3 rounded-full font-semibold">
+                        Start Free Trial
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="pt-24 pb-20 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-8 slide-in-left">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full glass bg-orange-100/50 text-[#FF7B54] text-sm font-semibold">
+                        <i class="fas fa-zap mr-2"></i>
+                        AI-Powered Learning • 7 Languages • Multi-Platform
+                    </div>
+                    
+                    <h1 class="text-5xl lg:text-6xl font-bold leading-tight">
+                        Master Languages with
+                        <span class="block mt-2 gradient-animation bg-clip-text text-transparent">
+                            <div class="word-rotate inline-block">
+                                <span>AI Intelligence</span>
+                                <span>Spaced Repetition</span>
+                                <span>Visual Learning</span>
+                                <span>Smart Quizzes</span>
+                            </div>
+                        </span>
+                    </h1>
+                    
+                    <p class="text-xl text-[#636E72] leading-relaxed">
+                        Transform your vocabulary learning with AI-generated content, scientifically-proven spaced repetition, and 7 engaging quiz modes. Join <span class="font-semibold text-[#FF7B54]">10,000+</span> learners mastering new languages effectively.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button class="group bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center">
+                            <span>Start Learning Free</span>
+                            <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
+                        </button>
+                        <button class="group bg-white/80 backdrop-blur px-8 py-4 rounded-full font-semibold text-lg border-2 border-gray-200 hover:border-[#FF7B54] transition-all duration-300 flex items-center justify-center">
+                            <i class="fas fa-play-circle mr-2 text-[#FF7B54] group-hover:scale-110 transition-transform"></i>
+                            Watch Demo
+                        </button>
+                    </div>
+
+                    <!-- App Store Buttons -->
+                    <div class="flex flex-wrap gap-4 pt-4">
+                        <a href="#" class="group">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
+                                 alt="Download on App Store" 
+                                 class="h-12 transform group-hover:scale-105 transition-transform duration-300">
+                        </a>
+                        <a href="#" class="group">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
+                                 alt="Get it on Google Play" 
+                                 class="h-12 transform group-hover:scale-105 transition-transform duration-300">
+                        </a>
+                    </div>
+
+                    <!-- Social Proof -->
+                    <div class="flex items-center space-x-8 text-sm text-[#636E72]">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex -space-x-1">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                            </div>
+                            <span class="font-semibold">4.9/5</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-users text-[#FF7B54]"></i>
+                            <span><span class="font-semibold">10,000+</span> active learners</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-globe text-[#FF7B54]"></i>
+                            <span><span class="font-semibold">7</span> native AI languages</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hero Visual -->
+                <div class="relative slide-in-right">
+                    <div class="relative z-10">
+                        <!-- Phone Mockup -->
+                        <div class="relative mx-auto w-72 lg:w-80">
+                            <div class="bg-gray-900 rounded-[3rem] p-3 shadow-2xl transform rotate-6 hover:rotate-0 transition-transform duration-700 card-3d">
+                                <div class="bg-white rounded-[2.5rem] overflow-hidden">
+                                    <!-- Status bar -->
+                                    <div class="bg-white px-6 py-3 flex justify-between items-center text-xs">
+                                        <span class="font-medium">9:41</span>
+                                        <div class="flex space-x-1">
+                                            <i class="fas fa-signal"></i>
+                                            <i class="fas fa-wifi"></i>
+                                            <i class="fas fa-battery-full"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Quiz Screen -->
+                                    <div class="p-6 bg-gradient-to-br from-[#FF7B54] to-orange-600 h-96">
+                                        <div class="text-white">
+                                            <h3 className="text-lg font-bold mb-2">Today's Challenge</h3>
+                                            <div class="bg-white/20 backdrop-blur rounded-2xl p-4 mb-4">
+                                                <p class="text-sm mb-1 text-orange-100">Question 3 of 10</p>
+                                                <p class="font-semibold">Which word means "serendipity"?</p>
+                                            </div>
+                                            
+                                            <div class="space-y-3">
+                                                <button class="w-full p-3 bg-white/90 text-gray-800 rounded-xl font-medium hover:scale-105 transition-transform">
+                                                    A pleasant surprise
+                                                </button>
+                                                <button class="w-full p-3 bg-white/20 backdrop-blur text-white rounded-xl hover:bg-white/30 transition-colors">
+                                                    Careful planning
+                                                </button>
+                                                <button class="w-full p-3 bg-white/20 backdrop-blur text-white rounded-xl hover:bg-white/30 transition-colors">
+                                                    Deep sadness
+                                                </button>
+                                                <button class="w-full p-3 bg-white/20 backdrop-blur text-white rounded-xl hover:bg-white/30 transition-colors">
+                                                    Quick movement
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="mt-6 flex justify-between items-center">
+                                                <div class="flex space-x-1">
+                                                    <div class="w-8 h-1 bg-white rounded-full"></div>
+                                                    <div class="w-8 h-1 bg-white rounded-full"></div>
+                                                    <div class="w-8 h-1 bg-white rounded-full"></div>
+                                                    <div class="w-8 h-1 bg-white/40 rounded-full"></div>
+                                                    <div class="w-8 h-1 bg-white/40 rounded-full"></div>
+                                                </div>
+                                                <div class="text-sm font-medium">
+                                                    <i class="fas fa-fire mr-1"></i> 15 day streak!
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Floating Elements -->
+                    <div class="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-yellow-400 to-[#FFD700] rounded-full opacity-80 pulse-glow"></div>
+                    <div class="absolute -bottom-8 -left-8 w-16 h-16 bg-gradient-to-br from-[#4CAF50] to-green-600 rounded-full opacity-70 float-animation"></div>
+                    <div class="absolute top-1/2 -right-12 w-12 h-12 bg-gradient-to-br from-purple-400 to-[#9C27B0] rounded-full opacity-60 float-animation" style="animation-delay: 2s;"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-white reveal">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-4">
+                    Everything You Need to 
+                    <span class="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">Master Vocabulary</span>
+                </h2>
+                <p class="text-xl text-[#636E72] max-w-3xl mx-auto">
+                    Our comprehensive platform combines cutting-edge AI technology with proven learning science to accelerate your language journey.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 0: Multi-Language Support -->
+                <div class="group p-8 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#6366F1] to-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-globe text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">7 Native AI Languages</h3>
+                    <p class="text-[#636E72] leading-relaxed mb-4">
+                        Native AI processing in English, Spanish, French, German, Italian, Portuguese, and Japanese with language-specific grammar rules.
+                    </p>
+                    <div class="flex items-center text-sm text-[#6366F1] font-medium group-hover:translate-x-2 transition-transform">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+                <!-- Feature 1: AI-Powered Content -->
+                <div class="group p-8 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#FF7B54] to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-brain text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">AI-Powered Content Generation</h3>
+                    <p class="text-[#636E72] leading-relaxed mb-4">
+                        Automatically generates definitions, examples, images, and audio pronunciations for any word using advanced AI models.
+                    </p>
+                    <div class="flex items-center text-sm text-[#FF7B54] font-medium group-hover:translate-x-2 transition-transform">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Leitner System -->
+                <div class="group p-8 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#4CAF50] to-green-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-clock text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Leitner Spaced Repetition</h3>
+                    <p class="text-[#636E72] leading-relaxed mb-4">
+                        Scientifically proven system with 7 review boxes that optimizes when you review words for maximum long-term retention.
+                    </p>
+                    <div class="flex items-center text-sm text-[#4CAF50] font-medium group-hover:translate-x-2 transition-transform">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Quiz Modes -->
+                <div class="group p-8 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#9C27B0] to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-gamepad text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">7 Engaging Quiz Modes</h3>
+                    <p class="text-[#636E72] leading-relaxed mb-4">
+                        Multiple quiz types: meaning matching, image association, audio comprehension, sentence completion, write from definition, and more.
+                    </p>
+                    <div class="flex items-center text-sm text-[#9C27B0] font-medium group-hover:translate-x-2 transition-transform">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Feature 4: Visual Learning -->
+                <div class="group p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#2196F3] to-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-image text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Visual Learning with AI Images</h3>
+                    <p class="text-[#636E72] leading-relaxed mb-4">
+                        AI-generated images help you associate words with visual concepts for better memory retention.
+                    </p>
+                    <div class="flex items-center text-sm text-[#2196F3] font-medium group-hover:translate-x-2 transition-transform">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Feature 5: Multi-Language Audio -->
+                <div class="group p-8 rounded-2xl bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-100 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#FFD700] to-yellow-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-headphones text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Multi-Language Audio</h3>
+                    <p class="text-[#636E72] leading-relaxed mb-4">
+                        Language-optimized voice selection with advanced text-to-speech. Each language uses native-sounding voices for authentic pronunciation.
+                    </p>
+                    <div class="flex items-center text-sm text-yellow-600 font-medium group-hover:translate-x-2 transition-transform">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Feature 6: Interactive Flashcards -->
+                <div class="group p-8 rounded-2xl bg-gradient-to-br from-red-50 to-pink-50 border border-red-100 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#FF6B6B] to-red-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-layer-group text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Interactive Flashcards</h3>
+                    <p class="text-[#636E72] leading-relaxed mb-4">
+                        Immersive full-screen flashcards with flip animations, rich content display, and integrated error reporting.
+                    </p>
+                    <div class="flex items-center text-sm text-[#FF6B6B] font-medium group-hover:translate-x-2 transition-transform">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Feature 7: Advanced Analytics -->
+                <div class="group p-8 rounded-2xl bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-100 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#14B8A6] to-teal-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-chart-line text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Advanced Analytics</h3>
+                    <p class="text-[#636E72] leading-relaxed mb-4">
+                        Comprehensive progress tracking with word mastery levels, learning velocity, retention rates, and performance insights.
+                    </p>
+                    <div class="flex items-center text-sm text-[#14B8A6] font-medium group-hover:translate-x-2 transition-transform">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Feature 8: Error Reporting -->
+                <div class="group p-8 rounded-2xl bg-gradient-to-br from-gray-50 to-slate-50 border border-gray-100 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#64748B] to-slate-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-exclamation-triangle text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Error Reporting System</h3>
+                    <p class="text-[#636E72] leading-relaxed mb-4">
+                        User-driven quality control with 5 error types for AI content. Report issues and get automatic content regeneration.
+                    </p>
+                    <div class="flex items-center text-sm text-[#64748B] font-medium group-hover:translate-x-2 transition-transform">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Feature 9: Offline Support -->
+                <div class="group p-8 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#10B981] to-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-wifi-slash text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Offline Support</h3>
+                    <p class="text-[#636E72] leading-relaxed mb-4">
+                        Premium users can download wordlists for offline access. Complete quiz functionality without internet connection.
+                    </p>
+                    <div class="flex items-center text-sm text-[#10B981] font-medium group-hover:translate-x-2 transition-transform">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Showcase Section -->
+    <section class="py-20 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 reveal">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-4">
+                    Experience the 
+                    <span class="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">Future of Learning</span>
+                </h2>
+                <p class="text-xl text-[#636E72] max-w-3xl mx-auto">
+                    Our intuitive interface and smart features make vocabulary learning engaging, efficient, and enjoyable.
+                </p>
+            </div>
+
+            <!-- Interactive Demo -->
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Feature Tabs -->
+                <div class="space-y-6">
+                    <div class="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-orange-100 transform hover:scale-105 transition-transform duration-300 cursor-pointer">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-[#FF7B54] to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-chart-line text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-2">Smart Progress Tracking</h3>
+                                <p class="text-[#636E72] mb-3">Monitor your learning journey with detailed analytics, streak counters, and achievement badges.</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">Learning Velocity</span>
+                                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Retention Rate</span>
+                                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">Daily Streaks</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-green-100 transform hover:scale-105 transition-transform duration-300 cursor-pointer">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-[#4CAF50] to-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-robot text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-2">Multi-Language AI Content</h3>
+                                <p class="text-[#636E72] mb-3">AI generates native-language content with proper grammar, cultural context, and language-optimized voices.</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">Native Definitions</span>
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">Cultural Images</span>
+                                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">Optimized Audio</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100 transform hover:scale-105 transition-transform duration-300 cursor-pointer">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-[#9C27B0] to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-box text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-2">Advanced Leitner System</h3>
+                                <p class="text-[#636E72] mb-3">7-box spaced repetition system that adapts to your learning pace and optimizes review timing.</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">Box 1-2: New</span>
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">Box 3-5: Learning</span>
+                                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Box 6-7: Mastered</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phone Mockup with Screens -->
+                <div class="relative flex justify-center">
+                    <div class="relative">
+                        <!-- Phone Frame -->
+                        <div class="w-80 h-[640px] bg-gray-900 rounded-[3rem] p-3 shadow-2xl">
+                            <div class="w-full h-full bg-white rounded-[2.5rem] overflow-hidden">
+                                <!-- Status Bar -->
+                                <div class="bg-white px-6 py-3 flex justify-between items-center text-xs">
+                                    <span class="font-medium">9:41</span>
+                                    <div class="flex space-x-1">
+                                        <i class="fas fa-signal"></i>
+                                        <i class="fas fa-wifi"></i>
+                                        <i class="fas fa-battery-full"></i>
+                                    </div>
+                                </div>
+                                
+                                <!-- Dashboard Screen -->
+                                <div class="p-6 h-full bg-gradient-to-b from-orange-50 to-amber-50">
+                                    <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
+                                    
+                                    <!-- Stats Grid -->
+                                    <div class="grid grid-cols-2 gap-4 mb-6">
+                                        <div class="bg-white rounded-2xl p-4 shadow-sm">
+                                            <div class="text-3xl font-bold text-[#FF7B54]">127</div>
+                                            <div class="text-sm text-[#636E72]">Words Learned</div>
+                                        </div>
+                                        <div class="bg-white rounded-2xl p-4 shadow-sm">
+                                            <div class="text-3xl font-bold text-[#4CAF50]">15</div>
+                                            <div class="text-sm text-[#636E72]">Day Streak 🔥</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Progress Card -->
+                                    <div class="bg-white rounded-2xl p-4 shadow-sm mb-4">
+                                        <div class="flex justify-between items-center mb-3">
+                                            <h3 class="font-semibold">Spanish Vocabulary</h3>
+                                            <span class="text-sm text-[#FF7B54] font-medium">78%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-3">
+                                            <div class="bg-gradient-to-r from-[#FF7B54] to-orange-600 rounded-full h-3 w-3/4"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Review Button -->
+                                    <button class="w-full bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white py-4 rounded-2xl font-semibold flex items-center justify-center space-x-2">
+                                        <i class="fas fa-play"></i>
+                                        <span>Start Today's Review (12 words)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Floating UI Elements -->
+                        <div class="absolute -top-8 -right-8 bg-white rounded-2xl p-4 shadow-xl transform rotate-12 hover:rotate-0 transition-transform duration-300">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-10 h-10 bg-[#FFD700] rounded-full flex items-center justify-center">
+                                    <i class="fas fa-trophy text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-bold">Achievement Unlocked!</div>
+                                    <div class="text-xs text-[#636E72]">100 Words Mastered</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-20 bg-white reveal">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-4">
+                    Your Learning Journey in 
+                    <span class="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">3 Simple Steps</span>
+                </h2>
+                <p class="text-xl text-[#636E72] max-w-3xl mx-auto">
+                    Our streamlined process makes vocabulary learning efficient, engaging, and effective.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8 relative">
+                <!-- Step 1 -->
+                <div class="relative">
+                    <div class="absolute -top-4 -left-4 w-12 h-12 bg-gradient-to-br from-[#FF7B54] to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-xl z-10">1</div>
+                    <div class="bg-gradient-to-br from-orange-50 to-amber-50 p-8 rounded-2xl border border-orange-100 h-full transform hover:scale-105 transition-transform duration-300">
+                        <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                            <i class="fas fa-plus-circle text-[#FF7B54] text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4">Create Your Wordlist</h3>
+                        <p class="text-[#636E72] mb-6">
+                            Simply add words you want to learn. Our AI instantly generates comprehensive learning materials.
+                        </p>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-[#4CAF50] mt-1 mr-3"></i>
+                                <span class="text-sm">AI-generated definitions & examples</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-[#4CAF50] mt-1 mr-3"></i>
+                                <span class="text-sm">AI visual associations</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-[#4CAF50] mt-1 mr-3"></i>
+                                <span class="text-sm">High-quality audio pronunciations</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Connector -->
+                    <div class="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-0">
+                        <i class="fas fa-arrow-right text-4xl text-orange-300"></i>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="relative">
+                    <div class="absolute -top-4 -left-4 w-12 h-12 bg-gradient-to-br from-[#9C27B0] to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl z-10">2</div>
+                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-2xl border border-purple-100 h-full transform hover:scale-105 transition-transform duration-300">
+                        <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                            <i class="fas fa-gamepad text-[#9C27B0] text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4">Take Engaging Quizzes</h3>
+                        <p class="text-[#636E72] mb-6">
+                            Practice with 7 different quiz modes that adapt to your learning progress.
+                        </p>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-[#4CAF50] mt-1 mr-3"></i>
+                                <span class="text-sm">Meaning ↔ Word matching</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-[#4CAF50] mt-1 mr-3"></i>
+                                <span class="text-sm">Image & audio recognition</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-[#4CAF50] mt-1 mr-3"></i>
+                                <span class="text-sm">Sentence completion</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Connector -->
+                    <div class="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-0">
+                        <i class="fas fa-arrow-right text-4xl text-purple-300"></i>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="relative">
+                    <div class="absolute -top-4 -left-4 w-12 h-12 bg-gradient-to-br from-[#4CAF50] to-green-600 rounded-full flex items-center justify-center text-white font-bold text-xl z-10">3</div>
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-2xl border border-green-100 h-full transform hover:scale-105 transition-transform duration-300">
+                        <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                            <i class="fas fa-brain text-[#4CAF50] text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4">Master with Repetition</h3>
+                        <p class="text-[#636E72] mb-6">
+                            Our 7-box Leitner system schedules reviews at optimal intervals for maximum retention.
+                        </p>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-[#4CAF50] mt-1 mr-3"></i>
+                                <span class="text-sm">Adaptive review scheduling</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-[#4CAF50] mt-1 mr-3"></i>
+                                <span class="text-sm">Progress tracking & insights</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-[#4CAF50] mt-1 mr-3"></i>
+                                <span class="text-sm">Long-term retention focus</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="text-center mt-16">
+                <button class="group bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-10 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                    <span>Start Your Learning Journey</span>
+                    <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Advanced Analytics Showcase (New Section) -->
+    <section class="py-20 bg-gradient-to-br from-gray-50 to-orange-50 reveal">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-4">
+                    Track Your Progress with 
+                    <span class="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">Advanced Analytics</span>
+                </h2>
+                <p class="text-xl text-[#636E72] max-w-3xl mx-auto">
+                    Get deep insights into your learning patterns, retention rates, and progress with our comprehensive analytics dashboard.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-2xl p-8 lg:p-12">
+                <div class="grid lg:grid-cols-3 gap-8 mb-8">
+                    <!-- Metric 1 -->
+                    <div class="text-center">
+                        <div class="w-32 h-32 mx-auto mb-4 relative">
+                            <svg class="w-32 h-32 transform -rotate-90">
+                                <circle cx="64" cy="64" r="56" stroke="#FFF9F0" stroke-width="16" fill="none"></circle>
+                                <circle cx="64" cy="64" r="56" stroke="#FF7B54" stroke-width="16" fill="none" 
+                                        stroke-dasharray="351.86" stroke-dashoffset="87.96" stroke-linecap="round"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-3xl font-bold text-[#FF7B54]">75%</span>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Learning Velocity</h3>
+                        <p class="text-[#636E72]">You're learning 3x faster than traditional methods</p>
+                    </div>
+
+                    <!-- Metric 2 -->
+                    <div class="text-center">
+                        <div class="w-32 h-32 mx-auto mb-4 relative">
+                            <svg class="w-32 h-32 transform -rotate-90">
+                                <circle cx="64" cy="64" r="56" stroke="#FFF9F0" stroke-width="16" fill="none"></circle>
+                                <circle cx="64" cy="64" r="56" stroke="#4CAF50" stroke-width="16" fill="none" 
+                                        stroke-dasharray="351.86" stroke-dashoffset="63.33" stroke-linecap="round"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-3xl font-bold text-[#4CAF50]">82%</span>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Retention Rate</h3>
+                        <p class="text-[#636E72]">Words retained after 30 days</p>
+                    </div>
+
+                    <!-- Metric 3 -->
+                    <div class="text-center">
+                        <div class="w-32 h-32 mx-auto mb-4 relative">
+                            <svg class="w-32 h-32 transform -rotate-90">
+                                <circle cx="64" cy="64" r="56" stroke="#FFF9F0" stroke-width="16" fill="none"></circle>
+                                <circle cx="64" cy="64" r="56" stroke="#9C27B0" stroke-width="16" fill="none" 
+                                        stroke-dasharray="351.86" stroke-dashoffset="35.19" stroke-linecap="round"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-3xl font-bold text-[#9C27B0]">90%</span>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Consistency Score</h3>
+                        <p class="text-[#636E72]">Daily learning streak maintained</p>
+                    </div>
+                </div>
+
+                <!-- Chart Preview -->
+                <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4">Your Learning Curve This Month</h3>
+                    <div class="h-48 flex items-end justify-between space-x-2">
+                        <div class="w-full bg-orange-200 rounded-t-lg" style="height: 40%"></div>
+                        <div class="w-full bg-orange-300 rounded-t-lg" style="height: 55%"></div>
+                        <div class="w-full bg-orange-400 rounded-t-lg" style="height: 65%"></div>
+                        <div class="w-full bg-orange-500 rounded-t-lg" style="height: 70%"></div>
+                        <div class="w-full bg-orange-600 rounded-t-lg" style="height: 85%"></div>
+                        <div class="w-full bg-orange-700 rounded-t-lg" style="height: 90%"></div>
+                        <div class="w-full bg-orange-800 rounded-t-lg" style="height: 95%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 bg-white reveal">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-4">
+                    Choose Your 
+                    <span class="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">Learning Plan</span>
+                </h2>
+                <p class="text-xl text-[#636E72] max-w-3xl mx-auto">
+                    Start with our free plan and upgrade when you're ready to unlock unlimited learning potential.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <!-- Free Plan -->
+                <div class="relative p-8 rounded-3xl bg-white border-2 border-gray-200 hover:border-orange-200 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2">
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold mb-2">Free</h3>
+                        <div class="mb-4">
+                            <span class="text-5xl font-bold">$0</span>
+                            <span class="text-[#636E72] ml-2">forever</span>
+                        </div>
+                        <p class="text-[#636E72]">Perfect for trying out Decorebator</p>
+                    </div>
+
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>1 wordlist</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Up to 10 words per list</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Basic quiz modes</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>AI-generated content</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Leitner spaced repetition</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Basic progress tracking</span>
+                        </li>
+                    </ul>
+
+                    <button class="w-full py-4 rounded-full font-semibold text-lg bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors">
+                        Get Started Free
+                    </button>
+                </div>
+
+                <!-- Monthly Plan (Most Popular) -->
+                <div class="relative p-8 rounded-3xl bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-[#FF7B54] shadow-xl transform scale-105">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <span class="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+                            MOST POPULAR
+                        </span>
+                    </div>
+                    
+                    <div class="text-center mb-8 pt-4">
+                        <h3 class="text-2xl font-bold mb-2">Monthly</h3>
+                        <div class="mb-4">
+                            <span class="text-5xl font-bold">$6.99</span>
+                            <span class="text-[#636E72] ml-2">per month</span>
+                        </div>
+                        <p class="text-[#636E72]">Full access to all features</p>
+                    </div>
+
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span class="font-semibold">Unlimited wordlists</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span class="font-semibold">Unlimited words</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>All 7 quiz modes</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Multi-language AI content</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Interactive flashcards</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Advanced analytics</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Offline mode</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Error reporting system</span>
+                        </li>
+                    </ul>
+
+                    <button class="w-full py-4 rounded-full font-semibold text-lg bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white hover:shadow-lg transform hover:scale-105 transition-all duration-300">
+                        Start 7-Day Free Trial
+                    </button>
+                </div>
+
+                <!-- Annual Plan -->
+                <div class="relative p-8 rounded-3xl bg-white border-2 border-gray-200 hover:border-[#FFD700] transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2">
+                    <div class="absolute -top-4 right-4">
+                        <span class="bg-gradient-to-r from-[#FFD700] to-yellow-600 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg">
+                            SAVE 17%
+                        </span>
+                    </div>
+                    
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold mb-2">Annual</h3>
+                        <div class="mb-4">
+                            <span class="text-5xl font-bold">$69.9</span>
+                            <span class="text-[#636E72] ml-2">per year</span>
+                        </div>
+                        <p class="text-[#636E72]">Best value for serious learners</p>
+                    </div>
+
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Everything in Monthly</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#FFD700] mr-3"></i>
+                            <span class="font-semibold">2 months free</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#FFD700] mr-3"></i>
+                            <span class="font-semibold">Early access to features</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Premium customer support</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Export capabilities</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-[#4CAF50] mr-3"></i>
+                            <span>Advanced customization</span>
+                        </li>
+                    </ul>
+
+                    <button class="w-full py-4 rounded-full font-semibold text-lg bg-gradient-to-r from-[#FFD700] to-yellow-600 text-white hover:shadow-lg transform hover:scale-105 transition-all duration-300">
+                        Save 17% Annually
+                    </button>
+                </div>
+            </div>
+
+            <!-- Money-back guarantee -->
+            <div class="text-center mt-12">
+                <div class="inline-flex items-center space-x-2 text-[#636E72]">
+                    <i class="fas fa-shield-alt text-[#4CAF50]"></i>
+                    <span>30-day money-back guarantee • Cancel anytime • Secure payment by Stripe</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-20 bg-gradient-to-br from-orange-50 to-amber-50 reveal">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-4">
+                    Loved by 
+                    <span class="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">Language Learners</span>
+                </h2>
+                <p class="text-xl text-[#636E72] max-w-3xl mx-auto">
+                    Join thousands of satisfied learners who have transformed their language skills with Decorebator.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Testimonial 1 -->
+                <div class="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="flex items-center mb-4">
+                        <img src="https://ui-avatars.com/api/?name=Sarah+Chen&background=FF7B54&color=fff&size=48&rounded=true" alt="Sarah Chen" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <div class="font-bold">Sarah Chen</div>
+                            <div class="text-sm text-[#636E72]">Language Student</div>
+                        </div>
+                    </div>
+                    <div class="flex mb-4">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                    <p class="text-[#636E72] leading-relaxed italic">
+                        "Decorebator transformed my Spanish learning. The AI-generated images help me remember words so much better than traditional methods. I've learned more in 3 months than in years of traditional study!"
+                    </p>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="flex items-center mb-4">
+                        <img src="https://ui-avatars.com/api/?name=Marcus+Rodriguez&background=4CAF50&color=fff&size=48&rounded=true" alt="Marcus Rodriguez" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <div class="font-bold">Marcus Rodriguez</div>
+                            <div class="text-sm text-[#636E72]">Professional Translator</div>
+                        </div>
+                    </div>
+                    <div class="flex mb-4">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                    <p class="text-[#636E72] leading-relaxed italic">
+                        "The spaced repetition system is incredibly effective. I've expanded my technical vocabulary by 300% in just 3 months. The 7 quiz modes keep learning fresh and engaging every day."
+                    </p>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="flex items-center mb-4">
+                        <img src="https://ui-avatars.com/api/?name=Emma+Thompson&background=9C27B0&color=fff&size=48&rounded=true" alt="Emma Thompson" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <div class="font-bold">Emma Thompson</div>
+                            <div class="text-sm text-[#636E72]">ESL Teacher</div>
+                        </div>
+                    </div>
+                    <div class="flex mb-4">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                    <p class="text-[#636E72] leading-relaxed italic">
+                        "I recommend Decorebator to all my students. The variety of quiz modes keeps them engaged and the progress tracking is excellent. It's the perfect blend of technology and pedagogy."
+                    </p>
+                </div>
+            </div>
+
+            <!-- Success Metrics -->
+            <div class="mt-16 bg-white rounded-3xl p-8 shadow-xl">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+                    <div>
+                        <div class="text-4xl font-bold text-[#FF7B54] mb-2">2.5M+</div>
+                        <div class="text-[#636E72]">Words Learned</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-bold text-[#4CAF50] mb-2">85%</div>
+                        <div class="text-[#636E72]">Retention Rate</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-bold text-[#9C27B0] mb-2">7</div>
+                        <div class="text-[#636E72]">AI Languages</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-bold text-[#FFD700] mb-2">4.9/5</div>
+                        <div class="text-[#636E72]">App Rating</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-20 bg-white reveal">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-4">
+                    Frequently Asked 
+                    <span class="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">Questions</span>
+                </h2>
+                <p class="text-xl text-[#636E72]">
+                    Everything you need to know about Decorebator.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- FAQ 1 -->
+                <div class="border border-gray-200 rounded-2xl overflow-hidden hover:border-orange-200 transition-colors">
+                    <button class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-orange-50 transition-colors" onclick="toggleFAQ(1)">
+                        <span class="text-lg font-semibold">How does the AI content generation work?</span>
+                        <i class="fas fa-chevron-down text-[#636E72] transition-transform" id="faq-icon-1"></i>
+                    </button>
+                    <div class="hidden px-6 pb-4" id="faq-content-1">
+                        <p class="text-[#636E72] leading-relaxed">
+                            Our AI analyzes each word and automatically generates contextually relevant definitions, example sentences, images, and audio pronunciations. This ensures you get comprehensive learning materials for every word you add.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ 2 -->
+                <div class="border border-gray-200 rounded-2xl overflow-hidden hover:border-orange-200 transition-colors">
+                    <button class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-orange-50 transition-colors" onclick="toggleFAQ(2)">
+                        <span class="text-lg font-semibold">What is the Leitner spaced repetition system?</span>
+                        <i class="fas fa-chevron-down text-[#636E72] transition-transform" id="faq-icon-2"></i>
+                    </button>
+                    <div class="hidden px-6 pb-4" id="faq-content-2">
+                        <p class="text-[#636E72] leading-relaxed">
+                            The Leitner system is a scientifically proven method that uses 7 boxes to schedule word reviews based on how well you know them. Words move through boxes with increasing review intervals (1 hour, 1 day, 3 days, 1 week, 2 weeks, 1 month), optimizing your learning efficiency.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ 3 -->
+                <div class="border border-gray-200 rounded-2xl overflow-hidden hover:border-orange-200 transition-colors">
+                    <button class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-orange-50 transition-colors" onclick="toggleFAQ(3)">
+                        <span class="text-lg font-semibold">Can I use Decorebator offline?</span>
+                        <i class="fas fa-chevron-down text-[#636E72] transition-transform" id="faq-icon-3"></i>
+                    </button>
+                    <div class="hidden px-6 pb-4" id="faq-content-3">
+                        <p class="text-[#636E72] leading-relaxed">
+                            Yes! Premium users can download their wordlists and continue learning offline. Your progress syncs automatically when you reconnect to the internet, ensuring you never miss a learning session.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ 4 -->
+                <div class="border border-gray-200 rounded-2xl overflow-hidden hover:border-orange-200 transition-colors">
+                    <button class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-orange-50 transition-colors" onclick="toggleFAQ(4)">
+                        <span class="text-lg font-semibold">What languages are supported?</span>
+                        <i class="fas fa-chevron-down text-[#636E72] transition-transform" id="faq-icon-4"></i>
+                    </button>
+                    <div class="hidden px-6 pb-4" id="faq-content-4">
+                        <p class="text-[#636E72] leading-relaxed">
+                            Decorebator features native AI support for 7 languages: English, Spanish, French, German, Italian, Portuguese, and Japanese. Our AI generates language-specific content with proper grammar rules, cultural context, and optimized voices for each language.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ 5 -->
+                <div class="border border-gray-200 rounded-2xl overflow-hidden hover:border-orange-200 transition-colors">
+                    <button class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-orange-50 transition-colors" onclick="toggleFAQ(5)">
+                        <span class="text-lg font-semibold">How do the different quiz modes work?</span>
+                        <i class="fas fa-chevron-down text-[#636E72] transition-transform" id="faq-icon-5"></i>
+                    </button>
+                    <div class="hidden px-6 pb-4" id="faq-content-5">
+                        <p class="text-[#636E72] leading-relaxed">
+                            We offer 7 quiz modes: meaning matching, word from meaning, image association, audio comprehension, sentence completion, write from definition, and audio-to-meaning. Each mode targets different aspects of vocabulary learning and adapts based on your current Leitner box level.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ 6 -->
+                <div class="border border-gray-200 rounded-2xl overflow-hidden hover:border-orange-200 transition-colors">
+                    <button class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-orange-50 transition-colors" onclick="toggleFAQ(6)">
+                        <span class="text-lg font-semibold">What makes the multi-language AI special?</span>
+                        <i class="fas fa-chevron-down text-[#636E72] transition-transform" id="faq-icon-6"></i>
+                    </button>
+                    <div class="hidden px-6 pb-4" id="faq-content-6">
+                        <p class="text-[#636E72] leading-relaxed">
+                            Our AI doesn't just translate - it understands each language natively. Spanish definitions include gender-aware grammar, German definitions use the four-case system, Japanese content handles kanji/hiragana appropriately, and each language gets culturally relevant images and optimized voice selection.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="download" class="py-20 bg-gradient-to-r from-[#FF7B54] to-orange-600 relative overflow-hidden reveal">
+        <!-- Animated background elements -->
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute -top-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl float-animation"></div>
+            <div class="absolute -bottom-10 -right-10 w-60 h-60 bg-white/10 rounded-full blur-2xl float-animation" style="animation-delay: 3s;"></div>
+        </div>
+        
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <h2 class="text-4xl lg:text-5xl font-bold text-white mb-6">
+                Ready to Transform Your Language Learning?
+            </h2>
+            <p class="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+                Join 10,000+ learners who are mastering new languages with AI-powered vocabulary learning and spaced repetition.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+                <button class="group bg-white text-[#FF7B54] px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                    <span>Start Your Free Trial</span>
+                    <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
+                </button>
+                <button class="group bg-white/20 backdrop-blur text-white px-8 py-4 rounded-full font-semibold text-lg border-2 border-white/50 hover:bg-white/30 transition-all duration-300">
+                    <i class="fas fa-play-circle mr-2"></i>
+                    <span>Watch Demo</span>
+                </button>
+            </div>
+            
+            <!-- App Store Buttons -->
+            <div class="flex flex-wrap gap-4 justify-center">
+                <a href="#" class="transform hover:scale-105 transition-transform duration-300">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
+                         alt="Download on App Store" 
+                         class="h-14">
+                </a>
+                <a href="#" class="transform hover:scale-105 transition-transform duration-300">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
+                         alt="Get it on Google Play" 
+                         class="h-14">
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Us Section -->
+    <section id="contact" class="py-20 bg-white reveal">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-4">
+                    Get in 
+                    <span class="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">Touch</span>
+                </h2>
+                <p class="text-xl text-[#636E72] max-w-2xl mx-auto">
+                    Have questions about Decorebator? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+                </p>
+            </div>
+
+            <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-3xl p-8 lg:p-12 shadow-xl">
+                <form class="space-y-6" action="#" method="POST">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Name -->
+                        <div>
+                            <label for="name" class="block text-sm font-semibold text-[#2D3436] mb-3">
+                                Full Name <span class="text-[#FF7B54]">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                required
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#FF7B54] focus:ring-2 focus:ring-[#FF7B54]/20 outline-none transition-all duration-300 bg-white"
+                                placeholder="Enter your full name"
+                            >
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label for="email" class="block text-sm font-semibold text-[#2D3436] mb-3">
+                                Email Address <span class="text-[#FF7B54]">*</span>
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                required
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#FF7B54] focus:ring-2 focus:ring-[#FF7B54]/20 outline-none transition-all duration-300 bg-white"
+                                placeholder="Enter your email address"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Subject -->
+                    <div>
+                        <label for="subject" class="block text-sm font-semibold text-[#2D3436] mb-3">
+                            Subject <span class="text-[#FF7B54]">*</span>
+                        </label>
+                        <select
+                            id="subject"
+                            name="subject"
+                            required
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#FF7B54] focus:ring-2 focus:ring-[#FF7B54]/20 outline-none transition-all duration-300 bg-white"
+                        >
+                            <option value="">Select a subject</option>
+                            <option value="general">General Inquiry</option>
+                            <option value="support">Technical Support</option>
+                            <option value="billing">Billing & Subscriptions</option>
+                            <option value="feature">Feature Request</option>
+                            <option value="bug">Bug Report</option>
+                            <option value="business">Business Inquiry</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Message -->
+                    <div>
+                        <label for="message" class="block text-sm font-semibold text-[#2D3436] mb-3">
+                            Message <span class="text-[#FF7B54]">*</span>
+                        </label>
+                        <textarea
+                            id="message"
+                            name="message"
+                            rows="6"
+                            required
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#FF7B54] focus:ring-2 focus:ring-[#FF7B54]/20 outline-none transition-all duration-300 resize-none bg-white"
+                            placeholder="Please describe your inquiry in detail..."
+                        ></textarea>
+                    </div>
+
+                    <!-- Privacy Notice -->
+                    <div class="bg-white/60 rounded-xl p-4 border border-orange-100">
+                        <div class="flex items-start space-x-3">
+                            <input
+                                type="checkbox"
+                                id="privacy"
+                                name="privacy"
+                                required
+                                class="mt-1 w-4 h-4 text-[#FF7B54] border-gray-300 rounded focus:ring-[#FF7B54] focus:ring-2"
+                            >
+                            <label for="privacy" class="text-sm text-[#636E72] leading-relaxed">
+                                I agree to the processing of my personal data in accordance with Decorebator's 
+                                <a href="/privacy" class="text-[#FF7B54] hover:underline font-medium">Privacy Policy</a>. 
+                                We will use your information to respond to your inquiry and may contact you about our services.
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <button
+                            type="submit"
+                            class="group bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 inline-flex items-center"
+                        >
+                            <span>Send Message</span>
+                            <i class="fas fa-paper-plane ml-2 group-hover:translate-x-2 transition-transform"></i>
+                        </button>
+                    </div>
+
+                    <!-- Contact Info -->
+                    <div class="mt-12 text-center">
+                        <p class="text-[#636E72] mb-4">
+                            Prefer email? Reach us directly at:
+                        </p>
+                        <a href="mailto:support@decorebator.com" class="text-[#FF7B54] font-semibold text-lg hover:underline">
+                            support@decorebator.com
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-4 gap-8 mb-12">
+                <!-- Brand -->
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-[#FF7B54] to-orange-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-lg"></i>
+                        </div>
+                        <span class="text-2xl font-bold">Decorebator</span>
+                    </div>
+                    <p class="text-gray-400 leading-relaxed">
+                        AI-powered vocabulary learning with spaced repetition. Master any language effectively with our comprehensive learning platform.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Product -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Product</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#features" class="text-gray-400 hover:text-white transition-colors">Features</a></li>
+                        <li><a href="#pricing" class="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
+                        <li><a href="#how-it-works" class="text-gray-400 hover:text-white transition-colors">How It Works</a></li>
+                        <li><a href="#download" class="text-gray-400 hover:text-white transition-colors">Mobile Apps</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Support</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#contact" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+                    </ul>
+                </div>
+
+                <!-- Legal -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Legal</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/privacy" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="/terms" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="/cookie-policy" class="text-gray-400 hover:text-white transition-colors">Cookie Policy</a></li>
+                        <li><a href="/security" class="text-gray-400 hover:text-white transition-colors">Security</a></li>
+                        <li><a href="/gdpr" class="text-gray-400 hover:text-white transition-colors">GDPR</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400">© 2025 Decorebator. All rights reserved.</p>
+                <div class="flex items-center space-x-6 mt-4 md:mt-0">
+                    <span class="text-gray-400 text-sm">Made with ❤️ for language learners worldwide</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // FAQ toggle
+        function toggleFAQ(index) {
+            const content = document.getElementById(`faq-content-${index}`);
+            const icon = document.getElementById(`faq-icon-${index}`);
+            
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        // Reveal on scroll
+        const revealElements = document.querySelectorAll('.reveal');
+        
+        const revealOnScroll = () => {
+            revealElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementBottom = element.getBoundingClientRect().bottom;
+                
+                if (elementTop < window.innerHeight && elementBottom > 0) {
+                    element.classList.add('active');
+                }
+            });
+        };
+
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Initial check
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Header background on scroll
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('header');
+            if (window.scrollY > 50) {
+                header.classList.add('bg-white/95', 'shadow-lg');
+            } else {
+                header.classList.remove('bg-white/95', 'shadow-lg');
+            }
+        });
+
+        // Parallax effect for background elements
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallaxElements = document.querySelectorAll('.parallax');
+            
+            parallaxElements.forEach(element => {
+                const speed = element.dataset.speed || 0.5;
+                element.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+        });
+    </script>
+</body>
+</html>

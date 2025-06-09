@@ -1,0 +1,932 @@
+{
+  "common": {
+    "appName": "Decorebator",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "continue": "Continue",
+    "getStarted": "Get Started",
+    "learnMore": "Learn More",
+    "watchDemo": "Watch Demo",
+    "signUp": "Sign Up",
+    "signIn": "Sign In",
+    "contactUs": "Contact Us"
+  },
+  "navigation": {
+    "home": "Home",
+    "features": "Features",
+    "pricing": "Pricing",
+    "howItWorks": "How It Works",
+    "helpCenter": "Help Center",
+    "faq": "FAQ",
+    "about": "About",
+    "contact": "Contact",
+    "blog": "Blog",
+    "careers": "Careers",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "getStartedFree": "Start Free Trial"
+  },
+  "hero": {
+    "title": "Master Languages with",
+    "rotatingWords": {
+      "aiIntelligence": "AI Intelligence",
+      "spacedRepetition": "Spaced Repetition",
+      "visualLearning": "Visual Learning",
+      "smartQuizzes": "Smart Quizzes"
+    },
+    "subtitle": "Transform your vocabulary learning with AI-generated content, scientifically-proven spaced repetition, and 8 engaging quiz modes. Join {count}+ learners mastering new languages effectively.",
+    "startLearningFree": "Start Learning Free",
+    "watchDemo": "Watch Demo",
+    "stats": {
+      "rating": "4.9/5",
+      "activeLearnersCount": "10,000+ active learners",
+      "languagesCount": "7 native AI languages"
+    }
+  },
+  "features": {
+    "title": "Powerful Features for Language Mastery",
+    "subtitle": "Everything you need to accelerate your vocabulary learning journey",
+    "aiPowered": {
+      "title": "AI-Powered Content Generation",
+      "description": "Instantly generate definitions, images, audio, and examples for any word using advanced AI technology."
+    },
+    "spacedRepetition": {
+      "title": "Scientific Spaced Repetition",
+      "description": "Master vocabulary efficiently with our 7-box Leitner system proven to boost retention by 85%."
+    },
+    "multipleQuizModes": {
+      "title": "8 Interactive Quiz Modes",
+      "description": "From visual recognition to audio comprehension - practice with diverse quiz types for comprehensive learning."
+    },
+    "visualLearning": {
+      "title": "Visual Learning with AI Images",
+      "description": "AI-generated images help create stronger memory associations for faster vocabulary retention."
+    },
+    "audioLearning": {
+      "title": "Native-Quality Audio",
+      "description": "Perfect pronunciation with AI-generated audio in native speaker quality for all supported languages."
+    },
+    "progressTracking": {
+      "title": "Advanced Analytics",
+      "description": "Track your progress with detailed analytics, mastery levels, and personalized learning insights."
+    },
+    "multiLanguage": {
+      "title": "7 Native Languages",
+      "description": "Full AI support for English, Spanish, French, German, Italian, Portuguese, and Japanese."
+    },
+    "offlineSupport": {
+      "title": "Offline Learning",
+      "description": "Premium users can download wordlists and continue learning without an internet connection."
+    },
+    "errorReporting": {
+      "title": "Content Quality Control",
+      "description": "Report AI content issues and help improve the learning experience for everyone."
+    },
+    "mobileFirst": {
+      "title": "Cross-Platform Learning",
+      "description": "Seamless experience across mobile, tablet, and web with automatic sync."
+    }
+  },
+  "showcase": {
+    "title": "See Decorebator in Action",
+    "subtitle": "Experience the complete learning ecosystem designed for modern language learners",
+    "features": {
+      "aiContent": {
+        "title": "AI-Generated Content",
+        "description": "Every word comes with AI-generated definitions, images, audio pronunciations, and contextual examples in your target language."
+      },
+      "smartQuizzes": {
+        "title": "Adaptive Quiz System",
+        "description": "8 different quiz modes that adapt to your learning progress, from basic recognition to advanced comprehension."
+      },
+      "analytics": {
+        "title": "Learning Analytics",
+        "description": "Track your progress with detailed analytics showing mastery levels, learning velocity, and retention rates."
+      }
+    }
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "subtitle": "Master vocabulary in three simple steps",
+    "step1": {
+      "title": "Create & Add Words",
+      "description": "Create wordlists and add words you want to learn. AI automatically generates rich content for each word."
+    },
+    "step2": {
+      "title": "Smart Practice",
+      "description": "Practice with 8 interactive quiz modes. Our Leitner system optimizes review timing for maximum retention."
+    },
+    "step3": {
+      "title": "Track Progress",
+      "description": "Monitor your learning journey with detailed analytics and achieve vocabulary mastery faster."
+    }
+  },
+  "testimonials": {
+    "title": "Loved by Language Learners Worldwide",
+    "subtitle": "Join thousands of successful learners who transformed their vocabulary",
+    "stats": {
+      "wordsLearned": "2.5M+ words learned",
+      "retentionRate": "85% retention rate",
+      "satisfaction": "4.9/5 satisfaction"
+    },
+    "testimonial1": {
+      "text": "Decorebator completely changed how I learn vocabulary. The AI-generated images and spaced repetition system helped me master 500+ Spanish words in just 2 months!",
+      "author": "Sarah Chen",
+      "role": "Spanish Learner"
+    },
+    "testimonial2": {
+      "text": "As a language teacher, I recommend Decorebator to all my students. The analytics feature helps me track their progress and the multiple quiz modes keep them engaged.",
+      "author": "Dr. Marcus Weber",
+      "role": "Language Professor"
+    },
+    "testimonial3": {
+      "text": "The offline feature is perfect for my commute. I can practice vocabulary on the subway without worrying about connectivity. The AI content quality is impressive!",
+      "author": "Yuki Tanaka",
+      "role": "Business Professional"
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Everything you need to know about Decorebator",
+    "question1": {
+      "question": "What languages does Decorebator support?",
+      "answer": "Decorebator offers full AI-powered support for 7 languages: English, Spanish, French, German, Italian, Portuguese, and Japanese. Each language has native-quality content generation, culturally relevant images, and optimized voice selection."
+    },
+    "question2": {
+      "question": "How does the Leitner system work?",
+      "answer": "Our 7-box Leitner system uses scientifically-proven spaced repetition. Words move between boxes based on your performance, with review intervals from immediate (Box 1) to monthly (Box 7). This optimizes learning efficiency and long-term retention."
+    },
+    "question3": {
+      "question": "What's included in the Premium plan?",
+      "answer": "Premium includes unlimited wordlists and words, all 8 quiz modes, AI-generated content for every word, advanced analytics, offline support, and priority customer support. Free users get 1 wordlist with up to 10 words."
+    },
+    "question4": {
+      "question": "Can I use Decorebator offline?",
+      "answer": "Yes! Premium subscribers can download their wordlists for offline access. You can practice quizzes and review flashcards without an internet connection, with progress syncing when you're back online."
+    },
+    "question5": {
+      "question": "How accurate is the AI-generated content?",
+      "answer": "Our AI content is highly accurate and continuously improving. We use advanced language models trained on vast datasets. Plus, our error reporting system allows users to flag issues, helping us maintain and improve content quality."
+    },
+    "question6": {
+      "question": "Is there a mobile app?",
+      "answer": "Yes! Decorebator is available on iOS and Android with full feature parity. Your progress syncs seamlessly between the mobile app and web platform, so you can learn anywhere."
+    }
+  },
+  "pricing": {
+    "title": "Choose Your Learning Plan",
+    "subtitle": "Start free, upgrade when you're ready to accelerate your learning",
+    "free": {
+      "title": "Free Plan",
+      "price": "$0",
+      "period": "",
+      "description": "Perfect for trying out the platform",
+      "features": {
+        "wordlists": "1 wordlist",
+        "words": "Up to 10 words",
+        "quizModes": "Basic quiz modes",
+        "access": "Online-only access"
+      },
+      "cta": "Get Started Free"
+    },
+    "monthly": {
+      "title": "Monthly Premium",
+      "price": "$6.99",
+      "period": "/month",
+      "description": "Full access to all premium features",
+      "badge": "Most Popular",
+      "features": {
+        "wordlists": "Unlimited wordlists",
+        "words": "Unlimited words",
+        "quizModes": "All 8 quiz modes",
+        "analytics": "Advanced analytics",
+        "offline": "Offline support",
+        "support": "Priority support"
+      },
+      "cta": "Start Monthly"
+    },
+    "annual": {
+      "title": "Annual Premium",
+      "price": "$69.90",
+      "period": "/year",
+      "description": "Best value for committed learners",
+      "savings": "Save $13.98!",
+      "features": {
+        "everything": "Everything in Monthly",
+        "value": "Best value for money",
+        "support": "Priority customer support",
+        "earlyAccess": "Early access to features"
+      },
+      "cta": "Start Annual"
+    }
+  },
+  "cta": {
+    "title": "Ready to Transform Your Language Learning?",
+    "subtitle": "Join 10,000+ learners who are mastering new languages with AI-powered vocabulary learning and spaced repetition.",
+    "startFreeTrial": "Start Your Free Trial"
+  },
+  "contact": {
+    "title": "Get in Touch",
+    "subtitle": "Have questions? We'd love to hear from you.",
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Your name",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "subject": "Subject",
+      "subjectPlaceholder": "What's this about?",
+      "message": "Message",
+      "messagePlaceholder": "Tell us more...",
+      "send": "Send Message",
+      "sending": "Sending...",
+      "success": "Message sent successfully!",
+      "error": "Failed to send message. Please try again."
+    },
+    "info": {
+      "email": "support@decorebator.com",
+      "response": "We typically respond within 24 hours",
+      "social": "Follow us on social media for updates"
+    }
+  },
+  "footer": {
+    "copyright": "© {year} Decorebator. All rights reserved.",
+    "about": {
+      "title": "About",
+      "soloEntrepreneur": "Solo Entrepreneur",
+      "location": "Brazil 🇧🇷",
+      "description": "Responsible for the architecture, full implementation, and design of this project. Solving a personal problem and thought it would be interesting to share with others.",
+      "followTwitter": "Follow on Twitter"
+    },
+    "social": {
+      "facebook": "Decorebator on Facebook",
+      "twitter": "Decorebator on Twitter", 
+      "instagram": "Decorebator on Instagram",
+      "linkedin": "Decorebator on LinkedIn"
+    }
+  },
+  "help": {
+    "title": "Help Center",
+    "subtitle": "Everything you need to know about Decorebator - AI-powered vocabulary learning",
+    "quickNavigation": "Quick Navigation",
+    "gettingStarted": {
+      "title": "Getting Started",
+      "createAccount": {
+        "title": "1. Create Your Account",
+        "steps": [
+          "Sign up with email and password",
+          "Choose your learning plan (Free or Premium)",
+          "Download the mobile app from your app store",
+          "Sign in with the same credentials"
+        ]
+      },
+      "startLearning": {
+        "title": "2. Start Learning",
+        "steps": [
+          "Create your first wordlist",
+          "Add words you want to learn",
+          "AI automatically generates definitions and content",
+          "Begin practicing with interactive quizzes"
+        ]
+      },
+      "proTip": "Start with 5-10 words in your first wordlist to get familiar with the system before adding more!"
+    },
+    "coreFeatures": {
+      "title": "Core Features",
+      "aiPowered": {
+        "title": "AI-Powered Content",
+        "description": "Automatically generates definitions, images, audio pronunciations, and example sentences for every word you add."
+      },
+      "quizModes": {
+        "title": "7 Quiz Modes",
+        "modes": [
+          "Guess Meaning",
+          "Word from Meaning",
+          "Image Association",
+          "Audio Comprehension",
+          "Sentence Completion",
+          "Write from Definition",
+          "Audio Recognition",
+          "Example Audio"
+        ]
+      },
+      "spacedRepetition": {
+        "title": "Spaced Repetition",
+        "description": "Uses the scientifically-proven Leitner system with 7 boxes to optimize when you review words for maximum retention."
+      },
+      "analytics": {
+        "title": "Advanced Analytics",
+        "description": "Track your progress with detailed statistics, word mastery levels, learning velocity, and retention rates."
+      },
+      "multiLanguage": {
+        "title": "Multi-Language Support",
+        "description": "Native AI support for 7 languages: English, Spanish, French, German, Italian, Portuguese, and Japanese."
+      },
+      "offline": {
+        "title": "Offline Support",
+        "description": "Premium users can download wordlists for offline access and continue learning without internet connection."
+      }
+    },
+    "leitnerSystem": {
+      "title": "How the Leitner System Works",
+      "description": "Decorebator uses a sophisticated 7-box Leitner system for optimal vocabulary retention through spaced repetition.",
+      "table": {
+        "box": "Box",
+        "interval": "Review Interval",
+        "purpose": "Purpose",
+        "boxes": [
+          {"box": "Box 1", "interval": "Immediate", "purpose": "New words, failed reviews"},
+          {"box": "Box 2", "interval": "1 hour", "purpose": "Recent learning"},
+          {"box": "Box 3", "interval": "1 day", "purpose": "Short-term retention"},
+          {"box": "Box 4", "interval": "3 days", "purpose": "Medium-term retention"},
+          {"box": "Box 5", "interval": "1 week", "purpose": "Long-term retention"},
+          {"box": "Box 6", "interval": "2 weeks", "purpose": "Extended retention"},
+          {"box": "Box 7", "interval": "1 month", "purpose": "Mastered words"}
+        ]
+      },
+      "progressionRules": {
+        "title": "Progression Rules",
+        "correct": "Correct Answer: Word moves to the next box",
+        "incorrect": "Incorrect Answer: Word resets to Box 1",
+        "mastered": "Box 7: Words stay in Box 7 when correct (mastered)"
+      },
+      "quizProgression": {
+        "title": "Quiz Type Progression",
+        "description": "Different quiz types are introduced based on the word's box level to increase difficulty progressively as you master each word."
+      }
+    },
+    "subscriptionPlans": {
+      "title": "Subscription Plans"
+    },
+    "languageSupport": {
+      "title": "Multi-Language Support",
+      "description": "Decorebator provides comprehensive multi-language support with native AI processing for authentic learning experiences.",
+      "supportedLanguages": "Supported Languages (7)",
+      "aiFeatures": "AI Features per Language",
+      "features": [
+        "Native Grammar: Language-specific rules and structures",
+        "Cultural Context: Culturally relevant images and examples",
+        "Optimized Audio: Native-sounding voice selection per language",
+        "Verb Systems: Language-appropriate tenses and inflections"
+      ]
+    },
+    "troubleshooting": {
+      "title": "Troubleshooting & Support",
+      "commonIssues": "Common Issues",
+      "audioNotPlaying": {
+        "title": "Audio not playing",
+        "solution": "Check your device volume and ensure you have a stable internet connection. Audio is generated by AI and requires online access."
+      },
+      "imagesNotLoading": {
+        "title": "Images not loading",
+        "solution": "Images are generated by AI and may take a few moments to appear. Refresh the quiz or use the error reporting feature if issues persist."
+      },
+      "subscriptionNotUpdating": {
+        "title": "Subscription not updating",
+        "solution": "After completing payment, close and reopen the app to refresh your subscription status. Changes should appear within a few minutes."
+      },
+      "errorReporting": {
+        "title": "Error Reporting",
+        "description": "If you encounter issues with AI-generated content, use our built-in error reporting system:",
+        "types": [
+          "Report incorrect definitions",
+          "Flag inappropriate images",
+          "Report audio playback issues",
+          "Submit irrelevant examples",
+          "Flag loading problems"
+        ]
+      },
+      "needHelp": {
+        "title": "Need More Help?",
+        "description": "Our support team is here to help you get the most out of Decorebator.",
+        "email": "Contact Support: support@decorebator.com"
+      }
+    },
+    "stillNeedHelp": {
+      "title": "Still Need Help?",
+      "subtitle": "Our support team is ready to assist you with any questions or issues.",
+      "emailSupport": "Email Support",
+      "contactForm": "Contact Form"
+    }
+  },
+  "signup": {
+    "title": "Join Decorebator",
+    "subtitle": "Start your language learning journey today",
+    "planSelection": {
+      "free": "You're signing up for the Free plan",
+      "monthly": "You're signing up for the Monthly Premium plan ($6.99/month)",
+      "annual": "You're signing up for the Annual Premium plan ($69.90/year)"
+    },
+    "form": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email Address",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "firstNamePlaceholder": "Enter your first name",
+      "lastNamePlaceholder": "Enter your last name",
+      "emailPlaceholder": "Enter your email address",
+      "passwordPlaceholder": "Create a secure password",
+      "confirmPasswordPlaceholder": "Confirm your password"
+    },
+    "features": {
+      "title": "What you'll get:",
+      "free": [
+        "1 wordlist with up to 10 words",
+        "Basic quiz modes",
+        "AI-generated content",
+        "Mobile and web access"
+      ],
+      "premium": [
+        "Unlimited wordlists and words",
+        "All 8 quiz modes",
+        "Advanced analytics",
+        "Offline support",
+        "Priority support"
+      ]
+    },
+    "terms": "By signing up, you agree to our {termsLink} and {privacyLink}",
+    "createAccount": "Create Account",
+    "creating": "Creating account...",
+    "alreadyHaveAccount": "Already have an account? {signInLink}",
+    "errors": {
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address",
+      "passwordRequired": "Password is required",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "passwordsMismatch": "Passwords do not match",
+      "signupFailed": "Failed to create account. Please try again."
+    }
+  },
+  "signupSuccess": {
+    "title": "Welcome to Decorebator!",
+    "subtitle": "Your account has been created successfully",
+    "freeFlow": {
+      "title": "You're all set with the Free plan!",
+      "description": "Download the mobile app to start learning vocabulary with AI-powered content and spaced repetition.",
+      "nextSteps": "Next Steps:",
+      "steps": [
+        "Download the Decorebator app",
+        "Sign in with your account",
+        "Create your first wordlist",
+        "Start learning!"
+      ]
+    },
+    "premiumFlow": {
+      "title": "Complete Your Premium Setup",
+      "description": "You're just one step away from unlocking unlimited learning potential.",
+      "redirecting": "Redirecting you to secure payment...",
+      "manualRedirect": "If you're not redirected automatically, {clickHere}.",
+      "clickHere": "click here",
+      "afterPayment": "After completing payment:",
+      "steps": [
+        "Download the mobile app",
+        "Sign in to see your Premium features",
+        "Create unlimited wordlists",
+        "Access all 8 quiz modes and offline support"
+      ],
+      "premiumFeatures": "Premium Features You'll Unlock:",
+      "features": [
+        "Unlimited wordlists and words",
+        "All 8 interactive quiz modes",
+        "Advanced learning analytics",
+        "Offline learning support",
+        "Priority customer support"
+      ]
+    },
+    "downloadApp": "Download the App",
+    "appStore": "Download on App Store",
+    "googlePlay": "Get it on Google Play",
+    "webVersion": "Or continue with the web version",
+    "continueToApp": "Continue to App"
+  },
+  "featurePages": {
+    "aiContent": {
+      "title": "AI-Powered Content Generation",
+      "subtitle": "Automatically enrich your vocabulary with definitions, examples, images, and audio",
+      "description": "Transform any word into a rich learning experience with our advanced AI technology that generates comprehensive content for every word you add to your wordlists.",
+      "hero": {
+        "title": "Enhance Every Word with AI",
+        "subtitle": "Experience the power of AI-generated definitions, contextual examples, visual associations, and native-quality pronunciation for accelerated vocabulary learning."
+      },
+      "benefits": {
+        "title": "Benefits of AI-Powered Learning",
+        "items": [
+          "Instant comprehensive definitions for any word",
+          "Contextual examples in your target language",
+          "AI-generated images for visual memory association",
+          "Native-quality audio pronunciation",
+          "Grammar and usage insights",
+          "Cultural context and nuances"
+        ]
+      },
+      "howItWorks": {
+        "title": "How AI Content Generation Works",
+        "steps": [
+          {
+            "title": "Add Words",
+            "description": "Simply add any word to your wordlist - no manual research needed."
+          },
+          {
+            "title": "AI Processing",
+            "description": "Our advanced AI models analyze the word and generate comprehensive content."
+          },
+          {
+            "title": "Rich Learning",
+            "description": "Get definitions, examples, images, and audio instantly for effective learning."
+          }
+        ]
+      },
+      "features": {
+        "title": "AI Content Features",
+        "definitions": "Comprehensive definitions with multiple meanings and contexts",
+        "examples": "Real-world usage examples in your target language",
+        "images": "Visual associations to strengthen memory retention",
+        "audio": "Perfect pronunciation with native speaker quality",
+        "grammar": "Part of speech and grammatical information",
+        "culture": "Cultural context and usage notes"
+      }
+    },
+    "spacedRepetition": {
+      "title": "Leitner Spaced Repetition System",
+      "subtitle": "Master vocabulary with scientifically-proven learning optimization",
+      "description": "Our advanced 7-box Leitner system optimizes when you review each word for maximum retention and long-term memory formation.",
+      "hero": {
+        "title": "Scientific Learning Optimization",
+        "subtitle": "Increase vocabulary retention by 85% with our proven spaced repetition system based on cognitive science research."
+      },
+      "benefits": {
+        "title": "Why Spaced Repetition Works",
+        "items": [
+          "85% improvement in long-term retention",
+          "Optimized review timing for each word",
+          "Prevents cramming and forgetting cycles",
+          "Builds strong neural pathways",
+          "Maximizes learning efficiency",
+          "Scientifically backed methodology"
+        ]
+      },
+      "system": {
+        "title": "7-Box Leitner System",
+        "description": "Words progress through 7 boxes based on your performance, with increasing review intervals:",
+        "boxes": [
+          { "box": "Box 1", "interval": "Immediate", "purpose": "New words, failed reviews" },
+          { "box": "Box 2", "interval": "1 hour", "purpose": "Recent learning" },
+          { "box": "Box 3", "interval": "1 day", "purpose": "Short-term retention" },
+          { "box": "Box 4", "interval": "3 days", "purpose": "Medium-term retention" },
+          { "box": "Box 5", "interval": "1 week", "purpose": "Long-term retention" },
+          { "box": "Box 6", "interval": "2 weeks", "purpose": "Extended retention" },
+          { "box": "Box 7", "interval": "1 month", "purpose": "Mastered words" }
+        ]
+      },
+      "progression": {
+        "title": "Smart Progression Rules",
+        "correct": "Correct answers move words to the next box with longer intervals",
+        "incorrect": "Incorrect answers reset words to Box 1 for immediate review",
+        "mastered": "Words in Box 7 stay mastered with monthly maintenance reviews"
+      }
+    },
+    "quizModes": {
+      "title": "7 Engaging Quiz Modes",
+      "subtitle": "Comprehensive testing with multiple learning approaches",
+      "description": "Challenge yourself with 8 different quiz types designed to test and strengthen different aspects of vocabulary knowledge and recall.",
+      "hero": {
+        "title": "Multi-Modal Learning Experience",
+        "subtitle": "Engage different learning pathways with varied quiz modes that test recognition, recall, comprehension, and application."
+      },
+      "modes": {
+        "title": "Available Quiz Modes",
+        "guessMeaning": {
+          "title": "Guess Meaning",
+          "description": "Choose the correct definition from multiple choices to test comprehension"
+        },
+        "wordFromMeaning": {
+          "title": "Word from Meaning",
+          "description": "Select the correct word that matches a given definition"
+        },
+        "imageAssociation": {
+          "title": "Image Association",
+          "description": "Identify words from AI-generated visual representations"
+        },
+        "audioComprehension": {
+          "title": "Audio Comprehension",
+          "description": "Recognize words and meanings from pronunciation"
+        },
+        "sentenceCompletion": {
+          "title": "Sentence Completion",
+          "description": "Complete sentences using grammatical and contextual clues"
+        },
+        "writeFromDefinition": {
+          "title": "Write from Definition",
+          "description": "Type the correct word based on its meaning (active recall)"
+        },
+        "audioRecognition": {
+          "title": "Audio Recognition",
+          "description": "Match spoken words with their written forms"
+        },
+        "exampleAudio": {
+          "title": "Example Audio",
+          "description": "Identify words from example sentence audio"
+        }
+      },
+      "benefits": {
+        "title": "Benefits of Multiple Quiz Modes",
+        "items": [
+          "Engages different learning pathways",
+          "Prevents monotony and boredom",
+          "Tests various aspects of knowledge",
+          "Builds comprehensive understanding",
+          "Adapts to different learning styles",
+          "Increases retention through variety"
+        ]
+      }
+    },
+    "visualLearning": {
+      "title": "Visual Learning with AI Images",
+      "subtitle": "Strengthen memory with powerful visual associations",
+      "description": "Leverage the power of visual memory with AI-generated images that create strong mental associations for every word in your vocabulary.",
+      "hero": {
+        "title": "See, Learn, Remember",
+        "subtitle": "Transform abstract words into memorable visual experiences with AI-generated images tailored to enhance your learning."
+      },
+      "benefits": {
+        "title": "Power of Visual Learning",
+        "items": [
+          "Visual memory is 6x stronger than text alone",
+          "Creates lasting mental associations",
+          "Engages multiple learning pathways",
+          "Improves recall speed and accuracy",
+          "Makes abstract concepts concrete",
+          "Enhances long-term retention"
+        ]
+      },
+      "features": {
+        "title": "AI Image Features",
+        "generation": "Custom images generated for each word",
+        "context": "Contextually relevant visual representations",
+        "culture": "Culturally appropriate imagery",
+        "quality": "High-quality AI-generated visuals",
+        "association": "Designed for optimal memory association",
+        "variety": "Diverse visual styles and approaches"
+      },
+      "science": {
+        "title": "The Science Behind Visual Learning",
+        "description": "Research shows that visual learning significantly improves retention and recall. Our AI-generated images are specifically designed to create the strongest possible memory associations."
+      }
+    },
+    "audioLearning": {
+      "title": "Multi-Language Audio Learning",
+      "subtitle": "Perfect pronunciation with native-quality voices",
+      "description": "Master pronunciation with our advanced text-to-speech technology featuring language-optimized voices for authentic, native-sounding audio.",
+      "hero": {
+        "title": "Hear It Right, Say It Right",
+        "subtitle": "Experience authentic pronunciation with AI-powered audio that adapts to each language's unique characteristics and sounds."
+      },
+      "features": {
+        "title": "Audio Learning Features",
+        "quality": "Native speaker quality for all 7 supported languages",
+        "optimization": "Language-specific voice selection and optimization",
+        "clarity": "Crystal clear pronunciation for every word",
+        "speed": "Adjustable playback speed for learning",
+        "repetition": "Unlimited audio repetition for practice",
+        "offline": "Downloaded audio works offline (Premium)"
+      },
+      "languages": {
+        "title": "Supported Languages",
+        "description": "Native-quality audio generation for:",
+        "list": [
+          "English - Multiple accent variations",
+          "Spanish - Latin American and European",
+          "French - Standard French pronunciation",
+          "German - High German standard",
+          "Italian - Standard Italian",
+          "Portuguese - Brazilian Portuguese",
+          "Japanese - Tokyo standard pronunciation"
+        ]
+      },
+      "benefits": {
+        "title": "Benefits of Audio Learning",
+        "items": [
+          "Improve pronunciation accuracy",
+          "Develop listening comprehension",
+          "Learn proper word stress and intonation",
+          "Build confidence in speaking",
+          "Enhance auditory memory",
+          "Practice authentic pronunciation"
+        ]
+      }
+    },
+    "analytics": {
+      "title": "Advanced Learning Analytics",
+      "subtitle": "Track progress with comprehensive insights and statistics",
+      "description": "Monitor your vocabulary learning journey with detailed analytics that provide actionable insights into your progress, strengths, and areas for improvement.",
+      "hero": {
+        "title": "Data-Driven Learning Success",
+        "subtitle": "Make informed decisions about your study habits with comprehensive analytics that track every aspect of your vocabulary learning."
+      },
+      "metrics": {
+        "title": "Key Analytics Metrics",
+        "retention": "Retention rates by word and category",
+        "speed": "Learning velocity and improvement trends",
+        "mastery": "Word mastery levels and progression",
+        "accuracy": "Quiz accuracy across different modes",
+        "time": "Study time and session analytics",
+        "streaks": "Learning streaks and consistency"
+      },
+      "insights": {
+        "title": "Actionable Insights",
+        "items": [
+          "Identify your strongest learning times",
+          "Discover which quiz modes work best for you",
+          "Track long-term retention patterns",
+          "Optimize study session length",
+          "Monitor learning velocity trends",
+          "Set and achieve vocabulary goals"
+        ]
+      },
+      "features": {
+        "title": "Analytics Features",
+        "dashboard": "Comprehensive progress dashboard",
+        "trends": "Visual learning trend analysis",
+        "goals": "Goal setting and tracking",
+        "reports": "Detailed performance reports",
+        "comparison": "Progress comparison over time",
+        "export": "Export analytics data (Premium)"
+      }
+    },
+    "multiLanguage": {
+      "title": "7 Native AI Languages",
+      "subtitle": "Full AI support with language-specific processing",
+      "description": "Experience authentic language learning with native AI processing that understands the unique grammar, culture, and nuances of each supported language.",
+      "hero": {
+        "title": "True Multilingual AI",
+        "subtitle": "Each language gets dedicated AI processing with native grammar rules, cultural context, and linguistic accuracy."
+      },
+      "languages": {
+        "title": "Supported Languages",
+        "english": "English - Global variations and contexts",
+        "spanish": "Spanish - Latin American and European variants",
+        "french": "French - Standard French with cultural nuances",
+        "german": "German - High German with compound word support",
+        "italian": "Italian - Standard Italian with regional awareness",
+        "portuguese": "Portuguese - Brazilian Portuguese focus",
+        "japanese": "Japanese - Hiragana, Katakana, and Kanji support"
+      },
+      "features": {
+        "title": "Language-Specific Features",
+        "grammar": "Native grammar rules and structures",
+        "culture": "Cultural context and appropriate usage",
+        "pronunciation": "Language-optimized voice selection",
+        "examples": "Authentic examples in target language",
+        "nuances": "Idiomatic expressions and nuances",
+        "variations": "Regional and dialectal variations"
+      },
+      "benefits": {
+        "title": "Benefits of Native AI Processing",
+        "items": [
+          "Accurate grammar and usage patterns",
+          "Culturally appropriate content",
+          "Authentic language examples",
+          "Proper pronunciation guides",
+          "Context-aware translations",
+          "Native speaker quality content"
+        ]
+      }
+    },
+    "flashcards": {
+      "title": "Interactive Flashcards",
+      "subtitle": "Immersive full-screen learning with rich content",
+      "description": "Study with beautifully designed interactive flashcards that present comprehensive word information in an engaging, distraction-free format.",
+      "hero": {
+        "title": "Focus on What Matters",
+        "subtitle": "Immerse yourself in learning with full-screen flashcards that eliminate distractions and maximize retention."
+      },
+      "features": {
+        "title": "Flashcard Features",
+        "fullscreen": "Immersive full-screen experience",
+        "animations": "Smooth flip animations and transitions",
+        "content": "Rich content with definitions, examples, and audio",
+        "images": "AI-generated visual associations",
+        "audio": "Integrated pronunciation playback",
+        "reporting": "Built-in error reporting system"
+      },
+      "design": {
+        "title": "Thoughtful Design",
+        "items": [
+          "Clean, distraction-free interface",
+          "Optimized for focus and concentration",
+          "Smooth animations enhance experience",
+          "Consistent design across devices",
+          "Accessibility-friendly features",
+          "Customizable study preferences"
+        ]
+      },
+      "integration": {
+        "title": "Seamless Integration",
+        "description": "Flashcards work seamlessly with the Leitner system, automatically scheduling review sessions based on your learning progress and retention patterns."
+      }
+    },
+    "errorReporting": {
+      "title": "Error Reporting System",
+      "subtitle": "User-driven quality control for continuous improvement",
+      "description": "Help improve the platform for everyone by reporting issues with AI-generated content through our comprehensive error reporting system.",
+      "hero": {
+        "title": "Community-Driven Quality",
+        "subtitle": "Contribute to better learning experiences by reporting content issues and helping us continuously improve our AI models."
+      },
+      "types": {
+        "title": "Error Types You Can Report",
+        "definition": "Incorrect or incomplete definitions",
+        "image": "Inappropriate or irrelevant images",
+        "audio": "Audio playback or pronunciation issues",
+        "example": "Irrelevant or incorrect example sentences",
+        "loading": "Content loading or display problems"
+      },
+      "process": {
+        "title": "How Error Reporting Works",
+        "steps": [
+          {
+            "title": "Identify Issue",
+            "description": "Notice a problem with AI-generated content during your study session."
+          },
+          {
+            "title": "Report Error",
+            "description": "Use the built-in reporting system to categorize and describe the issue."
+          },
+          {
+            "title": "Automatic Processing",
+            "description": "Our system automatically regenerates content and improves AI models."
+          }
+        ]
+      },
+      "benefits": {
+        "title": "Benefits of Error Reporting",
+        "items": [
+          "Improves content quality for all users",
+          "Helps train and refine AI models",
+          "Ensures cultural and linguistic accuracy",
+          "Provides feedback for continuous improvement",
+          "Creates a better learning experience",
+          "Builds a community-driven platform"
+        ]
+      }
+    },
+    "offlineSupport": {
+      "title": "Offline Learning Support",
+      "subtitle": "Learn anywhere, anytime without internet connection",
+      "description": "Premium users can download wordlists and continue learning offline with full quiz functionality and progress tracking.",
+      "hero": {
+        "title": "Learning Without Limits",
+        "subtitle": "Take your vocabulary learning anywhere with offline access to wordlists, quizzes, and all your study materials."
+      },
+      "features": {
+        "title": "Offline Features",
+        "download": "Download wordlists for offline access",
+        "quizzes": "Full quiz functionality without internet",
+        "flashcards": "Offline flashcard studying",
+        "audio": "Downloaded audio pronunciation",
+        "progress": "Local progress tracking",
+        "sync": "Automatic sync when back online"
+      },
+      "benefits": {
+        "title": "Benefits of Offline Learning",
+        "items": [
+          "Learn during commutes and travel",
+          "No interruption from poor connectivity",
+          "Save on mobile data usage",
+          "Study in remote locations",
+          "Consistent learning experience",
+          "Never lose study momentum"
+        ]
+      },
+      "howItWorks": {
+        "title": "How Offline Support Works",
+        "steps": [
+          {
+            "title": "Download Content",
+            "description": "Download your wordlists while connected to the internet."
+          },
+          {
+            "title": "Study Offline",
+            "description": "Access all content and quiz modes without internet connection."
+          },
+          {
+            "title": "Sync Progress",
+            "description": "Progress automatically syncs when you reconnect to the internet."
+          }
+        ]
+      },
+      "premium": {
+        "title": "Premium Feature",
+        "description": "Offline support is available for Premium subscribers. Upgrade to unlock unlimited offline learning capabilities."
+      }
+    }
+  }
+}

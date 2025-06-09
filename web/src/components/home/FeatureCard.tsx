@@ -4,16 +4,77 @@ import { Feature } from '../../types';
 
 interface FeatureCardProps {
   feature: Feature;
+  index?: number;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ feature }) => {
+const FeatureCard: React.FC<FeatureCardProps> = ({ feature, index = 0 }) => {
+  const animationDelay = `${index * 0.1}s`;
+  
+  const cardStyles = [
+    {
+      bg: 'bg-gradient-to-br from-indigo-50 to-purple-50',
+      border: 'border-indigo-100',
+      iconBg: 'bg-gradient-to-br from-[#6366F1] to-indigo-600',
+      icon: 'fas fa-globe',
+      linkColor: 'text-[#6366F1]'
+    },
+    {
+      bg: 'bg-gradient-to-br from-orange-50 to-amber-50',
+      border: 'border-orange-100',
+      iconBg: 'bg-gradient-to-br from-[#FF7B54] to-orange-600',
+      icon: 'fas fa-brain',
+      linkColor: 'text-[#FF7B54]'
+    },
+    {
+      bg: 'bg-gradient-to-br from-green-50 to-emerald-50',
+      border: 'border-green-100',
+      iconBg: 'bg-gradient-to-br from-[#4CAF50] to-green-600',
+      icon: 'fas fa-clock',
+      linkColor: 'text-[#4CAF50]'
+    },
+    {
+      bg: 'bg-gradient-to-br from-purple-50 to-pink-50',
+      border: 'border-purple-100',
+      iconBg: 'bg-gradient-to-br from-[#9C27B0] to-purple-600',
+      icon: 'fas fa-gamepad',
+      linkColor: 'text-[#9C27B0]'
+    },
+    {
+      bg: 'bg-gradient-to-br from-blue-50 to-cyan-50',
+      border: 'border-blue-100',
+      iconBg: 'bg-gradient-to-br from-[#2196F3] to-blue-600',
+      icon: 'fas fa-image',
+      linkColor: 'text-[#2196F3]'
+    },
+    {
+      bg: 'bg-gradient-to-br from-yellow-50 to-amber-50',
+      border: 'border-yellow-100',
+      iconBg: 'bg-gradient-to-br from-[#FFD700] to-yellow-600',
+      icon: 'fas fa-headphones',
+      linkColor: 'text-yellow-600'
+    }
+  ];
+
+  const style = cardStyles[index % cardStyles.length];
+  
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center text-center h-full min-w-[280px] sm:min-w-0">
-      <div className="bg-blue-100 text-blue-600 p-4 rounded-full mb-4">
-        {React.cloneElement(feature.icon, { className: 'h-8 w-8' })}
+    <div 
+      className={`group p-8 rounded-2xl ${style.bg} border ${style.border} hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2`}
+      style={{ animationDelay }}
+    >
+      <div className={`w-16 h-16 ${style.iconBg} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+        <i className={`${style.icon} text-white text-2xl`}></i>
       </div>
-      <h3 className="text-xl font-semibold text-slate-800 mb-2">{feature.title}</h3>
-      <p className="text-slate-600 text-sm leading-relaxed">{feature.description}</p>
+      <h3 className="text-xl font-bold mb-3">
+        {feature.title}
+      </h3>
+      <p className="text-[#636E72] leading-relaxed mb-4">
+        {feature.description}
+      </p>
+      <div className={`flex items-center text-sm ${style.linkColor} font-medium group-hover:translate-x-2 transition-transform`}>
+        <span>Learn more</span>
+        <i className="fas fa-arrow-right ml-2"></i>
+      </div>
     </div>
   );
 };
