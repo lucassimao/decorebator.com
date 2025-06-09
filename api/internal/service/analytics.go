@@ -91,8 +91,9 @@ func (as *AnalyticsService) updateWordMastery(ctx context.Context, result QuizRe
 			mastery_level = CASE 
 				WHEN $3 THEN 
 					-- Weighted average: 70% current box progress, 30% historical accuracy
+					-- Handle NULL case by defaulting to 0 accuracy when no previous attempts
 					(0.7 * ($4::decimal / 7.0) + 
-					 0.3 * (word_mastery.correct_attempts::decimal / NULLIF(word_mastery.total_attempts, 0)))
+					 0.3 * COALESCE(word_mastery.correct_attempts::decimal / NULLIF(word_mastery.total_attempts, 0), 0))
 				ELSE 
 					-- On failure, reduce mastery but not below 0
 					GREATEST(word_mastery.mastery_level - 0.1, 0)
@@ -118,6 +119,7 @@ func (as *AnalyticsService) updateWordMastery(ctx context.Context, result QuizRe
 func (as *AnalyticsService) updateLearningProgress(ctx context.Context, result QuizResult, tx pgx.Tx) error {
 	today := time.Now().Format("2006-01-02")
 
+	// First, calculate the correct words_studied count by counting unique words for this day
 	query := `
 		INSERT INTO learning_progress (
 			user_id, wordlist_id, date, words_studied, 
@@ -127,13 +129,20 @@ func (as *AnalyticsService) updateLearningProgress(ctx context.Context, result Q
 			CASE WHEN $4 THEN 1 ELSE 0 END, $5
 		)
 		ON CONFLICT (user_id, wordlist_id, date) DO UPDATE SET
-			words_studied = learning_progress.words_studied + 1,
+			words_studied = (
+				SELECT COUNT(DISTINCT qp.word_id) 
+				FROM quiz_performance qp
+				WHERE qp.user_id = $1 
+				  AND qp.wordlist_id = $2
+				  AND DATE(qp.created_at) = $3::date
+			),
 			total_quiz_attempts = learning_progress.total_quiz_attempts + 1,
 			correct_attempts = learning_progress.correct_attempts + CASE WHEN $4 THEN 1 ELSE 0 END,
 			average_response_time_ms = (
 				(learning_progress.average_response_time_ms * learning_progress.total_quiz_attempts + $5) / 
 				(learning_progress.total_quiz_attempts + 1)
-			)
+			),
+			updated_at = NOW()
 	`
 
 	_, err := tx.Exec(ctx, query, result.UserID, result.WordlistID, today, result.IsCorrect, result.ResponseTimeMs)
@@ -264,11 +273,12 @@ func (as *AnalyticsService) GetLearningProgress(ctx context.Context, userID, wor
 		       average_response_time_ms, study_time_seconds
 		FROM learning_progress
 		WHERE user_id = $1 AND wordlist_id = $2 
-		  AND date >= CURRENT_DATE - INTERVAL '%d days'
+		  AND date >= CURRENT_DATE - INTERVAL $3
 		ORDER BY date DESC
 	`
 
-	rows, err := as.db.Query(ctx, fmt.Sprintf(query, days), userID, wordlistID)
+	interval := fmt.Sprintf("%d days", days)
+	rows, err := as.db.Query(ctx, query, userID, wordlistID, interval)
 	if err != nil {
 		return nil, err
 	}
@@ -290,6 +300,12 @@ func (as *AnalyticsService) GetLearningProgress(ctx context.Context, userID, wor
 
 // UpdateBoxDistribution takes a snapshot of current box distribution
 func (as *AnalyticsService) UpdateBoxDistribution(ctx context.Context, userID, wordlistID int64) error {
+	tx, err := as.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
 	query := `
 		INSERT INTO box_distribution_snapshot (
 			user_id, wordlist_id, snapshot_date,
@@ -316,11 +332,21 @@ func (as *AnalyticsService) UpdateBoxDistribution(ctx context.Context, userID, w
 			box_4_count = EXCLUDED.box_4_count,
 			box_5_count = EXCLUDED.box_5_count,
 			box_6_count = EXCLUDED.box_6_count,
-			box_7_count = EXCLUDED.box_7_count
+			box_7_count = EXCLUDED.box_7_count,
+			updated_at = NOW()
 	`
 
-	_, err := as.db.Exec(ctx, query, userID, wordlistID)
-	return err
+	_, err = tx.Exec(ctx, query, userID, wordlistID)
+	if err != nil {
+		return fmt.Errorf("failed to update box distribution: %w", err)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
 }
 
 // GetBoxDistributionHistory retrieves historical box distribution
@@ -330,11 +356,12 @@ func (as *AnalyticsService) GetBoxDistributionHistory(ctx context.Context, userI
 		       box_4_count, box_5_count, box_6_count, box_7_count
 		FROM box_distribution_snapshot
 		WHERE user_id = $1 AND wordlist_id = $2
-		  AND snapshot_date >= CURRENT_DATE - INTERVAL '%d days'
+		  AND snapshot_date >= CURRENT_DATE - INTERVAL $3
 		ORDER BY snapshot_date DESC
 	`
 
-	rows, err := as.db.Query(ctx, fmt.Sprintf(query, days), userID, wordlistID)
+	interval := fmt.Sprintf("%d days", days)
+	rows, err := as.db.Query(ctx, query, userID, wordlistID, interval)
 	if err != nil {
 		return nil, err
 	}
