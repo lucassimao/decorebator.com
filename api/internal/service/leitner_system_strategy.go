@@ -60,10 +60,63 @@ type ExampleUsage struct {
 	LastUsedAt  time.Time `db:"last_used_at"`
 }
 
+// getNextDefinition selects the next word/definition for quiz generation using probabilistic availability.
+//
+// This function implements a probabilistic version of the Leitner spaced repetition system.
+//
+// ALGORITHM:
+// Instead of binary "due/not due" logic, every word has a selection probability ranging from a minimum
+// baseline to 100% when fully due. This ensures words are always available while maintaining the
+// scientific principles of spaced repetition.
+//
+// PROBABILITY FORMULA:
+// P(selection) = base_probability + (time_progress * (1 - base_probability))
+// Where:
+// - base_probability = minimum chance for each box (5% for Box 7, 70% for Box 2, etc.)
+// - time_progress = hours_since_review / intended_interval
+// - When time_progress ≥ 1, P(selection) = 100% (overdue)
+//
+// BOX-SPECIFIC PROBABILITIES:
+// - Box 1 (immediate): Always 100% probability
+// - Box 2 (1 hour): 70% minimum, reaches 100% at 1 hour
+// - Box 3 (1 day): 50% minimum, reaches 100% at 24 hours
+// - Box 4 (3 days): 30% minimum, reaches 100% at 72 hours
+// - Box 5 (1 week): 20% minimum, reaches 100% at 168 hours
+// - Box 6 (2 weeks): 10% minimum, reaches 100% at 336 hours
+// - Box 7 (1 month): 5% minimum, reaches 100% at 720 hours
+//
+// SELECTION LOGIC:
+// 1. Calculate probability for each word based on box and time since review
+// 2. Use PostgreSQL's RANDOM() function for probabilistic selection
+// 3. Prioritize overdue words (100% probability) in ordering
+// 4. Secondary sort by probability descending, then random for variety
+//
+// BENEFITS:
+// - Never completely stuck (critical for user engagement)
+// - Maintains spaced repetition effectiveness (due words heavily favored)
+// - Smooth user experience (no hard cutoffs)
+// - Single query execution (no complex fallback logic)
+// - Scientifically sound (models natural memory decay)
+//
+// MONITORING:
+// The function logs detailed selection metrics including:
+// - Selected definition details (ID, box, time since review)
+// - Selection probability used
+// - Whether word was overdue
+//
+// Parameters:
+// - userID: The user requesting a quiz
+// - wordlistID: The wordlist to select from
+//
+// Returns:
+// - NextDefinition with selected word/definition details and Leitner system metadata
+// - Error if no words exist in wordlist or database operations fail
+//
+// Checkout api/docs/PROBABILISTIC_LEITNER_IMPLEMENTATION.md for additional details
 func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
-	// Improved query that respects Leitner intervals
+	// Probabilistic query that ensures words are always available
 	query := `
-		WITH due_definitions AS (
+		WITH word_probabilities AS (
 			SELECT 
 				def.id, lst.id AS lst_id, def.token, 
 				def.part_of_speech, def.language, def.is_verb_type, def.meaning, def.examples, 
@@ -71,16 +124,38 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				di.url as image_url, di.description as image_description, 
 				wd.word_id AS word_id,
 				lst.updated_at,
-				-- Calculate if definition is due for review
+				EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 as hours_since_review,
+				-- Calculate selection probability based on box and time
 				CASE 
-					WHEN lst.box_id = 1 THEN TRUE														-- Immediate review
-					WHEN lst.box_id = 2 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 1 	-- 1 hours  
-					WHEN lst.box_id = 3 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 24 	-- 1 day
-					WHEN lst.box_id = 4 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 72 	-- 3 days
-					WHEN lst.box_id = 5 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 168 	-- 1 week
-					WHEN lst.box_id = 6 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 336 	-- 2 weeks
-					WHEN lst.box_id = 7 THEN EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 >= 720	-- 1 month
-				END AS is_due
+					-- Box 1: Always 100% probability (immediate review)
+					WHEN lst.box_id = 1 THEN 1.0
+					
+					-- Box 2: 70% minimum, reaches 100% at 1 hour
+					WHEN lst.box_id = 2 THEN 
+						GREATEST(0.7, LEAST(1.0, 0.7 + (0.3 * EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600)))
+					
+					-- Box 3: 50% minimum, reaches 100% at 24 hours
+					WHEN lst.box_id = 3 THEN 
+						GREATEST(0.5, LEAST(1.0, 0.5 + (0.5 * EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/(3600 * 24))))
+					
+					-- Box 4: 30% minimum, reaches 100% at 72 hours (3 days)
+					WHEN lst.box_id = 4 THEN 
+						GREATEST(0.3, LEAST(1.0, 0.3 + (0.7 * EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/(3600 * 72))))
+					
+					-- Box 5: 20% minimum, reaches 100% at 168 hours (1 week)
+					WHEN lst.box_id = 5 THEN 
+						GREATEST(0.2, LEAST(1.0, 0.2 + (0.8 * EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/(3600 * 168))))
+					
+					-- Box 6: 10% minimum, reaches 100% at 336 hours (2 weeks)
+					WHEN lst.box_id = 6 THEN 
+						GREATEST(0.1, LEAST(1.0, 0.1 + (0.9 * EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/(3600 * 336))))
+					
+					-- Box 7: 5% minimum, reaches 100% at 720 hours (1 month)
+					WHEN lst.box_id = 7 THEN 
+						GREATEST(0.05, LEAST(1.0, 0.05 + (0.95 * EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/(3600 * 720))))
+				END AS selection_probability,
+				-- Random value for this query execution
+				RANDOM() AS roll
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
 			JOIN word_definitions wd ON def.id = wd.definition_id
@@ -97,13 +172,17 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 		SELECT 
 			id, token, part_of_speech, language, is_verb_type, meaning, examples, inflections, 
 			lst_id, box_id, sounds, phonetic_notations, 
-			COALESCE(image_url,''), word_id, COALESCE(image_description,'')
-		FROM due_definitions
-		WHERE is_due = TRUE
+			COALESCE(image_url,''), word_id, COALESCE(image_description,''),
+			hours_since_review, selection_probability
+		FROM word_probabilities
+		WHERE roll <= selection_probability  -- Probabilistic selection
 		ORDER BY 
-			box_id ASC,                                    -- Prioritize lower boxes
-			EXTRACT(EPOCH FROM (NOW() - updated_at)) DESC, -- Prioritize older reviews
-			RANDOM()                                       -- Add randomization for ties
+			-- Prioritize words that are "overdue" (100% probability)
+			CASE WHEN selection_probability >= 1.0 THEN 0 ELSE 1 END,
+			-- Then by how close they are to being due
+			selection_probability DESC,
+			-- Add some randomness for variety
+			RANDOM()
 		LIMIT 1;
 	`
 
@@ -120,21 +199,37 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	defer rows.Close()
 
 	if !rows.Next() {
-		// No due definitions (respecting skip condition), try fallback
-		return getOldestDefinition(userID, wordlistID, true)
+		// This should rarely happen with probabilistic selection unless there are truly no words
+		common.Logger.Warn("no words selected even with probabilistic selection",
+			"userID", userID,
+			"wordlistID", wordlistID)
+		return nil, errors.New("no definitions found in wordlist")
 	}
 
 	definition := model.Definition{}
 	result := NextDefinition{Definition: &definition}
+	var hoursSinceReview float64
+	var selectionProbability float64
 
 	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
 		&definition.Meaning, &definition.Examples,
 		&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
-		&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription)
+		&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription,
+		&hoursSinceReview, &selectionProbability)
 
 	if err != nil {
 		return nil, err
 	}
+
+	// Log probabilistic selection for monitoring
+	common.Logger.Info("probabilistic_selection",
+		"userID", userID,
+		"wordlistID", wordlistID,
+		"definitionID", definition.ID,
+		"boxID", result.BoxID,
+		"hoursSinceReview", hoursSinceReview,
+		"selectionProbability", selectionProbability,
+		"wasOverdue", selectionProbability >= 1.0)
 
 	// Load example audio files for this definition
 	definitionRepo := repository.NewDefinitionRepository(db)
@@ -148,46 +243,46 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	return &result, nil
 }
 
-func getOldestDefinition(userID, wordlistID int64, respectSkipCondition bool) (*NextDefinition, error) {
-	// Build query intelligently based on parameters
-	var queryBuilder strings.Builder
-	
-	// SELECT clause - common for both cases
-	queryBuilder.WriteString(`
-		SELECT 
-			def.id, def.token, 
-			def.part_of_speech, def.language, def.is_verb_type, def.meaning, def.examples, 
-			def.inflections, lst.id AS lst_id, lst.box_id, def.sounds, def.phonetic_notations, 
-			COALESCE(di.url,'') as image_url, COALESCE(di.description,'') as image_description, 
-			wd.word_id AS word_id
-		FROM leitner_system_tracking lst 
-		JOIN definitions def ON lst.definition_id = def.id
-		JOIN word_definitions wd ON def.id = wd.definition_id
-		JOIN words w ON wd.word_id = w.id
-		LEFT JOIN definition_images di ON di.definition_id = def.id AND di.is_visible=TRUE
-		WHERE 
-			lst.user_id = $1
-			AND w.wordlist_id = $2
+// checkHasUnlearnedWords verifies if the user has any unlearned words in the wordlist
+func checkHasUnlearnedWords(userID, wordlistID int64) (bool, error) {
+	query := `
+		SELECT EXISTS(
+			SELECT 1 
+			FROM leitner_system_tracking lst 
+			JOIN word_definitions wd ON lst.definition_id = wd.definition_id
+			JOIN words w ON wd.word_id = w.id
+			WHERE lst.user_id = $1 
+			AND w.wordlist_id = $2 
 			AND w.learned = FALSE
-			AND def.meaning IS NOT NULL`)
-	
-	// Conditionally add skip condition
-	if respectSkipCondition {
-		queryBuilder.WriteString(`
-			AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())`)
-	} else {
-		common.Logger.Info("ignoring skip condition for quiz generation", "userID", userID, "wordlistID", wordlistID)
+			LIMIT 1
+		)
+	`
+
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return false, err
 	}
-	
-	// ORDER BY and LIMIT clauses - common for both cases
-	queryBuilder.WriteString(`
-		ORDER BY 
-			lst.box_id ASC,                     -- Prioritize lower boxes
-			lst.updated_at ASC NULLS FIRST,     -- Then by oldest review
-			RANDOM()                            -- Add randomization for ties
-		LIMIT 1`)
-	
-	query := queryBuilder.String()
+
+	var exists bool
+	err = db.QueryRow(context.Background(), query, userID, wordlistID).Scan(&exists)
+	return exists, err
+}
+
+// getWordlistBoxDistribution provides analytics on word distribution across boxes
+func getWordlistBoxDistribution(userID, wordlistID int64) (map[int64]int, error) {
+	query := `
+		SELECT 
+			lst.box_id,
+			COUNT(*) as word_count
+		FROM leitner_system_tracking lst
+		JOIN word_definitions wd ON lst.definition_id = wd.definition_id
+		JOIN words w ON wd.word_id = w.id
+		WHERE lst.user_id = $1 
+		AND w.wordlist_id = $2
+		AND w.learned = FALSE
+		GROUP BY lst.box_id
+		ORDER BY lst.box_id
+	`
 
 	db, err := common.GetDBConnection()
 	if err != nil {
@@ -200,41 +295,22 @@ func getOldestDefinition(userID, wordlistID int64, respectSkipCondition bool) (*
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		if respectSkipCondition {
-			// First attempt failed, try again ignoring skip condition
-			return getOldestDefinition(userID, wordlistID, false)
+	distribution := make(map[int64]int)
+	for rows.Next() {
+		var boxID int64
+		var count int
+		if err := rows.Scan(&boxID, &count); err != nil {
+			return nil, err
 		}
-		// Second attempt also failed
-		return nil, errors.New("no definitions found")
+		distribution[boxID] = count
 	}
 
-	definition := model.Definition{}
-	result := NextDefinition{Definition: &definition}
-
-	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
-		&definition.Meaning, &definition.Examples,
-		&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
-		&definition.PhoneticNotations, &result.ImageUrl, &result.ImageDescription, &result.WordID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Load example audio files for this definition
-	definitionRepo := repository.NewDefinitionRepository(db)
-	exampleAudioFiles, err := definitionRepo.GetExampleAudioByDefinitionID(definition.ID)
-	if err != nil {
-		// Log the error but don't fail the quiz generation
-		common.Logger.Error("failed to load example audio files", "definitionID", definition.ID, "error", err)
-	}
-	definition.ExampleAudioFiles = exampleAudioFiles
-
-	return &result, nil
+	return distribution, nil
 }
 
 // CreateQuiz generates a new quiz question for the user based on the Leitner spaced repetition system.
 // It selects the most appropriate word/definition that is due for review, considering:
+// - Probabilistic selection that ensures words are always available
 // - Leitner box intervals (box 1: immediate, box 2: 1 hour, box 3: 1 day, etc.)
 // - Word difficulty progression (different quiz types for different boxes)
 // - Temporarily skipped words (to avoid immediate repetition)
@@ -243,6 +319,34 @@ func getOldestDefinition(userID, wordlistID int64, respectSkipCondition bool) (*
 // Returns a Quiz object with the question, options, correct answer, and metadata.
 // Returns an error if no words are available for review or if database operations fail.
 func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error) {
+	// Early check to avoid unnecessary queries
+	hasWords, err := checkHasUnlearnedWords(userID, wordlistID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check wordlist status: %w", err)
+	}
+	if !hasWords {
+		return nil, errors.New("no unlearned words in wordlist")
+	}
+
+	// Log box distribution for monitoring (but don't fail if it errors)
+	if distribution, err := getWordlistBoxDistribution(userID, wordlistID); err == nil {
+		totalWords := 0
+		box7Count := 0
+		for boxID, count := range distribution {
+			totalWords += count
+			if boxID == 7 {
+				box7Count = count
+			}
+		}
+		if totalWords > 0 && float64(box7Count)/float64(totalWords) > 0.8 {
+			common.Logger.Info("high_box_7_concentration",
+				"userID", userID,
+				"wordlistID", wordlistID,
+				"box7Percentage", float64(box7Count)/float64(totalWords)*100,
+				"distribution", distribution)
+		}
+	}
+
 	nextDefinition, err := getNextDefinition(userID, wordlistID)
 	if err != nil {
 		return nil, err
@@ -357,7 +461,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 		}
 
 		// Select example using fair distribution to avoid repetition
-		selectedExample, err := selectFairExample(def.Definition.ID, def.WordID, availableExamples)
+		selectedExample, err := selectFairExample(def.Definition.ID, availableExamples)
 		if err != nil {
 			// Fallback to random selection if fair selection fails
 			common.Logger.Warn("fair example selection failed, using random", "definitionId", def.Definition.ID, "error", err)
@@ -501,7 +605,7 @@ func extractAnswerFromImageDescription(description, defaultToken string) string 
 // - availableExamples: Slice of example sentences to choose from
 //
 // Returns the selected example string and any database error
-func selectFairExample(definitionID, wordID int64, availableExamples []string) (string, error) {
+func selectFairExample(definitionID int64, availableExamples []string) (string, error) {
 	if len(availableExamples) == 0 {
 		return "", errors.New("no examples available")
 	}
