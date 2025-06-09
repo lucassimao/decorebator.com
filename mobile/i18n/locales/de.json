@@ -506,6 +506,7 @@
     },
     "rateLimitError": "Zu viele Meldungen eingereicht. Bitte versuchen Sie es später erneut.",
     "cooldownError": "Sie haben diesen Fehler kürzlich bereits gemeldet. Bitte warten Sie einen Moment, bevor Sie erneut melden.",
-    "loadingCard": "Karte laden..."
+    "loadingCard": "Karte laden...",
+    "savePosition": "Position speichern"
   }
 }

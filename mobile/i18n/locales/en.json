@@ -506,6 +506,7 @@
     },
     "rateLimitError": "Too many reports submitted. Please try again later.",
     "cooldownError": "You've already reported this error recently. Please wait a moment before reporting again.",
-    "loadingCard": "Loading card..."
+    "loadingCard": "Loading card...",
+    "savePosition": "Save position"
   }
 }

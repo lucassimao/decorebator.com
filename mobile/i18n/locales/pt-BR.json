@@ -507,6 +507,7 @@
     },
     "rateLimitError": "Muitos relatórios enviados. Por favor, tente novamente mais tarde.",
     "cooldownError": "Você já relatou este erro recentemente. Por favor, aguarde um momento antes de relatar novamente.",
-    "loadingCard": "Carregando cartão..."
+    "loadingCard": "Carregando cartão...",
+    "savePosition": "Salvar posição"
   }
 }

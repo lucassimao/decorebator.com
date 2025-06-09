@@ -69,8 +69,9 @@
     [x] O click no flash card deve mudar o lado dele
     [x] Revisar como stats são computaras e exibidas
     [x] Fix navigation
+    [x] Keep progress of flash cards
     [ ] Splash screen
-    [ ] Intehtation test plan
+    [ ] Integratation test plan
 
 [ ] MVP Release Checklist
     [x]  PostHog integration
@@ -82,7 +83,11 @@
     [ ]  browserstack testing
 
 # V2
-
+[ ] New quiz: phrasal verbs based on the verb
+[ ] Show effect after finishing flash cards like papel picado
+[ ] Idea: downgrade boxes for when taking time to train
+[ ] Update completion prompt: each definition must have a single meaning
+[ ] Im the flash card we need a way to list all words and jump straight to selected one
 [ ] Configurar Dashboard do river
 [ ] Add words in bulk
 [ ] Convert wordlist to another language

@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { ErrorReportModal } from "@/components/ErrorReportModal";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { useRouter, useLocalSearchParams } from "expo-router";
 
@@ -65,7 +66,8 @@ const FlashcardPractice: React.FC = () => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [shouldFetchDefinitions, setShouldFetchDefinitions] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [savePosition, setSavePosition] = useState(false);
+  const [isLoadingPosition, setIsLoadingPosition] = useState(true);
   const player = useAudioPlayer();
   const { didJustFinish } = useAudioPlayerStatus(player);
 
@@ -75,6 +77,77 @@ const FlashcardPractice: React.FC = () => {
       player.seekTo(0);
     }
   }, [didJustFinish, player]);
+
+  // Load saved position on mount
+  useEffect(() => {
+    const loadSavedPosition = async () => {
+      try {
+        const [savedPositionValue, savedIndex] = await Promise.all([
+          AsyncStorage.getItem(`flashcard_save_position_${wordlistId}`),
+          AsyncStorage.getItem(`flashcard_position_${wordlistId}`)
+        ]);
+        
+        if (savedPositionValue !== null) {
+          setSavePosition(savedPositionValue === 'true');
+          
+          if (savedPositionValue === 'true' && savedIndex !== null) {
+            const index = parseInt(savedIndex, 10);
+            if (!isNaN(index) && index >= 0 && words && index < words.length) {
+              setCurrentIndex(index);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading saved position:', error);
+      } finally {
+        setIsLoadingPosition(false);
+      }
+    };
+
+    if (wordlistId && words) {
+      loadSavedPosition();
+    } else {
+      setIsLoadingPosition(false);
+    }
+  }, [wordlistId, words]);
+
+  // Save position when it changes
+  useEffect(() => {
+    const saveCurrentPosition = async () => {
+      if (!savePosition || isLoadingPosition) return;
+      
+      try {
+        await AsyncStorage.setItem(
+          `flashcard_position_${wordlistId}`,
+          currentIndex.toString()
+        );
+      } catch (error) {
+        console.error('Error saving position:', error);
+      }
+    };
+
+    saveCurrentPosition();
+  }, [currentIndex, savePosition, wordlistId, isLoadingPosition]);
+
+  // Handle save position toggle
+  const handleToggleSavePosition = async () => {
+    const newValue = !savePosition;
+    setSavePosition(newValue);
+    
+    try {
+      await AsyncStorage.setItem(
+        `flashcard_save_position_${wordlistId}`,
+        newValue.toString()
+      );
+      
+      if (!newValue) {
+        // Clear saved position when disabled
+        await AsyncStorage.removeItem(`flashcard_position_${wordlistId}`);
+      }
+    } catch (error) {
+      console.error('Error toggling save position:', error);
+    }
+  };
 
   // Animation values
   const slideAnimation = useRef(new Animated.Value(0)).current;
@@ -211,8 +284,6 @@ const FlashcardPractice: React.FC = () => {
 
     if (newIndex === currentIndex) return;
 
-    setIsNavigating(true);
-
     // Slide animation
     Animated.sequence([
       Animated.timing(slideAnimation, {
@@ -225,9 +296,7 @@ const FlashcardPractice: React.FC = () => {
         duration: 0,
         useNativeDriver: true,
       }),
-    ]).start(() => {
-      setIsNavigating(false);
-    });
+    ]).start();
 
     // Reset flip state and definitions fetch state
     if (isFlipped) {
@@ -249,7 +318,7 @@ const FlashcardPractice: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingPosition) {
     return (
       <LinearGradient
         colors={[
@@ -349,6 +418,8 @@ const FlashcardPractice: React.FC = () => {
           isOnline={isOnline}
           onClose={() => router.back()}
           onReportError={() => setShowReportModal(true)}
+          savePosition={savePosition}
+          onToggleSavePosition={handleToggleSavePosition}
         />
 
         <FlashcardProgressBar
@@ -356,26 +427,19 @@ const FlashcardPractice: React.FC = () => {
           totalWords={words.length}
         />
 
-        {isNavigating ? (
-          <View style={styles.navigatingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.navigatingText}>{t("flashcards.loadingCard")}</Text>
-          </View>
-        ) : (
-          <FlashcardContent
-            currentWord={currentWord!}
-            definitions={definitions}
-            isFlipped={isFlipped}
-            shouldFetchDefinitions={shouldFetchDefinitions}
-            loadingDefinitions={loadingDefinitions}
-            definitionsError={definitionsError}
-            slideAnimation={slideAnimation}
-            scaleAnimation={scaleAnimation}
-            onFlip={flipCard}
-            onPlayAudio={playAudio}
-            onRefetchDefinitions={refetchDefinitions}
-          />
-        )}
+        <FlashcardContent
+          currentWord={currentWord!}
+          definitions={definitions}
+          isFlipped={isFlipped}
+          shouldFetchDefinitions={shouldFetchDefinitions}
+          loadingDefinitions={loadingDefinitions}
+          definitionsError={definitionsError}
+          slideAnimation={slideAnimation}
+          scaleAnimation={scaleAnimation}
+          onFlip={flipCard}
+          onPlayAudio={playAudio}
+          onRefetchDefinitions={refetchDefinitions}
+        />
 
         <FlashcardNavigation
           currentIndex={currentIndex}
@@ -442,15 +506,5 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     fontWeight: "600",
-  },
-  navigatingContainer: {
-    minHeight: 400,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  navigatingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: colors.textMedium,
   },
 });

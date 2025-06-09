@@ -507,6 +507,7 @@
     },
     "rateLimitError": "Troppi rapporti inviati. Riprova più tardi.",
     "cooldownError": "Hai già segnalato questo errore di recente. Attendi un momento prima di segnalare di nuovo.",
-    "loadingCard": "Caricamento scheda..."
+    "loadingCard": "Caricamento scheda...",
+    "savePosition": "Salva posizione"
   }
 }
