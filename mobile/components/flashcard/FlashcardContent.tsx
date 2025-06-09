@@ -257,20 +257,27 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
             isFlipped ? styles.cardBackVisible : null,
           ]}
         >
-          <ScrollView
-            style={styles.definitionsScroll}
-            contentContainerStyle={styles.definitionsScrollContent}
-            showsVerticalScrollIndicator={true}
-            bounces={true}
-            alwaysBounceVertical={false}
-            nestedScrollEnabled={true}
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={onFlip}
+            style={styles.cardTouchArea}
           >
-            {renderDefinitionsContent()}
-          </ScrollView>
+            <ScrollView
+              style={styles.definitionsScroll}
+              contentContainerStyle={styles.definitionsScrollContent}
+              showsVerticalScrollIndicator={true}
+              bounces={true}
+              alwaysBounceVertical={false}
+              nestedScrollEnabled={true}
+              scrollEnabled={true}
+            >
+              {renderDefinitionsContent()}
+            </ScrollView>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.flipHintTouchable}
             onPress={onFlip}
-            activeOpacity={0.7}
+            activeOpacity={0.9}
           >
             <Text style={styles.flipHint}>{t("flashcards.tapToFlipBack")}</Text>
           </TouchableOpacity>
@@ -339,6 +346,10 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     textAlign: "center",
   },
+  cardTouchArea: {
+    flex: 1,
+    marginBottom: 40,
+  },
   flipHintTouchable: {
     position: "absolute",
     bottom: 10,
@@ -350,7 +361,6 @@ const styles = StyleSheet.create({
   },
   definitionsScroll: {
     flex: 1,
-    marginBottom: 40,
   },
   definitionsScrollContent: {
     flexGrow: 1,
@@ -477,5 +487,8 @@ const styles = StyleSheet.create({
     color: colors.textLight,
     textAlign: "center",
     fontStyle: "italic",
+  },
+  scrollContent: {
+    flex: 1,
   },
 });
