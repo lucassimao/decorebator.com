@@ -137,7 +137,11 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 	}
 
 	// Upsert error report
-	err = repo.UpsertErrorReport(ctx, tx, userId, definitionID, wordID, string(errorType))
+	var defIDPtr *int64
+	if definitionID > 0 {
+		defIDPtr = &definitionID
+	}
+	err = repo.UpsertErrorReport(ctx, tx, userId, defIDPtr, wordID, string(errorType))
 	if err != nil {
 		common.Logger.Error("failed to save error report", "error", err)
 		return err

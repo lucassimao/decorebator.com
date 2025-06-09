@@ -258,7 +258,7 @@ func (r *ErrorReportRepository) UpdateDefinitionLastRegeneratedAt(ctx context.Co
 }
 
 // UpsertErrorReport updates or inserts an error report
-func (r *ErrorReportRepository) UpsertErrorReport(ctx context.Context, tx pgx.Tx, userID, definitionID, wordID int64, errorType string) error {
+func (r *ErrorReportRepository) UpsertErrorReport(ctx context.Context, tx pgx.Tx, userID int64, definitionID *int64, wordID int64, errorType string) error {
 	// First, try to update an existing row
 	tag, err := tx.Exec(ctx, `
 		UPDATE error_reports
@@ -268,7 +268,7 @@ func (r *ErrorReportRepository) UpsertErrorReport(ctx context.Context, tx pgx.Tx
 			status = 'pending'
 		WHERE
 			user_id = $1
-			AND definition_id = $2
+			AND definition_id IS NOT DISTINCT FROM $2
 			AND word_id = $3
 			AND status = 'pending'
 	`, userID, definitionID, wordID, errorType)
