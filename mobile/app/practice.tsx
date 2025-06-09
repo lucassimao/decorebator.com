@@ -65,6 +65,7 @@ const FlashcardPractice: React.FC = () => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [shouldFetchDefinitions, setShouldFetchDefinitions] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const player = useAudioPlayer();
   const { didJustFinish } = useAudioPlayerStatus(player);
 
@@ -210,6 +211,8 @@ const FlashcardPractice: React.FC = () => {
 
     if (newIndex === currentIndex) return;
 
+    setIsNavigating(true);
+
     // Slide animation
     Animated.sequence([
       Animated.timing(slideAnimation, {
@@ -222,7 +225,9 @@ const FlashcardPractice: React.FC = () => {
         duration: 0,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]).start(() => {
+      setIsNavigating(false);
+    });
 
     // Reset flip state and definitions fetch state
     if (isFlipped) {
@@ -351,19 +356,26 @@ const FlashcardPractice: React.FC = () => {
           totalWords={words.length}
         />
 
-        <FlashcardContent
-          currentWord={currentWord!}
-          definitions={definitions}
-          isFlipped={isFlipped}
-          shouldFetchDefinitions={shouldFetchDefinitions}
-          loadingDefinitions={loadingDefinitions}
-          definitionsError={definitionsError}
-          slideAnimation={slideAnimation}
-          scaleAnimation={scaleAnimation}
-          onFlip={flipCard}
-          onPlayAudio={playAudio}
-          onRefetchDefinitions={refetchDefinitions}
-        />
+        {isNavigating ? (
+          <View style={styles.navigatingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.navigatingText}>{t("flashcards.loadingCard")}</Text>
+          </View>
+        ) : (
+          <FlashcardContent
+            currentWord={currentWord!}
+            definitions={definitions}
+            isFlipped={isFlipped}
+            shouldFetchDefinitions={shouldFetchDefinitions}
+            loadingDefinitions={loadingDefinitions}
+            definitionsError={definitionsError}
+            slideAnimation={slideAnimation}
+            scaleAnimation={scaleAnimation}
+            onFlip={flipCard}
+            onPlayAudio={playAudio}
+            onRefetchDefinitions={refetchDefinitions}
+          />
+        )}
 
         <FlashcardNavigation
           currentIndex={currentIndex}
@@ -430,5 +442,15 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     fontWeight: "600",
+  },
+  navigatingContainer: {
+    minHeight: 400,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  navigatingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textMedium,
   },
 });

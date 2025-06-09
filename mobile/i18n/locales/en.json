@@ -161,6 +161,7 @@
     "reportSubmitted": "Your report has been submitted.",
     "rateLimitError": "Too many reports submitted. Please try again later.",
     "cooldownError": "You've already reported this error recently. Please wait a moment before reporting again.",
+    "loadingNextQuestion": "Loading next question...",
     "writeWordFromDefinition": "Write the word for this definition",
     "whatDoesThisWordMean": "What does this word mean?",
     "completeSentence": "Complete the sentence",
@@ -504,6 +505,7 @@
       "soundNotPlaying": "Sound not playing"
     },
     "rateLimitError": "Too many reports submitted. Please try again later.",
-    "cooldownError": "You've already reported this error recently. Please wait a moment before reporting again."
+    "cooldownError": "You've already reported this error recently. Please wait a moment before reporting again.",
+    "loadingCard": "Loading card..."
   }
 }

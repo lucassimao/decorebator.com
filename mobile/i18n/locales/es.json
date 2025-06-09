@@ -161,6 +161,7 @@
     "reportSubmitted": "Tu reporte ha sido enviado.",
     "rateLimitError": "Demasiados reportes enviados. Por favor intenta más tarde.",
     "cooldownError": "Ya has reportado este error recientemente. Por favor espera un momento antes de reportar nuevamente.",
+    "loadingNextQuestion": "Cargando siguiente pregunta...",
     "writeWordFromDefinition": "Escribe la palabra para esta definición",
     "whatDoesThisWordMean": "¿Qué significa esta palabra?",
     "completeSentence": "Completa la oración",
@@ -504,6 +505,7 @@
       "soundNotPlaying": "El sonido no se reproduce"
     },
     "rateLimitError": "Demasiados informes enviados. Por favor, inténtalo de nuevo más tarde.",
-    "cooldownError": "Ya has reportado este error recientemente. Por favor espera un momento antes de reportar nuevamente."
+    "cooldownError": "Ya has reportado este error recientemente. Por favor espera un momento antes de reportar nuevamente.",
+    "loadingCard": "Cargando tarjeta..."
   }
 }

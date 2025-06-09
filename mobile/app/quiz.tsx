@@ -77,6 +77,7 @@ const QuizScreen: React.FC = () => {
     isLoading,
     refetch,
     error,
+    isFetching,
   } = useQuery({
     queryKey: ["quiz", wordlistId],
     queryFn: () => offlineQuizApi.newQuiz(Number(wordlistId)),
@@ -278,8 +279,15 @@ const QuizScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.quizCard}>
-            {quiz && (
-              <QuizContent
+            {isFetching && !quiz ? (
+              <View style={styles.quizLoadingContainer}>
+                <ActivityIndicator size="large" color="#FF7B54" />
+                <Text style={styles.loadingText}>{t("quiz.loadingNextQuestion")}</Text>
+              </View>
+            ) : (
+              <>
+                {quiz && (
+                  <QuizContent
                 quiz={quiz}
                 userInput={userInput}
                 setUserInput={setUserInput}
@@ -303,6 +311,8 @@ const QuizScreen: React.FC = () => {
               isSubmitted={isSubmitted}
               onNextQuiz={handleNextQuiz}
             />
+              </>
+            )}
           </View>
         </ScrollView>
 
@@ -367,5 +377,15 @@ const styles = StyleSheet.create({
     color: "#636E72",
     textAlign: "center",
     lineHeight: 22,
+  },
+  quizLoadingContainer: {
+    minHeight: 300,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#636E72",
   },
 });
