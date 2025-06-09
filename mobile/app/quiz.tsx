@@ -62,6 +62,7 @@ const QuizScreen: React.FC = () => {
   const [correctCount, setCorrectCount] = useState(0);
   const [userInput, setUserInput] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoadingNext, setIsLoadingNext] = useState(false);
   const quizDisplayedAtRef = useRef(0);
 
   // Reset player
@@ -87,6 +88,7 @@ const QuizScreen: React.FC = () => {
   useEffect(() => {
     if (quiz?.id) {
       quizDisplayedAtRef.current = Date.now();
+      setIsLoadingNext(false);
     }
   }, [quiz?.id]);
 
@@ -104,7 +106,9 @@ const QuizScreen: React.FC = () => {
       }),
     onSuccess: () => {
       if (fastMode) {
-        setTimeout(handleNextQuiz, 600);
+        setTimeout(() => {
+          handleNextQuiz();
+        }, 600);
       }
     },
     onError: console.error,
@@ -194,6 +198,7 @@ const QuizScreen: React.FC = () => {
   };
 
   const handleNextQuiz = () => {
+    setIsLoadingNext(true);
     setSelectedAnswer(null);
     setShowResult(false);
     setUserInput("");
@@ -279,7 +284,7 @@ const QuizScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.quizCard}>
-            {isFetching && !quiz ? (
+            {isLoadingNext || (isFetching && !quiz) ? (
               <View style={styles.quizLoadingContainer}>
                 <ActivityIndicator size="large" color="#FF7B54" />
                 <Text style={styles.loadingText}>{t("quiz.loadingNextQuestion")}</Text>
