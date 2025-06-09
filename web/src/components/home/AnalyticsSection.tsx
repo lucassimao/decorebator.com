@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 
 const AnalyticsSection: React.FC = () => {
@@ -200,9 +201,9 @@ const AnalyticsSection: React.FC = () => {
           </div>
 
           <div className="mt-8">
-            <a href="/signup?plan=free" className="bg-white text-[#FF7B54] px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 inline-block">
+            <Link href="/signup?plan=free" className="bg-white text-[#FF7B54] px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 inline-block">
               Start Tracking Your Progress
-            </a>
+            </Link>
           </div>
         </div>
 

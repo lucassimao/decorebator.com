@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useEffect } from 'react';
 
 interface VideoModalProps {
@@ -109,14 +110,14 @@ const VideoModal: React.FC<VideoModalProps> = ({
 
             {/* CTA */}
             <div className="mt-6">
-              <a
+              <Link
                 href="/signup?plan=free"
                 className="inline-flex items-center space-x-2 bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                 onClick={onClose}
               >
                 <span>Start Learning Free</span>
                 <i className="fas fa-arrow-right"></i>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
