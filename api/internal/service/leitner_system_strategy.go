@@ -19,6 +19,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+func init() {
+	// Seed the random number generator with current time
+	// This ensures different random sequences on each program run
+	rand.Seed(time.Now().UnixNano())
+}
+
 // LeitnerSystemStrategy implements the Leitner spaced repetition algorithm for vocabulary learning.
 // The Leitner system uses boxes with increasing intervals to optimize long-term retention:
 // - Words start in box 1 (immediate review)
