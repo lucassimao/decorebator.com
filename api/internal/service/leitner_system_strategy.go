@@ -21,7 +21,8 @@ import (
 
 func init() {
 	// Seed the random number generator with current time
-	// This ensures different random sequences on each program run
+	// Used for: example sentence selection, answer position randomization
+	// Note: Quiz type selection now uses deterministic rotation
 	rand.Seed(time.Now().UnixNano())
 }
 
@@ -368,6 +369,16 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	if err != nil {
 		return nil, err
 	}
+	
+	// Additional logging for debugging WordFromImage availability
+	if nextDefinition.BoxID == 3 || nextDefinition.BoxID == 7 {
+		common.Logger.Info("image_quiz_availability",
+			"boxID", nextDefinition.BoxID,
+			"hasImage", nextDefinition.ImageUrl != "",
+			"imageUrl", nextDefinition.ImageUrl,
+			"imageDescription", nextDefinition.ImageDescription,
+			"selectedQuizType", quizType)
+	}
 
 	// Create quiz based on selected type
 	return createQuizForType(quizType, nextDefinition, word)
@@ -389,8 +400,23 @@ func selectQuizType(def *NextDefinition, word *model.Word) (model.QuizType, erro
 		return model.GuessMeaning, nil
 	}
 
-	// Randomly select from available types
-	return availableTypes[rand.Intn(len(availableTypes))], nil
+	// Deterministic selection based on definition ID and current time
+	// This ensures all quiz types get cycled through fairly
+	// Using minutes/10 ensures rotation every 10 minutes for variety
+	timeRotation := time.Now().Unix() / 600  // 600 seconds = 10 minutes
+	index := (int(def.Definition.ID) + int(timeRotation)) % len(availableTypes)
+	
+	// Log the selection for monitoring
+	common.Logger.Info("quiz_type_selected",
+		"definitionID", def.Definition.ID,
+		"boxID", def.BoxID,
+		"availableTypes", availableTypes,
+		"selectedType", availableTypes[index],
+		"index", index,
+		"imageUrl", def.ImageUrl,
+		"hasImage", def.ImageUrl != "")
+	
+	return availableTypes[index], nil
 }
 
 func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Word) bool {
