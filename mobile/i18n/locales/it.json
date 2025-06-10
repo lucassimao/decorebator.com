@@ -472,13 +472,32 @@
       "topWords": {
         "title": "Parole Più Padroneggiate",
         "subtitle": "Le tue parole con migliori prestazioni"
+      },
+      "boxDistribution": {
+        "title": "Distribuzione delle Fasi di Apprendimento",
+        "subtitle": "Parole distribuite nelle scatole Leitner",
+        "explanation": "Il sistema Leitner utilizza 7 scatole con intervalli di revisione crescenti. Le parole salgono quando risposte correttamente e tornano alla Scatola 1 se errate. Le scatole superiori indicano una migliore ritenzione.",
+        "box1": "Nuove (Ora)",
+        "box2": "In apprendimento (1h)",
+        "box3": "Familiari (1g)",
+        "box4": "Conosciute (3g)",
+        "box5": "Ritenute (1s)",
+        "box6": "Memorizzate (2s)",
+        "box7": "Padroneggiate (1m)"
+      },
+      "historicalBoxDistribution": {
+        "title": "Progresso di Apprendimento nel Tempo",
+        "subtitle": "Tendenze della percentuale di padronanza negli ultimi 30 giorni",
+        "explanation": "Questo grafico mostra la tua percentuale di padronanza nel tempo - la percentuale di parole che hanno raggiunto la Scatola 7 (fase padroneggiata). Barre più alte indicano una migliore padronanza complessiva del vocabolario!",
+        "masteryPercentage": "Percentuale di Parole Padroneggiate (Scatola 7)"
       }
     },
     "empty": {
       "noData": "Ancora nessun dato. Inizia a imparare!",
       "noProgress": "Ancora nessun dato di progresso",
       "noQuizzes": "Completa prima alcuni quiz",
-      "noMastered": "Ancora nessuna parola padroneggiata"
+      "noMastered": "Ancora nessuna parola padroneggiata",
+      "noHistoricalData": "Nessun dato storico ancora disponibile. Pratica per alcuni giorni per vedere le tendenze!"
     },
     "box": "Casella {{number}}",
     "quizTypes": {

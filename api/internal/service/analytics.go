@@ -175,3 +175,11 @@ func (svc *AnalyticsService) fetchTodayStats(ctx context.Context, userID int64, 
 func (svc *AnalyticsService) fetchCurrentStreak(ctx context.Context, userID int64) (int, error) {
 	return svc.repo.GetCurrentStreak(ctx, userID)
 }
+
+// Type alias for BoxDistribution
+type BoxDistribution = repository.BoxDistribution
+
+// GetCurrentBoxDistribution retrieves the current distribution of words across Leitner boxes
+func (as *AnalyticsService) GetCurrentBoxDistribution(ctx context.Context, userID, wordlistID int64) (*BoxDistribution, error) {
+	return as.repo.GetCurrentBoxDistribution(ctx, userID, wordlistID)
+}

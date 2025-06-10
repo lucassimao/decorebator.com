@@ -563,8 +563,9 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 
 	// Add correct answer to options at random position (for multiple choice quizzes)
 	if quizType != model.WriteWordFromDefinition {
-		// Insert correct answer at random position among the 3 incorrect options
-		answerIndex = rand.Intn(4)
+		// Ensure we have enough options and don't exceed the available positions
+		maxOptions := len(options) + 1 // +1 for the correct answer
+		answerIndex = rand.Intn(maxOptions)
 
 		// Insert the correct answer at the random position
 		options = append(options, "")
@@ -881,6 +882,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 			"wordId", quizResult.WordID,
 			"quizType", quizResult.QuizType)
 	}
+
 
 	return nil
 }

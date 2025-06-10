@@ -27,11 +27,13 @@ mobile/
 │   ├── dashboard/         # Main dashboard screens
 │   ├── quiz.tsx          # Quiz interface
 │   ├── practice.tsx      # Flashcard practice
+│   ├── analytics.tsx     # Analytics dashboard
 │   └── [auth screens]    # Sign in/up flows
 ├── components/           # Reusable UI components
 │   ├── dashboard/       # Dashboard-specific components
 │   ├── quiz/           # Quiz interface components
 │   ├── flashcard/      # Flashcard interface components
+│   ├── analytics/      # Analytics and data visualization
 │   └── [shared]        # Cross-feature components
 ├── api/                # API layer and types
 ├── hooks/              # Custom React hooks
@@ -123,7 +125,46 @@ mobile/
 - Scrollable definition content
 - Gesture-based navigation
 
-### 5. Offline Support
+### 5. Analytics System
+
+**Architecture**: Modular analytics with real-time data visualization
+- Component-based analytics dashboard extracted from monolithic 870-line component
+- Real-time box distribution tracking with automatic cache invalidation
+- Historical progress trends with daily snapshots
+- Performance metrics by quiz type and learning patterns
+
+**Analytics Components**:
+- `app/analytics.tsx` - Main analytics orchestration
+- `components/analytics/AnalyticsHeader.tsx` - Title and wordlist selection
+- `components/analytics/StatsGrid.tsx` - Overview metrics and mastery percentages
+- `components/analytics/WordMasteryChart.tsx` - Individual word progress visualization
+- `components/analytics/LearningProgressChart.tsx` - Daily learning trends and accuracy
+- `components/analytics/QuizPerformanceChart.tsx` - Performance metrics by quiz type
+- `components/analytics/BoxDistributionChart.tsx` - Current Leitner box distribution
+- `components/analytics/HistoricalBoxDistributionChart.tsx` - Progress trends over time
+- `components/analytics/TopWordsSection.tsx` - Highest performing vocabulary
+
+**Data Visualization**:
+- React Native Chart Kit for rendering charts and graphs
+- Custom color gradients for Leitner box progression visualization
+- Responsive chart sizing based on screen dimensions
+- Interactive chart elements with clear legends and explanations
+
+**Caching Strategy**:
+- Infinite cache for current box distribution (invalidated on quiz completion)
+- 5-minute cache for historical trends and learning progress
+- Automatic cache invalidation via custom hook (`useInvalidateAnalytics`)
+- Background data population during quiz sessions
+
+**UX Features**:
+- Real-time updates of learning metrics
+- Visual representation of spaced repetition progression
+- Historical trend analysis with date-based filtering
+- Empty states with helpful explanations
+- Loading states with skeleton placeholders
+- Error boundaries for graceful failure handling
+
+### 6. Offline Support
 
 **Architecture**: Selective offline caching for premium users
 - React Query cache persistence

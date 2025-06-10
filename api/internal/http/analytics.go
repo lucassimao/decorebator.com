@@ -15,7 +15,8 @@ func RegisterAnalyticsRoutes(r *gin.RouterGroup) {
 
 	analytics.GET("/wordlists/:id/mastery", getWordMastery)
 	analytics.GET("/wordlists/:id/progress", getLearningProgress)
-	analytics.GET("/wordlists/:id/distribution", getBoxDistribution)
+	analytics.GET("/wordlists/:id/distribution", getBoxDistributionHistory)
+	analytics.GET("/wordlists/:id/current-distribution", getCurrentBoxDistribution)
 	analytics.GET("/quiz-performance", getQuizTypePerformance)
 	analytics.GET("/dashboard", getDashboardStats)
 }
@@ -99,8 +100,8 @@ func getLearningProgress(c *gin.Context) {
 	})
 }
 
-// getBoxDistribution returns historical box distribution
-func getBoxDistribution(c *gin.Context) {
+// getBoxDistributionHistory returns historical box distribution
+func getBoxDistributionHistory(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -144,7 +145,7 @@ func getBoxDistribution(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"wordlist_id":  wordlistID,
+		"wordlistId":   wordlistID,
 		"days":         days,
 		"distribution": distribution,
 	})
@@ -192,5 +193,41 @@ func getDashboardStats(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"stats": stats,
+	})
+}
+
+// getCurrentBoxDistribution returns current distribution of words across Leitner boxes
+func getCurrentBoxDistribution(c *gin.Context) {
+	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
+
+	userID := c.GetInt64("userID")
+
+	// Verify wordlist ownership
+	wordlist, err := service.GetWordlistById(wordlistID, userID)
+	if err != nil || wordlist == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
+		return
+	}
+
+	analyticsService, err := service.NewAnalyticsService()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
+		return
+	}
+
+	distribution, err := analyticsService.GetCurrentBoxDistribution(c.Request.Context(), userID, wordlistID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch distribution"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"wordlistId":  wordlistID,
+		"distribution": distribution,
+		"totalWords":   distribution.TotalWords,
 	})
 }

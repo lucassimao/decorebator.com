@@ -471,13 +471,32 @@
       "topWords": {
         "title": "Palabras Más Dominadas",
         "subtitle": "Tus palabras con mejor rendimiento"
+      },
+      "boxDistribution": {
+        "title": "Distribución de Etapas de Aprendizaje",
+        "subtitle": "Palabras distribuidas en las cajas Leitner",
+        "explanation": "El sistema Leitner usa 7 cajas con intervalos de revisión crecientes. Las palabras suben cuando se responden correctamente y vuelven a la Caja 1 cuando son incorrectas. Las cajas más altas indican mejor retención.",
+        "box1": "Nuevas (Ahora)",
+        "box2": "Aprendiendo (1h)",
+        "box3": "Familiares (1d)",
+        "box4": "Conocidas (3d)",
+        "box5": "Retenidas (1s)",
+        "box6": "Memorizadas (2s)",
+        "box7": "Dominadas (1m)"
+      },
+      "historicalBoxDistribution": {
+        "title": "Progreso de Aprendizaje a lo Largo del Tiempo",
+        "subtitle": "Tendencias del porcentaje de dominio en los últimos 30 días",
+        "explanation": "Este gráfico muestra tu porcentaje de dominio a lo largo del tiempo - el porcentaje de palabras que han alcanzado la Caja 7 (etapa dominada). ¡Las barras más altas indican un mejor dominio general del vocabulario!",
+        "masteryPercentage": "Porcentaje de Palabras Dominadas (Caja 7)"
       }
     },
     "empty": {
       "noData": "Sin datos aún. ¡Empieza a aprender!",
       "noProgress": "Aún sin datos de progreso",
       "noQuizzes": "Completa algunas pruebas primero",
-      "noMastered": "Aún sin palabras dominadas"
+      "noMastered": "Aún sin palabras dominadas",
+      "noHistoricalData": "¡Aún no hay datos históricos disponibles. Practica unos días para ver las tendencias!"
     },
     "box": "Caja {{number}}",
     "quizTypes": {

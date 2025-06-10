@@ -1,0 +1,31 @@
+@email="lsimaocosta@gmail.com"
+@password= "12345"
+
+
+### Login
+# @name loginRequest
+POST http://localhost:8080/login
+content-type: application/json
+
+{
+"Email": {{email}},
+"Password": {{password}}
+}
+
+@authToken = {{loginRequest.response.headers.Authorization}}
+
+### Get User Profile
+GET https://api.decorebator.com/users
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### Get wordlist progress
+GET https://api.decorebator.com/analytics/wordlists/1/progress?days=7
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+### New quiz
+POST http://localhost:8080/wordlists/2/quizzes
+Content-Type: application/json
+Authorization: Bearer {{authToken}}

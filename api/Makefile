@@ -35,6 +35,74 @@ test: ## run containerized integration tests
 	docker compose -f docker-compose.test.yml down -v; \
 	go tool cover -html=coverage.out -o=coverage.html
 
+test-unit: ## Run unit tests
+	@echo "Running unit tests..."
+	go test -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+	go tool cover -func=unit.out
+
+test-integration: ## Run integration tests locally
+	@echo "Running integration tests..."
+	docker-compose -f docker-compose.test.yml up -d postgres redis minio
+	@echo "Waiting for services to be ready..."
+	sleep 10
+	@echo "Running migrations..."
+	$(MAKE) migrate-up-test
+	@echo "Running tests..."
+	TEST_DATABASE_URL=$$($(GODOTENV_PATH) -f .env.test sh -c 'echo $$TEST_DATABASE_URL') \
+		go test -v -race -coverprofile=integration.out -covermode=atomic ./tests/integration/...
+	go tool cover -func=integration.out
+	docker-compose -f docker-compose.test.yml down
+
+test-all: test-unit test-integration ## Run all tests
+	@echo "Combining coverage reports..."
+	go tool cover -html=unit.out -o coverage-unit.html
+	go tool cover -html=integration.out -o coverage-integration.html
+
+test-fast: ## Run tests without Docker (requires local services)
+	@echo "Running fast integration tests (requires local services)..."
+	go test -v -short ./tests/integration/...
+
+migrate-up-test: ## Run database migrations for test database
+	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env.test sh -c 'echo $$TEST_DATABASE_URL'); \
+	migrate -database $$POSTGRESQL_URL -path cmd/migrate/migrations up
+
+migrate-down-test: ## Rollback test database migration
+	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env.test sh -c 'echo $$TEST_DATABASE_URL'); \
+	migrate -database $$POSTGRESQL_URL -path cmd/migrate/migrations down 1
+
+coverage-html: ## Generate HTML coverage reports
+	@if [ -f unit.out ]; then go tool cover -html=unit.out -o coverage-unit.html; fi
+	@if [ -f integration.out ]; then go tool cover -html=integration.out -o coverage-integration.html; fi
+	@echo "Coverage reports generated: coverage-unit.html, coverage-integration.html"
+
+coverage-threshold: ## Check coverage thresholds
+	@echo "Checking coverage thresholds..."
+	@if [ -f unit.out ]; then \
+		UNIT_COV=$$(go tool cover -func=unit.out | grep total | awk '{print $$3}' | sed 's/%//'); \
+		echo "Unit coverage: $${UNIT_COV}%"; \
+		if [ $$(echo "$$UNIT_COV < 70" | bc -l) -eq 1 ]; then \
+			echo "❌ Unit coverage ($${UNIT_COV}%) below threshold (70%)"; \
+			exit 1; \
+		fi; \
+	fi
+	@if [ -f integration.out ]; then \
+		INT_COV=$$(go tool cover -func=integration.out | grep total | awk '{print $$3}' | sed 's/%//'); \
+		echo "Integration coverage: $${INT_COV}%"; \
+		if [ $$(echo "$$INT_COV < 80" | bc -l) -eq 1 ]; then \
+			echo "❌ Integration coverage ($${INT_COV}%) below threshold (80%)"; \
+			exit 1; \
+		fi; \
+	fi
+	@echo "✅ All coverage thresholds met!"
+
+test-watch: ## Run tests in watch mode
+	@echo "Watching for changes and running tests..."
+	@while true; do \
+		$(MAKE) test-unit; \
+		inotifywait -r -e modify,create,delete --include '.*\.go$$' ./internal ./tests; \
+		sleep 1; \
+	done
+
 run: ## HTTP server
 	$(GODOTENV_PATH) -f .env go run ./cmd/api
 

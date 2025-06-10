@@ -136,12 +136,6 @@ func (r *AnalyticsRepository) UpsertQuizTypeAnalytics(ctx context.Context, tx pg
 
 // Box Distribution Operations
 func (r *AnalyticsRepository) UpsertBoxDistribution(ctx context.Context, userID, wordlistID int64) error {
-	tx, err := r.db.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
 	query := `
 		INSERT INTO box_distribution_snapshot (
 			user_id, wordlist_id, snapshot_date,
@@ -149,17 +143,16 @@ func (r *AnalyticsRepository) UpsertBoxDistribution(ctx context.Context, userID,
 			box_5_count, box_6_count, box_7_count
 		)
 		SELECT 
-			$1, $2, CURRENT_DATE,
-			COUNT(CASE WHEN box_id = 1 THEN 1 END),
-			COUNT(CASE WHEN box_id = 2 THEN 1 END),
-			COUNT(CASE WHEN box_id = 3 THEN 1 END),
-			COUNT(CASE WHEN box_id = 4 THEN 1 END),
-			COUNT(CASE WHEN box_id = 5 THEN 1 END),
-			COUNT(CASE WHEN box_id = 6 THEN 1 END),
-			COUNT(CASE WHEN box_id = 7 THEN 1 END)
+			$1::bigint, $2::bigint, CURRENT_DATE,
+			COUNT(CASE WHEN lst.box_id = 1 THEN 1 END),
+			COUNT(CASE WHEN lst.box_id = 2 THEN 1 END),
+			COUNT(CASE WHEN lst.box_id = 3 THEN 1 END),
+			COUNT(CASE WHEN lst.box_id = 4 THEN 1 END),
+			COUNT(CASE WHEN lst.box_id = 5 THEN 1 END),
+			COUNT(CASE WHEN lst.box_id = 6 THEN 1 END),
+			COUNT(CASE WHEN lst.box_id = 7 THEN 1 END)
 		FROM leitner_system_tracking lst
-		JOIN word_definitions wd ON lst.definition_id = wd.definition_id
-		JOIN words w ON wd.word_id = w.id
+		JOIN words w ON lst.word_id = w.id
 		WHERE lst.user_id = $1 AND w.wordlist_id = $2
 		ON CONFLICT (user_id, wordlist_id, snapshot_date) DO UPDATE SET
 			box_1_count = EXCLUDED.box_1_count,
@@ -172,14 +165,9 @@ func (r *AnalyticsRepository) UpsertBoxDistribution(ctx context.Context, userID,
 			updated_at = NOW()
 	`
 
-	_, err = tx.Exec(ctx, query, userID, wordlistID)
+	_, err := r.db.Exec(ctx, query, userID, wordlistID)
 	if err != nil {
 		return fmt.Errorf("failed to update box distribution: %w", err)
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return nil
@@ -359,14 +347,15 @@ func (r *AnalyticsRepository) GetBoxDistributionHistory(ctx context.Context, use
 
 		dist := map[string]interface{}{
 			"date": date.Format("2006-01-02"),
-			"boxes": map[string]int{
-				"box_1": b1,
-				"box_2": b2,
-				"box_3": b3,
-				"box_4": b4,
-				"box_5": b5,
-				"box_6": b6,
-				"box_7": b7,
+			"boxes": BoxDistribution{
+				Box1Count:  b1,
+				Box2Count:  b2,
+				Box3Count:  b3,
+				Box4Count:  b4,
+				Box5Count:  b5,
+				Box6Count:  b6,
+				Box7Count:  b7,
+				TotalWords: b1 + b2 + b3 + b4 + b5 + b6 + b7,
 			},
 		}
 		distributions = append(distributions, dist)
@@ -484,4 +473,45 @@ func (r *AnalyticsRepository) GetCurrentStreak(ctx context.Context, userID int64
 		return 0, err
 	}
 	return currentStreak, nil
+}
+
+// BoxDistribution represents the current distribution of words across Leitner boxes
+type BoxDistribution struct {
+	Box1Count  int `json:"box1"`
+	Box2Count  int `json:"box2"`
+	Box3Count  int `json:"box3"`
+	Box4Count  int `json:"box4"`
+	Box5Count  int `json:"box5"`
+	Box6Count  int `json:"box6"`
+	Box7Count  int `json:"box7"`
+	TotalWords int `json:"totalWords"`
+}
+
+// GetCurrentBoxDistribution retrieves the current distribution of words across Leitner boxes
+func (r *AnalyticsRepository) GetCurrentBoxDistribution(ctx context.Context, userID, wordlistID int64) (*BoxDistribution, error) {
+	query := `
+		SELECT 
+			COUNT(CASE WHEN lst.box_id = 1 THEN 1 END) as box_1,
+			COUNT(CASE WHEN lst.box_id = 2 THEN 1 END) as box_2,
+			COUNT(CASE WHEN lst.box_id = 3 THEN 1 END) as box_3,
+			COUNT(CASE WHEN lst.box_id = 4 THEN 1 END) as box_4,
+			COUNT(CASE WHEN lst.box_id = 5 THEN 1 END) as box_5,
+			COUNT(CASE WHEN lst.box_id = 6 THEN 1 END) as box_6,
+			COUNT(CASE WHEN lst.box_id = 7 THEN 1 END) as box_7,
+			COUNT(*) as total_words
+		FROM leitner_system_tracking lst
+		JOIN words w ON lst.word_id = w.id
+		WHERE lst.user_id = $1 AND w.wordlist_id = $2
+	`
+
+	var dist BoxDistribution
+	err := r.db.QueryRow(ctx, query, userID, wordlistID).Scan(
+		&dist.Box1Count, &dist.Box2Count, &dist.Box3Count, &dist.Box4Count,
+		&dist.Box5Count, &dist.Box6Count, &dist.Box7Count, &dist.TotalWords,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get box distribution: %w", err)
+	}
+
+	return &dist, nil
 }

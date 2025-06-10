@@ -471,13 +471,32 @@
       "topWords": {
         "title": "Bestbeherrschte Wörter",
         "subtitle": "Ihre leistungsstärksten Wörter"
+      },
+      "boxDistribution": {
+        "title": "Lernstufen-Verteilung",
+        "subtitle": "Wörter verteilt über Leitner-Boxen",
+        "explanation": "Das Leitner-System verwendet 7 Boxen mit steigenden Wiederholungsintervallen. Wörter steigen bei richtiger Antwort auf und werden bei falscher Antwort auf Box 1 zurückgesetzt. Höhere Boxen zeigen bessere Merkfähigkeit.",
+        "box1": "Neu (Jetzt)",
+        "box2": "Lernend (1h)",
+        "box3": "Vertraut (1T)",
+        "box4": "Bekannt (3T)",
+        "box5": "Behalten (1W)",
+        "box6": "Eingeprägt (2W)",
+        "box7": "Gemeistert (1M)"
+      },
+      "historicalBoxDistribution": {
+        "title": "Lernfortschritt über Zeit",
+        "subtitle": "Beherrschungsgrad-Trends der letzten 30 Tage",
+        "explanation": "Diese Grafik zeigt Ihren Beherrschungsgrad über die Zeit - den Prozentsatz der Wörter, die Box 7 (Beherrschte Stufe) erreicht haben. Höhere Balken zeigen eine bessere Gesamtvokabelbeherrschung!",
+        "masteryPercentage": "Prozentsatz beherrschter Wörter (Box 7)"
       }
     },
     "empty": {
       "noData": "Noch keine Daten. Beginnen Sie zu lernen!",
       "noProgress": "Noch keine Fortschrittsdaten",
       "noQuizzes": "Absolvieren Sie zuerst einige Quizze",
-      "noMastered": "Noch keine beherrschten Wörter"
+      "noMastered": "Noch keine beherrschten Wörter",
+      "noHistoricalData": "Noch keine historischen Daten verfügbar. Üben Sie ein paar Tage, um Trends zu sehen!"
     },
     "box": "Box {{number}}",
     "quizTypes": {

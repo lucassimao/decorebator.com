@@ -32,6 +32,33 @@ export interface QuizTypePerformance {
   totalAttempts: number;
 }
 
+export interface BoxDistribution {
+  box1: number;
+  box2: number;
+  box3: number;
+  box4: number;
+  box5: number;
+  box6: number;
+  box7: number;
+}
+
+export interface BoxDistributionResponse {
+  wordlistId: number;
+  distribution: BoxDistribution;
+  totalWords: number;
+}
+
+export interface HistoricalBoxDistribution {
+  date: string;
+  boxes: BoxDistribution;
+}
+
+export interface HistoricalBoxDistributionResponse {
+  wordlistId: number;
+  days: number;
+  distribution: HistoricalBoxDistribution[];
+}
+
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // 1) Get dashboard statistics
@@ -108,4 +135,21 @@ export async function getWordlistProgressSummary(
     averageMastery: averageMastery,
     progressPercentage: progressPercentage,
   };
+}
+
+// 6) Get current box distribution for a wordlist
+export async function getCurrentBoxDistribution(
+  wordlistId: number,
+): Promise<BoxDistributionResponse> {
+  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/current-distribution`;
+  return await callAPI<BoxDistributionResponse>("GET", endpoint);
+}
+
+// 7) Get historical box distribution for a wordlist
+export async function getHistoricalBoxDistribution(
+  wordlistId: number,
+  days: number = 30,
+): Promise<HistoricalBoxDistributionResponse> {
+  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/distribution?days=${days}`;
+  return await callAPI<HistoricalBoxDistributionResponse>("GET", endpoint);
 }

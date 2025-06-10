@@ -72,7 +72,11 @@
     [x] Keep progress of flash cards
     [x] Improve loading state in quiz and practice screens
     [x] The state of the play button is not synced
+    [ ] Quiz loading state still stuck
+    [ ] Add Leitner box distribution metric
+    [ ] Security plan OWASP
     [ ] Possible to compute stats on the fly for paying users?
+    [ ] What would take to scale our backend to millons of request per min?
     [ ] Splash screen
     [ ] Integratation test plan
 

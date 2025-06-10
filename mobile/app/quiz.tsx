@@ -11,10 +11,10 @@ import { QuizProgressBar } from "@/components/quiz/QuizProgressBar";
 import { QuizLoadingState } from "@/components/quiz/QuizLoadingState";
 import { useOffline } from "@/hooks/useOffline";
 import { useErrorReporting } from "@/hooks/useErrorReporting";
+import { useInvalidateAnalytics } from "@/hooks/useInvalidateAnalytics";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -52,6 +52,7 @@ const QuizScreen: React.FC = () => {
   const { wordlistId, wordlistName } = useLocalSearchParams();
   const { t } = useTranslation();
   const { isOnline, isOfflineAvailable } = useOffline();
+  const { invalidateBoxDistribution } = useInvalidateAnalytics();
 
   // State
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -159,6 +160,9 @@ const QuizScreen: React.FC = () => {
         wordlistID: Number(wordlistId),
       }),
     onSuccess: () => {
+      // Invalidate box distribution after answering a quiz
+      invalidateBoxDistribution(Number(wordlistId));
+      
       if (fastMode) {
         setTimeout(() => {
           handleNextQuiz();

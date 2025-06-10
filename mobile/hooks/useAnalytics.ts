@@ -5,10 +5,14 @@ import {
   getQuizPerformance,
   getWordMastery,
   getWordlistProgressSummary,
+  getCurrentBoxDistribution,
+  getHistoricalBoxDistribution,
   LearningProgress,
   QuizTypePerformance,
   WordMasteryStats,
   WordlistProgressSummary,
+  BoxDistributionResponse,
+  HistoricalBoxDistributionResponse,
 } from "@/api/analytics";
 import { useQuery } from "@tanstack/react-query";
 
@@ -33,6 +37,14 @@ type UseAnalyticsResult = {
   wordlistProgressLoading: boolean;
   wordlistProgressError?: unknown;
   progressPercentage: number;
+
+  boxDistribution?: BoxDistributionResponse;
+  boxDistLoading: boolean;
+  boxDistError?: unknown;
+
+  historicalBoxDistribution?: HistoricalBoxDistributionResponse;
+  historicalBoxDistLoading: boolean;
+  historicalBoxDistError?: unknown;
 
   isPending: boolean;
 };
@@ -92,6 +104,30 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  // 6) Box distribution
+  const {
+    data: boxDistribution,
+    isLoading: boxDistLoading,
+    error: boxDistError,
+  } = useQuery<BoxDistributionResponse, unknown>({
+    queryKey: ["analytics", "boxDistribution", wordlistId],
+    queryFn: () => getCurrentBoxDistribution(wordlistId),
+    enabled: Boolean(wordlistId),
+    staleTime: Infinity, // Cache until quiz session invalidates it
+  });
+
+  // 7) Historical box distribution
+  const {
+    data: historicalBoxDistribution,
+    isLoading: historicalBoxDistLoading,
+    error: historicalBoxDistError,
+  } = useQuery<HistoricalBoxDistributionResponse, unknown>({
+    queryKey: ["analytics", "historicalBoxDistribution", wordlistId],
+    queryFn: () => getHistoricalBoxDistribution(wordlistId, 30),
+    enabled: Boolean(wordlistId),
+    staleTime: 5 * 60 * 1000, // 5 minutes cache for historical data
+  });
+
   return {
     dashboardStats,
     statsLoading,
@@ -114,11 +150,21 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     wordlistProgressError,
     progressPercentage: wordlistProgress?.progressPercentage ?? 0,
 
+    boxDistribution,
+    boxDistLoading,
+    boxDistError,
+
+    historicalBoxDistribution,
+    historicalBoxDistLoading,
+    historicalBoxDistError,
+
     isPending:
       statsLoading ||
       masteryLoading ||
       progressLoading ||
       quizPerfLoading ||
-      wordlistProgressLoading,
+      wordlistProgressLoading ||
+      boxDistLoading ||
+      historicalBoxDistLoading,
   };
 }

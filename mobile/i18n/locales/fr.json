@@ -472,13 +472,32 @@
       "topWords": {
         "title": "Mots les Plus Maîtrisés",
         "subtitle": "Vos mots les plus performants"
+      },
+      "boxDistribution": {
+        "title": "Distribution des Étapes d'Apprentissage",
+        "subtitle": "Mots répartis dans les boîtes Leitner",
+        "explanation": "Le système Leitner utilise 7 boîtes avec des intervalles de révision croissants. Les mots montent quand ils sont répondus correctement et retournent à la Boîte 1 en cas d'erreur. Les boîtes supérieures indiquent une meilleure rétention.",
+        "box1": "Nouveaux (Maintenant)",
+        "box2": "En apprentissage (1h)",
+        "box3": "Familiers (1j)",
+        "box4": "Connus (3j)",
+        "box5": "Retenus (1s)",
+        "box6": "Mémorisés (2s)",
+        "box7": "Maîtrisés (1m)"
+      },
+      "historicalBoxDistribution": {
+        "title": "Progrès d'Apprentissage au Fil du Temps",
+        "subtitle": "Tendances du pourcentage de maîtrise sur les 30 derniers jours",
+        "explanation": "Ce graphique montre votre pourcentage de maîtrise au fil du temps - le pourcentage de mots qui ont atteint la Boîte 7 (étape maîtrisée). Des barres plus hautes indiquent une meilleure maîtrise globale du vocabulaire !",
+        "masteryPercentage": "Pourcentage de Mots Maîtrisés (Boîte 7)"
       }
     },
     "empty": {
       "noData": "Pas encore de données. Commencez à apprendre !",
       "noProgress": "Pas encore de données de progrès",
       "noQuizzes": "Complétez d'abord quelques quiz",
-      "noMastered": "Pas encore de mots maîtrisés"
+      "noMastered": "Pas encore de mots maîtrisés",
+      "noHistoricalData": "Aucune donnée historique disponible pour le moment. Pratiquez quelques jours pour voir les tendances !"
     },
     "box": "Boîte {{number}}",
     "quizTypes": {
