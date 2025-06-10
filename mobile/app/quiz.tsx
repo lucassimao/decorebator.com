@@ -107,9 +107,13 @@ const QuizScreen: React.FC = () => {
     },
   });
 
+  const [currentQuizId, setCurrentQuizId] = useState<number | null>(null);
+
   useEffect(() => {
-    if (quiz?.id) {
+    if (quiz?.id && quiz.id !== currentQuizId) {
+      // New quiz received
       quizDisplayedAtRef.current = Date.now();
+      setCurrentQuizId(quiz.id);
       setIsLoadingNext(false);
       setLoadingTimeout(false);
       setRetryCount(0);
@@ -118,11 +122,11 @@ const QuizScreen: React.FC = () => {
         clearTimeout(loadingTimeoutRef.current);
       }
     }
-  }, [quiz?.id]);
+  }, [quiz?.id, currentQuizId]);
 
   // Handle loading timeout
   useEffect(() => {
-    if (isLoadingNext || (isFetching && !quiz)) {
+    if (isLoadingNext || (isFetching && currentQuizId === null)) {
       // Clear any existing timeout
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
@@ -145,7 +149,7 @@ const QuizScreen: React.FC = () => {
         clearTimeout(loadingTimeoutRef.current);
       }
     };
-  }, [isLoadingNext, isFetching, quiz]);
+  }, [isLoadingNext, isFetching, currentQuizId]);
 
   // Answer mutation
   const answerMutation = useMutation<void, Error, { success: boolean }>({
@@ -311,7 +315,7 @@ const QuizScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.quizCard}>
-            {isLoadingNext || (isFetching && !quiz) ? (
+            {isLoadingNext || (isFetching && currentQuizId === null) ? (
               <QuizLoadingState
                 isLoading={true}
                 hasTimeout={loadingTimeout}

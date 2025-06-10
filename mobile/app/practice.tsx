@@ -72,6 +72,7 @@ const FlashcardPractice: React.FC = () => {
   const [isLoadingPosition, setIsLoadingPosition] = useState(true);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
   const player = useAudioPlayer();
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -83,6 +84,7 @@ const FlashcardPractice: React.FC = () => {
     isLoading,
     error,
     refetch: refetchWords,
+    isFetching,
   } = useQuery({
     queryKey: ["words", wordlistId, "withDefinitions", retryCount],
     queryFn: () => offlineWordlistsApi.getWords(Number(wordlistId), true),
@@ -295,7 +297,7 @@ const FlashcardPractice: React.FC = () => {
 
   // Handle loading timeout for words
   useEffect(() => {
-    if (isLoading) {
+    if (isLoading || (isRetrying && isFetching)) {
       // Clear any existing timeout
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
@@ -311,6 +313,7 @@ const FlashcardPractice: React.FC = () => {
         clearTimeout(loadingTimeoutRef.current);
       }
       setLoadingTimeout(false);
+      setIsRetrying(false); // Clear retry state when data loads
     }
 
     return () => {
@@ -318,14 +321,15 @@ const FlashcardPractice: React.FC = () => {
         clearTimeout(loadingTimeoutRef.current);
       }
     };
-  }, [isLoading]);
+  }, [isLoading, isRetrying, isFetching]);
 
   const handleRetryWords = () => {
     setRetryCount(prev => prev + 1);
     setLoadingTimeout(false);
+    setIsRetrying(true);
   };
 
-  if (isLoading || isLoadingPosition) {
+  if (isLoading || isLoadingPosition || (isRetrying && isFetching)) {
     return (
       <ImageBackground
         source={require("@/assets/images/dashboard-bg.png")}
