@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { Definition, Word } from "../../api/wordlists";
 
 interface FlashcardContentProps {
@@ -23,7 +24,6 @@ interface FlashcardContentProps {
   slideAnimation: Animated.Value;
   scaleAnimation: Animated.Value;
   onFlip: () => void;
-  onPlayAudio: () => void;
   onRefetchDefinitions: () => void;
 }
 
@@ -48,16 +48,32 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
   slideAnimation,
   scaleAnimation,
   onFlip,
-  onPlayAudio,
   onRefetchDefinitions,
 }) => {
   const { t } = useTranslation();
+  const player = useAudioPlayer();
+  const { playing: isPlaying, didJustFinish } = useAudioPlayerStatus(player);
   const flipAnimation = useRef(new Animated.Value(0)).current;
+
+  // Reset player when audio finishes
+  useEffect(() => {
+    if (didJustFinish) {
+      player.seekTo(0);
+    }
+  }, [didJustFinish, player]);
 
   // Reset flip animation when word changes
   useEffect(() => {
     flipAnimation.setValue(0);
   }, [currentWord?.id]);
+
+  // Audio setup - replace audio when word changes
+  useEffect(() => {
+    if (currentWord?.audioURL) {
+      player.replace(currentWord.audioURL);
+      player.seekTo(0);
+    }
+  }, [currentWord?.audioURL, player]);
 
   // Handle flip animation
   useEffect(() => {
@@ -67,6 +83,17 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
       useNativeDriver: true,
     }).start();
   }, [isFlipped, flipAnimation]);
+
+  // Play audio function
+  const playAudio = async () => {
+    if (!currentWord?.audioURL) return;
+
+    try {
+      player.play();
+    } catch (error) {
+      console.error("Error playing audio:", error);
+    }
+  };
 
   // Animation interpolations
   const frontInterpolate = flipAnimation.interpolate({
@@ -233,9 +260,13 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
             {currentWord?.audioURL && (
               <TouchableOpacity
                 style={styles.audioButton}
-                onPress={onPlayAudio}
+                onPress={playAudio}
               >
-                <Ionicons name="volume-high" size={32} color={colors.primary} />
+                <Ionicons
+                  name={isPlaying ? "pause-circle" : "play-circle"}
+                  size={48}
+                  color={colors.primary}
+                />
               </TouchableOpacity>
             )}
           </View>
@@ -335,12 +366,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   audioButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.backgroundPeach,
-    justifyContent: "center",
-    alignItems: "center",
+    marginTop: 16,
   },
   flipHint: {
     fontSize: 14,

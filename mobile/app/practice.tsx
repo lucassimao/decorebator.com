@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   Alert,
   TouchableOpacity,
+  ImageBackground,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -23,13 +24,15 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 
 import * as offlineWordlistsApi from "@/api/offlineWordlists";
 import { useOffline } from "@/hooks/useOffline";
-import * as errorReportingApi from "@/api/errorReporting";
-import { ErrorType, ErrorReportRateLimitError } from "@/api/errorReporting";
+import { useErrorReporting } from "@/hooks/useErrorReporting";
+import { ErrorType } from "@/api/errorReporting";
 
 import { FlashcardHeader } from "@/components/flashcard/FlashcardHeader";
 import { FlashcardProgressBar } from "@/components/flashcard/FlashcardProgressBar";
 import { FlashcardContent } from "@/components/flashcard/FlashcardContent";
 import { FlashcardNavigation } from "@/components/flashcard/FlashcardNavigation";
+import { FlashcardLoadingState } from "@/components/flashcard/FlashcardLoadingState";
+import { ErrorState } from "@/components/ErrorState";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -65,33 +68,37 @@ const FlashcardPractice: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [shouldFetchDefinitions, setShouldFetchDefinitions] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
   const [savePosition, setSavePosition] = useState(false);
   const [isLoadingPosition, setIsLoadingPosition] = useState(true);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const player = useAudioPlayer();
-  const { didJustFinish } = useAudioPlayerStatus(player);
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Reset player
-  useEffect(() => {
-    if (didJustFinish) {
-      player.seekTo(0);
-    }
-  }, [didJustFinish, player]);
+
 
     // Fetch words with definitions only to avoid broken flashcards
   const {
     data: words,
     isLoading,
     error,
+    refetch: refetchWords,
   } = useQuery({
-    queryKey: ["words", wordlistId, "withDefinitions"],
+    queryKey: ["words", wordlistId, "withDefinitions", retryCount],
     queryFn: () => offlineWordlistsApi.getWords(Number(wordlistId), true),
     enabled: !!wordlistId,
-    retry: isOnline ? 3 : 0, // Don't retry in offline mode
+    retry: (failureCount, error) => {
+      // Don't retry timeout errors automatically - let user decide
+      if (error.message.includes('timeout')) {
+        return false;
+      }
+      return isOnline ? failureCount < 2 : false;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   const currentWord = words?.[currentIndex];
-  
+
   // Load saved position on mount
   useEffect(() => {
     const loadSavedPosition = async () => {
@@ -169,49 +176,6 @@ const FlashcardPractice: React.FC = () => {
 
 
 
-  // Error reporting mutation
-  const reportMutation = useMutation({
-    mutationFn: ({ errorType }: { errorType: ErrorType }) => {
-      if (!isOnline) {
-        throw new Error("Reporting not available in offline mode");
-      }
-
-      return errorReportingApi.reportError({
-        wordId: currentWord!.id,
-        definitionId: definitions[0]?.id || 0,
-        errorType,
-      });
-    },
-    onSuccess: () => {
-      Alert.alert(t("common.success"), t("flashcards.reportSubmitted"));
-      setShowReportModal(false);
-    },
-    onError: (error) => {
-      if (error instanceof ErrorReportRateLimitError) {
-        let message: string;
-        
-        if (error.windowType === "cooldown") {
-          // Cooldown for specific error on this word
-          message = error.retryAfter 
-            ? t("flashcards.cooldownError", { minutes: Math.ceil(error.retryAfter / 60) })
-            : error.message;
-        } else {
-          // Rate limit (hourly/daily)
-          message = error.retryAfter 
-            ? t("flashcards.rateLimitError", { minutes: Math.ceil(error.retryAfter / 60) })
-            : error.message;
-        }
-        
-        Alert.alert(t("common.error"), message);
-      } else {
-        Alert.alert(t("common.error"), t("offline.featureUnavailable"));
-      }
-    },
-  });
-
-  const handleReportError = (errorType: ErrorType) => {
-    reportMutation.mutate({ errorType });
-  };
 
   // Fetch definitions using React Query with offline support
   const {
@@ -228,8 +192,28 @@ const FlashcardPractice: React.FC = () => {
       ),
     enabled: !!wordlistId && !!currentWord?.id && shouldFetchDefinitions,
     staleTime: 5 * 60 * 1000, // 5 minutes - definitions don't change often
-    retry: isOnline ? 2 : 0, // Don't retry in offline mode
+    retry: (failureCount, error) => {
+      // Don't retry timeout errors automatically - let user decide
+      if (error.message.includes('timeout')) {
+        return false;
+      }
+      return isOnline ? failureCount < 1 : false;
+    },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+
+  // Error reporting hook
+  const {
+    showReportModal,
+    isReporting,
+    handleReportError,
+    openReportModal,
+    closeReportModal,
+  } = useErrorReporting({
+    wordId: currentWord?.id || 0,
+    definitionId: definitions[0]?.id || 0,
+    isOnline,
+    context: "flashcards",
   });
 
   // Reset player and definitions fetch state when word changes
@@ -309,108 +293,123 @@ const FlashcardPractice: React.FC = () => {
     setShouldFetchDefinitions(false); // Reset definitions fetch state for new card
   };
 
-  // Play audio
-  const playAudio = async () => {
-    if (!currentWord?.audioURL) return;
-
-    try {
-      player.play();
-    } catch (error) {
-      console.error("Error playing audio:", error);
+  // Handle loading timeout for words
+  useEffect(() => {
+    if (isLoading) {
+      // Clear any existing timeout
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      
+      // Set timeout for loading state
+      loadingTimeoutRef.current = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 10000); // Show timeout options after 10 seconds
+    } else {
+      // Clear timeout when not loading
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      setLoadingTimeout(false);
     }
+
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, [isLoading]);
+
+  const handleRetryWords = () => {
+    setRetryCount(prev => prev + 1);
+    setLoadingTimeout(false);
   };
 
   if (isLoading || isLoadingPosition) {
     return (
-      <LinearGradient
-        colors={[
-          colors.backgroundLight,
-          colors.backgroundPeach,
-          colors.backgroundSage,
-        ]}
-        style={styles.container}
+      <ImageBackground
+        source={require("@/assets/images/dashboard-bg.png")}
+        style={styles.backgroundImage}
+        resizeMode="cover"
       >
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </LinearGradient>
+        <FlashcardLoadingState
+          isLoading={true}
+          hasTimeout={loadingTimeout}
+          error={error}
+          isLoadingPosition={isLoadingPosition}
+          onRetry={handleRetryWords}
+          onGoBack={() => router.back()}
+          colors={colors}
+        />
+      </ImageBackground>
     );
   }
 
   // Handle offline error state
   if (error && !isOnline && !isOfflineAvailable) {
     return (
-      <LinearGradient
-        colors={[
-          colors.backgroundLight,
-          colors.backgroundPeach,
-          colors.backgroundSage,
-        ]}
-        style={styles.container}
+      <ImageBackground
+        source={require("@/assets/images/dashboard-bg.png")}
+        style={styles.backgroundImage}
+        resizeMode="cover"
       >
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.container}>
           <View style={styles.errorContainer}>
-            <MaterialIcons
-              name="cloud-off"
-              size={64}
-              color={colors.textMedium}
-            />
-            <Text style={styles.errorText}>{t("offline.premiumRequired")}</Text>
-            <Text style={styles.errorSubText}>
+            <MaterialIcons name="cloud-off" size={64} color={colors.textMedium} />
+            <Text style={[styles.errorTitle, { color: colors.textMedium }]}>
+              {t("offline.premiumRequired")}
+            </Text>
+            <Text style={[styles.errorMessage, { color: colors.textMedium }]}>
               {t("offline.premiumRequiredMessage")}
             </Text>
             <TouchableOpacity
-              style={styles.backButton}
+              style={[styles.backButton, { backgroundColor: colors.primary }]}
               onPress={() => router.back()}
             >
-              <Text style={styles.backButtonText}>{t("common.goBack")}</Text>
+              <Text style={[styles.backButtonText, { color: colors.white }]}>
+                {t("common.goBack")}
+              </Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
-      </LinearGradient>
+      </ImageBackground>
     );
   }
 
   if (error || !words || words.length === 0) {
     return (
-      <LinearGradient
-        colors={[
-          colors.backgroundLight,
-          colors.backgroundPeach,
-          colors.backgroundSage,
-        ]}
-        style={styles.container}
+      <ImageBackground
+        source={require("@/assets/images/dashboard-bg.png")}
+        style={styles.backgroundImage}
+        resizeMode="cover"
       >
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.container}>
           <View style={styles.errorContainer}>
-            <MaterialIcons
-              name="error-outline"
-              size={64}
-              color={colors.error}
-            />
-            <Text style={styles.errorText}>{t("flashcards.noWordsFound")}</Text>
+            <MaterialIcons name="error-outline" size={64} color={colors.error} />
+            <Text style={[styles.errorTitle, { color: colors.textMedium }]}>
+              {t("flashcards.noWordsFound")}
+            </Text>
             <TouchableOpacity
-              style={styles.backButton}
+              style={[styles.backButton, { backgroundColor: colors.primary }]}
               onPress={() => router.back()}
             >
-              <Text style={styles.backButtonText}>{t("common.goBack")}</Text>
+              <Text style={[styles.backButtonText, { color: colors.white }]}>
+                {t("common.goBack")}
+              </Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
-      </LinearGradient>
+      </ImageBackground>
     );
   }
 
   return (
-    <LinearGradient
-      colors={[
-        colors.backgroundLight,
-        colors.backgroundPeach,
-        colors.backgroundSage,
-      ]}
-      style={styles.container}
+    <ImageBackground
+      source={require("@/assets/images/dashboard-bg.png")}
+      style={styles.backgroundImage}
+      resizeMode="cover"
     >
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.container}>
         <OfflineIndicator />
 
         <FlashcardHeader
@@ -419,7 +418,7 @@ const FlashcardPractice: React.FC = () => {
           totalWords={words.length}
           isOnline={isOnline}
           onClose={() => router.back()}
-          onReportError={() => setShowReportModal(true)}
+          onReportError={openReportModal}
           savePosition={savePosition}
           onToggleSavePosition={handleToggleSavePosition}
         />
@@ -439,7 +438,6 @@ const FlashcardPractice: React.FC = () => {
           slideAnimation={slideAnimation}
           scaleAnimation={scaleAnimation}
           onFlip={flipCard}
-          onPlayAudio={playAudio}
           onRefetchDefinitions={refetchDefinitions}
         />
 
@@ -452,60 +450,54 @@ const FlashcardPractice: React.FC = () => {
         {/* Error Reporting Modal */}
         <ErrorReportModal
           visible={showReportModal}
-          onClose={() => setShowReportModal(false)}
+          onClose={closeReportModal}
           onReportError={handleReportError}
-          isLoading={reportMutation.isPending}
+          isLoading={isReporting}
           context="flashcards"
           wordName={currentWord?.name}
           errorTypes={[ErrorType.SoundNotPlaying, ErrorType.UnrelatedMeaning]}
         />
       </SafeAreaView>
-    </LinearGradient>
+    </ImageBackground>
   );
 };
 
 export default FlashcardPractice;
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    width: screenWidth,
+    height: Dimensions.get("window").height,
+  },
   container: {
     flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    paddingHorizontal: 40,
   },
-  errorText: {
-    fontSize: 18,
-    color: colors.textMedium,
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: "600",
     marginTop: 16,
-    marginBottom: 32,
+    marginBottom: 8,
     textAlign: "center",
   },
-  errorSubText: {
-    fontSize: 14,
-    color: colors.textMedium,
-    marginBottom: 32,
+  errorMessage: {
+    fontSize: 16,
     textAlign: "center",
-    lineHeight: 20,
+    lineHeight: 22,
+    marginBottom: 24,
   },
   backButton: {
-    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
   },
   backButtonText: {
-    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },

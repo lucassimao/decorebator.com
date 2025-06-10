@@ -10,6 +10,7 @@ export async function callAPI<T>(
   method: "GET" | "POST" | "DELETE" | "PATCH" | "PUT",
   endpoint: string,
   body?: string,
+  timeoutMs = 15000, // 15 second default timeout
 ): Promise<T> {
   const authorization = getAuthorization();
 
@@ -17,14 +18,25 @@ export async function callAPI<T>(
     throw new Error(AUTH_REQUIRED_ERROR);
   }
 
-  const response = await fetch(endpoint, {
-    method,
-    headers: {
-      authorization,
-    },
-    body,
-    credentials: "include",
+  // Create timeout promise
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(`Request timeout after ${timeoutMs}ms`));
+    }, timeoutMs);
   });
+
+  // Race between fetch and timeout
+  const response = await Promise.race([
+    fetch(endpoint, {
+      method,
+      headers: {
+        authorization,
+      },
+      body,
+      credentials: "include",
+    }),
+    timeoutPromise,
+  ]);
 
   let responseBody: any;
 

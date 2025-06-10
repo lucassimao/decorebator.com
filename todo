@@ -70,6 +70,9 @@
     [x] Revisar como stats são computaras e exibidas
     [x] Fix navigation
     [x] Keep progress of flash cards
+    [x] Improve loading state in quiz and practice screens
+    [x] The state of the play button is not synced
+    [ ] Possible to compute stats on the fly for paying users?
     [ ] Splash screen
     [ ] Integratation test plan
 
@@ -83,6 +86,8 @@
     [ ]  browserstack testing
 
 # V2
+[ ] Otimizar chat completion prompt - could it be cheaper?
+[ ] Otimize quiz creation - could it be quicker?
 [ ] New quiz: phrasal verbs based on the verb
 [ ] Show effect after finishing flash cards like papel picado
 [ ] Idea: downgrade boxes for when taking time to train

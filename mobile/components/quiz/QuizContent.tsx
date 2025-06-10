@@ -36,10 +36,17 @@ export const QuizContent: React.FC<QuizContentProps> = ({
 }) => {
   const { t } = useTranslation();
   const player = useAudioPlayer();
-  const { playing: isPlaying } = useAudioPlayerStatus(player);
+  const { playing: isPlaying,didJustFinish } = useAudioPlayerStatus(player);
   const [imageLoading, setImageLoading] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
 
+    // Reset player
+  useEffect(() => {
+    if (didJustFinish) {
+      player.seekTo(0);
+    }
+  }, [didJustFinish, player]);
+  
   // Audio setup
   useEffect(() => {
     if (quiz?.audioURL) {

@@ -26,7 +26,8 @@
     "ok": "OK",
     "hide": "非表示",
     "goBack": "戻る",
-    "more": "もっと"
+    "more": "もっと",
+    "retry": "再試行"
   },
   "auth": {
     "signin": {
@@ -159,9 +160,12 @@
     "fastMode": "高速モード",
     "reportIssue": "問題を報告",
     "reportSubmitted": "レポートが送信されました。",
-    "rateLimitError": "レポートの送信回数が多すぎます。後でもう一度お試しください。",
-    "cooldownError": "このエラーは最近報告されています。しばらく待ってから再度報告してください。",
+    "rateLimitError": "報告が多すぎます。{{minutes}}分後に再試行してください。",
+    "cooldownError": "このエラーは最近既に報告されています。{{minutes}}分待ってから再度報告してください。",
     "loadingNextQuestion": "次の質問を読み込み中...",
+    "loadingTakingLonger": "通常より時間がかかっています...",
+    "requestTimedOut": "リクエストがタイムアウトしました。接続が遅いか不安定な可能性があります。",
+    "slowConnection": "低速接続が検出されました。もう少し時間がかかる場合があります。",
     "writeWordFromDefinition": "この定義に対応する単語を書いてください",
     "whatDoesThisWordMean": "この単語の意味は何ですか？",
     "completeSentence": "文を完成させてください",
@@ -504,9 +508,13 @@
       "wrongExample": "間違った例",
       "soundNotPlaying": "音が再生されません"
     },
-    "rateLimitError": "レポートの送信が多すぎます。後でもう一度お試しください。",
-    "cooldownError": "このエラーは最近報告されています。しばらく待ってから再度報告してください。",
+    "rateLimitError": "報告が多すぎます。{{minutes}}分後に再試行してください。",
+    "cooldownError": "このエラーは最近既に報告されています。{{minutes}}分待ってから再度報告してください。",
     "loadingCard": "カードを読み込み中...",
+    "loadingWords": "単語を読み込み中...",
+    "loadingTakingLonger": "通常より時間がかかっています...",
+    "requestTimedOut": "リクエストがタイムアウトしました。接続が遅いか不安定な可能性があります。",
+    "slowConnection": "低速接続が検出されました。もう少し時間がかかる場合があります。",
     "savePosition": "位置を保存"
   }
 }

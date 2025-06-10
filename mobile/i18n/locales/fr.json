@@ -26,7 +26,8 @@
     "ok": "OK",
     "hide": "MASQUER",
     "goBack": "Retour",
-    "more": "Plus"
+    "more": "Plus",
+    "retry": "Réessayer"
   },
   "auth": {
     "signin": {
@@ -159,9 +160,12 @@
     "fastMode": "Mode Rapide",
     "reportIssue": "Signaler un Problème",
     "reportSubmitted": "Votre rapport a été envoyé.",
-    "rateLimitError": "Trop de rapports soumis. Veuillez réessayer plus tard.",
-    "cooldownError": "Vous avez déjà signalé cette erreur récemment. Veuillez attendre un moment avant de signaler à nouveau.",
+    "rateLimitError": "Trop de rapports soumis. Veuillez réessayer dans {{minutes}} minutes.",
+    "cooldownError": "Vous avez déjà signalé cette erreur récemment. Veuillez attendre {{minutes}} minutes avant de signaler à nouveau.",
     "loadingNextQuestion": "Chargement de la question suivante...",
+    "loadingTakingLonger": "Cela prend plus de temps que d'habitude...",
+    "requestTimedOut": "Délai d'attente de la requête dépassé. Votre connexion pourrait être lente ou instable.",
+    "slowConnection": "Connexion lente détectée. Cela pourrait prendre un peu plus de temps.",
     "writeWordFromDefinition": "Écrivez le mot pour cette définition",
     "whatDoesThisWordMean": "Que signifie ce mot ?",
     "completeSentence": "Complétez la phrase",
@@ -505,9 +509,13 @@
       "wrongExample": "Mauvais exemple",
       "soundNotPlaying": "Le son ne joue pas"
     },
-    "rateLimitError": "Trop de rapports soumis. Veuillez réessayer plus tard.",
-    "cooldownError": "Vous avez déjà signalé cette erreur récemment. Veuillez attendre un moment avant de signaler à nouveau.",
+    "rateLimitError": "Trop de rapports soumis. Veuillez réessayer dans {{minutes}} minutes.",
+    "cooldownError": "Vous avez déjà signalé cette erreur récemment. Veuillez attendre {{minutes}} minutes avant de signaler à nouveau.",
     "loadingCard": "Chargement de la carte...",
+    "loadingWords": "Chargement des mots...",
+    "loadingTakingLonger": "Cela prend plus de temps que d'habitude...",
+    "requestTimedOut": "Délai d'attente de la requête dépassé. Votre connexion pourrait être lente ou instable.",
+    "slowConnection": "Connexion lente détectée. Cela pourrait prendre un peu plus de temps.",
     "savePosition": "Sauvegarder la position"
   }
 }

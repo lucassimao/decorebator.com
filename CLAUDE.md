@@ -24,20 +24,40 @@ make watch
 make workers
 
 # Run tests with coverage
-make test
+make test              # Run all tests with Docker
+make test-unit         # Run unit tests only (fast)
+make test-integration  # Run integration tests locally
+make test-all          # Run both unit and integration tests
+make test-fast         # Run tests without Docker (requires local services)
+make test-watch        # Run tests in watch mode (auto-reload)
+make coverage-html     # Generate HTML coverage reports
+make coverage-threshold # Check if coverage meets thresholds
+
+# Test runner script for comprehensive testing
+./scripts/run-tests.sh setup       # First-time test setup
+./scripts/run-tests.sh unit        # Run unit tests only
+./scripts/run-tests.sh integration # Run integration tests
+./scripts/run-tests.sh all         # Run all tests
+./scripts/run-tests.sh watch       # Watch mode
+./scripts/run-tests.sh coverage    # Check coverage thresholds
+./scripts/run-tests.sh clean       # Clean test environment
 
 # Database operations
 make migrate-up         # Apply migrations
 make migrate-down       # Rollback last migration
+make migrate-up-test    # Run migrations on test database
+make migrate-down-test  # Rollback test database migrations
 make create-migration   # Create new migration file
 make psql              # Open PostgreSQL console
 
+# Debug commands
+make debug-api         # Debug API with delve
+make debug-workers     # Debug workers with delve
+
 # Other commands
 make build             # Build API binary
-make debug-workers     # Debug workers with delve
-make debug-api         # Debug API with delve
-make clean            # Remove build artifacts
-make help             # Show all available commands
+make clean             # Remove build artifacts
+make help              # Show all available commands
 make migrate-drop      # Drop all database tables (destructive)
 ```
 
@@ -163,6 +183,41 @@ Key tables with recent enhancements:
   - `mv_word_mastery_current` - Current word mastery state
   - `mv_quiz_type_performance` - Quiz performance analytics
 
+## Environment Setup
+
+### Development Environment
+
+1. Copy the environment template:
+```bash
+cp .env.example .env
+```
+
+2. Configure required services in `.env`:
+- PostgreSQL connection details
+- MinIO credentials for object storage
+- OpenAI API key for AI features
+- Stripe API keys and webhook secret
+- SendGrid API key for emails
+- JWT secret for authentication
+- Sentry DSN for error monitoring (optional)
+
+### Test Environment
+
+1. Copy the test environment template:
+```bash
+cp .env.test.example .env.test
+```
+
+2. Test services run on different ports:
+- PostgreSQL: 5433 (vs 5432 for dev)
+- MinIO: 9001 (vs 9000 for dev)
+- Redis: 6380 (vs 6379 for dev)
+
+3. Use `docker-compose.test.yml` for isolated test services:
+```bash
+docker-compose -f docker-compose.test.yml up -d
+```
+
 ## Subscription System
 
 ### Features
@@ -186,15 +241,45 @@ Key tables with recent enhancements:
 ### API Tests
 - Integration tests using `httpexpect`
 - Test database with Docker Compose (`docker-compose.test.yml`)
-- Coverage reports generated with `go test -cover`
-- Run single test: `go test -v -run TestName`
-- Run tests with coverage: `make test` (containerized with HTML report)
+- Coverage requirements: 70% unit, 80% integration
+- AAA (Arrange-Act-Assert) test structure
+- Test naming: `Test[Subject]_[Scenario]_[Expected]`
+- Mock servers for external services (OpenAI, Stripe, SendGrid)
+- Transaction-based test isolation
+- Performance benchmarking support
+- Security testing patterns
+
+### Running Tests
+```bash
+# Run single test
+go test -v -run TestName
+
+# Run tests in specific package
+go test -v ./internal/service/...
+
+# Run with race detection
+go test -race ./...
+
+# Generate coverage report
+make coverage-html
+```
 
 ### Mobile Tests
 - Jest with Expo preset
 - Run with `npm test` (runs in watch mode)
 - Run single test: `npm test -- --testNamePattern="test name"`
 - To run tests without watch mode: `jest` (directly)
+
+## CI/CD Pipeline
+
+### GitHub Actions Workflow
+- Automated testing on push/PR to master, main, develop branches
+- Unit tests, integration tests, linting, and security checks
+- Coverage threshold enforcement (70% unit, 80% integration)
+- Build verification for all binaries
+- Uses `golangci-lint` for code quality
+- `gosec` for security scanning
+- Race condition detection in tests
 
 ## External Services
 
@@ -217,6 +302,21 @@ Key tables with recent enhancements:
 7. Use `make watch` for API development with auto-reload
 8. Run `make test` before committing to ensure tests pass
 
+## Error Reporting System
+
+### Rate Limiting
+To prevent abuse and control API costs, error reporting implements comprehensive rate limiting:
+
+| Tier | Hourly Limit | Daily Limit |
+|------|--------------|-------------|
+| **Free** | 3 reports | 5 reports |
+| **Premium** | 10 reports | 30 reports |
+
+- 1-hour cooldown for reporting the same error on the same word
+- PostgreSQL-based rate limiting without Redis dependency
+- Clear error messages with retry times
+- Status endpoint to check remaining quota
+
 ## Important Notes
 
 - Authentication uses JWT tokens stored securely on mobile devices
@@ -225,9 +325,10 @@ Key tables with recent enhancements:
 - Email templates are located in `internal/mail/` directory
 - API endpoints are documented in `doc/words.http` and `doc/words.prod.http`
 - Recent architecture improvements planned in:
-  - `api/DEPENDENCY_INJECTION_MODERNIZATION_PLAN.md` - DI framework adoption
-  - `api/LOGGING_IMPROVEMENT_PLAN.md` - Enhanced structured logging
-  - `api/ANALYTICS_REVIEW_REPORT.md` - Performance and bug fixes for analytics
+  - `api/docs/DEPENDENCY_INJECTION_MODERNIZATION_PLAN.md` - DI framework adoption
+  - `api/docs/LOGGING_IMPROVEMENT_PLAN.md` - Enhanced structured logging
+  - `api/docs/ANALYTICS_REVIEW_REPORT.md` - Performance and bug fixes for analytics
+  - `api/docs/QUIZ_TYPE_ROTATION_PROPOSAL.md` - Deterministic quiz type selection
 
 ## Multi-Language Support
 
@@ -257,11 +358,6 @@ The application provides comprehensive multi-language support:
 - **Comprehensive Analytics**: Word mastery tracking, learning progress visualization, and performance metrics
 - **Offline Support**: Premium users can access wordlists and practice offline with seamless sync
 - **Subscription Tiers**: Free plan (1 wordlist, 10 words) and Premium plans ($6.99/month, $69.90/year)
-# important-instruction-reminders
-Do what has been asked; nothing more, nothing less.
-NEVER create files unless they're absolutely necessary for achieving your goal.
-ALWAYS prefer editing an existing file to creating a new one.
-NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 
 ## Memories
 - read README.md for more additional context on decorebator project

@@ -402,8 +402,8 @@ func selectQuizType(def *NextDefinition, word *model.Word) (model.QuizType, erro
 
 	// Deterministic selection based on definition ID and current time
 	// This ensures all quiz types get cycled through fairly
-	// Using minutes/10 ensures rotation every 10 minutes for variety
-	timeRotation := time.Now().Unix() / 600  // 600 seconds = 10 minutes
+	// Using 5-minute rotation ensures variety while maintaining predictability
+	timeRotation := time.Now().Unix() / 300  // 300 seconds = 5 minutes
 	index := (int(def.Definition.ID) + int(timeRotation)) % len(availableTypes)
 	
 	// Log the selection for monitoring

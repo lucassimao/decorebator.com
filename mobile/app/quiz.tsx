@@ -1,15 +1,16 @@
-import * as errorReportingApi from "@/api/errorReporting";
-import { ErrorType, ErrorReportRateLimitError } from "@/api/errorReporting";
+import { ErrorType } from "@/api/errorReporting";
 import * as offlineQuizApi from "@/api/offlineWordlists";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { ErrorReportModal } from "@/components/ErrorReportModal";
-import { QuizHeader } from "@/components/quiz/QuizHeader";
-import { QuizProgressBar } from "@/components/quiz/QuizProgressBar";
-import { QuizModeToggle } from "@/components/quiz/QuizModeToggle";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { QuizContent } from "@/components/quiz/QuizContent";
-import { QuizOptions } from "@/components/quiz/QuizOptions";
+import { QuizHeader } from "@/components/quiz/QuizHeader";
+import { QuizModeToggle } from "@/components/quiz/QuizModeToggle";
 import { QuizNextButton } from "@/components/quiz/QuizNextButton";
+import { QuizOptions } from "@/components/quiz/QuizOptions";
+import { QuizProgressBar } from "@/components/quiz/QuizProgressBar";
+import { QuizLoadingState } from "@/components/quiz/QuizLoadingState";
 import { useOffline } from "@/hooks/useOffline";
+import { useErrorReporting } from "@/hooks/useErrorReporting";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -26,6 +27,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -55,22 +57,15 @@ const QuizScreen: React.FC = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [fastMode, setFastMode] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const player = useAudioPlayer();
-  const { didJustFinish } = useAudioPlayerStatus(player);
   const [quizCount, setQuizCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [userInput, setUserInput] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoadingNext, setIsLoadingNext] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const quizDisplayedAtRef = useRef(0);
-
-  // Reset player
-  useEffect(() => {
-    if (didJustFinish) {
-      player.seekTo(0);
-    }
-  }, [didJustFinish, player]);
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch quiz
   const {
@@ -80,17 +75,76 @@ const QuizScreen: React.FC = () => {
     error,
     isFetching,
   } = useQuery({
-    queryKey: ["quiz", wordlistId],
+    queryKey: ["quiz", wordlistId, retryCount],
     queryFn: () => offlineQuizApi.newQuiz(Number(wordlistId)),
-    retry: isOnline ? 3 : 0,
+    retry: (failureCount, error) => {
+      // Don't retry timeout errors automatically - let user decide
+      if (error.message.includes('timeout')) {
+        return false;
+      }
+      return isOnline ? failureCount < 2 : false;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 0, // Always fetch fresh quiz
+    refetchOnWindowFocus: false,
+  });
+
+  // Error reporting hook
+  const {
+    showReportModal,
+    isReporting,
+    handleReportError,
+    openReportModal,
+    closeReportModal,
+  } = useErrorReporting({
+    wordId: quiz?.wordId || 0,
+    definitionId: quiz?.definitionId || 0,
+    isOnline,
+    context: "quiz",
+    onSuccess: () => {
+      handleNextQuiz();
+    },
   });
 
   useEffect(() => {
     if (quiz?.id) {
       quizDisplayedAtRef.current = Date.now();
       setIsLoadingNext(false);
+      setLoadingTimeout(false);
+      setRetryCount(0);
+      // Clear loading timeout
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
     }
   }, [quiz?.id]);
+
+  // Handle loading timeout
+  useEffect(() => {
+    if (isLoadingNext || (isFetching && !quiz)) {
+      // Clear any existing timeout
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      
+      // Set timeout for loading state
+      loadingTimeoutRef.current = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 10000); // Show timeout options after 10 seconds
+    } else {
+      // Clear timeout when not loading
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      setLoadingTimeout(false);
+    }
+
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, [isLoadingNext, isFetching, quiz]);
 
   // Answer mutation
   const answerMutation = useMutation<void, Error, { success: boolean }>({
@@ -114,45 +168,6 @@ const QuizScreen: React.FC = () => {
     onError: console.error,
   });
 
-  // Report error mutation
-  const reportMutation = useMutation({
-    mutationFn: ({ errorType }: { errorType: errorReportingApi.ErrorType }) => {
-      if (!isOnline) {
-        throw new Error("Reporting not available in offline mode");
-      }
-      return errorReportingApi.reportError({
-        wordId: quiz!.wordId,
-        definitionId: quiz!.definitionId,
-        errorType,
-      });
-    },
-    onSuccess: () => {
-      Alert.alert(t("common.success"), t("quiz.reportSubmitted"));
-      setShowReportModal(false);
-      handleNextQuiz();
-    },
-    onError: (error) => {
-      if (error instanceof ErrorReportRateLimitError) {
-        let message: string;
-        
-        if (error.windowType === "cooldown") {
-          // Cooldown for specific error on this word
-          message = error.retryAfter 
-            ? t("quiz.cooldownError", { minutes: Math.ceil(error.retryAfter / 60) })
-            : error.message;
-        } else {
-          // Rate limit (hourly/daily)
-          message = error.retryAfter 
-            ? t("quiz.rateLimitError", { minutes: Math.ceil(error.retryAfter / 60) })
-            : error.message;
-        }
-        
-        Alert.alert(t("common.error"), message);
-      } else {
-        Alert.alert(t("common.error"), t("offline.featureUnavailable"));
-      }
-    },
-  });
 
   const handleAnswerSelect = (index: number) => {
     if (showResult) return;
@@ -203,12 +218,20 @@ const QuizScreen: React.FC = () => {
     setShowResult(false);
     setUserInput("");
     setIsSubmitted(false);
+    setLoadingTimeout(false);
     refetch();
   };
 
-  const handleReportError = (errorType: ErrorType) => {
-    reportMutation.mutate({ errorType });
+  const handleRetryQuiz = () => {
+    setRetryCount(prev => prev + 1);
+    setLoadingTimeout(false);
+    setIsLoadingNext(true);
   };
+
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
 
   const onPressFastModeToggle = () => {
     setFastMode((v) => !v);
@@ -241,7 +264,7 @@ const QuizScreen: React.FC = () => {
             quizCount={quizCount}
             isOnline={isOnline}
             onBackPress={() => navigation.goBack()}
-            onReportPress={() => setShowReportModal(true)}
+            onReportPress={openReportModal}
           />
           <View style={styles.errorContainer}>
             <MaterialIcons name="cloud-off" size={64} color="#636E72" />
@@ -272,7 +295,7 @@ const QuizScreen: React.FC = () => {
           quizCount={quizCount}
           isOnline={isOnline}
           onBackPress={() => navigation.goBack()}
-          onReportPress={() => setShowReportModal(true)}
+          onReportPress={openReportModal}
         />
 
         <QuizProgressBar correctCount={correctCount} quizCount={quizCount} />
@@ -285,10 +308,13 @@ const QuizScreen: React.FC = () => {
         >
           <View style={styles.quizCard}>
             {isLoadingNext || (isFetching && !quiz) ? (
-              <View style={styles.quizLoadingContainer}>
-                <ActivityIndicator size="large" color="#FF7B54" />
-                <Text style={styles.loadingText}>{t("quiz.loadingNextQuestion")}</Text>
-              </View>
+              <QuizLoadingState
+                isLoading={true}
+                hasTimeout={loadingTimeout}
+                error={error}
+                onRetry={handleRetryQuiz}
+                onGoBack={handleGoBack}
+              />
             ) : (
               <>
                 {quiz && (
@@ -323,9 +349,9 @@ const QuizScreen: React.FC = () => {
 
         <ErrorReportModal
           visible={showReportModal}
-          onClose={() => setShowReportModal(false)}
+          onClose={closeReportModal}
           onReportError={handleReportError}
-          isLoading={reportMutation.isPending}
+          isLoading={isReporting}
           context="quiz"
         />
       </SafeAreaView>
@@ -382,15 +408,5 @@ const styles = StyleSheet.create({
     color: "#636E72",
     textAlign: "center",
     lineHeight: 22,
-  },
-  quizLoadingContainer: {
-    minHeight: 300,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#636E72",
   },
 });

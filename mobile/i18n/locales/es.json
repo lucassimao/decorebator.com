@@ -26,7 +26,8 @@
     "ok": "OK",
     "hide": "OCULTAR",
     "goBack": "Volver",
-    "more": "Más"
+    "more": "Más",
+    "retry": "Reintentar"
   },
   "auth": {
     "signin": {
@@ -159,9 +160,12 @@
     "fastMode": "Modo Rápido",
     "reportIssue": "Reportar un Problema",
     "reportSubmitted": "Tu reporte ha sido enviado.",
-    "rateLimitError": "Demasiados reportes enviados. Por favor intenta más tarde.",
-    "cooldownError": "Ya has reportado este error recientemente. Por favor espera un momento antes de reportar nuevamente.",
+    "rateLimitError": "Demasiados reportes enviados. Por favor intenta en {{minutes}} minutos.",
+    "cooldownError": "Ya has reportado este error recientemente. Por favor espera {{minutes}} minutos antes de reportar nuevamente.",
     "loadingNextQuestion": "Cargando siguiente pregunta...",
+    "loadingTakingLonger": "Esto está tomando más tiempo de lo usual...",
+    "requestTimedOut": "La solicitud expiró. Tu conexión podría ser lenta o inestable.",
+    "slowConnection": "Conexión lenta detectada. Esto podría tomar un poco más de tiempo.",
     "writeWordFromDefinition": "Escribe la palabra para esta definición",
     "whatDoesThisWordMean": "¿Qué significa esta palabra?",
     "completeSentence": "Completa la oración",
@@ -504,9 +508,13 @@
       "wrongExample": "Ejemplo incorrecto",
       "soundNotPlaying": "El sonido no se reproduce"
     },
-    "rateLimitError": "Demasiados informes enviados. Por favor, inténtalo de nuevo más tarde.",
-    "cooldownError": "Ya has reportado este error recientemente. Por favor espera un momento antes de reportar nuevamente.",
+    "rateLimitError": "Demasiados informes enviados. Por favor, inténtalo de nuevo en {{minutes}} minutos.",
+    "cooldownError": "Ya has reportado este error recientemente. Por favor espera {{minutes}} minutos antes de reportar nuevamente.",
     "loadingCard": "Cargando tarjeta...",
+    "loadingWords": "Cargando palabras...",
+    "loadingTakingLonger": "Esto está tomando más tiempo de lo usual...",
+    "requestTimedOut": "La solicitud expiró. Tu conexión podría ser lenta o inestable.",
+    "slowConnection": "Conexión lenta detectada. Esto podría tomar un poco más de tiempo.",
     "savePosition": "Guardar posición"
   }
 }

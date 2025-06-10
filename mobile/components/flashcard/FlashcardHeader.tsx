@@ -129,11 +129,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: colors.lightBackground,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderGray,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderGray,
+    backgroundColor: "transparent",
   },
   savePositionTextContainer: {
     flexDirection: "row",
@@ -141,11 +137,17 @@ const styles = StyleSheet.create({
   },
   savePositionText: {
     fontSize: 15,
-    color: colors.textMedium,
-    fontWeight: "500",
+    color: colors.textDark,
+    fontWeight: "600",
     marginLeft: 8,
+    textShadowColor: "rgba(255, 255, 255, 0.8)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   savePositionTextActive: {
     color: colors.primary,
+    textShadowColor: "rgba(255, 255, 255, 0.8)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });

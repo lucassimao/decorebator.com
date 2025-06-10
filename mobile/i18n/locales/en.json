@@ -26,7 +26,8 @@
     "ok": "OK",
     "hide": "HIDE",
     "goBack": "Go Back",
-    "more": "More"
+    "more": "More",
+    "retry": "Retry"
   },
   "auth": {
     "signin": {
@@ -159,9 +160,12 @@
     "fastMode": "Fast Mode",
     "reportIssue": "Report an Issue",
     "reportSubmitted": "Your report has been submitted.",
-    "rateLimitError": "Too many reports submitted. Please try again later.",
-    "cooldownError": "You've already reported this error recently. Please wait a moment before reporting again.",
+    "rateLimitError": "Too many reports submitted. Please try again in {{minutes}} minutes.",
+    "cooldownError": "You've already reported this error recently. Please wait {{minutes}} minutes before reporting again.",
     "loadingNextQuestion": "Loading next question...",
+    "loadingTakingLonger": "This is taking longer than usual...",
+    "requestTimedOut": "Request timed out. Your connection might be slow or unstable.",
+    "slowConnection": "Slow connection detected. This might take a bit longer.",
     "writeWordFromDefinition": "Write the word for this definition",
     "whatDoesThisWordMean": "What does this word mean?",
     "completeSentence": "Complete the sentence",
@@ -504,9 +508,13 @@
       "wrongExample": "Wrong example",
       "soundNotPlaying": "Sound not playing"
     },
-    "rateLimitError": "Too many reports submitted. Please try again later.",
-    "cooldownError": "You've already reported this error recently. Please wait a moment before reporting again.",
+    "rateLimitError": "Too many reports submitted. Please try again in {{minutes}} minutes.",
+    "cooldownError": "You've already reported this error recently. Please wait {{minutes}} minutes before reporting again.",
     "loadingCard": "Loading card...",
+    "loadingWords": "Loading words...",
+    "loadingTakingLonger": "This is taking longer than usual...",
+    "requestTimedOut": "Request timed out. Your connection might be slow or unstable.",
+    "slowConnection": "Slow connection detected. This might take a bit longer.",
     "savePosition": "Save position"
   }
 }

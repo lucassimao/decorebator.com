@@ -26,7 +26,8 @@
     "ok": "OK",
     "hide": "OCULTAR",
     "goBack": "Voltar",
-    "more": "Mais"
+    "more": "Mais",
+    "retry": "Tentar novamente"
   },
   "auth": {
     "signin": {
@@ -159,9 +160,12 @@
     "fastMode": "Modo Rápido",
     "reportIssue": "Reportar um Problema",
     "reportSubmitted": "O seu relatório foi enviado.",
-    "rateLimitError": "Demasiados relatórios enviados. Por favor, tente novamente mais tarde.",
-    "cooldownError": "Já reportou este erro recentemente. Por favor, aguarde um momento antes de reportar novamente.",
+    "rateLimitError": "Demasiados relatórios enviados. Tente novamente em {{minutes}} minutos.",
+    "cooldownError": "Já relatou este erro recentemente. Aguarde {{minutes}} minutos antes de relatar novamente.",
     "loadingNextQuestion": "A carregar próxima pergunta...",
+    "loadingTakingLonger": "Isto está a demorar mais que o normal...",
+    "requestTimedOut": "Pedido expirou. A sua ligação pode estar lenta ou instável.",
+    "slowConnection": "Ligação lenta detectada. Isto pode demorar um pouco mais.",
     "writeWordFromDefinition": "Escreva a palavra para esta definição",
     "whatDoesThisWordMean": "O que significa esta palavra?",
     "completeSentence": "Complete a frase",
@@ -504,9 +508,13 @@
       "wrongExample": "Exemplo errado",
       "soundNotPlaying": "Som não está a tocar"
     },
-    "rateLimitError": "Demasiados relatórios enviados. Por favor, tente novamente mais tarde.",
-    "cooldownError": "Já reportou este erro recentemente. Por favor, aguarde um momento antes de reportar novamente.",
+    "rateLimitError": "Demasiados relatórios enviados. Tente novamente em {{minutes}} minutos.",
+    "cooldownError": "Já relatou este erro recentemente. Aguarde {{minutes}} minutos antes de relatar novamente.",
     "loadingCard": "A carregar cartão...",
+    "loadingWords": "A carregar palavras...",
+    "loadingTakingLonger": "Isto está a demorar mais que o normal...",
+    "requestTimedOut": "Pedido expirou. A sua ligação pode estar lenta ou instável.",
+    "slowConnection": "Ligação lenta detectada. Isto pode demorar um pouco mais.",
     "savePosition": "Guardar posição"
   }
 }
