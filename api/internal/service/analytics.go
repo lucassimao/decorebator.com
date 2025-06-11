@@ -112,80 +112,6 @@ func (as *AnalyticsService) GetBoxDistributionHistory(ctx context.Context, userI
 	return as.repo.GetBoxDistributionHistory(ctx, userID, wordlistID, days)
 }
 
-// DashboardStats holds all the pieces of data we need for the dashboard.
-type DashboardStats struct {
-	TotalWords        int      `json:"totalWords"`
-	WordsMastered     int      `json:"wordsMastered"`
-	AverageMastery    *float64 `json:"averageMastery"` // could be nil if no rows
-	BestStreak        *int     `json:"bestStreak"`     // could be nil if no data
-	WordsStudiedToday int      `json:"wordsStudiedToday"`
-	QuizzesToday      int      `json:"quizzesToday"`
-	AccuracyToday     float64  `json:"accuracyToday"`
-	CurrentStreak     int      `json:"currentStreak"`
-}
-
-// GetDashboardStats fetches and returns all pieces of data for a given user.
-func (svc *AnalyticsService) GetDashboardStats(ctx context.Context, userID int64) (*DashboardStats, error) {
-	stats := &DashboardStats{}
-	
-	// Use errgroup to run all queries concurrently
-	g, ctx := errgroup.WithContext(ctx)
-	
-	// 1) Total mastery summary
-	g.Go(func() error {
-		return svc.fetchTotalMasteryStats(ctx, userID, stats)
-	})
-	
-	// 2) Today's activity summary  
-	g.Go(func() error {
-		return svc.fetchTodayStats(ctx, userID, stats)
-	})
-	
-	// 3) Current streak
-	var streak int
-	g.Go(func() error {
-		var err error
-		streak, err = svc.fetchCurrentStreak(ctx, userID)
-		return err
-	})
-	
-	// Wait for all goroutines to complete
-	if err := g.Wait(); err != nil {
-		return nil, fmt.Errorf("failed to fetch dashboard stats: %w", err)
-	}
-	
-	stats.CurrentStreak = streak
-	return stats, nil
-}
-
-func (svc *AnalyticsService) fetchTotalMasteryStats(ctx context.Context, userID int64, stats *DashboardStats) error {
-	totalWords, wordsMastered, avgMastery, bestStreak, err := svc.repo.GetTotalMasteryStats(ctx, userID)
-	if err != nil {
-		return err
-	}
-
-	stats.TotalWords = totalWords
-	stats.WordsMastered = wordsMastered
-	stats.AverageMastery = avgMastery
-	stats.BestStreak = bestStreak
-	return nil
-}
-
-func (svc *AnalyticsService) fetchTodayStats(ctx context.Context, userID int64, stats *DashboardStats) error {
-	wordsStudiedToday, quizzesToday, accuracyToday, err := svc.repo.GetTodayStats(ctx, userID)
-	if err != nil {
-		return err
-	}
-
-	stats.WordsStudiedToday = wordsStudiedToday
-	stats.QuizzesToday = quizzesToday
-	stats.AccuracyToday = accuracyToday
-	return nil
-}
-
-func (svc *AnalyticsService) fetchCurrentStreak(ctx context.Context, userID int64) (int, error) {
-	return svc.repo.GetCurrentStreak(ctx, userID)
-}
 
 // Type alias for BoxDistribution
 type BoxDistribution = repository.BoxDistribution
@@ -201,4 +127,79 @@ type PracticeTimeStats = repository.PracticeTimeStats
 // GetPracticeTime retrieves daily practice time for the last N days
 func (as *AnalyticsService) GetPracticeTime(ctx context.Context, userID, wordlistID int64, days int) ([]PracticeTimeStats, error) {
 	return as.repo.GetPracticeTime(ctx, userID, wordlistID, days)
+}
+
+// WordlistDashboardStats holds dashboard statistics for a specific wordlist
+type WordlistDashboardStats struct {
+	TotalWords        int      `json:"totalWords"`
+	WordsMastered     int      `json:"wordsMastered"`
+	AverageMastery    *float64 `json:"averageMastery"` // could be nil if no rows
+	BestStreak        *int     `json:"bestStreak"`     // could be nil if no data
+	WordsStudiedToday int      `json:"wordsStudiedToday"`
+	QuizzesToday      int      `json:"quizzesToday"`
+	AccuracyToday     float64  `json:"accuracyToday"`
+	CurrentStreak     int      `json:"currentStreak"`
+}
+
+// GetWordlistDashboardStats fetches and returns dashboard statistics for a specific wordlist
+func (svc *AnalyticsService) GetWordlistDashboardStats(ctx context.Context, userID, wordlistID int64) (*WordlistDashboardStats, error) {
+	stats := &WordlistDashboardStats{}
+	
+	// Use errgroup to run all queries concurrently
+	g, ctx := errgroup.WithContext(ctx)
+	
+	// 1) Wordlist mastery summary
+	g.Go(func() error {
+		return svc.fetchWordlistMasteryStats(ctx, userID, wordlistID, stats)
+	})
+	
+	// 2) Today's activity summary for this wordlist
+	g.Go(func() error {
+		return svc.fetchWordlistTodayStats(ctx, userID, wordlistID, stats)
+	})
+	
+	// 3) Current streak for this wordlist
+	var streak int
+	g.Go(func() error {
+		var err error
+		streak, err = svc.fetchWordlistCurrentStreak(ctx, userID, wordlistID)
+		return err
+	})
+	
+	// Wait for all goroutines to complete
+	if err := g.Wait(); err != nil {
+		return nil, fmt.Errorf("failed to fetch wordlist dashboard stats: %w", err)
+	}
+	
+	stats.CurrentStreak = streak
+	return stats, nil
+}
+
+func (svc *AnalyticsService) fetchWordlistMasteryStats(ctx context.Context, userID, wordlistID int64, stats *WordlistDashboardStats) error {
+	totalWords, wordsMastered, avgMastery, bestStreak, err := svc.repo.GetWordlistMasteryStats(ctx, userID, wordlistID)
+	if err != nil {
+		return err
+	}
+
+	stats.TotalWords = totalWords
+	stats.WordsMastered = wordsMastered
+	stats.AverageMastery = avgMastery
+	stats.BestStreak = bestStreak
+	return nil
+}
+
+func (svc *AnalyticsService) fetchWordlistTodayStats(ctx context.Context, userID, wordlistID int64, stats *WordlistDashboardStats) error {
+	wordsStudiedToday, quizzesToday, accuracyToday, err := svc.repo.GetWordlistTodayStats(ctx, userID, wordlistID)
+	if err != nil {
+		return err
+	}
+
+	stats.WordsStudiedToday = wordsStudiedToday
+	stats.QuizzesToday = quizzesToday
+	stats.AccuracyToday = accuracyToday
+	return nil
+}
+
+func (svc *AnalyticsService) fetchWordlistCurrentStreak(ctx context.Context, userID, wordlistID int64) (int, error) {
+	return svc.repo.GetWordlistCurrentStreak(ctx, userID, wordlistID)
 }

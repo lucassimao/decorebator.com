@@ -2,14 +2,14 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
 import { colors } from "./theme";
-import { DashboardStats } from "@/api/analytics";
+import { OverviewStats } from "@/api/analytics";
 
 interface StatsGridProps {
-  dashboardStats?: DashboardStats;
+  overviewStats?: OverviewStats;
 }
 
-export const StatsGrid: React.FC<StatsGridProps> = ({ dashboardStats }) => {
-  const { t } = useTranslation();
+export const StatsGrid: React.FC<StatsGridProps> = ({ overviewStats }) => {
+  const { t } = useTranslation(); 
 
   return (
     <View style={styles.statsGrid}>
@@ -18,7 +18,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ dashboardStats }) => {
           <Text style={styles.statIcon}>📚</Text>
         </View>
         <Text style={styles.statValue}>
-          {dashboardStats?.wordsStudiedToday || 0}
+          {overviewStats?.wordsStudiedToday || 0}
         </Text>
         <Text style={styles.statLabel}>
           {t("analytics.stats.wordsToday")}
@@ -30,7 +30,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ dashboardStats }) => {
           <Text style={styles.statIcon}>🔥</Text>
         </View>
         <Text style={[styles.statValue, styles.statValueHighlight]}>
-          {dashboardStats?.currentStreak || 0}
+          {overviewStats?.currentStreak || 0}
         </Text>
         <Text style={styles.statLabel}>
           {t("analytics.stats.dayStreak")}
@@ -42,7 +42,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ dashboardStats }) => {
           <Text style={styles.statIcon}>🏆</Text>
         </View>
         <Text style={[styles.statValue, styles.statValueSuccess]}>
-          {dashboardStats?.wordsMastered || 0}
+          {overviewStats?.wordsMastered || 0}
         </Text>
         <Text style={styles.statLabel}>
           {t("analytics.stats.mastered")}
@@ -54,7 +54,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ dashboardStats }) => {
           <Text style={styles.statIcon}>🎯</Text>
         </View>
         <Text style={styles.statValue}>
-          {Math.round(dashboardStats?.accuracyToday || 0)}%
+          {Math.round(overviewStats?.accuracyToday || 0)}%
         </Text>
         <Text style={styles.statLabel}>
           {t("analytics.stats.accuracy")}

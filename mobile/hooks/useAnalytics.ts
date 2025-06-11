@@ -1,6 +1,6 @@
 import {
-  DashboardStats,
-  getDashboardStats,
+  OverviewStats,
+  getWordlistOverviewStats,
   getLearningProgress,
   getQuizPerformance,
   getWordMastery,
@@ -19,7 +19,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 
 type UseAnalyticsResult = {
-  dashboardStats?: DashboardStats;
+  overviewStats?: OverviewStats;
   statsLoading: boolean;
   statsError?: unknown;
 
@@ -56,14 +56,15 @@ type UseAnalyticsResult = {
 };
 
 export function useAnalytics(wordlistId: number): UseAnalyticsResult {
-  // 1) Dashboard stats
+  // 1) Overview stats (wordlist-specific)
   const {
-    data: dashboardStats,
+    data: overviewStats,
     isLoading: statsLoading,
     error: statsError,
-  } = useQuery<DashboardStats, unknown>({
-    queryKey: ["analytics", "dashboard"],
-    queryFn: getDashboardStats,
+  } = useQuery<OverviewStats, unknown>({
+    queryKey: ["analytics", "overview", wordlistId],
+    queryFn: () => getWordlistOverviewStats(wordlistId),
+    enabled: Boolean(wordlistId),
   });
 
   // 2) Word mastery for the given wordlist
@@ -148,7 +149,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
   });
 
   return {
-    dashboardStats,
+    overviewStats,
     statsLoading,
     statsError,
 

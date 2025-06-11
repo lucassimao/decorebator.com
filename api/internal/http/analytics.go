@@ -19,7 +19,7 @@ func RegisterAnalyticsRoutes(r *gin.RouterGroup) {
 	analytics.GET("/wordlists/:id/current-distribution", getCurrentBoxDistribution)
 	analytics.GET("/wordlists/:id/quiz-performance", getQuizTypePerformance)
 	analytics.GET("/wordlists/:id/practice-time", getPracticeTime)
-	analytics.GET("/dashboard", getDashboardStats)
+	analytics.GET("/wordlists/:id/overview", getWordlistOverviewStats)
 }
 
 // getWordMastery returns word mastery statistics for a wordlist
@@ -187,29 +187,6 @@ func getQuizTypePerformance(c *gin.Context) {
 	})
 }
 
-// getDashboardStats returns overall dashboard statistics
-func getDashboardStats(c *gin.Context) {
-	userID := c.GetInt64("userID")
-
-	analyticsService, err := service.NewAnalyticsService()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
-		return
-	}
-
-	// Pass along request‐scoped context
-	ctx := c.Request.Context()
-
-	stats, err := analyticsService.GetDashboardStats(ctx, userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch dashboard stats"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"stats": stats,
-	})
-}
 
 // getCurrentBoxDistribution returns current distribution of words across Leitner boxes
 func getCurrentBoxDistribution(c *gin.Context) {
@@ -288,5 +265,40 @@ func getPracticeTime(c *gin.Context) {
 		"wordlistId":   wordlistID,
 		"days":         days,
 		"practiceTime": practiceTime,
+	})
+}
+
+// getWordlistOverviewStats returns dashboard statistics for a specific wordlist
+func getWordlistOverviewStats(c *gin.Context) {
+	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
+
+	userID := c.GetInt64("userID")
+
+	// Verify wordlist ownership
+	wordlist, err := service.GetWordlistById(wordlistID, userID)
+	if err != nil || wordlist == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
+		return
+	}
+
+	analyticsService, err := service.NewAnalyticsService()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
+		return
+	}
+
+	stats, err := analyticsService.GetWordlistDashboardStats(c.Request.Context(), userID, wordlistID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch wordlist dashboard stats"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"wordlistId": wordlistID,
+		"stats":      stats,
 	})
 }

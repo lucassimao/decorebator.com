@@ -1,6 +1,6 @@
 import { callAPI } from "./api";
 
-export interface DashboardStats {
+export interface OverviewStats {
   totalWords: number;
   wordsMastered: number;
   averageMastery: number;
@@ -74,10 +74,10 @@ export interface PracticeTimeResponse {
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-// 1) Get dashboard statistics
-export async function getDashboardStats(): Promise<DashboardStats> {
-  const endpoint = `${BASE_URL}/analytics/dashboard`;
-  const body = await callAPI<{ stats: DashboardStats }>("GET", endpoint);
+// 1) Get overview statistics for a specific wordlist
+export async function getWordlistOverviewStats(wordlistId: number): Promise<OverviewStats> {
+  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/overview`;
+  const body = await callAPI<{ stats: OverviewStats }>("GET", endpoint);
   return body.stats;
 }
 

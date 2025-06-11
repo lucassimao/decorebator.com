@@ -379,111 +379,6 @@ func (r *AnalyticsRepository) GetBoxDistributionHistory(ctx context.Context, use
 
 // Dashboard Stats Operations
 
-// DashboardStats holds all the pieces of data we need for the dashboard
-type DashboardStats struct {
-	TotalWords        int      `json:"totalWords"`
-	WordsMastered     int      `json:"wordsMastered"`
-	AverageMastery    *float64 `json:"averageMastery"` // could be nil if no rows
-	BestStreak        *int     `json:"bestStreak"`     // could be nil if no data
-	WordsStudiedToday int      `json:"wordsStudiedToday"`
-	QuizzesToday      int      `json:"quizzesToday"`
-	AccuracyToday     float64  `json:"accuracyToday"`
-	CurrentStreak     int      `json:"currentStreak"`
-}
-
-func (r *AnalyticsRepository) GetTotalMasteryStats(ctx context.Context, userID int64) (int, int, *float64, *int, error) {
-	query := `
-		SELECT 
-			COUNT(DISTINCT wm.word_id) AS total_words,
-			COUNT(DISTINCT CASE WHEN wm.mastery_level >= 0.8 THEN wm.word_id END) AS words_mastered,
-			AVG(wm.mastery_level) AS avg_mastery,
-			MAX(wm.streak_count) AS best_streak
-		FROM word_mastery wm
-		WHERE wm.user_id = $1;
-	`
-
-	var totalWords, wordsMastered int
-	var avgMastery *float64
-	var bestStreak *int
-
-	err := r.db.QueryRow(ctx, query, userID).Scan(
-		&totalWords, &wordsMastered, &avgMastery, &bestStreak,
-	)
-
-	return totalWords, wordsMastered, avgMastery, bestStreak, err
-}
-
-func (r *AnalyticsRepository) GetTodayStats(ctx context.Context, userID int64) (int, int, float64, error) {
-	query := `
-		SELECT 
-			COALESCE(SUM(words_studied), 0)           AS words_studied_today,
-			COALESCE(SUM(total_quiz_attempts), 0)      AS quizzes_today,
-			COALESCE(
-			  AVG(
-			    CASE 
-			      WHEN total_quiz_attempts > 0 
-			      THEN correct_attempts::float / total_quiz_attempts * 100 
-			      ELSE 0 
-			    END
-			  ), 
-			  0
-			) AS accuracy_today
-		FROM learning_progress
-		WHERE user_id = $1
-		  AND date = CURRENT_DATE;
-	`
-
-	var wordsStudiedToday, quizzesToday int
-	var accuracyToday float64
-
-	err := r.db.QueryRow(ctx, query, userID).Scan(
-		&wordsStudiedToday, &quizzesToday, &accuracyToday,
-	)
-
-	return wordsStudiedToday, quizzesToday, accuracyToday, err
-}
-
-func (r *AnalyticsRepository) GetCurrentStreak(ctx context.Context, userID int64) (int, error) {
-	query := `
-		WITH daily_activity AS (
-			SELECT 
-				date, 
-				SUM(total_quiz_attempts) AS attempts
-			FROM learning_progress
-			WHERE user_id = $1
-			GROUP BY date
-			ORDER BY date DESC
-		),
-		streak_calc AS (
-			SELECT 
-				date,
-				date - (ROW_NUMBER() OVER (ORDER BY date DESC))::int AS streak_group
-			FROM daily_activity
-			WHERE attempts > 0
-		)
-		SELECT COUNT(*) AS current_streak
-		FROM streak_calc
-		WHERE streak_group = (
-			SELECT streak_group 
-			FROM streak_calc 
-			WHERE date = CURRENT_DATE
-			LIMIT 1
-		);
-	`
-
-	var currentStreak int
-	err := r.db.QueryRow(ctx, query, userID).Scan(&currentStreak)
-	if err != nil {
-		// If there's no row for "date = CURRENT_DATE," pgx returns ErrNoRows.
-		// In that case, we treat the streak as zero.
-		if err == pgx.ErrNoRows {
-			return 0, nil
-		}
-		return 0, err
-	}
-	return currentStreak, nil
-}
-
 // BoxDistribution represents the current distribution of words across Leitner boxes
 type BoxDistribution struct {
 	Box1Count  int `json:"box1"`
@@ -584,4 +479,102 @@ func (r *AnalyticsRepository) GetPracticeTime(ctx context.Context, userID, wordl
 	}
 
 	return practiceTime, nil
+}
+
+// Wordlist-specific dashboard stats methods
+
+// GetWordlistMasteryStats retrieves mastery statistics for a specific wordlist
+func (r *AnalyticsRepository) GetWordlistMasteryStats(ctx context.Context, userID, wordlistID int64) (int, int, *float64, *int, error) {
+	query := `
+		SELECT 
+			COUNT(DISTINCT wm.word_id) AS total_words,
+			COUNT(DISTINCT CASE WHEN wm.mastery_level >= 0.8 THEN wm.word_id END) AS words_mastered,
+			AVG(wm.mastery_level) AS avg_mastery,
+			MAX(wm.streak_count) AS best_streak
+		FROM word_mastery wm
+		JOIN words w ON wm.word_id = w.id
+		WHERE wm.user_id = $1 AND w.wordlist_id = $2;
+	`
+
+	var totalWords, wordsMastered int
+	var avgMastery *float64
+	var bestStreak *int
+
+	err := r.db.QueryRow(ctx, query, userID, wordlistID).Scan(
+		&totalWords, &wordsMastered, &avgMastery, &bestStreak,
+	)
+
+	return totalWords, wordsMastered, avgMastery, bestStreak, err
+}
+
+// GetWordlistTodayStats retrieves today's activity statistics for a specific wordlist
+func (r *AnalyticsRepository) GetWordlistTodayStats(ctx context.Context, userID, wordlistID int64) (int, int, float64, error) {
+	query := `
+		SELECT 
+			COALESCE(SUM(words_studied), 0)           AS words_studied_today,
+			COALESCE(SUM(total_quiz_attempts), 0)      AS quizzes_today,
+			COALESCE(
+			  AVG(
+			    CASE 
+			      WHEN total_quiz_attempts > 0 
+			      THEN correct_attempts::float / total_quiz_attempts * 100 
+			      ELSE 0 
+			    END
+			  ), 
+			  0
+			) AS accuracy_today
+		FROM learning_progress
+		WHERE user_id = $1
+		  AND wordlist_id = $2
+		  AND date = CURRENT_DATE;
+	`
+
+	var wordsStudiedToday, quizzesToday int
+	var accuracyToday float64
+
+	err := r.db.QueryRow(ctx, query, userID, wordlistID).Scan(
+		&wordsStudiedToday, &quizzesToday, &accuracyToday,
+	)
+
+	return wordsStudiedToday, quizzesToday, accuracyToday, err
+}
+
+// GetWordlistCurrentStreak retrieves current daily streak for a specific wordlist
+func (r *AnalyticsRepository) GetWordlistCurrentStreak(ctx context.Context, userID, wordlistID int64) (int, error) {
+	query := `
+		WITH daily_activity AS (
+			SELECT 
+				date, 
+				SUM(total_quiz_attempts) AS attempts
+			FROM learning_progress
+			WHERE user_id = $1 AND wordlist_id = $2
+			GROUP BY date
+			ORDER BY date DESC
+		),
+		streak_calc AS (
+			SELECT 
+				date,
+				date - (ROW_NUMBER() OVER (ORDER BY date DESC))::int AS streak_group
+			FROM daily_activity
+			WHERE attempts > 0
+		)
+		SELECT COUNT(*) AS current_streak
+		FROM streak_calc
+		WHERE streak_group = (
+			SELECT streak_group 
+			FROM streak_calc 
+			WHERE date = CURRENT_DATE
+			LIMIT 1
+		);
+	`
+
+	var currentStreak int
+	err := r.db.QueryRow(ctx, query, userID, wordlistID).Scan(&currentStreak)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return currentStreak, nil
 }
