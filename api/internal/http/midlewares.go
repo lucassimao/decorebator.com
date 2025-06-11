@@ -155,10 +155,28 @@ func ErrorMiddleware() gin.HandlerFunc {
 					fmt.Println(stackTrace)
 				}
 
+				// Capture the error with Sentry if available
 				if hub := sentrygin.GetHubFromContext(c); hub != nil {
 					hub.WithScope(func(scope *sentry.Scope) {
-						scope.SetExtra("uri", c.Request.URL.Path)
-						// hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
+						// Set error context
+						scope.SetTag("error_type", "panic")
+						scope.SetContext("request", map[string]interface{}{
+							"url":    c.Request.URL.String(),
+							"method": c.Request.Method,
+							"path":   c.FullPath(),
+						})
+						
+						// Add user context if available
+						if val, exists := c.Get("userID"); exists {
+							if userID, ok := val.(int64); ok {
+								scope.SetUser(sentry.User{
+									ID: fmt.Sprintf("%d", userID),
+								})
+							}
+						}
+						
+						// Capture the exception
+						hub.CaptureException(err)
 					})
 				}
 

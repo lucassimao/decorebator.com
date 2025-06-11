@@ -47,7 +47,8 @@ func SetupRoutes() *gin.Engine {
 	subRepo := repository.NewSubscriptionRepository(db)
 
 	router := gin.New()
-	if common.Env.Env == common.Production {
+	// Sentry middleware must be first to capture all errors
+	if common.Env.Env == common.Production && os.Getenv("SENTRY_DSN") != "" {
 		router.Use(sentrygin.New(sentrygin.Options{
 			Repanic:         true,
 			WaitForDelivery: false,
