@@ -72,7 +72,22 @@ export const HistoricalBoxDistributionChart: React.FC<
     const percentageData = stackedData.map((dayData) => {
       const total = dayData.reduce((sum, val) => sum + val, 0);
       if (total === 0) return dayData;
-      return dayData.map(val => Math.round((val / total) * 100));
+      
+      // Calculate raw percentages
+      const rawPercentages = dayData.map(val => (val / total) * 100);
+      
+      // Round percentages and ensure they sum to 100%
+      const roundedPercentages = rawPercentages.map(val => Math.round(val));
+      const sum = roundedPercentages.reduce((a, b) => a + b, 0);
+      const diff = 100 - sum;
+      
+      // Adjust the largest percentage to make total equal 100%
+      if (diff !== 0) {
+        const maxIndex = rawPercentages.indexOf(Math.max(...rawPercentages));
+        roundedPercentages[maxIndex] += diff;
+      }
+      
+      return roundedPercentages;
     });
 
     return {
@@ -107,6 +122,7 @@ export const HistoricalBoxDistributionChart: React.FC<
               propsForLabels: {
                 fontSize: 12,
               },
+              formatYLabel: (value: string) => `${Math.round(parseFloat(value))}%`,
             }}
             style={styles.chart}
             withHorizontalLabels={true}
