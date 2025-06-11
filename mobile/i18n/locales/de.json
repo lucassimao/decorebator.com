@@ -189,6 +189,7 @@
     "incorrectAnswer": "Falsch. Die Antwort ist: {{answer}}",
     "loadingImage": "Bild wird geladen...",
     "imageLoadError": "Fehler beim Laden des Bildes",
+    "retryAttempts": "Wiederholungsversuche: {{count}}",
     "modes": {
       "flashcards": "Karteikarten",
       "multipleChoice": "Multiple Choice",
@@ -486,9 +487,12 @@
       },
       "historicalBoxDistribution": {
         "title": "Lernfortschritt über Zeit",
-        "subtitle": "Beherrschungsgrad-Trends der letzten 30 Tage",
+        "subtitle": "Wortverteilung über alle Leitner-Boxen",
         "explanation": "Diese Grafik zeigt Ihren Beherrschungsgrad über die Zeit - den Prozentsatz der Wörter, die Box 7 (Beherrschte Stufe) erreicht haben. Höhere Balken zeigen eine bessere Gesamtvokabelbeherrschung!",
-        "masteryPercentage": "Prozentsatz beherrschter Wörter (Box 7)"
+        "masteryPercentage": "Prozentsatz beherrschter Wörter (Box 7)",
+        "stackedExplanation": "Dieses gestapelte Balkendiagramm zeigt, wie Ihre Wörter im Laufe der Zeit auf alle 7 Leitner-Boxen verteilt sind. Mit Ihrem Fortschritt wandern die Wörter von rot (Box 1 - neu) zu grün (Box 7 - gemeistert). Die wachsende grüne Fläche zeigt Ihren Lernfortschritt!",
+        "currentMastery": "Aktuelle Beherrschungsrate",
+        "currentDistribution": "Aktuelle Verteilung"
       },
       "practiceTime": {
         "title": "Tägliche Übungszeit",

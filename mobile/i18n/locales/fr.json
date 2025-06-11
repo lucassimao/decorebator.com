@@ -189,6 +189,7 @@
     "incorrectAnswer": "Incorrect. La réponse est : {{answer}}",
     "loadingImage": "Chargement de l'image...",
     "imageLoadError": "Échec du chargement de l'image",
+    "retryAttempts": "Tentatives de réessai: {{count}}",
     "modes": {
       "flashcards": "Cartes Flash",
       "multipleChoice": "Choix Multiple",
@@ -487,9 +488,12 @@
       },
       "historicalBoxDistribution": {
         "title": "Progrès d'Apprentissage au Fil du Temps",
-        "subtitle": "Tendances du pourcentage de maîtrise sur les 30 derniers jours",
+        "subtitle": "Distribution des mots dans toutes les boîtes Leitner",
         "explanation": "Ce graphique montre votre pourcentage de maîtrise au fil du temps - le pourcentage de mots qui ont atteint la Boîte 7 (étape maîtrisée). Des barres plus hautes indiquent une meilleure maîtrise globale du vocabulaire !",
-        "masteryPercentage": "Pourcentage de Mots Maîtrisés (Boîte 7)"
+        "masteryPercentage": "Pourcentage de Mots Maîtrisés (Boîte 7)",
+        "stackedExplanation": "Ce graphique à barres empilées montre comment vos mots sont répartis dans les 7 boîtes Leitner au fil du temps. Au fur et à mesure de votre progression, les mots passent du rouge (Boîte 1 - nouveaux) au vert (Boîte 7 - maîtrisés). La zone verte croissante indique votre progression d'apprentissage !",
+        "currentMastery": "Taux de maîtrise actuel",
+        "currentDistribution": "Distribution Actuelle"
       },
       "practiceTime": {
         "title": "Temps de Pratique Quotidien",

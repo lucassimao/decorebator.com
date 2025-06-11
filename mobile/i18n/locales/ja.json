@@ -189,6 +189,7 @@
     "incorrectAnswer": "不正解。答えは：{{answer}}",
     "loadingImage": "画像を読み込んでいます...",
     "imageLoadError": "画像の読み込みに失敗しました",
+    "retryAttempts": "再試行回数: {{count}}",
     "modes": {
       "flashcards": "フラッシュカード",
       "multipleChoice": "選択問題",
@@ -486,9 +487,11 @@
       },
       "historicalBoxDistribution": {
         "title": "時間経過による学習進捗",
-        "subtitle": "過去30日間の習得度パーセンテージトレンド",
+        "subtitle": "すべてのライトナーボックスにおける単語分布",
         "explanation": "このグラフは、時間の経過とともにあなたの習得度パーセンテージを示しています - ボックス7（習得段階）に到達した単語の割合です。バーが高いほど、全体的な語彙習得度が良好であることを示します！",
-        "masteryPercentage": "習得した単語の割合（ボックス7）"
+        "masteryPercentage": "習得した単語の割合（ボックス7）",
+        "stackedExplanation": "この積み上げ棒グラフは、時間の経過とともに7つのライトナーボックスに単語がどのように分布しているかを示しています。進歩するにつれて、単語は赤（ボックス1 - 新規）から緑（ボックス7 - 習得済み）に移動します。緑の領域の増加は学習の進歩を示しています！",
+        "currentMastery": "現在の習得率"
       },
       "practiceTime": {
         "title": "日々の練習時間",

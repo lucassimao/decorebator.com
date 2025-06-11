@@ -62,10 +62,11 @@ export const BoxDistributionChart: React.FC<BoxDistributionChartProps> = ({
             chartConfig={{
               ...chartConfig,
               barPercentage: 0.8,
-              color: () => boxColorGradient[6]
+              // color: () => boxColorGradient[6]
             }}
             style={styles.chart}
             showValuesOnTopOfBars={true}
+            showBarTops={false}
             withHorizontalLabels={true}
             fromZero={true}
             withCustomBarColorFromData={true}

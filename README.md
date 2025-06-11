@@ -16,7 +16,7 @@ Decorebator is a comprehensive vocabulary learning application that uses AI-powe
   - **Write from Definition**: Type the word based on its meaning (active recall)
   - **Example Audio Recognition**: Identify words from contextual example sentence audio
 - **Interactive Flashcards**: Study definitions with examples, pronunciation, and grammatical context
-- **Spaced Repetition**: Uses the advanced 7-box Leitner system to optimize learning retention
+- **Spaced Repetition**: Uses the advanced 7-box Leitner system with deterministic selection to optimize learning retention
 - **Progress Tracking**: Monitor your learning journey with comprehensive analytics and detailed statistics
 - **Error Reporting**: Report issues with AI-generated content (images, audio, definitions) for continuous improvement
 - **Offline Support**: Premium users can access wordlists and practice offline

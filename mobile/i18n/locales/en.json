@@ -189,6 +189,7 @@
     "incorrectAnswer": "Incorrect. The answer is: {{answer}}",
     "loadingImage": "Loading image...",
     "imageLoadError": "Failed to load image",
+    "retryAttempts": "Retry attempts: {{count}}",
     "modes": {
       "flashcards": "Flashcards",
       "multipleChoice": "Multiple Choice",
@@ -486,9 +487,12 @@
       },
       "historicalBoxDistribution": {
         "title": "Learning Progress Over Time",
-        "subtitle": "Mastery percentage trends over the last 30 days",
+        "subtitle": "Word distribution across all Leitner boxes",
         "explanation": "This chart shows your mastery percentage over time - the percentage of words that have reached Box 7 (mastered stage). Higher bars indicate better overall vocabulary mastery!",
-        "masteryPercentage": "Percentage of Mastered Words (Box 7)"
+        "masteryPercentage": "Percentage of Mastered Words (Box 7)",
+        "stackedExplanation": "This stacked bar chart shows how your words are distributed across all 7 Leitner boxes over time. As you progress, words move from red (Box 1 - new) to green (Box 7 - mastered). The growing green area indicates your learning progress!",
+        "currentMastery": "Current mastery rate",
+        "currentDistribution": "Current Distribution"
       },
       "practiceTime": {
         "title": "Daily Practice Time",

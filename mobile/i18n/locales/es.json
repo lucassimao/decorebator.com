@@ -189,6 +189,7 @@
     "incorrectAnswer": "Incorrecto. La respuesta es: {{answer}}",
     "loadingImage": "Cargando imagen...",
     "imageLoadError": "Error al cargar la imagen",
+    "retryAttempts": "Intentos de reintento: {{count}}",
     "modes": {
       "flashcards": "Tarjetas",
       "multipleChoice": "Opción Múltiple",
@@ -486,9 +487,12 @@
       },
       "historicalBoxDistribution": {
         "title": "Progreso de Aprendizaje a lo Largo del Tiempo",
-        "subtitle": "Tendencias del porcentaje de dominio en los últimos 30 días",
+        "subtitle": "Distribución de palabras en todas las cajas Leitner",
         "explanation": "Este gráfico muestra tu porcentaje de dominio a lo largo del tiempo - el porcentaje de palabras que han alcanzado la Caja 7 (etapa dominada). ¡Las barras más altas indican un mejor dominio general del vocabulario!",
-        "masteryPercentage": "Porcentaje de Palabras Dominadas (Caja 7)"
+        "masteryPercentage": "Porcentaje de Palabras Dominadas (Caja 7)",
+        "stackedExplanation": "Este gráfico de barras apiladas muestra cómo se distribuyen tus palabras en las 7 cajas Leitner a lo largo del tiempo. A medida que progresas, las palabras se mueven del rojo (Caja 1 - nuevas) al verde (Caja 7 - dominadas). ¡El área verde creciente indica tu progreso de aprendizaje!",
+        "currentMastery": "Tasa de dominio actual",
+        "currentDistribution": "Distribución Actual"
       },
       "practiceTime": {
         "title": "Tiempo de Práctica Diaria",

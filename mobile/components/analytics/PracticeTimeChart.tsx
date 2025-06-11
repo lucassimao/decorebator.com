@@ -91,6 +91,7 @@ export const PracticeTimeChart: React.FC<PracticeTimeChartProps> = ({
           }}
           style={styles.chart}
           showValuesOnTopOfBars={true}
+          showBarTops={false}
           withHorizontalLabels={true}
           withVerticalLabels={true}
         />

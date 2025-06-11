@@ -189,6 +189,7 @@
     "incorrectAnswer": "Sbagliato. La risposta è: {{answer}}",
     "loadingImage": "Caricamento immagine...",
     "imageLoadError": "Impossibile caricare l'immagine",
+    "retryAttempts": "Tentativi di riprovare: {{count}}",
     "modes": {
       "flashcards": "Flashcard",
       "multipleChoice": "Scelta Multipla",
@@ -487,9 +488,12 @@
       },
       "historicalBoxDistribution": {
         "title": "Progresso di Apprendimento nel Tempo",
-        "subtitle": "Tendenze della percentuale di padronanza negli ultimi 30 giorni",
+        "subtitle": "Distribuzione delle parole in tutte le scatole Leitner",
         "explanation": "Questo grafico mostra la tua percentuale di padronanza nel tempo - la percentuale di parole che hanno raggiunto la Scatola 7 (fase padroneggiata). Barre più alte indicano una migliore padronanza complessiva del vocabolario!",
-        "masteryPercentage": "Percentuale di Parole Padroneggiate (Scatola 7)"
+        "masteryPercentage": "Percentuale di Parole Padroneggiate (Scatola 7)",
+        "stackedExplanation": "Questo grafico a barre impilate mostra come le tue parole sono distribuite nelle 7 scatole Leitner nel tempo. Man mano che progredisci, le parole si spostano dal rosso (Scatola 1 - nuove) al verde (Scatola 7 - padroneggiate). L'area verde crescente indica il tuo progresso di apprendimento!",
+        "currentMastery": "Tasso di padronanza attuale",
+        "currentDistribution": "Distribuzione Attuale"
       },
       "practiceTime": {
         "title": "Tempo di Pratica Giornaliero",

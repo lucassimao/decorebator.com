@@ -1,6 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
-import { BarChart } from "react-native-chart-kit";
+import { View, Text, StyleSheet, Dimensions, ScrollView } from "react-native";
+import { StackedBarChart } from "react-native-chart-kit";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { colors, chartConfig } from "./theme";
@@ -17,14 +17,24 @@ export const HistoricalBoxDistributionChart: React.FC<
 > = ({ historicalBoxDistribution }) => {
   const { t } = useTranslation();
 
-  const boxColorGradient = [
-    "#FF6B6B", // Box 1 - Red (hardest)
-    "#FF8E53", // Box 2 - Orange Red
-    "#FFB74D", // Box 3 - Orange
-    "#FFD54F", // Box 4 - Yellow
-    "#AED581", // Box 5 - Light Green
-    "#81C784", // Box 6 - Green
-    "#4CAF50", // Box 7 - Full Green (mastered)
+  const boxColors = {
+    box1: "#FF6B6B", // Red - New/Difficult
+    box2: "#FF8E53", // Orange Red
+    box3: "#FFB74D", // Orange
+    box4: "#FFD54F", // Yellow
+    box5: "#AED581", // Light Green
+    box6: "#81C784", // Green
+    box7: "#4CAF50", // Full Green - Mastered
+  };
+
+  const boxNames = [
+    { key: "box1", name: t("analytics.charts.boxDistribution.box1"), color: boxColors.box1 },
+    { key: "box2", name: t("analytics.charts.boxDistribution.box2"), color: boxColors.box2 },
+    { key: "box3", name: t("analytics.charts.boxDistribution.box3"), color: boxColors.box3 },
+    { key: "box4", name: t("analytics.charts.boxDistribution.box4"), color: boxColors.box4 },
+    { key: "box5", name: t("analytics.charts.boxDistribution.box5"), color: boxColors.box5 },
+    { key: "box6", name: t("analytics.charts.boxDistribution.box6"), color: boxColors.box6 },
+    { key: "box7", name: t("analytics.charts.boxDistribution.box7"), color: boxColors.box7 },
   ];
 
   const prepareChartData = () => {
@@ -45,25 +55,31 @@ export const HistoricalBoxDistributionChart: React.FC<
       return `${date.getMonth() + 1}/${date.getDate()}`;
     });
 
-    // Show progression: Box 7 (mastered) vs Box 1 (new/difficult)
-    // This gives a good sense of learning progress over time
-    const masteredWordsData = sampledData.map((item) => item.boxes.box7);
-    const newWordsData = sampledData.map((item) => item.boxes.box1);
+    // Prepare data for each box
+    const stackedData = sampledData.map((item) => {
+      return [
+        item.boxes.box1,
+        item.boxes.box2,
+        item.boxes.box3,
+        item.boxes.box4,
+        item.boxes.box5,
+        item.boxes.box6,
+        item.boxes.box7,
+      ];
+    });
 
-    // Create a progress ratio: mastered vs new words
-    const progressData = sampledData.map((item) => {
-      const total = item.boxes.box1 + item.boxes.box2 + item.boxes.box3 + 
-                   item.boxes.box4 + item.boxes.box5 + item.boxes.box6 + item.boxes.box7;
-      return total > 0 ? Math.round((item.boxes.box7 / total) * 100) : 0;
+    // Calculate percentages for better visualization
+    const percentageData = stackedData.map((dayData) => {
+      const total = dayData.reduce((sum, val) => sum + val, 0);
+      if (total === 0) return dayData;
+      return dayData.map(val => Math.round((val / total) * 100));
     });
 
     return {
       labels,
-      datasets: [
-        {
-          data: progressData,
-        },
-      ],
+      legend: ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5", "Box 6", "Box 7"],
+      data: percentageData,
+      barColors: Object.values(boxColors),
     };
   };
 
@@ -79,37 +95,66 @@ export const HistoricalBoxDistributionChart: React.FC<
       </Text>
       {chartData ? (
         <>
-          <BarChart
+          <StackedBarChart
             data={chartData}
-            width={screenWidth - 40}
-            height={220}
-            yAxisLabel=""
-            yAxisSuffix="%"
+            width={screenWidth - 72}
+            height={260}
             chartConfig={{
               ...chartConfig,
-              color: (opacity = 1) => boxColorGradient[6], // Green for mastery progress
+              color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
               barPercentage: 0.7,
+              decimalPlaces: 0,
+              propsForLabels: {
+                fontSize: 12,
+              },
             }}
             style={styles.chart}
-            showValuesOnTopOfBars={true}
             withHorizontalLabels={true}
-            fromZero={true}
+            hideLegend={true}
+            yAxisLabel=""
+            // yAxisSuffix="%"
+            // segments={5}
           />
-          {/* Progress Legend */}
-          <View style={styles.progressLegendContainer}>
-            <View style={styles.progressLegendItem}>
-              <View style={styles.progressLegendLeft}>
-                <View
-                  style={[
-                    styles.boxLegendDot,
-                    { backgroundColor: boxColorGradient[6] }, // Green
-                  ]}
-                />
-                <Text style={styles.boxLegendText}>
-                  {t("analytics.charts.historicalBoxDistribution.masteryPercentage")}
+          {/* Box Legend - Vertical Layout */}
+          <View style={styles.legendContainer}>
+            <Text style={styles.legendTitle}>
+              {t("analytics.charts.historicalBoxDistribution.currentDistribution")}
+            </Text>
+            <View style={styles.boxLegendWrapper}>
+              {boxNames.map((box, index) => (
+                <View key={box.key} style={styles.boxLegendItem}>
+                  <View style={styles.boxLegendLeft}>
+                    <View
+                      style={[
+                        styles.boxLegendDot,
+                        { backgroundColor: box.color },
+                      ]}
+                    />
+                    <Text style={styles.boxLegendText}>{box.name}</Text>
+                  </View>
+                  {chartData.data.length > 0 && (
+                    <Text style={styles.boxLegendPercentage}>
+                      {chartData.data[chartData.data.length - 1][index]}%
+                    </Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+          {/* Divider */}
+          <View style={styles.divider} />
+          {/* Progress Summary */}
+          <View style={styles.progressSummaryContainer}>
+            {chartData.data.length > 0 && (
+              <View style={styles.progressSummaryRow}>
+                <Text style={styles.progressSummaryLabel}>
+                  {t("analytics.charts.historicalBoxDistribution.currentMastery")}
+                </Text>
+                <Text style={styles.progressSummaryValue}>
+                  {chartData.data[chartData.data.length - 1][6]}%
                 </Text>
               </View>
-            </View>
+            )}
           </View>
           {/* Explanation */}
           <View style={styles.explanationContainer}>
@@ -119,7 +164,7 @@ export const HistoricalBoxDistributionChart: React.FC<
               color={colors.textMedium}
             />
             <Text style={styles.explanationText}>
-              {t("analytics.charts.historicalBoxDistribution.explanation")}
+              {t("analytics.charts.historicalBoxDistribution.stackedExplanation")}
             </Text>
           </View>
         </>
@@ -164,7 +209,6 @@ const styles = StyleSheet.create({
   chart: {
     marginVertical: 8,
     borderRadius: 16,
-    marginLeft: -20,
   },
   emptyChartContainer: {
     height: 200,
@@ -177,34 +221,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textLight,
   },
-  boxLegendContainer: {
+  legendContainer: {
     marginTop: 16,
+    marginBottom: 8,
+    paddingHorizontal: 8,
   },
-  progressLegendContainer: {
-    marginTop: 16,
+  legendTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.textDark,
+    marginBottom: 12,
+  },
+  boxLegendWrapper: {
+    flexDirection: "column",
   },
   boxLegendItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 6,
-    paddingHorizontal: 8,
-  },
-  progressLegendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 8,
   },
   boxLegendLeft: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-  },
-  progressLegendLeft: {
-    flexDirection: "row",
-    alignItems: "center",
   },
   boxLegendDot: {
     width: 12,
@@ -216,6 +256,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textDark,
     flex: 1,
+  },
+  boxLegendPercentage: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textDark,
+    minWidth: 45,
+    textAlign: "right",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.divider,
+    marginHorizontal: 8,
+    marginVertical: 12,
+  },
+  progressSummaryContainer: {
+    paddingHorizontal: 8,
+  },
+  progressSummaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  progressSummaryLabel: {
+    fontSize: 14,
+    color: colors.textMedium,
+  },
+  progressSummaryValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#4CAF50", // Box 7 green color
   },
   explanationContainer: {
     flexDirection: "row",

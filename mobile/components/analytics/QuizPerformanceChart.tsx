@@ -56,6 +56,7 @@ export const QuizPerformanceChart: React.FC<QuizPerformanceChartProps> = ({
             }}
             style={styles.chart}
             showValuesOnTopOfBars={true}
+            showBarTops={false}
             withHorizontalLabels={true}
             withVerticalLabels={false}
           />
