@@ -90,14 +90,14 @@ export async function getLearningProgress(
   return payload.progress;
 }
 
-// 4) Get quiz performance across all quiz types
-export async function getQuizPerformance(): Promise<QuizTypePerformance[]> {
-  const endpoint = `${BASE_URL}/analytics/quiz-performance`;
-  const payload = await callAPI<{ quiz_performance: QuizTypePerformance[] }>(
+// 4) Get quiz performance across all quiz types for a specific wordlist
+export async function getQuizPerformance(wordlistId: number): Promise<QuizTypePerformance[]> {
+  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/quiz-performance`;
+  const payload = await callAPI<{ quizPerformance: QuizTypePerformance[] }>(
     "GET",
     endpoint,
   );
-  return payload.quiz_performance;
+  return payload.quizPerformance;
 }
 
 // 5) Get wordlist progress summary with mastery-based calculations

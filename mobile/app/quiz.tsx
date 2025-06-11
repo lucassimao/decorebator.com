@@ -110,7 +110,7 @@ const QuizScreen: React.FC = () => {
   const [currentQuizId, setCurrentQuizId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (quiz?.id && quiz.id !== currentQuizId) {
+    if (quiz?.id) {
       // New quiz received
       quizDisplayedAtRef.current = Date.now();
       setCurrentQuizId(quiz.id);
@@ -120,13 +120,14 @@ const QuizScreen: React.FC = () => {
       // Clear loading timeout
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
       }
     }
-  }, [quiz?.id, currentQuizId]);
+  }, [quiz?.id]);
 
   // Handle loading timeout
   useEffect(() => {
-    if (isLoadingNext || (isFetching && currentQuizId === null)) {
+    if (isLoadingNext || isFetching || !quiz) {
       // Clear any existing timeout
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
@@ -149,7 +150,7 @@ const QuizScreen: React.FC = () => {
         clearTimeout(loadingTimeoutRef.current);
       }
     };
-  }, [isLoadingNext, isFetching, currentQuizId]);
+  }, [isLoadingNext, isFetching, quiz]);
 
   // Answer mutation
   const answerMutation = useMutation<void, Error, { success: boolean }>({
@@ -227,6 +228,7 @@ const QuizScreen: React.FC = () => {
     setUserInput("");
     setIsSubmitted(false);
     setLoadingTimeout(false);
+    setCurrentQuizId(null); // Reset current quiz ID to ensure loading state shows
     refetch();
   };
 
@@ -234,6 +236,8 @@ const QuizScreen: React.FC = () => {
     setRetryCount(prev => prev + 1);
     setLoadingTimeout(false);
     setIsLoadingNext(true);
+    setCurrentQuizId(null); // Reset current quiz ID to ensure loading state shows
+    refetch(); // Explicitly trigger refetch
   };
 
   const handleGoBack = () => {
@@ -249,11 +253,25 @@ const QuizScreen: React.FC = () => {
     }
   };
 
-  if (isLoading && quizCount === 0) {
+  if ((isLoading || !quiz) && quizCount === 0) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF7B54" />
-      </View>
+      <ImageBackground
+        source={require("@/assets/images/dashboard-bg.png")}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <SafeAreaView style={styles.container}>
+          <View style={[styles.quizCard, { margin: 20 }]}>
+            <QuizLoadingState
+              isLoading={isLoading}
+              hasTimeout={loadingTimeout}
+              error={error}
+              onRetry={handleRetryQuiz}
+              onGoBack={handleGoBack}
+            />
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
     );
   }
 
@@ -315,9 +333,9 @@ const QuizScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.quizCard}>
-            {isLoadingNext || (isFetching && currentQuizId === null) ? (
+            {(isLoadingNext || isFetching || !quiz) ? (
               <QuizLoadingState
-                isLoading={true}
+                isLoading={isLoadingNext || isFetching}
                 hasTimeout={loadingTimeout}
                 error={error}
                 onRetry={handleRetryQuiz}

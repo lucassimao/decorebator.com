@@ -80,7 +80,8 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 				if err == nil {
 					ctx := context.Background()
 					db.Exec(ctx, `REFRESH MATERIALIZED VIEW CONCURRENTLY mv_word_mastery_current`)
-					db.Exec(ctx, "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_quiz_type_performance")
+					db.Exec(ctx, "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_quiz_type_performance_by_wordlist")
+
 				} else {
 					common.Logger.Error("Could not refresh materialized views", "error", err)
 				}
@@ -102,7 +103,7 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 			DEFINITION_FETCHER_QUEUE:    {MaxWorkers: 50},
 			SUBSCRIPTION_REMINDER_QUEUE: {MaxWorkers: 10},
 			BACKFILL_INFLECTIONS_QUEUE:  {MaxWorkers: 1}, // Single worker to respect API rate limits
-				EXAMPLE_AUDIO_QUEUE:         {MaxWorkers: 20},
+			EXAMPLE_AUDIO_QUEUE:         {MaxWorkers: 20},
 		},
 		Workers:      riverWorkers,
 		Logger:       common.Logger,

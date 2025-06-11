@@ -136,24 +136,32 @@ func (r *AnalyticsRepository) UpsertQuizTypeAnalytics(ctx context.Context, tx pg
 
 // Box Distribution Operations
 func (r *AnalyticsRepository) UpsertBoxDistribution(ctx context.Context, userID, wordlistID int64) error {
+	// Use the same logic as GetCurrentBoxDistribution - count words by their minimum box level
 	query := `
 		INSERT INTO box_distribution_snapshot (
 			user_id, wordlist_id, snapshot_date,
 			box_1_count, box_2_count, box_3_count, box_4_count,
 			box_5_count, box_6_count, box_7_count
 		)
+		WITH word_min_boxes AS (
+			SELECT 
+				lst.word_id,
+				MIN(lst.box_id) as min_box_id
+			FROM leitner_system_tracking lst
+			JOIN words w ON lst.word_id = w.id
+			WHERE lst.user_id = $1 AND w.wordlist_id = $2
+			GROUP BY lst.word_id
+		)
 		SELECT 
 			$1::bigint, $2::bigint, CURRENT_DATE,
-			COUNT(CASE WHEN lst.box_id = 1 THEN 1 END),
-			COUNT(CASE WHEN lst.box_id = 2 THEN 1 END),
-			COUNT(CASE WHEN lst.box_id = 3 THEN 1 END),
-			COUNT(CASE WHEN lst.box_id = 4 THEN 1 END),
-			COUNT(CASE WHEN lst.box_id = 5 THEN 1 END),
-			COUNT(CASE WHEN lst.box_id = 6 THEN 1 END),
-			COUNT(CASE WHEN lst.box_id = 7 THEN 1 END)
-		FROM leitner_system_tracking lst
-		JOIN words w ON lst.word_id = w.id
-		WHERE lst.user_id = $1 AND w.wordlist_id = $2
+			COUNT(CASE WHEN min_box_id = 1 THEN 1 END),
+			COUNT(CASE WHEN min_box_id = 2 THEN 1 END),
+			COUNT(CASE WHEN min_box_id = 3 THEN 1 END),
+			COUNT(CASE WHEN min_box_id = 4 THEN 1 END),
+			COUNT(CASE WHEN min_box_id = 5 THEN 1 END),
+			COUNT(CASE WHEN min_box_id = 6 THEN 1 END),
+			COUNT(CASE WHEN min_box_id = 7 THEN 1 END)
+		FROM word_min_boxes
 		ON CONFLICT (user_id, wordlist_id, snapshot_date) DO UPDATE SET
 			box_1_count = EXCLUDED.box_1_count,
 			box_2_count = EXCLUDED.box_2_count,
@@ -228,16 +236,17 @@ type QuizTypePerformance struct {
 	LastUpdated   time.Time `json:"lastUpdated"`
 }
 
-func (r *AnalyticsRepository) GetQuizTypePerformance(ctx context.Context, userID int64) ([]QuizTypePerformance, error) {
+func (r *AnalyticsRepository) GetQuizTypePerformance(ctx context.Context, userID int64, wordlistID int64) ([]QuizTypePerformance, error) {
+	// Always query wordlist-specific performance from the new materialized view
 	query := `
 		SELECT quiz_type, total_attempts, success_rate, 
 		       average_response_time_ms, last_updated
-		FROM mv_quiz_type_performance
-		WHERE user_id = $1
+		FROM mv_quiz_type_performance_by_wordlist
+		WHERE user_id = $1 AND wordlist_id = $2
 		ORDER BY success_rate DESC
 	`
 
-	rows, err := r.db.Query(ctx, query, userID)
+	rows, err := r.db.Query(ctx, query, userID, wordlistID)
 	if err != nil {
 		return nil, err
 	}
@@ -489,19 +498,28 @@ type BoxDistribution struct {
 
 // GetCurrentBoxDistribution retrieves the current distribution of words across Leitner boxes
 func (r *AnalyticsRepository) GetCurrentBoxDistribution(ctx context.Context, userID, wordlistID int64) (*BoxDistribution, error) {
+	// First, get the minimum box for each word (since a word can have multiple definitions in different boxes)
+	// Then count how many words are at each minimum box level
 	query := `
+		WITH word_min_boxes AS (
+			SELECT 
+				lst.word_id,
+				MIN(lst.box_id) as min_box_id
+			FROM leitner_system_tracking lst
+			JOIN words w ON lst.word_id = w.id
+			WHERE lst.user_id = $1 AND w.wordlist_id = $2
+			GROUP BY lst.word_id
+		)
 		SELECT 
-			COUNT(CASE WHEN lst.box_id = 1 THEN 1 END) as box_1,
-			COUNT(CASE WHEN lst.box_id = 2 THEN 1 END) as box_2,
-			COUNT(CASE WHEN lst.box_id = 3 THEN 1 END) as box_3,
-			COUNT(CASE WHEN lst.box_id = 4 THEN 1 END) as box_4,
-			COUNT(CASE WHEN lst.box_id = 5 THEN 1 END) as box_5,
-			COUNT(CASE WHEN lst.box_id = 6 THEN 1 END) as box_6,
-			COUNT(CASE WHEN lst.box_id = 7 THEN 1 END) as box_7,
+			COUNT(CASE WHEN min_box_id = 1 THEN 1 END) as box_1,
+			COUNT(CASE WHEN min_box_id = 2 THEN 1 END) as box_2,
+			COUNT(CASE WHEN min_box_id = 3 THEN 1 END) as box_3,
+			COUNT(CASE WHEN min_box_id = 4 THEN 1 END) as box_4,
+			COUNT(CASE WHEN min_box_id = 5 THEN 1 END) as box_5,
+			COUNT(CASE WHEN min_box_id = 6 THEN 1 END) as box_6,
+			COUNT(CASE WHEN min_box_id = 7 THEN 1 END) as box_7,
 			COUNT(*) as total_words
-		FROM leitner_system_tracking lst
-		JOIN words w ON lst.word_id = w.id
-		WHERE lst.user_id = $1 AND w.wordlist_id = $2
+		FROM word_min_boxes
 	`
 
 	var dist BoxDistribution

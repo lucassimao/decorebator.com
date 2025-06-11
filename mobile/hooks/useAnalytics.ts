@@ -88,8 +88,9 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     isLoading: quizPerfLoading,
     error: quizPerfError,
   } = useQuery<QuizTypePerformance[], unknown>({
-    queryKey: ["analytics", "quiz-performance"],
-    queryFn: getQuizPerformance,
+    queryKey: ["analytics", "quiz-performance", wordlistId],
+    queryFn: () => getQuizPerformance(wordlistId),
+    enabled: Boolean(wordlistId),
   });
 
   // 5) Wordlist progress summary

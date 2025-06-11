@@ -89,9 +89,9 @@ func (as *AnalyticsService) GetWordMastery(ctx context.Context, userID, wordlist
 
 type QuizTypePerformance = repository.QuizTypePerformance
 
-// GetQuizTypePerformance retrieves performance stats by quiz type
-func (as *AnalyticsService) GetQuizTypePerformance(ctx context.Context, userID int64) ([]QuizTypePerformance, error) {
-	return as.repo.GetQuizTypePerformance(ctx, userID)
+// GetQuizTypePerformance retrieves performance stats by quiz type for a specific wordlist
+func (as *AnalyticsService) GetQuizTypePerformance(ctx context.Context, userID int64, wordlistID int64) ([]QuizTypePerformance, error) {
+	return as.repo.GetQuizTypePerformance(ctx, userID, wordlistID)
 }
 
 type LearningProgressStats = repository.LearningProgressStats

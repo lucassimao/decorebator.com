@@ -72,11 +72,10 @@
     [x] Keep progress of flash cards
     [x] Improve loading state in quiz and practice screens
     [x] The state of the play button is not synced
-    [ ] Quiz loading state still stuck
-    [ ] Add Leitner box distribution metric
-    [ ] Security plan OWASP
+    [x] Add Leitner box distribution metric
+    [x] Quiz loading state still stuck
+    [x] new metricts are not taking into account that a single word has more thatn 1 definition, leading to wrong data
     [ ] Possible to compute stats on the fly for paying users?
-    [ ] What would take to scale our backend to millons of request per min?
     [ ] Splash screen
     [ ] Integratation test plan
 
@@ -90,6 +89,8 @@
     [ ]  browserstack testing
 
 # V2
+[ ] Security plan OWASP
+[ ] What would take to scale our backend to millons of request per min?
 [ ] Otimizar chat completion prompt - could it be cheaper?
 [ ] Otimize quiz creation - could it be quicker?
 [ ] New quiz: phrasal verbs based on the verb

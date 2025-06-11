@@ -17,7 +17,7 @@ func RegisterAnalyticsRoutes(r *gin.RouterGroup) {
 	analytics.GET("/wordlists/:id/progress", getLearningProgress)
 	analytics.GET("/wordlists/:id/distribution", getBoxDistributionHistory)
 	analytics.GET("/wordlists/:id/current-distribution", getCurrentBoxDistribution)
-	analytics.GET("/quiz-performance", getQuizTypePerformance)
+	analytics.GET("/wordlists/:id/quiz-performance", getQuizTypePerformance)
 	analytics.GET("/dashboard", getDashboardStats)
 }
 
@@ -151,9 +151,22 @@ func getBoxDistributionHistory(c *gin.Context) {
 	})
 }
 
-// getQuizTypePerformance returns performance statistics by quiz type
+// getQuizTypePerformance returns performance statistics by quiz type for a specific wordlist
 func getQuizTypePerformance(c *gin.Context) {
+	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
+
 	userID := c.GetInt64("userID")
+
+	// Verify wordlist ownership
+	wordlist, err := service.GetWordlistById(wordlistID, userID)
+	if err != nil || wordlist == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
+		return
+	}
 
 	analyticsService, err := service.NewAnalyticsService()
 	if err != nil {
@@ -161,14 +174,15 @@ func getQuizTypePerformance(c *gin.Context) {
 		return
 	}
 
-	performance, err := analyticsService.GetQuizTypePerformance(c.Request.Context(), userID)
+	performance, err := analyticsService.GetQuizTypePerformance(c.Request.Context(), userID, wordlistID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch performance stats"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"quiz_performance": performance,
+		"wordlistId": wordlistID,
+		"quizPerformance": performance,
 	})
 }
 
