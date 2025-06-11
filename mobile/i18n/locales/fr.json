@@ -490,6 +490,12 @@
         "subtitle": "Tendances du pourcentage de maîtrise sur les 30 derniers jours",
         "explanation": "Ce graphique montre votre pourcentage de maîtrise au fil du temps - le pourcentage de mots qui ont atteint la Boîte 7 (étape maîtrisée). Des barres plus hautes indiquent une meilleure maîtrise globale du vocabulaire !",
         "masteryPercentage": "Pourcentage de Mots Maîtrisés (Boîte 7)"
+      },
+      "practiceTime": {
+        "title": "Temps de Pratique Quotidien",
+        "subtitle": "Temps consacré à la pratique des quiz",
+        "totalTime": "Total",
+        "avgDaily": "Moyenne Quotidienne"
       }
     },
     "empty": {
@@ -497,7 +503,8 @@
       "noProgress": "Pas encore de données de progrès",
       "noQuizzes": "Complétez d'abord quelques quiz",
       "noMastered": "Pas encore de mots maîtrisés",
-      "noHistoricalData": "Aucune donnée historique disponible pour le moment. Pratiquez quelques jours pour voir les tendances !"
+      "noHistoricalData": "Aucune donnée historique disponible pour le moment. Pratiquez quelques jours pour voir les tendances !",
+      "noPracticeTime": "Aucun temps de pratique enregistré pour le moment"
     },
     "box": "Boîte {{number}}",
     "quizTypes": {

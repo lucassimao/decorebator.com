@@ -59,6 +59,19 @@ export interface HistoricalBoxDistributionResponse {
   distribution: HistoricalBoxDistribution[];
 }
 
+export interface PracticeTimeStats {
+  date: string;
+  practiceTimeMs: number;
+  practiceTimeMinutes: number;
+  quizCount: number;
+}
+
+export interface PracticeTimeResponse {
+  wordlistId: number;
+  days: number;
+  practiceTime: PracticeTimeStats[];
+}
+
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // 1) Get dashboard statistics
@@ -152,4 +165,13 @@ export async function getHistoricalBoxDistribution(
 ): Promise<HistoricalBoxDistributionResponse> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/distribution?days=${days}`;
   return await callAPI<HistoricalBoxDistributionResponse>("GET", endpoint);
+}
+
+// 8) Get practice time for a wordlist
+export async function getPracticeTime(
+  wordlistId: number,
+  days: number = 7,
+): Promise<PracticeTimeResponse> {
+  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/practice-time?days=${days}`;
+  return await callAPI<PracticeTimeResponse>("GET", endpoint);
 }

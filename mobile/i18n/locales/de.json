@@ -489,6 +489,12 @@
         "subtitle": "Beherrschungsgrad-Trends der letzten 30 Tage",
         "explanation": "Diese Grafik zeigt Ihren Beherrschungsgrad über die Zeit - den Prozentsatz der Wörter, die Box 7 (Beherrschte Stufe) erreicht haben. Höhere Balken zeigen eine bessere Gesamtvokabelbeherrschung!",
         "masteryPercentage": "Prozentsatz beherrschter Wörter (Box 7)"
+      },
+      "practiceTime": {
+        "title": "Tägliche Übungszeit",
+        "subtitle": "Zeit für Quiz-Übungen",
+        "totalTime": "Gesamt",
+        "avgDaily": "Täglich Ø"
       }
     },
     "empty": {
@@ -496,7 +502,8 @@
       "noProgress": "Noch keine Fortschrittsdaten",
       "noQuizzes": "Absolvieren Sie zuerst einige Quizze",
       "noMastered": "Noch keine beherrschten Wörter",
-      "noHistoricalData": "Noch keine historischen Daten verfügbar. Üben Sie ein paar Tage, um Trends zu sehen!"
+      "noHistoricalData": "Noch keine historischen Daten verfügbar. Üben Sie ein paar Tage, um Trends zu sehen!",
+      "noPracticeTime": "Noch keine Übungszeit aufgezeichnet"
     },
     "box": "Box {{number}}",
     "quizTypes": {

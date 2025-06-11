@@ -7,12 +7,14 @@ import {
   getWordlistProgressSummary,
   getCurrentBoxDistribution,
   getHistoricalBoxDistribution,
+  getPracticeTime,
   LearningProgress,
   QuizTypePerformance,
   WordMasteryStats,
   WordlistProgressSummary,
   BoxDistributionResponse,
   HistoricalBoxDistributionResponse,
+  PracticeTimeResponse,
 } from "@/api/analytics";
 import { useQuery } from "@tanstack/react-query";
 
@@ -45,6 +47,10 @@ type UseAnalyticsResult = {
   historicalBoxDistribution?: HistoricalBoxDistributionResponse;
   historicalBoxDistLoading: boolean;
   historicalBoxDistError?: unknown;
+
+  practiceTime?: PracticeTimeResponse;
+  practiceTimeLoading: boolean;
+  practiceTimeError?: unknown;
 
   isPending: boolean;
 };
@@ -129,6 +135,18 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     staleTime: 5 * 60 * 1000, // 5 minutes cache for historical data
   });
 
+  // 8) Practice time for the last 7 days
+  const {
+    data: practiceTime,
+    isLoading: practiceTimeLoading,
+    error: practiceTimeError,
+  } = useQuery<PracticeTimeResponse, unknown>({
+    queryKey: ["analytics", "practiceTime", wordlistId],
+    queryFn: () => getPracticeTime(wordlistId, 7),
+    enabled: Boolean(wordlistId),
+    staleTime: 5 * 60 * 1000, // 5 minutes cache for practice time data
+  });
+
   return {
     dashboardStats,
     statsLoading,
@@ -159,6 +177,10 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     historicalBoxDistLoading,
     historicalBoxDistError,
 
+    practiceTime,
+    practiceTimeLoading,
+    practiceTimeError,
+
     isPending:
       statsLoading ||
       masteryLoading ||
@@ -166,6 +188,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
       quizPerfLoading ||
       wordlistProgressLoading ||
       boxDistLoading ||
-      historicalBoxDistLoading,
+      historicalBoxDistLoading ||
+      practiceTimeLoading,
   };
 }

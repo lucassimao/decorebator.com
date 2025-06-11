@@ -6,4 +6,5 @@ export { QuizPerformanceChart } from "./QuizPerformanceChart";
 export { TopWordsSection } from "./TopWordsSection";
 export { BoxDistributionChart } from "./BoxDistributionChart";
 export { HistoricalBoxDistributionChart } from "./HistoricalBoxDistributionChart";
+export { PracticeTimeChart } from "./PracticeTimeChart";
 export { colors } from "./theme";

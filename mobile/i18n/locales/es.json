@@ -489,6 +489,12 @@
         "subtitle": "Tendencias del porcentaje de dominio en los últimos 30 días",
         "explanation": "Este gráfico muestra tu porcentaje de dominio a lo largo del tiempo - el porcentaje de palabras que han alcanzado la Caja 7 (etapa dominada). ¡Las barras más altas indican un mejor dominio general del vocabulario!",
         "masteryPercentage": "Porcentaje de Palabras Dominadas (Caja 7)"
+      },
+      "practiceTime": {
+        "title": "Tiempo de Práctica Diaria",
+        "subtitle": "Tiempo dedicado a practicar cuestionarios",
+        "totalTime": "Total",
+        "avgDaily": "Promedio Diario"
       }
     },
     "empty": {
@@ -496,7 +502,8 @@
       "noProgress": "Aún sin datos de progreso",
       "noQuizzes": "Completa algunas pruebas primero",
       "noMastered": "Aún sin palabras dominadas",
-      "noHistoricalData": "¡Aún no hay datos históricos disponibles. Practica unos días para ver las tendencias!"
+      "noHistoricalData": "¡Aún no hay datos históricos disponibles. Practica unos días para ver las tendencias!",
+      "noPracticeTime": "Aún no se ha registrado tiempo de práctica"
     },
     "box": "Caja {{number}}",
     "quizTypes": {

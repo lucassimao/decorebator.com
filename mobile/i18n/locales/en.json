@@ -489,6 +489,12 @@
         "subtitle": "Mastery percentage trends over the last 30 days",
         "explanation": "This chart shows your mastery percentage over time - the percentage of words that have reached Box 7 (mastered stage). Higher bars indicate better overall vocabulary mastery!",
         "masteryPercentage": "Percentage of Mastered Words (Box 7)"
+      },
+      "practiceTime": {
+        "title": "Daily Practice Time",
+        "subtitle": "Time spent practicing quizzes",
+        "totalTime": "Total",
+        "avgDaily": "Daily Avg"
       }
     },
     "empty": {
@@ -496,7 +502,8 @@
       "noProgress": "No progress data yet",
       "noQuizzes": "Complete some quizzes first",
       "noMastered": "No mastered words yet",
-      "noHistoricalData": "No historical data available yet. Practice a few days to see trends!"
+      "noHistoricalData": "No historical data available yet. Practice a few days to see trends!",
+      "noPracticeTime": "No practice time recorded yet"
     },
     "box": "Box {{number}}",
     "quizTypes": {

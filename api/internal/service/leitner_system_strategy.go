@@ -48,17 +48,22 @@ type NextDefinition struct {
 }
 
 // boxToQuizTypes defines the quiz difficulty progression through Leitner boxes.
-// Each box introduces more challenging quiz types as the user demonstrates mastery:
-// - Lower boxes focus on recognition and basic recall
-// - Higher boxes require active recall, contextual understanding, and audio recognition
+// Each box introduces a new skill level with minimal repetition for cleaner progression:
+// - Box 1: Recognition (easiest)
+// - Box 2: Basic recall
+// - Box 3: Visual association
+// - Box 4: Contextual understanding
+// - Box 5: Active recall (hardest text-based)
+// - Box 6: Audio recognition (new modality)
+// - Box 7: Mastery level (most challenging types only)
 var boxToQuizTypes = map[int64][]model.QuizType{
-	1: {model.GuessMeaning},                                                                                                                                                                             // Basic recognition
-	2: {model.WordFromMeaning},                                                                                                                                                                          // Basic recall
-	3: {model.WordFromImage, model.GuessMeaning},                                                                                                                                                        // Visual association
-	4: {model.CompleteSentence, model.WordFromMeaning},                                                                                                                                                  // Contextual understanding
-	5: {model.WriteWordFromDefinition, model.CompleteSentence},                                                                                                                                          // Active recall
-	6: {model.WordFromAudio, model.WriteWordFromDefinition, model.WordFromExampleAudio},                                                                                                                 // Audio recognition
-	7: {model.WordFromExampleAudio, model.WriteWordFromDefinition, model.WordFromAudio, model.GuessMeaning, model.WordFromMeaning, model.WordFromImage, model.CompleteSentence, model.MeaningFromAudio}, // All
+	1: {model.GuessMeaning},                                                                                 // Recognition: "What does this word mean?"
+	2: {model.WordFromMeaning},                                                                              // Basic recall: "Which word matches this meaning?"
+	3: {model.WordFromImage},                                                                                // Visual association: "What word matches this image?"
+	4: {model.CompleteSentence},                                                                             // Contextual understanding: "Complete this sentence"
+	5: {model.WriteWordFromDefinition},                                                                      // Active recall: "Type the word from definition"
+	6: {model.WordFromAudio, model.WordFromExampleAudio},                                                    // Audio recognition: "What word from audio?"
+	7: {model.MeaningFromAudio, model.WordFromImage, model.WriteWordFromDefinition, model.CompleteSentence}, // Mastery: Most challenging types
 }
 
 // ExampleUsage tracks when examples were last used for fair distribution
@@ -369,7 +374,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Additional logging for debugging WordFromImage availability
 	if nextDefinition.BoxID == 3 || nextDefinition.BoxID == 7 {
 		common.Logger.Info("image_quiz_availability",
@@ -403,9 +408,9 @@ func selectQuizType(def *NextDefinition, word *model.Word) (model.QuizType, erro
 	// Deterministic selection based on definition ID and current time
 	// This ensures all quiz types get cycled through fairly
 	// Using 5-minute rotation ensures variety while maintaining predictability
-	timeRotation := time.Now().Unix() / 300  // 300 seconds = 5 minutes
+	timeRotation := time.Now().Unix() / 300 // 300 seconds = 5 minutes
 	index := (int(def.Definition.ID) + int(timeRotation)) % len(availableTypes)
-	
+
 	// Log the selection for monitoring
 	common.Logger.Info("quiz_type_selected",
 		"definitionID", def.Definition.ID,
@@ -415,7 +420,7 @@ func selectQuizType(def *NextDefinition, word *model.Word) (model.QuizType, erro
 		"index", index,
 		"imageUrl", def.ImageUrl,
 		"hasImage", def.ImageUrl != "")
-	
+
 	return availableTypes[index], nil
 }
 
@@ -883,7 +888,6 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 			"quizType", quizResult.QuizType)
 	}
 
-
 	return nil
 }
 
@@ -911,76 +915,6 @@ func (LeitnerSystemStrategy) IncludeDefinitions(wordId, userId int64, definition
 	}
 
 	return nil
-}
-
-// GetSkippedDefinitions retrieves all definitions that are currently being skipped due to error reports.
-// These are definitions that users have reported as having issues (wrong images, incorrect meanings, etc.)
-// and are temporarily excluded from quiz generation until the issues are resolved.
-//
-// This function is useful for:
-// - Admin interfaces to review reported issues
-// - Analytics to understand content quality problems
-// - Debugging quiz generation issues
-//
-// Parameters:
-// - userID: The ID of the user whose skipped definitions to retrieve
-// - wordlistID: The ID of the wordlist to check for skipped definitions
-//
-// Returns a slice of NextDefinition objects with error reporting details.
-func (s LeitnerSystemStrategy) GetSkippedDefinitions(userID, wordlistID int64) ([]NextDefinition, error) {
-	query := `
-		SELECT 
-			def.id, def.token, def.part_of_speech, def.meaning, def.examples, 
-			def.inflections, lst.id AS lst_id, lst.box_id, def.sounds, def.phonetic_notations, 
-			COALESCE(di.url,'') as image_url, COALESCE(di.description,'') as image_description, 
-			wd.word_id AS word_id,
-			der.error_type, der.description as error_description, der.reported_at
-		FROM leitner_system_tracking lst 
-		JOIN definitions def ON lst.definition_id = def.id
-		JOIN word_definitions wd ON def.id = wd.definition_id
-		JOIN words w ON wd.word_id = w.id
-		LEFT JOIN definition_images di ON di.definition_id = def.id AND di.is_visible=TRUE
-		LEFT JOIN error_reports der ON der.definition_id = def.id AND der.status = 'pending'
-		WHERE 
-			lst.user_id = $1
-			AND w.wordlist_id = $2
-			AND w.learned = FALSE
-			AND lst.temporarily_skipped_until > NOW()
-		ORDER BY der.reported_at DESC;
-	`
-
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := db.Query(context.Background(), query, userID, wordlistID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var results []NextDefinition
-	for rows.Next() {
-		definition := model.Definition{}
-		result := NextDefinition{Definition: &definition}
-		var errorType, errorDescription string
-		var reportedAt time.Time
-
-		err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech,
-			&definition.Meaning, &definition.Examples,
-			&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
-			&definition.PhoneticNotations, &result.ImageUrl, &result.ImageDescription, &result.WordID,
-			&errorType, &errorDescription, &reportedAt)
-
-		if err != nil {
-			return nil, err
-		}
-
-		results = append(results, result)
-	}
-
-	return results, nil
 }
 
 // MarkErrorResolved removes the temporary skip status from definitions and marks error reports as resolved.

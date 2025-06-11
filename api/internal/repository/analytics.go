@@ -533,3 +533,55 @@ func (r *AnalyticsRepository) GetCurrentBoxDistribution(ctx context.Context, use
 
 	return &dist, nil
 }
+
+// PracticeTimeStats represents daily practice time statistics
+type PracticeTimeStats struct {
+	Date               time.Time `json:"date"`
+	PracticeTimeMs     int       `json:"practiceTimeMs"`
+	PracticeTimeMinutes float64   `json:"practiceTimeMinutes"`
+	QuizCount          int       `json:"quizCount"`
+}
+
+// GetPracticeTime retrieves daily practice time calculated from quiz response times
+func (r *AnalyticsRepository) GetPracticeTime(ctx context.Context, userID, wordlistID int64, days int) ([]PracticeTimeStats, error) {
+	// Validate days parameter
+	if days < 0 {
+		days = 0
+	}
+	
+	query := `
+		SELECT 
+			DATE(qp.created_at) as practice_date,
+			SUM(COALESCE(qp.response_time_ms, 0)) as total_practice_time_ms,
+			ROUND(SUM(COALESCE(qp.response_time_ms, 0))::numeric / 60000.0, 1) as practice_time_minutes,
+			COUNT(*) as quiz_count
+		FROM quiz_performance qp
+		WHERE qp.user_id = $1 
+		  AND qp.wordlist_id = $2
+		  AND qp.created_at >= CURRENT_DATE - INTERVAL '1 day' * $3
+		GROUP BY DATE(qp.created_at)
+		ORDER BY practice_date DESC
+	`
+
+	rows, err := r.db.Query(ctx, query, userID, wordlistID, days)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var practiceTime []PracticeTimeStats
+	for rows.Next() {
+		var p PracticeTimeStats
+		err := rows.Scan(&p.Date, &p.PracticeTimeMs, &p.PracticeTimeMinutes, &p.QuizCount)
+		if err != nil {
+			return nil, err
+		}
+		practiceTime = append(practiceTime, p)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return practiceTime, nil
+}

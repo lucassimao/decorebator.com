@@ -18,6 +18,7 @@ import {
   TopWordsSection,
   BoxDistributionChart,
   HistoricalBoxDistributionChart,
+  PracticeTimeChart,
   colors,
 } from "@/components/analytics";
 
@@ -31,6 +32,7 @@ const AnalyticsDashboard = () => {
     quizPerformance,
     boxDistribution,
     historicalBoxDistribution,
+    practiceTime,
     isPending,
   } = useAnalytics(wordlistId);
   const navigation = useNavigation();
@@ -68,6 +70,8 @@ const AnalyticsDashboard = () => {
           <WordMasteryChart wordMastery={wordMastery} />
 
           <LearningProgressChart learningProgress={learningProgress} />
+
+          <PracticeTimeChart practiceTime={practiceTime} />
 
           <QuizPerformanceChart quizPerformance={quizPerformance} />
 

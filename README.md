@@ -305,9 +305,13 @@ npm run lint          # Run linter
 ### Comprehensive Analytics Platform
 - **Word Mastery Tracking**: Individual word progress with accuracy calculations
 - **Learning Progress Visualization**: Daily statistics and progress charts
-- **Quiz Performance Analysis**: Performance metrics by quiz type and difficulty
-- **Box Distribution Insights**: Historical snapshots of Leitner system progression
-- **Materialized Views**: Optimized database performance for real-time analytics
+- **Quiz Performance Analysis**: Performance metrics by quiz type (now wordlist-scoped)
+- **Box Distribution Insights**: 
+  - Current distribution correctly counts unique words (not definitions)
+  - Historical snapshots of Leitner system progression
+  - Word considered at its lowest box level across all definitions
+- **Materialized Views**: Optimized database performance with `mv_word_mastery_current` and `mv_quiz_type_performance_by_wordlist`
+- **Future Enhancement**: Real-time analytics for premium users (1-minute cache) vs hourly updates for free users
 
 ### Offline Support for Premium Users
 - **Local Data Caching**: Wordlists and definitions cached for offline access
@@ -356,6 +360,18 @@ npm run lint          # Run linter
 - **Enhanced User Experience**: Eliminates empty flashcard states caused by async definition processing
 - **Maintainable Codebase**: Easier to modify and extend individual flashcard features
 - **Backward Compatible**: Existing API endpoints maintain full compatibility
+
+### Quiz Loading State Fix (January 2025)
+- **Fixed Loading Forever Issue**: Resolved race condition causing quiz screen to hang indefinitely
+- **Improved State Management**: 
+  - Reset `currentQuizId` when loading new quiz
+  - Simplified loading condition to `(isLoadingNext || isFetching || !quiz)`
+  - Added explicit `refetch()` call in retry handler
+- **Enhanced User Experience**: 
+  - Reliable 10-second timeout with retry options
+  - Clear loading states during quiz transitions
+  - Proper initial loading screen with timeout handling
+- **Root Cause**: Complex state dependencies between `isLoadingNext`, `isFetching`, and `currentQuizId` were getting out of sync
 
 ## 📊 Database Schema
 
@@ -794,7 +810,8 @@ npm start
 - `GET /analytics/wordlists/:id/mastery` - Word mastery statistics
 - `GET /analytics/wordlists/:id/progress` - Learning progress (daily)
 - `GET /analytics/wordlists/:id/distribution` - Box distribution history
-- `GET /analytics/quiz-performance` - Quiz type performance stats
+- `GET /analytics/wordlists/:id/current-distribution` - Current box distribution (counts unique words)
+- `GET /analytics/wordlists/:id/quiz-performance` - Quiz type performance stats (wordlist-scoped)
 - `GET /analytics/dashboard` - Overall dashboard statistics
 
 ### Error Reporting & Content Quality

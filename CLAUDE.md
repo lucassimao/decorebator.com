@@ -9,6 +9,34 @@ Decorebator is an AI-powered vocabulary learning platform that uses AI-powered e
 - **Mobile App** (React Native/Expo) - Cross-platform mobile application with offline support
 - **Web Frontend** (Next.js) - Landing page and web application
 
+## Quick Reference Commands
+
+### Most Common Development Tasks
+```bash
+# Start full development environment
+cd api && make watch                    # Terminal 1: API server with auto-reload
+cd api && make workers                  # Terminal 2: Background workers
+cd mobile && npm start                  # Terminal 3: Mobile app
+
+# Run tests
+cd api && make test                     # Integration tests with Docker
+cd api && make test-unit               # Fast unit tests only
+cd mobile && npm test                  # Mobile Jest tests
+
+# Database operations
+cd api && make migrate-up              # Apply new migrations
+cd api && make psql                    # Database console
+```
+
+### Single Test Execution
+```bash
+# API - Run specific test
+go test -v -run TestSpecificFunction ./internal/service/
+
+# Mobile - Run specific test  
+npm test -- --testNamePattern="specific test name"
+```
+
 ## Common Development Commands
 
 ### API Backend (in `/api` directory)
@@ -158,6 +186,29 @@ Workers run as a separate process and include retry logic, rate limiting, and er
 - Error reporting modal for AI-generated content issues
 - Interactive flashcard system with flip animations
 
+#### Detailed Component Organization
+
+**Analytics Components** (7 modular components):
+- `AnalyticsHeader`, `StatsGrid`, `WordMasteryChart`, `LearningProgressChart`
+- `QuizPerformanceChart`, `BoxDistributionChart`, `HistoricalBoxDistributionChart`, `TopWordsSection`
+
+**Quiz Components**: Modular quiz interface with `QuizContent`, `QuizOptions`, `QuizHeader`, `QuizModeToggle`
+
+**Flashcard Components**: 4-component flashcard system with flip animations and navigation
+
+**Offline Components**: `OfflineManager`, `OfflineIndicator`, `OfflinePreloader` for premium offline support
+
+#### Performance & UX Patterns
+- **Loading State Architecture**: 10-second timeout detection with retry mechanisms
+- **Error Handling**: Network errors, timeout errors, offline errors with graceful degradation
+- **Memory Management**: Bounded cache, animation cleanup, audio management, timer cleanup
+- **Design System**: Card-based design with warm gradients, 8px base grid, touch-friendly targets
+
+#### State Management
+- **Server State**: React Query with intelligent caching and background updates
+- **Local State**: React hooks with custom hook extraction for shared logic
+- **Persistence**: Secure storage for tokens, AsyncStorage for preferences/offline data
+
 ### Database Schema
 
 Key tables with recent enhancements:
@@ -249,6 +300,28 @@ docker-compose -f docker-compose.test.yml up -d
 - Performance benchmarking support
 - Security testing patterns
 
+### Test Coverage Targets
+- **Unit Tests**: 70% minimum coverage
+- **Integration Tests**: 80% minimum coverage  
+- **Critical paths**: 95% coverage (auth, subscriptions, core business logic)
+
+### Test Naming Convention
+Format: `Test[Subject]_[Scenario]_[Expected]`
+```go
+func TestUserRegistration_WithValidData_ReturnsCreatedUser(t *testing.T)
+func TestCreateWordlist_WhenFreePlanLimitExceeded_Returns403(t *testing.T)
+```
+
+### Test Structure (AAA Pattern)
+- **Arrange**: Setup test data and dependencies
+- **Act**: Execute the operation being tested  
+- **Assert**: Verify expected outcomes
+
+### Integration Test Patterns
+- Transaction-based isolation with automatic rollback
+- Mock external services (OpenAI, Stripe, SendGrid) using httptest
+- Test data fixtures for complex scenarios
+
 ### Running Tests
 ```bash
 # Run single test
@@ -317,6 +390,25 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - Clear error messages with retry times
 - Status endpoint to check remaining quota
 
+## Known Architecture Issues & Modernization Plans
+
+### Critical Issues Requiring Attention
+1. **Global State Anti-Patterns**: Service layer uses global variables with `init()` functions containing `os.Exit(1)` calls that break testing
+2. **SQL Injection Vulnerability**: `analytics.go:271` uses `fmt.Sprintf` for SQL query building
+3. **Connection Pool Inefficiency**: Creating new service instances repeatedly instead of reusing connections
+4. **Missing Indexes**: Critical database indexes missing for analytics queries
+
+### Planned Modernization (Priority Order)
+1. **Week 1-2**: Remove `init()` functions, create repository interfaces
+2. **Week 3-4**: Convert services to constructor-based DI, fix SQL injection
+3. **Week 5-6**: Implement dependency container, refactor HTTP layer
+4. **Week 7-8**: Add missing indexes, implement caching layer
+
+**Files requiring immediate attention:**
+- `internal/service/word.go`, `internal/service/user.go` - Remove global repositories
+- `internal/http/analytics.go` - Fix SQL injection vulnerability
+- `internal/common/database.go` - Remove `os.Exit(1)` calls
+
 ## Important Notes
 
 - Authentication uses JWT tokens stored securely on mobile devices
@@ -328,7 +420,7 @@ To prevent abuse and control API costs, error reporting implements comprehensive
   - `api/docs/DEPENDENCY_INJECTION_MODERNIZATION_PLAN.md` - DI framework adoption
   - `api/docs/LOGGING_IMPROVEMENT_PLAN.md` - Enhanced structured logging
   - `api/docs/ANALYTICS_REVIEW_REPORT.md` - Performance and bug fixes for analytics
-  - `api/docs/QUIZ_TYPE_ROTATION_PROPOSAL.md` - Deterministic quiz type selection
+  - `api/docs/PROBABILISTIC_LEITNER_IMPLEMENTATION.md` - Advanced Leitner system solution
 
 ## Multi-Language Support
 
@@ -359,6 +451,39 @@ The application provides comprehensive multi-language support:
 - **Offline Support**: Premium users can access wordlists and practice offline with seamless sync
 - **Subscription Tiers**: Free plan (1 wordlist, 10 words) and Premium plans ($6.99/month, $69.90/year)
 
+## Advanced Leitner System - Probabilistic Selection
+
+The system implements probabilistic availability to solve the "Box 7 Stagnation" problem where users with all words in the highest box would have no practice content available.
+
+**Probability Formula:**
+```
+P(selection) = base_probability + (time_progress * (1 - base_probability))
+```
+
+**Box-Specific Minimum Probabilities:**
+- Box 1: 100% (always available)
+- Box 2: 70% minimum  
+- Box 3: 50% minimum
+- Box 4: 30% minimum
+- Box 5: 20% minimum
+- Box 6: 10% minimum
+- Box 7: 5% minimum (ensures content always available)
+
+**Benefits:**
+- Never stuck even with all words in Box 7
+- Maintains spaced repetition principles
+- Single query execution (no complex fallbacks)
+- Scientifically models natural memory decay
+
 ## Memories
 - read README.md for more additional context on decorebator project
+- read api/docs/ANALYTICS_PERFORMANCE_SCALABILITY_REPORT.md for analytics system architecture and future plans
+- read mobile/docs/mobile-app-architecture.md for detailed mobile app patterns and design system
 - Update README.md right after introducing major features or refactorings
+- Update relevant documentation after making architectural changes
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

@@ -490,6 +490,12 @@
         "subtitle": "Tendenze della percentuale di padronanza negli ultimi 30 giorni",
         "explanation": "Questo grafico mostra la tua percentuale di padronanza nel tempo - la percentuale di parole che hanno raggiunto la Scatola 7 (fase padroneggiata). Barre più alte indicano una migliore padronanza complessiva del vocabolario!",
         "masteryPercentage": "Percentuale di Parole Padroneggiate (Scatola 7)"
+      },
+      "practiceTime": {
+        "title": "Tempo di Pratica Giornaliero",
+        "subtitle": "Tempo dedicato alla pratica dei quiz",
+        "totalTime": "Totale",
+        "avgDaily": "Media Giornaliera"
       }
     },
     "empty": {
@@ -497,7 +503,8 @@
       "noProgress": "Ancora nessun dato di progresso",
       "noQuizzes": "Completa prima alcuni quiz",
       "noMastered": "Ancora nessuna parola padroneggiata",
-      "noHistoricalData": "Nessun dato storico ancora disponibile. Pratica per alcuni giorni per vedere le tendenze!"
+      "noHistoricalData": "Nessun dato storico ancora disponibile. Pratica per alcuni giorni per vedere le tendenze!",
+      "noPracticeTime": "Nessun tempo di pratica registrato ancora"
     },
     "box": "Casella {{number}}",
     "quizTypes": {

@@ -18,6 +18,7 @@ func RegisterAnalyticsRoutes(r *gin.RouterGroup) {
 	analytics.GET("/wordlists/:id/distribution", getBoxDistributionHistory)
 	analytics.GET("/wordlists/:id/current-distribution", getCurrentBoxDistribution)
 	analytics.GET("/wordlists/:id/quiz-performance", getQuizTypePerformance)
+	analytics.GET("/wordlists/:id/practice-time", getPracticeTime)
 	analytics.GET("/dashboard", getDashboardStats)
 }
 
@@ -243,5 +244,49 @@ func getCurrentBoxDistribution(c *gin.Context) {
 		"wordlistId":  wordlistID,
 		"distribution": distribution,
 		"totalWords":   distribution.TotalWords,
+	})
+}
+
+// getPracticeTime returns daily practice time statistics for a wordlist
+func getPracticeTime(c *gin.Context) {
+	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
+
+	// Get days parameter (default 7)
+	days := 7
+	if d := c.Query("days"); d != "" {
+		if parsed, err := strconv.Atoi(d); err == nil && parsed > 0 && parsed <= 30 {
+			days = parsed
+		}
+	}
+
+	userID := c.GetInt64("userID")
+
+	// Verify wordlist ownership
+	wordlist, err := service.GetWordlistById(wordlistID, userID)
+	if err != nil || wordlist == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
+		return
+	}
+
+	analyticsService, err := service.NewAnalyticsService()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
+		return
+	}
+
+	practiceTime, err := analyticsService.GetPracticeTime(c.Request.Context(), userID, wordlistID, days)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch practice time"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"wordlistId":   wordlistID,
+		"days":         days,
+		"practiceTime": practiceTime,
 	})
 }

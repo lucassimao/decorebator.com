@@ -102,6 +102,16 @@ mobile/
 - Loading state management with timeout handling
 - Retry mechanisms for network issues
 
+**Recent Loading State Fix (January 2025)**:
+- **Problem**: Quiz screen would hang indefinitely with loading spinner
+- **Root Cause**: Race condition between `currentQuizId`, `isLoadingNext`, and `isFetching` states
+- **Solution**: 
+  - Reset `currentQuizId` to `null` when loading new quiz
+  - Simplified loading condition to `(isLoadingNext || isFetching || !quiz)`
+  - Added explicit `refetch()` call in retry handler
+  - Consistent timeout management with proper cleanup
+- **Result**: Reliable 10-second timeout with retry options, preventing indefinite loading states
+
 ### 4. Flashcard System
 
 **Architecture**: 3D flip animations with lazy content loading
@@ -131,7 +141,8 @@ mobile/
 - Component-based analytics dashboard extracted from monolithic 870-line component
 - Real-time box distribution tracking with automatic cache invalidation
 - Historical progress trends with daily snapshots
-- Performance metrics by quiz type and learning patterns
+- Performance metrics by quiz type (now always wordlist-scoped)
+- Box distribution correctly counts unique words (not definitions)
 
 **Analytics Components**:
 - `app/analytics.tsx` - Main analytics orchestration
@@ -139,10 +150,16 @@ mobile/
 - `components/analytics/StatsGrid.tsx` - Overview metrics and mastery percentages
 - `components/analytics/WordMasteryChart.tsx` - Individual word progress visualization
 - `components/analytics/LearningProgressChart.tsx` - Daily learning trends and accuracy
-- `components/analytics/QuizPerformanceChart.tsx` - Performance metrics by quiz type
-- `components/analytics/BoxDistributionChart.tsx` - Current Leitner box distribution
+- `components/analytics/QuizPerformanceChart.tsx` - Performance metrics by quiz type (wordlist-scoped)
+- `components/analytics/BoxDistributionChart.tsx` - Current Leitner box distribution (counts unique words)
 - `components/analytics/HistoricalBoxDistributionChart.tsx` - Progress trends over time
 - `components/analytics/TopWordsSection.tsx` - Highest performing vocabulary
+
+**Key Improvements**:
+- **Box Distribution Fix**: Words with multiple definitions are counted once, at their lowest box level
+- **Quiz Performance Scoping**: All quiz performance metrics are now wordlist-specific
+- **API Optimization**: Removed redundant `mv_quiz_type_performance` materialized view
+- **Future Enhancement**: Real-time analytics for premium users (1-minute cache) vs hourly for free users
 
 **Data Visualization**:
 - React Native Chart Kit for rendering charts and graphs

@@ -8,6 +8,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/repository"
 	"github.com/jackc/pgx/v5"
+	"golang.org/x/sync/errgroup"
 )
 
 type AnalyticsService struct {
@@ -126,24 +127,34 @@ type DashboardStats struct {
 // GetDashboardStats fetches and returns all pieces of data for a given user.
 func (svc *AnalyticsService) GetDashboardStats(ctx context.Context, userID int64) (*DashboardStats, error) {
 	stats := &DashboardStats{}
-
+	
+	// Use errgroup to run all queries concurrently
+	g, ctx := errgroup.WithContext(ctx)
+	
 	// 1) Total mastery summary
-	if err := svc.fetchTotalMasteryStats(ctx, userID, stats); err != nil {
-		return nil, fmt.Errorf("fetchTotalMasteryStats: %w", err)
-	}
-
-	// 2) Today's activity summary
-	if err := svc.fetchTodayStats(ctx, userID, stats); err != nil {
-		return nil, fmt.Errorf("fetchTodayStats: %w", err)
-	}
-
+	g.Go(func() error {
+		return svc.fetchTotalMasteryStats(ctx, userID, stats)
+	})
+	
+	// 2) Today's activity summary  
+	g.Go(func() error {
+		return svc.fetchTodayStats(ctx, userID, stats)
+	})
+	
 	// 3) Current streak
-	streak, err := svc.fetchCurrentStreak(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("fetchCurrentStreak: %w", err)
+	var streak int
+	g.Go(func() error {
+		var err error
+		streak, err = svc.fetchCurrentStreak(ctx, userID)
+		return err
+	})
+	
+	// Wait for all goroutines to complete
+	if err := g.Wait(); err != nil {
+		return nil, fmt.Errorf("failed to fetch dashboard stats: %w", err)
 	}
+	
 	stats.CurrentStreak = streak
-
 	return stats, nil
 }
 
@@ -182,4 +193,12 @@ type BoxDistribution = repository.BoxDistribution
 // GetCurrentBoxDistribution retrieves the current distribution of words across Leitner boxes
 func (as *AnalyticsService) GetCurrentBoxDistribution(ctx context.Context, userID, wordlistID int64) (*BoxDistribution, error) {
 	return as.repo.GetCurrentBoxDistribution(ctx, userID, wordlistID)
+}
+
+// PracticeTimeStats represents daily practice time statistics
+type PracticeTimeStats = repository.PracticeTimeStats
+
+// GetPracticeTime retrieves daily practice time for the last N days
+func (as *AnalyticsService) GetPracticeTime(ctx context.Context, userID, wordlistID int64, days int) ([]PracticeTimeStats, error) {
+	return as.repo.GetPracticeTime(ctx, userID, wordlistID, days)
 }
