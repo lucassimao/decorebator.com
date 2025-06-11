@@ -11,7 +11,6 @@ import {
   View,
 } from "react-native";
 
-import { useAnalytics } from "@/hooks/useAnalytics";
 import { useUserInfo } from "@/hooks/users";
 import * as wordlistsApi from "@/api/wordlists";
 
@@ -63,36 +62,17 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
   const { t } = useTranslation();
   const { isPremium } = useUserInfo();
 
-  // Get analytics data (using wordlistId: 0 to get global stats)
-  const { dashboardStats, statsLoading, statsError } = useAnalytics(0);
-
-  // Get wordlists count separately to match the existing interface
+  // Get global user stats using the correct endpoint
   const {
-    data: wordlists,
-    isLoading: wordlistsLoading,
-    isError: wordlistsError,
+    data: stats,
+    isLoading,
+    isError,
+    refetch,
   } = useQuery({
-    queryKey: ["wordlists"],
-    queryFn: wordlistsApi.getUserWordlists,
+    queryKey: ["userStats"],
+    queryFn: wordlistsApi.getUserStats,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
-
-  // Transform analytics data to match the expected UserStats interface
-  const stats = dashboardStats
-    ? {
-        totalWords: dashboardStats.totalWords,
-        wordlists: wordlists?.length || 0,
-        wordsLearned: dashboardStats.wordsMastered,
-        currentStreak: dashboardStats.currentStreak,
-      }
-    : null;
-
-  const isLoading = statsLoading || wordlistsLoading;
-  const isError = statsError || wordlistsError;
-
-  const refetch = () => {
-    // Note: analytics data will refetch automatically based on React Query config
-  };
 
   // Animation on load
   useEffect(() => {

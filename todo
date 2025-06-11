@@ -75,8 +75,10 @@
     [x] Add Leitner box distribution metric
     [x] Quiz loading state still stuck
     [x] new metricts are not taking into account that a single word has more thatn 1 definition, leading to wrong data
-    [ ] Possible to compute stats on the fly for paying users?
-    [ ] Splash screen
+    [x] fix sentry
+    [x] make sure the percts show in mobile/components/analytics/HistoricalBoxDistributionChart.tsx total 100%
+    [x] StatsGrid should display stats per wordlist, not global
+    [ ] Possible to compute stats on the fly for paying users? optmize how we fetch them'
     [ ] Integratation test plan
 
 [ ] MVP Release Checklist
@@ -86,6 +88,7 @@
     [x]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
     [x]  Vercel-hosted page with SEO meta tags
     [x]  Decorebator Landing Page Redesign
+    [ ]  New Icon
     [ ]  browserstack testing
 
 # V2
@@ -125,6 +128,7 @@
     drag-and-drop, word building
     Voice practice (repeat the word aloud and get AI feedback).
 [ ] Support promotion codes in the settings page 
+[ ] Splash screen ? 
 [ ] Support invite friend to unlock premium features - 1 subscribed friend grants 1 week for the enviter
 [ ] Properly handle session expiration
 [ ] Remove the trigger in subscription table and drop user.subscription_* fields. Move logic to the service layer

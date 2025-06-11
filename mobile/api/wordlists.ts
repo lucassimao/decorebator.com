@@ -96,7 +96,7 @@ export async function getUserStats(): Promise<UserStats> {
 
   const body = await callAPI<UserStats>("GET", endpoint);
 
-  return { ...body, currentStreak: 10 };
+  return body;
 }
 
 export async function getWords(

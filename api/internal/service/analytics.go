@@ -29,31 +29,47 @@ type QuizResult = common.QuizResult
 
 // TrackQuizPerformance records the result of a quiz attempt
 func (as *AnalyticsService) TrackQuizPerformance(ctx context.Context, result QuizResult, tx pgx.Tx) error {
+	// Use errgroup to run all analytics operations concurrently
+	g, ctx := errgroup.WithContext(ctx)
+	
 	// 1. Record individual quiz performance
-	err := as.recordQuizPerformance(ctx, result, tx)
-	if err != nil {
-		return fmt.Errorf("failed to record quiz performance: %w", err)
-	}
+	g.Go(func() error {
+		err := as.recordQuizPerformance(ctx, result, tx)
+		if err != nil {
+			return fmt.Errorf("failed to record quiz performance: %w", err)
+		}
+		return nil
+	})
 
 	// 2. Update word mastery
-	err = as.updateWordMastery(ctx, result, tx)
-	if err != nil {
-		return fmt.Errorf("failed to update word mastery: %w", err)
-	}
+	g.Go(func() error {
+		err := as.updateWordMastery(ctx, result, tx)
+		if err != nil {
+			return fmt.Errorf("failed to update word mastery: %w", err)
+		}
+		return nil
+	})
 
 	// 3. Update daily learning progress
-	err = as.updateLearningProgress(ctx, result, tx)
-	if err != nil {
-		return fmt.Errorf("failed to update learning progress: %w", err)
-	}
+	g.Go(func() error {
+		err := as.updateLearningProgress(ctx, result, tx)
+		if err != nil {
+			return fmt.Errorf("failed to update learning progress: %w", err)
+		}
+		return nil
+	})
 
 	// 4. Update quiz type analytics
-	err = as.updateQuizTypeAnalytics(ctx, result, tx)
-	if err != nil {
-		return fmt.Errorf("failed to update quiz type analytics: %w", err)
-	}
+	g.Go(func() error {
+		err := as.updateQuizTypeAnalytics(ctx, result, tx)
+		if err != nil {
+			return fmt.Errorf("failed to update quiz type analytics: %w", err)
+		}
+		return nil
+	})
 
-	return nil
+	// Wait for all operations to complete
+	return g.Wait()
 }
 
 func (as *AnalyticsService) recordQuizPerformance(ctx context.Context, result QuizResult, tx pgx.Tx) error {
