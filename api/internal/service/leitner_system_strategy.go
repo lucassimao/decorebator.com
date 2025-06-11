@@ -72,63 +72,51 @@ type ExampleUsage struct {
 	LastUsedAt  time.Time `db:"last_used_at"`
 }
 
-// getNextDefinition selects the next word/definition for quiz generation using probabilistic availability.
+// getNextDefinition selects the next definition for quiz generation using deterministic priority-based selection.
 //
-// This function implements a probabilistic version of the Leitner spaced repetition system.
+// This function implements a deterministic version of the Leitner spaced repetition system that guarantees
+// definition selection while respecting spaced repetition intervals.
 //
 // ALGORITHM:
-// Instead of binary "due/not due" logic, every word has a selection probability ranging from a minimum
-// baseline to 100% when fully due. This ensures words are always available while maintaining the
-// scientific principles of spaced repetition.
+// Definitions are selected based on their progress toward their target review interval:
+// - Priority 1: Overdue definitions (100%+ of interval elapsed)
+// - Priority 2: Due soon definitions (80-100% of interval)
+// - Priority 3: Available definitions (50-80% of interval)
+// - Priority 4: All other definitions (sorted by progress %)
 //
-// PROBABILITY FORMULA:
-// P(selection) = base_probability + (time_progress * (1 - base_probability))
-// Where:
-// - base_probability = minimum chance for each box (5% for Box 7, 70% for Box 2, etc.)
-// - time_progress = hours_since_review / intended_interval
-// - When time_progress ≥ 1, P(selection) = 100% (overdue)
-//
-// BOX-SPECIFIC PROBABILITIES:
-// - Box 1 (immediate): Always 100% probability
-// - Box 2 (1 hour): 70% minimum, reaches 100% at 1 hour
-// - Box 3 (1 day): 50% minimum, reaches 100% at 24 hours
-// - Box 4 (3 days): 30% minimum, reaches 100% at 72 hours
-// - Box 5 (1 week): 20% minimum, reaches 100% at 168 hours
-// - Box 6 (2 weeks): 10% minimum, reaches 100% at 336 hours
-// - Box 7 (1 month): 5% minimum, reaches 100% at 720 hours
+// BOX-SPECIFIC INTERVALS:
+// - Box 1: Immediate (always available)
+// - Box 2: 1 hour
+// - Box 3: 1 day (24 hours)
+// - Box 4: 3 days (72 hours)
+// - Box 5: 1 week (168 hours)
+// - Box 6: 2 weeks (336 hours)
+// - Box 7: 1 month (720 hours)
 //
 // SELECTION LOGIC:
-// 1. Calculate probability for each word based on box and time since review
-// 2. Use PostgreSQL's RANDOM() function for probabilistic selection
-// 3. Prioritize overdue words (100% probability) in ordering
-// 4. Secondary sort by probability descending, then random for variety
+// 1. Calculate progress ratio for each definition (time_elapsed / target_interval)
+// 2. Assign priority bucket based on progress ratio
+// 3. Sort by priority bucket, then by oldest reviewed
+// 4. Select first definition (deterministic, no randomness)
 //
 // BENEFITS:
-// - Never completely stuck (critical for user engagement)
-// - Maintains spaced repetition effectiveness (due words heavily favored)
-// - Smooth user experience (no hard cutoffs)
-// - Single query execution (no complex fallback logic)
-// - Scientifically sound (models natural memory decay)
-//
-// MONITORING:
-// The function logs detailed selection metrics including:
-// - Selected definition details (ID, box, time since review)
-// - Selection probability used
-// - Whether word was overdue
+// - 100% deterministic (same data = same result)
+// - Guaranteed selection (no "no words selected" errors)
+// - Respects Leitner intervals precisely
+// - Simple and efficient (no complex probability calculations)
+// - Easy to debug and test
 //
 // Parameters:
 // - userID: The user requesting a quiz
 // - wordlistID: The wordlist to select from
 //
 // Returns:
-// - NextDefinition with selected word/definition details and Leitner system metadata
-// - Error if no words exist in wordlist or database operations fail
-//
-// Checkout api/docs/PROBABILISTIC_LEITNER_IMPLEMENTATION.md for additional details
+// - NextDefinition with selected definition details and Leitner system metadata
+// - Error if no definitions exist in wordlist or database operations fail
 func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
-	// Probabilistic query that ensures words are always available
+	// Deterministic query that guarantees definition selection
 	query := `
-		WITH word_probabilities AS (
+		WITH definition_priorities AS (
 			SELECT 
 				def.id, lst.id AS lst_id, def.token, 
 				def.part_of_speech, def.language, def.is_verb_type, def.meaning, def.examples, 
@@ -136,38 +124,34 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				di.url as image_url, di.description as image_description, 
 				wd.word_id AS word_id,
 				lst.updated_at,
+				-- Calculate hours since last review
 				COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/3600, 0) as hours_since_review,
-				-- Calculate selection probability based on box and time
+				-- Get target interval hours based on box
+				CASE lst.box_id
+					WHEN 1 THEN 0     -- Always available
+					WHEN 2 THEN 1     -- 1 hour
+					WHEN 3 THEN 24    -- 1 day
+					WHEN 4 THEN 72    -- 3 days
+					WHEN 5 THEN 168   -- 1 week
+					WHEN 6 THEN 336   -- 2 weeks
+					WHEN 7 THEN 720   -- 1 month
+				END as target_hours,
+				-- Calculate progress ratio (how close to target interval)
 				CASE 
-					-- Box 1: Always 100% probability (immediate review)
-					WHEN lst.box_id = 1 THEN 1.0
-					
-					-- Box 2: 70% minimum, reaches 100% at 1 hour
-					WHEN lst.box_id = 2 THEN 
-						GREATEST(0.7, LEAST(1.0, 0.7 + (0.3 * COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/3600, 0))))
-					
-					-- Box 3: 50% minimum, reaches 100% at 24 hours
-					WHEN lst.box_id = 3 THEN 
-						GREATEST(0.5, LEAST(1.0, 0.5 + (0.5 * COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/(3600 * 24), 0))))
-					
-					-- Box 4: 30% minimum, reaches 100% at 72 hours (3 days)
-					WHEN lst.box_id = 4 THEN 
-						GREATEST(0.3, LEAST(1.0, 0.3 + (0.7 * COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/(3600 * 72), 0))))
-					
-					-- Box 5: 20% minimum, reaches 100% at 168 hours (1 week)
-					WHEN lst.box_id = 5 THEN 
-						GREATEST(0.2, LEAST(1.0, 0.2 + (0.8 * COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/(3600 * 168), 0))))
-					
-					-- Box 6: 10% minimum, reaches 100% at 336 hours (2 weeks)
-					WHEN lst.box_id = 6 THEN 
-						GREATEST(0.1, LEAST(1.0, 0.1 + (0.9 * COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/(3600 * 336), 0))))
-					
-					-- Box 7: 5% minimum, reaches 100% at 720 hours (1 month)
-					WHEN lst.box_id = 7 THEN 
-						GREATEST(0.05, LEAST(1.0, 0.05 + (0.95 * COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/(3600 * 720), 0))))
-				END AS selection_probability,
-				-- Random value for this query execution
-				RANDOM() AS roll
+					WHEN lst.box_id = 1 THEN 1.0  -- Box 1 always 100% ready
+					ELSE COALESCE(
+						EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/3600 / 
+						NULLIF(CASE lst.box_id
+							WHEN 2 THEN 1
+							WHEN 3 THEN 24
+							WHEN 4 THEN 72
+							WHEN 5 THEN 168
+							WHEN 6 THEN 336
+							WHEN 7 THEN 720
+						END, 0), 
+						0
+					)
+				END as progress_ratio
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
 			JOIN word_definitions wd ON def.id = wd.definition_id
@@ -185,16 +169,19 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 			id, token, part_of_speech, language, is_verb_type, meaning, examples, inflections, 
 			lst_id, box_id, sounds, phonetic_notations, 
 			COALESCE(image_url,''), word_id, COALESCE(image_description,''),
-			hours_since_review, selection_probability
-		FROM word_probabilities
-		WHERE roll <= selection_probability  -- Probabilistic selection
+			hours_since_review, progress_ratio
+		FROM definition_priorities
 		ORDER BY 
-			-- Prioritize words that are "overdue" (100% probability)
-			CASE WHEN selection_probability >= 1.0 THEN 0 ELSE 1 END,
-			-- Then by how close they are to being due
-			selection_probability DESC,
-			-- Add some randomness for variety
-			RANDOM()
+			-- Priority 1: Overdue definitions (progress >= 100%)
+			CASE WHEN progress_ratio >= 1.0 THEN 0 ELSE 1 END,
+			-- Priority 2: Due soon (80-100% of interval)
+			CASE WHEN progress_ratio >= 0.8 THEN 0 ELSE 1 END,
+			-- Priority 3: Available (50-80% of interval)
+			CASE WHEN progress_ratio >= 0.5 THEN 0 ELSE 1 END,
+			-- Within same priority, pick oldest reviewed first
+			COALESCE(updated_at, TIMESTAMP '1970-01-01') ASC,
+			-- Final tiebreaker: definition ID for absolute determinism
+			id ASC
 		LIMIT 1;
 	`
 
@@ -211,37 +198,57 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	defer rows.Close()
 
 	if !rows.Next() {
-		// This should rarely happen with probabilistic selection unless there are truly no words
-		common.Logger.Warn("no words selected even with probabilistic selection",
-			"userID", userID,
-			"wordlistID", wordlistID)
+		// Debug: Let's check what's happening
+		debugQuery := `
+			SELECT COUNT(*) as total_words,
+				   COUNT(CASE WHEN w.learned = FALSE THEN 1 END) as unlearned_words,
+				   COUNT(CASE WHEN def.meaning IS NOT NULL THEN 1 END) as with_meaning,
+				   COUNT(CASE WHEN lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW() THEN 1 END) as not_skipped
+			FROM leitner_system_tracking lst 
+			JOIN definitions def ON lst.definition_id = def.id
+			JOIN word_definitions wd ON def.id = wd.definition_id
+			JOIN words w ON wd.word_id = w.id
+			WHERE lst.user_id = $1 AND w.wordlist_id = $2
+		`
+		var totalWords, unlearnedWords, withMeaning, notSkipped int
+		err := db.QueryRow(context.Background(), debugQuery, userID, wordlistID).Scan(&totalWords, &unlearnedWords, &withMeaning, &notSkipped)
+		if err == nil {
+			common.Logger.Error("no definitions selected - debug info",
+				"userID", userID,
+				"wordlistID", wordlistID,
+				"totalWords", totalWords,
+				"unlearnedWords", unlearnedWords,
+				"withMeaning", withMeaning,
+				"notSkipped", notSkipped)
+		}
+		
 		return nil, errors.New("no definitions found in wordlist")
 	}
 
 	definition := model.Definition{}
 	result := NextDefinition{Definition: &definition}
 	var hoursSinceReview float64
-	var selectionProbability float64
+	var progressRatio float64
 
 	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
 		&definition.Meaning, &definition.Examples,
 		&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
 		&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription,
-		&hoursSinceReview, &selectionProbability)
+		&hoursSinceReview, &progressRatio)
 
 	if err != nil {
 		return nil, err
 	}
 
-	// Log probabilistic selection for monitoring
-	common.Logger.Info("probabilistic_selection",
+	// Log deterministic selection for monitoring
+	common.Logger.Info("deterministic_selection",
 		"userID", userID,
 		"wordlistID", wordlistID,
 		"definitionID", definition.ID,
 		"boxID", result.BoxID,
 		"hoursSinceReview", hoursSinceReview,
-		"selectionProbability", selectionProbability,
-		"wasOverdue", selectionProbability >= 1.0)
+		"progressRatio", progressRatio,
+		"wasOverdue", progressRatio >= 1.0)
 
 	// Load example audio files for this definition
 	definitionRepo := repository.NewDefinitionRepository(db)
