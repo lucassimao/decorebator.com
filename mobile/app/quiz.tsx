@@ -253,7 +253,7 @@ const QuizScreen: React.FC = () => {
     }
   };
 
-  if ((isLoading || !quiz) && quizCount === 0) {
+  if ((isFetching || !quiz) && quizCount === 0) {
     return (
       <ImageBackground
         source={require("@/assets/images/dashboard-bg.png")}
@@ -263,7 +263,7 @@ const QuizScreen: React.FC = () => {
         <SafeAreaView style={styles.container}>
           <View style={[styles.quizCard, { margin: 20 }]}>
             <QuizLoadingState
-              isLoading={isLoading}
+              isLoading={isFetching}
               hasTimeout={loadingTimeout}
               error={error}
               onRetry={handleRetryQuiz}

@@ -29,7 +29,7 @@ Where:
 | 4 | 3 days | 30% | Lower availability |
 | 5 | 1 week | 20% | Low availability |
 | 6 | 2 weeks | 10% | Very low availability |
-| 7 | 1 month | 5% | Minimal but guaranteed availability |
+| 7 | 1 month | 15% | Increased minimum availability |
 
 ## Implementation Details
 
@@ -84,8 +84,8 @@ ORDER BY
 
 **After probabilistic fix:**
 - All 20 words in Box 7, all reviewed within last 24 hours
-- Each word: 5% + (0.95 × 24/720) = 8.17% probability
-- **Result: User gets quiz with 99.7% certainty** ✅
+- Each word: 15% + (0.85 × 24/720) = 17.8% probability
+- **Result: User gets quiz with 100% certainty using weighted random selection** ✅
 
 ### Example 3: Realistic Learning Progression
 
@@ -109,7 +109,7 @@ Expected: Lower boxes heavily favored, system works as intended
 **Day 90 - Advanced learner (CRITICAL SCENARIO):**
 ```
 Box 6: 3 words (10-100% each)
-Box 7: 17 words (5-100% each)
+Box 7: 17 words (15-100% each)
 Traditional: Often no words available
 Probabilistic: Always something available, respects timing
 ```
@@ -120,11 +120,11 @@ For a Box 7 word (720-hour target interval):
 
 | Hours Since Review | Probability | Description |
 |-------------------|-------------|-------------|
-| 0 (just reviewed) | 5.0% | Minimal chance |
-| 72 (3 days) | 14.5% | Slight increase |
-| 168 (1 week) | 27.1% | Moderate chance |
-| 360 (15 days) | 52.5% | Half-way point |
-| 540 (22.5 days) | 76.1% | Getting due |
+| 0 (just reviewed) | 15.0% | Minimal chance |
+| 72 (3 days) | 23.5% | Slight increase |
+| 168 (1 week) | 34.9% | Moderate chance |
+| 360 (15 days) | 57.5% | Half-way point |
+| 540 (22.5 days) | 78.7% | Getting due |
 | 720 (30 days) | 100% | Fully due |
 | 1000 (41+ days) | 100% | Overdue |
 
@@ -135,20 +135,18 @@ For a Box 7 word (720-hour target interval):
 - Word 2: 75% (Box 5, approaching due)
 - Word 3: 30% (Box 4, not quite due)
 - Word 4: 10% (Box 6, recently reviewed)
-- Word 5: 5% (Box 7, just reviewed)
+- Word 5: 15% (Box 7, just reviewed)
 
-**Query execution:**
-1. Generate random values: [0.2, 0.8, 0.15, 0.95, 0.03]
-2. Check `roll <= probability`:
-   - Word 1: 0.2 ≤ 1.0 ✅ (selected)
-   - Word 2: 0.8 ≤ 0.75 ❌ 
-   - Word 3: 0.15 ≤ 0.30 ✅ (selected)
-   - Word 4: 0.95 ≤ 0.10 ❌
-   - Word 5: 0.03 ≤ 0.05 ✅ (selected)
-
-3. **Available candidates:** Words 1, 3, 5
-4. **Ordering:** Word 1 (overdue) → Word 3 (higher probability) → Word 5
-5. **Selected:** Word 1 (as expected - overdue word prioritized)
+**Query execution (NEW WEIGHTED RANDOM METHOD):**
+1. Calculate weighted random scores: `RANDOM() / (probability + 0.001)`
+   - Word 1: 0.2 / 1.001 = 0.20 (lowest score, highest priority)
+   - Word 2: 0.8 / 0.751 = 1.07
+   - Word 3: 0.15 / 0.301 = 0.50
+   - Word 4: 0.95 / 0.101 = 9.41
+   - Word 5: 0.03 / 0.151 = 0.20
+2. Order by weighted random (lowest first):
+   - Word 1 or 5 selected (both have lowest scores)
+3. **GUARANTEED SELECTION** - No possibility of "no words selected" error
 
 ### Example 6: Monitoring Logs
 

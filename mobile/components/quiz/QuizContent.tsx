@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -39,6 +39,9 @@ export const QuizContent: React.FC<QuizContentProps> = ({
   const { playing: isPlaying,didJustFinish } = useAudioPlayerStatus(player);
   const [imageLoading, setImageLoading] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
+  const [imageRetryCount, setImageRetryCount] = useState(0);
+  const imageLoadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Reset player
   useEffect(() => {
@@ -59,11 +62,33 @@ export const QuizContent: React.FC<QuizContentProps> = ({
   useEffect(() => {
     if (quiz?.type === "WORD_FROM_IMAGE" && quiz.value !== currentImageUrl) {
       setImageLoading(true);
+      setImageError(false);
+      setImageRetryCount(0);
       setCurrentImageUrl(quiz.value);
     }
   }, [quiz?.value, quiz?.type, currentImageUrl]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (imageLoadTimeoutRef.current) {
+        clearTimeout(imageLoadTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const playAudio = () => player.play();
+
+  const retryImageLoad = () => {
+    setImageError(false);
+    setImageLoading(true);
+    setImageRetryCount((prev) => prev + 1);
+    // Force reload by adding/updating timestamp query parameter
+    const baseUrl = quiz.value.split('?')[0];
+    const existingParams = quiz.value.includes('?') ? quiz.value.split('?')[1] : '';
+    const timestamp = Date.now();
+    setCurrentImageUrl(`${baseUrl}?retry=${timestamp}${existingParams ? '&' + existingParams : ''}`);
+  };
 
   const hideSquareBracketContent = (text: string): string => {
     return text.replace(/\[([^\]]+)\]/g, "_____");
@@ -144,7 +169,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
         return (
           <View style={styles.questionContainer}>
             <View style={styles.imageContainer}>
-              {imageLoading && (
+              {imageLoading && !imageError && (
                 <View style={styles.imageLoadingContainer}>
                   <ActivityIndicator size="large" color="#FF7B54" />
                   <Text style={styles.imageLoadingText}>
@@ -152,22 +177,75 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                   </Text>
                 </View>
               )}
-              <Image
-                source={{ uri: quiz.value }}
-                style={[
-                  styles.questionImage,
-                  imageLoading && styles.hiddenImage,
-                ]}
-                resizeMode="contain"
-                onLoadStart={() => setImageLoading(true)}
-                onLoadEnd={() => setImageLoading(false)}
-                onError={() => {
-                  setImageLoading(false);
-                  Alert.alert(t("common.error"), t("quiz.imageLoadError"));
-                }}
-              />
+              {imageError ? (
+                <View style={styles.imageErrorContainer}>
+                  <Ionicons name="image-outline" size={48} color="#B2BEC3" />
+                  <Text style={styles.imageErrorText}>
+                    {t("quiz.imageLoadError")}
+                  </Text>
+                  <View style={styles.imageErrorActions}>
+                    <TouchableOpacity
+                      style={styles.retryButton}
+                      onPress={retryImageLoad}
+                    >
+                      <Ionicons name="refresh" size={20} color="#FFFFFF" />
+                      <Text style={styles.retryButtonText}>
+                        {t("common.retry")}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.skipImageButton}
+                      onPress={onSkipQuestion}
+                    >
+                      <Text style={styles.skipImageButtonText}>
+                        {t("quiz.skipQuestion")}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  {imageRetryCount > 0 && (
+                    <Text style={styles.retryCountText}>
+                      {t("quiz.retryAttempts", { count: imageRetryCount })}
+                    </Text>
+                  )}
+                </View>
+              ) : (
+                <Image
+                  source={{ uri: currentImageUrl || quiz.value }}
+                  style={[
+                    styles.questionImage,
+                    (imageLoading || imageError) && styles.hiddenImage,
+                  ]}
+                  resizeMode="contain"
+                  onLoadStart={() => {
+                    setImageLoading(true);
+                    setImageError(false);
+                    // Set a timeout for image loading (15 seconds)
+                    if (imageLoadTimeoutRef.current) {
+                      clearTimeout(imageLoadTimeoutRef.current);
+                    }
+                    imageLoadTimeoutRef.current = setTimeout(() => {
+                      setImageLoading(false);
+                      setImageError(true);
+                    }, 15000);
+                  }}
+                  onLoadEnd={() => {
+                    if (imageLoadTimeoutRef.current) {
+                      clearTimeout(imageLoadTimeoutRef.current);
+                    }
+                    setImageLoading(false);
+                    setImageError(false);
+                  }}
+                  onError={() => {
+                    if (imageLoadTimeoutRef.current) {
+                      clearTimeout(imageLoadTimeoutRef.current);
+                    }
+                    setImageLoading(false);
+                    setImageError(true);
+                  }}
+                />
+              )}
             </View>
-            {quiz.imageDescription && !imageLoading && (
+            {quiz.imageDescription && !imageLoading && !imageError && (
               <Text style={styles.imageDescription}>
                 {hideSquareBracketContent(quiz.imageDescription)}
               </Text>
@@ -389,6 +467,58 @@ const styles = StyleSheet.create({
   },
   hiddenImage: {
     opacity: 0,
+  },
+  imageErrorContainer: {
+    width: SCREEN_WIDTH - 80,
+    height: 200,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  imageErrorText: {
+    fontSize: 16,
+    color: "#636E72",
+    marginTop: 12,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  imageErrorActions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  retryButton: {
+    flexDirection: "row",
+    backgroundColor: "#FF7B54",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    gap: 8,
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  skipImageButton: {
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: "#E0E0E0",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  skipImageButtonText: {
+    color: "#636E72",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  retryCountText: {
+    fontSize: 12,
+    color: "#B2BEC3",
+    marginTop: 12,
   },
   writeInputContainer: {
     marginTop: 24,
