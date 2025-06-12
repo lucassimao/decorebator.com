@@ -342,7 +342,7 @@ func (h *UserRoutes) DeleteProfile(c *gin.Context) {
 	// Get user from context (set by auth middleware)
 	userIDAny, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found."})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found."})
 		return
 	}
 
