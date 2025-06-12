@@ -287,17 +287,23 @@ jobs:
           # Run golangci-lint only on files changed since the merge base
           golangci-lint run --timeout=5m --new-from-rev=$MERGE_BASE
 
-      - name: Install and run gosec security scanner on changed files
+      - name: Install and run gosec security scanner
         if: steps.changed-files.outputs.has_go_files == 'true'
         run: |
-          # Install gosec
-          echo "Installing gosec..."
-          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+          # Try alternative installation method
+          echo "Installing gosec via binary download..."
+          
+          # Download gosec binary directly
+          GOSEC_VERSION="2.21.2"
+          wget -q https://github.com/securecodewarrior/gosec/releases/download/v${GOSEC_VERSION}/gosec_${GOSEC_VERSION}_linux_amd64.tar.gz
+          tar -xzf gosec_${GOSEC_VERSION}_linux_amd64.tar.gz
+          chmod +x gosec
+          sudo mv gosec /usr/local/bin/
           
           # Verify installation
           gosec --version
           
-          # Get changed files for gosec (need absolute paths)
+          # Get changed files for gosec
           BASE_SHA="${{ github.event.pull_request.base.sha }}"
           HEAD_SHA="${{ github.event.pull_request.head.sha }}"
           CHANGED_GO_FILES=$(git diff --name-only --diff-filter=AM $BASE_SHA...$HEAD_SHA | grep '\.go$' | grep '^api/' | tr '\n' ' ' || echo "")
@@ -316,16 +322,11 @@ jobs:
             echo "{\"issues\": [], \"stats\": {\"files\": 0, \"lines\": 0, \"nosec\": 0, \"found\": 0}}" > gosec-report.json
           fi
       
-      - name: Run gosec on full codebase (fallback)
+      - name: Skip gosec when no Go files changed
         if: steps.changed-files.outputs.has_go_files == 'false'
         run: |
-          # Install gosec if not already installed
-          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
-          
-          # Run full gosec scan when no Go files are changed (shouldn't happen due to path filtering)
-          echo "Running full gosec security scan..."
-          gosec -no-fail -fmt json -out gosec-report.json ./... || true
-          gosec -quiet ./... || true
+          echo "No Go files changed, skipping gosec security scan"
+          echo "{\"issues\": [], \"stats\": {\"files\": 0, \"lines\": 0, \"nosec\": 0, \"found\": 0}}" > gosec-report.json
 
       - name: Upload gosec results
         uses: actions/upload-artifact@v4
