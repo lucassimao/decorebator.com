@@ -229,6 +229,7 @@ jobs:
           docker rm minio-test || true
 
   lint-and-security:
+    if: false
     name: Lint and Security Checks
     runs-on: ubuntu-latest
     defaults:

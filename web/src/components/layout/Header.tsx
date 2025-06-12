@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
+import Image from 'next/image';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 
 const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFeaturesDropdownOpen, setIsFeaturesDropdownOpen] = useState(false);
+  const [dropdownTimeout, setDropdownTimeout] = useState<NodeJS.Timeout | null>(null);
   const t = useTranslations('navigation');
   const locale = useLocale();
 
@@ -24,6 +26,30 @@ const Header: React.FC = () => {
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+
+  const handleDropdownEnter = () => {
+    if (dropdownTimeout) {
+      clearTimeout(dropdownTimeout);
+      setDropdownTimeout(null);
+    }
+    setIsFeaturesDropdownOpen(true);
+  };
+
+  const handleDropdownLeave = () => {
+    const timeout = setTimeout(() => {
+      setIsFeaturesDropdownOpen(false);
+    }, 150); // 150ms delay to prevent flickering
+    setDropdownTimeout(timeout);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (dropdownTimeout) {
+        clearTimeout(dropdownTimeout);
+      }
+    };
+  }, [dropdownTimeout]);
 
   const featureLinks = [
     { title: 'AI Content Generation', href: `/features/ai-content` },
@@ -43,8 +69,15 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-3 group cursor-pointer">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#FF7B54] to-orange-600 rounded-xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300">
-              <i className="fas fa-book-open text-white text-lg"></i>
+            <div className="w-10 h-10 flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300">
+              <Image
+                src="/logo.png"
+                alt="Decorebator Logo"
+                width={40}
+                height={40}
+                className="w-10 h-10"
+                priority
+              />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-[#FF7B54] to-orange-600 bg-clip-text text-transparent">
               Decorebator
@@ -60,8 +93,8 @@ const Header: React.FC = () => {
             {/* Features Dropdown */}
             <div 
               className="relative"
-              onMouseEnter={() => setIsFeaturesDropdownOpen(true)}
-              onMouseLeave={() => setIsFeaturesDropdownOpen(false)}
+              onMouseEnter={handleDropdownEnter}
+              onMouseLeave={handleDropdownLeave}
             >
               <button className="text-[#636E72] hover:text-[#FF7B54] transition-colors duration-300 font-medium flex items-center">
                 {t('features')}
@@ -69,20 +102,22 @@ const Header: React.FC = () => {
               </button>
               
               {isFeaturesDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-64 bg-white/95 backdrop-blur-lg shadow-xl rounded-xl border border-gray-100 py-2 z-50">
-                  <Link href={`/${locale}/#features`} className="block px-4 py-2 text-sm text-[#636E72] hover:text-[#FF7B54] hover:bg-orange-50 transition-colors">
-                    View All Features
-                  </Link>
-                  <div className="border-t border-gray-100 my-2"></div>
-                  {featureLinks.map((feature) => (
-                    <Link
-                      key={feature.href}
-                      href={`/${locale}${feature.href}`}
-                      className="block px-4 py-2 text-sm text-[#636E72] hover:text-[#FF7B54] hover:bg-orange-50 transition-colors"
-                    >
-                      {feature.title}
+                <div className="absolute top-full left-0 pt-2 w-64 z-50">
+                  <div className="bg-white/95 backdrop-blur-lg shadow-xl rounded-xl border border-gray-100 py-2">
+                    <Link href={`/${locale}/#features`} className="block px-4 py-2 text-sm text-[#636E72] hover:text-[#FF7B54] hover:bg-orange-50 transition-colors">
+                      View All Features
                     </Link>
-                  ))}
+                    <div className="border-t border-gray-100 my-2"></div>
+                    {featureLinks.map((feature) => (
+                      <Link
+                        key={feature.href}
+                        href={`/${locale}${feature.href}`}
+                        className="block px-4 py-2 text-sm text-[#636E72] hover:text-[#FF7B54] hover:bg-orange-50 transition-colors"
+                      >
+                        {feature.title}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

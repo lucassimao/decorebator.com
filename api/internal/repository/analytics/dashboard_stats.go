@@ -59,9 +59,9 @@ func (r *DashboardStatsRepository) GetPracticeTime(ctx context.Context, userID, 
 	var practiceTime []model.PracticeTimeStats
 	for rows.Next() {
 		var p model.PracticeTimeStats
-		err := rows.Scan(&p.Date, &p.PracticeTimeMs, &p.PracticeTimeMinutes, &p.QuizCount)
-		if err != nil {
-			return nil, err
+		scanErr := rows.Scan(&p.Date, &p.PracticeTimeMs, &p.PracticeTimeMinutes, &p.QuizCount)
+		if scanErr != nil {
+			return nil, scanErr
 		}
 		practiceTime = append(practiceTime, p)
 	}

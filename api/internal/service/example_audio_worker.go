@@ -15,6 +15,11 @@ import (
 	"github.com/riverqueue/river"
 )
 
+const (
+	rateLimitExceeded     = "rate_limit_exceeded"
+	billingHardLimitReached = "billing_hard_limit_reached"
+)
+
 type ExampleAudioArgs struct {
 	DefinitionID int64 `json:"definitionId"`
 	WordID       int64 `json:"wordId"`
@@ -80,10 +85,10 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 			logger.Error("OpenAI error for example", "example", exampleItem.ExampleText, "error", response.Error)
 
 			switch response.Error.Code {
-			case "rate_limit_exceeded":
+			case rateLimitExceeded:
 				// Return error to trigger retry for all examples
 				return river.JobSnooze(time.Minute + (time.Duration(rand.Intn(60)) * time.Second))
-			case "billing_hard_limit_reached":
+			case billingHardLimitReached:
 				logger.Warn(response.Error.Message)
 			}
 

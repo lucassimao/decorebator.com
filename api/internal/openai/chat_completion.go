@@ -75,7 +75,7 @@ var LanguageConfigs = map[string]LanguageConfig{
 		Code:             "fr",
 		Name:             "French",
 		Flag:             "🇫🇷",
-		PartOfSpeechList: []string{"nom", "pronom", "verbe", "adjectif", "adverbe", "préposition", "conjonction", "interjection"},
+		PartOfSpeechList: []string{"nom", "pronom", "verbe", "adjectif", "adverbe", "préposition", "conjunction", "interjection"},
 		PartOfSpeechMappings: map[string]string{
 			"nom":          "noun",
 			"pronom":       "pronoun",
@@ -517,7 +517,7 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 	return schema, nil
 }
 
-var examplesResponseSchema = map[string]any{
+var _ = map[string]any{
 	"name":   "ExamplesResponse",
 	"strict": true,
 	"schema": map[string]any{

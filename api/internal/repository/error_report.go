@@ -130,8 +130,8 @@ func (r *ErrorReportRepository) GetErrorReportStats(ctx context.Context, startTi
 	for rows.Next() {
 		var errorType string
 		var count int64
-		if err := rows.Scan(&errorType, &count); err != nil {
-			return nil, err
+		if scanErr := rows.Scan(&errorType, &count); scanErr != nil {
+			return nil, scanErr
 		}
 		stats.ReportsByType[errorType] = count
 	}
@@ -156,8 +156,8 @@ func (r *ErrorReportRepository) GetErrorReportStats(ctx context.Context, startTi
 
 	for rows.Next() {
 		var userStats UserReportStats
-		if err := rows.Scan(&userStats.UserID, &userStats.ReportCount, &userStats.SubscriptionPlan); err != nil {
-			return nil, err
+		if scanErr := rows.Scan(&userStats.UserID, &userStats.ReportCount, &userStats.SubscriptionPlan); scanErr != nil {
+			return nil, scanErr
 		}
 		stats.ReportsByUser = append(stats.ReportsByUser, userStats)
 	}

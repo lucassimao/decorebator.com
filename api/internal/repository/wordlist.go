@@ -118,8 +118,8 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 			dest = append(dest, w.WordsLearnedCount)
 		}
 
-		if err := rows.Scan(dest...); err != nil {
-			return nil, err
+		if scanErr := rows.Scan(dest...); scanErr != nil {
+			return nil, scanErr
 		}
 		wordlists = append(wordlists, &w)
 	}

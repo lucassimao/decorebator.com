@@ -174,8 +174,8 @@ func (r *BoxDistributionRepository) GetBoxDistributionHistory(ctx context.Contex
 		var date time.Time
 		var b1, b2, b3, b4, b5, b6, b7 int
 
-		if err := rows.Scan(&date, &b1, &b2, &b3, &b4, &b5, &b6, &b7); err != nil {
-			return nil, err
+		if scanErr := rows.Scan(&date, &b1, &b2, &b3, &b4, &b5, &b6, &b7); scanErr != nil {
+			return nil, scanErr
 		}
 
 		dist := map[string]interface{}{

@@ -32,7 +32,7 @@ func GetWordByWordlist(wordlistID, userID int64, onlyWithDefinitions bool) ([]Wo
 }
 
 func GetWordByID(id int64) (*Word, error) {
-	return wordRepository.GetById(id)
+	return wordRepository.GetByID(id)
 }
 
 func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
@@ -87,7 +87,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		}
 
 		var latestAudioURL string
-		latestAudioURL, err = wordRepository.GetLatestAudioUrl(trimmedName)
+		latestAudioURL, err = wordRepository.GetLatestAudioURL(trimmedName)
 
 		if err != nil {
 			if _, workerErr := TriggerTextToSpeechWorker(word.ID, nil, &tx); workerErr != nil {

@@ -22,12 +22,12 @@ func getUserFromContext(c *gin.Context) (*model.User, bool) {
 }
 
 // setupAnalyticsHandler is a helper function to reduce duplication in analytics handlers
-func setupAnalyticsHandler(c *gin.Context, defaultDays, maxDays int) (wordlistID int64, days int, userID int64, analyticsService service.AnalyticsServiceInterface, ok bool) {
+func setupAnalyticsHandler(c *gin.Context, defaultDays, maxDays int) (wordlistID int64, days int, analyticsService service.AnalyticsServiceInterface, ok bool) {
 	var err error
 	wordlistID, err = strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
-		return 0, 0, 0, nil, false
+		return 0, 0, nil, false
 	}
 
 	// Get days parameter
@@ -38,19 +38,19 @@ func setupAnalyticsHandler(c *gin.Context, defaultDays, maxDays int) (wordlistID
 		}
 	}
 
-	userID = c.GetInt64("userID")
+	userID := c.GetInt64("userID")
 
 	// Verify wordlist ownership
 	wordlist, err := service.GetWordlistByID(wordlistID, userID)
 	if err != nil || wordlist == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
-		return 0, 0, 0, nil, false
+		return 0, 0, nil, false
 	}
 
 	userObj, userOk := getUserFromContext(c)
 	if !userOk {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found in context"})
-		return 0, 0, 0, nil, false
+		return 0, 0, nil, false
 	}
 
 	analyticsService, err = service.NewAnalyticsService(service.AnalyticsConfig{
@@ -61,10 +61,10 @@ func setupAnalyticsHandler(c *gin.Context, defaultDays, maxDays int) (wordlistID
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
-		return 0, 0, 0, nil, false
+		return 0, 0, nil, false
 	}
 
-	return wordlistID, days, userID, analyticsService, true
+	return wordlistID, days, analyticsService, true
 }
 
 // getCacheTTL returns the cache TTL based on user's subscription
@@ -145,7 +145,7 @@ func getLearningProgress(c *gin.Context) {
 	// Get days parameter (default 30)
 	days := 30
 	if d := c.Query("days"); d != "" {
-		if parsed, err := strconv.Atoi(d); err == nil && parsed > 0 && parsed <= 365 {
+		if parsed, parseErr := strconv.Atoi(d); parseErr == nil && parsed > 0 && parsed <= 365 {
 			days = parsed
 		}
 	}
@@ -191,7 +191,7 @@ func getLearningProgress(c *gin.Context) {
 
 // getBoxDistributionHistory returns historical box distribution
 func getBoxDistributionHistory(c *gin.Context) {
-	wordlistID, days, _, analyticsService, ok := setupAnalyticsHandler(c, 30, 365)
+	wordlistID, days, analyticsService, ok := setupAnalyticsHandler(c, 30, 365)
 	if !ok {
 		return
 	}
@@ -211,7 +211,7 @@ func getBoxDistributionHistory(c *gin.Context) {
 
 // getQuizTypePerformance returns performance statistics by quiz type for a specific wordlist
 func getQuizTypePerformance(c *gin.Context) {
-	wordlistID, _, _, analyticsService, ok := setupAnalyticsHandler(c, 0, 0)
+	wordlistID, _, analyticsService, ok := setupAnalyticsHandler(c, 0, 0)
 	if !ok {
 		return
 	}
@@ -277,7 +277,7 @@ func getCurrentBoxDistribution(c *gin.Context) {
 
 // getPracticeTime returns daily practice time statistics for a wordlist
 func getPracticeTime(c *gin.Context) {
-	wordlistID, days, _, analyticsService, ok := setupAnalyticsHandler(c, 7, 30)
+	wordlistID, days, analyticsService, ok := setupAnalyticsHandler(c, 7, 30)
 	if !ok {
 		return
 	}
