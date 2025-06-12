@@ -1,0 +1,651 @@
+ Analytics System Architecture Redesign - Implementation Guide
+
+  🎯 Overview
+
+  This document provides detailed implementation instructions for redesigning the analytics system to improve performance, scalability, and maintainability. The key changes include:
+
+  1. Eliminating the N×8 API call problem in the dashboard ✅ COMPLETED
+  2. Adding Redis caching with tier-based TTLs (1 hour for free, 1 minute for premium) ✅ COMPLETED
+  3. Creating batch endpoints for efficient data fetching ✅ COMPLETED
+  4. Removing materialized views in favor of cached real-time queries ✅ COMPLETED
+  5. Fixing connection pooling issues ✅ COMPLETED
+  6. Adding proper database indexes ✅ COMPLETED
+
+  📋 Table of Contents
+
+  1. #phase-1-critical-performance-fixes ✅ COMPLETED
+  2. #phase-2-caching-infrastructure ✅ COMPLETED
+  3. #phase-3-service-layer-refactoring ✅ COMPLETED
+  4. #phase-4-mobile-app-optimization ✅ COMPLETED
+  5. #phase-5-cleanup-and-migration ✅ COMPLETED
+
+  ---
+  ## Implementation Status
+
+  ### ✅ Phase 1: Critical Performance Fixes (COMPLETED)
+
+  **What was done:**
+  1. Created database migration `000044_add_analytics_performance_indexes.up.sql` with 6 performance indexes
+     - Note: Removed CONCURRENTLY keyword due to transaction constraints
+  2. Created `api/internal/model/analytics_types.go` with new types
+  3. Added `GetAllWordlistsProgress` batch method to repository
+  4. Added corresponding service method
+  5. Created new HTTP endpoint `/analytics/progress-summary`
+
+  ### ✅ Phase 2: Caching Infrastructure (COMPLETED)
+
+  **What was done:**
+  1. Updated `.env.example` with Redis configuration
+  2. Created `api/internal/common/redis.go` with singleton Redis client
+  3. Created `api/internal/service/analytics_cached.go` implementing caching layer
+  4. Refactored analytics service architecture:
+     - Created `AnalyticsServiceInterface` for both cached and non-cached implementations
+     - Implemented single factory with configuration pattern
+     - Removed userID/wordlistID from interface method signatures
+     - Replaced subscriptionPlan with cacheTTL field
+  5. Updated all HTTP handlers to use new factory pattern
+
+  **Key architectural improvements implemented:**
+  - Service instantiation captures user context at creation time
+  - Graceful fallback: if Redis unavailable, uses direct database queries
+  - Cache TTLs: 1 hour for free users, 1 minute for premium users
+  - Simplified interface with shorter method names (Stats, Progress, WordMastery, etc.)
+  - Configuration-based factory pattern with UseCache flag
+
+  ### ✅ Phase 3: Service Layer Refactoring (COMPLETED)
+
+  **What was done:**
+  1. Added cache invalidation logic to `SaveQuizResult` in leitner_system_strategy.go
+  2. Implemented asynchronous cache invalidation for premium users
+  3. Added proper error handling and logging for monitoring
+
+  **Key features:**
+  - Premium users get real-time analytics updates after each quiz
+  - Cache invalidation runs in background (non-blocking)
+  - Graceful handling of Redis unavailability
+  - Comprehensive logging for troubleshooting
+  
+  **Enhancement implemented:**
+  - Added `isPremium` parameter to SaveQuizResult to avoid extra DB query
+  - Quiz handler extracts premium status from user context
+  - Simplified goroutine logic - no database access needed
+
+  ---
+  Phase 1: Critical Performance Fixes
+
+  1.1 Database Indexes ✅ COMPLETED
+
+  Migration file: 000044_add_analytics_performance_indexes.up.sql
+
+  Note: CONCURRENTLY was removed due to transaction constraints in migrations.
+
+  Indexes created:
+  - idx_word_mastery_overview: Composite index for overview queries
+  - idx_learning_progress_lookup: Learning progress lookups
+  - idx_words_analytics: Words lookup with learned=FALSE filter
+  - idx_word_mastery_progress: Progress summary queries
+  - idx_words_wordlist_progress: Wordlist progress joins
+  - idx_learning_progress_streak: Streak calculations with attempts filter
+
+  1.2 New API Types ✅ COMPLETED
+
+  Created: api/internal/model/analytics_types.go
+
+  Types added:
+  - ProgressSummaryResponse: Container for all wordlists progress
+  - WordlistProgress: Individual wordlist progress data
+  - WordlistDashboardStats: Moved from service layer for consistency
+  - CacheableAnalyticsData: Interface for cache key generation
+
+  1.3 Create Batch Progress Repository Method ✅ COMPLETED
+
+  Added to api/internal/repository/analytics.go:
+
+  // GetAllWordlistsProgress retrieves progress summary for all user's wordlists
+  func (r *AnalyticsRepository) GetAllWordlistsProgress(ctx context.Context, userID int64) ([]model.WordlistProgress, error) {
+      query := `
+          WITH wordlist_stats AS (
+              SELECT 
+                  w.wordlist_id,
+                  wl.name as wordlist_name,
+                  wl.language_code,
+                  COUNT(DISTINCT w.id) as total_words,
+                  COUNT(DISTINCT CASE WHEN wm.mastery_level >= 0.8 THEN w.id END) as words_mastered,
+                  CASE 
+                      WHEN COUNT(DISTINCT w.id) > 0 
+                      THEN ROUND(AVG(COALESCE(wm.mastery_level, 0)) * 100, 2)
+                      ELSE 0 
+                  END as progress_percent,
+                  MAX(lp.date) as last_activity_date
+              FROM words w
+              JOIN wordlists wl ON w.wordlist_id = wl.id
+              LEFT JOIN word_mastery wm ON w.id = wm.word_id AND w.user_id = wm.user_id
+              LEFT JOIN learning_progress lp ON w.wordlist_id = lp.wordlist_id AND w.user_id = lp.user_id
+              WHERE w.user_id = $1 
+                  AND w.learned = FALSE
+                  AND wl.deleted_at IS NULL
+              GROUP BY w.wordlist_id, wl.name, wl.language_code
+          ),
+          streaks AS (
+              SELECT 
+                  wordlist_id,
+                  COUNT(*) as current_streak
+              FROM (
+                  SELECT 
+                      wordlist_id,
+                      date,
+                      date - (ROW_NUMBER() OVER (PARTITION BY wordlist_id ORDER BY date DESC))::int AS streak_group
+                  FROM learning_progress
+                  WHERE user_id = $1 
+                      AND total_quiz_attempts > 0
+                      AND date >= CURRENT_DATE - INTERVAL '30 days'
+              ) streak_calc
+              WHERE streak_group = (
+                  SELECT streak_group 
+                  FROM (
+                      SELECT 
+                          date - (ROW_NUMBER() OVER (ORDER BY date DESC))::int AS streak_group
+                      FROM learning_progress
+                      WHERE user_id = $1 
+                          AND wordlist_id = streak_calc.wordlist_id
+                          AND total_quiz_attempts > 0
+                  ) sg
+                  WHERE date = CURRENT_DATE
+                  LIMIT 1
+              )
+              GROUP BY wordlist_id
+          )
+          SELECT 
+              ws.wordlist_id,
+              ws.wordlist_name,
+              ws.language_code,
+              ws.total_words,
+              ws.words_mastered,
+              ws.progress_percent,
+              COALESCE(s.current_streak, 0) as current_streak,
+              ws.last_activity_date
+          FROM wordlist_stats ws
+          LEFT JOIN streaks s ON ws.wordlist_id = s.wordlist_id
+          ORDER BY ws.wordlist_id;
+      `
+
+      rows, err := r.db.Query(ctx, query, userID)
+      if err != nil {
+          return nil, fmt.Errorf("failed to get wordlists progress: %w", err)
+      }
+      defer rows.Close()
+
+      var progress []model.WordlistProgress
+      for rows.Next() {
+          var wp model.WordlistProgress
+          err := rows.Scan(
+              &wp.WordlistID,
+              &wp.WordlistName,
+              &wp.LanguageCode,
+              &wp.TotalWords,
+              &wp.WordsMastered,
+              &wp.ProgressPercent,
+              &wp.CurrentStreak,
+              &wp.LastActivityDate,
+          )
+          if err != nil {
+              return nil, err
+          }
+          progress = append(progress, wp)
+      }
+
+      return progress, rows.Err()
+  }
+
+  1.4 Create Batch Progress Service Method ✅ COMPLETED
+
+  Added to api/internal/service/analytics.go
+
+  1.5 Create Batch Progress HTTP Endpoint ✅ COMPLETED
+
+  Added to api/internal/http/analytics.go:
+  - Route: GET /analytics/progress-summary
+  - Handler: getProgressSummary
+  
+  Note: Handler was updated to use NewAnalyticsServiceForUser pattern
+
+  ---
+  Phase 2: Caching Infrastructure
+
+  2.1 Add Redis Configuration ✅ COMPLETED
+
+  Updated .env.example with Redis configuration
+
+  2.2 Create Redis Client ✅ COMPLETED
+
+  Created: api/internal/common/redis.go
+
+  package common
+
+  import (
+      "context"
+      "fmt"
+      "os"
+      "strconv"
+      "sync"
+      "time"
+
+      "github.com/redis/go-redis/v9"
+  )
+
+  var (
+      redisClient *redis.Client
+      redisOnce   sync.Once
+  )
+
+  // GetRedisClient returns a singleton Redis client instance
+  func GetRedisClient() (*redis.Client, error) {
+      var initErr error
+
+      redisOnce.Do(func() {
+          host := os.Getenv("REDIS_HOST")
+          if host == "" {
+              host = "localhost"
+          }
+
+          port := os.Getenv("REDIS_PORT")
+          if port == "" {
+              port = "6379"
+          }
+
+          password := os.Getenv("REDIS_PASSWORD")
+
+          db := 0
+          if dbStr := os.Getenv("REDIS_DB"); dbStr != "" {
+              if parsed, err := strconv.Atoi(dbStr); err == nil {
+                  db = parsed
+              }
+          }
+
+          poolSize := 100
+          if poolStr := os.Getenv("REDIS_POOL_SIZE"); poolStr != "" {
+              if parsed, err := strconv.Atoi(poolStr); err == nil {
+                  poolSize = parsed
+              }
+          }
+
+          redisClient = redis.NewClient(&redis.Options{
+              Addr:         fmt.Sprintf("%s:%s", host, port),
+              Password:     password,
+              DB:           db,
+              PoolSize:     poolSize,
+              MinIdleConns: 10,
+              MaxRetries:   3,
+          })
+
+          // Test connection
+          ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+          defer cancel()
+
+          if err := redisClient.Ping(ctx).Err(); err != nil {
+              initErr = fmt.Errorf("failed to connect to Redis: %w", err)
+              redisClient = nil
+          }
+      })
+
+      if initErr != nil {
+          return nil, initErr
+      }
+
+      if redisClient == nil {
+          return nil, fmt.Errorf("Redis client not initialized")
+      }
+
+      return redisClient, nil
+  }
+
+  2.3 Create Cached Analytics Service ✅ COMPLETED
+
+  Created: api/internal/service/analytics_cached.go
+
+  **Architecture Decision**: 
+  - Stores subscription plan at service instantiation to avoid passing it to every method
+  - Implements all AnalyticsServiceInterface methods with caching
+  - Cache TTL determined by subscription plan: 1 hour for free, 1 minute for premium
+  - Graceful fallback when Redis unavailable (handled in NewAnalyticsServiceForUser)
+
+  **Key implementation details**:
+  - All analytics methods follow same pattern: check cache → compute if miss → cache result
+  - Cache keys use namespace pattern: `analytics:type:userID:wordlistID`
+  - InvalidateWordlistAnalytics method provided for cache invalidation
+  - Uses error groups for concurrent query execution in dashboard stats
+
+  ---
+  Phase 3: Service Layer Refactoring
+
+  ## Important Implementation Notes
+
+  ### Architecture Changes Made
+  1. **Service Instantiation Pattern**: Instead of passing subscription plan to every method, we now instantiate the service with the subscription plan using `NewAnalyticsServiceForUser(subscriptionPlan)`
+  2. **Interface Design**: Created `AnalyticsServiceInterface` that both cached and non-cached implementations satisfy
+  3. **Graceful Fallback**: If Redis is unavailable, the system automatically falls back to direct database queries
+
+  ### Key Files Modified
+  - `api/internal/service/analytics.go`: Refactored to support interface and factory pattern
+  - `api/internal/service/analytics_cached.go`: Implements caching with subscription-based TTLs
+  - `api/internal/http/analytics.go`: All handlers updated to use new pattern with `getUserFromContext()`
+
+  ### Decisions Made During Implementation
+  1. **Service Instantiation Pattern**: Opted for per-request instantiation with subscription plan rather than singleton
+     - Avoids concurrency issues with user-specific state
+     - Cleaner code without global state
+     - Each request gets a fresh service instance with the user's plan
+  
+  2. **Interface Design**: Created AnalyticsServiceInterface for both cached and non-cached implementations
+     - Allows seamless switching between implementations
+     - Graceful degradation when Redis unavailable
+  
+  3. **Deferred to Phase 3**:
+     - Cache invalidation in SaveQuizResult
+     - UpdateBoxDistribution method (evaluate if needed)
+
+  ---
+  ## Phase 3: Service Layer Refactoring ✅ COMPLETED
+
+  ### 3.1 Add Cache Invalidation to SaveQuizResult ✅ COMPLETED
+
+  **Goal**: Invalidate analytics caches for premium users after quiz completion for real-time updates
+
+  **What was implemented**:
+
+  Updated `api/internal/service/leitner_system_strategy.go` to add cache invalidation after quiz completion:
+
+  ```go
+  // In SaveQuizResult function, after analytics tracking succeeds:
+  
+  // Invalidate analytics cache for premium users
+  go func() {
+      ctx := context.Background()
+      db, err := common.GetDBConnection()
+      if err != nil {
+          common.Logger.Error("Failed to get DB connection for cache invalidation", "error", err)
+          return
+      }
+      
+      // Get user to check subscription
+      userRepo := &repository.UserRepository{Db: db}
+      user, err := userRepo.Find(ctx, userID)
+      if err != nil {
+          common.Logger.Error("Failed to get user for cache invalidation", "error", err)
+          return
+      }
+      
+      // Only invalidate for non-free users
+      if user.SubscriptionPlan != model.SubscriptionPlanFree {
+          cache, err := common.GetRedisClient()
+          if err != nil {
+              common.Logger.Warn("Redis not available for cache invalidation", "error", err)
+              return
+          }
+          
+          cachedService := &service.CachedAnalyticsService{
+              // Exported fields for cache invalidation
+          }
+          cachedService.SetCache(cache)
+          
+          // Invalidate wordlist-specific caches
+          if err := cachedService.InvalidateWordlistAnalytics(ctx, userID, wordlistID); err != nil {
+              common.Logger.Error("Failed to invalidate analytics cache", "error", err)
+          } else {
+              common.Logger.Info("Analytics cache invalidated for premium user",
+                  "userID", userID,
+                  "wordlistID", wordlistID,
+                  "plan", user.SubscriptionPlan)
+          }
+      }
+  }()
+  ```
+
+  **Key implementation details**:
+  - Runs asynchronously in goroutine to avoid blocking quiz response
+  - Only invalidates cache for premium users (non-free plans)
+  - Gracefully handles Redis unavailability
+  - Logs operations for monitoring
+  - Retrieves wordlistID from the word data within the same transaction
+
+  ---
+  ## Phase 4: Mobile App Optimization ✅ COMPLETED
+
+  ### 4.1 Create Progress Summary API Function ✅ COMPLETED
+
+  Already implemented in mobile/api/analytics.ts:
+  - Added WordlistProgress and ProgressSummaryResponse interfaces
+  - Created getProgressSummary() function
+  - Endpoint: GET /analytics/progress-summary
+
+  ### 4.2 Create Lightweight Progress Hook ✅ COMPLETED
+
+  Created mobile/hooks/useWordlistProgress.ts:
+  - Uses React Query with tier-agnostic caching (5min stale, 30min gc)
+  - Single API call instead of N×8 calls on dashboard
+  - Shared cache across components with automatic background refetching
+  - Fixed to use `gcTime` instead of deprecated `cacheTime` for React Query v5
+
+  ### 4.3 Update Dashboard to Use Batch Progress ✅ COMPLETED
+
+  Updated mobile/app/dashboard/index.tsx:
+  - Added `useWordlistProgress` hook import and usage
+  - Created `progressMap` using `useMemo` for O(1) lookup performance
+  - Updated `renderWordlistItem` to pass progress data as props
+  - Added `useMemo` import for performance optimization
+
+  ### 4.4 Update WordlistItem Component ✅ COMPLETED
+
+  Updated mobile/components/dashboard/WordlistItem.tsx:
+  - REMOVED `useAnalytics` hook completely (eliminates 8 API calls per item!)
+  - Added `WordlistProgress` import and `progress` prop to interface
+  - Updated component to use progress data from props:
+    - `progressPercentage = progress?.progressPercent ?? 0`
+    - `currentStreak = progress?.currentStreak ?? 0`
+    - `wordsMastered = progress?.wordsMastered ?? 0`
+
+  **Performance Impact**: Each WordlistItem no longer makes individual API calls!
+
+  ### 4.5 Update Analytics Page Hook ✅ COMPLETED
+
+  Updated mobile/hooks/useAnalytics.ts with tier-based cache times:
+  - Added `useUserInfo` import to get premium status
+  - Implemented tier-based caching:
+    - Premium users: 1 minute stale time, 5 minute gc time
+    - Free users: 1 hour stale time, 24 hour gc time
+  - Added `isPremium` to all query keys to prevent cache conflicts when user upgrades
+  - Applied consistent caching pattern to all 8 analytics queries
+
+  **Result**: Premium users get near real-time updates, free users get longer-cached data
+
+  ---
+  ## Phase 5: Cleanup and Migration ✅ COMPLETED
+
+  ### 5.1 Remove Materialized Views ✅ COMPLETED
+
+  Created migration: `000045_remove_analytics_materialized_views.up.sql`
+  - Drops `mv_word_mastery_current` and `mv_quiz_type_performance_by_wordlist`
+  - Removes `refresh_all_materialized_views()` function
+  - Updates table comments to document the change from materialized views to Redis caching
+  - Includes rollback migration (`.down.sql`) to restore views if needed
+
+  ### 5.2 Update River Jobs ✅ COMPLETED
+
+  Updated `api/internal/service/river.go`:
+  - Removed the hourly materialized view refresh periodic job
+  - Added comment explaining the removal: "Materialized view refresh job removed - now using Redis caching for analytics"
+  - Kept the daily subscription reminder job intact
+
+  ### 5.3 Update Repository Methods ✅ COMPLETED
+
+  Updated `api/internal/repository/analytics.go`:
+  - **GetWordMastery**: Now queries directly from `word_mastery` and `words` tables with proper JOINs
+  - **GetQuizTypePerformance**: Now queries directly from `quiz_performance` table with aggregation
+  - Both methods produce the same results as the materialized views but query real-time data
+  - Added comments explaining the change from materialized views to direct queries
+
+  ### 5.4 Docker Compose ✅ ALREADY EXISTS
+
+  Redis is already configured in `docker-compose.yml` with `redis/redis-stack-server:latest` image on port 6379
+
+  ---
+  ## 🚀 Deployment Checklist
+
+  ### Pre-deployment:
+
+  ✅ Database indexes created (Phase 1)
+  ✅ Redis infrastructure available
+  ✅ Environment variables updated
+  ✅ Mobile app optimizations implemented (Phase 4)
+  ⬜ Test cache fallback behavior
+  ⬜ Load test new batch endpoint
+
+  ### Deployment Order:
+
+  1. **Backend Deployment**:
+     - Deploy API with new endpoints and caching
+     - Monitor for errors and performance
+     - Verify Redis connection and fallback
+
+  2. **Mobile App Deployment**:
+     - ✅ Batch progress hook implemented
+     - ✅ Dashboard N×8 API call problem eliminated
+     - ✅ Tier-based caching implemented
+     - Ready for deployment and monitoring
+
+  3. **Monitoring Phase** (1-2 weeks):
+     - Track cache hit rates
+     - Monitor response times
+     - Check Redis memory usage
+
+  4. **Cleanup Phase** (after 2-4 weeks):
+     - Remove materialized views
+     - Clean up old code
+     - Update documentation
+
+  ---
+  ## 📊 Success Metrics
+
+  ### Performance Targets:
+
+  | Metric | Target | Current (Est.) |
+  |--------|--------|----------------|
+  | Dashboard Load Time | < 500ms (P95) | ~2-3s |
+  | Analytics Page Load | < 1s (P95) | ~1-2s |
+  | Cache Hit Rate (Premium) | > 90% | N/A |
+  | Cache Hit Rate (Free) | > 95% | N/A |
+  | API Calls per Dashboard | 1 | N×8 |
+  | Redis Memory Usage | < 1GB | N/A |
+
+  ### Monitoring Queries:
+
+  ```sql
+  -- Cache effectiveness monitoring
+  SELECT
+      subscription_plan,
+      COUNT(*) as total_requests,
+      COUNT(*) FILTER (WHERE cache_hit) as cache_hits,
+      ROUND(COUNT(*) FILTER (WHERE cache_hit) * 100.0 / COUNT(*), 2) as hit_rate,
+      ROUND(AVG(response_time_ms), 2) as avg_response_ms,
+      PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY response_time_ms) as p95_response_ms
+  FROM api_request_logs
+  WHERE endpoint LIKE '/analytics/%'
+      AND created_at > NOW() - INTERVAL '1 hour'
+  GROUP BY subscription_plan;
+  ```
+
+  ---
+  ## 🔧 Troubleshooting
+
+  ### Common Issues:
+
+  #### 1. Redis Connection Failures
+  - **Symptom**: Logs show "Redis not available, analytics will use database only"
+  - **Impact**: System falls back to database queries (still works, but slower)
+  - **Fix**: 
+    - Check Redis connection string in .env
+    - Verify Redis is running: `redis-cli ping`
+    - Check network connectivity
+
+  #### 2. High Database Load After Deployment
+  - **Symptom**: Database CPU spikes, slow queries
+  - **Possible Causes**:
+    - Missing indexes (run migration 000044)
+    - Cache not working (check Redis)
+    - Too many service instances being created
+  - **Fix**:
+    - Verify indexes: `\d+ word_mastery` in psql
+    - Monitor service instantiation in logs
+
+  #### 3. Stale Data for Premium Users
+  - **Symptom**: Premium users see old data despite 1-minute cache
+  - **Check**:
+    - User subscription status detection
+    - Cache invalidation after quiz completion
+    - TTL being applied correctly
+  - **Debug**: Add logging to track cache TTL application
+
+  ### Debug Logging:
+
+  ```go
+  // Add to CachedAnalyticsService methods
+  common.Logger.Debug("Analytics cache operation",
+      "operation", "get/set",
+      "key", cacheKey,
+      "userID", userID,
+      "subscriptionPlan", s.subscriptionPlan,
+      "ttl", ttl,
+      "hit", cacheHit)
+  ```
+
+  ### Emergency Rollback:
+
+  If issues arise, disable caching without code changes:
+  1. Set `REDIS_HOST=""` in environment
+  2. Service automatically falls back to direct DB queries
+  3. No mobile app changes needed
+
+  ---
+  ## Implementation Notes
+
+  ### What We Changed:
+
+  1. **Database Performance**:
+     - Added 6 strategic indexes for analytics queries
+     - Created batch endpoint to fetch all wordlists progress in one query
+
+  2. **Caching Architecture**:
+     - Redis caching with tier-based TTLs (1hr free, 1min premium)
+     - Service instantiation captures subscription plan
+     - Graceful fallback when Redis unavailable
+
+  3. **API Design**:
+     - New `/analytics/progress-summary` endpoint
+     - Factory pattern: `NewAnalyticsServiceForUser(plan)`
+     - Interface-based design for flexibility
+
+  ### What We Didn't Change:
+
+  1. **Kept Existing Endpoints**: All current analytics endpoints remain unchanged
+  2. **Database Schema**: No table changes, only added indexes
+  3. **Mobile Compatibility**: New batch endpoint is additive, old app versions continue working
+
+  ### Key Architectural Decisions:
+
+  1. **Per-Request Service Instantiation**: 
+     - Each request creates a service instance with user's plan
+     - Avoids global state and concurrency issues
+     - Clean separation of concerns
+
+  2. **Cache Key Design**:
+     - Pattern: `analytics:type:userID:wordlistID`
+     - Enables targeted invalidation
+     - Clear namespace separation
+
+  3. **Graceful Degradation**:
+     - System works without Redis (just slower)
+     - No hard dependencies on cache layer
+     - Automatic fallback behavior
+
+  ---
+  This implementation successfully addresses the N×8 API call problem while maintaining backward compatibility and providing a clear upgrade path for premium users.

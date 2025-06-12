@@ -4,3 +4,4 @@ bin/*
 .env.test
 coverage.out
 coverage.html
+integration.out

@@ -835,6 +835,7 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 // - transactionPtr: Optional database transaction (if nil, creates a new one)
 func (s LeitnerSystemStrategy) SaveQuizResult(
 	quizResult QuizResult,
+	isPremium bool,
 	transactionPtr *pgx.Tx) error {
 
 	var tx pgx.Tx
@@ -880,12 +881,17 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	quizResult.BoxID = currentBoxId
 
 	// Track analytics
-	analyticsService, err := NewAnalyticsService()
+	// Create analytics service without caching for write operations
+	analyticsService, err := NewAnalyticsService(AnalyticsConfig{
+		UserID:     quizResult.UserID,
+		WordlistID: quizResult.WordlistID,
+		UseCache:   false,
+	})
 	if err != nil {
 		return err
 	}
 
-	err = analyticsService.TrackQuizPerformance(ctx, quizResult, tx)
+	err = analyticsService.TrackQuiz(ctx, quizResult, tx)
 	if err != nil {
 		// Log error but don't fail the transaction
 		common.Logger.Error("failed to track quiz performance",
@@ -894,6 +900,56 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 			"wordId", quizResult.WordID,
 			"quizType", quizResult.QuizType)
 	}
+
+	// Update box distribution snapshot and invalidate cache (outside transaction)
+	go func() {
+		ctx := context.Background()
+		
+		// First, update the box distribution snapshot
+		common.Logger.Info("updating box distribution snapshot",
+			"userId", quizResult.UserID,
+			"wordlistId", quizResult.WordlistID)
+		err := analyticsService.UpdateBoxDistribution(ctx, quizResult.UserID, quizResult.WordlistID)
+		if err != nil {
+			common.Logger.Error("failed to update box distribution snapshot",
+				"error", err,
+				"userId", quizResult.UserID,
+				"wordlistId", quizResult.WordlistID)
+			return // Don't proceed with cache invalidation if DB update failed
+		}
+		common.Logger.Info("box distribution snapshot updated successfully",
+			"userId", quizResult.UserID,
+			"wordlistId", quizResult.WordlistID)
+
+		// Then, invalidate cache for premium users
+		if isPremium {
+			// Try to get cached analytics service
+			cache, err := common.GetRedisClient()
+			if err != nil {
+				// Redis not available, nothing to invalidate
+				common.Logger.Warn("Redis not available for cache invalidation", "error", err)
+				return
+			}
+
+			// Create cached service just for invalidation
+			cachedService := &CachedAnalyticsService{
+				cache: cache,
+			}
+
+			// Invalidate wordlist analytics cache (includes historical box distribution)
+			err = cachedService.InvalidateWordlistAnalytics(ctx, quizResult.UserID, quizResult.WordlistID)
+			if err != nil {
+				common.Logger.Error("failed to invalidate analytics cache", 
+					"error", err,
+					"userId", quizResult.UserID,
+					"wordlistId", quizResult.WordlistID)
+			} else {
+				common.Logger.Info("analytics cache invalidated for premium user",
+					"userId", quizResult.UserID,
+					"wordlistId", quizResult.WordlistID)
+			}
+		}
+	}()
 
 	return nil
 }

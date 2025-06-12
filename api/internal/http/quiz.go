@@ -52,6 +52,14 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 	}
 
 	userId := c.GetInt64("userID")
+	
+	// Get user from context to check if premium
+	isPremium := false
+	if user, exists := c.Get("user"); exists {
+		if userObj, ok := user.(*model.User); ok {
+			isPremium = userObj.SubscriptionPlan != model.PlanFree
+		}
+	}
 
 	var err = strategy.SaveQuizResult(common.QuizResult{
 		WordlistID:              input.WordlistID,
@@ -62,7 +70,7 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 		IsCorrect:               input.IsCorrect,
 		UserID:                  userId,
 		ResponseTimeMs:          input.ResponseTimeMs,
-	}, nil)
+	}, isPremium, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

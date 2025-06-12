@@ -40,27 +40,21 @@ test-unit: ## Run unit tests
 	go test -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
 	go tool cover -func=unit.out
 
-test-integration: ## Run integration tests locally
-	@echo "Running integration tests..."
-	docker-compose -f docker-compose.test.yml up -d postgres redis minio
-	@echo "Waiting for services to be ready..."
-	sleep 10
-	@echo "Running migrations..."
-	$(MAKE) migrate-up-test
-	@echo "Running tests..."
-	TEST_DATABASE_URL=$$($(GODOTENV_PATH) -f .env.test sh -c 'echo $$TEST_DATABASE_URL') \
-		go test -v -race -coverprofile=integration.out -covermode=atomic ./tests/integration/...
-	go tool cover -func=integration.out
-	docker-compose -f docker-compose.test.yml down
+test-integration: ## Run integration tests locally with proper cleanup
+	@echo "Running integration tests via test script..."
+	./scripts/run-tests.sh integration
 
-test-all: test-unit test-integration ## Run all tests
-	@echo "Combining coverage reports..."
-	go tool cover -html=unit.out -o coverage-unit.html
-	go tool cover -html=integration.out -o coverage-integration.html
+test-all: ## Run all tests with proper cleanup  
+	@echo "Running all tests via test script..."
+	./scripts/run-tests.sh all
 
 test-fast: ## Run tests without Docker (requires local services)
 	@echo "Running fast integration tests (requires local services)..."
 	go test -v -short ./tests/integration/...
+
+test-clean: ## Clean up test environment (stop containers, remove volumes)
+	@echo "Cleaning up test environment..."
+	./scripts/run-tests.sh clean
 
 migrate-up-test: ## Run database migrations for test database
 	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env.test sh -c 'echo $$TEST_DATABASE_URL'); \

@@ -159,6 +159,7 @@ Key architectural decisions:
 - SendGrid for email services (subscription notifications)
 - Sentry for error monitoring and logging
 - Structured logging with `slog` (enhancement planned)
+- Redis-based analytics caching with intelligent invalidation strategies
 
 ### Background Job Processing
 
@@ -358,7 +359,7 @@ make coverage-html
 
 - **PostgreSQL 15+** - Primary database with materialized views and pgx/v5 driver
 - **MinIO** - S3-compatible object storage for images and audio
-- **Redis** - Caching (configured but usage unclear)
+- **Redis** - Analytics caching layer with automatic invalidation
 - **SendGrid** - Email delivery for subscription notifications
 - **OpenAI API** - Image generation (DALL-E), text-to-speech (TTS), and AI content generation (GPT)
 - **Stripe** - Payment processing and subscription management with webhook integration
@@ -394,19 +395,20 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 
 ### Critical Issues Requiring Attention
 1. **Global State Anti-Patterns**: Service layer uses global variables with `init()` functions containing `os.Exit(1)` calls that break testing
-2. **SQL Injection Vulnerability**: `analytics.go:271` uses `fmt.Sprintf` for SQL query building
-3. **Connection Pool Inefficiency**: Creating new service instances repeatedly instead of reusing connections
-4. **Missing Indexes**: Critical database indexes missing for analytics queries
+2. **Connection Pool Inefficiency**: Creating new service instances repeatedly instead of reusing connections
+
+### Recent Performance Improvements
+- **Analytics Caching**: Implemented Redis-based caching layer (`analytics_cached.go`) with automatic invalidation
+- **Database Indexes**: Added performance indexes for analytics queries (migration 000044)
+- **SQL Injection Fixes**: Resolved SQL injection vulnerabilities in analytics queries
 
 ### Planned Modernization (Priority Order)
 1. **Week 1-2**: Remove `init()` functions, create repository interfaces
-2. **Week 3-4**: Convert services to constructor-based DI, fix SQL injection
+2. **Week 3-4**: Convert services to constructor-based DI
 3. **Week 5-6**: Implement dependency container, refactor HTTP layer
-4. **Week 7-8**: Add missing indexes, implement caching layer
 
 **Files requiring immediate attention:**
 - `internal/service/word.go`, `internal/service/user.go` - Remove global repositories
-- `internal/http/analytics.go` - Fix SQL injection vulnerability
 - `internal/common/database.go` - Remove `os.Exit(1)` calls
 
 ## Important Notes

@@ -1,0 +1,52 @@
+### Test Analytics Progress Summary Endpoint
+
+# Login first to get JWT token
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+###
+
+# Get all wordlists progress summary - NEW BATCH ENDPOINT
+GET http://localhost:3000/analytics/progress-summary
+Authorization: Bearer {{authToken}}
+
+###
+
+# Get wordlist-specific overview stats
+GET http://localhost:3000/analytics/wordlists/1/overview
+Authorization: Bearer {{authToken}}
+
+###
+
+# Get word mastery for wordlist
+GET http://localhost:3000/analytics/wordlists/1/mastery
+Authorization: Bearer {{authToken}}
+
+###
+
+# Get learning progress
+GET http://localhost:3000/analytics/wordlists/1/progress?days=7
+Authorization: Bearer {{authToken}}
+
+###
+
+# Get quiz performance
+GET http://localhost:3000/analytics/wordlists/1/quiz-performance
+Authorization: Bearer {{authToken}}
+
+###
+
+# Get current box distribution
+GET http://localhost:3000/analytics/wordlists/1/current-distribution
+Authorization: Bearer {{authToken}}
+
+###
+
+# Get practice time
+GET http://localhost:3000/analytics/wordlists/1/practice-time?days=7
+Authorization: Bearer {{authToken}}

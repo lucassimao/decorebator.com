@@ -30,6 +30,12 @@ GET https://api.decorebator.com/wordlists
 authorization: {{authToken}}
 
 
+### Next quiz 
+POST https://api.decorebator.com/wordlists/1/quizzes
+authorization: {{authToken}}
+
+
+
 
 ### Creating wordlist
 # @name wordlistRequest

@@ -19,6 +19,6 @@ type QuizResult struct {
 
 type SpacedRepetitionStrategy interface {
 	CreateQuiz(wordlistID, userID int64) (*model.Quiz, error)
-	SaveQuizResult(result QuizResult, tx *pgx.Tx) error
+	SaveQuizResult(result QuizResult, isPremium bool, tx *pgx.Tx) error
 	IncludeDefinitions(wordId, userId int64, definitionIds []int64, tx pgx.Tx) error
 }

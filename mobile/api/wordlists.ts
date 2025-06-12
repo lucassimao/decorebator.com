@@ -12,12 +12,6 @@ export type Wordlist = {
   wordsLearnedCount: number;
 };
 
-export type UserStats = {
-  totalWords: number;
-  wordlists: number;
-  wordsLearned: number;
-  currentStreak?: number;
-};
 
 export type Word = {
   id: number;
@@ -91,13 +85,6 @@ export async function getUserWordlists() {
   return body;
 }
 
-export async function getUserStats(): Promise<UserStats> {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + `/wordlists/stats`;
-
-  const body = await callAPI<UserStats>("GET", endpoint);
-
-  return body;
-}
 
 export async function getWords(
   wordlistId: number,

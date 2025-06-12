@@ -41,9 +41,6 @@ func GetUserWordlistsWithWordStats(userId int64) ([]*Wordlist, error) {
 	return result, nil
 }
 
-func GetStats(userId int64) (*model.UserStats, error) {
-	return wordlistRepository.GetStats(userId)
-}
 
 func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
 	wordlist, err := wordlistRepository.Save(newWordlist.Name, newWordlist.Description, newWordlist.LanguageCode, newWordlist.UserID)

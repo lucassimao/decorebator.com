@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"decorebator.com/internal/model"
@@ -160,20 +159,4 @@ func (repository *WordlistRepository) Update(wordlist *Wordlist) (int64, error) 
 	}
 
 	return result.RowsAffected(), nil
-}
-
-func (repository *WordlistRepository) GetStats(userId int64) (*model.UserStats, error) {
-	const statsQuery = `
-    SELECT
-      (SELECT COUNT(*) FROM words WHERE user_id = $1)             AS total_words,
-      (SELECT COUNT(*) FROM wordlists WHERE user_id = $1)         AS wordlists,
-      (SELECT COUNT(*) FROM words WHERE user_id = $1 AND learned) AS words_learned;
-    `
-
-	var s model.UserStats
-	row := repository.Db.QueryRow(context.Background(), statsQuery, userId)
-	if err := row.Scan(&s.TotalWords, &s.Wordlists, &s.WordsLearned); err != nil {
-		return nil, fmt.Errorf("GetUserStats: scan failed: %w", err)
-	}
-	return &s, nil
 }

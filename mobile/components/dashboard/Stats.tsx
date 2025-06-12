@@ -1,5 +1,4 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,7 +11,7 @@ import {
 } from "react-native";
 
 import { useUserInfo } from "@/hooks/users";
-import * as wordlistsApi from "@/api/wordlists";
+import { useWordlistProgress } from "@/hooks/useWordlistProgress";
 
 // Animated Counter Component
 interface AnimatedCounterProps {
@@ -60,23 +59,26 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const { t } = useTranslation();
-  const { isPremium } = useUserInfo();
 
-  // Get global user stats using the correct endpoint
+  // Use shared wordlist progress hook to avoid duplicate API calls
   const {
-    data: stats,
+    data: progressSummary,
     isLoading,
     isError,
     refetch,
-  } = useQuery({
-    queryKey: ["userStats"],
-    queryFn: wordlistsApi.getUserStats,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  } = useWordlistProgress();
+
+  // Transform progress summary to user stats format
+  const stats = progressSummary ? {
+    totalWords: progressSummary.wordlists.reduce((sum, wl) => sum + wl.totalWords, 0),
+    wordlists: progressSummary.wordlists.length,
+    wordsLearned: progressSummary.wordlists.reduce((sum, wl) => sum + wl.wordsMastered, 0),
+    currentStreak: Math.max(0, ...progressSummary.wordlists.map(wl => wl.currentStreak)) || undefined,
+  } : null;
 
   // Animation on load
   useEffect(() => {
-    if (!isLoading && stats) {
+    if (!isLoading && progressSummary) {
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -91,7 +93,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
         }),
       ]).start();
     }
-  }, [isLoading, stats]);
+  }, [isLoading, progressSummary]);
 
   const getProgressPercentage = () => {
     if (!stats || stats.totalWords === 0) return 0;

@@ -7,11 +7,12 @@ import DashboardStats from "@/components/dashboard/Stats";
 import { WordlistDetailModal } from "@/components/dashboard/WordlistDetailModal";
 import Wordlistitem from "@/components/dashboard/WordlistItem";
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
+import { useWordlistProgress } from "@/hooks/useWordlistProgress";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -62,6 +63,15 @@ const Dashboard: React.FC<DashboardProps> = () => {
     refetchOnMount: "always",
   });
 
+  // Fetch batch progress data
+  const { data: progressData, isLoading: progressLoading } = useWordlistProgress();
+
+  // Create progress map for O(1) lookup
+  const progressMap = useMemo(() => {
+    if (!progressData?.wordlists) return new Map();
+    return new Map(progressData.wordlists.map(p => [p.wordlistId, p]));
+  }, [progressData]);
+
   const hasNoWordlist = wordlists && wordlists.length == 0;
 
   useEffect(() => {
@@ -83,6 +93,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const renderWordlistItem = ({ item }: { item: Wordlist }) => (
     <Wordlistitem
       item={item}
+      progress={progressMap.get(item.id)}
       onPressed={() => setSelectedWordlist(item)}
       onUpgradePress={onUpgradePress}
     />

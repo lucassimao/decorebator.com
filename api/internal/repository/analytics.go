@@ -2,579 +2,146 @@ package repository
 
 import (
 	"context"
-	"fmt"
-	"time"
 
+	"decorebator.com/internal/model"
+	"decorebator.com/internal/repository/analytics"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// QuizPerformanceRepositoryInterface defines quiz performance operations
+type QuizPerformanceRepositoryInterface interface {
+	RecordQuizPerformance(ctx context.Context, tx pgx.Tx, userID, wordlistID, wordID, definitionID, leitnerSystemTrackingID int64, quizType string, boxID int64, isCorrect bool, responseTimeMs int) error
+	GetQuizTypePerformance(ctx context.Context, userID int64, wordlistID int64) ([]model.QuizTypePerformance, error)
+	UpsertQuizTypeAnalytics(ctx context.Context, tx pgx.Tx, userID int64, quizType string, isCorrect bool, responseTimeMs int) error
+}
+
+// WordMasteryRepositoryInterface defines word mastery operations
+type WordMasteryRepositoryInterface interface {
+	UpsertWordMastery(ctx context.Context, tx pgx.Tx, userID, wordID int64, boxID int64, isCorrect bool) error
+	GetWordMastery(ctx context.Context, userID, wordlistID int64) ([]model.WordMasteryStats, error)
+	GetWordlistMasteryStats(ctx context.Context, userID, wordlistID int64) (int, int, *float64, *int, error)
+}
+
+// LearningProgressRepositoryInterface defines learning progress operations
+type LearningProgressRepositoryInterface interface {
+	UpsertLearningProgress(ctx context.Context, tx pgx.Tx, userID, wordlistID int64, date string, isCorrect bool, responseTimeMs int) error
+	GetLearningProgress(ctx context.Context, userID, wordlistID int64, days int) ([]model.LearningProgressStats, error)
+	GetWordlistTodayStats(ctx context.Context, userID, wordlistID int64) (int, int, float64, error)
+	GetWordlistCurrentStreak(ctx context.Context, userID, wordlistID int64) (int, error)
+}
+
+// BoxDistributionRepositoryInterface defines box distribution operations
+type BoxDistributionRepositoryInterface interface {
+	UpsertBoxDistribution(ctx context.Context, userID, wordlistID int64) error
+	GetCurrentBoxDistribution(ctx context.Context, userID, wordlistID int64) (*model.BoxDistribution, error)
+	GetBoxDistributionHistory(ctx context.Context, userID, wordlistID int64, days int) ([]map[string]interface{}, error)
+}
+
+// DashboardStatsRepositoryInterface defines dashboard statistics operations
+type DashboardStatsRepositoryInterface interface {
+	GetPracticeTime(ctx context.Context, userID, wordlistID int64, days int) ([]model.PracticeTimeStats, error)
+}
+
+// BatchProgressRepositoryInterface defines batch progress operations
+type BatchProgressRepositoryInterface interface {
+	GetAllWordlistsProgress(ctx context.Context, userID int64) ([]model.WordlistProgress, error)
+}
+
+// AnalyticsRepositoryInterface combines all analytics operations
+type AnalyticsRepositoryInterface interface {
+	QuizPerformanceRepositoryInterface
+	WordMasteryRepositoryInterface
+	LearningProgressRepositoryInterface
+	BoxDistributionRepositoryInterface
+	DashboardStatsRepositoryInterface
+	BatchProgressRepositoryInterface
+}
+
+// AnalyticsRepository is a composite repository that implements all analytics interfaces
 type AnalyticsRepository struct {
-	db *pgxpool.Pool
+	QuizPerformance  QuizPerformanceRepositoryInterface
+	WordMastery      WordMasteryRepositoryInterface
+	LearningProgress LearningProgressRepositoryInterface
+	BoxDistribution  BoxDistributionRepositoryInterface
+	DashboardStats   DashboardStatsRepositoryInterface
+	BatchProgress    BatchProgressRepositoryInterface
 }
 
+// NewAnalyticsRepository creates a new composite analytics repository
 func NewAnalyticsRepository(db *pgxpool.Pool) *AnalyticsRepository {
-	return &AnalyticsRepository{db: db}
+	return &AnalyticsRepository{
+		QuizPerformance:  analytics.NewQuizPerformanceRepository(db),
+		WordMastery:      analytics.NewWordMasteryRepository(db),
+		LearningProgress: analytics.NewLearningProgressRepository(db),
+		BoxDistribution:  analytics.NewBoxDistributionRepository(db),
+		DashboardStats:   analytics.NewDashboardStatsRepository(db),
+		BatchProgress:    analytics.NewBatchProgressRepository(db),
+	}
 }
 
-// Quiz Performance Operations
+// Quiz Performance Operations - delegate to sub-repository
 func (r *AnalyticsRepository) RecordQuizPerformance(ctx context.Context, tx pgx.Tx, userID, wordlistID, wordID, definitionID, leitnerSystemTrackingID int64, quizType string, boxID int64, isCorrect bool, responseTimeMs int) error {
-	query := `
-		INSERT INTO quiz_performance (
-			user_id, wordlist_id, word_id, definition_id, 
-			leitner_system_tracking_id, quiz_type, box_id, 
-			is_correct, response_time_ms
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-	`
-
-	_, err := tx.Exec(ctx, query,
-		userID, wordlistID, wordID, definitionID,
-		leitnerSystemTrackingID, quizType, boxID,
-		isCorrect, responseTimeMs,
-	)
-
-	return err
+	return r.QuizPerformance.RecordQuizPerformance(ctx, tx, userID, wordlistID, wordID, definitionID, leitnerSystemTrackingID, quizType, boxID, isCorrect, responseTimeMs)
 }
 
-// Word Mastery Operations
-func (r *AnalyticsRepository) UpsertWordMastery(ctx context.Context, tx pgx.Tx, userID, wordID int64, boxID int64, isCorrect bool) error {
-	query := `
-		INSERT INTO word_mastery (
-			user_id, word_id, mastery_level, total_attempts, 
-			correct_attempts, streak_count, max_streak, last_seen_at
-		) VALUES (
-			$1, $2, 
-			CASE WHEN $3 THEN $4::decimal / 7.0 ELSE 0 END, -- mastery based on box
-			1, 
-			CASE WHEN $3 THEN 1 ELSE 0 END,
-			CASE WHEN $3 THEN 1 ELSE 0 END,
-			CASE WHEN $3 THEN 1 ELSE 0 END,
-			NOW()
-		)
-		ON CONFLICT (user_id, word_id) DO UPDATE SET
-			mastery_level = CASE 
-				WHEN $3 THEN 
-					-- Weighted average: 70% current box progress, 30% historical accuracy
-					-- Handle NULL case by defaulting to 0 accuracy when no previous attempts
-					(0.7 * ($4::decimal / 7.0) + 
-					 0.3 * COALESCE(word_mastery.correct_attempts::decimal / NULLIF(word_mastery.total_attempts, 0), 0))
-				ELSE 
-					-- On failure, reduce mastery but not below 0
-					GREATEST(word_mastery.mastery_level - 0.1, 0)
-			END,
-			total_attempts = word_mastery.total_attempts + 1,
-			correct_attempts = word_mastery.correct_attempts + CASE WHEN $3 THEN 1 ELSE 0 END,
-			streak_count = CASE 
-				WHEN $3 THEN word_mastery.streak_count + 1 
-				ELSE 0 
-			END,
-			max_streak = GREATEST(
-				word_mastery.max_streak, 
-				CASE WHEN $3 THEN word_mastery.streak_count + 1 ELSE word_mastery.streak_count END
-			),
-			last_seen_at = NOW(),
-			updated_at = NOW()
-	`
-
-	_, err := tx.Exec(ctx, query, userID, wordID, isCorrect, boxID)
-	return err
+func (r *AnalyticsRepository) GetQuizTypePerformance(ctx context.Context, userID int64, wordlistID int64) ([]model.QuizTypePerformance, error) {
+	return r.QuizPerformance.GetQuizTypePerformance(ctx, userID, wordlistID)
 }
 
-// Learning Progress Operations
-func (r *AnalyticsRepository) UpsertLearningProgress(ctx context.Context, tx pgx.Tx, userID, wordlistID int64, date string, isCorrect bool, responseTimeMs int) error {
-	query := `
-		INSERT INTO learning_progress (
-			user_id, wordlist_id, date, words_studied, 
-			total_quiz_attempts, correct_attempts, average_response_time_ms
-		) VALUES (
-			$1, $2, $3::date, 1, 1, 
-			CASE WHEN $4 THEN 1 ELSE 0 END, $5
-		)
-		ON CONFLICT (user_id, wordlist_id, date) DO UPDATE SET
-			words_studied = (
-				SELECT COUNT(DISTINCT qp.word_id) 
-				FROM quiz_performance qp
-				WHERE qp.user_id = $1 
-				  AND qp.wordlist_id = $2
-				  AND DATE(qp.created_at) = $3::date
-			),
-			total_quiz_attempts = learning_progress.total_quiz_attempts + 1,
-			correct_attempts = learning_progress.correct_attempts + CASE WHEN $4 THEN 1 ELSE 0 END,
-			average_response_time_ms = (
-				(learning_progress.average_response_time_ms * learning_progress.total_quiz_attempts + $5) / 
-				(learning_progress.total_quiz_attempts + 1)
-			),
-			updated_at = NOW()
-	`
-
-	_, err := tx.Exec(ctx, query, userID, wordlistID, date, isCorrect, responseTimeMs)
-	return err
-}
-
-// Quiz Type Analytics Operations
 func (r *AnalyticsRepository) UpsertQuizTypeAnalytics(ctx context.Context, tx pgx.Tx, userID int64, quizType string, isCorrect bool, responseTimeMs int) error {
-	query := `
-		INSERT INTO quiz_type_analytics (
-			user_id, quiz_type, total_attempts, correct_attempts, average_response_time_ms
-		) VALUES (
-			$1, $2, 1, 
-			CASE WHEN $3 THEN 1 ELSE 0 END, $4
-		)
-		ON CONFLICT (user_id, quiz_type) DO UPDATE SET
-			total_attempts = quiz_type_analytics.total_attempts + 1,
-			correct_attempts = quiz_type_analytics.correct_attempts + CASE WHEN $3 THEN 1 ELSE 0 END,
-			average_response_time_ms = (
-				(quiz_type_analytics.average_response_time_ms * quiz_type_analytics.total_attempts + $4) / 
-				(quiz_type_analytics.total_attempts + 1)
-			),
-			last_updated = NOW()
-	`
-
-	_, err := tx.Exec(ctx, query, userID, quizType, isCorrect, responseTimeMs)
-	return err
+	return r.QuizPerformance.UpsertQuizTypeAnalytics(ctx, tx, userID, quizType, isCorrect, responseTimeMs)
 }
 
-// Box Distribution Operations
+// Word Mastery Operations - delegate to sub-repository
+func (r *AnalyticsRepository) UpsertWordMastery(ctx context.Context, tx pgx.Tx, userID, wordID int64, boxID int64, isCorrect bool) error {
+	return r.WordMastery.UpsertWordMastery(ctx, tx, userID, wordID, boxID, isCorrect)
+}
+
+func (r *AnalyticsRepository) GetWordMastery(ctx context.Context, userID, wordlistID int64) ([]model.WordMasteryStats, error) {
+	return r.WordMastery.GetWordMastery(ctx, userID, wordlistID)
+}
+
+func (r *AnalyticsRepository) GetWordlistMasteryStats(ctx context.Context, userID, wordlistID int64) (int, int, *float64, *int, error) {
+	return r.WordMastery.GetWordlistMasteryStats(ctx, userID, wordlistID)
+}
+
+// Learning Progress Operations - delegate to sub-repository
+func (r *AnalyticsRepository) UpsertLearningProgress(ctx context.Context, tx pgx.Tx, userID, wordlistID int64, date string, isCorrect bool, responseTimeMs int) error {
+	return r.LearningProgress.UpsertLearningProgress(ctx, tx, userID, wordlistID, date, isCorrect, responseTimeMs)
+}
+
+func (r *AnalyticsRepository) GetLearningProgress(ctx context.Context, userID, wordlistID int64, days int) ([]model.LearningProgressStats, error) {
+	return r.LearningProgress.GetLearningProgress(ctx, userID, wordlistID, days)
+}
+
+func (r *AnalyticsRepository) GetWordlistTodayStats(ctx context.Context, userID, wordlistID int64) (int, int, float64, error) {
+	return r.LearningProgress.GetWordlistTodayStats(ctx, userID, wordlistID)
+}
+
+func (r *AnalyticsRepository) GetWordlistCurrentStreak(ctx context.Context, userID, wordlistID int64) (int, error) {
+	return r.LearningProgress.GetWordlistCurrentStreak(ctx, userID, wordlistID)
+}
+
+// Box Distribution Operations - delegate to sub-repository
 func (r *AnalyticsRepository) UpsertBoxDistribution(ctx context.Context, userID, wordlistID int64) error {
-	// Use the same logic as GetCurrentBoxDistribution - count words by their minimum box level
-	query := `
-		INSERT INTO box_distribution_snapshot (
-			user_id, wordlist_id, snapshot_date,
-			box_1_count, box_2_count, box_3_count, box_4_count,
-			box_5_count, box_6_count, box_7_count
-		)
-		WITH word_min_boxes AS (
-			SELECT 
-				lst.word_id,
-				MIN(lst.box_id) as min_box_id
-			FROM leitner_system_tracking lst
-			JOIN words w ON lst.word_id = w.id
-			WHERE lst.user_id = $1 AND w.wordlist_id = $2
-			GROUP BY lst.word_id
-		)
-		SELECT 
-			$1::bigint, $2::bigint, CURRENT_DATE,
-			COUNT(CASE WHEN min_box_id = 1 THEN 1 END),
-			COUNT(CASE WHEN min_box_id = 2 THEN 1 END),
-			COUNT(CASE WHEN min_box_id = 3 THEN 1 END),
-			COUNT(CASE WHEN min_box_id = 4 THEN 1 END),
-			COUNT(CASE WHEN min_box_id = 5 THEN 1 END),
-			COUNT(CASE WHEN min_box_id = 6 THEN 1 END),
-			COUNT(CASE WHEN min_box_id = 7 THEN 1 END)
-		FROM word_min_boxes
-		ON CONFLICT (user_id, wordlist_id, snapshot_date) DO UPDATE SET
-			box_1_count = EXCLUDED.box_1_count,
-			box_2_count = EXCLUDED.box_2_count,
-			box_3_count = EXCLUDED.box_3_count,
-			box_4_count = EXCLUDED.box_4_count,
-			box_5_count = EXCLUDED.box_5_count,
-			box_6_count = EXCLUDED.box_6_count,
-			box_7_count = EXCLUDED.box_7_count,
-			updated_at = NOW()
-	`
-
-	_, err := r.db.Exec(ctx, query, userID, wordlistID)
-	if err != nil {
-		return fmt.Errorf("failed to update box distribution: %w", err)
-	}
-
-	return nil
+	return r.BoxDistribution.UpsertBoxDistribution(ctx, userID, wordlistID)
 }
 
-// Query Operations
-
-// WordMasteryStats represents word mastery statistics
-type WordMasteryStats struct {
-	WordID       int64      `json:"wordId"`
-	Word         string     `json:"word"`
-	MasteryLevel float64    `json:"masteryLevel"`
-	Accuracy     float64    `json:"accuracy"`
-	StreakCount  int        `json:"streakCount"`
-	LastSeenAt   *time.Time `json:"lastSeenAt"`
-	HighestBox   int        `json:"highestBox"`
-}
-
-func (r *AnalyticsRepository) GetWordMastery(ctx context.Context, userID, wordlistID int64) ([]WordMasteryStats, error) {
-	query := `
-		SELECT word_id, word, mastery_level, accuracy_rate, 
-		       streak_count, last_seen_at, highest_box_reached
-		FROM mv_word_mastery_current
-		WHERE user_id = $1 AND wordlist_id = $2
-		ORDER BY mastery_level DESC, last_seen_at DESC
-	`
-
-	rows, err := r.db.Query(ctx, query, userID, wordlistID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var stats []WordMasteryStats
-	for rows.Next() {
-		var s WordMasteryStats
-		err := rows.Scan(&s.WordID, &s.Word, &s.MasteryLevel,
-			&s.Accuracy, &s.StreakCount, &s.LastSeenAt, &s.HighestBox)
-		if err != nil {
-			return nil, err
-		}
-		stats = append(stats, s)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return stats, nil
-}
-
-// QuizTypePerformance represents quiz type performance statistics
-type QuizTypePerformance struct {
-	QuizType      string    `json:"quizType"`
-	TotalAttempts int       `json:"totalAttempts"`
-	SuccessRate   float64   `json:"successRate"`
-	AvgResponseMs int       `json:"avgResponseMs"`
-	LastUpdated   time.Time `json:"lastUpdated"`
-}
-
-func (r *AnalyticsRepository) GetQuizTypePerformance(ctx context.Context, userID int64, wordlistID int64) ([]QuizTypePerformance, error) {
-	// Always query wordlist-specific performance from the new materialized view
-	query := `
-		SELECT quiz_type, total_attempts, success_rate, 
-		       average_response_time_ms, last_updated
-		FROM mv_quiz_type_performance_by_wordlist
-		WHERE user_id = $1 AND wordlist_id = $2
-		ORDER BY success_rate DESC
-	`
-
-	rows, err := r.db.Query(ctx, query, userID, wordlistID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var performances []QuizTypePerformance
-	for rows.Next() {
-		var p QuizTypePerformance
-		err := rows.Scan(&p.QuizType, &p.TotalAttempts, &p.SuccessRate,
-			&p.AvgResponseMs, &p.LastUpdated)
-		if err != nil {
-			return nil, err
-		}
-		performances = append(performances, p)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return performances, nil
-}
-
-// LearningProgressStats represents daily learning progress statistics
-type LearningProgressStats struct {
-	Date             time.Time `json:"date"`
-	WordsStudied     int       `json:"wordsStudied"`
-	WordsMastered    int       `json:"wordsMastered"`
-	TotalAttempts    int       `json:"totalAttempts"`
-	AccuracyRate     float64   `json:"accuracyRate"`
-	AvgResponseMs    int       `json:"avgResponseMs"`
-	StudyTimeSeconds int       `json:"studyTimeSeconds"`
-}
-
-func (r *AnalyticsRepository) GetLearningProgress(ctx context.Context, userID, wordlistID int64, days int) ([]LearningProgressStats, error) {
-	// Validate days parameter
-	if days < 0 {
-		days = 0
-	}
-	query := `
-		SELECT date, words_studied, words_mastered, total_quiz_attempts,
-		       CASE 
-		           WHEN total_quiz_attempts > 0 
-		           THEN ROUND(correct_attempts::numeric / total_quiz_attempts::numeric * 100, 1)
-		           ELSE 0
-		       END as accuracy_rate,
-		       average_response_time_ms, study_time_seconds
-		FROM learning_progress
-		WHERE user_id = $1 AND wordlist_id = $2 
-		  AND date >= CURRENT_DATE - INTERVAL '1 day' * $3
-		ORDER BY date DESC
-	`
-
-	rows, err := r.db.Query(ctx, query, userID, wordlistID, days)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var progress []LearningProgressStats
-	for rows.Next() {
-		var p LearningProgressStats
-		err := rows.Scan(&p.Date, &p.WordsStudied, &p.WordsMastered,
-			&p.TotalAttempts, &p.AccuracyRate, &p.AvgResponseMs, &p.StudyTimeSeconds)
-		if err != nil {
-			return nil, err
-		}
-		progress = append(progress, p)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return progress, nil
+func (r *AnalyticsRepository) GetCurrentBoxDistribution(ctx context.Context, userID, wordlistID int64) (*model.BoxDistribution, error) {
+	return r.BoxDistribution.GetCurrentBoxDistribution(ctx, userID, wordlistID)
 }
 
 func (r *AnalyticsRepository) GetBoxDistributionHistory(ctx context.Context, userID, wordlistID int64, days int) ([]map[string]interface{}, error) {
-	// Validate days parameter
-	if days < 0 {
-		days = 0
-	}
-	query := `
-		SELECT snapshot_date, box_1_count, box_2_count, box_3_count,
-		       box_4_count, box_5_count, box_6_count, box_7_count
-		FROM box_distribution_snapshot
-		WHERE user_id = $1 AND wordlist_id = $2
-		  AND snapshot_date >= CURRENT_DATE - INTERVAL '1 day' * $3
-		ORDER BY snapshot_date DESC
-	`
-
-	rows, err := r.db.Query(ctx, query, userID, wordlistID, days)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var distributions []map[string]interface{}
-	for rows.Next() {
-		var date time.Time
-		var b1, b2, b3, b4, b5, b6, b7 int
-
-		err := rows.Scan(&date, &b1, &b2, &b3, &b4, &b5, &b6, &b7)
-		if err != nil {
-			return nil, err
-		}
-
-		dist := map[string]interface{}{
-			"date": date.Format("2006-01-02"),
-			"boxes": BoxDistribution{
-				Box1Count:  b1,
-				Box2Count:  b2,
-				Box3Count:  b3,
-				Box4Count:  b4,
-				Box5Count:  b5,
-				Box6Count:  b6,
-				Box7Count:  b7,
-				TotalWords: b1 + b2 + b3 + b4 + b5 + b6 + b7,
-			},
-		}
-		distributions = append(distributions, dist)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return distributions, nil
+	return r.BoxDistribution.GetBoxDistributionHistory(ctx, userID, wordlistID, days)
 }
 
-// Dashboard Stats Operations
-
-// BoxDistribution represents the current distribution of words across Leitner boxes
-type BoxDistribution struct {
-	Box1Count  int `json:"box1"`
-	Box2Count  int `json:"box2"`
-	Box3Count  int `json:"box3"`
-	Box4Count  int `json:"box4"`
-	Box5Count  int `json:"box5"`
-	Box6Count  int `json:"box6"`
-	Box7Count  int `json:"box7"`
-	TotalWords int `json:"totalWords"`
+// Dashboard Stats Operations - delegate to sub-repository
+func (r *AnalyticsRepository) GetPracticeTime(ctx context.Context, userID, wordlistID int64, days int) ([]model.PracticeTimeStats, error) {
+	return r.DashboardStats.GetPracticeTime(ctx, userID, wordlistID, days)
 }
 
-// GetCurrentBoxDistribution retrieves the current distribution of words across Leitner boxes
-func (r *AnalyticsRepository) GetCurrentBoxDistribution(ctx context.Context, userID, wordlistID int64) (*BoxDistribution, error) {
-	// First, get the minimum box for each word (since a word can have multiple definitions in different boxes)
-	// Then count how many words are at each minimum box level
-	query := `
-		WITH word_min_boxes AS (
-			SELECT 
-				lst.word_id,
-				MIN(lst.box_id) as min_box_id
-			FROM leitner_system_tracking lst
-			JOIN words w ON lst.word_id = w.id
-			WHERE lst.user_id = $1 AND w.wordlist_id = $2
-			GROUP BY lst.word_id
-		)
-		SELECT 
-			COUNT(CASE WHEN min_box_id = 1 THEN 1 END) as box_1,
-			COUNT(CASE WHEN min_box_id = 2 THEN 1 END) as box_2,
-			COUNT(CASE WHEN min_box_id = 3 THEN 1 END) as box_3,
-			COUNT(CASE WHEN min_box_id = 4 THEN 1 END) as box_4,
-			COUNT(CASE WHEN min_box_id = 5 THEN 1 END) as box_5,
-			COUNT(CASE WHEN min_box_id = 6 THEN 1 END) as box_6,
-			COUNT(CASE WHEN min_box_id = 7 THEN 1 END) as box_7,
-			COUNT(*) as total_words
-		FROM word_min_boxes
-	`
-
-	var dist BoxDistribution
-	err := r.db.QueryRow(ctx, query, userID, wordlistID).Scan(
-		&dist.Box1Count, &dist.Box2Count, &dist.Box3Count, &dist.Box4Count,
-		&dist.Box5Count, &dist.Box6Count, &dist.Box7Count, &dist.TotalWords,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get box distribution: %w", err)
-	}
-
-	return &dist, nil
-}
-
-// PracticeTimeStats represents daily practice time statistics
-type PracticeTimeStats struct {
-	Date               time.Time `json:"date"`
-	PracticeTimeMs     int       `json:"practiceTimeMs"`
-	PracticeTimeMinutes float64   `json:"practiceTimeMinutes"`
-	QuizCount          int       `json:"quizCount"`
-}
-
-// GetPracticeTime retrieves daily practice time calculated from quiz response times
-func (r *AnalyticsRepository) GetPracticeTime(ctx context.Context, userID, wordlistID int64, days int) ([]PracticeTimeStats, error) {
-	// Validate days parameter
-	if days < 0 {
-		days = 0
-	}
-	
-	query := `
-		SELECT 
-			DATE(qp.created_at) as practice_date,
-			SUM(COALESCE(qp.response_time_ms, 0)) as total_practice_time_ms,
-			ROUND(SUM(COALESCE(qp.response_time_ms, 0))::numeric / 60000.0, 1) as practice_time_minutes,
-			COUNT(*) as quiz_count
-		FROM quiz_performance qp
-		WHERE qp.user_id = $1 
-		  AND qp.wordlist_id = $2
-		  AND qp.created_at >= CURRENT_DATE - INTERVAL '1 day' * $3
-		GROUP BY DATE(qp.created_at)
-		ORDER BY practice_date DESC
-	`
-
-	rows, err := r.db.Query(ctx, query, userID, wordlistID, days)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var practiceTime []PracticeTimeStats
-	for rows.Next() {
-		var p PracticeTimeStats
-		err := rows.Scan(&p.Date, &p.PracticeTimeMs, &p.PracticeTimeMinutes, &p.QuizCount)
-		if err != nil {
-			return nil, err
-		}
-		practiceTime = append(practiceTime, p)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return practiceTime, nil
-}
-
-// Wordlist-specific dashboard stats methods
-
-// GetWordlistMasteryStats retrieves mastery statistics for a specific wordlist
-func (r *AnalyticsRepository) GetWordlistMasteryStats(ctx context.Context, userID, wordlistID int64) (int, int, *float64, *int, error) {
-	query := `
-		SELECT 
-			COUNT(DISTINCT wm.word_id) AS total_words,
-			COUNT(DISTINCT CASE WHEN wm.mastery_level >= 0.8 THEN wm.word_id END) AS words_mastered,
-			AVG(wm.mastery_level) AS avg_mastery,
-			MAX(wm.streak_count) AS best_streak
-		FROM word_mastery wm
-		JOIN words w ON wm.word_id = w.id
-		WHERE wm.user_id = $1 AND w.wordlist_id = $2;
-	`
-
-	var totalWords, wordsMastered int
-	var avgMastery *float64
-	var bestStreak *int
-
-	err := r.db.QueryRow(ctx, query, userID, wordlistID).Scan(
-		&totalWords, &wordsMastered, &avgMastery, &bestStreak,
-	)
-
-	return totalWords, wordsMastered, avgMastery, bestStreak, err
-}
-
-// GetWordlistTodayStats retrieves today's activity statistics for a specific wordlist
-func (r *AnalyticsRepository) GetWordlistTodayStats(ctx context.Context, userID, wordlistID int64) (int, int, float64, error) {
-	query := `
-		SELECT 
-			COALESCE(SUM(words_studied), 0)           AS words_studied_today,
-			COALESCE(SUM(total_quiz_attempts), 0)      AS quizzes_today,
-			COALESCE(
-			  AVG(
-			    CASE 
-			      WHEN total_quiz_attempts > 0 
-			      THEN correct_attempts::float / total_quiz_attempts * 100 
-			      ELSE 0 
-			    END
-			  ), 
-			  0
-			) AS accuracy_today
-		FROM learning_progress
-		WHERE user_id = $1
-		  AND wordlist_id = $2
-		  AND date = CURRENT_DATE;
-	`
-
-	var wordsStudiedToday, quizzesToday int
-	var accuracyToday float64
-
-	err := r.db.QueryRow(ctx, query, userID, wordlistID).Scan(
-		&wordsStudiedToday, &quizzesToday, &accuracyToday,
-	)
-
-	return wordsStudiedToday, quizzesToday, accuracyToday, err
-}
-
-// GetWordlistCurrentStreak retrieves current daily streak for a specific wordlist
-func (r *AnalyticsRepository) GetWordlistCurrentStreak(ctx context.Context, userID, wordlistID int64) (int, error) {
-	query := `
-		WITH daily_activity AS (
-			SELECT 
-				date, 
-				SUM(total_quiz_attempts) AS attempts
-			FROM learning_progress
-			WHERE user_id = $1 AND wordlist_id = $2
-			GROUP BY date
-			ORDER BY date DESC
-		),
-		streak_calc AS (
-			SELECT 
-				date,
-				date - (ROW_NUMBER() OVER (ORDER BY date DESC))::int AS streak_group
-			FROM daily_activity
-			WHERE attempts > 0
-		)
-		SELECT COUNT(*) AS current_streak
-		FROM streak_calc
-		WHERE streak_group = (
-			SELECT streak_group 
-			FROM streak_calc 
-			WHERE date = CURRENT_DATE
-			LIMIT 1
-		);
-	`
-
-	var currentStreak int
-	err := r.db.QueryRow(ctx, query, userID, wordlistID).Scan(&currentStreak)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return 0, nil
-		}
-		return 0, err
-	}
-	return currentStreak, nil
+// Batch Progress Operations - delegate to sub-repository
+func (r *AnalyticsRepository) GetAllWordlistsProgress(ctx context.Context, userID int64) ([]model.WordlistProgress, error) {
+	return r.BatchProgress.GetAllWordlistsProgress(ctx, userID)
 }

@@ -52,7 +52,7 @@ const QuizScreen: React.FC = () => {
   const { wordlistId, wordlistName } = useLocalSearchParams();
   const { t } = useTranslation();
   const { isOnline, isOfflineAvailable } = useOffline();
-  const { invalidateBoxDistribution } = useInvalidateAnalytics();
+  const { invalidateBoxDistribution, invalidateAllAnalytics } = useInvalidateAnalytics();
 
   // State
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -80,7 +80,7 @@ const QuizScreen: React.FC = () => {
     queryFn: () => offlineQuizApi.newQuiz(Number(wordlistId)),
     retry: (failureCount, error) => {
       // Don't retry timeout errors automatically - let user decide
-      if (error.message.includes('timeout')) {
+      if (error?.message?.includes('timeout')) {
         return false;
       }
       return isOnline ? failureCount < 2 : false;
@@ -88,6 +88,7 @@ const QuizScreen: React.FC = () => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 0, // Always fetch fresh quiz
     refetchOnWindowFocus: false,
+    enabled: !!wordlistId, // Only fetch if wordlistId exists
   });
 
   // Error reporting hook
@@ -111,7 +112,7 @@ const QuizScreen: React.FC = () => {
 
   useEffect(() => {
     if (quiz?.id) {
-      // New quiz received
+      // Quiz received (even if it's the same ID)
       quizDisplayedAtRef.current = Date.now();
       setCurrentQuizId(quiz.id);
       setIsLoadingNext(false);
@@ -123,7 +124,7 @@ const QuizScreen: React.FC = () => {
         loadingTimeoutRef.current = null;
       }
     }
-  }, [quiz?.id]);
+  }, [quiz, retryCount]); // Trigger on quiz object change or retry, not just ID
 
   // Handle loading timeout
   useEffect(() => {
@@ -133,10 +134,10 @@ const QuizScreen: React.FC = () => {
         clearTimeout(loadingTimeoutRef.current);
       }
       
-      // Set timeout for loading state
+      // Set timeout for loading state (aligned with API timeout)
       loadingTimeoutRef.current = setTimeout(() => {
         setLoadingTimeout(true);
-      }, 10000); // Show timeout options after 10 seconds
+      }, 16000); // Show timeout options after 16 seconds (1s after API timeout)
     } else {
       // Clear timeout when not loading
       if (loadingTimeoutRef.current) {
@@ -165,8 +166,8 @@ const QuizScreen: React.FC = () => {
         wordlistID: Number(wordlistId),
       }),
     onSuccess: () => {
-      // Invalidate box distribution after answering a quiz
-      invalidateBoxDistribution(Number(wordlistId));
+      // Invalidate all analytics after answering a quiz (real-time updates)
+      invalidateAllAnalytics(Number(wordlistId));
       
       if (fastMode) {
         setTimeout(() => {
@@ -253,7 +254,8 @@ const QuizScreen: React.FC = () => {
     }
   };
 
-  if ((isFetching || !quiz) && quizCount === 0) {
+  // Show initial loading screen while fetching first quiz
+  if ((isLoading || isFetching || !quiz) && quizCount === 0) {
     return (
       <ImageBackground
         source={require("@/assets/images/dashboard-bg.png")}
@@ -263,7 +265,7 @@ const QuizScreen: React.FC = () => {
         <SafeAreaView style={styles.container}>
           <View style={[styles.quizCard, { margin: 20 }]}>
             <QuizLoadingState
-              isLoading={isFetching}
+              isLoading={isLoading || isFetching}
               hasTimeout={loadingTimeout}
               error={error}
               onRetry={handleRetryQuiz}

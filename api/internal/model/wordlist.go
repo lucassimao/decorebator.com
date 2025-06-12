@@ -7,11 +7,6 @@ import (
 	"github.com/jackc/pgx/pgtype"
 )
 
-type UserStats struct {
-	TotalWords   int `json:"totalWords"`
-	Wordlists    int `json:"wordlists"`
-	WordsLearned int `json:"wordsLearned"`
-}
 
 type Wordlist struct {
 	ID           int64              `json:"id"`

@@ -3,52 +3,114 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
 	"github.com/jackc/pgx/v5"
 	"golang.org/x/sync/errgroup"
 )
 
+var (
+	analyticsServiceInstance interface{}
+	analyticsServiceOnce     sync.Once
+	analyticsServiceErr      error
+)
+
 type AnalyticsService struct {
-	repo *repository.AnalyticsRepository
+	repo       *repository.AnalyticsRepository
+	userID     int64
+	wordlistID int64
 }
 
-func NewAnalyticsService() (*AnalyticsService, error) {
+// AnalyticsServiceInterface defines the methods that both regular and cached analytics services must implement
+type AnalyticsServiceInterface interface {
+	Stats(ctx context.Context) (*model.WordlistStats, error)
+	ProgressSummary(ctx context.Context) (*model.ProgressSummaryResponse, error)
+	WordMastery(ctx context.Context) ([]model.WordMasteryStats, error)
+	Progress(ctx context.Context, days int) ([]model.LearningProgressStats, error)
+	QuizPerformance(ctx context.Context) ([]model.QuizTypePerformance, error)
+	BoxDistribution(ctx context.Context) (*model.BoxDistribution, error)
+	BoxHistory(ctx context.Context, days int) ([]map[string]interface{}, error)
+	PracticeTime(ctx context.Context, days int) ([]model.PracticeTimeStats, error)
+	TrackQuiz(ctx context.Context, result QuizResult, tx pgx.Tx) error
+	UpdateBoxDistribution(ctx context.Context, userID, wordlistID int64) error
+}
+
+// AnalyticsConfig holds configuration for creating analytics service
+type AnalyticsConfig struct {
+	UserID     int64
+	WordlistID int64
+	UseCache   bool
+	CacheTTL   time.Duration
+}
+
+// NewAnalyticsService creates an analytics service instance with the given configuration
+func NewAnalyticsService(cfg AnalyticsConfig) (AnalyticsServiceInterface, error) {
 	db, err := common.GetDBConnection()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get database connection: %w", err)
 	}
+
 	repo := repository.NewAnalyticsRepository(db)
-	return &AnalyticsService{repo: repo}, nil
+	baseService := &AnalyticsService{
+		repo:       repo,
+		userID:     cfg.UserID,
+		wordlistID: cfg.WordlistID,
+	}
+
+	// If caching is disabled, return base service
+	if !cfg.UseCache {
+		return baseService, nil
+	}
+
+	// Try to get Redis client for caching
+	cache, err := common.GetRedisClient()
+	if err != nil {
+		// Redis is optional - log error but continue with non-cached service
+		common.Logger.Warn("Redis not available, analytics will use database only", "error", err)
+		return baseService, nil
+	}
+
+	// Use cached service with TTL
+	return NewCachedAnalyticsService(db, cache, cfg)
 }
 
 // QuizResult contains the data needed to track quiz performance
 type QuizResult = common.QuizResult
 
 // TrackQuizPerformance records the result of a quiz attempt
-func (as *AnalyticsService) TrackQuizPerformance(ctx context.Context, result QuizResult, tx pgx.Tx) error {
+func (as *AnalyticsService) TrackQuiz(ctx context.Context, result QuizResult, tx pgx.Tx) error {
 	// 1. Record individual quiz performance
-	err := as.recordQuizPerformance(ctx, result, tx)
+
+	err := as.repo.RecordQuizPerformance(ctx, tx,
+		result.UserID, result.WordlistID, result.WordID, result.DefinitionID,
+		result.LeitnerSystemTrackingID, string(result.QuizType), result.BoxID,
+		result.IsCorrect, result.ResponseTimeMs,
+	)
+
 	if err != nil {
 		return fmt.Errorf("failed to record quiz performance: %w", err)
 	}
 
 	// 2. Update word mastery
-	err = as.updateWordMastery(ctx, result, tx)
+	err = as.repo.UpsertWordMastery(ctx, tx, result.UserID, result.WordID, result.BoxID, result.IsCorrect)
 	if err != nil {
 		return fmt.Errorf("failed to update word mastery: %w", err)
 	}
 
 	// 3. Update daily learning progress
-	err = as.updateLearningProgress(ctx, result, tx)
+	// Use UTC to ensure consistent date handling across timezones
+	today := time.Now().UTC().Format("2006-01-02")
+	err = as.repo.UpsertLearningProgress(ctx, tx, result.UserID, result.WordlistID, today, result.IsCorrect, result.ResponseTimeMs)
 	if err != nil {
 		return fmt.Errorf("failed to update learning progress: %w", err)
 	}
 
 	// 4. Update quiz type analytics
-	err = as.updateQuizTypeAnalytics(ctx, result, tx)
+	err = as.repo.UpsertQuizTypeAnalytics(ctx, tx, result.UserID, string(result.QuizType), result.IsCorrect, result.ResponseTimeMs)
 	if err != nil {
 		return fmt.Errorf("failed to update quiz type analytics: %w", err)
 	}
@@ -56,50 +118,19 @@ func (as *AnalyticsService) TrackQuizPerformance(ctx context.Context, result Qui
 	return nil
 }
 
-func (as *AnalyticsService) recordQuizPerformance(ctx context.Context, result QuizResult, tx pgx.Tx) error {
-	return as.repo.RecordQuizPerformance(ctx, tx,
-		result.UserID, result.WordlistID, result.WordID, result.DefinitionID,
-		result.LeitnerSystemTrackingID, string(result.QuizType), result.BoxID,
-		result.IsCorrect, result.ResponseTimeMs,
-	)
-}
-
-func (as *AnalyticsService) updateWordMastery(ctx context.Context, result QuizResult, tx pgx.Tx) error {
-	return as.repo.UpsertWordMastery(ctx, tx, result.UserID, result.WordID, result.BoxID, result.IsCorrect)
-}
-
-func (as *AnalyticsService) updateLearningProgress(ctx context.Context, result QuizResult, tx pgx.Tx) error {
-	// Use UTC to ensure consistent date handling across timezones
-	today := time.Now().UTC().Format("2006-01-02")
-	return as.repo.UpsertLearningProgress(ctx, tx, result.UserID, result.WordlistID, today, result.IsCorrect, result.ResponseTimeMs)
-}
-
-func (as *AnalyticsService) updateQuizTypeAnalytics(ctx context.Context, result QuizResult, tx pgx.Tx) error {
-	return as.repo.UpsertQuizTypeAnalytics(ctx, tx, result.UserID, string(result.QuizType), result.IsCorrect, result.ResponseTimeMs)
-}
-
-// Analytics Query Methods
-
-// Type aliases to maintain compatibility
-type WordMasteryStats = repository.WordMasteryStats
-
 // GetWordMastery retrieves mastery stats for all words in a wordlist
-func (as *AnalyticsService) GetWordMastery(ctx context.Context, userID, wordlistID int64) ([]WordMasteryStats, error) {
-	return as.repo.GetWordMastery(ctx, userID, wordlistID)
+func (as *AnalyticsService) WordMastery(ctx context.Context) ([]model.WordMasteryStats, error) {
+	return as.repo.GetWordMastery(ctx, as.userID, as.wordlistID)
 }
-
-type QuizTypePerformance = repository.QuizTypePerformance
 
 // GetQuizTypePerformance retrieves performance stats by quiz type for a specific wordlist
-func (as *AnalyticsService) GetQuizTypePerformance(ctx context.Context, userID int64, wordlistID int64) ([]QuizTypePerformance, error) {
-	return as.repo.GetQuizTypePerformance(ctx, userID, wordlistID)
+func (as *AnalyticsService) QuizPerformance(ctx context.Context) ([]model.QuizTypePerformance, error) {
+	return as.repo.GetQuizTypePerformance(ctx, as.userID, as.wordlistID)
 }
 
-type LearningProgressStats = repository.LearningProgressStats
-
 // GetLearningProgress retrieves daily learning progress
-func (as *AnalyticsService) GetLearningProgress(ctx context.Context, userID, wordlistID int64, days int) ([]LearningProgressStats, error) {
-	return as.repo.GetLearningProgress(ctx, userID, wordlistID, days)
+func (as *AnalyticsService) Progress(ctx context.Context, days int) ([]model.LearningProgressStats, error) {
+	return as.repo.GetLearningProgress(ctx, as.userID, as.wordlistID, days)
 }
 
 // UpdateBoxDistribution takes a snapshot of current box distribution
@@ -107,75 +138,56 @@ func (as *AnalyticsService) UpdateBoxDistribution(ctx context.Context, userID, w
 	return as.repo.UpsertBoxDistribution(ctx, userID, wordlistID)
 }
 
-// GetBoxDistributionHistory retrieves historical box distribution
-func (as *AnalyticsService) GetBoxDistributionHistory(ctx context.Context, userID, wordlistID int64, days int) ([]map[string]interface{}, error) {
-	return as.repo.GetBoxDistributionHistory(ctx, userID, wordlistID, days)
+// GetHistoricalBoxDistribution retrieves historical box distribution
+func (as *AnalyticsService) BoxHistory(ctx context.Context, days int) ([]map[string]interface{}, error) {
+	return as.repo.GetBoxDistributionHistory(ctx, as.userID, as.wordlistID, days)
 }
-
-
-// Type alias for BoxDistribution
-type BoxDistribution = repository.BoxDistribution
 
 // GetCurrentBoxDistribution retrieves the current distribution of words across Leitner boxes
-func (as *AnalyticsService) GetCurrentBoxDistribution(ctx context.Context, userID, wordlistID int64) (*BoxDistribution, error) {
-	return as.repo.GetCurrentBoxDistribution(ctx, userID, wordlistID)
+func (as *AnalyticsService) BoxDistribution(ctx context.Context) (*model.BoxDistribution, error) {
+	return as.repo.GetCurrentBoxDistribution(ctx, as.userID, as.wordlistID)
 }
-
-// PracticeTimeStats represents daily practice time statistics
-type PracticeTimeStats = repository.PracticeTimeStats
 
 // GetPracticeTime retrieves daily practice time for the last N days
-func (as *AnalyticsService) GetPracticeTime(ctx context.Context, userID, wordlistID int64, days int) ([]PracticeTimeStats, error) {
-	return as.repo.GetPracticeTime(ctx, userID, wordlistID, days)
+func (as *AnalyticsService) PracticeTime(ctx context.Context, days int) ([]model.PracticeTimeStats, error) {
+	return as.repo.GetPracticeTime(ctx, as.userID, as.wordlistID, days)
 }
 
-// WordlistDashboardStats holds dashboard statistics for a specific wordlist
-type WordlistDashboardStats struct {
-	TotalWords        int      `json:"totalWords"`
-	WordsMastered     int      `json:"wordsMastered"`
-	AverageMastery    *float64 `json:"averageMastery"` // could be nil if no rows
-	BestStreak        *int     `json:"bestStreak"`     // could be nil if no data
-	WordsStudiedToday int      `json:"wordsStudiedToday"`
-	QuizzesToday      int      `json:"quizzesToday"`
-	AccuracyToday     float64  `json:"accuracyToday"`
-	CurrentStreak     int      `json:"currentStreak"`
-}
+// Stats fetches and returns dashboard statistics for the wordlist
+func (svc *AnalyticsService) Stats(ctx context.Context) (*model.WordlistStats, error) {
+	stats := &model.WordlistStats{}
 
-// GetWordlistDashboardStats fetches and returns dashboard statistics for a specific wordlist
-func (svc *AnalyticsService) GetWordlistDashboardStats(ctx context.Context, userID, wordlistID int64) (*WordlistDashboardStats, error) {
-	stats := &WordlistDashboardStats{}
-	
 	// Use errgroup to run all queries concurrently
 	g, ctx := errgroup.WithContext(ctx)
-	
+
 	// 1) Wordlist mastery summary
 	g.Go(func() error {
-		return svc.fetchWordlistMasteryStats(ctx, userID, wordlistID, stats)
+		return svc.fetchWordlistMasteryStats(ctx, svc.userID, svc.wordlistID, stats)
 	})
-	
+
 	// 2) Today's activity summary for this wordlist
 	g.Go(func() error {
-		return svc.fetchWordlistTodayStats(ctx, userID, wordlistID, stats)
+		return svc.fetchWordlistTodayStats(ctx, svc.userID, svc.wordlistID, stats)
 	})
-	
+
 	// 3) Current streak for this wordlist
 	var streak int
 	g.Go(func() error {
 		var err error
-		streak, err = svc.fetchWordlistCurrentStreak(ctx, userID, wordlistID)
+		streak, err = svc.fetchWordlistCurrentStreak(ctx, svc.userID, svc.wordlistID)
 		return err
 	})
-	
+
 	// Wait for all goroutines to complete
 	if err := g.Wait(); err != nil {
-		return nil, fmt.Errorf("failed to fetch wordlist dashboard stats: %w", err)
+		return nil, fmt.Errorf("failed to fetch wordlist stats: %w", err)
 	}
-	
+
 	stats.CurrentStreak = streak
 	return stats, nil
 }
 
-func (svc *AnalyticsService) fetchWordlistMasteryStats(ctx context.Context, userID, wordlistID int64, stats *WordlistDashboardStats) error {
+func (svc *AnalyticsService) fetchWordlistMasteryStats(ctx context.Context, userID, wordlistID int64, stats *model.WordlistStats) error {
 	totalWords, wordsMastered, avgMastery, bestStreak, err := svc.repo.GetWordlistMasteryStats(ctx, userID, wordlistID)
 	if err != nil {
 		return err
@@ -188,7 +200,7 @@ func (svc *AnalyticsService) fetchWordlistMasteryStats(ctx context.Context, user
 	return nil
 }
 
-func (svc *AnalyticsService) fetchWordlistTodayStats(ctx context.Context, userID, wordlistID int64, stats *WordlistDashboardStats) error {
+func (svc *AnalyticsService) fetchWordlistTodayStats(ctx context.Context, userID, wordlistID int64, stats *model.WordlistStats) error {
 	wordsStudiedToday, quizzesToday, accuracyToday, err := svc.repo.GetWordlistTodayStats(ctx, userID, wordlistID)
 	if err != nil {
 		return err
@@ -196,10 +208,22 @@ func (svc *AnalyticsService) fetchWordlistTodayStats(ctx context.Context, userID
 
 	stats.WordsStudiedToday = wordsStudiedToday
 	stats.QuizzesToday = quizzesToday
-	stats.AccuracyToday = accuracyToday
+	stats.AccuracyToday = &accuracyToday
 	return nil
 }
 
 func (svc *AnalyticsService) fetchWordlistCurrentStreak(ctx context.Context, userID, wordlistID int64) (int, error) {
 	return svc.repo.GetWordlistCurrentStreak(ctx, userID, wordlistID)
+}
+
+// GetAllWordlistsProgress retrieves progress summary for all user's wordlists
+func (as *AnalyticsService) ProgressSummary(ctx context.Context) (*model.ProgressSummaryResponse, error) {
+	progress, err := as.repo.GetAllWordlistsProgress(ctx, as.userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get wordlists progress: %w", err)
+	}
+
+	return &model.ProgressSummaryResponse{
+		Wordlists: progress,
+	}, nil
 }

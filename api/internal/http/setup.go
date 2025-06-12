@@ -19,7 +19,9 @@ func init() {
 	}
 
 	if err := sentry.Init(sentry.ClientOptions{
-		Dsn: sentryDsn,
+		Dsn:            sentryDsn,
+		Debug:          true,
+		SendDefaultPII: true,
 	}); err != nil {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
 	}
@@ -77,7 +79,6 @@ func SetupRoutes() *gin.Engine {
 	authenticatedRoutes.Use(Authenticate)
 	{
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
-		authenticatedRoutes.GET("/wordlists/stats", WordlistRoutes.GetStats)
 		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(subService, "create_wordlist"), WordlistRoutes.Create)
 		authenticatedRoutes.GET("/wordlists/:wordlistId", WordlistRoutes.GetById)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId", WordlistRoutes.Update)

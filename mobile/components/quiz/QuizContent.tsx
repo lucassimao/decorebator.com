@@ -41,7 +41,9 @@ export const QuizContent: React.FC<QuizContentProps> = ({
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
   const [imageRetryCount, setImageRetryCount] = useState(0);
+  const [showLoading, setShowLoading] = useState(false);
   const imageLoadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadingDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Reset player
   useEffect(() => {
@@ -60,19 +62,31 @@ export const QuizContent: React.FC<QuizContentProps> = ({
 
   // Handle image changes
   useEffect(() => {
-    if (quiz?.type === "WORD_FROM_IMAGE" && quiz.value !== currentImageUrl) {
-      setImageLoading(true);
-      setImageError(false);
-      setImageRetryCount(0);
-      setCurrentImageUrl(quiz.value);
+    if (quiz?.type === "WORD_FROM_IMAGE" && quiz.value) {
+      // Only reset loading state if the image URL actually changed
+      if (quiz.value !== currentImageUrl) {
+        setImageLoading(true);
+        setImageError(false);
+        setImageRetryCount(0);
+        setShowLoading(false);
+        setCurrentImageUrl(quiz.value);
+        
+        // Clear any existing loading delay
+        if (loadingDelayRef.current) {
+          clearTimeout(loadingDelayRef.current);
+        }
+      }
     }
-  }, [quiz?.value, quiz?.type, currentImageUrl]);
+  }, [quiz?.value, quiz?.type]); // Remove currentImageUrl from dependencies to avoid loops
 
-  // Cleanup timeout on unmount
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (imageLoadTimeoutRef.current) {
         clearTimeout(imageLoadTimeoutRef.current);
+      }
+      if (loadingDelayRef.current) {
+        clearTimeout(loadingDelayRef.current);
       }
     };
   }, []);
@@ -82,12 +96,21 @@ export const QuizContent: React.FC<QuizContentProps> = ({
   const retryImageLoad = () => {
     setImageError(false);
     setImageLoading(true);
+    setShowLoading(false);
     setImageRetryCount((prev) => prev + 1);
-    // Force reload by adding/updating timestamp query parameter
-    const baseUrl = quiz.value.split('?')[0];
-    const existingParams = quiz.value.includes('?') ? quiz.value.split('?')[1] : '';
+    
+    // Clear any existing timeouts
+    if (imageLoadTimeoutRef.current) {
+      clearTimeout(imageLoadTimeoutRef.current);
+    }
+    if (loadingDelayRef.current) {
+      clearTimeout(loadingDelayRef.current);
+    }
+    
+    // Force reload by adding timestamp query parameter
     const timestamp = Date.now();
-    setCurrentImageUrl(`${baseUrl}?retry=${timestamp}${existingParams ? '&' + existingParams : ''}`);
+    const separator = quiz.value.includes('?') ? '&' : '?';
+    setCurrentImageUrl(`${quiz.value}${separator}retry=${timestamp}`);
   };
 
   const hideSquareBracketContent = (text: string): string => {
@@ -169,7 +192,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
         return (
           <View style={styles.questionContainer}>
             <View style={styles.imageContainer}>
-              {imageLoading && !imageError && (
+              {showLoading && !imageError && (
                 <View style={styles.imageLoadingContainer}>
                   <ActivityIndicator size="large" color="#FF7B54" />
                   <Text style={styles.imageLoadingText}>
@@ -217,29 +240,56 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                   ]}
                   resizeMode="contain"
                   onLoadStart={() => {
-                    setImageLoading(true);
-                    setImageError(false);
-                    // Set a timeout for image loading (15 seconds)
+                    // Only set loading if not already loading to prevent rapid state changes
+                    if (!imageLoading) {
+                      setImageLoading(true);
+                      setImageError(false);
+                      setShowLoading(false);
+                      
+                      // Delay showing loading indicator to prevent flashing for quick loads
+                      loadingDelayRef.current = setTimeout(() => {
+                        setShowLoading(true);
+                      }, 300); // Show loading after 300ms
+                    }
+                    
+                    // Set a timeout for image loading (10 seconds)
                     if (imageLoadTimeoutRef.current) {
                       clearTimeout(imageLoadTimeoutRef.current);
                     }
                     imageLoadTimeoutRef.current = setTimeout(() => {
                       setImageLoading(false);
+                      setShowLoading(false);
                       setImageError(true);
-                    }, 15000);
+                    }, 10000);
                   }}
-                  onLoadEnd={() => {
+                  onLoad={() => {
+                    // Clear all timeouts
                     if (imageLoadTimeoutRef.current) {
                       clearTimeout(imageLoadTimeoutRef.current);
+                      imageLoadTimeoutRef.current = null;
                     }
+                    if (loadingDelayRef.current) {
+                      clearTimeout(loadingDelayRef.current);
+                      loadingDelayRef.current = null;
+                    }
+                    
                     setImageLoading(false);
+                    setShowLoading(false);
                     setImageError(false);
                   }}
                   onError={() => {
+                    // Clear all timeouts
                     if (imageLoadTimeoutRef.current) {
                       clearTimeout(imageLoadTimeoutRef.current);
+                      imageLoadTimeoutRef.current = null;
                     }
+                    if (loadingDelayRef.current) {
+                      clearTimeout(loadingDelayRef.current);
+                      loadingDelayRef.current = null;
+                    }
+                    
                     setImageLoading(false);
+                    setShowLoading(false);
                     setImageError(true);
                   }}
                 />

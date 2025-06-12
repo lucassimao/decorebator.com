@@ -1,4 +1,5 @@
 import { Wordlist } from "@/api/wordlists";
+import { WordlistProgress } from "@/api/analytics";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
@@ -16,12 +17,12 @@ import { LANGUAGES } from "./CreateWordlistModal";
 import * as wordlistsApi from "@/api/wordlists";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { useAnalytics } from "@/hooks/useAnalytics";
 import { useUserInfo } from "@/hooks/users";
 import { LinearGradient } from "expo-linear-gradient";
 
 type WordlistItemProps = {
   item: Wordlist;
+  progress?: WordlistProgress;
   onQuizStart?: (wordlist: Wordlist) => void;
   onPressed?: () => void;
   onUpgradePress?: () => void;
@@ -29,6 +30,7 @@ type WordlistItemProps = {
 
 const WordlistItem: React.FC<WordlistItemProps> = ({
   item,
+  progress,
   onQuizStart,
   onPressed,
   onUpgradePress,
@@ -41,8 +43,10 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const { isPremium } = useUserInfo();
   const language = LANGUAGES.find((l) => item.languageCode === l.code)!;
 
-  // Use analytics-based progress calculation
-  const { progressPercentage } = useAnalytics(item.id);
+  // Use progress from props
+  const progressPercentage = progress?.progressPercent ?? 0;
+  const currentStreak = progress?.currentStreak ?? 0;
+  const wordsMastered = progress?.wordsMastered ?? 0;
 
   // Delete mutation
   const deleteMutation = useMutation({

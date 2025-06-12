@@ -266,6 +266,24 @@ npm run lint          # Run linter
 
 ## 🆕 Recent Features & Improvements
 
+### Analytics System Redesign (January 2025)
+- **Solved N×8 API Call Problem**: New batch progress endpoint reduces dashboard calls from N×8 to 1
+- **Redis Caching Infrastructure**: 
+  - Tier-based TTLs: 10 seconds for premium users, 15 minutes for free users
+  - Graceful fallback to database when Redis unavailable
+  - Automatic cache invalidation using predicate functions for React Query v5 compatibility
+  - Real-time analytics updates for premium users after quiz sessions
+- **Performance Optimizations**:
+  - 6 new strategic database indexes for sub-second query performance
+  - Unified analytics service with interface-based architecture
+  - Factory pattern eliminates redundant database connections
+  - Historical box distribution optimized for 7-day windows instead of 30 days
+- **Developer Experience**:
+  - Simplified API with shorter method names (`Stats`, `Progress`, `WordMastery`)
+  - Single factory method with configuration flags
+  - Per-request service instantiation for clean separation of concerns
+  - Fixed cache invalidation key matching for `isPremium` flag in query keys
+
 ### Multi-Language Definition Support
 - **7 Supported Languages**: English, Spanish, French, German, Italian, Portuguese, Japanese
 - **Native Language Processing**: AI generates definitions in the target language with proper grammar
@@ -302,7 +320,7 @@ npm run lint          # Run linter
 - **Progress Tracking**: Integrated with Leitner system for spaced repetition
 - **Error Reporting Integration**: Report issues directly from flashcard interface
 
-### Comprehensive Analytics Platform
+### Comprehensive Analytics Platform (January 2025 Redesign)
 - **Word Mastery Tracking**: Individual word progress with accuracy calculations
 - **Learning Progress Visualization**: Daily statistics and progress charts
 - **Quiz Performance Analysis**: Performance metrics by quiz type (now wordlist-scoped)
@@ -310,8 +328,17 @@ npm run lint          # Run linter
   - Current distribution correctly counts unique words (not definitions)
   - Historical snapshots of Leitner system progression
   - Word considered at its lowest box level across all definitions
-- **Materialized Views**: Optimized database performance with `mv_word_mastery_current` and `mv_quiz_type_performance_by_wordlist`
-- **Future Enhancement**: Real-time analytics for premium users (1-minute cache) vs hourly updates for free users
+- **High-Performance Architecture**: 
+  - Redis caching with tier-based TTLs (1 hour for free users, 1 minute for premium)
+  - Batch progress API reduces dashboard calls from N×8 to 1
+  - Strategic database indexes for sub-second query performance
+  - Real-time cache invalidation for premium users after quiz completion
+- **Scalable Design**: Built to handle millions of users with efficient caching strategy
+- **Modern Service Architecture**:
+  - Interface-based design for flexible cached/non-cached implementations
+  - Factory pattern with per-request service instantiation
+  - Graceful Redis fallback to direct database queries
+  - Unified analytics interface with simplified method names
 
 ### Offline Support for Premium Users
 - **Local Data Caching**: Wordlists and definitions cached for offline access
@@ -373,9 +400,22 @@ npm run lint          # Run linter
   - Proper initial loading screen with timeout handling
 - **Root Cause**: Complex state dependencies between `isLoadingNext`, `isFetching`, and `currentQuizId` were getting out of sync
 
+### Timezone & Date Handling Fix (January 2025)
+- **Fixed Date Display Issues**: Resolved timezone conversion problems affecting all analytics charts
+- **Root Cause**: Backend sends ISO timestamps like "2025-06-11T00:00:00Z" which JavaScript interpreted as UTC, causing dates to display incorrectly in non-UTC timezones
+- **Components Fixed**:
+  - `HistoricalBoxDistributionChart.tsx`: Chart labels now show correct dates
+  - `PracticeTimeChart.tsx`: Practice time chart displays accurate date labels  
+  - `LearningProgressChart.tsx`: Learning progress trends show proper dates
+- **Technical Solution**: 
+  - Extract date part from ISO timestamps using `split('T')[0]`
+  - Parse date components manually as local time instead of UTC
+  - Prevents timezone conversion that was shifting dates by one day
+- **User Impact**: Charts now correctly show "Today", "Yesterday", and proper MM/DD format instead of incorrect dates
+
 ## 📊 Database Schema
 
-Key tables:
+Key tables with performance indexes:
 - `users`: User accounts, authentication, subscription status, and profile data (profile picture, country, date of birth, preferred language)
 - `subscriptions`: Subscription history and details with Stripe integration
 - `subscription_events`: Stripe webhook event audit trail & email notification tracking
@@ -628,9 +668,9 @@ The implementation in both quiz and flashcard screens (`quiz.tsx` and `practice.
 
 This system ensures legitimate users can report genuine issues while preventing abuse that could lead to excessive API costs.
 
-## 🧠 Leitner System for Spaced Repetition
+## 🧠 Leitner System for Spaced Repetition (Deterministic Implementation)
 
-Decorebator implements a sophisticated Leitner system for optimal vocabulary retention through spaced repetition.
+Decorebator implements a sophisticated deterministic Leitner system for optimal vocabulary retention through spaced repetition.
 
 ### How the Leitner System Works
 
@@ -638,59 +678,83 @@ The system uses **7 boxes** with increasing review intervals:
 
 | Box | Review Interval | Purpose |
 |-----|----------------|---------|
-| **Box 1** | Immediate | New words, failed reviews |
+| **Box 1** | Immediate (always available) | New words, failed reviews |
 | **Box 2** | 1 hour | Recent learning |
-| **Box 3** | 1 day | Short-term retention |
-| **Box 4** | 3 days | Medium-term retention |
-| **Box 5** | 1 week | Long-term retention |
-| **Box 6** | 2 weeks | Extended retention |
-| **Box 7** | 1 month | Mastered words |
+| **Box 3** | 1 day (24 hours) | Short-term retention |
+| **Box 4** | 3 days (72 hours) | Medium-term retention |
+| **Box 5** | 1 week (168 hours) | Long-term retention |
+| **Box 6** | 2 weeks (336 hours) | Extended retention |
+| **Box 7** | 1 month (720 hours) | Mastered words |
 
 ### Progression Rules
 - **Correct Answer**: Word moves to the next box (up to Box 7)
 - **Incorrect Answer**: Word resets to Box 1 regardless of current box
 - **Box 7**: Words stay in Box 7 when answered correctly (mastered state)
+- **Temporary Skip**: Incorrect answers trigger 10-minute skip to prevent immediate repetition
+
+### Deterministic Selection Algorithm
+
+The system uses a **100% deterministic priority-based selection** that guarantees word availability:
+
+1. **Progress Calculation**: Each definition has a progress ratio (time_elapsed / target_interval)
+2. **Priority Buckets**:
+   - Priority 1: Overdue definitions (100%+ of interval elapsed)
+   - Priority 2: Due soon definitions (80-100% of interval)
+   - Priority 3: Available definitions (50-80% of interval)
+   - Priority 4: All other definitions (sorted by progress %)
+3. **Selection**: Always picks the highest priority definition deterministically
+4. **Benefits**:
+   - No randomness - same data always produces same result
+   - Guaranteed selection - never "no words available" errors
+   - Respects Leitner intervals precisely
+   - Easy to debug and test
 
 ### Quiz Type Progression
 
-Different quiz types are introduced based on the word's box level to increase difficulty:
+Different quiz types are introduced based on the word's box level with minimal overlap:
 
 | Box | Quiz Types | Learning Focus |
 |-----|------------|----------------|
-| **1** | Guess Meaning | Basic recognition |
+| **1** | Guess Meaning | Recognition |
 | **2** | Word from Meaning | Basic recall |
-| **3** | Word from Image, Guess Meaning | Visual association |
-| **4** | Complete Sentence, Word from Meaning | Contextual understanding |
-| **5** | Write Word from Definition, Complete Sentence | Active recall |
-| **6** | Word from Audio, Write Word from Definition | Audio recognition |
-| **7** | Meaning from Audio, Word from Audio | Advanced audio comprehension |
+| **3** | Word from Image | Visual association |
+| **4** | Complete Sentence | Contextual understanding |
+| **5** | Write Word from Definition | Active recall |
+| **6** | Word from Audio, Word from Example Audio | Audio recognition |
+| **7** | Meaning from Audio, Word from Image, Write Word, Complete Sentence | Mastery mix |
 
 ### Intelligent Quiz Selection
 
-The system dynamically selects appropriate quiz types based on available content:
+The system uses **deterministic quiz type rotation** based on:
 
-- **Audio Quizzes**: Only shown if audio URL is available
-- **Image Quizzes**: Only shown if definition has associated images
-- **Sentence Completion**: Only shown if examples with brackets `[word]` exist
-- **Fallback**: Always falls back to basic "Guess Meaning" if specialized content unavailable
+- **Content Availability**: Validates audio, images, examples exist
+- **Time-Based Rotation**: 5-minute cycles ensure all types get used
+- **Fallback Logic**: Always falls back to "Guess Meaning" if content unavailable
+- **Fair Distribution**: Definition ID + time rotation ensures variety
 
-### Quiz Generation Algorithm
+### Quiz Generation Features
 
-1. **Due Definition Selection**: 
-   - Prioritizes definitions that are due for review based on box intervals
-   - Orders by box level (lower boxes first) then by oldest review time
-   - Excludes temporarily skipped definitions (error reporting system)
+1. **Definition Selection**: 
+   - Deterministic priority-based algorithm
+   - Respects box intervals without probability calculations
+   - Excludes temporarily skipped definitions (error reports)
+   - Logs selection details for monitoring
 
 2. **Quiz Type Selection**:
-   - Randomly selects from available quiz types for the word's current box
-   - Validates content availability (audio, images, examples)
-   - Ensures quiz can be properly generated with sufficient options
+   - Deterministic rotation based on definition ID and time
+   - Content validation before selection
+   - Ensures all available types cycle fairly
 
 3. **Multiple Choice Generation**:
-   - Generates 3 distractor options from definitions with same part of speech
-   - Excludes words from the same root/family to avoid confusion
-   - Filters options by length (< 50 characters) for readability
-   - Randomizes answer position within options
+   - 3 distractor options from same part of speech
+   - Excludes same word family to avoid confusion
+   - Length filtering (< 50 characters) for readability
+   - Random answer positioning
+
+4. **Fair Example Distribution**:
+   - Tracks example usage to prevent repetition
+   - Prioritizes unused examples, then least recently used
+   - 24-hour usage window for variety
 
 ### Error Reporting Integration
 
@@ -719,14 +783,23 @@ The Leitner system is seamlessly integrated with the interactive flashcard featu
 
 ### Advanced Features
 
-- **Smart Fallback**: When no due definitions exist, selects oldest reviewed definitions
+- **Deterministic Behavior**: 100% reproducible quiz generation for testing and debugging
+- **High Box 7 Concentration Handling**: Monitors and logs when 80%+ words reach mastery
 - **Transaction Safety**: All quiz results and box updates are atomic operations
-- **Content Validation**: Ensures definitions have required content before quiz generation
-- **Performance Optimization**: Uses efficient SQL queries with proper indexing
-- **Error Recovery**: Automatic handling of problematic content with temporary skip functionality
+- **Content Validation**: Pre-validates all content before quiz generation
+- **Performance Optimization**: Single SQL query with strategic indexes for sub-second response
+- **Error Recovery**: Automatic handling of problematic content with temporary skip
 - **Multi-Modal Learning**: Supports both active testing (quizzes) and passive review (flashcards)
+- **Debug Logging**: Comprehensive logging of selection decisions for monitoring
 
-This implementation ensures optimal learning efficiency by presenting words at scientifically-backed intervals while adapting to individual learning patterns and content availability.
+### Implementation Benefits
+
+This deterministic implementation ensures:
+- **Predictable Learning**: Users always have words to practice
+- **Fair Scheduling**: Words are reviewed at scientifically optimal intervals
+- **No Stagnation**: Even with all words in Box 7, the system continues functioning
+- **Easy Testing**: Deterministic behavior simplifies unit and integration tests
+- **Performance**: Efficient single-query selection with proper database indexes
 
 ## 🔐 Security
 
@@ -812,7 +885,10 @@ npm start
 - `GET /analytics/wordlists/:id/distribution` - Box distribution history
 - `GET /analytics/wordlists/:id/current-distribution` - Current box distribution (counts unique words)
 - `GET /analytics/wordlists/:id/quiz-performance` - Quiz type performance stats (wordlist-scoped)
-- `GET /analytics/dashboard` - Overall dashboard statistics
+- `GET /analytics/wordlists/:id/practice-time` - Practice time tracking by day
+- `GET /analytics/wordlists/:id/stats` - Comprehensive wordlist statistics
+- `GET /analytics/dashboard` - Overall dashboard statistics (deprecated - use progress-summary)
+- `GET /analytics/progress-summary` - Batch endpoint for all wordlists progress (reduces N×8 calls to 1)
 
 ### Error Reporting & Content Quality
 - `POST /errorReports` - Report errors in AI-generated content with structured error types (rate limited)

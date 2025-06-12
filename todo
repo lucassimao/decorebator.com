@@ -88,7 +88,7 @@
     [x]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
     [x]  Vercel-hosted page with SEO meta tags
     [x]  Decorebator Landing Page Redesign
-    [ ]  New Icon
+    [x]  New Icon
     [ ]  browserstack testing
 
 # V2

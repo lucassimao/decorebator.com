@@ -17,8 +17,35 @@ export const PracticeTimeChart: React.FC<PracticeTimeChartProps> = ({
   const { t } = useTranslation();
 
   const formatDateLabel = (dateString: string): string => {
-    const date = new Date(dateString);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+    try {
+      // Extract just the date part from ISO timestamp (e.g., "2025-06-11T00:00:00Z" -> "2025-06-11")
+      const datePart = dateString.split('T')[0];
+      const [year, month, day] = datePart.split('-').map(Number);
+      
+      // Validate parts exist and are numbers
+      if (!year || !month || !day || isNaN(year) || isNaN(month) || isNaN(day)) {
+        console.error("Invalid date parts:", { dateString, datePart, year, month, day });
+        // Fallback to UTC parsing
+        const fallbackDate = new Date(dateString);
+        return `${fallbackDate.getMonth() + 1}/${fallbackDate.getDate()}`;
+      }
+      
+      const date = new Date(year, month - 1, day);
+      
+      // Check if date creation was successful
+      if (isNaN(date.getTime())) {
+        console.error("Failed to create date:", dateString);
+        // Fallback to UTC parsing
+        const fallbackDate = new Date(dateString);
+        return `${fallbackDate.getMonth() + 1}/${fallbackDate.getDate()}`;
+      }
+      
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    } catch (error) {
+      console.error("Error parsing date:", dateString, error);
+      // Ultimate fallback - just show the original string
+      return dateString;
+    }
   };
 
   const formatMinutes = (minutes: number): string => {
@@ -36,7 +63,24 @@ export const PracticeTimeChart: React.FC<PracticeTimeChartProps> = ({
   // Sort by date ascending and take last 7 days
   const sortedData = practiceTime?.practiceTime
     ?.slice()
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .sort((a, b) => {
+      // Parse dates as local time for proper sorting
+      // Extract date part from ISO timestamp
+      const datePartA = a.date.split('T')[0];
+      const datePartB = b.date.split('T')[0];
+      const [yearA, monthA, dayA] = datePartA.split('-').map(Number);
+      const [yearB, monthB, dayB] = datePartB.split('-').map(Number);
+      const dateA = new Date(yearA, monthA - 1, dayA);
+      const dateB = new Date(yearB, monthB - 1, dayB);
+      
+      // Check if dates are valid
+      if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+        console.error("Invalid date during sorting:", a.date, b.date);
+        return 0; // Keep original order if dates are invalid
+      }
+      
+      return dateA.getTime() - dateB.getTime();
+    })
     .slice(-7) || [];
 
   const chartData = {

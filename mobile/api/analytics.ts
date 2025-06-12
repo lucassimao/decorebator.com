@@ -126,7 +126,14 @@ export async function getWordlistProgressSummary(
   wordlistId: number,
 ): Promise<WordlistProgressSummary> {
   const wordMasteryStats = await getWordMastery(wordlistId);
+  return calculateWordlistProgressFromMastery(wordlistId, wordMasteryStats);
+}
 
+// Helper function to calculate progress summary from pre-fetched mastery data
+export function calculateWordlistProgressFromMastery(
+  wordlistId: number,
+  wordMasteryStats: WordMasteryStats[],
+): WordlistProgressSummary {
   const totalWords = wordMasteryStats.length;
   const wordsMastered = wordMasteryStats.filter(
     (word) => word.masteryLevel >= 0.8, // Consider 80%+ as mastered
@@ -174,4 +181,25 @@ export async function getPracticeTime(
 ): Promise<PracticeTimeResponse> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/practice-time?days=${days}`;
   return await callAPI<PracticeTimeResponse>("GET", endpoint);
+}
+
+// 9) Get progress summary for all wordlists - NEW BATCH ENDPOINT
+export interface WordlistProgress {
+  wordlistId: number;
+  wordlistName: string;
+  languageCode: string;
+  totalWords: number;
+  wordsMastered: number;
+  progressPercent: number;
+  currentStreak: number;
+  lastActivityDate?: string;
+}
+
+export interface ProgressSummaryResponse {
+  wordlists: WordlistProgress[];
+}
+
+export async function getProgressSummary(): Promise<ProgressSummaryResponse> {
+  const endpoint = `${BASE_URL}/analytics/progress-summary`;
+  return await callAPI<ProgressSummaryResponse>("GET", endpoint);
 }

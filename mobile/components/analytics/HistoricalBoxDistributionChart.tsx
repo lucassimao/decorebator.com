@@ -42,58 +42,51 @@ export const HistoricalBoxDistributionChart: React.FC<
       return null;
     }
 
+    // For 7 days, show all data points (no sampling needed)
     const data = historicalBoxDistribution.distribution
       .slice()
       .reverse(); // Show oldest to newest
 
-    // Take every 3rd day to avoid crowding (for 30 days, show ~10 points)
-    const sampledData = data.filter((_, index) => index % 3 === 0).slice(0, 10);
-
-    // Prepare labels (dates)
-    const labels = sampledData.map((item) => {
-      const date = new Date(item.date);
+    // Prepare labels (dates) - use shorter format for 7 days
+    const labels = data.map((item) => {
+      // Parse date as local time to avoid timezone conversion issues
+      // Backend sends ISO timestamps like "2025-06-11T00:00:00Z", extract date part
+      const datePart = item.date.split('T')[0];
+      const [year, month, day] = datePart.split('-').map(Number);
+      const date = new Date(year, month - 1, day); // month is 0-indexed
+      const today = new Date();
+      
+      // Calculate difference using just the date parts to avoid timezone issues
+      const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const diffTime = todayOnly.getTime() - dateOnly.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) {
+        return "Today";
+      } else if (diffDays === 1) {
+        return "Yesterday";
+      }
       return `${date.getMonth() + 1}/${date.getDate()}`;
     });
 
-    // Prepare data for each box
-    const stackedData = sampledData.map((item) => {
+    // Prepare data for each box - use actual counts, not percentages for better readability
+    const stackedData = data.map((item) => {
       return [
-        item.boxes.box1,
-        item.boxes.box2,
-        item.boxes.box3,
-        item.boxes.box4,
-        item.boxes.box5,
-        item.boxes.box6,
-        item.boxes.box7,
+        item.boxes.box1 || 0,
+        item.boxes.box2 || 0,
+        item.boxes.box3 || 0,
+        item.boxes.box4 || 0,
+        item.boxes.box5 || 0,
+        item.boxes.box6 || 0,
+        item.boxes.box7 || 0,
       ];
-    });
-
-    // Calculate percentages for better visualization
-    const percentageData = stackedData.map((dayData) => {
-      const total = dayData.reduce((sum, val) => sum + val, 0);
-      if (total === 0) return dayData;
-      
-      // Calculate raw percentages
-      const rawPercentages = dayData.map(val => (val / total) * 100);
-      
-      // Round percentages and ensure they sum to 100%
-      const roundedPercentages = rawPercentages.map(val => Math.round(val));
-      const sum = roundedPercentages.reduce((a, b) => a + b, 0);
-      const diff = 100 - sum;
-      
-      // Adjust the largest percentage to make total equal 100%
-      if (diff !== 0) {
-        const maxIndex = rawPercentages.indexOf(Math.max(...rawPercentages));
-        roundedPercentages[maxIndex] += diff;
-      }
-      
-      return roundedPercentages;
     });
 
     return {
       labels,
       legend: ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5", "Box 6", "Box 7"],
-      data: percentageData,
+      data: stackedData,
       barColors: Object.values(boxColors),
     };
   };
@@ -122,14 +115,12 @@ export const HistoricalBoxDistributionChart: React.FC<
               propsForLabels: {
                 fontSize: 12,
               },
-              formatYLabel: (value: string) => `${Math.round(parseFloat(value))}%`,
+              formatYLabel: (value: string) => `${Math.round(parseFloat(value))}`,
             }}
             style={styles.chart}
             withHorizontalLabels={true}
             hideLegend={true}
             yAxisLabel=""
-            // yAxisSuffix="%"
-            // segments={5}
           />
           {/* Box Legend - Vertical Layout */}
           <View style={styles.legendContainer}>
@@ -150,7 +141,7 @@ export const HistoricalBoxDistributionChart: React.FC<
                   </View>
                   {chartData.data.length > 0 && (
                     <Text style={styles.boxLegendPercentage}>
-                      {chartData.data[chartData.data.length - 1][index]}%
+                      {chartData.data[chartData.data.length - 1][index]}
                     </Text>
                   )}
                 </View>
@@ -167,7 +158,7 @@ export const HistoricalBoxDistributionChart: React.FC<
                   {t("analytics.charts.historicalBoxDistribution.currentMastery")}
                 </Text>
                 <Text style={styles.progressSummaryValue}>
-                  {chartData.data[chartData.data.length - 1][6]}%
+                  {chartData.data[chartData.data.length - 1][6]}
                 </Text>
               </View>
             )}

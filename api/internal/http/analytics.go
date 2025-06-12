@@ -3,11 +3,31 @@ package http
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 )
+
+// getUserFromContext extracts the user object from the gin context
+func getUserFromContext(c *gin.Context) (*model.User, bool) {
+	user, exists := c.Get("user")
+	if !exists {
+		return nil, false
+	}
+	userObj, ok := user.(*model.User)
+	return userObj, ok
+}
+
+// getCacheTTL returns the cache TTL based on user's subscription
+func getCacheTTL(subscriptionPlan model.SubscriptionPlan) time.Duration {
+	if subscriptionPlan == model.PlanFree {
+		return 1 * time.Hour
+	}
+	return 1 * time.Minute
+}
 
 // RegisterAnalyticsRoutes registers all analytics endpoints
 func RegisterAnalyticsRoutes(r *gin.RouterGroup) {
@@ -20,6 +40,7 @@ func RegisterAnalyticsRoutes(r *gin.RouterGroup) {
 	analytics.GET("/wordlists/:id/quiz-performance", getQuizTypePerformance)
 	analytics.GET("/wordlists/:id/practice-time", getPracticeTime)
 	analytics.GET("/wordlists/:id/overview", getWordlistOverviewStats)
+	analytics.GET("/progress-summary", getProgressSummary)
 }
 
 // getWordMastery returns word mastery statistics for a wordlist
@@ -31,6 +52,11 @@ func getWordMastery(c *gin.Context) {
 	}
 
 	userID := c.GetInt64("userID")
+	userObj, ok := getUserFromContext(c)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found in context"})
+		return
+	}
 
 	// Verify wordlist ownership
 	wordlist, err := service.GetWordlistById(wordlistID, userID)
@@ -39,13 +65,18 @@ func getWordMastery(c *gin.Context) {
 		return
 	}
 
-	analyticsService, err := service.NewAnalyticsService()
+	analyticsService, err := service.NewAnalyticsService(service.AnalyticsConfig{
+		UserID:     userID,
+		WordlistID: wordlistID,
+		UseCache:   true,
+		CacheTTL:   getCacheTTL(userObj.SubscriptionPlan),
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
 		return
 	}
 
-	stats, err := analyticsService.GetWordMastery(c.Request.Context(), userID, wordlistID)
+	stats, err := analyticsService.WordMastery(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch mastery stats"})
 		return
@@ -82,13 +113,24 @@ func getLearningProgress(c *gin.Context) {
 		return
 	}
 
-	analyticsService, err := service.NewAnalyticsService()
+	userObj, ok := getUserFromContext(c)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	analyticsService, err := service.NewAnalyticsService(service.AnalyticsConfig{
+		UserID:     userID,
+		WordlistID: wordlistID,
+		UseCache:   true,
+		CacheTTL:   getCacheTTL(userObj.SubscriptionPlan),
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
 		return
 	}
 
-	progress, err := analyticsService.GetLearningProgress(c.Request.Context(), userID, wordlistID, days)
+	progress, err := analyticsService.Progress(c.Request.Context(), days)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch progress"})
 		return
@@ -126,20 +168,24 @@ func getBoxDistributionHistory(c *gin.Context) {
 		return
 	}
 
-	analyticsService, err := service.NewAnalyticsService()
+	userObj, ok := getUserFromContext(c)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	analyticsService, err := service.NewAnalyticsService(service.AnalyticsConfig{
+		UserID:     userID,
+		WordlistID: wordlistID,
+		UseCache:   true,
+		CacheTTL:   getCacheTTL(userObj.SubscriptionPlan),
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
 		return
 	}
 
-	// Update current snapshot
-	err = analyticsService.UpdateBoxDistribution(c.Request.Context(), userID, wordlistID)
-	if err != nil {
-		// Log but don't fail
-		common.Logger.Error("Failed to update box distribution", "error", err)
-	}
-
-	distribution, err := analyticsService.GetBoxDistributionHistory(c.Request.Context(), userID, wordlistID, days)
+	distribution, err := analyticsService.BoxHistory(c.Request.Context(), days)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch distribution"})
 		return
@@ -169,13 +215,24 @@ func getQuizTypePerformance(c *gin.Context) {
 		return
 	}
 
-	analyticsService, err := service.NewAnalyticsService()
+	userObj, ok := getUserFromContext(c)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	analyticsService, err := service.NewAnalyticsService(service.AnalyticsConfig{
+		UserID:     userID,
+		WordlistID: wordlistID,
+		UseCache:   true,
+		CacheTTL:   getCacheTTL(userObj.SubscriptionPlan),
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
 		return
 	}
 
-	performance, err := analyticsService.GetQuizTypePerformance(c.Request.Context(), userID, wordlistID)
+	performance, err := analyticsService.QuizPerformance(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch performance stats"})
 		return
@@ -205,13 +262,24 @@ func getCurrentBoxDistribution(c *gin.Context) {
 		return
 	}
 
-	analyticsService, err := service.NewAnalyticsService()
+	userObj, ok := getUserFromContext(c)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	analyticsService, err := service.NewAnalyticsService(service.AnalyticsConfig{
+		UserID:     userID,
+		WordlistID: wordlistID,
+		UseCache:   true,
+		CacheTTL:   getCacheTTL(userObj.SubscriptionPlan),
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
 		return
 	}
 
-	distribution, err := analyticsService.GetCurrentBoxDistribution(c.Request.Context(), userID, wordlistID)
+	distribution, err := analyticsService.BoxDistribution(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch distribution"})
 		return
@@ -249,13 +317,24 @@ func getPracticeTime(c *gin.Context) {
 		return
 	}
 
-	analyticsService, err := service.NewAnalyticsService()
+	userObj, ok := getUserFromContext(c)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	analyticsService, err := service.NewAnalyticsService(service.AnalyticsConfig{
+		UserID:     userID,
+		WordlistID: wordlistID,
+		UseCache:   true,
+		CacheTTL:   getCacheTTL(userObj.SubscriptionPlan),
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
 		return
 	}
 
-	practiceTime, err := analyticsService.GetPracticeTime(c.Request.Context(), userID, wordlistID, days)
+	practiceTime, err := analyticsService.PracticeTime(c.Request.Context(), days)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch practice time"})
 		return
@@ -285,13 +364,24 @@ func getWordlistOverviewStats(c *gin.Context) {
 		return
 	}
 
-	analyticsService, err := service.NewAnalyticsService()
+	userObj, ok := getUserFromContext(c)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	analyticsService, err := service.NewAnalyticsService(service.AnalyticsConfig{
+		UserID:     userID,
+		WordlistID: wordlistID,
+		UseCache:   true,
+		CacheTTL:   getCacheTTL(userObj.SubscriptionPlan),
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
 		return
 	}
 
-	stats, err := analyticsService.GetWordlistDashboardStats(c.Request.Context(), userID, wordlistID)
+	stats, err := analyticsService.Stats(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch wordlist dashboard stats"})
 		return
@@ -301,4 +391,35 @@ func getWordlistOverviewStats(c *gin.Context) {
 		"wordlistId": wordlistID,
 		"stats":      stats,
 	})
+}
+
+// getProgressSummary returns progress summary for all user's wordlists
+func getProgressSummary(c *gin.Context) {
+	userID := c.GetInt64("userID")
+
+	userObj, ok := getUserFromContext(c)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found in context"})
+		return
+	}
+
+	analyticsService, err := service.NewAnalyticsService(service.AnalyticsConfig{
+		UserID:     userID,
+		WordlistID: 0, // Not needed for progress summary
+		UseCache:   true,
+		CacheTTL:   getCacheTTL(userObj.SubscriptionPlan),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize analytics"})
+		return
+	}
+
+	summary, err := analyticsService.ProgressSummary(c.Request.Context())
+	if err != nil {
+		common.Logger.Error("Failed to fetch progress summary", "error", err, "userID", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch progress summary"})
+		return
+	}
+
+	c.JSON(http.StatusOK, summary)
 }
