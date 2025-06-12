@@ -1,0 +1,1 @@
+I think you made a confusion. The web/src/app/page.tsx is still using old components form the previous version of the website. The new landing page styling and designn should be solely based on the file web/template.html . The old components should be removed and only the new ones extratced from the web/template.html  should still be in the project

@@ -10,6 +10,7 @@ import TestimonialsSection from '../../components/home/TestimonialsSection';
 import FAQSection from '../../components/home/FAQSection';
 import CTASection from '../../components/home/CTASection';
 import ContactSection from '../../components/home/ContactSection';
+import FooterSection from '../../components/home/FooterSection';
 
 const HomePage: React.FC = () => {
   return (
@@ -30,6 +31,7 @@ const HomePage: React.FC = () => {
       <FAQSection />
       <CTASection />
       <ContactSection />
+      <FooterSection />
     </PageLayout>
   );
 };

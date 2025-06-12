@@ -34,7 +34,7 @@ const NewFeaturesSection: React.FC = () => {
       href: "/features/spaced-repetition"
     },
     {
-      title: "8 Engaging Quiz Modes",
+      title: "7 Engaging Quiz Modes",
       description: "Multiple quiz types: meaning matching, image association, audio comprehension, sentence completion, write from definition, and more.",
       icon: "fas fa-gamepad",
       bg: "bg-gradient-to-br from-purple-50 to-pink-50",

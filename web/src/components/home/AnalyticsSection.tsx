@@ -43,7 +43,7 @@ const AnalyticsSection: React.FC = () => {
     {
       icon: <i className="fas fa-target text-3xl"></i>,
       title: 'Quiz Performance Insights',
-      description: 'Detailed performance metrics across all 8 quiz types with success rates and timing.',
+      description: 'Detailed performance metrics across all 7 quiz types with success rates and timing.',
       details: ['Performance by quiz type', 'Average response times', 'Difficulty progression', 'Accuracy trends'],
     },
     {
@@ -87,13 +87,12 @@ const AnalyticsSection: React.FC = () => {
 
   const quizTypes = [
     { name: 'Guess Meaning', accuracy: 94, attempts: 456 },
-    { name: 'Word from Meaning', accuracy: 88, attempts: 398 },
-    { name: 'Image Association', accuracy: 87, attempts: 234 },
-    { name: 'Audio Comprehension', accuracy: 85, attempts: 176 },
-    { name: 'Sentence Completion', accuracy: 91, attempts: 312 },
-    { name: 'Write from Definition', accuracy: 78, attempts: 145 },
+    { name: 'Word from Image', accuracy: 87, attempts: 234 },
     { name: 'Audio Recognition', accuracy: 82, attempts: 189 },
-    { name: 'Example Audio', accuracy: 80, attempts: 124 },
+    { name: 'Complete Sentence', accuracy: 91, attempts: 312 },
+    { name: 'Write from Definition', accuracy: 78, attempts: 145 },
+    { name: 'Word from Meaning', accuracy: 88, attempts: 398 },
+    { name: 'Audio Comprehension', accuracy: 85, attempts: 176 },
   ];
 
   return (
@@ -176,92 +175,23 @@ const AnalyticsSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Premium vs Free Analytics Performance */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-          {/* Premium Analytics */}
-          <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl p-8 text-white">
-            <div className="flex items-center mb-4">
-              <i className="fas fa-crown text-3xl mr-3"></i>
-              <h3 className="text-2xl font-bold">Premium Analytics</h3>
-            </div>
-            <p className="text-lg mb-6 opacity-90">Lightning-fast real-time insights for serious learners</p>
-            
-            <div className="space-y-4">
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Response Time</span>
-                  <span className="text-2xl font-bold">&lt;50ms</span>
-                </div>
-                <p className="text-sm opacity-90">Redis-cached data for instant insights</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Data Freshness</span>
-                  <span className="text-2xl font-bold">1 min</span>
-                </div>
-                <p className="text-sm opacity-90">Real-time computation and caching</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Performance</span>
-                  <span className="text-2xl font-bold">Parallel</span>
-                </div>
-                <p className="text-sm opacity-90">Concurrent query execution</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Free Analytics */}
-          <div className="bg-gradient-to-br from-gray-600 to-gray-700 rounded-3xl p-8 text-white">
-            <div className="flex items-center mb-4">
-              <i className="fas fa-chart-bar text-3xl mr-3"></i>
-              <h3 className="text-2xl font-bold">Free Analytics</h3>
-            </div>
-            <p className="text-lg mb-6 opacity-90">Essential insights with optimized performance</p>
-            
-            <div className="space-y-4">
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Response Time</span>
-                  <span className="text-2xl font-bold">20-50ms</span>
-                </div>
-                <p className="text-sm opacity-90">Materialized views for efficiency</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Data Freshness</span>
-                  <span className="text-2xl font-bold">1 hour</span>
-                </div>
-                <p className="text-sm opacity-90">Hourly background refreshes</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Coverage</span>
-                  <span className="text-2xl font-bold">Essential</span>
-                </div>
-                <p className="text-sm opacity-90">All key learning metrics</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Advanced Features Highlight */}
         <div className="bg-gradient-to-r from-[#FF7B54] to-orange-600 rounded-3xl p-8 text-white text-center">
           <h3 className="text-3xl font-bold mb-4">Advanced Learning Intelligence</h3>
           <p className="text-xl mb-8 opacity-90">
-            Sophisticated analytics engine designed for millions of learners
+            Powered by materialized views and real-time analytics for instant insights
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
               <i className="fas fa-database text-4xl mb-4"></i>
-              <h4 className="text-lg font-semibold mb-2">Scalable Architecture</h4>
-              <p className="text-sm opacity-90">Built to handle millions of users with consistent performance</p>
+              <h4 className="text-lg font-semibold mb-2">Optimized Performance</h4>
+              <p className="text-sm opacity-90">Materialized views ensure lightning-fast analytics queries</p>
             </div>
             <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
-              <i className="fas fa-tachometer-alt text-4xl mb-4"></i>
-              <h4 className="text-lg font-semibold mb-2">Performance Optimized</h4>
-              <p className="text-sm opacity-90">Advanced indexing and caching for sub-50ms response times</p>
+              <i className="fas fa-sync-alt text-4xl mb-4"></i>
+              <h4 className="text-lg font-semibold mb-2">Real-time Updates</h4>
+              <p className="text-sm opacity-90">Analytics refresh instantly after every quiz completion</p>
             </div>
             <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
               <i className="fas fa-shield-alt text-4xl mb-4"></i>

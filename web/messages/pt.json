@@ -57,11 +57,11 @@
       "description": "Gere instantaneamente definições, imagens, áudio e exemplos para qualquer palavra usando tecnologia de IA avançada."
     },
     "spacedRepetition": {
-      "title": "Sistema Leitner Avançado",
-      "description": "Sistema Leitner probabilístico de 7 caixas com seleção inteligente de palavras - nunca fique sem conteúdo para estudar."
+      "title": "Repetição Espaçada Científica",
+      "description": "Domine vocabulário eficientemente com nosso sistema Leitner de 7 caixas comprovado para aumentar a retenção em 85%."
     },
     "multipleQuizModes": {
-      "title": "8 Modos de Quiz Interativos",
+      "title": "7 Modos de Quiz Interativos",
       "description": "Do reconhecimento visual à compreensão auditiva - pratique com diversos tipos de quiz para aprendizado abrangente."
     },
     "visualLearning": {
@@ -73,8 +73,8 @@
       "description": "Pronúncia perfeita com áudio gerado por IA em qualidade de falante nativo para todos os idiomas suportados."
     },
     "progressTracking": {
-      "title": "Análises de Alto Desempenho",
-      "description": "Análises em tempo real para usuários Premium com cache Redis, acompanhamento detalhado de domínio e insights instantâneos."
+      "title": "Análises Avançadas",
+      "description": "Acompanhe seu progresso com análises detalhadas, níveis de domínio e insights de aprendizado personalizados."
     },
     "multiLanguage": {
       "title": "7 Idiomas Nativos",
