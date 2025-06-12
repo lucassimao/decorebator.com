@@ -37,9 +37,19 @@ jobs:
       - name: Get changed Go files
         id: changed-files
         run: |
-          # Get the base branch (target of PR)
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          # Get the base branch (target of PR) - more robust approach
+          echo "Base ref: ${{ github.event.pull_request.base.ref }}"
+          echo "Head ref: ${{ github.event.pull_request.head.ref }}"
+          
+          # Ensure we have the base branch
+          git fetch origin ${{ github.event.pull_request.base.ref }}:${{ github.event.pull_request.base.ref }} || true
+          
+          # Use merge-base to find the common ancestor
+          BASE_SHA=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+          HEAD_SHA="HEAD"
+          
+          echo "Using base SHA: $BASE_SHA"
+          echo "Using head SHA: $HEAD_SHA"
           
           # Get list of changed .go files in the api directory
           CHANGED_FILES=$(git diff --name-only --diff-filter=AM $BASE_SHA...$HEAD_SHA | grep '\.go$' | grep '^api/' | sed 's|^api/||' | tr '\n' ' ' || echo "")
@@ -67,9 +77,9 @@ jobs:
           CHANGED_FILES="${{ steps.changed-files.outputs.files }}"
           echo "Running golangci-lint on: $CHANGED_FILES"
           
-          # Get the merge base for comparison
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          MERGE_BASE=$(git merge-base $BASE_SHA HEAD)
+          # Use the same merge base logic as file detection
+          MERGE_BASE=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+          echo "Using merge base for linting: $MERGE_BASE"
           
           # Run golangci-lint only on files changed since the merge base
           golangci-lint run --timeout=5m --new-from-rev=$MERGE_BASE

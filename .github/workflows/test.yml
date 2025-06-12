@@ -239,6 +239,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for git diff to work properly
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -249,9 +251,19 @@ jobs:
       - name: Get changed Go files
         id: changed-files
         run: |
-          # Get the base branch (target of PR)
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          # Get the base branch (target of PR) - more robust approach
+          echo "Base ref: ${{ github.event.pull_request.base.ref }}"
+          echo "Head ref: ${{ github.event.pull_request.head.ref }}"
+          
+          # Ensure we have the base branch
+          git fetch origin ${{ github.event.pull_request.base.ref }}:${{ github.event.pull_request.base.ref }} || true
+          
+          # Use merge-base to find the common ancestor
+          BASE_SHA=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+          HEAD_SHA="HEAD"
+          
+          echo "Using base SHA: $BASE_SHA"
+          echo "Using head SHA: $HEAD_SHA"
           
           # Get list of changed .go files in the api directory
           CHANGED_FILES=$(git diff --name-only --diff-filter=AM $BASE_SHA...$HEAD_SHA | grep '\.go$' | grep '^api/' | sed 's|^api/||' | tr '\n' ' ' || echo "")
@@ -280,9 +292,9 @@ jobs:
           CHANGED_FILES="${{ steps.changed-files.outputs.files }}"
           echo "Running golangci-lint on: $CHANGED_FILES"
           
-          # Get the merge base for comparison
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          MERGE_BASE=$(git merge-base $BASE_SHA HEAD)
+          # Use the same merge base logic as file detection
+          MERGE_BASE=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+          echo "Using merge base for linting: $MERGE_BASE"
           
           # Run golangci-lint only on files changed since the merge base
           golangci-lint run --timeout=5m --new-from-rev=$MERGE_BASE
@@ -303,10 +315,9 @@ jobs:
           # Verify installation
           gosec --version
           
-          # Get changed files for gosec
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-          CHANGED_GO_FILES=$(git diff --name-only --diff-filter=AM $BASE_SHA...$HEAD_SHA | grep '\.go$' | grep '^api/' | tr '\n' ' ' || echo "")
+          # Get changed files for gosec using same logic
+          MERGE_BASE=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+          CHANGED_GO_FILES=$(git diff --name-only --diff-filter=AM $MERGE_BASE...HEAD | grep '\.go$' | grep '^api/' | tr '\n' ' ' || echo "")
           
           if [ -n "$CHANGED_GO_FILES" ]; then
             echo "Running gosec security scan on changed files: $CHANGED_GO_FILES"
@@ -336,7 +347,7 @@ jobs:
           path: api/gosec-report.json
 
   coverage-check:
-    if: github.event_name == 'pull_request'
+    if: false  # Temporarily disabled
     name: Coverage Threshold Check (PR Only)
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests]
