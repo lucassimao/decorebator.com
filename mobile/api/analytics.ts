@@ -75,7 +75,9 @@ export interface PracticeTimeResponse {
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // 1) Get overview statistics for a specific wordlist
-export async function getWordlistOverviewStats(wordlistId: number): Promise<OverviewStats> {
+export async function getWordlistOverviewStats(
+  wordlistId: number,
+): Promise<OverviewStats> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/overview`;
   const body = await callAPI<{ stats: OverviewStats }>("GET", endpoint);
   return body.stats;
@@ -104,7 +106,9 @@ export async function getLearningProgress(
 }
 
 // 4) Get quiz performance across all quiz types for a specific wordlist
-export async function getQuizPerformance(wordlistId: number): Promise<QuizTypePerformance[]> {
+export async function getQuizPerformance(
+  wordlistId: number,
+): Promise<QuizTypePerformance[]> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/quiz-performance`;
   const payload = await callAPI<{ quizPerformance: QuizTypePerformance[] }>(
     "GET",

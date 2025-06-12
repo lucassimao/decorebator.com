@@ -11,7 +11,9 @@ interface WordMasteryChartProps {
   wordMastery?: WordMasteryStats[];
 }
 
-export const WordMasteryChart: React.FC<WordMasteryChartProps> = ({ wordMastery }) => {
+export const WordMasteryChart: React.FC<WordMasteryChartProps> = ({
+  wordMastery,
+}) => {
   const { t } = useTranslation();
 
   const progressChartData = {
@@ -53,8 +55,7 @@ export const WordMasteryChart: React.FC<WordMasteryChartProps> = ({ wordMastery 
                   style={[
                     styles.legendDot,
                     {
-                      backgroundColor:
-                        chartColors[index % chartColors.length],
+                      backgroundColor: chartColors[index % chartColors.length],
                     },
                   ]}
                 />

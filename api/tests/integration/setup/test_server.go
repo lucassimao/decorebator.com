@@ -80,8 +80,7 @@ func (ts *TestServer) WithTestUser(t *testing.T) string {
 	ts.Expect.POST("/users").
 		WithJSON(user).
 		Expect().
-		Status(201).
-		JSON()
+		Status(201)
 
 	// Login to get token
 	loginResp := ts.Expect.POST("/login").
@@ -90,10 +89,10 @@ func (ts *TestServer) WithTestUser(t *testing.T) string {
 			"password": user["password"],
 		}).
 		Expect().
-		Status(200).
-		JSON()
+		Status(200)
 
-	return loginResp.Object().Value("token").String().Raw()
+	// Login returns token in Authorization header, not JSON body
+	return loginResp.Header("Authorization").NotEmpty().Raw()
 }
 
 // WithPremiumUser creates a premium test user with active subscription

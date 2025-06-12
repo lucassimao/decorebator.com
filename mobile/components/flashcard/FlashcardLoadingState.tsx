@@ -25,7 +25,7 @@ export const FlashcardLoadingState: React.FC<FlashcardLoadingStateProps> = ({
   onGoBack,
   colors = {
     primary: "#FF7B54",
-    white: "#FFFFFF", 
+    white: "#FFFFFF",
     textMedium: "#636E72",
   },
 }) => {

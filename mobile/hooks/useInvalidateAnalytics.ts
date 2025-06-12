@@ -27,7 +27,7 @@ export function useInvalidateAnalytics() {
         );
       },
     });
-    
+
     // Also invalidate global progress summary since it aggregates all wordlists
     queryClient.invalidateQueries({
       queryKey: ["analytics", "progress-summary"],

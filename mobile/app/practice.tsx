@@ -76,9 +76,7 @@ const FlashcardPractice: React.FC = () => {
   const player = useAudioPlayer();
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-
-
-    // Fetch words with definitions only to avoid broken flashcards
+  // Fetch words with definitions only to avoid broken flashcards
   const {
     data: words,
     isLoading,
@@ -91,7 +89,7 @@ const FlashcardPractice: React.FC = () => {
     enabled: !!wordlistId,
     retry: (failureCount, error) => {
       // Don't retry timeout errors automatically - let user decide
-      if (error.message.includes('timeout')) {
+      if (error.message.includes("timeout")) {
         return false;
       }
       return isOnline ? failureCount < 2 : false;
@@ -107,13 +105,13 @@ const FlashcardPractice: React.FC = () => {
       try {
         const [savedPositionValue, savedIndex] = await Promise.all([
           AsyncStorage.getItem(`flashcard_save_position_${wordlistId}`),
-          AsyncStorage.getItem(`flashcard_position_${wordlistId}`)
+          AsyncStorage.getItem(`flashcard_position_${wordlistId}`),
         ]);
-        
+
         if (savedPositionValue !== null) {
-          setSavePosition(savedPositionValue === 'true');
-          
-          if (savedPositionValue === 'true' && savedIndex !== null) {
+          setSavePosition(savedPositionValue === "true");
+
+          if (savedPositionValue === "true" && savedIndex !== null) {
             const index = parseInt(savedIndex, 10);
             if (!isNaN(index) && index >= 0 && words && index < words.length) {
               setCurrentIndex(index);
@@ -121,7 +119,7 @@ const FlashcardPractice: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error('Error loading saved position:', error);
+        console.error("Error loading saved position:", error);
       } finally {
         setIsLoadingPosition(false);
       }
@@ -138,14 +136,14 @@ const FlashcardPractice: React.FC = () => {
   useEffect(() => {
     const saveCurrentPosition = async () => {
       if (!savePosition || isLoadingPosition) return;
-      
+
       try {
         await AsyncStorage.setItem(
           `flashcard_position_${wordlistId}`,
-          currentIndex.toString()
+          currentIndex.toString(),
         );
       } catch (error) {
-        console.error('Error saving position:', error);
+        console.error("Error saving position:", error);
       }
     };
 
@@ -156,28 +154,25 @@ const FlashcardPractice: React.FC = () => {
   const handleToggleSavePosition = async () => {
     const newValue = !savePosition;
     setSavePosition(newValue);
-    
+
     try {
       await AsyncStorage.setItem(
         `flashcard_save_position_${wordlistId}`,
-        newValue.toString()
+        newValue.toString(),
       );
-      
+
       if (!newValue) {
         // Clear saved position when disabled
         await AsyncStorage.removeItem(`flashcard_position_${wordlistId}`);
       }
     } catch (error) {
-      console.error('Error toggling save position:', error);
+      console.error("Error toggling save position:", error);
     }
   };
 
   // Animation values
   const slideAnimation = useRef(new Animated.Value(0)).current;
   const scaleAnimation = useRef(new Animated.Value(1)).current;
-
-
-
 
   // Fetch definitions using React Query with offline support
   const {
@@ -196,7 +191,7 @@ const FlashcardPractice: React.FC = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes - definitions don't change often
     retry: (failureCount, error) => {
       // Don't retry timeout errors automatically - let user decide
-      if (error.message.includes('timeout')) {
+      if (error.message.includes("timeout")) {
         return false;
       }
       return isOnline ? failureCount < 1 : false;
@@ -302,7 +297,7 @@ const FlashcardPractice: React.FC = () => {
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
-      
+
       // Set timeout for loading state
       loadingTimeoutRef.current = setTimeout(() => {
         setLoadingTimeout(true);
@@ -324,7 +319,7 @@ const FlashcardPractice: React.FC = () => {
   }, [isLoading, isRetrying, isFetching]);
 
   const handleRetryWords = () => {
-    setRetryCount(prev => prev + 1);
+    setRetryCount((prev) => prev + 1);
     setLoadingTimeout(false);
     setIsRetrying(true);
   };
@@ -359,7 +354,11 @@ const FlashcardPractice: React.FC = () => {
       >
         <SafeAreaView style={styles.container}>
           <View style={styles.errorContainer}>
-            <MaterialIcons name="cloud-off" size={64} color={colors.textMedium} />
+            <MaterialIcons
+              name="cloud-off"
+              size={64}
+              color={colors.textMedium}
+            />
             <Text style={[styles.errorTitle, { color: colors.textMedium }]}>
               {t("offline.premiumRequired")}
             </Text>
@@ -389,7 +388,11 @@ const FlashcardPractice: React.FC = () => {
       >
         <SafeAreaView style={styles.container}>
           <View style={styles.errorContainer}>
-            <MaterialIcons name="error-outline" size={64} color={colors.error} />
+            <MaterialIcons
+              name="error-outline"
+              size={64}
+              color={colors.error}
+            />
             <Text style={[styles.errorTitle, { color: colors.textMedium }]}>
               {t("flashcards.noWordsFound")}
             </Text>

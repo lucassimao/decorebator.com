@@ -8,7 +8,9 @@ interface AnalyticsHeaderProps {
   onBackPress: () => void;
 }
 
-export const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({ onBackPress }) => {
+export const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({
+  onBackPress,
+}) => {
   const { t } = useTranslation();
 
   return (
@@ -17,9 +19,7 @@ export const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({ onBackPress })
         <Ionicons name="arrow-back" size={24} color={colors.textDark} />
       </TouchableOpacity>
       <View style={styles.headerTextContainer}>
-        <Text style={styles.headerTitle}>
-          {t("analytics.header.title")}
-        </Text>
+        <Text style={styles.headerTitle}>{t("analytics.header.title")}</Text>
         <Text style={styles.headerSubtitle}>
           {t("analytics.header.subtitle")}
         </Text>

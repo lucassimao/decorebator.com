@@ -32,7 +32,7 @@ export class ErrorReportRateLimitError extends Error {
 
   constructor(data: RateLimitError) {
     super(data.error);
-    this.name = 'ErrorReportRateLimitError';
+    this.name = "ErrorReportRateLimitError";
     this.cooldownUntil = data.cooldownUntil;
     this.retryAfter = data.retryAfter;
     this.limit = data.limit;
@@ -43,7 +43,7 @@ export class ErrorReportRateLimitError extends Error {
 
 export async function reportError(request: ErrorReportRequest): Promise<void> {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + `/errorReports`;
-  
+
   try {
     await callAPI("POST", endpoint, JSON.stringify(request));
   } catch (error: any) {

@@ -21,8 +21,8 @@ export const LearningProgressChart: React.FC<LearningProgressChartProps> = ({
       learningProgress?.slice(-7).map((p) => {
         // Parse date as local time to avoid timezone conversion issues
         // Backend sends ISO timestamps like "2025-06-11T00:00:00Z", extract date part
-        const datePart = p.date.split('T')[0];
-        const [year, month, day] = datePart.split('-').map(Number);
+        const datePart = p.date.split("T")[0];
+        const [year, month, day] = datePart.split("-").map(Number);
         const date = new Date(year, month - 1, day);
         return `${date.getMonth() + 1}/${date.getDate()}`;
       }) || [],

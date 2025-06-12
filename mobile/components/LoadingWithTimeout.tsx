@@ -46,24 +46,24 @@ export const LoadingWithTimeout: React.FC<LoadingWithTimeoutProps> = ({
       <Text style={[styles.loadingText, { color: textColor }]}>
         {hasTimeout ? timeoutMessage : loadingMessage}
       </Text>
-      
+
       {hasTimeout && showTimeoutActions && (
         <View style={styles.timeoutActions}>
           <Text style={[styles.timeoutMessage, { color: textColor }]}>
-            {error?.message.includes('timeout') 
+            {error?.message.includes("timeout")
               ? t("quiz.requestTimedOut")
               : t("quiz.slowConnection")}
           </Text>
           <View style={styles.actionButtons}>
-            <TouchableOpacity 
-              style={[styles.retryButton, { backgroundColor: primaryColor }]} 
+            <TouchableOpacity
+              style={[styles.retryButton, { backgroundColor: primaryColor }]}
               onPress={onRetry}
             >
               <MaterialIcons name="refresh" size={20} color="#FFFFFF" />
               <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.goBackButton, { backgroundColor }]} 
+            <TouchableOpacity
+              style={[styles.goBackButton, { backgroundColor }]}
               onPress={onGoBack}
             >
               <MaterialIcons name="arrow-back" size={20} color={textColor} />

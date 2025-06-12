@@ -52,7 +52,8 @@ const QuizScreen: React.FC = () => {
   const { wordlistId, wordlistName } = useLocalSearchParams();
   const { t } = useTranslation();
   const { isOnline, isOfflineAvailable } = useOffline();
-  const { invalidateBoxDistribution, invalidateAllAnalytics } = useInvalidateAnalytics();
+  const { invalidateBoxDistribution, invalidateAllAnalytics } =
+    useInvalidateAnalytics();
 
   // State
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -80,7 +81,7 @@ const QuizScreen: React.FC = () => {
     queryFn: () => offlineQuizApi.newQuiz(Number(wordlistId)),
     retry: (failureCount, error) => {
       // Don't retry timeout errors automatically - let user decide
-      if (error?.message?.includes('timeout')) {
+      if (error?.message?.includes("timeout")) {
         return false;
       }
       return isOnline ? failureCount < 2 : false;
@@ -133,7 +134,7 @@ const QuizScreen: React.FC = () => {
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
-      
+
       // Set timeout for loading state (aligned with API timeout)
       loadingTimeoutRef.current = setTimeout(() => {
         setLoadingTimeout(true);
@@ -168,7 +169,7 @@ const QuizScreen: React.FC = () => {
     onSuccess: () => {
       // Invalidate all analytics after answering a quiz (real-time updates)
       invalidateAllAnalytics(Number(wordlistId));
-      
+
       if (fastMode) {
         setTimeout(() => {
           handleNextQuiz();
@@ -177,7 +178,6 @@ const QuizScreen: React.FC = () => {
     },
     onError: console.error,
   });
-
 
   const handleAnswerSelect = (index: number) => {
     if (showResult) return;
@@ -234,7 +234,7 @@ const QuizScreen: React.FC = () => {
   };
 
   const handleRetryQuiz = () => {
-    setRetryCount(prev => prev + 1);
+    setRetryCount((prev) => prev + 1);
     setLoadingTimeout(false);
     setIsLoadingNext(true);
     setCurrentQuizId(null); // Reset current quiz ID to ensure loading state shows
@@ -244,7 +244,6 @@ const QuizScreen: React.FC = () => {
   const handleGoBack = () => {
     navigation.goBack();
   };
-
 
   const onPressFastModeToggle = () => {
     setFastMode((v) => !v);
@@ -335,7 +334,7 @@ const QuizScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.quizCard}>
-            {(isLoadingNext || isFetching || !quiz) ? (
+            {isLoadingNext || isFetching || !quiz ? (
               <QuizLoadingState
                 isLoading={isLoadingNext || isFetching}
                 hasTimeout={loadingTimeout}
@@ -347,29 +346,29 @@ const QuizScreen: React.FC = () => {
               <>
                 {quiz && (
                   <QuizContent
-                quiz={quiz}
-                userInput={userInput}
-                setUserInput={setUserInput}
-                isSubmitted={isSubmitted}
-                onSubmitAnswer={handleWriteAnswer}
-                onSkipQuestion={handleSkipQuestion}
-              />
-            )}
+                    quiz={quiz}
+                    userInput={userInput}
+                    setUserInput={setUserInput}
+                    isSubmitted={isSubmitted}
+                    onSubmitAnswer={handleWriteAnswer}
+                    onSkipQuestion={handleSkipQuestion}
+                  />
+                )}
 
-            <QuizOptions
-              quiz={quiz!}
-              selectedAnswer={selectedAnswer}
-              showResult={showResult}
-              onAnswerSelect={handleAnswerSelect}
-            />
+                <QuizOptions
+                  quiz={quiz!}
+                  selectedAnswer={selectedAnswer}
+                  showResult={showResult}
+                  onAnswerSelect={handleAnswerSelect}
+                />
 
-            <QuizNextButton
-              showResult={showResult}
-              fastMode={fastMode}
-              quizType={quiz?.type || ""}
-              isSubmitted={isSubmitted}
-              onNextQuiz={handleNextQuiz}
-            />
+                <QuizNextButton
+                  showResult={showResult}
+                  fastMode={fastMode}
+                  quizType={quiz?.type || ""}
+                  isSubmitted={isSubmitted}
+                  onNextQuiz={handleNextQuiz}
+                />
               </>
             )}
           </View>

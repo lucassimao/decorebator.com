@@ -63,7 +63,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
   // Premium users get fresher data for better UX after quiz sessions
   const staleTime = isPremium ? 10 * 1000 : 15 * 60 * 1000; // 10s vs 15min
   const gcTime = isPremium ? 2 * 60 * 1000 : 60 * 60 * 1000; // 2min vs 1hr
-  
+
   // Common query options for analytics
   const commonQueryOptions = {
     staleTime,
@@ -121,7 +121,9 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
   });
 
   // 5) Wordlist progress summary (calculated from word mastery data to avoid duplicate API calls)
-  const wordlistProgress = wordMastery ? calculateWordlistProgressFromMastery(wordlistId, wordMastery) : undefined;
+  const wordlistProgress = wordMastery
+    ? calculateWordlistProgressFromMastery(wordlistId, wordMastery)
+    : undefined;
   const wordlistProgressLoading = masteryLoading;
   const wordlistProgressError = masteryError;
 
@@ -148,7 +150,6 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     enabled: Boolean(wordlistId),
     ...commonQueryOptions,
   });
-
 
   // 8) Practice time for the last 7 days
   const {
