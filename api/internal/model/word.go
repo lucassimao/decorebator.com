@@ -8,18 +8,6 @@ import (
 	"github.com/jackc/pgx/pgtype"
 )
 
-// parseTimestamp converts a string timestamp to pgtype.Timestamptz
-func parseTimestamp(timeStr *string) (pgtype.Timestamptz, error) {
-	if timeStr != nil {
-		parsedTime, err := time.Parse(time.RFC3339, *timeStr)
-		if err != nil {
-			return pgtype.Timestamptz{}, err
-		}
-		return pgtype.Timestamptz{Time: parsedTime, Status: pgtype.Present}, nil
-	}
-	return pgtype.Timestamptz{Status: pgtype.Null}, nil
-}
-
 type Word struct {
 	ID            int64              `json:"id"`
 	Name          string             `json:"name"`
@@ -34,6 +22,7 @@ type Word struct {
 }
 
 func (w Word) MarshalJSON() ([]byte, error) {
+
 	createdAt := "null"
 	updatedAt := "null"
 
@@ -81,16 +70,25 @@ func (w *Word) UnmarshalJSON(data []byte) error {
 	}
 
 	// Handle CreatedAt
-	var err error
-	w.CreatedAt, err = parseTimestamp(aux.CreatedAt)
-	if err != nil {
-		return err
+	if aux.CreatedAt != nil {
+		createdAtTime, err := time.Parse(time.RFC3339, *aux.CreatedAt)
+		if err != nil {
+			return err
+		}
+		w.CreatedAt = pgtype.Timestamptz{Time: createdAtTime, Status: pgtype.Present}
+	} else {
+		w.CreatedAt = pgtype.Timestamptz{Status: pgtype.Null}
 	}
 
 	// Handle UpdatedAt
-	w.UpdatedAt, err = parseTimestamp(aux.UpdatedAt)
-	if err != nil {
-		return err
+	if aux.UpdatedAt != nil {
+		updatedAtTime, err := time.Parse(time.RFC3339, *aux.UpdatedAt)
+		if err != nil {
+			return err
+		}
+		w.UpdatedAt = pgtype.Timestamptz{Time: updatedAtTime, Status: pgtype.Present}
+	} else {
+		w.UpdatedAt = pgtype.Timestamptz{Status: pgtype.Null}
 	}
 
 	return nil

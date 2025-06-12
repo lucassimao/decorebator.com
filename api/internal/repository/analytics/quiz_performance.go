@@ -19,7 +19,7 @@ func NewQuizPerformanceRepository(db *pgxpool.Pool) *QuizPerformanceRepository {
 }
 
 // RecordQuizPerformance records a quiz attempt in the quiz_performance table.
-//
+// 
 // Query: INSERT INTO quiz_performance with all quiz attempt details including:
 // - user_id, wordlist_id, word_id, definition_id, leitner_system_tracking_id
 // - quiz_type (e.g., "guess_meaning", "word_from_meaning", etc.)
@@ -84,10 +84,10 @@ func (r *QuizPerformanceRepository) GetQuizTypePerformance(ctx context.Context, 
 	var performances []model.QuizTypePerformance
 	for rows.Next() {
 		var p model.QuizTypePerformance
-		scanErr := rows.Scan(&p.QuizType, &p.TotalAttempts, &p.SuccessRate,
+		err := rows.Scan(&p.QuizType, &p.TotalAttempts, &p.SuccessRate,
 			&p.AvgResponseMs, &p.LastUpdated)
-		if scanErr != nil {
-			return nil, scanErr
+		if err != nil {
+			return nil, err
 		}
 		performances = append(performances, p)
 	}
@@ -104,11 +104,11 @@ func (r *QuizPerformanceRepository) GetQuizTypePerformance(ctx context.Context, 
 // Query: INSERT ... ON CONFLICT DO UPDATE pattern for real-time analytics:
 // - Inserts new record if user/quiz_type combination doesn't exist
 // - Updates existing record with new attempt data:
-//   - Increments total_attempts by 1
-//   - Increments correct_attempts by 1 if answer was correct
-//   - Recalculates average_response_time_ms using weighted average formula:
+//   * Increments total_attempts by 1
+//   * Increments correct_attempts by 1 if answer was correct
+//   * Recalculates average_response_time_ms using weighted average formula:
 //     (old_avg * old_count + new_time) / (old_count + 1)
-//   - Updates last_updated timestamp to NOW()
+//   * Updates last_updated timestamp to NOW()
 //
 // This maintains real-time aggregated statistics per user per quiz type.
 func (r *QuizPerformanceRepository) UpsertQuizTypeAnalytics(ctx context.Context, tx pgx.Tx, userID int64, quizType string, isCorrect bool, responseTimeMs int) error {

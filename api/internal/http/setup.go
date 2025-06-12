@@ -25,9 +25,11 @@ func init() {
 	}); err != nil {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
 	}
+
 }
 
 func SetupRoutes() *gin.Engine {
+
 	var WordRoutes = WordRoutes{}
 	var WorkerRoutes = WorkerRoutes{}
 	var WordlistRoutes = WordlistsRoutes{}
@@ -78,7 +80,7 @@ func SetupRoutes() *gin.Engine {
 	{
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
 		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(subService, "create_wordlist"), WordlistRoutes.Create)
-		authenticatedRoutes.GET("/wordlists/:wordlistId", WordlistRoutes.GetByID)
+		authenticatedRoutes.GET("/wordlists/:wordlistId", WordlistRoutes.GetById)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId", WordlistRoutes.Update)
 		authenticatedRoutes.DELETE("/wordlists/:wordlistId", WordlistRoutes.Delete)
 		authenticatedRoutes.GET("/wordlists/:wordlistId/words", WordRoutes.GetAll)
@@ -103,6 +105,7 @@ func SetupRoutes() *gin.Engine {
 		authenticatedRoutes.GET("/users", UserRoutes.GetProfile)
 		authenticatedRoutes.PATCH("/users", UserRoutes.UpdateProfile)
 		authenticatedRoutes.DELETE("/users", UserRoutes.DeleteProfile)
+
 	}
 
 	workerRoutes := router.Group("/static/workers")

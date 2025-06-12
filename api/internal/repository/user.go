@@ -99,6 +99,7 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 	if args.StripeCustomerID != nil {
 		whereConditions = append(whereConditions, fmt.Sprintf("stripe_customer_id = $%d", argIndex))
 		queryArgs = append(queryArgs, args.StripeCustomerID)
+		argIndex++
 	}
 
 	if len(whereConditions) > 0 {
@@ -120,12 +121,12 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 
 	for rows.Next() {
 		user := User{}
-		scanErr := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
+		err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
 			&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
 			&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt,
 			&user.CreatedAt, &user.UpdatedAt)
-		if scanErr != nil {
-			return nil, scanErr
+		if err != nil {
+			return nil, err
 		}
 		users = append(users, user)
 	}

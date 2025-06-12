@@ -40,8 +40,8 @@ func (repository *WordlistRepository) Save(name, description, languageCode strin
 }
 
 type FindWordlistArgs struct {
-	ID                       *int64
-	OwnerID                  *int64
+	Id                       *int64
+	OwnerId                  *int64
 	ComputeWordsCount        bool
 	ComputeWordsLearnedCount bool
 }
@@ -68,12 +68,12 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 	}
 
 	// Build WHERE clause
-	if args.ID != nil {
+	if args.Id != nil {
 		builder.WriteString(" WHERE wordlists.id = $1")
-		queryArgs = append(queryArgs, *args.ID)
-	} else if args.OwnerID != nil {
+		queryArgs = append(queryArgs, *args.Id)
+	} else if args.OwnerId != nil {
 		builder.WriteString(" WHERE wordlists.user_id = $1")
-		queryArgs = append(queryArgs, *args.OwnerID)
+		queryArgs = append(queryArgs, *args.OwnerId)
 	}
 
 	// Add GROUP BY if aggregating
@@ -118,8 +118,8 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 			dest = append(dest, w.WordsLearnedCount)
 		}
 
-		if scanErr := rows.Scan(dest...); scanErr != nil {
-			return nil, scanErr
+		if err := rows.Scan(dest...); err != nil {
+			return nil, err
 		}
 		wordlists = append(wordlists, &w)
 	}
@@ -130,9 +130,9 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 	return wordlists, nil
 }
 
-func (repository *WordlistRepository) Delete(wordlistID, userID int64) (int64, error) {
+func (repository *WordlistRepository) Delete(wordlistID, userId int64) (int64, error) {
 	query := `DELETE FROM wordlists WHERE user_id=$1 AND ID=$2`
-	result, err := repository.Db.Exec(context.Background(), query, userID, wordlistID)
+	result, err := repository.Db.Exec(context.Background(), query, userId, wordlistID)
 	if err != nil {
 		return 0, err
 	}
@@ -140,9 +140,9 @@ func (repository *WordlistRepository) Delete(wordlistID, userID int64) (int64, e
 	return result.RowsAffected(), nil
 }
 
-func (repository *WordlistRepository) DeleteAll(userID int64) (int64, error) {
+func (repository *WordlistRepository) DeleteAll(userId int64) (int64, error) {
 	query := `DELETE FROM wordlists WHERE user_id=$1`
-	result, err := repository.Db.Exec(context.Background(), query, userID)
+	result, err := repository.Db.Exec(context.Background(), query, userId)
 	if err != nil {
 		return 0, err
 	}

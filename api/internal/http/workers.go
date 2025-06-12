@@ -55,10 +55,7 @@ func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
 		return
 	}
 
-	if err := service.DeleteWordDefinitions(wordId, nil); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete word definitions", "wordId": wordId})
-		return
-	}
+	service.DeleteWordDefinitions(wordId, nil)
 	jobId, err := service.TriggerFetchDefinitionWorker(wordId, nil, nil)
 
 	if err != nil {

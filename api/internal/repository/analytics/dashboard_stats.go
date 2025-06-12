@@ -35,7 +35,7 @@ func (r *DashboardStatsRepository) GetPracticeTime(ctx context.Context, userID, 
 	if days < 0 {
 		days = 0
 	}
-
+	
 	query := `
 		SELECT 
 			DATE(qp.created_at) as practice_date,
@@ -59,9 +59,9 @@ func (r *DashboardStatsRepository) GetPracticeTime(ctx context.Context, userID, 
 	var practiceTime []model.PracticeTimeStats
 	for rows.Next() {
 		var p model.PracticeTimeStats
-		scanErr := rows.Scan(&p.Date, &p.PracticeTimeMs, &p.PracticeTimeMinutes, &p.QuizCount)
-		if scanErr != nil {
-			return nil, scanErr
+		err := rows.Scan(&p.Date, &p.PracticeTimeMs, &p.PracticeTimeMinutes, &p.QuizCount)
+		if err != nil {
+			return nil, err
 		}
 		practiceTime = append(practiceTime, p)
 	}

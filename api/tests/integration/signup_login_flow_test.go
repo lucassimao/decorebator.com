@@ -38,7 +38,7 @@ func TestSignupLoginFlow(t *testing.T) {
 		// Verify signup response contains JWT token in Authorization header
 		authToken := signupResponse.Header("Authorization").NotEmpty().Raw()
 		require.NotEmpty(t, authToken, "Authorization token should be present")
-
+		
 		// Verify JWT token is also set as cookie
 		signupResponse.Cookies().ContainsOnly("Authorization")
 		cookie := signupResponse.Cookie("Authorization")
@@ -62,13 +62,13 @@ func TestSignupLoginFlow(t *testing.T) {
 		// Verify login response contains JWT token in Authorization header
 		loginToken := loginResponse.Header("Authorization").NotEmpty().Raw()
 		require.NotEmpty(t, loginToken, "Authorization token should be present after login")
-
+		
 		// Verify JWT token is also set as cookie
 		loginResponse.Cookies().ContainsOnly("Authorization")
 		loginCookie := loginResponse.Cookie("Authorization")
 		loginCookie.Value().NotEmpty()
 		assert.Equal(t, loginToken, loginCookie.Value().Raw(), "Login token in header should match cookie")
-
+		
 		// Verify both tokens are valid JWT tokens (they might be different due to different generation times)
 		assert.Greater(t, len(authToken), 20, "Signup token should be a valid JWT")
 		assert.Greater(t, len(loginToken), 20, "Login token should be a valid JWT")
@@ -171,7 +171,7 @@ func TestSignupLoginFlow(t *testing.T) {
 
 		errorJSON := response.JSON().Object()
 		errorJSON.ContainsKey("error")
-		errorJSON.Value("error").IsEqual("Email already exists.")
+		errorJSON.Value("error").Equal("Email already exists.")
 
 		t.Log("✓ Signup correctly rejected for duplicate email")
 	})
@@ -256,7 +256,7 @@ func TestSignupLoginFlow(t *testing.T) {
 				},
 			},
 			{
-				name:    "empty payload",
+				name: "empty payload",
 				payload: map[string]interface{}{},
 			},
 		}
@@ -293,7 +293,7 @@ func TestSignupLoginPerformance(t *testing.T) {
 			Status(http.StatusCreated)
 
 		duration := time.Since(start)
-
+		
 		// Signup should complete within 2 seconds (includes bcrypt hashing)
 		assert.Less(t, duration, 2*time.Second, "Signup should be fast")
 		t.Logf("✓ Signup completed in %v", duration)
@@ -320,7 +320,7 @@ func TestSignupLoginPerformance(t *testing.T) {
 			Status(http.StatusOK)
 
 		duration := time.Since(start)
-
+		
 		// Login should complete within 3 seconds (includes bcrypt verification)
 		assert.Less(t, duration, 3*time.Second, "Login should be fast")
 		t.Logf("✓ Login completed in %v", duration)
@@ -362,10 +362,10 @@ func TestSignupLoginPerformance(t *testing.T) {
 
 		// All concurrent signups should succeed
 		assert.Empty(t, errors, "All concurrent signups should succeed")
-
+		
 		// Should complete within 15 seconds for 10 concurrent signups (including bcrypt hashing)
 		assert.Less(t, duration, 15*time.Second, "Concurrent signups should complete within reasonable time")
-
+		
 		t.Logf("✓ %d concurrent signups completed in %v", numConcurrent, duration)
 	})
 }

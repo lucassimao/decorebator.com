@@ -22,15 +22,15 @@ type WordRoutes struct{}
 type Word = service.Word
 
 func (h *WordRoutes) GetAll(c *gin.Context) {
-	wordlistID, _ := strconv.ParseInt(c.Param("wordlistID"), 10, 64)
+	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 
 	// Parse optional query parameter for filtering words with definitions
 	onlyWithDefinitions := c.Query("onlyWithDefinitions") == "true"
 
-	words, err := service.GetWordByWordlist(wordlistID, userId, onlyWithDefinitions)
+	words, err := service.GetWordByWordlist(wordlistId, userId, onlyWithDefinitions)
 	if err != nil {
-		common.Logger.Error("failed to get words", "error", err, "userId", userId, "wordlistID", wordlistID, "onlyWithDefinitions", onlyWithDefinitions)
+		common.Logger.Error("failed to get words", "error", err, "userId", userId, "wordlistId", wordlistId, "onlyWithDefinitions", onlyWithDefinitions)
 		c.String(http.StatusInternalServerError, "Could not get user words")
 		return
 	}
@@ -38,7 +38,7 @@ func (h *WordRoutes) GetAll(c *gin.Context) {
 }
 
 func (h *WordRoutes) Create(ctx *gin.Context) {
-	var wordlistID, _ = strconv.ParseInt(ctx.Param("wordlistID"), 10, 64)
+	var wordlistId, _ = strconv.ParseInt(ctx.Param("wordlistId"), 10, 64)
 	var userId = ctx.GetInt64("userID")
 	var input WordInput
 
@@ -47,7 +47,7 @@ func (h *WordRoutes) Create(ctx *gin.Context) {
 		return
 	}
 
-	var saved, err = service.SaveWord(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistID, Notes: input.Notes}, ctx.Request.Context())
+	var saved, err = service.SaveWord(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistId, Notes: input.Notes}, ctx.Request.Context())
 	var logger = common.Logger.With("word", input.Name, "userId", userId, "endpoint", ctx.Request.URL.Path)
 	fmt.Println(err)
 	if err != nil {
@@ -65,7 +65,7 @@ func (h *WordRoutes) Create(ctx *gin.Context) {
 
 func (h *WordRoutes) Delete(c *gin.Context) {
 	userId := c.GetInt64("userID")
-	id, _ := strconv.ParseInt(c.Param("wordID"), 10, 64)
+	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
 
 	_, err := service.DeleteWord(id, userId)
 	if err != nil {
@@ -82,8 +82,8 @@ func (h *WordRoutes) Delete(c *gin.Context) {
 func (h *WordRoutes) Update(c *gin.Context) {
 	var input WordInput
 
-	id, _ := strconv.ParseInt(c.Param("wordID"), 10, 64)
-	wordlistID, _ := strconv.ParseInt(c.Param("wordlistID"), 10, 64)
+	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
+	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 
 	if err := c.BindJSON(&input); err != nil {
@@ -91,7 +91,7 @@ func (h *WordRoutes) Update(c *gin.Context) {
 		return
 	}
 
-	err := service.UpdateWord(&Word{ID: id, Name: input.Name, UserID: userId, Learned: input.Learned, WordlistID: wordlistID}, nil)
+	err := service.UpdateWord(&Word{ID: id, Name: input.Name, UserID: userId, Learned: input.Learned, WordlistID: wordlistId}, nil)
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.String(http.StatusNotFound, err.Error())
@@ -105,15 +105,15 @@ func (h *WordRoutes) Update(c *gin.Context) {
 
 func (h *WordRoutes) GetDefinitions(c *gin.Context) {
 	userId := c.GetInt64("userID")
-	wordID, err := strconv.ParseInt(c.Param("wordID"), 10, 64)
+	wordId, err := strconv.ParseInt(c.Param("wordId"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid word ID"})
 		return
 	}
 
-	definitions, err := service.GetDefinitionsByWordId(wordID, userId)
+	definitions, err := service.GetDefinitionsByWordId(wordId, userId)
 	if err != nil {
-		common.Logger.Error("failed to get definitions", "error", err, "userId", userId, "wordID", wordID)
+		common.Logger.Error("failed to get definitions", "error", err, "userId", userId, "wordId", wordId)
 		c.String(http.StatusInternalServerError, "Could not get word definitions")
 		return
 	}

@@ -23,12 +23,12 @@ func NewWordMasteryRepository(db *pgxpool.Pool) *WordMasteryRepository {
 // Query: INSERT ... ON CONFLICT DO UPDATE pattern with sophisticated mastery calculation:
 // - Inserts new record if user/word combination doesn't exist with initial values
 // - Updates existing record using weighted mastery algorithm:
-//   - mastery_level: 70% current box progress + 30% historical accuracy
-//   - Box progress: boxID / 7.0 (scales Leitner box 1-7 to 0.0-1.0)
-//   - On correct answer: increases mastery, increments streak
-//   - On incorrect answer: reduces mastery by 0.1 (minimum 0), resets streak
-//   - Tracks total_attempts, correct_attempts, max_streak
-//   - Updates last_seen_at and updated_at timestamps
+//   * mastery_level: 70% current box progress + 30% historical accuracy
+//   * Box progress: boxID / 7.0 (scales Leitner box 1-7 to 0.0-1.0)
+//   * On correct answer: increases mastery, increments streak
+//   * On incorrect answer: reduces mastery by 0.1 (minimum 0), resets streak
+//   * Tracks total_attempts, correct_attempts, max_streak
+//   * Updates last_seen_at and updated_at timestamps
 //
 // This provides a nuanced mastery score combining current Leitner progress with historical accuracy.
 func (r *WordMasteryRepository) UpsertWordMastery(ctx context.Context, tx pgx.Tx, userID, wordID int64, boxID int64, isCorrect bool) error {
@@ -118,10 +118,10 @@ func (r *WordMasteryRepository) GetWordMastery(ctx context.Context, userID, word
 	var stats []model.WordMasteryStats
 	for rows.Next() {
 		var s model.WordMasteryStats
-		scanErr := rows.Scan(&s.WordID, &s.Word, &s.MasteryLevel,
+		err := rows.Scan(&s.WordID, &s.Word, &s.MasteryLevel,
 			&s.Accuracy, &s.StreakCount, &s.LastSeenAt, &s.HighestBox)
-		if scanErr != nil {
-			return nil, scanErr
+		if err != nil {
+			return nil, err
 		}
 		stats = append(stats, s)
 	}

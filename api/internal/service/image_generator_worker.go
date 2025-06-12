@@ -16,8 +16,8 @@ import (
 )
 
 type ImageGeneratorArgs struct {
-	DefinitionID int64        `json:"definitionId"`
-	UserID       *int64       `json:"userId"`
+	DefinitionId int64        `json:"definitionId"`
+	UserId       *int64       `json:"userId"`
 	ErrorReport  *ErrorReport `json:"errorReport"`
 }
 
@@ -31,12 +31,12 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	var logger = common.Logger.With("worker", "imagegenerator")
 
 	var (
-		definitionID = job.Args.DefinitionID
+		definitionID = job.Args.DefinitionId
 	)
 
-	definition, err := GetDefinitionById(job.Args.DefinitionID)
+	definition, err := GetDefinitionById(job.Args.DefinitionId)
 	if err != nil {
-		logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionID, "error", err)
+		logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
 		return river.JobCancel(err)
 	}
 
@@ -90,12 +90,12 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	logger.Debug("image generated", "definitionId", definitionID, "url", url)
 
 	_, err = SaveDefinitionImage(model.CreateDefinitionImageDTO{
-		API:          model.OPENAI,
+		Api:          model.OPENAI,
 		URL:          url,
 		Description:  longestExample,
 		Model:        "gpt-image-1",
 		Prompt:       prompt,
-		DefinitionID: definitionID,
+		DefinitionId: definitionID,
 	})
 
 	if err != nil {

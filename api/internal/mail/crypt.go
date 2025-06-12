@@ -52,7 +52,7 @@ func decryptAES(key []byte, encrypted string) (string, error) {
 	if len(ciphertext) < nonceSize {
 		return "", fmt.Errorf("ciphertext too short: expected at least %d bytes, got %d", nonceSize, len(ciphertext))
 	}
-
+	
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
 	plaintext, err := aesGCM.Open(nil, nonce, ciphertext, nil)
@@ -64,13 +64,14 @@ func decryptAES(key []byte, encrypted string) (string, error) {
 }
 
 type ResetPasswordPayload struct {
-	UserID    int64     `json:"userId"`
+	UserId    int64     `json:"userId"`
 	ExpiresAt time.Time `json:"expiresAt"`
 }
 
-func createResetPasswordToken(userID int64) (encryptedPayload string, err error) {
+func createResetPasswordToken(userId int64) (encryptedPayload string, err error) {
+
 	futureTime := time.Now().Add(time.Duration(30) * time.Minute)
-	payload := ResetPasswordPayload{UserID: userID, ExpiresAt: futureTime}
+	payload := ResetPasswordPayload{UserId: userId, ExpiresAt: futureTime}
 	encodedPayload, err := json.Marshal(payload)
 	if err != nil {
 		return "", err
@@ -86,6 +87,7 @@ func createResetPasswordToken(userID int64) (encryptedPayload string, err error)
 }
 
 func ValidateResetPasswordPayload(encrypted string) (*ResetPasswordPayload, error) {
+
 	key := []byte(os.Getenv("RESET_PASSWORD_PRIVATE_KEY"))
 
 	decrypted, err := decryptAES(key, encrypted)

@@ -48,20 +48,20 @@ type DefinitionExampleAudio struct {
 }
 
 type Definition struct {
-	ID                     int64                    `json:"id"`
-	Token                  string                   `json:"token"`
-	Language               string                   `json:"language"`
-	Meaning                string                   `json:"meaning"`
-	PartOfSpeech           string                   `json:"partOfSpeech"`
-	PartOfSpeechNormalized string                   `json:"partOfSpeechNormalized"`
-	IsVerbType             bool                     `json:"isVerbType"` // Computed flag indicating if this is a verb/phrasal verb
-	Examples               []string                 `json:"examples"`
-	Inflections            []Inflection             `json:"inflections"`
-	Source                 DefinitionSource         `json:"source"`
-	SourceID               *string                  `json:"sourceId"`
-	Sounds                 []Sound                  `json:"sounds"`
-	PhoneticNotations      []PhoneticNotation       `json:"phoneticNotations"`
-	ExampleAudioFiles      []DefinitionExampleAudio `json:"exampleAudioFiles"`
+	ID                      int64                    `json:"id"`
+	Token                   string                   `json:"token"`
+	Language                string                   `json:"language"`
+	Meaning                 string                   `json:"meaning"`
+	PartOfSpeech            string                   `json:"partOfSpeech"`
+	PartOfSpeechNormalized  string                   `json:"partOfSpeechNormalized"`
+	IsVerbType              bool                     `json:"isVerbType"` // Computed flag indicating if this is a verb/phrasal verb
+	Examples                []string                 `json:"examples"`
+	Inflections             []Inflection             `json:"inflections"`
+	Source                  DefinitionSource         `json:"source"`
+	SourceId                *string                  `json:"sourceId"`
+	Sounds                  []Sound                  `json:"sounds"`
+	PhoneticNotations       []PhoneticNotation       `json:"phoneticNotations"`
+	ExampleAudioFiles       []DefinitionExampleAudio `json:"exampleAudioFiles"`
 
 	CreatedAt pgtype.Timestamp `json:"createdAt"`
 	UpdatedAt pgtype.Timestamp `json:"updatedAt"`

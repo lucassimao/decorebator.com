@@ -3,7 +3,6 @@ bin/*
 .env.prod
 .env.test
 coverage.out
-unit.out
 coverage.html
 integration.out
 coverage-unit.html

@@ -11,13 +11,14 @@ import (
 )
 
 func MinIOPUT(data []byte, bucketName, objectName, contentType string) (string, error) {
+
 	var endpoint string
 	var useSecure bool
 
 	env := os.Getenv("ENV")
 	minioHost := os.Getenv("MINIO_HOST")
 	minioPort := os.Getenv("MINIO_PORT")
-
+	
 	switch env {
 	case "development":
 		endpoint = fmt.Sprintf("%s:%s", minioHost, minioPort)

@@ -5,16 +5,12 @@ import (
 	"os"
 )
 
-const (
-	EnvProduction = "production"
-)
-
 var options = &slog.HandlerOptions{Level: slog.LevelDebug}
 var handler slog.Handler
 var Logger *slog.Logger
 
 func init() {
-	if os.Getenv("ENV") == EnvProduction {
+	if os.Getenv("ENV") == "production" {
 		handler = slog.NewJSONHandler(os.Stdout, options)
 	} else {
 		handler = slog.NewTextHandler(os.Stdout, options)

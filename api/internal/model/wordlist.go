@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/pgtype"
 )
 
+
 type Wordlist struct {
 	ID           int64              `json:"id"`
 	Name         string             `json:"name"`
@@ -70,16 +71,25 @@ func (w *Wordlist) UnmarshalJSON(data []byte) error {
 	}
 
 	// Handle CreatedAt
-	var err error
-	w.CreatedAt, err = parseTimestamp(aux.CreatedAt)
-	if err != nil {
-		return err
+	if aux.CreatedAt != nil {
+		createdAtTime, err := time.Parse(time.RFC3339, *aux.CreatedAt)
+		if err != nil {
+			return err
+		}
+		w.CreatedAt = pgtype.Timestamptz{Time: createdAtTime, Status: pgtype.Present}
+	} else {
+		w.CreatedAt = pgtype.Timestamptz{Status: pgtype.Null}
 	}
 
 	// Handle UpdatedAt
-	w.UpdatedAt, err = parseTimestamp(aux.UpdatedAt)
-	if err != nil {
-		return err
+	if aux.UpdatedAt != nil {
+		updatedAtTime, err := time.Parse(time.RFC3339, *aux.UpdatedAt)
+		if err != nil {
+			return err
+		}
+		w.UpdatedAt = pgtype.Timestamptz{Time: updatedAtTime, Status: pgtype.Present}
+	} else {
+		w.UpdatedAt = pgtype.Timestamptz{Status: pgtype.Null}
 	}
 
 	return nil

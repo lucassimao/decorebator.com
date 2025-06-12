@@ -2,15 +2,15 @@ package model
 
 import "github.com/jackc/pgx/pgtype"
 
-type API string
+type Api string
 
 const (
-	OPENAI API = "openai"
+	OPENAI Api = "openai"
 )
 
 type DefinitionImage struct {
 	ID          int64
-	API         API
+	Api         Api
 	URL         string
 	Description string
 	Model       string
@@ -18,14 +18,14 @@ type DefinitionImage struct {
 	IsVisible   bool
 
 	CreatedAt    pgtype.Timestamp
-	DefinitionID int64
+	DefinitionId int64
 }
 
 type CreateDefinitionImageDTO struct {
-	API          API
+	Api          Api
 	URL          string
 	Description  string
 	Model        string
 	Prompt       string
-	DefinitionID int64
+	DefinitionId int64
 }

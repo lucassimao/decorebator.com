@@ -15,7 +15,7 @@ import (
 // CreateCheckoutSessionRequest represents the request to create a checkout session
 type CreateCheckoutSessionRequest struct {
 	Plan    string `json:"plan" binding:"required,oneof=monthly annual"`
-	ExpoURI string `json:"expoUri" binding:"required"`
+	ExpoUri string `json:"expoUri" binding:"required"`
 }
 
 // CreateCheckoutSession creates a Stripe checkout session
@@ -27,11 +27,7 @@ func CreateCheckoutSession(subService *service.SubscriptionService) gin.HandlerF
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 			return
 		}
-		user, ok := userAny.(*model.User)
-		if !ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type"})
-			return
-		}
+		user := userAny.(*model.User)
 
 		// Parse request
 		var req CreateCheckoutSessionRequest
@@ -53,7 +49,7 @@ func CreateCheckoutSession(subService *service.SubscriptionService) gin.HandlerF
 		}
 
 		// Create checkout session
-		session, err := subService.CreateCheckoutSession(c.Request.Context(), user.ID, user.Email, plan, req.ExpoURI)
+		session, err := subService.CreateCheckoutSession(c.Request.Context(), user.ID, user.Email, plan, req.ExpoUri)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create checkout session"})
 			return
@@ -105,11 +101,7 @@ func GetSubscriptionStatus(subRepo *repository.SubscriptionRepository) gin.Handl
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 			return
 		}
-		user, ok := userAny.(*model.User)
-		if !ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type"})
-			return
-		}
+		user := userAny.(*model.User)
 
 		// Get active subscription
 		subscription, err := subRepo.GetActiveSubscriptionForUser(c.Request.Context(), user.ID)
@@ -145,11 +137,7 @@ func CancelSubscription(subService *service.SubscriptionService) gin.HandlerFunc
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 			return
 		}
-		user, ok := userAny.(*model.User)
-		if !ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type"})
-			return
-		}
+		user := userAny.(*model.User)
 
 		// Cancel subscription
 		if err := subService.CancelSubscription(c.Request.Context(), user.ID); err != nil {
@@ -157,7 +145,7 @@ func CancelSubscription(subService *service.SubscriptionService) gin.HandlerFunc
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "Subscription will be canceled at the end of the billing period"})
+		c.JSON(http.StatusOK, gin.H{"message": "Subscription will be cancelled at the end of the billing period"})
 	}
 }
 
@@ -170,11 +158,7 @@ func GetSubscriptionHistory(subRepo *repository.SubscriptionRepository) gin.Hand
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 			return
 		}
-		user, ok := userAny.(*model.User)
-		if !ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type"})
-			return
-		}
+		user := userAny.(*model.User)
 
 		// Get subscription history
 		subscriptions, err := subRepo.GetUserSubscriptionHistory(c.Request.Context(), user.ID)
@@ -197,11 +181,7 @@ func CheckSubscriptionLimits(subService *service.SubscriptionService, action str
 			c.Abort()
 			return
 		}
-		user, ok := userAny.(*model.User)
-		if !ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type"})
-			return
-		}
+		user := userAny.(*model.User)
 
 		// For word operations, we might need wordlist ID
 		if action == "add_word" {

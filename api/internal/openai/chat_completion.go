@@ -14,23 +14,23 @@ import (
 )
 
 type LanguageConfig struct {
-	Code                 string
-	Name                 string
-	Flag                 string
-	PartOfSpeechList     []string
+	Code                string
+	Name                string
+	Flag                string
+	PartOfSpeechList    []string
 	PartOfSpeechMappings map[string]string // Maps language-specific terms to normalized English
-	VerbTenses           []string
-	GrammarInstructions  string
-	SpecialInstructions  string
-	ExampleInstructions  string
+	VerbTenses          []string
+	GrammarInstructions string
+	SpecialInstructions string
+	ExampleInstructions string
 }
 
-var LanguageConfigs = map[string]LanguageConfig{
+var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 	"en": {
-		Code:             "en",
-		Name:             "English",
-		Flag:             "🇬🇧",
-		PartOfSpeechList: []string{"noun", "pronoun", "verb", "phrasal verb", "adjective", "adverb", "preposition", "conjunction", "interjection"},
+		Code:                "en",
+		Name:                "English",
+		Flag:                "🇬🇧",
+		PartOfSpeechList:    []string{"noun", "pronoun", "verb", "phrasal verb", "adjective", "adverb", "preposition", "conjunction", "interjection"},
 		PartOfSpeechMappings: map[string]string{
 			"noun":         "noun",
 			"pronoun":      "pronoun",
@@ -48,10 +48,10 @@ var LanguageConfigs = map[string]LanguageConfig{
 		ExampleInstructions: "Wrap the target word in square brackets [word] in all example sentences.",
 	},
 	"es": {
-		Code:             "es",
-		Name:             "Spanish",
-		Flag:             "🇪🇸",
-		PartOfSpeechList: []string{"sustantivo", "pronombre", "verbo", "adjetivo", "adverbio", "preposición", "conjunción", "interjección"},
+		Code:                "es",
+		Name:                "Spanish",
+		Flag:                "🇪🇸",
+		PartOfSpeechList:    []string{"sustantivo", "pronombre", "verbo", "adjetivo", "adverbio", "preposición", "conjunción", "interjección"},
 		PartOfSpeechMappings: map[string]string{
 			"sustantivo":   "noun",
 			"pronombre":    "pronoun",
@@ -63,7 +63,7 @@ var LanguageConfigs = map[string]LanguageConfig{
 			"interjección": "interjection",
 			// Handle accented variations
 			"preposicion":  "preposition",
-			"conjunction":   "conjunction",
+			"conjuncion":   "conjunction",
 			"interjeccion": "interjection",
 		},
 		VerbTenses:          []string{"presente", "pretérito perfecto simple", "participio pasado"},
@@ -72,10 +72,10 @@ var LanguageConfigs = map[string]LanguageConfig{
 		ExampleInstructions: "Encierra la palabra objetivo entre corchetes [palabra] en todas las oraciones de ejemplo.",
 	},
 	"fr": {
-		Code:             "fr",
-		Name:             "French",
-		Flag:             "🇫🇷",
-		PartOfSpeechList: []string{"nom", "pronom", "verbe", "adjectif", "adverbe", "préposition", "conjunction", "interjection"},
+		Code:                "fr",
+		Name:                "French",
+		Flag:                "🇫🇷",
+		PartOfSpeechList:    []string{"nom", "pronom", "verbe", "adjectif", "adverbe", "préposition", "conjonction", "interjection"},
 		PartOfSpeechMappings: map[string]string{
 			"nom":          "noun",
 			"pronom":       "pronoun",
@@ -83,21 +83,21 @@ var LanguageConfigs = map[string]LanguageConfig{
 			"adjectif":     "adjective",
 			"adverbe":      "adverb",
 			"préposition":  "preposition",
-			"conjunction":  "conjunction",
+			"conjonction":  "conjunction",
 			"interjection": "interjection",
 			// Handle accented variations
-			"preposition": "preposition",
+			"preposition":  "preposition",
 		},
-		VerbTenses:          []string{"présent", "passé composé", "participate passé"},
-		GrammarInstructions: "Pour les verbes français, fournissez les formes du présent, passé composé et participate passé. Incluez les informations sur le genre pour les noms et adjectifs.",
+		VerbTenses:          []string{"présent", "passé composé", "participe passé"},
+		GrammarInstructions: "Pour les verbes français, fournissez les formes du présent, passé composé et participe passé. Incluez les informations sur le genre pour les noms et adjectifs.",
 		SpecialInstructions: "Attention aux liaisons et aux verbes irréguliers. Incluez les accents appropriés.",
 		ExampleInstructions: "Encadrez le mot cible entre crochets [mot] dans toutes les phrases d'exemple.",
 	},
 	"de": {
-		Code:             "de",
-		Name:             "German",
-		Flag:             "🇩🇪",
-		PartOfSpeechList: []string{"Substantiv", "Pronomen", "Verb", "Adjektiv", "Adverb", "Präposition", "Konjunktion", "Interjektion"},
+		Code:                "de",
+		Name:                "German",
+		Flag:                "🇩🇪",
+		PartOfSpeechList:    []string{"Substantiv", "Pronomen", "Verb", "Adjektiv", "Adverb", "Präposition", "Konjunktion", "Interjektion"},
 		PartOfSpeechMappings: map[string]string{
 			"Substantiv":   "noun",
 			"Pronomen":     "pronoun",
@@ -114,10 +114,10 @@ var LanguageConfigs = map[string]LanguageConfig{
 		ExampleInstructions: "Setzen Sie das Zielwort in eckige Klammern [Wort] in allen Beispielsätzen.",
 	},
 	"it": {
-		Code:             "it",
-		Name:             "Italian",
-		Flag:             "🇮🇹",
-		PartOfSpeechList: []string{"sostantivo", "pronome", "verbo", "aggettivo", "avverbio", "preposizione", "congiunzione", "interiezione"},
+		Code:                "it",
+		Name:                "Italian",
+		Flag:                "🇮🇹",
+		PartOfSpeechList:    []string{"sostantivo", "pronome", "verbo", "aggettivo", "avverbio", "preposizione", "congiunzione", "interiezione"},
 		PartOfSpeechMappings: map[string]string{
 			"sostantivo":   "noun",
 			"pronome":      "pronoun",
@@ -134,10 +134,10 @@ var LanguageConfigs = map[string]LanguageConfig{
 		ExampleInstructions: "Racchiudere la parola target tra parentesi quadre [parola] in tutte le frasi di esempio.",
 	},
 	"pt": {
-		Code:             "pt",
-		Name:             "Portuguese",
-		Flag:             "🇵🇹",
-		PartOfSpeechList: []string{"substantivo", "pronome", "verbo", "adjetivo", "advérbio", "preposição", "conjunção", "interjeição"},
+		Code:                "pt",
+		Name:                "Portuguese",
+		Flag:                "🇵🇹",
+		PartOfSpeechList:    []string{"substantivo", "pronome", "verbo", "adjetivo", "advérbio", "preposição", "conjunção", "interjeição"},
 		PartOfSpeechMappings: map[string]string{
 			"substantivo": "noun",
 			"pronome":     "pronoun",
@@ -159,10 +159,10 @@ var LanguageConfigs = map[string]LanguageConfig{
 		ExampleInstructions: "Coloque a palavra-alvo entre colchetes [palavra] em todas as frases de exemplo.",
 	},
 	"ja": {
-		Code:             "ja",
-		Name:             "Japanese",
-		Flag:             "🇯🇵",
-		PartOfSpeechList: []string{"名詞", "代名詞", "動詞", "形容詞", "副詞", "助詞", "接続詞", "感動詞"},
+		Code:                "ja",
+		Name:                "Japanese",
+		Flag:                "🇯🇵",
+		PartOfSpeechList:    []string{"名詞", "代名詞", "動詞", "形容詞", "副詞", "助詞", "接続詞", "感動詞"},
 		PartOfSpeechMappings: map[string]string{
 			"名詞":  "noun",
 			"代名詞": "pronoun",
@@ -181,7 +181,7 @@ var LanguageConfigs = map[string]LanguageConfig{
 }
 
 func isValidPartOfSpeech(value string, languageCode string) bool {
-	config, exists := LanguageConfigs[languageCode]
+	config, exists := LANGUAGE_CONFIGS[languageCode]
 	if !exists {
 		return false
 	}
@@ -196,7 +196,7 @@ func isValidPartOfSpeech(value string, languageCode string) bool {
 
 // buildLanguageSpecificPrompt creates language-specific prompts for ChatGPT
 func buildLanguageSpecificPrompt(token string, languageCode string) ([]map[string]string, error) {
-	languageConfig, exists := LanguageConfigs[languageCode]
+	languageConfig, exists := LANGUAGE_CONFIGS[languageCode]
 	if !exists {
 		return nil, fmt.Errorf("unsupported language: %s", languageCode)
 	}
@@ -258,7 +258,7 @@ func chatCompletion(messages []map[string]string, schema map[string]any) (*ChatC
 
 	var requestBody, err = json.Marshal(requestBodyStruct)
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling request data: %w", err)
+		return nil, fmt.Errorf("error marshalling request data: %w", err)
 	}
 
 	req, err := http.NewRequest("POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
@@ -318,7 +318,7 @@ func GetDefinition(token string, languageCode string) (*DefinitionWithPronunciat
 	if err != nil {
 		logger.Error("failed to build language-specific schema", "error", err)
 		// fallback to static schema
-		schema = definitionResponseSchema
+		schema = DEFINITION_RESPONSE_SCHEMA
 	}
 
 	var chatResponse *ChatCompletionResponse
@@ -426,7 +426,7 @@ type OpenAPIDefinition struct {
 
 // buildDefinitionSchema creates a language-specific JSON schema for definition responses
 func buildDefinitionSchema(languageCode string) (map[string]any, error) {
-	config, exists := LanguageConfigs[languageCode]
+	config, exists := LANGUAGE_CONFIGS[languageCode]
 	if !exists {
 		return nil, fmt.Errorf("unsupported language: %s", languageCode)
 	}
@@ -517,7 +517,7 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 	return schema, nil
 }
 
-var _ = map[string]any{
+var EXAMPLES_RESPONSE_SCHEMA = map[string]any{
 	"name":   "ExamplesResponse",
 	"strict": true,
 	"schema": map[string]any{
@@ -537,7 +537,7 @@ var _ = map[string]any{
 	},
 }
 
-var definitionResponseSchema = map[string]any{
+var DEFINITION_RESPONSE_SCHEMA = map[string]any{
 	"name":   "DefinitionResponse",
 	"strict": true,
 	"schema": map[string]any{

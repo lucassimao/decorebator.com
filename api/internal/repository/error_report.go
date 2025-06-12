@@ -130,8 +130,8 @@ func (r *ErrorReportRepository) GetErrorReportStats(ctx context.Context, startTi
 	for rows.Next() {
 		var errorType string
 		var count int64
-		if scanErr := rows.Scan(&errorType, &count); scanErr != nil {
-			return nil, scanErr
+		if err := rows.Scan(&errorType, &count); err != nil {
+			return nil, err
 		}
 		stats.ReportsByType[errorType] = count
 	}
@@ -156,8 +156,8 @@ func (r *ErrorReportRepository) GetErrorReportStats(ctx context.Context, startTi
 
 	for rows.Next() {
 		var userStats UserReportStats
-		if scanErr := rows.Scan(&userStats.UserID, &userStats.ReportCount, &userStats.SubscriptionPlan); scanErr != nil {
-			return nil, scanErr
+		if err := rows.Scan(&userStats.UserID, &userStats.ReportCount, &userStats.SubscriptionPlan); err != nil {
+			return nil, err
 		}
 		stats.ReportsByUser = append(stats.ReportsByUser, userStats)
 	}
@@ -194,7 +194,7 @@ func (r *ErrorReportRepository) GetErrorReportStats(ctx context.Context, startTi
 // CheckCooldown checks if a user is in cooldown for a specific error report
 func (r *ErrorReportRepository) CheckCooldown(ctx context.Context, userID int64, wordID int64, definitionID int64, errorType string) (*time.Time, error) {
 	var cooldownUntil *time.Time
-
+	
 	query := `
 		SELECT cooldown_until 
 		FROM error_report_cooldowns 
@@ -205,22 +205,22 @@ func (r *ErrorReportRepository) CheckCooldown(ctx context.Context, userID int64,
 			AND cooldown_until > NOW()
 		LIMIT 1
 	`
-
+	
 	wordIDParam := sql.NullInt64{Int64: wordID, Valid: wordID > 0}
 	defIDParam := sql.NullInt64{Int64: definitionID, Valid: definitionID > 0}
-
+	
 	if !wordIDParam.Valid {
 		wordIDParam.Int64 = -1
 	}
 	if !defIDParam.Valid {
 		defIDParam.Int64 = -1
 	}
-
+	
 	err := r.db.QueryRow(ctx, query, userID, wordIDParam.Int64, defIDParam.Int64, errorType).Scan(&cooldownUntil)
 	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
-
+	
 	return cooldownUntil, err
 }
 
@@ -234,25 +234,25 @@ func (r *ErrorReportRepository) SetCooldown(ctx context.Context, tx pgx.Tx, user
 			cooldown_until = EXCLUDED.cooldown_until,
 			updated_at = NOW()
 	`
-
+	
 	wordIDParam := sql.NullInt64{Int64: wordID, Valid: wordID > 0}
 	defIDParam := sql.NullInt64{Int64: definitionID, Valid: definitionID > 0}
-
+	
 	_, err := tx.Exec(ctx, query, userID, wordIDParam, defIDParam, errorType, cooldownUntil)
 	return err
 }
 
 // UpdateLastRegeneratedAt updates the last regenerated timestamp for words or definitions
 func (r *ErrorReportRepository) UpdateWordAudioLastRegeneratedAt(ctx context.Context, tx pgx.Tx, wordID int64) error {
-	_, err := tx.Exec(ctx,
-		"UPDATE words SET audio_last_regenerated_at = NOW() WHERE id = $1",
+	_, err := tx.Exec(ctx, 
+		"UPDATE words SET audio_last_regenerated_at = NOW() WHERE id = $1", 
 		wordID)
 	return err
 }
 
 func (r *ErrorReportRepository) UpdateDefinitionLastRegeneratedAt(ctx context.Context, tx pgx.Tx, definitionID int64) error {
-	_, err := tx.Exec(ctx,
-		"UPDATE definitions SET last_regenerated_at = NOW() WHERE id = $1",
+	_, err := tx.Exec(ctx, 
+		"UPDATE definitions SET last_regenerated_at = NOW() WHERE id = $1", 
 		definitionID)
 	return err
 }

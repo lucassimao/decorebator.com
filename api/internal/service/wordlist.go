@@ -24,14 +24,15 @@ func init() {
 }
 
 // include wordsCount and WordsLearnedCount for each scholarship
-func GetUserWordlistsWithWordStats(userID int64) ([]*Wordlist, error) {
+func GetUserWordlistsWithWordStats(userId int64) ([]*Wordlist, error) {
 	args := repo.FindWordlistArgs{
-		OwnerID:                  &userID,
+		OwnerId:                  &userId,
 		ComputeWordsCount:        true,
 		ComputeWordsLearnedCount: true,
 	}
 	result, err := wordlistRepository.Find(args)
 	if err != nil {
+
 		wrappedErr := fmt.Errorf(
 			"failed to get all wordlists: %w", err,
 		)
@@ -39,6 +40,7 @@ func GetUserWordlistsWithWordStats(userID int64) ([]*Wordlist, error) {
 	}
 	return result, nil
 }
+
 
 func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
 	wordlist, err := wordlistRepository.Save(newWordlist.Name, newWordlist.Description, newWordlist.LanguageCode, newWordlist.UserID)
@@ -52,10 +54,10 @@ func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
 	return wordlist, nil
 }
 
-func GetWordlistByID(id, userID int64) (*Wordlist, error) {
+func GetWordlistById(id, userId int64) (*Wordlist, error) {
 	args := repo.FindWordlistArgs{
-		ID:      &id,
-		OwnerID: &userID,
+		Id:      &id,
+		OwnerId: &userId,
 	}
 	result, err := wordlistRepository.Find(args)
 	if err != nil {
@@ -73,8 +75,8 @@ func GetWordlistByID(id, userID int64) (*Wordlist, error) {
 	return wordlist, nil
 }
 
-func DeleteWordlist(id, userID int64) (int64, error) {
-	count, err := wordlistRepository.Delete(id, userID)
+func DeleteWordlist(id, userId int64) (int64, error) {
+	count, err := wordlistRepository.Delete(id, userId)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
 			"failed to delete wordlist %d : %w", id, err,
@@ -102,4 +104,5 @@ func UpdateWordlist(wordlist *Wordlist) error {
 		return common.NotFoundError{ID: wordlist.ID, Entity: "Wordlist"}
 	}
 	return nil
+
 }

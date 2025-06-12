@@ -22,21 +22,21 @@ func NewBatchProgressRepository(db *pgxpool.Pool) *BatchProgressRepository {
 //
 // Query: Complex multi-CTE query combining wordlist statistics and streak calculations:
 // 1. wordlist_stats CTE: Aggregates word mastery and activity data per wordlist
-//   - JOINs words → wordlists → word_mastery → learning_progress
-//   - COUNT(DISTINCT w.id) as total_words in each wordlist
-//   - COUNT(DISTINCT CASE WHEN mastery_level >= 0.8) as words_mastered (80% threshold)
-//   - AVG(mastery_level) * 100 as progress_percent with NULL handling
-//   - MAX(date) as last_activity_date from learning_progress
-//   - Filters: learned = FALSE (active words only)
+//    - JOINs words → wordlists → word_mastery → learning_progress
+//    - COUNT(DISTINCT w.id) as total_words in each wordlist
+//    - COUNT(DISTINCT CASE WHEN mastery_level >= 0.8) as words_mastered (80% threshold)
+//    - AVG(mastery_level) * 100 as progress_percent with NULL handling
+//    - MAX(date) as last_activity_date from learning_progress
+//    - Filters: learned = FALSE (active words only)
 //
 // 2. streaks CTE: Calculates current consecutive practice streaks using gap-and-island technique
-//   - Uses ROW_NUMBER() window function to identify consecutive date groups
-//   - Filters by 30-day window and active practice days (total_quiz_attempts > 0)
-//   - Groups consecutive dates with same streak_group identifier
-//   - Only includes current streak (ending on CURRENT_DATE)
+//    - Uses ROW_NUMBER() window function to identify consecutive date groups
+//    - Filters by 30-day window and active practice days (total_quiz_attempts > 0)
+//    - Groups consecutive dates with same streak_group identifier
+//    - Only includes current streak (ending on CURRENT_DATE)
 //
 // 3. Main SELECT: Combines wordlist stats with streak data using LEFT JOIN
-//   - Returns: wordlist_id, name, language_code, totals, mastery stats, streak, last_activity
+//    - Returns: wordlist_id, name, language_code, totals, mastery stats, streak, last_activity
 //
 // Used for dashboard overview showing all wordlists with comprehensive progress metrics.
 func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, userID int64) ([]model.WordlistProgress, error) {

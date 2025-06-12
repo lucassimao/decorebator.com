@@ -16,6 +16,7 @@ type QuizRoutes struct{}
 var strategy common.SpacedRepetitionStrategy = service.LeitnerSystemStrategy{}
 
 func (h *QuizRoutes) Create(c *gin.Context) {
+
 	wordlistID, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 
@@ -42,6 +43,7 @@ type SaveInput struct {
 
 // Save if the users answered correctly or not
 func (h *QuizRoutes) Save(c *gin.Context) {
+
 	var input SaveInput
 
 	if err := c.BindJSON(&input); err != nil {
@@ -50,7 +52,7 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 	}
 
 	userId := c.GetInt64("userID")
-
+	
 	// Get user from context to check if premium
 	isPremium := false
 	if user, exists := c.Get("user"); exists {

@@ -22,7 +22,8 @@ type DefinitionRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Definition, tx pgx.Tx) ([]*Definition, error) {
+func (repository *DefinitionRepository) Save(tokenId int64, definitions []*Definition, tx pgx.Tx) ([]*Definition, error) {
+
 	// Prepare the definitions insert
 	definitionsInsert := `
         INSERT INTO 
@@ -47,11 +48,11 @@ func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Defin
 		// Execute the query within the transaction
 		err := tx.QueryRow(context.Background(), definitionsInsert, def.Token,
 			def.Language, def.PartOfSpeech, def.PartOfSpeechNormalized, meaning, def.Examples, def.Inflections,
-			def.Source, def.SourceID, def.Sounds, def.PhoneticNotations).Scan(&def.ID, &createdAt, &updatedAt)
+			def.Source, def.SourceId, def.Sounds, def.PhoneticNotations).Scan(&def.ID, &createdAt, &updatedAt)
 
 		if err != nil {
 			jsonString, _ := json.Marshal(def)
-			common.Logger.Error("failed to insert definition", "definition", jsonString, "tokenID", tokenID)
+			common.Logger.Error("failed to insert definition", "definition", jsonString, "tokenId", tokenId)
 			return nil, err
 		}
 
@@ -60,18 +61,19 @@ func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Defin
 		def.UpdatedAt = updatedAt
 		definitions[i] = def
 
-		_, err = tx.Exec(context.Background(), wordDefinitionsInsert, tokenID, def.ID)
+		_, err = tx.Exec(context.Background(), wordDefinitionsInsert, tokenId, def.ID)
 
 		if err != nil {
-			common.Logger.Error("failed to insert word_definition", "def.ID", def.ID, "tokenID", tokenID)
+			common.Logger.Error("failed to insert word_definition", "def.ID", def.ID, "tokenId", tokenId)
 			return nil, err
 		}
+
 	}
 
 	return definitions, nil
 }
 
-func (repository *DefinitionRepository) GetRandomMeanings(definitionIDsToIgnore []int, limit int) ([]string, error) {
+func (repository *DefinitionRepository) GetRandomMeanings(definitionIdsToIgnore []int, limit int) ([]string, error) {
 	// all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
 	// selecting random() to avoid the error 'SELECT DISTINCT, ORDER BY expressions must appear in select list (SQLSTATE 42P10)'
 	query := `
@@ -100,7 +102,7 @@ func (repository *DefinitionRepository) GetRandomMeanings(definitionIDsToIgnore 
 		SELECT meaning FROM options;
 	`
 
-	rows, err := repository.Db.Query(context.Background(), query, definitionIDsToIgnore, limit)
+	rows, err := repository.Db.Query(context.Background(), query, definitionIdsToIgnore, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +121,7 @@ func (repository *DefinitionRepository) GetRandomMeanings(definitionIDsToIgnore 
 	return meanings, nil
 }
 
-func (repository *DefinitionRepository) GetRandomTokens(definitionIDsToIgnore []int, partOfSpeech string, limit int) ([]string, error) {
+func (repository *DefinitionRepository) GetRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, limit int) ([]string, error) {
 	// selecting random() to avoid the error 'SELECT DISTINCT, ORDER BY expressions must appear in select list (SQLSTATE 42P10)'
 	query := `
 		WITH tokens AS (
@@ -137,7 +139,7 @@ func (repository *DefinitionRepository) GetRandomTokens(definitionIDsToIgnore []
 		)
 		SELECT token FROM tokens ;
 	`
-	rows, err := repository.Db.Query(context.Background(), query, partOfSpeech, definitionIDsToIgnore, limit)
+	rows, err := repository.Db.Query(context.Background(), query, partOfSpeech, definitionIdsToIgnore, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -156,6 +158,7 @@ func (repository *DefinitionRepository) GetRandomTokens(definitionIDsToIgnore []
 }
 
 func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, error) {
+
 	var builder strings.Builder
 
 	builder.WriteString(`SELECT id, token, language, part_of_speech, part_of_speech_normalized, is_verb_type, meaning, examples, inflections, source, 
@@ -174,6 +177,7 @@ func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, erro
 
 	if args.Name != nil {
 		filters = append(filters, fmt.Sprintf("token = $%d", index))
+		index++
 		queryArgs = append(queryArgs, *args.Name)
 	}
 
@@ -199,7 +203,7 @@ func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, erro
 
 		err = rows.Scan(&def.ID,
 			&def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning, &def.Examples, &def.Inflections,
-			&def.Source, &def.SourceID, &def.Sounds, &def.PhoneticNotations,
+			&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations,
 			&def.CreatedAt, &def.UpdatedAt)
 
 		if err != nil {
@@ -228,13 +232,9 @@ func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64, tx *
 		}
 		defer func() {
 			if err == nil {
-				if commitErr := managedTx.Commit(ctx); commitErr != nil {
-					err = fmt.Errorf("failed to commit transaction: %w", commitErr)
-				}
+				managedTx.Commit(ctx)
 			} else {
-				if rollbackErr := managedTx.Rollback(ctx); rollbackErr != nil {
-					err = fmt.Errorf("failed to rollback transaction: %w (original error: %w)", rollbackErr, err)
-				}
+				managedTx.Rollback(ctx)
 			}
 		}()
 	} else {
@@ -308,7 +308,7 @@ func (repository *DefinitionRepository) GetDefinitionsByWordId(wordId, userId in
 
 		err = rows.Scan(&def.ID,
 			&def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning, &def.Examples, &def.Inflections,
-			&def.Source, &def.SourceID, &def.Sounds, &def.PhoneticNotations,
+			&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations,
 			&def.CreatedAt, &def.UpdatedAt)
 
 		if err != nil {
@@ -340,7 +340,7 @@ func (repository *DefinitionRepository) GetDefinitionByID(definitionID int64) (*
 	var def Definition
 	err := repository.Db.QueryRow(context.Background(), query, definitionID).Scan(
 		&def.ID, &def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning,
-		&def.Examples, &def.Inflections, &def.Source, &def.SourceID,
+		&def.Examples, &def.Inflections, &def.Source, &def.SourceId,
 		&def.Sounds, &def.PhoneticNotations, &def.CreatedAt, &def.UpdatedAt)
 
 	if err != nil {

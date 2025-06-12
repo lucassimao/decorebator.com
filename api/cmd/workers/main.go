@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+
 	riverClient, err := service.GetRiverClient()
 
 	if err != nil {
@@ -40,8 +41,10 @@ func main() {
 		defer cancel()
 
 		// catching ctx.Done(). timeout of 5 seconds.
-		<-ctx.Done()
-		common.Logger.Debug("timeout of 5 seconds.")
+		select {
+		case <-ctx.Done():
+			common.Logger.Debug("timeout of 5 seconds.")
+		}
 	} else {
 		if err := riverClient.Stop(context.Background()); err != nil {
 			common.Logger.Error("failed to stop river client", "error", err)

@@ -23,7 +23,7 @@ func init() {
 	// Seed the random number generator with current time
 	// Used for: example sentence selection, answer position randomization
 	// Note: Quiz type selection now uses deterministic rotation
-	// Random seed is no longer needed as we use deterministic rotation
+	rand.Seed(time.Now().UnixNano())
 }
 
 // LeitnerSystemStrategy implements the Leitner spaced repetition algorithm for vocabulary learning.
@@ -221,7 +221,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				"withMeaning", withMeaning,
 				"notSkipped", notSkipped)
 		}
-
+		
 		return nil, errors.New("no definitions found in wordlist")
 	}
 
@@ -371,7 +371,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		return nil, err
 	}
 
-	word, err := GetWordByID(nextDefinition.WordID)
+	word, err := GetWordById(nextDefinition.WordID)
 	if err != nil {
 		return nil, err
 	}
@@ -786,13 +786,9 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 		}
 		defer func() {
 			if err == nil {
-				if commitErr := tx.Commit(ctx); commitErr != nil {
-					err = fmt.Errorf("failed to commit transaction: %w", commitErr)
-				}
+				tx.Commit(ctx)
 			} else {
-				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
-					common.Logger.Error("Failed to rollback transaction", "error", rollbackErr)
-				}
+				tx.Rollback(ctx)
 			}
 		}()
 	} else {
@@ -841,6 +837,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	quizResult QuizResult,
 	isPremium bool,
 	transactionPtr *pgx.Tx) error {
+
 	var tx pgx.Tx
 	var err error
 	ctx := context.Background()
@@ -858,13 +855,9 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 		}
 		defer func() {
 			if err == nil {
-				if commitErr := tx.Commit(ctx); commitErr != nil {
-					common.Logger.Error("Failed to commit transaction", "error", commitErr)
-				}
+				tx.Commit(ctx)
 			} else {
-				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
-					common.Logger.Error("Failed to rollback transaction", "error", rollbackErr)
-				}
+				tx.Rollback(ctx)
 			}
 		}()
 	} else {
@@ -911,7 +904,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	// Update box distribution snapshot and invalidate cache (outside transaction)
 	go func() {
 		ctx := context.Background()
-
+		
 		// First, update the box distribution snapshot
 		common.Logger.Info("updating box distribution snapshot",
 			"userId", quizResult.UserID,
@@ -946,7 +939,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 			// Invalidate wordlist analytics cache (includes historical box distribution)
 			err = cachedService.InvalidateWordlistAnalytics(ctx, quizResult.UserID, quizResult.WordlistID)
 			if err != nil {
-				common.Logger.Error("failed to invalidate analytics cache",
+				common.Logger.Error("failed to invalidate analytics cache", 
 					"error", err,
 					"userId", quizResult.UserID,
 					"wordlistId", quizResult.WordlistID)
@@ -1001,6 +994,7 @@ func (LeitnerSystemStrategy) IncludeDefinitions(wordId, userId int64, definition
 //
 // Returns an error if the database operations fail.
 func (s LeitnerSystemStrategy) MarkErrorResolved(report ErrorReport) error {
+
 	if report.DefinitionId == nil && report.WordId == nil {
 		return errors.New("definition or word missing")
 	}
@@ -1017,13 +1011,9 @@ func (s LeitnerSystemStrategy) MarkErrorResolved(report ErrorReport) error {
 	}
 	defer func() {
 		if err == nil {
-			if commitErr := tx.Commit(ctx); commitErr != nil {
-				common.Logger.Error("Failed to commit transaction", "error", commitErr)
-			}
+			tx.Commit(ctx)
 		} else {
-			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
-				common.Logger.Error("Failed to rollback transaction", "error", rollbackErr)
-			}
+			tx.Rollback(ctx)
 		}
 	}()
 
@@ -1063,6 +1053,7 @@ type ErrorReport struct {
 }
 
 func buildQuerySelectionFromErrorReport(report ErrorReport) (string, []any, error) {
+
 	if report.DefinitionId == nil && report.WordId == nil {
 		return "", nil, errors.New("definition or word missing")
 	}
@@ -1085,12 +1076,14 @@ func buildQuerySelectionFromErrorReport(report ErrorReport) (string, []any, erro
 	if report.WordId != nil {
 		whereConditions = append(whereConditions, fmt.Sprintf("word_id = $%d", argIndex))
 		queryArgs = append(queryArgs, report.WordId)
+		argIndex++
 	}
 
 	builder.WriteString(" WHERE ")
 	builder.WriteString(strings.Join(whereConditions, " AND "))
 
 	return builder.String(), queryArgs, nil
+
 }
 
 // ReportError records a user-reported issue with quiz content and temporarily excludes it from quiz generation.
@@ -1113,6 +1106,7 @@ func buildQuerySelectionFromErrorReport(report ErrorReport) (string, []any, erro
 //
 // Returns an error if the database operations fail.
 func (s LeitnerSystemStrategy) ReportError(userID int64, report ErrorReport, tx pgx.Tx, ctx context.Context) error {
+
 	if report.DefinitionId == nil && report.WordId == nil {
 		return errors.New("definition or word missing")
 	}

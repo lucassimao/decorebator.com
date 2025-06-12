@@ -43,7 +43,7 @@ func getInstructionsForLanguage(languageCode string, text string) string {
 	instructionsMap := map[string]string{
 		"en": "Speak in clear American English with natural pronunciation. Emphasize proper stress patterns and clear articulation.",
 		"es": "Habla en español con pronunciación clara y natural. Usa la entonación correcta y pronuncia todas las sílabas claramente.",
-		"fr": "Parlez en français avec une pronunciation claire et naturelle. Respectez les liaisons et l'accent tonique approprié.",
+		"fr": "Parlez en français avec une prononciation claire et naturelle. Respectez les liaisons et l'accent tonique approprié.",
 		"de": "Sprechen Sie auf Deutsch mit klarer und natürlicher Aussprache. Betonen Sie die richtige Silbenbetonung und sprechen Sie alle Konsonanten deutlich aus.",
 		"it": "Parla in italiano con pronuncia chiara e naturale. Rispetta l'accento tonico e pronuncia tutte le vocali chiaramente.",
 		"pt": "Fale em português com pronúncia clara e natural. Use a entonação correta e pronuncie todas as sílabas de forma distinta.",
@@ -69,7 +69,7 @@ func GenerateAudio(text string, languageCode string) (*GenerateAudioResponse, er
 
 	var requestBody, err = json.Marshal(requestBodyStruct)
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling request data: %w", err)
+		return nil, fmt.Errorf("error marshalling request data: %w", err)
 	}
 
 	req, err := http.NewRequest("POST", "https://api.openai.com/v1/audio/speech", bytes.NewBuffer(requestBody))
@@ -108,4 +108,5 @@ func GenerateAudio(text string, languageCode string) (*GenerateAudioResponse, er
 	}
 
 	return &generateAudioResponse, nil
+
 }

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"unicode/utf8"
 
@@ -27,12 +26,12 @@ func init() {
 
 // GetWordByWordlist returns words from wordlist with optional filtering
 // onlyWithDefinitions: if true, returns only words that have definitions with meanings
-func GetWordByWordlist(wordlistID, userID int64, onlyWithDefinitions bool) ([]Word, error) {
-	return wordRepository.GetWordsByWordlist(wordlistID, userID, onlyWithDefinitions)
+func GetWordByWordlist(wordlistId, userId int64, onlyWithDefinitions bool) ([]Word, error) {
+	return wordRepository.GetWordsByWordlist(wordlistId, userId, onlyWithDefinitions)
 }
 
-func GetWordByID(id int64) (*Word, error) {
-	return wordRepository.GetByID(id)
+func GetWordById(id int64) (*Word, error) {
+	return wordRepository.GetById(id)
 }
 
 func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
@@ -53,13 +52,9 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 	// db transaction mgmt
 	defer func() {
 		if err == nil {
-			if commitErr := tx.Commit(ctx); commitErr != nil {
-				common.Logger.Error("Failed to commit transaction", "error", commitErr)
-			}
+			tx.Commit(ctx)
 		} else {
-			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
-				common.Logger.Error("Failed to rollback transaction", "error", rollbackErr)
-			}
+			tx.Rollback(ctx)
 		}
 	}()
 
@@ -72,39 +67,29 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 	definitions, _ := findDefinitionsByName(word.Name)
 
 	if len(definitions) > 0 {
-		definitionIDs := []int64{}
+		definitionIds := []int64{}
 
 		for _, def := range definitions {
-			definitionIDs = append(definitionIDs, def.ID)
+			definitionIds = append(definitionIds, def.ID)
 		}
-		if err := wordRepository.ReuseDefinitions(word.ID, definitionIDs, tx); err != nil {
-			return word, fmt.Errorf("failed to reuse definitions: %w", err)
-		}
+		wordRepository.ReuseDefinitions(word.ID, definitionIds, tx)
 
 		quizStrategy := LeitnerSystemStrategy{}
-		if err := quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIDs, tx); err != nil {
-			return word, fmt.Errorf("failed to include definitions in leitner system: %w", err)
-		}
+		quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
 
 		var latestAudioURL string
-		latestAudioURL, err = wordRepository.GetLatestAudioURL(trimmedName)
+		latestAudioURL, err = wordRepository.GetLatestAudioUrl(trimmedName)
 
 		if err != nil {
-			if _, workerErr := TriggerTextToSpeechWorker(word.ID, nil, &tx); workerErr != nil {
-				common.Logger.Error("Failed to trigger text-to-speech worker", "error", workerErr)
-			}
+			TriggerTextToSpeechWorker(word.ID, nil, &tx)
 			err = nil // fine if triggering the worker fails somehow
 		} else {
 			word.AudioURL = latestAudioURL
 			err = UpdateWord(word, &tx)
 		}
 	} else {
-		if _, workerErr := TriggerFetchDefinitionWorker(word.ID, nil, &tx); workerErr != nil {
-			common.Logger.Error("Failed to trigger definition fetcher worker", "error", workerErr)
-		}
-		if _, workerErr := TriggerTextToSpeechWorker(word.ID, nil, &tx); workerErr != nil {
-			common.Logger.Error("Failed to trigger text-to-speech worker", "error", workerErr)
-		}
+		TriggerFetchDefinitionWorker(word.ID, nil, &tx)
+		TriggerTextToSpeechWorker(word.ID, nil, &tx)
 	}
 
 	if err != nil {
@@ -114,8 +99,8 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 	return word, nil
 }
 
-func DeleteWord(id, userID int64) (int64, error) {
-	word, err := GetWordByID(id)
+func DeleteWord(id, userId int64) (int64, error) {
+	word, err := GetWordById(id)
 	if err != nil {
 		return 0, err
 	}
@@ -124,7 +109,7 @@ func DeleteWord(id, userID int64) (int64, error) {
 		return 0, common.NotFoundError{ID: id, Entity: "Word"}
 	}
 
-	count, err := wordRepository.Delete(userID, id)
+	count, err := wordRepository.Delete(userId, id)
 	if err != nil {
 		common.Logger.Error("failed to delete word", "error", err)
 		return 0, errors.New("failed to delete word")

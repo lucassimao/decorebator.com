@@ -19,7 +19,7 @@ type WordRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *WordRepository) Save(name, notes string, userID, wordlistID int64, tx *pgx.Tx) (*Word, error) {
+func (repository *WordRepository) Save(name, notes string, userId, wordlistId int64, tx *pgx.Tx) (*Word, error) {
 	query := `
 		INSERT INTO words (name, wordlist_id, user_id, created_at, notes)
 		VALUES ($1, $2,$3, now(),$4)
@@ -29,7 +29,7 @@ func (repository *WordRepository) Save(name, notes string, userID, wordlistID in
 	var updatedAt pgtype.Timestamptz
 	var wordID int64
 
-	args := []any{name, wordlistID, userID, notes}
+	args := []any{name, wordlistId, userId, notes}
 
 	var row pgx.Row
 	if tx != nil {
@@ -45,10 +45,11 @@ func (repository *WordRepository) Save(name, notes string, userID, wordlistID in
 	}
 
 	return &Word{ID: wordID, Name: name, CreatedAt: createdAt, Notes: notes,
-		UpdatedAt: updatedAt, WordlistID: wordlistID, UserID: userID, AudioURL: ""}, nil
+		UpdatedAt: updatedAt, WordlistID: wordlistId, UserID: userId, AudioURL: ""}, nil
 }
 
-func (repository *WordRepository) ReuseDefinitions(wordID int64, definitionIDs []int64, tx pgx.Tx) error {
+func (repository *WordRepository) ReuseDefinitions(wordId int64, definitionIds []int64, tx pgx.Tx) error {
+
 	var strBuilder strings.Builder
 
 	strBuilder.WriteString("INSERT INTO word_definitions (word_id, definition_id) VALUES ")
@@ -56,9 +57,9 @@ func (repository *WordRepository) ReuseDefinitions(wordID int64, definitionIDs [
 	values := []any{}
 	index := 0
 
-	for _, definitionID := range definitionIDs {
+	for _, definitionId := range definitionIds {
 		parameters = append(parameters, fmt.Sprintf("($%d, $%d)", index+1, index+2))
-		values = append(values, wordID, definitionID)
+		values = append(values, wordId, definitionId)
 		index = index + 2
 	}
 
@@ -76,9 +77,9 @@ func (repository *WordRepository) ReuseDefinitions(wordID int64, definitionIDs [
 
 // GetWordsByWordlist returns words from wordlist with optional filtering
 // onlyWithDefinitions: if true, returns only words that have definitions with meanings
-func (repository *WordRepository) GetWordsByWordlist(wordlistID, userID int64, onlyWithDefinitions bool) ([]Word, error) {
+func (repository *WordRepository) GetWordsByWordlist(wordlistId, userId int64, onlyWithDefinitions bool) ([]Word, error) {
 	var query string
-
+	
 	if onlyWithDefinitions {
 		query = `SELECT DISTINCT w.id, w.name, w.created_at, w.updated_at, 
 					COALESCE(w.audio_url,''), COALESCE(w.notes,''), 
@@ -93,8 +94,8 @@ func (repository *WordRepository) GetWordsByWordlist(wordlistID, userID int64, o
 					COALESCE(notes,''), COALESCE(pronunciation,''), learned
 				FROM words WHERE wordlist_id=$1 AND user_id=$2 ORDER BY id DESC`
 	}
-
-	rows, err := repository.Db.Query(context.Background(), query, wordlistID, userID)
+	
+	rows, err := repository.Db.Query(context.Background(), query, wordlistId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -103,10 +104,10 @@ func (repository *WordRepository) GetWordsByWordlist(wordlistID, userID int64, o
 
 	words := []Word{}
 	for rows.Next() {
-		w := Word{WordlistID: wordlistID, UserID: userID}
-		scanErr := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.AudioURL, &w.Notes, &w.Pronunciation, &w.Learned)
-		if scanErr != nil {
-			return nil, scanErr
+		w := Word{WordlistID: wordlistId, UserID: userId}
+		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.AudioURL, &w.Notes, &w.Pronunciation, &w.Learned)
+		if err != nil {
+			return nil, err
 		}
 		words = append(words, w)
 	}
@@ -117,17 +118,17 @@ func (repository *WordRepository) GetWordsByWordlist(wordlistID, userID int64, o
 	return words, nil
 }
 
-func (repository *WordRepository) GetByID(wordID int64) (*Word, error) {
+func (repository *WordRepository) GetById(wordId int64) (*Word, error) {
 	query := `SELECT id, name, created_at, updated_at, wordlist_id, user_id, 
 				COALESCE(audio_url,''), COALESCE(notes,''), COALESCE(pronunciation,''), learned
 			FROM words WHERE id=$1`
-	row := repository.Db.QueryRow(context.Background(), query, wordID)
+	row := repository.Db.QueryRow(context.Background(), query, wordId)
 	var w Word
 
 	err := row.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.WordlistID, &w.UserID, &w.AudioURL, &w.Notes, &w.Pronunciation, &w.Learned)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, common.NotFoundError{ID: wordID, Entity: "word"}
+			return nil, common.NotFoundError{ID: wordId, Entity: "word"}
 		}
 
 		return nil, err
@@ -136,9 +137,9 @@ func (repository *WordRepository) GetByID(wordID int64) (*Word, error) {
 	return &w, nil
 }
 
-func (repository *WordRepository) Delete(userID, wordID int64) (int64, error) {
+func (repository *WordRepository) Delete(userId, wordID int64) (int64, error) {
 	query := `DELETE FROM words WHERE user_id=$1 AND id=$2`
-	result, err := repository.Db.Exec(context.Background(), query, userID, wordID)
+	result, err := repository.Db.Exec(context.Background(), query, userId, wordID)
 	if err != nil {
 		return 0, err
 	}
@@ -166,7 +167,7 @@ func (repository *WordRepository) Update(word *Word, tx *pgx.Tx) (int64, error) 
 	return result.RowsAffected(), nil
 }
 
-func (repository *WordRepository) GetLatestAudioURL(word string) (string, error) {
+func (repository *WordRepository) GetLatestAudioUrl(word string) (string, error) {
 	query := `SELECT audio_url
 			  FROM words 
 			  WHERE name=$1 AND audio_url is not null AND LENGTH(audio_url) > 0 order by id desc`

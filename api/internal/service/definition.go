@@ -83,7 +83,7 @@ func NormalizePartOfSpeech(partOfSpeech, languageCode string) string {
 	}
 
 	// Get language configuration
-	config, exists := openai.LanguageConfigs[languageCode]
+	config, exists := openai.LANGUAGE_CONFIGS[languageCode]
 	if !exists {
 		// Fallback to original value for unsupported languages
 		return partOfSpeech
