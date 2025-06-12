@@ -1,0 +1,221 @@
+# golangci-lint configuration for Decorebator API
+# Documentation: https://golangci-lint.run/usage/configuration/
+
+run:
+  # Timeout for analysis
+  timeout: 5m
+  
+  # Exit code when at least one issue was found
+  issues-exit-code: 1
+  
+  # Include test files
+  tests: true
+  
+
+output:
+  # Colored output
+  color: always
+  
+  # Print lines of code with issue
+  print-issued-lines: true
+  
+  # Print linter name in the end of issue text
+  print-linter-name: true
+
+linters:
+  enable:
+    # Default linters
+    - errcheck       # Checking for unchecked errors
+    - gosimple       # Specializes in simplifying code
+    - govet         # Reports suspicious constructs
+    - ineffassign   # Detects ineffectual assignments
+    - staticcheck   # State of the art linter
+    - typecheck     # Like the front-end of a Go compiler
+    - unused        # Checks for unused constants, variables, functions and types
+    
+    # Additional linters
+    - bodyclose     # Checks whether HTTP response body is closed
+    - dogsled       # Finds assignments with too many blank identifiers
+    - dupl          # Code clone detection
+    - copyloopvar   # Checks for pointers to enclosing loop variables
+    - goconst       # Finds repeated strings that could be constants
+    - gocyclo       # Cyclomatic complexity
+    - gofmt         # Checks whether code was gofmt-ed
+    - goimports     # Checks imports formatting
+    - goprintffuncname # Checks that printf-like functions are named with 'f' at the end
+    - gosec         # Security problems
+    - misspell      # Finds commonly misspelled English words
+    - nakedret      # Finds naked returns in functions
+    - nolintlint    # Reports ill-formed or insufficient nolint directives
+    - revive        # Fast, configurable, extensible, flexible, and beautiful linter
+    - rowserrcheck  # Checks whether Err of rows is checked successfully
+    - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed
+    - unconvert     # Unnecessary type conversions
+    - unparam       # Unused function parameters
+    - whitespace    # Detects leading and trailing whitespace
+
+  disable:
+    - depguard      # Too strict for our use case
+    - exhaustive    # Too noisy for switch statements
+    - gochecknoglobals # We use some globals for repositories
+    - godox         # We want to keep TODO/FIXME comments
+    - err113        # Too strict about error types
+    - lll           # Line length limit is too strict
+    - nlreturn      # Too opinionated about newlines
+    - testpackage   # We prefer testing in the same package
+    - wsl           # Too strict about whitespace
+
+linters-settings:
+  errcheck:
+    # Report about not checking of errors in type assertions
+    check-type-assertions: true
+    
+    # Report about assignment of errors to blank identifier
+    check-blank: false
+    
+    # Exclude certain functions from checking
+    exclude-functions:
+      - io.Copy
+      - fmt.Fprint
+      - fmt.Fprintf
+      - fmt.Fprintln
+      - strings.Builder.WriteString
+      - strings.Builder.Write
+      - strings.Builder.WriteByte
+      - strings.Builder.WriteRune
+
+  govet:
+    # Settings per analyzer
+    enable:
+      - shadow
+    settings:
+      printf:
+        funcs:
+          - (github.com/sirupsen/logrus.Logger).Debugf
+          - (github.com/sirupsen/logrus.Logger).Infof
+          - (github.com/sirupsen/logrus.Logger).Warnf
+          - (github.com/sirupsen/logrus.Logger).Errorf
+          - (github.com/sirupsen/logrus.Logger).Fatalf
+
+  gocyclo:
+    # Minimal code complexity to report
+    min-complexity: 20
+
+  dupl:
+    # Tokens count to trigger issue
+    threshold: 150
+
+  goconst:
+    # Minimal length of string constant
+    min-len: 3
+    # Minimal occurrences count to trigger
+    min-occurrences: 3
+
+  misspell:
+    # Locale to use
+    locale: US
+
+  unused:
+    # Check exported fields
+    check-exported: false
+
+  unparam:
+    # Check exported functions
+    check-exported: false
+
+  nakedret:
+    # Maximum length of function to check
+    max-func-lines: 30
+
+  gosec:
+    # Exclude specific rules
+    excludes:
+      - G104 # Unhandled errors - we handle this with errcheck
+      - G304 # File path provided as argument - needed for our use case
+
+issues:
+  # Exclude files
+  exclude-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.gen\\.go$"
+  
+  # Exclude directories
+  exclude-dirs:
+    - vendor
+    - bin
+    - docs
+    - scripts
+    
+  # List of regexps of issue texts to exclude
+  exclude:
+    # Exclude table-driven test loops from scopelint
+    - "Using the variable on range scope .* in function literal"
+    # Exclude certain packages from init() restrictions
+    - "don't use `init` function"
+    # Allow certain global variables
+    - "don't use global variable"
+    
+  # Excluding configuration per path, per linter, per text and per source
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - goconst
+    
+    # Exclude known issues in vendor folder
+    - path: vendor/
+      linters:
+        - typecheck
+        - unused
+        - errcheck
+        - gosec
+    
+    # Exclude certain errors in main packages
+    - path: cmd/
+      linters:
+        - gocyclo
+        - dupl
+    
+    # Allow global variables in service layer for repositories
+    - path: internal/service/
+      text: "don't use global variable"
+      linters:
+        - gochecknoglobals
+    
+    # Allow init functions in certain packages
+    - path: (cmd/|internal/http/setup\.go|internal/service/)
+      text: "don't use `init` function"
+      linters:
+        - gochecknoinits
+
+  # Maximum issues count per one linter
+  max-issues-per-linter: 50
+  
+  # Maximum count of issues with the same text
+  max-same-issues: 3
+  
+  # Fix found issues (if it's supported by the linter)
+  fix: false
+
+severity:
+  # Set the default severity for issues
+  default-severity: warning
+  
+  # If set to true severity-rules regular expressions become case sensitive
+  case-sensitive: false
+  
+  # Per-linter severity rules
+  rules:
+    - linters:
+        - gosec
+      severity: error
+    - linters:
+        - errcheck
+      severity: error
+    - linters:
+        - staticcheck
+      severity: error

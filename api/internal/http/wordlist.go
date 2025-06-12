@@ -28,7 +28,6 @@ func (h *WordlistsRoutes) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, wordlists)
 }
 
-
 func (h *WordlistsRoutes) Create(c *gin.Context) {
 	var input WordlistInput
 
@@ -56,7 +55,7 @@ func (h *WordlistsRoutes) GetById(c *gin.Context) {
 
 	var userId int64 = c.GetInt64("userID")
 
-	wordlist, err := service.GetWordlistById(id, userId)
+	wordlist, err := service.GetWordlistByID(id, userId)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)

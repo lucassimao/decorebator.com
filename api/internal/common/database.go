@@ -27,15 +27,15 @@ func GetDBConnection() (*pgxpool.Pool, error) {
 			host := os.Getenv("POSTGRES_HOST")
 			port := os.Getenv("POSTGRES_PORT")
 			dbName := os.Getenv("POSTGRES_DB")
-			
+
 			if user == "" || password == "" || host == "" || port == "" || dbName == "" {
 				fmt.Fprintf(os.Stderr, "Database configuration missing. Set DATABASE_URL or individual POSTGRES_* variables\n")
 				os.Exit(1)
 			}
-			
+
 			databaseURL = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbName)
 		}
-		
+
 		db, err = pgxpool.New(context.Background(), databaseURL)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)

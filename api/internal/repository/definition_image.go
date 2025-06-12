@@ -21,7 +21,6 @@ func NewDefinitionImageRepository(db *pgxpool.Pool) *DefinitionImageRepository {
 }
 
 func (repository *DefinitionImageRepository) Save(dto CreateDefinitionImageDTO) (*DefinitionImage, error) {
-
 	// maybe later receive via arg?
 	ctx := context.Background()
 
@@ -40,12 +39,14 @@ func (repository *DefinitionImageRepository) Save(dto CreateDefinitionImageDTO) 
 	// handle rollback if needed
 	defer func() {
 		if err != nil {
-			tx.Rollback(ctx)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				err = fmt.Errorf("failed to rollback transaction: %w (original error: %w)", rollbackErr, err)
+			}
 		}
 	}()
 
 	// existing images will be hidden
-	_, err = tx.Exec(ctx, "UPDATE definition_images SET is_visible=$1 WHERE definition_id=$2", false, dto.DefinitionId)
+	_, err = tx.Exec(ctx, "UPDATE definition_images SET is_visible=$1 WHERE definition_id=$2", false, dto.DefinitionID)
 
 	if err != nil {
 		err = &common.DatabaseError{
@@ -63,8 +64,8 @@ func (repository *DefinitionImageRepository) Save(dto CreateDefinitionImageDTO) 
 	`
 
 	// Execute the query within the transaction
-	err = tx.QueryRow(ctx, insert, dto.Api, dto.Description, dto.Model,
-		dto.Prompt, true, dto.DefinitionId, dto.URL).
+	err = tx.QueryRow(ctx, insert, dto.API, dto.Description, dto.Model,
+		dto.Prompt, true, dto.DefinitionID, dto.URL).
 		Scan(&def.ID, &def.CreatedAt)
 
 	if err != nil {

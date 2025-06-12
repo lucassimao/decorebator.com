@@ -14,6 +14,7 @@ all: help
 setup: ## Install all dev and build dependencies
 	go install github.com/joho/godotenv/cmd/godotenv@latest
 	go install github.com/go-delve/delve/cmd/dlv@latest
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2
 	sudo apt-get install -y inotify-tools migrate
 
 migrate-up: ## Run database migrations
@@ -94,6 +95,22 @@ test-watch: ## Run tests in watch mode
 	@while true; do \
 		$(MAKE) test-unit; \
 		inotifywait -r -e modify,create,delete --include '.*\.go$$' ./internal ./tests; \
+		sleep 1; \
+	done
+
+lint: ## Run golangci-lint on the codebase
+	@echo "${CYAN}Running golangci-lint...${RESET}"
+	golangci-lint run --timeout=5m
+
+lint-fix: ## Run golangci-lint with automatic fixes
+	@echo "${CYAN}Running golangci-lint with fixes...${RESET}"
+	golangci-lint run --fix --timeout=5m
+
+lint-watch: ## Run linting in watch mode
+	@echo "Watching for changes and running linter..."
+	@while true; do \
+		$(MAKE) lint; \
+		inotifywait -r -e modify,create,delete --include '.*\.go$$' ./; \
 		sleep 1; \
 	done
 

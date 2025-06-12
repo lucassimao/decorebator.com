@@ -308,9 +308,9 @@ func TestUserProfile(t *testing.T) {
 			Status(http.StatusOK)
 
 		json := response.JSON().Object()
-		json.Value("firstName").Equal("UpdatedFirst")
-		json.Value("lastName").Equal("UpdatedLast")
-		json.Value("country").Equal("US")
+		json.Value("firstName").IsEqual("UpdatedFirst")
+		json.Value("lastName").IsEqual("UpdatedLast")
+		json.Value("country").IsEqual("US")
 	})
 
 	t.Run("delete user account", func(t *testing.T) {
@@ -361,7 +361,7 @@ func TestSubscriptionAuthentication(t *testing.T) {
 			Status(http.StatusOK)
 
 		json := response.JSON().Object()
-		json.Value("subscriptionPlan").Equal("free")
+		json.Value("subscriptionPlan").IsEqual("free")
 	})
 
 	t.Run("premium user subscription status", func(t *testing.T) {
@@ -371,7 +371,7 @@ func TestSubscriptionAuthentication(t *testing.T) {
 			Status(http.StatusOK)
 
 		json := response.JSON().Object()
-		json.Value("subscriptionPlan").Equal("monthly")
+		json.Value("subscriptionPlan").IsEqual("monthly")
 	})
 }
 

@@ -21,7 +21,6 @@ func init() {
 }
 
 func SaveDefinitionImage(dto rep.CreateDefinitionImageDTO) (*rep.DefinitionImage, error) {
-
 	definitionImage, err := definitionImageRepository.Save(dto)
 	if err != nil {
 		msg := "failed to save definition image"

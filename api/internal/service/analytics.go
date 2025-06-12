@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"decorebator.com/internal/common"
@@ -13,11 +12,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var (
-	analyticsServiceInstance interface{}
-	analyticsServiceOnce     sync.Once
-	analyticsServiceErr      error
-)
+// Removed unused singleton pattern variables
 
 type AnalyticsService struct {
 	repo       *repository.AnalyticsRepository

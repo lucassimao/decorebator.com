@@ -35,7 +35,7 @@ func (r *DashboardStatsRepository) GetPracticeTime(ctx context.Context, userID, 
 	if days < 0 {
 		days = 0
 	}
-	
+
 	query := `
 		SELECT 
 			DATE(qp.created_at) as practice_date,

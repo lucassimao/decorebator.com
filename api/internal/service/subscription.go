@@ -356,7 +356,7 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 	}
 	user := &users[0]
 
-	// Send subscription cancelled email
+	// Send subscription canceled email
 	emailData := mail.SubscriptionEmailData{
 		PlanName:         string(sub.Plan),
 		CancellationDate: sub.CurrentPeriodEnd, // Service ends at period end
@@ -365,7 +365,7 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 
 	if err := mail.SendSubscriptionCancelledEmail(user, emailData); err != nil {
 		// Log error but don't fail the webhook
-		fmt.Printf("Failed to send subscription cancelled email: %v\n", err)
+		fmt.Printf("Failed to send subscription canceled email: %v\n", err)
 	}
 
 	return nil
@@ -458,7 +458,6 @@ func (s *SubscriptionService) handleInvoicePaymentFailed(ctx context.Context, ev
 
 // getOrCreateStripeCustomer gets existing or creates new Stripe customer
 func (s *SubscriptionService) getOrCreateStripeCustomer(ctx context.Context, userID int64, email string) (string, error) {
-
 	users, err := s.userRepo.Find(repository.FindUserArgs{ID: &userID})
 	if err != nil || len(users) == 0 {
 		return "", fmt.Errorf("no user for id %d", userID)

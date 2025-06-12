@@ -41,7 +41,7 @@ type SubscriptionStatus string
 
 const (
 	StatusActive   SubscriptionStatus = "active"
-	StatusCanceled SubscriptionStatus = "cancelled"
+	StatusCanceled SubscriptionStatus = "canceled"
 	StatusPastDue  SubscriptionStatus = "past_due"
 	StatusTrialing SubscriptionStatus = "trialing"
 	StatusUnpaid   SubscriptionStatus = "unpaid"

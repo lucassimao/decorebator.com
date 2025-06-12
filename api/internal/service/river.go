@@ -11,12 +11,12 @@ import (
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 )
 
-const IMAGE_GENERATOR_QUEUE = "image_generator"
-const TEXT_TO_SPEECH_QUEUE = "text_to_speech"
-const DEFINITION_FETCHER_QUEUE = "definition_fetcher"
-const SUBSCRIPTION_REMINDER_QUEUE = "subscription_reminder"
-const BACKFILL_INFLECTIONS_QUEUE = "backfill_inflections"
-const EXAMPLE_AUDIO_QUEUE = "example_audio"
+const ImageGeneratorQueue = "image_generator"
+const TextToSpeechQueue = "text_to_speech"
+const DefinitionFetcherQueue = "definition_fetcher"
+const SubscriptionReminderQueue = "subscription_reminder"
+const BackfillInflectionsQueue = "backfill_inflections"
+const ExampleAudioQueue = "example_audio"
 
 // NoOpJobArgs is a no-op job used for periodic jobs that execute inline
 type NoOpJobArgs struct{}
@@ -76,12 +76,12 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 	riverClient, err := river.NewClient(riverpgxv5.New(db), &river.Config{
 		Queues: map[string]river.QueueConfig{
 			river.QueueDefault:          {MaxWorkers: 100},
-			IMAGE_GENERATOR_QUEUE:       {MaxWorkers: 5},
-			TEXT_TO_SPEECH_QUEUE:        {MaxWorkers: 30}, //max of 50 per openai docs
-			DEFINITION_FETCHER_QUEUE:    {MaxWorkers: 50},
-			SUBSCRIPTION_REMINDER_QUEUE: {MaxWorkers: 10},
-			BACKFILL_INFLECTIONS_QUEUE:  {MaxWorkers: 1}, // Single worker to respect API rate limits
-			EXAMPLE_AUDIO_QUEUE:         {MaxWorkers: 20},
+			ImageGeneratorQueue:       {MaxWorkers: 5},
+			TextToSpeechQueue:        {MaxWorkers: 30}, //max of 50 per openai docs
+			DefinitionFetcherQueue:    {MaxWorkers: 50},
+			SubscriptionReminderQueue: {MaxWorkers: 10},
+			BackfillInflectionsQueue:  {MaxWorkers: 1}, // Single worker to respect API rate limits
+			ExampleAudioQueue:         {MaxWorkers: 20},
 		},
 		Workers:      riverWorkers,
 		Logger:       common.Logger,

@@ -327,11 +327,11 @@ func SendSubscriptionCancelledEmail(user *model.User, data SubscriptionEmailData
 	}
 
 	from := mail.NewEmail("Decorebator", "support@decorebator.com")
-	subject := "Subscription Cancelled"
+	subject := "Subscription Canceled"
 	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
 	to := mail.NewEmail(fullName, user.Email)
 
-	plainTextContent := fmt.Sprintf("Your subscription has been cancelled. You'll have access until %s", templateData["AccessUntil"])
+	plainTextContent := fmt.Sprintf("Your subscription has been canceled. You'll have access until %s", templateData["AccessUntil"])
 	htmlContent := sb.String()
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
 	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
@@ -347,7 +347,7 @@ func SendSubscriptionCancelledEmail(user *model.User, data SubscriptionEmailData
 		return fmt.Errorf("failed to send email: %v", response.Body)
 	}
 
-	logger.Info("subscription cancelled email sent successfully")
+	logger.Info("subscription canceled email sent successfully")
 	return nil
 }
 

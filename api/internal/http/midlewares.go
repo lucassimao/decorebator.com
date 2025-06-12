@@ -20,7 +20,6 @@ import (
 )
 
 func Authenticate(c *gin.Context) {
-
 	const BearerSchema = "Bearer "
 	authorization, err := c.Cookie("Authorization")
 
@@ -81,7 +80,6 @@ func Authenticate(c *gin.Context) {
 }
 
 func AuthenticateStatic(c *gin.Context) {
-
 	authorization := c.GetHeader("Authorization")
 
 	if authorization == "" || authorization != os.Getenv("STATIC_AUTHENTICATION") {
@@ -94,7 +92,6 @@ func AuthenticateStatic(c *gin.Context) {
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		if os.Getenv("ENV") == "production" {
 			c.Writer.Header().Add("Access-Control-Allow-Origin", "https://decorebator.com")
 			c.Writer.Header().Add("Access-Control-Allow-Origin", "https://api.decorebator.com")
@@ -120,7 +117,6 @@ func ErrorMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if rec := recover(); rec != nil {
-
 				var err error
 				switch v := rec.(type) {
 				case string:
@@ -165,7 +161,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 							"method": c.Request.Method,
 							"path":   c.FullPath(),
 						})
-						
+
 						// Add user context if available
 						if val, exists := c.Get("userID"); exists {
 							if userID, ok := val.(int64); ok {
@@ -174,7 +170,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 								})
 							}
 						}
-						
+
 						// Capture the exception
 						hub.CaptureException(err)
 					})

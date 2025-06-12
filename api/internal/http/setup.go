@@ -25,11 +25,9 @@ func init() {
 	}); err != nil {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
 	}
-
 }
 
 func SetupRoutes() *gin.Engine {
-
 	var WordRoutes = WordRoutes{}
 	var WorkerRoutes = WorkerRoutes{}
 	var WordlistRoutes = WordlistsRoutes{}
@@ -105,7 +103,6 @@ func SetupRoutes() *gin.Engine {
 		authenticatedRoutes.GET("/users", UserRoutes.GetProfile)
 		authenticatedRoutes.PATCH("/users", UserRoutes.UpdateProfile)
 		authenticatedRoutes.DELETE("/users", UserRoutes.DeleteProfile)
-
 	}
 
 	workerRoutes := router.Group("/static/workers")

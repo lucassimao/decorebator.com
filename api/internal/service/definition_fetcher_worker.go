@@ -15,7 +15,7 @@ import (
 )
 
 type DefinitionFetcherArgs struct {
-	WordId      int64        `json:"wordId"`
+	WordID      int64        `json:"wordId"`
 	ErrorReport *ErrorReport `json:"errorReport"`
 }
 
@@ -49,8 +49,8 @@ func getWordlistLanguage(wordID int64) (string, error) {
 
 func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[DefinitionFetcherArgs]) error {
 	logger := common.Logger.With("worker", "DefinitionFetcher")
-	wordID := job.Args.WordId
-	word, err := GetWordById(wordID)
+	wordID := job.Args.WordID
+	word, err := GetWordByID(wordID)
 
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
@@ -105,9 +105,13 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	}
 	defer func() {
 		if err == nil {
-			tx.Commit(ctx)
+			if commitErr := tx.Commit(ctx); commitErr != nil {
+				err = fmt.Errorf("failed to commit transaction: %w", commitErr)
+			}
 		} else {
-			tx.Rollback(ctx)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				common.Logger.Error("Failed to rollback transaction", "error", rollbackErr)
+			}
 		}
 	}()
 
@@ -145,7 +149,9 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 	}
 	strategy := LeitnerSystemStrategy{}
-	strategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
+	if err := strategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); err != nil {
+		return fmt.Errorf("failed to include definitions in leitner system: %w", err)
+	}
 
 	// if this job was triggered by an error report, then mark the issue as solved
 	if job.Args.ErrorReport != nil {
@@ -262,7 +268,7 @@ func QueueExampleAudioJob(definitionID int64, wordID int64, tx *pgx.Tx) error {
 	}
 
 	opts := &river.InsertOpts{
-		Queue: EXAMPLE_AUDIO_QUEUE,
+		Queue: ExampleAudioQueue,
 	}
 
 	if tx != nil {

@@ -99,7 +99,6 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 	if args.StripeCustomerID != nil {
 		whereConditions = append(whereConditions, fmt.Sprintf("stripe_customer_id = $%d", argIndex))
 		queryArgs = append(queryArgs, args.StripeCustomerID)
-		argIndex++
 	}
 
 	if len(whereConditions) > 0 {

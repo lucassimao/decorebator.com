@@ -14,7 +14,7 @@ import (
 )
 
 type TextToSpeechArgs struct {
-	WordId      int64        `json:"wordId"`
+	WordID      int64        `json:"wordId"`
 	ErrorReport *ErrorReport `json:"errorReport"`
 }
 
@@ -25,9 +25,9 @@ type TextToSpeechWorker struct {
 }
 
 func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpeechArgs]) error {
-	logger := common.Logger.With("worker", "texttospeech", "WordId", job.Args.WordId)
+	logger := common.Logger.With("worker", "texttospeech", "WordId", job.Args.WordID)
 
-	word, err := GetWordById(job.Args.WordId)
+	word, err := GetWordByID(job.Args.WordID)
 
 	if err != nil && errors.Is(err, common.NotFoundError{}) {
 		return river.JobCancel(errors.New("word not found"))
@@ -39,7 +39,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 	}
 
 	// Get wordlist language for language-specific audio generation
-	languageCode, err := getWordlistLanguage(job.Args.WordId)
+	languageCode, err := getWordlistLanguage(job.Args.WordID)
 	if err != nil {
 		logger.Error("failed to get wordlist language", "error", err)
 		return err

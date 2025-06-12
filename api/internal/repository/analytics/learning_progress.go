@@ -23,12 +23,12 @@ func NewLearningProgressRepository(db *pgxpool.Pool) *LearningProgressRepository
 // Query: INSERT ... ON CONFLICT DO UPDATE pattern for real-time daily progress tracking:
 // - Inserts new record if user/wordlist/date combination doesn't exist with initial values
 // - Updates existing record with new quiz attempt data:
-//   * words_studied: Recalculates using COUNT(DISTINCT word_id) from quiz_performance for the date
-//   * total_quiz_attempts: Increments by 1 for each quiz attempt
-//   * correct_attempts: Increments by 1 if answer was correct
-//   * average_response_time_ms: Updates using weighted average formula:
+//   - words_studied: Recalculates using COUNT(DISTINCT word_id) from quiz_performance for the date
+//   - total_quiz_attempts: Increments by 1 for each quiz attempt
+//   - correct_attempts: Increments by 1 if answer was correct
+//   - average_response_time_ms: Updates using weighted average formula:
 //     (old_avg * old_count + new_time) / (old_count + 1)
-//   * updated_at: Sets to NOW() timestamp
+//   - updated_at: Sets to NOW() timestamp
 //
 // This maintains accurate daily learning statistics with real-time updates on each quiz attempt.
 func (r *LearningProgressRepository) UpsertLearningProgress(ctx context.Context, tx pgx.Tx, userID, wordlistID int64, date string, isCorrect bool, responseTimeMs int) error {
@@ -64,13 +64,13 @@ func (r *LearningProgressRepository) UpsertLearningProgress(ctx context.Context,
 // GetLearningProgress retrieves daily learning progress statistics for a specific time period.
 //
 // Query: SELECT from learning_progress table with date range filtering:
-// - Selects daily aggregated learning statistics for a specific wordlist and user
-// - Calculates accuracy_rate as percentage: (correct_attempts / total_quiz_attempts) * 100
-// - Handles division by zero with CASE WHEN total_quiz_attempts > 0 condition
-// - Filters by date range: date >= CURRENT_DATE - INTERVAL days
-// - Orders by date DESC to show most recent days first
-// - Returns: date, words_studied, words_mastered, total_quiz_attempts, accuracy_rate, 
-//   average_response_time_ms, study_time_seconds
+//   - Selects daily aggregated learning statistics for a specific wordlist and user
+//   - Calculates accuracy_rate as percentage: (correct_attempts / total_quiz_attempts) * 100
+//   - Handles division by zero with CASE WHEN total_quiz_attempts > 0 condition
+//   - Filters by date range: date >= CURRENT_DATE - INTERVAL days
+//   - Orders by date DESC to show most recent days first
+//   - Returns: date, words_studied, words_mastered, total_quiz_attempts, accuracy_rate,
+//     average_response_time_ms, study_time_seconds
 //
 // Used for analytics charts showing learning progress over time.
 func (r *LearningProgressRepository) GetLearningProgress(ctx context.Context, userID, wordlistID int64, days int) ([]model.LearningProgressStats, error) {
@@ -164,11 +164,12 @@ func (r *LearningProgressRepository) GetWordlistTodayStats(ctx context.Context, 
 // Query: Complex CTE-based streak calculation using gap-and-island technique:
 // 1. daily_activity CTE: Groups learning_progress by date and sums total_quiz_attempts
 // 2. streak_calc CTE: Uses ROW_NUMBER() window function to identify consecutive date groups:
-//    - Subtracts row number from date to create "streak_group" identifier
-//    - Consecutive dates with activity will have the same streak_group value
+//   - Subtracts row number from date to create "streak_group" identifier
+//   - Consecutive dates with activity will have the same streak_group value
+//
 // 3. Main query: Counts days in the streak group that includes CURRENT_DATE
-//    - Only includes dates where attempts > 0 (active practice days)
-//    - Returns 0 if no activity found for current date
+//   - Only includes dates where attempts > 0 (active practice days)
+//   - Returns 0 if no activity found for current date
 //
 // This algorithm efficiently calculates streaks by identifying gaps in daily activity.
 // Example: dates [2024-01-01, 2024-01-02, 2024-01-03] become streak_group values

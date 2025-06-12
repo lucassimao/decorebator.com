@@ -15,7 +15,6 @@ import (
 )
 
 func main() {
-
 	if os.Getenv("ENV") == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -48,10 +47,8 @@ func main() {
 		defer cancel()
 
 		// catching ctx.Done(). timeout of 5 seconds.
-		select {
-		case <-ctx.Done():
-			log.Println("timeout of 5 seconds.")
-		}
+		<-ctx.Done()
+		log.Println("timeout of 5 seconds.")
 	} else {
 		if err := srv.Shutdown(context.Background()); err != nil {
 			log.Fatal("Server Shutdown:", err)

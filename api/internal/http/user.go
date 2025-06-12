@@ -111,8 +111,11 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		writeAuthenticationCookie(c, jwtToken)
 		c.Status(http.StatusCreated)
 		go mail.AddContactToList(user)
-		go mail.SendWelcomeEmail(input.Email)
-
+		go func() {
+			if err := mail.SendWelcomeEmail(input.Email); err != nil {
+				common.Logger.Error("Failed to send welcome email", "email", input.Email, "error", err)
+			}
+		}()
 	}
 }
 
@@ -129,7 +132,6 @@ func (h *UserRoutes) Login(c *gin.Context) {
 		c.Header("authorization", jwtToken)
 		writeAuthenticationCookie(c, jwtToken)
 		c.Status(http.StatusOK)
-
 	} else {
 		c.Status(http.StatusBadRequest)
 	}
@@ -141,7 +143,6 @@ func (h *UserRoutes) Logout(c *gin.Context) {
 }
 
 func (h *UserRoutes) ResetPassword(c *gin.Context) {
-
 	var input ResetPasswordInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -164,12 +165,14 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	service.UpdatePassword(payload.UserId, input.Password)
+	if err := service.UpdatePassword(payload.UserID, input.Password); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
+		return
+	}
 	c.Status(http.StatusOK)
 }
 
 func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
-
 	var input RequestResetPasswordEmailInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -266,7 +269,6 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 	// Upload profile picture if provided
 	var url *string
 	if input.UpdateProfilePictureInput != nil {
-
 		cmd := input.UpdateProfilePictureInput
 
 		imgBytes, mimeType, err := common.DecodeImageBase64(cmd.Base64Data)
@@ -314,7 +316,6 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 }
 
 func (h *UserRoutes) GetProfile(c *gin.Context) {
-
 	// Get user from context (set by auth middleware)
 	userIDAny, exists := c.Get("userID")
 	if !exists {
@@ -330,7 +331,7 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 		return
 	}
 
-	// hide unecessary data
+	// hide unnecessary data
 	user.PasswordHash = ""
 	user.StripeCustomerID = nil
 
@@ -338,7 +339,6 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 }
 
 func (h *UserRoutes) DeleteProfile(c *gin.Context) {
-
 	// Get user from context (set by auth middleware)
 	userIDAny, exists := c.Get("userID")
 	if !exists {

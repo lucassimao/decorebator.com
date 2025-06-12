@@ -19,7 +19,7 @@ type WordRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *WordRepository) Save(name, notes string, userId, wordlistId int64, tx *pgx.Tx) (*Word, error) {
+func (repository *WordRepository) Save(name, notes string, userID, wordlistID int64, tx *pgx.Tx) (*Word, error) {
 	query := `
 		INSERT INTO words (name, wordlist_id, user_id, created_at, notes)
 		VALUES ($1, $2,$3, now(),$4)
@@ -29,7 +29,7 @@ func (repository *WordRepository) Save(name, notes string, userId, wordlistId in
 	var updatedAt pgtype.Timestamptz
 	var wordID int64
 
-	args := []any{name, wordlistId, userId, notes}
+	args := []any{name, wordlistID, userID, notes}
 
 	var row pgx.Row
 	if tx != nil {
@@ -45,11 +45,10 @@ func (repository *WordRepository) Save(name, notes string, userId, wordlistId in
 	}
 
 	return &Word{ID: wordID, Name: name, CreatedAt: createdAt, Notes: notes,
-		UpdatedAt: updatedAt, WordlistID: wordlistId, UserID: userId, AudioURL: ""}, nil
+		UpdatedAt: updatedAt, WordlistID: wordlistID, UserID: userID, AudioURL: ""}, nil
 }
 
-func (repository *WordRepository) ReuseDefinitions(wordId int64, definitionIds []int64, tx pgx.Tx) error {
-
+func (repository *WordRepository) ReuseDefinitions(wordID int64, definitionIDs []int64, tx pgx.Tx) error {
 	var strBuilder strings.Builder
 
 	strBuilder.WriteString("INSERT INTO word_definitions (word_id, definition_id) VALUES ")
@@ -57,9 +56,9 @@ func (repository *WordRepository) ReuseDefinitions(wordId int64, definitionIds [
 	values := []any{}
 	index := 0
 
-	for _, definitionId := range definitionIds {
+	for _, definitionID := range definitionIDs {
 		parameters = append(parameters, fmt.Sprintf("($%d, $%d)", index+1, index+2))
-		values = append(values, wordId, definitionId)
+		values = append(values, wordID, definitionID)
 		index = index + 2
 	}
 
@@ -79,7 +78,7 @@ func (repository *WordRepository) ReuseDefinitions(wordId int64, definitionIds [
 // onlyWithDefinitions: if true, returns only words that have definitions with meanings
 func (repository *WordRepository) GetWordsByWordlist(wordlistId, userId int64, onlyWithDefinitions bool) ([]Word, error) {
 	var query string
-	
+
 	if onlyWithDefinitions {
 		query = `SELECT DISTINCT w.id, w.name, w.created_at, w.updated_at, 
 					COALESCE(w.audio_url,''), COALESCE(w.notes,''), 
@@ -94,7 +93,7 @@ func (repository *WordRepository) GetWordsByWordlist(wordlistId, userId int64, o
 					COALESCE(notes,''), COALESCE(pronunciation,''), learned
 				FROM words WHERE wordlist_id=$1 AND user_id=$2 ORDER BY id DESC`
 	}
-	
+
 	rows, err := repository.Db.Query(context.Background(), query, wordlistId, userId)
 	if err != nil {
 		return nil, err

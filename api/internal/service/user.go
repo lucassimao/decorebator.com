@@ -31,7 +31,6 @@ type Claims struct {
 }
 
 func GenerateJWT(user User) (string, error) {
-
 	claims := &Claims{
 		Email:            user.Email,
 		Environment:      os.Getenv("ENV"),
@@ -111,7 +110,6 @@ func LoginUser(email, password string) (string, error) {
 	} else {
 		return "", errors.New("invalid combination of email and/or password")
 	}
-
 }
 
 func GetProfile(userID int64) (*User, error) {
@@ -130,10 +128,16 @@ func GetProfile(userID int64) (*User, error) {
 }
 
 func Delete(userID int64) error {
-	DeleteUserErrorReports(userID)
-	wordlistRepository.DeleteAll(userID)
-	err := userRepository.Delete(userID)
-	return err
+	if _, err := DeleteUserErrorReports(userID); err != nil {
+		return fmt.Errorf("failed to delete user error reports: %w", err)
+	}
+	if _, err := wordlistRepository.DeleteAll(userID); err != nil {
+		return fmt.Errorf("failed to delete user wordlists: %w", err)
+	}
+	if err := userRepository.Delete(userID); err != nil {
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+	return nil
 }
 
 func UpdateProfile(userID int64, firstName, lastName, country, preferredLanguage, profilePictureUrl, password *string, dateOfBirth *time.Time) (*User, error) {

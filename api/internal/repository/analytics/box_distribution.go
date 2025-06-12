@@ -23,12 +23,14 @@ func NewBoxDistributionRepository(db *pgxpool.Pool) *BoxDistributionRepository {
 //
 // Query: INSERT ... ON CONFLICT DO UPDATE with complex CTE for box distribution calculation:
 // 1. word_min_boxes CTE: Finds minimum box level for each word across all its definitions
-//    - JOINs leitner_system_tracking with words table to filter by wordlist
-//    - Uses MIN(box_id) to get the lowest Leitner box for each word (most recent learning level)
-//    - Groups by word_id since words can have multiple definitions at different box levels
+//   - JOINs leitner_system_tracking with words table to filter by wordlist
+//   - Uses MIN(box_id) to get the lowest Leitner box for each word (most recent learning level)
+//   - Groups by word_id since words can have multiple definitions at different box levels
+//
 // 2. Main INSERT: Counts words at each box level (1-7) using conditional aggregation
-//    - Uses COUNT(CASE WHEN min_box_id = X THEN 1 END) pattern for each box
-//    - Sets snapshot_date to CURRENT_DATE for daily tracking
+//   - Uses COUNT(CASE WHEN min_box_id = X THEN 1 END) pattern for each box
+//   - Sets snapshot_date to CURRENT_DATE for daily tracking
+//
 // 3. ON CONFLICT: Updates existing daily snapshot with fresh counts
 //
 // This creates daily snapshots of word distribution across Leitner boxes for historical analysis.
@@ -87,12 +89,13 @@ func (r *BoxDistributionRepository) UpsertBoxDistribution(ctx context.Context, u
 //
 // Query: CTE-based word distribution calculation from leitner_system_tracking table:
 // 1. word_min_boxes CTE: Calculates minimum box level for each word
-//    - JOINs leitner_system_tracking with words to filter by wordlist_id  
-//    - Uses MIN(box_id) since words can have multiple definitions at different box levels
-//    - Groups by word_id to get one entry per word (using the lowest/most recent box level)
+//   - JOINs leitner_system_tracking with words to filter by wordlist_id
+//   - Uses MIN(box_id) since words can have multiple definitions at different box levels
+//   - Groups by word_id to get one entry per word (using the lowest/most recent box level)
+//
 // 2. Main SELECT: Counts words at each box level using conditional aggregation
-//    - COUNT(CASE WHEN min_box_id = X THEN 1 END) pattern for boxes 1-7
-//    - COUNT(*) for total_words across all boxes
+//   - COUNT(CASE WHEN min_box_id = X THEN 1 END) pattern for boxes 1-7
+//   - COUNT(*) for total_words across all boxes
 //
 // Returns current BoxDistribution with counts for each box level and total words.
 // Used for real-time box distribution charts and progress visualization.
@@ -171,8 +174,7 @@ func (r *BoxDistributionRepository) GetBoxDistributionHistory(ctx context.Contex
 		var date time.Time
 		var b1, b2, b3, b4, b5, b6, b7 int
 
-		err := rows.Scan(&date, &b1, &b2, &b3, &b4, &b5, &b6, &b7)
-		if err != nil {
+		if err := rows.Scan(&date, &b1, &b2, &b3, &b4, &b5, &b6, &b7); err != nil {
 			return nil, err
 		}
 

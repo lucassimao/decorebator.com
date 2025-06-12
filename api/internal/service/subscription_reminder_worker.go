@@ -21,7 +21,6 @@ type SubscriptionReminderArgs struct {
 // Kind returns the kind string for this job
 func (SubscriptionReminderArgs) Kind() string { return "subscription_reminder" }
 
-
 // SubscriptionReminderWorker sends renewal reminder emails
 type SubscriptionReminderWorker struct {
 	river.WorkerDefaults[SubscriptionReminderArgs]
@@ -81,11 +80,11 @@ func ScheduleRenewalReminders(ctx context.Context, db *pgxpool.Pool) error {
 
 	subRepo := repository.NewSubscriptionRepository(db)
 	userRepo := &repository.UserRepository{Db: db}
-	
+
 	// Get subscriptions renewing in the next 3-4 days
 	reminderWindow := time.Now().AddDate(0, 0, 3)
 	reminderWindowEnd := time.Now().AddDate(0, 0, 4)
-	
+
 	subscriptions, err := subRepo.GetSubscriptionsRenewingBetween(ctx, reminderWindow, reminderWindowEnd)
 	if err != nil {
 		return fmt.Errorf("failed to get subscriptions: %w", err)
@@ -96,7 +95,7 @@ func ScheduleRenewalReminders(ctx context.Context, db *pgxpool.Pool) error {
 		// Check context cancellation
 		select {
 		case <-ctx.Done():
-			logger.Warn("Context cancelled, stopping reminder processing")
+			logger.Warn("Context canceled, stopping reminder processing")
 			return ctx.Err()
 		default:
 		}

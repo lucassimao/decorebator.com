@@ -23,7 +23,7 @@ type Quiz struct {
 	IsVerbType       bool     `json:"isVerbType"`                 // Computed flag indicating if this is a verb/phrasal verb
 	Pronunciation    string   `json:"pronunciation,omitempty"`    //IPA pronunciation from the word
 	ImageDescription string   `json:"imageDescription,omitempty"` //only present in WordFromImage quiz
-	AudioURL         string   `json:"audioURL,omitempty"`         //only present in MeaningFromAudio, GuessMeaning and WordFromAudio quizes
+	AudioURL         string   `json:"audioURL,omitempty"`         //only present in MeaningFromAudio, GuessMeaning and WordFromAudio quizzes
 	DefinitionID     int64    `json:"definitionId"`
 	WordID           int64    `json:"wordId"`
 }

@@ -145,7 +145,7 @@ func CancelSubscription(subService *service.SubscriptionService) gin.HandlerFunc
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "Subscription will be cancelled at the end of the billing period"})
+		c.JSON(http.StatusOK, gin.H{"message": "Subscription will be canceled at the end of the billing period"})
 	}
 }
 
