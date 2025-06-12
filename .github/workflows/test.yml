@@ -252,14 +252,26 @@ jobs:
           working-directory: api
           args: --timeout=5m
 
-      - name: Run gosec security scanner
-        uses: securecodewarrior/github-action-gosec@master
-        with:
-          args: '-no-fail -fmt json -out gosec-report.json ./...'
-          workdir: api
+      - name: Install and run gosec security scanner
+        run: |
+          # Install gosec
+          echo "Installing gosec..."
+          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+          
+          # Verify installation
+          gosec --version
+          
+          # Run gosec with JSON output (continue on security findings)
+          echo "Running gosec security scan..."
+          gosec -no-fail -fmt json -out gosec-report.json ./... || true
+          
+          # Also run with readable output for logs
+          echo "Gosec scan results:"
+          gosec -quiet ./... || true
 
       - name: Upload gosec results
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: gosec-report
           path: api/gosec-report.json
