@@ -78,8 +78,8 @@
     [x] fix sentry
     [x] make sure the percts show in mobile/components/analytics/HistoricalBoxDistributionChart.tsx total 100%
     [x] StatsGrid should display stats per wordlist, not global
-    [ ] Possible to compute stats on the fly for paying users? optmize how we fetch them'
-    [ ] Integratation test plan
+    [x] Possible to compute stats on the fly for paying users? optmize how we fetch them'
+    [x] Integratation test plan
 
 [ ] MVP Release Checklist
     [x]  PostHog integration

@@ -155,11 +155,15 @@ mobile/
 - `components/analytics/HistoricalBoxDistributionChart.tsx` - Progress trends over time
 - `components/analytics/TopWordsSection.tsx` - Highest performing vocabulary
 
-**Key Improvements**:
+**Key Improvements (January 2025)**:
 - **Box Distribution Fix**: Words with multiple definitions are counted once, at their lowest box level
 - **Quiz Performance Scoping**: All quiz performance metrics are now wordlist-specific
 - **API Optimization**: Removed redundant `mv_quiz_type_performance` materialized view
-- **Future Enhancement**: Real-time analytics for premium users (1-minute cache) vs hourly for free users
+- **Real-Time Analytics**: Premium users get 10-second cache TTL vs 15-minute for free users
+- **Duplicate API Call Elimination**: Fixed duplicate calls to analytics endpoints
+- **Cache Invalidation Fix**: React Query v5 predicate functions for proper cache invalidation
+- **Timezone Fix**: All date displays now handle ISO timestamps correctly across timezones
+- **Optimized Data Windows**: Historical box distribution reduced from 30 days to 7 days
 
 **Data Visualization**:
 - React Native Chart Kit for rendering charts and graphs
@@ -168,15 +172,17 @@ mobile/
 - Interactive chart elements with clear legends and explanations
 
 **Caching Strategy**:
-- Infinite cache for current box distribution (invalidated on quiz completion)
-- 5-minute cache for historical trends and learning progress
-- Automatic cache invalidation via custom hook (`useInvalidateAnalytics`)
-- Background data population during quiz sessions
+- **Tier-Based TTLs**: 10 seconds for premium users, 15 minutes for free users
+- **Real-Time Updates**: Premium users get fresh analytics after quiz sessions  
+- **Automatic Cache Invalidation**: React Query v5 predicate functions handle `isPremium` flag
+- **Background Data Population**: Box distribution snapshots updated during quiz completion
+- **Graceful Fallback**: Direct database queries when Redis unavailable
 
 **UX Features**:
 - Real-time updates of learning metrics
 - Visual representation of spaced repetition progression
 - Historical trend analysis with date-based filtering
+- **Timezone-Aware Date Display**: Correctly shows dates regardless of user timezone
 - Empty states with helpful explanations
 - Loading states with skeleton placeholders
 - Error boundaries for graceful failure handling

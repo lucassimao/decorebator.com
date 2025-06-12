@@ -6,11 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
-	"decorebator.com/internal/common"
+	"os"
 )
-
-// $0.040 / image as Aug 8 2024
 
 type ImageGenerationResponse struct {
 	Created *int64 `json:"created"`
@@ -49,7 +46,7 @@ func GenerateImage(prompt string) (*ImageGenerationResponse, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", common.Env.OpenaiApiKey))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("OPENAI_API_KEY")))
 
 	client := &http.Client{}
 

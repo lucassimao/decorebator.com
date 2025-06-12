@@ -14,7 +14,7 @@ import (
 
 func init() {
 	sentryDsn, exists := os.LookupEnv("SENTRY_DSN")
-	if common.Env.Env == common.Production && !exists {
+	if os.Getenv("ENV") == "production" && !exists {
 		panic("SENTRY_DSN not found")
 	}
 
@@ -50,7 +50,7 @@ func SetupRoutes() *gin.Engine {
 
 	router := gin.New()
 	// Sentry middleware must be first to capture all errors
-	if common.Env.Env == common.Production && os.Getenv("SENTRY_DSN") != "" {
+	if os.Getenv("ENV") == "production" && os.Getenv("SENTRY_DSN") != "" {
 		router.Use(sentrygin.New(sentrygin.Options{
 			Repanic:         true,
 			WaitForDelivery: false,

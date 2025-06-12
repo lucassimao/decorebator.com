@@ -80,7 +80,7 @@ func translateValidationErrors(errs validator.ValidationErrors) map[string]strin
 
 func (h *UserRoutes) SignUp(c *gin.Context) {
 	var input SignupInput
-	if err := c.BindJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		var ve validator.ValidationErrors
 		var body any
 
@@ -90,7 +90,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 			body = gin.H{"error": err.Error()}
 		}
 
-		c.JSON(http.StatusBadRequest, body)
+		c.AbortWithStatusJSON(http.StatusBadRequest, body)
 		return
 	}
 
@@ -119,7 +119,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 func (h *UserRoutes) Login(c *gin.Context) {
 	var input loginInput
 
-	if err := c.BindJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -144,7 +144,7 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 
 	var input ResetPasswordInput
 
-	if err := c.BindJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		var ve validator.ValidationErrors
 		var body any
 
@@ -154,7 +154,7 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 			body = gin.H{"error": err.Error()}
 		}
 
-		c.JSON(http.StatusBadRequest, body)
+		c.AbortWithStatusJSON(http.StatusBadRequest, body)
 		return
 	}
 
@@ -172,7 +172,7 @@ func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
 
 	var input RequestResetPasswordEmailInput
 
-	if err := c.BindJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		var ve validator.ValidationErrors
 		var body any
 
@@ -182,7 +182,7 @@ func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
 			body = gin.H{"error": err.Error()}
 		}
 
-		c.JSON(http.StatusBadRequest, body)
+		c.AbortWithStatusJSON(http.StatusBadRequest, body)
 		return
 	}
 
@@ -225,7 +225,7 @@ func canConvertToInt(n int64) bool {
 func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 	var input UpdateProfileInput
 
-	if err := c.BindJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		var ve validator.ValidationErrors
 		var body any
 
@@ -235,7 +235,7 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 			body = gin.H{"error": err.Error()}
 		}
 
-		c.JSON(http.StatusBadRequest, body)
+		c.AbortWithStatusJSON(http.StatusBadRequest, body)
 		return
 	}
 

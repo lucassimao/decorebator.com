@@ -84,7 +84,7 @@ func AuthenticateStatic(c *gin.Context) {
 
 	authorization := c.GetHeader("Authorization")
 
-	if authorization == "" || authorization != common.Env.StaticAuthentication {
+	if authorization == "" || authorization != os.Getenv("STATIC_AUTHENTICATION") {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Wrong credentials"})
 		return
 	}
@@ -149,7 +149,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 					}
 				}
 
-				if common.Env.Env == common.Production {
+				if os.Getenv("ENV") == "production" {
 					attrs = append(attrs, slog.Any("stack_trace", stackTrace))
 				} else {
 					fmt.Println(stackTrace)

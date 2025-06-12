@@ -8,9 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"time"
-
-	"decorebator.com/internal/common"
 )
 
 func encryptAES(key []byte, plaintext string) (string, error) {
@@ -71,7 +70,7 @@ func createResetPasswordToken(userId int64) (encryptedPayload string, err error)
 		return "", err
 	}
 
-	key := []byte(common.Env.ResetPasswordPrivateKey)
+	key := []byte(os.Getenv("RESET_PASSWORD_PRIVATE_KEY"))
 	encryptedPayload, err = encryptAES([]byte(key), string(encodedPayload))
 	if err != nil {
 		return "", err
@@ -82,7 +81,7 @@ func createResetPasswordToken(userId int64) (encryptedPayload string, err error)
 
 func ValidateResetPasswordPayload(encrypted string) (*ResetPasswordPayload, error) {
 
-	key := []byte(common.Env.ResetPasswordPrivateKey)
+	key := []byte(os.Getenv("RESET_PASSWORD_PRIVATE_KEY"))
 
 	decrypted, err := decryptAES(key, encrypted)
 	if err != nil {

@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
-	"decorebator.com/internal/common"
+	"os"
 )
 
 type GenerateAudioResponse struct {
@@ -79,7 +78,7 @@ func GenerateAudio(text string, languageCode string) (*GenerateAudioResponse, er
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", common.Env.OpenaiApiKey))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("OPENAI_API_KEY")))
 
 	client := &http.Client{}
 

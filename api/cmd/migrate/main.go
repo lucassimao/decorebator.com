@@ -2,12 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"embed"
 	"fmt"
 	"log"
+	"os"
 
-	"embed"
-
-	"decorebator.com/internal/common"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -30,7 +29,23 @@ func (*verboseLogger) Verbose() bool {
 func main() {
 
 	// Use database/sql
-	db, err := sql.Open("postgres", common.Env.DatabaseUrl)
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		// Build URL from individual components if DATABASE_URL not set
+		user := os.Getenv("POSTGRES_USER")
+		password := os.Getenv("POSTGRES_PASSWORD")
+		host := os.Getenv("POSTGRES_HOST")
+		port := os.Getenv("POSTGRES_PORT")
+		dbName := os.Getenv("POSTGRES_DB")
+		
+		if user == "" || password == "" || host == "" || port == "" || dbName == "" {
+			log.Fatal("Database configuration missing. Set DATABASE_URL or individual POSTGRES_* variables")
+		}
+		
+		databaseURL = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbName)
+	}
+	
+	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
 		log.Fatalf("Failed to open DB: %v", err)
 	}
