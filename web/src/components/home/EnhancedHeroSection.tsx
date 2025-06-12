@@ -28,16 +28,16 @@ const EnhancedHeroSection: React.FC = () => {
   }, [words.length]);
 
   return (
-    <section className="pt-24 pb-20 relative overflow-hidden">
+    <section className="pt-24 pb-12 sm:pb-20 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8 slide-in-left">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div className="space-y-6 sm:space-y-8 slide-in-left order-1 lg:order-1">
             <div className="inline-flex items-center px-4 py-2 rounded-full glass bg-orange-100/50 text-[#FF7B54] text-sm font-semibold">
               <i className="fas fa-zap mr-2"></i>
               AI-Powered Learning • 7 Languages • Multi-Platform
             </div>
             
-            <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
               {t('title')}
               <span className="block mt-2 gradient-animation bg-clip-text text-transparent">
                 <div className="word-rotate inline-block">
@@ -53,7 +53,7 @@ const EnhancedHeroSection: React.FC = () => {
               </span>
             </h1>
             
-            <p className="text-xl text-[#636E72] leading-relaxed">
+            <p className="text-lg sm:text-xl text-[#636E72] leading-relaxed">
               {t('subtitle', { count: '10,000' })}
             </p>
 
@@ -117,59 +117,36 @@ const EnhancedHeroSection: React.FC = () => {
           </div>
 
           {/* Hero Visual */}
-          <div className="relative slide-in-right">
+          <div className="relative slide-in-right mt-8 lg:mt-0 order-2 lg:order-2">
             <div className="relative z-10">
               {/* Phone Mockup */}
-              <div className="relative mx-auto w-72 lg:w-80">
-                <div className="bg-gray-900 rounded-[3rem] p-3 shadow-2xl transform rotate-6 hover:rotate-0 transition-transform duration-700 card-3d">
+              <div className="relative mx-auto w-64 sm:w-72 md:w-80 lg:w-96 xl:w-[400px] max-w-sm lg:max-w-md">
+                <div className="bg-gray-900 rounded-[3rem] p-2 shadow-2xl transform rotate-3 sm:rotate-6 hover:rotate-0 transition-transform duration-700 card-3d">
                   <div className="bg-white rounded-[2.5rem] overflow-hidden">
-                    {/* Status bar */}
-                    <div className="bg-white px-6 py-3 flex justify-between items-center text-xs">
-                      <span className="font-medium">9:41</span>
-                      <div className="flex space-x-1">
-                        <i className="fas fa-signal"></i>
-                        <i className="fas fa-wifi"></i>
-                        <i className="fas fa-battery-full"></i>
-                      </div>
-                    </div>
-                    
-                    {/* Quiz Screen */}
-                    <div className="p-6 bg-gradient-to-br from-[#FF7B54] to-orange-600 h-96">
-                      <div className="text-white">
-                        <h3 className="text-lg font-bold mb-2">Today&apos;s Challenge</h3>
-                        <div className="bg-white/20 backdrop-blur rounded-2xl p-4 mb-4">
-                          <p className="text-sm mb-1 text-orange-100">Question 3 of 10</p>
-                          <p className="font-semibold">Which word means &quot;serendipity&quot;?</p>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          <button className="w-full p-3 bg-white/90 text-gray-800 rounded-xl font-medium hover:scale-105 transition-transform">
-                            A pleasant surprise
-                          </button>
-                          <button className="w-full p-3 bg-white/20 backdrop-blur text-white rounded-xl hover:bg-white/30 transition-colors">
-                            Careful planning
-                          </button>
-                          <button className="w-full p-3 bg-white/20 backdrop-blur text-white rounded-xl hover:bg-white/30 transition-colors">
-                            Deep sadness
-                          </button>
-                          <button className="w-full p-3 bg-white/20 backdrop-blur text-white rounded-xl hover:bg-white/30 transition-colors">
-                            Quick movement
-                          </button>
-                        </div>
-                        
-                        <div className="mt-6 flex justify-between items-center">
-                          <div className="flex space-x-1">
-                            <div className="w-8 h-1 bg-white rounded-full"></div>
-                            <div className="w-8 h-1 bg-white rounded-full"></div>
-                            <div className="w-8 h-1 bg-white rounded-full"></div>
-                            <div className="w-8 h-1 bg-white/40 rounded-full"></div>
-                            <div className="w-8 h-1 bg-white/40 rounded-full"></div>
-                          </div>
-                          <div className="text-sm font-medium">
-                            <i className="fas fa-fire mr-1"></i> 15 day streak!
-                          </div>
-                        </div>
-                      </div>
+                    {/* App Demo Video */}
+                    <div className="relative">
+                      <video
+                        className="w-full h-auto object-contain rounded-[2rem]"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        preload="metadata"
+                        poster="/app-screenshot.jpeg"
+                      >
+                        <source src="/hero-demo.webm" type="video/webm" />
+                        <source src="/hero-demo.mp4" type="video/mp4" />
+                        {/* Fallback for browsers without video support */}
+                        <Image
+                          src="/app-screenshot.jpeg"
+                          alt="Decorebator App Demo showing interactive learning features, quiz modes, and progress tracking"
+                          width={320}
+                          height={678}
+                          className="w-full h-auto object-contain rounded-[2rem]"
+                          priority
+                          sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, (max-width: 1024px) 320px, (max-width: 1280px) 352px, 384px"
+                        />
+                      </video>
                     </div>
                   </div>
                 </div>

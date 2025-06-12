@@ -57,11 +57,11 @@
       "description": "Generieren Sie sofort Definitionen, Bilder, Audio und Beispiele für jedes Wort mit fortschrittlicher KI-Technologie."
     },
     "spacedRepetition": {
-      "title": "Wissenschaftliche Verteilte Wiederholung",
-      "description": "Meistern Sie Vokabeln effizient mit unserem 7-Box-Leitner-System, das nachweislich die Behaltensrate um 85% steigert."
+      "title": "Erweiterte Leitner-System",
+      "description": "Probabilistisches 7-Box-Leitner-System mit intelligenter Wortauswahl - nie mehr ohne Lerninhalt."
     },
     "multipleQuizModes": {
-      "title": "7 Interaktive Quiz-Modi",
+      "title": "8 Interaktive Quiz-Modi",
       "description": "Von visueller Erkennung bis Hörverständnis - üben Sie mit verschiedenen Quiz-Typen für umfassendes Lernen."
     },
     "visualLearning": {
@@ -73,8 +73,8 @@
       "description": "Perfekte Aussprache mit KI-generiertem Audio in Muttersprachqualität für alle unterstützten Sprachen."
     },
     "progressTracking": {
-      "title": "Erweiterte Analysen",
-      "description": "Verfolgen Sie Ihren Fortschritt mit detaillierten Analysen, Beherrschungsgraden und personalisierten Lerneinblicken."
+      "title": "Hochleistungs-Analysen",
+      "description": "Echtzeit-Analysen für Premium-Nutzer mit Redis-Cache, detaillierte Beherrschungsverf olgung und sofortige Einblicke."
     },
     "multiLanguage": {
       "title": "7 Native Sprachen",
