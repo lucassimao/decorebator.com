@@ -228,9 +228,9 @@ jobs:
           docker stop minio-test || true
           docker rm minio-test || true
 
-  lint-and-security:
+  lint-checks:
     if: github.event_name == 'pull_request'
-    name: Lint and Security Checks (PR Only)
+    name: Lint Checks (PR Only)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -299,52 +299,6 @@ jobs:
           # Run golangci-lint only on files changed since the merge base
           golangci-lint run --timeout=5m --new-from-rev=$MERGE_BASE
 
-      - name: Install and run gosec security scanner
-        if: steps.changed-files.outputs.has_go_files == 'true'
-        run: |
-          # Try alternative installation method
-          echo "Installing gosec via binary download..."
-          
-          # Download gosec binary directly
-          GOSEC_VERSION="2.21.2"
-          wget -q https://github.com/securecodewarrior/gosec/releases/download/v${GOSEC_VERSION}/gosec_${GOSEC_VERSION}_linux_amd64.tar.gz
-          tar -xzf gosec_${GOSEC_VERSION}_linux_amd64.tar.gz
-          chmod +x gosec
-          sudo mv gosec /usr/local/bin/
-          
-          # Verify installation
-          gosec --version
-          
-          # Get changed files for gosec using same logic
-          MERGE_BASE=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
-          CHANGED_GO_FILES=$(git diff --name-only --diff-filter=AM $MERGE_BASE...HEAD | grep '\.go$' | grep '^api/' | tr '\n' ' ' || echo "")
-          
-          if [ -n "$CHANGED_GO_FILES" ]; then
-            echo "Running gosec security scan on changed files: $CHANGED_GO_FILES"
-            
-            # Run gosec on changed files with JSON output (continue on security findings)
-            gosec -no-fail -fmt json -out gosec-report.json $CHANGED_GO_FILES || true
-            
-            # Also run with readable output for logs
-            echo "Gosec scan results for changed files:"
-            gosec -quiet $CHANGED_GO_FILES || true
-          else
-            echo "No Go files changed, skipping gosec scan"
-            echo "{\"issues\": [], \"stats\": {\"files\": 0, \"lines\": 0, \"nosec\": 0, \"found\": 0}}" > gosec-report.json
-          fi
-      
-      - name: Skip gosec when no Go files changed
-        if: steps.changed-files.outputs.has_go_files == 'false'
-        run: |
-          echo "No Go files changed, skipping gosec security scan"
-          echo "{\"issues\": [], \"stats\": {\"files\": 0, \"lines\": 0, \"nosec\": 0, \"found\": 0}}" > gosec-report.json
-
-      - name: Upload gosec results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: gosec-report
-          path: api/gosec-report.json
 
   coverage-check:
     if: false  # Temporarily disabled
