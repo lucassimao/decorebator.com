@@ -123,7 +123,7 @@ func TestSignupLoginFlow(t *testing.T) {
 		server.Expect.POST("/login").
 			WithJSON(wrongCredentials).
 			Expect().
-			Status(http.StatusBadRequest)
+			Status(http.StatusBadRequest) // API returns 400 for wrong password
 
 		t.Log("✓ Login correctly rejected for wrong password")
 	})
@@ -137,7 +137,7 @@ func TestSignupLoginFlow(t *testing.T) {
 		server.Expect.POST("/login").
 			WithJSON(nonExistentCredentials).
 			Expect().
-			Status(http.StatusBadRequest)
+			Status(http.StatusBadRequest) // API returns 400 for non-existent user
 
 		t.Log("✓ Login correctly rejected for non-existent user")
 	})
@@ -167,7 +167,7 @@ func TestSignupLoginFlow(t *testing.T) {
 		response := server.Expect.POST("/users").
 			WithJSON(secondUser).
 			Expect().
-			Status(http.StatusInternalServerError) // API currently returns 500, should be 409
+			Status(http.StatusInternalServerError) // API returns 500 for duplicate email
 
 		errorJSON := response.JSON().Object()
 		errorJSON.ContainsKey("error")

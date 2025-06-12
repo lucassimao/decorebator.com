@@ -33,7 +33,10 @@ func encryptAES(key []byte, plaintext string) (string, error) {
 }
 
 func decryptAES(key []byte, encrypted string) (string, error) {
-	ciphertext, _ := hex.DecodeString(encrypted)
+	ciphertext, err := hex.DecodeString(encrypted)
+	if err != nil {
+		return "", fmt.Errorf("invalid hex encoding: %v", err)
+	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -46,6 +49,10 @@ func decryptAES(key []byte, encrypted string) (string, error) {
 	}
 
 	nonceSize := aesGCM.NonceSize()
+	if len(ciphertext) < nonceSize {
+		return "", fmt.Errorf("ciphertext too short: expected at least %d bytes, got %d", nonceSize, len(ciphertext))
+	}
+	
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
 	plaintext, err := aesGCM.Open(nil, nonce, ciphertext, nil)

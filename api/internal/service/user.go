@@ -122,6 +122,10 @@ func GetProfile(userID int64) (*User, error) {
 		return nil, err
 	}
 
+	if len(users) == 0 {
+		return nil, errors.New("user not found")
+	}
+
 	return &users[0], nil
 }
 
