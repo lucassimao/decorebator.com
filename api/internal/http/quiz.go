@@ -52,7 +52,7 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 	}
 
 	userId := c.GetInt64("userID")
-	
+
 	// Get user from context to check if premium
 	isPremium := false
 	if user, exists := c.Get("user"); exists {

@@ -1,0 +1,67 @@
+name: Lint with Reviewdog
+
+on:
+  pull_request:
+    branches: [ master, main, develop ]
+    paths:
+      - 'api/**/*.go'
+      - '.github/workflows/lint-reviewdog.yml'
+      - 'api/.golangci.yml'
+
+env:
+  GO_VERSION: '1.22'
+
+jobs:
+  lint-reviewdog:
+    name: Lint with Inline Comments
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: ./api
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+
+      - name: Get changed Go files
+        id: changed-files
+        run: |
+          # Get the base branch (target of PR)
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          
+          # Get list of changed .go files in the api directory
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AM $BASE_SHA...$HEAD_SHA | grep '\.go$' | grep '^api/' | sed 's|^api/||' | tr '\n' ' ' || echo "")
+          
+          echo "Changed Go files: $CHANGED_FILES"
+          
+          # Check if we have any Go files to lint
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "has_go_files=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_go_files=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run golangci-lint with reviewdog
+        if: steps.changed-files.outputs.has_go_files == 'true'
+        uses: reviewdog/action-golangci-lint@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          golangci_lint_flags: "--timeout=5m --new-from-rev=${{ github.event.pull_request.base.sha }}"
+          workdir: ./api
+          level: error
+          reporter: github-pr-review
+          filter_mode: added
+          fail_on_error: true
+
+      - name: No Go files changed
+        if: steps.changed-files.outputs.has_go_files == 'false'
+        run: |
+          echo "No Go files were changed in this PR, skipping lint check."

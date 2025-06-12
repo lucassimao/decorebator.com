@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Required for postgres driver registration
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -39,7 +39,7 @@ func CreateTestDB(t *testing.T) *pgxpool.Pool {
 }
 
 // RunMigrations runs database migrations for tests
-func RunMigrations(db *pgxpool.Pool) error {
+func RunMigrations(_ *pgxpool.Pool) error {
 	dbURL := getTestDatabaseURL()
 
 	// Determine correct migration path relative to where tests are run
@@ -95,7 +95,11 @@ func CleanTestData(db *pgxpool.Pool) error {
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+			fmt.Printf("Warning: failed to rollback transaction: %v\n", rollbackErr)
+		}
+	}()
 
 	// Disable foreign key checks temporarily
 	_, err = tx.Exec(ctx, "SET session_replication_role = replica")

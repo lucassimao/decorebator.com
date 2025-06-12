@@ -165,7 +165,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 							"method": c.Request.Method,
 							"path":   c.FullPath(),
 						})
-						
+
 						// Add user context if available
 						if val, exists := c.Get("userID"); exists {
 							if userID, ok := val.(int64); ok {
@@ -174,7 +174,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 								})
 							}
 						}
-						
+
 						// Capture the exception
 						hub.CaptureException(err)
 					})

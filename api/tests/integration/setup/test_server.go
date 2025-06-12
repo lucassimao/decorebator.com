@@ -2,6 +2,7 @@ package setup
 
 import (
 	"context"
+	"fmt"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -58,7 +59,9 @@ func NewTestServer(t *testing.T) *TestServer {
 
 	cleanup := func() {
 		server.Close()
-		CleanTestData(db)
+		if err := CleanTestData(db); err != nil {
+			fmt.Printf("Warning: failed to clean test data: %v\n", err)
+		}
 		db.Close()
 	}
 
@@ -73,7 +76,7 @@ func NewTestServer(t *testing.T) *TestServer {
 }
 
 // WithTestUser creates a test user and returns authentication token
-func (ts *TestServer) WithTestUser(t *testing.T) string {
+func (ts *TestServer) WithTestUser(_ *testing.T) string {
 	user := GenerateTestUser()
 
 	// Register user
@@ -132,7 +135,7 @@ func (ts *TestServer) activatePremiumSubscription(token string) error {
 }
 
 // extractUserIDFromToken extracts user ID from JWT token (simplified for testing)
-func (ts *TestServer) extractUserIDFromToken(token string) (int64, error) {
+func (ts *TestServer) extractUserIDFromToken(_ string) (int64, error) {
 	// In a real implementation, this would parse and validate the JWT
 	// For testing purposes, we'll query the database to find the most recent user
 	ctx := context.Background()

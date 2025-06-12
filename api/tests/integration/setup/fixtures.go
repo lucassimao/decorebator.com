@@ -2,7 +2,7 @@ package setup
 
 import (
 	"fmt"
-	"math/rand"
+	"math/rand" // nosec G404 - math/rand is acceptable for test fixtures, not cryptographic use
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -12,7 +12,7 @@ import (
 // GenerateTestUser generates a random test user
 func GenerateTestUser() map[string]interface{} {
 	fake := gofakeit.New(0)
-	
+
 	return map[string]interface{}{
 		"email":     fake.Email(),
 		"password":  "password123",
@@ -24,12 +24,12 @@ func GenerateTestUser() map[string]interface{} {
 // GenerateTestWordlist generates a random test wordlist
 func GenerateTestWordlist() map[string]interface{} {
 	fake := gofakeit.New(0)
-	
+
 	languages := []string{"en", "es", "fr", "de", "it", "pt", "ja"}
-	
+
 	return map[string]interface{}{
 		"name":        fake.Sentence(3),
-		"language":    languages[rand.Intn(len(languages))],
+		"language":    languages[rand.Intn(len(languages))], //nolint:gosec // G404 - test fixtures only
 		"description": fake.Sentence(10),
 	}
 }
@@ -37,7 +37,7 @@ func GenerateTestWordlist() map[string]interface{} {
 // GenerateTestWord generates a random test word
 func GenerateTestWord() map[string]interface{} {
 	fake := gofakeit.New(0)
-	
+
 	return map[string]interface{}{
 		"name":  fake.Word(),
 		"notes": fake.Sentence(5),
@@ -47,12 +47,12 @@ func GenerateTestWord() map[string]interface{} {
 // GenerateTestDefinition generates a random test definition
 func GenerateTestDefinition() map[string]interface{} {
 	fake := gofakeit.New(0)
-	
+
 	partsOfSpeech := []string{"noun", "verb", "adjective", "adverb", "preposition"}
-	
+
 	return map[string]interface{}{
 		"meaning":      fake.Sentence(8),
-		"partOfSpeech": partsOfSpeech[rand.Intn(len(partsOfSpeech))],
+		"partOfSpeech": partsOfSpeech[rand.Intn(len(partsOfSpeech))], //nolint:gosec // G404 - test fixtures only
 		"examples":     []string{fake.Sentence(6), fake.Sentence(7)},
 		"source":       "test",
 	}
@@ -116,7 +116,7 @@ func CreateTestUserSet() []TestUser {
 		{
 			Email:            "free@test.com",
 			FirstName:        "Free",
-			LastName:         "User", 
+			LastName:         "User",
 			SubscriptionPlan: "free",
 		},
 		{
@@ -127,7 +127,7 @@ func CreateTestUserSet() []TestUser {
 		},
 		{
 			Email:            "annual@test.com",
-			FirstName:        "Annual", 
+			FirstName:        "Annual",
 			LastName:         "User",
 			SubscriptionPlan: "annual",
 		},
@@ -144,14 +144,14 @@ func CreateTestWordlistSet(userID int64) []TestWordlist {
 			UserID:      userID,
 		},
 		{
-			Name:        "Business Vocabulary", 
+			Name:        "Business Vocabulary",
 			Language:    "en",
 			Description: "Professional business terms",
 			UserID:      userID,
 		},
 		{
 			Name:        "Vocabulario Básico",
-			Language:    "es", 
+			Language:    "es",
 			Description: "Palabras básicas en español",
 			UserID:      userID,
 		},
@@ -199,9 +199,9 @@ func MockStripeEvent(eventType string, data map[string]interface{}) map[string]i
 		"data": map[string]interface{}{
 			"object": data,
 		},
-		"livemode":           false,
-		"pending_webhooks":   1,
-		"api_version":        "2020-08-27",
+		"livemode":         false,
+		"pending_webhooks": 1,
+		"api_version":      "2020-08-27",
 	}
 }
 

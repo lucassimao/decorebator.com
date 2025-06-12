@@ -229,8 +229,8 @@ jobs:
           docker rm minio-test || true
 
   lint-and-security:
-    if: false
-    name: Lint and Security Checks
+    if: github.event_name == 'pull_request'
+    name: Lint and Security Checks (PR Only)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -246,14 +246,49 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: api/go.sum
 
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
-          working-directory: api
-          args: --timeout=5m
+      - name: Get changed Go files
+        id: changed-files
+        run: |
+          # Get the base branch (target of PR)
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          
+          # Get list of changed .go files in the api directory
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AM $BASE_SHA...$HEAD_SHA | grep '\.go$' | grep '^api/' | sed 's|^api/||' | tr '\n' ' ' || echo "")
+          
+          echo "Changed Go files: $CHANGED_FILES"
+          
+          # Check if we have any Go files to lint
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "has_go_files=false" >> $GITHUB_OUTPUT
+            echo "files=" >> $GITHUB_OUTPUT
+          else
+            echo "has_go_files=true" >> $GITHUB_OUTPUT
+            echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Install and run gosec security scanner
+      - name: Install golangci-lint
+        if: steps.changed-files.outputs.has_go_files == 'true'
+        run: |
+          # Install golangci-lint
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Run golangci-lint on changed files only
+        if: steps.changed-files.outputs.has_go_files == 'true'
+        run: |
+          CHANGED_FILES="${{ steps.changed-files.outputs.files }}"
+          echo "Running golangci-lint on: $CHANGED_FILES"
+          
+          # Get the merge base for comparison
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          MERGE_BASE=$(git merge-base $BASE_SHA HEAD)
+          
+          # Run golangci-lint only on files changed since the merge base
+          golangci-lint run --timeout=5m --new-from-rev=$MERGE_BASE
+
+      - name: Install and run gosec security scanner on changed files
+        if: steps.changed-files.outputs.has_go_files == 'true'
         run: |
           # Install gosec
           echo "Installing gosec..."
@@ -262,12 +297,34 @@ jobs:
           # Verify installation
           gosec --version
           
-          # Run gosec with JSON output (continue on security findings)
-          echo "Running gosec security scan..."
-          gosec -no-fail -fmt json -out gosec-report.json ./... || true
+          # Get changed files for gosec (need absolute paths)
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          CHANGED_GO_FILES=$(git diff --name-only --diff-filter=AM $BASE_SHA...$HEAD_SHA | grep '\.go$' | grep '^api/' | tr '\n' ' ' || echo "")
           
-          # Also run with readable output for logs
-          echo "Gosec scan results:"
+          if [ -n "$CHANGED_GO_FILES" ]; then
+            echo "Running gosec security scan on changed files: $CHANGED_GO_FILES"
+            
+            # Run gosec on changed files with JSON output (continue on security findings)
+            gosec -no-fail -fmt json -out gosec-report.json $CHANGED_GO_FILES || true
+            
+            # Also run with readable output for logs
+            echo "Gosec scan results for changed files:"
+            gosec -quiet $CHANGED_GO_FILES || true
+          else
+            echo "No Go files changed, skipping gosec scan"
+            echo "{\"issues\": [], \"stats\": {\"files\": 0, \"lines\": 0, \"nosec\": 0, \"found\": 0}}" > gosec-report.json
+          fi
+      
+      - name: Run gosec on full codebase (fallback)
+        if: steps.changed-files.outputs.has_go_files == 'false'
+        run: |
+          # Install gosec if not already installed
+          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+          
+          # Run full gosec scan when no Go files are changed (shouldn't happen due to path filtering)
+          echo "Running full gosec security scan..."
+          gosec -no-fail -fmt json -out gosec-report.json ./... || true
           gosec -quiet ./... || true
 
       - name: Upload gosec results
@@ -278,8 +335,8 @@ jobs:
           path: api/gosec-report.json
 
   coverage-check:
-    if: false
-    name: Coverage Threshold Check
+    if: github.event_name == 'pull_request'
+    name: Coverage Threshold Check (PR Only)
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests]
     defaults:

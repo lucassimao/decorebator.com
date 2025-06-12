@@ -239,11 +239,10 @@ func getQuizTypePerformance(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"wordlistId": wordlistID,
+		"wordlistId":      wordlistID,
 		"quizPerformance": performance,
 	})
 }
-
 
 // getCurrentBoxDistribution returns current distribution of words across Leitner boxes
 func getCurrentBoxDistribution(c *gin.Context) {
@@ -286,7 +285,7 @@ func getCurrentBoxDistribution(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"wordlistId":  wordlistID,
+		"wordlistId":   wordlistID,
 		"distribution": distribution,
 		"totalWords":   distribution.TotalWords,
 	})

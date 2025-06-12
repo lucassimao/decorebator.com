@@ -37,14 +37,14 @@ func main() {
 		host := os.Getenv("POSTGRES_HOST")
 		port := os.Getenv("POSTGRES_PORT")
 		dbName := os.Getenv("POSTGRES_DB")
-		
+
 		if user == "" || password == "" || host == "" || port == "" || dbName == "" {
 			log.Fatal("Database configuration missing. Set DATABASE_URL or individual POSTGRES_* variables")
 		}
-		
+
 		databaseURL = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbName)
 	}
-	
+
 	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
 		log.Fatalf("Failed to open DB: %v", err)
@@ -65,6 +65,9 @@ func main() {
 	m, err := migrate.NewWithInstance(
 		"iofs", sourceDriver,
 		"postgres", driver)
+	if err != nil {
+		log.Fatalf("Failed to create migrate instance: %v", err)
+	}
 	defer m.Close()
 
 	m.Log = &verboseLogger{}

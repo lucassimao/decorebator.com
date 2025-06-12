@@ -79,7 +79,7 @@ func (repository *WordRepository) ReuseDefinitions(wordId int64, definitionIds [
 // onlyWithDefinitions: if true, returns only words that have definitions with meanings
 func (repository *WordRepository) GetWordsByWordlist(wordlistId, userId int64, onlyWithDefinitions bool) ([]Word, error) {
 	var query string
-	
+
 	if onlyWithDefinitions {
 		query = `SELECT DISTINCT w.id, w.name, w.created_at, w.updated_at, 
 					COALESCE(w.audio_url,''), COALESCE(w.notes,''), 
@@ -94,7 +94,7 @@ func (repository *WordRepository) GetWordsByWordlist(wordlistId, userId int64, o
 					COALESCE(notes,''), COALESCE(pronunciation,''), learned
 				FROM words WHERE wordlist_id=$1 AND user_id=$2 ORDER BY id DESC`
 	}
-	
+
 	rows, err := repository.Db.Query(context.Background(), query, wordlistId, userId)
 	if err != nil {
 		return nil, err

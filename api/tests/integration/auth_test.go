@@ -217,7 +217,7 @@ func TestJWTAuthentication(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) { //nolint:revive // t is used in the test logic
 			request := server.Expect.GET("/users")
 
 			if tt.token != "" {
@@ -240,7 +240,7 @@ func TestPasswordReset(t *testing.T) {
 		Expect().
 		Status(http.StatusCreated)
 
-	t.Run("request password reset", func(t *testing.T) {
+	t.Run("request password reset", func(_ *testing.T) {
 		server.Expect.POST("/password/send-reset-email").
 			WithJSON(map[string]interface{}{
 				"email": user["email"],
@@ -250,7 +250,7 @@ func TestPasswordReset(t *testing.T) {
 		// Endpoint returns empty body on success
 	})
 
-	t.Run("request reset for non-existent email", func(t *testing.T) {
+	t.Run("request reset for non-existent email", func(_ *testing.T) {
 		server.Expect.POST("/password/send-reset-email").
 			WithJSON(map[string]interface{}{
 				"email": "nonexistent@example.com",
@@ -259,7 +259,7 @@ func TestPasswordReset(t *testing.T) {
 			Status(http.StatusOK) // Should still return 200 for security
 	})
 
-	t.Run("reset password with invalid token", func(t *testing.T) {
+	t.Run("reset password with invalid token", func(t *testing.T) { //nolint:revive // t is used for testing
 		// Test with invalid token format - should return 400 Bad Request
 		resetToken := "invalid-token-123"
 
@@ -279,7 +279,7 @@ func TestUserProfile(t *testing.T) {
 
 	token := server.WithTestUser(t)
 
-	t.Run("get user profile", func(t *testing.T) {
+	t.Run("get user profile", func(t *testing.T) { //nolint:revive // t is used for testing
 		response := server.Expect.GET("/users").
 			WithHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
 			Expect().
@@ -294,7 +294,7 @@ func TestUserProfile(t *testing.T) {
 		json.NotContainsKey("password")
 	})
 
-	t.Run("update user profile", func(t *testing.T) {
+	t.Run("update user profile", func(t *testing.T) { //nolint:revive // t is used for testing
 		updateData := map[string]interface{}{
 			"firstName": "UpdatedFirst",
 			"lastName":  "UpdatedLast",
@@ -308,12 +308,12 @@ func TestUserProfile(t *testing.T) {
 			Status(http.StatusOK)
 
 		json := response.JSON().Object()
-		json.Value("firstName").Equal("UpdatedFirst")
-		json.Value("lastName").Equal("UpdatedLast")
-		json.Value("country").Equal("US")
+		json.Value("firstName").IsEqual("UpdatedFirst")
+		json.Value("lastName").IsEqual("UpdatedLast")
+		json.Value("country").IsEqual("US")
 	})
 
-	t.Run("delete user account", func(t *testing.T) {
+	t.Run("delete user account", func(t *testing.T) { //nolint:revive // t is used for testing
 		server.Expect.DELETE("/users").
 			WithHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
 			Expect().
@@ -333,14 +333,14 @@ func TestUserLogout(t *testing.T) {
 
 	token := server.WithTestUser(t)
 
-	t.Run("successful logout", func(t *testing.T) {
+	t.Run("successful logout", func(t *testing.T) { //nolint:revive // t is used for testing
 		server.Expect.GET("/logout").
 			WithHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
 			Expect().
 			Status(http.StatusOK)
 	})
 
-	t.Run("logout without token", func(t *testing.T) {
+	t.Run("logout without token", func(t *testing.T) { //nolint:revive // t is used for testing
 		server.Expect.GET("/logout").
 			Expect().
 			Status(http.StatusOK) // Logout endpoint allows access without token
@@ -354,24 +354,24 @@ func TestSubscriptionAuthentication(t *testing.T) {
 	freeToken := server.WithTestUser(t)
 	premiumToken := server.WithPremiumUser(t)
 
-	t.Run("free user subscription status", func(t *testing.T) {
+	t.Run("free user subscription status", func(t *testing.T) { //nolint:revive // t is used for testing
 		response := server.Expect.GET("/users").
 			WithHeader("Authorization", fmt.Sprintf("Bearer %s", freeToken)).
 			Expect().
 			Status(http.StatusOK)
 
 		json := response.JSON().Object()
-		json.Value("subscriptionPlan").Equal("free")
+		json.Value("subscriptionPlan").IsEqual("free")
 	})
 
-	t.Run("premium user subscription status", func(t *testing.T) {
+	t.Run("premium user subscription status", func(t *testing.T) { //nolint:revive // t is used for testing
 		response := server.Expect.GET("/users").
 			WithHeader("Authorization", fmt.Sprintf("Bearer %s", premiumToken)).
 			Expect().
 			Status(http.StatusOK)
 
 		json := response.JSON().Object()
-		json.Value("subscriptionPlan").Equal("monthly")
+		json.Value("subscriptionPlan").IsEqual("monthly")
 	})
 }
 
@@ -391,7 +391,7 @@ func TestMultipleRequests(t *testing.T) {
 				Expect()
 
 			// All should succeed since no rate limiting is implemented
-			if response.Raw().StatusCode == http.StatusCreated {
+			if response.Raw().StatusCode == http.StatusCreated { //nolint:bodyclose // httpexpect handles body closing
 				successCount++
 			}
 
@@ -420,7 +420,7 @@ func TestMultipleRequests(t *testing.T) {
 				Expect()
 
 			// Should consistently get unauthorized (no rate limiting implemented)
-			if response.Raw().StatusCode == http.StatusBadRequest {
+			if response.Raw().StatusCode == http.StatusBadRequest { //nolint:bodyclose // httpexpect handles body closing
 				unauthorizedCount++
 			}
 

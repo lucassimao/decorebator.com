@@ -221,7 +221,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				"withMeaning", withMeaning,
 				"notSkipped", notSkipped)
 		}
-		
+
 		return nil, errors.New("no definitions found in wordlist")
 	}
 
@@ -904,7 +904,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	// Update box distribution snapshot and invalidate cache (outside transaction)
 	go func() {
 		ctx := context.Background()
-		
+
 		// First, update the box distribution snapshot
 		common.Logger.Info("updating box distribution snapshot",
 			"userId", quizResult.UserID,
@@ -939,7 +939,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 			// Invalidate wordlist analytics cache (includes historical box distribution)
 			err = cachedService.InvalidateWordlistAnalytics(ctx, quizResult.UserID, quizResult.WordlistID)
 			if err != nil {
-				common.Logger.Error("failed to invalidate analytics cache", 
+				common.Logger.Error("failed to invalidate analytics cache",
 					"error", err,
 					"userId", quizResult.UserID,
 					"wordlistId", quizResult.WordlistID)
