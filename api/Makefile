@@ -188,7 +188,7 @@ lint-fix: ## Run golangci-lint with --fix flag on changed files
 lint-install: ## Install golangci-lint
 	@echo "${YELLOW}Installing golangci-lint...${RESET}"
 	@if ! command -v golangci-lint >/dev/null 2>&1; then \
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.55.2; \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.62.2; \
 		echo "${GREEN}golangci-lint installed successfully${RESET}"; \
 	else \
 		echo "${GREEN}golangci-lint is already installed${RESET}"; \

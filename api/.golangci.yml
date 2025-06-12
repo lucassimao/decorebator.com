@@ -37,7 +37,7 @@ linters:
     - bodyclose     # Checks whether HTTP response body is closed
     - dogsled       # Finds assignments with too many blank identifiers
     - dupl          # Code clone detection
-    - copyloopvar   # Checks for pointers to enclosing loop variables
+    - copyloopvar   # Checks for pointers to enclosing loop variables (requires golangci-lint v1.57+)
     - goconst       # Finds repeated strings that could be constants
     - gocyclo       # Cyclomatic complexity
     - gofmt         # Checks whether code was gofmt-ed
