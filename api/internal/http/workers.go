@@ -19,14 +19,15 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 		return
 	}
 
-	jobId, err := service.TriggerGenerateImageWorker(definitionId, nil, nil)
+	// Admin context - pass nil userId to bypass validation
+	jobID, err := service.TriggerGenerateImageWorker(definitionId, nil, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "definitionId": definitionId})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": jobId})
+	c.JSON(http.StatusCreated, gin.H{"id": jobID})
 }
 
 func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
@@ -37,14 +38,15 @@ func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
 		return
 	}
 
-	jobId, err := service.TriggerTextToSpeechWorker(wordId, nil, nil)
+	// Admin context - pass nil userId to bypass validation
+	jobID, err := service.TriggerTextToSpeechWorker(wordId, nil, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordId})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": jobId})
+	c.JSON(http.StatusCreated, gin.H{"id": jobID})
 }
 
 func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
@@ -55,15 +57,16 @@ func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
 		return
 	}
 
+	// Admin context - pass nil userId to bypass validation
 	service.DeleteWordDefinitions(wordId, nil)
-	jobId, err := service.TriggerFetchDefinitionWorker(wordId, nil, nil)
+	jobID, err := service.TriggerFetchDefinitionWorker(wordId, nil, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordId})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": jobId})
+	c.JSON(http.StatusCreated, gin.H{"id": jobID})
 }
 
 func (h *WorkerRoutes) TriggerJob(c *gin.Context) {

@@ -17,7 +17,7 @@ import (
 
 type ImageGeneratorArgs struct {
 	DefinitionId int64        `json:"definitionId"`
-	UserId       *int64       `json:"userId"`
+	UserID       *int64       `json:"userId"`
 	ErrorReport  *ErrorReport `json:"errorReport"`
 }
 
@@ -32,7 +32,18 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	var (
 		definitionID = job.Args.DefinitionId
+		userID       = job.Args.UserID
 	)
+
+	// Validate user eligibility before processing (skip for admin/system jobs)
+	if userID != nil {
+		if err := ValidateUserEligibilityForWorkers(*userID); err != nil {
+			logger.Warn("User not eligible for image generation",
+				"userId", *userID, "definitionId", definitionID, "error", err)
+			// Cancel job permanently - user needs to upgrade
+			return river.JobCancel(err)
+		}
+	}
 
 	definition, err := GetDefinitionById(job.Args.DefinitionId)
 	if err != nil {

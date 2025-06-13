@@ -83,17 +83,17 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 	switch errorType {
 	case SoundNotPlaying:
 		report = ErrorReport{WordId: &wordID, UserId: userId}
-		_, err = TriggerTextToSpeechWorker(wordID, &report, &tx)
+		_, err = TriggerTextToSpeechWorker(wordID, &userId, &report, &tx)
 
 	case UnrelatedImage, MissingImage:
 		report = ErrorReport{DefinitionId: &definitionID, UserId: userId}
-		_, err = TriggerGenerateImageWorker(definitionID, &report, &tx)
+		_, err = TriggerGenerateImageWorker(definitionID, &userId, &report, &tx)
 
 	case UnrelatedExample, UnrelatedMeaning:
 		err = DeleteWordDefinitions(wordID, &tx)
 		if err == nil {
 			report = ErrorReport{WordId: &wordID, UserId: userId}
-			_, err = TriggerFetchDefinitionWorker(wordID, &report, &tx)
+			_, err = TriggerFetchDefinitionWorker(wordID, &userId, &report, &tx)
 		}
 	default:
 		err = fmt.Errorf("invalid error type %s", errorType)
