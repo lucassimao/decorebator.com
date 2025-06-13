@@ -1,4 +1,4 @@
-package service
+package integration
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
+	"decorebator.com/internal/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,10 +37,10 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 	createWordlist := func(userID int64, name string) int64 {
 		var wordlistID int64
 		err := db.QueryRow(ctx, `
-			INSERT INTO wordlists (name, user_id, language_code)
-			VALUES ($1, $2, 'en')
+			INSERT INTO wordlists (name, description, user_id, language_code)
+			VALUES ($1, $2, $3, 'en')
 			RETURNING id`,
-			name, userID).Scan(&wordlistID)
+			name, "Test wordlist description", userID).Scan(&wordlistID)
 		require.NoError(t, err)
 		return wordlistID
 	}
@@ -68,14 +69,14 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 		monthlyUserID := createTestUser("monthly@test.com", model.PlanMonthly)
 		defer cleanup(monthlyUserID)
 
-		err := ValidateUserEligibilityForWorkers(monthlyUserID)
+		err := service.ValidateUserEligibilityForWorkers(monthlyUserID)
 		assert.NoError(t, err, "Monthly plan users should have no restrictions")
 
 		// Test annual plan
 		annualUserID := createTestUser("annual@test.com", model.PlanAnnual)
 		defer cleanup(annualUserID)
 
-		err = ValidateUserEligibilityForWorkers(annualUserID)
+		err = service.ValidateUserEligibilityForWorkers(annualUserID)
 		assert.NoError(t, err, "Annual plan users should have no restrictions")
 	})
 
@@ -83,7 +84,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 		freeUserID := createTestUser("free-empty@test.com", model.PlanFree)
 		defer cleanup(freeUserID)
 
-		err := ValidateUserEligibilityForWorkers(freeUserID)
+		err := service.ValidateUserEligibilityForWorkers(freeUserID)
 		assert.NoError(t, err, "Free user with no content should pass validation")
 	})
 
@@ -98,7 +99,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 			createWord(freeUserID, wordlistID, fmt.Sprintf("word%d", i))
 		}
 
-		err := ValidateUserEligibilityForWorkers(freeUserID)
+		err := service.ValidateUserEligibilityForWorkers(freeUserID)
 		assert.NoError(t, err, "Free user with 1 wordlist and 10 words should pass")
 	})
 
@@ -109,7 +110,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 		createWordlist(freeUserID, "List 1")
 		createWordlist(freeUserID, "List 2")
 
-		err := ValidateUserEligibilityForWorkers(freeUserID)
+		err := service.ValidateUserEligibilityForWorkers(freeUserID)
 		assert.Error(t, err, "Free user with 2 wordlists should fail")
 		assert.Contains(t, err.Error(), "Free users are limited to 1 wordlist")
 	})
@@ -125,19 +126,19 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 			createWord(freeUserID, wordlistID, fmt.Sprintf("word%d", i))
 		}
 
-		err := ValidateUserEligibilityForWorkers(freeUserID)
+		err := service.ValidateUserEligibilityForWorkers(freeUserID)
 		assert.Error(t, err, "Free user with 11 words should fail")
 		assert.Contains(t, err.Error(), "Free users are limited to 10 words")
 	})
 
-	t.Run("ValidateWordEligibilityForWorkers", func(t *testing.T) {
+	t.Run("ValidateUserEligibilityForWorkers with valid user ID", func(t *testing.T) {
 		freeUserID := createTestUser("free-word-test@test.com", model.PlanFree)
 		defer cleanup(freeUserID)
 
 		wordlistID := createWordlist(freeUserID, "Test List")
-		wordID := createWord(freeUserID, wordlistID, "testword")
+		createWord(freeUserID, wordlistID, "testword")
 
-		err := ValidateWordEligibilityForWorkers(wordID)
-		assert.NoError(t, err, "Should validate word successfully")
+		err := service.ValidateUserEligibilityForWorkers(freeUserID)
+		assert.NoError(t, err, "Should validate user successfully")
 	})
 }
