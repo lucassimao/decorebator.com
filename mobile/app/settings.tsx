@@ -98,7 +98,7 @@ const SettingsScreen: React.FC = () => {
   const checkoutMutation = useMutation({
     mutationFn: async (plan: PlanRecurrence) => {
       const redirectUri = AuthSession.makeRedirectUri({
-        scheme: "decorerbator",
+        scheme: "decorebator",
         path: "stripe",
       });
 
@@ -115,6 +115,9 @@ const SettingsScreen: React.FC = () => {
         data.redirectUri,
       );
 
+      console.log(result);
+
+      // Handle all possible result types for better Android compatibility
       if (result.type === "success") {
         // Refresh subscription data
         refetchSubscription();
@@ -122,6 +125,17 @@ const SettingsScreen: React.FC = () => {
           t("common.success"),
           t("settings.subscription.activatedSuccess"),
         );
+      } else if (result.type === "cancel") {
+        // User cancelled checkout - no action needed
+        console.log("Checkout cancelled by user");
+      } else if (result.type === "dismiss") {
+        // Browser was dismissed - could be user closing or redirect completion
+        // Silently refresh subscription to check if payment succeeded
+        console.log("Browser dismissed, checking subscription status");
+
+        // Refresh subscription without showing success alert
+        // If payment succeeded, the subscription query will reflect the change
+        refetchSubscription();
       }
     },
     onError: () => {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -14,7 +15,6 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
-	"decorebator.com/internal/repository"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -164,25 +164,52 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				AND def.meaning IS NOT NULL
 				-- Exclude temporarily skipped definitions
 				AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())
+		),
+		selected_definition AS (
+			SELECT 
+				id, token, part_of_speech, language, is_verb_type, meaning, examples, inflections, 
+				lst_id, box_id, sounds, phonetic_notations, 
+				COALESCE(image_url,'') as image_url, word_id, COALESCE(image_description,'') as image_description,
+				hours_since_review, progress_ratio
+			FROM definition_priorities
+			ORDER BY 
+				-- Priority 1: Overdue definitions (progress >= 100%)
+				CASE WHEN progress_ratio >= 1.0 THEN 0 ELSE 1 END,
+				-- Priority 2: Due soon (80-100% of interval)
+				CASE WHEN progress_ratio >= 0.8 THEN 0 ELSE 1 END,
+				-- Priority 3: Available (50-80% of interval)
+				CASE WHEN progress_ratio >= 0.5 THEN 0 ELSE 1 END,
+				-- Within same priority, pick oldest reviewed first
+				COALESCE(updated_at, TIMESTAMP '1970-01-01') ASC,
+				-- Final tiebreaker: definition ID for absolute determinism
+				id ASC
+			LIMIT 1
 		)
 		SELECT 
-			id, token, part_of_speech, language, is_verb_type, meaning, examples, inflections, 
-			lst_id, box_id, sounds, phonetic_notations, 
-			COALESCE(image_url,''), word_id, COALESCE(image_description,''),
-			hours_since_review, progress_ratio
-		FROM definition_priorities
-		ORDER BY 
-			-- Priority 1: Overdue definitions (progress >= 100%)
-			CASE WHEN progress_ratio >= 1.0 THEN 0 ELSE 1 END,
-			-- Priority 2: Due soon (80-100% of interval)
-			CASE WHEN progress_ratio >= 0.8 THEN 0 ELSE 1 END,
-			-- Priority 3: Available (50-80% of interval)
-			CASE WHEN progress_ratio >= 0.5 THEN 0 ELSE 1 END,
-			-- Within same priority, pick oldest reviewed first
-			COALESCE(updated_at, TIMESTAMP '1970-01-01') ASC,
-			-- Final tiebreaker: definition ID for absolute determinism
-			id ASC
-		LIMIT 1;
+			sd.id, sd.token, sd.part_of_speech, sd.language, sd.is_verb_type, sd.meaning, sd.examples, sd.inflections, 
+			sd.lst_id, sd.box_id, sd.sounds, sd.phonetic_notations, 
+			sd.image_url, sd.word_id, sd.image_description,
+			sd.hours_since_review, sd.progress_ratio,
+			-- Aggregate example audio files into JSON array
+			COALESCE(
+				JSON_AGG(
+					JSON_BUILD_OBJECT(
+						'id', dea.id,
+						'definitionId', dea.definition_id,
+						'exampleText', dea.example_text,
+						'exampleHash', dea.example_hash,
+						'audioUrl', dea.audio_url,
+						'inflectionType', COALESCE(dea.inflection_type, ''),
+						'createdAt', dea.created_at
+					) ORDER BY dea.created_at DESC
+				) FILTER (WHERE dea.id IS NOT NULL),
+				'[]'::json
+			) as example_audio_files
+		FROM selected_definition sd
+		LEFT JOIN definition_example_audio dea ON dea.definition_id = sd.id
+		GROUP BY sd.id, sd.token, sd.part_of_speech, sd.language, sd.is_verb_type, sd.meaning, sd.examples, sd.inflections, 
+				 sd.lst_id, sd.box_id, sd.sounds, sd.phonetic_notations, 
+				 sd.image_url, sd.word_id, sd.image_description, sd.hours_since_review, sd.progress_ratio;
 	`
 
 	db, err := common.GetDBConnection()
@@ -229,15 +256,28 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 	result := NextDefinition{Definition: &definition}
 	var hoursSinceReview float64
 	var progressRatio float64
+	var exampleAudioFilesJSON []byte
 
 	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
 		&definition.Meaning, &definition.Examples,
 		&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
 		&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription,
-		&hoursSinceReview, &progressRatio)
+		&hoursSinceReview, &progressRatio, &exampleAudioFilesJSON)
 
 	if err != nil {
 		return nil, err
+	}
+
+	// Parse the JSON array of example audio files
+	if len(exampleAudioFilesJSON) > 0 {
+		err = json.Unmarshal(exampleAudioFilesJSON, &definition.ExampleAudioFiles)
+		if err != nil {
+			// Log the error but don't fail the quiz generation
+			common.Logger.Error("failed to parse example audio files JSON", "definitionID", definition.ID, "error", err)
+			definition.ExampleAudioFiles = []model.DefinitionExampleAudio{}
+		}
+	} else {
+		definition.ExampleAudioFiles = []model.DefinitionExampleAudio{}
 	}
 
 	// Log deterministic selection for monitoring
@@ -248,16 +288,8 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 		"boxID", result.BoxID,
 		"hoursSinceReview", hoursSinceReview,
 		"progressRatio", progressRatio,
-		"wasOverdue", progressRatio >= 1.0)
-
-	// Load example audio files for this definition
-	definitionRepo := repository.NewDefinitionRepository(db)
-	exampleAudioFiles, err := definitionRepo.GetExampleAudioByDefinitionID(definition.ID)
-	if err != nil {
-		// Log the error but don't fail the quiz generation
-		common.Logger.Error("failed to load example audio files", "definitionID", definition.ID, "error", err)
-	}
-	definition.ExampleAudioFiles = exampleAudioFiles
+		"wasOverdue", progressRatio >= 1.0,
+		"exampleAudioCount", len(definition.ExampleAudioFiles))
 
 	return &result, nil
 }
@@ -554,16 +586,18 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 			return nil, err
 		}
 
-		// Get least used example audio for fair distribution
-		db, err := common.GetDBConnection()
-		if err != nil {
-			return nil, err
+		// Use the already-loaded example audio files for better performance and consistency
+		if len(def.Definition.ExampleAudioFiles) == 0 {
+			return nil, errors.New("no example audio files available for WordFromExampleAudio quiz")
 		}
 
-		definitionRepo := repository.NewDefinitionRepository(db)
-		selectedExampleAudio, err := definitionRepo.GetLeastUsedExampleAudio(def.Definition.ID)
+		// Select example audio using fair distribution to avoid repetition
+		selectedExampleAudio, err := selectFairExampleAudio(def.Definition.ID, def.Definition.ExampleAudioFiles)
 		if err != nil {
-			return nil, err
+			// Fallback to first available if fair selection fails
+			common.Logger.Warn("fair example audio selection failed, using first available",
+				"definitionId", def.Definition.ID, "error", err)
+			selectedExampleAudio = &def.Definition.ExampleAudioFiles[0]
 		}
 
 		value = ""                               // No visual value needed for audio quiz
@@ -765,6 +799,145 @@ func recordExampleUsage(definitionID int64, example string) error {
 		DO UPDATE SET last_used_at = NOW()`
 
 	_, err = db.Exec(context.Background(), query, definitionID, hash)
+	return err
+}
+
+// selectFairExampleAudio implements fair distribution for example audio files to prevent repetition.
+// This function selects the least recently used example audio file and updates its usage tracking.
+//
+// Algorithm:
+// 1. Query the database for usage statistics of each example audio file
+// 2. Prioritize unused files, then least recently used files
+// 3. Update usage tracking for the selected file
+// 4. Return the selected audio file
+//
+// Parameters:
+// - definitionID: The definition these audio files belong to
+// - audioFiles: Slice of available example audio files
+//
+// Returns the selected audio file and any database error
+func selectFairExampleAudio(definitionID int64, audioFiles []model.DefinitionExampleAudio) (*model.DefinitionExampleAudio, error) {
+	if len(audioFiles) == 0 {
+		return nil, errors.New("no audio files available")
+	}
+
+	if len(audioFiles) == 1 {
+		// Only one audio file, record its usage and return it
+		err := recordExampleAudioUsage(definitionID, audioFiles[0].ID)
+		return &audioFiles[0], err
+	}
+
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get database connection: %w", err)
+	}
+
+	// Create a map of audio file IDs to audio files and their usage info
+	type audioFileInfo struct {
+		audioFile  *model.DefinitionExampleAudio
+		lastUsedAt *time.Time
+		usageCount int
+	}
+
+	audioFileInfos := make([]audioFileInfo, len(audioFiles))
+	audioFileIDs := make([]int64, len(audioFiles))
+
+	for i := range audioFiles {
+		audioFileInfos[i] = audioFileInfo{
+			audioFile: &audioFiles[i],
+		}
+		audioFileIDs[i] = audioFiles[i].ID
+	}
+
+	// Query for recent usage of these audio files
+	query := `
+		SELECT example_audio_id, last_used_at, usage_count
+		FROM example_audio_usage 
+		WHERE definition_id = $1 AND example_audio_id = ANY($2)
+		AND last_used_at > NOW() - INTERVAL '24 hours'`
+
+	rows, err := db.Query(context.Background(), query, definitionID, audioFileIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query audio file usage: %w", err)
+	}
+	defer rows.Close()
+
+	// Create a map of audio file ID -> usage info
+	usageMap := make(map[int64]struct {
+		lastUsedAt time.Time
+		usageCount int
+	})
+
+	for rows.Next() {
+		var audioFileID int64
+		var lastUsedAt time.Time
+		var usageCount int
+		if err = rows.Scan(&audioFileID, &lastUsedAt, &usageCount); err != nil {
+			return nil, fmt.Errorf("failed to scan usage row: %w", err)
+		}
+		usageMap[audioFileID] = struct {
+			lastUsedAt time.Time
+			usageCount int
+		}{lastUsedAt, usageCount}
+	}
+
+	// Update audioFileInfos with usage data
+	for i := range audioFileInfos {
+		if usage, exists := usageMap[audioFileInfos[i].audioFile.ID]; exists {
+			audioFileInfos[i].lastUsedAt = &usage.lastUsedAt
+			audioFileInfos[i].usageCount = usage.usageCount
+		}
+	}
+
+	// Sort by usage: unused first, then by oldest usage and lowest usage count
+	sort.Slice(audioFileInfos, func(i, j int) bool {
+		if audioFileInfos[i].lastUsedAt == nil && audioFileInfos[j].lastUsedAt == nil {
+			// Both unused, prioritize by lowest usage count (in case of edge cases)
+			return audioFileInfos[i].usageCount < audioFileInfos[j].usageCount
+		}
+		if audioFileInfos[i].lastUsedAt == nil {
+			return true // i is unused, prioritize it
+		}
+		if audioFileInfos[j].lastUsedAt == nil {
+			return false // j is unused, prioritize it
+		}
+		// Both used, prioritize by usage count first, then by older usage
+		if audioFileInfos[i].usageCount != audioFileInfos[j].usageCount {
+			return audioFileInfos[i].usageCount < audioFileInfos[j].usageCount
+		}
+		return audioFileInfos[i].lastUsedAt.Before(*audioFileInfos[j].lastUsedAt)
+	})
+
+	// Select the best (least used) audio file
+	selectedAudioFile := audioFileInfos[0].audioFile
+
+	// Record the usage
+	err = recordExampleAudioUsage(definitionID, selectedAudioFile.ID)
+	if err != nil {
+		common.Logger.Error("failed to record example audio usage",
+			"definitionId", definitionID,
+			"audioFileId", selectedAudioFile.ID,
+			"error", err)
+		// Don't fail the quiz generation if usage recording fails
+	}
+
+	return selectedAudioFile, nil
+}
+
+// recordExampleAudioUsage records when an example audio file was used to prevent immediate repetition
+func recordExampleAudioUsage(definitionID, audioFileID int64) error {
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return err
+	}
+
+	query := `
+		INSERT INTO example_audio_usage (definition_id, example_audio_id, last_used_at, usage_count)
+		VALUES ($1, $2, NOW(), 1)
+		ON CONFLICT (definition_id, example_audio_id)
+		DO UPDATE SET last_used_at = NOW(), usage_count = example_audio_usage.usage_count + 1`
+
+	_, err = db.Exec(context.Background(), query, definitionID, audioFileID)
 	return err
 }
 
