@@ -23,18 +23,12 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 
 	// Helper to create test user using service layer
 	createTestUser := func(email string, plan model.SubscriptionPlan) int64 {
-		userDTO := model.CreateUserDTO{
-			Email:     email,
-			FirstName: "Test",
-			LastName:  "User",
-			Password:  "password123",
-		}
-		user, err := service.SaveUser(userDTO, ctx)
+		user, err := service.SaveUser("Test", "User", "password123", email)
 		require.NoError(t, err)
 
 		// Update subscription plan if not free
 		if plan != model.PlanFree {
-			err := db.Exec(ctx, "UPDATE users SET subscription_plan = $1 WHERE id = $2", plan, user.ID)
+			_, err := db.Exec(ctx, "UPDATE users SET subscription_plan = $1 WHERE id = $2", plan, user.ID)
 			require.NoError(t, err)
 		}
 
@@ -43,33 +37,33 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 
 	// Helper to create wordlist using service layer
 	createWordlist := func(userID int64, name string) int64 {
-		wordlistDTO := model.CreateWordlistDTO{
+		wordlist := &model.Wordlist{
 			Name:         name,
 			Description:  "Test wordlist description",
 			UserID:       userID,
 			LanguageCode: "en",
 		}
-		wordlist, err := service.SaveWordlist(wordlistDTO, ctx)
+		savedWordlist, err := service.SaveWordlist(wordlist)
 		require.NoError(t, err)
-		return wordlist.ID
+		return savedWordlist.ID
 	}
 
 	// Helper to create word using service layer
 	createWord := func(userID, wordlistID int64, name string) int64 {
-		wordDTO := model.CreateWordDTO{
+		word := &model.Word{
 			Name:       name,
 			UserID:     userID,
 			WordlistID: wordlistID,
 		}
-		word, err := service.SaveWord(wordDTO, ctx)
+		savedWord, err := service.SaveWord(word, ctx)
 		require.NoError(t, err)
-		return word.ID
+		return savedWord.ID
 	}
 
 	// Cleanup function using service layer
 	cleanup := func(userID int64) {
 		// Use service layer for cleanup - this will cascade delete wordlists and words
-		service.Delete(userID, ctx)
+		service.Delete(userID)
 	}
 
 	t.Run("Premium users have no restrictions", func(t *testing.T) {
