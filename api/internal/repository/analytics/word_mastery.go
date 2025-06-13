@@ -62,10 +62,14 @@ func (r *WordMasteryRepository) UpsertWordMastery(ctx context.Context, tx pgx.Tx
 				WHEN $3 THEN word_mastery.streak_count + 1 
 				ELSE 0 
 			END,
-			max_streak = GREATEST(
-				word_mastery.max_streak, 
-				CASE WHEN $3 THEN word_mastery.streak_count + 1 ELSE word_mastery.streak_count END
-			),
+			max_streak = CASE 
+				WHEN $3 THEN 
+					-- On correct answer, compare current max with new streak
+					GREATEST(word_mastery.max_streak, word_mastery.streak_count + 1)
+				ELSE 
+					-- On incorrect answer, streak resets to 0, so max_streak stays unchanged
+					word_mastery.max_streak
+			END,
 			last_seen_at = NOW(),
 			updated_at = NOW()
 	`
@@ -82,6 +86,7 @@ func (r *WordMasteryRepository) UpsertWordMastery(ctx context.Context, tx pgx.Tx
 // - Calculates accuracy_rate as correct_attempts / total_attempts
 // - Groups by word to handle multiple definitions per word
 // - Uses MAX(box_id) to get the highest Leitner box achieved for each word
+// - Filters out learned words (learned = FALSE) to focus on active learning
 // - Orders by mastery_level DESC, then last_seen_at DESC for best-first sorting
 //
 // Returns array of WordMasteryStats with comprehensive learning metrics per word.
@@ -103,7 +108,9 @@ func (r *WordMasteryRepository) GetWordMastery(ctx context.Context, userID, word
 		JOIN words w ON wm.word_id = w.id
 		LEFT JOIN leitner_system_tracking lst 
 			ON lst.word_id = wm.word_id AND lst.user_id = wm.user_id
-		WHERE wm.user_id = $1 AND w.wordlist_id = $2
+		WHERE wm.user_id = $1 
+		  AND w.wordlist_id = $2 
+		  AND w.learned = FALSE  -- Only show active learning words
 		GROUP BY wm.word_id, w.name, wm.mastery_level, 
 				 wm.total_attempts, wm.correct_attempts, wm.streak_count, wm.last_seen_at
 		ORDER BY wm.mastery_level DESC, wm.last_seen_at DESC
@@ -135,24 +142,28 @@ func (r *WordMasteryRepository) GetWordMastery(ctx context.Context, userID, word
 
 // GetWordlistMasteryStats retrieves aggregate mastery statistics for a specific wordlist.
 //
-// Query: Aggregates word_mastery data joined with words table for wordlist-level metrics:
-// - COUNT(DISTINCT word_id) as total_words in the wordlist with mastery data
+// Query: Aggregates mastery data for all words in wordlist (not just those with mastery entries):
+// - COUNT(DISTINCT w.id) as total_words in the wordlist (all active learning words)
 // - COUNT(DISTINCT ... WHERE mastery_level >= 0.8) as words_mastered (80% threshold)
-// - AVG(mastery_level) as average mastery across all words in wordlist
+// - AVG(mastery_level) as average mastery across words with mastery data
 // - MAX(streak_count) as best_streak achieved in this wordlist
+// - Uses LEFT JOIN to include all words, even those without mastery data
+// - Filters out learned words (learned = FALSE) to focus on active learning
 // - Filters by user_id and wordlist_id for user-specific wordlist stats
 //
 // Returns: totalWords, wordsMastered, avgMastery, bestStreak for dashboard display.
 func (r *WordMasteryRepository) GetWordlistMasteryStats(ctx context.Context, userID, wordlistID int64) (int, int, *float64, *int, error) {
 	query := `
 		SELECT 
-			COUNT(DISTINCT wm.word_id) AS total_words,
-			COUNT(DISTINCT CASE WHEN wm.mastery_level >= 0.8 THEN wm.word_id END) AS words_mastered,
-			AVG(wm.mastery_level) AS avg_mastery,
+			COUNT(DISTINCT w.id) AS total_words,  -- Count all words in wordlist, not just those with mastery data
+			COUNT(DISTINCT CASE WHEN wm.mastery_level >= 0.8 THEN w.id END) AS words_mastered,
+			AVG(wm.mastery_level) AS avg_mastery,  -- Average only among words with mastery data
 			MAX(wm.streak_count) AS best_streak
-		FROM word_mastery wm
-		JOIN words w ON wm.word_id = w.id
-		WHERE wm.user_id = $1 AND w.wordlist_id = $2;
+		FROM words w
+		LEFT JOIN word_mastery wm ON w.id = wm.word_id AND wm.user_id = $1
+		WHERE w.user_id = $1 
+		  AND w.wordlist_id = $2 
+		  AND w.learned = FALSE;  -- Only count active learning words
 	`
 
 	var totalWords, wordsMastered int

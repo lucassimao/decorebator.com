@@ -70,7 +70,7 @@ func (r *LearningProgressRepository) UpsertLearningProgress(ctx context.Context,
 //   - Filters by date range: date >= CURRENT_DATE - INTERVAL days
 //   - Orders by date DESC to show most recent days first
 //   - Returns: date, words_studied, words_mastered, total_quiz_attempts, accuracy_rate,
-//     average_response_time_ms, study_time_seconds
+//     average_response_time_ms
 //
 // Used for analytics charts showing learning progress over time.
 func (r *LearningProgressRepository) GetLearningProgress(ctx context.Context, userID, wordlistID int64, days int) ([]model.LearningProgressStats, error) {
@@ -85,7 +85,7 @@ func (r *LearningProgressRepository) GetLearningProgress(ctx context.Context, us
 		           THEN ROUND(correct_attempts::numeric / total_quiz_attempts::numeric * 100, 1)
 		           ELSE 0
 		       END as accuracy_rate,
-		       average_response_time_ms, study_time_seconds
+		       average_response_time_ms
 		FROM learning_progress
 		WHERE user_id = $1 AND wordlist_id = $2 
 		  AND date >= CURRENT_DATE - INTERVAL '1 day' * $3
@@ -102,7 +102,7 @@ func (r *LearningProgressRepository) GetLearningProgress(ctx context.Context, us
 	for rows.Next() {
 		var p model.LearningProgressStats
 		err := rows.Scan(&p.Date, &p.WordsStudied, &p.WordsMastered,
-			&p.TotalAttempts, &p.AccuracyRate, &p.AvgResponseMs, &p.StudyTimeSeconds)
+			&p.TotalAttempts, &p.AccuracyRate, &p.AvgResponseMs)
 		if err != nil {
 			return nil, err
 		}
@@ -161,45 +161,57 @@ func (r *LearningProgressRepository) GetWordlistTodayStats(ctx context.Context, 
 
 // GetWordlistCurrentStreak calculates the current consecutive daily practice streak for a wordlist.
 //
-// Query: Complex CTE-based streak calculation using gap-and-island technique:
-// 1. daily_activity CTE: Groups learning_progress by date and sums total_quiz_attempts
-// 2. streak_calc CTE: Uses ROW_NUMBER() window function to identify consecutive date groups:
-//   - Subtracts row number from date to create "streak_group" identifier
-//   - Consecutive dates with activity will have the same streak_group value
+// Query: Recursive approach counting consecutive days backwards from most recent activity:
+// 1. recent_activity CTE: Gets the most recent practice date (today or earlier)
+// 2. RECURSIVE CTE: Counts backwards day by day while practice exists
+//   - Starts from most recent practice date
+//   - Recursively goes back one day at a time
+//   - Stops when a day with no practice is found
 //
-// 3. Main query: Counts days in the streak group that includes CURRENT_DATE
-//   - Only includes dates where attempts > 0 (active practice days)
-//   - Returns 0 if no activity found for current date
+// 3. Returns total count of consecutive practice days
 //
-// This algorithm efficiently calculates streaks by identifying gaps in daily activity.
-// Example: dates [2024-01-01, 2024-01-02, 2024-01-03] become streak_group values
-// that group consecutive practice days together.
+// This correctly handles cases where:
+// - User practiced today: includes today in streak
+// - User hasn't practiced today: counts streak up to yesterday
+// - No recent activity: returns 0
 func (r *LearningProgressRepository) GetWordlistCurrentStreak(ctx context.Context, userID, wordlistID int64) (int, error) {
 	query := `
-		WITH daily_activity AS (
-			SELECT 
-				date, 
-				SUM(total_quiz_attempts) AS attempts
+		WITH RECURSIVE recent_activity AS (
+			SELECT MAX(date) as last_practice_date
 			FROM learning_progress
-			WHERE user_id = $1 AND wordlist_id = $2
-			GROUP BY date
-			ORDER BY date DESC
+			WHERE user_id = $1 
+			  AND wordlist_id = $2 
+			  AND total_quiz_attempts > 0
+			  AND date >= CURRENT_DATE - INTERVAL '365 days'  -- Limit search to past year
 		),
-		streak_calc AS (
+		streak_days(practice_date, day_count) AS (
+			-- Base case: start from most recent practice date
 			SELECT 
-				date,
-				date - (ROW_NUMBER() OVER (ORDER BY date DESC))::int AS streak_group
-			FROM daily_activity
-			WHERE attempts > 0
+				ra.last_practice_date,
+				1
+			FROM recent_activity ra
+			WHERE ra.last_practice_date IS NOT NULL
+			  AND ra.last_practice_date >= CURRENT_DATE - INTERVAL '1 day'  -- Must be today or yesterday
+			
+			UNION ALL
+			
+			-- Recursive case: go back one day if practice exists
+			SELECT 
+				(sd.practice_date - INTERVAL '1 day')::date,
+				sd.day_count + 1
+			FROM streak_days sd
+			WHERE EXISTS (
+				SELECT 1 
+				FROM learning_progress lp 
+				WHERE lp.user_id = $1 
+				  AND lp.wordlist_id = $2
+				  AND lp.date = (sd.practice_date - INTERVAL '1 day')::date
+				  AND lp.total_quiz_attempts > 0
+			)
+			  AND sd.day_count < 365  -- Prevent infinite recursion
 		)
-		SELECT COUNT(*) AS current_streak
-		FROM streak_calc
-		WHERE streak_group = (
-			SELECT streak_group 
-			FROM streak_calc 
-			WHERE date = CURRENT_DATE
-			LIMIT 1
-		);
+		SELECT COALESCE(MAX(day_count), 0) as current_streak
+		FROM streak_days;
 	`
 
 	var currentStreak int

@@ -52,7 +52,10 @@ func (r *QuizPerformanceRepository) RecordQuizPerformance(ctx context.Context, t
 // - Groups by quiz_type to get performance metrics per quiz mode
 // - Calculates total_attempts (COUNT(*))
 // - Calculates success_rate as percentage: (correct_attempts / total_attempts) * 100
-// - Calculates average_response_time_ms (AVG of response times)
+// - Calculates average_response_time_ms with NULL handling and outlier filtering:
+//   - Only includes response times between 200ms and 30000ms (realistic range)
+//   - Uses COALESCE to handle NULL values in average calculation
+//
 // - Gets last_updated timestamp (MAX of created_at)
 // - Orders by success_rate DESC to show best performing quiz types first
 //
@@ -67,7 +70,16 @@ func (r *QuizPerformanceRepository) GetQuizTypePerformance(ctx context.Context, 
 				THEN ROUND(SUM(CASE WHEN qp.is_correct THEN 1 ELSE 0 END)::numeric / COUNT(*)::numeric * 100, 1)
 				ELSE 0
 			END AS success_rate,
-			AVG(qp.response_time_ms)::INT as average_response_time_ms,
+			COALESCE(
+				AVG(
+					CASE 
+						WHEN qp.response_time_ms BETWEEN 200 AND 30000 
+						THEN qp.response_time_ms 
+						ELSE NULL 
+					END
+				)::INT, 
+				0
+			) as average_response_time_ms,
 			MAX(qp.created_at) as last_updated
 		FROM quiz_performance qp
 		WHERE qp.user_id = $1 AND qp.wordlist_id = $2
@@ -106,12 +118,19 @@ func (r *QuizPerformanceRepository) GetQuizTypePerformance(ctx context.Context, 
 // - Updates existing record with new attempt data:
 //   - Increments total_attempts by 1
 //   - Increments correct_attempts by 1 if answer was correct
-//   - Recalculates average_response_time_ms using weighted average formula:
-//     (old_avg * old_count + new_time) / (old_count + 1)
+//   - Recalculates average_response_time_ms using weighted average formula with NULL handling:
+//     COALESCE(old_avg, 0) * old_count + new_time) / (old_count + 1)
+//   - Only includes response times in realistic range (200ms-30000ms) for average calculation
 //   - Updates last_updated timestamp to NOW()
 //
 // This maintains real-time aggregated statistics per user per quiz type.
 func (r *QuizPerformanceRepository) UpsertQuizTypeAnalytics(ctx context.Context, tx pgx.Tx, userID int64, quizType string, isCorrect bool, responseTimeMs int) error {
+	// Validate response time is in realistic range for analytics
+	filteredResponseTime := 0
+	if responseTimeMs >= 200 && responseTimeMs <= 30000 {
+		filteredResponseTime = responseTimeMs
+	}
+
 	query := `
 		INSERT INTO quiz_type_analytics (
 			user_id, quiz_type, total_attempts, correct_attempts, average_response_time_ms
@@ -122,13 +141,17 @@ func (r *QuizPerformanceRepository) UpsertQuizTypeAnalytics(ctx context.Context,
 		ON CONFLICT (user_id, quiz_type) DO UPDATE SET
 			total_attempts = quiz_type_analytics.total_attempts + 1,
 			correct_attempts = quiz_type_analytics.correct_attempts + CASE WHEN $3 THEN 1 ELSE 0 END,
-			average_response_time_ms = (
-				(quiz_type_analytics.average_response_time_ms * quiz_type_analytics.total_attempts + $4) / 
-				(quiz_type_analytics.total_attempts + 1)
-			),
+			average_response_time_ms = 
+				CASE 
+					WHEN $4 > 0 THEN  -- Only update average if we have a valid filtered response time
+						(COALESCE(quiz_type_analytics.average_response_time_ms, 0) * quiz_type_analytics.total_attempts + $4) / 
+						(quiz_type_analytics.total_attempts + 1)
+					ELSE 
+						quiz_type_analytics.average_response_time_ms  -- Keep existing average
+				END,
 			last_updated = NOW()
 	`
 
-	_, err := tx.Exec(ctx, query, userID, quizType, isCorrect, responseTimeMs)
+	_, err := tx.Exec(ctx, query, userID, quizType, isCorrect, filteredResponseTime)
 	return err
 }

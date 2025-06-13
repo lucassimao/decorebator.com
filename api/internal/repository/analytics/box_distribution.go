@@ -22,45 +22,49 @@ func NewBoxDistributionRepository(db *pgxpool.Pool) *BoxDistributionRepository {
 // UpsertBoxDistribution updates or inserts daily box distribution snapshot in box_distribution_snapshot table.
 //
 // Query: INSERT ... ON CONFLICT DO UPDATE with complex CTE for box distribution calculation:
-// 1. word_min_boxes CTE: Finds minimum box level for each word across all its definitions
+// 1. word_max_boxes CTE: Finds highest box level for each word across all its definitions
 //   - JOINs leitner_system_tracking with words table to filter by wordlist
-//   - Uses MIN(box_id) to get the lowest Leitner box for each word (most recent learning level)
+//   - Uses MAX(box_id) to get the highest Leitner box for each word (best progress achieved)
+//   - Filters out learned words (learned = FALSE) to focus on active learning
 //   - Groups by word_id since words can have multiple definitions at different box levels
 //
 // 2. Main INSERT: Counts words at each box level (1-7) using conditional aggregation
-//   - Uses COUNT(CASE WHEN min_box_id = X THEN 1 END) pattern for each box
+//   - Uses COUNT(CASE WHEN max_box_id = X THEN 1 END) pattern for each box
 //   - Sets snapshot_date to CURRENT_DATE for daily tracking
 //
 // 3. ON CONFLICT: Updates existing daily snapshot with fresh counts
 //
 // This creates daily snapshots of word distribution across Leitner boxes for historical analysis.
+// Uses MAX(box_id) to be consistent with word mastery analytics (highest_box_reached).
 func (r *BoxDistributionRepository) UpsertBoxDistribution(ctx context.Context, userID, wordlistID int64) error {
-	// Use the same logic as GetCurrentBoxDistribution - count words by their minimum box level
+	// Use the same logic as GetCurrentBoxDistribution - count words by their highest box level
 	query := `
 		INSERT INTO box_distribution_snapshot (
 			user_id, wordlist_id, snapshot_date,
 			box_1_count, box_2_count, box_3_count, box_4_count,
 			box_5_count, box_6_count, box_7_count
 		)
-		WITH word_min_boxes AS (
+		WITH word_max_boxes AS (
 			SELECT 
 				lst.word_id,
-				MIN(lst.box_id) as min_box_id
+				MAX(lst.box_id) as max_box_id
 			FROM leitner_system_tracking lst
 			JOIN words w ON lst.word_id = w.id
-			WHERE lst.user_id = $1 AND w.wordlist_id = $2
+			WHERE lst.user_id = $1 
+			  AND w.wordlist_id = $2 
+			  AND w.learned = FALSE  -- Only count active learning words
 			GROUP BY lst.word_id
 		)
 		SELECT 
 			$1::bigint, $2::bigint, CURRENT_DATE,
-			COUNT(CASE WHEN min_box_id = 1 THEN 1 END),
-			COUNT(CASE WHEN min_box_id = 2 THEN 1 END),
-			COUNT(CASE WHEN min_box_id = 3 THEN 1 END),
-			COUNT(CASE WHEN min_box_id = 4 THEN 1 END),
-			COUNT(CASE WHEN min_box_id = 5 THEN 1 END),
-			COUNT(CASE WHEN min_box_id = 6 THEN 1 END),
-			COUNT(CASE WHEN min_box_id = 7 THEN 1 END)
-		FROM word_min_boxes
+			COUNT(CASE WHEN max_box_id = 1 THEN 1 END),
+			COUNT(CASE WHEN max_box_id = 2 THEN 1 END),
+			COUNT(CASE WHEN max_box_id = 3 THEN 1 END),
+			COUNT(CASE WHEN max_box_id = 4 THEN 1 END),
+			COUNT(CASE WHEN max_box_id = 5 THEN 1 END),
+			COUNT(CASE WHEN max_box_id = 6 THEN 1 END),
+			COUNT(CASE WHEN max_box_id = 7 THEN 1 END)
+		FROM word_max_boxes
 		ON CONFLICT (user_id, wordlist_id, snapshot_date) DO UPDATE SET
 			box_1_count = EXCLUDED.box_1_count,
 			box_2_count = EXCLUDED.box_2_count,
@@ -88,40 +92,44 @@ func (r *BoxDistributionRepository) UpsertBoxDistribution(ctx context.Context, u
 // GetCurrentBoxDistribution retrieves the current real-time distribution of words across Leitner boxes.
 //
 // Query: CTE-based word distribution calculation from leitner_system_tracking table:
-// 1. word_min_boxes CTE: Calculates minimum box level for each word
+// 1. word_max_boxes CTE: Calculates highest box level for each word
 //   - JOINs leitner_system_tracking with words to filter by wordlist_id
-//   - Uses MIN(box_id) since words can have multiple definitions at different box levels
-//   - Groups by word_id to get one entry per word (using the lowest/most recent box level)
+//   - Uses MAX(box_id) since words can have multiple definitions at different box levels
+//   - Groups by word_id to get one entry per word (using the highest/best progress box level)
+//   - Filters out learned words (learned = FALSE) to focus on active learning
 //
 // 2. Main SELECT: Counts words at each box level using conditional aggregation
-//   - COUNT(CASE WHEN min_box_id = X THEN 1 END) pattern for boxes 1-7
+//   - COUNT(CASE WHEN max_box_id = X THEN 1 END) pattern for boxes 1-7
 //   - COUNT(*) for total_words across all boxes
 //
 // Returns current BoxDistribution with counts for each box level and total words.
 // Used for real-time box distribution charts and progress visualization.
+// Consistent with word mastery analytics using MAX(box_id) for highest achievement.
 func (r *BoxDistributionRepository) GetCurrentBoxDistribution(ctx context.Context, userID, wordlistID int64) (*model.BoxDistribution, error) {
-	// First, get the minimum box for each word (since a word can have multiple definitions in different boxes)
-	// Then count how many words are at each minimum box level
+	// First, get the maximum box for each word (since a word can have multiple definitions in different boxes)
+	// Then count how many words are at each maximum box level (representing best progress per word)
 	query := `
-		WITH word_min_boxes AS (
+		WITH word_max_boxes AS (
 			SELECT 
 				lst.word_id,
-				MIN(lst.box_id) as min_box_id
+				MAX(lst.box_id) as max_box_id
 			FROM leitner_system_tracking lst
 			JOIN words w ON lst.word_id = w.id
-			WHERE lst.user_id = $1 AND w.wordlist_id = $2
+			WHERE lst.user_id = $1 
+			  AND w.wordlist_id = $2 
+			  AND w.learned = FALSE  -- Only count active learning words
 			GROUP BY lst.word_id
 		)
 		SELECT 
-			COUNT(CASE WHEN min_box_id = 1 THEN 1 END) as box_1,
-			COUNT(CASE WHEN min_box_id = 2 THEN 1 END) as box_2,
-			COUNT(CASE WHEN min_box_id = 3 THEN 1 END) as box_3,
-			COUNT(CASE WHEN min_box_id = 4 THEN 1 END) as box_4,
-			COUNT(CASE WHEN min_box_id = 5 THEN 1 END) as box_5,
-			COUNT(CASE WHEN min_box_id = 6 THEN 1 END) as box_6,
-			COUNT(CASE WHEN min_box_id = 7 THEN 1 END) as box_7,
+			COUNT(CASE WHEN max_box_id = 1 THEN 1 END) as box_1,
+			COUNT(CASE WHEN max_box_id = 2 THEN 1 END) as box_2,
+			COUNT(CASE WHEN max_box_id = 3 THEN 1 END) as box_3,
+			COUNT(CASE WHEN max_box_id = 4 THEN 1 END) as box_4,
+			COUNT(CASE WHEN max_box_id = 5 THEN 1 END) as box_5,
+			COUNT(CASE WHEN max_box_id = 6 THEN 1 END) as box_6,
+			COUNT(CASE WHEN max_box_id = 7 THEN 1 END) as box_7,
 			COUNT(*) as total_words
-		FROM word_min_boxes
+		FROM word_max_boxes
 	`
 
 	var dist model.BoxDistribution

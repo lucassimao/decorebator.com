@@ -17,16 +17,22 @@ func NewDashboardStatsRepository(db *pgxpool.Pool) *DashboardStatsRepository {
 	return &DashboardStatsRepository{db: db}
 }
 
-// GetPracticeTime retrieves daily practice time statistics calculated from quiz response times.
+// GetPracticeTime retrieves daily practice time statistics calculated from filtered quiz response times.
 //
-// Query: Aggregates quiz_performance data by date to calculate daily practice time:
+// Query: Aggregates quiz_performance data by date with outlier filtering for realistic practice time:
 // - Groups by DATE(created_at) to aggregate quiz attempts by day
+// - Filters response times to exclude unrealistic values:
+//   * >= 200ms (minimum realistic response time)
+//   * <= 30000ms (30 seconds maximum to exclude "stepped away" cases)
 // - SUM(response_time_ms) as total_practice_time_ms for the day
-// - Converts milliseconds to minutes: SUM(response_time_ms) / 60000.0 with ROUND to 1 decimal
-// - COUNT(*) as quiz_count to show number of quiz attempts per day
+// - Converts to minutes: SUM(response_time_ms) / 60000.0 with ROUND to 1 decimal
+// - COUNT(*) as quiz_count to show total quiz attempts (including filtered ones)
 // - Uses COALESCE to handle NULL response times (defaults to 0)
 // - Filters by date range: created_at >= CURRENT_DATE - INTERVAL days
 // - Orders by practice_date DESC to show most recent days first
+//
+// Note: This is an approximation of actual practice time based on quiz response times.
+// The filtering helps remove obvious outliers (accidental clicks, stepping away) for more realistic estimates.
 //
 // Returns array of PracticeTimeStats with daily practice metrics for time-based analytics.
 // Used for practice time charts and daily activity visualization.
@@ -39,8 +45,23 @@ func (r *DashboardStatsRepository) GetPracticeTime(ctx context.Context, userID, 
 	query := `
 		SELECT 
 			DATE(qp.created_at) as practice_date,
-			SUM(COALESCE(qp.response_time_ms, 0)) as total_practice_time_ms,
-			ROUND(SUM(COALESCE(qp.response_time_ms, 0))::numeric / 60000.0, 1) as practice_time_minutes,
+			SUM(
+				CASE 
+					WHEN qp.response_time_ms BETWEEN 200 AND 30000 
+					THEN qp.response_time_ms 
+					ELSE 0 
+				END
+			) as total_practice_time_ms,
+			ROUND(
+				SUM(
+					CASE 
+						WHEN qp.response_time_ms BETWEEN 200 AND 30000 
+						THEN qp.response_time_ms 
+						ELSE 0 
+					END
+				)::numeric / 60000.0, 
+				1
+			) as practice_time_minutes,
 			COUNT(*) as quiz_count
 		FROM quiz_performance qp
 		WHERE qp.user_id = $1 
