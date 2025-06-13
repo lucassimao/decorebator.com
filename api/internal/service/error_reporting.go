@@ -39,10 +39,10 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 	}
 
 	// Check user eligibility for worker processing (free tier limits)
-	if err := ValidateUserEligibilityForWorkers(userId); err != nil {
-		logger.Warn("User not eligible for error report processing", 
-			"userId", userId, "error", err)
-		return err
+	if validationErr := ValidateUserEligibilityForWorkers(userId); validationErr != nil {
+		logger.Warn("User not eligible for error report processing",
+			"userId", userId, "error", validationErr)
+		return validationErr
 	}
 
 	db, err := common.GetDBConnection()

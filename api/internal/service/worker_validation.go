@@ -20,10 +20,10 @@ func ValidateUserEligibilityForWorkers(userID int64) error {
 
 	// Get user information including subscription plan
 	var subscriptionPlan model.SubscriptionPlan
-	err = db.QueryRow(context.Background(), 
-		"SELECT subscription_plan FROM users WHERE id = $1", 
+	err = db.QueryRow(context.Background(),
+		"SELECT subscription_plan FROM users WHERE id = $1",
 		userID).Scan(&subscriptionPlan)
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to get user subscription plan: %w", err)
 	}
@@ -41,7 +41,7 @@ func ValidateUserEligibilityForWorkers(userID int64) error {
 	err = db.QueryRow(context.Background(),
 		"SELECT COUNT(*) FROM wordlists WHERE user_id = $1",
 		userID).Scan(&wordlistCount)
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to count wordlists: %w", err)
 	}
@@ -50,7 +50,7 @@ func ValidateUserEligibilityForWorkers(userID int64) error {
 	err = db.QueryRow(context.Background(),
 		"SELECT COUNT(*) FROM words WHERE user_id = $1 AND learned = false",
 		userID).Scan(&totalWordCount)
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to count words: %w", err)
 	}
@@ -84,7 +84,7 @@ func ValidateWordEligibilityForWorkers(wordID int64) error {
 	err = db.QueryRow(context.Background(),
 		"SELECT user_id FROM words WHERE id = $1",
 		wordID).Scan(&userID)
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to get user from word: %w", err)
 	}
@@ -109,7 +109,7 @@ func ValidateDefinitionEligibilityForWorkers(definitionID int64) error {
 		WHERE d.id = $1
 		LIMIT 1`,
 		definitionID).Scan(&userID)
-	
+
 	if err != nil {
 		// If no user found, it might be a shared definition - allow it
 		return nil

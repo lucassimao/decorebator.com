@@ -92,7 +92,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 		defer cleanup(freeUserID)
 
 		wordlistID := createWordlist(freeUserID, "Test List")
-		
+
 		// Create exactly 10 words
 		for i := 0; i < 10; i++ {
 			createWord(freeUserID, wordlistID, fmt.Sprintf("word%d", i))
@@ -119,7 +119,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 		defer cleanup(freeUserID)
 
 		wordlistID := createWordlist(freeUserID, "Test List")
-		
+
 		// Create 11 words (exceeds limit)
 		for i := 0; i < 11; i++ {
 			createWord(freeUserID, wordlistID, fmt.Sprintf("word%d", i))

@@ -36,7 +36,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 
 	// Validate user eligibility before processing
 	if err := ValidateWordEligibilityForWorkers(job.Args.WordID); err != nil {
-		logger.Warn("User not eligible for example audio generation", 
+		logger.Warn("User not eligible for example audio generation",
 			"wordId", job.Args.WordID, "error", err)
 		// Cancel job permanently - user needs to upgrade
 		return river.JobCancel(err)

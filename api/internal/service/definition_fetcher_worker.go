@@ -50,7 +50,7 @@ func getWordlistLanguage(wordID int64) (string, error) {
 func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[DefinitionFetcherArgs]) error {
 	// Validate user eligibility before processing
 	if err := ValidateWordEligibilityForWorkers(job.Args.WordId); err != nil {
-		common.Logger.Warn("User not eligible for definition fetching", 
+		common.Logger.Warn("User not eligible for definition fetching",
 			"wordId", job.Args.WordId, "error", err)
 		// Cancel job permanently - user needs to upgrade
 		return river.JobCancel(err)

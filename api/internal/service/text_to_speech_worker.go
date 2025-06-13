@@ -29,7 +29,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 
 	// Validate user eligibility before processing
 	if err := ValidateWordEligibilityForWorkers(job.Args.WordId); err != nil {
-		logger.Warn("User not eligible for text-to-speech", 
+		logger.Warn("User not eligible for text-to-speech",
 			"wordId", job.Args.WordId, "error", err)
 		// Cancel job permanently - user needs to upgrade
 		return river.JobCancel(err)
