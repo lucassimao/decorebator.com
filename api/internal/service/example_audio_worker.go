@@ -18,6 +18,7 @@ import (
 type ExampleAudioArgs struct {
 	DefinitionID int64 `json:"definitionId"`
 	WordID       int64 `json:"wordId"`
+	UserID       int64 `json:"userId"`
 }
 
 func (ExampleAudioArgs) Kind() string { return "ExampleAudio" }
@@ -32,12 +33,12 @@ type ExampleAudioItem struct {
 }
 
 func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAudioArgs]) error {
-	logger := common.Logger.With("worker", "exampleaudio", "DefinitionID", job.Args.DefinitionID, "WordID", job.Args.WordID)
+	logger := common.Logger.With("worker", "exampleaudio", "DefinitionID", job.Args.DefinitionID, "WordID", job.Args.WordID, "UserId", job.Args.UserID)
 
 	// Validate user eligibility before processing
-	if err := ValidateWordEligibilityForWorkers(job.Args.WordID); err != nil {
+	if err := ValidateUserEligibilityForWorkers(job.Args.UserID); err != nil {
 		logger.Warn("User not eligible for example audio generation",
-			"wordId", job.Args.WordID, "error", err)
+			"userId", job.Args.UserID, "wordId", job.Args.WordID, "error", err)
 		// Cancel job permanently - user needs to upgrade
 		return river.JobCancel(err)
 	}

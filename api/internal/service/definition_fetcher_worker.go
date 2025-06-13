@@ -16,6 +16,7 @@ import (
 
 type DefinitionFetcherArgs struct {
 	WordId      int64        `json:"wordId"`
+	UserID      *int64       `json:"userId"`
 	ErrorReport *ErrorReport `json:"errorReport"`
 }
 
@@ -48,12 +49,14 @@ func getWordlistLanguage(wordID int64) (string, error) {
 }
 
 func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[DefinitionFetcherArgs]) error {
-	// Validate user eligibility before processing
-	if err := ValidateWordEligibilityForWorkers(job.Args.WordId); err != nil {
-		common.Logger.Warn("User not eligible for definition fetching",
-			"wordId", job.Args.WordId, "error", err)
-		// Cancel job permanently - user needs to upgrade
-		return river.JobCancel(err)
+	// Validate user eligibility before processing (skip if userId is nil - admin context)
+	if job.Args.UserID != nil {
+		if err := ValidateUserEligibilityForWorkers(*job.Args.UserID); err != nil {
+			common.Logger.Warn("User not eligible for definition fetching",
+				"userId", *job.Args.UserID, "wordId", job.Args.WordId, "error", err)
+			// Cancel job permanently - user needs to upgrade
+			return river.JobCancel(err)
+		}
 	}
 	logger := common.Logger.With("worker", "DefinitionFetcher")
 	wordID := job.Args.WordId
@@ -139,14 +142,19 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	for _, definition := range definitions {
 		definitionIds = append(definitionIds, definition.ID)
 
-		_, err = TriggerGenerateImageWorker(definition.ID, nil, &tx)
+		var userIDValue int64
+		if job.Args.UserID != nil {
+			userIDValue = *job.Args.UserID
+		}
+
+		_, err = TriggerGenerateImageWorker(definition.ID, userIDValue, nil, &tx)
 
 		if err != nil {
 			logger.Error("failed to trigger image generator", "definitionId", definition.ID, "error", err)
 		}
 
 		// Queue example audio generation job
-		err = QueueExampleAudioJob(definition.ID, word.ID, &tx)
+		err = QueueExampleAudioJob(definition.ID, word.ID, job.Args.UserID, &tx)
 		if err != nil {
 			logger.Error("failed to queue example audio job", "definitionId", definition.ID, "wordId", word.ID, "error", err)
 		}
@@ -257,15 +265,21 @@ func validateDefinitions(word string, definitions []*model.Definition) []string 
 }
 
 // QueueExampleAudioJob queues a job to generate example audio for a definition
-func QueueExampleAudioJob(definitionID int64, wordID int64, tx *pgx.Tx) error {
+func QueueExampleAudioJob(definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error {
 	client, err := GetRiverClient()
 	if err != nil {
 		return err
 	}
 
+	var userIDValue int64
+	if userID != nil {
+		userIDValue = *userID
+	}
+
 	args := ExampleAudioArgs{
 		DefinitionID: definitionID,
 		WordID:       wordID,
+		UserID:       userIDValue,
 	}
 
 	opts := &river.InsertOpts{

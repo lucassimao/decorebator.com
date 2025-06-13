@@ -38,13 +38,6 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 		return errors.New("validation failed")
 	}
 
-	// Check user eligibility for worker processing (free tier limits)
-	if validationErr := ValidateUserEligibilityForWorkers(userId); validationErr != nil {
-		logger.Warn("User not eligible for error report processing",
-			"userId", userId, "error", validationErr)
-		return validationErr
-	}
-
 	db, err := common.GetDBConnection()
 	if err != nil {
 		return err
@@ -90,17 +83,17 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 	switch errorType {
 	case SoundNotPlaying:
 		report = ErrorReport{WordId: &wordID, UserId: userId}
-		_, err = TriggerTextToSpeechWorker(wordID, &report, &tx)
+		_, err = TriggerTextToSpeechWorker(wordID, userId, &report, &tx)
 
 	case UnrelatedImage, MissingImage:
 		report = ErrorReport{DefinitionId: &definitionID, UserId: userId}
-		_, err = TriggerGenerateImageWorker(definitionID, &report, &tx)
+		_, err = TriggerGenerateImageWorker(definitionID, userId, &report, &tx)
 
 	case UnrelatedExample, UnrelatedMeaning:
 		err = DeleteWordDefinitions(wordID, &tx)
 		if err == nil {
 			report = ErrorReport{WordId: &wordID, UserId: userId}
-			_, err = TriggerFetchDefinitionWorker(wordID, &report, &tx)
+			_, err = TriggerFetchDefinitionWorker(wordID, &userId, &report, &tx)
 		}
 	default:
 		err = fmt.Errorf("invalid error type %s", errorType)

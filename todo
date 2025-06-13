@@ -91,6 +91,11 @@
     [x]  New Icon
     [ ]  browserstack testing
          - checkout redirect from android is not working
+         - Audio is playing in loop
+         - If you loop through all definitions, then the quiz gets stuck
+         - word from example is not playing for shrill. is it working anyways?
+         - Fix SignUp screen - use transparent PNG as the login scren
+         - Fix splashscreen
 
 # V2
 [ ] Security plan OWASP
