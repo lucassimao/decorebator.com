@@ -21,47 +21,55 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Helper to create test user
+	// Helper to create test user using service layer
 	createTestUser := func(email string, plan model.SubscriptionPlan) int64 {
-		var userID int64
-		err := db.QueryRow(ctx, `
-			INSERT INTO users (email, first_name, last_name, password_hash, subscription_plan)
-			VALUES ($1, 'Test', 'User', 'hash', $2)
-			RETURNING id`,
-			email, plan).Scan(&userID)
+		userDTO := model.CreateUserDTO{
+			Email:     email,
+			FirstName: "Test",
+			LastName:  "User",
+			Password:  "password123",
+		}
+		user, err := service.SaveUser(userDTO, ctx)
 		require.NoError(t, err)
-		return userID
+
+		// Update subscription plan if not free
+		if plan != model.PlanFree {
+			err := db.Exec(ctx, "UPDATE users SET subscription_plan = $1 WHERE id = $2", plan, user.ID)
+			require.NoError(t, err)
+		}
+
+		return user.ID
 	}
 
-	// Helper to create wordlist
+	// Helper to create wordlist using service layer
 	createWordlist := func(userID int64, name string) int64 {
-		var wordlistID int64
-		err := db.QueryRow(ctx, `
-			INSERT INTO wordlists (name, description, user_id, language_code)
-			VALUES ($1, $2, $3, 'en')
-			RETURNING id`,
-			name, "Test wordlist description", userID).Scan(&wordlistID)
+		wordlistDTO := model.CreateWordlistDTO{
+			Name:         name,
+			Description:  "Test wordlist description",
+			UserID:       userID,
+			LanguageCode: "en",
+		}
+		wordlist, err := service.SaveWordlist(wordlistDTO, ctx)
 		require.NoError(t, err)
-		return wordlistID
+		return wordlist.ID
 	}
 
-	// Helper to create word
+	// Helper to create word using service layer
 	createWord := func(userID, wordlistID int64, name string) int64 {
-		var wordID int64
-		err := db.QueryRow(ctx, `
-			INSERT INTO words (name, user_id, wordlist_id, learned)
-			VALUES ($1, $2, $3, false)
-			RETURNING id`,
-			name, userID, wordlistID).Scan(&wordID)
+		wordDTO := model.CreateWordDTO{
+			Name:       name,
+			UserID:     userID,
+			WordlistID: wordlistID,
+		}
+		word, err := service.SaveWord(wordDTO, ctx)
 		require.NoError(t, err)
-		return wordID
+		return word.ID
 	}
 
-	// Cleanup function
+	// Cleanup function using service layer
 	cleanup := func(userID int64) {
-		db.Exec(ctx, "DELETE FROM words WHERE user_id = $1", userID)
-		db.Exec(ctx, "DELETE FROM wordlists WHERE user_id = $1", userID)
-		db.Exec(ctx, "DELETE FROM users WHERE id = $1", userID)
+		// Use service layer for cleanup - this will cascade delete wordlists and words
+		service.Delete(userID, ctx)
 	}
 
 	t.Run("Premium users have no restrictions", func(t *testing.T) {
