@@ -80,7 +80,19 @@ export async function getWordlistOverviewStats(
 ): Promise<OverviewStats> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/overview`;
   const body = await callAPI<{ stats: OverviewStats }>("GET", endpoint);
-  return body.stats;
+  
+  // Ensure valid stats structure with safe defaults
+  const stats = body.stats || {};
+  return {
+    totalWords: stats.totalWords || 0,
+    wordsMastered: stats.wordsMastered || 0,
+    averageMastery: stats.averageMastery || 0,
+    bestStreak: stats.bestStreak || 0,
+    currentStreak: stats.currentStreak || 0,
+    wordsStudiedToday: stats.wordsStudiedToday || 0,
+    quizzesToday: stats.quizzesToday || 0,
+    accuracyToday: stats.accuracyToday || 0,
+  };
 }
 
 // 2) Get word mastery for a specific wordlist
@@ -89,7 +101,7 @@ export async function getWordMastery(
 ): Promise<WordMasteryStats[]> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/mastery`;
   const payload = await callAPI<{ stats: WordMasteryStats[] }>("GET", endpoint);
-  return payload.stats;
+  return payload.stats || [];
 }
 
 // 3) Get learning progress for the last N days
@@ -102,7 +114,7 @@ export async function getLearningProgress(
     "GET",
     endpoint,
   );
-  return payload.progress;
+  return payload.progress || [];
 }
 
 // 4) Get quiz performance across all quiz types for a specific wordlist
@@ -114,7 +126,7 @@ export async function getQuizPerformance(
     "GET",
     endpoint,
   );
-  return payload.quizPerformance;
+  return payload.quizPerformance || [];
 }
 
 // 5) Get wordlist progress summary with mastery-based calculations
@@ -138,14 +150,17 @@ export function calculateWordlistProgressFromMastery(
   wordlistId: number,
   wordMasteryStats: WordMasteryStats[],
 ): WordlistProgressSummary {
-  const totalWords = wordMasteryStats.length;
-  const wordsMastered = wordMasteryStats.filter(
-    (word) => word.masteryLevel >= 0.8, // Consider 80%+ as mastered
+  // Safety check: ensure wordMasteryStats is valid array
+  const safeStats = Array.isArray(wordMasteryStats) ? wordMasteryStats : [];
+  
+  const totalWords = safeStats.length;
+  const wordsMastered = safeStats.filter(
+    (word) => word && typeof word.masteryLevel === 'number' && word.masteryLevel >= 0.8, // Consider 80%+ as mastered
   ).length;
 
   const averageMastery =
     totalWords > 0
-      ? wordMasteryStats.reduce((sum, word) => sum + word.masteryLevel, 0) /
+      ? safeStats.reduce((sum, word) => sum + (word?.masteryLevel || 0), 0) /
         totalWords
       : 0;
 
@@ -166,7 +181,17 @@ export async function getCurrentBoxDistribution(
   wordlistId: number,
 ): Promise<BoxDistributionResponse> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/current-distribution`;
-  return await callAPI<BoxDistributionResponse>("GET", endpoint);
+  const response = await callAPI<BoxDistributionResponse>("GET", endpoint);
+  
+  // Ensure valid response structure
+  return {
+    wordlistId: response.wordlistId || wordlistId,
+    distribution: response.distribution || {
+      box1: 0, box2: 0, box3: 0, box4: 0,
+      box5: 0, box6: 0, box7: 0
+    },
+    totalWords: response.totalWords || 0,
+  };
 }
 
 // 7) Get historical box distribution for a wordlist
@@ -175,7 +200,14 @@ export async function getHistoricalBoxDistribution(
   days: number = 30,
 ): Promise<HistoricalBoxDistributionResponse> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/distribution?days=${days}`;
-  return await callAPI<HistoricalBoxDistributionResponse>("GET", endpoint);
+  const response = await callAPI<HistoricalBoxDistributionResponse>("GET", endpoint);
+  
+  // Ensure valid response structure  
+  return {
+    wordlistId: response.wordlistId || wordlistId,
+    days: response.days || days,
+    distribution: Array.isArray(response.distribution) ? response.distribution : [],
+  };
 }
 
 // 8) Get practice time for a wordlist
@@ -184,7 +216,14 @@ export async function getPracticeTime(
   days: number = 7,
 ): Promise<PracticeTimeResponse> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/practice-time?days=${days}`;
-  return await callAPI<PracticeTimeResponse>("GET", endpoint);
+  const response = await callAPI<PracticeTimeResponse>("GET", endpoint);
+  
+  // Ensure valid response structure
+  return {
+    wordlistId: response.wordlistId || wordlistId,
+    days: response.days || days,
+    practiceTime: Array.isArray(response.practiceTime) ? response.practiceTime : [],
+  };
 }
 
 // 9) Get progress summary for all wordlists - NEW BATCH ENDPOINT
@@ -205,5 +244,10 @@ export interface ProgressSummaryResponse {
 
 export async function getProgressSummary(): Promise<ProgressSummaryResponse> {
   const endpoint = `${BASE_URL}/analytics/progress-summary`;
-  return await callAPI<ProgressSummaryResponse>("GET", endpoint);
+  const response = await callAPI<ProgressSummaryResponse>("GET", endpoint);
+  
+  // Ensure valid response structure - this is critical for DashboardStats
+  return {
+    wordlists: Array.isArray(response.wordlists) ? response.wordlists : [],
+  };
 }

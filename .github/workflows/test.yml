@@ -2,12 +2,10 @@ name: Integration Tests
 
 on:
   push:
-    branches: [ master, main, develop ]
     paths:
       - 'api/**'
       - '.github/workflows/test.yml'
   pull_request:
-    branches: [ master, main, develop ]
     paths:
       - 'api/**'
       - '.github/workflows/test.yml'

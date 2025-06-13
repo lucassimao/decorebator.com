@@ -82,6 +82,11 @@ func getWordMastery(c *gin.Context) {
 		return
 	}
 
+	// Ensure stats is never nil - return empty array if no data
+	if stats == nil {
+		stats = []model.WordMasteryStats{}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"wordlist_id": wordlistID,
 		"stats":       stats,
@@ -134,6 +139,11 @@ func getLearningProgress(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch progress"})
 		return
+	}
+
+	// Ensure progress is never nil - return empty array if no data
+	if progress == nil {
+		progress = []model.LearningProgressStats{}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -191,6 +201,11 @@ func getBoxDistributionHistory(c *gin.Context) {
 		return
 	}
 
+	// Ensure distribution is never nil - return empty array if no data
+	if distribution == nil {
+		distribution = []map[string]interface{}{}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"wordlistId":   wordlistID,
 		"days":         days,
@@ -238,6 +253,11 @@ func getQuizTypePerformance(c *gin.Context) {
 		return
 	}
 
+	// Ensure performance is never nil - return empty array if no data
+	if performance == nil {
+		performance = []model.QuizTypePerformance{}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"wordlistId":      wordlistID,
 		"quizPerformance": performance,
@@ -282,6 +302,14 @@ func getCurrentBoxDistribution(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch distribution"})
 		return
+	}
+
+	// Ensure distribution is never nil - return empty distribution if no data
+	if distribution == nil {
+		distribution = &model.BoxDistribution{
+			Box1Count: 0, Box2Count: 0, Box3Count: 0, Box4Count: 0,
+			Box5Count: 0, Box6Count: 0, Box7Count: 0, TotalWords: 0,
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -339,6 +367,11 @@ func getPracticeTime(c *gin.Context) {
 		return
 	}
 
+	// Ensure practiceTime is never nil - return empty array if no data
+	if practiceTime == nil {
+		practiceTime = []model.PracticeTimeStats{}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"wordlistId":   wordlistID,
 		"days":         days,
@@ -386,6 +419,15 @@ func getWordlistOverviewStats(c *gin.Context) {
 		return
 	}
 
+	// Ensure stats is never nil - return safe defaults if no data
+	if stats == nil {
+		stats = &model.WordlistStats{
+			TotalWords: 0, WordsMastered: 0, AverageMastery: nil,
+			BestStreak: nil, WordsStudiedToday: 0, QuizzesToday: 0,
+			AccuracyToday: nil, CurrentStreak: 0,
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"wordlistId": wordlistID,
 		"stats":      stats,
@@ -418,6 +460,13 @@ func getProgressSummary(c *gin.Context) {
 		common.Logger.Error("Failed to fetch progress summary", "error", err, "userID", userID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch progress summary"})
 		return
+	}
+
+	// Ensure summary is never nil and has valid wordlists array
+	if summary == nil {
+		summary = &model.ProgressSummaryResponse{Wordlists: []model.WordlistProgress{}}
+	} else if summary.Wordlists == nil {
+		summary.Wordlists = []model.WordlistProgress{}
 	}
 
 	c.JSON(http.StatusOK, summary)
