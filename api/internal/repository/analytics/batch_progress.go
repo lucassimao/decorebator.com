@@ -91,7 +91,7 @@ func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, u
 							
 							-- Recursive case: go back one day if practice exists
 							SELECT 
-								sd.practice_date - INTERVAL '1 day',
+								(sd.practice_date - INTERVAL '1 day')::date,
 								sd.day_count + 1
 							FROM streak_days sd
 							WHERE EXISTS (
@@ -99,7 +99,7 @@ func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, u
 								FROM learning_progress lp 
 								WHERE lp.user_id = $1 
 								  AND lp.wordlist_id = ra.wordlist_id
-								  AND lp.date = sd.practice_date - INTERVAL '1 day'
+								  AND lp.date = (sd.practice_date - INTERVAL '1 day')::date
 								  AND lp.total_quiz_attempts > 0
 							)
 							  AND sd.day_count < 365  -- Prevent infinite recursion

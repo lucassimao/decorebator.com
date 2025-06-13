@@ -175,7 +175,7 @@ func (r *LearningProgressRepository) GetWordlistTodayStats(ctx context.Context, 
 // - No recent activity: returns 0
 func (r *LearningProgressRepository) GetWordlistCurrentStreak(ctx context.Context, userID, wordlistID int64) (int, error) {
 	query := `
-		WITH recent_activity AS (
+		WITH RECURSIVE recent_activity AS (
 			SELECT MAX(date) as last_practice_date
 			FROM learning_progress
 			WHERE user_id = $1 
@@ -183,7 +183,7 @@ func (r *LearningProgressRepository) GetWordlistCurrentStreak(ctx context.Contex
 			  AND total_quiz_attempts > 0
 			  AND date >= CURRENT_DATE - INTERVAL '365 days'  -- Limit search to past year
 		),
-		RECURSIVE streak_days(practice_date, day_count) AS (
+		streak_days(practice_date, day_count) AS (
 			-- Base case: start from most recent practice date
 			SELECT 
 				ra.last_practice_date,
@@ -196,7 +196,7 @@ func (r *LearningProgressRepository) GetWordlistCurrentStreak(ctx context.Contex
 			
 			-- Recursive case: go back one day if practice exists
 			SELECT 
-				sd.practice_date - INTERVAL '1 day',
+				(sd.practice_date - INTERVAL '1 day')::date,
 				sd.day_count + 1
 			FROM streak_days sd
 			WHERE EXISTS (
@@ -204,7 +204,7 @@ func (r *LearningProgressRepository) GetWordlistCurrentStreak(ctx context.Contex
 				FROM learning_progress lp 
 				WHERE lp.user_id = $1 
 				  AND lp.wordlist_id = $2
-				  AND lp.date = sd.practice_date - INTERVAL '1 day'
+				  AND lp.date = (sd.practice_date - INTERVAL '1 day')::date
 				  AND lp.total_quiz_attempts > 0
 			)
 			  AND sd.day_count < 365  -- Prevent infinite recursion

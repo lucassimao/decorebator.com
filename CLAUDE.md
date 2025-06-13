@@ -344,6 +344,48 @@ make coverage-html
 - Run single test: `npm test -- --testNamePattern="test name"`
 - To run tests without watch mode: `jest` (directly)
 
+### Database Query Testing (CRITICAL REQUIREMENT)
+
+**ALL database query changes MUST be tested directly in PostgreSQL before committing code.**
+
+#### Why Direct Database Testing is Required
+- **PostgreSQL Version Compatibility**: Ensures queries work on our specific PostgreSQL 15+ version
+- **Syntax Validation**: Catches PostgreSQL-specific syntax errors that Go compilation cannot detect
+- **Performance Verification**: Validates query execution plans and performance characteristics
+- **Data Type Compatibility**: Prevents runtime type mismatch errors (e.g., date vs timestamp issues)
+- **Complex Query Validation**: Essential for recursive CTEs, complex JOINs, and advanced SQL features
+
+#### Testing Process for Database Changes
+1. **Extract SQL Queries**: Copy exact SQL from Go repository files
+2. **Test with Real Parameters**: Replace `$1`, `$2` placeholders with actual test values
+3. **Verify on Target Database**: Test on same PostgreSQL version used in production
+4. **Check Execution Plans**: Use `EXPLAIN` to verify query performance
+5. **Test Edge Cases**: Verify with NULL values, empty results, and boundary conditions
+
+#### Database Connection for Testing
+```bash
+# Use development database for testing
+psql "postgresql://user:pass@localhost:5432/decorebator?sslmode=disable"
+
+# Test query syntax with EXPLAIN
+EXPLAIN (FORMAT TEXT) SELECT ...;
+
+# Test with actual data
+SELECT ... WHERE user_id = 137 AND wordlist_id = 100;
+```
+
+#### Recent Database Query Fixes (January 2025)
+- **Type Mismatch Errors**: Fixed `(sd.practice_date - INTERVAL '1 day')::date` casting in recursive CTEs
+- **Recursive CTE Syntax**: Corrected `WITH RECURSIVE` placement in multi-CTE queries
+- **Comprehensive Testing**: All 15 analytics repository queries verified working correctly
+
+#### Files Requiring Special Attention
+- `internal/repository/analytics/` - Complex analytical queries with CTEs and recursive logic
+- Any repository files with raw SQL strings - Syntax must be PostgreSQL-compatible
+- Migration files - Must be tested on exact target PostgreSQL version
+
+**NEVER commit database query changes without direct PostgreSQL testing verification.**
+
 ## CI/CD Pipeline
 
 ### GitHub Actions Workflow
@@ -401,6 +443,30 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - **Analytics Caching**: Implemented Redis-based caching layer (`analytics_cached.go`) with automatic invalidation
 - **Database Indexes**: Added performance indexes for analytics queries (migration 000044)
 - **SQL Injection Fixes**: Resolved SQL injection vulnerabilities in analytics queries
+
+### Analytics Data Quality Fixes (January 2025)
+- **Fixed Critical Streak Calculation Bug**: Corrected broken gap-and-islands logic in `GetWordlistCurrentStreak` and `GetAllWordlistsProgress`
+  - **Issue**: `ROW_NUMBER() OVER (ORDER BY date DESC)` caused consecutive dates to have different group identifiers
+  - **Solution**: Implemented recursive CTE approach that accurately counts backwards from most recent practice
+  - **Files**: `learning_progress.go:176-212`, `batch_progress.go:73-112`
+- **Corrected Box Distribution Logic**: Fixed inconsistent word progress tracking across analytics
+  - **Issue**: Used `MIN(box_id)` showing worst performance instead of best progress per word
+  - **Solution**: Changed to `MAX(box_id)` for consistency with word mastery analytics showing highest achievement
+  - **Files**: `box_distribution.go:45-64`, `box_distribution.go:109-130`
+- **Enhanced Response Time Filtering**: Added consistent outlier detection across all analytics functions
+  - **Practice Time**: Filters to 200ms-30s range excluding accidental clicks and timeouts
+  - **Quiz Performance**: Added NULL handling with COALESCE protection and realistic range filtering
+  - **Files**: `dashboard_stats.go:48-72`, `quiz_performance.go:72-81`, `quiz_performance.go:127-150`
+- **Fixed Word Count Inconsistencies**: Corrected mastery statistics to count all words in wordlists
+  - **Issue**: Only counted words with existing mastery data, not total wordlist size
+  - **Solution**: Use LEFT JOIN from words table to include all active learning words
+  - **Files**: `word_mastery.go:152-162`
+- **Database Schema Cleanup**: Removed unused `study_time_seconds` column that was never maintained
+  - **Migration**: `000046_remove_unused_study_time_seconds.up.sql`
+  - **Code Cleanup**: Updated models and queries to remove dead code references
+  - **Files**: `learning_progress.go:88`, `analytics_types.go:73-81`
+- **Added Consistent Learned Words Filtering**: All analytics now exclude completed words (`w.learned = FALSE`)
+  - **Impact**: Analytics focus on active learning progress, consistent across all functions
 
 ### Planned Modernization (Priority Order)
 1. **Week 1-2**: Remove `init()` functions, create repository interfaces
@@ -483,6 +549,8 @@ P(selection) = base_probability + (time_progress * (1 - base_probability))
 - read mobile/docs/mobile-app-architecture.md for detailed mobile app patterns and design system
 - Update README.md right after introducing major features or refactorings
 - Update relevant documentation after making architectural changes
+- Fixed critical analytics bugs in January 2025: streak calculations, box distribution logic, response time filtering, word count inconsistencies, and removed unused database fields
+- Analytics repository functions reviewed and corrected: GetWordlistCurrentStreak, GetAllWordlistsProgress, GetCurrentBoxDistribution, GetPracticeTime, GetQuizTypePerformance, GetWordlistMasteryStats
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.

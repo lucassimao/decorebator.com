@@ -284,6 +284,30 @@ npm run lint          # Run linter
   - Per-request service instantiation for clean separation of concerns
   - Fixed cache invalidation key matching for `isPremium` flag in query keys
 
+### Analytics Data Quality & Bug Fixes (January 2025)
+- **Fixed Critical Streak Calculation Bug**: Corrected broken gap-and-islands logic that prevented proper consecutive day counting
+  - **Before**: Used incorrect `ROW_NUMBER() OVER (ORDER BY date DESC)` causing consecutive dates to have different groups
+  - **After**: Implemented recursive CTE approach that accurately counts backwards from most recent practice
+  - **Impact**: Current streaks now correctly calculate for both individual wordlists and batch progress
+- **Corrected Box Distribution Logic**: Fixed inconsistent word progress tracking across analytics
+  - **Before**: Used `MIN(box_id)` showing worst performance per word
+  - **After**: Uses `MAX(box_id)` showing best progress achieved, consistent with word mastery analytics
+  - **Impact**: Box distribution charts now accurately represent learning advancement
+- **Enhanced Response Time Filtering**: Added outlier detection across all analytics functions
+  - **Practice Time**: Filters response times to 200ms-30s range excluding accidental clicks and timeouts
+  - **Quiz Performance**: Consistent filtering with NULL handling and COALESCE protection
+  - **Impact**: More realistic practice time estimates and performance metrics
+- **Fixed Word Count Inconsistencies**: Corrected mastery statistics to count all words in wordlists
+  - **Before**: Only counted words with existing mastery data
+  - **After**: Counts all active learning words using LEFT JOIN, consistent with other analytics
+  - **Impact**: Accurate total word counts matching actual wordlist sizes
+- **Removed Unused Database Fields**: Cleaned up `study_time_seconds` column that was never maintained
+  - **Migration 000046**: Safely removes unused field from `learning_progress` table
+  - **Code Cleanup**: Updated models and queries to remove dead code references
+  - **Impact**: Cleaner schema and reduced confusion about practice time data sources
+- **Added Learned Words Filtering**: Consistent filtering across all analytics to exclude completed words
+  - **Impact**: All analytics now focus on active learning progress, not completed words
+
 ### Multi-Language Definition Support
 - **7 Supported Languages**: English, Spanish, French, German, Italian, Portuguese, Japanese
 - **Native Language Processing**: AI generates definitions in the target language with proper grammar
