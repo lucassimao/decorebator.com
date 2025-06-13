@@ -90,20 +90,9 @@
     [x]  Decorebator Landing Page Redesign
     [x]  New Icon
     [ ]  browserstack testing
-         - checkout redirect from android is not working
-         - Audio is playing in loop
-<<<<<<< Updated upstream
          - If you loop through all definitions, then the quiz gets stuck
          - word from example is not playing for shrill. is it working anyways?
          - Fix SignUp screen - use transparent PNG as the login scren
-         - Fix splashscreen
-=======
-         - remove splashscreen
-
-         - If you loop through all definitions, then the quiz gets stuck
-         - word from example is not playing for shrill. is it working anyways?
-         - Fix SignUp screen - use transparent PNG as the login scren
->>>>>>> Stashed changes
 
 # V2
 [ ] Security plan OWASP

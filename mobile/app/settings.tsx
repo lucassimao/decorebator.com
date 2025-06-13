@@ -7,9 +7,10 @@ import * as AuthSession from "expo-auth-session";
 import * as MailComposer from "expo-mail-composer";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   ActivityIndicator,
   Alert,
@@ -75,6 +76,7 @@ const SettingsScreen: React.FC = () => {
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<PlanRecurrence | null>(null);
   const { t } = useTranslation();
+  const previousSubscriptionRef = useRef<string | null>(null);
 
   const PRICING_PLANS = React.useMemo(() => getPricingPlans(t), [t]);
 
@@ -95,11 +97,36 @@ const SettingsScreen: React.FC = () => {
     refetchOnWindowFocus: "always",
   });
 
+  // Detect subscription changes when returning to the screen (e.g., after Stripe checkout)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (subscription) {
+        const currentPlan = subscription.plan;
+
+        // Check if subscription upgraded from free to premium
+        if (
+          previousSubscriptionRef.current === "free" &&
+          currentPlan !== "free" &&
+          currentPlan !== null
+        ) {
+          // Show success message for completed checkout
+          Alert.alert(
+            t("common.success"),
+            t("settings.subscription.activatedSuccess"),
+          );
+        }
+
+        // Update the reference for next comparison
+        previousSubscriptionRef.current = currentPlan;
+      }
+    }, [subscription, t]),
+  );
+
   const checkoutMutation = useMutation({
     mutationFn: async (plan: PlanRecurrence) => {
       const redirectUri = AuthSession.makeRedirectUri({
         scheme: "decorebator",
-        path: "stripe",
+        path: "settings", // Use settings path instead of stripe
       });
 
       const res = await subscriptionsApi.createCheckoutSession(
@@ -115,12 +142,13 @@ const SettingsScreen: React.FC = () => {
         data.redirectUri,
       );
 
-      console.log(result);
+      console.log("Stripe checkout result:", result);
 
       // Handle all possible result types for better Android compatibility
       if (result.type === "success") {
-        // Refresh subscription data
-        refetchSubscription();
+        // Direct success - refresh subscription and show success message
+        console.log("Checkout completed successfully");
+        await refetchSubscription();
         Alert.alert(
           t("common.success"),
           t("settings.subscription.activatedSuccess"),
@@ -130,12 +158,17 @@ const SettingsScreen: React.FC = () => {
         console.log("Checkout cancelled by user");
       } else if (result.type === "dismiss") {
         // Browser was dismissed - could be user closing or redirect completion
-        // Silently refresh subscription to check if payment succeeded
+        // This is common on Android when Stripe redirects back to the app
         console.log("Browser dismissed, checking subscription status");
 
-        // Refresh subscription without showing success alert
-        // If payment succeeded, the subscription query will reflect the change
-        refetchSubscription();
+        // Wait a moment for any background processing, then refresh
+        setTimeout(async () => {
+          await refetchSubscription();
+
+          // Check if subscription changed from free to premium
+          // Note: We'll let the subscription query refetch handle the UI update
+          console.log("Subscription status checked after browser dismiss");
+        }, 1000);
       }
     },
     onError: () => {

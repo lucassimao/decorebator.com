@@ -160,9 +160,9 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
     >
       <LinearGradient
         colors={[
-          "rgba(255, 255, 255, 0.98)", 
-          "rgba(255, 251, 246, 0.95)", 
-          "rgba(255, 248, 240, 0.92)"
+          "rgba(255, 255, 255, 0.98)",
+          "rgba(255, 251, 246, 0.95)",
+          "rgba(255, 248, 240, 0.92)",
         ]}
         style={styles.statsContainer}
         start={{ x: 0, y: 0 }}
