@@ -15,7 +15,7 @@ import (
 
 type TextToSpeechArgs struct {
 	WordId      int64        `json:"wordId"`
-	UserID      int64        `json:"userId"`
+	UserID      *int64       `json:"userId"`
 	ErrorReport *ErrorReport `json:"errorReport"`
 }
 
@@ -28,12 +28,14 @@ type TextToSpeechWorker struct {
 func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpeechArgs]) error {
 	logger := common.Logger.With("worker", "texttospeech", "WordId", job.Args.WordId, "UserId", job.Args.UserID)
 
-	// Validate user eligibility before processing
-	if err := ValidateUserEligibilityForWorkers(job.Args.UserID); err != nil {
-		logger.Warn("User not eligible for text-to-speech",
-			"userId", job.Args.UserID, "wordId", job.Args.WordId, "error", err)
-		// Cancel job permanently - user needs to upgrade
-		return river.JobCancel(err)
+	// Validate user eligibility before processing (skip for admin/system jobs)
+	if job.Args.UserID != nil {
+		if err := ValidateUserEligibilityForWorkers(*job.Args.UserID); err != nil {
+			logger.Warn("User not eligible for text-to-speech",
+				"userId", *job.Args.UserID, "wordId", job.Args.WordId, "error", err)
+			// Cancel job permanently - user needs to upgrade
+			return river.JobCancel(err)
+		}
 	}
 
 	word, err := GetWordById(job.Args.WordId)

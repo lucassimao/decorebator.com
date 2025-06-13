@@ -142,12 +142,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	for _, definition := range definitions {
 		definitionIds = append(definitionIds, definition.ID)
 
-		var userIDValue int64
-		if job.Args.UserID != nil {
-			userIDValue = *job.Args.UserID
-		}
-
-		_, err = TriggerGenerateImageWorker(definition.ID, userIDValue, nil, &tx)
+		_, err = TriggerGenerateImageWorker(definition.ID, job.Args.UserID, nil, &tx)
 
 		if err != nil {
 			logger.Error("failed to trigger image generator", "definitionId", definition.ID, "error", err)
@@ -271,15 +266,10 @@ func QueueExampleAudioJob(definitionID int64, wordID int64, userID *int64, tx *p
 		return err
 	}
 
-	var userIDValue int64
-	if userID != nil {
-		userIDValue = *userID
-	}
-
 	args := ExampleAudioArgs{
 		DefinitionID: definitionID,
 		WordID:       wordID,
-		UserID:       userIDValue,
+		UserID:       userID,
 	}
 
 	opts := &river.InsertOpts{

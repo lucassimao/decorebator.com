@@ -16,9 +16,9 @@ import (
 )
 
 type ExampleAudioArgs struct {
-	DefinitionID int64 `json:"definitionId"`
-	WordID       int64 `json:"wordId"`
-	UserID       int64 `json:"userId"`
+	DefinitionID int64  `json:"definitionId"`
+	WordID       int64  `json:"wordId"`
+	UserID       *int64 `json:"userId"`
 }
 
 func (ExampleAudioArgs) Kind() string { return "ExampleAudio" }
@@ -35,12 +35,14 @@ type ExampleAudioItem struct {
 func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAudioArgs]) error {
 	logger := common.Logger.With("worker", "exampleaudio", "DefinitionID", job.Args.DefinitionID, "WordID", job.Args.WordID, "UserId", job.Args.UserID)
 
-	// Validate user eligibility before processing
-	if err := ValidateUserEligibilityForWorkers(job.Args.UserID); err != nil {
-		logger.Warn("User not eligible for example audio generation",
-			"userId", job.Args.UserID, "wordId", job.Args.WordID, "error", err)
-		// Cancel job permanently - user needs to upgrade
-		return river.JobCancel(err)
+	// Validate user eligibility before processing (skip for admin/system jobs)
+	if job.Args.UserID != nil {
+		if err := ValidateUserEligibilityForWorkers(*job.Args.UserID); err != nil {
+			logger.Warn("User not eligible for example audio generation",
+				"userId", *job.Args.UserID, "wordId", job.Args.WordID, "error", err)
+			// Cancel job permanently - user needs to upgrade
+			return river.JobCancel(err)
+		}
 	}
 
 	// 1. Fetch definition from database

@@ -86,7 +86,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		latestAudioURL, err = wordRepository.GetLatestAudioUrl(trimmedName)
 
 		if err != nil {
-			_, _ = TriggerTextToSpeechWorker(word.ID, word.UserID, nil, &tx)
+			_, _ = TriggerTextToSpeechWorker(word.ID, &word.UserID, nil, &tx)
 			err = nil // fine if triggering the worker fails somehow
 		} else {
 			word.AudioURL = latestAudioURL
@@ -94,7 +94,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		}
 	} else {
 		_, _ = TriggerFetchDefinitionWorker(word.ID, &word.UserID, nil, &tx)
-		_, _ = TriggerTextToSpeechWorker(word.ID, word.UserID, nil, &tx)
+		_, _ = TriggerTextToSpeechWorker(word.ID, &word.UserID, nil, &tx)
 	}
 
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 	"github.com/riverqueue/river/rivertype"
 )
 
-func TriggerGenerateImageWorker(definitionID int64, userID int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
+func TriggerGenerateImageWorker(definitionID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: IMAGE_GENERATOR_QUEUE,
 	}
@@ -22,7 +22,7 @@ func TriggerGenerateImageWorker(definitionID int64, userID int64, errorReport *E
 	}, tx)
 }
 
-func TriggerTextToSpeechWorker(wordID int64, userID int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
+func TriggerTextToSpeechWorker(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: TEXT_TO_SPEECH_QUEUE,
 	}

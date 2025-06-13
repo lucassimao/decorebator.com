@@ -19,13 +19,8 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt64("userID")
-	if userID == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
-		return
-	}
-
-	jobID, err := service.TriggerGenerateImageWorker(definitionId, userID, nil, nil)
+	// Admin context - pass nil userId to bypass validation
+	jobID, err := service.TriggerGenerateImageWorker(definitionId, nil, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "definitionId": definitionId})
@@ -43,13 +38,8 @@ func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt64("userID")
-	if userID == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
-		return
-	}
-
-	jobID, err := service.TriggerTextToSpeechWorker(wordId, userID, nil, nil)
+	// Admin context - pass nil userId to bypass validation
+	jobID, err := service.TriggerTextToSpeechWorker(wordId, nil, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordId})
