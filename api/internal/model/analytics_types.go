@@ -78,7 +78,6 @@ type LearningProgressStats struct {
 	TotalAttempts    int       `json:"totalAttempts"`
 	AccuracyRate     float64   `json:"accuracyRate"`
 	AvgResponseMs    int       `json:"avgResponseMs"`
-	StudyTimeSeconds int       `json:"studyTimeSeconds"`
 }
 
 // BoxDistribution represents the current distribution of words across Leitner boxes

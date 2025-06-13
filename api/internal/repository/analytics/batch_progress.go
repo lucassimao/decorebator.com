@@ -20,22 +20,24 @@ func NewBatchProgressRepository(db *pgxpool.Pool) *BatchProgressRepository {
 
 // GetAllWordlistsProgress retrieves comprehensive progress summary for all user's wordlists.
 //
-// Query: Complex multi-CTE query combining wordlist statistics and streak calculations:
-// 1. wordlist_stats CTE: Aggregates word mastery and activity data per wordlist
-//    - JOINs words → wordlists → word_mastery → learning_progress
+// Query: Optimized multi-CTE query combining wordlist statistics and streak calculations:
+// 1. wordlist_stats CTE: Aggregates word mastery data per wordlist
+//    - JOINs wordlists → words → word_mastery (more efficient join order)
 //    - COUNT(DISTINCT w.id) as total_words in each wordlist
 //    - COUNT(DISTINCT CASE WHEN mastery_level >= 0.8) as words_mastered (80% threshold)
 //    - AVG(mastery_level) * 100 as progress_percent with NULL handling
-//    - MAX(date) as last_activity_date from learning_progress
-//    - Filters: learned = FALSE (active words only)
+//    - Filters: user_id match and learned = FALSE (active words only)
 //
-// 2. streaks CTE: Calculates current consecutive practice streaks using gap-and-island technique
-//    - Uses ROW_NUMBER() window function to identify consecutive date groups
-//    - Filters by 30-day window and active practice days (total_quiz_attempts > 0)
-//    - Groups consecutive dates with same streak_group identifier
-//    - Only includes current streak (ending on CURRENT_DATE)
+// 2. recent_activity CTE: Gets last practice date per wordlist
+//    - MAX(date) where total_quiz_attempts > 0 for actual practice days
 //
-// 3. Main SELECT: Combines wordlist stats with streak data using LEFT JOIN
+// 3. streaks CTE: Calculates current consecutive practice streaks per wordlist
+//    - Uses recursive CTE approach for accurate streak counting
+//    - Starts from most recent practice date (today or earlier)
+//    - Counts backwards while consecutive practice days exist
+//    - Handles edge cases: practiced today vs yesterday vs no recent activity
+//
+// 4. Main SELECT: Combines all CTEs using LEFT JOINs
 //    - Returns: wordlist_id, name, language_code, totals, mastery stats, streak, last_activity
 //
 // Used for dashboard overview showing all wordlists with comprehensive progress metrics.
@@ -43,7 +45,7 @@ func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, u
 	query := `
 		WITH wordlist_stats AS (
 			SELECT 
-				w.wordlist_id,
+				wl.id as wordlist_id,
 				wl.name as wordlist_name,
 				wl.language_code,
 				COUNT(DISTINCT w.id) as total_words,
@@ -52,44 +54,61 @@ func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, u
 					WHEN COUNT(DISTINCT w.id) > 0 
 					THEN ROUND(AVG(COALESCE(wm.mastery_level, 0)) * 100, 2)
 					ELSE 0 
-				END as progress_percent,
-				MAX(lp.date) as last_activity_date
-			FROM words w
-			JOIN wordlists wl ON w.wordlist_id = wl.id
-			LEFT JOIN word_mastery wm ON w.id = wm.word_id AND w.user_id = wm.user_id
-			LEFT JOIN learning_progress lp ON w.wordlist_id = lp.wordlist_id AND w.user_id = lp.user_id
-			WHERE w.user_id = $1 
-				AND w.learned = FALSE
-			GROUP BY w.wordlist_id, wl.name, wl.language_code
+				END as progress_percent
+			FROM wordlists wl
+			JOIN words w ON wl.id = w.wordlist_id AND w.user_id = $1 AND w.learned = FALSE
+			LEFT JOIN word_mastery wm ON w.id = wm.word_id AND wm.user_id = $1
+			WHERE wl.user_id = $1
+			GROUP BY wl.id, wl.name, wl.language_code
 		),
-		streaks AS (
+		recent_activity AS (
 			SELECT 
 				wordlist_id,
-				COUNT(*) as current_streak
-			FROM (
-				SELECT 
-					wordlist_id,
-					date,
-					date - (ROW_NUMBER() OVER (PARTITION BY wordlist_id ORDER BY date DESC))::int AS streak_group
-				FROM learning_progress
-				WHERE user_id = $1 
-					AND total_quiz_attempts > 0
-					AND date >= CURRENT_DATE - INTERVAL '30 days'
-			) streak_calc
-			WHERE streak_group = (
-				SELECT streak_group 
-				FROM (
-					SELECT 
-						date - (ROW_NUMBER() OVER (ORDER BY date DESC))::int AS streak_group
-					FROM learning_progress
-					WHERE user_id = $1 
-						AND wordlist_id = streak_calc.wordlist_id
-						AND total_quiz_attempts > 0
-				) sg
-				WHERE date = CURRENT_DATE
-				LIMIT 1
-			)
+				MAX(date) as last_activity_date,
+				MAX(CASE WHEN total_quiz_attempts > 0 THEN date END) as last_practice_date
+			FROM learning_progress
+			WHERE user_id = $1
 			GROUP BY wordlist_id
+		),
+		streaks AS (
+			SELECT DISTINCT ON (wordlist_id)
+				wordlist_id,
+				current_streak
+			FROM (
+				-- For each wordlist, calculate its current streak
+				SELECT 
+					ra.wordlist_id,
+					(
+						WITH RECURSIVE streak_days(practice_date, day_count) AS (
+							-- Base case: start from most recent practice date
+							SELECT 
+								ra.last_practice_date,
+								1
+							WHERE ra.last_practice_date IS NOT NULL
+							  AND ra.last_practice_date >= CURRENT_DATE - INTERVAL '1 day'
+							
+							UNION ALL
+							
+							-- Recursive case: go back one day if practice exists
+							SELECT 
+								sd.practice_date - INTERVAL '1 day',
+								sd.day_count + 1
+							FROM streak_days sd
+							WHERE EXISTS (
+								SELECT 1 
+								FROM learning_progress lp 
+								WHERE lp.user_id = $1 
+								  AND lp.wordlist_id = ra.wordlist_id
+								  AND lp.date = sd.practice_date - INTERVAL '1 day'
+								  AND lp.total_quiz_attempts > 0
+							)
+							  AND sd.day_count < 365  -- Prevent infinite recursion
+						)
+						SELECT COALESCE(MAX(day_count), 0)
+						FROM streak_days
+					) as current_streak
+				FROM recent_activity ra
+			) streak_calc
 		)
 		SELECT 
 			ws.wordlist_id,
@@ -99,8 +118,9 @@ func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, u
 			ws.words_mastered,
 			ws.progress_percent,
 			COALESCE(s.current_streak, 0) as current_streak,
-			ws.last_activity_date
+			ra.last_activity_date
 		FROM wordlist_stats ws
+		LEFT JOIN recent_activity ra ON ws.wordlist_id = ra.wordlist_id
 		LEFT JOIN streaks s ON ws.wordlist_id = s.wordlist_id
 		ORDER BY ws.wordlist_id;
 	`
