@@ -8,11 +8,6 @@
     "scheme": "decorebator",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/images/splash2.gif",
-      "resizeMode": "contain",
-      "backgroundColor": "#f7f7f7"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],

@@ -47,9 +47,10 @@ export const QuizContent: React.FC<QuizContentProps> = ({
   );
   const loadingDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Reset player
+  // Reset player when audio finishes
   useEffect(() => {
     if (didJustFinish) {
+      player.pause();
       player.seekTo(0);
     }
   }, [didJustFinish, player]);
@@ -58,6 +59,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
   useEffect(() => {
     if (quiz?.audioURL) {
       player.replace(quiz.audioURL);
+      player.pause();
       player.seekTo(0);
     }
   }, [quiz?.audioURL, player]);
@@ -93,7 +95,18 @@ export const QuizContent: React.FC<QuizContentProps> = ({
     };
   }, []);
 
-  const playAudio = () => player.play();
+  const playAudio = async () => {
+    try {
+      if (isPlaying) {
+        player.pause();
+        player.seekTo(0);
+      } else {
+        player.play();
+      }
+    } catch (error) {
+      console.error("Error playing audio:", error);
+    }
+  };
 
   const retryImageLoad = () => {
     setImageError(false);

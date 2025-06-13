@@ -432,3 +432,34 @@ const { data, isLoading, error, refetch } = useQuery({
 5. **Progressive Web App**: Web platform support
 
 This architecture provides a scalable, maintainable, and user-friendly foundation for vocabulary learning with room for future enhancements and feature additions.
+
+## Cross-Reference Documentation
+
+This architecture document is part of a comprehensive documentation suite:
+
+### **Related Documentation:**
+- `ui-design-system.md` - Comprehensive UI patterns, color system, and component architecture
+- `state-management-patterns.md` - Advanced state management, caching strategies, and data flow
+- `animation-and-interactions.md` - Animation systems, gesture handling, and performance optimization
+- `testing-and-development-patterns.md` - Testing strategies, development workflows, and quality assurance
+- `offline-feature.md` - Offline functionality implementation details
+- `offline-flashcards.md` - Offline flashcard system architecture
+- `image-loading-improvements.md` - Image loading optimizations and error handling
+- `timezone-date-handling.md` - Date handling and timezone management
+
+### **Key Implementation Files:**
+- `theme/colors.ts` - Centralized color system
+- `hooks/useOffline.tsx` - Network state management
+- `hooks/useErrorReporting.ts` - Error reporting system
+- `utils/offlineManager.ts` - Offline data management
+- `components/analytics/` - Modular analytics system
+- `components/quiz/` - Quiz interface components
+- `components/flashcard/` - Flashcard system components
+
+### **Recent Updates & Fixes:**
+- **Audio Playback**: Fixed audio auto-replay issues in quiz and flashcard components
+- **Splash Screen**: Completely removed splash screen configuration for immediate app loading
+- **Dashboard Stats**: Enhanced visual design with brand-colored shadows and improved styling
+- **Analytics System**: Implemented tier-based caching and real-time updates for premium users
+- **Offline Support**: Comprehensive offline functionality for premium users with 72-hour cache expiry
+- **Error Reporting**: Rate-limited user feedback system with context-aware error types

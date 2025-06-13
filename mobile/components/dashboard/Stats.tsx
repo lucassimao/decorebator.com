@@ -159,7 +159,11 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
       style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
     >
       <LinearGradient
-        colors={["rgba(255, 255, 255, 0.9)", "rgba(255, 255, 255, 0.7)"]}
+        colors={[
+          "rgba(255, 255, 255, 0.98)", 
+          "rgba(255, 251, 246, 0.95)", 
+          "rgba(255, 248, 240, 0.92)"
+        ]}
         style={styles.statsContainer}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -278,16 +282,22 @@ export default DashboardStats;
 
 const styles = StyleSheet.create({
   statsContainer: {
-    borderRadius: 20,
-    paddingVertical: 20,
-    paddingHorizontal: 16,
+    borderRadius: 24,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
     marginHorizontal: 20,
     marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 5,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    // Enhanced shadow for iOS
+    shadowColor: "#FF7B54",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    // Enhanced shadow for Android
+    elevation: 12,
+    // Subtle inner glow effect
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
   },
   loadingContainer: {
     marginHorizontal: 20,
@@ -296,10 +306,17 @@ const styles = StyleSheet.create({
   skeletonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    borderRadius: 20,
-    paddingVertical: 20,
-    paddingHorizontal: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 24,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    shadowColor: "#FF7B54",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 8,
   },
   skeletonItem: {
     alignItems: "center",
@@ -329,11 +346,18 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 24,
     paddingVertical: 30,
     marginHorizontal: 20,
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255, 107, 107, 0.2)",
+    shadowColor: "#FF6B6B",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 8,
   },
   errorText: {
     fontSize: 16,
@@ -403,17 +427,25 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 60,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: "rgba(255, 123, 84, 0.15)",
     marginHorizontal: 16,
+    borderRadius: 0.5,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 123, 84, 0.1)",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(255, 123, 84, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 123, 84, 0.15)",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12,
+    shadowColor: "#FF7B54",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   labelContainer: {
     minHeight: 32,

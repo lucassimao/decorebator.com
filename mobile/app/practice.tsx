@@ -219,6 +219,7 @@ const FlashcardPractice: React.FC = () => {
 
     if (currentWord?.audioURL) {
       player.replace(currentWord?.audioURL);
+      player.pause();
       player.seekTo(0);
     }
 

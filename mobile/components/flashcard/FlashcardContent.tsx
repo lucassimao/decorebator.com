@@ -58,6 +58,7 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
   // Reset player when audio finishes
   useEffect(() => {
     if (didJustFinish) {
+      player.pause();
       player.seekTo(0);
     }
   }, [didJustFinish, player]);
@@ -71,6 +72,7 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
   useEffect(() => {
     if (currentWord?.audioURL) {
       player.replace(currentWord.audioURL);
+      player.pause();
       player.seekTo(0);
     }
   }, [currentWord?.audioURL, player]);
@@ -89,7 +91,12 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
     if (!currentWord?.audioURL) return;
 
     try {
-      player.play();
+      if (isPlaying) {
+        player.pause();
+        player.seekTo(0);
+      } else {
+        player.play();
+      }
     } catch (error) {
       console.error("Error playing audio:", error);
     }
