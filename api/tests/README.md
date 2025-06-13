@@ -385,15 +385,62 @@ Coverage results are uploaded to Codecov for tracking over time.
 
 ### Fixtures
 
-Test fixtures provide consistent, realistic data:
+**IMPORTANT**: Use production model types from `api/internal/model/` instead of custom test types.
 
+❌ **Current (Deprecated)**: Custom test types that duplicate production models
 ```go
-// Load predefined test data
+// DON'T DO THIS - creates maintenance burden and type drift
+type TestUser struct {
+    ID               int64  `json:"id"`
+    Email            string `json:"email"`
+    FirstName        string `json:"firstName"`  // Different from production
+    SubscriptionPlan string `json:"subscriptionPlan"`  // Missing proper enum type
+}
+```
+
+✅ **Recommended**: Use actual production models
+```go
+import "decorebator.com/internal/model"
+
+// Use real production types for realistic testing
+func GenerateTestUser() *model.User {
+    fake := gofakeit.New(0)
+    return &model.User{
+        FirstName:        fake.FirstName(),
+        LastName:         fake.LastName(),
+        Email:           fake.Email(),
+        PasswordHash:    "$2a$10$...", // Use real bcrypt hash
+        SubscriptionPlan: model.SubscriptionPlanFree,  // Use proper enum
+    }
+}
+
+func GenerateTestWordlist(userID int64) *model.Wordlist {
+    fake := gofakeit.New(0)
+    return &model.Wordlist{
+        Name:         fake.Sentence(3),
+        Description:  fake.Sentence(10),
+        UserID:       userID,
+        LanguageCode: "en",
+        // pgtype fields will be set by database operations
+    }
+}
+```
+
+**Benefits of Using Production Models**:
+- **Type Safety**: Tests use exact same types as production
+- **Automatic Updates**: Model changes automatically propagate to tests
+- **Realistic Testing**: Tests exercise actual JSON marshaling/unmarshaling logic
+- **No Duplication**: Eliminates duplicate type definitions
+- **Better Coverage**: Tests cover model serialization code paths
+
+### Test Data Generation
+```go
+// Load predefined test data using production models
 server.SeedTestData(t, "users", "wordlists", "words")
 
-// Generate random test data
-user := setup.GenerateTestUser()
-wordlist := setup.GenerateTestWordlist(userID)
+// Generate random test data with production types
+user := setup.GenerateTestUser()          // Returns *model.User
+wordlist := setup.GenerateTestWordlist(userID)  // Returns *model.Wordlist
 ```
 
 ### Data Isolation
@@ -413,8 +460,55 @@ Tests use data that closely resembles production:
 
 ## Best Practices
 
+### Migration from Test Types to Production Models
+
+**Action Required**: The current `tests/integration/setup/fixtures.go` file contains custom test types that should be replaced with production models.
+
+**Migration Steps**:
+
+1. **Update fixture generation functions**:
+   ```go
+   // Before: Returns map[string]interface{}
+   func GenerateTestUser() map[string]interface{} { ... }
+   
+   // After: Returns actual production type
+   func GenerateTestUser() *model.User { ... }
+   ```
+
+2. **Update test code to use production types**:
+   ```go
+   // Before: Manual type casting and field access
+   userMap := setup.GenerateTestUser()
+   email := userMap["email"].(string)
+   
+   // After: Type-safe field access
+   user := setup.GenerateTestUser()
+   email := user.Email
+   ```
+
+3. **Remove custom test types**:
+   - Delete `TestUser`, `TestWordlist`, `TestWord`, `TestDefinition` from fixtures.go
+   - Update all references to use `model.User`, `model.Wordlist`, etc.
+
+4. **Handle complex fields properly**:
+   ```go
+   // Production models may have fields that need special handling
+   user := &model.User{
+       // Simple fields work as before
+       FirstName: fake.FirstName(),
+       Email:     fake.Email(),
+       
+       // Handle enum types properly
+       SubscriptionPlan: model.SubscriptionPlanFree,
+       
+       // pgtype fields will be handled by database operations
+       // Don't set CreatedAt/UpdatedAt manually
+   }
+   ```
+
 ### Do's ✅
 
+- **Production Models**: Always use `api/internal/model/` types instead of custom test types
 - **External Environment**: Always source environment variables externally, never hardcode in tests
 - **Real API Routes**: Use actual production routes in integration tests
 - **Descriptive Naming**: Follow the `Test[Subject]_[Scenario]_[Expected]` convention

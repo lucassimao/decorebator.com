@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	httphandlers "decorebator.com/internal/http"
 	"decorebator.com/tests/integration/setup"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -286,9 +287,9 @@ func TestSignupLoginPerformance(t *testing.T) {
 	t.Run("signup performance", func(t *testing.T) {
 		start := time.Now()
 
-		user := setup.GenerateTestUser()
+		signupInput := setup.GenerateSignupInput()
 		server.Expect.POST("/users").
-			WithJSON(user).
+			WithJSON(signupInput).
 			Expect().
 			Status(http.StatusCreated)
 
@@ -301,17 +302,17 @@ func TestSignupLoginPerformance(t *testing.T) {
 
 	t.Run("login performance", func(t *testing.T) {
 		// Create user first
-		user := setup.GenerateTestUser()
+		signupInput := setup.GenerateSignupInput()
 		server.Expect.POST("/users").
-			WithJSON(user).
+			WithJSON(signupInput).
 			Expect().
 			Status(http.StatusCreated)
 
 		start := time.Now()
 
-		credentials := map[string]interface{}{
-			"email":    user["email"],
-			"password": user["password"],
+		credentials := httphandlers.LoginInput{
+			Email:    signupInput.Email,
+			Password: signupInput.Password,
 		}
 
 		server.Expect.POST("/login").
@@ -335,11 +336,11 @@ func TestSignupLoginPerformance(t *testing.T) {
 		// Start concurrent signups
 		for i := 0; i < numConcurrent; i++ {
 			go func(index int) {
-				user := setup.GenerateTestUser()
-				user["email"] = fmt.Sprintf("concurrent%d@example.com", index)
+				signupInput := setup.GenerateSignupInput()
+				signupInput.Email = fmt.Sprintf("concurrent%d@example.com", index)
 
 				resp := server.Expect.POST("/users").
-					WithJSON(user).
+					WithJSON(signupInput).
 					Expect()
 
 				if resp.Raw().StatusCode != http.StatusCreated { //nolint:bodyclose // httpexpect handles body closing

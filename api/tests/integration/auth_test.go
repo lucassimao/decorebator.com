@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	httphandlers "decorebator.com/internal/http"
 	"decorebator.com/tests/integration/setup"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -103,41 +104,41 @@ func TestUserLogin(t *testing.T) {
 	defer server.Cleanup()
 
 	// Create a test user first
-	user := setup.GenerateTestUser()
+	signupInput := setup.GenerateSignupInput()
 	server.Expect.POST("/users").
-		WithJSON(user).
+		WithJSON(signupInput).
 		Expect().
 		Status(http.StatusCreated)
 
 	tests := []struct {
 		name           string
-		credentials    map[string]interface{}
+		credentials    interface{}
 		expectedStatus int
 		shouldHaveJWT  bool
 	}{
 		{
 			name: "successful login",
-			credentials: map[string]interface{}{
-				"email":    user["email"],
-				"password": user["password"],
+			credentials: httphandlers.LoginInput{
+				Email:    signupInput.Email,
+				Password: signupInput.Password,
 			},
 			expectedStatus: http.StatusOK,
 			shouldHaveJWT:  true,
 		},
 		{
 			name: "wrong password",
-			credentials: map[string]interface{}{
-				"email":    user["email"],
-				"password": "wrongpassword",
+			credentials: httphandlers.LoginInput{
+				Email:    signupInput.Email,
+				Password: "wrongpassword",
 			},
 			expectedStatus: http.StatusBadRequest, // API returns 400 for wrong password
 			shouldHaveJWT:  false,
 		},
 		{
 			name: "non-existent user",
-			credentials: map[string]interface{}{
-				"email":    "nonexistent@example.com",
-				"password": "password123",
+			credentials: httphandlers.LoginInput{
+				Email:    "nonexistent@example.com",
+				Password: "password123",
 			},
 			expectedStatus: http.StatusBadRequest, // API returns 400 for non-existent user
 			shouldHaveJWT:  false,
@@ -145,7 +146,7 @@ func TestUserLogin(t *testing.T) {
 		{
 			name: "missing email",
 			credentials: map[string]interface{}{
-				"password": user["password"],
+				"password": signupInput.Password,
 			},
 			expectedStatus: http.StatusBadRequest,
 			shouldHaveJWT:  false,
@@ -153,7 +154,7 @@ func TestUserLogin(t *testing.T) {
 		{
 			name: "missing password",
 			credentials: map[string]interface{}{
-				"email": user["email"],
+				"email": signupInput.Email,
 			},
 			expectedStatus: http.StatusBadRequest,
 			shouldHaveJWT:  false,
@@ -234,16 +235,16 @@ func TestPasswordReset(t *testing.T) {
 	defer server.Cleanup()
 
 	// Create a test user
-	user := setup.GenerateTestUser()
+	signupInput := setup.GenerateSignupInput()
 	server.Expect.POST("/users").
-		WithJSON(user).
+		WithJSON(signupInput).
 		Expect().
 		Status(http.StatusCreated)
 
 	t.Run("request password reset", func(_ *testing.T) {
 		server.Expect.POST("/password/send-reset-email").
 			WithJSON(map[string]interface{}{
-				"email": user["email"],
+				"email": signupInput.Email,
 			}).
 			Expect().
 			Status(http.StatusOK)
@@ -379,15 +380,15 @@ func TestMultipleRequests(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
-	user := setup.GenerateTestUser()
+	signupInput := setup.GenerateSignupInput()
 
 	t.Run("multiple rapid registrations", func(t *testing.T) {
 		// Test multiple rapid registrations (no rate limiting implemented currently)
 		successCount := 0
 		for i := 0; i < 5; i++ {
-			testUser := setup.GenerateTestUser()
+			testSignupInput := setup.GenerateSignupInput()
 			response := server.Expect.POST("/users").
-				WithJSON(testUser).
+				WithJSON(testSignupInput).
 				Expect()
 
 			// All should succeed since no rate limiting is implemented
@@ -405,7 +406,7 @@ func TestMultipleRequests(t *testing.T) {
 	t.Run("multiple login attempts with wrong password", func(t *testing.T) {
 		// Create user first
 		server.Expect.POST("/users").
-			WithJSON(user).
+			WithJSON(signupInput).
 			Expect().
 			Status(http.StatusCreated)
 
@@ -413,9 +414,9 @@ func TestMultipleRequests(t *testing.T) {
 		unauthorizedCount := 0
 		for i := 0; i < 5; i++ {
 			response := server.Expect.POST("/login").
-				WithJSON(map[string]interface{}{
-					"email":    user["email"],
-					"password": "wrongpassword",
+				WithJSON(httphandlers.LoginInput{
+					Email:    signupInput.Email,
+					Password: "wrongpassword",
 				}).
 				Expect()
 

@@ -24,7 +24,7 @@ type SignupInput struct {
 	Password  string `json:"password" binding:"required,min=5"`
 }
 
-type loginInput struct {
+type LoginInput struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
@@ -117,7 +117,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 }
 
 func (h *UserRoutes) Login(c *gin.Context) {
-	var input loginInput
+	var input LoginInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

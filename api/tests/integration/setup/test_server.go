@@ -77,19 +77,19 @@ func NewTestServer(t *testing.T) *TestServer {
 
 // WithTestUser creates a test user and returns authentication token
 func (ts *TestServer) WithTestUser(_ *testing.T) string {
-	user := GenerateTestUser()
+	signupInput := GenerateSignupInput()
 
 	// Register user
 	ts.Expect.POST("/users").
-		WithJSON(user).
+		WithJSON(signupInput).
 		Expect().
 		Status(201)
 
 	// Login to get token
 	loginResp := ts.Expect.POST("/login").
-		WithJSON(map[string]interface{}{
-			"email":    user["email"],
-			"password": user["password"],
+		WithJSON(httphandlers.LoginInput{
+			Email:    signupInput.Email,
+			Password: signupInput.Password,
 		}).
 		Expect().
 		Status(200)
