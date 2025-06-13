@@ -27,6 +27,14 @@ type TextToSpeechWorker struct {
 func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpeechArgs]) error {
 	logger := common.Logger.With("worker", "texttospeech", "WordId", job.Args.WordId)
 
+	// Validate user eligibility before processing
+	if err := ValidateWordEligibilityForWorkers(job.Args.WordId); err != nil {
+		logger.Warn("User not eligible for text-to-speech", 
+			"wordId", job.Args.WordId, "error", err)
+		// Cancel job permanently - user needs to upgrade
+		return river.JobCancel(err)
+	}
+
 	word, err := GetWordById(job.Args.WordId)
 
 	if err != nil && errors.Is(err, common.NotFoundError{}) {

@@ -43,6 +43,11 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		return nil, common.BusinessError{Message: "words must be limited to 15 chars"}
 	}
 
+	// Validate user eligibility for workers before creating word
+	if err := ValidateUserEligibilityForWorkers(dto.UserID); err != nil {
+		return nil, err
+	}
+
 	tx, err := wordRepository.Db.Begin(ctx)
 
 	if err != nil {

@@ -90,6 +90,7 @@
     [x]  Decorebator Landing Page Redesign
     [x]  New Icon
     [ ]  browserstack testing
+         - checkout redirect from android is not working
 
 # V2
 [ ] Security plan OWASP

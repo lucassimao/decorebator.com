@@ -34,6 +34,14 @@ type ExampleAudioItem struct {
 func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAudioArgs]) error {
 	logger := common.Logger.With("worker", "exampleaudio", "DefinitionID", job.Args.DefinitionID, "WordID", job.Args.WordID)
 
+	// Validate user eligibility before processing
+	if err := ValidateWordEligibilityForWorkers(job.Args.WordID); err != nil {
+		logger.Warn("User not eligible for example audio generation", 
+			"wordId", job.Args.WordID, "error", err)
+		// Cancel job permanently - user needs to upgrade
+		return river.JobCancel(err)
+	}
+
 	// 1. Fetch definition from database
 	db, err := common.GetDBConnection()
 	if err != nil {

@@ -34,6 +34,14 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		definitionID = job.Args.DefinitionId
 	)
 
+	// Validate user eligibility before processing
+	if err := ValidateDefinitionEligibilityForWorkers(definitionID); err != nil {
+		logger.Warn("User not eligible for image generation", 
+			"definitionId", definitionID, "error", err)
+		// Cancel job permanently - user needs to upgrade
+		return river.JobCancel(err)
+	}
+
 	definition, err := GetDefinitionById(job.Args.DefinitionId)
 	if err != nil {
 		logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
