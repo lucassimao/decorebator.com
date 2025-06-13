@@ -18,7 +18,7 @@ if (__DEV__) {
 
 export {
   // Catch any errors thrown by the Layout component.
-   ErrorBoundary 
+  ErrorBoundary,
 } from "expo-router";
 
 export const unstable_settings = {
@@ -58,14 +58,14 @@ const queryClient = new QueryClient();
 function RootLayoutNav() {
   return (
     <I18nextProvider i18n={i18n}>
-        <QueryClientProvider client={queryClient}>
-          <LanguageInitializer />
-          <SnackbarProvider>
-            <UpgradePromptDialogProvider>
-              <PostHogProvider
-                apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
-                options={{ host: "https://us.i.posthog.com", disabled: __DEV__ }}
-              >
+      <QueryClientProvider client={queryClient}>
+        <LanguageInitializer />
+        <SnackbarProvider>
+          <UpgradePromptDialogProvider>
+            <PostHogProvider
+              apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
+              options={{ host: "https://us.i.posthog.com", disabled: __DEV__ }}
+            >
               <Stack>
                 <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen
@@ -105,10 +105,10 @@ function RootLayoutNav() {
                   options={{ headerShown: false }}
                 />
               </Stack>
-              </PostHogProvider>
-            </UpgradePromptDialogProvider>
-          </SnackbarProvider>
-        </QueryClientProvider>
+            </PostHogProvider>
+          </UpgradePromptDialogProvider>
+        </SnackbarProvider>
+      </QueryClientProvider>
     </I18nextProvider>
   );
 }

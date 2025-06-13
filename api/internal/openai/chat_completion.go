@@ -14,23 +14,24 @@ import (
 )
 
 type LanguageConfig struct {
-	Code                string
-	Name                string
-	Flag                string
-	PartOfSpeechList    []string
+	Code                 string
+	Name                 string
+	Flag                 string
+	PartOfSpeechList     []string
 	PartOfSpeechMappings map[string]string // Maps language-specific terms to normalized English
-	VerbTenses          []string
-	GrammarInstructions string
-	SpecialInstructions string
-	ExampleInstructions string
+	VerbTenses           []string
+	GrammarInstructions  string
+	SpecialInstructions  string
+	ExampleInstructions  string
 }
 
+//nolint
 var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 	"en": {
-		Code:                "en",
-		Name:                "English",
-		Flag:                "🇬🇧",
-		PartOfSpeechList:    []string{"noun", "pronoun", "verb", "phrasal verb", "adjective", "adverb", "preposition", "conjunction", "interjection"},
+		Code:             "en",
+		Name:             "English",
+		Flag:             "🇬🇧",
+		PartOfSpeechList: []string{"noun", "pronoun", "verb", "phrasal verb", "adjective", "adverb", "preposition", "conjunction", "interjection"},
 		PartOfSpeechMappings: map[string]string{
 			"noun":         "noun",
 			"pronoun":      "pronoun",
@@ -48,10 +49,10 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		ExampleInstructions: "Wrap the target word in square brackets [word] in all example sentences.",
 	},
 	"es": {
-		Code:                "es",
-		Name:                "Spanish",
-		Flag:                "🇪🇸",
-		PartOfSpeechList:    []string{"sustantivo", "pronombre", "verbo", "adjetivo", "adverbio", "preposición", "conjunción", "interjección"},
+		Code:             "es",
+		Name:             "Spanish",
+		Flag:             "🇪🇸",
+		PartOfSpeechList: []string{"sustantivo", "pronombre", "verbo", "adjetivo", "adverbio", "preposición", "conjunción", "interjección"},
 		PartOfSpeechMappings: map[string]string{
 			"sustantivo":   "noun",
 			"pronombre":    "pronoun",
@@ -72,10 +73,10 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		ExampleInstructions: "Encierra la palabra objetivo entre corchetes [palabra] en todas las oraciones de ejemplo.",
 	},
 	"fr": {
-		Code:                "fr",
-		Name:                "French",
-		Flag:                "🇫🇷",
-		PartOfSpeechList:    []string{"nom", "pronom", "verbe", "adjectif", "adverbe", "préposition", "conjonction", "interjection"},
+		Code:             "fr",
+		Name:             "French",
+		Flag:             "🇫🇷",
+		PartOfSpeechList: []string{"nom", "pronom", "verbe", "adjectif", "adverbe", "préposition", "conjonction", "interjection"},
 		PartOfSpeechMappings: map[string]string{
 			"nom":          "noun",
 			"pronom":       "pronoun",
@@ -86,7 +87,7 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 			"conjonction":  "conjunction",
 			"interjection": "interjection",
 			// Handle accented variations
-			"preposition":  "preposition",
+			"preposition": "preposition",
 		},
 		VerbTenses:          []string{"présent", "passé composé", "participe passé"},
 		GrammarInstructions: "Pour les verbes français, fournissez les formes du présent, passé composé et participe passé. Incluez les informations sur le genre pour les noms et adjectifs.",
@@ -94,10 +95,10 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		ExampleInstructions: "Encadrez le mot cible entre crochets [mot] dans toutes les phrases d'exemple.",
 	},
 	"de": {
-		Code:                "de",
-		Name:                "German",
-		Flag:                "🇩🇪",
-		PartOfSpeechList:    []string{"Substantiv", "Pronomen", "Verb", "Adjektiv", "Adverb", "Präposition", "Konjunktion", "Interjektion"},
+		Code:             "de",
+		Name:             "German",
+		Flag:             "🇩🇪",
+		PartOfSpeechList: []string{"Substantiv", "Pronomen", "Verb", "Adjektiv", "Adverb", "Präposition", "Konjunktion", "Interjektion"},
 		PartOfSpeechMappings: map[string]string{
 			"Substantiv":   "noun",
 			"Pronomen":     "pronoun",
@@ -114,10 +115,10 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		ExampleInstructions: "Setzen Sie das Zielwort in eckige Klammern [Wort] in allen Beispielsätzen.",
 	},
 	"it": {
-		Code:                "it",
-		Name:                "Italian",
-		Flag:                "🇮🇹",
-		PartOfSpeechList:    []string{"sostantivo", "pronome", "verbo", "aggettivo", "avverbio", "preposizione", "congiunzione", "interiezione"},
+		Code:             "it",
+		Name:             "Italian",
+		Flag:             "🇮🇹",
+		PartOfSpeechList: []string{"sostantivo", "pronome", "verbo", "aggettivo", "avverbio", "preposizione", "congiunzione", "interiezione"},
 		PartOfSpeechMappings: map[string]string{
 			"sostantivo":   "noun",
 			"pronome":      "pronoun",
@@ -134,10 +135,10 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		ExampleInstructions: "Racchiudere la parola target tra parentesi quadre [parola] in tutte le frasi di esempio.",
 	},
 	"pt": {
-		Code:                "pt",
-		Name:                "Portuguese",
-		Flag:                "🇵🇹",
-		PartOfSpeechList:    []string{"substantivo", "pronome", "verbo", "adjetivo", "advérbio", "preposição", "conjunção", "interjeição"},
+		Code:             "pt",
+		Name:             "Portuguese",
+		Flag:             "🇵🇹",
+		PartOfSpeechList: []string{"substantivo", "pronome", "verbo", "adjetivo", "advérbio", "preposição", "conjunção", "interjeição"},
 		PartOfSpeechMappings: map[string]string{
 			"substantivo": "noun",
 			"pronome":     "pronoun",
@@ -159,10 +160,10 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		ExampleInstructions: "Coloque a palavra-alvo entre colchetes [palavra] em todas as frases de exemplo.",
 	},
 	"ja": {
-		Code:                "ja",
-		Name:                "Japanese",
-		Flag:                "🇯🇵",
-		PartOfSpeechList:    []string{"名詞", "代名詞", "動詞", "形容詞", "副詞", "助詞", "接続詞", "感動詞"},
+		Code:             "ja",
+		Name:             "Japanese",
+		Flag:             "🇯🇵",
+		PartOfSpeechList: []string{"名詞", "代名詞", "動詞", "形容詞", "副詞", "助詞", "接続詞", "感動詞"},
 		PartOfSpeechMappings: map[string]string{
 			"名詞":  "noun",
 			"代名詞": "pronoun",
@@ -517,6 +518,7 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 	return schema, nil
 }
 
+//nolint
 var EXAMPLES_RESPONSE_SCHEMA = map[string]any{
 	"name":   "ExamplesResponse",
 	"strict": true,

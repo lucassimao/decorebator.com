@@ -64,12 +64,13 @@ const Dashboard: React.FC<DashboardProps> = () => {
   });
 
   // Fetch batch progress data
-  const { data: progressData, isLoading: progressLoading } = useWordlistProgress();
+  const { data: progressData, isLoading: progressLoading } =
+    useWordlistProgress();
 
   // Create progress map for O(1) lookup
   const progressMap = useMemo(() => {
     if (!progressData?.wordlists) return new Map();
-    return new Map(progressData.wordlists.map(p => [p.wordlistId, p]));
+    return new Map(progressData.wordlists.map((p) => [p.wordlistId, p]));
   }, [progressData]);
 
   const hasNoWordlist = wordlists && wordlists.length == 0;
@@ -168,9 +169,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
               isLoading ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="large" color="#FF7B54" />
-                  <Text style={styles.loadingText}>
-                    {t("common.loading")}
-                  </Text>
+                  <Text style={styles.loadingText}>{t("common.loading")}</Text>
                 </View>
               ) : (
                 <View style={styles.emptyContainer}>

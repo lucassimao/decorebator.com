@@ -32,14 +32,14 @@ func (h *ErrorReportRoutes) Create(c *gin.Context) {
 		// Handle cooldown errors specifically
 		if cooldownErr, ok := err.(service.CooldownError); ok {
 			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error":        cooldownErr.Message,
+				"error":         cooldownErr.Message,
 				"cooldownUntil": cooldownErr.CooldownUntil.Unix(),
-				"retryAfter":   int(cooldownErr.RetryAfter.Seconds()),
-				"windowType":   "cooldown", // Indicate this is a cooldown, not a rate limit
+				"retryAfter":    int(cooldownErr.RetryAfter.Seconds()),
+				"windowType":    "cooldown", // Indicate this is a cooldown, not a rate limit
 			})
 			return
 		}
-		
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Please try again later."})
 	} else {
 		c.JSON(http.StatusOK, gin.H{})

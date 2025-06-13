@@ -7,7 +7,6 @@ import (
 	"github.com/jackc/pgx/pgtype"
 )
 
-
 type Wordlist struct {
 	ID           int64              `json:"id"`
 	Name         string             `json:"name"`

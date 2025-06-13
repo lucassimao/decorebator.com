@@ -43,19 +43,23 @@ export const useErrorReporting = ({
     onError: (error) => {
       if (error instanceof ErrorReportRateLimitError) {
         let message: string;
-        
+
         if (error.windowType === "cooldown") {
           // Cooldown for specific error on this word
-          message = error.retryAfter 
-            ? t(`${context}.cooldownError`, { minutes: Math.ceil(error.retryAfter / 60) })
+          message = error.retryAfter
+            ? t(`${context}.cooldownError`, {
+                minutes: Math.ceil(error.retryAfter / 60),
+              })
             : error.message;
         } else {
           // Rate limit (hourly/daily)
-          message = error.retryAfter 
-            ? t(`${context}.rateLimitError`, { minutes: Math.ceil(error.retryAfter / 60) })
+          message = error.retryAfter
+            ? t(`${context}.rateLimitError`, {
+                minutes: Math.ceil(error.retryAfter / 60),
+              })
             : error.message;
         }
-        
+
         Alert.alert(t("common.error"), message);
       } else {
         Alert.alert(t("common.error"), t("offline.featureUnavailable"));

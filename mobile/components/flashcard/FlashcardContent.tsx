@@ -258,10 +258,7 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
           <View style={styles.cardContent}>
             <Text style={styles.wordText}>{currentWord?.name}</Text>
             {currentWord?.audioURL && (
-              <TouchableOpacity
-                style={styles.audioButton}
-                onPress={playAudio}
-              >
+              <TouchableOpacity style={styles.audioButton} onPress={playAudio}>
                 <Ionicons
                   name={isPlaying ? "pause-circle" : "play-circle"}
                   size={48}
@@ -289,10 +286,7 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
             isFlipped ? styles.cardBackVisible : null,
           ]}
         >
-          <Pressable
-            style={styles.cardTouchArea}
-            onPress={onFlip}
-          >
+          <Pressable style={styles.cardTouchArea} onPress={onFlip}>
             <ScrollView
               style={styles.definitionsScroll}
               contentContainerStyle={styles.definitionsScrollContent}

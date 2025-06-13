@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -14,20 +15,24 @@ func MinIOPUT(data []byte, bucketName, objectName, contentType string) (string, 
 	var endpoint string
 	var useSecure bool
 
-	switch Env.Env {
-	case Development:
-		endpoint = fmt.Sprintf("%s:%s", Env.MinioHost, Env.MinioPort)
+	env := os.Getenv("ENV")
+	minioHost := os.Getenv("MINIO_HOST")
+	minioPort := os.Getenv("MINIO_PORT")
+
+	switch env {
+	case "development":
+		endpoint = fmt.Sprintf("%s:%s", minioHost, minioPort)
 		useSecure = false
-	case Production:
-		endpoint = Env.MinioHost
+	case "production":
+		endpoint = minioHost
 		useSecure = true
 	default:
-		return "", fmt.Errorf("unsupported environment: %v", Env.Env)
+		return "", fmt.Errorf("unsupported environment: %v", env)
 	}
 
 	// Initialize minio client object
 	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(Env.MinioRootUser, Env.MinioRootPassword, ""),
+		Creds:  credentials.NewStaticV4(os.Getenv("MINIO_ROOT_USER"), os.Getenv("MINIO_ROOT_PASSWORD"), ""),
 		Secure: useSecure,
 	})
 	if err != nil {
@@ -48,13 +53,13 @@ func MinIOPUT(data []byte, bucketName, objectName, contentType string) (string, 
 
 	var publicURL string
 
-	switch Env.Env {
-	case Development:
-		publicURL = fmt.Sprintf("http://%s:%s/%s/%s", Env.MinioHost, Env.MinioPort, bucketName, objectName)
-	case Production:
-		publicURL = fmt.Sprintf("https://%s.%s/%s", bucketName, Env.MinioHost, objectName)
+	switch env {
+	case "development":
+		publicURL = fmt.Sprintf("http://%s:%s/%s/%s", minioHost, minioPort, bucketName, objectName)
+	case "production":
+		publicURL = fmt.Sprintf("https://%s.%s/%s", bucketName, minioHost, objectName)
 	default:
-		return "", fmt.Errorf("unsupported environment: %v", Env.Env)
+		return "", fmt.Errorf("unsupported environment: %v", env)
 	}
 
 	return publicURL, nil

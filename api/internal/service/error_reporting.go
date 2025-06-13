@@ -22,7 +22,7 @@ const (
 
 func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, userId int64, ctx context.Context) error {
 	logger := common.Logger.With("errorType", errorType, "wordID", wordID, "definitionID", definitionID, "userId", userId)
-	
+
 	// Log error report attempt for monitoring
 	logger.Info("Error report attempt",
 		"action", "error_report_attempt",
@@ -52,7 +52,7 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 		logger.Error("failed to check cooldown", "error", err)
 		return err
 	}
-	
+
 	if cooldownUntil != nil {
 		retryAfter := cooldownUntil.Sub(time.Now())
 		logger.Warn("Error report blocked by cooldown",
@@ -146,7 +146,7 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 		common.Logger.Error("failed to save error report", "error", err)
 		return err
 	}
-	
+
 	// Log successful error report for monitoring
 	logger.Info("Error report processed successfully",
 		"action", "error_report_success",
@@ -169,9 +169,9 @@ func DeleteUserErrorReports(userId int64) (int64, error) {
 
 // CooldownError represents an error when a cooldown is active
 type CooldownError struct {
-	Message      string
+	Message       string
 	CooldownUntil time.Time
-	RetryAfter   time.Duration
+	RetryAfter    time.Duration
 }
 
 func (e CooldownError) Error() string {

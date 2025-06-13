@@ -69,12 +69,24 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
   } = useWordlistProgress();
 
   // Transform progress summary to user stats format
-  const stats = progressSummary ? {
-    totalWords: progressSummary.wordlists.reduce((sum, wl) => sum + wl.totalWords, 0),
-    wordlists: progressSummary.wordlists.length,
-    wordsLearned: progressSummary.wordlists.reduce((sum, wl) => sum + wl.wordsMastered, 0),
-    currentStreak: Math.max(0, ...progressSummary.wordlists.map(wl => wl.currentStreak)) || undefined,
-  } : null;
+  const stats = progressSummary
+    ? {
+        totalWords: progressSummary.wordlists.reduce(
+          (sum, wl) => sum + wl.totalWords,
+          0,
+        ),
+        wordlists: progressSummary.wordlists.length,
+        wordsLearned: progressSummary.wordlists.reduce(
+          (sum, wl) => sum + wl.wordsMastered,
+          0,
+        ),
+        currentStreak:
+          Math.max(
+            0,
+            ...progressSummary.wordlists.map((wl) => wl.currentStreak),
+          ) || undefined,
+      }
+    : null;
 
   // Animation on load
   useEffect(() => {

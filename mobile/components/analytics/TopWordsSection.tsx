@@ -8,7 +8,9 @@ interface TopWordsSectionProps {
   wordMastery?: WordMasteryStats[];
 }
 
-export const TopWordsSection: React.FC<TopWordsSectionProps> = ({ wordMastery }) => {
+export const TopWordsSection: React.FC<TopWordsSectionProps> = ({
+  wordMastery,
+}) => {
   const { t } = useTranslation();
 
   return (

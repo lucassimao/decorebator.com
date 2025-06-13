@@ -84,7 +84,7 @@ func AuthenticateStatic(c *gin.Context) {
 
 	authorization := c.GetHeader("Authorization")
 
-	if authorization == "" || authorization != common.Env.StaticAuthentication {
+	if authorization == "" || authorization != os.Getenv("STATIC_AUTHENTICATION") {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Wrong credentials"})
 		return
 	}
@@ -149,7 +149,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 					}
 				}
 
-				if common.Env.Env == common.Production {
+				if os.Getenv("ENV") == "production" {
 					attrs = append(attrs, slog.Any("stack_trace", stackTrace))
 				} else {
 					fmt.Println(stackTrace)
@@ -165,7 +165,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 							"method": c.Request.Method,
 							"path":   c.FullPath(),
 						})
-						
+
 						// Add user context if available
 						if val, exists := c.Get("userID"); exists {
 							if userID, ok := val.(int64); ok {
@@ -174,7 +174,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 								})
 							}
 						}
-						
+
 						// Capture the exception
 						hub.CaptureException(err)
 					})

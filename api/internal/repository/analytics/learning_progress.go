@@ -23,12 +23,12 @@ func NewLearningProgressRepository(db *pgxpool.Pool) *LearningProgressRepository
 // Query: INSERT ... ON CONFLICT DO UPDATE pattern for real-time daily progress tracking:
 // - Inserts new record if user/wordlist/date combination doesn't exist with initial values
 // - Updates existing record with new quiz attempt data:
-//   * words_studied: Recalculates using COUNT(DISTINCT word_id) from quiz_performance for the date
-//   * total_quiz_attempts: Increments by 1 for each quiz attempt
-//   * correct_attempts: Increments by 1 if answer was correct
-//   * average_response_time_ms: Updates using weighted average formula:
+//   - words_studied: Recalculates using COUNT(DISTINCT word_id) from quiz_performance for the date
+//   - total_quiz_attempts: Increments by 1 for each quiz attempt
+//   - correct_attempts: Increments by 1 if answer was correct
+//   - average_response_time_ms: Updates using weighted average formula:
 //     (old_avg * old_count + new_time) / (old_count + 1)
-//   * updated_at: Sets to NOW() timestamp
+//   - updated_at: Sets to NOW() timestamp
 //
 // This maintains accurate daily learning statistics with real-time updates on each quiz attempt.
 func (r *LearningProgressRepository) UpsertLearningProgress(ctx context.Context, tx pgx.Tx, userID, wordlistID int64, date string, isCorrect bool, responseTimeMs int) error {
@@ -64,13 +64,13 @@ func (r *LearningProgressRepository) UpsertLearningProgress(ctx context.Context,
 // GetLearningProgress retrieves daily learning progress statistics for a specific time period.
 //
 // Query: SELECT from learning_progress table with date range filtering:
-// - Selects daily aggregated learning statistics for a specific wordlist and user
-// - Calculates accuracy_rate as percentage: (correct_attempts / total_quiz_attempts) * 100
-// - Handles division by zero with CASE WHEN total_quiz_attempts > 0 condition
-// - Filters by date range: date >= CURRENT_DATE - INTERVAL days
-// - Orders by date DESC to show most recent days first
-// - Returns: date, words_studied, words_mastered, total_quiz_attempts, accuracy_rate, 
-//   average_response_time_ms
+//   - Selects daily aggregated learning statistics for a specific wordlist and user
+//   - Calculates accuracy_rate as percentage: (correct_attempts / total_quiz_attempts) * 100
+//   - Handles division by zero with CASE WHEN total_quiz_attempts > 0 condition
+//   - Filters by date range: date >= CURRENT_DATE - INTERVAL days
+//   - Orders by date DESC to show most recent days first
+//   - Returns: date, words_studied, words_mastered, total_quiz_attempts, accuracy_rate,
+//     average_response_time_ms
 //
 // Used for analytics charts showing learning progress over time.
 func (r *LearningProgressRepository) GetLearningProgress(ctx context.Context, userID, wordlistID int64, days int) ([]model.LearningProgressStats, error) {
@@ -164,9 +164,10 @@ func (r *LearningProgressRepository) GetWordlistTodayStats(ctx context.Context, 
 // Query: Recursive approach counting consecutive days backwards from most recent activity:
 // 1. recent_activity CTE: Gets the most recent practice date (today or earlier)
 // 2. RECURSIVE CTE: Counts backwards day by day while practice exists
-//    - Starts from most recent practice date
-//    - Recursively goes back one day at a time
-//    - Stops when a day with no practice is found
+//   - Starts from most recent practice date
+//   - Recursively goes back one day at a time
+//   - Stops when a day with no practice is found
+//
 // 3. Returns total count of consecutive practice days
 //
 // This correctly handles cases where:

@@ -22,20 +22,20 @@ func NewBatchProgressRepository(db *pgxpool.Pool) *BatchProgressRepository {
 //
 // Query: Optimized multi-CTE query combining wordlist statistics and streak calculations:
 // 1. wordlist_stats CTE: Aggregates word mastery data per wordlist
-//    - JOINs wordlists → words → word_mastery (more efficient join order)
-//    - COUNT(DISTINCT w.id) as total_words in each wordlist
-//    - COUNT(DISTINCT CASE WHEN mastery_level >= 0.8) as words_mastered (80% threshold)
-//    - AVG(mastery_level) * 100 as progress_percent with NULL handling
-//    - Filters: user_id match and learned = FALSE (active words only)
+//   - JOINs wordlists → words → word_mastery (more efficient join order)
+//   - COUNT(DISTINCT w.id) as total_words in each wordlist
+//   - COUNT(DISTINCT CASE WHEN mastery_level >= 0.8) as words_mastered (80% threshold)
+//   - AVG(mastery_level) * 100 as progress_percent with NULL handling
+//   - Filters: user_id match and learned = FALSE (active words only)
 //
 // 2. recent_activity CTE: Gets last practice date per wordlist
-//    - MAX(date) where total_quiz_attempts > 0 for actual practice days
+//   - MAX(date) where total_quiz_attempts > 0 for actual practice days
 //
 // 3. streaks CTE: Calculates current consecutive practice streaks per wordlist
-//    - Uses recursive CTE approach for accurate streak counting
-//    - Starts from most recent practice date (today or earlier)
-//    - Counts backwards while consecutive practice days exist
-//    - Handles edge cases: practiced today vs yesterday vs no recent activity
+//   - Uses recursive CTE approach for accurate streak counting
+//   - Starts from most recent practice date (today or earlier)
+//   - Counts backwards while consecutive practice days exist
+//   - Handles edge cases: practiced today vs yesterday vs no recent activity
 //
 // 4. Main SELECT: Combines all CTEs using LEFT JOINs
 //    - Returns: wordlist_id, name, language_code, totals, mastery stats, streak, last_activity

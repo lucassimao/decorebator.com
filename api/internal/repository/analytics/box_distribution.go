@@ -23,13 +23,15 @@ func NewBoxDistributionRepository(db *pgxpool.Pool) *BoxDistributionRepository {
 //
 // Query: INSERT ... ON CONFLICT DO UPDATE with complex CTE for box distribution calculation:
 // 1. word_max_boxes CTE: Finds highest box level for each word across all its definitions
-//    - JOINs leitner_system_tracking with words table to filter by wordlist
-//    - Uses MAX(box_id) to get the highest Leitner box for each word (best progress achieved)
-//    - Filters out learned words (learned = FALSE) to focus on active learning
-//    - Groups by word_id since words can have multiple definitions at different box levels
+//   - JOINs leitner_system_tracking with words table to filter by wordlist
+//   - Uses MAX(box_id) to get the highest Leitner box for each word (best progress achieved)
+//   - Filters out learned words (learned = FALSE) to focus on active learning
+//   - Groups by word_id since words can have multiple definitions at different box levels
+//
 // 2. Main INSERT: Counts words at each box level (1-7) using conditional aggregation
-//    - Uses COUNT(CASE WHEN max_box_id = X THEN 1 END) pattern for each box
-//    - Sets snapshot_date to CURRENT_DATE for daily tracking
+//   - Uses COUNT(CASE WHEN max_box_id = X THEN 1 END) pattern for each box
+//   - Sets snapshot_date to CURRENT_DATE for daily tracking
+//
 // 3. ON CONFLICT: Updates existing daily snapshot with fresh counts
 //
 // This creates daily snapshots of word distribution across Leitner boxes for historical analysis.
@@ -91,13 +93,14 @@ func (r *BoxDistributionRepository) UpsertBoxDistribution(ctx context.Context, u
 //
 // Query: CTE-based word distribution calculation from leitner_system_tracking table:
 // 1. word_max_boxes CTE: Calculates highest box level for each word
-//    - JOINs leitner_system_tracking with words to filter by wordlist_id  
-//    - Uses MAX(box_id) since words can have multiple definitions at different box levels
-//    - Groups by word_id to get one entry per word (using the highest/best progress box level)
-//    - Filters out learned words (learned = FALSE) to focus on active learning
+//   - JOINs leitner_system_tracking with words to filter by wordlist_id
+//   - Uses MAX(box_id) since words can have multiple definitions at different box levels
+//   - Groups by word_id to get one entry per word (using the highest/best progress box level)
+//   - Filters out learned words (learned = FALSE) to focus on active learning
+//
 // 2. Main SELECT: Counts words at each box level using conditional aggregation
-//    - COUNT(CASE WHEN max_box_id = X THEN 1 END) pattern for boxes 1-7
-//    - COUNT(*) for total_words across all boxes
+//   - COUNT(CASE WHEN max_box_id = X THEN 1 END) pattern for boxes 1-7
+//   - COUNT(*) for total_words across all boxes
 //
 // Returns current BoxDistribution with counts for each box level and total words.
 // Used for real-time box distribution charts and progress visualization.

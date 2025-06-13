@@ -12,7 +12,6 @@ export type Wordlist = {
   wordsLearnedCount: number;
 };
 
-
 export type Word = {
   id: number;
   name: string;
@@ -84,7 +83,6 @@ export async function getUserWordlists() {
   const body = await callAPI<Wordlist[]>("GET", endpoint);
   return body;
 }
-
 
 export async function getWords(
   wordlistId: number,

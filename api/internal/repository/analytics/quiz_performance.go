@@ -19,7 +19,7 @@ func NewQuizPerformanceRepository(db *pgxpool.Pool) *QuizPerformanceRepository {
 }
 
 // RecordQuizPerformance records a quiz attempt in the quiz_performance table.
-// 
+//
 // Query: INSERT INTO quiz_performance with all quiz attempt details including:
 // - user_id, wordlist_id, word_id, definition_id, leitner_system_tracking_id
 // - quiz_type (e.g., "guess_meaning", "word_from_meaning", etc.)
@@ -53,8 +53,9 @@ func (r *QuizPerformanceRepository) RecordQuizPerformance(ctx context.Context, t
 // - Calculates total_attempts (COUNT(*))
 // - Calculates success_rate as percentage: (correct_attempts / total_attempts) * 100
 // - Calculates average_response_time_ms with NULL handling and outlier filtering:
-//   * Only includes response times between 200ms and 30000ms (realistic range)
-//   * Uses COALESCE to handle NULL values in average calculation
+//   - Only includes response times between 200ms and 30000ms (realistic range)
+//   - Uses COALESCE to handle NULL values in average calculation
+//
 // - Gets last_updated timestamp (MAX of created_at)
 // - Orders by success_rate DESC to show best performing quiz types first
 //
@@ -115,12 +116,12 @@ func (r *QuizPerformanceRepository) GetQuizTypePerformance(ctx context.Context, 
 // Query: INSERT ... ON CONFLICT DO UPDATE pattern for real-time analytics:
 // - Inserts new record if user/quiz_type combination doesn't exist
 // - Updates existing record with new attempt data:
-//   * Increments total_attempts by 1
-//   * Increments correct_attempts by 1 if answer was correct
-//   * Recalculates average_response_time_ms using weighted average formula with NULL handling:
+//   - Increments total_attempts by 1
+//   - Increments correct_attempts by 1 if answer was correct
+//   - Recalculates average_response_time_ms using weighted average formula with NULL handling:
 //     COALESCE(old_avg, 0) * old_count + new_time) / (old_count + 1)
-//   * Only includes response times in realistic range (200ms-30000ms) for average calculation
-//   * Updates last_updated timestamp to NOW()
+//   - Only includes response times in realistic range (200ms-30000ms) for average calculation
+//   - Updates last_updated timestamp to NOW()
 //
 // This maintains real-time aggregated statistics per user per quiz type.
 func (r *QuizPerformanceRepository) UpsertQuizTypeAnalytics(ctx context.Context, tx pgx.Tx, userID int64, quizType string, isCorrect bool, responseTimeMs int) error {
@@ -129,7 +130,7 @@ func (r *QuizPerformanceRepository) UpsertQuizTypeAnalytics(ctx context.Context,
 	if responseTimeMs >= 200 && responseTimeMs <= 30000 {
 		filteredResponseTime = responseTimeMs
 	}
-	
+
 	query := `
 		INSERT INTO quiz_type_analytics (
 			user_id, quiz_type, total_attempts, correct_attempts, average_response_time_ms

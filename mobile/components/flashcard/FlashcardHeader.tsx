@@ -38,54 +38,59 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
   return (
     <View>
       <View style={styles.header}>
-      <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-        <Ionicons name="close" size={28} color={colors.textDark} />
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <Ionicons name="close" size={28} color={colors.textDark} />
+        </TouchableOpacity>
 
-      <View style={styles.headerCenter}>
-        <Text style={styles.headerTitle}>{wordlistName}</Text>
-        <Text style={styles.headerSubtitle}>
-          {t("flashcards.cardCounter", {
-            current: currentIndex + 1,
-            total: totalWords,
-          })}
-        </Text>
-      </View>
-
-      <TouchableOpacity
-        style={styles.reportButton}
-        onPress={onReportError}
-        disabled={!isOnline}
-      >
-        <MaterialIcons
-          name="flag"
-          size={24}
-          color={isOnline ? colors.textMedium : colors.borderGray}
-        />
-      </TouchableOpacity>
-    </View>
-    
-    {onToggleSavePosition && (
-      <View style={styles.savePositionContainer}>
-        <View style={styles.savePositionTextContainer}>
-          <MaterialIcons 
-            name="bookmark" 
-            size={20} 
-            color={savePosition ? colors.primary : colors.textMedium} 
-          />
-          <Text style={[styles.savePositionText, savePosition && styles.savePositionTextActive]}>
-            {t("flashcards.savePosition")}
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>{wordlistName}</Text>
+          <Text style={styles.headerSubtitle}>
+            {t("flashcards.cardCounter", {
+              current: currentIndex + 1,
+              total: totalWords,
+            })}
           </Text>
         </View>
-        <Switch
-          value={savePosition}
-          onValueChange={onToggleSavePosition}
-          thumbColor={colors.white}
-          trackColor={{ false: colors.borderGray, true: colors.primary }}
-          ios_backgroundColor={colors.borderGray}
-        />
+
+        <TouchableOpacity
+          style={styles.reportButton}
+          onPress={onReportError}
+          disabled={!isOnline}
+        >
+          <MaterialIcons
+            name="flag"
+            size={24}
+            color={isOnline ? colors.textMedium : colors.borderGray}
+          />
+        </TouchableOpacity>
       </View>
-    )}
+
+      {onToggleSavePosition && (
+        <View style={styles.savePositionContainer}>
+          <View style={styles.savePositionTextContainer}>
+            <MaterialIcons
+              name="bookmark"
+              size={20}
+              color={savePosition ? colors.primary : colors.textMedium}
+            />
+            <Text
+              style={[
+                styles.savePositionText,
+                savePosition && styles.savePositionTextActive,
+              ]}
+            >
+              {t("flashcards.savePosition")}
+            </Text>
+          </View>
+          <Switch
+            value={savePosition}
+            onValueChange={onToggleSavePosition}
+            thumbColor={colors.white}
+            trackColor={{ false: colors.borderGray, true: colors.primary }}
+            ios_backgroundColor={colors.borderGray}
+          />
+        </View>
+      )}
     </View>
   );
 };

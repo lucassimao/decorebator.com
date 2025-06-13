@@ -5,6 +5,7 @@ GREEN  		  := $(shell tput -Txterm setaf 2)
 YELLOW 		  := $(shell tput -Txterm setaf 3)
 WHITE  		  := $(shell tput -Txterm setaf 7)
 CYAN   		  := $(shell tput -Txterm setaf 6)
+RED    		  := $(shell tput -Txterm setaf 1)
 RESET  		  := $(shell tput -Txterm sgr0)
 GODOTENV_PATH := ~/go/bin/godotenv
 DIR_TO_WATCH  := $(PWD)
@@ -136,6 +137,125 @@ create-migration: ## Create a new database migration file with the provided file
 	else \
 		migrate create -ext sql -dir cmd/migrate/migrations -seq $$FILE_NAME; \
 	fi	
+
+## Code Quality Targets
+
+lint: ## Run golangci-lint on all Go files
+	@echo "${YELLOW}Running golangci-lint on all files...${RESET}"
+	golangci-lint run --timeout=5m
+
+lint-changed: ## Run golangci-lint only on files changed since master branch
+	@echo "${YELLOW}Running golangci-lint on changed files since master...${RESET}"
+	@CHANGED_FILES=$$(git diff --name-only --diff-filter=AM origin/master...HEAD | grep '\.go$$' | grep '^api/' | sed 's|^api/||' || echo ""); \
+	if [ -z "$$CHANGED_FILES" ]; then \
+		echo "${GREEN}No Go files changed since master branch${RESET}"; \
+	else \
+		echo "${CYAN}Changed files: $$CHANGED_FILES${RESET}"; \
+		golangci-lint run --timeout=5m --new-from-rev=$$(git merge-base origin/master HEAD); \
+	fi
+
+lint-staged: ## Run golangci-lint only on staged files
+	@echo "${YELLOW}Running golangci-lint on staged files...${RESET}"
+	@STAGED_FILES=$$(git diff --cached --name-only --diff-filter=AM | grep '\.go$$' | grep '^api/' || echo ""); \
+	if [ -z "$$STAGED_FILES" ]; then \
+		echo "${GREEN}No Go files staged${RESET}"; \
+	else \
+		echo "${CYAN}Staged files: $$STAGED_FILES${RESET}"; \
+		golangci-lint run --timeout=5m --new-from-rev=HEAD~1; \
+	fi
+
+lint-branch: ## Run golangci-lint on files changed in current branch vs specified base (usage: make lint-branch BASE=develop)
+	@BASE_BRANCH=$${BASE:-main}; \
+	echo "${YELLOW}Running golangci-lint on files changed since $$BASE_BRANCH...${RESET}"; \
+	CHANGED_FILES=$$(git diff --name-only --diff-filter=AM $$BASE_BRANCH...HEAD | grep '\.go$$' | grep '^api/' || echo ""); \
+	if [ -z "$$CHANGED_FILES" ]; then \
+		echo "${GREEN}No Go files changed since $$BASE_BRANCH${RESET}"; \
+	else \
+		echo "${CYAN}Changed files: $$CHANGED_FILES${RESET}"; \
+		golangci-lint run --timeout=5m --new-from-rev=$$(git merge-base $$BASE_BRANCH HEAD); \
+	fi
+
+lint-fix: ## Run golangci-lint with --fix flag on changed files
+	@echo "${YELLOW}Running golangci-lint --fix on changed files...${RESET}"
+	@CHANGED_FILES=$$(git diff --name-only --diff-filter=AM origin/master...HEAD | grep '\.go$$' | grep '^api/' || echo ""); \
+	if [ -z "$$CHANGED_FILES" ]; then \
+		echo "${GREEN}No Go files changed since master branch${RESET}"; \
+	else \
+		echo "${CYAN}Fixing files: $$CHANGED_FILES${RESET}"; \
+		golangci-lint run --fix --timeout=5m --new-from-rev=$$(git merge-base origin/master HEAD); \
+	fi
+
+lint-install: ## Install golangci-lint
+	@echo "${YELLOW}Installing golangci-lint...${RESET}"
+	@if ! command -v golangci-lint >/dev/null 2>&1; then \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.62.2; \
+		echo "${GREEN}golangci-lint installed successfully${RESET}"; \
+	else \
+		echo "${GREEN}golangci-lint is already installed${RESET}"; \
+		golangci-lint version; \
+	fi
+
+format: ## Format Go code using gofmt and goimports
+	@echo "${YELLOW}Formatting Go code...${RESET}"
+	@go fmt ./...
+	@if command -v goimports >/dev/null 2>&1; then \
+		goimports -w .; \
+	else \
+		echo "${CYAN}Installing goimports...${RESET}"; \
+		go install golang.org/x/tools/cmd/goimports@latest; \
+		goimports -w .; \
+	fi
+	@echo "${GREEN}Code formatted${RESET}"
+
+format-check: ## Check if Go code is properly formatted
+	@echo "${YELLOW}Checking Go code formatting...${RESET}"
+	@UNFORMATTED=$$(gofmt -l .); \
+	if [ -n "$$UNFORMATTED" ]; then \
+		echo "${RED}The following files need formatting:${RESET}"; \
+		echo "$$UNFORMATTED"; \
+		exit 1; \
+	else \
+		echo "${GREEN}All files are properly formatted${RESET}"; \
+	fi
+
+pre-commit: lint-staged format-check ## Run pre-commit checks (lint staged files + format check)
+	@echo "${GREEN}✅ Pre-commit checks passed${RESET}"
+
+pre-push: lint-changed test-unit ## Run pre-push checks (lint changed files + unit tests)
+	@echo "${GREEN}✅ Pre-push checks passed${RESET}"
+
+check-all: format-check lint test-unit ## Run all code quality checks
+	@echo "${GREEN}✅ All checks passed${RESET}"
+
+lint-diff: ## Show diff of what lint-fix would change (dry run)
+	@echo "${YELLOW}Showing what lint-fix would change...${RESET}"
+	@CHANGED_FILES=$$(git diff --name-only --diff-filter=AM origin/main...HEAD | grep '\.go$$' | grep '^api/' || echo ""); \
+	if [ -z "$$CHANGED_FILES" ]; then \
+		echo "${GREEN}No Go files changed since main branch${RESET}"; \
+	else \
+		echo "${CYAN}Files that would be affected: $$CHANGED_FILES${RESET}"; \
+		golangci-lint run --fix --diff --timeout=5m --new-from-rev=$$(git merge-base origin/main HEAD); \
+	fi
+
+## Git Integration Targets
+
+git-hooks-install: ## Install git hooks for automated linting
+	@echo "${YELLOW}Installing git hooks...${RESET}"
+	@mkdir -p .git/hooks
+	@echo '#!/bin/bash' > .git/hooks/pre-commit
+	@echo 'cd api && make pre-commit' >> .git/hooks/pre-commit
+	@chmod +x .git/hooks/pre-commit
+	@echo '#!/bin/bash' > .git/hooks/pre-push
+	@echo 'cd api && make pre-push' >> .git/hooks/pre-push
+	@chmod +x .git/hooks/pre-push
+	@echo "${GREEN}Git hooks installed successfully${RESET}"
+	@echo "${CYAN}Pre-commit: runs lint-staged + format-check${RESET}"
+	@echo "${CYAN}Pre-push: runs lint-changed + unit tests${RESET}"
+
+git-hooks-remove: ## Remove git hooks
+	@echo "${YELLOW}Removing git hooks...${RESET}"
+	@rm -f .git/hooks/pre-commit .git/hooks/pre-push
+	@echo "${GREEN}Git hooks removed${RESET}"
 
 help: ## Show this help.
 	@echo ''

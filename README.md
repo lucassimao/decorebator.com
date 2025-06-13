@@ -242,6 +242,9 @@ make create-migration  # Create new migration file
 make psql             # Open PostgreSQL console
 make debug-workers    # Debug workers with delve
 make build            # Build production binary
+make lint             # Run golangci-lint on codebase
+make lint-fix         # Run golangci-lint with automatic fixes
+make lint-watch       # Run linting in watch mode
 ```
 
 ### Mobile App

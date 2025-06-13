@@ -79,7 +79,9 @@ const AnalyticsDashboard = () => {
 
           <BoxDistributionChart boxDistribution={boxDistribution} />
 
-          <HistoricalBoxDistributionChart historicalBoxDistribution={historicalBoxDistribution} />
+          <HistoricalBoxDistributionChart
+            historicalBoxDistribution={historicalBoxDistribution}
+          />
 
           {/* Bottom spacing */}
           <View style={{ height: 20 }} />

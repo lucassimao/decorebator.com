@@ -1,0 +1,384 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ master, main, develop ]
+    paths:
+      - 'api/**'
+      - '.github/workflows/test.yml'
+  pull_request:
+    branches: [ master, main, develop ]
+    paths:
+      - 'api/**'
+      - '.github/workflows/test.yml'
+
+env:
+  GO_VERSION: '1.22'
+  POSTGRES_USER: test_user
+  POSTGRES_PASSWORD: test_pass
+  POSTGRES_DB: decorebator_test
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('api/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run unit tests
+        run: |
+          go test -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+          go tool cover -func=unit.out
+
+      - name: Upload unit test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: api/unit.out
+          flags: unit
+          name: unit-tests
+          token: ${{ secrets.CODECOV_TOKEN }}
+      
+      - name: Upload unit coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-coverage
+          path: api/unit.out
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('api/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Start MinIO
+        run: |
+          docker run -d \
+            --name minio-test \
+            -p 9001:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio server /data
+          
+          # Wait for MinIO to be ready
+          timeout 30s bash -c 'until curl -f http://localhost:9001/minio/health/live; do sleep 1; done'
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Create test environment file
+        run: |
+          cat > .env.test << EOF
+          # Database Configuration
+          POSTGRES_USER=${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ env.POSTGRES_DB }}
+          POSTGRES_HOST=localhost
+          POSTGRES_PORT=5433
+          DATABASE_URL=postgres://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5433/${{ env.POSTGRES_DB }}?sslmode=disable
+          TEST_DATABASE_URL=postgres://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5433/${{ env.POSTGRES_DB }}?sslmode=disable
+          
+          # MinIO Configuration
+          MINIO_HOST=localhost
+          MINIO_PORT=9001
+          MINIO_ROOT_USER=minioadmin
+          MINIO_ROOT_PASSWORD=minioadmin
+          
+          # Redis Configuration
+          REDIS_URL=redis://localhost:6380
+          
+          # Test Configuration
+          TEST_MODE=true
+          JWT_SECRET=test-jwt-secret-key-for-testing-only
+          ENV=test
+          
+          # External API Keys (mock keys for testing)
+          OPENAI_API_KEY=test-openai-key-mock
+          STRIPE_API_KEY=test-stripe-key-mock
+          STRIPE_WEBHOOK_SECRET=test-stripe-webhook-secret
+          STRIPE_SUCCESS_URL=http://localhost:8080/subscription/success
+          STRIPE_CANCEL_URL=http://localhost:8080/subscription/cancel
+          SENDGRID_API_KEY=test-sendgrid-key-mock
+          RESET_PASSWORD_PRIVATE_KEY=test-reset-password-key-32-chars
+          
+          # Feature Flags for Testing
+          DISABLE_WORKERS=true
+          DISABLE_WEBHOOKS=true
+          DISABLE_RATE_LIMITING=false
+          DISABLE_EMAIL_SENDING=true
+          EOF
+
+      - name: Run database migrations
+        run: |
+          # Source environment variables
+          set -a
+          source .env.test
+          set +a
+          
+          # Use Go-based migration runner
+          go run ./cmd/migrate/main.go
+
+      - name: Run integration tests
+        run: |
+          # Source environment variables
+          set -a
+          source .env.test
+          set +a
+          
+          # Run tests with environment
+          go test -v -race -coverprofile=integration.out -covermode=atomic ./tests/integration/...
+          go tool cover -func=integration.out
+
+      - name: Upload integration test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: api/integration.out
+          flags: integration
+          name: integration-tests
+          token: ${{ secrets.CODECOV_TOKEN }}
+      
+      - name: Upload integration coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-coverage
+          path: api/integration.out
+
+      - name: Generate coverage report
+        run: |
+          go tool cover -html=integration.out -o coverage-integration.html
+
+      - name: Upload coverage HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: api/coverage-integration.html
+
+      - name: Cleanup test containers
+        if: always()
+        run: |
+          docker stop minio-test || true
+          docker rm minio-test || true
+
+  lint-checks:
+    if: github.event_name == 'pull_request'
+    name: Lint Checks (PR Only)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for git diff to work properly
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+
+      - name: Get changed Go files
+        id: changed-files
+        run: |
+          # Get the base branch (target of PR) - more robust approach
+          echo "Base ref: ${{ github.event.pull_request.base.ref }}"
+          echo "Head ref: ${{ github.event.pull_request.head.ref }}"
+          
+          # Ensure we have the base branch
+          git fetch origin ${{ github.event.pull_request.base.ref }}:${{ github.event.pull_request.base.ref }} || true
+          
+          # Use merge-base to find the common ancestor
+          BASE_SHA=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+          HEAD_SHA="HEAD"
+          
+          echo "Using base SHA: $BASE_SHA"
+          echo "Using head SHA: $HEAD_SHA"
+          
+          # Get list of changed .go files in the api directory
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AM $BASE_SHA...$HEAD_SHA | grep '\.go$' | grep '^api/' | sed 's|^api/||' | tr '\n' ' ' || echo "")
+          
+          echo "Changed Go files: $CHANGED_FILES"
+          
+          # Check if we have any Go files to lint
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "has_go_files=false" >> $GITHUB_OUTPUT
+            echo "files=" >> $GITHUB_OUTPUT
+          else
+            echo "has_go_files=true" >> $GITHUB_OUTPUT
+            echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install golangci-lint
+        if: steps.changed-files.outputs.has_go_files == 'true'
+        run: |
+          # Install golangci-lint
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.62.2
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Run golangci-lint on changed files only
+        if: steps.changed-files.outputs.has_go_files == 'true'
+        run: |
+          CHANGED_FILES="${{ steps.changed-files.outputs.files }}"
+          echo "Running golangci-lint on: $CHANGED_FILES"
+          
+          # Use the same merge base logic as file detection
+          MERGE_BASE=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+          echo "Using merge base for linting: $MERGE_BASE"
+          
+          # Run golangci-lint only on files changed since the merge base
+          golangci-lint run --timeout=5m --new-from-rev=$MERGE_BASE
+
+
+  coverage-check:
+    if: false  # Temporarily disabled
+    name: Coverage Threshold Check (PR Only)
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    defaults:
+      run:
+        working-directory: ./api
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Download unit coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-coverage
+          path: api/
+
+      - name: Download integration coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: integration-coverage
+          path: api/
+
+      - name: Check coverage thresholds
+        run: |
+          echo "Checking unit test coverage threshold (70%)..."
+          UNIT_COVERAGE=$(go tool cover -func=unit.out | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Unit coverage: ${UNIT_COVERAGE}%"
+          
+          echo "Checking integration test coverage threshold (80%)..."
+          INTEGRATION_COVERAGE=$(go tool cover -func=integration.out | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Integration coverage: ${INTEGRATION_COVERAGE}%"
+          
+          # Check thresholds
+          if (( $(echo "$UNIT_COVERAGE < 70" | bc -l) )); then
+            echo "❌ Unit test coverage ($UNIT_COVERAGE%) is below threshold (70%)"
+            exit 1
+          fi
+          
+          if (( $(echo "$INTEGRATION_COVERAGE < 80" | bc -l) )); then
+            echo "❌ Integration test coverage ($INTEGRATION_COVERAGE%) is below threshold (80%)"
+            exit 1
+          fi
+          
+          echo "✅ All coverage thresholds met!"
+          echo "📊 Unit: ${UNIT_COVERAGE}% | Integration: ${INTEGRATION_COVERAGE}%"
+
+  build-verification:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+
+      - name: Build API server
+        run: go build -v ./cmd/api
+
+      - name: Build migration tool
+        run: go build -v ./cmd/migrate
+
+      - name: Build workers
+        run: go build -v ./cmd/workers
+
+      - name: Verify no unused dependencies
+        run: go mod tidy && git diff --exit-code go.mod go.sum

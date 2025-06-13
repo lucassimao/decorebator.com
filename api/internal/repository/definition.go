@@ -48,7 +48,7 @@ func (repository *DefinitionRepository) Save(tokenId int64, definitions []*Defin
 		// Execute the query within the transaction
 		err := tx.QueryRow(context.Background(), definitionsInsert, def.Token,
 			def.Language, def.PartOfSpeech, def.PartOfSpeechNormalized, meaning, def.Examples, def.Inflections,
-			def.Source, def.SourceId, def.Sounds, def.PhoneticNotations).Scan(&def.ID, &createdAt, &updatedAt)
+			def.Source, def.SourceID, def.Sounds, def.PhoneticNotations).Scan(&def.ID, &createdAt, &updatedAt)
 
 		if err != nil {
 			jsonString, _ := json.Marshal(def)
@@ -203,7 +203,7 @@ func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, erro
 
 		err = rows.Scan(&def.ID,
 			&def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning, &def.Examples, &def.Inflections,
-			&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations,
+			&def.Source, &def.SourceID, &def.Sounds, &def.PhoneticNotations,
 			&def.CreatedAt, &def.UpdatedAt)
 
 		if err != nil {
@@ -308,7 +308,7 @@ func (repository *DefinitionRepository) GetDefinitionsByWordId(wordId, userId in
 
 		err = rows.Scan(&def.ID,
 			&def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning, &def.Examples, &def.Inflections,
-			&def.Source, &def.SourceId, &def.Sounds, &def.PhoneticNotations,
+			&def.Source, &def.SourceID, &def.Sounds, &def.PhoneticNotations,
 			&def.CreatedAt, &def.UpdatedAt)
 
 		if err != nil {
@@ -340,7 +340,7 @@ func (repository *DefinitionRepository) GetDefinitionByID(definitionID int64) (*
 	var def Definition
 	err := repository.Db.QueryRow(context.Background(), query, definitionID).Scan(
 		&def.ID, &def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning,
-		&def.Examples, &def.Inflections, &def.Source, &def.SourceId,
+		&def.Examples, &def.Inflections, &def.Source, &def.SourceID,
 		&def.Sounds, &def.PhoneticNotations, &def.CreatedAt, &def.UpdatedAt)
 
 	if err != nil {

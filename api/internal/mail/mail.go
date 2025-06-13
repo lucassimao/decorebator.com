@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"log/slog"
+	"os"
 	"strings"
 	"time"
 
@@ -33,12 +34,12 @@ func GetUserRepositoryForMail() (*repository.UserRepository, error) {
 func AddContactToList(user *model.User) {
 	logger := common.Logger.With("func", "AddContactToList", "user", user.ID)
 
-	if common.Env.Env != common.Production {
+	if os.Getenv("ENV") != "production" {
 		logger.Debug("non-production environment. skipping")
 		return
 	}
 
-	request := sendgrid.GetRequest(common.Env.SendGridApiKey, "/v3/marketing/contacts", "")
+	request := sendgrid.GetRequest(os.Getenv("SENDGRID_API_KEY"), "/v3/marketing/contacts", "")
 	request.Method = "PUT"
 	request.Body = []byte(fmt.Sprintf(`
 	{
@@ -111,7 +112,7 @@ func SendResetPasswordEmail(email string) error {
 	plainTextContent := sb.String()
 	htmlContent := sb.String()
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 	response, err := client.Send(message)
 
 	if err != nil {
@@ -187,7 +188,7 @@ func SendSubscriptionActivatedEmail(user *model.User, data SubscriptionEmailData
 	plainTextContent := "Your Decorebator subscription is now active!"
 	htmlContent := sb.String()
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 	response, err := client.Send(message)
 
 	if err != nil {
@@ -236,7 +237,7 @@ func SendSubscriptionRenewedEmail(user *model.User, data SubscriptionEmailData) 
 	plainTextContent := "Your Decorebator subscription has been renewed."
 	htmlContent := sb.String()
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 	response, err := client.Send(message)
 
 	if err != nil {
@@ -285,7 +286,7 @@ func SendRenewalReminderEmail(user *model.User, data SubscriptionEmailData) erro
 	plainTextContent := fmt.Sprintf("Your Decorebator subscription will renew on %s", templateData["RenewalDate"])
 	htmlContent := sb.String()
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 	response, err := client.Send(message)
 
 	if err != nil {
@@ -333,7 +334,7 @@ func SendSubscriptionCancelledEmail(user *model.User, data SubscriptionEmailData
 	plainTextContent := fmt.Sprintf("Your subscription has been cancelled. You'll have access until %s", templateData["AccessUntil"])
 	htmlContent := sb.String()
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 	response, err := client.Send(message)
 
 	if err != nil {
@@ -383,7 +384,7 @@ func SendPaymentFailedEmail(user *model.User, data SubscriptionEmailData) error 
 	plainTextContent := "Your payment failed. Please update your payment method to avoid service interruption."
 	htmlContent := sb.String()
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 	response, err := client.Send(message)
 
 	if err != nil {
@@ -439,7 +440,7 @@ func SendWelcomeEmail(email string) error {
 	plainTextContent := sb.String()
 	htmlContent := sb.String()
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(common.Env.SendGridApiKey)
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 	response, err := client.Send(message)
 
 	if err != nil {

@@ -9,7 +9,7 @@ interface StatsGridProps {
 }
 
 export const StatsGrid: React.FC<StatsGridProps> = ({ overviewStats }) => {
-  const { t } = useTranslation(); 
+  const { t } = useTranslation();
 
   return (
     <View style={styles.statsGrid}>
@@ -20,9 +20,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ overviewStats }) => {
         <Text style={styles.statValue}>
           {overviewStats?.wordsStudiedToday || 0}
         </Text>
-        <Text style={styles.statLabel}>
-          {t("analytics.stats.wordsToday")}
-        </Text>
+        <Text style={styles.statLabel}>{t("analytics.stats.wordsToday")}</Text>
       </View>
 
       <View style={[styles.statCard, styles.statCardHighlight]}>
@@ -32,9 +30,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ overviewStats }) => {
         <Text style={[styles.statValue, styles.statValueHighlight]}>
           {overviewStats?.currentStreak || 0}
         </Text>
-        <Text style={styles.statLabel}>
-          {t("analytics.stats.dayStreak")}
-        </Text>
+        <Text style={styles.statLabel}>{t("analytics.stats.dayStreak")}</Text>
       </View>
 
       <View style={styles.statCard}>
@@ -44,9 +40,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ overviewStats }) => {
         <Text style={[styles.statValue, styles.statValueSuccess]}>
           {overviewStats?.wordsMastered || 0}
         </Text>
-        <Text style={styles.statLabel}>
-          {t("analytics.stats.mastered")}
-        </Text>
+        <Text style={styles.statLabel}>{t("analytics.stats.mastered")}</Text>
       </View>
 
       <View style={styles.statCard}>
@@ -56,9 +50,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ overviewStats }) => {
         <Text style={styles.statValue}>
           {Math.round(overviewStats?.accuracyToday || 0)}%
         </Text>
-        <Text style={styles.statLabel}>
-          {t("analytics.stats.accuracy")}
-        </Text>
+        <Text style={styles.statLabel}>{t("analytics.stats.accuracy")}</Text>
       </View>
     </View>
   );

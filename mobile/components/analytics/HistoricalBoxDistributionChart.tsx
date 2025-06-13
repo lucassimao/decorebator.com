@@ -28,40 +28,77 @@ export const HistoricalBoxDistributionChart: React.FC<
   };
 
   const boxNames = [
-    { key: "box1", name: t("analytics.charts.boxDistribution.box1"), color: boxColors.box1 },
-    { key: "box2", name: t("analytics.charts.boxDistribution.box2"), color: boxColors.box2 },
-    { key: "box3", name: t("analytics.charts.boxDistribution.box3"), color: boxColors.box3 },
-    { key: "box4", name: t("analytics.charts.boxDistribution.box4"), color: boxColors.box4 },
-    { key: "box5", name: t("analytics.charts.boxDistribution.box5"), color: boxColors.box5 },
-    { key: "box6", name: t("analytics.charts.boxDistribution.box6"), color: boxColors.box6 },
-    { key: "box7", name: t("analytics.charts.boxDistribution.box7"), color: boxColors.box7 },
+    {
+      key: "box1",
+      name: t("analytics.charts.boxDistribution.box1"),
+      color: boxColors.box1,
+    },
+    {
+      key: "box2",
+      name: t("analytics.charts.boxDistribution.box2"),
+      color: boxColors.box2,
+    },
+    {
+      key: "box3",
+      name: t("analytics.charts.boxDistribution.box3"),
+      color: boxColors.box3,
+    },
+    {
+      key: "box4",
+      name: t("analytics.charts.boxDistribution.box4"),
+      color: boxColors.box4,
+    },
+    {
+      key: "box5",
+      name: t("analytics.charts.boxDistribution.box5"),
+      color: boxColors.box5,
+    },
+    {
+      key: "box6",
+      name: t("analytics.charts.boxDistribution.box6"),
+      color: boxColors.box6,
+    },
+    {
+      key: "box7",
+      name: t("analytics.charts.boxDistribution.box7"),
+      color: boxColors.box7,
+    },
   ];
 
   const prepareChartData = () => {
-    if (!historicalBoxDistribution?.distribution || historicalBoxDistribution.distribution.length === 0) {
+    if (
+      !historicalBoxDistribution?.distribution ||
+      historicalBoxDistribution.distribution.length === 0
+    ) {
       return null;
     }
 
     // For 7 days, show all data points (no sampling needed)
-    const data = historicalBoxDistribution.distribution
-      .slice()
-      .reverse(); // Show oldest to newest
+    const data = historicalBoxDistribution.distribution.slice().reverse(); // Show oldest to newest
 
     // Prepare labels (dates) - use shorter format for 7 days
     const labels = data.map((item) => {
       // Parse date as local time to avoid timezone conversion issues
       // Backend sends ISO timestamps like "2025-06-11T00:00:00Z", extract date part
-      const datePart = item.date.split('T')[0];
-      const [year, month, day] = datePart.split('-').map(Number);
+      const datePart = item.date.split("T")[0];
+      const [year, month, day] = datePart.split("-").map(Number);
       const date = new Date(year, month - 1, day); // month is 0-indexed
       const today = new Date();
-      
+
       // Calculate difference using just the date parts to avoid timezone issues
-      const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const dateOnly = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+      );
+      const todayOnly = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate(),
+      );
       const diffTime = todayOnly.getTime() - dateOnly.getTime();
       const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-      
+
       if (diffDays === 0) {
         return "Today";
       } else if (diffDays === 1) {
@@ -115,7 +152,8 @@ export const HistoricalBoxDistributionChart: React.FC<
               propsForLabels: {
                 fontSize: 12,
               },
-              formatYLabel: (value: string) => `${Math.round(parseFloat(value))}`,
+              formatYLabel: (value: string) =>
+                `${Math.round(parseFloat(value))}`,
             }}
             style={styles.chart}
             withHorizontalLabels={true}
@@ -125,7 +163,9 @@ export const HistoricalBoxDistributionChart: React.FC<
           {/* Box Legend - Vertical Layout */}
           <View style={styles.legendContainer}>
             <Text style={styles.legendTitle}>
-              {t("analytics.charts.historicalBoxDistribution.currentDistribution")}
+              {t(
+                "analytics.charts.historicalBoxDistribution.currentDistribution",
+              )}
             </Text>
             <View style={styles.boxLegendWrapper}>
               {boxNames.map((box, index) => (
@@ -155,7 +195,9 @@ export const HistoricalBoxDistributionChart: React.FC<
             {chartData.data.length > 0 && (
               <View style={styles.progressSummaryRow}>
                 <Text style={styles.progressSummaryLabel}>
-                  {t("analytics.charts.historicalBoxDistribution.currentMastery")}
+                  {t(
+                    "analytics.charts.historicalBoxDistribution.currentMastery",
+                  )}
                 </Text>
                 <Text style={styles.progressSummaryValue}>
                   {chartData.data[chartData.data.length - 1][6]}
@@ -171,7 +213,9 @@ export const HistoricalBoxDistributionChart: React.FC<
               color={colors.textMedium}
             />
             <Text style={styles.explanationText}>
-              {t("analytics.charts.historicalBoxDistribution.stackedExplanation")}
+              {t(
+                "analytics.charts.historicalBoxDistribution.stackedExplanation",
+              )}
             </Text>
           </View>
         </>

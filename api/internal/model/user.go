@@ -34,31 +34,31 @@ func (u User) MarshalJSON() ([]byte, error) {
 		"email":            u.Email,
 		"subscriptionPlan": u.SubscriptionPlan,
 	}
-	
+
 	if u.ProfilePictureURL != nil {
 		userMap["profilePictureUrl"] = *u.ProfilePictureURL
 	}
-	
+
 	if u.Country != nil {
 		userMap["country"] = *u.Country
 	}
-	
+
 	if u.DateOfBirth != nil {
 		userMap["dateOfBirth"] = u.DateOfBirth.UTC().Format("2006-01-02")
 	}
-	
+
 	if u.PreferredLanguage != nil {
 		userMap["preferredLanguage"] = *u.PreferredLanguage
 	}
-	
+
 	if u.SubscriptionStatus != nil {
 		userMap["subscriptionStatus"] = *u.SubscriptionStatus
 	}
-	
+
 	if u.StripeCustomerID != nil {
 		userMap["stripeCustomerId"] = *u.StripeCustomerID
 	}
-	
+
 	if u.SubscriptionEndsAt != nil {
 		userMap["subscriptionEndsAt"] = u.SubscriptionEndsAt.UTC().Format(time.RFC3339)
 	}

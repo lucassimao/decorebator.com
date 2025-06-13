@@ -51,7 +51,11 @@ export const BoxDistributionChart: React.FC<BoxDistributionChartProps> = ({
                     boxDistribution.distribution.box6,
                     boxDistribution.distribution.box7,
                   ],
-                  colors: boxColorGradient.map((hex) => (opacity = 1) => hex),
+                  colors: boxColorGradient.map(
+                    (hex) =>
+                      (opacity = 1) =>
+                        hex,
+                  ),
                 },
               ],
             }}
@@ -70,13 +74,13 @@ export const BoxDistributionChart: React.FC<BoxDistributionChartProps> = ({
             withHorizontalLabels={true}
             fromZero={true}
             withCustomBarColorFromData={true}
-            flatColor={true}  
-            
+            flatColor={true}
           />
           {/* Box Labels Legend */}
           <View style={styles.boxLegendContainer}>
             {[1, 2, 3, 4, 5, 6, 7].map((boxNum) => {
-              const boxKey = `box${boxNum}` as keyof typeof boxDistribution.distribution;
+              const boxKey =
+                `box${boxNum}` as keyof typeof boxDistribution.distribution;
               const count = boxDistribution.distribution[boxKey];
               const labelKey = `analytics.charts.boxDistribution.box${boxNum}`;
               return (

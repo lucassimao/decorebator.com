@@ -22,8 +22,9 @@ func NewDashboardStatsRepository(db *pgxpool.Pool) *DashboardStatsRepository {
 // Query: Aggregates quiz_performance data by date with outlier filtering for realistic practice time:
 // - Groups by DATE(created_at) to aggregate quiz attempts by day
 // - Filters response times to exclude unrealistic values:
-//   * >= 200ms (minimum realistic response time)
-//   * <= 30000ms (30 seconds maximum to exclude "stepped away" cases)
+//   - >= 200ms (minimum realistic response time)
+//   - <= 30000ms (30 seconds maximum to exclude "stepped away" cases)
+//
 // - SUM(response_time_ms) as total_practice_time_ms for the day
 // - Converts to minutes: SUM(response_time_ms) / 60000.0 with ROUND to 1 decimal
 // - COUNT(*) as quiz_count to show total quiz attempts (including filtered ones)
@@ -41,7 +42,7 @@ func (r *DashboardStatsRepository) GetPracticeTime(ctx context.Context, userID, 
 	if days < 0 {
 		days = 0
 	}
-	
+
 	query := `
 		SELECT 
 			DATE(qp.created_at) as practice_date,

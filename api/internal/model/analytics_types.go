@@ -94,8 +94,8 @@ type BoxDistribution struct {
 
 // PracticeTimeStats represents daily practice time statistics
 type PracticeTimeStats struct {
-	Date               time.Time `json:"date"`
-	PracticeTimeMs     int       `json:"practiceTimeMs"`
+	Date                time.Time `json:"date"`
+	PracticeTimeMs      int       `json:"practiceTimeMs"`
 	PracticeTimeMinutes float64   `json:"practiceTimeMinutes"`
-	QuizCount          int       `json:"quizCount"`
+	QuizCount           int       `json:"quizCount"`
 }

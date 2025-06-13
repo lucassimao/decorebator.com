@@ -36,22 +36,24 @@ export const QuizContent: React.FC<QuizContentProps> = ({
 }) => {
   const { t } = useTranslation();
   const player = useAudioPlayer();
-  const { playing: isPlaying,didJustFinish } = useAudioPlayerStatus(player);
+  const { playing: isPlaying, didJustFinish } = useAudioPlayerStatus(player);
   const [imageLoading, setImageLoading] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
   const [imageRetryCount, setImageRetryCount] = useState(0);
   const [showLoading, setShowLoading] = useState(false);
-  const imageLoadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const imageLoadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const loadingDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Reset player
+  // Reset player
   useEffect(() => {
     if (didJustFinish) {
       player.seekTo(0);
     }
   }, [didJustFinish, player]);
-  
+
   // Audio setup
   useEffect(() => {
     if (quiz?.audioURL) {
@@ -70,7 +72,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
         setImageRetryCount(0);
         setShowLoading(false);
         setCurrentImageUrl(quiz.value);
-        
+
         // Clear any existing loading delay
         if (loadingDelayRef.current) {
           clearTimeout(loadingDelayRef.current);
@@ -98,7 +100,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
     setImageLoading(true);
     setShowLoading(false);
     setImageRetryCount((prev) => prev + 1);
-    
+
     // Clear any existing timeouts
     if (imageLoadTimeoutRef.current) {
       clearTimeout(imageLoadTimeoutRef.current);
@@ -106,10 +108,10 @@ export const QuizContent: React.FC<QuizContentProps> = ({
     if (loadingDelayRef.current) {
       clearTimeout(loadingDelayRef.current);
     }
-    
+
     // Force reload by adding timestamp query parameter
     const timestamp = Date.now();
-    const separator = quiz.value.includes('?') ? '&' : '?';
+    const separator = quiz.value.includes("?") ? "&" : "?";
     setCurrentImageUrl(`${quiz.value}${separator}retry=${timestamp}`);
   };
 
@@ -245,13 +247,13 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                       setImageLoading(true);
                       setImageError(false);
                       setShowLoading(false);
-                      
+
                       // Delay showing loading indicator to prevent flashing for quick loads
                       loadingDelayRef.current = setTimeout(() => {
                         setShowLoading(true);
                       }, 300); // Show loading after 300ms
                     }
-                    
+
                     // Set a timeout for image loading (10 seconds)
                     if (imageLoadTimeoutRef.current) {
                       clearTimeout(imageLoadTimeoutRef.current);
@@ -272,7 +274,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                       clearTimeout(loadingDelayRef.current);
                       loadingDelayRef.current = null;
                     }
-                    
+
                     setImageLoading(false);
                     setShowLoading(false);
                     setImageError(false);
@@ -287,7 +289,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                       clearTimeout(loadingDelayRef.current);
                       loadingDelayRef.current = null;
                     }
-                    
+
                     setImageLoading(false);
                     setShowLoading(false);
                     setImageError(true);

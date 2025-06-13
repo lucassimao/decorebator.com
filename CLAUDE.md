@@ -26,6 +26,11 @@ cd mobile && npm test                  # Mobile Jest tests
 # Database operations
 cd api && make migrate-up              # Apply new migrations
 cd api && make psql                    # Database console
+
+# Code quality
+cd api && make lint                    # Run golangci-lint
+cd web && npm run lint                 # Web frontend linting
+cd mobile && npm run lint              # Mobile app linting
 ```
 
 ### Single Test Execution
@@ -81,6 +86,11 @@ make psql              # Open PostgreSQL console
 # Debug commands
 make debug-api         # Debug API with delve
 make debug-workers     # Debug workers with delve
+
+# Linting and code quality
+make lint              # Run golangci-lint on the codebase
+make lint-fix          # Run golangci-lint with automatic fixes
+make lint-watch        # Run linting in watch mode
 
 # Other commands
 make build             # Build API binary
