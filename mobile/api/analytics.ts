@@ -80,7 +80,7 @@ export async function getWordlistOverviewStats(
 ): Promise<OverviewStats> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/overview`;
   const body = await callAPI<{ stats: OverviewStats }>("GET", endpoint);
-  
+
   // Ensure valid stats structure with safe defaults
   const stats = body.stats || {};
   return {
@@ -152,10 +152,11 @@ export function calculateWordlistProgressFromMastery(
 ): WordlistProgressSummary {
   // Safety check: ensure wordMasteryStats is valid array
   const safeStats = Array.isArray(wordMasteryStats) ? wordMasteryStats : [];
-  
+
   const totalWords = safeStats.length;
   const wordsMastered = safeStats.filter(
-    (word) => word && typeof word.masteryLevel === 'number' && word.masteryLevel >= 0.8, // Consider 80%+ as mastered
+    (word) =>
+      word && typeof word.masteryLevel === "number" && word.masteryLevel >= 0.8, // Consider 80%+ as mastered
   ).length;
 
   const averageMastery =
@@ -182,13 +183,18 @@ export async function getCurrentBoxDistribution(
 ): Promise<BoxDistributionResponse> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/current-distribution`;
   const response = await callAPI<BoxDistributionResponse>("GET", endpoint);
-  
+
   // Ensure valid response structure
   return {
     wordlistId: response.wordlistId || wordlistId,
     distribution: response.distribution || {
-      box1: 0, box2: 0, box3: 0, box4: 0,
-      box5: 0, box6: 0, box7: 0
+      box1: 0,
+      box2: 0,
+      box3: 0,
+      box4: 0,
+      box5: 0,
+      box6: 0,
+      box7: 0,
     },
     totalWords: response.totalWords || 0,
   };
@@ -200,13 +206,18 @@ export async function getHistoricalBoxDistribution(
   days: number = 30,
 ): Promise<HistoricalBoxDistributionResponse> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/distribution?days=${days}`;
-  const response = await callAPI<HistoricalBoxDistributionResponse>("GET", endpoint);
-  
-  // Ensure valid response structure  
+  const response = await callAPI<HistoricalBoxDistributionResponse>(
+    "GET",
+    endpoint,
+  );
+
+  // Ensure valid response structure
   return {
     wordlistId: response.wordlistId || wordlistId,
     days: response.days || days,
-    distribution: Array.isArray(response.distribution) ? response.distribution : [],
+    distribution: Array.isArray(response.distribution)
+      ? response.distribution
+      : [],
   };
 }
 
@@ -217,12 +228,14 @@ export async function getPracticeTime(
 ): Promise<PracticeTimeResponse> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/practice-time?days=${days}`;
   const response = await callAPI<PracticeTimeResponse>("GET", endpoint);
-  
+
   // Ensure valid response structure
   return {
     wordlistId: response.wordlistId || wordlistId,
     days: response.days || days,
-    practiceTime: Array.isArray(response.practiceTime) ? response.practiceTime : [],
+    practiceTime: Array.isArray(response.practiceTime)
+      ? response.practiceTime
+      : [],
   };
 }
 
@@ -245,7 +258,7 @@ export interface ProgressSummaryResponse {
 export async function getProgressSummary(): Promise<ProgressSummaryResponse> {
   const endpoint = `${BASE_URL}/analytics/progress-summary`;
   const response = await callAPI<ProgressSummaryResponse>("GET", endpoint);
-  
+
   // Ensure valid response structure - this is critical for DashboardStats
   return {
     wordlists: Array.isArray(response.wordlists) ? response.wordlists : [],
