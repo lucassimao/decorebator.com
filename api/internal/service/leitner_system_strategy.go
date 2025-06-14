@@ -58,12 +58,12 @@ type NextDefinition struct {
 // - Box 7: Mastery level (most challenging types only)
 var boxToQuizTypes = map[int64][]model.QuizType{
 	1: {model.GuessMeaning},                                                                                 // Recognition: "What does this word mean?"
-	2: {model.WordFromMeaning},                                                                              // Basic recall: "Which word matches this meaning?"
-	3: {model.WordFromImage},                                                                                // Visual association: "What word matches this image?"
-	4: {model.CompleteSentence},                                                                             // Contextual understanding: "Complete this sentence"
-	5: {model.WriteWordFromDefinition},                                                                      // Active recall: "Type the word from definition"
-	6: {model.WordFromAudio, model.WordFromExampleAudio},                                                    // Audio recognition: "What word from audio?"
-	7: {model.MeaningFromAudio, model.WordFromImage, model.WriteWordFromDefinition, model.CompleteSentence}, // Mastery: Most challenging types
+	2: {model.WordFromMeaning, model.GuessMeaning},                                                          // Basic recall: "Which word matches this meaning?" + recognition practice
+	3: {model.WordFromImage, model.WordFromMeaning},                                                         // Visual association: "What word matches this image?" + meaning recall
+	4: {model.CompleteSentence, model.WordFromExampleAudio, model.GuessMeaning},                            // Contextual understanding + recognition reinforcement
+	5: {model.WriteWordFromDefinition, model.WordFromExampleAudio, model.WordFromMeaning},                  // Active recall + meaning practice
+	6: {model.WordFromAudio, model.WordFromExampleAudio, model.WordFromImage, model.GuessMeaning},          // Audio/Visual recognition + meaning reinforcement
+	7: {model.MeaningFromAudio, model.WordFromImage, model.WriteWordFromDefinition, model.CompleteSentence, model.WordFromExampleAudio, model.WordFromAudio, model.WordFromMeaning, model.GuessMeaning}, // Mastery: All types for comprehensive review
 }
 
 // ExampleUsage tracks when examples were last used for fair distribution
@@ -165,23 +165,41 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				-- Exclude temporarily skipped definitions
 				AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())
 		),
-		selected_definition AS (
+		weighted_definitions AS (
 			SELECT 
 				id, token, part_of_speech, language, is_verb_type, meaning, examples, inflections, 
 				lst_id, box_id, sounds, phonetic_notations, 
 				COALESCE(image_url,'') as image_url, word_id, COALESCE(image_description,'') as image_description,
-				hours_since_review, progress_ratio
+				hours_since_review, progress_ratio,
+				-- Calculate weighted selection score to reduce dominance
+				CASE 
+					-- Overdue definitions get high weight (but not exclusive)
+					WHEN progress_ratio >= 1.0 THEN 
+						100 + (progress_ratio * 50) + hours_since_review
+					-- Due soon get medium-high weight
+					WHEN progress_ratio >= 0.8 THEN 
+						80 + (progress_ratio * 20) + hours_since_review
+					-- Available get medium weight
+					WHEN progress_ratio >= 0.5 THEN 
+						60 + (progress_ratio * 15) + hours_since_review
+					-- Not quite ready get low weight (but still possible)
+					ELSE 
+						20 + (progress_ratio * 10) + hours_since_review
+				END as selection_weight
 			FROM definition_priorities
+		),
+		selected_definition AS (
+			SELECT 
+				id, token, part_of_speech, language, is_verb_type, meaning, examples, inflections, 
+				lst_id, box_id, sounds, phonetic_notations, 
+				image_url, word_id, image_description, hours_since_review, progress_ratio
+			FROM weighted_definitions
+			-- Use deterministic but varied selection based on current time and definition ID
+			-- This creates pseudo-random selection weighted by importance
 			ORDER BY 
-				-- Priority 1: Overdue definitions (progress >= 100%)
-				CASE WHEN progress_ratio >= 1.0 THEN 0 ELSE 1 END,
-				-- Priority 2: Due soon (80-100% of interval)
-				CASE WHEN progress_ratio >= 0.8 THEN 0 ELSE 1 END,
-				-- Priority 3: Available (50-80% of interval)
-				CASE WHEN progress_ratio >= 0.5 THEN 0 ELSE 1 END,
-				-- Within same priority, pick oldest reviewed first
-				COALESCE(updated_at, TIMESTAMP '1970-01-01') ASC,
-				-- Final tiebreaker: definition ID for absolute determinism
+				-- Primary sort: Use a deterministic hash to create variety while respecting weights
+				(selection_weight * (1 + SIN(id * 12345 + EXTRACT(EPOCH FROM NOW())::INTEGER % 86400))) DESC,
+				-- Fallback tiebreaker for absolute determinism in edge cases
 				id ASC
 			LIMIT 1
 		)
@@ -280,8 +298,8 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 		definition.ExampleAudioFiles = []model.DefinitionExampleAudio{}
 	}
 
-	// Log deterministic selection for monitoring
-	common.Logger.Info("deterministic_selection",
+	// Log weighted selection for monitoring
+	common.Logger.Info("weighted_selection",
 		"userID", userID,
 		"wordlistID", wordlistID,
 		"definitionID", definition.ID,
@@ -409,7 +427,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	}
 
 	// Select appropriate quiz type based on box and available content
-	quizType, err := selectQuizType(nextDefinition, word)
+	quizType, err := selectQuizType(nextDefinition, word, userID, wordlistID)
 	if err != nil {
 		return nil, err
 	}
@@ -428,7 +446,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 	return createQuizForType(quizType, nextDefinition, word)
 }
 
-func selectQuizType(def *NextDefinition, word *model.Word) (model.QuizType, error) {
+func selectQuizType(def *NextDefinition, word *model.Word, userID, wordlistID int64) (model.QuizType, error) {
 	possibleTypes := boxToQuizTypes[def.BoxID]
 
 	// Filter out quiz types that require unavailable content
@@ -444,23 +462,26 @@ func selectQuizType(def *NextDefinition, word *model.Word) (model.QuizType, erro
 		return model.GuessMeaning, nil
 	}
 
-	// Deterministic selection based on definition ID and current time
-	// This ensures all quiz types get cycled through fairly
-	// Using 5-minute rotation ensures variety while maintaining predictability
-	timeRotation := time.Now().Unix() / 300 // 300 seconds = 5 minutes
-	index := (int(def.Definition.ID) + int(timeRotation)) % len(availableTypes)
+	// Global quiz type balancing: favor least recently used types
+	// This ensures better distribution across all quiz types
+	selectedType, err := selectBalancedQuizType(userID, wordlistID, availableTypes)
+	if err != nil {
+		// Fallback to time-based rotation if balancing fails
+		timeRotation := time.Now().Unix() / 300 // 300 seconds = 5 minutes
+		index := (int(def.Definition.ID) + int(timeRotation)) % len(availableTypes)
+		selectedType = availableTypes[index]
+	}
 
 	// Log the selection for monitoring
 	common.Logger.Info("quiz_type_selected",
 		"definitionID", def.Definition.ID,
 		"boxID", def.BoxID,
 		"availableTypes", availableTypes,
-		"selectedType", availableTypes[index],
-		"index", index,
+		"selectedType", selectedType,
 		"imageUrl", def.ImageUrl,
 		"hasImage", def.ImageUrl != "")
 
-	return availableTypes[index], nil
+	return selectedType, nil
 }
 
 func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Word) bool {
@@ -1257,6 +1278,116 @@ func buildQuerySelectionFromErrorReport(report ErrorReport) (string, []any, erro
 
 	return builder.String(), queryArgs, nil
 
+}
+
+// selectBalancedQuizType selects a quiz type from available types, favoring those that have been used less recently.
+// This helps balance quiz type distribution across the session to provide better variety for users.
+func selectBalancedQuizType(userID, wordlistID int64, availableTypes []model.QuizType) (model.QuizType, error) {
+	if len(availableTypes) == 1 {
+		return availableTypes[0], nil
+	}
+
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return "", err
+	}
+
+	// Get recent quiz type usage for this user/wordlist (last 2 hours)
+	query := `
+		SELECT quiz_type, COUNT(*) as usage_count, MAX(created_at) as last_used_at
+		FROM quiz_performance 
+		WHERE user_id = $1 AND wordlist_id = $2 
+		AND created_at > NOW() - INTERVAL '2 hours'
+		GROUP BY quiz_type`
+
+	rows, err := db.Query(context.Background(), query, userID, wordlistID)
+	if err != nil {
+		return "", err
+	}
+	defer rows.Close()
+
+	// Build usage map
+	usage := make(map[string]struct {
+		count      int
+		lastUsedAt time.Time
+	})
+
+	for rows.Next() {
+		var quizType string
+		var count int
+		var lastUsedAt time.Time
+		if err = rows.Scan(&quizType, &count, &lastUsedAt); err != nil {
+			return "", err
+		}
+		usage[quizType] = struct {
+			count      int
+			lastUsedAt time.Time
+		}{count: count, lastUsedAt: lastUsedAt}
+	}
+
+	// Calculate scores for available types (lower score = higher priority)
+	type typeScore struct {
+		quizType model.QuizType
+		score    float64
+	}
+
+	var scores []typeScore
+	now := time.Now()
+
+	for _, qt := range availableTypes {
+		typeUsage, exists := usage[string(qt)]
+		
+		var score float64
+		if !exists {
+			// Never used = highest priority
+			score = 0
+		} else {
+			// Score based on usage count and recency
+			hoursSinceLastUse := now.Sub(typeUsage.lastUsedAt).Hours()
+			
+			// Base score from usage count (more usage = higher score)
+			score = float64(typeUsage.count) * 10
+			
+			// Reduce score based on time since last use (older = lower score)
+			score -= hoursSinceLastUse * 2
+			
+			// Ensure score is not negative
+			if score < 0 {
+				score = 0
+			}
+		}
+
+		scores = append(scores, typeScore{
+			quizType: qt,
+			score:    score,
+		})
+	}
+
+	// Sort by score (ascending - lower score = higher priority)
+	sort.Slice(scores, func(i, j int) bool {
+		return scores[i].score < scores[j].score
+	})
+
+	// Select from the top 2 least used types with some randomness
+	// This prevents being too predictable while still favoring underused types
+	topCount := len(scores)
+	if topCount > 2 {
+		topCount = 2
+	}
+
+	// Use time-based pseudo-randomness for selection within top choices
+	timeRotation := time.Now().Unix() / 300 // 5-minute rotation
+	selectedIndex := int(timeRotation) % topCount
+
+	common.Logger.Info("quiz_type_balancing",
+		"userID", userID,
+		"wordlistID", wordlistID,
+		"availableTypes", availableTypes,
+		"selectedType", scores[selectedIndex].quizType,
+		"selectedScore", scores[selectedIndex].score,
+		"allScores", scores)
+
+	return scores[selectedIndex].quizType, nil
 }
 
 // ReportError records a user-reported issue with quiz content and temporarily excludes it from quiz generation.
