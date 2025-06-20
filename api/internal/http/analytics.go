@@ -33,18 +33,18 @@ func getCacheTTL(subscriptionPlan model.SubscriptionPlan) time.Duration {
 func RegisterAnalyticsRoutes(r *gin.RouterGroup) {
 	analytics := r.Group("/analytics")
 
-	analytics.GET("/wordlists/:id/mastery", getWordMastery)
-	analytics.GET("/wordlists/:id/progress", getLearningProgress)
-	analytics.GET("/wordlists/:id/distribution", getBoxDistributionHistory)
-	analytics.GET("/wordlists/:id/current-distribution", getCurrentBoxDistribution)
-	analytics.GET("/wordlists/:id/quiz-performance", getQuizTypePerformance)
-	analytics.GET("/wordlists/:id/practice-time", getPracticeTime)
-	analytics.GET("/wordlists/:id/overview", getWordlistOverviewStats)
+	analytics.GET("/wordlists/:id/stats", getWordlistStats)
+	analytics.GET("/wordlists/:id/word-mastery", getWordlistWordMastery)
+	analytics.GET("/wordlists/:id/learning-progress", getWordlistLearningProgress)
+	analytics.GET("/wordlists/:id/practice-time", getWordlistPracticeTime)
+	analytics.GET("/wordlists/:id/box-distribution-history", getWordlistBoxDistributionHistory)
+	analytics.GET("/wordlists/:id/current-box-distribution", getWordlistCurrentBoxDistribution)
+	analytics.GET("/wordlists/:id/quiz-type-performance", getWordlistQuizTypePerformance)
 	analytics.GET("/progress-summary", getProgressSummary)
 }
 
-// getWordMastery returns word mastery statistics for a wordlist
-func getWordMastery(c *gin.Context) {
+// getWordlistWordMastery returns word mastery statistics for a wordlist
+func getWordlistWordMastery(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -93,8 +93,8 @@ func getWordMastery(c *gin.Context) {
 	})
 }
 
-// getLearningProgress returns daily learning progress
-func getLearningProgress(c *gin.Context) {
+// getWordlistLearningProgress returns daily learning progress
+func getWordlistLearningProgress(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -135,7 +135,7 @@ func getLearningProgress(c *gin.Context) {
 		return
 	}
 
-	progress, err := analyticsService.Progress(c.Request.Context(), days)
+	progress, err := analyticsService.LearningProgress(c.Request.Context(), days)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch progress"})
 		return
@@ -153,8 +153,8 @@ func getLearningProgress(c *gin.Context) {
 	})
 }
 
-// getBoxDistributionHistory returns historical box distribution
-func getBoxDistributionHistory(c *gin.Context) {
+// getWordlistBoxDistributionHistory returns historical box distribution
+func getWordlistBoxDistributionHistory(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -195,7 +195,7 @@ func getBoxDistributionHistory(c *gin.Context) {
 		return
 	}
 
-	distribution, err := analyticsService.BoxHistory(c.Request.Context(), days)
+	distribution, err := analyticsService.BoxDistributionHistory(c.Request.Context(), days)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch distribution"})
 		return
@@ -213,8 +213,8 @@ func getBoxDistributionHistory(c *gin.Context) {
 	})
 }
 
-// getQuizTypePerformance returns performance statistics by quiz type for a specific wordlist
-func getQuizTypePerformance(c *gin.Context) {
+// getWordlistQuizTypePerformance returns performance statistics by quiz type for a specific wordlist
+func getWordlistQuizTypePerformance(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -247,7 +247,7 @@ func getQuizTypePerformance(c *gin.Context) {
 		return
 	}
 
-	performance, err := analyticsService.QuizPerformance(c.Request.Context())
+	performance, err := analyticsService.QuizTypePerformance(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch performance stats"})
 		return
@@ -264,8 +264,8 @@ func getQuizTypePerformance(c *gin.Context) {
 	})
 }
 
-// getCurrentBoxDistribution returns current distribution of words across Leitner boxes
-func getCurrentBoxDistribution(c *gin.Context) {
+// getWordlistCurrentBoxDistribution returns current distribution of words across Leitner boxes
+func getWordlistCurrentBoxDistribution(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -298,7 +298,7 @@ func getCurrentBoxDistribution(c *gin.Context) {
 		return
 	}
 
-	distribution, err := analyticsService.BoxDistribution(c.Request.Context())
+	distribution, err := analyticsService.CurrentBoxDistribution(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch distribution"})
 		return
@@ -319,8 +319,8 @@ func getCurrentBoxDistribution(c *gin.Context) {
 	})
 }
 
-// getPracticeTime returns daily practice time statistics for a wordlist
-func getPracticeTime(c *gin.Context) {
+// getWordlistPracticeTime returns daily practice time statistics for a wordlist
+func getWordlistPracticeTime(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -379,8 +379,8 @@ func getPracticeTime(c *gin.Context) {
 	})
 }
 
-// getWordlistOverviewStats returns dashboard statistics for a specific wordlist
-func getWordlistOverviewStats(c *gin.Context) {
+// getWordlistStats returns statistics for a specific wordlist
+func getWordlistStats(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -415,7 +415,7 @@ func getWordlistOverviewStats(c *gin.Context) {
 
 	stats, err := analyticsService.Stats(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch wordlist dashboard stats"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch wordlist stats"})
 		return
 	}
 

@@ -161,7 +161,7 @@ run_integration_tests() {
     set +a
     
     local test_exit_code=0
-    go test -v -race -coverprofile=integration.out -covermode=atomic ./tests/integration/... || test_exit_code=$?
+    go test -v -race -count=1 -p=1  -coverprofile=integration.out -covermode=atomic ./tests/integration/... || test_exit_code=$?
     
     if [ $test_exit_code -eq 0 ]; then
         success "Integration tests passed"

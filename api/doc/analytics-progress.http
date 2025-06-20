@@ -1,4 +1,15 @@
-### Test Analytics Progress Summary Endpoint
+### DEPRECATED: Analytics Progress Summary Endpoint Tests
+### 
+### ⚠️  This file is deprecated. Please use analytics.http for comprehensive API documentation.
+### 
+### The analytics.http file contains:
+### - Complete endpoint documentation with examples
+### - Response schemas and error handling
+### - Performance notes and caching information
+### - Implementation details and data quality notes
+###
+
+# Quick test endpoints for backwards compatibility:
 
 # Login first to get JWT token
 POST http://localhost:3000/auth/login
@@ -50,3 +61,7 @@ Authorization: Bearer {{authToken}}
 # Get practice time
 GET http://localhost:3000/analytics/wordlists/1/practice-time?days=7
 Authorization: Bearer {{authToken}}
+
+###
+
+# For complete documentation, see: analytics.http

@@ -158,7 +158,7 @@ func (r *WordMasteryRepository) GetWordlistMasteryStats(ctx context.Context, use
 			COUNT(DISTINCT w.id) AS total_words,  -- Count all words in wordlist, not just those with mastery data
 			COUNT(DISTINCT CASE WHEN wm.mastery_level >= 0.8 THEN w.id END) AS words_mastered,
 			AVG(wm.mastery_level) AS avg_mastery,  -- Average only among words with mastery data
-			MAX(wm.streak_count) AS best_streak
+			MAX(wm.max_streak) AS best_streak
 		FROM words w
 		LEFT JOIN word_mastery wm ON w.id = wm.word_id AND wm.user_id = $1
 		WHERE w.user_id = $1 

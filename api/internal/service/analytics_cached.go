@@ -37,9 +37,9 @@ func NewCachedAnalyticsService(db *pgxpool.Pool, cache *redis.Client, cfg Analyt
 	}, nil
 }
 
-// Stats gets overview stats with caching
+// Stats gets stats with caching
 func (s *CachedAnalyticsService) Stats(ctx context.Context) (*model.WordlistStats, error) {
-	cacheKey := fmt.Sprintf("analytics:overview:%d:%d", s.userID, s.wordlistID)
+	cacheKey := fmt.Sprintf("analytics:stats:%d:%d", s.userID, s.wordlistID)
 
 	// Try cache first
 	cached, err := s.cache.Get(ctx, cacheKey).Result()
@@ -155,8 +155,8 @@ func (s *CachedAnalyticsService) WordMastery(ctx context.Context) ([]model.WordM
 	return stats, nil
 }
 
-// Progress gets learning progress with caching
-func (s *CachedAnalyticsService) Progress(ctx context.Context, days int) ([]model.LearningProgressStats, error) {
+// LearningProgress gets learning progress with caching
+func (s *CachedAnalyticsService) LearningProgress(ctx context.Context, days int) ([]model.LearningProgressStats, error) {
 	cacheKey := fmt.Sprintf("analytics:progress:%d:%d:%d", s.userID, s.wordlistID, days)
 
 	// Try cache first
@@ -182,8 +182,8 @@ func (s *CachedAnalyticsService) Progress(ctx context.Context, days int) ([]mode
 	return progress, nil
 }
 
-// QuizPerformance gets quiz performance with caching
-func (s *CachedAnalyticsService) QuizPerformance(ctx context.Context) ([]model.QuizTypePerformance, error) {
+// QuizTypePerformance gets quiz performance with caching
+func (s *CachedAnalyticsService) QuizTypePerformance(ctx context.Context) ([]model.QuizTypePerformance, error) {
 	cacheKey := fmt.Sprintf("analytics:quiz-performance:%d:%d", s.userID, s.wordlistID)
 
 	// Try cache first
@@ -209,8 +209,8 @@ func (s *CachedAnalyticsService) QuizPerformance(ctx context.Context) ([]model.Q
 	return performance, nil
 }
 
-// BoxDistribution gets current box distribution with caching
-func (s *CachedAnalyticsService) BoxDistribution(ctx context.Context) (*model.BoxDistribution, error) {
+// CurrentBoxDistribution gets current box distribution with caching
+func (s *CachedAnalyticsService) CurrentBoxDistribution(ctx context.Context) (*model.BoxDistribution, error) {
 	cacheKey := fmt.Sprintf("analytics:box-distribution:%d:%d", s.userID, s.wordlistID)
 
 	// Try cache first
@@ -236,8 +236,8 @@ func (s *CachedAnalyticsService) BoxDistribution(ctx context.Context) (*model.Bo
 	return distribution, nil
 }
 
-// BoxHistory gets historical box distribution with caching
-func (s *CachedAnalyticsService) BoxHistory(ctx context.Context, days int) ([]map[string]interface{}, error) {
+// BoxDistributionHistory gets historical box distribution with caching
+func (s *CachedAnalyticsService) BoxDistributionHistory(ctx context.Context, days int) ([]map[string]interface{}, error) {
 	cacheKey := fmt.Sprintf("analytics:historical-box-distribution:%d:%d:%d", s.userID, s.wordlistID, days)
 
 	// Try cache first
@@ -332,7 +332,7 @@ func (s *CachedAnalyticsService) InvalidateWordlistAnalytics(ctx context.Context
 	}
 
 	keys := []string{
-		fmt.Sprintf("analytics:overview:%d:%d", userID, wordlistID),
+		fmt.Sprintf("analytics:stats:%d:%d", userID, wordlistID),
 		fmt.Sprintf("analytics:mastery:%d:%d", userID, wordlistID),
 		fmt.Sprintf("analytics:progress:%d:%d", userID, wordlistID),
 		fmt.Sprintf("analytics:quiz-performance:%d:%d", userID, wordlistID),

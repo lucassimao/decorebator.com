@@ -28,7 +28,7 @@ type CacheableAnalyticsData interface {
 	GetDataType() string
 }
 
-// WordlistStats represents overview statistics for a wordlist
+// WordlistStats represents statistics for a wordlist
 type WordlistStats struct {
 	TotalWords        int      `json:"totalWords"`
 	WordsMastered     int      `json:"wordsMastered"`
@@ -42,12 +42,12 @@ type WordlistStats struct {
 
 // GetCacheKey implements CacheableAnalyticsData for WordlistStats
 func (w WordlistStats) GetCacheKey(userID, wordlistID int64) string {
-	return fmt.Sprintf("analytics:overview:%d:%d", userID, wordlistID)
+	return fmt.Sprintf("analytics:stats:%d:%d", userID, wordlistID)
 }
 
 // GetDataType implements CacheableAnalyticsData for WordlistStats
 func (w WordlistStats) GetDataType() string {
-	return "overview"
+	return "stats"
 }
 
 // WordMasteryStats represents word mastery statistics

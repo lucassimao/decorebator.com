@@ -692,6 +692,74 @@ func TestWithDataInspection(t *testing.T) {
 }
 ```
 
+## 🧮 Analytics Testing Implementation
+
+### Comprehensive Analytics Test Suite
+
+The Decorebator API includes a comprehensive analytics testing suite with dedicated test files for each analytics endpoint. This implementation demonstrates advanced testing patterns for complex database calculations and business logic validation.
+
+#### Analytics Test Coverage
+
+- **8 dedicated test files** covering all analytics endpoints
+- **Database query validation** with direct PostgreSQL testing
+- **Complex calculation verification** for metrics, percentages, and aggregations
+- **Edge case testing** including empty data, boundary conditions, and error scenarios
+
+#### Key Files
+- `tests/integration/analytics/` - Complete analytics test suite
+- `api/docs/ANALYTICS_TESTING_IMPLEMENTATION.md` - Detailed implementation guide
+
+#### Example: Analytics Calculation Testing
+
+```go
+func TestWordMasteryEndpoint_CalculationAccuracy(t *testing.T) {
+    // Arrange: Create test data with known values
+    testData := setupWordMasteryTestData(t, server.DB, ctx)
+    
+    // Act: Call analytics endpoint
+    response := server.Expect.GET(fmt.Sprintf("/analytics/wordlists/%d/mastery", testData.WordlistID)).
+        WithHeader("Authorization", token).
+        Expect().Status(http.StatusOK)
+    
+    // Assert: Verify calculations match expected values
+    stats := response.JSON().Object().Value("stats").Array()
+    for i, stat := range stats.Iter() {
+        expected := testData.ExpectedWords[i]
+        statObj := stat.Object()
+        
+        statObj.Value("masteryLevel").Number().InDelta(expected.MasteryLevel, 0.01)
+        statObj.Value("accuracy").Number().InDelta(expected.Accuracy, 0.01)
+        statObj.Value("highestBox").ValueEqual("highestBox", expected.BoxLevel)
+    }
+}
+```
+
+#### Advanced Testing Patterns
+
+1. **Controlled Data Seeding** - Creates test data with predetermined values for exact calculation verification
+2. **Complex Query Testing** - Validates CTEs, window functions, and multi-table aggregations
+3. **Metric-Specific Test Files** - Focused test suites for each analytics endpoint
+4. **Shared Utilities** - Common helpers reduce duplication across test files
+
+### Database Query Validation
+
+Following CLAUDE.md requirements, all analytics tests validate database queries directly:
+
+```go
+// Insert known test data
+_, err := db.Exec(ctx,
+    `INSERT INTO word_mastery (user_id, word_id, mastery_level, total_attempts, correct_attempts, streak_count, max_streak) 
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    userID, wordID, 0.75, 16, 12, 4, 6)
+
+// Test endpoint calculation
+response := server.Expect.GET(fmt.Sprintf("/analytics/wordlists/%d/mastery", wordlistID))
+
+// Verify calculation accuracy
+expectedAccuracy := float64(12) / float64(16) // 75%
+statObj.Value("accuracy").Number().InDelta(expectedAccuracy, 0.01)
+```
+
 ## 📚 Additional Resources
 
 ### Go Testing Resources
@@ -704,6 +772,11 @@ func TestWithDataInspection(t *testing.T) {
 - [httpexpect](https://github.com/gavv/httpexpect) - HTTP API testing
 - [gomock](https://github.com/golang/mock) - Mock generation
 - [golangci-lint](https://golangci-lint.run/) - Linting
+
+### Project-Specific Resources
+- `api/docs/ANALYTICS_TESTING_IMPLEMENTATION.md` - Comprehensive analytics testing guide
+- `tests/integration/analytics/` - Analytics test suite implementation
+- `tests/integration/setup/` - Test infrastructure and utilities
 
 ### Best Practices References
 - [Google Go Testing Best Practices](https://google.github.io/styleguide/go/best-practices.html#testing)

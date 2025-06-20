@@ -79,7 +79,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   });
 
   // Get analytics data for this wordlist
-  const { wordlistProgress, wordlistProgressLoading } = useAnalytics(
+  const { wordlistProgress } = useAnalytics(
     wordlist.id,
   );
 

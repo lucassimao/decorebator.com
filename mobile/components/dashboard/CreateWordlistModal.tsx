@@ -197,7 +197,6 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    autoFocus
                     style={[styles.input, errors.name && styles.inputError]}
                     placeholder={t("createWordlist.namePlaceholder")}
                     placeholderTextColor="#B2BEC3"

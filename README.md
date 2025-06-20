@@ -907,15 +907,21 @@ npm start
 - `PATCH /wordlists/:id/quizzes` - Save quiz progress and performance
 
 ### Analytics
-- `GET /analytics/wordlists/:id/mastery` - Word mastery statistics
-- `GET /analytics/wordlists/:id/progress` - Learning progress (daily)
-- `GET /analytics/wordlists/:id/distribution` - Box distribution history
-- `GET /analytics/wordlists/:id/current-distribution` - Current box distribution (counts unique words)
-- `GET /analytics/wordlists/:id/quiz-performance` - Quiz type performance stats (wordlist-scoped)
-- `GET /analytics/wordlists/:id/practice-time` - Practice time tracking by day
-- `GET /analytics/wordlists/:id/stats` - Comprehensive wordlist statistics
-- `GET /analytics/dashboard` - Overall dashboard statistics (deprecated - use progress-summary)
-- `GET /analytics/progress-summary` - Batch endpoint for all wordlists progress (reduces N×8 calls to 1)
+**Comprehensive analytics system with Redis caching and performance optimizations**
+- `GET /analytics/progress-summary` - **Primary batch endpoint**: All wordlists overview (1 call vs N×8)
+- `GET /analytics/wordlists/:id/overview` - Comprehensive dashboard stats (total, mastery, streaks, today's activity)
+- `GET /analytics/wordlists/:id/mastery` - Detailed word mastery analytics with accuracy and streak data
+- `GET /analytics/wordlists/:id/progress?days=N` - Daily learning progress over time (1-365 days, default: 30)
+- `GET /analytics/wordlists/:id/quiz-performance` - Performance metrics by quiz type (success rate, response time)
+- `GET /analytics/wordlists/:id/current-distribution` - Current Leitner box distribution (Box 1-7 counts)
+- `GET /analytics/wordlists/:id/box-distribution?days=N` - Historical box distribution snapshots (1-90 days)
+- `GET /analytics/wordlists/:id/practice-time?days=N` - Daily practice time with outlier filtering (1-30 days)
+
+**API Documentation**: See `api/doc/analytics.http` for complete endpoint documentation with examples, response schemas, error handling, and implementation notes.
+
+**Performance Features**: All endpoints include Redis caching (5-15min TTL), automatic cache invalidation, response time filtering (200ms-30s), and optimized database queries with indexes.
+
+**Recent Improvements** (January 2025): Fixed streak calculations, box distribution logic, response time filtering, and word count accuracy. Added comprehensive test coverage with service layer integration.
 
 ### Error Reporting & Content Quality
 - `POST /errorReports` - Report errors in AI-generated content with structured error types (rate limited)

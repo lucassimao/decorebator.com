@@ -3,6 +3,8 @@ bin/*
 .env.prod
 .env.test
 unit.out
+analytics.test
+integration.test
 coverage.out
 coverage.html
 integration.out

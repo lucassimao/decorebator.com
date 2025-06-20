@@ -42,6 +42,10 @@ func NewTestServer(t *testing.T) *TestServer {
 	err := RunMigrations(db)
 	require.NoError(t, err, "Failed to run migrations")
 
+	// Clean any existing test data to ensure fresh state
+	err = CleanTestData(db)
+	require.NoError(t, err, "Failed to clean test data before starting")
+
 	// Use the real API routes from internal/http/setup.go
 	engine := httphandlers.SetupRoutes()
 
@@ -59,9 +63,8 @@ func NewTestServer(t *testing.T) *TestServer {
 
 	cleanup := func() {
 		server.Close()
-		if err := CleanTestData(db); err != nil {
-			fmt.Printf("Warning: failed to clean test data: %v\n", err)
-		}
+		// Note: Database cleanup now happens at the START of each test via CleanTestData() in NewTestServer()
+		// Only close the database connection here
 		db.Close()
 	}
 
@@ -100,13 +103,62 @@ func (ts *TestServer) WithTestUser(_ *testing.T) string {
 
 // WithPremiumUser creates a premium test user with active subscription
 func (ts *TestServer) WithPremiumUser(t *testing.T) string {
-	token := ts.WithTestUser(t)
+	signupInput := GenerateSignupInput()
 
-	// Mock subscription activation
-	err := ts.activatePremiumSubscription(token)
+	// Register user
+	ts.Expect.POST("/users").
+		WithJSON(signupInput).
+		Expect().
+		Status(201)
+
+	// Get user ID and update subscription before first login
+	ctx := context.Background()
+	var userID int64
+	err := ts.DB.QueryRow(ctx, "SELECT id FROM users WHERE email = $1", signupInput.Email).Scan(&userID)
+	require.NoError(t, err, "Failed to get user ID")
+
+	// Update user subscription status before login to get premium token
+	query := `
+		UPDATE users 
+		SET subscription_plan = 'monthly', 
+		    subscription_status = 'active',
+		    updated_at = NOW()
+		WHERE id = $1
+	`
+	_, err = ts.DB.Exec(ctx, query, userID)
 	require.NoError(t, err, "Failed to activate premium subscription")
 
-	return token
+	// Create an active subscription record in subscriptions table
+	subscriptionQuery := `
+		INSERT INTO subscriptions (
+			user_id, stripe_subscription_id, stripe_customer_id,
+			plan, status, current_period_start, current_period_end,
+			cancel_at_period_end, amount_cents, currency, created_at, updated_at
+		) VALUES (
+			$1, $2, $3,
+			$4::subscription_plan, $5::subscription_status, NOW(), NOW() + INTERVAL '1 month',
+			false, 699, 'USD', NOW(), NOW()
+		)
+	`
+	_, err = ts.DB.Exec(ctx, subscriptionQuery,
+		userID,
+		fmt.Sprintf("test_sub_%d", userID),
+		fmt.Sprintf("test_cus_%d", userID),
+		"monthly",
+		"active")
+	require.NoError(t, err, "Failed to create premium subscription record")
+
+	// Login to get token with premium subscription
+	loginResp := ts.Expect.POST("/login").
+		WithJSON(httphandlers.LoginInput{
+			Email:    signupInput.Email,
+			Password: signupInput.Password,
+		}).
+		Expect().
+		Status(200)
+
+	// Login returns token in Authorization header with premium status
+	return loginResp.Header("Authorization").NotEmpty().Raw()
 }
 
 // activatePremiumSubscription simulates premium subscription activation

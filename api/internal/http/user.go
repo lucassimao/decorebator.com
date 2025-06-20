@@ -326,7 +326,12 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 
 	user, err := service.GetProfile(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found."})
+		// If user not found (e.g., deleted), return 401 instead of 500
+		if err.Error() == "user not found" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found."})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error."})
+		}
 		return
 	}
 

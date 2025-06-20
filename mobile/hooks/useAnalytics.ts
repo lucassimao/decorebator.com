@@ -1,13 +1,13 @@
 import {
-  OverviewStats,
-  getWordlistOverviewStats,
-  getLearningProgress,
-  getQuizPerformance,
-  getWordMastery,
+  WordlistStats,
+  getWordlistStats,
+  getWordlistLearningProgress,
+  getWordlistQuizTypePerformance,
+  getWordlistWordMastery,
   calculateWordlistProgressFromMastery,
-  getCurrentBoxDistribution,
-  getHistoricalBoxDistribution,
-  getPracticeTime,
+  getWordlistCurrentBoxDistribution,
+  getWordlistBoxDistributionHistory,
+  getWordlistPracticeTime,
   LearningProgress,
   QuizTypePerformance,
   WordMasteryStats,
@@ -20,7 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useUserInfo } from "@/hooks/users";
 
 type UseAnalyticsResult = {
-  overviewStats?: OverviewStats;
+  stats?: WordlistStats;
   statsLoading: boolean;
   statsError?: unknown;
 
@@ -57,29 +57,24 @@ type UseAnalyticsResult = {
 };
 
 export function useAnalytics(wordlistId: number): UseAnalyticsResult {
-  const { isPremium } = useUserInfo();
+  const { isPremium, cacheConfig } = useUserInfo();
 
-  // Define cache times based on subscription tier
-  // Premium users get fresher data for better UX after quiz sessions
-  const staleTime = isPremium ? 10 * 1000 : 15 * 60 * 1000; // 10s vs 15min
-  const gcTime = isPremium ? 2 * 60 * 1000 : 60 * 60 * 1000; // 2min vs 1hr
-
-  // Common query options for analytics
+  // Common query options for analytics using centralized cache configuration
   const commonQueryOptions = {
-    staleTime,
-    gcTime,
-    refetchOnWindowFocus: isPremium, // Premium users get automatic refresh when returning to screen
-    refetchOnMount: isPremium ? ("always" as const) : false, // Premium users always get fresh data on mount
+    staleTime: cacheConfig.dataFreshnessDuration,
+    gcTime: cacheConfig.memoryRetentionTime,
+    refetchOnWindowFocus: cacheConfig.autoRefreshOnFocus,
+    refetchOnMount: cacheConfig.alwaysFetchOnMount,
   };
 
-  // 1) Overview stats (wordlist-specific)
+  // 1) Stats (wordlist-specific) 
   const {
-    data: overviewStats,
+    data: stats,
     isLoading: statsLoading,
     error: statsError,
-  } = useQuery<OverviewStats, unknown>({
-    queryKey: ["analytics", "overview", wordlistId, isPremium],
-    queryFn: () => getWordlistOverviewStats(wordlistId),
+  } = useQuery<WordlistStats, unknown>({
+    queryKey: ["analytics", "stats", wordlistId, isPremium],
+    queryFn: () => getWordlistStats(wordlistId),
     enabled: Boolean(wordlistId),
     ...commonQueryOptions,
   });
@@ -91,7 +86,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     error: masteryError,
   } = useQuery<WordMasteryStats[], unknown>({
     queryKey: ["analytics", "mastery", wordlistId, isPremium],
-    queryFn: () => getWordMastery(wordlistId),
+    queryFn: () => getWordlistWordMastery(wordlistId),
     enabled: Boolean(wordlistId),
     ...commonQueryOptions,
   });
@@ -103,7 +98,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     error: progressError,
   } = useQuery<LearningProgress[], unknown>({
     queryKey: ["analytics", "progress", wordlistId, isPremium],
-    queryFn: () => getLearningProgress(wordlistId, 7),
+    queryFn: () => getWordlistLearningProgress(wordlistId, 7),
     enabled: Boolean(wordlistId),
     ...commonQueryOptions,
   });
@@ -115,7 +110,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     error: quizPerfError,
   } = useQuery<QuizTypePerformance[], unknown>({
     queryKey: ["analytics", "quiz-performance", wordlistId, isPremium],
-    queryFn: () => getQuizPerformance(wordlistId),
+    queryFn: () => getWordlistQuizTypePerformance(wordlistId),
     enabled: Boolean(wordlistId),
     ...commonQueryOptions,
   });
@@ -134,7 +129,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     error: boxDistError,
   } = useQuery<BoxDistributionResponse, unknown>({
     queryKey: ["analytics", "boxDistribution", wordlistId, isPremium],
-    queryFn: () => getCurrentBoxDistribution(wordlistId),
+    queryFn: () => getWordlistCurrentBoxDistribution(wordlistId),
     enabled: Boolean(wordlistId),
     ...commonQueryOptions,
   });
@@ -146,7 +141,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     error: historicalBoxDistError,
   } = useQuery<HistoricalBoxDistributionResponse, unknown>({
     queryKey: ["analytics", "historicalBoxDistribution", wordlistId, isPremium],
-    queryFn: () => getHistoricalBoxDistribution(wordlistId, 7),
+    queryFn: () => getWordlistBoxDistributionHistory(wordlistId, 7),
     enabled: Boolean(wordlistId),
     ...commonQueryOptions,
   });
@@ -158,13 +153,13 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     error: practiceTimeError,
   } = useQuery<PracticeTimeResponse, unknown>({
     queryKey: ["analytics", "practiceTime", wordlistId, isPremium],
-    queryFn: () => getPracticeTime(wordlistId, 7),
+    queryFn: () => getWordlistPracticeTime(wordlistId, 7),
     enabled: Boolean(wordlistId),
     ...commonQueryOptions,
   });
 
   return {
-    overviewStats,
+    stats,
     statsLoading,
     statsError,
 

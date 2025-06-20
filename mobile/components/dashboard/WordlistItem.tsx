@@ -45,8 +45,6 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
   // Use progress from props
   const progressPercentage = progress?.progressPercent ?? 0;
-  const currentStreak = progress?.currentStreak ?? 0;
-  const wordsMastered = progress?.wordsMastered ?? 0;
 
   // Delete mutation
   const deleteMutation = useMutation({

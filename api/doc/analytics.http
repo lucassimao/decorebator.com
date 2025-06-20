@@ -1,0 +1,301 @@
+### Decorebator Analytics API Documentation
+### 
+### This file documents all analytics endpoints for the Decorebator API
+### All endpoints require authentication via JWT token
+###
+
+# Login to get JWT token
+# @name loginRequest
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com", 
+  "password": "password123"
+}
+
+@authToken = {{loginRequest.response.headers.Authorization}}
+
+###
+
+##################################################
+# PROGRESS SUMMARY ANALYTICS
+##################################################
+
+### Get Progress Summary (All Wordlists)
+# Returns overview statistics for all user wordlists
+# Response: Array of wordlist progress data with totals, mastery stats, streaks
+GET http://localhost:3000/analytics/progress-summary
+Authorization: {{authToken}}
+
+###
+
+##################################################
+# WORDLIST-SPECIFIC ANALYTICS
+##################################################
+
+### Get Wordlist Overview Stats
+# Returns comprehensive dashboard statistics for a specific wordlist
+# Includes: total words, mastery, streaks, today's activity, accuracy
+GET http://localhost:3000/analytics/wordlists/1/overview
+Authorization: {{authToken}}
+
+###
+
+### Get Word Mastery Analytics
+# Returns detailed mastery data for each word in the wordlist
+# Includes: mastery level, accuracy, streak count, highest box, last seen
+GET http://localhost:3000/analytics/wordlists/1/mastery
+Authorization: {{authToken}}
+
+###
+
+### Get Learning Progress
+# Returns daily learning progress over time
+# Query params: days (1-365, default: 30)
+GET http://localhost:3000/analytics/wordlists/1/progress?days=30
+Authorization: {{authToken}}
+
+###
+
+### Get Learning Progress (7 days)
+GET http://localhost:3000/analytics/wordlists/1/progress?days=7
+Authorization: {{authToken}}
+
+###
+
+### Get Learning Progress (Custom range)
+GET http://localhost:3000/analytics/wordlists/1/progress?days=90
+Authorization: {{authToken}}
+
+###
+
+##################################################
+# QUIZ PERFORMANCE ANALYTICS
+##################################################
+
+### Get Quiz Type Performance
+# Returns performance metrics grouped by quiz type
+# Includes: success rate, average response time, total attempts
+GET http://localhost:3000/analytics/wordlists/1/quiz-performance
+Authorization: {{authToken}}
+
+###
+
+##################################################
+# LEITNER BOX DISTRIBUTION ANALYTICS  
+##################################################
+
+### Get Current Box Distribution
+# Returns current distribution of words across Leitner boxes (1-7)
+GET http://localhost:3000/analytics/wordlists/1/current-distribution
+Authorization: {{authToken}}
+
+###
+
+### Get Box Distribution History
+# Returns historical snapshots of box distribution over time
+# Query params: days (1-90, default: 30)
+GET http://localhost:3000/analytics/wordlists/1/box-distribution?days=30
+Authorization: {{authToken}}
+
+###
+
+### Get Box Distribution History (7 days)
+GET http://localhost:3000/analytics/wordlists/1/box-distribution?days=7
+Authorization: {{authToken}}
+
+###
+
+##################################################
+# PRACTICE TIME ANALYTICS
+##################################################
+
+### Get Practice Time Analytics
+# Returns daily practice time and quiz count
+# Query params: days (1-30, default: 7)
+# Response includes filtered response times (200ms-30s range)
+GET http://localhost:3000/analytics/wordlists/1/practice-time?days=7
+Authorization: {{authToken}}
+
+###
+
+### Get Practice Time (30 days)
+GET http://localhost:3000/analytics/wordlists/1/practice-time?days=30
+Authorization: {{authToken}}
+
+###
+
+### Get Practice Time (1 day)
+GET http://localhost:3000/analytics/wordlists/1/practice-time?days=1
+Authorization: {{authToken}}
+
+###
+
+##################################################
+# ERROR HANDLING EXAMPLES
+##################################################
+
+### Invalid Wordlist ID (404)
+GET http://localhost:3000/analytics/wordlists/999999/mastery
+Authorization: {{authToken}}
+
+###
+
+### Invalid Wordlist ID Format (400)  
+GET http://localhost:3000/analytics/wordlists/invalid/mastery
+Authorization: {{authToken}}
+
+###
+
+### Unauthorized Access (401)
+GET http://localhost:3000/analytics/wordlists/1/mastery
+
+###
+
+### Invalid Days Parameter (defaults to valid range)
+GET http://localhost:3000/analytics/wordlists/1/progress?days=invalid
+Authorization: {{authToken}}
+
+###
+
+### Days Parameter Too Large (clamped to maximum)
+GET http://localhost:3000/analytics/wordlists/1/practice-time?days=100
+Authorization: {{authToken}}
+
+###
+
+##################################################
+# EXAMPLE RESPONSES
+##################################################
+
+### Example Progress Summary Response:
+# {
+#   "wordlists": [
+#     {
+#       "wordlistId": 1,
+#       "wordlistName": "Spanish Basics",
+#       "languageCode": "es", 
+#       "totalWords": 10,
+#       "wordsMastered": 7,
+#       "progressPercent": 70.0,
+#       "currentStreak": 5,
+#       "lastActivityDate": "2025-06-15T18:30:00Z"
+#     }
+#   ]
+# }
+
+### Example Word Mastery Response:
+# {
+#   "wordlist_id": 1,
+#   "stats": [
+#     {
+#       "wordId": 1,
+#       "word": "excellent", 
+#       "masteryLevel": 0.95,
+#       "accuracy": 95.0,
+#       "streakCount": 8,
+#       "highestBox": 7,
+#       "lastSeenAt": "2025-06-15T17:30:00Z"
+#     }
+#   ]
+# }
+
+### Example Learning Progress Response:
+# {
+#   "wordlistId": 1,
+#   "days": 7,
+#   "progress": [
+#     {
+#       "date": "2025-06-15",
+#       "wordsStudied": 5,
+#       "totalAttempts": 25, 
+#       "accuracyRate": 80.0,
+#       "avgResponseTimeMs": 1800
+#     }
+#   ]
+# }
+
+### Example Quiz Performance Response:
+# {
+#   "wordlistId": 1,
+#   "quizPerformance": [
+#     {
+#       "quizType": "guess_meaning",
+#       "totalAttempts": 100,
+#       "successRate": 85.0,
+#       "avgResponseTimeMs": 1650.5
+#     }
+#   ]
+# }
+
+### Example Box Distribution Response:
+# {
+#   "wordlistId": 1,
+#   "distribution": {
+#     "box1Count": 2,
+#     "box2Count": 3,
+#     "box3Count": 1, 
+#     "box4Count": 2,
+#     "box5Count": 1,
+#     "box6Count": 0,
+#     "box7Count": 1,
+#     "totalWords": 10
+#   }
+# }
+
+### Example Practice Time Response:
+# {
+#   "wordlistId": 1,
+#   "days": 7,
+#   "practiceTime": [
+#     {
+#       "date": "2025-06-15",
+#       "practiceTimeMs": 9100,
+#       "practiceTimeMinutes": 0.2,
+#       "quizCount": 5
+#     }
+#   ]
+# }
+
+###
+
+##################################################
+# NOTES & IMPLEMENTATION DETAILS
+##################################################
+
+### Caching
+# Analytics endpoints implement Redis-based caching with automatic invalidation
+# Cache TTL varies by endpoint: 5-15 minutes for most endpoints
+# Cache is invalidated on quiz submissions and word updates
+
+### Rate Limiting
+# Analytics endpoints have generous rate limits (100 req/min per user)
+# Error reporting has stricter limits: 3/hour (free), 10/hour (premium)
+
+### Performance
+# All analytics queries include performance optimizations:
+# - Response time filtering (200ms-30s range)
+# - Database indexes on analytics tables  
+# - Materialized views for complex aggregations
+# - Pagination for large datasets
+
+### Data Quality
+# Recent fixes (January 2025) addressed:
+# - Streak calculation accuracy (gap-and-islands logic)
+# - Box distribution consistency (MAX vs MIN box_id)
+# - Word count accuracy (LEFT JOIN for all words)
+# - Response time outlier filtering
+
+### Authentication
+# All endpoints require valid JWT token in Authorization header
+# Tokens expire after 24 hours and auto-refresh on activity
+
+### Error Responses
+# 400: Invalid parameters (wordlist ID format, days range)
+# 401: Missing or invalid authentication token
+# 404: Wordlist not found or not owned by user
+# 429: Rate limit exceeded
+# 500: Internal server error
+
+###

@@ -67,7 +67,7 @@ func (r *DashboardStatsRepository) GetPracticeTime(ctx context.Context, userID, 
 		FROM quiz_performance qp
 		WHERE qp.user_id = $1 
 		  AND qp.wordlist_id = $2
-		  AND qp.created_at >= CURRENT_DATE - INTERVAL '1 day' * $3
+		  AND qp.created_at > CURRENT_DATE - INTERVAL '1 day' * $3
 		GROUP BY DATE(qp.created_at)
 		ORDER BY practice_date DESC
 	`

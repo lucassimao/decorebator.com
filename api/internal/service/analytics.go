@@ -30,10 +30,10 @@ type AnalyticsServiceInterface interface {
 	Stats(ctx context.Context) (*model.WordlistStats, error)
 	ProgressSummary(ctx context.Context) (*model.ProgressSummaryResponse, error)
 	WordMastery(ctx context.Context) ([]model.WordMasteryStats, error)
-	Progress(ctx context.Context, days int) ([]model.LearningProgressStats, error)
-	QuizPerformance(ctx context.Context) ([]model.QuizTypePerformance, error)
-	BoxDistribution(ctx context.Context) (*model.BoxDistribution, error)
-	BoxHistory(ctx context.Context, days int) ([]map[string]interface{}, error)
+	LearningProgress(ctx context.Context, days int) ([]model.LearningProgressStats, error)
+	QuizTypePerformance(ctx context.Context) ([]model.QuizTypePerformance, error)
+	CurrentBoxDistribution(ctx context.Context) (*model.BoxDistribution, error)
+	BoxDistributionHistory(ctx context.Context, days int) ([]map[string]interface{}, error)
 	PracticeTime(ctx context.Context, days int) ([]model.PracticeTimeStats, error)
 	TrackQuiz(ctx context.Context, result QuizResult, tx pgx.Tx) error
 	UpdateBoxDistribution(ctx context.Context, userID, wordlistID int64) error
@@ -124,12 +124,12 @@ func (as *AnalyticsService) WordMastery(ctx context.Context) ([]model.WordMaster
 }
 
 // GetQuizTypePerformance retrieves performance stats by quiz type for a specific wordlist
-func (as *AnalyticsService) QuizPerformance(ctx context.Context) ([]model.QuizTypePerformance, error) {
+func (as *AnalyticsService) QuizTypePerformance(ctx context.Context) ([]model.QuizTypePerformance, error) {
 	return as.repo.GetQuizTypePerformance(ctx, as.userID, as.wordlistID)
 }
 
 // GetLearningProgress retrieves daily learning progress
-func (as *AnalyticsService) Progress(ctx context.Context, days int) ([]model.LearningProgressStats, error) {
+func (as *AnalyticsService) LearningProgress(ctx context.Context, days int) ([]model.LearningProgressStats, error) {
 	return as.repo.GetLearningProgress(ctx, as.userID, as.wordlistID, days)
 }
 
@@ -139,12 +139,12 @@ func (as *AnalyticsService) UpdateBoxDistribution(ctx context.Context, userID, w
 }
 
 // GetHistoricalBoxDistribution retrieves historical box distribution
-func (as *AnalyticsService) BoxHistory(ctx context.Context, days int) ([]map[string]interface{}, error) {
+func (as *AnalyticsService) BoxDistributionHistory(ctx context.Context, days int) ([]map[string]interface{}, error) {
 	return as.repo.GetBoxDistributionHistory(ctx, as.userID, as.wordlistID, days)
 }
 
 // GetCurrentBoxDistribution retrieves the current distribution of words across Leitner boxes
-func (as *AnalyticsService) BoxDistribution(ctx context.Context) (*model.BoxDistribution, error) {
+func (as *AnalyticsService) CurrentBoxDistribution(ctx context.Context) (*model.BoxDistribution, error) {
 	return as.repo.GetCurrentBoxDistribution(ctx, as.userID, as.wordlistID)
 }
 
@@ -153,7 +153,7 @@ func (as *AnalyticsService) PracticeTime(ctx context.Context, days int) ([]model
 	return as.repo.GetPracticeTime(ctx, as.userID, as.wordlistID, days)
 }
 
-// Stats fetches and returns dashboard statistics for the wordlist
+// Stats fetches and returns statistics for the wordlist
 func (svc *AnalyticsService) Stats(ctx context.Context) (*model.WordlistStats, error) {
 	stats := &model.WordlistStats{}
 

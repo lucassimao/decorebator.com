@@ -64,8 +64,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
   });
 
   // Fetch batch progress data
-  const { data: progressData, isLoading: progressLoading } =
-    useWordlistProgress();
+  const { data: progressData } =  useWordlistProgress();
 
   // Create progress map for O(1) lookup
   const progressMap = useMemo(() => {

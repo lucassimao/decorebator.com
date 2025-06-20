@@ -3,6 +3,7 @@ package setup
 import (
 	"fmt"
 	"math/rand" // nosec G404 - math/rand is acceptable for test fixtures, not cryptographic use
+	"time"
 
 	httphandlers "decorebator.com/internal/http"
 	"decorebator.com/internal/model"
@@ -13,7 +14,7 @@ import (
 
 // GenerateTestUser generates a random test user using production model
 func GenerateTestUser() *model.User {
-	fake := gofakeit.New(0)
+	fake := gofakeit.New(uint64(time.Now().UnixNano())) // Use time-based seed for unique data
 
 	// Generate a realistic bcrypt hash for testing
 	passwordHash, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
@@ -30,7 +31,7 @@ func GenerateTestUser() *model.User {
 
 // GenerateSignupInput generates signup input using production SignupInput struct
 func GenerateSignupInput() httphandlers.SignupInput {
-	fake := gofakeit.New(0)
+	fake := gofakeit.New(uint64(time.Now().UnixNano())) // Use time-based seed for unique data
 
 	return httphandlers.SignupInput{
 		Email:     fake.Email(),
@@ -42,7 +43,7 @@ func GenerateSignupInput() httphandlers.SignupInput {
 
 // GenerateTestWordlist generates a random test wordlist using production model
 func GenerateTestWordlist(userID int64) *model.Wordlist {
-	fake := gofakeit.New(0)
+	fake := gofakeit.New(uint64(time.Now().UnixNano())) // Use time-based seed for unique data
 
 	languages := []string{"en", "es", "fr", "de", "it", "pt", "ja"}
 
@@ -57,7 +58,7 @@ func GenerateTestWordlist(userID int64) *model.Wordlist {
 
 // GenerateTestWord generates a random test word using production model
 func GenerateTestWord(wordlistID, userID int64) *model.Word {
-	fake := gofakeit.New(0)
+	fake := gofakeit.New(uint64(time.Now().UnixNano())) // Use time-based seed for unique data
 
 	return &model.Word{
 		Name:       fake.Word(),
@@ -69,9 +70,9 @@ func GenerateTestWord(wordlistID, userID int64) *model.Word {
 	}
 }
 
-// GenerateTestDefinition generates a random test definition using production model
+// GenerateTestDefinition generates a random test definition using production model  
 func GenerateTestDefinition() *model.Definition {
-	fake := gofakeit.New(0)
+	fake := gofakeit.New(uint64(time.Now().UnixNano())) // Use time-based seed for unique data
 
 	partsOfSpeech := []string{"noun", "verb", "adjective", "adverb", "preposition"}
 

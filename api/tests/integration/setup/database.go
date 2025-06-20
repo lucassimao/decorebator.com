@@ -42,15 +42,26 @@ func CreateTestDB(t *testing.T) *pgxpool.Pool {
 func RunMigrations(_ *pgxpool.Pool) error {
 	dbURL := getTestDatabaseURL()
 
-	// Determine correct migration path relative to where tests are run
-	migrationPath := "file://../../cmd/migrate/migrations"
+	// Try different migration paths based on where tests are run from
+	migrationPaths := []string{
+		"file://../../cmd/migrate/migrations",     // From tests/integration/analytics/
+		"file://../../../cmd/migrate/migrations",  // From tests/integration/
+		"file://cmd/migrate/migrations",           // From api root directory
+		"file://./cmd/migrate/migrations",         // From api root directory (alternative)
+	}
 
-	m, err := migrate.New(
-		migrationPath,
-		dbURL,
-	)
+	var m *migrate.Migrate
+	var err error
+	
+	for _, migrationPath := range migrationPaths {
+		m, err = migrate.New(migrationPath, dbURL)
+		if err == nil {
+			break
+		}
+	}
+	
 	if err != nil {
-		return fmt.Errorf("failed to create migrate instance: %w", err)
+		return fmt.Errorf("failed to create migrate instance with any path: %w", err)
 	}
 	defer m.Close()
 

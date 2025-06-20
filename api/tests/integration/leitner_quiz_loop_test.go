@@ -16,7 +16,6 @@ import (
 // where the user lsimaocosta+bs1@gmail.com gets stuck in a loop with the same quiz
 func TestLeitnerQuizLoop_ReproducesProductionIssue(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	// Seed production data
 	seedProductionData(t, server.DB)
@@ -39,7 +38,6 @@ func TestLeitnerQuizLoop_ReproducesProductionIssue(t *testing.T) {
 // TestLeitnerQuizLoop_50Iterations tests the algorithm with fewer iterations
 func TestLeitnerQuizLoop_50Iterations(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	seedProductionData(t, server.DB)
 
@@ -58,7 +56,6 @@ func TestLeitnerQuizLoop_50Iterations(t *testing.T) {
 // TestLeitnerQuizLoop_200Iterations tests the algorithm with more iterations
 func TestLeitnerQuizLoop_200Iterations(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	seedProductionData(t, server.DB)
 
@@ -77,7 +74,6 @@ func TestLeitnerQuizLoop_200Iterations(t *testing.T) {
 // TestLeitnerQuizLoop_500Iterations tests the algorithm with many iterations
 func TestLeitnerQuizLoop_500Iterations(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	seedProductionData(t, server.DB)
 
