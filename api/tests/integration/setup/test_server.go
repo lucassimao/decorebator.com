@@ -161,31 +161,6 @@ func (ts *TestServer) WithPremiumUser(t *testing.T) string {
 	return loginResp.Header("Authorization").NotEmpty().Raw()
 }
 
-// activatePremiumSubscription simulates premium subscription activation
-func (ts *TestServer) activatePremiumSubscription(token string) error {
-	// This would typically involve mocking Stripe webhook
-	// For now, we'll directly update the database
-	ctx := context.Background()
-
-	// Extract user ID from token (simplified for testing)
-	userID, err := ts.extractUserIDFromToken(token)
-	if err != nil {
-		return err
-	}
-
-	// Update user subscription status
-	query := `
-		UPDATE users 
-		SET subscription_plan = 'monthly', 
-		    subscription_status = 'active',
-		    updated_at = NOW()
-		WHERE id = $1
-	`
-
-	_, err = ts.DB.Exec(ctx, query, userID)
-	return err
-}
-
 // extractUserIDFromToken extracts user ID from JWT token (simplified for testing)
 func (ts *TestServer) extractUserIDFromToken(_ string) (int64, error) {
 	// In a real implementation, this would parse and validate the JWT

@@ -36,6 +36,8 @@ func SetupRoutes() *gin.Engine {
 	var UserRoutes = UserRoutes{}
 	var QuizRoutes = QuizRoutes{}
 	var ErrorReportsRoutes = ErrorReportRoutes{}
+	var ContentRoutes = ContentRoutes{}
+	var DemoRoutes = DemoRoutes{}
 
 	// Initialize subscription service
 	db, err := common.GetDBConnection()
@@ -72,6 +74,9 @@ func SetupRoutes() *gin.Engine {
 		router.POST("/webhook/stripe", HandleStripeWebhook(subService))
 		// Redirect to local expo scheme
 		router.GET("/subscription/checkout-redirect", CheckoutRedirect())
+		
+		// Demo quiz endpoint for web landing page (static auth)
+		router.GET("/quiz/demo", AuthenticateStatic, DemoRoutes.GetDemoQuizzes)
 	}
 
 	// Routes with authentication
@@ -93,6 +98,10 @@ func SetupRoutes() *gin.Engine {
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", QuizRoutes.Save)
 		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(), ErrorReportsRoutes.Create)
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus())
+
+		// Content moderation routes
+		authenticatedRoutes.GET("/content/guidelines", ContentRoutes.GetContentGuidelines)
+		authenticatedRoutes.POST("/content/validate", ContentRoutes.ValidateContent)
 
 		RegisterAnalyticsRoutes(authenticatedRoutes)
 

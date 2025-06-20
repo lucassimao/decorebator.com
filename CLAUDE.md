@@ -580,13 +580,6 @@ The system uses a deterministic priority-based algorithm for word selection, ens
 
 ## Memories
 - read README.md for more additional context on decorebator project
-- read api/docs/ANALYTICS_PERFORMANCE_SCALABILITY_REPORT.md for analytics system architecture and future plans
-- read mobile/docs/mobile-app-architecture.md for detailed mobile app patterns and design system
-- read api/docs/ANALYTICS_TESTING_IMPLEMENTATION.md for comprehensive analytics testing patterns
+- read all files inside the docs folder for comprehensive documentation and  patterns
 - Update README.md right after introducing major features or refactorings
-- Update relevant documentation after making architectural changes
-- Fixed critical analytics bugs in January 2025: streak calculations, box distribution logic, response time filtering, word count inconsistencies, and removed unused database fields
-- Analytics repository functions reviewed and corrected: GetWordlistCurrentStreak, GetAllWordlistsProgress, GetCurrentBoxDistribution, GetPracticeTime, GetQuizTypePerformance, GetWordlistMasteryStats
-- Implemented comprehensive analytics integration tests covering all edge cases and data scenarios
-- Added batch analytics endpoint `/analytics/progress-summary` reducing mobile API calls from 8 to 1
 - use api/Makefile and api/scripts/run-tests.sh as the source for the main automations and commands in this monorepo

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"unicode/utf8"
 
@@ -13,6 +14,7 @@ import (
 )
 
 var wordRepository *repo.WordRepository
+var contentFilter *ContentFilterService
 
 type Word = model.Word
 
@@ -22,6 +24,7 @@ func init() {
 		common.Logger.Error("failed to open db connection", "error", err)
 	}
 	wordRepository = &repo.WordRepository{Db: db}
+	contentFilter = NewContentFilterService()
 }
 
 // GetWordByWordlist returns words from wordlist with optional filtering
@@ -41,6 +44,33 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 	// count runes (Unicode characters), not bytes
 	if utf8.RuneCountInString(trimmedName) > 15 {
 		return nil, common.BusinessError{Message: "words must be limited to 15 chars"}
+	}
+
+	// Content filtering validation
+	wordlistId := dto.WordlistID
+	language := "en" // Default to English, should get from wordlist
+	
+	// Try to get wordlist language for more accurate filtering
+	if wordlist, err := GetWordlistById(wordlistId, dto.UserID); err == nil && wordlist != nil {
+		language = wordlist.LanguageCode
+	}
+	
+	// Validate word content
+	filterResult := contentFilter.ValidateWord(trimmedName, language)
+	if !filterResult.IsAppropriate {
+		return nil, common.BusinessError{
+			Message: fmt.Sprintf("Word content not appropriate: %s", filterResult.Reason),
+		}
+	}
+
+	// Validate notes content if provided
+	if dto.Notes != "" {
+		notesResult := contentFilter.ValidateDescription(dto.Notes)
+		if !notesResult.IsAppropriate {
+			return nil, common.BusinessError{
+				Message: fmt.Sprintf("Word notes not appropriate: %s", notesResult.Reason),
+			}
+		}
 	}
 
 	tx, err := wordRepository.Db.Begin(ctx)

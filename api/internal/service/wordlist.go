@@ -11,6 +11,7 @@ import (
 )
 
 var wordlistRepository *repo.WordlistRepository
+var wordlistContentFilter *ContentFilterService
 
 type Wordlist = model.Wordlist
 
@@ -21,6 +22,7 @@ func init() {
 		os.Exit(1)
 	}
 	wordlistRepository = &repo.WordlistRepository{Db: db}
+	wordlistContentFilter = NewContentFilterService()
 }
 
 // include wordsCount and WordsLearnedCount for each scholarship
@@ -42,6 +44,24 @@ func GetUserWordlistsWithWordStats(userId int64) ([]*Wordlist, error) {
 }
 
 func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
+	// Content filtering validation
+	nameResult := wordlistContentFilter.ValidateWordlistName(newWordlist.Name)
+	if !nameResult.IsAppropriate {
+		return nil, common.BusinessError{
+			Message: fmt.Sprintf("Wordlist name not appropriate: %s", nameResult.Reason),
+		}
+	}
+
+	// Validate description if provided
+	if newWordlist.Description != "" {
+		descResult := wordlistContentFilter.ValidateDescription(newWordlist.Description)
+		if !descResult.IsAppropriate {
+			return nil, common.BusinessError{
+				Message: fmt.Sprintf("Wordlist description not appropriate: %s", descResult.Reason),
+			}
+		}
+	}
+
 	wordlist, err := wordlistRepository.Save(newWordlist.Name, newWordlist.Description, newWordlist.LanguageCode, newWordlist.UserID, newWordlist.PronunciationSystem)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
@@ -91,6 +111,24 @@ func DeleteWordlist(id, userId int64) (int64, error) {
 }
 
 func UpdateWordlist(wordlist *Wordlist) error {
+	// Content filtering validation for updates
+	nameResult := wordlistContentFilter.ValidateWordlistName(wordlist.Name)
+	if !nameResult.IsAppropriate {
+		return common.BusinessError{
+			Message: fmt.Sprintf("Wordlist name not appropriate: %s", nameResult.Reason),
+		}
+	}
+
+	// Validate description if provided
+	if wordlist.Description != "" {
+		descResult := wordlistContentFilter.ValidateDescription(wordlist.Description)
+		if !descResult.IsAppropriate {
+			return common.BusinessError{
+				Message: fmt.Sprintf("Wordlist description not appropriate: %s", descResult.Reason),
+			}
+		}
+	}
+
 	count, err := wordlistRepository.Update(wordlist)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
