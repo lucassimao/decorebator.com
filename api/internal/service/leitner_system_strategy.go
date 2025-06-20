@@ -21,23 +21,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func init() {
-	// Seed the random number generator with current time
-	// Used for: example sentence selection fallbacks
-	// Note: Quiz type selection now uses deterministic rotation
-	mathrand.Seed(time.Now().UnixNano())
-}
-
 // cryptoRandInt generates a cryptographically secure random int in range [0, max)
-func cryptoRandInt(max int) int {
-	if max <= 0 {
+func cryptoRandInt(limit int) int {
+	if limit <= 0 {
 		return 0
 	}
-	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(limit)))
 	if err != nil {
 		// Fallback to math/rand if crypto/rand fails
 		//nolint:gosec // G404 - fallback random when crypto/rand is unavailable
-		return mathrand.Intn(max)
+		return mathrand.Intn(limit)
 	}
 	return int(n.Int64())
 }

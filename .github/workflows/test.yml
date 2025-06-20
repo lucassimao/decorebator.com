@@ -18,7 +18,7 @@ permissions:
   security-events: write
 
 env:
-  GO_VERSION: '1.23'
+  GO_VERSION: '1.23.10'
   POSTGRES_USER: test_user
   POSTGRES_PASSWORD: test_pass
   POSTGRES_DB: decorebator_test
@@ -583,125 +583,25 @@ jobs:
     steps:
       - name: Generate test summary
         run: |
-          echo "## 🚀 Test Results Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Unit tests status
-          echo "### 📊 Test Results Overview" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "${{ needs.unit-tests.result }}" == "success" ]; then
-            echo "✅ **Unit Tests**: Passed" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.unit-tests.result }}" == "failure" ]; then
-            echo "❌ **Unit Tests**: Failed" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.unit-tests.result }}" == "cancelled" ]; then
-            echo "⏹️ **Unit Tests**: Cancelled" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ **Unit Tests**: ${{ needs.unit-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Integration tests status  
-          if [ "${{ needs.integration-tests.result }}" == "success" ]; then
-            echo "✅ **Integration Tests**: Passed" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.integration-tests.result }}" == "failure" ]; then
-            echo "❌ **Integration Tests**: Failed" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.integration-tests.result }}" == "cancelled" ]; then
-            echo "⏹️ **Integration Tests**: Cancelled" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ **Integration Tests**: ${{ needs.integration-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Lint checks status
-          if [ "${{ needs.lint-checks.result }}" == "success" ]; then
-            echo "✅ **Lint Checks**: Passed" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.lint-checks.result }}" == "skipped" ]; then
-            echo "⏭️ **Lint Checks**: Skipped (PR only)" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.lint-checks.result }}" == "failure" ]; then
-            echo "❌ **Lint Checks**: Failed" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.lint-checks.result }}" == "cancelled" ]; then
-            echo "⏹️ **Lint Checks**: Cancelled" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ **Lint Checks**: ${{ needs.lint-checks.result }}" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Build verification status
-          if [ "${{ needs.build-verification.result }}" == "success" ]; then
-            echo "✅ **Build Verification**: Passed" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.build-verification.result }}" == "failure" ]; then
-            echo "❌ **Build Verification**: Failed" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.build-verification.result }}" == "cancelled" ]; then
-            echo "⏹️ **Build Verification**: Cancelled" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ **Build Verification**: ${{ needs.build-verification.result }}" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Security scan status
-          if [ "${{ needs.security-scan.result }}" == "success" ]; then
-            echo "✅ **Security Scan**: Passed" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.security-scan.result }}" == "failure" ]; then
-            echo "❌ **Security Scan**: Failed" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.security-scan.result }}" == "cancelled" ]; then
-            echo "⏹️ **Security Scan**: Cancelled" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ **Security Scan**: ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Calculate and display summary statistics
-          PASSED=0
-          FAILED=0
-          SKIPPED=0
-          OTHER=0
-          
-          # Count results
-          [ "${{ needs.unit-tests.result }}" == "success" ] && PASSED=$((PASSED + 1)) || [ "${{ needs.unit-tests.result }}" == "failure" ] && FAILED=$((FAILED + 1)) || [ "${{ needs.unit-tests.result }}" == "skipped" ] && SKIPPED=$((SKIPPED + 1)) || OTHER=$((OTHER + 1))
-          [ "${{ needs.integration-tests.result }}" == "success" ] && PASSED=$((PASSED + 1)) || [ "${{ needs.integration-tests.result }}" == "failure" ] && FAILED=$((FAILED + 1)) || [ "${{ needs.integration-tests.result }}" == "skipped" ] && SKIPPED=$((SKIPPED + 1)) || OTHER=$((OTHER + 1))
-          [ "${{ needs.build-verification.result }}" == "success" ] && PASSED=$((PASSED + 1)) || [ "${{ needs.build-verification.result }}" == "failure" ] && FAILED=$((FAILED + 1)) || [ "${{ needs.build-verification.result }}" == "skipped" ] && SKIPPED=$((SKIPPED + 1)) || OTHER=$((OTHER + 1))
-          [ "${{ needs.security-scan.result }}" == "success" ] && PASSED=$((PASSED + 1)) || [ "${{ needs.security-scan.result }}" == "failure" ] && FAILED=$((FAILED + 1)) || [ "${{ needs.security-scan.result }}" == "skipped" ] && SKIPPED=$((SKIPPED + 1)) || OTHER=$((OTHER + 1))
-          
-          # Handle lint checks separately since it can be skipped
-          if [ "${{ needs.lint-checks.result }}" == "success" ] || [ "${{ needs.lint-checks.result }}" == "skipped" ]; then
-            if [ "${{ needs.lint-checks.result }}" == "success" ]; then
-              PASSED=$((PASSED + 1))
+          {
+            echo "## 🚀 Test Results Summary"
+            echo ""
+            echo "### Test Status"
+            echo "- **Unit Tests**: ${{ needs.unit-tests.result }}"
+            echo "- **Integration Tests**: ${{ needs.integration-tests.result }}"
+            echo "- **Lint Checks**: ${{ needs.lint-checks.result }}"
+            echo "- **Build Verification**: ${{ needs.build-verification.result }}"
+            echo "- **Security Scan**: ${{ needs.security-scan.result }}"
+            echo ""
+            echo "### Quick Status"
+            if [ "${{ needs.integration-tests.result }}" == "failure" ]; then
+              echo "❌ **Integration tests failed** - Check logs above for details"
+            elif [ "${{ needs.unit-tests.result }}" == "failure" ]; then
+              echo "❌ **Unit tests failed** - Check logs above for details"
             else
-              SKIPPED=$((SKIPPED + 1))
+              echo "✅ **All tests passed!**"
             fi
-          elif [ "${{ needs.lint-checks.result }}" == "failure" ]; then
-            FAILED=$((FAILED + 1))
-          else
-            OTHER=$((OTHER + 1))
-          fi
-          
-          echo "### 📈 Summary Statistics" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ **Passed**: $PASSED" >> $GITHUB_STEP_SUMMARY
-          echo "- ❌ **Failed**: $FAILED" >> $GITHUB_STEP_SUMMARY
-          if [ $SKIPPED -gt 0 ]; then
-            echo "- ⏭️ **Skipped**: $SKIPPED" >> $GITHUB_STEP_SUMMARY
-          fi
-          if [ $OTHER -gt 0 ]; then
-            echo "- ⚠️ **Other**: $OTHER" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Overall result
-          if [ $FAILED -eq 0 ] && [ $OTHER -eq 0 ]; then
-            echo "🎉 **Overall Result**: All required checks passed!" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ **Overall Result**: Some checks failed - see details above" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📊 **View detailed test reports above for specific failure information**" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🔍 Quick Debugging Tips" >> $GITHUB_STEP_SUMMARY
-          echo "- **For unit test failures**: Check the 'Unit Test Results' section above" >> $GITHUB_STEP_SUMMARY
-          echo "- **For integration test failures**: Download 'integration-test-reports' artifact for detailed logs" >> $GITHUB_STEP_SUMMARY
-          echo "- **For lint failures**: Look at the golangci-lint action output" >> $GITHUB_STEP_SUMMARY
-          echo "- **For security issues**: Download 'security-scan-results' artifact for SARIF report" >> $GITHUB_STEP_SUMMARY
-          echo "- **Enable Code Scanning**: Go to Settings > Security > Code scanning to enable automatic SARIF uploads" >> $GITHUB_STEP_SUMMARY
-          echo "- **Local testing**: Run \`make test-report\` for structured test output" >> $GITHUB_STEP_SUMMARY
+          } >> $GITHUB_STEP_SUMMARY
           
       - name: Check overall status
         run: |
