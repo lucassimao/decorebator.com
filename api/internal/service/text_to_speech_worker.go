@@ -68,6 +68,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 		switch response.Error.Code {
 		case "rate_limit_exceeded":
 			// snoozing between 1 and 2min
+			//nolint:gosec // G404 - using weak random for rate limiting jitter, not cryptographic security
 			return river.JobSnooze(time.Minute + (time.Duration(rand.Intn(60)) * time.Second))
 		case "billing_hard_limit_reached":
 			// [TODO] notification here elsewhere

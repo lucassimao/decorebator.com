@@ -16,7 +16,6 @@ import (
 // where the user lsimaocosta+bs1@gmail.com gets stuck in a loop with the same quiz
 func TestLeitnerQuizLoop_ReproducesProductionIssue(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	// Seed production data
 	seedProductionData(t, server.DB)
@@ -31,7 +30,7 @@ func TestLeitnerQuizLoop_ReproducesProductionIssue(t *testing.T) {
 		Status(http.StatusOK)
 
 	token := loginResp.Header("authorization").NotEmpty().Raw()
-	
+
 	// Request quizzes 100 times, answering correctly each time
 	runQuizLoopTest(t, server, token, 100)
 }
@@ -39,7 +38,6 @@ func TestLeitnerQuizLoop_ReproducesProductionIssue(t *testing.T) {
 // TestLeitnerQuizLoop_50Iterations tests the algorithm with fewer iterations
 func TestLeitnerQuizLoop_50Iterations(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	seedProductionData(t, server.DB)
 
@@ -58,7 +56,6 @@ func TestLeitnerQuizLoop_50Iterations(t *testing.T) {
 // TestLeitnerQuizLoop_200Iterations tests the algorithm with more iterations
 func TestLeitnerQuizLoop_200Iterations(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	seedProductionData(t, server.DB)
 
@@ -77,7 +74,6 @@ func TestLeitnerQuizLoop_200Iterations(t *testing.T) {
 // TestLeitnerQuizLoop_500Iterations tests the algorithm with many iterations
 func TestLeitnerQuizLoop_500Iterations(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	seedProductionData(t, server.DB)
 
@@ -98,31 +94,31 @@ func runQuizLoopTest(t *testing.T, server *setup.TestServer, token string, itera
 	// Track quiz types received
 	quizTypesReceived := make(map[string]int)
 	quizDefinitionIDs := make(map[int64]int)
-	
+
 	// Request quizzes, answering correctly each time
 	for i := 0; i < iterations; i++ {
 		// Create quiz
 		quizResp := server.Expect.POST("/wordlists/7/quizzes").
 			WithHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
 			Expect()
-		
-		// Check if we got an error response 
+
+		// Check if we got an error response
 		if quizResp.Raw().StatusCode != http.StatusOK {
-			t.Fatalf("Failed to get quiz at iteration %d - status code: %d, response: %s", 
+			t.Fatalf("Failed to get quiz at iteration %d - status code: %d, response: %s",
 				i+1, quizResp.Raw().StatusCode, quizResp.Body().Raw())
 		}
-		
+
 		// The quiz is returned directly, not wrapped in an object
 		quiz := quizResp.JSON().Object()
 		quizType := quiz.Value("type").String().Raw()
 		quizID := int64(quiz.Value("id").Number().Raw())
 		definitionID := int64(quiz.Value("definitionId").Number().Raw())
 		wordID := int64(quiz.Value("wordId").Number().Raw())
-		
+
 		// Track quiz types and definitions
 		quizTypesReceived[quizType]++
 		quizDefinitionIDs[definitionID]++
-		
+
 		// Log every 10th iteration or every 50th for large tests
 		logInterval := 10
 		if iterations > 200 {
@@ -131,7 +127,7 @@ func runQuizLoopTest(t *testing.T, server *setup.TestServer, token string, itera
 		if (i+1)%logInterval == 0 {
 			t.Logf("Iteration %d: Quiz type=%s, definitionID=%d", i+1, quizType, definitionID)
 		}
-		
+
 		// Save quiz result (answer correctly)
 		server.Expect.PATCH("/wordlists/7/quizzes").
 			WithHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
@@ -146,33 +142,33 @@ func runQuizLoopTest(t *testing.T, server *setup.TestServer, token string, itera
 			}).
 			Expect().
 			Status(http.StatusNoContent)
-		
+
 		// Small delay to simulate real usage
 		time.Sleep(50 * time.Millisecond)
 	}
-	
+
 	// Verify results
 	t.Logf("\n=== Quiz Type Distribution (%d iterations) ===", iterations)
 	for quizType, count := range quizTypesReceived {
 		percentage := float64(count) / float64(iterations) * 100
 		t.Logf("%s: %d times (%.1f%%)", quizType, count, percentage)
 	}
-	
+
 	t.Logf("\n=== Definition Distribution ===")
 	for defID, count := range quizDefinitionIDs {
 		percentage := float64(count) / float64(iterations) * 100
 		t.Logf("Definition %d: %d times (%.1f%%)", defID, count, percentage)
 	}
-	
+
 	// Check that we got variety in quiz types
 	require.Greater(t, len(quizTypesReceived), 1, "Should receive multiple quiz types")
-	
+
 	// Check that all quiz types that should be available were used
 	expectedQuizTypes := []string{
 		"GUESS_MEANING", "WORD_FROM_MEANING", "WORD_FROM_IMAGE", "COMPLETE_SENTENCE",
 		"WRITE_WORD_FROM_DEFINITION", "WORD_FROM_AUDIO", "WORD_FROM_EXAMPLE_AUDIO", "MEANING_FROM_AUDIO",
 	}
-	
+
 	// Log which quiz types were never received
 	t.Logf("\n=== Missing Quiz Types ===")
 	for _, expectedType := range expectedQuizTypes {
@@ -180,7 +176,7 @@ func runQuizLoopTest(t *testing.T, server *setup.TestServer, token string, itera
 			t.Logf("Never received: %s", expectedType)
 		}
 	}
-	
+
 	// Check for the stuck quiz problem - if one definition dominates
 	maxCount := 0
 	var dominantDefID int64
@@ -190,16 +186,16 @@ func runQuizLoopTest(t *testing.T, server *setup.TestServer, token string, itera
 			dominantDefID = defID
 		}
 	}
-	
+
 	dominanceRatio := float64(maxCount) / float64(iterations)
 	t.Logf("\n=== Dominance Analysis ===")
 	t.Logf("Most frequent definition: %d appeared %d times (%.1f%%)", dominantDefID, maxCount, dominanceRatio*100)
-	
+
 	// If one definition appears more than 80% of the time, we have the stuck quiz problem
 	if dominanceRatio > 0.8 {
 		t.Errorf("Quiz stuck problem detected! Definition %d dominated %.1f%% of quizzes", dominantDefID, dominanceRatio*100)
 	}
-	
+
 	// Additional checks for balanced quiz types
 	for quizType, count := range quizTypesReceived {
 		percentage := float64(count) / float64(iterations) * 100
@@ -212,12 +208,12 @@ func runQuizLoopTest(t *testing.T, server *setup.TestServer, token string, itera
 
 func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 	ctx := context.Background()
-	
+
 	// Start transaction
 	tx, err := pool.Begin(ctx)
 	require.NoError(t, err)
 	defer tx.Rollback(ctx)
-	
+
 	// 1. Insert user (with test password)
 	_, err = tx.Exec(ctx, `
 		INSERT INTO users (id, first_name, last_name, email, password_hash, subscription_plan)
@@ -226,15 +222,15 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 		ON CONFLICT (id) DO UPDATE SET subscription_plan = EXCLUDED.subscription_plan
 	`) // password is "test123"
 	require.NoError(t, err)
-	
+
 	// 2. Insert wordlist
 	_, err = tx.Exec(ctx, `
-		INSERT INTO wordlists (id, name, description, user_id, language_code, words_count)
-		VALUES (7, 'Test browser stack1', '', 5, 'en', 2)
+		INSERT INTO wordlists (id, name, description, user_id, language_code, words_count, pronunciation_system)
+		VALUES (7, 'Test browser stack1', '', 5, 'en', 2, 'ipa')
 		ON CONFLICT (id) DO NOTHING
 	`)
 	require.NoError(t, err)
-	
+
 	// 3. Insert words
 	_, err = tx.Exec(ctx, `
 		INSERT INTO words (id, name, notes, learned, user_id, wordlist_id, pronunciation, audio_url)
@@ -244,7 +240,7 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 		ON CONFLICT (id) DO NOTHING
 	`)
 	require.NoError(t, err)
-	
+
 	// 4. Insert definitions
 	_, err = tx.Exec(ctx, `
 		INSERT INTO definitions (id, token, language, part_of_speech, meaning, examples, inflections, source, sounds, phonetic_notations, part_of_speech_normalized)
@@ -266,7 +262,7 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 		ON CONFLICT (id) DO NOTHING
 	`)
 	require.NoError(t, err)
-	
+
 	// 5. Insert word_definitions mapping
 	_, err = tx.Exec(ctx, `
 		INSERT INTO word_definitions (word_id, definition_id)
@@ -276,7 +272,7 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 		ON CONFLICT DO NOTHING
 	`)
 	require.NoError(t, err)
-	
+
 	// 6. Insert leitner_system_tracking (with current state from production)
 	// Note: Clear temporarily_skipped_until as those are in the past
 	_, err = tx.Exec(ctx, `
@@ -292,7 +288,7 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 			temporarily_skipped_until = EXCLUDED.temporarily_skipped_until
 	`)
 	require.NoError(t, err)
-	
+
 	// 7. Insert definition_images
 	_, err = tx.Exec(ctx, `
 		INSERT INTO definition_images (id, definition_id, url, description, is_visible, api, model, prompt)
@@ -304,7 +300,7 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 		ON CONFLICT (id) DO NOTHING
 	`)
 	require.NoError(t, err)
-	
+
 	// 8. Insert definition_example_audio
 	_, err = tx.Exec(ctx, `
 		INSERT INTO definition_example_audio (id, definition_id, example_text, example_hash, audio_url, inflection_type)
@@ -324,10 +320,10 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 		ON CONFLICT (id) DO NOTHING
 	`)
 	require.NoError(t, err)
-	
+
 	// Commit transaction
 	err = tx.Commit(ctx)
 	require.NoError(t, err)
-	
+
 	t.Log("Production data seeded successfully")
 }

@@ -595,8 +595,8 @@ func TestCodeQuality(t *testing.T) {
 
 echo "Running pre-commit checks..."
 
-# Run unit tests
-make test-unit
+# Run unit tests with structured output
+make test-report
 if [ $? -ne 0 ]; then
     echo "❌ Unit tests failed"
     exit 1
@@ -610,10 +610,17 @@ if [ $? -ne 0 ]; then
 fi
 
 # Run linter
-golangci-lint run
+make lint
 if [ $? -ne 0 ]; then
     echo "❌ Linting failed"
     exit 1
+fi
+
+# Run security scan
+make security-scan
+if [ $? -ne 0 ]; then
+    echo "⚠️  Security issues found"
+    # Don't fail on security issues in pre-commit
 fi
 
 echo "✅ All pre-commit checks passed"
@@ -623,23 +630,45 @@ echo "✅ All pre-commit checks passed"
 
 ```yaml
 # .github/workflows/test.yml (excerpt)
-- name: Run tests with coverage
+- name: Run unit tests with structured output
   run: |
-    go test -v -race -coverprofile=coverage.out ./...
+    # Install gotestsum for better test output formatting
+    go install gotest.tools/gotestsum@latest
     
-- name: Check coverage threshold
+    # Run tests with structured output and junit report
+    gotestsum --junitfile unit-tests.xml --format testname -- \
+      -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+    
+    # Display coverage summary
+    go tool cover -func=unit.out
+    
+- name: Check coverage thresholds
   run: |
-    COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
-    echo "Coverage: ${COVERAGE}%"
-    if (( $(echo "$COVERAGE < 80" | bc -l) )); then
-      echo "Coverage ${COVERAGE}% is below threshold 80%"
+    # Unit test coverage (70% threshold)
+    UNIT_COV=$(go tool cover -func=unit.out | grep total | awk '{print $3}' | sed 's/%//')
+    echo "Unit coverage: ${UNIT_COV}%"
+    if (( $(echo "$UNIT_COV < 70" | bc -l) )); then
+      echo "❌ Unit coverage (${UNIT_COV}%) below threshold (70%)"
       exit 1
+    fi
+    
+    # Integration test coverage (80% threshold) - if integration.out exists
+    if [ -f integration.out ]; then
+      INT_COV=$(go tool cover -func=integration.out | grep total | awk '{print $3}' | sed 's/%//')
+      echo "Integration coverage: ${INT_COV}%"
+      if (( $(echo "$INT_COV < 80" | bc -l) )); then
+        echo "❌ Integration coverage (${INT_COV}%) below threshold (80%)"
+        exit 1
+      fi
     fi
 
 - name: Upload coverage to Codecov
-  uses: codecov/codecov-action@v3
+  uses: codecov/codecov-action@v4
   with:
-    file: ./coverage.out
+    file: unit.out
+    flags: unit
+    name: unit-tests
+    token: ${{ secrets.CODECOV_TOKEN }}
 ```
 
 ## 🐛 Debugging Tests
@@ -692,6 +721,128 @@ func TestWithDataInspection(t *testing.T) {
 }
 ```
 
+## 🧮 Analytics Testing Implementation
+
+### Comprehensive Analytics Test Suite
+
+The Decorebator API includes a comprehensive analytics testing suite with dedicated test files for each analytics endpoint. This implementation demonstrates advanced testing patterns for complex database calculations and business logic validation.
+
+#### Analytics Test Coverage
+
+- **8 dedicated test files** covering all analytics endpoints
+- **Database query validation** with direct PostgreSQL testing
+- **Complex calculation verification** for metrics, percentages, and aggregations
+- **Edge case testing** including empty data, boundary conditions, and error scenarios
+
+#### Key Files
+- `tests/integration/analytics/` - Complete analytics test suite
+- `api/docs/ANALYTICS_TESTING_IMPLEMENTATION.md` - Detailed implementation guide
+
+#### Example: Analytics Calculation Testing
+
+```go
+func TestWordMasteryEndpoint_CalculationAccuracy(t *testing.T) {
+    // Arrange: Create test data with known values
+    testData := setupWordMasteryTestData(t, server.DB, ctx)
+    
+    // Act: Call analytics endpoint
+    response := server.Expect.GET(fmt.Sprintf("/analytics/wordlists/%d/mastery", testData.WordlistID)).
+        WithHeader("Authorization", token).
+        Expect().Status(http.StatusOK)
+    
+    // Assert: Verify calculations match expected values
+    stats := response.JSON().Object().Value("stats").Array()
+    for i, stat := range stats.Iter() {
+        expected := testData.ExpectedWords[i]
+        statObj := stat.Object()
+        
+        statObj.Value("masteryLevel").Number().InDelta(expected.MasteryLevel, 0.01)
+        statObj.Value("accuracy").Number().InDelta(expected.Accuracy, 0.01)
+        statObj.Value("highestBox").ValueEqual("highestBox", expected.BoxLevel)
+    }
+}
+```
+
+#### Advanced Testing Patterns
+
+1. **Controlled Data Seeding** - Creates test data with predetermined values for exact calculation verification
+2. **Complex Query Testing** - Validates CTEs, window functions, and multi-table aggregations
+3. **Metric-Specific Test Files** - Focused test suites for each analytics endpoint
+4. **Shared Utilities** - Common helpers reduce duplication across test files
+
+### Database Query Validation
+
+Following CLAUDE.md requirements, all analytics tests validate database queries directly:
+
+```go
+// Insert known test data
+_, err := db.Exec(ctx,
+    `INSERT INTO word_mastery (user_id, word_id, mastery_level, total_attempts, correct_attempts, streak_count, max_streak) 
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    userID, wordID, 0.75, 16, 12, 4, 6)
+
+// Test endpoint calculation
+response := server.Expect.GET(fmt.Sprintf("/analytics/wordlists/%d/mastery", wordlistID))
+
+// Verify calculation accuracy
+expectedAccuracy := float64(12) / float64(16) // 75%
+statObj.Value("accuracy").Number().InDelta(expectedAccuracy, 0.01)
+```
+
+## 🔧 Modern Testing Infrastructure
+
+### Updated Testing Commands (2025)
+
+The project now includes modernized testing infrastructure with structured output and version-aligned tools:
+
+#### Quick Testing Commands
+```bash
+# Fast unit tests with structured output
+make test-report
+
+# Comprehensive testing (all tests + coverage)
+./scripts/run-tests.sh all
+
+# Specific test types
+./scripts/run-tests.sh unit        # Unit tests only
+./scripts/run-tests.sh integration # Integration tests only
+./scripts/run-tests.sh watch       # Watch mode for development
+
+# Tool management
+make setup                         # Install all tools with correct versions
+make check-versions               # Verify tool versions match CI
+make security-scan                # Run security scans (govulncheck)
+```
+
+#### Advanced Test Script Features
+- **Version Alignment**: All tools match GitHub Actions workflow versions
+- **Structured Output**: Uses `gotestsum` for better test reporting  
+- **Security Scanning**: Integrated `govulncheck` for vulnerability detection
+- **Clean Environment**: Automatic Docker cleanup between test runs
+- **Coverage Reports**: HTML reports and threshold checking
+
+#### Test Script Examples
+```bash
+# First-time setup
+./scripts/run-tests.sh setup
+
+# Development workflow
+./scripts/run-tests.sh watch       # Auto-reload on file changes
+
+# CI-style testing
+./scripts/run-tests.sh report      # Full report with all metrics
+
+# Cleanup after issues
+./scripts/run-tests.sh clean       # Remove Docker containers/volumes
+```
+
+### Tool Versions (Matching CI)
+- **Go**: 1.23
+- **PostgreSQL**: 15  
+- **Redis**: 7-alpine
+- **gotestsum**: latest (structured test output)
+- **govulncheck**: latest (security scanning)
+
 ## 📚 Additional Resources
 
 ### Go Testing Resources
@@ -704,6 +855,11 @@ func TestWithDataInspection(t *testing.T) {
 - [httpexpect](https://github.com/gavv/httpexpect) - HTTP API testing
 - [gomock](https://github.com/golang/mock) - Mock generation
 - [golangci-lint](https://golangci-lint.run/) - Linting
+
+### Project-Specific Resources
+- `api/docs/ANALYTICS_TESTING_IMPLEMENTATION.md` - Comprehensive analytics testing guide
+- `tests/integration/analytics/` - Analytics test suite implementation
+- `tests/integration/setup/` - Test infrastructure and utilities
 
 ### Best Practices References
 - [Google Go Testing Best Practices](https://google.github.io/styleguide/go/best-practices.html#testing)

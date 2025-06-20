@@ -3,6 +3,7 @@ package setup
 import (
 	"fmt"
 	"math/rand" // nosec G404 - math/rand is acceptable for test fixtures, not cryptographic use
+	"time"
 
 	httphandlers "decorebator.com/internal/http"
 	"decorebator.com/internal/model"
@@ -13,15 +14,27 @@ import (
 
 // GenerateTestUser generates a random test user using production model
 func GenerateTestUser() *model.User {
-	fake := gofakeit.New(0)
+	// Use UnixNano for better uniqueness across rapid calls
+	now := time.Now().UnixNano()
+	var seed uint64
+	if now >= 0 {
+		seed = uint64(now)
+	} else {
+		seed = uint64(-now) // Handle negative values safely
+	}
+	fake := gofakeit.New(seed)
 
 	// Generate a realistic bcrypt hash for testing
 	passwordHash, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 
+	// Add UUID to email to ensure uniqueness
+	uuid := uuid.New().String()[:8] // Use first 8 chars of UUID
+	email := fmt.Sprintf("test+%s@example.com", uuid)
+
 	return &model.User{
 		FirstName:        fake.FirstName(),
 		LastName:         fake.LastName(),
-		Email:            fake.Email(),
+		Email:            email,
 		PasswordHash:     string(passwordHash),
 		SubscriptionPlan: model.PlanFree,
 		// pgtype fields will be set by database operations
@@ -30,10 +43,22 @@ func GenerateTestUser() *model.User {
 
 // GenerateSignupInput generates signup input using production SignupInput struct
 func GenerateSignupInput() httphandlers.SignupInput {
-	fake := gofakeit.New(0)
+	// Use UnixNano for better uniqueness across rapid calls
+	now := time.Now().UnixNano()
+	var seed uint64
+	if now >= 0 {
+		seed = uint64(now)
+	} else {
+		seed = uint64(-now) // Handle negative values safely
+	}
+	fake := gofakeit.New(seed)
+
+	// Add UUID to email to ensure uniqueness
+	uuid := uuid.New().String()[:8] // Use first 8 chars of UUID
+	email := fmt.Sprintf("test+%s@example.com", uuid)
 
 	return httphandlers.SignupInput{
-		Email:     fake.Email(),
+		Email:     email,
 		Password:  "password123",
 		FirstName: fake.FirstName(),
 		LastName:  fake.LastName(),
@@ -42,22 +67,40 @@ func GenerateSignupInput() httphandlers.SignupInput {
 
 // GenerateTestWordlist generates a random test wordlist using production model
 func GenerateTestWordlist(userID int64) *model.Wordlist {
-	fake := gofakeit.New(0)
+	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
+	now := time.Now().Unix()
+	var seed uint64
+	if now >= 0 {
+		seed = uint64(now)
+	} else {
+		seed = uint64(-now) // Handle negative values safely
+	}
+	fake := gofakeit.New(seed)
 
 	languages := []string{"en", "es", "fr", "de", "it", "pt", "ja"}
+	languageCode := languages[rand.Intn(len(languages))] //nolint:gosec // G404 - test fixtures only
 
 	return &model.Wordlist{
-		Name:         fake.Sentence(3),
-		Description:  fake.Sentence(10),
-		UserID:       userID,
-		LanguageCode: languages[rand.Intn(len(languages))], //nolint:gosec // G404 - test fixtures only
+		Name:                fake.Sentence(3),
+		Description:         fake.Sentence(10),
+		UserID:              userID,
+		LanguageCode:        languageCode,
+		PronunciationSystem: model.GetDefaultPronunciationSystem(languageCode),
 		// pgtype fields will be set by database operations
 	}
 }
 
 // GenerateTestWord generates a random test word using production model
 func GenerateTestWord(wordlistID, userID int64) *model.Word {
-	fake := gofakeit.New(0)
+	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
+	now := time.Now().Unix()
+	var seed uint64
+	if now >= 0 {
+		seed = uint64(now)
+	} else {
+		seed = uint64(-now) // Handle negative values safely
+	}
+	fake := gofakeit.New(seed)
 
 	return &model.Word{
 		Name:       fake.Word(),
@@ -71,7 +114,15 @@ func GenerateTestWord(wordlistID, userID int64) *model.Word {
 
 // GenerateTestDefinition generates a random test definition using production model
 func GenerateTestDefinition() *model.Definition {
-	fake := gofakeit.New(0)
+	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
+	now := time.Now().Unix()
+	var seed uint64
+	if now >= 0 {
+		seed = uint64(now)
+	} else {
+		seed = uint64(-now) // Handle negative values safely
+	}
+	fake := gofakeit.New(seed)
 
 	partsOfSpeech := []string{"noun", "verb", "adjective", "adverb", "preposition"}
 
@@ -126,22 +177,25 @@ func CreateTestUserSet() []*model.User {
 func CreateTestWordlistSet(userID int64) []*model.Wordlist {
 	return []*model.Wordlist{
 		{
-			Name:         "Travel Essentials",
-			LanguageCode: "en",
-			Description:  "Essential words for traveling",
-			UserID:       userID,
+			Name:                "Travel Essentials",
+			LanguageCode:        "en",
+			Description:         "Essential words for traveling",
+			UserID:              userID,
+			PronunciationSystem: model.PronunciationSystemIPA,
 		},
 		{
-			Name:         "Business Vocabulary",
-			LanguageCode: "en",
-			Description:  "Professional business terms",
-			UserID:       userID,
+			Name:                "Business Vocabulary",
+			LanguageCode:        "en",
+			Description:         "Professional business terms",
+			UserID:              userID,
+			PronunciationSystem: model.PronunciationSystemIPA,
 		},
 		{
-			Name:         "Vocabulario Básico",
-			LanguageCode: "es",
-			Description:  "Palabras básicas en español",
-			UserID:       userID,
+			Name:                "Vocabulario Básico",
+			LanguageCode:        "es",
+			Description:         "Palabras básicas en español",
+			UserID:              userID,
+			PronunciationSystem: model.PronunciationSystemIPA,
 		},
 	}
 }

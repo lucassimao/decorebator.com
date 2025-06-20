@@ -38,8 +38,20 @@ cd mobile && npm run lint              # Mobile app linting
 # API - Run specific test
 go test -v -run TestSpecificFunction ./internal/service/
 
+# API - Run specific test file
+go test -v ./tests/integration/analytics_word_mastery_test.go
+
 # Mobile - Run specific test  
 npm test -- --testNamePattern="specific test name"
+
+# Mobile - Run tests without watch mode
+cd mobile && jest
+
+# Mobile - Run specific test file
+npm test -- components/quiz/QuizContent.test.tsx
+
+# Mobile - Run tests with coverage
+cd mobile && jest --coverage
 ```
 
 ## Common Development Commands
@@ -349,10 +361,11 @@ make coverage-html
 ```
 
 ### Mobile Tests
-- Jest with Expo preset
-- Run with `npm test` (runs in watch mode)
+- Jest with Expo preset configured in `package.json`
+- Run with `npm test` (runs in watch mode with `--watchAll`)
 - Run single test: `npm test -- --testNamePattern="test name"`
 - To run tests without watch mode: `jest` (directly)
+- Test files located in component directories alongside source files
 
 ### Database Query Testing (CRITICAL REQUIREMENT)
 
@@ -454,6 +467,13 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - **Database Indexes**: Added performance indexes for analytics queries (migration 000044)
 - **SQL Injection Fixes**: Resolved SQL injection vulnerabilities in analytics queries
 
+### Analytics System Improvements (January 2025)
+
+**Batch Analytics Endpoint**: 
+- New `/analytics/progress-summary` endpoint reduces API calls from N×8 to 1
+- Single request returns all analytics data for dashboard
+- Optimized for mobile app performance
+
 ### Analytics Data Quality Fixes (January 2025)
 - **Fixed Critical Streak Calculation Bug**: Corrected broken gap-and-islands logic in `GetWordlistCurrentStreak` and `GetAllWordlistsProgress`
   - **Issue**: `ROW_NUMBER() OVER (ORDER BY date DESC)` caused consecutive dates to have different group identifiers
@@ -499,6 +519,10 @@ To prevent abuse and control API costs, error reporting implements comprehensive
   - `api/docs/LOGGING_IMPROVEMENT_PLAN.md` - Enhanced structured logging
   - `api/docs/ANALYTICS_REVIEW_REPORT.md` - Performance and bug fixes for analytics
   - `api/docs/PROBABILISTIC_LEITNER_IMPLEMENTATION.md` - Advanced Leitner system solution
+  - `api/docs/DETERMINISTIC_LEITNER_IMPLEMENTATION.md` - Deterministic priority-based Leitner algorithm
+  - `api/docs/LEITNER_ALGORITHM_OPTIMIZATION_REPORT.md` - Comprehensive Leitner system optimization analysis
+  - `api/docs/TESTING_BEST_PRACTICES.md` - Detailed testing guidelines and patterns
+  - `api/docs/WORKER_ABUSE_PREVENTION.md` - Background worker abuse prevention for free users
 
 ## Multi-Language Support
 
@@ -529,41 +553,40 @@ The application provides comprehensive multi-language support:
 - **Offline Support**: Premium users can access wordlists and practice offline with seamless sync
 - **Subscription Tiers**: Free plan (1 wordlist, 10 words) and Premium plans ($6.99/month, $69.90/year)
 
-## Advanced Leitner System - Probabilistic Selection
+## Advanced Leitner System - Deterministic Implementation
 
-The system implements probabilistic availability to solve the "Box 7 Stagnation" problem where users with all words in the highest box would have no practice content available.
+The system uses a deterministic priority-based algorithm for word selection, ensuring consistent and predictable learning experiences.
 
-**Probability Formula:**
-```
-P(selection) = base_probability + (time_progress * (1 - base_probability))
-```
+**Box Review Intervals:**
+- Box 1: Immediate (new/failed words)
+- Box 2: 1 hour
+- Box 3: 6 hours  
+- Box 4: 1 day
+- Box 5: 3 days
+- Box 6: 7 days
+- Box 7: 1 month
 
-**Box-Specific Minimum Probabilities:**
-- Box 1: 100% (always available)
-- Box 2: 70% minimum  
-- Box 3: 50% minimum
-- Box 4: 30% minimum
-- Box 5: 20% minimum
-- Box 6: 10% minimum
-- Box 7: 5% minimum (ensures content always available)
+**Selection Algorithm:**
+1. Words due for review (past their interval)
+2. Words temporarily skipped due to error reports
+3. Quiz type progression tied to box level
+4. 100% deterministic - same conditions produce same results
 
-**Benefits:**
-- Never stuck even with all words in Box 7
-- Maintains spaced repetition principles
-- Single query execution (no complex fallbacks)
-- Scientifically models natural memory decay
+**Features:**
+- Prevents Box 7 stagnation with intelligent scheduling
+- Temporary skip for reported errors (auto-resumed after regeneration)
+- Progressive quiz difficulty matching box level
+- Consistent user experience across sessions
 
 ## Memories
 - read README.md for more additional context on decorebator project
 - read api/docs/ANALYTICS_PERFORMANCE_SCALABILITY_REPORT.md for analytics system architecture and future plans
 - read mobile/docs/mobile-app-architecture.md for detailed mobile app patterns and design system
+- read api/docs/ANALYTICS_TESTING_IMPLEMENTATION.md for comprehensive analytics testing patterns
 - Update README.md right after introducing major features or refactorings
 - Update relevant documentation after making architectural changes
 - Fixed critical analytics bugs in January 2025: streak calculations, box distribution logic, response time filtering, word count inconsistencies, and removed unused database fields
 - Analytics repository functions reviewed and corrected: GetWordlistCurrentStreak, GetAllWordlistsProgress, GetCurrentBoxDistribution, GetPracticeTime, GetQuizTypePerformance, GetWordlistMasteryStats
-
-# important-instruction-reminders
-Do what has been asked; nothing more, nothing less.
-NEVER create files unless they're absolutely necessary for achieving your goal.
-ALWAYS prefer editing an existing file to creating a new one.
-NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+- Implemented comprehensive analytics integration tests covering all edge cases and data scenarios
+- Added batch analytics endpoint `/analytics/progress-summary` reducing mobile API calls from 8 to 1
+- use api/Makefile and api/scripts/run-tests.sh as the source for the main automations and commands in this monorepo

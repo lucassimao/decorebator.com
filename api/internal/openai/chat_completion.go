@@ -14,18 +14,21 @@ import (
 )
 
 type LanguageConfig struct {
-	Code                 string
-	Name                 string
-	Flag                 string
-	PartOfSpeechList     []string
-	PartOfSpeechMappings map[string]string // Maps language-specific terms to normalized English
-	VerbTenses           []string
-	GrammarInstructions  string
-	SpecialInstructions  string
-	ExampleInstructions  string
+	Code                      string
+	Name                      string
+	Flag                      string
+	PartOfSpeechList          []string
+	PartOfSpeechMappings      map[string]string // Maps language-specific terms to normalized English
+	VerbTenses                []string
+	GrammarInstructions       string
+	SpecialInstructions       string
+	ExampleInstructions       string
+	PronunciationInstructions map[string]string // Instructions per pronunciation system
 }
 
-//nolint
+// gofmt:off
+//
+//nolint:gochecknoglobals // Global language configuration map
 var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 	"en": {
 		Code:             "en",
@@ -47,6 +50,9 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "For English verbs, provide present, past, and past participle forms. Include phrasal verbs when applicable.",
 		SpecialInstructions: "Pay attention to irregular verb forms and common phrasal verb combinations.",
 		ExampleInstructions: "Wrap the target word in square brackets [word] in all example sentences.",
+		PronunciationInstructions: map[string]string{
+			"ipa": "Provide accurate IPA (International Phonetic Alphabet) transcription using standard symbols like /ˈhɛloʊ/ for 'hello'. Use primary stress markers (ˈ) and secondary stress markers (ˌ) when needed.",
+		},
 	},
 	"es": {
 		Code:             "es",
@@ -71,6 +77,9 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "Para verbos españoles, proporciona las formas de presente, pretérito perfecto simple y participio pasado. Incluye información sobre género para sustantivos y adjetivos.",
 		SpecialInstructions: "Considera las diferencias regionales y incluye formas tanto formales como informales cuando sea relevante.",
 		ExampleInstructions: "Encierra la palabra objetivo entre corchetes [palabra] en todas las oraciones de ejemplo.",
+		PronunciationInstructions: map[string]string{
+			"ipa": "Proporciona transcripción IPA precisa usando símbolos estándar como /ˈoːla/ para 'hola'. Usa marcadores de acento primario (ˈ) cuando sea necesario.",
+		},
 	},
 	"fr": {
 		Code:             "fr",
@@ -93,6 +102,9 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "Pour les verbes français, fournissez les formes du présent, passé composé et participe passé. Incluez les informations sur le genre pour les noms et adjectifs.",
 		SpecialInstructions: "Attention aux liaisons et aux verbes irréguliers. Incluez les accents appropriés.",
 		ExampleInstructions: "Encadrez le mot cible entre crochets [mot] dans toutes les phrases d'exemple.",
+		PronunciationInstructions: map[string]string{
+			"ipa": "Fournissez une transcription IPA précise utilisant des symbols standard comme /bon.ˈʒuʁ/ pour 'bonjour'. Utilisez les marqueurs d'accent primaire (ˈ) et secondaire (ˌ).",
+		},
 	},
 	"de": {
 		Code:             "de",
@@ -113,6 +125,9 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "Für deutsche Verben, geben Sie Präsens, Präteritum und Partizip II an. Für Substantive, geben Sie den Artikel (der/die/das) und Pluralform an.",
 		SpecialInstructions: "Beachten Sie trennbare Verben und Komposita. Berücksichtigen Sie die vier Fälle (Nominativ, Akkusativ, Dativ, Genitiv).",
 		ExampleInstructions: "Setzen Sie das Zielwort in eckige Klammern [Wort] in allen Beispielsätzen.",
+		PronunciationInstructions: map[string]string{
+			"ipa": "Geben Sie eine genaue IPA-Transcription mit Standardsymbolen wie /ˈhaːloː/ für 'hallo' an. Verwenden Sie primäre (ˈ) und sekundäre (ˌ) Betonungsmarkierungen.",
+		},
 	},
 	"it": {
 		Code:             "it",
@@ -133,6 +148,9 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "Per i verbi italiani, fornire le forme del presente, passato prossimo e participio passato. Includere informazioni sul genere per sostantivi e aggettivi.",
 		SpecialInstructions: "Prestare attenzione ai verbi irregolari e alle coniugazioni specifiche di ciascun gruppo verbale.",
 		ExampleInstructions: "Racchiudere la parola target tra parentesi quadre [parola] in tutte le frasi di esempio.",
+		PronunciationInstructions: map[string]string{
+			"ipa": "Fornisci trascrizione IPA accurata usando simboli standard come /ˈtʃaːo/ per 'ciao'. Usa marcatori di stress primario (ˈ) e secondario (ˌ).",
+		},
 	},
 	"pt": {
 		Code:             "pt",
@@ -158,6 +176,9 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "Para verbos portugueses, forneça as formas do presente, pretérito perfeito e particípio passado. Inclua informações sobre gênero para substantivos e adjetivos.",
 		SpecialInstructions: "Considere as diferenças entre português brasileiro e europeu quando relevante. Atenção aos sons nasais e acentuação.",
 		ExampleInstructions: "Coloque a palavra-alvo entre colchetes [palavra] em todas as frases de exemplo.",
+		PronunciationInstructions: map[string]string{
+			"ipa": "Forneça transcrição IPA precisa usando símbolos padrão como /oˈla/ para 'olá'. Use marcadores de stress primário (ˈ) e secundário (ˌ).",
+		},
 	},
 	"ja": {
 		Code:             "ja",
@@ -178,8 +199,14 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "日本語の動詞について、現在形、過去形、連体形を提供してください。敬語や丁寧語の情報も含めてください。",
 		SpecialInstructions: "ひらがな、カタカナ、漢字の適切な使い分けに注意してください。助詞の使い方も重要です。",
 		ExampleInstructions: "すべての例文で対象の単語を角括弧[単語]で囲んでください。",
+		PronunciationInstructions: map[string]string{
+			"romaji":   "Provide accurate romanization (romaji) using standard Hepburn romanization like 'konnichiwa' for こんにちは. Use lowercase with proper spacing.",
+			"hiragana": "Provide accurate pronunciation in hiragana/katakana like こんにちは for greetings, カメラ for foreign words. Use appropriate writing system based on word type.",
+		},
 	},
 }
+
+// gofmt:on
 
 func isValidPartOfSpeech(value string, languageCode string) bool {
 	config, exists := LANGUAGE_CONFIGS[languageCode]
@@ -196,7 +223,7 @@ func isValidPartOfSpeech(value string, languageCode string) bool {
 }
 
 // buildLanguageSpecificPrompt creates language-specific prompts for ChatGPT
-func buildLanguageSpecificPrompt(token string, languageCode string) ([]map[string]string, error) {
+func buildLanguageSpecificPrompt(token string, languageCode string, pronunciationSystem model.PronunciationSystem) ([]map[string]string, error) {
 	languageConfig, exists := LANGUAGE_CONFIGS[languageCode]
 	if !exists {
 		return nil, fmt.Errorf("unsupported language: %s", languageCode)
@@ -223,13 +250,19 @@ func buildLanguageSpecificPrompt(token string, languageCode string) ([]map[strin
 			" • \"meaning\" must be a non-empty string in %s. "+
 			" • \"examples\" must be an array of strings. Each string must include the original token wrapped in square brackets. If the partOfSpeech is \"verb\" or equivalent, \"examples\" should be an empty array. "+
 			" • \"inflections\" must be an array. If partOfSpeech is \"verb\" or equivalent, you must include one item for each valid verb tense (%s). Otherwise, \"inflections\" must be an empty array. "+
-			" • Each inflection object must have exactly these required keys: \"inflection\" (string), \"tense\" (one of: %s), and \"examples\" (an array of exactly 3 strings). "+
-			" • Each of the 3 example strings inside \"inflection.examples\" must contain that inflected form wrapped in square brackets. "+
+			" • Each inflection object must have exactly these required keys: \"inflection\" (string), \"tense\" (one of: %s), and \"examples\" (an array of exactly 7 strings). "+
+			" • Each of the 7 example strings inside \"inflection.examples\" must contain that inflected form wrapped in square brackets. "+
 			" • You may include multiple \"results\" items if the word can function in multiple parts of speech, but only one object per POS. "+
 			" • If the token is not found (or the user provided an invalid word), respond with: { \"results\": [], \"pronunciation\": \"\" } "+
 			" • Under no circumstances should you output any text other than valid JSON that matches the schema exactly. "+
-			" • When you do provide \"pronunciation\", it must be the IPA (International Phonetic Alphabet) string for the token. "+
+			" • When you do provide \"pronunciation\", %s "+
 			" • %s",
+		func() string {
+			if instructions, exists := languageConfig.PronunciationInstructions[string(pronunciationSystem)]; exists {
+				return instructions
+			}
+			return "it must be the IPA (International Phonetic Alphabet) string for the token."
+		}(),
 		languageConfig.Code,
 		strings.Join(languageConfig.PartOfSpeechList, ", "),
 		languageConfig.Name,
@@ -302,13 +335,13 @@ type DefinitionWithPronunciation struct {
 	Pronunciation string
 }
 
-func GetDefinition(token string, languageCode string) (*DefinitionWithPronunciation, error) {
-	logger := common.Logger.With("token", token, "languageCode", languageCode, "func", "GetDefinition", "package", "openai")
+func GetDefinition(token string, languageCode string, pronunciationSystem model.PronunciationSystem) (*DefinitionWithPronunciation, error) {
+	logger := common.Logger.With("token", token, "languageCode", languageCode, "pronunciationSystem", pronunciationSystem, "func", "GetDefinition", "package", "openai")
 
-	logger.Debug("defining token using chatgpt", "token", token, "language", languageCode)
+	logger.Debug("defining token using chatgpt", "token", token, "language", languageCode, "pronunciationSystem", pronunciationSystem)
 
 	// Generate language-specific prompts
-	messages, err := buildLanguageSpecificPrompt(token, languageCode)
+	messages, err := buildLanguageSpecificPrompt(token, languageCode, pronunciationSystem)
 	if err != nil {
 		logger.Error("failed to build language-specific prompt", "error", err)
 		return nil, err
@@ -468,17 +501,25 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 								"description": fmt.Sprintf("A clear definition in %s", config.Name),
 							},
 							"examples": map[string]any{
-								"type":        "array",
-								"description": fmt.Sprintf("Example sentences in %s showing usage of the word. Should be an empty array if partOfSpeech is NOT verb or equivalent.", config.Name),
+								"type": "array",
+								"description": fmt.Sprintf(
+									"Example sentences in %s showing usage of the word. "+
+										"MUST be filled for all parts of speech EXCEPT verbs or equivalent (like phrasal verbs), "+
+										"which must have an empty array here and provide examples exclusively under the 'inflections' property.",
+									config.Name,
+								),
 								"items": map[string]string{
 									"type":        "string",
 									"description": "Each sentence must include the word wrapped in square brackets. Example: 'He [runs] every morning.'",
 								},
 							},
 							"inflections": map[string]any{
-								"type":        "array",
-								"description": fmt.Sprintf("List of verb inflections in %s. Return an empty array if partOfSpeech is NOT a verb or equivalent.", config.Name),
-								"items": map[string]any{
+								"type": "array",
+								"description": fmt.Sprintf(
+									"List of verb inflections in %s. MUST be filled ONLY if partOfSpeech is a verb or equivalent. "+
+										"All usage examples for verbs must be listed here, not in the 'examples' field above.",
+									config.Name,
+								), "items": map[string]any{
 									"type":                 "object",
 									"additionalProperties": false,
 									"description":          fmt.Sprintf("Details for a single verb form in %s, including the inflected verb and usage examples.", config.Name),
@@ -495,10 +536,10 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 										},
 										"examples": map[string]any{
 											"type":        "array",
-											"description": fmt.Sprintf("Exactly 3 different usage examples of the verb in this tense in %s.", config.Name),
+											"description": fmt.Sprintf("Exactly 7 different usage examples of the verb in this tense in %s.", config.Name),
 											"items": map[string]any{
 												"type":        "string",
-												"description": fmt.Sprintf("Example sentence using the inflection in %s. Must contain the word wrapped in square brackets.", config.Name),
+												"description": fmt.Sprintf("Example sentence using the full inflection in %s, wrapped entirely in square brackets. For phrasal verbs, wrap the full phrase. E.g., '[skims off]' not '[skims] off'.", config.Name),
 											},
 										},
 									},
@@ -516,27 +557,6 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 	}
 
 	return schema, nil
-}
-
-//nolint
-var EXAMPLES_RESPONSE_SCHEMA = map[string]any{
-	"name":   "ExamplesResponse",
-	"strict": true,
-	"schema": map[string]any{
-		"type":                 "object",
-		"required":             []string{"examples"},
-		"additionalProperties": false,
-		"properties": map[string]any{
-			"examples": map[string]any{
-				"type":        "array",
-				"description": "An array of well-structured, creative phrases that include the word, matching the intended part of speech and sense.",
-				"items": map[string]string{
-					"type":        "string",
-					"description": "Each phrase must be a complete sentence with a subject and verb. The word should be wrapped in square brackets, e.g., 'He [tore up] the letter.'",
-				},
-			},
-		},
-	},
 }
 
 var DEFINITION_RESPONSE_SCHEMA = map[string]any{

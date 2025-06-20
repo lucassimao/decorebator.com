@@ -38,7 +38,7 @@ func NewBatchProgressRepository(db *pgxpool.Pool) *BatchProgressRepository {
 //   - Handles edge cases: practiced today vs yesterday vs no recent activity
 //
 // 4. Main SELECT: Combines all CTEs using LEFT JOINs
-//    - Returns: wordlist_id, name, language_code, totals, mastery stats, streak, last_activity
+//   - Returns: wordlist_id, name, language_code, totals, mastery stats, streak, last_activity
 //
 // Used for dashboard overview showing all wordlists with comprehensive progress metrics.
 func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, userID int64) ([]model.WordlistProgress, error) {
@@ -56,7 +56,7 @@ func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, u
 					ELSE 0 
 				END as progress_percent
 			FROM wordlists wl
-			JOIN words w ON wl.id = w.wordlist_id AND w.user_id = $1 AND w.learned = FALSE
+			LEFT JOIN words w ON wl.id = w.wordlist_id AND w.user_id = $1 AND w.learned = FALSE
 			LEFT JOIN word_mastery wm ON w.id = wm.word_id AND wm.user_id = $1
 			WHERE wl.user_id = $1
 			GROUP BY wl.id, wl.name, wl.language_code

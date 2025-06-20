@@ -415,8 +415,21 @@
     "descriptionPlaceholder": "Añade una descripción para tu lista",
     "languageLabel": "Idioma",
     "languageRequired": "Por favor selecciona un idioma",
+    "pronunciationLabel": "Sistema de Pronunciación",
+    "pronunciationHelp": "Elige cómo se mostrará la pronunciación",
+    "pronunciationRequired": "Por favor selecciona un sistema de pronunciación",
+    "pronunciationNotSupported": "El sistema de pronunciación seleccionado no es compatible con este idioma",
+    "pronunciationLoadError": "Error al cargar las opciones de pronunciación",
+    "pronunciationDefaultWillBeUsed": "Se usará el sistema de pronunciación predeterminado",
     "errorMessage": "Error al crear la lista. Por favor, inténtalo de nuevo.",
     "createButton": "Crear Lista"
+  },
+  "pronunciationSystems": {
+    "ipa": "AFI",
+    "romaji": "Romaji",
+    "hiragana": "Hiragana",
+    "pinyin": "Pinyin",
+    "hangul": "Hangul"
   },
   "upgradePrompt": {
     "title": "¿Disfrutando Decorebator?",

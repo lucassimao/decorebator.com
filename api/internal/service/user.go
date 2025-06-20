@@ -130,8 +130,12 @@ func GetProfile(userID int64) (*User, error) {
 }
 
 func Delete(userID int64) error {
-	DeleteUserErrorReports(userID)
-	wordlistRepository.DeleteAll(userID)
+	if _, deleteReportsErr := DeleteUserErrorReports(userID); deleteReportsErr != nil {
+		common.Logger.Error("failed to delete user error reports", "userId", userID, "error", deleteReportsErr)
+	}
+	if _, deleteWordlistsErr := wordlistRepository.DeleteAll(userID); deleteWordlistsErr != nil {
+		common.Logger.Error("failed to delete user wordlists", "userId", userID, "error", deleteWordlistsErr)
+	}
 	err := userRepository.Delete(userID)
 	return err
 }

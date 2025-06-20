@@ -1,6 +1,16 @@
 # Load environment variables from the .env file
 include .env
 
+# Tool versions (matching GitHub workflow)
+GO_VERSION := 1.23
+POSTGRES_VERSION := 15
+REDIS_VERSION := 7-alpine
+MINIO_VERSION := latest
+GOTESTSUM_VERSION := latest
+GOVULNCHECK_VERSION := latest
+GODOTENV_VERSION := latest
+DELVE_VERSION := latest
+
 GREEN  		  := $(shell tput -Txterm setaf 2)
 YELLOW 		  := $(shell tput -Txterm setaf 3)
 WHITE  		  := $(shell tput -Txterm setaf 7)
@@ -12,10 +22,20 @@ DIR_TO_WATCH  := $(PWD)
 
 all: help
 
-setup: ## Install all dev and build dependencies
-	go install github.com/joho/godotenv/cmd/godotenv@latest
-	go install github.com/go-delve/delve/cmd/dlv@latest
-	sudo apt-get install -y inotify-tools migrate
+setup: ## Install all dev and build dependencies (matching GitHub workflow versions)
+	@echo "${YELLOW}Installing development tools (versions matching GitHub workflow)...${RESET}"
+	go install github.com/joho/godotenv/cmd/godotenv@$(GODOTENV_VERSION)
+	go install github.com/go-delve/delve/cmd/dlv@$(DELVE_VERSION)
+	go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION)
+	go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION)
+	@echo "${YELLOW}Installing system dependencies...${RESET}"
+	sudo apt-get update && sudo apt-get install -y inotify-tools migrate
+	@echo "${GREEN}✅ All dependencies installed successfully${RESET}"
+	@echo "${CYAN}Tool versions:${RESET}"
+	@echo "  Go: $(GO_VERSION)"
+	@echo "  PostgreSQL: $(POSTGRES_VERSION)"  
+	@echo "  Redis: $(REDIS_VERSION)"
+	@echo "  MinIO: $(MINIO_VERSION)"
 
 migrate-up: ## Run database migrations
 	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable'); \
@@ -98,6 +118,42 @@ test-watch: ## Run tests in watch mode
 		sleep 1; \
 	done
 
+test-report: ## Run tests with detailed reporting (requires gotestsum)
+	@echo "${YELLOW}Running tests with detailed reporting...${RESET}"
+	@command -v gotestsum >/dev/null 2>&1 || { echo "Installing gotestsum@$(GOTESTSUM_VERSION)..."; go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION); }
+	@echo "Unit tests:"
+	@gotestsum --format testname -- -v -race -coverprofile=unit.out -covermode=atomic ./internal/... || true
+	@echo "\n${GREEN}Unit tests completed.${RESET}"
+	@echo "\n${YELLOW}Note: For integration tests, use 'make test-integration' or './scripts/run-tests.sh all'${RESET}"
+	@echo "${YELLOW}Integration tests require database setup and can't run standalone.${RESET}"
+	@echo "\n${GREEN}Coverage summary:${RESET}"
+	@if [ -f unit.out ]; then echo "Unit coverage:"; go tool cover -func=unit.out | tail -1; fi
+
+test-report-full: ## Run ALL tests with detailed reporting (includes integration tests)
+	@echo "${YELLOW}Running full test suite with detailed reporting...${RESET}"
+	@echo "${YELLOW}This will use the test script for proper environment setup...${RESET}"
+	./scripts/run-tests.sh all
+
+test-ci: ## Run tests with CI-style reporting (unit tests only)
+	@echo "${YELLOW}Running CI-style tests with structured output...${RESET}"
+	@command -v gotestsum >/dev/null 2>&1 || { echo "Installing gotestsum@$(GOTESTSUM_VERSION)..."; go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION); }
+	gotestsum --junitfile unit-tests.xml --format testname -- -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+	@echo "\n${GREEN}Unit tests completed with JUnit XML output.${RESET}"
+	@echo "${YELLOW}For integration tests with full CI setup, use './scripts/run-tests.sh all'${RESET}"
+
+check-versions: ## Check installed tool versions vs expected versions
+	@echo "${CYAN}Checking tool versions (expected vs installed):${RESET}"
+	@echo "Go:"
+	@echo "  Expected: $(GO_VERSION)"
+	@go version 2>/dev/null | grep -oE 'go[0-9]+\.[0-9]+' | sed 's/go/  Installed: /' || echo "  Installed: Not found"
+	@echo "gotestsum:"
+	@echo "  Expected: $(GOTESTSUM_VERSION)"
+	@gotestsum --version 2>/dev/null | sed 's/^/  Installed: /' || echo "  Installed: Not found (run 'make setup')"
+	@echo "govulncheck:"
+	@echo "  Expected: $(GOVULNCHECK_VERSION)"
+	@govulncheck -version 2>/dev/null | sed 's/^/  Installed: /' || echo "  Installed: Not found (run 'make setup')"
+
+
 run: ## HTTP server
 	$(GODOTENV_PATH) -f .env go run ./cmd/api
 
@@ -137,6 +193,69 @@ create-migration: ## Create a new database migration file with the provided file
 	else \
 		migrate create -ext sql -dir cmd/migrate/migrations -seq $$FILE_NAME; \
 	fi	
+
+## Quality Assurance Targets
+
+qa-install: ## Install QA tools matching GitHub workflow versions
+	@echo "${YELLOW}Installing QA tools...${RESET}"
+	@if ! command -v golangci-lint >/dev/null 2>&1; then \
+		echo "Installing golangci-lint..."; \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.62.2; \
+	fi
+	@if ! command -v gosec >/dev/null 2>&1; then \
+		echo "Installing gosec..."; \
+		go install github.com/securego/gosec/v2/cmd/gosec@latest; \
+	fi
+	@if ! command -v govulncheck >/dev/null 2>&1; then \
+		echo "Installing govulncheck..."; \
+		go install golang.org/x/vuln/cmd/govulncheck@latest; \
+	fi
+	@if ! command -v gotestsum >/dev/null 2>&1; then \
+		echo "Installing gotestsum..."; \
+		go install gotest.tools/gotestsum@latest; \
+	fi
+	@echo "${GREEN}✅ All QA tools installed${RESET}"
+
+qa: qa-install ## Run comprehensive quality assurance suite matching GitHub workflow
+	@echo "${CYAN}🔍 Running comprehensive Quality Assurance suite...${RESET}"
+	@echo "${YELLOW}This matches what runs in the GitHub workflow${RESET}\n"
+	@$(MAKE) lint
+	@$(MAKE) security-scan-full
+	@$(MAKE) test-unit
+	@$(MAKE) test-integration
+	@echo "${GREEN}✅ All QA checks completed${RESET}"
+
+qa-fast: qa-install ## Run fast QA checks (no integration tests)
+	@echo "${CYAN}🚀 Running fast QA checks...${RESET}"
+	@$(MAKE) lint
+	@$(MAKE) security-scan-full  
+	@$(MAKE) test-unit
+	@echo "${GREEN}✅ Fast QA checks completed${RESET}"
+
+qa-ci: qa-install ## Run QA checks with CI-style output (JUnit XML + structured logs)
+	@echo "${CYAN}🤖 Running QA checks with CI-style output...${RESET}"
+	@mkdir -p reports
+	@$(MAKE) lint > reports/lint.log 2>&1 || true
+	@$(MAKE) security-scan-full > reports/security.log 2>&1 || true
+	@gotestsum --junitfile reports/unit-tests.xml --format testname -- -v -race -coverprofile=reports/unit.out -covermode=atomic ./internal/... || true
+	@gotestsum --junitfile reports/integration-tests.xml --format testname -- -v -race -count=1 -p=1 -coverprofile=reports/integration.out -covermode=atomic ./tests/integration/... || true
+	@echo "${GREEN}✅ CI-style QA checks completed - reports in ./reports/${RESET}"
+
+security-scan-full: ## Run comprehensive security scanning (matching GitHub workflow)
+	@echo "${CYAN}🔒 Running comprehensive security scans...${RESET}"
+	@echo "\n${YELLOW}1. Running gosec security scanner...${RESET}"
+	@gosec -fmt json -out gosec-results.json -stdout -verbose=text ./... || true
+	@echo "\n${YELLOW}2. Running govulncheck vulnerability scanner...${RESET}"
+	@govulncheck ./...
+	@echo "\n${YELLOW}3. Running go vet security checks...${RESET}"
+	@go vet ./...
+	@echo "${GREEN}✅ Security scans completed${RESET}"
+
+security-scan: ## Run basic security scan (gosec + govulncheck)
+	@echo "${CYAN}🔒 Running security scans...${RESET}"
+	@govulncheck ./...
+	@gosec ./...
+	@echo "${GREEN}✅ Security scan completed${RESET}"
 
 ## Code Quality Targets
 
@@ -226,6 +345,8 @@ pre-push: lint-changed test-unit ## Run pre-push checks (lint changed files + un
 
 check-all: format-check lint test-unit ## Run all code quality checks
 	@echo "${GREEN}✅ All checks passed${RESET}"
+
+
 
 lint-diff: ## Show diff of what lint-fix would change (dry run)
 	@echo "${YELLOW}Showing what lint-fix would change...${RESET}"

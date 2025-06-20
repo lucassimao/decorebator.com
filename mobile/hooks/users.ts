@@ -18,11 +18,26 @@ export const useUserInfo = () => {
     !!user &&
     (user.subscriptionPlan === "monthly" || user.subscriptionPlan === "annual");
 
+  // Cache timing strategy based on subscription tier
+  // Premium users get fresher data for better UX after quiz sessions
+  const cacheConfig = {
+    dataFreshnessDuration: isPremium ? 10 * 1000 : 15 * 60 * 1000, // 10s vs 15min
+    memoryRetentionTime: isPremium ? 2 * 60 * 1000 : 60 * 60 * 1000, // 2min vs 1hr
+    autoRefreshOnFocus: isPremium, // Premium users get automatic refresh when returning to screen
+    alwaysFetchOnMount: isPremium ? ("always" as const) : false, // Premium users always get fresh data on mount
+  };
+
   useEffect(() => {
     if (user) {
       offlineManager.setUserPremiumStatus(isPremium);
     }
   }, [user, isPremium]);
 
-  return { userInfo: user, loading: isLoading, error, isPremium };
+  return {
+    userInfo: user,
+    loading: isLoading,
+    error,
+    isPremium,
+    cacheConfig,
+  };
 };

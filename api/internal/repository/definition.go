@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -73,38 +73,41 @@ func (repository *DefinitionRepository) Save(tokenId int64, definitions []*Defin
 	return definitions, nil
 }
 
+// all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
 func (repository *DefinitionRepository) GetRandomMeanings(definitionIdsToIgnore []int, limit int) ([]string, error) {
-	// all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
-	// selecting random() to avoid the error 'SELECT DISTINCT, ORDER BY expressions must appear in select list (SQLSTATE 42P10)'
+	// Handle empty array case
+	if len(definitionIdsToIgnore) == 0 {
+		return []string{}, nil
+	}
+
 	query := `
-		WITH options AS (
-			SELECT DISTINCT def.meaning, random()
+        WITH target_definitions AS (
+			SELECT DISTINCT part_of_speech 
+			FROM definitions 
+			WHERE id = ANY($1)
+		),
+        excluded_words AS (
+			SELECT DISTINCT wd.word_id
+			FROM word_definitions wd
+			WHERE wd.definition_id = ANY($1)
+		),
+        candidates AS (
+			SELECT DISTINCT def.meaning
 			FROM definitions def
 			JOIN word_definitions wd ON wd.definition_id = def.id
-			WHERE wd.word_id NOT IN (
-				SELECT word_id 
-				FROM word_definitions 
-				WHERE definition_id = ANY($1)
-			)
-			AND length(def.meaning) < 50
-			AND def.meaning NOT IN (
-				SELECT meaning 
-				FROM definitions 
-				WHERE id = ANY($1)
-			)
-			AND part_of_speech IN (
-				SELECT part_of_speech 
-				FROM definitions 
-				WHERE id = ANY($1)
-			)
-			ORDER BY random() LIMIT $2
+			WHERE def.part_of_speech IN (SELECT part_of_speech FROM target_definitions)
+			AND wd.word_id NOT IN (SELECT word_id FROM excluded_words)
+			AND def.id <> ALL($1)
 		)
-		SELECT meaning FROM options;
+        SELECT meaning
+        FROM candidates
+        ORDER BY length(meaning) ASC, RANDOM()
+        LIMIT $2;
 	`
 
 	rows, err := repository.Db.Query(context.Background(), query, definitionIdsToIgnore, limit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query random meanings for definitions %v: %w", definitionIdsToIgnore, err)
 	}
 	defer rows.Close()
 
@@ -232,9 +235,13 @@ func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64, tx *
 		}
 		defer func() {
 			if err == nil {
-				managedTx.Commit(ctx)
+				if commitErr := managedTx.Commit(ctx); commitErr != nil {
+					common.Logger.Error("failed to commit transaction in definition repository", "error", commitErr)
+				}
 			} else {
-				managedTx.Rollback(ctx)
+				if rollbackErr := managedTx.Rollback(ctx); rollbackErr != nil {
+					common.Logger.Error("failed to rollback transaction in definition repository", "error", rollbackErr)
+				}
 			}
 		}()
 	} else {
@@ -355,7 +362,7 @@ func (repository *DefinitionRepository) GetDefinitionByID(definitionID int64) (*
 
 func (repository *DefinitionRepository) CreateExampleAudio(definitionID int64, exampleText, audioURL, inflectionType string) error {
 	// Generate hash for the example text
-	exampleHash := fmt.Sprintf("%x", md5.Sum([]byte(exampleText)))[:32]
+	exampleHash := fmt.Sprintf("%x", sha256.Sum256([]byte(exampleText)))[:32]
 
 	query := `INSERT INTO definition_example_audio (definition_id, example_text, example_hash, audio_url, inflection_type) 
 			  VALUES ($1, $2, $3, $4, NULLIF($5, ''))`

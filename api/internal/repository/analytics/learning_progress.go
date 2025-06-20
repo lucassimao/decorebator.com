@@ -88,7 +88,7 @@ func (r *LearningProgressRepository) GetLearningProgress(ctx context.Context, us
 		       average_response_time_ms
 		FROM learning_progress
 		WHERE user_id = $1 AND wordlist_id = $2 
-		  AND date >= CURRENT_DATE - INTERVAL '1 day' * $3
+		  AND date > CURRENT_DATE - INTERVAL '1 day' * $3
 		ORDER BY date DESC
 	`
 

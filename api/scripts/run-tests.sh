@@ -5,6 +5,14 @@
 
 set -e
 
+# Tool versions (matching GitHub workflow and Makefile)
+GO_VERSION="1.23"
+POSTGRES_VERSION="15"
+REDIS_VERSION="7-alpine"
+MINIO_VERSION="latest"
+GOTESTSUM_VERSION="latest"
+GOVULNCHECK_VERSION="latest"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -134,12 +142,34 @@ cleanup() {
     success "Cleanup completed"
 }
 
+# Install gotestsum if available
+ensure_gotestsum() {
+    if ! command -v gotestsum &> /dev/null; then
+        log "gotestsum not found, installing version $GOTESTSUM_VERSION..."
+        go install gotest.tools/gotestsum@$GOTESTSUM_VERSION
+        
+        # Check if installation was successful
+        if ! command -v gotestsum &> /dev/null; then
+            warning "Failed to install gotestsum, falling back to go test"
+            return 1
+        fi
+    fi
+    return 0
+}
+
 # Run unit tests
 run_unit_tests() {
     log "Running unit tests..."
     cd "$PROJECT_ROOT"
     
-    go test -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+    # Try to use gotestsum for better output, fall back to go test
+    if ensure_gotestsum; then
+        log "Using gotestsum for structured output"
+        gotestsum --format testname -- -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+    else
+        log "Using go test"
+        go test -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+    fi
     
     if [ $? -eq 0 ]; then
         success "Unit tests passed"
@@ -161,7 +191,15 @@ run_integration_tests() {
     set +a
     
     local test_exit_code=0
-    go test -v -race -coverprofile=integration.out -covermode=atomic ./tests/integration/... || test_exit_code=$?
+    
+    # Try to use gotestsum for better output, fall back to go test
+    if ensure_gotestsum; then
+        log "Using gotestsum for structured output"
+        gotestsum --format testname -- -v -race -count=1 -p=1 -coverprofile=integration.out -covermode=atomic ./tests/integration/... || test_exit_code=$?
+    else
+        log "Using go test"
+        go test -v -race -count=1 -p=1 -coverprofile=integration.out -covermode=atomic ./tests/integration/... || test_exit_code=$?
+    fi
     
     if [ $test_exit_code -eq 0 ]; then
         success "Integration tests passed"
@@ -321,6 +359,9 @@ show_help() {
     echo "  all                      Run all tests (unit + integration)"
     echo "  watch                    Run tests in watch mode (auto-reload on file changes)"
     echo "  coverage                 Check coverage thresholds"
+    echo "  versions                 Check tool versions vs expected versions"
+    echo "  security                 Run security scans (nancy, govulncheck)"
+    echo "  report                   Run all tests with detailed reporting (full setup)"
     echo "  clean                    Clean up test environment"
     echo "  help                     Show this help message"
     echo
@@ -336,6 +377,54 @@ show_help() {
     echo "  Test configuration is loaded from .env.test"
     echo "  Docker services run on non-standard ports to avoid conflicts"
     echo "  All test data is automatically cleaned up between runs"
+}
+
+# Check tool versions
+check_versions() {
+    log "Checking tool versions (expected vs installed):"
+    
+    echo "Go:"
+    echo "  Expected: $GO_VERSION"
+    local go_installed=$(go version 2>/dev/null | grep -oE 'go[0-9]+\.[0-9]+' | sed 's/go//' || echo "Not found")
+    echo "  Installed: $go_installed"
+    
+    echo "gotestsum:"
+    echo "  Expected: $GOTESTSUM_VERSION"
+    local gotestsum_installed=$(gotestsum --version 2>/dev/null || echo "Not found")
+    echo "  Installed: $gotestsum_installed"
+    
+    echo "govulncheck:"
+    echo "  Expected: $GOVULNCHECK_VERSION"
+    local govulncheck_installed=$(govulncheck -version 2>/dev/null || echo "Not found")
+    echo "  Installed: $govulncheck_installed"
+    
+    echo "Docker images (from compose file):"
+    echo "  PostgreSQL: $POSTGRES_VERSION"
+    echo "  Redis: $REDIS_VERSION"
+    echo "  MinIO: $MINIO_VERSION"
+}
+
+# Run security scans
+run_security_scans() {
+    log "Running security scans (matching GitHub workflow)..."
+    cd "$PROJECT_ROOT"
+    
+    # Install govulncheck if not present
+    if ! command -v govulncheck &> /dev/null; then
+        log "Installing govulncheck version $GOVULNCHECK_VERSION..."
+        go install golang.org/x/vuln/cmd/govulncheck@$GOVULNCHECK_VERSION
+    fi
+    
+    log "Running govulncheck (official Go vulnerability scanner)..."
+    if govulncheck ./...; then
+        success "No vulnerabilities found"
+    else
+        warning "Vulnerabilities found - check output above"
+        log "Note: Some vulnerabilities may be in standard library or dependencies"
+    fi
+    
+    success "Security scan completed"
+    log "Tip: Use 'govulncheck -show verbose ./...' for detailed information"
 }
 
 # Main command dispatcher
@@ -382,6 +471,21 @@ main() {
             ;;
         "clean")
             cleanup
+            ;;
+        "versions")
+            check_versions
+            ;;
+        "security")
+            run_security_scans
+            ;;
+        "report")
+            check_dependencies
+            setup_env
+            run_migrations
+            log "Running comprehensive test report..."
+            run_unit_tests
+            run_integration_tests
+            check_coverage
             ;;
         "help"|"-h"|"--help")
             show_help

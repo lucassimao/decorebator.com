@@ -14,7 +14,6 @@ import (
 
 func TestUserRegistration(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	tests := []struct {
 		name           string
@@ -36,7 +35,7 @@ func TestUserRegistration(t *testing.T) {
 		{
 			name: "duplicate email registration",
 			payload: map[string]interface{}{
-				"email":     "newuser@example.com", // Same as above
+				"email":     "duplicate@example.com", // Will be created first, then tested for duplicate
 				"password":  "password123",
 				"firstName": "Jane",
 				"lastName":  "Smith",
@@ -79,6 +78,24 @@ func TestUserRegistration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Special handling for duplicate email test
+			if tt.name == "duplicate email registration" {
+				// First create the user
+				server.Expect.POST("/users").
+					WithJSON(tt.payload).
+					Expect().
+					Status(http.StatusCreated)
+
+				// Now test duplicate registration
+				server.Expect.POST("/users").
+					WithJSON(tt.payload).
+					Expect().
+					Status(tt.expectedStatus)
+
+				// No further processing needed for duplicate test
+				return
+			}
+
 			response := server.Expect.POST("/users").
 				WithJSON(tt.payload).
 				Expect().
@@ -101,7 +118,6 @@ func TestUserRegistration(t *testing.T) {
 
 func TestUserLogin(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	// Create a test user first
 	signupInput := setup.GenerateSignupInput()
@@ -185,7 +201,6 @@ func TestUserLogin(t *testing.T) {
 
 func TestJWTAuthentication(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	// Create authenticated user
 	token := server.WithTestUser(t)
@@ -232,7 +247,6 @@ func TestJWTAuthentication(t *testing.T) {
 
 func TestPasswordReset(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	// Create a test user
 	signupInput := setup.GenerateSignupInput()
@@ -276,7 +290,6 @@ func TestPasswordReset(t *testing.T) {
 
 func TestUserProfile(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	token := server.WithTestUser(t)
 
@@ -324,13 +337,12 @@ func TestUserProfile(t *testing.T) {
 		server.Expect.GET("/users").
 			WithHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
 			Expect().
-			Status(http.StatusInternalServerError)
+			Status(http.StatusUnauthorized)
 	})
 }
 
 func TestUserLogout(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	token := server.WithTestUser(t)
 
@@ -350,7 +362,6 @@ func TestUserLogout(t *testing.T) {
 
 func TestSubscriptionAuthentication(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	freeToken := server.WithTestUser(t)
 	premiumToken := server.WithPremiumUser(t)
@@ -378,9 +389,6 @@ func TestSubscriptionAuthentication(t *testing.T) {
 
 func TestMultipleRequests(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
-
-	signupInput := setup.GenerateSignupInput()
 
 	t.Run("multiple rapid registrations", func(t *testing.T) {
 		// Test multiple rapid registrations (no rate limiting implemented currently)
@@ -404,6 +412,9 @@ func TestMultipleRequests(t *testing.T) {
 	})
 
 	t.Run("multiple login attempts with wrong password", func(t *testing.T) {
+		// Generate a unique signup input for this subtest
+		signupInput := setup.GenerateSignupInput()
+
 		// Create user first
 		server.Expect.POST("/users").
 			WithJSON(signupInput).

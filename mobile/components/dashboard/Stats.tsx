@@ -169,7 +169,6 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
         end={{ x: 1, y: 1 }}
       >
         {/* Progress Overview */}
-        {PROGRESS_OVERVIEW_ENABLED && (
           <View style={styles.progressOverview}>
             <Text style={styles.progressLabel}>
               {t("dashboard.stats.learningProgress")}
@@ -217,7 +216,6 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
               )}
             </View>
           </View>
-        )}
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>

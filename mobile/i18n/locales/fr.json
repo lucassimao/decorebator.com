@@ -415,8 +415,21 @@
     "descriptionPlaceholder": "Ajoutez une description pour votre liste",
     "languageLabel": "Langue",
     "languageRequired": "Veuillez sélectionner une langue",
+    "pronunciationLabel": "Système de prononciation",
+    "pronunciationHelp": "Choisissez comment la prononciation sera affichée",
+    "pronunciationRequired": "Veuillez sélectionner un système de prononciation",
+    "pronunciationNotSupported": "Le système de prononciation sélectionné n'est pas pris en charge pour cette langue",
+    "pronunciationLoadError": "Échec du chargement des options de prononciation",
+    "pronunciationDefaultWillBeUsed": "Le système de prononciation par défaut sera utilisé",
     "errorMessage": "Échec de la création de la liste. Veuillez réessayer.",
     "createButton": "Créer la liste"
+  },
+  "pronunciationSystems": {
+    "ipa": "API",
+    "romaji": "Romaji",
+    "hiragana": "Hiragana",
+    "pinyin": "Pinyin",
+    "hangul": "Hangul"
   },
   "upgradePrompt": {
     "title": "Vous appréciez Decorebator ?",

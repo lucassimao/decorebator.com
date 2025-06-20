@@ -38,10 +38,11 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 	// Helper to create wordlist using service layer
 	createWordlist := func(userID int64, name string) int64 {
 		wordlist := &model.Wordlist{
-			Name:         name,
-			Description:  "Test wordlist description",
-			UserID:       userID,
-			LanguageCode: "en",
+			Name:                name,
+			Description:         "Test wordlist description",
+			UserID:              userID,
+			LanguageCode:        "en",
+			PronunciationSystem: model.PronunciationSystemIPA,
 		}
 		savedWordlist, err := service.SaveWordlist(wordlist)
 		require.NoError(t, err)

@@ -2,13 +2,13 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
 import { colors } from "./theme";
-import { OverviewStats } from "@/api/analytics";
+import { WordlistStats } from "@/api/analytics";
 
 interface StatsGridProps {
-  overviewStats?: OverviewStats;
+  stats?: WordlistStats;
 }
 
-export const StatsGrid: React.FC<StatsGridProps> = ({ overviewStats }) => {
+export const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => {
   const { t } = useTranslation();
 
   return (
@@ -18,7 +18,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ overviewStats }) => {
           <Text style={styles.statIcon}>📚</Text>
         </View>
         <Text style={styles.statValue}>
-          {overviewStats?.wordsStudiedToday || 0}
+          {stats?.wordsStudiedToday || 0}
         </Text>
         <Text style={styles.statLabel}>{t("analytics.stats.wordsToday")}</Text>
       </View>
@@ -28,7 +28,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ overviewStats }) => {
           <Text style={styles.statIcon}>🔥</Text>
         </View>
         <Text style={[styles.statValue, styles.statValueHighlight]}>
-          {overviewStats?.currentStreak || 0}
+          {stats?.currentStreak || 0}
         </Text>
         <Text style={styles.statLabel}>{t("analytics.stats.dayStreak")}</Text>
       </View>
@@ -38,7 +38,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ overviewStats }) => {
           <Text style={styles.statIcon}>🏆</Text>
         </View>
         <Text style={[styles.statValue, styles.statValueSuccess]}>
-          {overviewStats?.wordsMastered || 0}
+          {stats?.wordsMastered || 0}
         </Text>
         <Text style={styles.statLabel}>{t("analytics.stats.mastered")}</Text>
       </View>
@@ -48,7 +48,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ overviewStats }) => {
           <Text style={styles.statIcon}>🎯</Text>
         </View>
         <Text style={styles.statValue}>
-          {Math.round(overviewStats?.accuracyToday || 0)}%
+          {Math.round(stats?.accuracyToday || 0)}%
         </Text>
         <Text style={styles.statLabel}>{t("analytics.stats.accuracy")}</Text>
       </View>

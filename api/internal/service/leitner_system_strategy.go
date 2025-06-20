@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/big"
+	mathrand "math/rand"
 	"regexp"
 	"sort"
 	"strings"
@@ -19,11 +21,18 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func init() {
-	// Seed the random number generator with current time
-	// Used for: example sentence selection, answer position randomization
-	// Note: Quiz type selection now uses deterministic rotation
-	rand.Seed(time.Now().UnixNano())
+// cryptoRandInt generates a cryptographically secure random int in range [0, max)
+func cryptoRandInt(limit int) int {
+	if limit <= 0 {
+		return 0
+	}
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(limit)))
+	if err != nil {
+		// Fallback to math/rand if crypto/rand fails
+		//nolint:gosec // G404 - fallback random when crypto/rand is unavailable
+		return mathrand.Intn(limit)
+	}
+	return int(n.Int64())
 }
 
 // LeitnerSystemStrategy implements the Leitner spaced repetition algorithm for vocabulary learning.
@@ -57,12 +66,12 @@ type NextDefinition struct {
 // - Box 6: Audio recognition (new modality)
 // - Box 7: Mastery level (most challenging types only)
 var boxToQuizTypes = map[int64][]model.QuizType{
-	1: {model.GuessMeaning},                                                                                 // Recognition: "What does this word mean?"
-	2: {model.WordFromMeaning, model.GuessMeaning},                                                          // Basic recall: "Which word matches this meaning?" + recognition practice
-	3: {model.WordFromImage, model.WordFromMeaning},                                                         // Visual association: "What word matches this image?" + meaning recall
-	4: {model.CompleteSentence, model.WordFromExampleAudio, model.GuessMeaning},                            // Contextual understanding + recognition reinforcement
-	5: {model.WriteWordFromDefinition, model.WordFromExampleAudio, model.WordFromMeaning},                  // Active recall + meaning practice
-	6: {model.WordFromAudio, model.WordFromExampleAudio, model.WordFromImage, model.GuessMeaning},          // Audio/Visual recognition + meaning reinforcement
+	1: {model.GuessMeaning},                                                                                                                                                                             // Recognition: "What does this word mean?"
+	2: {model.WordFromMeaning, model.GuessMeaning},                                                                                                                                                      // Basic recall: "Which word matches this meaning?" + recognition practice
+	3: {model.WordFromImage, model.WordFromMeaning},                                                                                                                                                     // Visual association: "What word matches this image?" + meaning recall
+	4: {model.CompleteSentence, model.WordFromExampleAudio, model.GuessMeaning},                                                                                                                         // Contextual understanding + recognition reinforcement
+	5: {model.WriteWordFromDefinition, model.WordFromExampleAudio, model.WordFromMeaning},                                                                                                               // Active recall + meaning practice
+	6: {model.WordFromAudio, model.WordFromExampleAudio, model.WordFromImage, model.GuessMeaning},                                                                                                       // Audio/Visual recognition + meaning reinforcement
 	7: {model.MeaningFromAudio, model.WordFromImage, model.WriteWordFromDefinition, model.CompleteSentence, model.WordFromExampleAudio, model.WordFromAudio, model.WordFromMeaning, model.GuessMeaning}, // Mastery: All types for comprehensive review
 }
 
@@ -562,7 +571,8 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 		if err != nil {
 			// Fallback to random selection if fair selection fails
 			common.Logger.Warn("fair example selection failed, using random", "definitionId", def.Definition.ID, "error", err)
-			i := rand.Intn(len(availableExamples))
+			//nolint:gosec // G404 - fallback random selection, not security-critical
+			i := mathrand.Intn(len(availableExamples))
 			selectedExample = availableExamples[i]
 		}
 		value = selectedExample
@@ -601,7 +611,6 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 		value = def.Definition.Token
 
 	case model.WordFromExampleAudio:
-		quizAnswer = def.Definition.Token
 		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
@@ -621,6 +630,8 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 			selectedExampleAudio = &def.Definition.ExampleAudioFiles[0]
 		}
 
+		// Extract answer from brackets in the example text
+		quizAnswer = extractAnswerFromExample(selectedExampleAudio.ExampleText, def.Definition.Token)
 		value = ""                               // No visual value needed for audio quiz
 		audioURL = selectedExampleAudio.AudioURL // Example audio URL
 
@@ -632,7 +643,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 	if quizType != model.WriteWordFromDefinition {
 		// Ensure we have enough options and don't exceed the available positions
 		maxOptions := len(options) + 1 // +1 for the correct answer
-		answerIndex = rand.Intn(maxOptions)
+		answerIndex = cryptoRandInt(maxOptions)
 
 		// Insert the correct answer at the random position
 		options = append(options, "")
@@ -801,7 +812,7 @@ func selectFairExample(definitionID int64, availableExamples []string) (string, 
 
 // hashExample creates a consistent hash for an example to track its usage
 func hashExample(example string) string {
-	hash := md5.Sum([]byte(strings.TrimSpace(strings.ToLower(example))))
+	hash := sha256.Sum256([]byte(strings.TrimSpace(strings.ToLower(example))))
 	return hex.EncodeToString(hash[:])
 }
 
@@ -980,9 +991,13 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 		}
 		defer func() {
 			if err == nil {
-				tx.Commit(ctx)
+				if commitErr := tx.Commit(ctx); commitErr != nil {
+					common.Logger.Error("failed to commit transaction in leitner system", "error", commitErr)
+				}
 			} else {
-				tx.Rollback(ctx)
+				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+					common.Logger.Error("failed to rollback transaction in leitner system", "error", rollbackErr)
+				}
 			}
 		}()
 	} else {
@@ -1049,9 +1064,13 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 		}
 		defer func() {
 			if err == nil {
-				tx.Commit(ctx)
+				if commitErr := tx.Commit(ctx); commitErr != nil {
+					common.Logger.Error("failed to commit transaction in leitner system", "error", commitErr)
+				}
 			} else {
-				tx.Rollback(ctx)
+				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+					common.Logger.Error("failed to rollback transaction in leitner system", "error", rollbackErr)
+				}
 			}
 		}()
 	} else {
@@ -1205,9 +1224,13 @@ func (s LeitnerSystemStrategy) MarkErrorResolved(report ErrorReport) error {
 	}
 	defer func() {
 		if err == nil {
-			tx.Commit(ctx)
+			if commitErr := tx.Commit(ctx); commitErr != nil {
+				common.Logger.Error("failed to commit transaction in mark error resolved", "error", commitErr)
+			}
 		} else {
-			tx.Rollback(ctx)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				common.Logger.Error("failed to rollback transaction in mark error resolved", "error", rollbackErr)
+			}
 		}
 	}()
 
@@ -1336,7 +1359,7 @@ func selectBalancedQuizType(userID, wordlistID int64, availableTypes []model.Qui
 
 	for _, qt := range availableTypes {
 		typeUsage, exists := usage[string(qt)]
-		
+
 		var score float64
 		if !exists {
 			// Never used = highest priority
@@ -1344,13 +1367,13 @@ func selectBalancedQuizType(userID, wordlistID int64, availableTypes []model.Qui
 		} else {
 			// Score based on usage count and recency
 			hoursSinceLastUse := now.Sub(typeUsage.lastUsedAt).Hours()
-			
+
 			// Base score from usage count (more usage = higher score)
 			score = float64(typeUsage.count) * 10
-			
+
 			// Reduce score based on time since last use (older = lower score)
 			score -= hoursSinceLastUse * 2
-			
+
 			// Ensure score is not negative
 			if score < 0 {
 				score = 0

@@ -21,8 +21,12 @@ func main() {
 	}
 
 	var srv = &http.Server{
-		Addr:    ":" + os.Getenv("PORT"),
-		Handler: decorebator.SetupRoutes(),
+		Addr:              ":" + os.Getenv("PORT"),
+		Handler:           decorebator.SetupRoutes(),
+		ReadHeaderTimeout: 10 * time.Second, // Fix G112: Prevent Slowloris attacks
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 	defer common.CloseDBConnection()
 

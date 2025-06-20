@@ -7,14 +7,64 @@ import (
 	"github.com/jackc/pgx/pgtype"
 )
 
+// PronunciationSystem represents the pronunciation system for a wordlist
+type PronunciationSystem string
+
+const (
+	PronunciationSystemIPA      PronunciationSystem = "ipa"      // International Phonetic Alphabet (European languages)
+	PronunciationSystemRomaji   PronunciationSystem = "romaji"   // Romaji for Japanese
+	PronunciationSystemHiragana PronunciationSystem = "hiragana" // Hiragana/Katakana for Japanese
+	PronunciationSystemPinyin   PronunciationSystem = "pinyin"   // Pinyin for Chinese (Mandarin)
+	PronunciationSystemHangul   PronunciationSystem = "hangul"   // Hangul for Korean
+)
+
+// GetDefaultPronunciationSystem returns the default pronunciation system for a language
+func GetDefaultPronunciationSystem(languageCode string) PronunciationSystem {
+	switch languageCode {
+	case "ja":
+		return PronunciationSystemRomaji
+	case "zh", "zh-cn", "zh-tw":
+		return PronunciationSystemPinyin
+	case "ko", "kr":
+		return PronunciationSystemHangul
+	default:
+		return PronunciationSystemIPA
+	}
+}
+
+// GetSupportedPronunciationSystems returns the supported pronunciation systems for a language
+func GetSupportedPronunciationSystems(languageCode string) []PronunciationSystem {
+	switch languageCode {
+	case "ja":
+		return []PronunciationSystem{PronunciationSystemRomaji, PronunciationSystemHiragana}
+	case "zh", "zh-cn", "zh-tw":
+		return []PronunciationSystem{PronunciationSystemPinyin}
+	case "ko", "kr":
+		return []PronunciationSystem{PronunciationSystemHangul}
+	default:
+		return []PronunciationSystem{PronunciationSystemIPA}
+	}
+}
+
+// CanChangePronunciationSystem returns true if the language allows changing pronunciation system
+func CanChangePronunciationSystem(languageCode string) bool {
+	switch languageCode {
+	case "ja":
+		return true // Japanese allows switching between Romaji and Hiragana/Katakana
+	default:
+		return false // All other languages are locked to their default system
+	}
+}
+
 type Wordlist struct {
-	ID           int64              `json:"id"`
-	Name         string             `json:"name"`
-	Description  string             `json:"description"`
-	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
-	UserID       int64              `json:"userId"`
-	LanguageCode string             `json:"languageCode"`
+	ID                  int64               `json:"id"`
+	Name                string              `json:"name"`
+	Description         string              `json:"description"`
+	CreatedAt           pgtype.Timestamptz  `json:"createdAt"`
+	UpdatedAt           pgtype.Timestamptz  `json:"updatedAt"`
+	UserID              int64               `json:"userId"`
+	LanguageCode        string              `json:"languageCode"`
+	PronunciationSystem PronunciationSystem `json:"pronunciationSystem"`
 
 	// Computed dinamically based on words table
 	WordsCount        *int `json:"wordsCount"`
@@ -34,13 +84,14 @@ func (w Wordlist) MarshalJSON() ([]byte, error) {
 	}
 
 	m := map[string]any{
-		"id":           w.ID,
-		"name":         w.Name,
-		"description":  w.Description,
-		"languageCode": w.LanguageCode,
-		"createdAt":    createdAtValue, // será string ou nil → "null"
-		"updatedAt":    updatedAtValue, // será string ou nil → "null"
-		"userId":       w.UserID,
+		"id":                  w.ID,
+		"name":                w.Name,
+		"description":         w.Description,
+		"languageCode":        w.LanguageCode,
+		"pronunciationSystem": w.PronunciationSystem,
+		"createdAt":           createdAtValue, // será string ou nil → "null"
+		"updatedAt":           updatedAtValue, // será string ou nil → "null"
+		"userId":              w.UserID,
 	}
 
 	if w.WordsCount != nil {

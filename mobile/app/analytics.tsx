@@ -26,13 +26,13 @@ const AnalyticsDashboard = () => {
   const { wordlistId: rawWordlistId } = useLocalSearchParams();
   const wordlistId = Number(rawWordlistId);
   const {
-    overviewStats,
+    stats,
     wordMastery,
     learningProgress,
+    practiceTime,
     quizPerformance,
     boxDistribution,
     historicalBoxDistribution,
-    practiceTime,
     isPending,
   } = useAnalytics(wordlistId);
   const navigation = useNavigation();
@@ -65,7 +65,7 @@ const AnalyticsDashboard = () => {
         <AnalyticsHeader onBackPress={() => navigation.goBack()} />
 
         <ScrollView showsVerticalScrollIndicator={false}>
-          <StatsGrid overviewStats={overviewStats} />
+          <StatsGrid stats={stats} />
 
           <WordMasteryChart wordMastery={wordMastery} />
 

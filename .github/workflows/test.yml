@@ -10,8 +10,15 @@ on:
       - 'api/**'
       - '.github/workflows/test.yml'
 
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  pull-requests: write
+  security-events: write
+
 env:
-  GO_VERSION: '1.22'
+  GO_VERSION: '1.23.10'
   POSTGRES_USER: test_user
   POSTGRES_PASSWORD: test_pass
   POSTGRES_DB: decorebator_test
@@ -34,14 +41,15 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: api/go.sum
 
-      - name: Cache Go modules
+      - name: Cache Go modules and build cache
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('api/go.sum') }}
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('api/go.sum') }}
           restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
             ${{ runner.os }}-go-
 
       - name: Download dependencies
@@ -49,8 +57,55 @@ jobs:
 
       - name: Run unit tests
         run: |
-          go test -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+          # Install gotestsum for better test output formatting
+          go install gotest.tools/gotestsum@latest
+          
+          # Run tests with structured output and junit report
+          gotestsum --junitfile unit-tests.xml --format testname -- \
+            -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+          
+          # Display coverage summary
           go tool cover -func=unit.out
+          
+          # Ensure test results file exists
+          if [ ! -f "unit-tests.xml" ]; then
+            echo "Warning: unit-tests.xml not generated, creating empty report"
+            cat > unit-tests.xml << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <testsuite tests="0" failures="0" time="0" name="Unit Tests">
+          </testsuite>
+          EOF
+          fi
+          
+      - name: Upload unit test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: api/unit-tests.xml
+          
+      - name: Generate unit test summary
+        if: always()
+        run: |
+          echo "## 📊 Unit Test Results" >> $GITHUB_STEP_SUMMARY
+          if [ -f "unit-tests.xml" ]; then
+            # Parse basic info from XML
+            TESTS=$(grep -o 'tests="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
+            FAILURES=$(grep -o 'failures="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
+            ERRORS=$(grep -o 'errors="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
+            
+            echo "- **Total Tests**: $TESTS" >> $GITHUB_STEP_SUMMARY
+            echo "- **Failures**: $FAILURES" >> $GITHUB_STEP_SUMMARY
+            echo "- **Errors**: $ERRORS" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "$FAILURES" = "0" ] && [ "$ERRORS" = "0" ]; then
+              echo "✅ All unit tests passed!" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ Some unit tests failed. Check logs above for details." >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ No test results file found" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Upload unit test coverage
         uses: codecov/codecov-action@v4
@@ -65,6 +120,15 @@ jobs:
         with:
           name: unit-coverage
           path: api/unit.out
+          
+      - name: Upload test reports on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: unit-test-reports
+          path: |
+            api/unit-tests.xml
+            api/unit.out
 
   integration-tests:
     name: Integration Tests
@@ -108,14 +172,15 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: api/go.sum
 
-      - name: Cache Go modules
+      - name: Cache Go modules and build cache
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('api/go.sum') }}
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('api/go.sum') }}
           restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
             ${{ runner.os }}-go-
 
       - name: Start MinIO
@@ -187,14 +252,60 @@ jobs:
 
       - name: Run integration tests
         run: |
+          # Install gotestsum for better test output formatting
+          go install gotest.tools/gotestsum@latest
+          
           # Source environment variables
           set -a
           source .env.test
           set +a
           
-          # Run tests with environment
-          go test -v -race -coverprofile=integration.out -covermode=atomic ./tests/integration/...
+          # Run tests with structured output and junit report
+          gotestsum --junitfile integration-tests.xml --format testname -- \
+            -v -race -count=1 -p=1 -coverprofile=integration.out -covermode=atomic ./tests/integration/...
+          
+          # Display coverage summary
           go tool cover -func=integration.out
+          
+          # Ensure test results file exists
+          if [ ! -f "integration-tests.xml" ]; then
+            echo "Warning: integration-tests.xml not generated, creating empty report"
+            cat > integration-tests.xml << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <testsuite tests="0" failures="0" time="0" name="Integration Tests">
+          </testsuite>
+          EOF
+          fi
+          
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: api/integration-tests.xml
+          
+      - name: Generate integration test summary
+        if: always()
+        run: |
+          echo "## 🔧 Integration Test Results" >> $GITHUB_STEP_SUMMARY
+          if [ -f "integration-tests.xml" ]; then
+            # Parse basic info from XML
+            TESTS=$(grep -o 'tests="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
+            FAILURES=$(grep -o 'failures="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
+            ERRORS=$(grep -o 'errors="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
+            
+            echo "- **Total Tests**: $TESTS" >> $GITHUB_STEP_SUMMARY
+            echo "- **Failures**: $FAILURES" >> $GITHUB_STEP_SUMMARY
+            echo "- **Errors**: $ERRORS" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "$FAILURES" = "0" ] && [ "$ERRORS" = "0" ]; then
+              echo "✅ All integration tests passed!" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ Some integration tests failed. Check logs above for details." >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ No test results file found" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Upload integration test coverage
         uses: codecov/codecov-action@v4
@@ -219,6 +330,16 @@ jobs:
         with:
           name: coverage-report
           path: api/coverage-integration.html
+          
+      - name: Upload test reports on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: integration-test-reports
+          path: |
+            api/integration-tests.xml
+            api/integration.out
+            api/.env.test
 
       - name: Cleanup test containers
         if: always()
@@ -277,25 +398,15 @@ jobs:
             echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
           fi
 
-      - name: Install golangci-lint
+      - name: Run golangci-lint
         if: steps.changed-files.outputs.has_go_files == 'true'
-        run: |
-          # Install golangci-lint
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.62.2
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: ./api
+          args: --timeout=10m --new-from-rev=origin/${{ github.event.pull_request.base.ref }}
+          install-mode: goinstall
 
-      - name: Run golangci-lint on changed files only
-        if: steps.changed-files.outputs.has_go_files == 'true'
-        run: |
-          CHANGED_FILES="${{ steps.changed-files.outputs.files }}"
-          echo "Running golangci-lint on: $CHANGED_FILES"
-          
-          # Use the same merge base logic as file detection
-          MERGE_BASE=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
-          echo "Using merge base for linting: $MERGE_BASE"
-          
-          # Run golangci-lint only on files changed since the merge base
-          golangci-lint run --timeout=5m --new-from-rev=$MERGE_BASE
 
 
   coverage-check:
@@ -380,3 +491,127 @@ jobs:
 
       - name: Verify no unused dependencies
         run: go mod tidy && git diff --exit-code go.mod go.sum
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+
+      - name: Run Gosec Security Scanner
+        run: |
+          # Install gosec from the correct repository
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          
+          echo "## 🔒 Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          
+          # Run gosec and generate SARIF report
+          echo "### Gosec Security Analysis" >> $GITHUB_STEP_SUMMARY
+          if gosec -fmt sarif -out gosec-results.sarif -stdout -verbose=text ./...; then
+            echo "✅ Gosec security scan completed successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Gosec found potential security issues (see logs above)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Generate human-readable report for summary
+          echo "### Security Issues Summary" >> $GITHUB_STEP_SUMMARY
+          gosec -fmt json ./... | jq -r '.Stats | "**Total Issues:** \(.found // 0), **Files Scanned:** \(.num_files // 0)"' >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "Issues found - check detailed logs above" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if SARIF file was created
+          if [ -f "gosec-results.sarif" ]; then
+            echo "📁 SARIF report generated successfully" >> $GITHUB_STEP_SUMMARY
+            echo "🔍 Security results available as artifact (SARIF upload to Security tab requires Code Scanning to be enabled)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ SARIF report not generated" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Run additional go vet security checks
+          echo "### Go Vet Analysis" >> $GITHUB_STEP_SUMMARY
+          if go vet ./...; then
+            echo "✅ go vet checks passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ go vet found potential issues" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('api/gosec-results.sarif') != ''
+        continue-on-error: true  # Don't fail if Code Scanning is not enabled
+        with:
+          sarif_file: api/gosec-results.sarif
+          
+      - name: Upload security scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-results
+          path: |
+            api/gosec-results.sarif
+
+      - name: Run govulncheck vulnerability scanner
+        run: |
+          # Install govulncheck
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          
+          echo "## 🛡️ Vulnerability Scan Results" >> $GITHUB_STEP_SUMMARY
+          
+          # Run govulncheck and capture results
+          if govulncheck ./...; then
+            echo "✅ No known vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Potential vulnerabilities detected. Check logs above for details." >> $GITHUB_STEP_SUMMARY
+            echo "💡 Run \`govulncheck ./...\` locally for detailed analysis" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, lint-checks, build-verification, security-scan]
+    if: always()
+    
+    steps:
+      - name: Generate test summary
+        run: |
+          {
+            echo "## 🚀 Test Results Summary"
+            echo ""
+            echo "### Test Status"
+            echo "- **Unit Tests**: ${{ needs.unit-tests.result }}"
+            echo "- **Integration Tests**: ${{ needs.integration-tests.result }}"
+            echo "- **Lint Checks**: ${{ needs.lint-checks.result }}"
+            echo "- **Build Verification**: ${{ needs.build-verification.result }}"
+            echo "- **Security Scan**: ${{ needs.security-scan.result }}"
+            echo ""
+            echo "### Quick Status"
+            if [ "${{ needs.integration-tests.result }}" == "failure" ]; then
+              echo "❌ **Integration tests failed** - Check logs above for details"
+            elif [ "${{ needs.unit-tests.result }}" == "failure" ]; then
+              echo "❌ **Unit tests failed** - Check logs above for details"
+            else
+              echo "✅ **All tests passed!**"
+            fi
+          } >> $GITHUB_STEP_SUMMARY
+          
+      - name: Check overall status
+        run: |
+          if [ "${{ needs.unit-tests.result }}" != "success" ] || \
+             [ "${{ needs.integration-tests.result }}" != "success" ] || \
+             [ "${{ needs.build-verification.result }}" != "success" ] || \
+             [ "${{ needs.security-scan.result }}" != "success" ] || \
+             ([ "${{ needs.lint-checks.result }}" != "success" ] && [ "${{ needs.lint-checks.result }}" != "skipped" ]); then
+            echo "❌ One or more required checks failed"
+            exit 1
+          else
+            echo "✅ All checks passed successfully"
+          fi

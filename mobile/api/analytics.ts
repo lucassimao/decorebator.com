@@ -1,6 +1,6 @@
 import { callAPI } from "./api";
 
-export interface OverviewStats {
+export interface WordlistStats {
   totalWords: number;
   wordsMastered: number;
   averageMastery: number;
@@ -74,12 +74,12 @@ export interface PracticeTimeResponse {
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-// 1) Get overview statistics for a specific wordlist
-export async function getWordlistOverviewStats(
+// 1) Get statistics for a specific wordlist
+export async function getWordlistStats(
   wordlistId: number,
-): Promise<OverviewStats> {
-  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/overview`;
-  const body = await callAPI<{ stats: OverviewStats }>("GET", endpoint);
+): Promise<WordlistStats> {
+  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/stats`;
+  const body = await callAPI<{ stats: WordlistStats }>("GET", endpoint);
 
   // Ensure valid stats structure with safe defaults
   const stats = body.stats || {};
@@ -96,20 +96,20 @@ export async function getWordlistOverviewStats(
 }
 
 // 2) Get word mastery for a specific wordlist
-export async function getWordMastery(
+export async function getWordlistWordMastery(
   wordlistId: number,
 ): Promise<WordMasteryStats[]> {
-  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/mastery`;
+  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/word-mastery`;
   const payload = await callAPI<{ stats: WordMasteryStats[] }>("GET", endpoint);
   return payload.stats || [];
 }
 
 // 3) Get learning progress for the last N days
-export async function getLearningProgress(
+export async function getWordlistLearningProgress(
   wordlistId: number,
   days: number,
 ): Promise<LearningProgress[]> {
-  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/progress?days=${days}`;
+  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/learning-progress?days=${days}`;
   const payload = await callAPI<{ progress: LearningProgress[] }>(
     "GET",
     endpoint,
@@ -118,10 +118,10 @@ export async function getLearningProgress(
 }
 
 // 4) Get quiz performance across all quiz types for a specific wordlist
-export async function getQuizPerformance(
+export async function getWordlistQuizTypePerformance(
   wordlistId: number,
 ): Promise<QuizTypePerformance[]> {
-  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/quiz-performance`;
+  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/quiz-type-performance`;
   const payload = await callAPI<{ quizPerformance: QuizTypePerformance[] }>(
     "GET",
     endpoint,
@@ -141,7 +141,7 @@ export interface WordlistProgressSummary {
 export async function getWordlistProgressSummary(
   wordlistId: number,
 ): Promise<WordlistProgressSummary> {
-  const wordMasteryStats = await getWordMastery(wordlistId);
+  const wordMasteryStats = await getWordlistWordMastery(wordlistId);
   return calculateWordlistProgressFromMastery(wordlistId, wordMasteryStats);
 }
 
@@ -166,7 +166,7 @@ export function calculateWordlistProgressFromMastery(
       : 0;
 
   const progressPercentage =
-    totalWords > 0 ? Math.round((wordsMastered / totalWords) * 100) : 0;
+    totalWords > 0 ? Math.round(averageMastery * 100) : 0;
 
   return {
     wordlistId: wordlistId,
@@ -178,10 +178,10 @@ export function calculateWordlistProgressFromMastery(
 }
 
 // 6) Get current box distribution for a wordlist
-export async function getCurrentBoxDistribution(
+export async function getWordlistCurrentBoxDistribution(
   wordlistId: number,
 ): Promise<BoxDistributionResponse> {
-  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/current-distribution`;
+  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/current-box-distribution`;
   const response = await callAPI<BoxDistributionResponse>("GET", endpoint);
 
   // Ensure valid response structure
@@ -201,11 +201,11 @@ export async function getCurrentBoxDistribution(
 }
 
 // 7) Get historical box distribution for a wordlist
-export async function getHistoricalBoxDistribution(
+export async function getWordlistBoxDistributionHistory(
   wordlistId: number,
   days: number = 30,
 ): Promise<HistoricalBoxDistributionResponse> {
-  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/distribution?days=${days}`;
+  const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/box-distribution-history?days=${days}`;
   const response = await callAPI<HistoricalBoxDistributionResponse>(
     "GET",
     endpoint,
@@ -222,7 +222,7 @@ export async function getHistoricalBoxDistribution(
 }
 
 // 8) Get practice time for a wordlist
-export async function getPracticeTime(
+export async function getWordlistPracticeTime(
   wordlistId: number,
   days: number = 7,
 ): Promise<PracticeTimeResponse> {

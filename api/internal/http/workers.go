@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"decorebator.com/internal/common"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -58,7 +59,9 @@ func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
 	}
 
 	// Admin context - pass nil userId to bypass validation
-	service.DeleteWordDefinitions(wordId, nil)
+	if deleteErr := service.DeleteWordDefinitions(wordId, nil); deleteErr != nil {
+		common.Logger.Error("failed to delete word definitions", "wordId", wordId, "error", deleteErr)
+	}
 	jobID, err := service.TriggerFetchDefinitionWorker(wordId, nil, nil, nil)
 
 	if err != nil {

@@ -415,8 +415,21 @@
     "descriptionPlaceholder": "Fügen Sie eine Beschreibung für Ihre Wortliste hinzu",
     "languageLabel": "Sprache",
     "languageRequired": "Bitte wählen Sie eine Sprache",
+    "pronunciationLabel": "Aussprachesystem",
+    "pronunciationHelp": "Wählen Sie, wie die Aussprache angezeigt wird",
+    "pronunciationRequired": "Bitte wählen Sie ein Aussprachesystem",
+    "pronunciationNotSupported": "Das gewählte Aussprachesystem wird für diese Sprache nicht unterstützt",
+    "pronunciationLoadError": "Fehler beim Laden der Ausspracheoptionen",
+    "pronunciationDefaultWillBeUsed": "Das Standard-Aussprachesystem wird verwendet",
     "errorMessage": "Fehler beim Erstellen der Wortliste. Bitte versuchen Sie es erneut.",
     "createButton": "Wortliste erstellen"
+  },
+  "pronunciationSystems": {
+    "ipa": "IPA",
+    "romaji": "Romaji",
+    "hiragana": "Hiragana",
+    "pinyin": "Pinyin",
+    "hangul": "Hangul"
   },
   "upgradePrompt": {
     "title": "Gefällt Ihnen Decorebator?",

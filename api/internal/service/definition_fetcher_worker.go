@@ -26,26 +26,33 @@ type DefinitionFetcherWorker struct {
 	river.WorkerDefaults[DefinitionFetcherArgs]
 }
 
-// getWordlistLanguage retrieves the language code for a wordlist from a word ID
-func getWordlistLanguage(wordID int64) (string, error) {
+// getWordlistLanguageAndPronunciation retrieves the language code and pronunciation system for a wordlist from a word ID
+func getWordlistLanguageAndPronunciation(wordID int64) (string, model.PronunciationSystem, error) {
 	db, err := common.GetDBConnection()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	query := `
-		SELECT w.language_code 
+		SELECT w.language_code, w.pronunciation_system
 		FROM words wd 
 		JOIN wordlists w ON wd.wordlist_id = w.id 
 		WHERE wd.id = $1`
 
 	var languageCode string
-	err = db.QueryRow(context.Background(), query, wordID).Scan(&languageCode)
+	var pronunciationSystem model.PronunciationSystem
+	err = db.QueryRow(context.Background(), query, wordID).Scan(&languageCode, &pronunciationSystem)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return languageCode, nil
+	return languageCode, pronunciationSystem, nil
+}
+
+// getWordlistLanguage is a backward compatibility wrapper for other workers that only need language code
+func getWordlistLanguage(wordID int64) (string, error) {
+	languageCode, _, err := getWordlistLanguageAndPronunciation(wordID)
+	return languageCode, err
 }
 
 func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[DefinitionFetcherArgs]) error {
@@ -69,16 +76,16 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		return err
 	}
 
-	// Get wordlist language
-	languageCode, err := getWordlistLanguage(wordID)
+	// Get wordlist language and pronunciation system
+	languageCode, pronunciationSystem, err := getWordlistLanguageAndPronunciation(wordID)
 	if err != nil {
-		logger.Error("failed to get wordlist language", "error", err)
+		logger.Error("failed to get wordlist language and pronunciation system", "error", err)
 		return river.JobCancel(err)
 	}
 
-	logger.Info("fetching definitions", "word", word.Name, "language", languageCode)
+	logger.Info("fetching definitions", "word", word.Name, "language", languageCode, "pronunciationSystem", pronunciationSystem)
 
-	definitionData, err := openai.GetDefinition(word.Name, languageCode)
+	definitionData, err := openai.GetDefinition(word.Name, languageCode, pronunciationSystem)
 	if err != nil {
 		logger.Error("failed to fetch definitions using openai", "error", err)
 		return err
@@ -115,9 +122,13 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	}
 	defer func() {
 		if err == nil {
-			tx.Commit(ctx)
+			if commitErr := tx.Commit(ctx); commitErr != nil {
+				logger.Error("failed to commit transaction in definition fetcher worker", "error", commitErr)
+			}
 		} else {
-			tx.Rollback(ctx)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				logger.Error("failed to rollback transaction in definition fetcher worker", "error", rollbackErr)
+			}
 		}
 	}()
 
@@ -155,7 +166,9 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 	}
 	strategy := LeitnerSystemStrategy{}
-	strategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
+	if includeErr := strategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
+		logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)
+	}
 
 	// if this job was triggered by an error report, then mark the issue as solved
 	if job.Args.ErrorReport != nil {

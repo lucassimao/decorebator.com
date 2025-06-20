@@ -6,14 +6,16 @@ import (
 	"strconv"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
 type WordlistInput struct {
-	Name         string `json:"name" binding:"required"`
-	Description  string `json:"description"`
-	LanguageCode string `json:"languageCode" binding:"required"`
+	Name                string                     `json:"name" binding:"required"`
+	Description         string                     `json:"description"`
+	LanguageCode        string                     `json:"languageCode" binding:"required"`
+	PronunciationSystem *model.PronunciationSystem `json:"pronunciationSystem,omitempty"`
 }
 
 type WordlistsRoutes struct{}
@@ -36,14 +38,61 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 		return
 	}
 
+	// Determine pronunciation system
+	var pronunciationSystem model.PronunciationSystem
+	if input.PronunciationSystem != nil {
+		// Validate that the pronunciation system is supported for this language
+		supportedSystems := model.GetSupportedPronunciationSystems(input.LanguageCode)
+		isSupported := false
+		for _, system := range supportedSystems {
+			if system == *input.PronunciationSystem {
+				isSupported = true
+				break
+			}
+		}
+		if !isSupported {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Pronunciation system not supported for this language"})
+			return
+		}
+		pronunciationSystem = *input.PronunciationSystem
+	} else {
+		// Use default pronunciation system for the language
+		pronunciationSystem = model.GetDefaultPronunciationSystem(input.LanguageCode)
+	}
+
 	var userId int64 = c.GetInt64("userID")
-	saved, err := service.SaveWordlist(&Wordlist{Name: input.Name, Description: input.Description, UserID: userId, LanguageCode: input.LanguageCode})
+	saved, err := service.SaveWordlist(&Wordlist{
+		Name:                input.Name,
+		Description:         input.Description,
+		UserID:              userId,
+		LanguageCode:        input.LanguageCode,
+		PronunciationSystem: pronunciationSystem,
+	})
 
 	if err != nil {
 		panic(err)
 	}
 
 	c.JSON(http.StatusCreated, saved)
+}
+
+// GetPronunciationSystems returns the supported pronunciation systems for a language
+func (h *WordlistsRoutes) GetPronunciationSystems(c *gin.Context) {
+	languageCode := c.Query("languageCode")
+	if languageCode == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "languageCode query parameter is required"})
+		return
+	}
+
+	supportedSystems := model.GetSupportedPronunciationSystems(languageCode)
+	defaultSystem := model.GetDefaultPronunciationSystem(languageCode)
+	canChange := model.CanChangePronunciationSystem(languageCode)
+
+	c.JSON(http.StatusOK, gin.H{
+		"supportedSystems": supportedSystems,
+		"defaultSystem":    defaultSystem,
+		"canChange":        canChange,
+	})
 }
 
 func (h *WordlistsRoutes) GetById(c *gin.Context) {

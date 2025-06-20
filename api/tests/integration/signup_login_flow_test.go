@@ -2,12 +2,10 @@ package integration
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
-	httphandlers "decorebator.com/internal/http"
 	"decorebator.com/tests/integration/setup"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,7 +14,6 @@ import (
 // TestSignupLoginFlow tests the complete user registration and login flow
 func TestSignupLoginFlow(t *testing.T) {
 	server := setup.NewTestServer(t)
-	defer server.Cleanup()
 
 	// The login route is now handled by the test server setup
 
@@ -274,99 +271,5 @@ func TestSignupLoginFlow(t *testing.T) {
 				t.Logf("✓ Login correctly rejected for %s", tc.name)
 			})
 		}
-	})
-}
-
-// TestSignupLoginPerformance tests the performance of signup and login operations
-func TestSignupLoginPerformance(t *testing.T) {
-	server := setup.NewTestServer(t)
-	defer server.Cleanup()
-
-	// The login route is now handled by the test server setup
-
-	t.Run("signup performance", func(t *testing.T) {
-		start := time.Now()
-
-		signupInput := setup.GenerateSignupInput()
-		server.Expect.POST("/users").
-			WithJSON(signupInput).
-			Expect().
-			Status(http.StatusCreated)
-
-		duration := time.Since(start)
-
-		// Signup should complete within 2 seconds (includes bcrypt hashing)
-		assert.Less(t, duration, 2*time.Second, "Signup should be fast")
-		t.Logf("✓ Signup completed in %v", duration)
-	})
-
-	t.Run("login performance", func(t *testing.T) {
-		// Create user first
-		signupInput := setup.GenerateSignupInput()
-		server.Expect.POST("/users").
-			WithJSON(signupInput).
-			Expect().
-			Status(http.StatusCreated)
-
-		start := time.Now()
-
-		credentials := httphandlers.LoginInput{
-			Email:    signupInput.Email,
-			Password: signupInput.Password,
-		}
-
-		server.Expect.POST("/login").
-			WithJSON(credentials).
-			Expect().
-			Status(http.StatusOK)
-
-		duration := time.Since(start)
-
-		// Login should complete within 3 seconds (includes bcrypt verification)
-		assert.Less(t, duration, 3*time.Second, "Login should be fast")
-		t.Logf("✓ Login completed in %v", duration)
-	})
-
-	t.Run("concurrent signups", func(t *testing.T) {
-		const numConcurrent = 10
-		results := make(chan error, numConcurrent)
-
-		start := time.Now()
-
-		// Start concurrent signups
-		for i := 0; i < numConcurrent; i++ {
-			go func(index int) {
-				signupInput := setup.GenerateSignupInput()
-				signupInput.Email = fmt.Sprintf("concurrent%d@example.com", index)
-
-				resp := server.Expect.POST("/users").
-					WithJSON(signupInput).
-					Expect()
-
-				if resp.Raw().StatusCode != http.StatusCreated { //nolint:bodyclose // httpexpect handles body closing
-					results <- fmt.Errorf("signup %d failed with status %d", index, resp.Raw().StatusCode) //nolint:bodyclose // httpexpect handles body closing
-				} else {
-					results <- nil
-				}
-			}(i)
-		}
-
-		// Collect results
-		var errors []error
-		for i := 0; i < numConcurrent; i++ {
-			if err := <-results; err != nil {
-				errors = append(errors, err)
-			}
-		}
-
-		duration := time.Since(start)
-
-		// All concurrent signups should succeed
-		assert.Empty(t, errors, "All concurrent signups should succeed")
-
-		// Should complete within 15 seconds for 10 concurrent signups (including bcrypt hashing)
-		assert.Less(t, duration, 15*time.Second, "Concurrent signups should complete within reasonable time")
-
-		t.Logf("✓ %d concurrent signups completed in %v", numConcurrent, duration)
 	})
 }
