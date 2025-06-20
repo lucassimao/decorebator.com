@@ -280,7 +280,7 @@ func setupWordlistOverviewTestData(t *testing.T, server *setup.TestServer, token
 	require.NoError(t, err)
 
 	// Create streak data (current streak) - expecting 6 based on actual calculation
-	// Note: The streak calculation includes today and counts backwards, so a 5-day setup 
+	// Note: The streak calculation includes today and counts backwards, so a 5-day setup
 	// with today included results in a streak of 6
 	_ = setupStreakData(ctx, t, server, userID, wordlistID, 5)
 	// Clear any potential Redis cache for this wordlist

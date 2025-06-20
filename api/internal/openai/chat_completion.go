@@ -25,7 +25,7 @@ type LanguageConfig struct {
 	ExampleInstructions  string
 }
 
-//nolint
+// nolint
 var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 	"en": {
 		Code:             "en",
@@ -518,7 +518,7 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 	return schema, nil
 }
 
-//nolint
+// nolint
 var EXAMPLES_RESPONSE_SCHEMA = map[string]any{
 	"name":   "ExamplesResponse",
 	"strict": true,

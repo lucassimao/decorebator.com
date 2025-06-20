@@ -104,17 +104,17 @@ func TestBoxDistributionHistoryEndpoint_HistoricalData(t *testing.T) {
 	json.ContainsKey("distribution")
 
 	distribution := json.Value("distribution").Array()
-	
+
 	// Debug: Print the actual length received
 	actualLength := int(distribution.Length().Raw())
 	t.Logf("Expected %d snapshots, got %d", len(testData.ExpectedSnapshots), actualLength)
 	t.Logf("Response body: %v", response.Body().Raw())
-	
+
 	// If we got no snapshots, it might be a data setup issue
 	if actualLength == 0 {
 		t.Logf("No snapshots returned. UserID: %d, WordlistID: %d", testData.UserID, testData.WordlistID)
 	}
-	
+
 	assert.Equal(t, len(testData.ExpectedSnapshots), actualLength,
 		"Should return snapshots for all test dates")
 
@@ -125,7 +125,7 @@ func TestBoxDistributionHistoryEndpoint_HistoricalData(t *testing.T) {
 
 		snapshotObj.ContainsKey("date")
 		snapshotObj.ContainsKey("boxes")
-		
+
 		// The box distribution is nested inside "boxes" field
 		boxesObj := snapshotObj.Value("boxes").Object()
 		boxesObj.HasValue("box1", expectedSnapshot.Box1Count)
@@ -272,7 +272,7 @@ func setupBoxDistributionTestData(t *testing.T, server *setup.TestServer, token 
 	}
 }
 
-// setupMaxBoxLogicTestData creates test data to verify MAX(box_id) logic using service layer calls  
+// setupMaxBoxLogicTestData creates test data to verify MAX(box_id) logic using service layer calls
 func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token string) *BoxDistributionTestData {
 	ctx := context.Background()
 
@@ -289,7 +289,7 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 
 	// Create first word with multiple definitions at different box levels
 	wordID1, _, leitnerID1 := createBasicWordStructure(t, server, token, wordlistID, "word1")
-	
+
 	// Update the first definition to box 5 (will be the max)
 	_, err := server.DB.Exec(ctx,
 		`UPDATE leitner_system_tracking SET box_id = $1 WHERE id = $2`,
@@ -338,9 +338,9 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 		require.NoError(t, err)
 	}
 
-	// Create second word with multiple definitions at different box levels  
+	// Create second word with multiple definitions at different box levels
 	wordID2, _, leitnerID2 := createBasicWordStructure(t, server, token, wordlistID, "word2")
-	
+
 	// Update the first definition to box 7 (will be the max)
 	_, err = server.DB.Exec(ctx,
 		`UPDATE leitner_system_tracking SET box_id = $1 WHERE id = $2`,
@@ -362,7 +362,7 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 
 		definition := &model.Definition{
 			Token:                  fmt.Sprintf("word2_def%d", i+2),
-			Language:               "en", 
+			Language:               "en",
 			Meaning:                fmt.Sprintf("Meaning %d for word2", i+2),
 			PartOfSpeech:           "noun",
 			Examples:               []string{fmt.Sprintf("Example %d", i+2)},
@@ -391,7 +391,7 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 
 	// Debug: Verify what we've created
 	var wordCount int
-	err = server.DB.QueryRow(ctx, 
+	err = server.DB.QueryRow(ctx,
 		"SELECT COUNT(DISTINCT word_id) FROM leitner_system_tracking WHERE user_id = $1",
 		userID).Scan(&wordCount)
 	require.NoError(t, err)

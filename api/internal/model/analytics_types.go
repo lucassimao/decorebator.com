@@ -72,12 +72,12 @@ type QuizTypePerformance struct {
 
 // LearningProgressStats represents daily learning progress statistics
 type LearningProgressStats struct {
-	Date             time.Time `json:"date"`
-	WordsStudied     int       `json:"wordsStudied"`
-	WordsMastered    int       `json:"wordsMastered"`
-	TotalAttempts    int       `json:"totalAttempts"`
-	AccuracyRate     float64   `json:"accuracyRate"`
-	AvgResponseMs    int       `json:"avgResponseMs"`
+	Date          time.Time `json:"date"`
+	WordsStudied  int       `json:"wordsStudied"`
+	WordsMastered int       `json:"wordsMastered"`
+	TotalAttempts int       `json:"totalAttempts"`
+	AccuracyRate  float64   `json:"accuracyRate"`
+	AvgResponseMs int       `json:"avgResponseMs"`
 }
 
 // BoxDistribution represents the current distribution of words across Leitner boxes

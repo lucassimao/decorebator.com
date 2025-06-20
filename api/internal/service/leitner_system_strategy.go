@@ -57,12 +57,12 @@ type NextDefinition struct {
 // - Box 6: Audio recognition (new modality)
 // - Box 7: Mastery level (most challenging types only)
 var boxToQuizTypes = map[int64][]model.QuizType{
-	1: {model.GuessMeaning},                                                                                 // Recognition: "What does this word mean?"
-	2: {model.WordFromMeaning, model.GuessMeaning},                                                          // Basic recall: "Which word matches this meaning?" + recognition practice
-	3: {model.WordFromImage, model.WordFromMeaning},                                                         // Visual association: "What word matches this image?" + meaning recall
-	4: {model.CompleteSentence, model.WordFromExampleAudio, model.GuessMeaning},                            // Contextual understanding + recognition reinforcement
-	5: {model.WriteWordFromDefinition, model.WordFromExampleAudio, model.WordFromMeaning},                  // Active recall + meaning practice
-	6: {model.WordFromAudio, model.WordFromExampleAudio, model.WordFromImage, model.GuessMeaning},          // Audio/Visual recognition + meaning reinforcement
+	1: {model.GuessMeaning},                                                                                                                                                                             // Recognition: "What does this word mean?"
+	2: {model.WordFromMeaning, model.GuessMeaning},                                                                                                                                                      // Basic recall: "Which word matches this meaning?" + recognition practice
+	3: {model.WordFromImage, model.WordFromMeaning},                                                                                                                                                     // Visual association: "What word matches this image?" + meaning recall
+	4: {model.CompleteSentence, model.WordFromExampleAudio, model.GuessMeaning},                                                                                                                         // Contextual understanding + recognition reinforcement
+	5: {model.WriteWordFromDefinition, model.WordFromExampleAudio, model.WordFromMeaning},                                                                                                               // Active recall + meaning practice
+	6: {model.WordFromAudio, model.WordFromExampleAudio, model.WordFromImage, model.GuessMeaning},                                                                                                       // Audio/Visual recognition + meaning reinforcement
 	7: {model.MeaningFromAudio, model.WordFromImage, model.WriteWordFromDefinition, model.CompleteSentence, model.WordFromExampleAudio, model.WordFromAudio, model.WordFromMeaning, model.GuessMeaning}, // Mastery: All types for comprehensive review
 }
 
@@ -1336,7 +1336,7 @@ func selectBalancedQuizType(userID, wordlistID int64, availableTypes []model.Qui
 
 	for _, qt := range availableTypes {
 		typeUsage, exists := usage[string(qt)]
-		
+
 		var score float64
 		if !exists {
 			// Never used = highest priority
@@ -1344,13 +1344,13 @@ func selectBalancedQuizType(userID, wordlistID int64, availableTypes []model.Qui
 		} else {
 			// Score based on usage count and recency
 			hoursSinceLastUse := now.Sub(typeUsage.lastUsedAt).Hours()
-			
+
 			// Base score from usage count (more usage = higher score)
 			score = float64(typeUsage.count) * 10
-			
+
 			// Reduce score based on time since last use (older = lower score)
 			score -= hoursSinceLastUse * 2
-			
+
 			// Ensure score is not negative
 			if score < 0 {
 				score = 0

@@ -37,8 +37,8 @@ func createBasicWordStructure(t *testing.T, server *setup.TestServer, token stri
 
 	// Verify the word exists and belongs to the user
 	var wordExists bool
-	err := server.DB.QueryRow(ctx, 
-		"SELECT EXISTS(SELECT 1 FROM words WHERE id = $1 AND user_id = $2)", 
+	err := server.DB.QueryRow(ctx,
+		"SELECT EXISTS(SELECT 1 FROM words WHERE id = $1 AND user_id = $2)",
 		wordID, userID).Scan(&wordExists)
 	require.NoError(t, err)
 	require.True(t, wordExists, "Word should exist in database")
@@ -131,7 +131,7 @@ func saveQuizResult(_ *testing.T, server *setup.TestServer, token string, wordli
 // flushRedisCache clears all Redis cache to ensure test isolation
 func flushRedisCache(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Get Redis client to clear cache
 	redisClient, err := common.GetRedisClient()
 	if err != nil {
@@ -139,7 +139,7 @@ func flushRedisCache(t *testing.T) {
 		t.Logf("Redis not available for cache flush: %v", err)
 		return
 	}
-	
+
 	// Use FLUSHALL to clear entire Redis cache for complete test isolation
 	err = redisClient.FlushAll(ctx).Err()
 	if err != nil {

@@ -70,7 +70,7 @@ func GenerateTestWord(wordlistID, userID int64) *model.Word {
 	}
 }
 
-// GenerateTestDefinition generates a random test definition using production model  
+// GenerateTestDefinition generates a random test definition using production model
 func GenerateTestDefinition() *model.Definition {
 	fake := gofakeit.New(uint64(time.Now().UnixNano())) // Use time-based seed for unique data
 

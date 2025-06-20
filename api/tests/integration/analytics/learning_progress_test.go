@@ -328,7 +328,7 @@ func setupAccuracyEdgeCaseTestData(t *testing.T, server *setup.TestServer, token
 	flushRedisCache(t)
 
 	// Create word structure via API (not used for edge cases since we create historical data directly)
-	_, _, _ = createBasicWordStructure(t, server, token, wordlistID, "edgecaseword")
+	createBasicWordStructure(t, server, token, wordlistID, "edgecaseword")
 
 	// Edge case scenarios
 	edgeCases := []struct {

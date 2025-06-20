@@ -44,22 +44,22 @@ func RunMigrations(_ *pgxpool.Pool) error {
 
 	// Try different migration paths based on where tests are run from
 	migrationPaths := []string{
-		"file://../../cmd/migrate/migrations",     // From tests/integration/analytics/
-		"file://../../../cmd/migrate/migrations",  // From tests/integration/
-		"file://cmd/migrate/migrations",           // From api root directory
-		"file://./cmd/migrate/migrations",         // From api root directory (alternative)
+		"file://../../cmd/migrate/migrations",    // From tests/integration/analytics/
+		"file://../../../cmd/migrate/migrations", // From tests/integration/
+		"file://cmd/migrate/migrations",          // From api root directory
+		"file://./cmd/migrate/migrations",        // From api root directory (alternative)
 	}
 
 	var m *migrate.Migrate
 	var err error
-	
+
 	for _, migrationPath := range migrationPaths {
 		m, err = migrate.New(migrationPath, dbURL)
 		if err == nil {
 			break
 		}
 	}
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to create migrate instance with any path: %w", err)
 	}

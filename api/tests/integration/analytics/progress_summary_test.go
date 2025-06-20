@@ -59,28 +59,28 @@ func TestProgressSummaryEndpoint_MultipleWordlists(t *testing.T) {
 		assert.Equal(t, expected.WordlistName, actual["wordlistName"])
 		assert.Equal(t, expected.LanguageCode, actual["languageCode"])
 		assert.Equal(t, expected.TotalWords, actual["totalWords"])
-		
+
 		// Verify mastery count is reasonable (≥ 0 and ≤ total words)
 		wordsMastered := actual["wordsMastered"].(int)
 		totalWords := actual["totalWords"].(int)
-		assert.True(t, wordsMastered >= 0 && wordsMastered <= totalWords, 
+		assert.True(t, wordsMastered >= 0 && wordsMastered <= totalWords,
 			fmt.Sprintf("Words mastered (%d) should be between 0 and total words (%d)", wordsMastered, totalWords))
-		
+
 		// Verify progress percentage is reasonable (0-100%)
 		progressPercent := actual["progressPercent"].(float64)
-		assert.True(t, progressPercent >= 0 && progressPercent <= 100, 
+		assert.True(t, progressPercent >= 0 && progressPercent <= 100,
 			fmt.Sprintf("Progress percentage (%.2f) should be between 0 and 100", progressPercent))
-		
+
 		// Verify streak is reasonable (≥ 0)
 		currentStreak := actual["currentStreak"].(int)
-		assert.True(t, currentStreak >= 0, 
+		assert.True(t, currentStreak >= 0,
 			fmt.Sprintf("Current streak (%d) should be >= 0", currentStreak))
-		
+
 		// The German Grammar wordlist should have higher progress (more mastered words in setup)
 		if expected.WordlistName == "German Grammar" {
 			assert.True(t, progressPercent > 50, "German Grammar should have >50% progress")
 		}
-		
+
 		// The Spanish Basics should have higher progress than French Advanced (more mastered words in setup)
 		if expected.WordlistName == "Spanish Basics" {
 			assert.True(t, progressPercent > 30, "Spanish Basics should have >30% progress")
@@ -132,19 +132,19 @@ func TestProgressSummaryEndpoint_ProgressCalculations(t *testing.T) {
 		switch expectedScenario.WordlistName {
 		case "Empty Progress":
 			// Should have minimal progress (0% words mastered)
-			assert.True(t, progressPercent >= 0 && progressPercent <= 30, 
+			assert.True(t, progressPercent >= 0 && progressPercent <= 30,
 				fmt.Sprintf("Empty Progress should have low progress, got %.2f", progressPercent))
 		case "Partial Progress":
 			// Should have moderate progress (some words mastered)
-			assert.True(t, progressPercent >= 20 && progressPercent <= 60, 
+			assert.True(t, progressPercent >= 20 && progressPercent <= 60,
 				fmt.Sprintf("Partial Progress should have moderate progress, got %.2f", progressPercent))
 		case "Complete Progress":
 			// Should have high progress (all words mastered)
-			assert.True(t, progressPercent >= 60 && progressPercent <= 100, 
+			assert.True(t, progressPercent >= 60 && progressPercent <= 100,
 				fmt.Sprintf("Complete Progress should have high progress, got %.2f", progressPercent))
 		case "Single Word":
 			// Should have high progress (single word mastered)
-			assert.True(t, progressPercent >= 60 && progressPercent <= 100, 
+			assert.True(t, progressPercent >= 60 && progressPercent <= 100,
 				fmt.Sprintf("Single Word should have high progress, got %.2f", progressPercent))
 		}
 
