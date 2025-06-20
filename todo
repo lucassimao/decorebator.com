@@ -1,96 +1,51 @@
-[x] (mobile) use callApi instead of fetch directly
-[x] Submit quiz answer once the option is clicked and not when clicking 'Next Quizz'
-[x] investigate behaviour of useQuery and useMutation in Quiz screen 
-[x] display part of speech in the quiz screen
-[x] quiz screen blinks after picking option
-[x] check if "plural of something" is fetching the something. eg perils
-[x] refactor how the quiz type is represented. use string enum instead of int
-[x] fast quiz mode
-[x] Opções de palavras estão se repetindo como se fossem cacheados pelo banco
-[x] add word modal - save and add more
-[x] GetDefinition using chatGPT is not saving examples properly
-[x] New quiz: word from meaning
-[x] New quiz: word from image
-[x] New quiz: word from pronounciation
-[x] use queue when fetching definitions from openai
-[x] integrate with stability AI image generation API
-[x] track quiz success and error timestamps
-[x] limit the length of words to 15
-[x] Display example copy as a hint for when doing the image quiz
-[x] listen for pronounciation on meaning from word quiz
-[x] Allow to report problem
-[x] continuos deployment of the backend
-[x] Reuse definitions already fetched
-[x] run db migrations  before deployment
-    
-[x] Marketing
-    [x] recover password 
-    [x] Welcome email
-[x] subscription
+[ ]  browserstack testing
+        - Fix SignUp screen - use transparent PNG as the login scren
+        - Integrate Revenue cat for non US users
+        - Confi sentry in the expo app
 
-[ ] Mobile UI improvements
-    [x] Dashboard
-    [x] Sign Up
-    [x] Wordlist CRUD
-    [x] Sign In
-    [x] Recover password
-    [x] Quiz
-    [x] remove react native paper dependency
-    [x] Replace expo-av with expo-audio
-    [x] App icon
-    [x] New quiz: write word from definition
-    [x] UI translation
-    [x] Offline support
-    [x] Remove learned words from quiz
-    [x] Fix % learned in the ItemUi
-    [x] Support Stripe cupoms
-    [x] Try SaveQuizResultWithAnalytics and Add new stats dashboard
-    [x] Flashcards
-    [x] Display pronunciation if available (missing quiz screens)
-    [x] Leitner system - problem with single word stuck at lowest box
-    [x] Use all examples
-    [x] Lets now support to report errors on the flash card screen mobile/app/practice.tsx - the same as it works in mobile/app/quiz.tsx . If you need etxt copies make sure to use i18n features and add any new key to all i18n json files
-    [x] Update mobile/components/dashboard/WordlistDetailModal.tsx to use analytics details
-    [x] Lets update mobile/components/dashboard/Stats.tsx so that we replace wordlistsApi.getUserStats with the stats we are already computing in the mobile/   hooks/useAnalytics.ts hook. Only 
-  reuse whatever is already been expected to be show in the current implementation of the component - nothing else more
-    [x] Update all i18n json files in mobile/i18n/locales to include the keys offiline.preloading , 
-        offiline.availableOffline , offiline.preloadWhenOnline , offiline.downloadForOffline, offline.cacheProgress . They only exist in mobile/i18n/locales/en.json and should be replicated across all i18n files in the same dir
-    [x] Update mobile/components/dashboard/WordlistItem.tsx to show the full name of the wordlist  in the first line. Then the buttons (flash card, stats, quiz) need to be reworked and moved elsewhere inside the component layout cuz the are very small right now to be used in mobile screens.
-    [x] error_reporting_analysis.html
-    [x] Multilanguage quizes
-    [x] New quiz: read example and ask to write or pick heard words
-    [x] O quiz pra escrever a palavra tem que ter um botão “não lembro” que deve levar imediatamente para o box 1 da mesma definição    
-    [x] Quando selecionar opções evitar outras que possam ter a mesma palavra do quiz
-    [x] No flash card usar apenas lavaras com definitions
-    [x] Unify part of speech constants across different languages
-    [x] merge GetWordsWithDefinitions and GetAllFromWordlist em api/internal/service/word.go - getWordsWithDefinitions and getWords in mobile/api/wordlists.ts
-    [x] Need to ignore temporarily_skipped_until if all words are skipped
-    [x] Security abuse of api calls: Controlar quão frequente user pode reportar erro
-    [x] O click no flash card deve mudar o lado dele
-    [x] Revisar como stats são computaras e exibidas
-    [x] Fix navigation
-    [x] Keep progress of flash cards
-    [x] Improve loading state in quiz and practice screens
-    [x] The state of the play button is not synced
-    [x] Add Leitner box distribution metric
-    [x] Quiz loading state still stuck
-    [x] new metricts are not taking into account that a single word has more thatn 1 definition, leading to wrong data
-    [x] fix sentry
-    [x] make sure the percts show in mobile/components/analytics/HistoricalBoxDistributionChart.tsx total 100%
-    [x] StatsGrid should display stats per wordlist, not global
-    [x] Possible to compute stats on the fly for paying users? optmize how we fetch them'
-    [x] Integratation test plan
+### iOS App Store Release Checklist
 
-[ ] MVP Release Checklist
-    [x]  PostHog integration
-    [x]  Sentry for error tracking
-    [x]  Set up Stripe
-    [x]  CI/CD pipelines (GitHub Actions → Digital Ocean and Expo)
-    [x]  Vercel-hosted page with SEO meta tags
-    [x]  Decorebator Landing Page Redesign
-    [x]  New Icon
-    [ ]  browserstack testing
-         - Fix SignUp screen - use transparent PNG as the login scren
+- [ ] Apple ID with 2FA enabled  
+- [ ] Join Apple Developer Program ($99/year)  
+- [ ] Use Xcode/EAS to build signed `.ipa` or `.app`  
+- [x] Ensure app conforms to [App Store Review Guidelines]   
+- [x] Prepare metadata in App Store Connect:  
+  - App Name, Subtitle, Keywords, Categories  
+  - Description, Support URL, Marketing URL, Copyright  
+  - Privacy Policy URL and App Privacy details   
+  - Age Rating, Content Rights, Demo/test account credentials  
+- [ ] Create screenshots and optional preview video (various device sizes)   
+- [ ] Use TestFlight for beta testing with sandbox users   
+- [ ] Archive and upload build via Xcode or EAS Submit  
+- [ ] Attach build to version in App Store Connect  
+- [ ] Provide App Review notes (especially for special features/external links)   
+- [ ] Submit for review  
+- [ ] Choose release type (Manual/Automatic/Scheduled)  
+- [ ] After approval: Release in App Store Connect  
+- [ ] Post-launch: Monitor analytics, crash logs, and reviews
+
+### Android Google Play Release Checklist
+
+- [ ] Google Play Developer account created ($25 one-time fee)   
+- [ ] Ensure app adheres to Play Program Policies & DDA   
+- [ ] Build a release-ready Android App Bundle (`.aab`), minSdk version, no debug flags   
+- [ ] Sign the AAB correctly  
+- [ ] Prepare Play Console store listing:  
+  - Title (≤50 chars), Short Description (≤80), Full Description (≤4,000)   
+  - App icon (512×512), Feature Graphic (1024×500), Screenshots *(min 2)*   
+  - Optional promo video (YouTube, first 30 s play)   
+  - Privacy Policy URL and contact info   
+  - Content rating questionnaire, pricing & distribution regions (incl. Brazil/EU)   
+- [ ] Create in-app products or subscriptions (link Merchant Account)   
+- [ ] Use testing tracks:  
+  - Internal (team)  
+  - Closed beta (limited testers)  
+  - Open beta (public)   
+- [ ] Upload AAB and release notes under **Release > Production** (or beta)   
+- [ ] Review release summary and artifacts  
+- [ ] Submit for review (takes 2–7 days)   
+- [ ] Post-launch: monitor downloads, crashes (Play Console & Firebase), reviews, revenue   
+
 
 # V2
 [ ] Security plan OWASP

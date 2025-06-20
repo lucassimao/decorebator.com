@@ -494,7 +494,47 @@ const SettingsScreen: React.FC = () => {
               </Text>
               <Ionicons name="chevron-forward" size={20} color="#636E72" />
             </TouchableOpacity>
+          </View>
 
+          {/* Legal & Privacy Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {t("settings.legalAndPrivacy")}
+            </Text>
+
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={async () => {
+                await WebBrowser.openBrowserAsync(
+                  `https://decorebator.com/${i18n.language}/privacy`,
+                );
+              }}
+            >
+              <MaterialIcons name="privacy-tip" size={24} color="#636E72" />
+              <Text style={styles.settingText}>
+                {t("settings.privacyPolicy")}
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color="#636E72" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={async () => {
+                await WebBrowser.openBrowserAsync(
+                  `https://decorebator.com/${i18n.language}/terms`,
+                );
+              }}
+            >
+              <MaterialIcons name="gavel" size={24} color="#636E72" />
+              <Text style={styles.settingText}>
+                {t("settings.termsOfService")}
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color="#636E72" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Sign Out */}
+          <View style={styles.section}>
             <TouchableOpacity style={styles.settingItem} onPress={signOut}>
               <MaterialIcons name="logout" size={24} color="#FF6B6B" />
               <Text style={[styles.settingText, { color: "#FF6B6B" }]}>

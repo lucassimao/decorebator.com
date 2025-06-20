@@ -21,13 +21,29 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
 }) => {
   return (
     <View style={styles.header}>
-      <TouchableOpacity style={styles.backButton} onPress={onBackPress}>
+      <TouchableOpacity 
+        style={styles.backButton} 
+        onPress={onBackPress}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        accessibilityHint="Return to previous screen"
+      >
         <Ionicons name="arrow-back" size={24} color="#2D3436" />
       </TouchableOpacity>
 
       <View style={styles.headerCenter}>
-        <Text style={styles.headerTitle}>{wordlistName || "Quiz"}</Text>
-        <Text style={styles.headerSubtitle}>
+        <Text 
+          style={styles.headerTitle}
+          accessibilityRole="header"
+          accessibilityLevel={1}
+        >
+          {wordlistName || "Quiz"}
+        </Text>
+        <Text 
+          style={styles.headerSubtitle}
+          accessibilityRole="text"
+          accessibilityLabel={`Score: ${correctCount} out of ${quizCount} questions correct`}
+        >
           {correctCount}/{quizCount} correct
         </Text>
       </View>
@@ -36,6 +52,10 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
         style={[styles.settingsButton, !isOnline && styles.disabledButton]}
         onPress={() => isOnline && onReportPress()}
         disabled={!isOnline}
+        accessibilityRole="button"
+        accessibilityLabel={isOnline ? "Report error" : "Report error (offline)"}
+        accessibilityHint={isOnline ? "Report an issue with the current question" : "Requires internet connection"}
+        accessibilityState={{ disabled: !isOnline }}
       >
         <MaterialIcons
           name="flag"
