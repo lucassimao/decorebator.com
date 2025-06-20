@@ -72,9 +72,13 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 	}
 	defer func() {
 		if err == nil {
-			tx.Commit(ctx)
+			if commitErr := tx.Commit(ctx); commitErr != nil {
+				common.Logger.Error("failed to commit transaction in error reporting", "error", commitErr)
+			}
 		} else {
-			tx.Rollback(ctx)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				common.Logger.Error("failed to rollback transaction in error reporting", "error", rollbackErr)
+			}
 		}
 	}()
 

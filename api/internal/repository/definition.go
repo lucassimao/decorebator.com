@@ -82,23 +82,21 @@ func (repository *DefinitionRepository) GetRandomMeanings(definitionIdsToIgnore 
 
 	query := `
         WITH target_definitions AS (
-			SELECT DISTINCT meaning, part_of_speech 
+			SELECT DISTINCT part_of_speech 
 			FROM definitions 
 			WHERE id = ANY($1)
+		),
+        excluded_words AS (
+			SELECT DISTINCT wd.word_id
+			FROM word_definitions wd
+			WHERE wd.definition_id = ANY($1)
 		),
         candidates AS (
 			SELECT DISTINCT def.meaning
 			FROM definitions def
 			JOIN word_definitions wd ON wd.definition_id = def.id
-			CROSS JOIN target_definitions td
-			WHERE NOT EXISTS (
-				SELECT 1
-				FROM word_definitions wd2
-				WHERE wd2.word_id = wd.word_id
-				AND wd2.definition_id = ANY($1)
-			)
-			AND def.meaning <> td.meaning
-			AND def.part_of_speech = td.part_of_speech
+			WHERE def.part_of_speech IN (SELECT part_of_speech FROM target_definitions)
+			AND wd.word_id NOT IN (SELECT word_id FROM excluded_words)
 			AND def.id <> ALL($1)
 		)
         SELECT meaning
@@ -109,7 +107,7 @@ func (repository *DefinitionRepository) GetRandomMeanings(definitionIdsToIgnore 
 
 	rows, err := repository.Db.Query(context.Background(), query, definitionIdsToIgnore, limit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query random meanings for definitions %v: %w", definitionIdsToIgnore, err)
 	}
 	defer rows.Close()
 
@@ -237,9 +235,13 @@ func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64, tx *
 		}
 		defer func() {
 			if err == nil {
-				managedTx.Commit(ctx)
+				if commitErr := managedTx.Commit(ctx); commitErr != nil {
+					common.Logger.Error("failed to commit transaction in definition repository", "error", commitErr)
+				}
 			} else {
-				managedTx.Rollback(ctx)
+				if rollbackErr := managedTx.Rollback(ctx); rollbackErr != nil {
+					common.Logger.Error("failed to rollback transaction in definition repository", "error", rollbackErr)
+				}
 			}
 		}()
 	} else {

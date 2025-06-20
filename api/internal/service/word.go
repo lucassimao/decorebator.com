@@ -52,9 +52,13 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 	// db transaction mgmt
 	defer func() {
 		if err == nil {
-			tx.Commit(ctx)
+			if commitErr := tx.Commit(ctx); commitErr != nil {
+				common.Logger.Error("failed to commit transaction", "error", commitErr)
+			}
 		} else {
-			tx.Rollback(ctx)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				common.Logger.Error("failed to rollback transaction", "error", rollbackErr)
+			}
 		}
 	}()
 
@@ -72,10 +76,14 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		for _, def := range definitions {
 			definitionIds = append(definitionIds, def.ID)
 		}
-		wordRepository.ReuseDefinitions(word.ID, definitionIds, tx)
+		if reuseErr := wordRepository.ReuseDefinitions(word.ID, definitionIds, tx); reuseErr != nil {
+			common.Logger.Error("failed to reuse definitions", "wordId", word.ID, "error", reuseErr)
+		}
 
 		quizStrategy := LeitnerSystemStrategy{}
-		quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
+		if includeErr := quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
+			common.Logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)
+		}
 
 		var latestAudioURL string
 		latestAudioURL, err = wordRepository.GetLatestAudioUrl(trimmedName)

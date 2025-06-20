@@ -164,7 +164,11 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	service.UpdatePassword(payload.UserId, input.Password)
+	if err := service.UpdatePassword(payload.UserId, input.Password); err != nil {
+		common.Logger.Error("failed to update password", "userId", payload.UserId, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
+		return
+	}
 	c.Status(http.StatusOK)
 }
 

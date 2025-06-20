@@ -36,6 +36,7 @@ func cryptoRandInt(max int) int {
 	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
 	if err != nil {
 		// Fallback to math/rand if crypto/rand fails
+		//nolint:gosec // G404 - fallback random when crypto/rand is unavailable
 		return mathrand.Intn(max)
 	}
 	return int(n.Int64())
@@ -997,9 +998,13 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 		}
 		defer func() {
 			if err == nil {
-				tx.Commit(ctx)
+				if commitErr := tx.Commit(ctx); commitErr != nil {
+					common.Logger.Error("failed to commit transaction in leitner system", "error", commitErr)
+				}
 			} else {
-				tx.Rollback(ctx)
+				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+					common.Logger.Error("failed to rollback transaction in leitner system", "error", rollbackErr)
+				}
 			}
 		}()
 	} else {
@@ -1066,9 +1071,13 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 		}
 		defer func() {
 			if err == nil {
-				tx.Commit(ctx)
+				if commitErr := tx.Commit(ctx); commitErr != nil {
+					common.Logger.Error("failed to commit transaction in leitner system", "error", commitErr)
+				}
 			} else {
-				tx.Rollback(ctx)
+				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+					common.Logger.Error("failed to rollback transaction in leitner system", "error", rollbackErr)
+				}
 			}
 		}()
 	} else {
@@ -1222,9 +1231,13 @@ func (s LeitnerSystemStrategy) MarkErrorResolved(report ErrorReport) error {
 	}
 	defer func() {
 		if err == nil {
-			tx.Commit(ctx)
+			if commitErr := tx.Commit(ctx); commitErr != nil {
+				common.Logger.Error("failed to commit transaction in mark error resolved", "error", commitErr)
+			}
 		} else {
-			tx.Rollback(ctx)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				common.Logger.Error("failed to rollback transaction in mark error resolved", "error", rollbackErr)
+			}
 		}
 	}()
 

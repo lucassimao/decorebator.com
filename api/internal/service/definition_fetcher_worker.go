@@ -122,9 +122,13 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	}
 	defer func() {
 		if err == nil {
-			tx.Commit(ctx)
+			if commitErr := tx.Commit(ctx); commitErr != nil {
+				logger.Error("failed to commit transaction in definition fetcher worker", "error", commitErr)
+			}
 		} else {
-			tx.Rollback(ctx)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				logger.Error("failed to rollback transaction in definition fetcher worker", "error", rollbackErr)
+			}
 		}
 	}()
 
@@ -162,7 +166,9 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 	}
 	strategy := LeitnerSystemStrategy{}
-	strategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx)
+	if includeErr := strategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
+		logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)
+	}
 
 	// if this job was triggered by an error report, then mark the issue as solved
 	if job.Args.ErrorReport != nil {

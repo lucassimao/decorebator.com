@@ -40,7 +40,9 @@ func (repository *DefinitionImageRepository) Save(dto CreateDefinitionImageDTO) 
 	// handle rollback if needed
 	defer func() {
 		if err != nil {
-			tx.Rollback(ctx)
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				common.Logger.Error("failed to rollback transaction in definition image repository", "error", rollbackErr)
+			}
 		}
 	}()
 
