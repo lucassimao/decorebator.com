@@ -262,7 +262,7 @@ jobs:
           
           # Run tests with structured output and junit report
           gotestsum --junitfile integration-tests.xml --format testname -- \
-            -v -race -coverprofile=integration.out -covermode=atomic ./tests/integration/...
+            -v -race -count=1 -p=1 -coverprofile=integration.out -covermode=atomic ./tests/integration/...
           
           # Display coverage summary
           go tool cover -func=integration.out
