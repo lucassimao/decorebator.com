@@ -57,14 +57,14 @@ func CanChangePronunciationSystem(languageCode string) bool {
 }
 
 type Wordlist struct {
-	ID                   int64               `json:"id"`
-	Name                 string              `json:"name"`
-	Description          string              `json:"description"`
-	CreatedAt            pgtype.Timestamptz  `json:"createdAt"`
-	UpdatedAt            pgtype.Timestamptz  `json:"updatedAt"`
-	UserID               int64               `json:"userId"`
-	LanguageCode         string              `json:"languageCode"`
-	PronunciationSystem  PronunciationSystem `json:"pronunciationSystem"`
+	ID                  int64               `json:"id"`
+	Name                string              `json:"name"`
+	Description         string              `json:"description"`
+	CreatedAt           pgtype.Timestamptz  `json:"createdAt"`
+	UpdatedAt           pgtype.Timestamptz  `json:"updatedAt"`
+	UserID              int64               `json:"userId"`
+	LanguageCode        string              `json:"languageCode"`
+	PronunciationSystem PronunciationSystem `json:"pronunciationSystem"`
 
 	// Computed dinamically based on words table
 	WordsCount        *int `json:"wordsCount"`

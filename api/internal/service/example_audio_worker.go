@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -93,6 +93,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 			switch response.Error.Code {
 			case "rate_limit_exceeded":
 				// Return error to trigger retry for all examples
+				//nolint:gosec // G404 - using weak random for rate limiting jitter, not cryptographic security
 				return river.JobSnooze(time.Minute + (time.Duration(rand.Intn(60)) * time.Second))
 			case "billing_hard_limit_reached":
 				logger.Warn(response.Error.Message)
@@ -172,7 +173,7 @@ func (w *ExampleAudioWorker) selectExamplesForAudio(definition *model.Definition
 
 func (w *ExampleAudioWorker) uploadAudio(audioData []byte, definitionID int64, exampleText string) (string, error) {
 	// Generate hash for consistent naming
-	hash := fmt.Sprintf("%x", md5.Sum([]byte(exampleText)))[:8]
+	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(exampleText)))[:8]
 	filename := fmt.Sprintf("audio/example-%d-%s.mp3", definitionID, hash)
 
 	audioURL, err := common.Upload(audioData, "decorebator", filename, "audio/mpeg")

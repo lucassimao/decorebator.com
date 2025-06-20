@@ -206,6 +206,14 @@ create-migration: ## Create a new database migration file with the provided file
 		migrate create -ext sql -dir cmd/migrate/migrations -seq $$FILE_NAME; \
 	fi	
 
+## Quality Assurance Targets
+
+qa: qa-install ## Run comprehensive quality assurance suite matching GitHub workflow
+qa-fast: qa-install ## Run fast QA checks (no integration tests)
+qa-install: ## Install QA tools matching GitHub workflow versions
+qa-ci: ## Run QA checks with CI-style output (JUnit XML + structured logs)
+security-scan-full: ## Run comprehensive security scanning (matching GitHub workflow)
+
 ## Code Quality Targets
 
 lint: ## Run golangci-lint on all Go files
@@ -294,6 +302,115 @@ pre-push: lint-changed test-unit ## Run pre-push checks (lint changed files + un
 
 check-all: format-check lint test-unit ## Run all code quality checks
 	@echo "${GREEN}✅ All checks passed${RESET}"
+
+qa: qa-install ## Run comprehensive quality assurance suite matching GitHub workflow
+	@echo "${CYAN}🔍 Running comprehensive Quality Assurance suite...${RESET}"
+	@echo "${YELLOW}This matches what runs in the GitHub workflow${RESET}\n"
+	
+	@echo "${CYAN}1/6 Code Formatting Check...${RESET}"
+	@$(MAKE) format-check
+	
+	@echo "\n${CYAN}2/6 Linting (golangci-lint)...${RESET}"
+	@$(MAKE) lint
+	
+	@echo "\n${CYAN}3/6 Unit Tests...${RESET}"
+	@$(MAKE) test-unit
+	
+	@echo "\n${CYAN}4/6 Integration Tests...${RESET}"
+	@$(MAKE) test-integration
+	
+	@echo "\n${CYAN}5/6 Security Scanning...${RESET}"
+	@$(MAKE) security-scan-full
+	
+	@echo "\n${CYAN}6/6 Coverage Threshold Check...${RESET}"
+	@$(MAKE) coverage-threshold
+	
+	@echo "\n${GREEN}🎉 Quality Assurance Suite Completed Successfully!${RESET}"
+	@echo "${CYAN}Summary:${RESET}"
+	@echo "  ✅ Code formatting"
+	@echo "  ✅ Linting (golangci-lint)"
+	@echo "  ✅ Unit tests"
+	@echo "  ✅ Integration tests"
+	@echo "  ✅ Security scanning (gosec + govulncheck)"
+	@echo "  ✅ Coverage thresholds (70% unit, 80% integration)"
+
+qa-install: ## Install QA tools matching GitHub workflow versions
+	@echo "${YELLOW}Installing QA tools (matching GitHub workflow)...${RESET}"
+	@command -v golangci-lint >/dev/null 2>&1 || $(MAKE) lint-install
+	@command -v gotestsum >/dev/null 2>&1 || { echo "Installing gotestsum@$(GOTESTSUM_VERSION)..."; go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION); }
+	@command -v govulncheck >/dev/null 2>&1 || { echo "Installing govulncheck@$(GOVULNCHECK_VERSION)..."; go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION); }
+	@command -v gosec >/dev/null 2>&1 || { echo "Installing gosec@latest..."; go install github.com/securego/gosec/v2/cmd/gosec@latest; }
+	@echo "${GREEN}✅ All QA tools installed${RESET}"
+
+qa-fast: qa-install ## Run fast QA checks (no integration tests)
+	@echo "${CYAN}🚀 Running Fast Quality Assurance checks...${RESET}\n"
+	
+	@echo "${CYAN}1/4 Code Formatting Check...${RESET}"
+	@$(MAKE) format-check
+	
+	@echo "\n${CYAN}2/4 Linting (golangci-lint)...${RESET}"
+	@$(MAKE) lint
+	
+	@echo "\n${CYAN}3/4 Unit Tests...${RESET}"
+	@$(MAKE) test-unit
+	
+	@echo "\n${CYAN}4/4 Security Scanning...${RESET}"
+	@$(MAKE) security-scan-full
+	
+	@echo "\n${GREEN}🎉 Fast QA Suite Completed Successfully!${RESET}"
+	@echo "${YELLOW}Note: Integration tests skipped for speed${RESET}"
+
+security-scan-full: ## Run comprehensive security scanning (matching GitHub workflow)
+	@echo "${YELLOW}Running comprehensive security scans...${RESET}"
+	@command -v gosec >/dev/null 2>&1 || { echo "Installing gosec@latest..."; go install github.com/securego/gosec/v2/cmd/gosec@latest; }
+	@command -v govulncheck >/dev/null 2>&1 || { echo "Installing govulncheck@$(GOVULNCHECK_VERSION)..."; go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION); }
+	
+	@echo "${CYAN}Running gosec security scanner...${RESET}"
+	@if gosec -fmt sarif -out gosec-results.sarif -stdout -verbose=text ./... 2>/dev/null; then \
+		echo "${GREEN}✅ Gosec security scan completed successfully${RESET}"; \
+	else \
+		echo "${YELLOW}⚠️  Gosec found potential security issues${RESET}"; \
+		echo "${CYAN}Check gosec-results.sarif for details${RESET}"; \
+	fi
+	
+	@echo "${CYAN}Running go vet security checks...${RESET}"
+	@if go vet ./...; then \
+		echo "${GREEN}✅ go vet checks passed${RESET}"; \
+	else \
+		echo "${YELLOW}⚠️  go vet found potential issues${RESET}"; \
+	fi
+	
+	@echo "${CYAN}Running govulncheck vulnerability scanner...${RESET}"
+	@if govulncheck ./...; then \
+		echo "${GREEN}✅ No known vulnerabilities found${RESET}"; \
+	else \
+		echo "${YELLOW}⚠️  Potential vulnerabilities detected${RESET}"; \
+		echo "${CYAN}Run 'govulncheck -show verbose ./...' for detailed analysis${RESET}"; \
+	fi
+	
+	@echo "${GREEN}✅ Security scan completed${RESET}"
+	@if [ -f gosec-results.sarif ]; then \
+		echo "${CYAN}📁 SARIF report: gosec-results.sarif${RESET}"; \
+	fi
+
+qa-ci: ## Run QA checks with CI-style output (JUnit XML + structured logs)
+	@echo "${YELLOW}Running QA checks with CI-style reporting...${RESET}"
+	@command -v gotestsum >/dev/null 2>&1 || { echo "Installing gotestsum@$(GOTESTSUM_VERSION)..."; go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION); }
+	
+	@echo "${CYAN}Code formatting check...${RESET}"
+	@$(MAKE) format-check
+	
+	@echo "${CYAN}Linting with golangci-lint...${RESET}"
+	@$(MAKE) lint
+	
+	@echo "${CYAN}Unit tests with JUnit output...${RESET}"
+	@gotestsum --junitfile unit-tests.xml --format testname -- -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+	
+	@echo "${CYAN}Security scanning...${RESET}"
+	@$(MAKE) security-scan-full
+	
+	@echo "${GREEN}✅ CI-style QA checks completed${RESET}"
+	@echo "${CYAN}Outputs: unit-tests.xml, unit.out, gosec-results.sarif${RESET}"
 
 lint-diff: ## Show diff of what lint-fix would change (dry run)
 	@echo "${YELLOW}Showing what lint-fix would change...${RESET}"

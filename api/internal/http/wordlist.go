@@ -12,9 +12,9 @@ import (
 )
 
 type WordlistInput struct {
-	Name                string                      `json:"name" binding:"required"`
-	Description         string                      `json:"description"`
-	LanguageCode        string                      `json:"languageCode" binding:"required"`
+	Name                string                     `json:"name" binding:"required"`
+	Description         string                     `json:"description"`
+	LanguageCode        string                     `json:"languageCode" binding:"required"`
 	PronunciationSystem *model.PronunciationSystem `json:"pronunciationSystem,omitempty"`
 }
 
@@ -62,9 +62,9 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 
 	var userId int64 = c.GetInt64("userID")
 	saved, err := service.SaveWordlist(&Wordlist{
-		Name:                input.Name, 
-		Description:         input.Description, 
-		UserID:             userId, 
+		Name:                input.Name,
+		Description:         input.Description,
+		UserID:              userId,
 		LanguageCode:        input.LanguageCode,
 		PronunciationSystem: pronunciationSystem,
 	})

@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -75,23 +75,35 @@ func (repository *DefinitionRepository) Save(tokenId int64, definitions []*Defin
 
 // all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
 func (repository *DefinitionRepository) GetRandomMeanings(definitionIdsToIgnore []int, limit int) ([]string, error) {
+	// Handle empty array case
+	if len(definitionIdsToIgnore) == 0 {
+		return []string{}, nil
+	}
+
 	query := `
-        WITH definition AS  (SELECT meaning, part_of_speech FROM definitions WHERE id = $1),
-             candidates AS
-          (SELECT def.meaning
-           FROM definitions def
-           JOIN word_definitions wd ON wd.definition_id = def.id
-           CROSS JOIN definition
-           WHERE NOT EXISTS
-               (SELECT 1
-                FROM word_definitions wd2
-                WHERE wd2.word_id = wd.word_id
-                  AND wd2.definition_id = $1)
-             AND def.meaning <> definition.meaning
-             AND def.part_of_speech = definition.part_of_speech)
+        WITH target_definitions AS (
+			SELECT DISTINCT meaning, part_of_speech 
+			FROM definitions 
+			WHERE id = ANY($1)
+		),
+        candidates AS (
+			SELECT DISTINCT def.meaning
+			FROM definitions def
+			JOIN word_definitions wd ON wd.definition_id = def.id
+			CROSS JOIN target_definitions td
+			WHERE NOT EXISTS (
+				SELECT 1
+				FROM word_definitions wd2
+				WHERE wd2.word_id = wd.word_id
+				AND wd2.definition_id = ANY($1)
+			)
+			AND def.meaning <> td.meaning
+			AND def.part_of_speech = td.part_of_speech
+			AND def.id <> ALL($1)
+		)
         SELECT meaning
         FROM candidates
-        ORDER BY length(meaning) ASC,  RANDOM()
+        ORDER BY length(meaning) ASC, RANDOM()
         LIMIT $2;
 	`
 
@@ -348,7 +360,7 @@ func (repository *DefinitionRepository) GetDefinitionByID(definitionID int64) (*
 
 func (repository *DefinitionRepository) CreateExampleAudio(definitionID int64, exampleText, audioURL, inflectionType string) error {
 	// Generate hash for the example text
-	exampleHash := fmt.Sprintf("%x", md5.Sum([]byte(exampleText)))[:32]
+	exampleHash := fmt.Sprintf("%x", sha256.Sum256([]byte(exampleText)))[:32]
 
 	query := `INSERT INTO definition_example_audio (definition_id, example_text, example_hash, audio_url, inflection_type) 
 			  VALUES ($1, $2, $3, $4, NULLIF($5, ''))`

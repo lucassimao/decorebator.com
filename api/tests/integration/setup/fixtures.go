@@ -15,8 +15,14 @@ import (
 // GenerateTestUser generates a random test user using production model
 func GenerateTestUser() *model.User {
 	// Use UnixNano for better uniqueness across rapid calls
-	//nolint:gosec // Safe conversion for test seed generation
-	fake := gofakeit.New(uint64(time.Now().UnixNano()))
+	now := time.Now().UnixNano()
+	var seed uint64
+	if now >= 0 {
+		seed = uint64(now)
+	} else {
+		seed = uint64(-now) // Handle negative values safely
+	}
+	fake := gofakeit.New(seed)
 
 	// Generate a realistic bcrypt hash for testing
 	passwordHash, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
@@ -38,8 +44,14 @@ func GenerateTestUser() *model.User {
 // GenerateSignupInput generates signup input using production SignupInput struct
 func GenerateSignupInput() httphandlers.SignupInput {
 	// Use UnixNano for better uniqueness across rapid calls
-	//nolint:gosec // Safe conversion for test seed generation
-	fake := gofakeit.New(uint64(time.Now().UnixNano()))
+	now := time.Now().UnixNano()
+	var seed uint64
+	if now >= 0 {
+		seed = uint64(now)
+	} else {
+		seed = uint64(-now) // Handle negative values safely
+	}
+	fake := gofakeit.New(seed)
 
 	// Add UUID to email to ensure uniqueness
 	uuid := uuid.New().String()[:8] // Use first 8 chars of UUID
@@ -56,8 +68,14 @@ func GenerateSignupInput() httphandlers.SignupInput {
 // GenerateTestWordlist generates a random test wordlist using production model
 func GenerateTestWordlist(userID int64) *model.Wordlist {
 	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
-	//nolint:gosec // Safe conversion for test seed generation
-	fake := gofakeit.New(uint64(time.Now().Unix()))
+	now := time.Now().Unix()
+	var seed uint64
+	if now >= 0 {
+		seed = uint64(now)
+	} else {
+		seed = uint64(-now) // Handle negative values safely
+	}
+	fake := gofakeit.New(seed)
 
 	languages := []string{"en", "es", "fr", "de", "it", "pt", "ja"}
 	languageCode := languages[rand.Intn(len(languages))] //nolint:gosec // G404 - test fixtures only
@@ -75,8 +93,14 @@ func GenerateTestWordlist(userID int64) *model.Wordlist {
 // GenerateTestWord generates a random test word using production model
 func GenerateTestWord(wordlistID, userID int64) *model.Word {
 	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
-	//nolint:gosec // Safe conversion for test seed generation
-	fake := gofakeit.New(uint64(time.Now().Unix()))
+	now := time.Now().Unix()
+	var seed uint64
+	if now >= 0 {
+		seed = uint64(now)
+	} else {
+		seed = uint64(-now) // Handle negative values safely
+	}
+	fake := gofakeit.New(seed)
 
 	return &model.Word{
 		Name:       fake.Word(),
@@ -91,8 +115,14 @@ func GenerateTestWord(wordlistID, userID int64) *model.Word {
 // GenerateTestDefinition generates a random test definition using production model
 func GenerateTestDefinition() *model.Definition {
 	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
-	//nolint:gosec // Safe conversion for test seed generation
-	fake := gofakeit.New(uint64(time.Now().Unix()))
+	now := time.Now().Unix()
+	var seed uint64
+	if now >= 0 {
+		seed = uint64(now)
+	} else {
+		seed = uint64(-now) // Handle negative values safely
+	}
+	fake := gofakeit.New(seed)
 
 	partsOfSpeech := []string{"noun", "verb", "adjective", "adverb", "preposition"}
 

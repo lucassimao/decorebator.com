@@ -36,13 +36,13 @@ func (repository *WordlistRepository) Save(name, description, languageCode strin
 	}
 
 	return &Wordlist{
-		ID:                  wordlistID, 
-		Name:                name, 
+		ID:                  wordlistID,
+		Name:                name,
 		Description:         description,
 		LanguageCode:        languageCode,
 		PronunciationSystem: pronunciationSystem,
-		CreatedAt:           createdAt, 
-		UpdatedAt:           updatedAt, 
+		CreatedAt:           createdAt,
+		UpdatedAt:           updatedAt,
 		UserID:              userID,
 	}, nil
 }

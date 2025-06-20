@@ -14,15 +14,15 @@ import (
 )
 
 type LanguageConfig struct {
-	Code                 string
-	Name                 string
-	Flag                 string
-	PartOfSpeechList     []string
-	PartOfSpeechMappings map[string]string // Maps language-specific terms to normalized English
-	VerbTenses           []string
-	GrammarInstructions  string
-	SpecialInstructions  string
-	ExampleInstructions  string
+	Code                      string
+	Name                      string
+	Flag                      string
+	PartOfSpeechList          []string
+	PartOfSpeechMappings      map[string]string // Maps language-specific terms to normalized English
+	VerbTenses                []string
+	GrammarInstructions       string
+	SpecialInstructions       string
+	ExampleInstructions       string
 	PronunciationInstructions map[string]string // Instructions per pronunciation system
 }
 
@@ -103,7 +103,7 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		SpecialInstructions: "Attention aux liaisons et aux verbes irréguliers. Incluez les accents appropriés.",
 		ExampleInstructions: "Encadrez le mot cible entre crochets [mot] dans toutes les phrases d'exemple.",
 		PronunciationInstructions: map[string]string{
-			"ipa": "Fournissez une transcription IPA précise utilisant des symboles standard comme /bon.ˈʒuʁ/ pour 'bonjour'. Utilisez les marqueurs d'accent primaire (ˈ) et secondaire (ˌ).",
+			"ipa": "Fournissez une transcription IPA précise utilisant des symbols standard comme /bon.ˈʒuʁ/ pour 'bonjour'. Utilisez les marqueurs d'accent primaire (ˈ) et secondaire (ˌ).",
 		},
 	},
 	"de": {
@@ -126,7 +126,7 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		SpecialInstructions: "Beachten Sie trennbare Verben und Komposita. Berücksichtigen Sie die vier Fälle (Nominativ, Akkusativ, Dativ, Genitiv).",
 		ExampleInstructions: "Setzen Sie das Zielwort in eckige Klammern [Wort] in allen Beispielsätzen.",
 		PronunciationInstructions: map[string]string{
-			"ipa": "Geben Sie eine genaue IPA-Transkription mit Standardsymbolen wie /ˈhaːloː/ für 'hallo' an. Verwenden Sie primäre (ˈ) und sekundäre (ˌ) Betonungsmarkierungen.",
+			"ipa": "Geben Sie eine genaue IPA-Transcription mit Standardsymbolen wie /ˈhaːloː/ für 'hallo' an. Verwenden Sie primäre (ˈ) und sekundäre (ˌ) Betonungsmarkierungen.",
 		},
 	},
 	"it": {
@@ -257,12 +257,12 @@ func buildLanguageSpecificPrompt(token string, languageCode string, pronunciatio
 			" • Under no circumstances should you output any text other than valid JSON that matches the schema exactly. "+
 			" • When you do provide \"pronunciation\", %s "+
 			" • %s",
-			func() string {
-				if instructions, exists := languageConfig.PronunciationInstructions[string(pronunciationSystem)]; exists {
-					return instructions
-				}
-				return "it must be the IPA (International Phonetic Alphabet) string for the token."
-			}(),
+		func() string {
+			if instructions, exists := languageConfig.PronunciationInstructions[string(pronunciationSystem)]; exists {
+				return instructions
+			}
+			return "it must be the IPA (International Phonetic Alphabet) string for the token."
+		}(),
 		languageConfig.Code,
 		strings.Join(languageConfig.PartOfSpeechList, ", "),
 		languageConfig.Name,

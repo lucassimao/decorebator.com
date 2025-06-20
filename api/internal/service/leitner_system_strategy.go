@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/big"
+	mathrand "math/rand"
 	"regexp"
 	"sort"
 	"strings"
@@ -21,9 +23,22 @@ import (
 
 func init() {
 	// Seed the random number generator with current time
-	// Used for: example sentence selection, answer position randomization
+	// Used for: example sentence selection fallbacks
 	// Note: Quiz type selection now uses deterministic rotation
-	rand.Seed(time.Now().UnixNano())
+	mathrand.Seed(time.Now().UnixNano())
+}
+
+// cryptoRandInt generates a cryptographically secure random int in range [0, max)
+func cryptoRandInt(max int) int {
+	if max <= 0 {
+		return 0
+	}
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		// Fallback to math/rand if crypto/rand fails
+		return mathrand.Intn(max)
+	}
+	return int(n.Int64())
 }
 
 // LeitnerSystemStrategy implements the Leitner spaced repetition algorithm for vocabulary learning.
@@ -562,7 +577,8 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 		if err != nil {
 			// Fallback to random selection if fair selection fails
 			common.Logger.Warn("fair example selection failed, using random", "definitionId", def.Definition.ID, "error", err)
-			i := rand.Intn(len(availableExamples))
+			//nolint:gosec // G404 - fallback random selection, not security-critical
+			i := mathrand.Intn(len(availableExamples))
 			selectedExample = availableExamples[i]
 		}
 		value = selectedExample
@@ -633,7 +649,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 	if quizType != model.WriteWordFromDefinition {
 		// Ensure we have enough options and don't exceed the available positions
 		maxOptions := len(options) + 1 // +1 for the correct answer
-		answerIndex = rand.Intn(maxOptions)
+		answerIndex = cryptoRandInt(maxOptions)
 
 		// Insert the correct answer at the random position
 		options = append(options, "")
@@ -802,7 +818,7 @@ func selectFairExample(definitionID int64, availableExamples []string) (string, 
 
 // hashExample creates a consistent hash for an example to track its usage
 func hashExample(example string) string {
-	hash := md5.Sum([]byte(strings.TrimSpace(strings.ToLower(example))))
+	hash := sha256.Sum256([]byte(strings.TrimSpace(strings.ToLower(example))))
 	return hex.EncodeToString(hash[:])
 }
 
