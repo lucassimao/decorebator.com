@@ -531,7 +531,7 @@ jobs:
           # Check if SARIF file was created
           if [ -f "gosec-results.sarif" ]; then
             echo "📁 SARIF report generated successfully" >> $GITHUB_STEP_SUMMARY
-            echo "🔍 Security results will be uploaded to GitHub Security tab" >> $GITHUB_STEP_SUMMARY
+            echo "🔍 Security results available as artifact (SARIF upload to Security tab requires Code Scanning to be enabled)" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ SARIF report not generated" >> $GITHUB_STEP_SUMMARY
           fi
@@ -547,6 +547,7 @@ jobs:
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v3
         if: always() && hashFiles('api/gosec-results.sarif') != ''
+        continue-on-error: true  # Don't fail if Code Scanning is not enabled
         with:
           sarif_file: api/gosec-results.sarif
           
@@ -627,15 +628,16 @@ jobs:
           echo "- **For unit test failures**: Check the 'Unit Test Results' section above" >> $GITHUB_STEP_SUMMARY
           echo "- **For integration test failures**: Download 'integration-test-reports' artifact for detailed logs" >> $GITHUB_STEP_SUMMARY
           echo "- **For lint failures**: Look at the golangci-lint action output" >> $GITHUB_STEP_SUMMARY
-          echo "- **For security issues**: Check the SARIF results uploaded to Security tab" >> $GITHUB_STEP_SUMMARY
+          echo "- **For security issues**: Download 'security-scan-results' artifact for SARIF report" >> $GITHUB_STEP_SUMMARY
+          echo "- **Enable Code Scanning**: Go to Settings > Security > Code scanning to enable automatic SARIF uploads" >> $GITHUB_STEP_SUMMARY
           echo "- **Local testing**: Run \`make test-report\` for structured test output" >> $GITHUB_STEP_SUMMARY
           
       - name: Check overall status
         run: |
-          if [ "${{ needs.unit-tests.result }}" != "success" ] || 
-             [ "${{ needs.integration-tests.result }}" != "success" ] || 
-             [ "${{ needs.build-verification.result }}" != "success" ] ||
-             [ "${{ needs.security-scan.result }}" != "success" ] ||
+          if [ "${{ needs.unit-tests.result }}" != "success" ] || \
+             [ "${{ needs.integration-tests.result }}" != "success" ] || \
+             [ "${{ needs.build-verification.result }}" != "success" ] || \
+             [ "${{ needs.security-scan.result }}" != "success" ] || \
              ([ "${{ needs.lint-checks.result }}" != "success" ] && [ "${{ needs.lint-checks.result }}" != "skipped" ]); then
             echo "❌ One or more required checks failed"
             exit 1
