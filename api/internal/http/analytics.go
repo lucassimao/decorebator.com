@@ -94,6 +94,8 @@ func getWordlistWordMastery(c *gin.Context) {
 }
 
 // getWordlistLearningProgress returns daily learning progress
+//
+//nolint:dupl // Similar pattern to getWordlistPracticeTime but different parameters and response structure
 func getWordlistLearningProgress(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -320,6 +322,8 @@ func getWordlistCurrentBoxDistribution(c *gin.Context) {
 }
 
 // getWordlistPracticeTime returns daily practice time statistics for a wordlist
+//
+//nolint:dupl // Similar pattern to getWordlistLearningProgress but different parameters and response structure
 func getWordlistPracticeTime(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

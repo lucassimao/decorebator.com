@@ -299,10 +299,10 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 	// Create additional definitions for word1 using service layer calls
 	for i, boxLevel := range []int{2, 3} {
 		// Create additional definitions using SaveDefinition service call
-		tx, err := server.DB.Begin(ctx)
-		require.NoError(t, err)
+		tx, txErr := server.DB.Begin(ctx)
+		require.NoError(t, txErr)
 		defer func() {
-			if err != nil {
+			if txErr != nil {
 				_ = tx.Rollback(ctx)
 			} else {
 				_ = tx.Commit(ctx)
@@ -319,23 +319,23 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 			PartOfSpeechNormalized: "noun",
 		}
 
-		definitions, err := service.SaveDefinition(fmt.Sprintf("word1_def%d", i+2), wordID1, []*model.Definition{definition}, tx)
-		require.NoError(t, err)
+		definitions, saveErr := service.SaveDefinition(fmt.Sprintf("word1_def%d", i+2), wordID1, []*model.Definition{definition}, tx)
+		require.NoError(t, saveErr)
 		require.Len(t, definitions, 1)
 
 		definitionID := definitions[0].ID
 
 		// Add to Leitner system using service call
 		strategy := service.LeitnerSystemStrategy{}
-		err = strategy.IncludeDefinitions(wordID1, userID, []int64{definitionID}, tx)
-		require.NoError(t, err)
+		includeErr := strategy.IncludeDefinitions(wordID1, userID, []int64{definitionID}, tx)
+		require.NoError(t, includeErr)
 
 		// Update box level for this definition
-		_, err = tx.Exec(ctx,
+		_, updateErr := tx.Exec(ctx,
 			`UPDATE leitner_system_tracking SET box_id = $1 
 			 WHERE word_id = $2 AND definition_id = $3`,
 			boxLevel, wordID1, definitionID)
-		require.NoError(t, err)
+		require.NoError(t, updateErr)
 	}
 
 	// Create second word with multiple definitions at different box levels
@@ -350,10 +350,10 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 	// Create additional definitions for word2 using service layer calls
 	for i, boxLevel := range []int{1, 4} {
 		// Create additional definitions using SaveDefinition service call
-		tx, err := server.DB.Begin(ctx)
-		require.NoError(t, err)
+		tx, txErr := server.DB.Begin(ctx)
+		require.NoError(t, txErr)
 		defer func() {
-			if err != nil {
+			if txErr != nil {
 				_ = tx.Rollback(ctx)
 			} else {
 				_ = tx.Commit(ctx)
@@ -370,23 +370,23 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 			PartOfSpeechNormalized: "noun",
 		}
 
-		definitions, err := service.SaveDefinition(fmt.Sprintf("word2_def%d", i+2), wordID2, []*model.Definition{definition}, tx)
-		require.NoError(t, err)
+		definitions, saveErr := service.SaveDefinition(fmt.Sprintf("word2_def%d", i+2), wordID2, []*model.Definition{definition}, tx)
+		require.NoError(t, saveErr)
 		require.Len(t, definitions, 1)
 
 		definitionID := definitions[0].ID
 
 		// Add to Leitner system using service call
 		strategy := service.LeitnerSystemStrategy{}
-		err = strategy.IncludeDefinitions(wordID2, userID, []int64{definitionID}, tx)
-		require.NoError(t, err)
+		includeErr := strategy.IncludeDefinitions(wordID2, userID, []int64{definitionID}, tx)
+		require.NoError(t, includeErr)
 
 		// Update box level for this definition
-		_, err = tx.Exec(ctx,
+		_, updateErr := tx.Exec(ctx,
 			`UPDATE leitner_system_tracking SET box_id = $1 
 			 WHERE word_id = $2 AND definition_id = $3`,
 			boxLevel, wordID2, definitionID)
-		require.NoError(t, err)
+		require.NoError(t, updateErr)
 	}
 
 	// Debug: Verify what we've created

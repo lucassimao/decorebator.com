@@ -14,7 +14,9 @@ import (
 
 // GenerateTestUser generates a random test user using production model
 func GenerateTestUser() *model.User {
-	fake := gofakeit.New(uint64(time.Now().UnixNano())) // Use time-based seed for unique data
+	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
+	//nolint:gosec // Safe conversion for test seed generation
+	fake := gofakeit.New(uint64(time.Now().Unix()))
 
 	// Generate a realistic bcrypt hash for testing
 	passwordHash, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
@@ -31,7 +33,9 @@ func GenerateTestUser() *model.User {
 
 // GenerateSignupInput generates signup input using production SignupInput struct
 func GenerateSignupInput() httphandlers.SignupInput {
-	fake := gofakeit.New(uint64(time.Now().UnixNano())) // Use time-based seed for unique data
+	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
+	//nolint:gosec // Safe conversion for test seed generation
+	fake := gofakeit.New(uint64(time.Now().Unix()))
 
 	return httphandlers.SignupInput{
 		Email:     fake.Email(),
@@ -43,7 +47,9 @@ func GenerateSignupInput() httphandlers.SignupInput {
 
 // GenerateTestWordlist generates a random test wordlist using production model
 func GenerateTestWordlist(userID int64) *model.Wordlist {
-	fake := gofakeit.New(uint64(time.Now().UnixNano())) // Use time-based seed for unique data
+	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
+	//nolint:gosec // Safe conversion for test seed generation
+	fake := gofakeit.New(uint64(time.Now().Unix()))
 
 	languages := []string{"en", "es", "fr", "de", "it", "pt", "ja"}
 
@@ -58,7 +64,9 @@ func GenerateTestWordlist(userID int64) *model.Wordlist {
 
 // GenerateTestWord generates a random test word using production model
 func GenerateTestWord(wordlistID, userID int64) *model.Word {
-	fake := gofakeit.New(uint64(time.Now().UnixNano())) // Use time-based seed for unique data
+	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
+	//nolint:gosec // Safe conversion for test seed generation
+	fake := gofakeit.New(uint64(time.Now().Unix()))
 
 	return &model.Word{
 		Name:       fake.Word(),
@@ -72,7 +80,9 @@ func GenerateTestWord(wordlistID, userID int64) *model.Word {
 
 // GenerateTestDefinition generates a random test definition using production model
 func GenerateTestDefinition() *model.Definition {
-	fake := gofakeit.New(uint64(time.Now().UnixNano())) // Use time-based seed for unique data
+	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
+	//nolint:gosec // Safe conversion for test seed generation
+	fake := gofakeit.New(uint64(time.Now().Unix()))
 
 	partsOfSpeech := []string{"noun", "verb", "adjective", "adverb", "preposition"}
 

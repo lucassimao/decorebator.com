@@ -90,8 +90,6 @@
     [x]  Decorebator Landing Page Redesign
     [x]  New Icon
     [ ]  browserstack testing
-         - If you loop through all definitions, then the quiz gets stuck
-         - word from example is not playing for shrill. is it working anyways?
          - Fix SignUp screen - use transparent PNG as the login scren
 
 # V2
