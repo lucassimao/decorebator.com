@@ -73,33 +73,26 @@ func (repository *DefinitionRepository) Save(tokenId int64, definitions []*Defin
 	return definitions, nil
 }
 
+// all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
 func (repository *DefinitionRepository) GetRandomMeanings(definitionIdsToIgnore []int, limit int) ([]string, error) {
-	// all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
-	// selecting random() to avoid the error 'SELECT DISTINCT, ORDER BY expressions must appear in select list (SQLSTATE 42P10)'
 	query := `
-		WITH options AS (
-			SELECT DISTINCT def.meaning, random()
-			FROM definitions def
-			JOIN word_definitions wd ON wd.definition_id = def.id
-			WHERE wd.word_id NOT IN (
-				SELECT word_id 
-				FROM word_definitions 
-				WHERE definition_id = ANY($1)
-			)
-			AND length(def.meaning) < 50
-			AND def.meaning NOT IN (
-				SELECT meaning 
-				FROM definitions 
-				WHERE id = ANY($1)
-			)
-			AND part_of_speech IN (
-				SELECT part_of_speech 
-				FROM definitions 
-				WHERE id = ANY($1)
-			)
-			ORDER BY random() LIMIT $2
-		)
-		SELECT meaning FROM options;
+        WITH definition AS  (SELECT meaning, part_of_speech FROM definitions WHERE id = $1),
+             candidates AS
+          (SELECT def.meaning
+           FROM definitions def
+           JOIN word_definitions wd ON wd.definition_id = def.id
+           CROSS JOIN definition
+           WHERE NOT EXISTS
+               (SELECT 1
+                FROM word_definitions wd2
+                WHERE wd2.word_id = wd.word_id
+                  AND wd2.definition_id = $1)
+             AND def.meaning <> definition.meaning
+             AND def.part_of_speech = definition.part_of_speech)
+        SELECT meaning
+        FROM candidates
+        ORDER BY length(meaning) ASC,  RANDOM()
+        LIMIT $2;
 	`
 
 	rows, err := repository.Db.Query(context.Background(), query, definitionIdsToIgnore, limit)

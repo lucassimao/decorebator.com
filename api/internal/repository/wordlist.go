@@ -17,10 +17,10 @@ type WordlistRepository struct {
 
 type Wordlist = model.Wordlist
 
-func (repository *WordlistRepository) Save(name, description, languageCode string, userID int64) (*Wordlist, error) {
+func (repository *WordlistRepository) Save(name, description, languageCode string, userID int64, pronunciationSystem model.PronunciationSystem) (*Wordlist, error) {
 	query := `
-		INSERT INTO wordlists (name, description, user_id,language_code)
-		VALUES ($1, $2, $3,$4)
+		INSERT INTO wordlists (name, description, user_id, language_code, pronunciation_system)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, updated_at`
 
 	var wordlistID int64
@@ -28,15 +28,23 @@ func (repository *WordlistRepository) Save(name, description, languageCode strin
 	var updatedAt pgtype.Timestamptz
 
 	err := repository.Db.
-		QueryRow(context.Background(), query, name, description, userID, languageCode).
+		QueryRow(context.Background(), query, name, description, userID, languageCode, pronunciationSystem).
 		Scan(&wordlistID, &createdAt, &updatedAt)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &Wordlist{ID: wordlistID, Name: name, Description: description,
-		CreatedAt: createdAt, UpdatedAt: updatedAt, UserID: userID}, nil
+	return &Wordlist{
+		ID:                  wordlistID, 
+		Name:                name, 
+		Description:         description,
+		LanguageCode:        languageCode,
+		PronunciationSystem: pronunciationSystem,
+		CreatedAt:           createdAt, 
+		UpdatedAt:           updatedAt, 
+		UserID:              userID,
+	}, nil
 }
 
 type FindWordlistArgs struct {
@@ -53,7 +61,7 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 	)
 
 	// Build SELECT clause
-	builder.WriteString("SELECT wordlists.id, wordlists.name, wordlists.description, wordlists.user_id, wordlists.created_at, wordlists.updated_at, wordlists.language_code")
+	builder.WriteString("SELECT wordlists.id, wordlists.name, wordlists.description, wordlists.user_id, wordlists.created_at, wordlists.updated_at, wordlists.language_code, wordlists.pronunciation_system")
 	if args.ComputeWordsCount || args.ComputeWordsLearnedCount {
 		if args.ComputeWordsCount {
 			builder.WriteString(", COUNT(words.id) AS word_count")
@@ -107,6 +115,7 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 			&w.CreatedAt,
 			&w.UpdatedAt,
 			&w.LanguageCode,
+			&w.PronunciationSystem,
 		)
 
 		if args.ComputeWordsCount {

@@ -390,8 +390,6 @@ func TestSubscriptionAuthentication(t *testing.T) {
 func TestMultipleRequests(t *testing.T) {
 	server := setup.NewTestServer(t)
 
-	signupInput := setup.GenerateSignupInput()
-
 	t.Run("multiple rapid registrations", func(t *testing.T) {
 		// Test multiple rapid registrations (no rate limiting implemented currently)
 		successCount := 0
@@ -414,6 +412,9 @@ func TestMultipleRequests(t *testing.T) {
 	})
 
 	t.Run("multiple login attempts with wrong password", func(t *testing.T) {
+		// Generate a unique signup input for this subtest
+		signupInput := setup.GenerateSignupInput()
+
 		// Create user first
 		server.Expect.POST("/users").
 			WithJSON(signupInput).

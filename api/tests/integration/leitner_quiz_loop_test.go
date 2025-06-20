@@ -225,8 +225,8 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 
 	// 2. Insert wordlist
 	_, err = tx.Exec(ctx, `
-		INSERT INTO wordlists (id, name, description, user_id, language_code, words_count)
-		VALUES (7, 'Test browser stack1', '', 5, 'en', 2)
+		INSERT INTO wordlists (id, name, description, user_id, language_code, words_count, pronunciation_system)
+		VALUES (7, 'Test browser stack1', '', 5, 'en', 2, 'ipa')
 		ON CONFLICT (id) DO NOTHING
 	`)
 	require.NoError(t, err)

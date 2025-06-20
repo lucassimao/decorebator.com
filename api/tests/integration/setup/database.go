@@ -247,23 +247,25 @@ func loadWordlistsFixture(ctx context.Context, db *pgxpool.Pool) error {
 
 	wordlists := []map[string]interface{}{
 		{
-			"name":     "Travel Essentials",
-			"language": "en",
-			"user_id":  userID,
+			"name":                 "Travel Essentials",
+			"language":             "en",
+			"user_id":              userID,
+			"pronunciation_system": "ipa",
 		},
 		{
-			"name":     "Business Vocabulary",
-			"language": "en",
-			"user_id":  userID,
+			"name":                 "Business Vocabulary",
+			"language":             "en",
+			"user_id":              userID,
+			"pronunciation_system": "ipa",
 		},
 	}
 
 	for _, wordlist := range wordlists {
 		query := `
-			INSERT INTO wordlists (name, language, user_id)
-			VALUES ($1, $2, $3)
+			INSERT INTO wordlists (name, language_code, user_id, pronunciation_system)
+			VALUES ($1, $2, $3, $4)
 		`
-		_, err := db.Exec(ctx, query, wordlist["name"], wordlist["language"], wordlist["user_id"])
+		_, err := db.Exec(ctx, query, wordlist["name"], wordlist["language"], wordlist["user_id"], wordlist["pronunciation_system"])
 		if err != nil {
 			return err
 		}

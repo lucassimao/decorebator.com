@@ -14,17 +14,21 @@ import (
 
 // GenerateTestUser generates a random test user using production model
 func GenerateTestUser() *model.User {
-	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
+	// Use UnixNano for better uniqueness across rapid calls
 	//nolint:gosec // Safe conversion for test seed generation
-	fake := gofakeit.New(uint64(time.Now().Unix()))
+	fake := gofakeit.New(uint64(time.Now().UnixNano()))
 
 	// Generate a realistic bcrypt hash for testing
 	passwordHash, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 
+	// Add UUID to email to ensure uniqueness
+	uuid := uuid.New().String()[:8] // Use first 8 chars of UUID
+	email := fmt.Sprintf("test+%s@example.com", uuid)
+
 	return &model.User{
 		FirstName:        fake.FirstName(),
 		LastName:         fake.LastName(),
-		Email:            fake.Email(),
+		Email:            email,
 		PasswordHash:     string(passwordHash),
 		SubscriptionPlan: model.PlanFree,
 		// pgtype fields will be set by database operations
@@ -33,12 +37,16 @@ func GenerateTestUser() *model.User {
 
 // GenerateSignupInput generates signup input using production SignupInput struct
 func GenerateSignupInput() httphandlers.SignupInput {
-	// Use Unix timestamp (seconds) with safe conversion to avoid overflow
+	// Use UnixNano for better uniqueness across rapid calls
 	//nolint:gosec // Safe conversion for test seed generation
-	fake := gofakeit.New(uint64(time.Now().Unix()))
+	fake := gofakeit.New(uint64(time.Now().UnixNano()))
+
+	// Add UUID to email to ensure uniqueness
+	uuid := uuid.New().String()[:8] // Use first 8 chars of UUID
+	email := fmt.Sprintf("test+%s@example.com", uuid)
 
 	return httphandlers.SignupInput{
-		Email:     fake.Email(),
+		Email:     email,
 		Password:  "password123",
 		FirstName: fake.FirstName(),
 		LastName:  fake.LastName(),
@@ -52,12 +60,14 @@ func GenerateTestWordlist(userID int64) *model.Wordlist {
 	fake := gofakeit.New(uint64(time.Now().Unix()))
 
 	languages := []string{"en", "es", "fr", "de", "it", "pt", "ja"}
+	languageCode := languages[rand.Intn(len(languages))] //nolint:gosec // G404 - test fixtures only
 
 	return &model.Wordlist{
-		Name:         fake.Sentence(3),
-		Description:  fake.Sentence(10),
-		UserID:       userID,
-		LanguageCode: languages[rand.Intn(len(languages))], //nolint:gosec // G404 - test fixtures only
+		Name:                fake.Sentence(3),
+		Description:         fake.Sentence(10),
+		UserID:              userID,
+		LanguageCode:        languageCode,
+		PronunciationSystem: model.GetDefaultPronunciationSystem(languageCode),
 		// pgtype fields will be set by database operations
 	}
 }
@@ -137,22 +147,25 @@ func CreateTestUserSet() []*model.User {
 func CreateTestWordlistSet(userID int64) []*model.Wordlist {
 	return []*model.Wordlist{
 		{
-			Name:         "Travel Essentials",
-			LanguageCode: "en",
-			Description:  "Essential words for traveling",
-			UserID:       userID,
+			Name:                "Travel Essentials",
+			LanguageCode:        "en",
+			Description:         "Essential words for traveling",
+			UserID:              userID,
+			PronunciationSystem: model.PronunciationSystemIPA,
 		},
 		{
-			Name:         "Business Vocabulary",
-			LanguageCode: "en",
-			Description:  "Professional business terms",
-			UserID:       userID,
+			Name:                "Business Vocabulary",
+			LanguageCode:        "en",
+			Description:         "Professional business terms",
+			UserID:              userID,
+			PronunciationSystem: model.PronunciationSystemIPA,
 		},
 		{
-			Name:         "Vocabulario Básico",
-			LanguageCode: "es",
-			Description:  "Palabras básicas en español",
-			UserID:       userID,
+			Name:                "Vocabulario Básico",
+			LanguageCode:        "es",
+			Description:         "Palabras básicas en español",
+			UserID:              userID,
+			PronunciationSystem: model.PronunciationSystemIPA,
 		},
 	}
 }

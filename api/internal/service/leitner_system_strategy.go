@@ -601,7 +601,6 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 		value = def.Definition.Token
 
 	case model.WordFromExampleAudio:
-		quizAnswer = def.Definition.Token
 		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
@@ -621,6 +620,8 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 			selectedExampleAudio = &def.Definition.ExampleAudioFiles[0]
 		}
 
+		// Extract answer from brackets in the example text
+		quizAnswer = extractAnswerFromExample(selectedExampleAudio.ExampleText, def.Definition.Token)
 		value = ""                               // No visual value needed for audio quiz
 		audioURL = selectedExampleAudio.AudioURL // Example audio URL
 

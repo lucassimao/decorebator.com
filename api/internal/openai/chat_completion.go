@@ -23,6 +23,7 @@ type LanguageConfig struct {
 	GrammarInstructions  string
 	SpecialInstructions  string
 	ExampleInstructions  string
+	PronunciationInstructions map[string]string // Instructions per pronunciation system
 }
 
 // gofmt:off
@@ -49,6 +50,9 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "For English verbs, provide present, past, and past participle forms. Include phrasal verbs when applicable.",
 		SpecialInstructions: "Pay attention to irregular verb forms and common phrasal verb combinations.",
 		ExampleInstructions: "Wrap the target word in square brackets [word] in all example sentences.",
+		PronunciationInstructions: map[string]string{
+			"ipa": "Provide accurate IPA (International Phonetic Alphabet) transcription using standard symbols like /ˈhɛloʊ/ for 'hello'. Use primary stress markers (ˈ) and secondary stress markers (ˌ) when needed.",
+		},
 	},
 	"es": {
 		Code:             "es",
@@ -73,6 +77,9 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "Para verbos españoles, proporciona las formas de presente, pretérito perfecto simple y participio pasado. Incluye información sobre género para sustantivos y adjetivos.",
 		SpecialInstructions: "Considera las diferencias regionales y incluye formas tanto formales como informales cuando sea relevante.",
 		ExampleInstructions: "Encierra la palabra objetivo entre corchetes [palabra] en todas las oraciones de ejemplo.",
+		PronunciationInstructions: map[string]string{
+			"ipa": "Proporciona transcripción IPA precisa usando símbolos estándar como /ˈoːla/ para 'hola'. Usa marcadores de acento primario (ˈ) cuando sea necesario.",
+		},
 	},
 	"fr": {
 		Code:             "fr",
@@ -95,6 +102,9 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "Pour les verbes français, fournissez les formes du présent, passé composé et participe passé. Incluez les informations sur le genre pour les noms et adjectifs.",
 		SpecialInstructions: "Attention aux liaisons et aux verbes irréguliers. Incluez les accents appropriés.",
 		ExampleInstructions: "Encadrez le mot cible entre crochets [mot] dans toutes les phrases d'exemple.",
+		PronunciationInstructions: map[string]string{
+			"ipa": "Fournissez une transcription IPA précise utilisant des symboles standard comme /bon.ˈʒuʁ/ pour 'bonjour'. Utilisez les marqueurs d'accent primaire (ˈ) et secondaire (ˌ).",
+		},
 	},
 	"de": {
 		Code:             "de",
@@ -115,6 +125,9 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "Für deutsche Verben, geben Sie Präsens, Präteritum und Partizip II an. Für Substantive, geben Sie den Artikel (der/die/das) und Pluralform an.",
 		SpecialInstructions: "Beachten Sie trennbare Verben und Komposita. Berücksichtigen Sie die vier Fälle (Nominativ, Akkusativ, Dativ, Genitiv).",
 		ExampleInstructions: "Setzen Sie das Zielwort in eckige Klammern [Wort] in allen Beispielsätzen.",
+		PronunciationInstructions: map[string]string{
+			"ipa": "Geben Sie eine genaue IPA-Transkription mit Standardsymbolen wie /ˈhaːloː/ für 'hallo' an. Verwenden Sie primäre (ˈ) und sekundäre (ˌ) Betonungsmarkierungen.",
+		},
 	},
 	"it": {
 		Code:             "it",
@@ -135,6 +148,9 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "Per i verbi italiani, fornire le forme del presente, passato prossimo e participio passato. Includere informazioni sul genere per sostantivi e aggettivi.",
 		SpecialInstructions: "Prestare attenzione ai verbi irregolari e alle coniugazioni specifiche di ciascun gruppo verbale.",
 		ExampleInstructions: "Racchiudere la parola target tra parentesi quadre [parola] in tutte le frasi di esempio.",
+		PronunciationInstructions: map[string]string{
+			"ipa": "Fornisci trascrizione IPA accurata usando simboli standard come /ˈtʃaːo/ per 'ciao'. Usa marcatori di stress primario (ˈ) e secondario (ˌ).",
+		},
 	},
 	"pt": {
 		Code:             "pt",
@@ -160,6 +176,9 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "Para verbos portugueses, forneça as formas do presente, pretérito perfeito e particípio passado. Inclua informações sobre gênero para substantivos e adjetivos.",
 		SpecialInstructions: "Considere as diferenças entre português brasileiro e europeu quando relevante. Atenção aos sons nasais e acentuação.",
 		ExampleInstructions: "Coloque a palavra-alvo entre colchetes [palavra] em todas as frases de exemplo.",
+		PronunciationInstructions: map[string]string{
+			"ipa": "Forneça transcrição IPA precisa usando símbolos padrão como /oˈla/ para 'olá'. Use marcadores de stress primário (ˈ) e secundário (ˌ).",
+		},
 	},
 	"ja": {
 		Code:             "ja",
@@ -180,6 +199,10 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		GrammarInstructions: "日本語の動詞について、現在形、過去形、連体形を提供してください。敬語や丁寧語の情報も含めてください。",
 		SpecialInstructions: "ひらがな、カタカナ、漢字の適切な使い分けに注意してください。助詞の使い方も重要です。",
 		ExampleInstructions: "すべての例文で対象の単語を角括弧[単語]で囲んでください。",
+		PronunciationInstructions: map[string]string{
+			"romaji":   "Provide accurate romanization (romaji) using standard Hepburn romanization like 'konnichiwa' for こんにちは. Use lowercase with proper spacing.",
+			"hiragana": "Provide accurate pronunciation in hiragana/katakana like こんにちは for greetings, カメラ for foreign words. Use appropriate writing system based on word type.",
+		},
 	},
 }
 
@@ -200,7 +223,7 @@ func isValidPartOfSpeech(value string, languageCode string) bool {
 }
 
 // buildLanguageSpecificPrompt creates language-specific prompts for ChatGPT
-func buildLanguageSpecificPrompt(token string, languageCode string) ([]map[string]string, error) {
+func buildLanguageSpecificPrompt(token string, languageCode string, pronunciationSystem model.PronunciationSystem) ([]map[string]string, error) {
 	languageConfig, exists := LANGUAGE_CONFIGS[languageCode]
 	if !exists {
 		return nil, fmt.Errorf("unsupported language: %s", languageCode)
@@ -232,8 +255,14 @@ func buildLanguageSpecificPrompt(token string, languageCode string) ([]map[strin
 			" • You may include multiple \"results\" items if the word can function in multiple parts of speech, but only one object per POS. "+
 			" • If the token is not found (or the user provided an invalid word), respond with: { \"results\": [], \"pronunciation\": \"\" } "+
 			" • Under no circumstances should you output any text other than valid JSON that matches the schema exactly. "+
-			" • When you do provide \"pronunciation\", it must be the IPA (International Phonetic Alphabet) string for the token. "+
+			" • When you do provide \"pronunciation\", %s "+
 			" • %s",
+			func() string {
+				if instructions, exists := languageConfig.PronunciationInstructions[string(pronunciationSystem)]; exists {
+					return instructions
+				}
+				return "it must be the IPA (International Phonetic Alphabet) string for the token."
+			}(),
 		languageConfig.Code,
 		strings.Join(languageConfig.PartOfSpeechList, ", "),
 		languageConfig.Name,
@@ -306,13 +335,13 @@ type DefinitionWithPronunciation struct {
 	Pronunciation string
 }
 
-func GetDefinition(token string, languageCode string) (*DefinitionWithPronunciation, error) {
-	logger := common.Logger.With("token", token, "languageCode", languageCode, "func", "GetDefinition", "package", "openai")
+func GetDefinition(token string, languageCode string, pronunciationSystem model.PronunciationSystem) (*DefinitionWithPronunciation, error) {
+	logger := common.Logger.With("token", token, "languageCode", languageCode, "pronunciationSystem", pronunciationSystem, "func", "GetDefinition", "package", "openai")
 
-	logger.Debug("defining token using chatgpt", "token", token, "language", languageCode)
+	logger.Debug("defining token using chatgpt", "token", token, "language", languageCode, "pronunciationSystem", pronunciationSystem)
 
 	// Generate language-specific prompts
-	messages, err := buildLanguageSpecificPrompt(token, languageCode)
+	messages, err := buildLanguageSpecificPrompt(token, languageCode, pronunciationSystem)
 	if err != nil {
 		logger.Error("failed to build language-specific prompt", "error", err)
 		return nil, err

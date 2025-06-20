@@ -100,9 +100,10 @@ func createTestWordlist(_ *testing.T, server *setup.TestServer, token string, na
 	wordlistResp := server.Expect.POST("/wordlists").
 		WithHeader("Authorization", token).
 		WithJSON(map[string]interface{}{
-			"name":         name,
-			"description":  description,
-			"languageCode": "en",
+			"name":                name,
+			"description":         description,
+			"languageCode":        "en",
+			"pronunciationSystem": "ipa",
 		}).
 		Expect().
 		Status(201)

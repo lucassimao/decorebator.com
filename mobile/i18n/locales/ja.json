@@ -415,8 +415,21 @@
     "descriptionPlaceholder": "リストの説明を追加",
     "languageLabel": "言語",
     "languageRequired": "言語を選択してください",
+    "pronunciationLabel": "発音表記システム",
+    "pronunciationHelp": "発音の表示方法を選択",
+    "pronunciationRequired": "発音表記システムを選択してください",
+    "pronunciationNotSupported": "選択された発音表記システムはこの言語ではサポートされていません",
+    "pronunciationLoadError": "発音オプションの読み込みに失敗しました",
+    "pronunciationDefaultWillBeUsed": "デフォルトの発音表記システムが使用されます",
     "errorMessage": "リストの作成に失敗しました。もう一度お試しください。",
     "createButton": "リストを作成"
+  },
+  "pronunciationSystems": {
+    "ipa": "IPA",
+    "romaji": "ローマ字",
+    "hiragana": "ひらがな",
+    "pinyin": "ピンイン",
+    "hangul": "ハングル"
   },
   "upgradePrompt": {
     "title": "Decorebatorを楽しんでいますか？",

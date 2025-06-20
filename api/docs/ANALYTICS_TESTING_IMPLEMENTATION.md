@@ -508,4 +508,32 @@ func TestAnalyticsEndpoint_ErrorCases(t *testing.T) {
 - Clear test failure messages with specific calculation details
 - Comprehensive error scenario coverage
 
+## 🚀 Running Analytics Tests
+
+### Quick Commands (Updated 2025)
+
+```bash
+# Run all analytics tests with structured output
+./scripts/run-tests.sh integration
+
+# Run specific analytics test file
+go test -v ./tests/integration/analytics/word_mastery_test.go
+
+# Run analytics tests in watch mode during development
+./scripts/run-tests.sh watch
+
+# Generate coverage report
+make coverage-html
+```
+
+### CI-Compatible Testing
+
+```bash
+# Full test suite with proper environment setup
+./scripts/run-tests.sh all
+
+# CI-style reporting with gotestsum
+make test-ci
+```
+
 This analytics testing implementation provides a robust foundation for validating the accuracy and reliability of all analytics functionality in the Decorebator API.

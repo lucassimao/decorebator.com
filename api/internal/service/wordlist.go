@@ -42,7 +42,7 @@ func GetUserWordlistsWithWordStats(userId int64) ([]*Wordlist, error) {
 }
 
 func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
-	wordlist, err := wordlistRepository.Save(newWordlist.Name, newWordlist.Description, newWordlist.LanguageCode, newWordlist.UserID)
+	wordlist, err := wordlistRepository.Save(newWordlist.Name, newWordlist.Description, newWordlist.LanguageCode, newWordlist.UserID, newWordlist.PronunciationSystem)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
 			"failed to save wordlist: %w", err,

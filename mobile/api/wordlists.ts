@@ -1,5 +1,12 @@
 import { callAPI } from "./api";
 
+export type PronunciationSystem =
+  | "ipa"
+  | "romaji"
+  | "hiragana"
+  | "pinyin"
+  | "hangul";
+
 export type Wordlist = {
   createdAt: string;
   description: string;
@@ -8,6 +15,7 @@ export type Wordlist = {
   updatedAt: string;
   userId: number;
   languageCode: string;
+  pronunciationSystem: PronunciationSystem;
   wordsCount: number;
   wordsLearnedCount: number;
 };
@@ -76,7 +84,9 @@ export type CreateWordDTO = Pick<Word, "wordlistId" | "name" | "notes">;
 export type CreateWordlistDTO = Pick<
   Wordlist,
   "description" | "name" | "languageCode"
->;
+> & {
+  pronunciationSystem?: PronunciationSystem;
+};
 
 export async function getUserWordlists() {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/wordlists";
@@ -171,5 +181,22 @@ export async function getWordDefinitions(
     `/wordlists/${wordlistId}/words/${wordId}/definitions`;
 
   const body = await callAPI<Definition[]>("GET", endpoint);
+  return body;
+}
+
+export type PronunciationSystemsResponse = {
+  supportedSystems: PronunciationSystem[];
+  defaultSystem: PronunciationSystem;
+  canChange: boolean;
+};
+
+export async function getPronunciationSystems(
+  languageCode: string,
+): Promise<PronunciationSystemsResponse> {
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL +
+    `/wordlists/pronunciation-systems?languageCode=${languageCode}`;
+
+  const body = await callAPI<PronunciationSystemsResponse>("GET", endpoint);
   return body;
 }

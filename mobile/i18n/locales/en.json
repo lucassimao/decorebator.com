@@ -415,8 +415,21 @@
     "descriptionPlaceholder": "Add a description for your wordlist",
     "languageLabel": "Language",
     "languageRequired": "Please select a language",
+    "pronunciationLabel": "Pronunciation System",
+    "pronunciationHelp": "Choose how pronunciation will be displayed",
+    "pronunciationRequired": "Please select a pronunciation system",
+    "pronunciationNotSupported": "Selected pronunciation system is not supported for this language",
+    "pronunciationLoadError": "Failed to load pronunciation options",
+    "pronunciationDefaultWillBeUsed": "Default pronunciation system will be used",
     "errorMessage": "Failed to create wordlist. Please try again.",
     "createButton": "Create Wordlist"
+  },
+  "pronunciationSystems": {
+    "ipa": "IPA",
+    "romaji": "Romaji",
+    "hiragana": "Hiragana",
+    "pinyin": "Pinyin",
+    "hangul": "Hangul"
   },
   "upgradePrompt": {
     "title": "Enjoying Decorebator?",

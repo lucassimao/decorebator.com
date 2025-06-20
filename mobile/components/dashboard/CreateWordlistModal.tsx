@@ -17,9 +17,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useForm, Controller } from "react-hook-form";
-import { CreateWordlistDTO } from "@/api/wordlists";
+import { CreateWordlistDTO, PronunciationSystem } from "@/api/wordlists";
 import * as wordlistsApi from "@/api/wordlists";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -89,13 +89,46 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<CreateWordlistDTO>({
     defaultValues: {
       name: "",
       description: "",
       languageCode: undefined,
+      pronunciationSystem: undefined,
     },
   });
+
+  // Watch selected language to fetch pronunciation systems
+  const selectedLanguage = watch("languageCode");
+
+  // Fetch pronunciation systems for selected language
+  const {
+    data: pronunciationData,
+    isLoading: isLoadingPronunciation,
+    error: pronunciationError,
+  } = useQuery({
+    queryKey: ["pronunciationSystems", selectedLanguage],
+    queryFn: () => wordlistsApi.getPronunciationSystems(selectedLanguage!),
+    enabled: !!selectedLanguage,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    retry: 2, // Retry on failure
+  });
+
+  // Auto-select default pronunciation system when language changes
+  useEffect(() => {
+    if (pronunciationData?.defaultSystem) {
+      // Only set if no pronunciation system is currently selected or if language changed
+      const currentPronunciation = watch("pronunciationSystem");
+      if (
+        !currentPronunciation ||
+        !pronunciationData.supportedSystems.includes(currentPronunciation)
+      ) {
+        setValue("pronunciationSystem", pronunciationData.defaultSystem);
+      }
+    }
+  }, [pronunciationData, setValue, watch]);
 
   // Animation effect
   useEffect(() => {
@@ -297,6 +330,92 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                 </Text>
               )}
             </View>
+
+            {/* Pronunciation System Selection */}
+            {pronunciationData?.canChange && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>
+                  {t("createWordlist.pronunciationLabel")}
+                </Text>
+                <Text style={styles.helpText}>
+                  {t("createWordlist.pronunciationHelp")}
+                </Text>
+                <Controller
+                  control={control}
+                  name="pronunciationSystem"
+                  rules={{
+                    validate: (value) => {
+                      // If pronunciation system selection is available and required
+                      if (pronunciationData?.canChange && !value) {
+                        return t("createWordlist.pronunciationRequired");
+                      }
+                      // If value is set, ensure it's supported
+                      if (
+                        value &&
+                        pronunciationData?.supportedSystems &&
+                        !pronunciationData.supportedSystems.includes(value)
+                      ) {
+                        return t("createWordlist.pronunciationNotSupported");
+                      }
+                      return true;
+                    },
+                  }}
+                  render={({ field: { onChange, value } }) => (
+                    <View>
+                      {isLoadingPronunciation ? (
+                        <View style={styles.loadingContainer}>
+                          <ActivityIndicator size="small" color="#FF7B54" />
+                        </View>
+                      ) : pronunciationError ? (
+                        <View style={styles.errorContainer}>
+                          <Text style={styles.errorText}>
+                            {t("createWordlist.pronunciationLoadError")}
+                          </Text>
+                          <Text style={styles.helpText}>
+                            {t("createWordlist.pronunciationDefaultWillBeUsed")}
+                          </Text>
+                        </View>
+                      ) : (
+                        <ScrollView
+                          horizontal
+                          showsHorizontalScrollIndicator={false}
+                          style={styles.languageScroll}
+                        >
+                          {pronunciationData?.supportedSystems.map((system) => (
+                            <TouchableOpacity
+                              key={system}
+                              style={[
+                                styles.pronunciationItem,
+                                value === system &&
+                                  styles.pronunciationItemSelected,
+                              ]}
+                              onPress={() => {
+                                onChange(system);
+                              }}
+                            >
+                              <Text
+                                style={[
+                                  styles.pronunciationName,
+                                  value === system &&
+                                    styles.pronunciationNameSelected,
+                                ]}
+                              >
+                                {t(`pronunciationSystems.${system}`)}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </ScrollView>
+                      )}
+                    </View>
+                  )}
+                />
+                {errors.pronunciationSystem && (
+                  <Text style={styles.errorText}>
+                    {errors.pronunciationSystem.message}
+                  </Text>
+                )}
+              </View>
+            )}
 
             {/* Submit Error */}
             {mutation.error && (
@@ -520,5 +639,44 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.7,
+  },
+  helpText: {
+    fontSize: 14,
+    color: "#636E72",
+    marginBottom: 12,
+    fontStyle: "italic",
+  },
+  loadingContainer: {
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+  pronunciationItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    marginRight: 10,
+    backgroundColor: "#FAFAFA",
+  },
+  pronunciationItemSelected: {
+    borderColor: "#FF7B54",
+    backgroundColor: "#FFF5F0",
+  },
+  pronunciationName: {
+    fontSize: 16,
+    color: "#636E72",
+  },
+  pronunciationNameSelected: {
+    color: "#FF7B54",
+    fontWeight: "500",
+  },
+  errorContainer: {
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    backgroundColor: "#FFF5F5",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#FFE6E6",
   },
 });
