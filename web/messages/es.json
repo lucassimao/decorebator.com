@@ -57,11 +57,11 @@
       "description": "Genera instantáneamente definiciones, imágenes, audio y ejemplos para cualquier palabra usando tecnología IA avanzada."
     },
     "spacedRepetition": {
-      "title": "Repetición Espaciada Científica",
-      "description": "Domina vocabulario eficientemente con nuestro sistema Leitner de 7 cajas probado para aumentar la retención en 85%."
+      "title": "Sistema Leitner Avanzado",
+      "description": "Sistema Leitner probabilístico de 7 cajas con selección inteligente de palabras - nunca te quedes sin contenido para estudiar."
     },
     "multipleQuizModes": {
-      "title": "7 Modos de Cuestionario Interactivos",
+      "title": "8 Modos de Cuestionario Interactivos",
       "description": "Desde reconocimiento visual hasta comprensión auditiva - practica con diversos tipos de cuestionario para aprendizaje integral."
     },
     "visualLearning": {
@@ -73,8 +73,8 @@
       "description": "Pronunciación perfecta con audio generado por IA en calidad de hablante nativo para todos los idiomas compatibles."
     },
     "progressTracking": {
-      "title": "Análisis Avanzados",
-      "description": "Rastrea tu progreso con análisis detallados, niveles de dominio e insights de aprendizaje personalizados."
+      "title": "Análisis de Alto Rendimiento",
+      "description": "Análisis en tiempo real para usuarios Premium con caché Redis, seguimiento detallado de dominio e insights instantáneos."
     },
     "multiLanguage": {
       "title": "7 Idiomas Nativos",
@@ -85,8 +85,8 @@
       "description": "Los usuarios premium pueden descargar listas de palabras y continuar aprendiendo sin conexión a internet."
     },
     "errorReporting": {
-      "title": "Control de Calidad de Contenido",
-      "description": "Reporta problemas de contenido IA y ayuda a mejorar la experiencia de aprendizaje para todos."
+      "title": "Reporte Inteligente de Errores",
+      "description": "Sistema de reporte de errores con límites de tasa y regeneración automática de contenido para mejoras impulsadas por la comunidad."
     },
     "mobileFirst": {
       "title": "Aprendizaje Multiplataforma",

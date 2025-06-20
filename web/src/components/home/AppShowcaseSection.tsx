@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 const AppShowcaseSection: React.FC = () => {
   return (
@@ -70,55 +71,33 @@ const AppShowcaseSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Phone Mockup with Screens */}
+          {/* App Demo Video */}
           <div className="relative flex justify-center">
             <div className="relative">
-              {/* Phone Frame */}
-              <div className="w-80 h-[640px] bg-gray-900 rounded-[3rem] p-3 shadow-2xl">
-                <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden">
-                  {/* Status Bar */}
-                  <div className="bg-white px-6 py-3 flex justify-between items-center text-xs">
-                    <span className="font-medium">9:41</span>
-                    <div className="flex space-x-1">
-                      <i className="fas fa-signal"></i>
-                      <i className="fas fa-wifi"></i>
-                      <i className="fas fa-battery-full"></i>
-                    </div>
-                  </div>
-                  
-                  {/* Dashboard Screen */}
-                  <div className="p-6 h-full bg-gradient-to-b from-orange-50 to-amber-50">
-                    <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
-                    
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="bg-white rounded-2xl p-4 shadow-sm">
-                        <div className="text-3xl font-bold text-[#FF7B54]">127</div>
-                        <div className="text-sm text-[#636E72]">Words Learned</div>
-                      </div>
-                      <div className="bg-white rounded-2xl p-4 shadow-sm">
-                        <div className="text-3xl font-bold text-[#4CAF50]">15</div>
-                        <div className="text-sm text-[#636E72]">Day Streak 🔥</div>
-                      </div>
-                    </div>
-                    
-                    {/* Progress Card */}
-                    <div className="bg-white rounded-2xl p-4 shadow-sm mb-4">
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="font-semibold">Spanish Vocabulary</h3>
-                        <span className="text-sm text-[#FF7B54] font-medium">78%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div className="bg-gradient-to-r from-[#FF7B54] to-orange-600 rounded-full h-3 w-3/4"></div>
-                      </div>
-                    </div>
-                    
-                    {/* Review Button */}
-                    <button className="w-full bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white py-4 rounded-2xl font-semibold flex items-center justify-center space-x-2">
-                      <i className="fas fa-play"></i>
-                      <span>Start Today&apos;s Review (12 words)</span>
-                    </button>
-                  </div>
+              {/* Phone Frame with Video */}
+              <div className="w-80 bg-gray-900 rounded-[3rem] p-3 shadow-2xl transform hover:scale-105 transition-transform duration-500">
+                <div className="w-full bg-white rounded-[2.5rem] overflow-hidden">
+                  <video
+                    className="w-full h-auto object-contain rounded-[2rem]"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="metadata"
+                    poster="/app-screenshot.jpeg"
+                  >
+                    <source src="/app-demo.webm" type="video/webm" />
+                    <source src="/app-demo.mp4" type="video/mp4" />
+                    {/* Fallback for very old browsers */}
+                    <Image
+                      src="/app-demo.gif"
+                      alt="Decorebator App Demo - Live interaction showing quiz features, progress tracking, and learning flow"
+                      width={320}
+                      height={678}
+                      className="w-full h-auto object-contain rounded-[2rem]"
+                      unoptimized
+                    />
+                  </video>
                 </div>
               </div>
               
@@ -126,11 +105,11 @@ const AppShowcaseSection: React.FC = () => {
               <div className="absolute -top-8 -right-8 bg-white rounded-2xl p-4 shadow-xl transform rotate-12 hover:rotate-0 transition-transform duration-300">
                 <div className="flex items-center space-x-2">
                   <div className="w-10 h-10 bg-[#FFD700] rounded-full flex items-center justify-center">
-                    <i className="fas fa-trophy text-white"></i>
+                    <i className="fas fa-video text-white"></i>
                   </div>
                   <div>
-                    <div className="text-sm font-bold">Achievement Unlocked!</div>
-                    <div className="text-xs text-[#636E72]">100 Words Mastered</div>
+                    <div className="text-sm font-bold">Live Demo!</div>
+                    <div className="text-xs text-[#636E72]">See it in action</div>
                   </div>
                 </div>
               </div>

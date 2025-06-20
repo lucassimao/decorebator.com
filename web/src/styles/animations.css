@@ -132,3 +132,48 @@
 ::-webkit-scrollbar-thumb:hover {
     background: #ff6347;
 }
+
+/* Reduced motion support for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .float-animation,
+    .pulse-glow,
+    .slide-in-left,
+    .slide-in-right,
+    .slide-in-up,
+    .gradient-animation,
+    .word-rotate span,
+    .card-3d,
+    .reveal {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .card-3d:hover {
+        transform: none !important;
+    }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+    .float-animation {
+        animation-duration: 4s; /* Faster on mobile to reduce battery drain */
+    }
+    
+    .card-3d:hover {
+        transform: rotateY(5deg) rotateX(5deg); /* Less rotation on mobile */
+    }
+}
+
+/* Video optimizations for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    video[autoplay] {
+        animation-play-state: paused !important;
+    }
+}
+
+/* Ensure videos are responsive */
+video {
+    max-width: 100%;
+    height: auto;
+}
