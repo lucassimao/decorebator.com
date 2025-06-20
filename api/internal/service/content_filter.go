@@ -36,10 +36,10 @@ func NewContentFilterService() *ContentFilterService {
 		profanityLists: make(map[string][]string),
 		patterns:       make(map[string]*regexp.Regexp),
 	}
-	
+
 	service.initializeProfanityLists()
 	service.initializePatterns()
-	
+
 	return service
 }
 
@@ -58,7 +58,7 @@ func (cfs *ContentFilterService) initializeProfanityLists() {
 		// Spam indicators
 		"free money", "click here", "buy now", "limited time",
 	}
-	
+
 	// Spanish
 	cfs.profanityLists["es"] = []string{
 		"tonto", "estúpido", "idiota", "maldito",
@@ -66,7 +66,7 @@ func (cfs *ContentFilterService) initializeProfanityLists() {
 		"matar", "violencia", "arma",
 		"odio", "racista",
 	}
-	
+
 	// French
 	cfs.profanityLists["fr"] = []string{
 		"stupide", "idiot", "maudit", "bête",
@@ -74,7 +74,7 @@ func (cfs *ContentFilterService) initializeProfanityLists() {
 		"tuer", "violence", "arme",
 		"haine", "raciste",
 	}
-	
+
 	// German
 	cfs.profanityLists["de"] = []string{
 		"dumm", "blöd", "idiot", "verdammt",
@@ -82,7 +82,7 @@ func (cfs *ContentFilterService) initializeProfanityLists() {
 		"töten", "gewalt", "waffe",
 		"hass", "rassist",
 	}
-	
+
 	// Italian
 	cfs.profanityLists["it"] = []string{
 		"stupido", "idiota", "maledetto", "scemo",
@@ -90,7 +90,7 @@ func (cfs *ContentFilterService) initializeProfanityLists() {
 		"uccidere", "violenza", "arma",
 		"odio", "razzista",
 	}
-	
+
 	// Portuguese
 	cfs.profanityLists["pt"] = []string{
 		"estúpido", "idiota", "maldito", "burro",
@@ -98,7 +98,7 @@ func (cfs *ContentFilterService) initializeProfanityLists() {
 		"matar", "violência", "arma",
 		"ódio", "racista",
 	}
-	
+
 	// Japanese (romanized)
 	cfs.profanityLists["ja"] = []string{
 		"baka", "aho", "kuso",
@@ -113,7 +113,7 @@ func (cfs *ContentFilterService) hasCharacterRepetition(text string) bool {
 	if len(text) < 5 {
 		return false
 	}
-	
+
 	count := 1
 	for i := 1; i < len(text); i++ {
 		if text[i] == text[i-1] {
@@ -134,7 +134,7 @@ func (cfs *ContentFilterService) hasWordRepetition(text string) bool {
 	if len(words) < 3 {
 		return false
 	}
-	
+
 	for i := 0; i <= len(words)-3; i++ {
 		if words[i] == words[i+1] && words[i+1] == words[i+2] {
 			return true
@@ -148,19 +148,19 @@ func (cfs *ContentFilterService) containsWholeWord(text, word string) bool {
 	// Convert both to lowercase for case-insensitive matching
 	lowerText := strings.ToLower(text)
 	lowerWord := strings.ToLower(word)
-	
+
 	// Split text into words
 	words := strings.FieldsFunc(lowerText, func(r rune) bool {
 		return !unicode.IsLetter(r) && !unicode.IsNumber(r)
 	})
-	
+
 	// Check if any word matches exactly
 	for _, w := range words {
 		if w == lowerWord {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -168,25 +168,25 @@ func (cfs *ContentFilterService) containsWholeWord(text, word string) bool {
 func (cfs *ContentFilterService) initializePatterns() {
 	// URL detection pattern
 	cfs.patterns["url"] = regexp.MustCompile(`https?://[^\s]+|www\.[^\s]+|\b[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b`)
-	
+
 	// Email detection pattern
 	cfs.patterns["email"] = regexp.MustCompile(`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`)
-	
+
 	// Phone number pattern
 	cfs.patterns["phone"] = regexp.MustCompile(`\b\d{3}[-.]?\d{3}[-.]?\d{4}\b|\+\d{1,3}[-.\s]?\d{1,14}`)
-	
+
 	// Note: Word repetition is checked separately in hasWordRepetition function
 	// No regex pattern needed due to RE2 limitations with backreferences
-	
+
 	// All caps pattern (potential spam/aggression)
 	cfs.patterns["allcaps"] = regexp.MustCompile(`^[A-Z\s]{10,}$`)
-	
+
 	// Number spam pattern
 	cfs.patterns["numberspam"] = regexp.MustCompile(`\d{5,}`)
 }
 
 // ValidateWord checks if a word is appropriate for the educational platform
-func (cfs *ContentFilterService) ValidateWord(word, language string) ContentFilterResult {
+func (cfs *ContentFilterService) ValidateWord(word string) ContentFilterResult {
 	if word == "" {
 		return ContentFilterResult{
 			IsAppropriate: false,
@@ -195,10 +195,10 @@ func (cfs *ContentFilterService) ValidateWord(word, language string) ContentFilt
 			FlaggedWords:  []string{},
 		}
 	}
-	
+
 	// Normalize the word for checking
 	normalizedWord := strings.ToLower(strings.TrimSpace(word))
-	
+
 	// Check word length (prevent spam)
 	if len(normalizedWord) > 100 {
 		return ContentFilterResult{
@@ -208,24 +208,24 @@ func (cfs *ContentFilterService) ValidateWord(word, language string) ContentFilt
 			FlaggedWords:  []string{word},
 		}
 	}
-	
+
 	// Check for non-educational content across all languages for comprehensive filtering
 	for lang := range cfs.profanityLists {
 		if result := cfs.checkProfanity(normalizedWord, lang); !result.IsAppropriate {
 			return result
 		}
 	}
-	
+
 	// Check for patterns (URLs, emails, etc.)
 	if result := cfs.checkPatterns(normalizedWord); !result.IsAppropriate {
 		return result
 	}
-	
+
 	// Check for non-alphabetic content (except allowed characters)
 	if result := cfs.checkCharacters(normalizedWord); !result.IsAppropriate {
 		return result
 	}
-	
+
 	return ContentFilterResult{
 		IsAppropriate: true,
 		Severity:      "",
@@ -244,10 +244,10 @@ func (cfs *ContentFilterService) ValidateWordlistName(name string) ContentFilter
 			FlaggedWords:  []string{},
 		}
 	}
-	
+
 	// Normalize the name
 	normalizedName := strings.ToLower(strings.TrimSpace(name))
-	
+
 	// Check length
 	if len(normalizedName) > 50 {
 		return ContentFilterResult{
@@ -257,19 +257,19 @@ func (cfs *ContentFilterService) ValidateWordlistName(name string) ContentFilter
 			FlaggedWords:  []string{name},
 		}
 	}
-	
+
 	// Check for profanity in multiple languages
 	for lang := range cfs.profanityLists {
 		if result := cfs.checkProfanity(normalizedName, lang); !result.IsAppropriate {
 			return result
 		}
 	}
-	
+
 	// Check for patterns
 	if result := cfs.checkPatterns(normalizedName); !result.IsAppropriate {
 		return result
 	}
-	
+
 	return ContentFilterResult{
 		IsAppropriate: true,
 		Severity:      "",
@@ -289,10 +289,10 @@ func (cfs *ContentFilterService) ValidateDescription(description string) Content
 			FlaggedWords:  []string{},
 		}
 	}
-	
+
 	// Normalize the description
 	normalizedDesc := strings.ToLower(strings.TrimSpace(description))
-	
+
 	// Check length
 	if len(normalizedDesc) > 200 {
 		return ContentFilterResult{
@@ -302,11 +302,11 @@ func (cfs *ContentFilterService) ValidateDescription(description string) Content
 			FlaggedWords:  []string{},
 		}
 	}
-	
+
 	// Check for profanity in multiple languages
 	words := strings.Fields(normalizedDesc)
 	flaggedWords := []string{}
-	
+
 	for _, word := range words {
 		for lang := range cfs.profanityLists {
 			if result := cfs.checkProfanity(word, lang); !result.IsAppropriate {
@@ -314,7 +314,7 @@ func (cfs *ContentFilterService) ValidateDescription(description string) Content
 			}
 		}
 	}
-	
+
 	if len(flaggedWords) > 0 {
 		return ContentFilterResult{
 			IsAppropriate: false,
@@ -323,12 +323,12 @@ func (cfs *ContentFilterService) ValidateDescription(description string) Content
 			FlaggedWords:  flaggedWords,
 		}
 	}
-	
+
 	// Check for patterns
 	if result := cfs.checkPatterns(normalizedDesc); !result.IsAppropriate {
 		return result
 	}
-	
+
 	return ContentFilterResult{
 		IsAppropriate: true,
 		Severity:      "",
@@ -343,21 +343,21 @@ func (cfs *ContentFilterService) checkProfanity(text, language string) ContentFi
 	if _, exists := cfs.profanityLists[language]; !exists {
 		language = "en"
 	}
-	
+
 	words := cfs.profanityLists[language]
 	flaggedWords := []string{}
-	
+
 	for _, word := range words {
 		// Use word boundary matching to avoid false positives like "hell" in "hello"
 		if cfs.containsWholeWord(text, word) {
 			flaggedWords = append(flaggedWords, word)
 		}
 	}
-	
+
 	if len(flaggedWords) > 0 {
 		severity := SeverityMedium
 		reason := "Contains inappropriate language"
-		
+
 		// Determine severity based on content type
 		for _, word := range flaggedWords {
 			if cfs.isHighSeverityWord(word) {
@@ -366,7 +366,7 @@ func (cfs *ContentFilterService) checkProfanity(text, language string) ContentFi
 				break
 			}
 		}
-		
+
 		return ContentFilterResult{
 			IsAppropriate: false,
 			Severity:      severity,
@@ -374,7 +374,7 @@ func (cfs *ContentFilterService) checkProfanity(text, language string) ContentFi
 			FlaggedWords:  flaggedWords,
 		}
 	}
-	
+
 	return ContentFilterResult{
 		IsAppropriate: true,
 		Severity:      "",
@@ -394,7 +394,7 @@ func (cfs *ContentFilterService) checkPatterns(text string) ContentFilterResult 
 			FlaggedWords:  []string{"URL detected"},
 		}
 	}
-	
+
 	// Check for emails
 	if cfs.patterns["email"].MatchString(text) {
 		return ContentFilterResult{
@@ -404,7 +404,7 @@ func (cfs *ContentFilterService) checkPatterns(text string) ContentFilterResult 
 			FlaggedWords:  []string{"Email detected"},
 		}
 	}
-	
+
 	// Check for phone numbers
 	if cfs.patterns["phone"].MatchString(text) {
 		return ContentFilterResult{
@@ -414,7 +414,7 @@ func (cfs *ContentFilterService) checkPatterns(text string) ContentFilterResult 
 			FlaggedWords:  []string{"Phone number detected"},
 		}
 	}
-	
+
 	// Check for excessive character repetition
 	if cfs.hasCharacterRepetition(text) {
 		return ContentFilterResult{
@@ -424,7 +424,7 @@ func (cfs *ContentFilterService) checkPatterns(text string) ContentFilterResult 
 			FlaggedWords:  []string{"Repetitive content"},
 		}
 	}
-	
+
 	// Check for word repetition
 	if cfs.hasWordRepetition(text) {
 		return ContentFilterResult{
@@ -434,7 +434,7 @@ func (cfs *ContentFilterService) checkPatterns(text string) ContentFilterResult 
 			FlaggedWords:  []string{"Repetitive content"},
 		}
 	}
-	
+
 	// Check for all caps (potential spam/aggression)
 	if cfs.patterns["allcaps"].MatchString(text) {
 		return ContentFilterResult{
@@ -444,7 +444,7 @@ func (cfs *ContentFilterService) checkPatterns(text string) ContentFilterResult 
 			FlaggedWords:  []string{"All caps text"},
 		}
 	}
-	
+
 	// Check for number spam
 	if cfs.patterns["numberspam"].MatchString(text) {
 		return ContentFilterResult{
@@ -454,7 +454,7 @@ func (cfs *ContentFilterService) checkPatterns(text string) ContentFilterResult 
 			FlaggedWords:  []string{"Number spam"},
 		}
 	}
-	
+
 	return ContentFilterResult{
 		IsAppropriate: true,
 		Severity:      "",
@@ -467,14 +467,14 @@ func (cfs *ContentFilterService) checkPatterns(text string) ContentFilterResult 
 func (cfs *ContentFilterService) checkCharacters(text string) ContentFilterResult {
 	// Allow letters, numbers, spaces, hyphens, apostrophes, and common punctuation
 	allowedChars := func(r rune) bool {
-		return unicode.IsLetter(r) || 
-			   unicode.IsNumber(r) || 
-			   unicode.IsSpace(r) ||
-			   r == '-' || r == '\'' || r == '.' || r == ',' || 
-			   r == '(' || r == ')' || r == '[' || r == ']' ||
-			   r == '!' || r == '?'
+		return unicode.IsLetter(r) ||
+			unicode.IsNumber(r) ||
+			unicode.IsSpace(r) ||
+			r == '-' || r == '\'' || r == '.' || r == ',' ||
+			r == '(' || r == ')' || r == '[' || r == ']' ||
+			r == '!' || r == '?'
 	}
-	
+
 	for _, r := range text {
 		if !allowedChars(r) {
 			return ContentFilterResult{
@@ -485,7 +485,7 @@ func (cfs *ContentFilterService) checkCharacters(text string) ContentFilterResul
 			}
 		}
 	}
-	
+
 	return ContentFilterResult{
 		IsAppropriate: true,
 		Severity:      "",
@@ -507,13 +507,13 @@ func (cfs *ContentFilterService) isHighSeverityWord(word string) bool {
 		"sexo", "adulto", "nu", "matar", "violência", "arma", "ódio", "racista",
 		"ecchi", "hentai", "sekkusu", "korosu", "boryoku", "sabetsu",
 	}
-	
+
 	for _, highWord := range highSeverityWords {
 		if strings.Contains(word, highWord) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 

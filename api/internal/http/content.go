@@ -15,7 +15,7 @@ func (h *ContentRoutes) GetContentGuidelines(c *gin.Context) {
 	guidelines := contentFilter.GetContentGuidelines()
 
 	response := gin.H{
-		"guidelines": guidelines,
+		"guidelines":  guidelines,
 		"description": "Please follow these guidelines when creating wordlists and adding vocabulary words to ensure content is appropriate for all users.",
 	}
 
@@ -37,7 +37,7 @@ func (h *ContentRoutes) ValidateContent(c *gin.Context) {
 	}
 
 	contentFilter := service.NewContentFilterService()
-	
+
 	// Default to English if no language provided
 	if request.Language == "" {
 		request.Language = "en"
@@ -47,7 +47,7 @@ func (h *ContentRoutes) ValidateContent(c *gin.Context) {
 
 	switch request.Type {
 	case "word":
-		result = contentFilter.ValidateWord(request.Content, request.Language)
+		result = contentFilter.ValidateWord(request.Content)
 	case "wordlist_name":
 		result = contentFilter.ValidateWordlistName(request.Content)
 	case "description":

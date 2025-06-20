@@ -9,7 +9,7 @@ import (
 )
 
 // Helper function to create a test user
-func createTestUser(t *testing.T, server *setup.TestServer) map[string]interface{} {
+func createTestUser(_ *testing.T, server *setup.TestServer) map[string]interface{} {
 	testUser := map[string]interface{}{
 		"email":     "testuser@example.com",
 		"password":  "password123",
@@ -32,25 +32,10 @@ func createTestUser(t *testing.T, server *setup.TestServer) map[string]interface
 // Helper function to create a premium test user
 func createPremiumTestUser(t *testing.T, server *setup.TestServer) map[string]interface{} {
 	token := server.WithPremiumUser(t)
-	
+
 	return map[string]interface{}{
 		"token": token,
 	}
-}
-
-// Helper function to login a user
-func loginUser(t *testing.T, server *setup.TestServer, email, password string) string {
-	loginCredentials := map[string]interface{}{
-		"email":    email,
-		"password": password,
-	}
-
-	resp := server.Expect.POST("/login").
-		WithJSON(loginCredentials).
-		Expect().
-		Status(http.StatusOK)
-
-	return resp.Header("Authorization").NotEmpty().Raw()
 }
 
 func TestContentFilteringWordlist_Create_ShouldRejectInappropriateName(t *testing.T) {
@@ -172,8 +157,8 @@ func TestContentFilteringWordlist_Create_ShouldRejectInappropriateName(t *testin
 			if tc.shouldReject {
 				respBody := resp.JSON().Object()
 				respBody.ContainsKey("error")
-				error := respBody.Value("error").String().Raw()
-				assert.Contains(t, error, "not appropriate", tc.description)
+				err := respBody.Value("error").String().Raw()
+				assert.Contains(t, err, "not appropriate", tc.description)
 			} else {
 				respBody := resp.JSON().Object()
 				respBody.ContainsKey("id")
@@ -262,8 +247,8 @@ func TestContentFilteringWordlist_Create_ShouldRejectInappropriateDescription(t 
 				resp.Status(http.StatusBadRequest)
 				respBody := resp.JSON().Object()
 				respBody.ContainsKey("error")
-				error := respBody.Value("error").String().Raw()
-				assert.Contains(t, error, "not appropriate", tc.testDesc)
+				err := respBody.Value("error").String().Raw()
+				assert.Contains(t, err, "not appropriate", tc.testDesc)
 			}
 		})
 	}
@@ -424,8 +409,8 @@ func TestContentFilteringWord_Create_ShouldRejectInappropriateWords(t *testing.T
 				resp.Status(http.StatusBadRequest)
 				respBody := resp.JSON().Object()
 				respBody.ContainsKey("error")
-				error := respBody.Value("error").String().Raw()
-				assert.Contains(t, error, "not appropriate", tc.testDesc)
+				err := respBody.Value("error").String().Raw()
+				assert.Contains(t, err, "not appropriate", tc.testDesc)
 			}
 		})
 	}
@@ -476,8 +461,8 @@ func TestContentFilteringMultiLanguage_FreeUser_ShouldDetectInappropriateContent
 			resp.Status(http.StatusBadRequest)
 			respBody := resp.JSON().Object()
 			respBody.ContainsKey("error")
-			error := respBody.Value("error").String().Raw()
-			assert.Contains(t, error, "not appropriate", "Should reject "+test.word+" ("+test.language+")")
+			err := respBody.Value("error").String().Raw()
+			assert.Contains(t, err, "not appropriate", "Should reject "+test.word+" ("+test.language+")")
 		})
 	}
 
@@ -497,7 +482,7 @@ func TestContentFilteringMultiLanguage_FreeUser_ShouldDetectInappropriateContent
 		if i >= 5 { // Free plan has 10 word limit, save some for other tests
 			break
 		}
-		t.Run("accept_"+test.word+"_"+test.language, func(t *testing.T) {
+		t.Run("accept_"+test.word+"_"+test.language, func(_ *testing.T) {
 			resp := server.Expect.POST("/wordlists/{wordlistId}/words", wordlistID).
 				WithHeader("Authorization", "Bearer "+token).
 				WithJSON(map[string]interface{}{
@@ -588,14 +573,14 @@ func TestContentFilteringMultiLanguage_PremiumUser_ShouldDetectInappropriateCont
 					resp.Status(http.StatusBadRequest)
 					respBody := resp.JSON().Object()
 					respBody.ContainsKey("error")
-					error := respBody.Value("error").String().Raw()
-					assert.Contains(t, error, "not appropriate", "Should reject "+badWord+" in "+langTest.language)
+					err := respBody.Value("error").String().Raw()
+					assert.Contains(t, err, "not appropriate", "Should reject "+badWord+" in "+langTest.language)
 				})
 			}
 
-			// Test good words should be accepted  
+			// Test good words should be accepted
 			for _, goodWord := range langTest.goodWords {
-				t.Run("accept_"+goodWord, func(t *testing.T) {
+				t.Run("accept_"+goodWord, func(_ *testing.T) {
 					resp := server.Expect.POST("/wordlists/{wordlistId}/words", wordlistID).
 						WithHeader("Authorization", "Bearer "+token).
 						WithJSON(map[string]interface{}{

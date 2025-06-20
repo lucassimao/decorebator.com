@@ -9,19 +9,19 @@ import (
 )
 
 type Word struct {
-	ID                 int64              `json:"id"`
-	Name               string             `json:"name"`
-	CreatedAt          pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt          pgtype.Timestamptz `json:"updatedAt"`
-	WordlistID         int64              `json:"wordlistId"`
-	UserID             int64              `json:"userId"`
-	AudioURL           string             `json:"audioURL"`
-	Notes              string             `json:"notes"`
-	Pronunciation      string             `json:"pronunciation"`
-	Learned            bool               `json:"learned"`
-	ContentStatus      ContentStatus      `json:"contentStatus"`
-	FlaggedReason      *string            `json:"flaggedReason,omitempty"`
-	ContentReviewedAt  *pgtype.Timestamptz `json:"contentReviewedAt,omitempty"`
+	ID                int64               `json:"id"`
+	Name              string              `json:"name"`
+	CreatedAt         pgtype.Timestamptz  `json:"createdAt"`
+	UpdatedAt         pgtype.Timestamptz  `json:"updatedAt"`
+	WordlistID        int64               `json:"wordlistId"`
+	UserID            int64               `json:"userId"`
+	AudioURL          string              `json:"audioURL"`
+	Notes             string              `json:"notes"`
+	Pronunciation     string              `json:"pronunciation"`
+	Learned           bool                `json:"learned"`
+	ContentStatus     ContentStatus       `json:"contentStatus"`
+	FlaggedReason     *string             `json:"flaggedReason,omitempty"`
+	ContentReviewedAt *pgtype.Timestamptz `json:"contentReviewedAt,omitempty"`
 }
 
 func (w Word) MarshalJSON() ([]byte, error) {
