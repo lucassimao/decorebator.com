@@ -25,7 +25,9 @@ type LanguageConfig struct {
 	ExampleInstructions  string
 }
 
-//nolint
+// gofmt:off
+//
+//nolint:gochecknoglobals // Global language configuration map
 var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 	"en": {
 		Code:             "en",
@@ -181,6 +183,8 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 	},
 }
 
+// gofmt:on
+
 func isValidPartOfSpeech(value string, languageCode string) bool {
 	config, exists := LANGUAGE_CONFIGS[languageCode]
 	if !exists {
@@ -223,8 +227,8 @@ func buildLanguageSpecificPrompt(token string, languageCode string) ([]map[strin
 			" • \"meaning\" must be a non-empty string in %s. "+
 			" • \"examples\" must be an array of strings. Each string must include the original token wrapped in square brackets. If the partOfSpeech is \"verb\" or equivalent, \"examples\" should be an empty array. "+
 			" • \"inflections\" must be an array. If partOfSpeech is \"verb\" or equivalent, you must include one item for each valid verb tense (%s). Otherwise, \"inflections\" must be an empty array. "+
-			" • Each inflection object must have exactly these required keys: \"inflection\" (string), \"tense\" (one of: %s), and \"examples\" (an array of exactly 3 strings). "+
-			" • Each of the 3 example strings inside \"inflection.examples\" must contain that inflected form wrapped in square brackets. "+
+			" • Each inflection object must have exactly these required keys: \"inflection\" (string), \"tense\" (one of: %s), and \"examples\" (an array of exactly 7 strings). "+
+			" • Each of the 7 example strings inside \"inflection.examples\" must contain that inflected form wrapped in square brackets. "+
 			" • You may include multiple \"results\" items if the word can function in multiple parts of speech, but only one object per POS. "+
 			" • If the token is not found (or the user provided an invalid word), respond with: { \"results\": [], \"pronunciation\": \"\" } "+
 			" • Under no circumstances should you output any text other than valid JSON that matches the schema exactly. "+
@@ -468,17 +472,25 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 								"description": fmt.Sprintf("A clear definition in %s", config.Name),
 							},
 							"examples": map[string]any{
-								"type":        "array",
-								"description": fmt.Sprintf("Example sentences in %s showing usage of the word. Should be an empty array if partOfSpeech is NOT verb or equivalent.", config.Name),
+								"type": "array",
+								"description": fmt.Sprintf(
+									"Example sentences in %s showing usage of the word. "+
+										"MUST be filled for all parts of speech EXCEPT verbs or equivalent (like phrasal verbs), "+
+										"which must have an empty array here and provide examples exclusively under the 'inflections' property.",
+									config.Name,
+								),
 								"items": map[string]string{
 									"type":        "string",
 									"description": "Each sentence must include the word wrapped in square brackets. Example: 'He [runs] every morning.'",
 								},
 							},
 							"inflections": map[string]any{
-								"type":        "array",
-								"description": fmt.Sprintf("List of verb inflections in %s. Return an empty array if partOfSpeech is NOT a verb or equivalent.", config.Name),
-								"items": map[string]any{
+								"type": "array",
+								"description": fmt.Sprintf(
+									"List of verb inflections in %s. MUST be filled ONLY if partOfSpeech is a verb or equivalent. "+
+										"All usage examples for verbs must be listed here, not in the 'examples' field above.",
+									config.Name,
+								), "items": map[string]any{
 									"type":                 "object",
 									"additionalProperties": false,
 									"description":          fmt.Sprintf("Details for a single verb form in %s, including the inflected verb and usage examples.", config.Name),
@@ -495,10 +507,10 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 										},
 										"examples": map[string]any{
 											"type":        "array",
-											"description": fmt.Sprintf("Exactly 3 different usage examples of the verb in this tense in %s.", config.Name),
+											"description": fmt.Sprintf("Exactly 7 different usage examples of the verb in this tense in %s.", config.Name),
 											"items": map[string]any{
 												"type":        "string",
-												"description": fmt.Sprintf("Example sentence using the inflection in %s. Must contain the word wrapped in square brackets.", config.Name),
+												"description": fmt.Sprintf("Example sentence using the full inflection in %s, wrapped entirely in square brackets. For phrasal verbs, wrap the full phrase. E.g., '[skims off]' not '[skims] off'.", config.Name),
 											},
 										},
 									},
@@ -516,27 +528,6 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 	}
 
 	return schema, nil
-}
-
-//nolint
-var EXAMPLES_RESPONSE_SCHEMA = map[string]any{
-	"name":   "ExamplesResponse",
-	"strict": true,
-	"schema": map[string]any{
-		"type":                 "object",
-		"required":             []string{"examples"},
-		"additionalProperties": false,
-		"properties": map[string]any{
-			"examples": map[string]any{
-				"type":        "array",
-				"description": "An array of well-structured, creative phrases that include the word, matching the intended part of speech and sense.",
-				"items": map[string]string{
-					"type":        "string",
-					"description": "Each phrase must be a complete sentence with a subject and verb. The word should be wrapped in square brackets, e.g., 'He [tore up] the letter.'",
-				},
-			},
-		},
-	},
 }
 
 var DEFINITION_RESPONSE_SCHEMA = map[string]any{

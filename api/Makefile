@@ -1,6 +1,16 @@
 # Load environment variables from the .env file
 include .env
 
+# Tool versions (matching GitHub workflow)
+GO_VERSION := 1.23
+POSTGRES_VERSION := 15
+REDIS_VERSION := 7-alpine
+MINIO_VERSION := latest
+GOTESTSUM_VERSION := latest
+GOVULNCHECK_VERSION := latest
+GODOTENV_VERSION := latest
+DELVE_VERSION := latest
+
 GREEN  		  := $(shell tput -Txterm setaf 2)
 YELLOW 		  := $(shell tput -Txterm setaf 3)
 WHITE  		  := $(shell tput -Txterm setaf 7)
@@ -12,10 +22,20 @@ DIR_TO_WATCH  := $(PWD)
 
 all: help
 
-setup: ## Install all dev and build dependencies
-	go install github.com/joho/godotenv/cmd/godotenv@latest
-	go install github.com/go-delve/delve/cmd/dlv@latest
-	sudo apt-get install -y inotify-tools migrate
+setup: ## Install all dev and build dependencies (matching GitHub workflow versions)
+	@echo "${YELLOW}Installing development tools (versions matching GitHub workflow)...${RESET}"
+	go install github.com/joho/godotenv/cmd/godotenv@$(GODOTENV_VERSION)
+	go install github.com/go-delve/delve/cmd/dlv@$(DELVE_VERSION)
+	go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION)
+	go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION)
+	@echo "${YELLOW}Installing system dependencies...${RESET}"
+	sudo apt-get update && sudo apt-get install -y inotify-tools migrate
+	@echo "${GREEN}✅ All dependencies installed successfully${RESET}"
+	@echo "${CYAN}Tool versions:${RESET}"
+	@echo "  Go: $(GO_VERSION)"
+	@echo "  PostgreSQL: $(POSTGRES_VERSION)"  
+	@echo "  Redis: $(REDIS_VERSION)"
+	@echo "  MinIO: $(MINIO_VERSION)"
 
 migrate-up: ## Run database migrations
 	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable'); \
@@ -97,6 +117,54 @@ test-watch: ## Run tests in watch mode
 		inotifywait -r -e modify,create,delete --include '.*\.go$$' ./internal ./tests; \
 		sleep 1; \
 	done
+
+test-report: ## Run tests with detailed reporting (requires gotestsum)
+	@echo "${YELLOW}Running tests with detailed reporting...${RESET}"
+	@command -v gotestsum >/dev/null 2>&1 || { echo "Installing gotestsum@$(GOTESTSUM_VERSION)..."; go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION); }
+	@echo "Unit tests:"
+	@gotestsum --format testname -- -v -race -coverprofile=unit.out -covermode=atomic ./internal/... || true
+	@echo "\n${GREEN}Unit tests completed.${RESET}"
+	@echo "\n${YELLOW}Note: For integration tests, use 'make test-integration' or './scripts/run-tests.sh all'${RESET}"
+	@echo "${YELLOW}Integration tests require database setup and can't run standalone.${RESET}"
+	@echo "\n${GREEN}Coverage summary:${RESET}"
+	@if [ -f unit.out ]; then echo "Unit coverage:"; go tool cover -func=unit.out | tail -1; fi
+
+test-report-full: ## Run ALL tests with detailed reporting (includes integration tests)
+	@echo "${YELLOW}Running full test suite with detailed reporting...${RESET}"
+	@echo "${YELLOW}This will use the test script for proper environment setup...${RESET}"
+	./scripts/run-tests.sh all
+
+test-ci: ## Run tests with CI-style reporting (unit tests only)
+	@echo "${YELLOW}Running CI-style tests with structured output...${RESET}"
+	@command -v gotestsum >/dev/null 2>&1 || { echo "Installing gotestsum@$(GOTESTSUM_VERSION)..."; go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION); }
+	gotestsum --junitfile unit-tests.xml --format testname -- -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+	@echo "\n${GREEN}Unit tests completed with JUnit XML output.${RESET}"
+	@echo "${YELLOW}For integration tests with full CI setup, use './scripts/run-tests.sh all'${RESET}"
+
+check-versions: ## Check installed tool versions vs expected versions
+	@echo "${CYAN}Checking tool versions (expected vs installed):${RESET}"
+	@echo "Go:"
+	@echo "  Expected: $(GO_VERSION)"
+	@go version 2>/dev/null | grep -oE 'go[0-9]+\.[0-9]+' | sed 's/go/  Installed: /' || echo "  Installed: Not found"
+	@echo "gotestsum:"
+	@echo "  Expected: $(GOTESTSUM_VERSION)"
+	@gotestsum --version 2>/dev/null | sed 's/^/  Installed: /' || echo "  Installed: Not found (run 'make setup')"
+	@echo "govulncheck:"
+	@echo "  Expected: $(GOVULNCHECK_VERSION)"
+	@govulncheck -version 2>/dev/null | sed 's/^/  Installed: /' || echo "  Installed: Not found (run 'make setup')"
+
+security-scan: ## Run security scans (matching GitHub workflow)
+	@echo "${YELLOW}Running security scans...${RESET}"
+	@command -v govulncheck >/dev/null 2>&1 || { echo "Installing govulncheck@$(GOVULNCHECK_VERSION)..."; go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION); }
+	@echo "${CYAN}Running govulncheck (official Go vulnerability scanner)...${RESET}"
+	@if govulncheck ./...; then \
+		echo "${GREEN}✅ No vulnerabilities found${RESET}"; \
+	else \
+		echo "${YELLOW}⚠️  Vulnerabilities found - check output above${RESET}"; \
+		echo "${CYAN}Note: Some vulnerabilities may be in standard library or dependencies${RESET}"; \
+	fi
+	@echo "${GREEN}✅ Security scan completed${RESET}"
+	@echo "${CYAN}Tip: Use 'govulncheck -show verbose ./...' for detailed vulnerability information${RESET}"
 
 run: ## HTTP server
 	$(GODOTENV_PATH) -f .env go run ./cmd/api

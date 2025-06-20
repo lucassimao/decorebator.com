@@ -2,7 +2,7 @@ name: decorebator-test
 services:
   
   redis:
-    image: redis/redis-stack-server:latest
+    image: redis:7-alpine
     ports:
       - "6380:6379"
     tmpfs:
@@ -45,7 +45,7 @@ services:
       exit 0;"
 
   main:                         
-    image: golang:1.22
+    image: golang:1.23
     depends_on:
       postgres:
         condition: service_healthy
@@ -62,7 +62,7 @@ services:
       - .env.test
 
   postgres:
-    image: postgres:15.3
+    image: postgres:15
     environment:
       POSTGRES_USER: test_user
       POSTGRES_PASSWORD: test_pass
