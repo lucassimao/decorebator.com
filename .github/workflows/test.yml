@@ -93,59 +93,15 @@ jobs:
             TESTS=$(grep -o 'tests="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
             FAILURES=$(grep -o 'failures="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
             ERRORS=$(grep -o 'errors="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
-            PASSED=$((TESTS - FAILURES - ERRORS))
             
             echo "- **Total Tests**: $TESTS" >> $GITHUB_STEP_SUMMARY
-            echo "- **Passed**: $PASSED ✅" >> $GITHUB_STEP_SUMMARY
             echo "- **Failures**: $FAILURES" >> $GITHUB_STEP_SUMMARY
             echo "- **Errors**: $ERRORS" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            
-            # Extract and list individual test results
-            if [ "$TESTS" -gt "0" ]; then
-              echo "### 📋 Individual Test Results" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              
-              # Parse testcases from XML and show results
-              # Use awk to parse XML and extract test case information
-              awk '
-              /<testcase/ {
-                # Extract test name and classname
-                match($0, /name="([^"]*)"/, name_arr)
-                match($0, /classname="([^"]*)"/, class_arr)
-                test_name = name_arr[1]
-                class_name = class_arr[1]
-                
-                # Check if this is a self-closing tag or has content
-                if (match($0, /\/>/)) {
-                  # Self-closing tag means passed
-                  print "✅ `" class_name "` → " test_name
-                } else {
-                  # Has content, read until closing tag
-                  full_line = $0
-                  while (getline > 0 && !/< \/testcase>/) {
-                    full_line = full_line "\n" $0
-                  }
-                  
-                  # Check for failure or error
-                  if (match(full_line, /<failure/)) {
-                    print "❌ `" class_name "` → " test_name " (FAILED)"
-                  } else if (match(full_line, /<error/)) {
-                    print "❌ `" class_name "` → " test_name " (ERROR)"
-                  } else {
-                    print "✅ `" class_name "` → " test_name
-                  }
-                }
-              }
-              ' unit-tests.xml >> $GITHUB_STEP_SUMMARY
-              
-              echo "" >> $GITHUB_STEP_SUMMARY
-            fi
             
             if [ "$FAILURES" = "0" ] && [ "$ERRORS" = "0" ]; then
-              echo "🎉 **All unit tests passed!**" >> $GITHUB_STEP_SUMMARY
+              echo "✅ All unit tests passed!" >> $GITHUB_STEP_SUMMARY
             else
-              echo "❌ **Some unit tests failed.** Check the detailed logs above for failure reasons." >> $GITHUB_STEP_SUMMARY
+              echo "❌ Some unit tests failed. Check logs above for details." >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "⚠️ No test results file found" >> $GITHUB_STEP_SUMMARY
@@ -337,59 +293,15 @@ jobs:
             TESTS=$(grep -o 'tests="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
             FAILURES=$(grep -o 'failures="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
             ERRORS=$(grep -o 'errors="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
-            PASSED=$((TESTS - FAILURES - ERRORS))
             
             echo "- **Total Tests**: $TESTS" >> $GITHUB_STEP_SUMMARY
-            echo "- **Passed**: $PASSED ✅" >> $GITHUB_STEP_SUMMARY
             echo "- **Failures**: $FAILURES" >> $GITHUB_STEP_SUMMARY
             echo "- **Errors**: $ERRORS" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            
-            # Extract and list individual test results
-            if [ "$TESTS" -gt "0" ]; then
-              echo "### 📋 Individual Test Results" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              
-              # Parse testcases from XML and show results
-              # Use awk to parse XML and extract test case information
-              awk '
-              /<testcase/ {
-                # Extract test name and classname
-                match($0, /name="([^"]*)"/, name_arr)
-                match($0, /classname="([^"]*)"/, class_arr)
-                test_name = name_arr[1]
-                class_name = class_arr[1]
-                
-                # Check if this is a self-closing tag or has content
-                if (match($0, /\/>/)) {
-                  # Self-closing tag means passed
-                  print "✅ `" class_name "` → " test_name
-                } else {
-                  # Has content, read until closing tag
-                  full_line = $0
-                  while (getline > 0 && !/< \/testcase>/) {
-                    full_line = full_line "\n" $0
-                  }
-                  
-                  # Check for failure or error
-                  if (match(full_line, /<failure/)) {
-                    print "❌ `" class_name "` → " test_name " (FAILED)"
-                  } else if (match(full_line, /<error/)) {
-                    print "❌ `" class_name "` → " test_name " (ERROR)"
-                  } else {
-                    print "✅ `" class_name "` → " test_name
-                  }
-                }
-              }
-              ' integration-tests.xml >> $GITHUB_STEP_SUMMARY
-              
-              echo "" >> $GITHUB_STEP_SUMMARY
-            fi
             
             if [ "$FAILURES" = "0" ] && [ "$ERRORS" = "0" ]; then
-              echo "🎉 **All integration tests passed!**" >> $GITHUB_STEP_SUMMARY
+              echo "✅ All integration tests passed!" >> $GITHUB_STEP_SUMMARY
             else
-              echo "❌ **Some integration tests failed.** Check the detailed logs above for failure reasons." >> $GITHUB_STEP_SUMMARY
+              echo "❌ Some integration tests failed. Check logs above for details." >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "⚠️ No test results file found" >> $GITHUB_STEP_SUMMARY
@@ -669,131 +581,26 @@ jobs:
     if: always()
     
     steps:
-      - name: Download test results
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          pattern: "*-test-results"
-          merge-multiple: true
-          
-      - name: Generate comprehensive test summary
+      - name: Generate test summary
         run: |
           {
             echo "## 🚀 Test Results Summary"
             echo ""
-            echo "### Pipeline Status Overview"
-            echo "| Component | Status | Result |"
-            echo "|-----------|--------|--------|"
-            
-            # Unit Tests
-            if [ "${{ needs.unit-tests.result }}" == "success" ]; then
-              echo "| Unit Tests | ✅ | **Passed** |"
-            elif [ "${{ needs.unit-tests.result }}" == "failure" ]; then
-              echo "| Unit Tests | ❌ | **Failed** |"
-            else
-              echo "| Unit Tests | ⚠️ | **${{ needs.unit-tests.result }}** |"
-            fi
-            
-            # Integration Tests
-            if [ "${{ needs.integration-tests.result }}" == "success" ]; then
-              echo "| Integration Tests | ✅ | **Passed** |"
-            elif [ "${{ needs.integration-tests.result }}" == "failure" ]; then
-              echo "| Integration Tests | ❌ | **Failed** |"
-            else
-              echo "| Integration Tests | ⚠️ | **${{ needs.integration-tests.result }}** |"
-            fi
-            
-            # Lint Checks
-            if [ "${{ needs.lint-checks.result }}" == "success" ]; then
-              echo "| Lint Checks | ✅ | **Passed** |"
-            elif [ "${{ needs.lint-checks.result }}" == "skipped" ]; then
-              echo "| Lint Checks | ⏭️ | **Skipped** (not a PR) |"
-            elif [ "${{ needs.lint-checks.result }}" == "failure" ]; then
-              echo "| Lint Checks | ❌ | **Failed** |"
-            else
-              echo "| Lint Checks | ⚠️ | **${{ needs.lint-checks.result }}** |"
-            fi
-            
-            # Build Verification
-            if [ "${{ needs.build-verification.result }}" == "success" ]; then
-              echo "| Build Verification | ✅ | **Passed** |"
-            elif [ "${{ needs.build-verification.result }}" == "failure" ]; then
-              echo "| Build Verification | ❌ | **Failed** |"
-            else
-              echo "| Build Verification | ⚠️ | **${{ needs.build-verification.result }}** |"
-            fi
-            
-            # Security Scan
-            if [ "${{ needs.security-scan.result }}" == "success" ]; then
-              echo "| Security Scan | ✅ | **Passed** |"
-            elif [ "${{ needs.security-scan.result }}" == "failure" ]; then
-              echo "| Security Scan | ❌ | **Failed** |"
-            else
-              echo "| Security Scan | ⚠️ | **${{ needs.security-scan.result }}** |"
-            fi
-            
+            echo "### Test Status"
+            echo "- **Unit Tests**: ${{ needs.unit-tests.result }}"
+            echo "- **Integration Tests**: ${{ needs.integration-tests.result }}"
+            echo "- **Lint Checks**: ${{ needs.lint-checks.result }}"
+            echo "- **Build Verification**: ${{ needs.build-verification.result }}"
+            echo "- **Security Scan**: ${{ needs.security-scan.result }}"
             echo ""
-            echo "### Detailed Test Metrics"
-            
-            # Parse unit test results if available
-            if [ -f "unit-tests.xml" ]; then
-              UNIT_TESTS=$(grep -o 'tests="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
-              UNIT_FAILURES=$(grep -o 'failures="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
-              UNIT_ERRORS=$(grep -o 'errors="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
-              UNIT_PASSED=$((UNIT_TESTS - UNIT_FAILURES - UNIT_ERRORS))
-              echo "- **Unit Tests**: $UNIT_PASSED/$UNIT_TESTS passed ($UNIT_FAILURES failures, $UNIT_ERRORS errors)"
-            else
-              echo "- **Unit Tests**: Results not available"
-            fi
-            
-            # Parse integration test results if available
-            if [ -f "integration-tests.xml" ]; then
-              INT_TESTS=$(grep -o 'tests="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
-              INT_FAILURES=$(grep -o 'failures="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
-              INT_ERRORS=$(grep -o 'errors="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
-              INT_PASSED=$((INT_TESTS - INT_FAILURES - INT_ERRORS))
-              echo "- **Integration Tests**: $INT_PASSED/$INT_TESTS passed ($INT_FAILURES failures, $INT_ERRORS errors)"
-            else
-              echo "- **Integration Tests**: Results not available"
-            fi
-            
-            echo ""
-            echo "### Overall Status"
-            
-            # Determine overall status
-            CRITICAL_FAILURES=0
-            if [ "${{ needs.unit-tests.result }}" == "failure" ]; then
-              CRITICAL_FAILURES=$((CRITICAL_FAILURES + 1))
-              echo "❌ **Unit tests failed** - Fix failing unit tests before merging"
-            fi
-            
+            echo "### Quick Status"
             if [ "${{ needs.integration-tests.result }}" == "failure" ]; then
-              CRITICAL_FAILURES=$((CRITICAL_FAILURES + 1))
-              echo "❌ **Integration tests failed** - Fix failing integration tests before merging"
-            fi
-            
-            if [ "${{ needs.build-verification.result }}" == "failure" ]; then
-              CRITICAL_FAILURES=$((CRITICAL_FAILURES + 1))
-              echo "❌ **Build verification failed** - Fix build issues before merging"
-            fi
-            
-            if [ "${{ needs.security-scan.result }}" == "failure" ]; then
-              CRITICAL_FAILURES=$((CRITICAL_FAILURES + 1))
-              echo "❌ **Security scan failed** - Address security issues before merging"
-            fi
-            
-            if [ "${{ needs.lint-checks.result }}" == "failure" ]; then
-              echo "⚠️ **Lint checks failed** - Fix code style issues before merging"
-            fi
-            
-            if [ "$CRITICAL_FAILURES" == "0" ] && [ "${{ needs.lint-checks.result }}" != "failure" ]; then
-              echo "🎉 **All checks passed!** Ready to merge."
-            elif [ "$CRITICAL_FAILURES" == "0" ]; then
-              echo "⚠️ **Core tests passed** but lint checks failed. Consider fixing style issues."
+              echo "❌ **Integration tests failed** - Check logs above for details"
+            elif [ "${{ needs.unit-tests.result }}" == "failure" ]; then
+              echo "❌ **Unit tests failed** - Check logs above for details"
             else
-              echo "❌ **$CRITICAL_FAILURES critical check(s) failed.** Please fix issues before merging."
+              echo "✅ **All tests passed!**"
             fi
-            
           } >> $GITHUB_STEP_SUMMARY
           
       - name: Check overall status
