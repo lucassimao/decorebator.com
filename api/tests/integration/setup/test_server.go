@@ -161,16 +161,6 @@ func (ts *TestServer) WithPremiumUser(t *testing.T) string {
 	return loginResp.Header("Authorization").NotEmpty().Raw()
 }
 
-// extractUserIDFromToken extracts user ID from JWT token (simplified for testing)
-func (ts *TestServer) extractUserIDFromToken(_ string) (int64, error) {
-	// In a real implementation, this would parse and validate the JWT
-	// For testing purposes, we'll query the database to find the most recent user
-	ctx := context.Background()
-
-	var userID int64
-	err := ts.DB.QueryRow(ctx, "SELECT id FROM users ORDER BY created_at DESC LIMIT 1").Scan(&userID)
-	return userID, err
-}
 
 // SeedTestData seeds the database with test data
 func (ts *TestServer) SeedTestData(t *testing.T, fixtures ...string) {

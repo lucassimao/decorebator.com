@@ -46,7 +46,7 @@ func GetRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, size int)
 }
 
 func GetDefinitionById(id int64) (*model.Definition, error) {
-	results, err := definitionRepository.Find(repo.FindArgs{Id: &id})
+	results, err := definitionRepository.Find(repo.FindArgs{ID: &id})
 	if err != nil || len(results) == 0 {
 		return nil, nil
 	}
@@ -71,7 +71,7 @@ func didUserCreateWord(wordId, userId int64) (bool, error) {
 }
 
 func GetDefinitionsByWordId(wordId, userId int64) ([]*model.Definition, error) {
-	return definitionRepository.GetDefinitionsByWordId(wordId, userId)
+	return definitionRepository.GetDefinitionsByWordID(wordId, userId)
 }
 
 // NormalizePartOfSpeech converts a language-specific part-of-speech to normalized English

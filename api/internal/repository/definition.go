@@ -22,7 +22,7 @@ type DefinitionRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *DefinitionRepository) Save(tokenId int64, definitions []*Definition, tx pgx.Tx) ([]*Definition, error) {
+func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Definition, tx pgx.Tx) ([]*Definition, error) {
 
 	// Prepare the definitions insert
 	definitionsInsert := `
@@ -52,7 +52,7 @@ func (repository *DefinitionRepository) Save(tokenId int64, definitions []*Defin
 
 		if err != nil {
 			jsonString, _ := json.Marshal(def)
-			common.Logger.Error("failed to insert definition", "definition", jsonString, "tokenId", tokenId)
+			common.Logger.Error("failed to insert definition", "definition", jsonString, "tokenID", tokenID)
 			return nil, err
 		}
 
@@ -61,22 +61,21 @@ func (repository *DefinitionRepository) Save(tokenId int64, definitions []*Defin
 		def.UpdatedAt = updatedAt
 		definitions[i] = def
 
-		_, err = tx.Exec(context.Background(), wordDefinitionsInsert, tokenId, def.ID)
+		_, err = tx.Exec(context.Background(), wordDefinitionsInsert, tokenID, def.ID)
 
 		if err != nil {
-			common.Logger.Error("failed to insert word_definition", "def.ID", def.ID, "tokenId", tokenId)
+			common.Logger.Error("failed to insert word_definition", "def.ID", def.ID, "tokenID", tokenID)
 			return nil, err
 		}
-
 	}
 
 	return definitions, nil
 }
 
 // all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
-func (repository *DefinitionRepository) GetRandomMeanings(definitionIdsToIgnore []int, limit int) ([]string, error) {
+func (repository *DefinitionRepository) GetRandomMeanings(definitionIDsToIgnore []int, limit int) ([]string, error) {
 	// Handle empty array case
-	if len(definitionIdsToIgnore) == 0 {
+	if len(definitionIDsToIgnore) == 0 {
 		return []string{}, nil
 	}
 
@@ -105,9 +104,9 @@ func (repository *DefinitionRepository) GetRandomMeanings(definitionIdsToIgnore 
         LIMIT $2;
 	`
 
-	rows, err := repository.Db.Query(context.Background(), query, definitionIdsToIgnore, limit)
+	rows, err := repository.Db.Query(context.Background(), query, definitionIDsToIgnore, limit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query random meanings for definitions %v: %w", definitionIdsToIgnore, err)
+		return nil, fmt.Errorf("failed to query random meanings for definitions %v: %w", definitionIDsToIgnore, err)
 	}
 	defer rows.Close()
 
@@ -124,7 +123,7 @@ func (repository *DefinitionRepository) GetRandomMeanings(definitionIdsToIgnore 
 	return meanings, nil
 }
 
-func (repository *DefinitionRepository) GetRandomTokens(definitionIdsToIgnore []int, partOfSpeech string, limit int) ([]string, error) {
+func (repository *DefinitionRepository) GetRandomTokens(definitionIDsToIgnore []int, partOfSpeech string, limit int) ([]string, error) {
 	// selecting random() to avoid the error 'SELECT DISTINCT, ORDER BY expressions must appear in select list (SQLSTATE 42P10)'
 	query := `
 		WITH tokens AS (
@@ -142,7 +141,7 @@ func (repository *DefinitionRepository) GetRandomTokens(definitionIdsToIgnore []
 		)
 		SELECT token FROM tokens ;
 	`
-	rows, err := repository.Db.Query(context.Background(), query, partOfSpeech, definitionIdsToIgnore, limit)
+	rows, err := repository.Db.Query(context.Background(), query, partOfSpeech, definitionIDsToIgnore, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +160,6 @@ func (repository *DefinitionRepository) GetRandomTokens(definitionIdsToIgnore []
 }
 
 func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, error) {
-
 	var builder strings.Builder
 
 	builder.WriteString(`SELECT id, token, language, part_of_speech, part_of_speech_normalized, is_verb_type, meaning, examples, inflections, source, 
@@ -172,10 +170,10 @@ func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, erro
 	filters := []string{}
 	index := 1
 
-	if args.Id != nil {
+	if args.ID != nil {
 		filters = append(filters, fmt.Sprintf("id = $%d", index))
 		index++
-		queryArgs = append(queryArgs, strconv.FormatInt(*args.Id, 10))
+		queryArgs = append(queryArgs, strconv.FormatInt(*args.ID, 10))
 	}
 
 	if args.Name != nil {
@@ -222,7 +220,7 @@ func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, erro
 // Delete definitions and word_definitions only if they are associated to a single word.
 // If associated to more than one word, then just dele word_definitions entries.
 // If tx is nil, a new transaction is created and managed internally.
-func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64, tx *pgx.Tx) error {
+func (repository *DefinitionRepository) DeleteWordDefinitions(wordID int64, tx *pgx.Tx) error {
 	var managedTx pgx.Tx
 	var err error
 	ctx := context.Background()
@@ -252,26 +250,26 @@ func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64, tx *
 				FROM word_definitions 
 				WHERE definition_id IN (SELECT definition_id from word_definitions WHERE word_id=$1)`
 
-	row := managedTx.QueryRow(ctx, query, wordId)
+	row := managedTx.QueryRow(ctx, query, wordID)
 	var count int
 
 	err = row.Scan(&count)
 
 	if err != nil {
-		common.Logger.Error("failed to query how many words use the same definition", "error", err, "wordId", wordId)
+		common.Logger.Error("failed to query how many words use the same definition", "error", err, "wordID", wordID)
 		return err
 	}
 
 	// just one word use these definitions. Drop them'll
 	if count == 1 {
 		// deleting from definitions table cascades to word_definitions and definition_images
-		_, err = managedTx.Exec(ctx, "DELETE FROM definitions WHERE id in (SELECT definition_id from word_definitions WHERE word_id=$1)", wordId)
+		_, err = managedTx.Exec(ctx, "DELETE FROM definitions WHERE id in (SELECT definition_id from word_definitions WHERE word_id=$1)", wordID)
 		if err != nil {
 			return errors.New("failed to delete definitions")
 		}
 	} else {
 		// definitions are shared. will only delete entries in the many to many table
-		_, err = managedTx.Exec(ctx, "DELETE from word_definitions WHERE word_id=$1", wordId)
+		_, err = managedTx.Exec(ctx, "DELETE from word_definitions WHERE word_id=$1", wordID)
 		if err != nil {
 			return errors.New("failed to delete word_definitions")
 		}
@@ -280,9 +278,9 @@ func (repository *DefinitionRepository) DeleteWordDefinitions(wordId int64, tx *
 	return nil
 }
 
-func (repository *DefinitionRepository) DidUserCreateWord(wordId, userId int64) (bool, error) {
+func (repository *DefinitionRepository) DidUserCreateWord(wordID, userID int64) (bool, error) {
 	query := `SELECT count(*) FROM words w WHERE w.id=$1 and user_id=$2`
-	row := repository.Db.QueryRow(context.Background(), query, wordId, userId)
+	row := repository.Db.QueryRow(context.Background(), query, wordID, userID)
 	var count int
 	err := row.Scan(&count)
 
@@ -293,7 +291,7 @@ func (repository *DefinitionRepository) DidUserCreateWord(wordId, userId int64) 
 	return count == 1, nil
 }
 
-func (repository *DefinitionRepository) GetDefinitionsByWordId(wordId, userId int64) ([]*Definition, error) {
+func (repository *DefinitionRepository) GetDefinitionsByWordID(wordID, userID int64) ([]*Definition, error) {
 	query := `
 		SELECT d.id, d.token, d.language, d.part_of_speech, d.part_of_speech_normalized, d.is_verb_type, d.meaning, d.examples, d.inflections, 
 			   d.source, d.source_id, d.sounds, d.phonetic_notations, d.created_at, d.updated_at
@@ -303,7 +301,7 @@ func (repository *DefinitionRepository) GetDefinitionsByWordId(wordId, userId in
 		WHERE w.id = $1 AND w.user_id = $2
 		ORDER BY d.id ASC`
 
-	rows, err := repository.Db.Query(context.Background(), query, wordId, userId)
+	rows, err := repository.Db.Query(context.Background(), query, wordID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +327,7 @@ func (repository *DefinitionRepository) GetDefinitionsByWordId(wordId, userId in
 }
 
 type FindArgs struct {
-	Id   *int64
+	ID   *int64
 	Name *string
 }
 

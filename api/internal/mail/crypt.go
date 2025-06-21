@@ -78,7 +78,7 @@ func createResetPasswordToken(userId int64) (encryptedPayload string, err error)
 	}
 
 	key := []byte(os.Getenv("RESET_PASSWORD_PRIVATE_KEY"))
-	encryptedPayload, err = encryptAES([]byte(key), string(encodedPayload))
+	encryptedPayload, err = encryptAES(key, string(encodedPayload))
 	if err != nil {
 		return "", err
 	}

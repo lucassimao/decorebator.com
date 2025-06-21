@@ -4,9 +4,27 @@ import (
 	"net/http"
 	"testing"
 
+	"decorebator.com/internal/service"
 	"decorebator.com/tests/integration/setup"
 	"github.com/stretchr/testify/assert"
 )
+
+// setupMockModeration injects a mock moderation service for testing
+func setupMockModeration(_ *testing.T) func() {
+	// Create and inject mock moderation service
+	mockModeration := service.NewMockModerationService()
+	service.SetModerationService(mockModeration)
+	service.SetWordlistModerationService(mockModeration)
+
+	// Return cleanup function to restore original services
+	cleanup := func() {
+		// Restore original moderation services
+		service.SetModerationService(service.NewOpenAIModerationService())
+		service.SetWordlistModerationService(service.NewOpenAIModerationService())
+	}
+
+	return cleanup
+}
 
 // Helper function to create a test user
 func createTestUser(_ *testing.T, server *setup.TestServer) map[string]interface{} {
@@ -40,6 +58,9 @@ func createPremiumTestUser(t *testing.T, server *setup.TestServer) map[string]in
 
 func TestContentFilteringWordlist_Create_ShouldRejectInappropriateName(t *testing.T) {
 	// Arrange
+	cleanup := setupMockModeration(t)
+	defer cleanup()
+
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
@@ -170,6 +191,9 @@ func TestContentFilteringWordlist_Create_ShouldRejectInappropriateName(t *testin
 
 func TestContentFilteringWordlist_Create_ShouldRejectInappropriateDescription(t *testing.T) {
 	// Arrange
+	cleanup := setupMockModeration(t)
+	defer cleanup()
+
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
@@ -256,6 +280,9 @@ func TestContentFilteringWordlist_Create_ShouldRejectInappropriateDescription(t 
 
 func TestContentFilteringWord_Create_ShouldRejectInappropriateWords(t *testing.T) {
 	// Arrange
+	cleanup := setupMockModeration(t)
+	defer cleanup()
+
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
@@ -418,6 +445,9 @@ func TestContentFilteringWord_Create_ShouldRejectInappropriateWords(t *testing.T
 
 func TestContentFilteringMultiLanguage_FreeUser_ShouldDetectInappropriateContent(t *testing.T) {
 	// Arrange
+	cleanup := setupMockModeration(t)
+	defer cleanup()
+
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
@@ -501,6 +531,9 @@ func TestContentFilteringMultiLanguage_FreeUser_ShouldDetectInappropriateContent
 
 func TestContentFilteringMultiLanguage_PremiumUser_ShouldDetectInappropriateContent(t *testing.T) {
 	// Arrange
+	cleanup := setupMockModeration(t)
+	defer cleanup()
+
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 

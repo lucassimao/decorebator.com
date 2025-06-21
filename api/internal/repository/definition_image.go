@@ -21,7 +21,6 @@ func NewDefinitionImageRepository(db *pgxpool.Pool) *DefinitionImageRepository {
 }
 
 func (repository *DefinitionImageRepository) Save(dto CreateDefinitionImageDTO) (*DefinitionImage, error) {
-
 	// maybe later receive via arg?
 	ctx := context.Background()
 

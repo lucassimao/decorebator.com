@@ -14,7 +14,7 @@ import (
 )
 
 var wordRepository *repo.WordRepository
-var contentFilter *ContentFilterService
+var moderationService ModerationService
 
 type Word = model.Word
 
@@ -24,7 +24,12 @@ func init() {
 		common.Logger.Error("failed to open db connection", "error", err)
 	}
 	wordRepository = &repo.WordRepository{Db: db}
-	contentFilter = NewContentFilterService()
+	moderationService = NewOpenAIModerationService()
+}
+
+// SetModerationService allows injection of moderation service for testing
+func SetModerationService(service ModerationService) {
+	moderationService = service
 }
 
 // GetWordByWordlist returns words from wordlist with optional filtering
@@ -34,7 +39,7 @@ func GetWordByWordlist(wordlistId, userId int64, onlyWithDefinitions bool) ([]Wo
 }
 
 func GetWordById(id int64) (*Word, error) {
-	return wordRepository.GetById(id)
+	return wordRepository.GetByID(id)
 }
 
 func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
@@ -46,8 +51,8 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		return nil, common.BusinessError{Message: "words must be limited to 15 chars"}
 	}
 
-	// Validate word content
-	filterResult := contentFilter.ValidateWord(trimmedName)
+	// Validate word content using OpenAI moderation
+	filterResult := moderationService.ValidateWord(trimmedName)
 	if !filterResult.IsAppropriate {
 		return nil, common.BusinessError{
 			Message: fmt.Sprintf("Word content not appropriate: %s", filterResult.Reason),
@@ -56,7 +61,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 
 	// Validate notes content if provided
 	if dto.Notes != "" {
-		notesResult := contentFilter.ValidateDescription(dto.Notes)
+		notesResult := moderationService.ValidateDescription(dto.Notes)
 		if !notesResult.IsAppropriate {
 			return nil, common.BusinessError{
 				Message: fmt.Sprintf("Word notes not appropriate: %s", notesResult.Reason),
@@ -107,7 +112,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		}
 
 		var latestAudioURL string
-		latestAudioURL, err = wordRepository.GetLatestAudioUrl(trimmedName)
+		latestAudioURL, err = wordRepository.GetLatestAudioURL(trimmedName)
 
 		if err != nil {
 			_, _ = TriggerTextToSpeechWorker(word.ID, &word.UserID, nil, &tx)

@@ -327,7 +327,7 @@ func SendSubscriptionCancelledEmail(user *model.User, data SubscriptionEmailData
 	}
 
 	from := mail.NewEmail("Decorebator", "support@decorebator.com")
-	subject := "Subscription Cancelled"
+	subject := "Subscription Canceled"
 	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
 	to := mail.NewEmail(fullName, user.Email)
 

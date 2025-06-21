@@ -11,7 +11,7 @@ import (
 )
 
 var wordlistRepository *repo.WordlistRepository
-var wordlistContentFilter *ContentFilterService
+var wordlistModerationService ModerationService
 
 type Wordlist = model.Wordlist
 
@@ -22,13 +22,18 @@ func init() {
 		os.Exit(1)
 	}
 	wordlistRepository = &repo.WordlistRepository{Db: db}
-	wordlistContentFilter = NewContentFilterService()
+	wordlistModerationService = NewOpenAIModerationService()
+}
+
+// SetWordlistModerationService allows injection of moderation service for testing
+func SetWordlistModerationService(service ModerationService) {
+	wordlistModerationService = service
 }
 
 // include wordsCount and WordsLearnedCount for each scholarship
 func GetUserWordlistsWithWordStats(userId int64) ([]*Wordlist, error) {
 	args := repo.FindWordlistArgs{
-		OwnerId:                  &userId,
+		OwnerID:                  &userId,
 		ComputeWordsCount:        true,
 		ComputeWordsLearnedCount: true,
 	}
@@ -45,7 +50,7 @@ func GetUserWordlistsWithWordStats(userId int64) ([]*Wordlist, error) {
 
 func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
 	// Content filtering validation
-	nameResult := wordlistContentFilter.ValidateWordlistName(newWordlist.Name)
+	nameResult := wordlistModerationService.ValidateWordlistName(newWordlist.Name)
 	if !nameResult.IsAppropriate {
 		return nil, common.BusinessError{
 			Message: fmt.Sprintf("Wordlist name not appropriate: %s", nameResult.Reason),
@@ -54,7 +59,7 @@ func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
 
 	// Validate description if provided
 	if newWordlist.Description != "" {
-		descResult := wordlistContentFilter.ValidateDescription(newWordlist.Description)
+		descResult := wordlistModerationService.ValidateDescription(newWordlist.Description)
 		if !descResult.IsAppropriate {
 			return nil, common.BusinessError{
 				Message: fmt.Sprintf("Wordlist description not appropriate: %s", descResult.Reason),
@@ -75,8 +80,8 @@ func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
 
 func GetWordlistById(id, userId int64) (*Wordlist, error) {
 	args := repo.FindWordlistArgs{
-		Id:      &id,
-		OwnerId: &userId,
+		ID:      &id,
+		OwnerID: &userId,
 	}
 	result, err := wordlistRepository.Find(args)
 	if err != nil {
@@ -112,7 +117,7 @@ func DeleteWordlist(id, userId int64) (int64, error) {
 
 func UpdateWordlist(wordlist *Wordlist) error {
 	// Content filtering validation for updates
-	nameResult := wordlistContentFilter.ValidateWordlistName(wordlist.Name)
+	nameResult := wordlistModerationService.ValidateWordlistName(wordlist.Name)
 	if !nameResult.IsAppropriate {
 		return common.BusinessError{
 			Message: fmt.Sprintf("Wordlist name not appropriate: %s", nameResult.Reason),
@@ -121,7 +126,7 @@ func UpdateWordlist(wordlist *Wordlist) error {
 
 	// Validate description if provided
 	if wordlist.Description != "" {
-		descResult := wordlistContentFilter.ValidateDescription(wordlist.Description)
+		descResult := wordlistModerationService.ValidateDescription(wordlist.Description)
 		if !descResult.IsAppropriate {
 			return common.BusinessError{
 				Message: fmt.Sprintf("Wordlist description not appropriate: %s", descResult.Reason),

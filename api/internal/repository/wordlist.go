@@ -48,8 +48,8 @@ func (repository *WordlistRepository) Save(name, description, languageCode strin
 }
 
 type FindWordlistArgs struct {
-	Id                       *int64
-	OwnerId                  *int64
+	ID                       *int64
+	OwnerID                  *int64
 	ComputeWordsCount        bool
 	ComputeWordsLearnedCount bool
 }
@@ -76,12 +76,12 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 	}
 
 	// Build WHERE clause
-	if args.Id != nil {
+	if args.ID != nil {
 		builder.WriteString(" WHERE wordlists.id = $1")
-		queryArgs = append(queryArgs, *args.Id)
-	} else if args.OwnerId != nil {
+		queryArgs = append(queryArgs, *args.ID)
+	} else if args.OwnerID != nil {
 		builder.WriteString(" WHERE wordlists.user_id = $1")
-		queryArgs = append(queryArgs, *args.OwnerId)
+		queryArgs = append(queryArgs, *args.OwnerID)
 	}
 
 	// Add GROUP BY if aggregating
@@ -139,9 +139,9 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 	return wordlists, nil
 }
 
-func (repository *WordlistRepository) Delete(wordlistID, userId int64) (int64, error) {
+func (repository *WordlistRepository) Delete(wordlistID, userID int64) (int64, error) {
 	query := `DELETE FROM wordlists WHERE user_id=$1 AND ID=$2`
-	result, err := repository.Db.Exec(context.Background(), query, userId, wordlistID)
+	result, err := repository.Db.Exec(context.Background(), query, userID, wordlistID)
 	if err != nil {
 		return 0, err
 	}

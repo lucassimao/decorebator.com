@@ -19,6 +19,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const productionEnv = "production"
+
 func Authenticate(c *gin.Context) {
 
 	const BearerSchema = "Bearer "
@@ -95,7 +97,7 @@ func AuthenticateStatic(c *gin.Context) {
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		if os.Getenv("ENV") == "production" {
+		if os.Getenv("ENV") == productionEnv {
 			c.Writer.Header().Add("Access-Control-Allow-Origin", "https://decorebator.com")
 			c.Writer.Header().Add("Access-Control-Allow-Origin", "https://api.decorebator.com")
 		} else {
@@ -149,7 +151,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 					}
 				}
 
-				if os.Getenv("ENV") == "production" {
+				if os.Getenv("ENV") == productionEnv {
 					attrs = append(attrs, slog.Any("stack_trace", stackTrace))
 				} else {
 					fmt.Println(stackTrace)

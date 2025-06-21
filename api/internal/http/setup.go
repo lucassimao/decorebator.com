@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+
 func init() {
 	sentryDsn, exists := os.LookupEnv("SENTRY_DSN")
 	if os.Getenv("ENV") == "production" && !exists {
@@ -36,7 +37,6 @@ func SetupRoutes() *gin.Engine {
 	var UserRoutes = UserRoutes{}
 	var QuizRoutes = QuizRoutes{}
 	var ErrorReportsRoutes = ErrorReportRoutes{}
-	var contentRoutes = ContentRoutes{}
 	var demoRoutes = DemoRoutes{}
 
 	// Initialize subscription service
@@ -98,10 +98,6 @@ func SetupRoutes() *gin.Engine {
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", QuizRoutes.Save)
 		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(), ErrorReportsRoutes.Create)
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus())
-
-		// Content moderation routes
-		authenticatedRoutes.GET("/content/guidelines", contentRoutes.GetContentGuidelines)
-		authenticatedRoutes.POST("/content/validate", contentRoutes.ValidateContent)
 
 		RegisterAnalyticsRoutes(authenticatedRoutes)
 
