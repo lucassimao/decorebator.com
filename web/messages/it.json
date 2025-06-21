@@ -30,10 +30,10 @@
     "careers": "Carriere",
     "privacy": "Informativa Privacy",
     "terms": "Termini di Servizio",
-    "getStartedFree": "Inizia Prova Gratuita"
+    "getStartedFree": "Scarica App"
   },
   "hero": {
-    "title": "Padroneggia le Lingue con",
+    "title": "Padroneggia le Lingue con Decorebator",
     "rotatingWords": {
       "aiIntelligence": "Intelligenza Artificiale",
       "spacedRepetition": "Ripetizione Dilazionata",
@@ -152,31 +152,52 @@
     }
   },
   "faq": {
-    "title": "Domande Frequenti",
-    "subtitle": "Tutto quello che devi sapere su Decorebator",
-    "question1": {
-      "question": "Quali lingue supporta Decorebator?",
-      "answer": "Decorebator offre supporto completo powered dall'IA per 7 lingue: inglese, spagnolo, francese, tedesco, italiano, portoghese e giapponese. Ogni lingua ha generazione di contenuti di qualità nativa, immagini culturalmente rilevanti e selezione vocale ottimizzata."
+    "title": {
+      "part1": "Domande",
+      "part2": "Frequenti"
     },
-    "question2": {
-      "question": "Come funziona il sistema Leitner?",
-      "answer": "Il nostro sistema Leitner a 7 scatole utilizza la ripetizione dilazionata scientificamente provata. Le parole si spostano tra le scatole in base alle tue prestazioni, con intervalli di ripasso da immediato (Scatola 1) a mensile (Scatola 7). Questo ottimizza l'efficienza dell'apprendimento e la ritenzione a lungo termine."
-    },
-    "question3": {
-      "question": "Cosa è incluso nel piano Premium?",
-      "answer": "Premium include liste di parole e parole illimitate, tutte le 7 modalità di quiz, contenuti generati dall'IA per ogni parola, analisi avanzate, supporto offline e assistenza clienti prioritaria. Gli utenti gratuiti ottengono 1 lista di parole con fino a 10 parole."
-    },
-    "question4": {
-      "question": "Posso usare Decorebator offline?",
-      "answer": "Sì! Gli abbonati Premium possono scaricare le loro liste di parole per l'accesso offline. Puoi praticare quiz e rivedere flashcard senza una connessione internet, con i progressi che si sincronizzano quando torni online."
-    },
-    "question5": {
-      "question": "Quanto sono accurati i contenuti generati dall'IA?",
-      "answer": "I nostri contenuti IA sono molto accurati e in continuo miglioramento. Utilizziamo modelli linguistici avanzati addestrati su vasti dataset. Inoltre, il nostro sistema di segnalazione errori consente agli utenti di segnalare problemi, aiutandoci a mantenere e migliorare la qualità dei contenuti."
-    },
-    "question6": {
-      "question": "C'è un'app mobile?",
-      "answer": "Sì! Decorebator è disponibile su iOS e Android con piena parità di funzionalità. I tuoi progressi si sincronizzano perfettamente tra l'app mobile e la piattaforma web, così puoi imparare ovunque."
+    "subtitle": "Tutto quello che devi sapere su Decorebator - apprendimento del vocabolario powered dall'IA",
+    "questions": {
+      "1": {
+        "question": "Come funziona la generazione di contenuti IA di Decorebator?",
+        "answer": "Decorebator utilizza modelli IA avanzati per generare automaticamente definizioni complete, immagini contestuali, pronuncia audio di qualità nativa e frasi di esempio per ogni parola che aggiungi. I nostri algoritmi IA analizzano ogni parola nel contesto della sua lingua target, creando contenuti culturalmente appropriati e linguisticamente accurati che migliorano l'apprendimento e la ritenzione."
+      },
+      "2": {
+        "question": "Come funziona il sistema avanzato Leitner di ripetizione dilazionata?",
+        "answer": "Il nostro sistema Leitner a 7 scatole ottimizza quando ripassi ogni parola per la massima ritenzione. Le parole progrediscono attraverso scatole con intervalli crescenti: immediato (Scatola 1), 1 ora, 1 giorno, 3 giorni, 1 settimana, 2 settimane, fino a 1 mese (Scatola 7). Le risposte corrette spostano le parole avanti, quelle errate le riportano alla Scatola 1. Questo metodo scientificamente provato migliora la ritenzione a lungo termine dell'85%."
+      },
+      "3": {
+        "question": "Quali sono i piani di abbonamento e i prezzi di Decorebator?",
+        "answer": "Decorebator offre un piano Gratuito (1 lista di parole, fino a 10 parole, modalità quiz di base) e piani Premium: €6,99/mese o €69,90/anno (risparmia €13,98!). Premium include liste di parole e parole illimitate, tutte le 7 modalità quiz, analisi avanzate, supporto offline, contenuti IA illimitati e assistenza clienti prioritaria. Inizia gratis e fai l'upgrade quando sei pronto!"
+      },
+      "4": {
+        "question": "Posso usare Decorebator offline senza connessione internet?",
+        "answer": "Sì! Gli abbonati Premium possono scaricare le loro liste di parole per l'accesso completo offline. Studia flashcard, pratica tutte le modalità quiz e traccia i progressi senza internet. I tuoi progressi offline si sincronizzano automaticamente quando ti riconnetti. Questa funzionalità è perfetta per i spostamenti, viaggi o aree con connettività limitata."
+      },
+      "5": {
+        "question": "Quali lingue supporta Decorebator per i contenuti IA?",
+        "answer": "Decorebator fornisce supporto IA nativo completo per 7 lingue: Inglese, Spagnolo, Francese, Tedesco, Italiano, Portoghese e Giapponese. Ogni lingua riceve elaborazione IA dedicata con regole grammaticali native, contesto culturale, selezione vocale ottimizzata e contenuti linguisticamente accurati. Non è solo traduzione - è vera comprensione multilingue!"
+      },
+      "6": {
+        "question": "Che tipi di quiz e modalità di apprendimento sono disponibili?",
+        "answer": "Decorebator offre 7 modalità quiz coinvolgenti: Indovina il Significato (scelta multipla), Parola dal Significato (riconoscimento), Associazione Immagini (apprendimento visivo), Comprensione Audio (abilità di ascolto), Completamento Frasi (utilizzo contestuale), Scrivi dalla Definizione (richiamo attivo) e Riconoscimento Audio (abbinamento parola-suono). Ogni modalità mira a percorsi di apprendimento diversi per comprensione completa."
+      },
+      "7": {
+        "question": "Come funzionano le analisi e il tracciamento dei progressi?",
+        "answer": "Gli utenti Premium ottengono analisi avanzate con cache Redis per prestazioni istantanee. Traccia tassi di ritenzione delle parole, velocità di apprendimento, livelli di padronanza, accuratezza dei quiz attraverso modalità diverse, tempo di studio e serie di apprendimento. Ottieni approfondimenti azionabili per identificare i tuoi tempi di apprendimento più forti, ottimizzare le sessioni di studio e raggiungere i tuoi obiettivi di vocabolario più velocemente."
+      },
+      "8": {
+        "question": "Cosa succede se trovo errori nei contenuti generati dall'IA?",
+        "answer": "Decorebator ha un sistema completo di segnalazione errori con limiti di uso equo (Gratuito: 3/ora, 5/giorno; Premium: 10/ora, 30/giorno). Segnala definizioni errate, immagini inappropriate, problemi audio, esempi irrilevanti o problemi di caricamento. Il nostro sistema rigenera automaticamente i contenuti e migliora i modelli IA in base ai tuoi feedback, assicurando qualità migliorata per tutti gli utenti."
+      },
+      "9": {
+        "question": "Su quali piattaforme e dispositivi funziona Decorebator?",
+        "answer": "Decorebator è disponibile come app mobile nativa su iOS e Android con piena parità di funzionalità, oltre a una piattaforma web. I tuoi progressi, liste di parole e impostazioni si sincronizzano senza problemi attraverso tutti dispositivi. Studia sul tuo telefono durante i spostamenti, passa al tablet a casa o usa la versione web al lavoro - la tua esperienza di apprendimento rimane consistente ovunque."
+      },
+      "10": {
+        "question": "Quanto sono affidabili e accurati i contenuti IA?",
+        "answer": "I nostri contenuti IA sono molto accurati e in continuo miglioramento. Utilizziamo modelli linguistici all'avanguardia addestrati su vasti dataset con elaborazione specifica per lingua per accuratezza culturale e grammaticale. Il nostro sistema di segnalazione errori guidato dalla comunità aiuta a identificare e correggere eventuali problemi, assicurando che la qualità dei contenuti migliori continuamente. I contenuti vengono rigenerati automaticamente quando vengono segnalati problemi."
+      }
     }
   },
   "pricing": {

@@ -1,7 +1,35 @@
 'use client';
 
-import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
+import { Line, Bar, Doughnut, PolarArea } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 const AnalyticsSection: React.FC = () => {
   const [animatedValues, setAnimatedValues] = useState({
@@ -9,7 +37,6 @@ const AnalyticsSection: React.FC = () => {
     wordsMastered: 0,
     averageAccuracy: 0,
     streakDays: 0,
-    responseTime: 0,
   });
 
   // Animate numbers on mount
@@ -20,47 +47,27 @@ const AnalyticsSection: React.FC = () => {
         wordsMastered: 1923,
         averageAccuracy: 89,
         streakDays: 42,
-        responseTime: 1.8,
       });
     }, 500);
 
     return () => clearTimeout(timer);
   }, []);
 
-  const metrics = [
-    {
-      icon: <i className="fas fa-brain text-3xl"></i>,
-      title: 'Word Mastery Tracking',
-      description: 'Individual word progress with mastery levels calculated from Leitner box progression and accuracy rates.',
-      details: ['Mastery percentage (0-100%)', 'Streak counting', 'Box level progression (1-7)', 'Historical accuracy'],
-    },
-    {
-      icon: <i className="fas fa-chart-line text-3xl"></i>,
-      title: 'Learning Progress Analytics',
-      description: 'Daily aggregated statistics showing your learning journey over time.',
-      details: ['Words studied per day', 'New words added', 'Study time tracking', 'Response time analysis'],
-    },
-    {
-      icon: <i className="fas fa-target text-3xl"></i>,
-      title: 'Quiz Performance Insights',
-      description: 'Detailed performance metrics across all 8 quiz types with success rates and timing.',
-      details: ['Performance by quiz type', 'Average response times', 'Difficulty progression', 'Accuracy trends'],
-    },
-    {
-      icon: <i className="fas fa-layer-group text-3xl"></i>,
-      title: 'Leitner System Tracking',
-      description: 'Advanced spaced repetition analytics showing word distribution across difficulty boxes.',
-      details: ['Box distribution snapshots', 'Retention analysis', 'Optimal review timing', 'Memory consolidation'],
-    },
-  ];
 
   const dashboardStats = [
     {
-      label: 'Total Words',
-      value: animatedValues.totalWords,
+      label: 'Words Studied Today',
+      value: 12,
       suffix: '',
       icon: <i className="fas fa-book text-[#FF7B54]"></i>,
-      description: 'Across all wordlists',
+      description: 'Today\'s learning activity',
+    },
+    {
+      label: 'Current Streak',
+      value: animatedValues.streakDays,
+      suffix: ' days',
+      icon: <i className="fas fa-fire text-[#FF7B54]"></i>,
+      description: 'Daily study streak',
     },
     {
       label: 'Words Mastered',
@@ -70,232 +77,430 @@ const AnalyticsSection: React.FC = () => {
       description: '80%+ mastery level',
     },
     {
-      label: 'Average Accuracy',
+      label: 'Today\'s Accuracy',
       value: animatedValues.averageAccuracy,
       suffix: '%',
       icon: <i className="fas fa-bullseye text-[#4CAF50]"></i>,
-      description: 'Overall success rate',
-    },
-    {
-      label: 'Current Streak',
-      value: animatedValues.streakDays,
-      suffix: ' days',
-      icon: <i className="fas fa-fire text-[#FF7B54]"></i>,
-      description: 'Daily study streak',
+      description: 'Success rate today',
     },
   ];
 
-  const quizTypes = [
-    { name: 'Guess Meaning', accuracy: 94, attempts: 456 },
-    { name: 'Word from Meaning', accuracy: 88, attempts: 398 },
-    { name: 'Image Association', accuracy: 87, attempts: 234 },
-    { name: 'Audio Comprehension', accuracy: 85, attempts: 176 },
-    { name: 'Sentence Completion', accuracy: 91, attempts: 312 },
-    { name: 'Write from Definition', accuracy: 78, attempts: 145 },
-    { name: 'Audio Recognition', accuracy: 82, attempts: 189 },
-    { name: 'Example Audio', accuracy: 80, attempts: 124 },
+
+  // Chart.js configurations matching mobile app theme
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: 'rgba(45, 52, 54, 0.9)',
+        titleColor: '#FFFFFF',
+        bodyColor: '#FFFFFF',
+        borderColor: '#FF7B54',
+        borderWidth: 1,
+        cornerRadius: 8,
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          color: '#636E72',
+          font: {
+            size: 12,
+          },
+        },
+      },
+      y: {
+        grid: {
+          color: '#F0F0F0',
+        },
+        ticks: {
+          color: '#636E72',
+          font: {
+            size: 12,
+          },
+        },
+      },
+    },
+  };
+
+  // Learning Progress Chart Data (Line Chart)
+  const learningProgressData = {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      {
+        label: 'Words Studied',
+        data: [15, 12, 18, 22, 16, 25, 20],
+        borderColor: '#FF7B54',
+        backgroundColor: 'rgba(255, 123, 84, 0.1)',
+        pointBackgroundColor: '#FFFFFF',
+        pointBorderColor: '#FF7B54',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        tension: 0.4,
+        fill: true,
+      },
+    ],
+  };
+
+  // Practice Time Chart Data (Bar Chart)
+  const practiceTimeData = {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      {
+        label: 'Practice Time (minutes)',
+        data: [25, 18, 32, 28, 22, 45, 38],
+        backgroundColor: 'rgba(156, 39, 176, 0.8)',
+        borderColor: '#9C27B0',
+        borderWidth: 1,
+        borderRadius: 4,
+      },
+    ],
+  };
+
+  // Box Distribution Chart Data (Doughnut Chart)
+  const boxDistributionData = {
+    labels: ['Box 1 (New)', 'Box 2 (Learning)', 'Box 3 (Progress)', 'Box 4 (Familiar)', 'Box 5 (Known)', 'Box 6 (Strong)', 'Box 7 (Mastered)'],
+    datasets: [
+      {
+        data: [45, 38, 29, 22, 18, 12, 8],
+        backgroundColor: [
+          '#EF4444', // red-500
+          '#F97316', // orange-500
+          '#EAB308', // yellow-500
+          '#84CC16', // lime-500
+          '#22C55E', // green-500
+          '#10B981', // emerald-500
+          '#059669', // green-600
+        ],
+        borderWidth: 0,
+        cutout: '50%',
+      },
+    ],
+  };
+
+
+  // Word Mastery Chart Data (Polar Area Chart)
+  const wordMasteryData = {
+    labels: ['Bonjour', 'Hola', 'Ciao', 'Guten Tag', 'Kon\'nichiwa', 'Olá'],
+    datasets: [
+      {
+        label: 'Mastery Level',
+        data: [92, 88, 85, 79, 74, 68],
+        backgroundColor: [
+          'rgba(255, 123, 84, 0.8)',
+          'rgba(76, 175, 80, 0.8)',
+          'rgba(255, 215, 0, 0.8)',
+          'rgba(156, 39, 176, 0.8)',
+          'rgba(33, 150, 243, 0.8)',
+          'rgba(255, 107, 61, 0.8)',
+        ],
+        borderColor: [
+          '#FF7B54',
+          '#4CAF50',
+          '#FFD700',
+          '#9C27B0',
+          '#2196F3',
+          '#FF6B3D',
+        ],
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  // Historical Box Distribution Data (Stacked Bar Chart)
+  const historicalBoxData = {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      { label: 'Box 1', data: [47, 46, 45, 44, 45, 44, 45], backgroundColor: '#EF4444', stack: 'Stack 0' },
+      { label: 'Box 2', data: [40, 39, 38, 37, 38, 37, 38], backgroundColor: '#F97316', stack: 'Stack 0' },
+      { label: 'Box 3', data: [31, 30, 29, 28, 29, 28, 29], backgroundColor: '#EAB308', stack: 'Stack 0' },
+      { label: 'Box 4', data: [24, 23, 22, 21, 22, 21, 22], backgroundColor: '#84CC16', stack: 'Stack 0' },
+      { label: 'Box 5', data: [19, 18, 17, 16, 18, 17, 18], backgroundColor: '#22C55E', stack: 'Stack 0' },
+      { label: 'Box 6', data: [13, 12, 11, 10, 12, 11, 12], backgroundColor: '#10B981', stack: 'Stack 0' },
+      { label: 'Box 7', data: [6, 7, 8, 9, 8, 9, 8], backgroundColor: '#059669', stack: 'Stack 0' },
+    ],
+  };
+
+  // Top Words Data (not a chart, but a leaderboard)
+  const topWords = [
+    { rank: 1, word: 'Bonjour', mastery: 92, box: 7 },
+    { rank: 2, word: 'Hola', mastery: 88, box: 6 },
+    { rank: 3, word: 'Ciao', mastery: 85, box: 6 },
+    { rank: 4, word: 'Guten Tag', mastery: 79, box: 5 },
+    { rank: 5, word: 'Kon\'nichiwa', mastery: 74, box: 5 },
   ];
 
   return (
-    <section id="analytics" className="py-20 bg-gradient-to-br from-[#FDF6E3] to-orange-50">
+    <section id="analytics" className="py-16 bg-gradient-to-br from-[#FDF6E3] to-orange-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold mb-4">
-            Track Your Progress with 
-            <span className="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent"> Advanced Analytics</span>
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h2 className="text-3xl lg:text-4xl font-bold mb-3">
+            <span className="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">Advanced Analytics</span>
           </h2>
-          <p className="text-xl text-[#636E72] max-w-3xl mx-auto">
-            Comprehensive learning insights powered by sophisticated analytics engine. Monitor every aspect of your vocabulary journey with precision.
+          <p className="text-lg text-[#636E72] max-w-2xl mx-auto">
+            9 powerful analytics tools to track your vocabulary mastery and learning progress
           </p>
         </div>
 
-        {/* Dashboard Preview */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 mb-16 transform hover:scale-105 transition-transform duration-300">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-[#2D3436] mb-2">Your Learning Dashboard</h3>
-            <p className="text-[#636E72]">Real-time statistics updated after every quiz</p>
-          </div>
-          
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Dashboard Stats */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {dashboardStats.map((stat) => (
-              <div key={stat.label} className="text-center group">
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 group-hover:shadow-lg transition-shadow duration-300">
-                  <div className="text-4xl mb-3">{stat.icon}</div>
-                  <div className="text-3xl font-bold text-[#2D3436] mb-1">
-                    {stat.value.toLocaleString()}{stat.suffix}
-                  </div>
-                  <div className="text-sm font-semibold text-[#636E72] mb-1">{stat.label}</div>
-                  <div className="text-xs text-[#636E72]">{stat.description}</div>
+              <div key={stat.label} className="text-center">
+                <div className="text-2xl mb-2">{stat.icon}</div>
+                <div className="text-2xl font-bold text-[#2D3436] mb-1">
+                  {stat.value.toLocaleString()}{stat.suffix}
                 </div>
+                <div className="text-sm text-[#636E72]">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Analytics Features Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-          {metrics.map((metric) => (
-            <div key={metric.title} className="bg-white/80 backdrop-blur rounded-3xl p-8 shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-500">
-              <div className="bg-gradient-to-br from-[#FF7B54] to-orange-600 text-white p-4 rounded-2xl mb-6 w-16 h-16 flex items-center justify-center">
-                {metric.icon}
-              </div>
-              <h3 className="text-xl font-bold text-[#2D3436] mb-4">{metric.title}</h3>
-              <p className="text-[#636E72] mb-6 leading-relaxed">{metric.description}</p>
-              <ul className="space-y-2">
-                {metric.details.map((detail, idx) => (
-                  <li key={idx} className="flex items-center text-sm text-[#636E72]">
-                    <i className="fas fa-check-circle text-[#4CAF50] mr-3"></i>
-                    {detail}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Quiz Performance Chart Preview */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 mb-16">
-          <h3 className="text-2xl font-bold text-[#2D3436] text-center mb-8">Quiz Type Performance Analysis</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {quizTypes.map((quiz) => (
-              <div key={quiz.name} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow duration-300">
-                <div className="text-sm font-semibold text-[#2D3436] mb-2">{quiz.name}</div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-[#636E72]">Accuracy</span>
-                  <span className="text-lg font-bold text-[#FF7B54]">{quiz.accuracy}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                  <div 
-                    className="bg-gradient-to-r from-[#FF7B54] to-orange-600 h-2 rounded-full transition-all duration-1000"
-                    style={{ width: `${quiz.accuracy}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-[#636E72]">{quiz.attempts} attempts</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Premium vs Free Analytics Performance */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-          {/* Premium Analytics */}
-          <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl p-8 text-white">
-            <div className="flex items-center mb-4">
-              <i className="fas fa-crown text-3xl mr-3"></i>
-              <h3 className="text-2xl font-bold">Premium Analytics</h3>
-            </div>
-            <p className="text-lg mb-6 opacity-90">Lightning-fast real-time insights for serious learners</p>
-            
-            <div className="space-y-4">
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Response Time</span>
-                  <span className="text-2xl font-bold">&lt;50ms</span>
-                </div>
-                <p className="text-sm opacity-90">Redis-cached data for instant insights</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Data Freshness</span>
-                  <span className="text-2xl font-bold">1 min</span>
-                </div>
-                <p className="text-sm opacity-90">Real-time computation and caching</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Performance</span>
-                  <span className="text-2xl font-bold">Parallel</span>
-                </div>
-                <p className="text-sm opacity-90">Concurrent query execution</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Free Analytics */}
-          <div className="bg-gradient-to-br from-gray-600 to-gray-700 rounded-3xl p-8 text-white">
-            <div className="flex items-center mb-4">
-              <i className="fas fa-chart-bar text-3xl mr-3"></i>
-              <h3 className="text-2xl font-bold">Free Analytics</h3>
-            </div>
-            <p className="text-lg mb-6 opacity-90">Essential insights with optimized performance</p>
-            
-            <div className="space-y-4">
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Response Time</span>
-                  <span className="text-2xl font-bold">20-50ms</span>
-                </div>
-                <p className="text-sm opacity-90">Materialized views for efficiency</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Data Freshness</span>
-                  <span className="text-2xl font-bold">1 hour</span>
-                </div>
-                <p className="text-sm opacity-90">Hourly background refreshes</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Coverage</span>
-                  <span className="text-2xl font-bold">Essential</span>
-                </div>
-                <p className="text-sm opacity-90">All key learning metrics</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Advanced Features Highlight */}
-        <div className="bg-gradient-to-r from-[#FF7B54] to-orange-600 rounded-3xl p-8 text-white text-center">
-          <h3 className="text-3xl font-bold mb-4">Advanced Learning Intelligence</h3>
-          <p className="text-xl mb-8 opacity-90">
-            Sophisticated analytics engine designed for millions of learners
-          </p>
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
-              <i className="fas fa-database text-4xl mb-4"></i>
-              <h4 className="text-lg font-semibold mb-2">Scalable Architecture</h4>
-              <p className="text-sm opacity-90">Built to handle millions of users with consistent performance</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
-              <i className="fas fa-tachometer-alt text-4xl mb-4"></i>
-              <h4 className="text-lg font-semibold mb-2">Performance Optimized</h4>
-              <p className="text-sm opacity-90">Advanced indexing and caching for sub-50ms response times</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
-              <i className="fas fa-shield-alt text-4xl mb-4"></i>
-              <h4 className="text-lg font-semibold mb-2">Data Integrity</h4>
-              <p className="text-sm opacity-90">Transactional updates ensure consistent analytics data</p>
+          {/* Learning Progress Chart */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h3 className="text-lg font-bold text-[#2D3436] mb-4">Learning Progress</h3>
+            <div className="h-48">
+              <Line 
+                data={learningProgressData} 
+                options={{
+                  ...chartOptions,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    tooltip: {
+                      ...chartOptions.plugins.tooltip,
+                      callbacks: {
+                        label: function(context: { parsed: { y: number } }) {
+                          return `Words: ${context.parsed.y}`;
+                        }
+                      }
+                    },
+                  },
+                  scales: {
+                    ...chartOptions.scales,
+                    y: {
+                      ...chartOptions.scales.y,
+                      beginAtZero: true,
+                      max: 30,
+                    },
+                  },
+                }} 
+              />
             </div>
           </div>
 
-          <div className="mt-8">
-            <Link href="/signup?plan=free" className="bg-white text-[#FF7B54] px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 inline-block">
-              Start Tracking Your Progress
-            </Link>
+          {/* Practice Time Chart */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h3 className="text-lg font-bold text-[#2D3436] mb-4">Practice Time</h3>
+            <div className="h-48">
+              <Bar 
+                data={practiceTimeData} 
+                options={{
+                  ...chartOptions,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    tooltip: {
+                      ...chartOptions.plugins.tooltip,
+                      callbacks: {
+                        label: function(context: { parsed: { y: number } }) {
+                          return `${context.parsed.y} minutes`;
+                        }
+                      }
+                    },
+                  },
+                  scales: {
+                    ...chartOptions.scales,
+                    y: {
+                      ...chartOptions.scales.y,
+                      beginAtZero: true,
+                      max: 50,
+                      ticks: {
+                        ...chartOptions.scales.y.ticks,
+                        callback: function(value: string | number) {
+                          return value + 'm';
+                        }
+                      }
+                    },
+                  },
+                }} 
+              />
+            </div>
           </div>
+
+          {/* Box Distribution Chart */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h3 className="text-lg font-bold text-[#2D3436] mb-4">Box Distribution</h3>
+            <div className="h-48 flex items-center justify-center">
+              <Doughnut 
+                data={boxDistributionData} 
+                options={{
+                  ...chartOptions,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    legend: { display: false },
+                    tooltip: {
+                      ...chartOptions.plugins.tooltip,
+                      callbacks: {
+                        label: function(context: { label?: string; parsed: number; dataset: { data: number[] } }) {
+                          const label = context.label || '';
+                          const value = context.parsed;
+                          return `${label}: ${value} words`;
+                        }
+                      }
+                    },
+                  },
+                  scales: undefined,
+                }} 
+              />
+            </div>
+          </div>
+
+          {/* Word Mastery Chart */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h3 className="text-lg font-bold text-[#2D3436] mb-4">Word Mastery</h3>
+            <div className="h-48 flex items-center justify-center">
+              <PolarArea 
+                data={wordMasteryData} 
+                options={{
+                  ...chartOptions,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    legend: { display: false },
+                    tooltip: {
+                      ...chartOptions.plugins.tooltip,
+                      callbacks: {
+                        label: function(context: { label?: string; parsed: { r: number } }) {
+                          const label = context.label || '';
+                          const value = context.parsed.r;
+                          return `${label}: ${value}%`;
+                        }
+                      }
+                    },
+                  },
+                  scales: {
+                    r: {
+                      beginAtZero: true,
+                      max: 100,
+                      ticks: { display: false },
+                      grid: { color: '#F0F0F0' },
+                      pointLabels: { display: false },
+                    },
+                  },
+                }} 
+              />
+            </div>
+          </div>
+
+          {/* Quiz Performance Chart */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h3 className="text-lg font-bold text-[#2D3436] mb-4">Quiz Performance</h3>
+            <div className="h-48">
+              <Bar 
+                data={{
+                  labels: ['Guess', 'Meaning', 'Image', 'Audio'],
+                  datasets: [{
+                    data: [94, 88, 87, 85],
+                    backgroundColor: 'rgba(255, 123, 84, 0.8)',
+                    borderRadius: 4,
+                  }]
+                }}
+                options={{
+                  ...chartOptions,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    tooltip: {
+                      ...chartOptions.plugins.tooltip,
+                      callbacks: {
+                        label: function(context: { parsed: { y: number } }) {
+                          return `${context.parsed.y}% accuracy`;
+                        }
+                      }
+                    },
+                  },
+                  scales: {
+                    ...chartOptions.scales,
+                    y: {
+                      ...chartOptions.scales.y,
+                      beginAtZero: true,
+                      max: 100,
+                      ticks: {
+                        ...chartOptions.scales.y.ticks,
+                        callback: function(value: string | number) {
+                          return value + '%';
+                        }
+                      }
+                    },
+                  },
+                }} 
+              />
+            </div>
+          </div>
+
+          {/* Historical Box Distribution Chart */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h3 className="text-lg font-bold text-[#2D3436] mb-4">Historical Progress</h3>
+            <div className="h-48">
+              <Bar 
+                data={historicalBoxData} 
+                options={{
+                  ...chartOptions,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    legend: { display: false },
+                  },
+                  scales: {
+                    ...chartOptions.scales,
+                    x: { stacked: true },
+                    y: { 
+                      stacked: true,
+                      beginAtZero: true,
+                    },
+                  },
+                }} 
+              />
+            </div>
+          </div>
+
         </div>
 
-        {/* Data Points Showcase */}
-        <div className="mt-16 text-center">
-          <h3 className="text-2xl font-bold text-[#2D3436] mb-8">Comprehensive Data Tracking</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            {[
-              { label: 'Mastery Levels', value: '0-100%' },
-              { label: 'Quiz Types', value: '7 Types' },
-              { label: 'Leitner Boxes', value: '7 Levels' },
-              { label: 'Response Time', value: 'Milliseconds' },
-              { label: 'Accuracy Rate', value: 'Real-time' },
-              { label: 'Streak Tracking', value: 'Daily' },
-            ].map((item) => (
-              <div key={item.label} className="bg-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <div className="text-2xl font-bold text-[#FF7B54] mb-1">{item.value}</div>
-                <div className="text-xs text-[#636E72] font-medium">{item.label}</div>
+        {/* Top Words Leaderboard */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <h3 className="text-xl font-bold text-[#2D3436] mb-6">Top Words Leaderboard</h3>
+          <div className="space-y-3">
+            {topWords.map((word) => (
+              <div key={word.rank} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                    word.rank === 1 ? 'bg-[#FFD700]' : 'bg-gray-400'
+                  }`}>
+                    {word.rank}
+                  </div>
+                  <span className="font-semibold text-[#2D3436]">{word.word}</span>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <span className="bg-[#4CAF50] text-white px-3 py-1 rounded-full text-sm font-bold">
+                    {word.mastery}%
+                  </span>
+                  <span className="bg-gray-200 text-[#636E72] px-3 py-1 rounded-full text-sm">
+                    Box {word.box}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
         </div>
+
+
       </div>
     </section>
   );

@@ -6,12 +6,14 @@ import AppShowcaseSection from '../../components/home/AppShowcaseSection';
 import HowItWorksSection from '../../components/home/HowItWorksSection';
 import AnalyticsSection from '../../components/home/AnalyticsSection';
 import PricingSection from '../../components/home/PricingSection';
-import TestimonialsSection from '../../components/home/TestimonialsSection';
 import FAQSection from '../../components/home/FAQSection';
 import CTASection from '../../components/home/CTASection';
-import ContactSection from '../../components/home/ContactSection';
+import { fetchDemoQuizzes } from '../../lib/quiz-data';
 
-const HomePage: React.FC = () => {
+const HomePage: React.FC = async () => {
+  // Fetch quiz data at build time
+  const demoQuizzes = await fetchDemoQuizzes();
+
   return (
     <PageLayout>
       {/* Animated Background Elements */}
@@ -20,16 +22,15 @@ const HomePage: React.FC = () => {
         <div className="absolute bottom-20 right-10 w-40 h-40 bg-yellow-300 rounded-full opacity-3 blur-3xl float-animation" style={{animationDelay: '3s'}}></div>
       </div>
 
-      <EnhancedHeroSection />
+      <EnhancedHeroSection demoQuizzes={demoQuizzes} />
       <NewFeaturesSection />
       <AppShowcaseSection />
       <HowItWorksSection />
       <AnalyticsSection />
       <PricingSection />
-      <TestimonialsSection />
+      {/* <TestimonialsSection /> */}
       <FAQSection />
       <CTASection />
-      <ContactSection />
     </PageLayout>
   );
 };

@@ -1,199 +1,325 @@
 
+'use client';
+
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import PageLayout from '../../../components/layout/PageLayout';
 import { PolicySection } from '../../../components/policy/PolicySection';
 
 export default function PrivacyPolicy() {
+  const t = useTranslations('privacy');
+  
   return (
     <PageLayout>
       <div className="pt-24 pb-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-[#2D3436] mb-4">
-              Privacy Policy
+              {t('title')}
             </h1>
             <p className="text-xl text-[#636E72]">
-              How we collect, use, and protect your personal information
+              {t('subtitle')}
             </p>
             <p className="text-sm text-[#636E72] mt-4">
-              Last updated: December 6, 2024
+              {t('lastUpdated')}
             </p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12">
             <PolicySection
-              title="1. Information We Collect"
+              title="Introduction"
               content={`
-                <p class="mb-4">We collect information you provide directly to us, such as when you:</p>
+                <p class="mb-4">${t('introduction.content')}</p>
+              `}
+            />
+
+            <PolicySection
+              title={t('sections.informationWeCollect.title')}
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">${t('sections.informationWeCollect.personalInformation.title')}</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Create an account and provide your email address, name, and password</li>
-                  <li>Complete your user profile with optional information like country, date of birth, and profile picture</li>
-                  <li>Create vocabulary lists and add words to study</li>
-                  <li>Use our quiz and flashcard features</li>
-                  <li>Subscribe to our premium services</li>
-                  <li>Contact us for support or feedback</li>
-                  <li>Report errors in AI-generated content</li>
+                  ${t('sections.informationWeCollect.personalInformation.items').map((item: string) => `<li>${item}</li>`).join('')}
                 </ul>
                 
-                <h4 class="text-lg font-semibold mb-3 mt-6">Automatically Collected Information</h4>
-                <p class="mb-4">When you use our services, we automatically collect certain information, including:</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">${t('sections.informationWeCollect.learningData.title')}</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Learning progress and quiz performance data</li>
-                  <li>Usage analytics and app interaction patterns</li>
-                  <li>Device information and operating system details</li>
-                  <li>IP address and general location information</li>
-                  <li>Log data including access times and pages viewed</li>
+                  ${t('sections.informationWeCollect.learningData.items').map((item: string) => `<li>${item}</li>`).join('')}
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">${t('sections.informationWeCollect.technicalData.title')}</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  ${t('sections.informationWeCollect.technicalData.items').map((item: string) => `<li>${item}</li>`).join('')}
                 </ul>
               `}
             />
 
             <PolicySection
-              title="2. How We Use Your Information"
+              title="How We Use Your Information"
               content={`
-                <p class="mb-4">We use the information we collect to:</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Core App Functionality</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Provide, maintain, and improve our vocabulary learning services</li>
-                  <li>Generate personalized AI-powered content (definitions, images, audio)</li>
-                  <li>Track your learning progress and implement spaced repetition algorithms</li>
-                  <li>Process subscription payments and manage your account</li>
-                  <li>Send important service announcements and subscription notifications</li>
-                  <li>Provide customer support and respond to your inquiries</li>
-                  <li>Improve our AI models and content quality based on error reports</li>
-                  <li>Analyze usage patterns to enhance user experience</li>
-                  <li>Comply with legal obligations and protect our rights</li>
+                  <li>Account creation and authentication</li>
+                  <li>Synchronizing learning progress across devices</li>
+                  <li>Delivering personalized spaced repetition schedules</li>
+                  <li>Generating AI-powered vocabulary content</li>
+                  <li>Ensuring content appropriateness through automated moderation</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">App Improvement</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Analyzing usage patterns to improve features</li>
+                  <li>Identifying and fixing technical issues</li>
+                  <li>Developing new educational features</li>
+                  <li>Optimizing app performance</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Communication</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Sending subscription renewal notifications</li>
+                  <li>Providing customer support</li>
+                  <li>Sharing important app updates (with your consent)</li>
                 </ul>
               `}
             />
 
             <PolicySection
-              title="3. Information Sharing and Disclosure"
+              title="Data Sharing and Third Parties"
               content={`
-                <p class="mb-4">We do not sell, trade, or otherwise transfer your personal information to third parties, except in the following circumstances:</p>
-                
                 <h4 class="text-lg font-semibold mb-3 mt-6">Service Providers</h4>
-                <p class="mb-4">We share information with trusted third-party service providers who assist us in operating our services:</p>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li><strong>AI Providers:</strong> For generating definitions, images, and audio pronunciations</li>
-                  <li><strong>Stripe:</strong> For processing subscription payments securely</li>
-                  <li><strong>SendGrid:</strong> For sending transactional emails</li>
-                  <li><strong>Cloud Storage:</strong> For storing user-generated content and AI-generated media</li>
-                  <li><strong>Analytics Providers:</strong> For understanding app usage and improving our services</li>
+                  <li><strong>OpenAI</strong>: For generating vocabulary definitions, images, and audio</li>
+                  <li><strong>Stripe</strong>: For secure payment processing (subscription management)</li>
+                  <li><strong>SendGrid</strong>: For transactional email delivery</li>
+                  <li><strong>Sentry</strong>: For error monitoring and crash reporting</li>
+                  <li><strong>PostHog</strong>: For privacy-focused analytics</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Data Processing</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Vocabulary terms are sent to OpenAI for content generation</li>
+                  <li>Payment information is processed securely by Stripe</li>
+                  <li>Analytics data is anonymized and aggregated</li>
+                  <li>No personal data is sold to third parties</li>
                 </ul>
                 
                 <h4 class="text-lg font-semibold mb-3 mt-6">Legal Requirements</h4>
-                <p class="mb-4">We may disclose your information when required by law or to:</p>
+                <p class="mb-4">We may disclose information if required by law, court order, or to protect our rights and safety.</p>
+              `}
+            />
+
+            <PolicySection
+              title="Data Security"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Technical Safeguards</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Comply with legal process or government requests</li>
-                  <li>Protect our rights, property, or safety</li>
-                  <li>Investigate fraud or security issues</li>
-                  <li>Enforce our Terms of Service</li>
+                  <li>End-to-end encryption for sensitive data</li>
+                  <li>Secure API communications using HTTPS</li>
+                  <li>JWT tokens for authenticated sessions</li>
+                  <li>Secure local storage on your device</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Access Controls</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Limited employee access to personal data</li>
+                  <li>Regular security audits and updates</li>
+                  <li>Data minimization practices</li>
+                  <li>Secure development practices</li>
                 </ul>
               `}
             />
 
             <PolicySection
-              title="4. Data Security and Storage"
+              title="Your Rights and Choices"
               content={`
-                <p class="mb-4">We implement robust security measures to protect your personal information:</p>
-                <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li><strong>Encryption:</strong> All data is encrypted in transit using TLS/SSL protocols</li>
-                  <li><strong>Password Security:</strong> Passwords are hashed using industry-standard bcrypt</li>
-                  <li><strong>JWT Authentication:</strong> Secure token-based authentication for API access</li>
-                  <li><strong>Database Security:</strong> PostgreSQL with proper access controls and monitoring</li>
-                  <li><strong>Secure Storage:</strong> Mobile tokens stored in device Keychain/Keystore</li>
-                  <li><strong>Regular Security Audits:</strong> Ongoing security assessments and updates</li>
-                </ul>
-                
-                <p class="mb-4 mt-6">Your data is stored on secure servers in data centers with physical and electronic security measures. We retain your information for as long as your account is active or as needed to provide services.</p>
-              `}
-            />
-
-            <PolicySection
-              title="5. Your Rights and Choices"
-              content={`
-                <p class="mb-4">You have the following rights regarding your personal information:</p>
-                
                 <h4 class="text-lg font-semibold mb-3 mt-6">Account Management</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li><strong>Access:</strong> View and update your profile information at any time</li>
-                  <li><strong>Correction:</strong> Modify incorrect or outdated personal data</li>
-                  <li><strong>Deletion:</strong> Delete your account and associated data</li>
-                  <li><strong>Data Export:</strong> Request a copy of your learning data</li>
+                  <li><strong>Access</strong>: View your personal information in app settings</li>
+                  <li><strong>Update</strong>: Modify your profile and preferences anytime</li>
+                  <li><strong>Delete</strong>: Request complete account deletion</li>
+                  <li><strong>Export</strong>: Download your learning data</li>
                 </ul>
                 
-                <h4 class="text-lg font-semibold mb-3 mt-6">Communication Preferences</h4>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Privacy Controls</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Opt out of marketing communications (subscription emails will continue)</li>
-                  <li>Manage notification preferences in your account settings</li>
-                  <li>Contact us to update your communication preferences</li>
+                  <li><strong>Analytics</strong>: Opt out of usage analytics</li>
+                  <li><strong>Notifications</strong>: Control email and push notifications</li>
+                  <li><strong>Data Processing</strong>: Limit AI content generation features</li>
+                  <li><strong>Location</strong>: No location data is collected</li>
                 </ul>
                 
-                <h4 class="text-lg font-semibold mb-3 mt-6">EU Residents (GDPR)</h4>
-                <p class="mb-4">If you are located in the European Union, you have additional rights under GDPR. Please see our <a href="/gdpr" class="text-orange-600 hover:text-orange-800 underline">GDPR Compliance page</a> for detailed information.</p>
-              `}
-            />
-
-            <PolicySection
-              title="6. Children's Privacy"
-              content={`
-                <p class="mb-4">Our services are not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13.</p>
-                
-                <p class="mb-4">If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately. We will take steps to remove such information and terminate the child's account.</p>
-                
-                <p class="mb-4">For users between 13 and 18 years old, we recommend parental guidance when using our services.</p>
-              `}
-            />
-
-            <PolicySection
-              title="7. International Data Transfers"
-              content={`
-                <p class="mb-4">Your information may be transferred to and processed in countries other than your own. These countries may have different data protection laws than your country.</p>
-                
-                <p class="mb-4">When we transfer personal information internationally, we ensure appropriate safeguards are in place, including:</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Subscription Management</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Standard contractual clauses approved by relevant authorities</li>
-                  <li>Adequacy decisions by the European Commission</li>
-                  <li>Other appropriate safeguards to protect your data</li>
+                  <li><strong>Cancel</strong>: End subscriptions through app stores</li>
+                  <li><strong>Refunds</strong>: Request refunds according to store policies</li>
+                  <li><strong>Data Retention</strong>: Learning data preserved during subscription</li>
                 </ul>
               `}
             />
 
             <PolicySection
-              title="8. Cookies and Tracking Technologies"
+              title="Data Retention"
               content={`
-                <p class="mb-4">We use cookies and similar tracking technologies to enhance your experience. For detailed information about our cookie practices, please see our <a href="/cookies" class="text-orange-600 hover:text-orange-800 underline">Cookie Policy</a>.</p>
-                
-                <p class="mb-4">You can control cookie settings through your browser preferences, though some features may not function properly if cookies are disabled.</p>
-              `}
-            />
-
-            <PolicySection
-              title="9. Changes to This Privacy Policy"
-              content={`
-                <p class="mb-4">We may update this Privacy Policy from time to time to reflect changes in our practices or applicable law. We will notify you of significant changes by:</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Active Accounts</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Posting the updated policy on our website with a new "Last Updated" date</li>
-                  <li>Sending an email notification for material changes</li>
-                  <li>Displaying a prominent notice in our mobile application</li>
+                  <li>Personal information: Retained while account is active</li>
+                  <li>Learning progress: Preserved for educational continuity</li>
+                  <li>Analytics data: Aggregated and anonymized after 90 days</li>
                 </ul>
                 
-                <p class="mb-4">Your continued use of our services after any changes indicates your acceptance of the updated Privacy Policy.</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Deleted Accounts</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Personal information: Deleted within 30 days</li>
+                  <li>Learning data: Permanently removed</li>
+                  <li>Legal requirements: Some data may be retained as required by law</li>
+                </ul>
               `}
             />
 
             <PolicySection
-              title="10. Contact Us"
+              title="Children's Privacy"
               content={`
-                <p class="mb-4">If you have any questions about this Privacy Policy or our privacy practices, please contact us:</p>
+                <p class="mb-4">Decorebator is suitable for all ages, including children under 13. For users under 13:</p>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Parental consent is required for account creation</li>
+                  <li>Limited data collection focused on educational features</li>
+                  <li>No behavioral advertising or tracking</li>
+                  <li>Enhanced privacy protections</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="International Data Transfers"
+              content={`
+                <p class="mb-4">Your information may be transferred to and processed in countries other than your own, including:</p>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>United States (OpenAI, Stripe, SendGrid)</li>
+                  <li>European Union (data protection compliance)</li>
+                  <li>Other regions where our service providers operate</li>
+                </ul>
                 
-                <div class="bg-gray-50 p-6 rounded-lg mt-4">
-                  <p class="mb-2"><strong>Email:</strong> privacy@decorebator.com</p>
-                  <p class="mb-2"><strong>Data Protection Officer:</strong> dpo@decorebator.com</p>
-                  <p class="mb-2"><strong>Address:</strong> [Your Business Address]</p>
-                  <p class="mb-2"><strong>Phone:</strong> [Your Phone Number]</p>
-                </div>
+                <p class="mb-4">We ensure appropriate safeguards are in place for international transfers.</p>
+              `}
+            />
+
+            <PolicySection
+              title="Cookies and Tracking"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Local Storage</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>App preferences and settings</li>
+                  <li>Authentication tokens</li>
+                  <li>Offline learning data</li>
+                  <li>No third-party tracking cookies</li>
+                </ul>
                 
-                <p class="mb-4 mt-4">We will respond to your inquiry within 30 days (or sooner as required by applicable law).</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Analytics</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Anonymized usage statistics</li>
+                  <li>Performance monitoring</li>
+                  <li>Error tracking</li>
+                  <li>No personal identification</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="Updates to Privacy Policy"
+              content={`
+                <p class="mb-4">We may update this Privacy Policy to reflect:</p>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Changes in app features</li>
+                  <li>Legal requirements</li>
+                  <li>Improved privacy practices</li>
+                  <li>User feedback and requests</li>
+                </ul>
+                
+                <p class="mb-4">Significant changes will be communicated through:</p>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>In-app notifications</li>
+                  <li>Email updates (if opted in)</li>
+                  <li>App Store update notes</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="Regional Privacy Rights"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">European Union (GDPR)</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Right to access your personal data</li>
+                  <li>Right to rectify inaccurate information</li>
+                  <li>Right to erase your data</li>
+                  <li>Right to restrict processing</li>
+                  <li>Right to data portability</li>
+                  <li>Right to object to processing</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">California (CCPA)</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Right to know what personal information is collected</li>
+                  <li>Right to delete personal information</li>
+                  <li>Right to opt-out of sale (we don't sell data)</li>
+                  <li>Right to non-discrimination</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Other Regions</h4>
+                <p class="mb-4">We comply with applicable privacy laws in all regions where the app is available.</p>
+              `}
+            />
+
+            <PolicySection
+              title="Contact Information"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Privacy Questions</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li><strong>Email</strong>: privacy@decorebator.com</li>
+                  <li><strong>Response Time</strong>: Within 72 hours</li>
+                  <li><strong>Data Requests</strong>: Processed within 30 days</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">General Support</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li><strong>In-App</strong>: Settings > Help & Support</li>
+                  <li><strong>Email</strong>: support@decorebator.com</li>
+                  <li><strong>Website</strong>: https://decorebator.com/privacy</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Data Protection Officer</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li><strong>Email</strong>: dpo@decorebator.com</li>
+                  <li><strong>Role</strong>: Overseeing privacy compliance and user rights</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="Transparency Report"
+              content={`
+                <p class="mb-4">We are committed to transparency about our privacy practices:</p>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>No data sales to third parties</li>
+                  <li>Minimal data collection for core functionality</li>
+                  <li>User control over privacy settings</li>
+                  <li>Regular privacy policy updates</li>
+                  <li>Open communication about data practices</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="Conclusion"
+              content={`
+                <p class="mb-4">Your privacy is fundamental to our mission of providing effective vocabulary learning. We are committed to:</p>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Protecting your personal information</li>
+                  <li>Being transparent about our practices</li>
+                  <li>Giving you control over your data</li>
+                  <li>Continuously improving our privacy protections</li>
+                </ul>
+                
+                <p class="mb-4">By using Decorebator, you agree to this Privacy Policy. Please review it regularly for updates and contact us with any questions or concerns.</p>
               `}
             />
 
@@ -209,8 +335,10 @@ export default function PrivacyPolicy() {
                     Your Privacy Matters
                   </h3>
                   <p className="text-orange-800">
-                    We are committed to protecting your privacy and being transparent about our data practices. 
-                    This policy explains how we handle your information to provide you with the best vocabulary learning experience.
+                    {t('sections.conclusion.content')}
+                  </p>
+                  <p className="text-orange-800 mt-3">
+                    {t('sections.conclusion.effectiveDate')} | {t('sections.conclusion.version')} | {t('sections.conclusion.nextReview')}
                   </p>
                 </div>
               </div>

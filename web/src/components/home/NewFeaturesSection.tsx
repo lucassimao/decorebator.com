@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 
 const NewFeaturesSection: React.FC = () => {
   const features = [
@@ -10,8 +9,7 @@ const NewFeaturesSection: React.FC = () => {
       bg: "bg-gradient-to-br from-indigo-50 to-purple-50",
       border: "border-indigo-100",
       iconBg: "bg-gradient-to-br from-[#6366F1] to-indigo-600",
-      linkColor: "text-[#6366F1]",
-      href: "/features/multi-language"
+      linkColor: "text-[#6366F1]"
     },
     {
       title: "AI-Powered Content Generation",
@@ -20,8 +18,7 @@ const NewFeaturesSection: React.FC = () => {
       bg: "bg-gradient-to-br from-orange-50 to-amber-50",
       border: "border-orange-100",
       iconBg: "bg-gradient-to-br from-[#FF7B54] to-orange-600",
-      linkColor: "text-[#FF7B54]",
-      href: "/features/ai-content"
+      linkColor: "text-[#FF7B54]"
     },
     {
       title: "Leitner Spaced Repetition",
@@ -30,8 +27,7 @@ const NewFeaturesSection: React.FC = () => {
       bg: "bg-gradient-to-br from-green-50 to-emerald-50",
       border: "border-green-100",
       iconBg: "bg-gradient-to-br from-[#4CAF50] to-green-600",
-      linkColor: "text-[#4CAF50]",
-      href: "/features/spaced-repetition"
+      linkColor: "text-[#4CAF50]"
     },
     {
       title: "8 Engaging Quiz Modes",
@@ -40,8 +36,7 @@ const NewFeaturesSection: React.FC = () => {
       bg: "bg-gradient-to-br from-purple-50 to-pink-50",
       border: "border-purple-100",
       iconBg: "bg-gradient-to-br from-[#9C27B0] to-purple-600",
-      linkColor: "text-[#9C27B0]",
-      href: "/features/quiz-modes"
+      linkColor: "text-[#9C27B0]"
     },
     {
       title: "Visual Learning with AI Images",
@@ -50,8 +45,7 @@ const NewFeaturesSection: React.FC = () => {
       bg: "bg-gradient-to-br from-blue-50 to-cyan-50",
       border: "border-blue-100",
       iconBg: "bg-gradient-to-br from-[#2196F3] to-blue-600",
-      linkColor: "text-[#2196F3]",
-      href: "/features/visual-learning"
+      linkColor: "text-[#2196F3]"
     },
     {
       title: "Multi-Language Audio",
@@ -60,8 +54,7 @@ const NewFeaturesSection: React.FC = () => {
       bg: "bg-gradient-to-br from-yellow-50 to-amber-50",
       border: "border-yellow-100",
       iconBg: "bg-gradient-to-br from-[#FFD700] to-yellow-600",
-      linkColor: "text-yellow-600",
-      href: "/features/audio-learning"
+      linkColor: "text-yellow-600"
     },
     {
       title: "Interactive Flashcards",
@@ -70,8 +63,7 @@ const NewFeaturesSection: React.FC = () => {
       bg: "bg-gradient-to-br from-red-50 to-pink-50",
       border: "border-red-100",
       iconBg: "bg-gradient-to-br from-[#FF6B6B] to-red-600",
-      linkColor: "text-[#FF6B6B]",
-      href: "/features/flashcards"
+      linkColor: "text-[#FF6B6B]"
     },
     {
       title: "Advanced Analytics",
@@ -80,8 +72,7 @@ const NewFeaturesSection: React.FC = () => {
       bg: "bg-gradient-to-br from-teal-50 to-cyan-50",
       border: "border-teal-100",
       iconBg: "bg-gradient-to-br from-[#14B8A6] to-teal-600",
-      linkColor: "text-[#14B8A6]",
-      href: "/features/analytics"
+      linkColor: "text-[#14B8A6]"
     },
     {
       title: "Error Reporting System",
@@ -90,8 +81,7 @@ const NewFeaturesSection: React.FC = () => {
       bg: "bg-gradient-to-br from-gray-50 to-slate-50",
       border: "border-gray-100",
       iconBg: "bg-gradient-to-br from-[#64748B] to-slate-600",
-      linkColor: "text-[#64748B]",
-      href: "/features/error-reporting"
+      linkColor: "text-[#64748B]"
     },
     {
       title: "Offline Support",
@@ -100,8 +90,7 @@ const NewFeaturesSection: React.FC = () => {
       bg: "bg-gradient-to-br from-emerald-50 to-green-50",
       border: "border-emerald-100",
       iconBg: "bg-gradient-to-br from-[#10B981] to-emerald-600",
-      linkColor: "text-[#10B981]",
-      href: "/features/offline-support"
+      linkColor: "text-[#10B981]"
     }
   ];
 
@@ -120,23 +109,18 @@ const NewFeaturesSection: React.FC = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature) => (
-            <Link 
+            <div 
               key={feature.title}
-              href={feature.href}
-              className={`group block p-8 rounded-2xl ${feature.bg} border ${feature.border} hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2`}
+              className={`p-8 rounded-2xl ${feature.bg} border ${feature.border} hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2`}
             >
-              <div className={`w-16 h-16 ${feature.iconBg} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+              <div className={`w-16 h-16 ${feature.iconBg} rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300`}>
                 <i className={`${feature.icon} text-white text-2xl`}></i>
               </div>
               <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-              <p className="text-[#636E72] leading-relaxed mb-4">
+              <p className="text-[#636E72] leading-relaxed">
                 {feature.description}
               </p>
-              <div className={`flex items-center text-sm ${feature.linkColor} font-medium group-hover:translate-x-2 transition-transform`}>
-                <span>Learn more</span>
-                <i className="fas fa-arrow-right ml-2"></i>
-              </div>
-            </Link>
+            </div>
           ))}
         </div>
       </div>

@@ -30,10 +30,10 @@
     "careers": "Empleos",
     "privacy": "Política de privacidad",
     "terms": "Términos de servicio",
-    "getStartedFree": "Comienza Prueba Gratuita"
+    "getStartedFree": "Descargar App"
   },
   "hero": {
-    "title": "Domina idiomas con",
+    "title": "Domina idiomas con Decorebator",
     "rotatingWords": {
       "aiIntelligence": "Inteligencia Artificial",
       "spacedRepetition": "Repetición Espaciada",
@@ -152,31 +152,52 @@
     }
   },
   "faq": {
-    "title": "Preguntas Frecuentes",
-    "subtitle": "Todo lo que necesitas saber sobre Decorebator",
-    "question1": {
-      "question": "¿Qué idiomas soporta Decorebator?",
-      "answer": "Decorebator ofrece soporte completo con IA para 7 idiomas: inglés, español, francés, alemán, italiano, portugués y japonés. Cada idioma tiene generación de contenido de calidad nativa, imágenes culturalmente relevantes y selección de voz optimizada."
+    "title": {
+      "part1": "Preguntas",
+      "part2": "Frecuentes"
     },
-    "question2": {
-      "question": "¿Cómo funciona el sistema Leitner?",
-      "answer": "Nuestro sistema Leitner de 7 cajas usa repetición espaciada científicamente probada. Las palabras se mueven entre cajas basándose en tu rendimiento, con intervalos de revisión desde inmediato (Caja 1) hasta mensual (Caja 7). Esto optimiza la eficiencia de aprendizaje y retención a largo plazo."
-    },
-    "question3": {
-      "question": "¿Qué incluye el plan Premium?",
-      "answer": "Premium incluye listas de palabras y palabras ilimitadas, los 7 modos de cuestionario, contenido generado por IA para cada palabra, análisis avanzados, soporte offline y atención al cliente prioritaria. Los usuarios gratuitos obtienen 1 lista de palabras con hasta 10 palabras."
-    },
-    "question4": {
-      "question": "¿Puedo usar Decorebator offline?",
-      "answer": "¡Sí! Los suscriptores premium pueden descargar sus listas de palabras para acceso offline. Puedes practicar cuestionarios y revisar tarjetas de memoria sin conexión a internet, con sincronización de progreso cuando estés de vuelta online."
-    },
-    "question5": {
-      "question": "¿Qué tan preciso es el contenido generado por IA?",
-      "answer": "Nuestro contenido IA es altamente preciso y mejora continuamente. Usamos modelos de lenguaje avanzados entrenados en vastos conjuntos de datos. Además, nuestro sistema de reporte de errores permite a los usuarios señalar problemas, ayudándonos a mantener y mejorar la calidad del contenido."
-    },
-    "question6": {
-      "question": "¿Hay una aplicación móvil?",
-      "answer": "¡Sí! Decorebator está disponible en iOS y Android con paridad completa de características. Tu progreso se sincroniza perfectamente entre la aplicación móvil y la plataforma web, para que puedas aprender en cualquier lugar."
+    "subtitle": "Todo lo que necesitas saber sobre Decorebator.",
+    "questions": {
+      "1": {
+        "question": "¿Cómo funciona la generación de contenido IA?",
+        "answer": "Nuestra IA genera automáticamente materiales de aprendizaje integrales para cada palabra que agregues. El sistema crea definiciones contextualmente relevantes, oraciones de ejemplo, imágenes culturalmente apropiadas y pronunciaciones de audio de alta calidad en tu idioma objetivo, con reglas gramaticales específicas del idioma y optimización de voz."
+      },
+      "2": {
+        "question": "¿Qué es el sistema avanzado de repetición espaciada Leitner?",
+        "answer": "Decorebator utiliza un sistema de repetición espaciada de 7 cajas científicamente optimizado con intervalos: Caja 1 (inmediato), Caja 2 (1 hora), Caja 3 (6 horas), Caja 4 (1 día), Caja 5 (3 días), Caja 6 (7 días) y Caja 7 (1 mes). Las palabras progresan a través de las cajas según tu rendimiento, con progresión inteligente de tipos de quiz para un aprendizaje óptimo."
+      },
+      "3": {
+        "question": "¿Cuáles son los planes de suscripción y precios?",
+        "answer": "Decorebator ofrece un plan Gratuito (1 lista de vocabulario, máximo 10 palabras) y planes Premium: $6.99/mes o $69.90/año. Premium incluye listas y palabras ilimitadas, soporte offline con sincronización automática, historial completo de análisis, funcionalidad de exportación e insights avanzados de aprendizaje."
+      },
+      "4": {
+        "question": "¿Puedo usar Decorebator sin conexión?",
+        "answer": "¡Sí! Los usuarios Premium pueden descargar sus listas de vocabulario y continuar aprendiendo sin conexión con funcionalidad completa. Tu progreso se sincroniza automáticamente cuando te reconectas a internet, asegurando que nunca pierdas una sesión de aprendizaje."
+      },
+      "5": {
+        "question": "¿Qué idiomas son compatibles para la generación de contenido IA?",
+        "answer": "Decorebator soporta 7 idiomas con procesamiento nativo de IA: inglés, español, francés, alemán, italiano, portugués y japonés. Cada idioma recibe generación de contenido culturalmente apropiada, reglas gramaticales correctas (como gramática consciente del género en español o sistema de casos alemán) y selección de voz optimizada."
+      },
+      "6": {
+        "question": "¿Cuántos modos de quiz están disponibles y cómo funcionan?",
+        "answer": "Hay 8 modos de quiz diferentes diseñados para dirigirse a varios aspectos del aprendizaje de vocabulario: adivinar significado, palabra del significado, asociación visual, comprensión auditiva, completar oraciones, recordar activo, reconocimiento de audio y audio de ejemplo. Los tipos de quiz se adaptan progresivamente según tu nivel actual de aprendizaje."
+      },
+      "7": {
+        "question": "¿Qué características de análisis y seguimiento de progreso están incluidas?",
+        "answer": "Decorebator proporciona análisis integrales con múltiples herramientas de seguimiento: estadísticas del panel, gráficos de dominio de palabras, tendencias de progreso de aprendizaje, análisis de tiempo de práctica, desglose de rendimiento en quiz, tablas de clasificación de mejores palabras, visualización de distribución de cajas y seguimiento de progreso histórico. Los usuarios Premium obtienen historial ilimitado y exportación de datos."
+      },
+      "8": {
+        "question": "¿Cómo funciona el sistema de reporte de errores?",
+        "answer": "Los usuarios pueden reportar problemas con contenido generado por IA (definiciones, imágenes, audio) directamente desde la aplicación. El sistema incluye limitación de velocidad (Gratuito: 3 reportes/hora, 5/día; Premium: 10 reportes/hora, 30/día) y regeneración automática de contenido. Las palabras reportadas se omiten temporalmente durante las revisiones hasta que se genere nuevo contenido."
+      },
+      "9": {
+        "question": "¿Qué plataformas y dispositivos son compatibles?",
+        "answer": "Decorebator está disponible como aplicación móvil para dispositivos iOS y Android, además de una aplicación web integral con soporte multiidioma. Tu progreso se sincroniza automáticamente en todos los dispositivos con gestión automática de sesiones."
+      },
+      "10": {
+        "question": "¿Qué tan confiable es la generación de contenido IA?",
+        "answer": "Nuestro sistema de generación de contenido IA incluye múltiples medidas de aseguramiento de calidad: lógica de reintento automático, limitación de velocidad y distribución de uso justo para asegurar creación confiable de contenido. El sistema de reporte de errores permite a los usuarios solicitar nuevo contenido si algo no cumple sus necesidades de aprendizaje."
+      }
     }
   },
   "pricing": {
@@ -921,6 +942,131 @@
       "premium": {
         "title": "Característica Premium",
         "description": "El soporte offline está disponible para suscriptores Premium. Actualiza para desbloquear capacidades ilimitadas de aprendizaje offline."
+      }
+    }
+  },
+  "terms": {
+    "title": "Términos de Servicio",
+    "subtitle": "Términos y condiciones legales para el uso de Decorebator",
+    "lastUpdated": "Última actualización: Enero 2025",
+    "sections": {
+      "1": {
+        "title": "Aceptación de los Términos",
+        "content": "Al descargar, instalar o usar la aplicación móvil Decorebator (\"Aplicación\"), usted acepta estar sujeto a estos Términos de Servicio (\"Términos\"). Si no está de acuerdo con estos Términos, no use la Aplicación."
+      },
+      "2": {
+        "title": "Descripción del Servicio",
+        "intro": "Decorebator es una aplicación de aprendizaje de vocabulario con IA que proporciona:",
+        "features": [
+          "Sistema de aprendizaje de repetición espaciada",
+          "Contenido de vocabulario generado por IA",
+          "Múltiples modos de quiz y tarjetas de memoria",
+          "Seguimiento del progreso de aprendizaje",
+          "Capacidades de estudio offline",
+          "Soporte multiidioma"
+        ]
+      },
+      "3": {
+        "title": "Cuentas de Usuario",
+        "accountCreation": {
+          "title": "Creación de Cuenta",
+          "items": [
+            "Debe proporcionar información precisa y completa",
+            "Es responsable de mantener la seguridad de la cuenta",
+            "Una cuenta por persona",
+            "Edad mínima: 13 años (con consentimiento parental si es menor de 18)"
+          ]
+        },
+        "accountResponsibilities": {
+          "title": "Responsabilidades de la Cuenta",
+          "items": [
+            "Mantener las credenciales de acceso seguras",
+            "Notificarnos inmediatamente de acceso no autorizado",
+            "Actualizar la información según sea necesario",
+            "Cumplir con todas las leyes aplicables"
+          ]
+        }
+      },
+      "4": {
+        "title": "Planes de Suscripción",
+        "freePlan": {
+          "title": "Plan Gratuito",
+          "items": [
+            "Máximo 1 lista de palabras",
+            "Hasta 10 palabras por lista",
+            "Modos básicos de quiz",
+            "Características limitadas"
+          ]
+        },
+        "premiumPlans": {
+          "title": "Planes Premium",
+          "items": [
+            "Mensual: $6,99/mes",
+            "Anual: $69,90/año",
+            "Listas de palabras y palabras ilimitadas",
+            "Análisis avanzados",
+            "Soporte prioritario",
+            "Todas las características incluidas"
+          ]
+        },
+        "billingTerms": {
+          "title": "Términos de Facturación",
+          "items": [
+            "Las suscripciones se renuevan automáticamente a menos que se cancelen",
+            "Pago procesado a través de App Store/Google Play",
+            "Reembolsos sujetos a las políticas de la plataforma",
+            "Cambios de precio con 30 días de aviso"
+          ]
+        }
+      },
+      "acknowledgment": {
+        "title": "Reconocimiento",
+        "content": "Al usar Decorebator, usted reconoce que ha leído, entendido y acepta estar sujeto a estos Términos de Servicio y nuestra Política de Privacidad."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "subtitle": "Cómo recopilamos, usamos y protegemos su información personal",
+    "lastUpdated": "Última actualización: Enero 2025",
+    "introduction": {
+      "content": "Decorebator (\"nosotros\", \"nuestro\" o \"nos\") está comprometido a proteger su privacidad. Esta Política de Privacidad explica cómo recopilamos, usamos y protegemos su información cuando usa la aplicación móvil Decorebator."
+    },
+    "sections": {
+      "informationWeCollect": {
+        "title": "Información que Recopilamos",
+        "personalInformation": {
+          "title": "Información Personal",
+          "items": [
+            "Dirección de Email: Requerida para la creación de cuenta y autenticación",
+            "Información de Perfil: Foto de perfil opcional y nombre para mostrar",
+            "Información de Suscripción: Detalles de facturación procesados de forma segura a través de Stripe"
+          ]
+        },
+        "learningData": {
+          "title": "Datos de Aprendizaje",
+          "items": [
+            "Listas de Palabras: Listas de vocabulario que crea o modifica",
+            "Progreso de Aprendizaje: Puntuaciones de quiz, datos de repetición espaciada y análisis de estudio",
+            "Preferencias del Usuario: Configuraciones de la aplicación, preferencias de idioma y opciones de notificación",
+            "Moderación de Contenido: Análisis automatizado del contenido generado por el usuario para verificar apropiado"
+          ]
+        },
+        "technicalData": {
+          "title": "Datos Técnicos",
+          "items": [
+            "Información del Dispositivo: Tipo de dispositivo, sistema operativo, versión de la aplicación",
+            "Análisis de Uso: Uso de características, duración de sesiones y métricas de rendimiento",
+            "Reportes de Error: Registros de fallos y reportes de error para mejora de la aplicación"
+          ]
+        }
+      },
+      "conclusion": {
+        "content": "Su privacidad es fundamental para nuestra misión de proporcionar aprendizaje efectivo de vocabulario. Estamos comprometidos a proteger su información personal, ser transparentes sobre nuestras prácticas, darle control sobre sus datos y mejorar continuamente nuestras protecciones de privacidad.",
+        "agreement": "Al usar Decorebator, usted acepta esta Política de Privacidad. Por favor revísela regularmente para actualizaciones y contáctenos con cualquier pregunta o preocupación.",
+        "effectiveDate": "Fecha de Vigencia: 1 de Enero, 2025",
+        "version": "Versión: 1.0",
+        "nextReview": "Próxima Revisión: 1 de Julio, 2025"
       }
     }
   }
