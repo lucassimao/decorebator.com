@@ -9,21 +9,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// setupMockModeration injects a mock moderation service for testing
-func setupMockModeration(_ *testing.T) func() {
-	// Create and inject mock moderation service
+// createTestServerWithMockModeration creates a test server with mock moderation service
+func createTestServerWithMockModeration(t *testing.T) *setup.TestServer {
+	// Create mock moderation service
 	mockModeration := service.NewMockModerationService()
-	service.SetModerationService(mockModeration)
-	service.SetWordlistModerationService(mockModeration)
 
-	// Return cleanup function to restore original services
-	cleanup := func() {
-		// Restore original moderation services
-		service.SetModerationService(service.NewOpenAIModerationService())
-		service.SetWordlistModerationService(service.NewOpenAIModerationService())
+	// Create test server with mock moderation service injected
+	config := &setup.TestConfig{
+		ModerationService: mockModeration,
 	}
 
-	return cleanup
+	return setup.NewTestServer(t, config)
 }
 
 // Helper function to create a test user
@@ -58,10 +54,7 @@ func createPremiumTestUser(t *testing.T, server *setup.TestServer) map[string]in
 
 func TestContentFilteringWordlist_Create_ShouldRejectInappropriateName(t *testing.T) {
 	// Arrange
-	cleanup := setupMockModeration(t)
-	defer cleanup()
-
-	server := setup.NewTestServer(t)
+	server := createTestServerWithMockModeration(t)
 	defer server.Cleanup()
 
 	// Use premium user to avoid wordlist limit issues when testing multiple cases
@@ -192,10 +185,7 @@ func TestContentFilteringWordlist_Create_ShouldRejectInappropriateName(t *testin
 
 func TestContentFilteringWordlist_Create_ShouldRejectInappropriateDescription(t *testing.T) {
 	// Arrange
-	cleanup := setupMockModeration(t)
-	defer cleanup()
-
-	server := setup.NewTestServer(t)
+	server := createTestServerWithMockModeration(t)
 	defer server.Cleanup()
 
 	// Use premium user to avoid wordlist limit issues when testing multiple cases
@@ -282,10 +272,7 @@ func TestContentFilteringWordlist_Create_ShouldRejectInappropriateDescription(t 
 
 func TestContentFilteringWord_Create_ShouldRejectInappropriateWords(t *testing.T) {
 	// Arrange
-	cleanup := setupMockModeration(t)
-	defer cleanup()
-
-	server := setup.NewTestServer(t)
+	server := createTestServerWithMockModeration(t)
 	defer server.Cleanup()
 
 	// Use premium user to avoid word limit issues
@@ -448,10 +435,7 @@ func TestContentFilteringWord_Create_ShouldRejectInappropriateWords(t *testing.T
 
 func TestContentFilteringMultiLanguage_FreeUser_ShouldDetectInappropriateContent(t *testing.T) {
 	// Arrange
-	cleanup := setupMockModeration(t)
-	defer cleanup()
-
-	server := setup.NewTestServer(t)
+	server := createTestServerWithMockModeration(t)
 	defer server.Cleanup()
 
 	user := createTestUser(t, server)
@@ -534,10 +518,7 @@ func TestContentFilteringMultiLanguage_FreeUser_ShouldDetectInappropriateContent
 
 func TestContentFilteringMultiLanguage_PremiumUser_ShouldDetectInappropriateContent(t *testing.T) {
 	// Arrange
-	cleanup := setupMockModeration(t)
-	defer cleanup()
-
-	server := setup.NewTestServer(t)
+	server := createTestServerWithMockModeration(t)
 	defer server.Cleanup()
 
 	user := createPremiumTestUser(t, server)

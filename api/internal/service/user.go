@@ -19,6 +19,7 @@ import (
 type User = model.User
 
 var userRepository *repo.UserRepository
+var wordlistRepository *repo.WordlistRepository
 
 const AUTH_TOKEN_DURATION = (24 * time.Hour) * 365 // 1 year
 
@@ -62,6 +63,7 @@ func init() {
 		os.Exit(1)
 	}
 	userRepository = &repo.UserRepository{Db: db}
+	wordlistRepository = &repo.WordlistRepository{Db: db}
 }
 
 func SaveUser(firstName, lastName, password, email string) (*User, error) {

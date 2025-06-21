@@ -98,7 +98,7 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 			// Handle accented variations
 			"preposition": "preposition",
 		},
-		VerbTenses:          []string{"présent", "passé composé", "participe passé"}, //nolint:misspell // French language terms
+		VerbTenses:          []string{"présent", "passé composé", "participe passé"},                                                                                                           //nolint:misspell // French language terms
 		GrammarInstructions: "Pour les verbes français, fournissez les formes du présent, passé composé et participe passé. Incluez les informations sur le genre pour les noms et adjectifs.", //nolint:misspell // French language terms
 		SpecialInstructions: "Attention aux liaisons et aux verbes irréguliers. Incluez les accents appropriés.",
 		ExampleInstructions: "Encadrez le mot cible entre crochets [mot] dans toutes les phrases d'exemple.",

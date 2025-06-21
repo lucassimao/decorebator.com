@@ -39,10 +39,13 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 		return nil, err
 	}
 
+	// Create word service for workers
+	wordService := NewWordService(db, NewOpenAIModerationService())
+
 	riverWorkers := river.NewWorkers()
 	river.AddWorker(riverWorkers, &ImageGeneratorWorker{})
-	river.AddWorker(riverWorkers, &TextToSpeechWorker{})
-	river.AddWorker(riverWorkers, &DefinitionFetcherWorker{})
+	river.AddWorker(riverWorkers, NewTextToSpeechWorker(wordService))
+	river.AddWorker(riverWorkers, NewDefinitionFetcherWorker(wordService))
 	river.AddWorker(riverWorkers, &ExampleAudioWorker{})
 	river.AddWorker(riverWorkers, &SubscriptionReminderWorker{
 		db:       db,

@@ -49,7 +49,6 @@ func (repository *WordRepository) Save(name, notes string, userID, wordlistID in
 }
 
 func (repository *WordRepository) ReuseDefinitions(wordID int64, definitionIDs []int64, tx pgx.Tx) error {
-
 	var strBuilder strings.Builder
 
 	strBuilder.WriteString("INSERT INTO word_definitions (word_id, definition_id) VALUES ")

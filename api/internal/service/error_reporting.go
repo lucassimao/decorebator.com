@@ -132,7 +132,7 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 	}
 
 	// marking the definition temporarily as unavailable
-	var strategy LeitnerSystemStrategy
+	strategy := DefaultLeitnerSystemStrategy()
 	err = strategy.ReportError(userId, report, tx, ctx)
 
 	if err != nil {

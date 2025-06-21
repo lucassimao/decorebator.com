@@ -24,14 +24,11 @@ type TestServer struct {
 	BaseURL string
 }
 
-// TestConfig holds configuration for test server
-type TestConfig struct {
-	DatabaseURL string
-	TestMode    bool
-}
+// TestConfig holds configuration for test server (alias for HTTP config)
+type TestConfig = httphandlers.Config
 
 // NewTestServer creates a new test server instance using the real API routes
-func NewTestServer(t *testing.T) *TestServer {
+func NewTestServer(t *testing.T, config ...*TestConfig) *TestServer {
 	// Set gin to test mode
 	gin.SetMode(gin.TestMode)
 
@@ -46,8 +43,22 @@ func NewTestServer(t *testing.T) *TestServer {
 	err = CleanTestData(db)
 	require.NoError(t, err, "Failed to clean test data before starting")
 
-	// Use the real API routes from internal/http/setup.go
-	engine := httphandlers.SetupRoutes()
+	// Configure services for testing
+	var testConfig *httphandlers.Config
+	if len(config) > 0 && config[0] != nil {
+		testConfig = config[0]
+		// Ensure database is set for test config
+		if testConfig.Database == nil {
+			testConfig.Database = db
+		}
+	} else {
+		testConfig = &httphandlers.Config{
+			Database: db,
+		}
+	}
+
+	// Use the real API routes from internal/http/setup.go with test configuration
+	engine := httphandlers.SetupRoutes(testConfig)
 
 	// Create test server
 	server := httptest.NewServer(engine)
@@ -160,7 +171,6 @@ func (ts *TestServer) WithPremiumUser(t *testing.T) string {
 	// Login returns token in Authorization header with premium status
 	return loginResp.Header("Authorization").NotEmpty().Raw()
 }
-
 
 // SeedTestData seeds the database with test data
 func (ts *TestServer) SeedTestData(t *testing.T, fixtures ...string) {

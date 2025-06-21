@@ -24,6 +24,13 @@ func (DefinitionFetcherArgs) Kind() string { return "DefinitionFetcher" }
 
 type DefinitionFetcherWorker struct {
 	river.WorkerDefaults[DefinitionFetcherArgs]
+	wordService *WordService
+}
+
+func NewDefinitionFetcherWorker(wordService *WordService) *DefinitionFetcherWorker {
+	return &DefinitionFetcherWorker{
+		wordService: wordService,
+	}
 }
 
 // getWordlistLanguageAndPronunciation retrieves the language code and pronunciation system for a wordlist from a word ID
@@ -67,7 +74,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	}
 	logger := common.Logger.With("worker", "DefinitionFetcher")
 	wordID := job.Args.WordId
-	word, err := GetWordById(wordID)
+	word, err := w.wordService.GetWordByID(wordID)
 
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
@@ -165,7 +172,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 			logger.Error("failed to queue example audio job", "definitionId", definition.ID, "wordId", word.ID, "error", err)
 		}
 	}
-	strategy := LeitnerSystemStrategy{}
+	strategy := NewLeitnerSystemStrategy(w.wordService)
 	if includeErr := strategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
 		logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)
 	}

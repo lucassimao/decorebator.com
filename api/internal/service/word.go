@@ -11,38 +11,35 @@ import (
 	"decorebator.com/internal/model"
 	repo "decorebator.com/internal/repository"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-var wordRepository *repo.WordRepository
-var moderationService ModerationService
 
 type Word = model.Word
 
-func init() {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		common.Logger.Error("failed to open db connection", "error", err)
-	}
-	wordRepository = &repo.WordRepository{Db: db}
-	moderationService = NewOpenAIModerationService()
+// WordService handles word-related operations with dependency injection
+type WordService struct {
+	repository        *repo.WordRepository
+	moderationService ModerationService
 }
 
-// SetModerationService allows injection of moderation service for testing
-func SetModerationService(service ModerationService) {
-	moderationService = service
+// NewWordService creates a new word service with dependencies
+func NewWordService(db *pgxpool.Pool, moderationService ModerationService) *WordService {
+	return &WordService{
+		repository:        &repo.WordRepository{Db: db},
+		moderationService: moderationService,
+	}
 }
 
 // GetWordByWordlist returns words from wordlist with optional filtering
-// onlyWithDefinitions: if true, returns only words that have definitions with meanings
-func GetWordByWordlist(wordlistId, userId int64, onlyWithDefinitions bool) ([]Word, error) {
-	return wordRepository.GetWordsByWordlist(wordlistId, userId, onlyWithDefinitions)
+func (ws *WordService) GetWordByWordlist(wordlistID, userID int64, onlyWithDefinitions bool) ([]Word, error) {
+	return ws.repository.GetWordsByWordlist(wordlistID, userID, onlyWithDefinitions)
 }
 
-func GetWordById(id int64) (*Word, error) {
-	return wordRepository.GetByID(id)
+func (ws *WordService) GetWordByID(id int64) (*Word, error) {
+	return ws.repository.GetByID(id)
 }
 
-func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
+func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 	var lowerCasedName = strings.ToLower(dto.Name)
 	var trimmedName = strings.TrimSpace(lowerCasedName)
 
@@ -51,8 +48,8 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		return nil, common.BusinessError{Message: "words must be limited to 15 chars"}
 	}
 
-	// Validate word content using OpenAI moderation
-	filterResult := moderationService.ValidateWord(trimmedName)
+	// Validate word content using moderation service
+	filterResult := ws.moderationService.ValidateWord(trimmedName)
 	if !filterResult.IsAppropriate {
 		return nil, common.BusinessError{
 			Message: fmt.Sprintf("Word content not appropriate: %s", filterResult.Reason),
@@ -61,7 +58,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 
 	// Validate notes content if provided
 	if dto.Notes != "" {
-		notesResult := moderationService.ValidateDescription(dto.Notes)
+		notesResult := ws.moderationService.ValidateDescription(dto.Notes)
 		if !notesResult.IsAppropriate {
 			return nil, common.BusinessError{
 				Message: fmt.Sprintf("Word notes not appropriate: %s", notesResult.Reason),
@@ -69,7 +66,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		}
 	}
 
-	tx, err := wordRepository.Db.Begin(ctx)
+	tx, err := ws.repository.Db.Begin(ctx)
 
 	if err != nil {
 		return nil, err
@@ -88,7 +85,7 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		}
 	}()
 
-	word, err := wordRepository.Save(trimmedName, dto.Notes, dto.UserID, dto.WordlistID, &tx)
+	word, err := ws.repository.Save(trimmedName, dto.Notes, dto.UserID, dto.WordlistID, &tx)
 	if err != nil {
 		return nil, err
 	}
@@ -102,24 +99,24 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 		for _, def := range definitions {
 			definitionIds = append(definitionIds, def.ID)
 		}
-		if reuseErr := wordRepository.ReuseDefinitions(word.ID, definitionIds, tx); reuseErr != nil {
+		if reuseErr := ws.repository.ReuseDefinitions(word.ID, definitionIds, tx); reuseErr != nil {
 			common.Logger.Error("failed to reuse definitions", "wordId", word.ID, "error", reuseErr)
 		}
 
-		quizStrategy := LeitnerSystemStrategy{}
+		quizStrategy := NewLeitnerSystemStrategy(ws)
 		if includeErr := quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
 			common.Logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)
 		}
 
 		var latestAudioURL string
-		latestAudioURL, err = wordRepository.GetLatestAudioURL(trimmedName)
+		latestAudioURL, err = ws.repository.GetLatestAudioURL(trimmedName)
 
 		if err != nil {
 			_, _ = TriggerTextToSpeechWorker(word.ID, &word.UserID, nil, &tx)
 			err = nil // fine if triggering the worker fails somehow
 		} else {
 			word.AudioURL = latestAudioURL
-			err = UpdateWord(word, &tx)
+			err = ws.UpdateWord(word, &tx)
 		}
 	} else {
 		_, _ = TriggerFetchDefinitionWorker(word.ID, &word.UserID, nil, &tx)
@@ -133,8 +130,8 @@ func SaveWord(dto *Word, ctx context.Context) (*Word, error) {
 	return word, nil
 }
 
-func DeleteWord(id, userId int64) (int64, error) {
-	word, err := GetWordById(id)
+func (ws *WordService) DeleteWord(id, userID int64) (int64, error) {
+	word, err := ws.GetWordByID(id)
 	if err != nil {
 		return 0, err
 	}
@@ -143,7 +140,7 @@ func DeleteWord(id, userId int64) (int64, error) {
 		return 0, common.NotFoundError{ID: id, Entity: "Word"}
 	}
 
-	count, err := wordRepository.Delete(userId, id)
+	count, err := ws.repository.Delete(userID, id)
 	if err != nil {
 		common.Logger.Error("failed to delete word", "error", err)
 		return 0, errors.New("failed to delete word")
@@ -152,8 +149,8 @@ func DeleteWord(id, userId int64) (int64, error) {
 	return count, nil
 }
 
-func UpdateWord(word *Word, tx *pgx.Tx) error {
-	count, err := wordRepository.Update(word, tx)
+func (ws *WordService) UpdateWord(word *Word, tx *pgx.Tx) error {
+	count, err := ws.repository.Update(word, tx)
 	if err != nil {
 		return err
 	}

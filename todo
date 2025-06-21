@@ -1,7 +1,19 @@
 [ ]  browserstack testing
+        - Finish webchanges
         - Fix SignUp screen - use transparent PNG as the login scren
         - Integrate Revenue cat for non US users
-        - Confi sentry in the expo app
+        - Config sentry in the expo app
+        - /content/guidelines and /content/validate seems unecessary given the mobile/components/dashboard/ContentGuidelinesModal.tsx hardcoded the guide
+        - is mobile/update-translations.sh still necessary ?
+        - use OpenAI moderation api https://platform.openai.com/docs/api-reference/moderations (https://platform.openai.com/docs/guides/moderation) - if it fails then let it go
+        - Tests failed
+        * `TestContentFilteringWordlist`
+        * `TestContentFilteringWord`
+        * `TestCurrentBoxDistributionEndpoint`
+        * `TestProgressSummaryEndpoint`
+
+
+
 
 ### iOS App Store Release Checklist
 

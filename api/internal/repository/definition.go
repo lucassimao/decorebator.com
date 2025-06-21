@@ -23,7 +23,6 @@ type DefinitionRepository struct {
 }
 
 func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Definition, tx pgx.Tx) ([]*Definition, error) {
-
 	// Prepare the definitions insert
 	definitionsInsert := `
         INSERT INTO 

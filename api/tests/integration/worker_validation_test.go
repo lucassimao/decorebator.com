@@ -21,6 +21,9 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 
 	ctx := context.Background()
 
+	// Create services for testing
+	wordService := service.NewWordService(db, service.NewOpenAIModerationService())
+
 	// Helper to create test user using service layer
 	createTestUser := func(email string, plan model.SubscriptionPlan) int64 {
 		user, err := service.SaveUser("Test", "User", "password123", email)
@@ -56,7 +59,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 			UserID:     userID,
 			WordlistID: wordlistID,
 		}
-		savedWord, err := service.SaveWord(word, ctx)
+		savedWord, err := wordService.SaveWord(ctx, word)
 		require.NoError(t, err)
 		return savedWord.ID
 	}

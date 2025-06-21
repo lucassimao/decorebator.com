@@ -18,12 +18,20 @@ type WordlistInput struct {
 	PronunciationSystem *model.PronunciationSystem `json:"pronunciationSystem,omitempty"`
 }
 
-type WordlistsRoutes struct{}
+type WordlistsRoutes struct {
+	wordlistService *service.WordlistService
+}
 type Wordlist = service.Wordlist
 
+func NewWordlistsRoutes(wordlistService *service.WordlistService) *WordlistsRoutes {
+	return &WordlistsRoutes{
+		wordlistService: wordlistService,
+	}
+}
+
 func (h *WordlistsRoutes) GetAll(c *gin.Context) {
-	var userId int64 = c.GetInt64("userID")
-	wordlists, err := service.GetUserWordlistsWithWordStats(userId)
+	var userID int64 = c.GetInt64("userID")
+	wordlists, err := h.wordlistService.GetUserWordlistsWithWordStats(userID)
 	if err != nil {
 		panic(err)
 	}
@@ -60,11 +68,11 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 		pronunciationSystem = model.GetDefaultPronunciationSystem(input.LanguageCode)
 	}
 
-	var userId int64 = c.GetInt64("userID")
-	saved, err := service.SaveWordlist(&Wordlist{
+	var userID int64 = c.GetInt64("userID")
+	saved, err := h.wordlistService.SaveWordlist(&Wordlist{
 		Name:                input.Name,
 		Description:         input.Description,
-		UserID:              userId,
+		UserID:              userID,
 		LanguageCode:        input.LanguageCode,
 		PronunciationSystem: pronunciationSystem,
 	})
@@ -74,7 +82,7 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 		case common.BusinessError:
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		default:
-			common.Logger.Error("failed to create wordlist", "error", err, "userId", userId)
+			common.Logger.Error("failed to create wordlist", "error", err, "userID", userID)
 			c.Status(http.StatusInternalServerError)
 		}
 	} else {
@@ -108,9 +116,9 @@ func (h *WordlistsRoutes) GetById(c *gin.Context) {
 		return
 	}
 
-	var userId int64 = c.GetInt64("userID")
+	var userID int64 = c.GetInt64("userID")
 
-	wordlist, err := service.GetWordlistById(id, userId)
+	wordlist, err := h.wordlistService.GetWordlistByID(id, userID)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
@@ -124,9 +132,9 @@ func (h *WordlistsRoutes) GetById(c *gin.Context) {
 
 func (h *WordlistsRoutes) Delete(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	var userId int64 = c.GetInt64("userID")
+	var userID int64 = c.GetInt64("userID")
 
-	_, err := service.DeleteWordlist(id, userId)
+	_, err := h.wordlistService.DeleteWordlist(id, userID)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
@@ -148,8 +156,8 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 		return
 	}
 
-	var userId int64 = c.GetInt64("userID")
-	err := service.UpdateWordlist(&Wordlist{ID: id, Name: input.Name, Description: input.Description, LanguageCode: input.LanguageCode, UserID: userId})
+	var userID int64 = c.GetInt64("userID")
+	err := h.wordlistService.UpdateWordlist(&Wordlist{ID: id, Name: input.Name, Description: input.Description, LanguageCode: input.LanguageCode, UserID: userID})
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
@@ -158,7 +166,7 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 			case common.BusinessError:
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			default:
-				common.Logger.Error("failed to update wordlist", "error", err, "userId", userId)
+				common.Logger.Error("failed to update wordlist", "error", err, "userID", userID)
 				c.Status(http.StatusInternalServerError)
 			}
 		}
