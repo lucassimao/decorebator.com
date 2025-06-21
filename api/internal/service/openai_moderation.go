@@ -15,32 +15,32 @@ import (
 
 // ModerationCategory represents OpenAI moderation categories
 type ModerationCategory struct {
-	Sexual         bool `json:"sexual"`
-	Hate           bool `json:"hate"`
-	Harassment     bool `json:"harassment"`
-	SelfHarm       bool `json:"self-harm"`
-	SexualMinors   bool `json:"sexual/minors"`
-	HateThreat     bool `json:"hate/threatening"`
-	ViolenceGore   bool `json:"violence/graphic"`
-	SelfHarmIntent bool `json:"self-harm/intent"`
-	SelfHarmInstr  bool `json:"self-harm/instructions"`
-	HarassmentThr  bool `json:"harassment/threatening"`
-	Violence       bool `json:"violence"`
+	Harassment            bool `json:"harassment"`
+	HarassmentThreatening bool `json:"harassment/threatening"`
+	Hate                  bool `json:"hate"`
+	HateThreatening       bool `json:"hate/threatening"`
+	SelfHarm              bool `json:"self-harm"`
+	SelfHarmIntent        bool `json:"self-harm/intent"`
+	SelfHarmInstructions  bool `json:"self-harm/instructions"`
+	Sexual                bool `json:"sexual"`
+	SexualMinors          bool `json:"sexual/minors"`
+	Violence              bool `json:"violence"`
+	ViolenceGraphic       bool `json:"violence/graphic"`
 }
 
 // ModerationCategoryScore represents confidence scores for each category
 type ModerationCategoryScore struct {
-	Sexual         float64 `json:"sexual"`
-	Hate           float64 `json:"hate"`
-	Harassment     float64 `json:"harassment"`
-	SelfHarm       float64 `json:"self-harm"`
-	SexualMinors   float64 `json:"sexual/minors"`
-	HateThreat     float64 `json:"hate/threatening"`
-	ViolenceGore   float64 `json:"violence/graphic"`
-	SelfHarmIntent float64 `json:"self-harm/intent"`
-	SelfHarmInstr  float64 `json:"self-harm/instructions"`
-	HarassmentThr  float64 `json:"harassment/threatening"`
-	Violence       float64 `json:"violence"`
+	Harassment            float64 `json:"harassment"`
+	HarassmentThreatening float64 `json:"harassment/threatening"`
+	Hate                  float64 `json:"hate"`
+	HateThreatening       float64 `json:"hate/threatening"`
+	SelfHarm              float64 `json:"self-harm"`
+	SelfHarmIntent        float64 `json:"self-harm/intent"`
+	SelfHarmInstructions  float64 `json:"self-harm/instructions"`
+	Sexual                float64 `json:"sexual"`
+	SexualMinors          float64 `json:"sexual/minors"`
+	Violence              float64 `json:"violence"`
+	ViolenceGraphic       float64 `json:"violence/graphic"`
 }
 
 // ModerationResult represents a single moderation result
@@ -60,7 +60,7 @@ type ModerationResponse struct {
 // ModerationRequest represents the OpenAI moderation API request
 type ModerationRequest struct {
 	Input string `json:"input"`
-	Model string `json:"model,omitempty"` // Optional, defaults to "text-moderation-latest"
+	Model string `json:"model,omitempty"` // Optional, defaults to "omni-moderation-latest"
 }
 
 // ContentFilterResult maintains compatibility with existing code
@@ -189,7 +189,7 @@ func (s *OpenAIModerationService) ValidateDescription(description string) Conten
 func (s *OpenAIModerationService) moderateWithOpenAI(text string) (*ModerationResult, error) {
 	reqBody := ModerationRequest{
 		Input: text,
-		Model: "text-moderation-latest",
+		Model: "omni-moderation-latest",
 	}
 
 	jsonData, err := json.Marshal(reqBody)
@@ -234,16 +234,16 @@ func (s *OpenAIModerationService) buildRejectionReason(result *ModerationResult)
 	if categories.Sexual || categories.SexualMinors {
 		return "Content contains sexual or adult material not appropriate for educational use"
 	}
-	if categories.Hate || categories.HateThreat {
+	if categories.Hate || categories.HateThreatening {
 		return "Content contains hate speech or threatening language"
 	}
-	if categories.Harassment || categories.HarassmentThr {
+	if categories.Harassment || categories.HarassmentThreatening {
 		return "Content contains harassment or threatening behavior"
 	}
-	if categories.Violence || categories.ViolenceGore {
+	if categories.Violence || categories.ViolenceGraphic {
 		return "Content contains violent or graphic material"
 	}
-	if categories.SelfHarm || categories.SelfHarmIntent || categories.SelfHarmInstr {
+	if categories.SelfHarm || categories.SelfHarmIntent || categories.SelfHarmInstructions {
 		return "Content contains self-harm related material"
 	}
 

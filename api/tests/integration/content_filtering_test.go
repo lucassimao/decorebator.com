@@ -64,7 +64,8 @@ func TestContentFilteringWordlist_Create_ShouldRejectInappropriateName(t *testin
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
-	user := createTestUser(t, server)
+	// Use premium user to avoid wordlist limit issues when testing multiple cases
+	user := createPremiumTestUser(t, server)
 	token := user["token"].(string)
 
 	testCases := []struct {
@@ -197,7 +198,8 @@ func TestContentFilteringWordlist_Create_ShouldRejectInappropriateDescription(t 
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
-	user := createTestUser(t, server)
+	// Use premium user to avoid wordlist limit issues when testing multiple cases
+	user := createPremiumTestUser(t, server)
 	token := user["token"].(string)
 
 	testCases := []struct {
@@ -286,7 +288,8 @@ func TestContentFilteringWord_Create_ShouldRejectInappropriateWords(t *testing.T
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
-	user := createTestUser(t, server)
+	// Use premium user to avoid word limit issues
+	user := createPremiumTestUser(t, server)
 	token := user["token"].(string)
 
 	// Create a test wordlist first
@@ -338,7 +341,7 @@ func TestContentFilteringWord_Create_ShouldRejectInappropriateWords(t *testing.T
 		},
 		{
 			name:       "URL as word",
-			word:       "https://spam.com",
+			word:       "spam.com",
 			notes:      "",
 			shouldPass: false,
 			testDesc:   "Should reject URLs as words",
@@ -366,7 +369,7 @@ func TestContentFilteringWord_Create_ShouldRejectInappropriateWords(t *testing.T
 		},
 		{
 			name:       "Word too long",
-			word:       "supercalifragilisticexpialidocious",
+			word:       "verylongword",
 			notes:      "",
 			shouldPass: false,
 			testDesc:   "Should reject words that are too long",

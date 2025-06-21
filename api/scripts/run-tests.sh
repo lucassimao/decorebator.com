@@ -195,10 +195,10 @@ run_integration_tests() {
     # Try to use gotestsum for better output, fall back to go test
     if ensure_gotestsum; then
         log "Using gotestsum for structured output"
-        gotestsum --format testname -- -v -race -count=1 -p=1 -coverprofile=integration.out -covermode=atomic ./tests/integration/... || test_exit_code=$?
+        gotestsum --format testname -- -v -race -count=1 -p=1 -coverpkg=./internal/... -coverprofile=integration.out -covermode=atomic ./tests/integration/... || test_exit_code=$?
     else
         log "Using go test"
-        go test -v -race -count=1 -p=1 -coverprofile=integration.out -covermode=atomic ./tests/integration/... || test_exit_code=$?
+        go test -v -race -count=1 -p=1 -coverpkg=./internal/... -coverprofile=integration.out -covermode=atomic ./tests/integration/... || test_exit_code=$?
     fi
     
     if [ $test_exit_code -eq 0 ]; then
@@ -251,7 +251,7 @@ run_specific_integration_test() {
     source "$ENV_FILE"
     set +a
     
-    go test -v -race -run "$test_name" ./tests/integration/...
+    go test -v -race -coverpkg=./internal/... -run "$test_name" ./tests/integration/...
     
     if [ $? -eq 0 ]; then
         success "Integration test '$test_name' passed"

@@ -57,7 +57,7 @@ services:
       - .:/app    
       - /home/lucas/go/pkg/mod:/go/pkg/mod # '/home/lucas/go/pkg/mod' comes from `go env GOMODCACHE`
     working_dir: /app
-    command: go test -coverprofile=coverage.out -cover -v ./tests/integration/...
+    command: go test -coverpkg=./internal/... -coverprofile=coverage.out -cover -v ./tests/integration/...
     env_file:
       - .env.test
 

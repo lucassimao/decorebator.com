@@ -70,10 +70,16 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 	})
 
 	if err != nil {
-		panic(err)
+		switch err.(type) {
+		case common.BusinessError:
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		default:
+			common.Logger.Error("failed to create wordlist", "error", err, "userId", userId)
+			c.Status(http.StatusInternalServerError)
+		}
+	} else {
+		c.JSON(http.StatusCreated, saved)
 	}
-
-	c.JSON(http.StatusCreated, saved)
 }
 
 // GetPronunciationSystems returns the supported pronunciation systems for a language
@@ -148,7 +154,13 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
 		} else {
-			panic(err)
+			switch err.(type) {
+			case common.BusinessError:
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			default:
+				common.Logger.Error("failed to update wordlist", "error", err, "userId", userId)
+				c.Status(http.StatusInternalServerError)
+			}
 		}
 		return
 	}

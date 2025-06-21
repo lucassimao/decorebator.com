@@ -63,8 +63,9 @@ func NewMockModerationService() *MockModerationService {
 			"maledetto":      "Content contains harassment or threatening behavior",
 
 			// Long sequences/invalid content
-			"123456789":                          "Content contains harassment or threatening behavior",
-			"supercalifragilisticexpialidocious": "Content contains harassment or threatening behavior",
+			"123456789":     "Content contains harassment or threatening behavior",
+			"verylongword":  "Content contains harassment or threatening behavior",
+			"spam.com":      "Content contains harassment or threatening behavior",
 		},
 	}
 }

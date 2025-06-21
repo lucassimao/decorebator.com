@@ -71,7 +71,7 @@ test-all: ## Run all tests with proper cleanup
 
 test-fast: ## Run tests without Docker (requires local services)
 	@echo "Running fast integration tests (requires local services)..."
-	go test -v -short ./tests/integration/...
+	go test -v -short -coverpkg=./internal/... ./tests/integration/...
 
 test-clean: ## Clean up test environment (stop containers, remove volumes)
 	@echo "Cleaning up test environment..."
@@ -238,7 +238,7 @@ qa-ci: qa-install ## Run QA checks with CI-style output (JUnit XML + structured 
 	@$(MAKE) lint > reports/lint.log 2>&1 || true
 	@$(MAKE) security-scan-full > reports/security.log 2>&1 || true
 	@gotestsum --junitfile reports/unit-tests.xml --format testname -- -v -race -coverprofile=reports/unit.out -covermode=atomic ./internal/... || true
-	@gotestsum --junitfile reports/integration-tests.xml --format testname -- -v -race -count=1 -p=1 -coverprofile=reports/integration.out -covermode=atomic ./tests/integration/... || true
+	@gotestsum --junitfile reports/integration-tests.xml --format testname -- -v -race -count=1 -p=1 -coverpkg=./internal/... -coverprofile=reports/integration.out -covermode=atomic ./tests/integration/... || true
 	@echo "${GREEN}✅ CI-style QA checks completed - reports in ./reports/${RESET}"
 
 security-scan-full: ## Run comprehensive security scanning (matching GitHub workflow)
