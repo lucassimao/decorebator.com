@@ -56,7 +56,7 @@ func (wls *WordlistService) GetUserWordlistsWithWordStats(userID int64) ([]*Word
 
 func (wls *WordlistService) SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
 	// Content filtering validation
-	nameResult := wls.moderationService.ValidateWordlistName(newWordlist.Name)
+	nameResult := wls.moderationService.Validate(newWordlist.Name)
 	if !nameResult.IsAppropriate {
 		return nil, common.BusinessError{
 			Message: fmt.Sprintf("Wordlist name not appropriate: %s", nameResult.Reason),
@@ -65,7 +65,7 @@ func (wls *WordlistService) SaveWordlist(newWordlist *Wordlist) (*Wordlist, erro
 
 	// Validate description if provided
 	if newWordlist.Description != "" {
-		descResult := wls.moderationService.ValidateDescription(newWordlist.Description)
+		descResult := wls.moderationService.Validate(newWordlist.Description)
 		if !descResult.IsAppropriate {
 			return nil, common.BusinessError{
 				Message: fmt.Sprintf("Wordlist description not appropriate: %s", descResult.Reason),
@@ -123,7 +123,7 @@ func (wls *WordlistService) DeleteWordlist(id, userID int64) (int64, error) {
 
 func (wls *WordlistService) UpdateWordlist(wordlist *Wordlist) error {
 	// Content filtering validation for updates
-	nameResult := wls.moderationService.ValidateWordlistName(wordlist.Name)
+	nameResult := wls.moderationService.Validate(wordlist.Name)
 	if !nameResult.IsAppropriate {
 		return common.BusinessError{
 			Message: fmt.Sprintf("Wordlist name not appropriate: %s", nameResult.Reason),
@@ -132,7 +132,7 @@ func (wls *WordlistService) UpdateWordlist(wordlist *Wordlist) error {
 
 	// Validate description if provided
 	if wordlist.Description != "" {
-		descResult := wls.moderationService.ValidateDescription(wordlist.Description)
+		descResult := wls.moderationService.Validate(wordlist.Description)
 		if !descResult.IsAppropriate {
 			return common.BusinessError{
 				Message: fmt.Sprintf("Wordlist description not appropriate: %s", descResult.Reason),

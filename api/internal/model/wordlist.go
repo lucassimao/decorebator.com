@@ -65,9 +65,6 @@ type Wordlist struct {
 	UserID              int64               `json:"userId"`
 	LanguageCode        string              `json:"languageCode"`
 	PronunciationSystem PronunciationSystem `json:"pronunciationSystem"`
-	ContentStatus       ContentStatus       `json:"contentStatus"`
-	FlaggedReason       *string             `json:"flaggedReason,omitempty"`
-	ContentReviewedAt   *pgtype.Timestamptz `json:"contentReviewedAt,omitempty"`
 
 	// Computed dinamically based on words table
 	WordsCount        *int `json:"wordsCount"`
@@ -86,11 +83,6 @@ func (w Wordlist) MarshalJSON() ([]byte, error) {
 		updatedAtValue = w.UpdatedAt.Time.UTC().Format(time.RFC3339)
 	}
 
-	var contentReviewedAtValue any
-	if w.ContentReviewedAt != nil && w.ContentReviewedAt.Status == pgtype.Present {
-		contentReviewedAtValue = w.ContentReviewedAt.Time.UTC().Format(time.RFC3339)
-	}
-
 	m := map[string]any{
 		"id":                  w.ID,
 		"name":                w.Name,
@@ -100,9 +92,6 @@ func (w Wordlist) MarshalJSON() ([]byte, error) {
 		"createdAt":           createdAtValue, // será string ou nil → "null"
 		"updatedAt":           updatedAtValue, // será string ou nil → "null"
 		"userId":              w.UserID,
-		"contentStatus":       w.ContentStatus,
-		"flaggedReason":       w.FlaggedReason,
-		"contentReviewedAt":   contentReviewedAtValue,
 	}
 
 	if w.WordsCount != nil {

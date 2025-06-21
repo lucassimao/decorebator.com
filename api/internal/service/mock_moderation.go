@@ -70,8 +70,8 @@ func NewMockModerationService() *MockModerationService {
 	}
 }
 
-// ValidateContent checks if content is appropriate using predefined test rules
-func (m *MockModerationService) ValidateContent(text string) ContentFilterResult {
+// Validate checks if content is appropriate using predefined test rules
+func (m *MockModerationService) Validate(text string) ContentFilterResult {
 	// Basic validation first
 	if text == "" {
 		return ContentFilterResult{
@@ -115,35 +115,6 @@ func (m *MockModerationService) ValidateContent(text string) ContentFilterResult
 		IsAppropriate: true,
 		Reason:        "",
 		FlaggedWords:  []string{},
-	}
-}
-
-// ValidateWord validates a single word
-func (m *MockModerationService) ValidateWord(word string) ContentFilterResult {
-	return m.ValidateContent(word)
-}
-
-// ValidateWordlistName validates a wordlist name
-func (m *MockModerationService) ValidateWordlistName(name string) ContentFilterResult {
-	return m.ValidateContent(name)
-}
-
-// ValidateDescription validates a description
-func (m *MockModerationService) ValidateDescription(description string) ContentFilterResult {
-	return m.ValidateContent(description)
-}
-
-// GetContentGuidelines returns test content guidelines
-func (m *MockModerationService) GetContentGuidelines() []string {
-	return []string{
-		"Keep content educational and appropriate for all ages",
-		"Use vocabulary words that help language learning",
-		"Avoid profanity, adult content, or offensive language",
-		"Don't include personal information (emails, phone numbers, URLs)",
-		"Keep wordlist names and descriptions family-friendly",
-		"Focus on legitimate vocabulary and educational content",
-		"Respect cultural sensitivities across different languages",
-		"Content is automatically reviewed to ensure it meets community standards",
 	}
 }
 

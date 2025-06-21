@@ -9,23 +9,19 @@ import (
 )
 
 type Word struct {
-	ID                int64               `json:"id"`
-	Name              string              `json:"name"`
-	CreatedAt         pgtype.Timestamptz  `json:"createdAt"`
-	UpdatedAt         pgtype.Timestamptz  `json:"updatedAt"`
-	WordlistID        int64               `json:"wordlistId"`
-	UserID            int64               `json:"userId"`
-	AudioURL          string              `json:"audioURL"`
-	Notes             string              `json:"notes"`
-	Pronunciation     string              `json:"pronunciation"`
-	Learned           bool                `json:"learned"`
-	ContentStatus     ContentStatus       `json:"contentStatus"`
-	FlaggedReason     *string             `json:"flaggedReason,omitempty"`
-	ContentReviewedAt *pgtype.Timestamptz `json:"contentReviewedAt,omitempty"`
+	ID            int64              `json:"id"`
+	Name          string             `json:"name"`
+	CreatedAt     pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt     pgtype.Timestamptz `json:"updatedAt"`
+	WordlistID    int64              `json:"wordlistId"`
+	UserID        int64              `json:"userId"`
+	AudioURL      string             `json:"audioURL"`
+	Notes         string             `json:"notes"`
+	Pronunciation string             `json:"pronunciation"`
+	Learned       bool               `json:"learned"`
 }
 
 func (w Word) MarshalJSON() ([]byte, error) {
-
 	createdAt := "null"
 	updatedAt := "null"
 
@@ -42,16 +38,6 @@ func (w Word) MarshalJSON() ([]byte, error) {
 		audioURL = w.AudioURL
 	}
 
-	contentReviewedAt := "null"
-	if w.ContentReviewedAt != nil && w.ContentReviewedAt.Status == pgtype.Present {
-		contentReviewedAt = w.ContentReviewedAt.Time.UTC().Format(time.RFC3339)
-	}
-
-	flaggedReason := "null"
-	if w.FlaggedReason != nil {
-		flaggedReason = fmt.Sprintf("%q", *w.FlaggedReason)
-	}
-
 	return []byte(fmt.Sprintf(`{
         "id": %d,
         "name": %q,
@@ -61,12 +47,9 @@ func (w Word) MarshalJSON() ([]byte, error) {
         "updatedAt": %q,
         "wordlistId": %d,
         "notes": %q,
-		"pronunciation": %q,
-        "userId": %d,
-		"contentStatus": %q,
-		"flaggedReason": %s,
-		"contentReviewedAt": %q
-    }`, w.ID, w.Name, createdAt, audioURL, w.Learned, updatedAt, w.WordlistID, w.Notes, w.Pronunciation, w.UserID, w.ContentStatus, flaggedReason, contentReviewedAt)), nil
+        "pronunciation": %q,
+        "userId": %d
+    }`, w.ID, w.Name, createdAt, audioURL, w.Learned, updatedAt, w.WordlistID, w.Notes, w.Pronunciation, w.UserID)), nil
 }
 
 func (w *Word) UnmarshalJSON(data []byte) error {

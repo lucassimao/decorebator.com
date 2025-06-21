@@ -72,11 +72,7 @@ type ContentFilterResult struct {
 
 // ModerationService interface for content moderation
 type ModerationService interface {
-	ValidateContent(text string) ContentFilterResult
-	ValidateWord(word string) ContentFilterResult
-	ValidateWordlistName(name string) ContentFilterResult
-	ValidateDescription(description string) ContentFilterResult
-	GetContentGuidelines() []string
+	Validate(text string) ContentFilterResult
 }
 
 // OpenAIModerationService handles content moderation using OpenAI's moderation API
@@ -108,8 +104,8 @@ func NewOpenAIModerationService() *OpenAIModerationService {
 	}
 }
 
-// ValidateContent moderates content using OpenAI's moderation API
-func (s *OpenAIModerationService) ValidateContent(text string) ContentFilterResult {
+// Validate moderates content using OpenAI's moderation API
+func (s *OpenAIModerationService) Validate(text string) ContentFilterResult {
 	// Basic validation first (empty, too long, etc.)
 	if text == "" {
 		return ContentFilterResult{
@@ -168,21 +164,6 @@ func (s *OpenAIModerationService) ValidateContent(text string) ContentFilterResu
 		Reason:        "",
 		FlaggedWords:  []string{},
 	}
-}
-
-// ValidateWord validates a single word
-func (s *OpenAIModerationService) ValidateWord(word string) ContentFilterResult {
-	return s.ValidateContent(word)
-}
-
-// ValidateWordlistName validates a wordlist name
-func (s *OpenAIModerationService) ValidateWordlistName(name string) ContentFilterResult {
-	return s.ValidateContent(name)
-}
-
-// ValidateDescription validates a description
-func (s *OpenAIModerationService) ValidateDescription(description string) ContentFilterResult {
-	return s.ValidateContent(description)
 }
 
 // moderateWithOpenAI calls the OpenAI moderation API
@@ -307,18 +288,4 @@ func (s *OpenAIModerationService) GetDailyRejectionCount(date string) (int, erro
 	}
 
 	return count, nil
-}
-
-// GetContentGuidelines returns user-friendly content guidelines
-func (s *OpenAIModerationService) GetContentGuidelines() []string {
-	return []string{
-		"Keep content educational and appropriate for all ages",
-		"Use vocabulary words that help language learning",
-		"Avoid profanity, adult content, or offensive language",
-		"Don't include personal information (emails, phone numbers, URLs)",
-		"Keep wordlist names and descriptions family-friendly",
-		"Focus on legitimate vocabulary and educational content",
-		"Respect cultural sensitivities across different languages",
-		"Content is automatically reviewed to ensure it meets community standards",
-	}
 }
