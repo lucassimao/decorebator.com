@@ -45,16 +45,22 @@ func NewTestServer(t *testing.T, config ...*TestConfig) *TestServer {
 
 	// Configure services for testing
 	var testConfig *httphandlers.Config
-	if len(config) > 0 && config[0] != nil {
+	switch len(config) {
+	case 0:
+		// No config provided, use defaults
+		testConfig = &httphandlers.Config{
+			Database: db,
+		}
+	case 1:
+		// One config provided, use it
 		testConfig = config[0]
 		// Ensure database is set for test config
 		if testConfig.Database == nil {
 			testConfig.Database = db
 		}
-	} else {
-		testConfig = &httphandlers.Config{
-			Database: db,
-		}
+	default:
+		// Multiple configs provided - this is an error
+		panic("NewTestServer accepts at most one config parameter")
 	}
 
 	// Use the real API routes from internal/http/setup.go with test configuration
