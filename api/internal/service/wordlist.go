@@ -2,37 +2,50 @@ package service
 
 import (
 	"fmt"
-	"os"
 
 	"decorebator.com/internal/model"
 	repo "decorebator.com/internal/repository"
 
 	"decorebator.com/internal/common"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var wordlistRepository *repo.WordlistRepository
-
 type Wordlist = model.Wordlist
+
+// WordlistService handles wordlist-related operations with dependency injection
+type WordlistService struct {
+	repository        *repo.WordlistRepository
+	moderationService ModerationService
+}
+
+// NewWordlistService creates a new wordlist service with dependencies
+func NewWordlistService(db *pgxpool.Pool, moderationService ModerationService) *WordlistService {
+	return &WordlistService{
+		repository:        &repo.WordlistRepository{Db: db},
+		moderationService: moderationService,
+	}
+}
+
+// Legacy global instance for backward compatibility during migration
+var defaultWordlistService *WordlistService
 
 func init() {
 	db, err := common.GetDBConnection()
 	if err != nil {
 		common.Logger.Error("failed to open db connection", "error", err)
-		os.Exit(1)
 	}
-	wordlistRepository = &repo.WordlistRepository{Db: db}
+	defaultWordlistService = NewWordlistService(db, NewOpenAIModerationService())
 }
 
-// include wordsCount and WordsLearnedCount for each scholarship
-func GetUserWordlistsWithWordStats(userId int64) ([]*Wordlist, error) {
+// GetUserWordlistsWithWordStats returns wordlists with word statistics
+func (wls *WordlistService) GetUserWordlistsWithWordStats(userID int64) ([]*Wordlist, error) {
 	args := repo.FindWordlistArgs{
-		OwnerId:                  &userId,
+		OwnerID:                  &userID,
 		ComputeWordsCount:        true,
 		ComputeWordsLearnedCount: true,
 	}
-	result, err := wordlistRepository.Find(args)
+	result, err := wls.repository.Find(args)
 	if err != nil {
-
 		wrappedErr := fmt.Errorf(
 			"failed to get all wordlists: %w", err,
 		)
@@ -41,8 +54,26 @@ func GetUserWordlistsWithWordStats(userId int64) ([]*Wordlist, error) {
 	return result, nil
 }
 
-func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
-	wordlist, err := wordlistRepository.Save(newWordlist.Name, newWordlist.Description, newWordlist.LanguageCode, newWordlist.UserID, newWordlist.PronunciationSystem)
+func (wls *WordlistService) SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
+	// Content filtering validation
+	nameResult := wls.moderationService.Validate(newWordlist.Name)
+	if !nameResult.IsAppropriate {
+		return nil, common.BusinessError{
+			Message: fmt.Sprintf("Wordlist name not appropriate: %s", nameResult.Reason),
+		}
+	}
+
+	// Validate description if provided
+	if newWordlist.Description != "" {
+		descResult := wls.moderationService.Validate(newWordlist.Description)
+		if !descResult.IsAppropriate {
+			return nil, common.BusinessError{
+				Message: fmt.Sprintf("Wordlist description not appropriate: %s", descResult.Reason),
+			}
+		}
+	}
+
+	wordlist, err := wls.repository.Save(newWordlist.Name, newWordlist.Description, newWordlist.LanguageCode, newWordlist.UserID, newWordlist.PronunciationSystem)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
 			"failed to save wordlist: %w", err,
@@ -53,12 +84,12 @@ func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
 	return wordlist, nil
 }
 
-func GetWordlistById(id, userId int64) (*Wordlist, error) {
+func (wls *WordlistService) GetWordlistByID(id, userID int64) (*Wordlist, error) {
 	args := repo.FindWordlistArgs{
-		Id:      &id,
-		OwnerId: &userId,
+		ID:      &id,
+		OwnerID: &userID,
 	}
-	result, err := wordlistRepository.Find(args)
+	result, err := wls.repository.Find(args)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
 			"failed to get wordlist %d by id: %w", id, err,
@@ -74,8 +105,8 @@ func GetWordlistById(id, userId int64) (*Wordlist, error) {
 	return wordlist, nil
 }
 
-func DeleteWordlist(id, userId int64) (int64, error) {
-	count, err := wordlistRepository.Delete(id, userId)
+func (wls *WordlistService) DeleteWordlist(id, userID int64) (int64, error) {
+	count, err := wls.repository.Delete(id, userID)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
 			"failed to delete wordlist %d : %w", id, err,
@@ -90,8 +121,26 @@ func DeleteWordlist(id, userId int64) (int64, error) {
 	return count, nil
 }
 
-func UpdateWordlist(wordlist *Wordlist) error {
-	count, err := wordlistRepository.Update(wordlist)
+func (wls *WordlistService) UpdateWordlist(wordlist *Wordlist) error {
+	// Content filtering validation for updates
+	nameResult := wls.moderationService.Validate(wordlist.Name)
+	if !nameResult.IsAppropriate {
+		return common.BusinessError{
+			Message: fmt.Sprintf("Wordlist name not appropriate: %s", nameResult.Reason),
+		}
+	}
+
+	// Validate description if provided
+	if wordlist.Description != "" {
+		descResult := wls.moderationService.Validate(wordlist.Description)
+		if !descResult.IsAppropriate {
+			return common.BusinessError{
+				Message: fmt.Sprintf("Wordlist description not appropriate: %s", descResult.Reason),
+			}
+		}
+	}
+
+	count, err := wls.repository.Update(wordlist)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
 			"failed to update wordlist %d : %w", wordlist.ID, err,
@@ -103,5 +152,32 @@ func UpdateWordlist(wordlist *Wordlist) error {
 		return common.NotFoundError{ID: wordlist.ID, Entity: "Wordlist"}
 	}
 	return nil
+}
 
+// Legacy function wrappers for backward compatibility during migration
+func GetUserWordlistsWithWordStats(userID int64) ([]*Wordlist, error) {
+	return defaultWordlistService.GetUserWordlistsWithWordStats(userID)
+}
+
+func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
+	return defaultWordlistService.SaveWordlist(newWordlist)
+}
+
+func GetWordlistByID(id, userID int64) (*Wordlist, error) {
+	return defaultWordlistService.GetWordlistByID(id, userID)
+}
+
+func DeleteWordlist(id, userID int64) (int64, error) {
+	return defaultWordlistService.DeleteWordlist(id, userID)
+}
+
+func UpdateWordlist(wordlist *Wordlist) error {
+	return defaultWordlistService.UpdateWordlist(wordlist)
+}
+
+// Deprecated: Use GetWordlistByID instead
+//
+//nolint:revive // keeping for backward compatibility
+func GetWordlistById(id, userID int64) (*Wordlist, error) {
+	return GetWordlistByID(id, userID)
 }

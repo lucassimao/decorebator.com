@@ -5,7 +5,9 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
+import * as MailComposer from "expo-mail-composer";
 import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -540,6 +542,58 @@ const ProfileSettingsScreen: React.FC = () => {
                 <MaterialIcons name="lock-outline" size={24} color="#636E72" />
                 <Text style={styles.actionText}>
                   {t("profile.changePassword.title")}
+                </Text>
+                <Ionicons name="chevron-forward" size={20} color="#636E72" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={async () => {
+                  await WebBrowser.openBrowserAsync(
+                    `https://decorebator.com/${i18n.language}/privacy`,
+                  );
+                }}
+              >
+                <MaterialIcons name="privacy-tip" size={24} color="#636E72" />
+                <Text style={styles.actionText}>
+                  {t("settings.privacyPolicy")}
+                </Text>
+                <Ionicons name="chevron-forward" size={20} color="#636E72" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => {
+                  Alert.alert(
+                    t("profile.dataExport.title"),
+                    t("profile.dataExport.message"),
+                    [
+                      { text: t("common.cancel"), style: "cancel" },
+                      {
+                        text: t("profile.dataExport.requestButton"),
+                        onPress: async () => {
+                          const isAvailable =
+                            await MailComposer.isAvailableAsync();
+                          if (!isAvailable) {
+                            Alert.alert(t("settings.noEmailClient"));
+                            return;
+                          }
+                          MailComposer.composeAsync({
+                            recipients: ["privacy@decorebator.com"],
+                            subject: t("profile.dataExport.emailSubject"),
+                            body: t("profile.dataExport.emailBody", {
+                              email: profile?.email,
+                            }),
+                          });
+                        },
+                      },
+                    ],
+                  );
+                }}
+              >
+                <MaterialIcons name="download" size={24} color="#636E72" />
+                <Text style={styles.actionText}>
+                  {t("profile.dataExport.title")}
                 </Text>
                 <Ionicons name="chevron-forward" size={20} color="#636E72" />
               </TouchableOpacity>

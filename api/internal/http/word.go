@@ -17,20 +17,28 @@ type WordInput struct {
 	Learned bool   `json:"learned"`
 }
 
-type WordRoutes struct{}
+type WordRoutes struct {
+	wordService *service.WordService
+}
 
 type Word = service.Word
 
+func NewWordRoutes(wordService *service.WordService) *WordRoutes {
+	return &WordRoutes{
+		wordService: wordService,
+	}
+}
+
 func (h *WordRoutes) GetAll(c *gin.Context) {
-	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	userId := c.GetInt64("userID")
+	wordlistID, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	userID := c.GetInt64("userID")
 
 	// Parse optional query parameter for filtering words with definitions
 	onlyWithDefinitions := c.Query("onlyWithDefinitions") == "true"
 
-	words, err := service.GetWordByWordlist(wordlistId, userId, onlyWithDefinitions)
+	words, err := h.wordService.GetWordByWordlist(wordlistID, userID, onlyWithDefinitions)
 	if err != nil {
-		common.Logger.Error("failed to get words", "error", err, "userId", userId, "wordlistId", wordlistId, "onlyWithDefinitions", onlyWithDefinitions)
+		common.Logger.Error("failed to get words", "error", err, "userID", userID, "wordlistID", wordlistID, "onlyWithDefinitions", onlyWithDefinitions)
 		c.String(http.StatusInternalServerError, "Could not get user words")
 		return
 	}
@@ -38,8 +46,8 @@ func (h *WordRoutes) GetAll(c *gin.Context) {
 }
 
 func (h *WordRoutes) Create(ctx *gin.Context) {
-	var wordlistId, _ = strconv.ParseInt(ctx.Param("wordlistId"), 10, 64)
-	var userId = ctx.GetInt64("userID")
+	var wordlistID, _ = strconv.ParseInt(ctx.Param("wordlistId"), 10, 64)
+	var userID = ctx.GetInt64("userID")
 	var input WordInput
 
 	if err := ctx.BindJSON(&input); err != nil {
@@ -47,8 +55,8 @@ func (h *WordRoutes) Create(ctx *gin.Context) {
 		return
 	}
 
-	var saved, err = service.SaveWord(&Word{Name: input.Name, UserID: userId, WordlistID: wordlistId, Notes: input.Notes}, ctx.Request.Context())
-	var logger = common.Logger.With("word", input.Name, "userId", userId, "endpoint", ctx.Request.URL.Path)
+	var saved, err = h.wordService.SaveWord(ctx.Request.Context(), &Word{Name: input.Name, UserID: userID, WordlistID: wordlistID, Notes: input.Notes})
+	var logger = common.Logger.With("word", input.Name, "userID", userID, "endpoint", ctx.Request.URL.Path)
 	fmt.Println(err)
 	if err != nil {
 		switch err.(type) {
@@ -64,10 +72,10 @@ func (h *WordRoutes) Create(ctx *gin.Context) {
 }
 
 func (h *WordRoutes) Delete(c *gin.Context) {
-	userId := c.GetInt64("userID")
+	userID := c.GetInt64("userID")
 	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
 
-	_, err := service.DeleteWord(id, userId)
+	_, err := h.wordService.DeleteWord(id, userID)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.String(http.StatusNotFound, err.Error())
@@ -83,15 +91,15 @@ func (h *WordRoutes) Update(c *gin.Context) {
 	var input WordInput
 
 	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
-	wordlistId, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	userId := c.GetInt64("userID")
+	wordlistID, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	userID := c.GetInt64("userID")
 
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := service.UpdateWord(&Word{ID: id, Name: input.Name, UserID: userId, Learned: input.Learned, WordlistID: wordlistId}, nil)
+	err := h.wordService.UpdateWord(&Word{ID: id, Name: input.Name, UserID: userID, Learned: input.Learned, WordlistID: wordlistID}, nil)
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.String(http.StatusNotFound, err.Error())
@@ -104,16 +112,16 @@ func (h *WordRoutes) Update(c *gin.Context) {
 }
 
 func (h *WordRoutes) GetDefinitions(c *gin.Context) {
-	userId := c.GetInt64("userID")
-	wordId, err := strconv.ParseInt(c.Param("wordId"), 10, 64)
+	userID := c.GetInt64("userID")
+	wordID, err := strconv.ParseInt(c.Param("wordId"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid word ID"})
 		return
 	}
 
-	definitions, err := service.GetDefinitionsByWordId(wordId, userId)
+	definitions, err := service.GetDefinitionsByWordId(wordID, userID)
 	if err != nil {
-		common.Logger.Error("failed to get definitions", "error", err, "userId", userId, "wordId", wordId)
+		common.Logger.Error("failed to get definitions", "error", err, "userID", userID, "wordId", wordID)
 		c.String(http.StatusInternalServerError, "Could not get word definitions")
 		return
 	}

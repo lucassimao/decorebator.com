@@ -23,6 +23,13 @@ func (TextToSpeechArgs) Kind() string { return "TextToSpeech" }
 
 type TextToSpeechWorker struct {
 	river.WorkerDefaults[TextToSpeechArgs]
+	wordService *WordService
+}
+
+func NewTextToSpeechWorker(wordService *WordService) *TextToSpeechWorker {
+	return &TextToSpeechWorker{
+		wordService: wordService,
+	}
 }
 
 func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpeechArgs]) error {
@@ -38,7 +45,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 		}
 	}
 
-	word, err := GetWordById(job.Args.WordId)
+	word, err := w.wordService.GetWordByID(job.Args.WordId)
 
 	if err != nil && errors.Is(err, common.NotFoundError{}) {
 		return river.JobCancel(errors.New("word not found"))
@@ -88,14 +95,14 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 
 	logger.Debug("audio generated", "wordId", word.ID, "url", word.AudioURL, "word", word.Name)
 
-	err = UpdateWord(word, nil)
+	err = w.wordService.UpdateWord(word, nil)
 	if err != nil {
 		return err
 	}
 
 	// if this job was triggered by an error report, then mark the issue as solved
 	if job.Args.ErrorReport != nil {
-		var strategy LeitnerSystemStrategy
+		strategy := NewLeitnerSystemStrategy(w.wordService)
 		return strategy.MarkErrorResolved(*job.Args.ErrorReport)
 	}
 

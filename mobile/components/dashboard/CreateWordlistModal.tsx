@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import { CreateWordlistDTO, PronunciationSystem } from "@/api/wordlists";
 import * as wordlistsApi from "@/api/wordlists";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { ContentGuidelinesModal } from "./ContentGuidelinesModal";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type Language = {
@@ -56,6 +57,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const [showContentGuidelines, setShowContentGuidelines] = useState(false);
 
   const mutation = useMutation<
     wordlistsApi.Wordlist,
@@ -174,6 +176,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
       visible={visible}
       animationType="none"
       onRequestClose={onClose}
+      accessibilityViewIsModal={true}
     >
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View
@@ -201,13 +204,50 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.handle} />
-            <Text style={styles.title}>{t("createWordlist.title")}</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Text 
+              style={styles.title}
+              accessibilityRole="header"
+              accessibilityLevel={1}
+            >
+              {t("createWordlist.title")}
+            </Text>
+            <TouchableOpacity 
+              style={styles.closeButton} 
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.close")}
+              accessibilityHint="Close the create wordlist dialog"
+            >
               <Ionicons name="close" size={24} color="#636E72" />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+            {/* Content Guidelines Notice */}
+            <View style={styles.guidelinesNotice}>
+              <View style={styles.guidelinesHeader}>
+                <Ionicons name="information-circle" size={20} color="#FF7B54" />
+                <Text style={styles.guidelinesTitle}>
+                  {t("createWordlist.contentGuidelines")}
+                </Text>
+              </View>
+              <Text style={styles.guidelinesText}>
+                {t("createWordlist.contentGuidelinesText")}
+              </Text>
+              <TouchableOpacity
+                style={styles.guidelinesLink}
+                onPress={() => setShowContentGuidelines(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t("createWordlist.viewGuidelines")}
+                accessibilityHint="View detailed content guidelines"
+              >
+                <Text style={styles.guidelinesLinkText}>
+                  {t("createWordlist.viewGuidelines")}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color="#FF7B54" />
+              </TouchableOpacity>
+            </View>
+
             {/* Name Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
@@ -238,6 +278,9 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                     onBlur={onBlur}
                     autoCapitalize="words"
                     maxLength={50}
+                    accessibilityLabel={t("createWordlist.nameLabel")}
+                    accessibilityHint="Enter a name for your new wordlist"
+                    accessibilityRequired={true}
                   />
                 )}
               />
@@ -271,6 +314,8 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                     multiline
                     numberOfLines={3}
                     maxLength={200}
+                    accessibilityLabel={t("createWordlist.descriptionLabel")}
+                    accessibilityHint="Optionally describe what this wordlist is for"
                   />
                 )}
               />
@@ -298,6 +343,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     style={styles.languageScroll}
+                    accessibilityLabel="Select language for wordlist"
                   >
                     {LANGUAGES.map((lang) => (
                       <TouchableOpacity
@@ -309,6 +355,9 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                         onPress={() => {
                           onChange(lang.code);
                         }}
+                        accessibilityRole="radio"
+                        accessibilityLabel={`Select ${t(`dashboard.languages.${lang.name.toLowerCase()}`)} language`}
+                        accessibilityState={{ selected: value === lang.code }}
                       >
                         <Text style={styles.languageFlag}>{lang.flag}</Text>
                         <Text
@@ -392,6 +441,9 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                               onPress={() => {
                                 onChange(system);
                               }}
+                              accessibilityRole="radio"
+                              accessibilityLabel={`Select ${t(`pronunciationSystems.${system}`)} pronunciation system`}
+                              accessibilityState={{ selected: value === system }}
                             >
                               <Text
                                 style={[
@@ -432,6 +484,9 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
             <TouchableOpacity
               style={[styles.button, styles.cancelButton]}
               onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.cancel")}
+              accessibilityHint="Cancel wordlist creation and close dialog"
             >
               <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
             </TouchableOpacity>
@@ -444,6 +499,10 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
               ]}
               onPress={handleSubmit(handleFormSubmit)}
               disabled={mutation.isPending}
+              accessibilityRole="button"
+              accessibilityLabel={mutation.isPending ? "Creating wordlist..." : t("createWordlist.createButton")}
+              accessibilityHint="Create the new wordlist with entered details"
+              accessibilityState={{ disabled: mutation.isPending }}
             >
               {mutation.isPending ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
@@ -464,6 +523,11 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
           </View>
         </Animated.View>
       </KeyboardAvoidingView>
+
+      <ContentGuidelinesModal
+        visible={showContentGuidelines}
+        onClose={() => setShowContentGuidelines(false)}
+      />
     </Modal>
   );
 };
@@ -526,6 +590,43 @@ const styles = StyleSheet.create({
   },
   form: {
     padding: 20,
+  },
+  guidelinesNotice: {
+    backgroundColor: "#FFF9F0",
+    borderWidth: 1,
+    borderColor: "#FFE6CC",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+  },
+  guidelinesHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  guidelinesTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2D3436",
+    marginLeft: 8,
+    flex: 1,
+  },
+  guidelinesText: {
+    fontSize: 14,
+    color: "#636E72",
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  guidelinesLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+  },
+  guidelinesLinkText: {
+    fontSize: 14,
+    color: "#FF7B54",
+    fontWeight: "500",
   },
   inputGroup: {
     marginBottom: 24,

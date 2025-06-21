@@ -203,6 +203,9 @@
     "helpAndSupport": "ヘルプとサポート",
     "noEmailClient": "メールクライアントがありません。support@decorerbator.com にメールを送っていただけますか？",
     "supportEmailSubject": "サポートリクエスト",
+    "legalAndPrivacy": "法的事項とプライバシー",
+    "privacyPolicy": "プライバシーポリシー",
+    "termsOfService": "利用規約",
     "subscription": {
       "title": "サブスクリプション",
       "currentPlan": "現在のサブスクリプション",

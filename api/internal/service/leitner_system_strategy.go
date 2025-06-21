@@ -41,7 +41,28 @@ func cryptoRandInt(limit int) int {
 // - Correct answers move words to higher boxes (longer intervals)
 // - Incorrect answers reset words to box 1 (immediate review)
 // - Each box has different quiz types to progressively increase difficulty
-type LeitnerSystemStrategy struct{}
+type LeitnerSystemStrategy struct {
+	wordService *WordService
+}
+
+func NewLeitnerSystemStrategy(wordService *WordService) *LeitnerSystemStrategy {
+	return &LeitnerSystemStrategy{
+		wordService: wordService,
+	}
+}
+
+// Default strategy uses a default word service - this is for backward compatibility
+func DefaultLeitnerSystemStrategy() LeitnerSystemStrategy {
+	db, err := common.GetDBConnection()
+	if err != nil {
+		common.Logger.Error("failed to get db connection for default strategy", "error", err)
+		// Return empty strategy - will fail at runtime but avoids panic during init
+		return LeitnerSystemStrategy{}
+	}
+	wordService := NewWordService(db, NewOpenAIModerationService())
+	return LeitnerSystemStrategy{wordService: wordService}
+}
+
 type Quiz = model.Quiz
 type QuizType = model.QuizType
 
@@ -396,7 +417,7 @@ func getWordlistBoxDistribution(userID, wordlistID int64) (map[int64]int, error)
 //
 // Returns a Quiz object with the question, options, correct answer, and metadata.
 // Returns an error if no words are available for review or if database operations fail.
-func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error) {
+func (s LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error) {
 	// Early check to avoid unnecessary queries
 	hasWords, err := checkHasUnlearnedWords(userID, wordlistID)
 	if err != nil {
@@ -430,7 +451,7 @@ func (LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error)
 		return nil, err
 	}
 
-	word, err := GetWordById(nextDefinition.WordID)
+	word, err := s.wordService.GetWordByID(nextDefinition.WordID)
 	if err != nil {
 		return nil, err
 	}

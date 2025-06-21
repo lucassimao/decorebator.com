@@ -24,14 +24,11 @@ type TestServer struct {
 	BaseURL string
 }
 
-// TestConfig holds configuration for test server
-type TestConfig struct {
-	DatabaseURL string
-	TestMode    bool
-}
+// TestConfig holds configuration for test server (alias for HTTP config)
+type TestConfig = httphandlers.Config
 
 // NewTestServer creates a new test server instance using the real API routes
-func NewTestServer(t *testing.T) *TestServer {
+func NewTestServer(t *testing.T, config ...*TestConfig) *TestServer {
 	// Set gin to test mode
 	gin.SetMode(gin.TestMode)
 
@@ -46,8 +43,28 @@ func NewTestServer(t *testing.T) *TestServer {
 	err = CleanTestData(db)
 	require.NoError(t, err, "Failed to clean test data before starting")
 
-	// Use the real API routes from internal/http/setup.go
-	engine := httphandlers.SetupRoutes()
+	// Configure services for testing
+	var testConfig *httphandlers.Config
+	switch len(config) {
+	case 0:
+		// No config provided, use defaults
+		testConfig = &httphandlers.Config{
+			Database: db,
+		}
+	case 1:
+		// One config provided, use it
+		testConfig = config[0]
+		// Ensure database is set for test config
+		if testConfig.Database == nil {
+			testConfig.Database = db
+		}
+	default:
+		// Multiple configs provided - this is an error
+		panic("NewTestServer accepts at most one config parameter")
+	}
+
+	// Use the real API routes from internal/http/setup.go with test configuration
+	engine := httphandlers.SetupRoutes(testConfig)
 
 	// Create test server
 	server := httptest.NewServer(engine)
@@ -159,42 +176,6 @@ func (ts *TestServer) WithPremiumUser(t *testing.T) string {
 
 	// Login returns token in Authorization header with premium status
 	return loginResp.Header("Authorization").NotEmpty().Raw()
-}
-
-// activatePremiumSubscription simulates premium subscription activation
-func (ts *TestServer) activatePremiumSubscription(token string) error {
-	// This would typically involve mocking Stripe webhook
-	// For now, we'll directly update the database
-	ctx := context.Background()
-
-	// Extract user ID from token (simplified for testing)
-	userID, err := ts.extractUserIDFromToken(token)
-	if err != nil {
-		return err
-	}
-
-	// Update user subscription status
-	query := `
-		UPDATE users 
-		SET subscription_plan = 'monthly', 
-		    subscription_status = 'active',
-		    updated_at = NOW()
-		WHERE id = $1
-	`
-
-	_, err = ts.DB.Exec(ctx, query, userID)
-	return err
-}
-
-// extractUserIDFromToken extracts user ID from JWT token (simplified for testing)
-func (ts *TestServer) extractUserIDFromToken(_ string) (int64, error) {
-	// In a real implementation, this would parse and validate the JWT
-	// For testing purposes, we'll query the database to find the most recent user
-	ctx := context.Background()
-
-	var userID int64
-	err := ts.DB.QueryRow(ctx, "SELECT id FROM users ORDER BY created_at DESC LIMIT 1").Scan(&userID)
-	return userID, err
 }
 
 // SeedTestData seeds the database with test data

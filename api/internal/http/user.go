@@ -111,7 +111,11 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		writeAuthenticationCookie(c, jwtToken)
 		c.Status(http.StatusCreated)
 		go mail.AddContactToList(user)
-		go mail.SendWelcomeEmail(input.Email)
+		go func() {
+			if err := mail.SendWelcomeEmail(input.Email); err != nil {
+				common.Logger.Error("failed to send welcome email", "email", input.Email, "error", err)
+			}
+		}()
 
 	}
 }
@@ -339,7 +343,7 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 		return
 	}
 
-	// hide unecessary data
+	// hide unnecessary data
 	user.PasswordHash = ""
 	user.StripeCustomerID = nil
 

@@ -38,13 +38,29 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
   return (
     <View>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+        <TouchableOpacity 
+          style={styles.closeButton} 
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel="Close flashcards"
+          accessibilityHint="Return to previous screen"
+        >
           <Ionicons name="close" size={28} color={colors.textDark} />
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>{wordlistName}</Text>
-          <Text style={styles.headerSubtitle}>
+          <Text 
+            style={styles.headerTitle}
+            accessibilityRole="header"
+            accessibilityLevel={1}
+          >
+            {wordlistName}
+          </Text>
+          <Text 
+            style={styles.headerSubtitle}
+            accessibilityRole="text"
+            accessibilityLabel={`Card ${currentIndex + 1} of ${totalWords}`}
+          >
             {t("flashcards.cardCounter", {
               current: currentIndex + 1,
               total: totalWords,
@@ -56,6 +72,10 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
           style={styles.reportButton}
           onPress={onReportError}
           disabled={!isOnline}
+          accessibilityRole="button"
+          accessibilityLabel={isOnline ? "Report error" : "Report error (offline)"}
+          accessibilityHint={isOnline ? "Report an issue with the current flashcard" : "Requires internet connection"}
+          accessibilityState={{ disabled: !isOnline }}
         >
           <MaterialIcons
             name="flag"
@@ -88,6 +108,10 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
             thumbColor={colors.white}
             trackColor={{ false: colors.borderGray, true: colors.primary }}
             ios_backgroundColor={colors.borderGray}
+            accessibilityRole="switch"
+            accessibilityLabel={t("flashcards.savePosition")}
+            accessibilityHint="Remember your position when you return to this wordlist"
+            accessibilityValue={{ text: savePosition ? "On" : "Off" }}
           />
         </View>
       )}

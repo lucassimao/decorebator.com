@@ -203,6 +203,9 @@
     "helpAndSupport": "Ajuda e Suporte",
     "noEmailClient": "Nenhum cliente de e-mail disponível. Você poderia nos enviar um e-mail para support@decorerbator.com?",
     "supportEmailSubject": "Solicitação de suporte",
+    "legalAndPrivacy": "Legal e Privacidade",
+    "privacyPolicy": "Política de Privacidade",
+    "termsOfService": "Termos de Serviço",
     "subscription": {
       "title": "Assinatura",
       "currentPlan": "Assinatura Atual",

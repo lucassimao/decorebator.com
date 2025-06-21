@@ -70,7 +70,7 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 			"interjección": "interjection",
 			// Handle accented variations
 			"preposicion":  "preposition",
-			"conjuncion":   "conjunction",
+			"conjuncion":   "conjunction", //nolint:misspell // Spanish language term
 			"interjeccion": "interjection",
 		},
 		VerbTenses:          []string{"presente", "pretérito perfecto simple", "participio pasado"},
@@ -85,7 +85,7 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		Code:             "fr",
 		Name:             "French",
 		Flag:             "🇫🇷",
-		PartOfSpeechList: []string{"nom", "pronom", "verbe", "adjectif", "adverbe", "préposition", "conjonction", "interjection"},
+		PartOfSpeechList: []string{"nom", "pronom", "verbe", "adjectif", "adverbe", "préposition", "conjonction", "interjection"}, //nolint:misspell // French language terms
 		PartOfSpeechMappings: map[string]string{
 			"nom":          "noun",
 			"pronom":       "pronoun",
@@ -93,13 +93,13 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 			"adjectif":     "adjective",
 			"adverbe":      "adverb",
 			"préposition":  "preposition",
-			"conjonction":  "conjunction",
+			"conjonction":  "conjunction", //nolint:misspell // French language term
 			"interjection": "interjection",
 			// Handle accented variations
 			"preposition": "preposition",
 		},
-		VerbTenses:          []string{"présent", "passé composé", "participe passé"},
-		GrammarInstructions: "Pour les verbes français, fournissez les formes du présent, passé composé et participe passé. Incluez les informations sur le genre pour les noms et adjectifs.",
+		VerbTenses:          []string{"présent", "passé composé", "participe passé"},                                                                                                           //nolint:misspell // French language terms
+		GrammarInstructions: "Pour les verbes français, fournissez les formes du présent, passé composé et participe passé. Incluez les informations sur le genre pour les noms et adjectifs.", //nolint:misspell // French language terms
 		SpecialInstructions: "Attention aux liaisons et aux verbes irréguliers. Incluez les accents appropriés.",
 		ExampleInstructions: "Encadrez le mot cible entre crochets [mot] dans toutes les phrases d'exemple.",
 		PronunciationInstructions: map[string]string{
@@ -292,7 +292,7 @@ func chatCompletion(messages []map[string]string, schema map[string]any) (*ChatC
 
 	var requestBody, err = json.Marshal(requestBodyStruct)
 	if err != nil {
-		return nil, fmt.Errorf("error marshalling request data: %w", err)
+		return nil, fmt.Errorf("error marshaling request data: %w", err)
 	}
 
 	req, err := http.NewRequest("POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
@@ -369,7 +369,7 @@ func GetDefinition(token string, languageCode string, pronunciationSystem model.
 	var openAIDefinition OpenAPIDefinition
 	err = json.Unmarshal([]byte(firstDefinition), &openAIDefinition)
 	if err != nil {
-		logger.Error("error unmarshalling definition", "error", err)
+		logger.Error("error unmarshaling definition", "error", err)
 		return nil, fmt.Errorf("failed to unmarshall ChatGPT response: %w", err)
 	}
 

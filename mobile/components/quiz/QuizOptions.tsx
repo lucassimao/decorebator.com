@@ -63,8 +63,52 @@ export const QuizOptions: React.FC<QuizOptionsProps> = ({
     return null; // This quiz type doesn't use options
   }
 
+  const getAccessibilityLabel = (option: string, index: number) => {
+    if (!showResult) {
+      return `Option ${index + 1}: ${option}`;
+    }
+
+    const isCorrect = index === quiz?.answerIndex;
+    const isSelected = selectedAnswer === index;
+
+    if (isCorrect) {
+      return `Correct answer: ${option}`;
+    } else if (isSelected && !isCorrect) {
+      return `Your incorrect selection: ${option}`;
+    }
+
+    return `Option ${index + 1}: ${option}`;
+  };
+
+  const getAccessibilityHint = (index: number) => {
+    if (showResult) return undefined;
+    return "Double tap to select this answer";
+  };
+
+  const getAccessibilityState = (index: number) => {
+    if (!showResult) {
+      return { 
+        selected: selectedAnswer === index,
+        disabled: false 
+      };
+    }
+
+    const isCorrect = index === quiz?.answerIndex;
+    const isSelected = selectedAnswer === index;
+
+    return {
+      selected: isSelected,
+      disabled: true,
+      checked: isCorrect
+    };
+  };
+
   return (
-    <View style={styles.optionsContainer}>
+    <View 
+      style={styles.optionsContainer}
+      accessibilityRole="radiogroup"
+      accessibilityLabel="Answer options"
+    >
       {quiz?.options.map((option, index) => (
         <TouchableOpacity
           key={index}
@@ -72,15 +116,29 @@ export const QuizOptions: React.FC<QuizOptionsProps> = ({
           onPress={() => onAnswerSelect(index)}
           disabled={showResult}
           activeOpacity={0.7}
+          accessibilityRole="radio"
+          accessibilityLabel={getAccessibilityLabel(option, index)}
+          accessibilityHint={getAccessibilityHint(index)}
+          accessibilityState={getAccessibilityState(index)}
         >
           <Text style={getOptionTextStyle(index)}>{option}</Text>
           {showResult && index === quiz.answerIndex && (
-            <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+            <Ionicons 
+              name="checkmark-circle" 
+              size={24} 
+              color="#4CAF50"
+              accessibilityLabel="Correct answer indicator"
+            />
           )}
           {showResult &&
             selectedAnswer === index &&
             index !== quiz.answerIndex && (
-              <Ionicons name="close-circle" size={24} color="#FF6B6B" />
+              <Ionicons 
+                name="close-circle" 
+                size={24} 
+                color="#FF6B6B"
+                accessibilityLabel="Incorrect answer indicator"
+              />
             )}
         </TouchableOpacity>
       ))}

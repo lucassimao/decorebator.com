@@ -22,7 +22,6 @@ type Word struct {
 }
 
 func (w Word) MarshalJSON() ([]byte, error) {
-
 	createdAt := "null"
 	updatedAt := "null"
 
@@ -48,7 +47,7 @@ func (w Word) MarshalJSON() ([]byte, error) {
         "updatedAt": %q,
         "wordlistId": %d,
         "notes": %q,
-		"pronunciation": %q,
+        "pronunciation": %q,
         "userId": %d
     }`, w.ID, w.Name, createdAt, audioURL, w.Learned, updatedAt, w.WordlistID, w.Notes, w.Pronunciation, w.UserID)), nil
 }

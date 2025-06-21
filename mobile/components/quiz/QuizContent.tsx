@@ -162,15 +162,40 @@ export const QuizContent: React.FC<QuizContentProps> = ({
       case "GUESS_MEANING":
         return (
           <View style={styles.questionContainer}>
-            <Text style={styles.wordText}>{quiz.value}</Text>
-            {quiz.pos && <Text style={styles.posText}>({quiz.pos})</Text>}
+            <Text 
+              style={styles.wordText}
+              accessibilityRole="text"
+              accessibilityLabel={`Word to define: ${quiz.value}`}
+            >
+              {quiz.value}
+            </Text>
+            {quiz.pos && (
+              <Text 
+                style={styles.posText}
+                accessibilityRole="text"
+                accessibilityLabel={`Part of speech: ${quiz.pos}`}
+              >
+                ({quiz.pos})
+              </Text>
+            )}
             {quiz.pronunciation && (
-              <Text style={styles.pronunciationText}>
+              <Text 
+                style={styles.pronunciationText}
+                accessibilityRole="text"
+                accessibilityLabel={`Pronunciation: ${quiz.pronunciation}`}
+              >
                 /{quiz.pronunciation}/
               </Text>
             )}
             {quiz.audioURL && (
-              <TouchableOpacity style={styles.audioButton} onPress={playAudio}>
+              <TouchableOpacity 
+                style={styles.audioButton} 
+                onPress={playAudio}
+                accessibilityRole="button"
+                accessibilityLabel={isPlaying ? "Pause pronunciation" : "Play pronunciation"}
+                accessibilityHint="Plays the pronunciation of the current word"
+                accessibilityState={{ selected: isPlaying }}
+              >
                 <Ionicons
                   name={isPlaying ? "pause-circle" : "play-circle"}
                   size={48}
@@ -184,11 +209,19 @@ export const QuizContent: React.FC<QuizContentProps> = ({
       case "COMPLETE_SENTENCE":
         return (
           <View style={styles.questionContainer}>
-            <Text style={styles.sentenceText}>
+            <Text 
+              style={styles.sentenceText}
+              accessibilityRole="text"
+              accessibilityLabel={`Complete this sentence: ${hideSquareBracketContent(quiz.value)}`}
+            >
               {hideSquareBracketContent(quiz.value)}
             </Text>
             {quiz.pos && (
-              <Text style={styles.posText}>
+              <Text 
+                style={styles.posText}
+                accessibilityRole="text"
+                accessibilityLabel={`Part of speech: ${quiz.pos}${quiz.isVerbType ? ", using inflections" : ""}`}
+              >
                 ({quiz.pos}
                 {quiz.isVerbType && " - using inflections"})
               </Text>
@@ -199,7 +232,13 @@ export const QuizContent: React.FC<QuizContentProps> = ({
       case "WORD_FROM_MEANING":
         return (
           <View style={styles.questionContainer}>
-            <Text style={styles.meaningText}>{quiz.value}</Text>
+            <Text 
+              style={styles.meaningText}
+              accessibilityRole="text"
+              accessibilityLabel={`Find the word that matches this meaning: ${quiz.value}`}
+            >
+              {quiz.value}
+            </Text>
           </View>
         );
 
@@ -216,15 +255,25 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                 </View>
               )}
               {imageError ? (
-                <View style={styles.imageErrorContainer}>
+                <View 
+                  style={styles.imageErrorContainer}
+                  accessibilityRole="alert"
+                  accessibilityLabel="Image failed to load"
+                >
                   <Ionicons name="image-outline" size={48} color="#B2BEC3" />
-                  <Text style={styles.imageErrorText}>
+                  <Text 
+                    style={styles.imageErrorText}
+                    accessibilityRole="text"
+                  >
                     {t("quiz.imageLoadError")}
                   </Text>
                   <View style={styles.imageErrorActions}>
                     <TouchableOpacity
                       style={styles.retryButton}
                       onPress={retryImageLoad}
+                      accessibilityRole="button"
+                      accessibilityLabel="Retry loading image"
+                      accessibilityHint="Attempts to reload the image"
                     >
                       <Ionicons name="refresh" size={20} color="#FFFFFF" />
                       <Text style={styles.retryButtonText}>
@@ -234,6 +283,9 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                     <TouchableOpacity
                       style={styles.skipImageButton}
                       onPress={onSkipQuestion}
+                      accessibilityRole="button"
+                      accessibilityLabel="Skip this question"
+                      accessibilityHint="Moves to the next question"
                     >
                       <Text style={styles.skipImageButtonText}>
                         {t("quiz.skipQuestion")}
@@ -241,7 +293,11 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                     </TouchableOpacity>
                   </View>
                   {imageRetryCount > 0 && (
-                    <Text style={styles.retryCountText}>
+                    <Text 
+                      style={styles.retryCountText}
+                      accessibilityRole="text"
+                      accessibilityLabel={`Retry attempts: ${imageRetryCount}`}
+                    >
                       {t("quiz.retryAttempts", { count: imageRetryCount })}
                     </Text>
                   )}
@@ -254,6 +310,12 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                     (imageLoading || imageError) && styles.hiddenImage,
                   ]}
                   resizeMode="contain"
+                  accessible={true}
+                  accessibilityRole="image"
+                  accessibilityLabel={quiz.imageDescription ? 
+                    `Quiz image: ${hideSquareBracketContent(quiz.imageDescription)}` : 
+                    "Quiz image for word identification"}
+                  accessibilityHint="This image represents the word you need to identify"
                   onLoadStart={() => {
                     // Only set loading if not already loading to prevent rapid state changes
                     if (!imageLoading) {
@@ -321,18 +383,38 @@ export const QuizContent: React.FC<QuizContentProps> = ({
       case "WORD_FROM_AUDIO":
       case "MEANING_FROM_AUDIO":
       case "WORD_FROM_EXAMPLE_AUDIO":
+        const getAudioQuizLabel = () => {
+          switch (quiz.type) {
+            case "WORD_FROM_AUDIO":
+              return isPlaying ? "Audio is playing, listen for the word" : "Play audio to hear the word";
+            case "MEANING_FROM_AUDIO":
+              return isPlaying ? "Audio is playing, listen and select the meaning" : "Play audio to hear the word, then select its meaning";
+            case "WORD_FROM_EXAMPLE_AUDIO":
+              return isPlaying ? "Audio is playing, listen for the example sentence" : "Play audio to hear an example sentence";
+            default:
+              return isPlaying ? "Audio is playing" : "Tap to play audio";
+          }
+        };
+
         return (
           <View style={styles.questionContainer}>
             <TouchableOpacity
               style={styles.largeAudioButton}
               onPress={playAudio}
+              accessibilityRole="button"
+              accessibilityLabel={getAudioQuizLabel()}
+              accessibilityHint="Double tap to play or pause the audio"
+              accessibilityState={{ selected: isPlaying }}
             >
               <Ionicons
                 name={isPlaying ? "pause-circle" : "play-circle"}
                 size={80}
                 color="#FF7B54"
               />
-              <Text style={styles.audioText}>
+              <Text 
+                style={styles.audioText}
+                accessibilityRole="text"
+              >
                 {isPlaying ? t("quiz.audioPlaying") : t("quiz.audioTapToPlay")}
               </Text>
             </TouchableOpacity>
@@ -343,10 +425,28 @@ export const QuizContent: React.FC<QuizContentProps> = ({
         const correctAnswer = quiz.options[quiz.answerIndex];
         return (
           <View style={styles.questionContainer}>
-            <Text style={styles.meaningText}>{quiz.value}</Text>
-            {quiz.pos && <Text style={styles.posText}>({quiz.pos})</Text>}
+            <Text 
+              style={styles.meaningText}
+              accessibilityRole="text"
+              accessibilityLabel={`Type the word that matches this definition: ${quiz.value}`}
+            >
+              {quiz.value}
+            </Text>
+            {quiz.pos && (
+              <Text 
+                style={styles.posText}
+                accessibilityRole="text"
+                accessibilityLabel={`Part of speech: ${quiz.pos}`}
+              >
+                ({quiz.pos})
+              </Text>
+            )}
             {quiz.pronunciation && (
-              <Text style={styles.pronunciationText}>
+              <Text 
+                style={styles.pronunciationText}
+                accessibilityRole="text"
+                accessibilityLabel={`Pronunciation: ${quiz.pronunciation}`}
+              >
                 /{quiz.pronunciation}/
               </Text>
             )}
@@ -371,6 +471,13 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                 autoCorrect={false}
                 editable={!isSubmitted}
                 onSubmitEditing={onSubmitAnswer}
+                accessibilityRole="search"
+                accessibilityLabel="Type your answer here"
+                accessibilityHint="Enter the word that matches the given definition"
+                accessibilityState={{ 
+                  disabled: isSubmitted,
+                  selected: isSubmitted && userInput.toLowerCase().trim() === correctAnswer.toLowerCase()
+                }}
               />
               {!isSubmitted && (
                 <View style={styles.buttonContainer}>
@@ -381,6 +488,10 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                     ]}
                     onPress={onSubmitAnswer}
                     disabled={!userInput.trim()}
+                    accessibilityRole="button"
+                    accessibilityLabel="Submit answer"
+                    accessibilityHint="Submit your typed answer for evaluation"
+                    accessibilityState={{ disabled: !userInput.trim() }}
                   >
                     <Text style={styles.submitAnswerText}>
                       {t("quiz.submit")}
@@ -389,6 +500,9 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                   <TouchableOpacity
                     style={styles.skipButton}
                     onPress={onSkipQuestion}
+                    accessibilityRole="button"
+                    accessibilityLabel="Skip this question"
+                    accessibilityHint="Move to the next question without answering"
                   >
                     <Text style={styles.skipButtonText}>
                       {t("quiz.skipQuestion")}
@@ -398,7 +512,11 @@ export const QuizContent: React.FC<QuizContentProps> = ({
               )}
             </View>
             {isSubmitted && (
-              <View style={styles.answerFeedback}>
+              <View 
+                style={styles.answerFeedback}
+                accessibilityRole="alert"
+                accessibilityLiveRegion="assertive"
+              >
                 {userInput.toLowerCase().trim() ===
                 correctAnswer.toLowerCase() ? (
                   <>
@@ -407,14 +525,22 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                       size={24}
                       color="#4CAF50"
                     />
-                    <Text style={styles.correctFeedback}>
+                    <Text 
+                      style={styles.correctFeedback}
+                      accessibilityRole="text"
+                      accessibilityLabel={`Correct! ${t("quiz.correctAnswer")}`}
+                    >
                       {t("quiz.correctAnswer")}
                     </Text>
                   </>
                 ) : (
                   <>
                     <Ionicons name="close-circle" size={24} color="#FF6B6B" />
-                    <Text style={styles.incorrectFeedback}>
+                    <Text 
+                      style={styles.incorrectFeedback}
+                      accessibilityRole="text"
+                      accessibilityLabel={`Incorrect. The correct answer is: ${correctAnswer}`}
+                    >
                       {t("quiz.incorrectAnswer", { answer: correctAnswer })}
                     </Text>
                   </>
@@ -432,7 +558,14 @@ export const QuizContent: React.FC<QuizContentProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.quizTitle}>{getQuizTitle()}</Text>
+      <Text 
+        style={styles.quizTitle}
+        accessibilityRole="header"
+        accessibilityLevel={1}
+        accessibilityLabel={`Quiz question: ${getQuizTitle()}`}
+      >
+        {getQuizTitle()}
+      </Text>
       {renderQuizContent()}
     </View>
   );

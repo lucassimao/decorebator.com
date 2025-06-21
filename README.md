@@ -5,7 +5,7 @@ Decorebator is a comprehensive vocabulary learning application that uses AI-powe
 ## 🌟 Features
 
 ### Core Learning Features
-- **Build Vocabulary Lists**: Create and manage multiple wordlists for any language
+- **Multi-Language Support**: Create wordlists in 7 languages with native AI-powered content generation
 - **AI-Powered Enrichment**: Automatically generates definitions, images, audio pronunciations, and example sentences
 - **Multiple Quiz Modes** (8 Different Types):
   - **Guess Meaning**: Choose the correct meaning for a given word
@@ -16,10 +16,10 @@ Decorebator is a comprehensive vocabulary learning application that uses AI-powe
   - **Write from Definition**: Type the word based on its meaning (active recall)
   - **Example Audio Recognition**: Identify words from contextual example sentence audio
 - **Interactive Flashcards**: Study definitions with examples, pronunciation, and grammatical context
-- **Spaced Repetition**: Uses the advanced 7-box Leitner system with deterministic selection to optimize learning retention
-- **Progress Tracking**: Monitor your learning journey with comprehensive analytics and detailed statistics
-- **Error Reporting**: Report issues with AI-generated content (images, audio, definitions) for continuous improvement
-- **Offline Support**: Premium users can access wordlists and practice offline
+- **Advanced Leitner System**: 7-box spaced repetition with deterministic word selection for optimal retention
+- **Comprehensive Analytics**: Real-time progress tracking with detailed statistics and performance insights
+- **Error Reporting**: User-driven quality control for AI-generated content with automatic regeneration
+- **Offline Support**: Premium users can access wordlists and practice offline with seamless sync
 
 ### Subscription Tiers
 - **Free Plan**:
@@ -50,29 +50,30 @@ Located in `/api`, the backend follows a 3-tier layered architecture:
 - **Repository Layer** (`internal/repository/`): Database operations
 
 **Key Technologies**:
-- Go with Gin web framework
+- Go with Gin web framework and 3-tier layered architecture
 - PostgreSQL 15+ database with pgx/v5 driver and materialized views
+- Redis caching layer for analytics with intelligent invalidation
 - River queue system for background jobs with PostgreSQL backend
 - MinIO for S3-compatible object storage
 - SendGrid for email services
-- OpenAI API for AI features (DALL-E, TTS, GPT)
+- OpenAI API for AI features (DALL-E, TTS, GPT) with multi-language support
 - Stripe for subscription payments with webhook integration
 - Sentry for error monitoring and logging
 - Structured logging with slog
 
 ### 2. Mobile Application (React Native/Expo)
 Located in `/mobile`, cross-platform mobile app with:
-- Expo Router for navigation
-- React Query for API state management with offline caching
-- React Hook Form with Zod validation
-- React Native Paper UI components
-- Secure storage for JWT tokens
-- Automatic session refresh on focus
-- Real-time subscription status updates
-- Internationalization (i18n) support for 8 languages
-- Offline support for premium users with local storage
-- Error reporting modal for AI-generated content issues
-- Interactive flashcard system with flip animations
+- Expo Router for navigation with modular component architecture
+- React Query for API state management with intelligent caching and offline support
+- React Hook Form with Zod validation for robust form handling
+- React Native Paper UI components with custom design system
+- Secure storage for JWT tokens (Keychain/Keystore)
+- Automatic session refresh with subscription status updates
+- Internationalization (i18n) support for 8 languages with real-time switching
+- Premium offline support with local data persistence and seamless sync
+- Comprehensive error reporting system for AI-generated content quality control
+- Interactive flashcard system with smooth flip animations and rich content display
+- Advanced analytics dashboard with real-time progress tracking and performance insights
 
 ### 3. Web Frontend (Next.js)
 Located in `/web`, marketing website and web app with:
@@ -267,178 +268,6 @@ npm run start         # Start production server
 npm run lint          # Run linter
 ```
 
-## 🆕 Recent Features & Improvements
-
-### Analytics System Redesign (January 2025)
-- **Solved N×8 API Call Problem**: New batch progress endpoint reduces dashboard calls from N×8 to 1
-- **Redis Caching Infrastructure**: 
-  - Tier-based TTLs: 10 seconds for premium users, 15 minutes for free users
-  - Graceful fallback to database when Redis unavailable
-  - Automatic cache invalidation using predicate functions for React Query v5 compatibility
-  - Real-time analytics updates for premium users after quiz sessions
-- **Performance Optimizations**:
-  - 6 new strategic database indexes for sub-second query performance
-  - Unified analytics service with interface-based architecture
-  - Factory pattern eliminates redundant database connections
-  - Historical box distribution optimized for 7-day windows instead of 30 days
-- **Developer Experience**:
-  - Simplified API with shorter method names (`Stats`, `Progress`, `WordMastery`)
-  - Single factory method with configuration flags
-  - Per-request service instantiation for clean separation of concerns
-  - Fixed cache invalidation key matching for `isPremium` flag in query keys
-
-### Analytics Data Quality & Bug Fixes (January 2025)
-- **Fixed Critical Streak Calculation Bug**: Corrected broken gap-and-islands logic that prevented proper consecutive day counting
-  - **Before**: Used incorrect `ROW_NUMBER() OVER (ORDER BY date DESC)` causing consecutive dates to have different groups
-  - **After**: Implemented recursive CTE approach that accurately counts backwards from most recent practice
-  - **Impact**: Current streaks now correctly calculate for both individual wordlists and batch progress
-- **Corrected Box Distribution Logic**: Fixed inconsistent word progress tracking across analytics
-  - **Before**: Used `MIN(box_id)` showing worst performance per word
-  - **After**: Uses `MAX(box_id)` showing best progress achieved, consistent with word mastery analytics
-  - **Impact**: Box distribution charts now accurately represent learning advancement
-- **Enhanced Response Time Filtering**: Added outlier detection across all analytics functions
-  - **Practice Time**: Filters response times to 200ms-30s range excluding accidental clicks and timeouts
-  - **Quiz Performance**: Consistent filtering with NULL handling and COALESCE protection
-  - **Impact**: More realistic practice time estimates and performance metrics
-- **Fixed Word Count Inconsistencies**: Corrected mastery statistics to count all words in wordlists
-  - **Before**: Only counted words with existing mastery data
-  - **After**: Counts all active learning words using LEFT JOIN, consistent with other analytics
-  - **Impact**: Accurate total word counts matching actual wordlist sizes
-- **Removed Unused Database Fields**: Cleaned up `study_time_seconds` column that was never maintained
-  - **Migration 000046**: Safely removes unused field from `learning_progress` table
-  - **Code Cleanup**: Updated models and queries to remove dead code references
-  - **Impact**: Cleaner schema and reduced confusion about practice time data sources
-- **Added Learned Words Filtering**: Consistent filtering across all analytics to exclude completed words
-  - **Impact**: All analytics now focus on active learning progress, not completed words
-
-### Multi-Language Definition Support
-- **7 Supported Languages**: English, Spanish, French, German, Italian, Portuguese, Japanese
-- **Native Language Processing**: AI generates definitions in the target language with proper grammar
-- **Language-Specific Prompts**: ChatGPT receives instructions in the wordlist's language for authentic content
-- **Dynamic Part-of-Speech Validation**: Grammar rules adapted for each language (e.g., German cases, Spanish gender)
-- **Automatic Language Detection**: System detects wordlist language and adapts content generation accordingly
-- **Comprehensive Verb Systems**: Language-appropriate verb tenses and inflections (presente, passé composé, Präteritum, etc.)
-- **Cultural Linguistic Accuracy**: Regional variations supported (Brazilian vs European Portuguese)
-- **Language-Optimized Audio**: Voice selection optimized per language for natural pronunciation
-- **Culturally-Aware Images**: Image generation prompts in native language for cultural relevance
-
-### Enhanced Grammar Support for Verbs
-- **Verb Inflection System**: Automatic generation of verb forms (past tense, present tense, gerund, participle)
-- **Contextual Examples**: Smart example sentences showing verbs in different grammatical contexts
-- **Part-of-Speech Intelligence**: Enhanced definition fetching with proper grammatical categorization
-- **Quiz Integration**: Sentence completion quizzes now use verb inflections for realistic practice
-
-### Advanced Error Reporting System
-- **User-Driven Quality Control**: Users can report issues with AI-generated content
-- **5 Error Types Supported**:
-  - Image doesn't match word meaning
-  - Image not loading properly
-  - Wrong or inaccurate definition
-  - Irrelevant example sentences
-  - Audio pronunciation not playing
-- **Automatic Content Regeneration**: Reported errors trigger background jobs to fix issues
-- **Temporary Skip Logic**: Problematic content is temporarily removed from quiz rotation
-- **Multi-Language Support**: Error reporting available in 8 languages
-
-### Interactive Flashcard System
-- **Immersive Learning Experience**: Full-screen flashcards with smooth flip animations
-- **Rich Content Display**: Definitions, pronunciations, examples, and part-of-speech information
-- **Verb-Specific Features**: Special handling for verb inflections and tense examples
-- **Progress Tracking**: Integrated with Leitner system for spaced repetition
-- **Error Reporting Integration**: Report issues directly from flashcard interface
-
-### Comprehensive Analytics Platform (January 2025 Redesign)
-- **Word Mastery Tracking**: Individual word progress with accuracy calculations
-- **Learning Progress Visualization**: Daily statistics and progress charts
-- **Quiz Performance Analysis**: Performance metrics by quiz type (now wordlist-scoped)
-- **Box Distribution Insights**: 
-  - Current distribution correctly counts unique words (not definitions)
-  - Historical snapshots of Leitner system progression
-  - Word considered at its lowest box level across all definitions
-- **High-Performance Architecture**: 
-  - Redis caching with tier-based TTLs (1 hour for free users, 1 minute for premium)
-  - Batch progress API reduces dashboard calls from N×8 to 1
-  - Strategic database indexes for sub-second query performance
-  - Real-time cache invalidation for premium users after quiz completion
-- **Scalable Design**: Built to handle millions of users with efficient caching strategy
-- **Modern Service Architecture**:
-  - Interface-based design for flexible cached/non-cached implementations
-  - Factory pattern with per-request service instantiation
-  - Graceful Redis fallback to direct database queries
-  - Unified analytics interface with simplified method names
-
-### Offline Support for Premium Users
-- **Local Data Caching**: Wordlists and definitions cached for offline access
-- **Seamless Synchronization**: Automatic sync when connection is restored
-- **Offline Quiz Support**: Complete quiz functionality without internet
-- **Progress Preservation**: Offline learning progress saved and synced
-
-### Internationalization (i18n)
-- **8 Language Support**: English, German, Spanish, French, Italian, Japanese, Portuguese (BR), Portuguese (PT)
-- **Dynamic Language Switching**: Real-time language changes without app restart
-- **Comprehensive Translation Coverage**: All UI elements, error messages, and features translated
-- **Cultural Localization**: Currency symbols, date formats, and cultural adaptations
-
-### Enhanced Leitner System
-- **Improved Box Progression**: Refined algorithm prevents immediate repetition of failed words
-- **Intelligent Quiz Type Selection**: Dynamic quiz types based on word difficulty and available content
-- **Pronunciation Integration**: Word pronunciation display in quiz and flashcard interfaces
-- **Error Recovery**: Automatic handling of content validation and fallback mechanisms
-
-### Modular Analytics Architecture (December 2024)
-- **Component-Based Refactoring**: Extracted analytics screen from 870-line monolithic component into 7 focused, reusable components
-- **Real-Time Box Distribution**: Live tracking of word progression across Leitner system boxes with automatic cache invalidation
-- **Historical Progress Tracking**: Daily snapshots of learning progress with visual trend analysis
-- **Component Modularity**:
-  - `AnalyticsHeader`: Title and wordlist selection controls
-  - `StatsGrid`: Overview metrics with mastery percentages
-  - `WordMasteryChart`: Individual word progress visualization
-  - `LearningProgressChart`: Daily learning trends and accuracy rates
-  - `QuizPerformanceChart`: Performance metrics by quiz type
-  - `BoxDistributionChart`: Current word distribution across Leitner boxes
-  - `HistoricalBoxDistributionChart`: Progress trends over time
-  - `TopWordsSection`: Highest performing vocabulary words
-- **Background Data Population**: Automatic box distribution snapshots during quiz completion
-- **Cache Strategy Optimization**: Infinite cache for current data, 5-minute cache for historical trends
-- **Maintainable Architecture**: Clear separation of concerns for analytics features
-
-### Modular Flashcard Architecture (December 2024)
-- **Component-Based Refactoring**: Broke down 962-line flashcard component into 4 focused, reusable components
-- **Smart Content Filtering**: API enhancement to only fetch words with definitions, preventing broken flashcard experiences
-- **Improved Data Integrity**: New `onlyWithDefinitions` API parameter ensures flashcards always have content to display
-- **Component Modularity**: 
-  - `FlashcardHeader`: Title, progress counter, and error reporting controls
-  - `FlashcardProgressBar`: Visual learning progress indicator
-  - `FlashcardContent`: Complex card flip animations and rich content display
-  - `FlashcardNavigation`: Previous/next navigation with keyboard support
-- **Enhanced User Experience**: Eliminates empty flashcard states caused by async definition processing
-- **Maintainable Codebase**: Easier to modify and extend individual flashcard features
-- **Backward Compatible**: Existing API endpoints maintain full compatibility
-
-### Quiz Loading State Fix (January 2025)
-- **Fixed Loading Forever Issue**: Resolved race condition causing quiz screen to hang indefinitely
-- **Improved State Management**: 
-  - Reset `currentQuizId` when loading new quiz
-  - Simplified loading condition to `(isLoadingNext || isFetching || !quiz)`
-  - Added explicit `refetch()` call in retry handler
-- **Enhanced User Experience**: 
-  - Reliable 10-second timeout with retry options
-  - Clear loading states during quiz transitions
-  - Proper initial loading screen with timeout handling
-- **Root Cause**: Complex state dependencies between `isLoadingNext`, `isFetching`, and `currentQuizId` were getting out of sync
-
-### Timezone & Date Handling Fix (January 2025)
-- **Fixed Date Display Issues**: Resolved timezone conversion problems affecting all analytics charts
-- **Root Cause**: Backend sends ISO timestamps like "2025-06-11T00:00:00Z" which JavaScript interpreted as UTC, causing dates to display incorrectly in non-UTC timezones
-- **Components Fixed**:
-  - `HistoricalBoxDistributionChart.tsx`: Chart labels now show correct dates
-  - `PracticeTimeChart.tsx`: Practice time chart displays accurate date labels  
-  - `LearningProgressChart.tsx`: Learning progress trends show proper dates
-- **Technical Solution**: 
-  - Extract date part from ISO timestamps using `split('T')[0]`
-  - Parse date components manually as local time instead of UTC
-  - Prevents timezone conversion that was shifting dates by one day
-- **User Impact**: Charts now correctly show "Today", "Yesterday", and proper MM/DD format instead of incorrect dates
 
 ## 📊 Database Schema
 
@@ -907,21 +736,24 @@ npm start
 - `PATCH /wordlists/:id/quizzes` - Save quiz progress and performance
 
 ### Analytics
-**Comprehensive analytics system with Redis caching and performance optimizations**
-- `GET /analytics/progress-summary` - **Primary batch endpoint**: All wordlists overview (1 call vs N×8)
-- `GET /analytics/wordlists/:id/overview` - Comprehensive dashboard stats (total, mastery, streaks, today's activity)
-- `GET /analytics/wordlists/:id/mastery` - Detailed word mastery analytics with accuracy and streak data
+**High-performance analytics system with Redis caching and batch optimization**
+- `GET /analytics/progress-summary` - **Batch endpoint**: All wordlists overview in a single call (reduces N×8 API calls to 1)
+- `GET /analytics/wordlists/:id/overview` - Comprehensive dashboard stats (total words, mastery rates, streaks, daily activity)
+- `GET /analytics/wordlists/:id/mastery` - Detailed word mastery analytics with accuracy calculations and streak tracking
 - `GET /analytics/wordlists/:id/progress?days=N` - Daily learning progress over time (1-365 days, default: 30)
-- `GET /analytics/wordlists/:id/quiz-performance` - Performance metrics by quiz type (success rate, response time)
-- `GET /analytics/wordlists/:id/current-distribution` - Current Leitner box distribution (Box 1-7 counts)
+- `GET /analytics/wordlists/:id/quiz-performance` - Performance metrics by quiz type (success rate, response time analysis)
+- `GET /analytics/wordlists/:id/current-distribution` - Current Leitner box distribution (Box 1-7 word counts)
 - `GET /analytics/wordlists/:id/box-distribution?days=N` - Historical box distribution snapshots (1-90 days)
 - `GET /analytics/wordlists/:id/practice-time?days=N` - Daily practice time with outlier filtering (1-30 days)
 
-**API Documentation**: See `api/doc/analytics.http` for complete endpoint documentation with examples, response schemas, error handling, and implementation notes.
+**Performance Architecture**: 
+- Redis caching with tier-based TTLs (5-15 minute cache for different user types)
+- Automatic cache invalidation after quiz completion
+- Response time filtering (200ms-30s) to exclude outliers
+- Strategic database indexes for sub-second query performance
+- Graceful fallback to database when Redis unavailable
 
-**Performance Features**: All endpoints include Redis caching (5-15min TTL), automatic cache invalidation, response time filtering (200ms-30s), and optimized database queries with indexes.
-
-**Recent Improvements** (January 2025): Fixed streak calculations, box distribution logic, response time filtering, and word count accuracy. Added comprehensive test coverage with service layer integration.
+**Documentation**: Complete API documentation available in `api/doc/analytics.http` with examples and response schemas.
 
 ### Error Reporting & Content Quality
 - `POST /errorReports` - Report errors in AI-generated content with structured error types (rate limited)

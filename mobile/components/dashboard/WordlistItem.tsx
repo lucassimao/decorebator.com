@@ -142,13 +142,31 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         onPress={onPressed}
         activeOpacity={0.7}
         onLongPress={() => setShowMenu(true)}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.name} wordlist. ${item.wordsCount} words. ${progressPercentage > 0 ? `${Math.round(progressPercentage)}% learned.` : 'No progress yet.'} Double tap to open details, long press for menu.`}
+        accessibilityHint="Open wordlist details or long press for actions menu"
       >
         <View style={styles.cardHeader}>
-          <Text style={styles.languageFlag}>{language.flag}</Text>
+          <Text 
+            style={styles.languageFlag}
+            accessibilityLabel={`Language: ${t(`dashboard.languages.${language.name.toLowerCase()}`)}`}
+          >
+            {language.flag}
+          </Text>
           <View style={styles.cardTitleContainer}>
-            <Text style={styles.wordlistTitle}>{item.name}</Text>
+            <Text 
+              style={styles.wordlistTitle}
+              accessibilityRole="header"
+              accessibilityLevel={2}
+            >
+              {item.name}
+            </Text>
             {item.description && (
-              <Text style={styles.wordlistDescription} numberOfLines={2}>
+              <Text 
+                style={styles.wordlistDescription} 
+                numberOfLines={2}
+                accessibilityRole="text"
+              >
                 {item.description}
               </Text>
             )}
@@ -190,6 +208,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           <TouchableOpacity
             style={styles.actionButtonLarge}
             onPress={handleAnalytics}
+            accessibilityRole="button"
+            accessibilityLabel={t("wordlistItem.analytics")}
+            accessibilityHint={isPremium ? "View detailed learning analytics" : "Premium feature - tap to upgrade"}
           >
             <MaterialIcons name="bar-chart" size={20} color="#FFD700" />
             <Text style={styles.actionButtonText}>
@@ -200,6 +221,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           <TouchableOpacity
             style={styles.actionButtonLarge}
             onPress={handlePractice}
+            accessibilityRole="button"
+            accessibilityLabel={t("wordlistItem.practice")}
+            accessibilityHint="Practice with flashcards"
           >
             <MaterialIcons name="style" size={20} color="#2196F3" />
             <Text style={styles.actionButtonText}>
@@ -210,6 +234,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           <TouchableOpacity
             style={styles.actionButtonLarge}
             onPress={handleQuizStart}
+            accessibilityRole="button"
+            accessibilityLabel={t("wordlistItem.quiz")}
+            accessibilityHint="Start quiz session"
           >
             <MaterialIcons
               name="play-circle-filled"
@@ -224,6 +251,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           <TouchableOpacity
             style={styles.actionButtonLarge}
             onPress={() => setShowMenu(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.more")}
+            accessibilityHint="Show more options for this wordlist"
           >
             <MaterialIcons name="more-horiz" size={20} color="#636E72" />
             <Text style={styles.actionButtonText}>{t("common.more")}</Text>
@@ -237,12 +267,19 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         transparent
         animationType="fade"
         onRequestClose={() => setShowMenu(false)}
+        accessibilityViewIsModal={true}
       >
         <TouchableWithoutFeedback onPress={() => setShowMenu(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
               <View style={styles.menuContainer}>
-                <Text style={styles.menuTitle}>{item.name}</Text>
+                <Text 
+                  style={styles.menuTitle}
+                  accessibilityRole="header"
+                  accessibilityLevel={1}
+                >
+                  {item.name}
+                </Text>
 
                 <TouchableOpacity
                   style={styles.menuItem}
@@ -250,6 +287,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                     setShowMenu(false);
                     router.push(`/analytics?wordlistId=${item.id}`);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("wordlistItem.viewAnalytics")}
+                  accessibilityHint="View detailed learning analytics for this wordlist"
                 >
                   <MaterialIcons name="analytics" size={24} color="#FFD700" />
                   <Text style={styles.menuItemText}>
@@ -260,6 +300,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                 <TouchableOpacity
                   style={styles.menuItem}
                   onPress={handlePractice}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("wordlistItem.practiceFlashcards")}
+                  accessibilityHint="Practice with interactive flashcards"
                 >
                   <MaterialIcons name="style" size={24} color="#2196F3" />
                   <Text style={styles.menuItemText}>
@@ -270,6 +313,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                 <TouchableOpacity
                   style={styles.menuItem}
                   onPress={handleQuizStart}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("wordlistItem.startQuiz")}
+                  accessibilityHint="Start an interactive quiz session"
                 >
                   <MaterialIcons name="quiz" size={24} color="#4CAF50" />
                   <Text style={styles.menuItemText}>
@@ -277,7 +323,13 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.menuItem} onPress={handleEdit}>
+                <TouchableOpacity 
+                  style={styles.menuItem} 
+                  onPress={handleEdit}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("wordlistItem.editWordlist")}
+                  accessibilityHint="Edit wordlist details and add or remove words"
+                >
                   <MaterialIcons name="edit" size={24} color="#FF7B54" />
                   <Text style={styles.menuItemText}>
                     {t("wordlistItem.editWordlist")}
@@ -290,6 +342,10 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   style={[styles.menuItem, styles.deleteMenuItem]}
                   onPress={handleDelete}
                   disabled={deleteMutation.isPending}
+                  accessibilityRole="button"
+                  accessibilityLabel={deleteMutation.isPending ? "Deleting wordlist..." : t("wordlistItem.deleteWordlist")}
+                  accessibilityHint="Permanently delete this wordlist and all its words"
+                  accessibilityState={{ disabled: deleteMutation.isPending }}
                 >
                   {deleteMutation.isPending ? (
                     <ActivityIndicator size="small" color="#FF6B6B" />
@@ -314,6 +370,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         transparent
         animationType="fade"
         onRequestClose={() => setShowPremiumModal(false)}
+        accessibilityViewIsModal={true}
       >
         <TouchableWithoutFeedback onPress={() => setShowPremiumModal(false)}>
           <View style={styles.modalOverlay}>
@@ -329,10 +386,17 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                     <View style={styles.premiumIconContainer}>
                       <MaterialIcons name="analytics" size={32} color="#FFF" />
                     </View>
-                    <Text style={styles.premiumTitle}>
+                    <Text 
+                      style={styles.premiumTitle}
+                      accessibilityRole="header"
+                      accessibilityLevel={1}
+                    >
                       {t("dashboard.stats.premium.title")}
                     </Text>
-                    <Text style={styles.premiumSubtitle}>
+                    <Text 
+                      style={styles.premiumSubtitle}
+                      accessibilityRole="text"
+                    >
                       {t("dashboard.stats.premium.subtitle")}
                     </Text>
 
@@ -343,6 +407,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                           setShowPremiumModal(false);
                           onUpgradePress?.();
                         }}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("settings.subscription.upgradeButton")}
+                        accessibilityHint="Upgrade to premium to access analytics features"
                       >
                         <Text style={styles.upgradeButtonText}>
                           {t("settings.subscription.upgradeButton")}
@@ -352,6 +419,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                       <TouchableOpacity
                         style={styles.cancelButton}
                         onPress={() => setShowPremiumModal(false)}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("upgradePrompt.maybeLater")}
+                        accessibilityHint="Close this upgrade prompt"
                       >
                         <Text style={styles.cancelButtonText}>
                           {t("upgradePrompt.maybeLater")}

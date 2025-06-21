@@ -4,10 +4,12 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Link, router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { usePostHog } from "posthog-react-native";
 import * as React from "react";
 import { Controller, FieldError, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import {
   Animated,
   Dimensions,
@@ -31,6 +33,9 @@ const schema = z
     lastName: z.string().min(2, "Required"),
     email: z.string().email().min(2, "Required"),
     password: z.string().min(2, "Required"),
+    agreeToTerms: z.boolean().refine((val) => val === true, {
+      message: "You must agree to the terms",
+    }),
   })
   .required();
 
@@ -134,10 +139,15 @@ export default function SignUpScreen() {
       lastName: "",
       email: __DEV__ ? process.env.EXPO_PUBLIC_TEST_USER_EMAIL : "",
       password: __DEV__ ? process.env.EXPO_PUBLIC_TEST_USER_PASSWORD : "",
+      agreeToTerms: false,
     },
   });
 
-  const onSubmit = (data: any) => signup(data);
+  const onSubmit = (data: any) => {
+    // Exclude agreeToTerms from API submission
+    const { agreeToTerms, ...submitData } = data;
+    signup(submitData);
+  };
   const toggleSecureTextEntry = () => setSecureTextEntry(!secureTextEntry);
 
   return (
@@ -329,6 +339,59 @@ export default function SignUpScreen() {
               />
             </View>
 
+            {/* Terms and Privacy Agreement */}
+            <Controller
+              control={control}
+              name="agreeToTerms"
+              defaultValue={false}
+              render={({ field: { onChange, value } }) => (
+                <View style={styles.termsContainer}>
+                  <TouchableOpacity
+                    style={styles.checkboxContainer}
+                    onPress={() => onChange(!value)}
+                    activeOpacity={0.8}
+                  >
+                    <View
+                      style={[styles.checkbox, value && styles.checkboxChecked]}
+                    >
+                      {value && (
+                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                      )}
+                    </View>
+                    <Text style={styles.termsText}>
+                      {t("auth.signup.termsText")}{" "}
+                      <Text
+                        style={styles.termsLink}
+                        onPress={async () => {
+                          await WebBrowser.openBrowserAsync(
+                            `https://decorebator.com/${i18n.language}/terms`,
+                          );
+                        }}
+                      >
+                        {t("auth.signup.termsOfService")}
+                      </Text>{" "}
+                      {t("common.and")}{" "}
+                      <Text
+                        style={styles.termsLink}
+                        onPress={async () => {
+                          await WebBrowser.openBrowserAsync(
+                            `https://decorebator.com/${i18n.language}/privacy`,
+                          );
+                        }}
+                      >
+                        {t("auth.signup.privacyPolicy")}
+                      </Text>
+                    </Text>
+                  </TouchableOpacity>
+                  {errors.agreeToTerms && (
+                    <Text style={styles.errorMessage}>
+                      {t("auth.signup.mustAgreeToTerms")}
+                    </Text>
+                  )}
+                </View>
+              )}
+            />
+
             <TouchableOpacity
               style={styles.button}
               onPress={handleSubmit(onSubmit)}
@@ -488,5 +551,39 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     minHeight: 16, // Height matching the ErrorMessage height
+  },
+  termsContainer: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: "#E0E0E0",
+    borderRadius: 4,
+    marginRight: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
+  checkboxChecked: {
+    backgroundColor: "#FF7B54",
+    borderColor: "#FF7B54",
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#636E72",
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: "#FF7B54",
+    fontWeight: "600",
+    textDecorationLine: "underline",
   },
 });

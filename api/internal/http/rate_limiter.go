@@ -19,7 +19,12 @@ func RateLimitErrorReports() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		user := userAny.(*model.User)
+		user, ok := userAny.(*model.User)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user type"})
+			c.Abort()
+			return
+		}
 
 		// Get database connection
 		db, err := common.GetDBConnection()

@@ -10,7 +10,16 @@ import (
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+// Config holds optional configuration for setting up routes
+type Config struct {
+	WordService       *service.WordService
+	WordlistService   *service.WordlistService
+	ModerationService service.ModerationService
+	Database          *pgxpool.Pool
+}
 
 func init() {
 	sentryDsn, exists := os.LookupEnv("SENTRY_DSN")
@@ -28,25 +37,58 @@ func init() {
 
 }
 
-func SetupRoutes() *gin.Engine {
-
-	var WordRoutes = WordRoutes{}
-	var WorkerRoutes = WorkerRoutes{}
-	var WordlistRoutes = WordlistsRoutes{}
-	var UserRoutes = UserRoutes{}
-	var QuizRoutes = QuizRoutes{}
-	var ErrorReportsRoutes = ErrorReportRoutes{}
-
-	// Initialize subscription service
-	db, err := common.GetDBConnection()
-	if err != nil {
-		common.Logger.Error("Failed to get database connection", "error", err)
-		fmt.Fprintf(os.Stderr, "Failed to get database connection: %v\n", err)
-		os.Exit(1)
+// applyDefaults fills in missing configuration with default values
+func applyDefaults(config *Config) (*Config, error) {
+	// Start with empty config if nil
+	if config == nil {
+		config = &Config{}
 	}
 
-	subService := service.NewSubscriptionService(db)
-	subRepo := repository.NewSubscriptionRepository(db)
+	// Set default database connection if not provided
+	if config.Database == nil {
+		db, err := common.GetDBConnection()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get database connection: %w", err)
+		}
+		config.Database = db
+	}
+
+	// Set default moderation service if not provided
+	if config.ModerationService == nil {
+		config.ModerationService = service.NewOpenAIModerationService()
+	}
+
+	// Set default word service if not provided
+	if config.WordService == nil {
+		config.WordService = service.NewWordService(config.Database, config.ModerationService)
+	}
+
+	// Set default wordlist service if not provided
+	if config.WordlistService == nil {
+		config.WordlistService = service.NewWordlistService(config.Database, config.ModerationService)
+	}
+
+	return config, nil
+}
+
+func SetupRoutes(config *Config) *gin.Engine {
+	// Apply defaults to configuration
+	config, err := applyDefaults(config)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to apply default configuration: %v", err))
+	}
+
+	subService := service.NewSubscriptionService(config.Database)
+	subRepo := repository.NewSubscriptionRepository(config.Database)
+
+	// Initialize route handlers with dependency injection
+	var WordRoutes = NewWordRoutes(config.WordService)
+	var WorkerRoutes = WorkerRoutes{}
+	var WordlistRoutes = NewWordlistsRoutes(config.WordlistService)
+	var UserRoutes = UserRoutes{}
+	var quizRoutes = QuizRoutes{}
+	var ErrorReportsRoutes = ErrorReportRoutes{}
+	var demoRoutes = DemoRoutes{}
 
 	router := gin.New()
 	// Sentry middleware must be first to capture all errors
@@ -72,6 +114,9 @@ func SetupRoutes() *gin.Engine {
 		router.POST("/webhook/stripe", HandleStripeWebhook(subService))
 		// Redirect to local expo scheme
 		router.GET("/subscription/checkout-redirect", CheckoutRedirect())
+
+		// Demo quiz endpoint for web landing page (static auth)
+		router.GET("/quiz/demo", AuthenticateStatic, demoRoutes.GetDemoQuizzes)
 	}
 
 	// Routes with authentication
@@ -89,8 +134,8 @@ func SetupRoutes() *gin.Engine {
 		authenticatedRoutes.PUT("/wordlists/:wordlistId/words/:wordId", WordRoutes.Update)
 		authenticatedRoutes.GET("/wordlists/:wordlistId/words/:wordId/definitions", WordRoutes.GetDefinitions)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(subService, "add_word"), WordRoutes.Create)
-		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", QuizRoutes.Create)
-		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", QuizRoutes.Save)
+		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizRoutes.Create)
+		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizRoutes.Save)
 		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(), ErrorReportsRoutes.Create)
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus())
 

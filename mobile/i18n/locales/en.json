@@ -61,7 +61,9 @@
       "privacyPolicy": "Privacy Policy",
       "signUpButton": "Sign Up",
       "alreadyHaveAccount": "Already have an account?",
-      "signIn": "Sign In"
+      "signIn": "Sign In",
+      "agreeToTerms": "I agree to the Terms of Service and Privacy Policy",
+      "mustAgreeToTerms": "You must agree to the Terms of Service and Privacy Policy to continue"
     },
     "forgotPassword": {
       "title": "Forgot Password",
@@ -203,6 +205,9 @@
     "helpAndSupport": "Help & Support",
     "noEmailClient": "No email client available. Could you please email us at support@decorerbator.com?",
     "supportEmailSubject": "Support request",
+    "legalAndPrivacy": "Legal & Privacy",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
     "subscription": {
       "title": "Subscription",
       "currentPlan": "Current Subscription",
@@ -326,7 +331,14 @@
         "strong": "Strong"
       }
     },
-    "memberSince": "Member since {{date}}"
+    "memberSince": "Member since {{date}}",
+    "dataExport": {
+      "title": "Export My Data",
+      "message": "You can request a copy of all your data. We'll send it to your registered email address within 30 days.",
+      "requestButton": "Request Data Export",
+      "emailSubject": "Data Export Request",
+      "emailBody": "I would like to request a copy of all my data associated with the email: {{email}}"
+    }
   },
   "upgrade": {
     "title": "Upgrade to Premium",
