@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
 import Image from 'next/image';
+import React, { useState } from 'react';
 import VideoModal from '../common/VideoModal';
 
 const CTASection: React.FC = () => {

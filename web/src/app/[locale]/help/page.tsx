@@ -443,22 +443,13 @@ const HelpCenterPage: React.FC = () => {
               <p className="text-xl mb-6 opacity-90">
                 Our support team is ready to assist you with any questions or issues.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a
-                  href="mailto:support@decorebator.com"
-                  className="bg-white text-[#FF7B54] px-8 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300 inline-block"
-                >
-                  <i className="fas fa-envelope mr-2"></i>
-                  Email Support
-                </a>
-                <Link
-                  href="/#contact"
-                  className="bg-white/20 backdrop-blur text-white px-8 py-3 rounded-full font-semibold border-2 border-white/50 hover:bg-white/30 transition-all duration-300 inline-block"
-                >
-                  <i className="fas fa-comments mr-2"></i>
-                  Contact Form
-                </Link>
-              </div>
+              <a
+                href="mailto:support@decorebator.com"
+                className="bg-white text-[#FF7B54] px-8 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300 inline-block"
+              >
+                <i className="fas fa-envelope mr-2"></i>
+                Email Support
+              </a>
             </div>
           </section>
         </div>

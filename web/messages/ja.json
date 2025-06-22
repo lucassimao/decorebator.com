@@ -15,7 +15,12 @@
     "watchDemo": "デモを見る",
     "signUp": "登録",
     "signIn": "ログイン",
-    "contactUs": "お問い合わせ"
+    "contactUs": "お問い合わせ",
+    "appStorePending": {
+      "title": "近日公開！",
+      "message": "現在、アプリストアの承認を待っています。アプリは間もなくダウンロード可能になります！",
+      "okButton": "OK"
+    }
   },
   "navigation": {
     "home": "ホーム",

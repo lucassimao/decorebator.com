@@ -15,7 +15,12 @@
     "watchDemo": "Watch Demo",
     "signUp": "Sign Up",
     "signIn": "Sign In",
-    "contactUs": "Contact Us"
+    "contactUs": "Contact Us",
+    "appStorePending": {
+      "title": "Coming Soon!",
+      "message": "We're currently waiting for App Store approval. The app will be available for download soon!",
+      "okButton": "OK"
+    }
   },
   "navigation": {
     "home": "Home",

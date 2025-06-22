@@ -15,7 +15,12 @@
     "watchDemo": "Ver demo",
     "signUp": "Registrarse",
     "signIn": "Iniciar sesión",
-    "contactUs": "Contáctanos"
+    "contactUs": "Contáctanos",
+    "appStorePending": {
+      "title": "¡Próximamente!",
+      "message": "Actualmente estamos esperando la aprobación de las tiendas de aplicaciones. ¡La app estará disponible para descargar pronto!",
+      "okButton": "Aceptar"
+    }
   },
   "navigation": {
     "home": "Inicio",

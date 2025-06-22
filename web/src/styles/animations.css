@@ -170,3 +170,19 @@ video {
     max-width: 100%;
     height: auto;
 }
+
+/* Modal scale-in animation */
+@keyframes scale-in {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.animate-scale-in {
+    animation: scale-in 0.3s ease-out;
+}

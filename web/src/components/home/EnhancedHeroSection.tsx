@@ -15,7 +15,9 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
+  const [showAppStoreAlert, setShowAppStoreAlert] = useState(false);
   const t = useTranslations('hero');
+  const tCommon = useTranslations('common');
   
   const words = [
     t('rotatingWords.aiIntelligence') || 'AI Intelligence',
@@ -75,7 +77,10 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
 
             {/* App Store Buttons */}
             <div className="flex flex-wrap gap-4 pt-4">
-              <a href="#" className="group">
+              <button 
+                onClick={() => setShowAppStoreAlert(true)} 
+                className="group"
+              >
                 <Image 
                   src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
                   alt="Download on App Store" 
@@ -83,8 +88,11 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
                   height={48}
                   className="h-12 transform group-hover:scale-105 transition-transform duration-300"
                 />
-              </a>
-              <a href="#" className="group">
+              </button>
+              <button 
+                onClick={() => setShowAppStoreAlert(true)} 
+                className="group"
+              >
                 <Image 
                   src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
                   alt="Get it on Google Play" 
@@ -92,7 +100,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
                   height={48}
                   className="h-12 transform group-hover:scale-105 transition-transform duration-300"
                 />
-              </a>
+              </button>
             </div>
 
             {/* Social Proof */}
@@ -177,6 +185,32 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
         onClose={() => setIsQuizModalOpen(false)}
         demoQuizzes={demoQuizzes}
       />
+
+      {/* App Store Alert Modal */}
+      {showAppStoreAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setShowAppStoreAlert(false)} />
+          <div className="bg-white rounded-2xl p-8 max-w-sm w-full relative z-10 shadow-2xl animate-scale-in">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#FF7B54] to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-rocket text-white text-2xl"></i>
+              </div>
+              <h3 className="text-2xl font-bold text-[#2D3436] mb-3">
+                {tCommon('appStorePending.title')}
+              </h3>
+              <p className="text-[#636E72] mb-6">
+                {tCommon('appStorePending.message')}
+              </p>
+              <button
+                onClick={() => setShowAppStoreAlert(false)}
+                className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300"
+              >
+                {tCommon('appStorePending.okButton')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

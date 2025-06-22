@@ -1,27 +1,23 @@
-
 'use client';
 
 import React from 'react';
-import { useTranslations } from 'next-intl';
 import PageLayout from '../../../components/layout/PageLayout';
 import { PolicySection } from '../../../components/policy/PolicySection';
 
 export default function PrivacyPolicy() {
-  const t = useTranslations('privacy');
-  
   return (
     <PageLayout>
       <div className="pt-24 pb-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-[#2D3436] mb-4">
-              {t('title')}
+              Privacy Policy
             </h1>
             <p className="text-xl text-[#636E72]">
-              {t('subtitle')}
+              Your privacy is important to us
             </p>
             <p className="text-sm text-[#636E72] mt-4">
-              {t('lastUpdated')}
+              Last updated: January 2025
             </p>
           </div>
 
@@ -29,26 +25,37 @@ export default function PrivacyPolicy() {
             <PolicySection
               title="Introduction"
               content={`
-                <p class="mb-4">${t('introduction.content')}</p>
+                <p class="mb-4">Welcome to Decorebator. This Privacy Policy explains how we collect, use, share, and protect your personal information when you use our vocabulary learning app. We are committed to protecting your privacy and ensuring transparency about our data practices.</p>
               `}
             />
 
             <PolicySection
-              title={t('sections.informationWeCollect.title')}
+              title="Information We Collect"
               content={`
-                <h4 class="text-lg font-semibold mb-3 mt-6">${t('sections.informationWeCollect.personalInformation.title')}</h4>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Personal Information</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  ${t('sections.informationWeCollect.personalInformation.items').map((item: string) => `<li>${item}</li>`).join('')}
+                  <li>Email address for account creation</li>
+                  <li>Password (encrypted and never stored in plain text)</li>
+                  <li>Display name (optional)</li>
+                  <li>Subscription status and payment information (processed by Stripe)</li>
                 </ul>
                 
-                <h4 class="text-lg font-semibold mb-3 mt-6">${t('sections.informationWeCollect.learningData.title')}</h4>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Learning Data</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  ${t('sections.informationWeCollect.learningData.items').map((item: string) => `<li>${item}</li>`).join('')}
+                  <li>Words and vocabulary lists you create</li>
+                  <li>Learning progress and quiz performance</li>
+                  <li>Spaced repetition schedule data</li>
+                  <li>Practice time and learning streaks</li>
+                  <li>Error reports for AI-generated content</li>
                 </ul>
                 
-                <h4 class="text-lg font-semibold mb-3 mt-6">${t('sections.informationWeCollect.technicalData.title')}</h4>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Technical Data</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  ${t('sections.informationWeCollect.technicalData.items').map((item: string) => `<li>${item}</li>`).join('')}
+                  <li>Device type and operating system</li>
+                  <li>App version and language settings</li>
+                  <li>Anonymous usage analytics (PostHog)</li>
+                  <li>Error logs and crash reports (Sentry)</li>
+                  <li>IP address (for security purposes only)</li>
                 </ul>
               `}
             />
@@ -335,10 +342,10 @@ export default function PrivacyPolicy() {
                     Your Privacy Matters
                   </h3>
                   <p className="text-orange-800">
-                    {t('sections.conclusion.content')}
+                    We take your privacy seriously and are committed to protecting your personal information. If you have any questions or concerns about our privacy practices, please don&apos;t hesitate to contact us.
                   </p>
                   <p className="text-orange-800 mt-3">
-                    {t('sections.conclusion.effectiveDate')} | {t('sections.conclusion.version')} | {t('sections.conclusion.nextReview')}
+                    Effective Date: January 1, 2025 | Version: 1.0 | Next Review: July 2025
                   </p>
                 </div>
               </div>

@@ -1,59 +1,66 @@
-
 'use client';
 
 import React from 'react';
-import { useTranslations } from 'next-intl';
 import PageLayout from '../../../components/layout/PageLayout';
 import { PolicySection } from '../../../components/policy/PolicySection';
 
 export default function TermsOfService() {
-  const t = useTranslations('terms');
-  
   return (
     <PageLayout>
       <div className="pt-24 pb-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-[#2D3436] mb-4">
-              {t('title')}
+              Terms of Service
             </h1>
             <p className="text-xl text-[#636E72]">
-              {t('subtitle')}
+              Please read these terms carefully before using Decorebator
             </p>
             <p className="text-sm text-[#636E72] mt-4">
-              {t('lastUpdated')}
+              Last updated: January 2025
             </p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12">
             <PolicySection
-              title={t('sections.1.title')}
+              title="1. Acceptance of Terms"
               content={`
-                <p class="mb-4">${t('sections.1.content')}</p>
+                <p class="mb-4">By downloading, installing, or using Decorebator ("the App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the App. We may update these Terms at any time, and your continued use constitutes acceptance of any changes.</p>
               `}
             />
 
             <PolicySection
-              title={t('sections.2.title')}
+              title="2. Service Description"
               content={`
-                <p class="mb-4">${t('sections.2.intro')}</p>
+                <p class="mb-4">Decorebator is an AI-powered vocabulary learning application that helps users master new languages through:</p>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  ${t('sections.2.features').map((feature: string) => `<li>${feature}</li>`).join('')}
+                  <li>AI-generated definitions, images, and audio for vocabulary words</li>
+                  <li>Advanced Leitner spaced repetition system for optimal retention</li>
+                  <li>Multiple interactive quiz modes</li>
+                  <li>Progress tracking and analytics</li>
+                  <li>Cross-platform synchronization</li>
+                  <li>Premium features including offline access and unlimited wordlists</li>
                 </ul>
               `}
             />
 
             <PolicySection
-              title={t('sections.3.title')}
+              title="3. User Accounts"
               content={`
-                <h4 class="text-lg font-semibold mb-3 mt-6">${t('sections.3.accountCreation.title')}</h4>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Account Creation</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  ${t('sections.3.accountCreation.items').map((item: string) => `<li>${item}</li>`).join('')}
+                  <li>You must provide accurate information during registration</li>
+                  <li>You must be at least 13 years old, or have parental consent</li>
+                  <li>One account per person - no shared accounts</li>
+                  <li>Choose a strong, unique password</li>
                 </ul>
                 
-                <h4 class="text-lg font-semibold mb-3 mt-6">${t('sections.3.accountResponsibilities.title')}</h4>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Account Responsibilities</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  ${t('sections.3.accountResponsibilities.items').map((item: string) => `<li>${item}</li>`).join('')}
+                  <li>You are responsible for all activity under your account</li>
+                  <li>Keep your login credentials secure</li>
+                  <li>Notify us immediately of unauthorized access</li>
+                  <li>Do not use another person&apos;s account</li>
                 </ul>
               `}
             />
@@ -318,14 +325,14 @@ export default function TermsOfService() {
                 <h4 class="text-lg font-semibold mb-3 mt-6">Payment Processing</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
                   <li>Stripe processes subscription payments</li>
-                  <li>Subject to Stripe's terms and policies</li>
+                  <li>Subject to Stripe&apos;s terms and policies</li>
                   <li>We are not responsible for payment processor issues</li>
                 </ul>
                 
                 <h4 class="text-lg font-semibold mb-3 mt-6">AI Services</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
                   <li>OpenAI powers content generation features</li>
-                  <li>Subject to OpenAI's usage policies</li>
+                  <li>Subject to OpenAI&apos;s usage policies</li>
                   <li>We monitor for appropriate use</li>
                 </ul>
                 
@@ -407,7 +414,7 @@ export default function TermsOfService() {
                 
                 <h4 class="text-lg font-semibold mb-3 mt-6">Parental Controls</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Parents can manage children's accounts</li>
+                  <li>Parents can manage children&apos;s accounts</li>
                   <li>Enhanced privacy for users under 13</li>
                   <li>Educational progress sharing with parents</li>
                 </ul>

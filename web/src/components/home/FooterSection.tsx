@@ -1,12 +1,10 @@
 'use client';
 
 import React from 'react';
-import { useTranslations } from 'next-intl';
 import { FacebookIcon, TwitterIcon, InstagramIcon, LinkedInIcon } from './icons';
 import Link from 'next/link';
 
 const FooterSection: React.FC = () => {
-  const t = useTranslations('footer');
   return (
     <footer className="bg-slate-800 text-slate-400 py-12 mt-16" aria-labelledby="footer-heading">
       <h2 id="footer-heading" className="sr-only">Footer</h2>
@@ -22,8 +20,9 @@ const FooterSection: React.FC = () => {
             </ul>
           </div>
           <div>
-            <h5 className="text-slate-200 font-semibold mb-3">Legal</h5>
+            <h5 className="text-slate-200 font-semibold mb-3">Support</h5>
             <ul className="space-y-2">
+              <li><Link href="/help" className="hover:text-slate-100">Help Center</Link></li>
               <li><Link href="/privacy" className="hover:text-slate-100">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-slate-100">Terms of Service</Link></li>
             </ul>
