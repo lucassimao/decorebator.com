@@ -15,7 +15,12 @@
     "watchDemo": "Ver Demonstração",
     "signUp": "Criar Conta",
     "signIn": "Entrar",
-    "contactUs": "Fale Conosco"
+    "contactUs": "Fale Conosco",
+    "appStorePending": {
+      "title": "Em breve!",
+      "message": "Estamos aguardando a aprovação das lojas de aplicativos. O app estará disponível para download em breve!",
+      "okButton": "OK"
+    }
   },
   "navigation": {
     "home": "Início",
@@ -30,10 +35,10 @@
     "careers": "Carreiras",
     "privacy": "Política de Privacidade",
     "terms": "Termos de Serviço",
-    "getStartedFree": "Começar Teste Grátis"
+    "getStartedFree": "Baixar App"
   },
   "hero": {
-    "title": "Domine Idiomas com",
+    "title": "Domine Idiomas com Decorebator",
     "rotatingWords": {
       "aiIntelligence": "Inteligência Artificial",
       "spacedRepetition": "Repetição Espaçada",
@@ -152,31 +157,52 @@
     }
   },
   "faq": {
-    "title": "Perguntas Frequentes",
-    "subtitle": "Tudo que você precisa saber sobre o Decorebator",
-    "question1": {
-      "question": "Quais idiomas o Decorebator suporta?",
-      "answer": "O Decorebator oferece suporte completo de IA para 7 idiomas: inglês, espanhol, francês, alemão, italiano, português e japonês. Cada idioma tem geração de conteúdo de qualidade nativa, imagens culturalmente relevantes e seleção de voz otimizada."
+    "title": {
+      "part1": "Perguntas",
+      "part2": "Frequentes"
     },
-    "question2": {
-      "question": "Como funciona o sistema Leitner?",
-      "answer": "Nosso sistema Leitner de 7 caixas usa repetição espaçada cientificamente comprovada. As palavras se movem entre caixas baseado no seu desempenho, com intervalos de revisão de imediato (Caixa 1) a mensal (Caixa 7). Isso otimiza a eficiência de aprendizado e retenção a longo prazo."
-    },
-    "question3": {
-      "question": "O que está incluso no plano Premium?",
-      "answer": "O Premium inclui listas de palavras e palavras ilimitadas, todos os 7 modos de quiz, conteúdo gerado por IA para cada palavra, análises avançadas, suporte offline e atendimento prioritário. Usuários gratuitos têm 1 lista de palavras com até 10 palavras."
-    },
-    "question4": {
-      "question": "Posso usar o Decorebator offline?",
-      "answer": "Sim! Assinantes premium podem baixar suas listas de palavras para acesso offline. Você pode praticar quizzes e revisar flashcards sem conexão com a internet, com progresso sincronizando quando voltar online."
-    },
-    "question5": {
-      "question": "Quão preciso é o conteúdo gerado por IA?",
-      "answer": "Nosso conteúdo de IA é altamente preciso e continuamente melhorando. Usamos modelos de linguagem avançados treinados em vastos conjuntos de dados. Além disso, nosso sistema de relatório de erros permite que usuários sinalizem problemas, nos ajudando a manter e melhorar a qualidade do conteúdo."
-    },
-    "question6": {
-      "question": "Existe um aplicativo móvel?",
-      "answer": "Sim! O Decorebator está disponível no iOS e Android com paridade completa de recursos. Seu progresso sincroniza perfeitamente entre o aplicativo móvel e a plataforma web, para que você possa aprender em qualquer lugar."
+    "subtitle": "Tudo que você precisa saber sobre o Decorebator.",
+    "questions": {
+      "1": {
+        "question": "Como funciona a geração de conteúdo com IA?",
+        "answer": "Nossa IA gera automaticamente materiais de aprendizado abrangentes para cada palavra que você adiciona. O sistema cria definições contextualmente relevantes, frases de exemplo, imagens culturalmente apropriadas e pronunciação de áudio de alta qualidade no seu idioma de destino, com regras gramaticais específicas do idioma e otimização de voz."
+      },
+      "2": {
+        "question": "O que é o sistema avançado de repetição espaçada Leitner?",
+        "answer": "O Decorebator utiliza um sistema de repetição espaçada de 7 caixas cientificamente otimizado com intervalos: Caixa 1 (imediato), Caixa 2 (1 hora), Caixa 3 (6 horas), Caixa 4 (1 dia), Caixa 5 (3 dias), Caixa 6 (7 dias) e Caixa 7 (1 mês). As palavras progridem através das caixas conforme seu desempenho, com progressão inteligente de tipos de quiz para aprendizado otimizado."
+      },
+      "3": {
+        "question": "Quais são os planos de assinatura e preços?",
+        "answer": "O Decorebator oferece um plano Gratuito (1 lista de vocabulário, máximo 10 palavras) e planos Premium: R$ 34,90/mês ou R$ 349,00/ano. O Premium inclui listas e palavras ilimitadas, suporte offline com sincronização automática, histórico completo de análises, funcionalidade de exportação e insights avançados de aprendizado."
+      },
+      "4": {
+        "question": "Posso usar o Decorebator offline?",
+        "answer": "Sim! Usuários Premium podem baixar suas listas de vocabulário e continuar aprendendo offline com funcionalidade completa. Seu progresso sincroniza automaticamente quando você se reconecta à internet, garantindo que nunca perca uma sessão de aprendizado."
+      },
+      "5": {
+        "question": "Quais idiomas são suportados para geração de conteúdo com IA?",
+        "answer": "O Decorebator suporta 7 idiomas com processamento nativo de IA: inglês, espanhol, francês, alemão, italiano, português e japonês. Cada idioma recebe geração de conteúdo culturalmente apropriada, regras gramaticais corretas (como gramática consciente de gênero em português ou sistema de casos alemão) e seleção de voz otimizada."
+      },
+      "6": {
+        "question": "Quantos modos de quiz estão disponíveis e como funcionam?",
+        "answer": "Há 8 modos de quiz diferentes projetados para abordar vários aspectos do aprendizado de vocabulário: adivinhar significado, palavra pelo significado, associação visual, compreensão auditiva, completar frases, recordação ativa, reconhecimento de áudio e áudio de exemplo. Os tipos de quiz se adaptam progressivamente conforme seu nível atual de aprendizado."
+      },
+      "7": {
+        "question": "Quais recursos de análises e acompanhamento de progresso estão incluídos?",
+        "answer": "O Decorebator fornece análises abrangentes com múltiplas ferramentas de acompanhamento: estatísticas do painel, gráficos de domínio de palavras, tendências de progresso de aprendizado, análise de tempo de prática, detalhamento de desempenho em quiz, ranking das melhores palavras, visualização de distribuição de caixas e acompanhamento de progresso histórico. Usuários Premium obtêm histórico ilimitado e exportação de dados."
+      },
+      "8": {
+        "question": "Como funciona o sistema de relatório de erros?",
+        "answer": "Os usuários podem relatar problemas com conteúdo gerado por IA (definições, imagens, áudio) diretamente do aplicativo. O sistema inclui limitação de taxa (Gratuito: 3 relatórios/hora, 5/dia; Premium: 10 relatórios/hora, 30/dia) e regeneração automática de conteúdo. Palavras relatadas são temporariamente omitidas durante revisões até que novo conteúdo seja gerado."
+      },
+      "9": {
+        "question": "Quais plataformas e dispositivos são suportados?",
+        "answer": "O Decorebator está disponível como aplicativo móvel para dispositivos iOS e Android, além de um aplicativo web abrangente com suporte multi-idiomas. Seu progresso sincroniza automaticamente em todos os dispositivos com gerenciamento automático de sessões."
+      },
+      "10": {
+        "question": "Quão confiável é a geração de conteúdo com IA?",
+        "answer": "Nosso sistema de geração de conteúdo com IA inclui múltiplas medidas de garantia de qualidade: lógica de tentativa automática, limitação de taxa e distribuição de uso justo para garantir criação confiável de conteúdo. O sistema de relatório de erros permite que usuários solicitem novo conteúdo se algo não atender suas necessidades de aprendizado."
+      }
     }
   },
   "pricing": {

@@ -15,7 +15,12 @@
     "watchDemo": "Watch Demo",
     "signUp": "Sign Up",
     "signIn": "Sign In",
-    "contactUs": "Contact Us"
+    "contactUs": "Contact Us",
+    "appStorePending": {
+      "title": "Coming Soon!",
+      "message": "We're currently waiting for App Store approval. The app will be available for download soon!",
+      "okButton": "OK"
+    }
   },
   "navigation": {
     "home": "Home",
@@ -30,10 +35,10 @@
     "careers": "Careers",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
-    "getStartedFree": "Start Free Trial"
+    "getStartedFree": "Download App"
   },
   "hero": {
-    "title": "Master Languages with",
+    "title": "Master Languages with Decorebator",
     "rotatingWords": {
       "aiIntelligence": "AI Intelligence",
       "spacedRepetition": "Spaced Repetition",
@@ -967,6 +972,180 @@
       "premium": {
         "title": "Premium Feature",
         "description": "Offline support is available for Premium subscribers. Upgrade to unlock unlimited offline learning capabilities."
+      }
+    }
+  },
+  "faq": {
+    "title": {
+      "part1": "Frequently Asked",
+      "part2": "Questions"
+    },
+    "subtitle": "Everything you need to know about Decorebator.",
+    "questions": {
+      "1": {
+        "question": "How does the AI content generation work?",
+        "answer": "Our AI automatically generates comprehensive learning materials for each word you add. The system creates contextually relevant definitions, example sentences, culturally-aware images, and high-quality audio pronunciations in your target language, with language-specific grammar rules and voice optimization."
+      },
+      "2": {
+        "question": "What is the Advanced Leitner spaced repetition system?",
+        "answer": "Decorebator uses a scientifically optimized 7-box spaced repetition system with intervals: Box 1 (immediate), Box 2 (1 hour), Box 3 (6 hours), Box 4 (1 day), Box 5 (3 days), Box 6 (7 days), and Box 7 (1 month). Words progress through boxes based on your performance, with intelligent quiz type progression for optimal learning."
+      },
+      "3": {
+        "question": "What are the subscription plans and pricing?",
+        "answer": "Decorebator offers a Free plan (1 wordlist, 10 words maximum) and Premium plans: $6.99/month or $69.90/year. Premium includes unlimited wordlists and words, offline support with seamless sync, complete analytics history, export functionality, and advanced learning insights."
+      },
+      "4": {
+        "question": "Can I use Decorebator offline?",
+        "answer": "Yes! Premium users can download their wordlists and continue learning offline with full functionality. Your progress syncs automatically when you reconnect to the internet, ensuring you never miss a learning session."
+      },
+      "5": {
+        "question": "What languages are supported for AI content generation?",
+        "answer": "Decorebator supports 7 languages with native AI processing: English, Spanish, French, German, Italian, Portuguese, and Japanese. Each language receives culturally-aware content generation, proper grammar rules (like Spanish gender-aware grammar or German case system), and optimized voice selection."
+      },
+      "6": {
+        "question": "How many quiz modes are available and how do they work?",
+        "answer": "There are 8 different quiz modes designed to target various aspects of vocabulary learning: Guess meaning, word from meaning, visual association, audio comprehension, sentence completion, active recall, audio recognition, and example audio. Quiz types progressively adapt based on your current learning level."
+      },
+      "7": {
+        "question": "What analytics and progress tracking features are included?",
+        "answer": "Decorebator provides comprehensive analytics with multiple tracking tools: dashboard statistics, word mastery charts, learning progress trends, practice time analytics, quiz performance breakdowns, top words leaderboards, box distribution visualization, and historical progress tracking. Premium users get unlimited history and data export."
+      },
+      "8": {
+        "question": "How does the error reporting system work?",
+        "answer": "Users can report issues with AI-generated content (definitions, images, audio) directly from the app. The system includes rate limiting (Free: 3 reports/hour, 5/day; Premium: 10 reports/hour, 30/day) and automatic content regeneration. Reported words are temporarily skipped during reviews until new content is generated."
+      },
+      "9": {
+        "question": "What platforms and devices are supported?",
+        "answer": "Decorebator is available as a mobile app for iOS and Android devices, plus a comprehensive web application with multi-language support. Your progress synchronizes across all devices with automatic session management."
+      },
+      "10": {
+        "question": "How reliable is the AI content generation?",
+        "answer": "Our AI content generation system includes multiple quality assurance measures: automatic retry logic, rate limiting, and fair usage distribution to ensure reliable content creation. The error reporting system allows users to request new content if anything doesn't meet their learning needs."
+      }
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "subtitle": "Legal terms and conditions for using Decorebator",
+    "lastUpdated": "Last updated: January 2025",
+    "sections": {
+      "1": {
+        "title": "Agreement to Terms",
+        "content": "By downloading, installing, or using the Decorebator mobile application (\"App\"), you agree to be bound by these Terms of Service (\"Terms\"). If you do not agree to these Terms, do not use the App."
+      },
+      "2": {
+        "title": "Description of Service",
+        "intro": "Decorebator is an AI-powered vocabulary learning application that provides:",
+        "features": [
+          "Spaced repetition learning system",
+          "AI-generated vocabulary content",
+          "Multiple quiz modes and flashcards",
+          "Learning progress tracking",
+          "Offline study capabilities",
+          "Multi-language support"
+        ]
+      },
+      "3": {
+        "title": "User Accounts",
+        "accountCreation": {
+          "title": "Account Creation",
+          "items": [
+            "You must provide accurate and complete information",
+            "You are responsible for maintaining account security",
+            "One account per person",
+            "Minimum age: 13 years (with parental consent if under 18)"
+          ]
+        },
+        "accountResponsibilities": {
+          "title": "Account Responsibilities",
+          "items": [
+            "Keep login credentials secure",
+            "Notify us immediately of unauthorized access",
+            "Update information as needed",
+            "Comply with all applicable laws"
+          ]
+        }
+      },
+      "4": {
+        "title": "Subscription Plans",
+        "freePlan": {
+          "title": "Free Plan",
+          "items": [
+            "1 wordlist maximum",
+            "Up to 10 words per wordlist",
+            "Basic quiz modes",
+            "Limited features"
+          ]
+        },
+        "premiumPlans": {
+          "title": "Premium Plans",
+          "items": [
+            "Monthly: $6.99/month",
+            "Annual: $69.90/year",
+            "Unlimited wordlists and words",
+            "Advanced analytics",
+            "Priority support",
+            "All features included"
+          ]
+        },
+        "billingTerms": {
+          "title": "Billing Terms",
+          "items": [
+            "Subscriptions auto-renew unless cancelled",
+            "Payment processed through App Store/Google Play",
+            "Refunds subject to platform policies",
+            "Price changes with 30-day notice"
+          ]
+        }
+      },
+      "acknowledgment": {
+        "title": "Acknowledgment",
+        "content": "By using Decorebator, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "subtitle": "How we collect, use, and protect your personal information",
+    "lastUpdated": "Last updated: January 2025",
+    "introduction": {
+      "content": "Decorebator (\"we,\" \"our,\" or \"us\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use the Decorebator mobile application."
+    },
+    "sections": {
+      "informationWeCollect": {
+        "title": "Information We Collect",
+        "personalInformation": {
+          "title": "Personal Information",
+          "items": [
+            "Email Address: Required for account creation and authentication",
+            "Profile Information: Optional profile picture and display name",
+            "Subscription Information: Billing details processed securely through Stripe"
+          ]
+        },
+        "learningData": {
+          "title": "Learning Data",
+          "items": [
+            "Wordlists: Vocabulary lists you create or modify",
+            "Learning Progress: Quiz scores, spaced repetition data, and study analytics",
+            "User Preferences: App settings, language preferences, and notification choices",
+            "Content Moderation: Automated analysis of user-generated content for appropriateness"
+          ]
+        },
+        "technicalData": {
+          "title": "Technical Data",
+          "items": [
+            "Device Information: Device type, operating system, app version",
+            "Usage Analytics: Feature usage, session duration, and performance metrics",
+            "Error Reports: Crash logs and error reports for app improvement"
+          ]
+        }
+      },
+      "conclusion": {
+        "content": "Your privacy is fundamental to our mission of providing effective vocabulary learning. We are committed to protecting your personal information, being transparent about our practices, giving you control over your data, and continuously improving our privacy protections.",
+        "agreement": "By using Decorebator, you agree to this Privacy Policy. Please review it regularly for updates and contact us with any questions or concerns.",
+        "effectiveDate": "Effective Date: January 1, 2025",
+        "version": "Version: 1.0",
+        "nextReview": "Next Review: July 1, 2025"
       }
     }
   }

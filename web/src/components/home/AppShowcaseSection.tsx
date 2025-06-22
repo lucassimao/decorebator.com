@@ -8,7 +8,7 @@ const AppShowcaseSection: React.FC = () => {
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-4">
             Experience the 
-            <span className="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">Future of Learning</span>
+            <span className="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent"> Future of Learning</span>
           </h2>
           <p className="text-xl text-[#636E72] max-w-3xl mx-auto">
             Our intuitive interface and smart features make vocabulary learning engaging, efficient, and enjoyable.
@@ -26,10 +26,10 @@ const AppShowcaseSection: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Smart Progress Tracking</h3>
-                  <p className="text-[#636E72] mb-3">Monitor your learning journey with detailed analytics, streak counters, and achievement badges.</p>
+                  <p className="text-[#636E72] mb-3">Monitor your learning journey with detailed analytics, word mastery tracking, and daily streaks.</p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">Learning Velocity</span>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Retention Rate</span>
+                    <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">Word Mastery</span>
+                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Box Distribution</span>
                     <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">Daily Streaks</span>
                   </div>
                 </div>

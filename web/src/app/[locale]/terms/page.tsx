@@ -1,3 +1,4 @@
+'use client';
 
 import React from 'react';
 import PageLayout from '../../../components/layout/PageLayout';
@@ -13,10 +14,10 @@ export default function TermsOfService() {
               Terms of Service
             </h1>
             <p className="text-xl text-[#636E72]">
-              Legal terms and conditions for using Decorebator
+              Please read these terms carefully before using Decorebator
             </p>
             <p className="text-sm text-[#636E72] mt-4">
-              Last updated: December 6, 2024
+              Last updated: January 2025
             </p>
           </div>
 
@@ -24,227 +25,450 @@ export default function TermsOfService() {
             <PolicySection
               title="1. Acceptance of Terms"
               content={`
-                <p class="mb-4">By accessing and using Decorebator ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.</p>
-                
-                <p class="mb-4">These Terms of Service ("Terms") govern your use of our vocabulary learning application and related services operated by Decorebator ("us", "we", or "our").</p>
-                
-                <p class="mb-4">Your access to and use of the Service is conditioned on your acceptance of and compliance with these Terms. These Terms apply to all visitors, users, and others who access or use the Service.</p>
+                <p class="mb-4">By downloading, installing, or using Decorebator ("the App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the App. We may update these Terms at any time, and your continued use constitutes acceptance of any changes.</p>
               `}
             />
 
             <PolicySection
-              title="2. Description of Service"
+              title="2. Service Description"
               content={`
-                <p class="mb-4">Decorebator is an AI-powered vocabulary learning platform that provides:</p>
+                <p class="mb-4">Decorebator is an AI-powered vocabulary learning application that helps users master new languages through:</p>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Vocabulary list creation and management in multiple languages</li>
-                  <li>AI-generated definitions, example sentences, images, and audio pronunciations</li>
-                  <li>Interactive quizzes and flashcards using spaced repetition (Leitner system)</li>
-                  <li>Progress tracking and learning analytics</li>
-                  <li>Premium subscription features including unlimited wordlists and offline access</li>
-                  <li>Multi-language support for content generation</li>
-                  <li>Error reporting system for AI-generated content quality control</li>
+                  <li>AI-generated definitions, images, and audio for vocabulary words</li>
+                  <li>Advanced Leitner spaced repetition system for optimal retention</li>
+                  <li>Multiple interactive quiz modes</li>
+                  <li>Progress tracking and analytics</li>
+                  <li>Cross-platform synchronization</li>
+                  <li>Premium features including offline access and unlimited wordlists</li>
                 </ul>
-                
-                <p class="mb-4">We reserve the right to modify, suspend, or discontinue the Service (or any part or content thereof) at any time without notice to you.</p>
               `}
             />
 
             <PolicySection
-              title="3. User Accounts and Registration"
+              title="3. User Accounts"
               content={`
                 <h4 class="text-lg font-semibold mb-3 mt-6">Account Creation</h4>
-                <p class="mb-4">To access certain features of the Service, you must register for an account. When you create an account, you agree to:</p>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Provide accurate, current, and complete information</li>
-                  <li>Maintain the security of your password and account</li>
-                  <li>Accept responsibility for all activities that occur under your account</li>
-                  <li>Notify us immediately of any unauthorized use of your account</li>
+                  <li>You must provide accurate information during registration</li>
+                  <li>You must be at least 13 years old, or have parental consent</li>
+                  <li>One account per person - no shared accounts</li>
+                  <li>Choose a strong, unique password</li>
                 </ul>
                 
-                <h4 class="text-lg font-semibold mb-3 mt-6">Age Requirements</h4>
-                <p class="mb-4">You must be at least 13 years old to use the Service. Users between 13 and 18 should have parental consent before using the Service.</p>
-                
-                <h4 class="text-lg font-semibold mb-3 mt-6">Account Termination</h4>
-                <p class="mb-4">We may terminate or suspend your account and bar access to the Service immediately, without prior notice or liability, under our sole discretion, for any reason whatsoever including but not limited to a breach of the Terms.</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Account Responsibilities</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>You are responsible for all activity under your account</li>
+                  <li>Keep your login credentials secure</li>
+                  <li>Notify us immediately of unauthorized access</li>
+                  <li>Do not use another person&apos;s account</li>
+                </ul>
               `}
             />
 
             <PolicySection
-              title="4. Subscription Plans and Billing"
+              title="4. Subscription Plans"
               content={`
                 <h4 class="text-lg font-semibold mb-3 mt-6">Free Plan</h4>
-                <p class="mb-4">The free plan includes limited access with the following restrictions:</p>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
                   <li>1 wordlist maximum</li>
-                  <li>10 words per wordlist</li>
-                  <li>Basic quiz modes only</li>
-                  <li>Online-only access</li>
+                  <li>Up to 10 words per wordlist</li>
+                  <li>Basic quiz modes</li>
+                  <li>Limited features</li>
                 </ul>
                 
                 <h4 class="text-lg font-semibold mb-3 mt-6">Premium Plans</h4>
-                <p class="mb-4">Premium subscriptions are available with the following pricing:</p>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li><strong>Monthly Plan:</strong> $6.99 per month, billed monthly</li>
-                  <li><strong>Annual Plan:</strong> $69.90 per year, billed annually</li>
+                  <li><strong>Monthly</strong>: $6.99/month</li>
+                  <li><strong>Annual</strong>: $69.90/year</li>
+                  <li>Unlimited wordlists and words</li>
+                  <li>Advanced analytics</li>
+                  <li>Priority support</li>
+                  <li>All features included</li>
                 </ul>
                 
-                <h4 class="text-lg font-semibold mb-3 mt-6">Billing and Payment</h4>
-                <p class="mb-4">Payment processing is handled securely through Stripe. By subscribing, you agree to:</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Billing Terms</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Pay all applicable fees and charges incurred through your account</li>
-                  <li>Automatic renewal unless you cancel your subscription</li>
-                  <li>Price changes with 30 days advance notice</li>
-                  <li>No refunds for partial billing periods</li>
+                  <li>Subscriptions auto-renew unless cancelled</li>
+                  <li>Payment processed through App Store/Google Play</li>
+                  <li>Refunds subject to platform policies</li>
+                  <li>Price changes with 30-day notice</li>
                 </ul>
-                
-                <h4 class="text-lg font-semibold mb-3 mt-6">Cancellation</h4>
-                <p class="mb-4">You may cancel your subscription at any time. Cancellations take effect at the end of the current billing period. No refunds will be provided for unused portions of your subscription.</p>
               `}
             />
 
             <PolicySection
-              title="5. Acceptable Use Policy"
+              title="5. Acceptable Use"
               content={`
-                <p class="mb-4">You agree not to use the Service to:</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Permitted Uses</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Violate any applicable laws or regulations</li>
-                  <li>Infringe upon the rights of others</li>
-                  <li>Transmit any harmful, offensive, or objectionable content</li>
-                  <li>Attempt to gain unauthorized access to the Service or other user accounts</li>
-                  <li>Use automated scripts or bots to access the Service</li>
-                  <li>Reverse engineer, decompile, or disassemble any portion of the Service</li>
-                  <li>Upload or share content that contains viruses or malicious code</li>
-                  <li>Abuse the error reporting system with false or malicious reports</li>
-                  <li>Share your account credentials with other users</li>
+                  <li>Personal vocabulary learning</li>
+                  <li>Educational purposes</li>
+                  <li>Creating appropriate vocabulary content</li>
+                  <li>Sharing wordlists with proper content</li>
                 </ul>
                 
-                <p class="mb-4">We reserve the right to investigate and take appropriate action against users who violate this policy, including account suspension or termination.</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Prohibited Uses</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Uploading offensive, illegal, or inappropriate content</li>
+                  <li>Attempting to reverse engineer the app</li>
+                  <li>Using automated tools or bots</li>
+                  <li>Violating intellectual property rights</li>
+                  <li>Sharing account credentials</li>
+                  <li>Commercial use without permission</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Content Guidelines</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Keep vocabulary appropriate for all ages</li>
+                  <li>No spam, malware, or harmful content</li>
+                  <li>Respect copyright and intellectual property</li>
+                  <li>Report inappropriate content</li>
+                  <li>All user-generated content is subject to automated moderation</li>
+                  <li>Content that violates guidelines will be automatically rejected</li>
+                  <li>Repeated violations may result in account restrictions</li>
+                </ul>
               `}
             />
 
             <PolicySection
-              title="6. Intellectual Property Rights"
+              title="6. User-Generated Content"
               content={`
-                <h4 class="text-lg font-semibold mb-3 mt-6">Service Content</h4>
-                <p class="mb-4">The Service and its original content, features, and functionality are owned by Decorebator and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.</p>
-                
-                <h4 class="text-lg font-semibold mb-3 mt-6">User Content</h4>
-                <p class="mb-4">You retain ownership of the content you create, including vocabulary lists and custom words. By using the Service, you grant us a limited license to:</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Ownership</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Store and process your content to provide the Service</li>
-                  <li>Generate AI-powered enhancements (definitions, images, audio)</li>
-                  <li>Improve our services and AI models (in aggregated, non-identifiable form)</li>
+                  <li>You retain ownership of wordlists you create</li>
+                  <li>You grant us license to process and display your content</li>
+                  <li>We may use anonymized data for app improvement</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Content Responsibility</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>You are responsible for content you upload</li>
+                  <li>We may remove inappropriate content</li>
+                  <li>Repeated violations may result in account suspension</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Automated Content Moderation</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>All wordlists and vocabulary words are automatically screened for appropriateness</li>
+                  <li>Content is evaluated for educational value, profanity, and safety</li>
+                  <li>Multi-language filtering ensures global community standards</li>
+                  <li>Content status (approved, pending, rejected) is tracked and logged</li>
+                  <li>Appeals process available for incorrectly flagged content</li>
                 </ul>
                 
                 <h4 class="text-lg font-semibold mb-3 mt-6">AI-Generated Content</h4>
-                <p class="mb-4">AI-generated content (definitions, images, audio) created for your wordlists becomes part of your user content. However, we retain the right to use aggregated patterns from this content to improve our services.</p>
-                
-                <h4 class="text-lg font-semibold mb-3 mt-6">Third-Party Content</h4>
-                <p class="mb-4">The Service may contain content from third-party sources, including AI providers. Such content is subject to the respective third-party terms and licenses.</p>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>AI-generated definitions, images, and audio are provided as-is</li>
+                  <li>Report errors using in-app reporting system</li>
+                  <li>We continuously improve AI content quality</li>
+                </ul>
               `}
             />
 
             <PolicySection
               title="7. Privacy and Data Protection"
               content={`
-                <p class="mb-4">Your privacy is important to us. Our Privacy Policy explains how we collect, use, and protect your information when you use the Service. By using the Service, you agree to the collection and use of information in accordance with our Privacy Policy.</p>
-                
-                <p class="mb-4">Key privacy points:</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Data Collection</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>We collect necessary information to provide and improve the Service</li>
-                  <li>Your learning data is used to implement spaced repetition algorithms</li>
-                  <li>We share data with trusted service providers (AI services, payment processors, email services)</li>
-                  <li>You have rights to access, correct, and delete your personal data</li>
-                  <li>EU users have additional rights under GDPR</li>
+                  <li>We collect minimal data necessary for app functionality</li>
+                  <li>Detailed practices outlined in Privacy Policy</li>
+                  <li>You can request data deletion at any time</li>
                 </ul>
                 
-                <p class="mb-4">For complete details, please review our <a href="/privacy" class="text-orange-600 hover:text-orange-800 underline">Privacy Policy</a> and <a href="/gdpr" class="text-orange-600 hover:text-orange-800 underline">GDPR Compliance page</a>.</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Data Security</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>We implement industry-standard security measures</li>
+                  <li>Regular security audits and updates</li>
+                  <li>Prompt notification of any security incidents</li>
+                </ul>
               `}
             />
 
             <PolicySection
-              title="8. AI-Generated Content and Accuracy"
+              title="8. Intellectual Property"
               content={`
-                <h4 class="text-lg font-semibold mb-3 mt-6">Content Generation</h4>
-                <p class="mb-4">Our Service uses artificial intelligence to generate educational content including definitions, example sentences, images, and audio pronunciations. While we strive for accuracy, AI-generated content may contain errors or inaccuracies.</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Our Rights</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Decorebator app and brand are our property</li>
+                  <li>AI-generated content created through our systems</li>
+                  <li>All improvements and enhancements to the app</li>
+                </ul>
                 
-                <h4 class="text-lg font-semibold mb-3 mt-6">Quality Control</h4>
-                <p class="mb-4">We provide error reporting tools that allow users to report issues with AI-generated content. We use these reports to improve content quality, but we cannot guarantee the accuracy of all AI-generated material.</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Your Rights</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Vocabulary wordlists you create</li>
+                  <li>Personal learning progress data</li>
+                  <li>Feedback and suggestions you provide</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Third-Party Content</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Some content may be generated using third-party AI services</li>
+                  <li>Appropriate licenses and attributions are maintained</li>
+                  <li>Report any copyright concerns promptly</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="9. Disclaimers and Limitations"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Service Availability</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>App provided "as is" without warranties</li>
+                  <li>We may temporarily suspend service for maintenance</li>
+                  <li>No guarantee of uninterrupted access</li>
+                  <li>Features may change with updates</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Educational Disclaimer</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>App is a learning tool, not a comprehensive language course</li>
+                  <li>Results may vary based on individual usage</li>
+                  <li>Supplement with other learning methods as needed</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">AI Content Disclaimer</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>AI-generated content may contain errors</li>
+                  <li>Use error reporting system for corrections</li>
+                  <li>We continuously improve content accuracy</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="10. Limitation of Liability"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Scope of Liability</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Our liability limited to subscription fees paid</li>
+                  <li>No liability for indirect or consequential damages</li>
+                  <li>Force majeure events beyond our control excluded</li>
+                </ul>
                 
                 <h4 class="text-lg font-semibold mb-3 mt-6">User Responsibility</h4>
-                <p class="mb-4">Users should verify important information and use the Service as a learning aid rather than a definitive source. We recommend consulting authoritative dictionaries and language resources for critical information.</p>
-                
-                <h4 class="text-lg font-semibold mb-3 mt-6">Content Ownership</h4>
-                <p class="mb-4">AI-generated content is created specifically for your learning needs and becomes part of your user content, subject to the intellectual property terms outlined above.</p>
-              `}
-            />
-
-            <PolicySection
-              title="9. Disclaimers and Limitation of Liability"
-              content={`
-                <h4 class="text-lg font-semibold mb-3 mt-6">Service Disclaimer</h4>
-                <p class="mb-4">The Service is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind, either express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, or non-infringement.</p>
-                
-                <h4 class="text-lg font-semibold mb-3 mt-6">Educational Purpose</h4>
-                <p class="mb-4">The Service is designed for educational purposes and language learning. We do not guarantee specific learning outcomes or proficiency levels.</p>
-                
-                <h4 class="text-lg font-semibold mb-3 mt-6">Limitation of Liability</h4>
-                <p class="mb-4">In no event shall Decorebator, its directors, employees, partners, agents, suppliers, or affiliates be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the Service.</p>
-                
-                <h4 class="text-lg font-semibold mb-3 mt-6">Maximum Liability</h4>
-                <p class="mb-4">Our total liability to you for all claims arising from or relating to the Service shall not exceed the amount you paid us in the twelve (12) months preceding the claim.</p>
-              `}
-            />
-
-            <PolicySection
-              title="10. Governing Law and Dispute Resolution"
-              content={`
-                <h4 class="text-lg font-semibold mb-3 mt-6">Governing Law</h4>
-                <p class="mb-4">These Terms shall be interpreted and governed by the laws of [Your Jurisdiction], without regard to its conflict of law provisions.</p>
-                
-                <h4 class="text-lg font-semibold mb-3 mt-6">Dispute Resolution</h4>
-                <p class="mb-4">Any disputes arising from these Terms or your use of the Service shall be resolved through:</p>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Good faith negotiation between the parties</li>
-                  <li>Binding arbitration if negotiation fails</li>
-                  <li>Jurisdiction in the courts of [Your Jurisdiction] for any disputes not subject to arbitration</li>
+                  <li>You use the app at your own risk</li>
+                  <li>Responsible for your own learning outcomes</li>
+                  <li>Maintain appropriate device security</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="11. Termination"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Termination by You</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Cancel subscription through app stores</li>
+                  <li>Delete account through app settings</li>
+                  <li>Data deletion within 30 days of account closure</li>
                 </ul>
                 
-                <h4 class="text-lg font-semibold mb-3 mt-6">Class Action Waiver</h4>
-                <p class="mb-4">You agree that any arbitration or proceeding shall be limited to the dispute between us and you individually. You waive any right to participate in a class action lawsuit or class-wide arbitration.</p>
-              `}
-            />
-
-            <PolicySection
-              title="11. Changes to Terms"
-              content={`
-                <p class="mb-4">We reserve the right to modify or replace these Terms at any time. If a revision is material, we will provide at least 30 days notice prior to any new terms taking effect.</p>
-                
-                <p class="mb-4">Material changes will be communicated through:</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Termination by Us</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Email notification to registered users</li>
-                  <li>Prominent notice in the mobile application</li>
-                  <li>Updated "Last Modified" date on this page</li>
+                  <li>We may suspend accounts for Terms violations</li>
+                  <li>30-day notice for non-violation terminations</li>
+                  <li>Immediate termination for serious violations</li>
                 </ul>
                 
-                <p class="mb-4">Your continued use of the Service after any changes indicates your acceptance of the new Terms.</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Effect of Termination</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Access to app and data ends</li>
+                  <li>Subscriptions cancelled according to platform policies</li>
+                  <li>Certain provisions survive termination</li>
+                </ul>
               `}
             />
 
             <PolicySection
-              title="12. Contact Information"
+              title="12. Geographic Restrictions"
               content={`
-                <p class="mb-4">If you have any questions about these Terms of Service, please contact us:</p>
+                <h4 class="text-lg font-semibold mb-3 mt-6">Availability</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>App available in countries where legally permitted</li>
+                  <li>Some features may vary by region</li>
+                  <li>Compliance with local laws required</li>
+                </ul>
                 
+                <h4 class="text-lg font-semibold mb-3 mt-6">Export Controls</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Software subject to export control laws</li>
+                  <li>Users responsible for compliance with local regulations</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="13. Updates and Changes"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">App Updates</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Regular updates to improve functionality</li>
+                  <li>Security updates may be mandatory</li>
+                  <li>New features may be added or removed</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Terms Changes</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Terms may be updated periodically</li>
+                  <li>Significant changes communicated through app</li>
+                  <li>Continued use constitutes acceptance</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="14. Third-Party Services"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Payment Processing</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Stripe processes subscription payments</li>
+                  <li>Subject to Stripe&apos;s terms and policies</li>
+                  <li>We are not responsible for payment processor issues</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">AI Services</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>OpenAI powers content generation features</li>
+                  <li>Subject to OpenAI&apos;s usage policies</li>
+                  <li>We monitor for appropriate use</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">App Stores</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Distribution through Apple App Store and Google Play</li>
+                  <li>Subject to platform terms and policies</li>
+                  <li>Platform-specific features and limitations apply</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="15. Support and Contact"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Customer Support</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>In-app support available in Settings</li>
+                  <li>Email support: support@decorebator.com</li>
+                  <li>Response within 72 hours for Premium users</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Technical Issues</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Report bugs through in-app system</li>
+                  <li>Regular bug fixes in app updates</li>
+                  <li>Community support resources available</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="16. Governing Law"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Jurisdiction</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Terms governed by laws of [Jurisdiction]</li>
+                  <li>Disputes resolved through binding arbitration</li>
+                  <li>Class action waiver applies</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">International Users</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Local laws may provide additional rights</li>
+                  <li>Terms adapted to comply with regional requirements</li>
+                  <li>Contact us for region-specific questions</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="17. Accessibility"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Commitment</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>App designed with accessibility in mind</li>
+                  <li>Screen reader support and keyboard navigation</li>
+                  <li>Continuous improvements based on user feedback</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Assistance</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Contact support for accessibility questions</li>
+                  <li>Alternative formats available upon request</li>
+                  <li>Reasonable accommodations provided</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="18. Educational Use"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Schools and Institutions</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Special educational licenses available</li>
+                  <li>Bulk pricing for institutional use</li>
+                  <li>Student privacy protections enhanced</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Parental Controls</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Parents can manage children&apos;s accounts</li>
+                  <li>Enhanced privacy for users under 13</li>
+                  <li>Educational progress sharing with parents</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="19. Security"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Data Protection</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Regular security assessments</li>
+                  <li>Prompt security incident response</li>
+                  <li>User notification of significant threats</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">User Security</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Enable device security features</li>
+                  <li>Use strong, unique passwords</li>
+                  <li>Report suspicious activity immediately</li>
+                </ul>
+              `}
+            />
+
+            <PolicySection
+              title="20. Miscellaneous"
+              content={`
+                <h4 class="text-lg font-semibold mb-3 mt-6">Entire Agreement</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>These Terms constitute the complete agreement</li>
+                  <li>Supersede all previous agreements</li>
+                  <li>May only be modified in writing</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Severability</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>Invalid provisions do not affect remaining Terms</li>
+                  <li>Terms interpreted to maximum extent permitted by law</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Assignment</h4>
+                <ul class="list-disc pl-6 mb-4 space-y-2">
+                  <li>We may assign rights and obligations</li>
+                  <li>You may not assign without our consent</li>
+                  <li>Terms bind successors and assigns</li>
+                </ul>
+                
+                <h4 class="text-lg font-semibold mb-3 mt-6">Contact Information</h4>
                 <div class="bg-gray-50 p-6 rounded-lg mt-4">
-                  <p class="mb-2"><strong>Email:</strong> legal@decorebator.com</p>
-                  <p class="mb-2"><strong>Support:</strong> support@decorebator.com</p>
-                  <p class="mb-2"><strong>Address:</strong> [Your Business Address]</p>
-                  <p class="mb-2"><strong>Phone:</strong> [Your Phone Number]</p>
+                  <p class="mb-2"><strong>Legal:</strong> legal@decorebator.com</p>
+                  <p class="mb-2"><strong>General:</strong> support@decorebator.com</p>
+                  <p class="mb-2"><strong>Privacy:</strong> privacy@decorebator.com</p>
                 </div>
-                
-                <p class="mb-4 mt-4">We will respond to your inquiry within 5 business days.</p>
               `}
             />
 
@@ -257,15 +481,15 @@ export default function TermsOfService() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-orange-900 mb-2">
-                    Fair and Transparent Terms
+                    Acknowledgment
                   </h3>
                   <p className="text-orange-800">
-                    These terms are designed to protect both users and our service while enabling the best possible vocabulary learning experience. 
-                    We believe in clear, fair policies that respect your rights as a learner.
+                    By using Decorebator, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy.
                   </p>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </div>

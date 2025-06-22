@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
+import React, { useState } from 'react';
 import VideoModal from '../common/VideoModal';
 
 const CTASection: React.FC = () => {
@@ -25,10 +24,6 @@ const CTASection: React.FC = () => {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-          <Link href="/signup?plan=free" className="group bg-white text-[#FF7B54] px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 inline-block">
-            <span>Start Your Free Trial</span>
-            <i className="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-          </Link>
           <button 
             onClick={() => setIsVideoModalOpen(true)}
             className="group bg-white/20 backdrop-blur text-white px-8 py-4 rounded-full font-semibold text-lg border-2 border-white/50 hover:bg-white/30 transition-all duration-300"

@@ -59,8 +59,10 @@
 
 .gradient-animation {
     background: linear-gradient(270deg, #FF7B54, #FFD700, #FF7B54);
-    background-size: 200% 200%;
+    background-size: 200% 100%;
     animation: gradient-shift 8s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
 }
 
 /* Glassmorphism effects */
@@ -70,23 +72,14 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Word rotation animation */
+/* Word rotation animation - now handled by React state */
 .word-rotate {
     position: relative;
     height: 1.2em;
     overflow: hidden;
+    min-width: 200px;
+    display: inline-block;
 }
-
-.word-rotate span {
-    position: absolute;
-    opacity: 0;
-    animation: word-rotate 12s infinite;
-}
-
-.word-rotate span:nth-child(1) { animation-delay: 0s; }
-.word-rotate span:nth-child(2) { animation-delay: 3s; }
-.word-rotate span:nth-child(3) { animation-delay: 6s; }
-.word-rotate span:nth-child(4) { animation-delay: 9s; }
 
 /* 3D card effect */
 .card-3d {
@@ -176,4 +169,20 @@
 video {
     max-width: 100%;
     height: auto;
+}
+
+/* Modal scale-in animation */
+@keyframes scale-in {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.animate-scale-in {
+    animation: scale-in 0.3s ease-out;
 }

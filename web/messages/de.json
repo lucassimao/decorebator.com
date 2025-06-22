@@ -15,7 +15,12 @@
     "watchDemo": "Demo ansehen",
     "signUp": "Registrieren",
     "signIn": "Anmelden",
-    "contactUs": "Kontakt"
+    "contactUs": "Kontakt",
+    "appStorePending": {
+      "title": "Demnächst verfügbar!",
+      "message": "Wir warten derzeit auf die Genehmigung der App Stores. Die App wird bald zum Download verfügbar sein!",
+      "okButton": "OK"
+    }
   },
   "navigation": {
     "home": "Startseite",
@@ -30,10 +35,10 @@
     "careers": "Karriere",
     "privacy": "Datenschutz",
     "terms": "Nutzungsbedingungen",
-    "getStartedFree": "Kostenlose Testversion"
+    "getStartedFree": "App Herunterladen"
   },
   "hero": {
-    "title": "Sprachen meistern mit",
+    "title": "Sprachen meistern mit Decorebator",
     "rotatingWords": {
       "aiIntelligence": "KI-Intelligenz",
       "spacedRepetition": "Verteilter Wiederholung",
@@ -921,6 +926,55 @@
       "premium": {
         "title": "Premium-Funktion",
         "description": "Offline-Unterstützung ist für Premium-Abonnenten verfügbar. Upgraden Sie, um unbegrenzte Offline-Lernmöglichkeiten freizuschalten."
+      }
+    }
+  },
+  "faq": {
+    "title": {
+      "part1": "Häufig Gestellte",
+      "part2": "Fragen"
+    },
+    "subtitle": "Alles was Sie über Decorebator wissen müssen.",
+    "questions": {
+      "1": {
+        "question": "Wie funktioniert die KI-gestützte Inhaltsgenerierung?",
+        "answer": "Unsere KI generiert automatisch umfassendes Lernmaterial für jedes Wort, das Sie hinzufügen. Das System erstellt kontextuell relevante Definitionen, Beispielsätze, kulturell bewusste Bilder und hochwertige Audioaussprachen in Ihrer Zielsprache, mit sprachspezifischen Grammatikregeln und Stimmoptimierung."
+      },
+      "2": {
+        "question": "Was ist das erweiterte Leitner-System für verteilte Wiederholung?",
+        "answer": "Decorebator verwendet ein wissenschaftlich optimiertes 7-Box-System für verteilte Wiederholung mit Intervallen: Box 1 (sofort), Box 2 (1 Stunde), Box 3 (6 Stunden), Box 4 (1 Tag), Box 5 (3 Tage), Box 6 (7 Tage) und Box 7 (1 Monat). Wörter durchlaufen die Boxen basierend auf Ihrer Leistung, mit intelligenter Quiz-Typ-Progression für optimales Lernen."
+      },
+      "3": {
+        "question": "Welche Abonnement-Pläne und Preise gibt es?",
+        "answer": "Decorebator bietet einen kostenlosen Plan (1 Wortliste, maximal 10 Wörter) und Premium-Pläne: 6,99€/Monat oder 69,90€/Jahr. Premium beinhaltet unbegrenzte Wortlisten und Wörter, Offline-Unterstützung mit nahtloser Synchronisation, vollständige Analyseverlauf, Exportfunktionalität und erweiterte Lerneinblicke."
+      },
+      "4": {
+        "question": "Kann ich Decorebator offline verwenden?",
+        "answer": "Ja! Premium-Nutzer können ihre Wortlisten herunterladen und offline mit vollständiger Funktionalität weiterlernen. Ihr Fortschritt synchronisiert sich automatisch, wenn Sie sich wieder mit dem Internet verbinden, sodass Sie nie eine Lernsitzung verpassen."
+      },
+      "5": {
+        "question": "Welche Sprachen werden für die KI-Inhaltsgenerierung unterstützt?",
+        "answer": "Decorebator unterstützt 7 Sprachen mit nativer KI-Verarbeitung: Englisch, Spanisch, Französisch, Deutsch, Italienisch, Portugiesisch und Japanisch. Jede Sprache erhält kulturell bewusste Inhaltsgenerierung, korrekte Grammatikregeln (wie geschlechtsbewusste Grammatik im Spanischen oder das deutsche Fallsystem) und optimierte Stimmauswahl."
+      },
+      "6": {
+        "question": "Wie viele Quiz-Modi sind verfügbar und wie funktionieren sie?",
+        "answer": "Es gibt 8 verschiedene Quiz-Modi, die darauf ausgelegt sind, verschiedene Aspekte des Vokabellernens anzugehen: Bedeutung erraten, Wort aus Bedeutung, visuelle Assoziation, Hörverständnis, Satzvervollständigung, aktiver Abruf, Audioerkennung und Beispielaudio. Quiz-Typen passen sich progressiv an Ihr aktuelles Lernniveau an."
+      },
+      "7": {
+        "question": "Welche Analyse- und Fortschrittsverfolgungsfunktionen sind enthalten?",
+        "answer": "Decorebator bietet umfassende Analysen mit mehreren Verfolgungstools: Dashboard-Statistiken, Wortbeherrschungsdiagramme, Lernfortschrittstrends, Übungszeit-Analysen, Quiz-Leistungsaufschlüsselungen, Top-Wörter-Bestenlisten, Box-Verteilungsvisualisierung und historische Fortschrittsverfolgung. Premium-Nutzer erhalten unbegrenzten Verlauf und Datenexport."
+      },
+      "8": {
+        "question": "Wie funktioniert das Fehlermeldungssystem?",
+        "answer": "Nutzer können Probleme mit KI-generierten Inhalten (Definitionen, Bilder, Audio) direkt aus der App melden. Das System beinhaltet Ratenbegrenzung (Kostenlos: 3 Meldungen/Stunde, 5/Tag; Premium: 10 Meldungen/Stunde, 30/Tag) und automatische Inhaltsregenerierung. Gemeldete Wörter werden während der Wiederholungen temporär übersprungen, bis neuer Inhalt generiert wird."
+      },
+      "9": {
+        "question": "Welche Plattformen und Geräte werden unterstützt?",
+        "answer": "Decorebator ist als mobile App für iOS- und Android-Geräte verfügbar, plus eine umfassende Webanwendung mit mehrsprachiger Unterstützung. Ihr Fortschritt synchronisiert sich über alle Geräte mit automatischem Sitzungsmanagement."
+      },
+      "10": {
+        "question": "Wie zuverlässig ist die KI-Inhaltsgenerierung?",
+        "answer": "Unser KI-Inhaltsgenerierungssystem beinhaltet mehrere Qualitätssicherungsmaßnahmen: automatische Wiederholungslogik, Ratenbegrenzung und faire Nutzungsverteilung zur Gewährleistung zuverlässiger Inhaltserstellung. Das Fehlermeldungssystem ermöglicht es Nutzern, neue Inhalte anzufordern, falls etwas nicht ihren Lernbedürfnissen entspricht."
       }
     }
   }
