@@ -16,10 +16,26 @@
     "signUp": "Sign Up",
     "signIn": "Sign In",
     "contactUs": "Contact Us",
+    "downloadApp": "Download App",
+    "tryQuiz": "Try a Quick Quiz",
+    "submitAnswer": "Submit Answer",
+    "skip": "Skip",
+    "skipQuestion": "Skip Question",
+    "nextQuestion": "Next Question",
+    "completeQuiz": "Complete Quiz",
+    "tryAgain": "Try Again",
+    "reportIssue": "Report an Issue",
+    "scrollToTop": "Scroll to top",
+    "selectLanguage": "Select language",
+    "processing": "Processing...",
     "appStorePending": {
       "title": "Coming Soon!",
       "message": "We're currently waiting for App Store approval. The app will be available for download soon!",
       "okButton": "OK"
+    },
+    "appStore": {
+      "downloadAppStore": "Download on App Store",
+      "downloadGooglePlay": "Get it on Google Play"
     }
   },
   "navigation": {
@@ -261,6 +277,17 @@
   },
   "footer": {
     "copyright": "© {year} Decorebator. All rights reserved.",
+    "screenReader": "Footer",
+    "navigation": {
+      "features": "Features",
+      "howItWorks": "How It Works",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "support": "Support",
+      "helpCenter": "Help Center",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service"
+    },
     "about": {
       "title": "About",
       "soloEntrepreneur": "Solo Entrepreneur",
@@ -1148,5 +1175,198 @@
         "nextReview": "Next Review: July 1, 2025"
       }
     }
+  },
+  "quiz": {
+    "demo": {
+      "title": "Quick Quiz Demo",
+      "fastMode": "Fast Mode",
+      "fastModeEnabled": "Auto-advance enabled",
+      "fastModeDisabled": "Manual progression",
+      "errorReport": {
+        "title": "Report an Issue",
+        "subtitle": "What seems to be wrong with this question?",
+        "options": {
+          "wrongMeaning": "Wrong meaning or definition",
+          "imageNotMatch": "Image doesn't match the word",
+          "imageNotLoading": "Image not loading",
+          "wrongExample": "Wrong example sentence",
+          "audioNotPlaying": "Audio not playing"
+        },
+        "reporting": "Reporting issue...",
+        "success": "Thank you for your feedback! This will help us improve the content."
+      },
+      "types": {
+        "guessMeaning": "What does this word mean?",
+        "wordFromMeaning": "Which word matches this definition?",
+        "wordFromImage": "Which word does this image represent?",
+        "completeSentence": "Complete the sentence:",
+        "writeFromDefinition": "What word matches this definition?",
+        "wordFromAudio": "Which word did you hear?",
+        "exampleAudio": "Complete the sentence:",
+        "default": "Choose the correct answer:"
+      },
+      "audioInstructions": "Listen to the audio and select the word you hear",
+      "imagePlaceholder": "Image would be displayed here",
+      "inputPlaceholder": "Type your answer here...",
+      "correctAnswer": "Correct answer: {answer}",
+      "completion": {
+        "title": "Quiz Complete!",
+        "score": "You scored {score} out of {total} questions"
+      },
+      "unavailable": {
+        "title": "Demo Unavailable",
+        "message": "Quiz demo is temporarily unavailable"
+      }
+    }
+  },
+  "video": {
+    "modal": {
+      "closeModal": "Close modal",
+      "demoTitle": "Decorebator Demo",
+      "seeInAction": "See Decorebator in Action",
+      "description": "Watch how AI-powered vocabulary learning works with spaced repetition, interactive quizzes, and comprehensive analytics.",
+      "features": {
+        "aiContent": "AI Content",
+        "spacedRepetition": "Spaced Repetition",
+        "quizModes": "7 Quiz Modes",
+        "analytics": "Analytics"
+      }
+    }
+  },
+  "hero": {
+    "tagline": "AI-Powered Learning • 7 Languages • Multi-Platform",
+    "imageAlt": "Decorebator App Demo showing interactive learning features, quiz modes, and progress tracking",
+    "videoTitle": "Decorebator Demo - AI-Powered Vocabulary Learning",
+    "socialProof": "+ active learners"
+  },
+  "contact": {
+    "form": {
+      "title": "Get in Touch",
+      "subtitle": "Have questions about Decorebator? We'd love to hear from you. Send us a message and we'll respond as soon as possible.",
+      "fullName": "Full Name *",
+      "fullNamePlaceholder": "Enter your full name",
+      "emailAddress": "Email Address *",
+      "emailPlaceholder": "Enter your email address",
+      "subject": "Subject *",
+      "subjectPlaceholder": "Select a subject...",
+      "message": "Message *",
+      "messagePlaceholder": "Tell us how we can help you...",
+      "sendMessage": "Send Message",
+      "subjects": {
+        "general": "General Inquiry",
+        "support": "Technical Support",
+        "billing": "Billing & Subscriptions",
+        "feature": "Feature Request",
+        "bug": "Bug Report",
+        "partnership": "Partnership Opportunity"
+      }
+    },
+    "info": {
+      "emailUs": "Email Us",
+      "emailAddress": "support@decorebator.com",
+      "liveChat": "Live Chat",
+      "availability": "Available 24/7",
+      "helpCenter": "Help Center",
+      "quickAnswers": "Find quick answers"
+    }
+  },
+  "resetPassword": {
+    "title": "Reset Your Password",
+    "subtitle": "Enter your new password below. Make sure it's strong and memorable.",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Enter new password",
+    "confirmPassword": "Confirm New Password",
+    "confirmPasswordPlaceholder": "Confirm new password",
+    "resetButton": "Reset Password",
+    "helpText": "Remember to choose a strong password you haven't used before.",
+    "errors": {
+      "fillBothFields": "Please fill in both password fields.",
+      "tooShort": "Password must be at least 4 characters long.",
+      "noMatch": "Passwords do not match.",
+      "resetFailed": "Failed to reset password. Please try again."
+    },
+    "success": "Password has been reset successfully!"
+  },
+  "pricing": {
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "Perfect for trying out vocabulary learning",
+        "features": [
+          "1 Wordlist",
+          "Up to 10 Words",
+          "Basic Quiz Modes"
+        ]
+      },
+      "monthly": {
+        "name": "Monthly Premium",
+        "description": "Full access with monthly flexibility",
+        "badge": "MOST POPULAR",
+        "features": [
+          "Unlimited Wordlists",
+          "Unlimited Words",
+          "All 8 Quiz Modes",
+          "Advanced Analytics",
+          "Offline Support"
+        ]
+      },
+      "annual": {
+        "name": "Annual Premium",
+        "description": "Best value for committed learners",
+        "savings": "Save $13.98 per year",
+        "features": [
+          "Everything in Monthly",
+          "Save $13.98 per year",
+          "Early Access to Features"
+        ]
+      }
+    },
+    "title": "Choose Your Learning Plan",
+    "subtitle": "Start free and upgrade anytime. All plans include AI-powered vocabulary enrichment and spaced repetition.",
+    "allPlansInclude": "✨ All Plans Include",
+    "features": {
+      "aiContent": "AI-Powered Content",
+      "spacedRepetition": "Spaced Repetition",
+      "mobileAccess": "Mobile App Access",
+      "securePrivate": "Secure & Private"
+    },
+    "footer": "No contracts • Cancel anytime • Secure payment via Stripe"
+  },
+  "howItWorks": {
+    "title": "Your Learning Journey in 3 Simple Steps",
+    "subtitle": "Our streamlined process makes vocabulary learning efficient, engaging, and effective.",
+    "step1": {
+      "title": "Create Your Wordlist",
+      "description": "Simply add words you want to learn. Our AI instantly generates comprehensive learning materials.",
+      "features": [
+        "AI-generated definitions & examples",
+        "AI visual associations",
+        "High-quality audio pronunciations"
+      ]
+    },
+    "step2": {
+      "title": "Take Engaging Quizzes",
+      "description": "Practice with 8 different quiz modes that adapt to your learning progress.",
+      "features": [
+        "Meaning ↔ Word matching",
+        "Image & audio recognition",
+        "Sentence completion"
+      ]
+    },
+    "step3": {
+      "title": "Master with Repetition",
+      "description": "Our 7-box Leitner system schedules reviews at optimal intervals for maximum retention.",
+      "features": [
+        "Adaptive review scheduling",
+        "Progress tracking & insights",
+        "Long-term retention focus"
+      ]
+    }
+  },
+  "cta": {
+    "title": "Ready to Transform Your Language Learning?",
+    "subtitle": "Master new languages with AI-powered vocabulary learning and spaced repetition.",
+    "subtitleWithStats": "Join {count}+ learners who are mastering new languages with AI-powered vocabulary learning and spaced repetition.",
+    "videoTitle": "Decorebator Demo - AI-Powered Vocabulary Learning"
   }
 }

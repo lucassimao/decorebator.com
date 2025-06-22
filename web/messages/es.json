@@ -16,10 +16,26 @@
     "signUp": "Registrarse",
     "signIn": "Iniciar sesión",
     "contactUs": "Contáctanos",
+    "downloadApp": "Descargar App",
+    "tryQuiz": "Prueba un cuestionario rápido",
+    "submitAnswer": "Enviar respuesta",
+    "skip": "Saltar",
+    "skipQuestion": "Saltar pregunta",
+    "nextQuestion": "Siguiente pregunta",
+    "completeQuiz": "Completar cuestionario",
+    "tryAgain": "Intentar de nuevo",
+    "reportIssue": "Reportar un problema",
+    "scrollToTop": "Volver arriba",
+    "selectLanguage": "Seleccionar idioma",
+    "processing": "Procesando...",
     "appStorePending": {
       "title": "¡Próximamente!",
       "message": "Actualmente estamos esperando la aprobación de las tiendas de aplicaciones. ¡La app estará disponible para descargar pronto!",
       "okButton": "Aceptar"
+    },
+    "appStore": {
+      "downloadAppStore": "Descargar en App Store",
+      "downloadGooglePlay": "Obtener en Google Play"
     }
   },
   "navigation": {
@@ -1073,6 +1089,226 @@
         "version": "Versión: 1.0",
         "nextReview": "Próxima Revisión: 1 de Julio, 2025"
       }
+    }
+  },
+  "quiz": {
+    "demo": {
+      "title": "Demo de cuestionario rápido",
+      "fastMode": "Modo rápido",
+      "fastModeEnabled": "Avance automático activado",
+      "fastModeDisabled": "Progresión manual",
+      "errorReport": {
+        "title": "Reportar un problema",
+        "subtitle": "¿Qué parece estar mal con esta pregunta?",
+        "options": {
+          "wrongMeaning": "Significado o definición incorrecta",
+          "imageNotMatch": "La imagen no coincide con la palabra",
+          "imageNotLoading": "La imagen no carga",
+          "wrongExample": "Oración de ejemplo incorrecta",
+          "audioNotPlaying": "El audio no reproduce"
+        },
+        "reporting": "Reportando problema...",
+        "success": "¡Gracias por tu comentario! Esto nos ayudará a mejorar el contenido."
+      },
+      "types": {
+        "guessMeaning": "¿Qué significa esta palabra?",
+        "wordFromMeaning": "¿Qué palabra coincide con esta definición?",
+        "wordFromImage": "¿Qué palabra representa esta imagen?",
+        "completeSentence": "Completa la oración:",
+        "writeFromDefinition": "¿Qué palabra coincide con esta definición?",
+        "wordFromAudio": "¿Qué palabra escuchaste?",
+        "exampleAudio": "Completa la oración:",
+        "default": "Elige la respuesta correcta:"
+      },
+      "audioInstructions": "Escucha el audio y selecciona la palabra que escuches",
+      "imagePlaceholder": "La imagen se mostraría aquí",
+      "inputPlaceholder": "Escribe tu respuesta aquí...",
+      "correctAnswer": "Respuesta correcta: {answer}",
+      "completion": {
+        "title": "¡Cuestionario completado!",
+        "score": "Obtuviste {score} de {total} preguntas correctas"
+      },
+      "unavailable": {
+        "title": "Demo no disponible",
+        "message": "El demo del cuestionario no está disponible temporalmente"
+      }
+    }
+  },
+  "video": {
+    "modal": {
+      "closeModal": "Cerrar modal",
+      "demoTitle": "Demo de Decorebator",
+      "seeInAction": "Ve Decorebator en acción",
+      "description": "Mira cómo funciona el aprendizaje de vocabulario con IA con repetición espaciada, cuestionarios interactivos y análisis completos.",
+      "features": {
+        "aiContent": "Contenido IA",
+        "spacedRepetition": "Repetición Espaciada",
+        "quizModes": "7 Modos de Cuestionario",
+        "analytics": "Análisis"
+      }
+    }
+  },
+  "hero": {
+    "tagline": "Aprendizaje con IA • 7 Idiomas • Multiplataforma",
+    "imageAlt": "Demo de la App Decorebator mostrando características de aprendizaje interactivo, modos de cuestionario y seguimiento de progreso",
+    "videoTitle": "Demo de Decorebator - Aprendizaje de vocabulario con IA",
+    "socialProof": "+ estudiantes activos"
+  },
+  "contact": {
+    "form": {
+      "title": "Ponte en contacto",
+      "subtitle": "¿Tienes preguntas sobre Decorebator? Nos encantaría saber de ti. Envíanos un mensaje y responderemos lo antes posible.",
+      "fullName": "Nombre completo *",
+      "fullNamePlaceholder": "Ingresa tu nombre completo",
+      "emailAddress": "Dirección de email *",
+      "emailPlaceholder": "Ingresa tu dirección de email",
+      "subject": "Asunto *",
+      "subjectPlaceholder": "Selecciona un asunto...",
+      "message": "Mensaje *",
+      "messagePlaceholder": "Cuéntanos cómo podemos ayudarte...",
+      "sendMessage": "Enviar mensaje",
+      "subjects": {
+        "general": "Consulta general",
+        "support": "Soporte técnico",
+        "billing": "Facturación y suscripciones",
+        "feature": "Solicitud de característica",
+        "bug": "Reporte de error",
+        "partnership": "Oportunidad de asociación"
+      }
+    },
+    "info": {
+      "emailUs": "Envíanos un email",
+      "emailAddress": "support@decorebator.com",
+      "liveChat": "Chat en vivo",
+      "availability": "Disponible 24/7",
+      "helpCenter": "Centro de ayuda",
+      "quickAnswers": "Encuentra respuestas rápidas"
+    }
+  },
+  "resetPassword": {
+    "title": "Restablecer tu contraseña",
+    "subtitle": "Ingresa tu nueva contraseña abajo. Asegúrate de que sea segura y memorable.",
+    "newPassword": "Nueva contraseña",
+    "newPasswordPlaceholder": "Ingresa nueva contraseña",
+    "confirmPassword": "Confirmar nueva contraseña",
+    "confirmPasswordPlaceholder": "Confirma nueva contraseña",
+    "resetButton": "Restablecer contraseña",
+    "helpText": "Recuerda elegir una contraseña segura que no hayas usado antes.",
+    "errors": {
+      "fillBothFields": "Por favor completa ambos campos de contraseña.",
+      "tooShort": "La contraseña debe tener al menos 4 caracteres.",
+      "noMatch": "Las contraseñas no coinciden.",
+      "resetFailed": "Error al restablecer la contraseña. Por favor intenta de nuevo."
+    },
+    "success": "¡La contraseña ha sido restablecida exitosamente!"
+  },
+  "pricing": {
+    "plans": {
+      "free": {
+        "name": "Gratis",
+        "description": "Perfecto para probar el aprendizaje de vocabulario",
+        "features": [
+          "1 Lista de palabras",
+          "Hasta 10 palabras",
+          "Modos básicos de cuestionario"
+        ]
+      },
+      "monthly": {
+        "name": "Premium mensual",
+        "description": "Acceso completo con flexibilidad mensual",
+        "badge": "MÁS POPULAR",
+        "features": [
+          "Listas de palabras ilimitadas",
+          "Palabras ilimitadas",
+          "Los 8 modos de cuestionario",
+          "Análisis avanzados",
+          "Soporte sin conexión"
+        ]
+      },
+      "annual": {
+        "name": "Premium anual",
+        "description": "La mejor relación calidad-precio para estudiantes comprometidos",
+        "savings": "¡Ahorra $13.98 al año",
+        "features": [
+          "Todo lo de mensual",
+          "Ahorra $13.98 al año",
+          "Acceso anticipado a características"
+        ]
+      }
+    },
+    "title": "Elige tu plan de aprendizaje",
+    "subtitle": "Comienza gratis y actualiza cuando quieras. Todos los planes incluyen enriquecimiento de vocabulario con IA y repetición espaciada.",
+    "allPlansInclude": "✨ Todos los planes incluyen",
+    "features": {
+      "aiContent": "Contenido con IA",
+      "spacedRepetition": "Repetición espaciada",
+      "mobileAccess": "Acceso a app móvil",
+      "securePrivate": "Seguro y privado"
+    },
+    "footer": "Sin contratos • Cancela cuando quieras • Pago seguro vía Stripe"
+  },
+  "howItWorks": {
+    "title": "Tu viaje de aprendizaje en 3 pasos simples",
+    "subtitle": "Nuestro proceso simplificado hace que el aprendizaje de vocabulario sea eficiente, atractivo y efectivo.",
+    "step1": {
+      "title": "Crea tu lista de palabras",
+      "description": "Simplemente agrega palabras que quieras aprender. Nuestra IA genera instantáneamente materiales de aprendizaje completos.",
+      "features": [
+        "Definiciones y ejemplos generados por IA",
+        "Asociaciones visuales con IA",
+        "Pronunciaciones de audio de alta calidad"
+      ]
+    },
+    "step2": {
+      "title": "Toma cuestionarios atractivos",
+      "description": "Practica con 8 modos diferentes de cuestionario que se adaptan a tu progreso de aprendizaje.",
+      "features": [
+        "Emparejamiento significado ↔ palabra",
+        "Reconocimiento de imagen y audio",
+        "Completar oraciones"
+      ]
+    },
+    "step3": {
+      "title": "Domina con repetición",
+      "description": "Nuestro sistema Leitner de 7 cajas programa revisiones en intervalos óptimos para máxima retención.",
+      "features": [
+        "Programación adaptativa de revisiones",
+        "Seguimiento de progreso e insights",
+        "Enfoque en retención a largo plazo"
+      ]
+    }
+  },
+  "cta": {
+    "title": "¿Listo para transformar tu aprendizaje de idiomas?",
+    "subtitle": "Domina nuevos idiomas con aprendizaje de vocabulario con IA y repetición espaciada.",
+    "subtitleWithStats": "Únete a {count}+ estudiantes que están dominando nuevos idiomas con aprendizaje de vocabulario con IA y repetición espaciada.",
+    "videoTitle": "Demo de Decorebator - Aprendizaje de vocabulario con IA"
+  },
+  "footer": {
+    "copyright": "© {year} Decorebator. Todos los derechos reservados.",
+    "screenReader": "Pie de página",
+    "navigation": {
+      "features": "Características",
+      "howItWorks": "Cómo funciona",
+      "pricing": "Precios",
+      "faq": "Preguntas frecuentes",
+      "support": "Soporte",
+      "helpCenter": "Centro de ayuda",
+      "privacy": "Política de privacidad",
+      "terms": "Términos de servicio"
+    },
+    "about": {
+      "title": "Acerca de",
+      "soloEntrepreneur": "Emprendedor independiente",
+      "location": "Brasil 🇧🇷",
+      "description": "Responsable de la arquitectura, implementación completa y diseño de este proyecto. Resolviendo un problema personal y pensé que sería interesante compartirlo con otros.",
+      "followTwitter": "Seguir en Twitter"
+    },
+    "social": {
+      "facebook": "Decorebator en Facebook",
+      "twitter": "Decorebator en Twitter",
+      "instagram": "Decorebator en Instagram",
+      "linkedin": "Decorebator en LinkedIn"
     }
   }
 }
