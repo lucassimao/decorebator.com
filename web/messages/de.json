@@ -16,10 +16,26 @@
     "signUp": "Registrieren",
     "signIn": "Anmelden",
     "contactUs": "Kontakt",
+    "downloadApp": "App Herunterladen",
+    "tryQuiz": "Kurzes Quiz Ausprobieren",
+    "submitAnswer": "Antwort Absenden",
+    "skip": "Überspringen",
+    "skipQuestion": "Frage Überspringen",
+    "nextQuestion": "Nächste Frage",
+    "completeQuiz": "Quiz Abschließen",
+    "tryAgain": "Erneut Versuchen",
+    "reportIssue": "Problem Melden",
+    "scrollToTop": "Nach Oben Scrollen",
+    "selectLanguage": "Sprache Auswählen",
+    "processing": "Verarbeitung...",
     "appStorePending": {
       "title": "Demnächst verfügbar!",
       "message": "Wir warten derzeit auf die Genehmigung der App Stores. Die App wird bald zum Download verfügbar sein!",
       "okButton": "OK"
+    },
+    "appStore": {
+      "downloadAppStore": "Im App Store Herunterladen",
+      "downloadGooglePlay": "Bei Google Play Herunterladen"
     }
   },
   "navigation": {
@@ -45,6 +61,10 @@
       "visualLearning": "Visuellem Lernen",
       "smartQuizzes": "Intelligenten Quiz"
     },
+    "tagline": "KI-Gestütztes Lernen • 7 Sprachen • Multi-Plattform",
+    "imageAlt": "Decorebator App Demo zeigt interaktive Lernfunktionen, Quiz-Modi und Fortschrittsverfolgung",
+    "videoTitle": "Decorebator Demo - KI-Gestütztes Vokabellernen",
+    "socialProof": "+ aktive Lernende",
     "subtitle": "Transformieren Sie Ihr Vokabellernen mit KI-generiertem Inhalt, wissenschaftlich bewiesener verteilter Wiederholung und 7 ansprechenden Quiz-Modi. Schließen Sie sich {count}+ Lernenden an, die effektiv neue Sprachen meistern.",
     "startLearningFree": "Kostenlos lernen starten",
     "watchDemo": "Demo Ansehen",
@@ -229,17 +249,112 @@
         "earlyAccess": "Früher Zugang zu Funktionen"
       },
       "cta": "Jährlich starten"
+    },
+    "title": "Wählen Sie Ihren Lernplan",
+    "subtitle": "Starten Sie kostenlos und upgraden Sie jederzeit. Alle Pläne beinhalten KI-gestützte Vokabelerweiterung und verteilte Wiederholung.",
+    "allPlansInclude": "✨ Alle Pläne Beinhalten",
+    "features": {
+      "aiContent": "KI-Gestützte Inhalte",
+      "spacedRepetition": "Verteilte Wiederholung",
+      "mobileAccess": "Mobile App Zugang",
+      "securePrivate": "Sicher & Privat"
+    },
+    "footer": "Keine Verträge • Jederzeit kündbar • Sichere Zahlung über Stripe",
+    "plans": {
+      "free": {
+        "name": "Kostenlos",
+        "description": "Perfekt zum Ausprobieren des Vokabellernens",
+        "features": [
+          "1 Wortliste",
+          "Bis zu 10 Wörter",
+          "Basis-Quiz-Modi"
+        ]
+      },
+      "monthly": {
+        "name": "Monatlich Premium",
+        "description": "Vollzugang mit monatlicher Flexibilität",
+        "badge": "AM BELIEBTESTEN",
+        "features": [
+          "Unbegrenzte Wortlisten",
+          "Unbegrenzte Wörter",
+          "Alle 8 Quiz-Modi",
+          "Erweiterte Analysen",
+          "Offline-Unterstützung"
+        ]
+      },
+      "annual": {
+        "name": "Jährlich Premium",
+        "description": "Bester Wert für engagierte Lernende",
+        "savings": "Sparen Sie 13,98€ pro Jahr",
+        "features": [
+          "Alles in Monatlich",
+          "Sparen Sie 13,98€ pro Jahr",
+          "Früher Zugang zu Funktionen"
+        ]
+      }
+    }
+  },
+  "howItWorks": {
+    "title": "Ihre Lernreise in 3 Einfachen Schritten",
+    "subtitle": "Unser optimierter Prozess macht Vokabellernen effizient, ansprechend und effektiv.",
+    "step1": {
+      "title": "Erstellen Sie Ihre Wortliste",
+      "description": "Fügen Sie einfach Wörter hinzu, die Sie lernen möchten. Unsere KI generiert sofort umfassende Lernmaterialien.",
+      "features": [
+        "KI-generierte Definitionen & Beispiele",
+        "KI-visuelle Assoziationen",
+        "Hochwertige Audio-Aussprachen"
+      ]
+    },
+    "step2": {
+      "title": "Nehmen Sie an Ansprechenden Quiz Teil",
+      "description": "Üben Sie mit 8 verschiedenen Quiz-Modi, die sich an Ihren Lernfortschritt anpassen.",
+      "features": [
+        "Bedeutung ↔ Wort-Zuordnung",
+        "Bild- & Audio-Erkennung",
+        "Satzvervollständigung"
+      ]
+    },
+    "step3": {
+      "title": "Meistern mit Wiederholung",
+      "description": "Unser 7-Box-Leitner-System plant Wiederholungen in optimalen Intervallen für maximale Behaltung.",
+      "features": [
+        "Adaptive Wiederholungsplanung",
+        "Fortschrittsverfolgung & Einblicke",
+        "Fokus auf langfristige Behaltung"
+      ]
     }
   },
   "cta": {
     "title": "Bereit, Ihr Sprachenlernen zu Transformieren?",
-    "subtitle": "Schließen Sie sich 10.000+ Lernenden an, die neue Sprachen mit KI-gestütztem Vokabellernen und verteilter Wiederholung meistern.",
+    "subtitle": "Meistern Sie neue Sprachen mit KI-gestütztem Vokabellernen und verteilter Wiederholung.",
+    "subtitleWithStats": "Schließen Sie sich {count}+ Lernenden an, die neue Sprachen mit KI-gestütztem Vokabellernen und verteilter Wiederholung meistern.",
+    "videoTitle": "Decorebator Demo - KI-Gestütztes Vokabellernen",
     "startFreeTrial": "Starten Sie Ihre Kostenlose Testversion"
   },
   "contact": {
     "title": "Kontakt Aufnehmen",
     "subtitle": "Haben Sie Fragen? Wir würden gerne von Ihnen hören.",
     "form": {
+      "title": "Kontakt Aufnehmen",
+      "subtitle": "Haben Sie Fragen zu Decorebator? Wir würden gerne von Ihnen hören. Senden Sie uns eine Nachricht und wir antworten so schnell wie möglich.",
+      "fullName": "Vollständiger Name *",
+      "fullNamePlaceholder": "Geben Sie Ihren vollständigen Namen ein",
+      "emailAddress": "E-Mail-Adresse *",
+      "emailPlaceholder": "Geben Sie Ihre E-Mail-Adresse ein",
+      "subject": "Betreff *",
+      "subjectPlaceholder": "Wählen Sie einen Betreff...",
+      "message": "Nachricht *",
+      "messagePlaceholder": "Sagen Sie uns, wie wir Ihnen helfen können...",
+      "sendMessage": "Nachricht Senden",
+      "subjects": {
+        "general": "Allgemeine Anfrage",
+        "support": "Technischer Support",
+        "billing": "Abrechnung & Abonnements",
+        "feature": "Funktionsanfrage",
+        "bug": "Fehlerbericht",
+        "partnership": "Partnerschaftsmöglichkeit"
+      },
       "name": "Name",
       "namePlaceholder": "Ihr Name",
       "email": "E-Mail",
@@ -254,6 +369,12 @@
       "error": "Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut."
     },
     "info": {
+      "emailUs": "E-Mail an Uns",
+      "emailAddress": "support@decorebator.com",
+      "liveChat": "Live-Chat",
+      "availability": "24/7 verfügbar",
+      "helpCenter": "Hilfezentrum",
+      "quickAnswers": "Schnelle Antworten finden",
       "email": "support@decorebator.com",
       "response": "Wir antworten normalerweise innerhalb von 24 Stunden",
       "social": "Folgen Sie uns in sozialen Medien für Updates"
@@ -261,6 +382,17 @@
   },
   "footer": {
     "copyright": "© {year} Decorebator. Alle Rechte vorbehalten.",
+    "screenReader": "Fußzeile",
+    "navigation": {
+      "features": "Funktionen",
+      "howItWorks": "Wie Es Funktioniert",
+      "pricing": "Preise",
+      "faq": "FAQ",
+      "support": "Support",
+      "helpCenter": "Hilfezentrum",
+      "privacy": "Datenschutz",
+      "terms": "Nutzungsbedingungen"
+    },
     "about": {
       "title": "Über uns",
       "soloEntrepreneur": "Solo-Unternehmer",
@@ -975,6 +1107,205 @@
       "10": {
         "question": "Wie zuverlässig ist die KI-Inhaltsgenerierung?",
         "answer": "Unser KI-Inhaltsgenerierungssystem beinhaltet mehrere Qualitätssicherungsmaßnahmen: automatische Wiederholungslogik, Ratenbegrenzung und faire Nutzungsverteilung zur Gewährleistung zuverlässiger Inhaltserstellung. Das Fehlermeldungssystem ermöglicht es Nutzern, neue Inhalte anzufordern, falls etwas nicht ihren Lernbedürfnissen entspricht."
+      }
+    }
+  },
+  "quiz": {
+    "demo": {
+      "title": "Kurzes Quiz Demo",
+      "fastMode": "Schneller Modus",
+      "fastModeEnabled": "Auto-Fortschritt aktiviert",
+      "fastModeDisabled": "Manuelle Progression",
+      "errorReport": {
+        "title": "Problem Melden",
+        "subtitle": "Was scheint mit dieser Frage nicht zu stimmen?",
+        "options": {
+          "wrongMeaning": "Falsche Bedeutung oder Definition",
+          "imageNotMatch": "Bild passt nicht zum Wort",
+          "imageNotLoading": "Bild lädt nicht",
+          "wrongExample": "Falscher Beispielsatz",
+          "audioNotPlaying": "Audio spielt nicht ab"
+        },
+        "reporting": "Problem wird gemeldet...",
+        "success": "Vielen Dank für Ihr Feedback! Das hilft uns, den Inhalt zu verbessern."
+      },
+      "types": {
+        "guessMeaning": "Was bedeutet dieses Wort?",
+        "wordFromMeaning": "Welches Wort passt zu dieser Definition?",
+        "wordFromImage": "Welches Wort stellt dieses Bild dar?",
+        "completeSentence": "Vervollständigen Sie den Satz:",
+        "writeFromDefinition": "Welches Wort passt zu dieser Definition?",
+        "wordFromAudio": "Welches Wort haben Sie gehört?",
+        "exampleAudio": "Vervollständigen Sie den Satz:",
+        "default": "Wählen Sie die richtige Antwort:"
+      },
+      "audioInstructions": "Hören Sie das Audio und wählen Sie das Wort, das Sie hören",
+      "imagePlaceholder": "Bild würde hier angezeigt werden",
+      "inputPlaceholder": "Geben Sie Ihre Antwort hier ein...",
+      "correctAnswer": "Richtige Antwort: {answer}",
+      "completion": {
+        "title": "Quiz Abgeschlossen!",
+        "score": "Sie haben {score} von {total} Fragen richtig beantwortet"
+      },
+      "unavailable": {
+        "title": "Demo Nicht Verfügbar",
+        "message": "Quiz-Demo ist vorübergehend nicht verfügbar"
+      }
+    }
+  },
+  "video": {
+    "modal": {
+      "closeModal": "Modal Schließen",
+      "demoTitle": "Decorebator Demo",
+      "seeInAction": "Sehen Sie Decorebator in Aktion",
+      "description": "Sehen Sie, wie KI-gestütztes Vokabellernen mit verteilter Wiederholung, interaktiven Quiz und umfassenden Analysen funktioniert.",
+      "features": {
+        "aiContent": "KI-Inhalte",
+        "spacedRepetition": "Verteilte Wiederholung",
+        "quizModes": "8 Quiz-Modi",
+        "analytics": "Analysen"
+      }
+    }
+  },
+  "resetPassword": {
+    "title": "Passwort Zurücksetzen",
+    "subtitle": "Geben Sie Ihr neues Passwort unten ein. Stellen Sie sicher, dass es stark und einprägsam ist.",
+    "newPassword": "Neues Passwort",
+    "newPasswordPlaceholder": "Neues Passwort eingeben",
+    "confirmPassword": "Neues Passwort Bestätigen",
+    "confirmPasswordPlaceholder": "Neues Passwort bestätigen",
+    "resetButton": "Passwort Zurücksetzen",
+    "helpText": "Denken Sie daran, ein starkes Passwort zu wählen, das Sie noch nicht verwendet haben.",
+    "errors": {
+      "fillBothFields": "Bitte füllen Sie beide Passwort-Felder aus.",
+      "tooShort": "Passwort muss mindestens 4 Zeichen lang sein.",
+      "noMatch": "Passwörter stimmen nicht überein.",
+      "resetFailed": "Passwort konnte nicht zurückgesetzt werden. Bitte versuchen Sie es erneut."
+    },
+    "success": "Passwort wurde erfolgreich zurückgesetzt!"
+  },
+  "terms": {
+    "title": "Nutzungsbedingungen",
+    "subtitle": "Rechtliche Bedingungen für die Nutzung von Decorebator",
+    "lastUpdated": "Zuletzt aktualisiert: Januar 2025",
+    "sections": {
+      "1": {
+        "title": "Zustimmung zu den Bedingungen",
+        "content": "Durch das Herunterladen, Installieren oder Verwenden der mobilen Anwendung Decorebator (\"App\") stimmen Sie zu, durch diese Nutzungsbedingungen (\"Bedingungen\") gebunden zu sein. Wenn Sie diesen Bedingungen nicht zustimmen, verwenden Sie die App nicht."
+      },
+      "2": {
+        "title": "Beschreibung des Dienstes",
+        "intro": "Decorebator ist eine KI-gestützte Vokabellern-Anwendung, die Folgendes bietet:",
+        "features": [
+          "Verteiltes Wiederholungslernsystem",
+          "KI-generierte Vokabelinhalte",
+          "Mehrere Quiz-Modi und Karteikarten",
+          "Lernfortschrittsverfolgung",
+          "Offline-Lernfähigkeiten",
+          "Mehrsprachige Unterstützung"
+        ]
+      },
+      "3": {
+        "title": "Benutzerkonten",
+        "accountCreation": {
+          "title": "Kontoerstellung",
+          "items": [
+            "Sie müssen genaue und vollständige Informationen angeben",
+            "Sie sind für die Aufrechterhaltung der Kontosicherheit verantwortlich",
+            "Ein Konto pro Person",
+            "Mindestalter: 13 Jahre (mit elterlicher Zustimmung unter 18)"
+          ]
+        },
+        "accountResponsibilities": {
+          "title": "Kontoverantwortlichkeiten",
+          "items": [
+            "Anmeldedaten sicher aufbewahren",
+            "Unbefugten Zugriff sofort melden",
+            "Informationen nach Bedarf aktualisieren",
+            "Alle geltenden Gesetze einhalten"
+          ]
+        }
+      },
+      "4": {
+        "title": "Abonnement-Pläne",
+        "freePlan": {
+          "title": "Kostenloser Plan",
+          "items": [
+            "Maximal 1 Wortliste",
+            "Bis zu 10 Wörter pro Wortliste",
+            "Basis-Quiz-Modi",
+            "Begrenzte Funktionen"
+          ]
+        },
+        "premiumPlans": {
+          "title": "Premium-Pläne",
+          "items": [
+            "Monatlich: 6,99€/Monat",
+            "Jährlich: 69,90€/Jahr",
+            "Unbegrenzte Wortlisten und Wörter",
+            "Erweiterte Analysen",
+            "Prioritätssupport",
+            "Alle Funktionen enthalten"
+          ]
+        },
+        "billingTerms": {
+          "title": "Abrechnungsbedingungen",
+          "items": [
+            "Abonnements verlängern sich automatisch, es sei denn, sie werden gekündigt",
+            "Zahlung wird über App Store/Google Play abgewickelt",
+            "Rückerstattungen unterliegen den Plattform-Richtlinien",
+            "Preisänderungen mit 30-Tage-Benachrichtigung"
+          ]
+        }
+      },
+      "acknowledgment": {
+        "title": "Anerkennung",
+        "content": "Durch die Nutzung von Decorebator bestätigen Sie, dass Sie diese Nutzungsbedingungen und unsere Datenschutzrichtlinie gelesen, verstanden haben und sich damit einverstanden erklären, durch sie gebunden zu sein."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Datenschutzrichtlinie",
+    "subtitle": "Wie wir Ihre persönlichen Informationen sammeln, verwenden und schützen",
+    "lastUpdated": "Zuletzt aktualisiert: Januar 2025",
+    "introduction": {
+      "content": "Decorebator (\"wir\", \"unser\" oder \"uns\") ist dem Schutz Ihrer Privatsphäre verpflichtet. Diese Datenschutzrichtlinie erklärt, wie wir Ihre Informationen sammeln, verwenden und schützen, wenn Sie die mobile Anwendung Decorebator verwenden."
+    },
+    "sections": {
+      "informationWeCollect": {
+        "title": "Informationen, Die Wir Sammeln",
+        "personalInformation": {
+          "title": "Persönliche Informationen",
+          "items": [
+            "E-Mail-Adresse: Erforderlich für Kontoerstellung und Authentifizierung",
+            "Profilinformationen: Optionales Profilbild und Anzeigename",
+            "Abonnementinformationen: Abrechnungsdetails werden sicher über Stripe verarbeitet"
+          ]
+        },
+        "learningData": {
+          "title": "Lerndaten",
+          "items": [
+            "Wortlisten: Vokabellisten, die Sie erstellen oder ändern",
+            "Lernfortschritt: Quiz-Ergebnisse, verteilte Wiederholungsdaten und Lernanalysen",
+            "Benutzereinstellungen: App-Einstellungen, Spracheinstellungen und Benachrichtigungsoptionen",
+            "Inhaltsmoderation: Automatisierte Analyse von nutzergenerierten Inhalten auf Angemessenheit"
+          ]
+        },
+        "technicalData": {
+          "title": "Technische Daten",
+          "items": [
+            "Geräteinformationen: Gerätetyp, Betriebssystem, App-Version",
+            "Nutzungsanalysen: Funktionsnutzung, Sitzungsdauer und Leistungsmetriken",
+            "Fehlerberichte: Absturzprotokolle und Fehlerberichte zur App-Verbesserung"
+          ]
+        }
+      },
+      "conclusion": {
+        "content": "Ihre Privatsphäre ist grundlegend für unsere Mission, effektives Vokabellernen zu bieten. Wir sind verpflichtet, Ihre persönlichen Informationen zu schützen, transparent über unsere Praktiken zu sein, Ihnen Kontrolle über Ihre Daten zu geben und unsere Datenschutzmaßnahmen kontinuierlich zu verbessern.",
+        "agreement": "Durch die Nutzung von Decorebator stimmen Sie dieser Datenschutzrichtlinie zu. Bitte überprüfen Sie sie regelmäßig auf Updates und kontaktieren Sie uns bei Fragen oder Bedenken.",
+        "effectiveDate": "Wirksamkeitsdatum: 1. Januar 2025",
+        "version": "Version: 1.0",
+        "nextReview": "Nächste Überprüfung: 1. Juli 2025"
       }
     }
   }

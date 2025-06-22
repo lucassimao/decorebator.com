@@ -16,10 +16,26 @@
     "signUp": "Registrati",
     "signIn": "Accedi",
     "contactUs": "Contattaci",
+    "downloadApp": "Scarica App",
+    "tryQuiz": "Prova un Quiz Veloce",
+    "submitAnswer": "Invia Risposta",
+    "skip": "Salta",
+    "skipQuestion": "Salta Domanda",
+    "nextQuestion": "Prossima Domanda",
+    "completeQuiz": "Completa Quiz",
+    "tryAgain": "Riprova",
+    "reportIssue": "Segnala un Problema",
+    "scrollToTop": "Scorri in alto",
+    "selectLanguage": "Seleziona lingua",
+    "processing": "Elaborazione...",
     "appStorePending": {
       "title": "Prossimamente!",
       "message": "Stiamo attualmente aspettando l'approvazione degli store. L'app sarà presto disponibile per il download!",
       "okButton": "OK"
+    },
+    "appStore": {
+      "downloadAppStore": "Scarica su App Store",
+      "downloadGooglePlay": "Ottienilo su Google Play"
     }
   },
   "navigation": {
@@ -947,6 +963,325 @@
       "premium": {
         "title": "Funzionalità Premium",
         "description": "Il supporto offline è disponibile per abbonati Premium. Aggiornati per sbloccare capacità di apprendimento offline illimitate."
+      }
+    }
+  },
+  "quiz": {
+    "demo": {
+      "title": "Demo Quiz Veloce",
+      "fastMode": "Modalità Veloce",
+      "fastModeEnabled": "Avanzamento automatico attivato",
+      "fastModeDisabled": "Progressione manuale",
+      "errorReport": {
+        "title": "Segnala un Problema",
+        "subtitle": "Cosa sembra sbagliato in questa domanda?",
+        "options": {
+          "wrongMeaning": "Significato o definizione sbagliati",
+          "imageNotMatch": "L'immagine non corrisponde alla parola",
+          "imageNotLoading": "L'immagine non si carica",
+          "wrongExample": "Frase di esempio sbagliata",
+          "audioNotPlaying": "L'audio non si riproduce"
+        },
+        "reporting": "Segnalazione problema...",
+        "success": "Grazie per il tuo feedback! Questo ci aiuterà a migliorare il contenuto."
+      },
+      "types": {
+        "guessMeaning": "Cosa significa questa parola?",
+        "wordFromMeaning": "Quale parola corrisponde a questa definizione?",
+        "wordFromImage": "Quale parola rappresenta questa immagine?",
+        "completeSentence": "Completa la frase:",
+        "writeFromDefinition": "Quale parola corrisponde a questa definizione?",
+        "wordFromAudio": "Quale parola hai sentito?",
+        "exampleAudio": "Completa la frase:",
+        "default": "Scegli la risposta corretta:"
+      },
+      "audioInstructions": "Ascolta l'audio e seleziona la parola che senti",
+      "imagePlaceholder": "L'immagine verrebbe visualizzata qui",
+      "inputPlaceholder": "Digita la tua risposta qui...",
+      "correctAnswer": "Risposta corretta: {answer}",
+      "completion": {
+        "title": "Quiz Completato!",
+        "score": "Hai risposto correttamente a {score} domande su {total}"
+      },
+      "unavailable": {
+        "title": "Demo Non Disponibile",
+        "message": "La demo del quiz è temporaneamente non disponibile"
+      }
+    }
+  },
+  "video": {
+    "modal": {
+      "closeModal": "Chiudi modal",
+      "demoTitle": "Demo Decorebator",
+      "seeInAction": "Vedi Decorebator in Azione",
+      "description": "Guarda come funziona l'apprendimento del vocabolario basato su IA con ripetizione dilazionata, quiz interattivi e analisi complete.",
+      "features": {
+        "aiContent": "Contenuti IA",
+        "spacedRepetition": "Ripetizione Dilazionata",
+        "quizModes": "8 Modalità Quiz",
+        "analytics": "Analisi"
+      }
+    }
+  },
+  "hero": {
+    "tagline": "Apprendimento Basato su IA • 7 Lingue • Multi-Piattaforma",
+    "imageAlt": "Demo App Decorebator che mostra funzionalità di apprendimento interattivo, modalità quiz e monitoraggio progressi",
+    "videoTitle": "Demo Decorebator - Apprendimento Vocabolario Basato su IA",
+    "socialProof": "+ studenti attivi"
+  },
+  "contact": {
+    "form": {
+      "title": "Mettiti in Contatto",
+      "subtitle": "Hai domande su Decorebator? Ci piacerebbe sentirti. Inviaci un messaggio e risponderemo il prima possibile.",
+      "fullName": "Nome Completo *",
+      "fullNamePlaceholder": "Inserisci il tuo nome completo",
+      "emailAddress": "Indirizzo Email *",
+      "emailPlaceholder": "Inserisci il tuo indirizzo email",
+      "subject": "Oggetto *",
+      "subjectPlaceholder": "Seleziona un oggetto...",
+      "message": "Messaggio *",
+      "messagePlaceholder": "Dicci come possiamo aiutarti...",
+      "sendMessage": "Invia Messaggio",
+      "subjects": {
+        "general": "Richiesta Generale",
+        "support": "Supporto Tecnico",
+        "billing": "Fatturazione e Abbonamenti",
+        "feature": "Richiesta Funzionalità",
+        "bug": "Segnalazione Bug",
+        "partnership": "Opportunità Partnership"
+      }
+    },
+    "info": {
+      "emailUs": "Inviaci Email",
+      "emailAddress": "support@decorebator.com",
+      "liveChat": "Chat Live",
+      "availability": "Disponibile 24/7",
+      "helpCenter": "Centro Assistenza",
+      "quickAnswers": "Trova risposte veloci"
+    }
+  },
+  "resetPassword": {
+    "title": "Reimposta la Tua Password",
+    "subtitle": "Inserisci la tua nuova password qui sotto. Assicurati che sia forte e memorabile.",
+    "newPassword": "Nuova Password",
+    "newPasswordPlaceholder": "Inserisci nuova password",
+    "confirmPassword": "Conferma Nuova Password",
+    "confirmPasswordPlaceholder": "Conferma nuova password",
+    "resetButton": "Reimposta Password",
+    "helpText": "Ricordati di scegliere una password forte che non hai mai usato prima.",
+    "errors": {
+      "fillBothFields": "Compila entrambi i campi password.",
+      "tooShort": "La password deve essere lunga almeno 4 caratteri.",
+      "noMatch": "Le password non corrispondono.",
+      "resetFailed": "Impossibile reimpostare la password. Riprova."
+    },
+    "success": "Password reimpostata con successo!"
+  },
+  "pricing": {
+    "plans": {
+      "free": {
+        "name": "Gratuito",
+        "description": "Perfetto per provare l'apprendimento del vocabolario",
+        "features": [
+          "1 Lista Parole",
+          "Fino a 10 Parole",
+          "Modalità Quiz Base"
+        ]
+      },
+      "monthly": {
+        "name": "Premium Mensile",
+        "description": "Accesso completo con flessibilità mensile",
+        "badge": "PIÙ POPOLARE",
+        "features": [
+          "Liste Parole Illimitate",
+          "Parole Illimitate",
+          "Tutte le 8 Modalità Quiz",
+          "Analisi Avanzate",
+          "Supporto Offline"
+        ]
+      },
+      "annual": {
+        "name": "Premium Annuale",
+        "description": "Il miglior valore per studenti impegnati",
+        "savings": "Risparmia 13,98€ all'anno",
+        "features": [
+          "Tutto nel Mensile",
+          "Risparmia 13,98€ all'anno",
+          "Accesso Anticipato alle Funzionalità"
+        ]
+      }
+    },
+    "title": "Scegli il Tuo Piano di Apprendimento",
+    "subtitle": "Inizia gratis e aggiorna quando vuoi. Tutti i piani includono arricchimento vocabolario basato su IA e ripetizione dilazionata.",
+    "allPlansInclude": "✨ Tutti i Piani Includono",
+    "features": {
+      "aiContent": "Contenuti Basati su IA",
+      "spacedRepetition": "Ripetizione Dilazionata",
+      "mobileAccess": "Accesso App Mobile",
+      "securePrivate": "Sicuro e Privato"
+    },
+    "footer": "Nessun contratto • Cancella quando vuoi • Pagamento sicuro tramite Stripe"
+  },
+  "howItWorks": {
+    "title": "Il Tuo Percorso di Apprendimento in 3 Semplici Passi",
+    "subtitle": "Il nostro processo ottimizzato rende l'apprendimento del vocabolario efficiente, coinvolgente ed efficace.",
+    "step1": {
+      "title": "Crea la Tua Lista Parole",
+      "description": "Aggiungi semplicemente parole che vuoi imparare. La nostra IA genera istantaneamente materiali di apprendimento completi.",
+      "features": [
+        "Definizioni ed esempi generati da IA",
+        "Associazioni visive IA",
+        "Pronunce audio di alta qualità"
+      ]
+    },
+    "step2": {
+      "title": "Fai Quiz Coinvolgenti",
+      "description": "Pratica con 8 diverse modalità quiz che si adattano al tuo progresso di apprendimento.",
+      "features": [
+        "Abbinamento Significato ↔ Parola",
+        "Riconoscimento immagini e audio",
+        "Completamento frasi"
+      ]
+    },
+    "step3": {
+      "title": "Padroneggia con la Ripetizione",
+      "description": "Il nostro sistema Leitner a 7 scatole programma le revisioni a intervalli ottimali per la massima ritenzione.",
+      "features": [
+        "Programmazione ripetizione adattiva",
+        "Monitoraggio progressi e approfondimenti",
+        "Focus sulla ritenzione a lungo termine"
+      ]
+    }
+  },
+  "cta": {
+    "title": "Pronto a Trasformare il Tuo Apprendimento Linguistico?",
+    "subtitle": "Padroneggia nuove lingue con apprendimento vocabolario basato su IA e ripetizione dilazionata.",
+    "subtitleWithStats": "Unisciti a {count}+ studenti che stanno padroneggiando nuove lingue con apprendimento vocabolario basato su IA e ripetizione dilazionata.",
+    "videoTitle": "Demo Decorebator - Apprendimento Vocabolario Basato su IA",
+    "startFreeTrial": "Inizia la Tua Prova Gratuita"
+  },
+  "terms": {
+    "title": "Termini di Servizio",
+    "subtitle": "Termini e condizioni legali per l'uso di Decorebator",
+    "lastUpdated": "Ultimo aggiornamento: Gennaio 2025",
+    "sections": {
+      "1": {
+        "title": "Accordo ai Termini",
+        "content": "Scaricando, installando o utilizzando l'applicazione mobile Decorebator (\"App\"), accetti di essere vincolato da questi Termini di Servizio (\"Termini\"). Se non accetti questi Termini, non utilizzare l'App."
+      },
+      "2": {
+        "title": "Descrizione del Servizio",
+        "intro": "Decorebator è un'applicazione di apprendimento vocabolario basata su IA che fornisce:",
+        "features": [
+          "Sistema di apprendimento con ripetizione dilazionata",
+          "Contenuti vocabolario generati da IA",
+          "Modalità quiz multiple e flashcard",
+          "Monitoraggio progressi apprendimento",
+          "Capacità studio offline",
+          "Supporto multilingue"
+        ]
+      },
+      "3": {
+        "title": "Account Utente",
+        "accountCreation": {
+          "title": "Creazione Account",
+          "items": [
+            "Devi fornire informazioni accurate e complete",
+            "Sei responsabile del mantenimento della sicurezza dell'account",
+            "Un account per persona",
+            "Età minima: 13 anni (con consenso parentale se sotto i 18)"
+          ]
+        },
+        "accountResponsibilities": {
+          "title": "Responsabilità Account",
+          "items": [
+            "Mantieni sicure le credenziali di accesso",
+            "Notificaci immediatamente accesso non autorizzato",
+            "Aggiorna le informazioni secondo necessità",
+            "Rispetta tutte le leggi applicabili"
+          ]
+        }
+      },
+      "4": {
+        "title": "Piani Abbonamento",
+        "freePlan": {
+          "title": "Piano Gratuito",
+          "items": [
+            "Massimo 1 lista parole",
+            "Fino a 10 parole per lista",
+            "Modalità quiz base",
+            "Funzionalità limitate"
+          ]
+        },
+        "premiumPlans": {
+          "title": "Piani Premium",
+          "items": [
+            "Mensile: 6,99€/mese",
+            "Annuale: 69,90€/anno",
+            "Liste parole e parole illimitate",
+            "Analisi avanzate",
+            "Supporto prioritario",
+            "Tutte le funzionalità incluse"
+          ]
+        },
+        "billingTerms": {
+          "title": "Termini Fatturazione",
+          "items": [
+            "Gli abbonamenti si rinnovano automaticamente a meno che non vengano cancellati",
+            "Pagamento elaborato tramite App Store/Google Play",
+            "Rimborsi soggetti alle politiche della piattaforma",
+            "Cambi prezzo con preavviso di 30 giorni"
+          ]
+        }
+      },
+      "acknowledgment": {
+        "title": "Riconoscimento",
+        "content": "Utilizzando Decorebator, riconosci di aver letto, compreso e accettato di essere vincolato da questi Termini di Servizio e dalla nostra Informativa Privacy."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Informativa Privacy",
+    "subtitle": "Come raccogliamo, utilizziamo e proteggiamo le tue informazioni personali",
+    "lastUpdated": "Ultimo aggiornamento: Gennaio 2025",
+    "introduction": {
+      "content": "Decorebator (\"noi\", \"nostro\" o \"ci\") è impegnato a proteggere la tua privacy. Questa Informativa Privacy spiega come raccogliamo, utilizziamo e salvaguardiamo le tue informazioni quando utilizzi l'applicazione mobile Decorebator."
+    },
+    "sections": {
+      "informationWeCollect": {
+        "title": "Informazioni Che Raccogliamo",
+        "personalInformation": {
+          "title": "Informazioni Personali",
+          "items": [
+            "Indirizzo Email: Richiesto per creazione account e autenticazione",
+            "Informazioni Profilo: Immagine profilo opzionale e nome visualizzato",
+            "Informazioni Abbonamento: Dettagli fatturazione elaborati in sicurezza tramite Stripe"
+          ]
+        },
+        "learningData": {
+          "title": "Dati Apprendimento",
+          "items": [
+            "Liste Parole: Liste vocabolario che crei o modifichi",
+            "Progresso Apprendimento: Punteggi quiz, dati ripetizione dilazionata e analisi studio",
+            "Preferenze Utente: Impostazioni app, preferenze lingua e scelte notifiche",
+            "Moderazione Contenuti: Analisi automatizzata contenuti generati dall'utente per appropriatezza"
+          ]
+        },
+        "technicalData": {
+          "title": "Dati Tecnici",
+          "items": [
+            "Informazioni Dispositivo: Tipo dispositivo, sistema operativo, versione app",
+            "Analisi Utilizzo: Utilizzo funzionalità, durata sessione e metriche prestazioni",
+            "Rapporti Errori: Log crash e rapporti errori per miglioramento app"
+          ]
+        }
+      },
+      "conclusion": {
+        "content": "La tua privacy è fondamentale per la nostra missione di fornire apprendimento vocabolario efficace. Siamo impegnati a proteggere le tue informazioni personali, essere trasparenti sulle nostre pratiche, darti controllo sui tuoi dati e migliorare continuamente le nostre protezioni privacy.",
+        "agreement": "Utilizzando Decorebator, accetti questa Informativa Privacy. Ti preghiamo di rivederla regolarmente per aggiornamenti e contattaci con qualsiasi domanda o preoccupazione.",
+        "effectiveDate": "Data Effettiva: 1° Gennaio 2025",
+        "version": "Versione: 1.0",
+        "nextReview": "Prossima Revisione: 1° Luglio 2025"
       }
     }
   }

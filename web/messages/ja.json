@@ -16,10 +16,26 @@
     "signUp": "登録",
     "signIn": "ログイン",
     "contactUs": "お問い合わせ",
+    "downloadApp": "アプリをダウンロード",
+    "tryQuiz": "クイッククイズを試す",
+    "submitAnswer": "回答を提出",
+    "skip": "スキップ",
+    "skipQuestion": "問題をスキップ",
+    "nextQuestion": "次の問題",
+    "completeQuiz": "クイズ完了",
+    "tryAgain": "もう一度試す",
+    "reportIssue": "問題を報告",
+    "scrollToTop": "トップへ戻る",
+    "selectLanguage": "言語を選択",
+    "processing": "処理中...",
     "appStorePending": {
       "title": "近日公開！",
       "message": "現在、アプリストアの承認を待っています。アプリは間もなくダウンロード可能になります！",
       "okButton": "OK"
+    },
+    "appStore": {
+      "downloadAppStore": "App Storeでダウンロード",
+      "downloadGooglePlay": "Google Playでダウンロード"
     }
   },
   "navigation": {
@@ -948,6 +964,226 @@
         "title": "プレミアム機能",
         "description": "オフラインサポートはプレミアム登録者向けです。無制限のオフライン学習機能をアンロックするためにアップグレードしてください。"
       }
+    }
+  },
+  "quiz": {
+    "demo": {
+      "title": "クイッククイズデモ",
+      "fastMode": "高速モード",
+      "fastModeEnabled": "自動進行有効",
+      "fastModeDisabled": "手動進行",
+      "errorReport": {
+        "title": "問題を報告",
+        "subtitle": "この問題の何が間違っていますか？",
+        "options": {
+          "wrongMeaning": "意味や定義が間違っている",
+          "imageNotMatch": "画像が単語と一致しない",
+          "imageNotLoading": "画像が読み込まれない",
+          "wrongExample": "例文が間違っている",
+          "audioNotPlaying": "音声が再生されない"
+        },
+        "reporting": "問題を報告中...",
+        "success": "フィードバックありがとうございます！コンテンツの改善に役立ちます。"
+      },
+      "types": {
+        "guessMeaning": "この単語の意味は何ですか？",
+        "wordFromMeaning": "この定義に合う単語は何ですか？",
+        "wordFromImage": "この画像が表す単語は何ですか？",
+        "completeSentence": "文を完成させてください：",
+        "writeFromDefinition": "この定義に合う単語は何ですか？",
+        "wordFromAudio": "聞こえた単語は何ですか？",
+        "exampleAudio": "文を完成させてください：",
+        "default": "正しい答えを選んでください："
+      },
+      "audioInstructions": "音声を聞いて、聞こえた単語を選択してください",
+      "imagePlaceholder": "ここに画像が表示されます",
+      "inputPlaceholder": "ここに答えを入力してください...",
+      "correctAnswer": "正解：{answer}",
+      "completion": {
+        "title": "クイズ完了！",
+        "score": "{total}問中{score}問正解でした"
+      },
+      "unavailable": {
+        "title": "デモ利用不可",
+        "message": "クイズデモは一時的に利用できません"
+      }
+    }
+  },
+  "video": {
+    "modal": {
+      "closeModal": "モーダルを閉じる",
+      "demoTitle": "Decorebatorデモ",
+      "seeInAction": "Decorebatorの実際の動作を見る",
+      "description": "AIパワーの単語学習が間隔反復、インタラクティブクイズ、包括的な分析とどのように機能するかをご覧ください。",
+      "features": {
+        "aiContent": "AIコンテンツ",
+        "spacedRepetition": "間隔反復",
+        "quizModes": "7つのクイズモード",
+        "analytics": "分析"
+      }
+    }
+  },
+  "hero": {
+    "tagline": "AIパワー学習 • 7言語 • マルチプラットフォーム",
+    "imageAlt": "インタラクティブ学習機能、クイズモード、進捗追跡を示すDecorebatorアプリデモ",
+    "videoTitle": "Decorebatorデモ - AIパワー単語学習",
+    "socialProof": "+ アクティブ学習者"
+  },
+  "contact": {
+    "form": {
+      "title": "お問い合わせ",
+      "subtitle": "Decorebatorに関してご質問はありませんか？お気軽にお問い合わせください。メッセージをお送りいただければ、可能な限り迅速に対応いたします。",
+      "fullName": "氏名 *",
+      "fullNamePlaceholder": "お名前を入力してください",
+      "emailAddress": "メールアドレス *",
+      "emailPlaceholder": "メールアドレスを入力してください",
+      "subject": "件名 *",
+      "subjectPlaceholder": "件名を選択してください...",
+      "message": "メッセージ *",
+      "messagePlaceholder": "どのようなお手伝いができるかお聞かせください...",
+      "sendMessage": "メッセージを送信",
+      "subjects": {
+        "general": "一般的なお問い合わせ",
+        "support": "技術サポート",
+        "billing": "請求・サブスクリプション",
+        "feature": "機能リクエスト",
+        "bug": "バグレポート",
+        "partnership": "パートナーシップの機会"
+      }
+    },
+    "info": {
+      "emailUs": "メールでお問い合わせ",
+      "emailAddress": "support@decorebator.com",
+      "liveChat": "ライブチャット",
+      "availability": "24時間365日対応",
+      "helpCenter": "ヘルプセンター",
+      "quickAnswers": "素早い答えを見つける"
+    }
+  },
+  "resetPassword": {
+    "title": "パスワードをリセット",
+    "subtitle": "以下に新しいパスワードを入力してください。強力で覚えやすいものにしてください。",
+    "newPassword": "新しいパスワード",
+    "newPasswordPlaceholder": "新しいパスワードを入力",
+    "confirmPassword": "新しいパスワードを確認",
+    "confirmPasswordPlaceholder": "新しいパスワードを確認",
+    "resetButton": "パスワードをリセット",
+    "helpText": "以前に使用したことのない強力なパスワードを選んでください。",
+    "errors": {
+      "fillBothFields": "パスワードフィールドを両方とも入力してください。",
+      "tooShort": "パスワードは少なくとも4文字以上である必要があります。",
+      "noMatch": "パスワードが一致しません。",
+      "resetFailed": "パスワードのリセットに失敗しました。もう一度お試しください。"
+    },
+    "success": "パスワードが正常にリセットされました！"
+  },
+  "pricing": {
+    "plans": {
+      "free": {
+        "name": "無料",
+        "description": "単語学習を試すのに最適",
+        "features": [
+          "1つの単語リスト",
+          "最大10単語",
+          "基本クイズモード"
+        ]
+      },
+      "monthly": {
+        "name": "プレミアム月額",
+        "description": "月額の柔軟性で完全アクセス",
+        "badge": "最人気",
+        "features": [
+          "無制限の単語リスト",
+          "無制限の単語",
+          "8つのクイズモードすべて",
+          "高度な分析",
+          "オフラインサポート"
+        ]
+      },
+      "annual": {
+        "name": "プレミアム年額",
+        "description": "本格的な学習者に最適な価値",
+        "savings": "年額$13.98お得",
+        "features": [
+          "月額のすべて",
+          "年額$13.98節約",
+          "機能の早期アクセス"
+        ]
+      }
+    },
+    "title": "学習プランを選択",
+    "subtitle": "無料で始めて、準備ができたらいつでもアップグレード。すべてのプランにAIパワーの単語強化と間隔反復が含まれています。",
+    "allPlansInclude": "✨ すべてのプランに含まれるもの",
+    "features": {
+      "aiContent": "AIパワーコンテンツ",
+      "spacedRepetition": "間隔反復",
+      "mobileAccess": "モバイルアプリアクセス",
+      "securePrivate": "安全・プライベート"
+    },
+    "footer": "契約なし • いつでもキャンセル可能 • Stripeで安全決済"
+  },
+  "howItWorks": {
+    "title": "3つの簡単なステップで学習旅程",
+    "subtitle": "合理化されたプロセスで単語学習を効率的、魅力的、効果的にします。",
+    "step1": {
+      "title": "単語リストを作成",
+      "description": "学びたい単語を簡単に追加するだけ。AIが即座に包括的な学習材料を生成します。",
+      "features": [
+        "AI生成の定義と例文",
+        "AI視覚的関連付け",
+        "高品質な音声発音"
+      ]
+    },
+    "step2": {
+      "title": "魅力的なクイズに取り組む",
+      "description": "学習進捗に合わせて調整される8種類の異なるクイズモードで練習してください。",
+      "features": [
+        "意味 ↔ 単語マッチング",
+        "画像と音声認識",
+        "文完成"
+      ]
+    },
+    "step3": {
+      "title": "反復でマスター",
+      "description": "7ボックスLeitnerシステムが最大限の保持を目指して最適な間隔で復習をスケジュールします。",
+      "features": [
+        "適応的復習スケジューリング",
+        "進捗追跡と洞察",
+        "長期保持に焦点"
+      ]
+    }
+  },
+  "cta": {
+    "title": "言語学習を変革する準備はできていますか？",
+    "subtitle": "AIパワー単語学習と間隔反復で新しい言語をマスターしてください。",
+    "subtitleWithStats": "AIパワー単語学習と間隔反復で新しい言語をマスターしている{count}+の学習者に仕間入りしてください。",
+    "videoTitle": "Decorebatorデモ - AIパワー単語学習"
+  },
+  "footer": {
+    "copyright": "© {year} Decorebator. すべての権利を保有しています。",
+    "screenReader": "フッター",
+    "navigation": {
+      "features": "機能",
+      "howItWorks": "使い方",
+      "pricing": "料金",
+      "faq": "FAQ",
+      "support": "サポート",
+      "helpCenter": "ヘルプセンター",
+      "privacy": "プライバシーポリシー",
+      "terms": "利用規約"
+    },
+    "about": {
+      "title": "関於",
+      "soloEntrepreneur": "ソロ起業家",
+      "location": "ブラジル 🇧🇷",
+      "description": "このプロジェクトのアーキテクチャ、完全実装、デザインを担当。個人的な問題を解決し、他の方々と共有することが興味深いと思いました。",
+      "followTwitter": "Twitterでフォロー"
+    },
+    "social": {
+      "facebook": "FacebookのDecorebator",
+      "twitter": "TwitterのDecorebator",
+      "instagram": "InstagramのDecorebator",
+      "linkedin": "LinkedInのDecorebator"
     }
   }
 }
