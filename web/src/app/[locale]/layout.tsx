@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import {NextIntlClientProvider} from 'next-intl';
 import {routing} from '../../../i18n';
 import {notFound} from 'next/navigation';
+import { AppStoreModalProvider } from '@/components/common/AppStoreModalProvider';
+import { statsConfig } from '@/config/statsConfig';
+import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 
 export const metadata: Metadata = {
   title: "Decorebator - AI-Powered Vocabulary Learning",
-  description: "Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Track your progress with advanced analytics. Join 10,000+ learners today!",
+  description: `Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Track your progress with advanced analytics.${statsConfig.showStats.userCount ? ` Join ${statsConfig.values.userCount}+ learners today!` : ''}`,
 };
 
 export function generateStaticParams() {
@@ -31,7 +34,10 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      {children}
+      <AppStoreModalProvider>
+        {children}
+        <ScrollToTopButton />
+      </AppStoreModalProvider>
     </NextIntlClientProvider>
   );
 }

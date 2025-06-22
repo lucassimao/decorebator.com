@@ -1,8 +1,9 @@
 'use client';
 
-import Image from 'next/image';
 import React, { useState } from 'react';
 import VideoModal from '../common/VideoModal';
+import AppStoreButton from '../common/AppStoreButton';
+import { statsConfig } from '@/config/statsConfig';
 
 const CTASection: React.FC = () => {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
@@ -20,7 +21,10 @@ const CTASection: React.FC = () => {
           Ready to Transform Your Language Learning?
         </h2>
         <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-          Join 10,000+ learners who are mastering new languages with AI-powered vocabulary learning and spaced repetition.
+          {statsConfig.locations.ctaSection.showUserCount 
+            ? `Join ${statsConfig.values.userCount}+ learners who are mastering new languages with AI-powered vocabulary learning and spaced repetition.`
+            : "Master new languages with AI-powered vocabulary learning and spaced repetition."
+          }
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
@@ -35,24 +39,8 @@ const CTASection: React.FC = () => {
         
         {/* App Store Buttons */}
         <div className="flex flex-wrap gap-4 justify-center">
-          <a href="#" className="transform hover:scale-105 transition-transform duration-300">
-            <Image 
-              src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
-              alt="Download on App Store" 
-              width={168}
-              height={56}
-              className="h-14"
-            />
-          </a>
-          <a href="#" className="transform hover:scale-105 transition-transform duration-300">
-            <Image 
-              src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
-              alt="Get it on Google Play" 
-              width={168}
-              height={56}
-              className="h-14"
-            />
-          </a>
+          <AppStoreButton store="apple" />
+          <AppStoreButton store="google" />
         </div>
       </div>
 

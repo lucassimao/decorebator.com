@@ -202,7 +202,7 @@
     },
     "monthly": {
       "title": "Monatlich Premium",
-      "price": "6,99€",
+      "price": "$6.99",
       "period": "/Monat",
       "description": "Vollzugang zu allen Premium-Funktionen",
       "badge": "Am Beliebtesten",
@@ -218,10 +218,10 @@
     },
     "annual": {
       "title": "Jährlich Premium",
-      "price": "69,90€",
+      "price": "$69.90",
       "period": "/Jahr",
       "description": "Bester Wert für engagierte Lernende",
-      "savings": "Sparen Sie 13,98€!",
+      "savings": "Save $13.98!",
       "features": {
         "everything": "Alles in Monatlich",
         "value": "Bestes Preis-Leistungs-Verhältnis",

@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import React, { useEffect } from 'react';
+import SmartDownloadButton from './SmartDownloadButton';
 
 interface VideoModalProps {
   isOpen: boolean;
@@ -110,14 +110,13 @@ const VideoModal: React.FC<VideoModalProps> = ({
 
             {/* CTA */}
             <div className="mt-6">
-              <Link
-                href="/signup?plan=free"
-                className="inline-flex items-center space-x-2 bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+              <SmartDownloadButton 
                 onClick={onClose}
+                size="medium"
               >
-                <span>Start Learning Free</span>
+                <span>Download App</span>
                 <i className="fas fa-arrow-right"></i>
-              </Link>
+              </SmartDownloadButton>
             </div>
           </div>
         </div>

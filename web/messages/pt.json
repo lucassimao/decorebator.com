@@ -173,7 +173,7 @@
       },
       "3": {
         "question": "Quais são os planos de assinatura e preços?",
-        "answer": "O Decorebator oferece um plano Gratuito (1 lista de vocabulário, máximo 10 palavras) e planos Premium: R$ 34,90/mês ou R$ 349,00/ano. O Premium inclui listas e palavras ilimitadas, suporte offline com sincronização automática, histórico completo de análises, funcionalidade de exportação e insights avançados de aprendizado."
+        "answer": "O Decorebator oferece um plano Gratuito (1 lista de vocabulário, máximo 10 palavras) e planos Premium: $6.99/mês ou $69.90/ano. O Premium inclui listas e palavras ilimitadas, suporte offline com sincronização automática, histórico completo de análises, funcionalidade de exportação e insights avançados de aprendizado."
       },
       "4": {
         "question": "Posso usar o Decorebator offline?",
@@ -193,7 +193,7 @@
       },
       "8": {
         "question": "Como funciona o sistema de relatório de erros?",
-        "answer": "Os usuários podem relatar problemas com conteúdo gerado por IA (definições, imagens, áudio) diretamente do aplicativo. O sistema inclui limitação de taxa (Gratuito: 3 relatórios/hora, 5/dia; Premium: 10 relatórios/hora, 30/dia) e regeneração automática de conteúdo. Palavras relatadas são temporariamente omitidas durante revisões até que novo conteúdo seja gerado."
+        "answer": "Os usuários podem relatar problemas com conteúdo gerado por IA (definições, imagens, áudio) diretamente do aplicativo. O sistema automaticamente regenera o conteúdo quando há problemas relatados. Palavras relatadas são temporariamente omitidas durante revisões até que novo conteúdo seja gerado."
       },
       "9": {
         "question": "Quais plataformas e dispositivos são suportados?",
@@ -201,7 +201,7 @@
       },
       "10": {
         "question": "Quão confiável é a geração de conteúdo com IA?",
-        "answer": "Nosso sistema de geração de conteúdo com IA inclui múltiplas medidas de garantia de qualidade: lógica de tentativa automática, limitação de taxa e distribuição de uso justo para garantir criação confiável de conteúdo. O sistema de relatório de erros permite que usuários solicitem novo conteúdo se algo não atender suas necessidades de aprendizado."
+        "answer": "Nosso sistema de geração de conteúdo com IA inclui múltiplas medidas de garantia de qualidade para garantir criação confiável de conteúdo. O sistema de relatório de erros permite que usuários solicitem novo conteúdo se algo não atender suas necessidades de aprendizado."
       }
     }
   },
@@ -223,7 +223,7 @@
     },
     "monthly": {
       "title": "Premium Mensal",
-      "price": "R$ 34,90",
+      "price": "$6.99",
       "period": "/mês",
       "description": "Acesso completo a todos os recursos premium",
       "badge": "Mais Popular",
@@ -239,10 +239,10 @@
     },
     "annual": {
       "title": "Premium Anual",
-      "price": "R$ 349,00",
+      "price": "$69.90",
       "period": "/ano",
       "description": "Melhor valor para alunos dedicados",
-      "savings": "Economize R$ 69,80!",
+      "savings": "Save $13.98!",
       "features": {
         "everything": "Tudo do Mensal",
         "value": "Melhor custo-benefício",

@@ -1,10 +1,17 @@
 [ ]  browserstack testing
-        - Fix SignUp screen - use transparent PNG as the login scren
-        - Integrate Revenue cat for non US users
         - Config sentry in the expo app        
         - improve mobile UI and detect default language
+        - Fix SignUp screen - use transparent PNG as the login scren
+        - Integrate Revenue cat for non US users
 
 
+- fully translate Web app. Make sure that all other language translation files are in sync wih the english version.
+Also if any page or component has english text copies, extract to the translation json files ( except for the privacy and term pages, thats fine to be all english). In the end all translation json files must have all the same keys
+
+- gravar demo
+
+- explore UI options for mobile keeping the current guideline
+- ⁠install sentry api and mobile
 
 
 ### iOS App Store Release Checklist

@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import FooterSection from '../home/FooterSection';
+import SmartDownloadButton from '../common/SmartDownloadButton';
 
 interface FeaturePageLayoutProps {
   featureKey: string;
@@ -10,7 +11,6 @@ interface FeaturePageLayoutProps {
 
 const FeaturePageLayout: React.FC<FeaturePageLayoutProps> = ({ featureKey, children }) => {
   const t = useTranslations(`featurePages.${featureKey}`);
-  const tCommon = useTranslations('common');
 
   return (
     <div className="min-h-screen bg-[#FDF6E3] relative overflow-hidden">
@@ -53,13 +53,13 @@ const FeaturePageLayout: React.FC<FeaturePageLayoutProps> = ({ featureKey, child
               {t('hero.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/signup?plan=free"
+              <SmartDownloadButton 
                 className="group bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+                size="large"
               >
-                <span>{tCommon('getStarted')}</span>
+                <span>Download App</span>
                 <i className="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-              </Link>
+              </SmartDownloadButton>
               <Link
                 href="/#features"
                 className="group bg-white/80 backdrop-blur px-8 py-4 rounded-full font-semibold text-lg border-2 border-gray-200 hover:border-[#FF7B54] transition-all duration-300 flex items-center justify-center text-[#2D3436]"
@@ -87,13 +87,13 @@ const FeaturePageLayout: React.FC<FeaturePageLayoutProps> = ({ featureKey, child
             Join thousands of learners already mastering vocabulary with Decorebator
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/signup?plan=free"
+            <SmartDownloadButton 
               className="group bg-white text-[#FF7B54] px-8 py-4 rounded-full font-semibold text-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+              size="large"
             >
-              <span>Start Free Trial</span>
+              <span>Download App</span>
               <i className="fas fa-rocket ml-2 group-hover:translate-x-1 transition-transform"></i>
-            </Link>
+            </SmartDownloadButton>
             <Link
               href="/#pricing"
               className="group border-2 border-white text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-white hover:text-[#FF7B54] transition-all duration-300 flex items-center justify-center"

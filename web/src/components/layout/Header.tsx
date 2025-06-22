@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import LanguageSwitcher from '../common/LanguageSwitcher';
+import DownloadAppButton from '../common/DownloadAppButton';
 
 const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -64,9 +65,9 @@ const Header: React.FC = () => {
               FAQ
             </a>
             <LanguageSwitcher />
-            <a href="#download" className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 inline-block">
+            <DownloadAppButton className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 inline-block">
               Download App
-            </a>
+            </DownloadAppButton>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -96,9 +97,12 @@ const Header: React.FC = () => {
             <div className="pt-2 border-t border-gray-200">
               <LanguageSwitcher />
             </div>
-            <a href="#download" className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-3 rounded-full font-semibold inline-block text-center" onClick={() => setIsMobileMenuOpen(false)}>
+            <DownloadAppButton 
+              className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-3 rounded-full font-semibold inline-block text-center" 
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
               Download App
-            </a>
+            </DownloadAppButton>
           </nav>
         </div>
       </div>

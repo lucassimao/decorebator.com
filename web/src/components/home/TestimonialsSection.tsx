@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { statsConfig } from '@/config/statsConfig';
 
 const TestimonialsSection: React.FC = () => {
   return (
@@ -99,26 +100,32 @@ const TestimonialsSection: React.FC = () => {
         </div>
 
         {/* Success Metrics */}
-        <div className="mt-16 bg-white rounded-3xl p-8 shadow-xl">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-[#FF7B54] mb-2">2.5M+</div>
-              <div className="text-[#636E72]">Words Learned</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-[#4CAF50] mb-2">85%</div>
-              <div className="text-[#636E72]">Retention Rate</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-[#9C27B0] mb-2">7</div>
-              <div className="text-[#636E72]">AI Languages</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-[#FFD700] mb-2">4.9/5</div>
-              <div className="text-[#636E72]">App Rating</div>
+        {statsConfig.locations.testimonials.showStats && (
+          <div className="mt-16 bg-white rounded-3xl p-8 shadow-xl">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+              <div>
+                <div className="text-4xl font-bold text-[#FF7B54] mb-2">2.5M+</div>
+                <div className="text-[#636E72]">Words Learned</div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-[#4CAF50] mb-2">85%</div>
+                <div className="text-[#636E72]">Retention Rate</div>
+              </div>
+              {statsConfig.showStats.languageCount && (
+                <div>
+                  <div className="text-4xl font-bold text-[#9C27B0] mb-2">{statsConfig.values.languageCount}</div>
+                  <div className="text-[#636E72]">AI Languages</div>
+                </div>
+              )}
+              {statsConfig.showStats.starRating && (
+                <div>
+                  <div className="text-4xl font-bold text-[#FFD700] mb-2">{statsConfig.values.starRating}</div>
+                  <div className="text-[#636E72]">App Rating</div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

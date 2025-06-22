@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 const FooterSection: React.FC = () => {
   return (
-    <footer className="bg-slate-800 text-slate-400 py-12 mt-16" aria-labelledby="footer-heading">
+    <footer className="bg-slate-800 text-slate-400 py-12" aria-labelledby="footer-heading">
       <h2 id="footer-heading" className="sr-only">Footer</h2>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">

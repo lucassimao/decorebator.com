@@ -173,7 +173,7 @@
       },
       "3": {
         "question": "Quels sont les plans d'abonnement et les tarifs ?",
-        "answer": "Decorebator propose un plan Gratuit (1 liste de vocabulaire, 10 mots maximum) et des plans Premium : 6,99€/mois ou 69,90€/an. Premium inclut des listes et mots illimités, support hors ligne avec synchronisation transparente, historique complet d'analyses, fonctionnalité d'exportation et insights d'apprentissage avancés."
+        "answer": "Decorebator propose un plan Gratuit (1 liste de vocabulaire, 10 mots maximum) et des plans Premium : $6.99/mois ou $69.90/an. Premium inclut des listes et mots illimités, support hors ligne avec synchronisation transparente, historique complet d'analyses, fonctionnalité d'exportation et insights d'apprentissage avancés."
       },
       "4": {
         "question": "Puis-je utiliser Decorebator hors ligne ?",
@@ -193,7 +193,7 @@
       },
       "8": {
         "question": "Comment fonctionne le système de signalement d'erreurs ?",
-        "answer": "Les utilisateurs peuvent signaler des problèmes avec le contenu généré par IA (définitions, images, audio) directement depuis l'application. Le système inclut une limitation de débit (Gratuit : 3 signalements/heure, 5/jour ; Premium : 10 signalements/heure, 30/jour) et une régénération automatique de contenu. Les mots signalés sont temporairement ignorés pendant les révisions jusqu'à ce qu'un nouveau contenu soit généré."
+        "answer": "Les utilisateurs peuvent signaler des problèmes avec le contenu généré par IA (définitions, images, audio) directement depuis l'application. Le système régénère automatiquement le contenu lorsque des problèmes sont signalés. Les mots signalés sont temporairement ignorés pendant les révisions jusqu'à ce qu'un nouveau contenu soit généré."
       },
       "9": {
         "question": "Quelles plateformes et appareils sont pris en charge ?",
@@ -201,7 +201,7 @@
       },
       "10": {
         "question": "À quel point la génération de contenu IA est-elle fiable ?",
-        "answer": "Notre système de génération de contenu IA inclut plusieurs mesures d'assurance qualité : logique de nouvelle tentative automatique, limitation de débit et distribution d'utilisation équitable pour garantir une création de contenu fiable. Le système de signalement d'erreurs permet aux utilisateurs de demander un nouveau contenu si quelque chose ne répond pas à leurs besoins d'apprentissage."
+        "answer": "Notre système de génération de contenu IA inclut plusieurs mesures d'assurance qualité pour garantir une création de contenu fiable. Le système de signalement d'erreurs permet aux utilisateurs de demander un nouveau contenu si quelque chose ne répond pas à leurs besoins d'apprentissage."
       }
     }
   },
@@ -223,7 +223,7 @@
     },
     "monthly": {
       "title": "Premium Mensuel",
-      "price": "6,99€",
+      "price": "$6.99",
       "period": "/mois",
       "description": "Accès complet à toutes les fonctionnalités premium",
       "badge": "Le Plus Populaire",
@@ -239,10 +239,10 @@
     },
     "annual": {
       "title": "Premium Annuel",
-      "price": "69,90€",
+      "price": "$69.90",
       "period": "/an",
       "description": "Meilleure valeur pour les apprenants engagés",
-      "savings": "Économisez 13,98€!",
+      "savings": "Save $13.98!",
       "features": {
         "everything": "Tout en Mensuel",
         "value": "Meilleur rapport qualité-prix",

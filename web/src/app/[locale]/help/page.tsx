@@ -1,6 +1,6 @@
 import React from 'react';
-import Link from 'next/link';
 import PageLayout from '../../../components/layout/PageLayout';
+import AppStoreButton from '../../../components/common/AppStoreButton';
 
 const HelpCenterPage: React.FC = () => {
   return (
@@ -67,6 +67,15 @@ const HelpCenterPage: React.FC = () => {
                     <li>• AI automatically generates definitions and content</li>
                     <li>• Begin practicing with interactive quizzes</li>
                   </ul>
+                </div>
+              </div>
+              
+              {/* Download Buttons */}
+              <div className="mt-8 text-center">
+                <p className="text-[#636E72] mb-4">Download the app to get started:</p>
+                <div className="flex flex-wrap gap-4 justify-center">
+                  <AppStoreButton store="apple" className="h-12" />
+                  <AppStoreButton store="google" className="h-12" />
                 </div>
               </div>
 
@@ -255,6 +264,13 @@ const HelpCenterPage: React.FC = () => {
                 <i className="fas fa-crown text-[#FFD700] mr-3"></i>
                 Subscription Plans
               </h2>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-blue-700 text-sm">
+                  <i className="fas fa-info-circle mr-2"></i>
+                  Subscriptions are managed directly within the mobile app. Download the app to view and manage your subscription plans.
+                </p>
+              </div>
 
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="border border-gray-200 rounded-xl p-6 text-center">
@@ -266,9 +282,10 @@ const HelpCenterPage: React.FC = () => {
                     <li>• Basic quiz modes</li>
                     <li>• Online-only access</li>
                   </ul>
-                  <Link href="/signup?plan=free" className="bg-[#4CAF50] text-white px-6 py-2 rounded-full font-semibold hover:bg-green-600 transition-colors duration-300 inline-block">
-                    Get Started Free
-                  </Link>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    <AppStoreButton store="apple" className="h-11" />
+                    <AppStoreButton store="google" className="h-11" />
+                  </div>
                 </div>
 
                 <div className="border-2 border-[#FF7B54] rounded-xl p-6 text-center relative">
@@ -285,9 +302,10 @@ const HelpCenterPage: React.FC = () => {
                     <li>• Offline support</li>
                     <li>• Priority support</li>
                   </ul>
-                  <Link href="/signup?plan=monthly" className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transition-all duration-300 inline-block">
-                    Start Monthly
-                  </Link>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    <AppStoreButton store="apple" className="h-11" />
+                    <AppStoreButton store="google" className="h-11" />
+                  </div>
                 </div>
 
                 <div className="border border-gray-200 rounded-xl p-6 text-center">
@@ -300,9 +318,10 @@ const HelpCenterPage: React.FC = () => {
                     <li>• Priority customer support</li>
                     <li>• Early access to features</li>
                   </ul>
-                  <Link href="/signup?plan=annual" className="bg-gradient-to-r from-[#9C27B0] to-purple-600 text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transition-all duration-300 inline-block">
-                    Start Annual
-                  </Link>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    <AppStoreButton store="apple" className="h-11" />
+                    <AppStoreButton store="google" className="h-11" />
+                  </div>
                 </div>
               </div>
             </div>

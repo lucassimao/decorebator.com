@@ -1,4 +1,5 @@
 import React from 'react';
+import { statsConfig } from '@/config/statsConfig';
 
 interface StructuredDataProps {
   type?: 'website' | 'softwareApplication' | 'mobileApplication';
@@ -52,18 +53,20 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
             "description": "Everything in Monthly Premium with annual savings"
           }
         ],
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "4.9",
-          "ratingCount": "10000",
-          "bestRating": "5",
-          "worstRating": "1"
-        },
+        ...(statsConfig.showStats.starRating && {
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": statsConfig.values.starRating.split('/')[0],
+            "ratingCount": statsConfig.showStats.userCount ? statsConfig.values.userCount.replace('+', '').replace(',', '') : "1000",
+            "bestRating": "5",
+            "worstRating": "1"
+          }
+        }),
         "featureList": [
           "AI-powered content generation",
           "7-box Leitner spaced repetition system", 
           "8 interactive quiz modes",
-          "Multi-language support (7 languages)",
+          ...(statsConfig.showStats.languageCount ? [`Multi-language support (${statsConfig.values.languageCount} languages)`] : []),
           "Visual learning with AI-generated images",
           "Audio pronunciation with TTS",
           "Comprehensive analytics and progress tracking",
@@ -135,7 +138,7 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
         "name": "What languages are supported for AI content generation?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Decorebator supports 7 languages with native AI processing: English, Spanish, French, German, Italian, Portuguese, and Japanese. Each language receives culturally-aware content generation, proper grammar rules, and optimized voice selection."
+          "text": `Decorebator supports ${statsConfig.showStats.languageCount ? statsConfig.values.languageCount : 'multiple'} languages with native AI processing: English, Spanish, French, German, Italian, Portuguese, and Japanese. Each language receives culturally-aware content generation, proper grammar rules, and optimized voice selection.`
         }
       }
     ]

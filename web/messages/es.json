@@ -193,7 +193,7 @@
       },
       "8": {
         "question": "¿Cómo funciona el sistema de reporte de errores?",
-        "answer": "Los usuarios pueden reportar problemas con contenido generado por IA (definiciones, imágenes, audio) directamente desde la aplicación. El sistema incluye limitación de velocidad (Gratuito: 3 reportes/hora, 5/día; Premium: 10 reportes/hora, 30/día) y regeneración automática de contenido. Las palabras reportadas se omiten temporalmente durante las revisiones hasta que se genere nuevo contenido."
+        "answer": "Los usuarios pueden reportar problemas con contenido generado por IA (definiciones, imágenes, audio) directamente desde la aplicación. El sistema automáticamente regenera el contenido cuando hay problemas reportados. Las palabras reportadas se omiten temporalmente durante las revisiones hasta que se genere nuevo contenido."
       },
       "9": {
         "question": "¿Qué plataformas y dispositivos son compatibles?",
@@ -201,7 +201,7 @@
       },
       "10": {
         "question": "¿Qué tan confiable es la generación de contenido IA?",
-        "answer": "Nuestro sistema de generación de contenido IA incluye múltiples medidas de aseguramiento de calidad: lógica de reintento automático, limitación de velocidad y distribución de uso justo para asegurar creación confiable de contenido. El sistema de reporte de errores permite a los usuarios solicitar nuevo contenido si algo no cumple sus necesidades de aprendizaje."
+        "answer": "Nuestro sistema de generación de contenido IA incluye múltiples medidas de aseguramiento de calidad para asegurar creación confiable de contenido. El sistema de reporte de errores permite a los usuarios solicitar nuevo contenido si algo no cumple sus necesidades de aprendizaje."
       }
     }
   },

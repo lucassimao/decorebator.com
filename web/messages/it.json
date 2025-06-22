@@ -173,7 +173,7 @@
       },
       "3": {
         "question": "Quali sono i piani di abbonamento e i prezzi di Decorebator?",
-        "answer": "Decorebator offre un piano Gratuito (1 lista di parole, fino a 10 parole, modalità quiz di base) e piani Premium: €6,99/mese o €69,90/anno (risparmia €13,98!). Premium include liste di parole e parole illimitate, tutte le 7 modalità quiz, analisi avanzate, supporto offline, contenuti IA illimitati e assistenza clienti prioritaria. Inizia gratis e fai l'upgrade quando sei pronto!"
+        "answer": "Decorebator offre un piano Gratuito (1 lista di parole, fino a 10 parole, modalità quiz di base) e piani Premium: $6.99/mese o $69.90/anno (risparmia $13.98!). Premium include liste di parole e parole illimitate, tutte le 7 modalità quiz, analisi avanzate, supporto offline, contenuti IA illimitati e assistenza clienti prioritaria. Inizia gratis e fai l'upgrade quando sei pronto!"
       },
       "4": {
         "question": "Posso usare Decorebator offline senza connessione internet?",
@@ -193,7 +193,7 @@
       },
       "8": {
         "question": "Cosa succede se trovo errori nei contenuti generati dall'IA?",
-        "answer": "Decorebator ha un sistema completo di segnalazione errori con limiti di uso equo (Gratuito: 3/ora, 5/giorno; Premium: 10/ora, 30/giorno). Segnala definizioni errate, immagini inappropriate, problemi audio, esempi irrilevanti o problemi di caricamento. Il nostro sistema rigenera automaticamente i contenuti e migliora i modelli IA in base ai tuoi feedback, assicurando qualità migliorata per tutti gli utenti."
+        "answer": "Decorebator ha un sistema completo di segnalazione errori. Puoi segnalare definizioni errate, immagini inappropriate, problemi audio, esempi irrilevanti o problemi di caricamento. Il nostro sistema rigenera automaticamente i contenuti e migliora i modelli IA in base ai tuoi feedback, assicurando qualità migliorata per tutti gli utenti."
       },
       "9": {
         "question": "Su quali piattaforme e dispositivi funziona Decorebator?",
@@ -223,7 +223,7 @@
     },
     "monthly": {
       "title": "Premium Mensile",
-      "price": "€6,99",
+      "price": "$6.99",
       "period": "/mese",
       "description": "Accesso completo a tutte le funzionalità premium",
       "badge": "Più Popolare",
@@ -239,10 +239,10 @@
     },
     "annual": {
       "title": "Premium Annuale",
-      "price": "€69,90",
+      "price": "$69.90",
       "period": "/anno",
       "description": "Il miglior valore per studenti impegnati",
-      "savings": "Risparmia €13,98!",
+      "savings": "Save $13.98!",
       "features": {
         "everything": "Tutto nel Mensile",
         "value": "Miglior rapporto qualità-prezzo",
