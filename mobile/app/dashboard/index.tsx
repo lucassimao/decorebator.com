@@ -14,11 +14,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "@/contexts/ThemeContext";
+import { createCommonStyles } from "@/styles/common";
 import {
   ActivityIndicator,
   Dimensions,
   FlatList,
-  ImageBackground,
   RefreshControl,
   SafeAreaView,
   StyleSheet,
@@ -39,6 +40,9 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const upgradeDialog = useUpgradePromptDialog();
   const router = useRouter();
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
 
   // Fetch subscription
   const { data: subscription } = useQuery({
@@ -128,7 +132,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
           style={styles.addButton}
           onPress={handleAddNewWordlist}
         >
-          <Ionicons name="add-circle" size={34} color="#FF7B54" />
+          <Ionicons name="add-circle" size={34} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
     </>
@@ -142,14 +146,9 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
   return (
     <>
-      <ImageBackground
-        source={require("@/assets/images/dashboard-bg.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.container}>
-          <OfflineIndicator />
-          <FlatList
+      <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+        <OfflineIndicator />
+        <FlatList
             data={isLoading ? [] : wordlists}
             renderItem={renderWordlistItem}
             keyExtractor={(item) => String(item.id)}
@@ -160,14 +159,14 @@ const Dashboard: React.FC<DashboardProps> = () => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                colors={["#FF7B54"]}
-                tintColor="#FF7B54"
+                colors={[theme.colors.primary]}
+                tintColor={theme.colors.primary}
               />
             }
             ListEmptyComponent={
               isLoading ? (
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color="#FF7B54" />
+                  <ActivityIndicator size="large" color={theme.colors.primary} />
                   <Text style={styles.loadingText}>{t("common.loading")}</Text>
                 </View>
               ) : (
@@ -182,14 +181,13 @@ const Dashboard: React.FC<DashboardProps> = () => {
                     <Text style={styles.ctaButtonText}>
                       {t("dashboard.wordlists.createFirstWordlist")}
                     </Text>
-                    <Ionicons name="add-circle" size={24} color="#FFFFFF" />
+                    <Ionicons name="add-circle" size={24} color={theme.colors.text.inverse} />
                   </TouchableOpacity>
                 </View>
               )
             }
           />
-        </SafeAreaView>
-      </ImageBackground>
+      </SafeAreaView>
 
       {/* Create Wordlist Modal */}
       <CreateWordlistModal
@@ -211,14 +209,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
 export default Dashboard;
 
-const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: width,
-    height: height,
-  },
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background.default,
   },
   loadingContainer: {
     paddingVertical: 60,
@@ -228,7 +222,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
   },
   listContent: {
     paddingBottom: 30,
@@ -245,26 +239,18 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: theme.colors.background.surface,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...theme.shadows.sm,
   },
   profileButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.colors.background.surface,
+    ...theme.shadows.sm,
   },
   profileImage: {
     width: "100%",
@@ -273,17 +259,13 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    borderRadius: 16,
-    paddingVertical: 20,
+    backgroundColor: theme.colors.background.surface,
+    borderRadius: theme.borderRadius.lg,
+    paddingVertical: theme.spacing.lg,
     paddingHorizontal: 10,
     marginHorizontal: 20,
     marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    ...theme.shadows.sm,
   },
   statItem: {
     alignItems: "center",
@@ -291,13 +273,13 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 14,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     marginBottom: 8,
   },
   statValue: {
     fontSize: 36,
     fontWeight: "700",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -309,7 +291,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
   },
   addButton: {
     padding: 4,
@@ -322,26 +304,23 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 18,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     marginBottom: 20,
   },
   ctaButton: {
-    backgroundColor: "#FF7B54",
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
     gap: 8,
+    ...theme.shadows.md,
+    shadowColor: theme.colors.primary,
   },
   ctaButtonText: {
-    color: "#FFFFFF",
+    color: theme.colors.text.inverse,
     fontSize: 18,
     fontWeight: "600",
   },

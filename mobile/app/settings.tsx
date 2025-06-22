@@ -11,17 +11,19 @@ import React, { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { useFocusEffect } from "@react-navigation/native";
+import { useTheme } from "@/contexts/ThemeContext";
+import { createCommonStyles } from "@/styles/common";
 import {
   ActivityIndicator,
   Alert,
   Dimensions,
-  ImageBackground,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Switch,
 } from "react-native";
 
 type PlanRecurrence = "annual" | "monthly";
@@ -77,6 +79,8 @@ const SettingsScreen: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<PlanRecurrence | null>(null);
   const { t } = useTranslation();
   const previousSubscriptionRef = useRef<string | null>(null);
+  const { theme, toggleTheme, themeMode, setThemeMode } = useTheme();
+  const commonStyles = createCommonStyles(theme);
 
   const PRICING_PLANS = React.useMemo(() => getPricingPlans(t), [t]);
 
@@ -244,28 +248,25 @@ const SettingsScreen: React.FC = () => {
 
   const isPremium = subscription?.plan !== "free";
 
+  const styles = createStyles(theme);
+
   return (
-    <ImageBackground
-      source={require("@/assets/images/dashboard-bg.png")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <SafeAreaView style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="arrow-back" size={24} color="#2D3436" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>{t("settings.title")}</Text>
-            <View style={{ width: 40 }} />
-          </View>
+    <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t("settings.title")}</Text>
+          <View style={{ width: 40 }} />
+        </View>
 
           {/* Current Subscription */}
           <View style={styles.section}>
@@ -275,7 +276,7 @@ const SettingsScreen: React.FC = () => {
 
             {isLoading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#FF7B54" />
+                <ActivityIndicator size="small" color={theme.colors.primary} />
               </View>
             ) : (
               <View style={styles.subscriptionCard}>
@@ -284,7 +285,7 @@ const SettingsScreen: React.FC = () => {
                     <MaterialIcons
                       name={isPremium ? "workspace-premium" : "lock-outline"}
                       size={24}
-                      color={isPremium ? "#FFD700" : "#636E72"}
+                      color={isPremium ? theme.colors.premium : theme.colors.text.secondary}
                     />
                   </View>
                   <View style={styles.subscriptionInfo}>
@@ -325,13 +326,13 @@ const SettingsScreen: React.FC = () => {
                         disabled={cancelMutation.isPending}
                       >
                         {cancelMutation.isPending ? (
-                          <ActivityIndicator size="small" color="#FF6B6B" />
+                          <ActivityIndicator size="small" color={theme.colors.error} />
                         ) : (
                           <>
                             <MaterialIcons
                               name="cancel"
                               size={20}
-                              color="#FF6B6B"
+                              color={theme.colors.error}
                             />
                             <Text style={styles.cancelButtonText}>
                               {t("settings.subscription.cancelSubscription")}
@@ -349,7 +350,7 @@ const SettingsScreen: React.FC = () => {
                       <MaterialIcons
                         name="info-outline"
                         size={16}
-                        color="#636E72"
+                        color={theme.colors.text.secondary}
                       />{" "}
                       {t("settings.subscription.freePlanLimit")}
                     </Text>
@@ -377,7 +378,7 @@ const SettingsScreen: React.FC = () => {
                     <MaterialIcons
                       name="check-circle"
                       size={20}
-                      color="#4CAF50"
+                      color={theme.colors.success}
                     />
                     <Text style={styles.featureText}>{feature}</Text>
                   </View>
@@ -445,7 +446,7 @@ const SettingsScreen: React.FC = () => {
                 activeOpacity={0.8}
               >
                 {checkoutMutation.isPending ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <ActivityIndicator size="small" color={theme.colors.text.inverse} />
                 ) : (
                   <>
                     <Text style={styles.subscribeButtonText}>
@@ -470,12 +471,65 @@ const SettingsScreen: React.FC = () => {
               style={styles.settingItem}
               onPress={profileSettings}
             >
-              <MaterialIcons name="person-outline" size={24} color="#636E72" />
+              <MaterialIcons name="person-outline" size={24} color={theme.colors.text.secondary} />
               <Text style={styles.settingText}>
                 {t("settings.account.title")}
               </Text>
-              <Ionicons name="chevron-forward" size={20} color="#636E72" />
+              <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
             </TouchableOpacity>
+
+            {/* Theme Toggle */}
+            <View style={styles.settingItem}>
+              <MaterialIcons 
+                name={theme.mode === 'dark' ? "dark-mode" : "light-mode"} 
+                size={24} 
+                color={theme.colors.text.secondary} 
+              />
+              <Text style={styles.settingText}>
+                {t("settings.theme", { defaultValue: "Theme" })}
+              </Text>
+              <View style={styles.themeToggleContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.themeOption,
+                    themeMode === 'light' && styles.themeOptionActive
+                  ]}
+                  onPress={() => setThemeMode('light')}
+                >
+                  <MaterialIcons 
+                    name="light-mode" 
+                    size={16} 
+                    color={themeMode === 'light' ? theme.colors.primary : theme.colors.text.secondary} 
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.themeOption,
+                    themeMode === 'system' && styles.themeOptionActive
+                  ]}
+                  onPress={() => setThemeMode('system')}
+                >
+                  <MaterialIcons 
+                    name="phone-iphone" 
+                    size={16} 
+                    color={themeMode === 'system' ? theme.colors.primary : theme.colors.text.secondary} 
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.themeOption,
+                    themeMode === 'dark' && styles.themeOptionActive
+                  ]}
+                  onPress={() => setThemeMode('dark')}
+                >
+                  <MaterialIcons 
+                    name="dark-mode" 
+                    size={16} 
+                    color={themeMode === 'dark' ? theme.colors.primary : theme.colors.text.secondary} 
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
             {/* <TouchableOpacity style={styles.settingItem}>
               <MaterialIcons
@@ -488,11 +542,11 @@ const SettingsScreen: React.FC = () => {
             </TouchableOpacity> */}
 
             <TouchableOpacity style={styles.settingItem} onPress={support}>
-              <MaterialIcons name="help-outline" size={24} color="#636E72" />
+              <MaterialIcons name="help-outline" size={24} color={theme.colors.text.secondary} />
               <Text style={styles.settingText}>
                 {t("settings.helpAndSupport")}
               </Text>
-              <Ionicons name="chevron-forward" size={20} color="#636E72" />
+              <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
             </TouchableOpacity>
           </View>
 
@@ -510,11 +564,11 @@ const SettingsScreen: React.FC = () => {
                 );
               }}
             >
-              <MaterialIcons name="privacy-tip" size={24} color="#636E72" />
+              <MaterialIcons name="privacy-tip" size={24} color={theme.colors.text.secondary} />
               <Text style={styles.settingText}>
                 {t("settings.privacyPolicy")}
               </Text>
-              <Ionicons name="chevron-forward" size={20} color="#636E72" />
+              <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -525,39 +579,35 @@ const SettingsScreen: React.FC = () => {
                 );
               }}
             >
-              <MaterialIcons name="gavel" size={24} color="#636E72" />
+              <MaterialIcons name="gavel" size={24} color={theme.colors.text.secondary} />
               <Text style={styles.settingText}>
                 {t("settings.termsOfService")}
               </Text>
-              <Ionicons name="chevron-forward" size={20} color="#636E72" />
+              <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
             </TouchableOpacity>
           </View>
 
           {/* Sign Out */}
           <View style={styles.section}>
             <TouchableOpacity style={styles.settingItem} onPress={signOut}>
-              <MaterialIcons name="logout" size={24} color="#FF6B6B" />
-              <Text style={[styles.settingText, { color: "#FF6B6B" }]}>
+              <MaterialIcons name="logout" size={24} color={theme.colors.error} />
+              <Text style={[styles.settingText, { color: theme.colors.error }]}>
                 {t("settings.account.logOut")}
               </Text>
-              <Ionicons name="chevron-forward" size={20} color="#FF6B6B" />
+              <Ionicons name="chevron-forward" size={20} color={theme.colors.error} />
             </TouchableOpacity>
           </View>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
   );
 };
 
 export default SettingsScreen;
 
-const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: SCREEN_WIDTH,
-  },
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background.default,
   },
   scrollContent: {
     paddingBottom: 30,
@@ -573,14 +623,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: theme.colors.background.elevated,
     justifyContent: "center",
     alignItems: "center",
+    ...theme.shadows.sm,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
   },
   section: {
     marginBottom: 24,
@@ -588,13 +639,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
     marginBottom: 8,
     paddingHorizontal: 20,
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     marginBottom: 16,
     paddingHorizontal: 20,
   },
@@ -603,15 +654,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   subscriptionCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: theme.colors.background.surface,
     marginHorizontal: 20,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.lg,
+    ...theme.shadows.md,
   },
   subscriptionHeader: {
     flexDirection: "row",
@@ -622,7 +669,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#FFF5F0",
+    backgroundColor: theme.mode === 'light' ? '#FFF5F0' : theme.colors.background.elevated,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
@@ -633,18 +680,18 @@ const styles = StyleSheet.create({
   planName: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
     marginBottom: 4,
   },
   planStatus: {
     fontSize: 14,
-    color: "#4CAF50",
+    color: theme.colors.success,
     textTransform: "capitalize",
   },
   subscriptionDetails: {
     borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
-    paddingTop: 16,
+    borderTopColor: theme.colors.ui.divider,
+    paddingTop: theme.spacing.md,
   },
   detailRow: {
     flexDirection: "row",
@@ -653,50 +700,51 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
   },
   detailValue: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
   },
   cancelButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
-    borderRadius: 8,
-    backgroundColor: "#FFF5F5",
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.state.incorrectBackground,
     gap: 8,
   },
   cancelButtonText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#FF6B6B",
+    color: theme.colors.error,
   },
   freeplanLimits: {
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
+    borderTopColor: theme.colors.ui.divider,
   },
   limitText: {
     fontSize: 14,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     flex: 1,
   },
   featuresCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: theme.colors.background.surface,
     marginHorizontal: 20,
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.lg,
     marginBottom: 20,
+    ...theme.shadows.sm,
   },
   featuresTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
     marginBottom: 16,
   },
   featureRow: {
@@ -707,7 +755,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 14,
-    color: "#2D3436",
+    color: theme.colors.text.primary,
     flex: 1,
   },
   pricingContainer: {
@@ -718,24 +766,25 @@ const styles = StyleSheet.create({
   },
   pricingCard: {
     flex: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: theme.colors.background.surface,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
     borderWidth: 2,
     borderColor: "transparent",
     position: "relative",
+    ...theme.shadows.sm,
   },
   pricingCardSelected: {
-    borderColor: "#FF7B54",
+    borderColor: theme.colors.primary,
   },
   pricingCardPopular: {
-    borderColor: "#FFD700",
+    borderColor: theme.colors.premium,
   },
   popularBadge: {
     position: "absolute",
     top: -12,
     alignSelf: "center",
-    backgroundColor: "#FFD700",
+    backgroundColor: theme.colors.premium,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -743,12 +792,12 @@ const styles = StyleSheet.create({
   popularText: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
   },
   planInterval: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
     marginBottom: 8,
     textAlign: "center",
   },
@@ -760,87 +809,103 @@ const styles = StyleSheet.create({
   },
   priceSymbol: {
     fontSize: 16,
-    color: "#2D3436",
+    color: theme.colors.text.primary,
     fontWeight: "500",
   },
   priceAmount: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
   },
   priceInterval: {
     fontSize: 14,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
   },
   savingsBadge: {
-    backgroundColor: "#E8F5E9",
+    backgroundColor: theme.colors.state.correctBackground,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: theme.borderRadius.sm,
     alignSelf: "center",
     marginBottom: 12,
   },
   savingsText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#4CAF50",
+    color: theme.colors.success,
   },
   radioButton: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: "#DFE6E9",
+    borderColor: theme.colors.ui.disabled,
     alignSelf: "center",
     justifyContent: "center",
     alignItems: "center",
   },
   radioButtonSelected: {
-    borderColor: "#FF7B54",
+    borderColor: theme.colors.primary,
   },
   radioButtonInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#FF7B54",
+    backgroundColor: theme.colors.primary,
   },
   subscribeButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FF7B54",
+    backgroundColor: theme.colors.primary,
     marginHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
     gap: 8,
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+    ...theme.shadows.md,
+    shadowColor: theme.colors.primary,
   },
   subscribeButtonDisabled: {
-    backgroundColor: "#DFE6E9",
+    backgroundColor: theme.colors.ui.disabled,
     shadowOpacity: 0,
   },
   subscribeButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: theme.colors.text.inverse,
   },
   settingItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: theme.colors.background.surface,
     marginHorizontal: 20,
-    padding: 16,
-    borderRadius: 12,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
     marginBottom: 8,
     gap: 12,
+    ...theme.shadows.sm,
   },
   settingText: {
     flex: 1,
     fontSize: 16,
-    color: "#2D3436",
+    color: theme.colors.text.primary,
+  },
+  themeToggleContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  themeOption: {
+    width: 32,
+    height: 32,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.background.elevated,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.ui.border,
+  },
+  themeOptionActive: {
+    backgroundColor: theme.colors.background.subtle,
+    borderColor: theme.colors.primary,
   },
 });

@@ -1,7 +1,8 @@
 import { useNavigation } from "@react-navigation/native";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams } from "expo-router";
+import { useTheme } from "@/contexts/ThemeContext";
+import { createCommonStyles } from "@/styles/common";
 import {
   ActivityIndicator,
   ScrollView,
@@ -19,7 +20,6 @@ import {
   BoxDistributionChart,
   HistoricalBoxDistributionChart,
   PracticeTimeChart,
-  colors,
 } from "@/components/analytics";
 
 const AnalyticsDashboard = () => {
@@ -36,36 +36,28 @@ const AnalyticsDashboard = () => {
     isPending,
   } = useAnalytics(wordlistId);
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
 
   if (isPending) {
     return (
-      <LinearGradient
-        colors={[
-          colors.backgroundLight,
-          colors.backgroundPeach,
-          colors.backgroundSage,
-        ]}
-        style={styles.loadingContainer}
-      >
-        <ActivityIndicator size="large" color={colors.primary} />
-      </LinearGradient>
+      <SafeAreaView style={[commonStyles.safeArea, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </SafeAreaView>
     );
   }
 
   return (
-    <LinearGradient
-      colors={[
-        colors.backgroundLight,
-        colors.backgroundPeach,
-        colors.backgroundSage,
-      ]}
-      style={styles.container}
-    >
-      <SafeAreaView style={styles.safeArea}>
-        <AnalyticsHeader onBackPress={() => navigation.goBack()} />
+    <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+      <AnalyticsHeader onBackPress={() => navigation.goBack()} />
 
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <StatsGrid stats={stats} />
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <StatsGrid stats={stats} />
 
           <WordMasteryChart wordMastery={wordMastery} />
 
@@ -85,24 +77,28 @@ const AnalyticsDashboard = () => {
 
           {/* Bottom spacing */}
           <View style={{ height: 20 }} />
-        </ScrollView>
-      </SafeAreaView>
-    </LinearGradient>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 export default AnalyticsDashboard;
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
   container: {
     flex: 1,
-  },
-  safeArea: {
-    flex: 1,
+    backgroundColor: theme.colors.background.default,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: theme.colors.background.default,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
   },
 });

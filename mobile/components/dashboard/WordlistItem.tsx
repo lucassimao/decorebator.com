@@ -19,6 +19,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useUserInfo } from "@/hooks/users";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTheme } from "@/contexts/ThemeContext";
 
 type WordlistItemProps = {
   item: Wordlist;
@@ -42,6 +43,8 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const { t } = useTranslation();
   const { isPremium } = useUserInfo();
   const language = LANGUAGES.find((l) => item.languageCode === l.code)!;
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
 
   // Use progress from props
   const progressPercentage = progress?.progressPercent ?? 0;
@@ -175,7 +178,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
         <View style={styles.cardStats}>
           <View style={styles.cardStat}>
-            <MaterialIcons name="library-books" size={16} color="#636E72" />
+            <MaterialIcons name="library-books" size={16} color={theme.colors.text.secondary} />
             <Text style={styles.cardStatText}>
               {t("wordlistItem.wordCount", { count: item.wordsCount ?? 0 })}
             </Text>
@@ -187,7 +190,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           </View>
           {progressPercentage > 0 && (
             <View style={styles.cardStat}>
-              <MaterialIcons name="school" size={16} color="#636E72" />
+              <MaterialIcons name="school" size={16} color={theme.colors.text.secondary} />
               <Text style={styles.cardStatText}>
                 {t("wordlistItem.percentLearned", {
                   percent: Math.round(progressPercentage),
@@ -212,7 +215,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             accessibilityLabel={t("wordlistItem.analytics")}
             accessibilityHint={isPremium ? "View detailed learning analytics" : "Premium feature - tap to upgrade"}
           >
-            <MaterialIcons name="bar-chart" size={20} color="#FFD700" />
+            <MaterialIcons name="bar-chart" size={20} color={theme.colors.premium} />
             <Text style={styles.actionButtonText}>
               {t("wordlistItem.analytics")}
             </Text>
@@ -225,7 +228,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             accessibilityLabel={t("wordlistItem.practice")}
             accessibilityHint="Practice with flashcards"
           >
-            <MaterialIcons name="style" size={20} color="#2196F3" />
+            <MaterialIcons name="style" size={20} color={theme.colors.semantic.info} />
             <Text style={styles.actionButtonText}>
               {t("wordlistItem.practice")}
             </Text>
@@ -241,7 +244,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             <MaterialIcons
               name="play-circle-filled"
               size={20}
-              color="#4CAF50"
+              color={theme.colors.success}
             />
             <Text style={styles.actionButtonText}>
               {t("wordlistItem.quiz")}
@@ -255,7 +258,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             accessibilityLabel={t("common.more")}
             accessibilityHint="Show more options for this wordlist"
           >
-            <MaterialIcons name="more-horiz" size={20} color="#636E72" />
+            <MaterialIcons name="more-horiz" size={20} color={theme.colors.text.secondary} />
             <Text style={styles.actionButtonText}>{t("common.more")}</Text>
           </TouchableOpacity>
         </View>
@@ -291,7 +294,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   accessibilityLabel={t("wordlistItem.viewAnalytics")}
                   accessibilityHint="View detailed learning analytics for this wordlist"
                 >
-                  <MaterialIcons name="analytics" size={24} color="#FFD700" />
+                  <MaterialIcons name="analytics" size={24} color={theme.colors.premium} />
                   <Text style={styles.menuItemText}>
                     {t("wordlistItem.viewAnalytics")}
                   </Text>
@@ -304,7 +307,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   accessibilityLabel={t("wordlistItem.practiceFlashcards")}
                   accessibilityHint="Practice with interactive flashcards"
                 >
-                  <MaterialIcons name="style" size={24} color="#2196F3" />
+                  <MaterialIcons name="style" size={24} color={theme.colors.semantic.info} />
                   <Text style={styles.menuItemText}>
                     {t("wordlistItem.practiceFlashcards")}
                   </Text>
@@ -317,7 +320,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   accessibilityLabel={t("wordlistItem.startQuiz")}
                   accessibilityHint="Start an interactive quiz session"
                 >
-                  <MaterialIcons name="quiz" size={24} color="#4CAF50" />
+                  <MaterialIcons name="quiz" size={24} color={theme.colors.success} />
                   <Text style={styles.menuItemText}>
                     {t("wordlistItem.startQuiz")}
                   </Text>
@@ -330,7 +333,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   accessibilityLabel={t("wordlistItem.editWordlist")}
                   accessibilityHint="Edit wordlist details and add or remove words"
                 >
-                  <MaterialIcons name="edit" size={24} color="#FF7B54" />
+                  <MaterialIcons name="edit" size={24} color={theme.colors.primary} />
                   <Text style={styles.menuItemText}>
                     {t("wordlistItem.editWordlist")}
                   </Text>
@@ -348,9 +351,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   accessibilityState={{ disabled: deleteMutation.isPending }}
                 >
                   {deleteMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#FF6B6B" />
+                    <ActivityIndicator size="small" color={theme.colors.error} />
                   ) : (
-                    <Ionicons name="trash-outline" size={24} color="#FF6B6B" />
+                    <Ionicons name="trash-outline" size={24} color={theme.colors.error} />
                   )}
                   <Text
                     style={[styles.menuItemText, styles.deleteMenuItemText]}
@@ -441,18 +444,18 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
 export default WordlistItem;
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
   wordlistCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: theme.mode === 'light' ? theme.colors.background.surface : theme.colors.background.elevated,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
     marginHorizontal: 20,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: theme.mode === 'light' ? theme.colors.ui.border : theme.colors.ui.divider,
+    ...theme.shadows.md,
+    // Extra elevation for better contrast
+    elevation: theme.mode === 'light' ? 6 : 10,
   },
   cardHeader: {
     flexDirection: "row",
@@ -469,12 +472,12 @@ const styles = StyleSheet.create({
   wordlistTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
     marginBottom: 4,
   },
   wordlistDescription: {
     fontSize: 14,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     lineHeight: 20,
   },
   actionButtonsRow: {
@@ -483,7 +486,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
+    borderTopColor: theme.colors.ui.divider,
   },
   actionButtonLarge: {
     flex: 1,
@@ -491,13 +494,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 8,
-    borderRadius: 8,
-    backgroundColor: "#FAFAFA",
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.mode === 'light' ? theme.colors.ui.inputBackground : theme.colors.background.subtle,
     gap: 4,
   },
   actionButtonText: {
     fontSize: 12,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     fontWeight: "500",
     textAlign: "center",
   },
@@ -514,47 +517,43 @@ const styles = StyleSheet.create({
   },
   cardStatText: {
     fontSize: 14,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
   },
   languageName: {
     fontSize: 14,
-    color: "#FF7B54",
+    color: theme.colors.primary,
     fontWeight: "500",
   },
   progressBar: {
     height: 4,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: theme.colors.ui.divider,
     borderRadius: 2,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#4CAF50",
+    backgroundColor: theme.colors.success,
     borderRadius: 2,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: theme.colors.overlay.backdrop,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   menuContainer: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    backgroundColor: theme.colors.background.surface,
+    borderRadius: theme.borderRadius.lg,
     padding: 8,
     width: "100%",
     maxWidth: 320,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    ...theme.shadows.lg,
   },
   menuTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 4,
@@ -569,12 +568,12 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 16,
-    color: "#2D3436",
+    color: theme.colors.text.primary,
     flex: 1,
   },
   menuDivider: {
     height: 1,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: theme.colors.ui.divider,
     marginVertical: 8,
     marginHorizontal: 16,
   },
@@ -582,7 +581,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   deleteMenuItemText: {
-    color: "#FF6B6B",
+    color: theme.colors.error,
   },
   // Premium Modal Styles
   premiumModalContainer: {
@@ -609,7 +608,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#FFD700",
+    backgroundColor: theme.colors.premium,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,

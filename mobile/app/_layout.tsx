@@ -5,6 +5,7 @@ import { Stack } from "expo-router";
 import { useI18n } from "@/hooks/useI18n";
 import { SnackbarProvider } from "@/hooks/useSnackbar";
 import { UpgradePromptDialogProvider } from "@/hooks/useUpgradePromptDialog";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import i18n from "@/i18n";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProvider } from "posthog-react-native";
@@ -49,14 +50,15 @@ function RootLayoutNav() {
   return (
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>
-        <LanguageInitializer />
-        <SnackbarProvider>
-          <UpgradePromptDialogProvider>
-            <PostHogProvider
-              apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
-              options={{ host: "https://us.i.posthog.com", disabled: __DEV__ }}
-            >
-              <Stack>
+        <ThemeProvider>
+          <LanguageInitializer />
+          <SnackbarProvider>
+            <UpgradePromptDialogProvider>
+              <PostHogProvider
+                apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
+                options={{ host: "https://us.i.posthog.com", disabled: __DEV__ }}
+              >
+                <Stack>
                 <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen
                   name="analytics"
@@ -98,6 +100,7 @@ function RootLayoutNav() {
             </PostHogProvider>
           </UpgradePromptDialogProvider>
         </SnackbarProvider>
+      </ThemeProvider>
       </QueryClientProvider>
     </I18nextProvider>
   );

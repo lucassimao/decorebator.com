@@ -18,11 +18,12 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "@/contexts/ThemeContext";
+import { createCommonStyles } from "@/styles/common";
 import {
   ActivityIndicator,
   Alert,
   Dimensions,
-  ImageBackground,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -54,6 +55,9 @@ const QuizScreen: React.FC = () => {
   const { isOnline, isOfflineAvailable } = useOffline();
   const { invalidateBoxDistribution, invalidateAllAnalytics } =
     useInvalidateAnalytics();
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
 
   // State
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -256,65 +260,48 @@ const QuizScreen: React.FC = () => {
   // Show initial loading screen while fetching first quiz
   if ((isLoading || isFetching || !quiz) && quizCount === 0) {
     return (
-      <ImageBackground
-        source={require("@/assets/images/dashboard-bg.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.container}>
-          <View style={[styles.quizCard, { margin: 20 }]}>
-            <QuizLoadingState
-              isLoading={isLoading || isFetching}
-              hasTimeout={loadingTimeout}
-              error={error}
-              onRetry={handleRetryQuiz}
-              onGoBack={handleGoBack}
-            />
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
+      <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+        <View style={[styles.quizCard, { margin: 20 }]}>
+          <QuizLoadingState
+            isLoading={isLoading || isFetching}
+            hasTimeout={loadingTimeout}
+            error={error}
+            onRetry={handleRetryQuiz}
+            onGoBack={handleGoBack}
+          />
+        </View>
+      </SafeAreaView>
     );
   }
 
   // Handle offline error state
   if (error && !isOnline && !isOfflineAvailable) {
     return (
-      <ImageBackground
-        source={require("@/assets/images/dashboard-bg.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.container}>
-          <QuizHeader
-            wordlistName={String(wordlistName)}
-            correctCount={correctCount}
-            quizCount={quizCount}
-            isOnline={isOnline}
-            onBackPress={() => navigation.goBack()}
-            onReportPress={openReportModal}
-          />
-          <View style={styles.errorContainer}>
-            <MaterialIcons name="cloud-off" size={64} color="#636E72" />
-            <Text style={styles.errorTitle}>
-              {t("offline.premiumRequired")}
-            </Text>
-            <Text style={styles.errorMessage}>
-              {t("offline.premiumRequiredMessage")}
-            </Text>
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
+      <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+        <QuizHeader
+          wordlistName={String(wordlistName)}
+          correctCount={correctCount}
+          quizCount={quizCount}
+          isOnline={isOnline}
+          onBackPress={() => navigation.goBack()}
+          onReportPress={openReportModal}
+        />
+        <View style={styles.errorContainer}>
+          <MaterialIcons name="cloud-off" size={64} color={theme.colors.text.secondary} />
+          <Text style={styles.errorTitle}>
+            {t("offline.premiumRequired")}
+          </Text>
+          <Text style={styles.errorMessage}>
+            {t("offline.premiumRequiredMessage")}
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ImageBackground
-      source={require("@/assets/images/dashboard-bg.png")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <SafeAreaView style={styles.container}>
-        <OfflineIndicator />
+    <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+      <OfflineIndicator />
 
         <QuizHeader
           wordlistName={String(wordlistName)}
@@ -381,41 +368,35 @@ const QuizScreen: React.FC = () => {
           isLoading={isReporting}
           context="quiz"
         />
-      </SafeAreaView>
-    </ImageBackground>
+    </SafeAreaView>
   );
 };
 
 export default QuizScreen;
 
-const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-  },
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background.default,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FDF6E3",
+    backgroundColor: theme.colors.background.default,
   },
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
   quizCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+    backgroundColor: theme.mode === 'light' ? theme.colors.background.surface : theme.colors.background.elevated,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.mode === 'light' ? theme.colors.ui.border : theme.colors.ui.divider,
+    ...theme.shadows.md,
+    elevation: theme.mode === 'light' ? 6 : 10,
   },
   errorContainer: {
     flex: 1,
@@ -426,13 +407,13 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
     marginTop: 16,
     marginBottom: 8,
   },
   errorMessage: {
     fontSize: 16,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     textAlign: "center",
     lineHeight: 22,
   },

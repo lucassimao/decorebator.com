@@ -1,6 +1,7 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface QuizHeaderProps {
   wordlistName: string;
@@ -19,6 +20,8 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
   onBackPress,
   onReportPress,
 }) => {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   return (
     <View style={styles.header}>
       <TouchableOpacity 
@@ -28,7 +31,7 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
         accessibilityLabel="Go back"
         accessibilityHint="Return to previous screen"
       >
-        <Ionicons name="arrow-back" size={24} color="#2D3436" />
+        <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
       </TouchableOpacity>
 
       <View style={styles.headerCenter}>
@@ -60,14 +63,14 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
         <MaterialIcons
           name="flag"
           size={24}
-          color={isOnline ? "#636E72" : "#DFE6E9"}
+          color={isOnline ? theme.colors.text.secondary : theme.colors.ui.disabled}
         />
       </TouchableOpacity>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -79,9 +82,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: theme.colors.background.surface,
     justifyContent: "center",
     alignItems: "center",
+    ...theme.shadows.sm,
   },
   headerCenter: {
     flex: 1,
@@ -91,20 +95,21 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     marginTop: 2,
   },
   settingsButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: theme.colors.background.surface,
     justifyContent: "center",
     alignItems: "center",
+    ...theme.shadows.sm,
   },
   disabledButton: {
     opacity: 0.5,

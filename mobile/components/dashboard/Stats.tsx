@@ -1,7 +1,7 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   Animated,
   StyleSheet,
@@ -53,12 +53,14 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
 // Main Component
 type DashboardStatsProps = {};
 
-const PROGRESS_OVERVIEW_ENABLED = false;
+const PROGRESS_OVERVIEW_ENABLED = true;
 
 const DashboardStats: React.FC<DashboardStatsProps> = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
 
   // Use shared wordlist progress hook to avoid duplicate API calls
   const {
@@ -145,7 +147,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
   if (isError) {
     return (
       <TouchableOpacity onPress={() => refetch()} style={styles.errorContainer}>
-        <MaterialIcons name="error-outline" size={24} color="#FF6B6B" />
+        <MaterialIcons name="error-outline" size={24} color={theme.colors.error} />
         <Text style={styles.errorText}>
           {t("dashboard.stats.failedToLoad")}
         </Text>
@@ -158,17 +160,9 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
     <Animated.View
       style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
     >
-      <LinearGradient
-        colors={[
-          "rgba(255, 255, 255, 0.98)",
-          "rgba(255, 251, 246, 0.95)",
-          "rgba(255, 248, 240, 0.92)",
-        ]}
-        style={styles.statsContainer}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
+      <View style={styles.statsContainer}>
         {/* Progress Overview */}
+        {PROGRESS_OVERVIEW_ENABLED && (
           <View style={styles.progressOverview}>
             <Text style={styles.progressLabel}>
               {t("dashboard.stats.learningProgress")}
@@ -205,7 +199,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
                   <MaterialIcons
                     name="local-fire-department"
                     size={20}
-                    color="#FF6B3D"
+                    color={theme.colors.semantic.warning}
                   />
                   <Text style={styles.streakText}>
                     {t("dashboard.stats.dayStreak", {
@@ -216,12 +210,13 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
               )}
             </View>
           </View>
+        )}
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={[styles.statItem, styles.statItemFirst]}>
             <View style={styles.iconContainer}>
-              <MaterialIcons name="library-books" size={24} color="#FF7B54" />
+              <MaterialIcons name="library-books" size={24} color={theme.colors.primary} />
             </View>
             <View style={styles.labelContainer}>
               <Text style={styles.statLabel}>
@@ -239,7 +234,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
 
           <View style={styles.statItem}>
             <View style={styles.iconContainer}>
-              <Ionicons name="list" size={24} color="#4CAF50" />
+              <Ionicons name="list" size={24} color={theme.colors.success} />
             </View>
             <View style={styles.labelContainer}>
               <Text style={styles.statLabel}>
@@ -257,7 +252,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
 
           <View style={[styles.statItem, styles.statItemLast]}>
             <View style={styles.iconContainer}>
-              <MaterialIcons name="school" size={24} color="#2196F3" />
+              <MaterialIcons name="school" size={24} color={theme.colors.semantic.info} />
             </View>
             <View style={styles.labelContainer}>
               <Text style={styles.statLabel}>
@@ -266,36 +261,31 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
             </View>
             <AnimatedCounter
               value={stats?.wordsLearned || 0}
-              style={[styles.statValue, { color: "#4CAF50" }]}
+              style={[styles.statValue, { color: theme.colors.success }]}
               delay={400}
             />
           </View>
         </View>
-      </LinearGradient>
+      </View>
     </Animated.View>
   );
 };
 
 export default DashboardStats;
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
   statsContainer: {
-    borderRadius: 24,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
+    borderRadius: theme.borderRadius.xl,
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
     marginHorizontal: 20,
     marginBottom: 24,
+    backgroundColor: theme.mode === 'light' ? theme.colors.background.surface : theme.colors.background.elevated,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-    // Enhanced shadow for iOS
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    // Enhanced shadow for Android
-    elevation: 12,
-    // Subtle inner glow effect
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderColor: theme.mode === 'light' ? theme.colors.ui.border : theme.colors.ui.divider,
+    ...theme.shadows.md,
+    // Extra elevation for contrast
+    elevation: theme.mode === 'light' ? 8 : 12,
   },
   loadingContainer: {
     marginHorizontal: 20,
@@ -304,17 +294,13 @@ const styles = StyleSheet.create({
   skeletonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 24,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
+    backgroundColor: theme.colors.background.surface,
+    borderRadius: theme.borderRadius.xl,
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
+    borderColor: theme.colors.ui.border,
+    ...theme.shadows.md,
   },
   skeletonItem: {
     alignItems: "center",
@@ -324,47 +310,43 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: theme.colors.ui.divider,
     marginBottom: 8,
   },
   skeletonText: {
     width: 60,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: theme.colors.ui.divider,
     marginBottom: 8,
   },
   skeletonNumber: {
     width: 40,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: theme.colors.ui.divider,
   },
   errorContainer: {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 24,
+    backgroundColor: theme.colors.background.surface,
+    borderRadius: theme.borderRadius.xl,
     paddingVertical: 30,
     marginHorizontal: 20,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: "rgba(255, 107, 107, 0.2)",
-    shadowColor: "#FF6B6B",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
+    borderColor: theme.colors.state.incorrectBackground,
+    ...theme.shadows.md,
   },
   errorText: {
     fontSize: 16,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     marginTop: 8,
   },
   retryText: {
     fontSize: 14,
-    color: "#FF7B54",
+    color: theme.colors.primary,
     marginTop: 4,
     fontWeight: "500",
   },
@@ -373,7 +355,7 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 14,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     marginBottom: 8,
     fontWeight: "500",
   },
@@ -385,24 +367,24 @@ const styles = StyleSheet.create({
   progressBarBackground: {
     flex: 1,
     height: 8,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: theme.colors.ui.divider,
     borderRadius: 4,
     overflow: "hidden",
   },
   progressBarFill: {
     height: "100%",
-    backgroundColor: "#4CAF50",
+    backgroundColor: theme.colors.success,
     borderRadius: 4,
   },
   progressPercentage: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#4CAF50",
+    color: theme.colors.success,
     minWidth: 45,
   },
   motivationalText: {
     fontSize: 13,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     fontStyle: "italic",
   },
   statsGrid: {
@@ -425,7 +407,7 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 60,
-    backgroundColor: "rgba(255, 123, 84, 0.15)",
+    backgroundColor: theme.colors.ui.divider,
     marginHorizontal: 16,
     borderRadius: 0.5,
   },
@@ -433,17 +415,13 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "rgba(255, 123, 84, 0.08)",
+    backgroundColor: theme.mode === 'light' ? 'rgba(255, 123, 84, 0.08)' : theme.colors.background.subtle,
     borderWidth: 1,
-    borderColor: "rgba(255, 123, 84, 0.15)",
+    borderColor: theme.mode === 'light' ? 'rgba(255, 123, 84, 0.15)' : theme.colors.ui.border,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 12,
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    ...theme.shadows.sm,
   },
   labelContainer: {
     minHeight: 32,
@@ -454,7 +432,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 13,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     fontWeight: "500",
     textAlign: "center",
     lineHeight: 16,
@@ -462,7 +440,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
   },
   streakContainer: {
     flexDirection: "row",
@@ -472,6 +450,6 @@ const styles = StyleSheet.create({
   streakText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FF6B3D",
+    color: theme.colors.semantic.warning,
   },
 });

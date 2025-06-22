@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { Quiz } from "../../api/wordlists";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -35,6 +36,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
   onSkipQuestion,
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const player = useAudioPlayer();
   const { playing: isPlaying, didJustFinish } = useAudioPlayerStatus(player);
   const [imageLoading, setImageLoading] = useState(false);

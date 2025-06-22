@@ -6,10 +6,13 @@ import React, { useEffect } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export const Header = () => {
   const { t } = useTranslation();
   const posthog = usePostHog();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
 
   // Fetch user profile
   const { data: user, isLoading } = useQuery({
@@ -64,7 +67,7 @@ export const Header = () => {
           style={styles.settingsButton}
           onPress={handleSettingsPress}
         >
-          <Ionicons name="settings-outline" size={24} color="#2D3436" />
+          <Ionicons name="settings-outline" size={24} color={theme.colors.text.primary} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -99,7 +102,7 @@ export const Header = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -112,26 +115,18 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: theme.colors.background.surface,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...theme.shadows.sm,
   },
   profileButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.colors.background.surface,
+    ...theme.shadows.sm,
   },
   avatarContainer: {
     width: "100%",
@@ -145,7 +140,7 @@ const styles = StyleSheet.create({
   avatarPlaceholder: {
     width: "100%",
     height: "100%",
-    backgroundColor: "#FF7B54",
+    backgroundColor: theme.colors.primary,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 20,
@@ -153,7 +148,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: theme.colors.text.inverse,
   },
   greetingContainer: {
     marginBottom: 20,
@@ -162,18 +157,18 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 28,
     fontWeight: "600",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
     marginBottom: 4,
   },
   userName: {
     fontSize: 28,
     fontWeight: "600",
-    color: "#2D3436",
+    color: theme.colors.text.primary,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: "#636E72",
+    color: theme.colors.text.secondary,
     marginTop: 4,
   },
 });

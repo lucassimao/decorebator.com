@@ -382,43 +382,32 @@ const FlashcardPractice: React.FC = () => {
 
   if (error || !words || words.length === 0) {
     return (
-      <ImageBackground
-        source={require("@/assets/images/dashboard-bg.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.container}>
-          <View style={styles.errorContainer}>
-            <MaterialIcons
-              name="error-outline"
-              size={64}
-              color={colors.error}
-            />
-            <Text style={[styles.errorTitle, { color: colors.textMedium }]}>
-              {t("flashcards.noWordsFound")}
+      <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+        <View style={styles.errorContainer}>
+          <MaterialIcons
+            name="error-outline"
+            size={64}
+            color={theme.colors.error}
+          />
+          <Text style={styles.errorTitle}>
+            {t("flashcards.noWordsFound")}
+          </Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backButtonText}>
+              {t("common.goBack")}
             </Text>
-            <TouchableOpacity
-              style={[styles.backButton, { backgroundColor: colors.primary }]}
-              onPress={() => router.back()}
-            >
-              <Text style={[styles.backButtonText, { color: colors.white }]}>
-                {t("common.goBack")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ImageBackground
-      source={require("@/assets/images/dashboard-bg.png")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <SafeAreaView style={styles.container}>
-        <OfflineIndicator />
+    <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+      <OfflineIndicator />
 
         <FlashcardHeader
           wordlistName={wordlistName || ""}
@@ -465,21 +454,16 @@ const FlashcardPractice: React.FC = () => {
           wordName={currentWord?.name}
           errorTypes={[ErrorType.SoundNotPlaying, ErrorType.UnrelatedMeaning]}
         />
-      </SafeAreaView>
-    </ImageBackground>
+    </SafeAreaView>
   );
 };
 
 export default FlashcardPractice;
 
-const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: screenWidth,
-    height: Dimensions.get("window").height,
-  },
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background.default,
   },
   errorContainer: {
     flex: 1,
@@ -490,17 +474,20 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 20,
     fontWeight: "600",
+    color: theme.colors.text.primary,
     marginTop: 16,
     marginBottom: 8,
     textAlign: "center",
   },
   errorMessage: {
     fontSize: 16,
+    color: theme.colors.text.secondary,
     textAlign: "center",
     lineHeight: 22,
     marginBottom: 24,
   },
   backButton: {
+    backgroundColor: theme.colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
@@ -508,5 +495,6 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 16,
     fontWeight: "600",
+    color: theme.colors.text.inverse,
   },
 });
