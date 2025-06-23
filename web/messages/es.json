@@ -597,6 +597,205 @@
       }
     }
   },
+  "help": {
+    "title": "Centro de Ayuda",
+    "subtitle": "Todo lo que necesitas saber sobre Decorebator - aprendizaje de vocabulario con IA",
+    "navigation": {
+      "title": "Navegación Rápida",
+      "gettingStarted": "Comenzar",
+      "features": "Características",
+      "leitnerSystem": "Sistema Leitner",
+      "troubleshooting": "Solución de Problemas"
+    },
+    "gettingStarted": {
+      "title": "Comenzar",
+      "createAccount": {
+        "title": "1. Crea tu Cuenta",
+        "steps": [
+          "Regístrate con email y contraseña",
+          "Elige tu plan de aprendizaje (Gratuito o Premium)",
+          "Descarga la aplicación móvil desde tu tienda de apps",
+          "Inicia sesión con las mismas credenciales"
+        ]
+      },
+      "startLearning": {
+        "title": "2. Comienza a Aprender",
+        "steps": [
+          "Crea tu primera lista de palabras",
+          "Añade palabras que quieras aprender",
+          "La IA genera automáticamente definiciones y contenido",
+          "Comienza a practicar con cuestionarios interactivos"
+        ]
+      },
+      "downloadText": "Descarga la app para comenzar:",
+      "proTip": {
+        "title": "Consejo Pro",
+        "text": "¡Comienza con 5-10 palabras en tu primera lista para familiarizarte con el sistema antes de añadir más!"
+      }
+    },
+    "coreFeatures": {
+      "title": "Características Principales",
+      "aiPowered": {
+        "title": "Contenido Potenciado por IA",
+        "description": "Genera automáticamente definiciones, imágenes, pronunciaciones de audio y frases de ejemplo para cada palabra que añadas."
+      },
+      "quizModes": {
+        "title": "8 Modos de Quiz",
+        "modes": [
+          "Adivina el Significado",
+          "Palabra desde Significado", 
+          "Asociación de Imágenes",
+          "Comprensión de Audio",
+          "Completar Oración",
+          "Escribir desde Definición",
+          "Reconocimiento de Audio",
+          "Reconocimiento de Audio de Ejemplo"
+        ]
+      },
+      "spacedRepetition": {
+        "title": "Repetición Espaciada",
+        "description": "Utiliza el sistema Leitner científicamente probado con 7 cajas para optimizar cuándo revisas palabras para la máxima retención."
+      },
+      "analytics": {
+        "title": "Analíticas Avanzadas",
+        "description": "Rastrea tu progreso con estadísticas detalladas, niveles de dominio de palabras, velocidad de aprendizaje y tasas de retención."
+      },
+      "multiLanguage": {
+        "title": "Soporte Multi-idioma",
+        "description": "Soporte nativo de IA para 7 idiomas: inglés, español, francés, alemán, italiano, portugués y japonés."
+      },
+      "offline": {
+        "title": "Soporte Sin Conexión",
+        "description": "Los usuarios Premium pueden descargar listas de palabras para acceso sin conexión y continuar aprendiendo sin conexión a internet."
+      }
+    },
+    "leitnerSystem": {
+      "title": "Cómo Funciona el Sistema Leitner",
+      "description": "Decorebator utiliza un sofisticado sistema Leitner de 7 cajas para una retención óptima de vocabulario a través de repetición espaciada.",
+      "table": {
+        "box": "Caja",
+        "interval": "Intervalo de Revisión",
+        "purpose": "Propósito",
+        "boxes": [
+          {"box": "Caja 1", "interval": "Inmediato", "purpose": "Palabras nuevas, revisiones fallidas"},
+          {"box": "Caja 2", "interval": "1 hora", "purpose": "Aprendizaje reciente"},
+          {"box": "Caja 3", "interval": "1 día", "purpose": "Retención a corto plazo"},
+          {"box": "Caja 4", "interval": "3 días", "purpose": "Retención a mediano plazo"},
+          {"box": "Caja 5", "interval": "1 semana", "purpose": "Retención a largo plazo"},
+          {"box": "Caja 6", "interval": "2 semanas", "purpose": "Retención extendida"},
+          {"box": "Caja 7", "interval": "1 mes", "purpose": "Palabras dominadas"}
+        ]
+      },
+      "progressionRules": {
+        "title": "Reglas de Progresión",
+        "correct": "Respuesta Correcta: La palabra pasa a la siguiente caja",
+        "incorrect": "Respuesta Incorrecta: La palabra regresa a la Caja 1",
+        "mastered": "Caja 7: Las palabras permanecen en la Caja 7 cuando son correctas (dominadas)"
+      },
+      "quizProgression": {
+        "title": "Progresión de Tipo de Quiz",
+        "description": "Se introducen diferentes tipos de quiz basados en el nivel de caja de la palabra para aumentar la dificultad progresivamente mientras dominas cada palabra."
+      }
+    },
+    "subscriptionPlans": {
+      "title": "Planes de Suscripción",
+      "appNotice": "Las suscripciones se gestionan directamente dentro de la aplicación móvil. Descarga la app para ver y gestionar tus planes de suscripción.",
+      "free": {
+        "title": "Plan Gratuito",
+        "price": "$0",
+        "features": [
+          "1 lista de palabras máximo",
+          "Hasta 10 palabras por lista",
+          "Modos de quiz básicos",
+          "Acceso solo en línea"
+        ]
+      },
+      "monthly": {
+        "title": "Premium Mensual",
+        "price": "$6.99",
+        "period": "/mes",
+        "badge": "Más Popular",
+        "features": [
+          "Listas de palabras ilimitadas",
+          "Palabras ilimitadas",
+          "Los 8 modos de quiz",
+          "Analíticas avanzadas",
+          "Soporte sin conexión",
+          "Soporte prioritario"
+        ]
+      },
+      "annual": {
+        "title": "Premium Anual",
+        "price": "$69.90",
+        "period": "/año",
+        "savings": "¡Ahorra $13.98!",
+        "features": [
+          "Todo lo de Mensual",
+          "Mejor valor por dinero",
+          "Soporte al cliente prioritario",
+          "Acceso temprano a características"
+        ]
+      }
+    },
+    "languageSupport": {
+      "title": "Soporte Multi-idioma",
+      "description": "Decorebator proporciona soporte integral multi-idioma con procesamiento nativo de IA para experiencias de aprendizaje auténticas.",
+      "supportedLanguages": "Idiomas Soportados (7)",
+      "aiFeatures": "Características de IA por Idioma",
+      "languages": [
+        {"flag": "🇺🇸", "name": "Inglés", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"},
+        {"flag": "🇪🇸", "name": "Español", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"},
+        {"flag": "🇫🇷", "name": "Francés", "bgClass": "bg-gradient-to-r from-blue-50 to-white"},
+        {"flag": "🇩🇪", "name": "Alemán", "bgClass": "bg-gradient-to-r from-black to-red-50"},
+        {"flag": "🇮🇹", "name": "Italiano", "bgClass": "bg-gradient-to-r from-green-50 to-red-50"},
+        {"flag": "🇵🇹", "name": "Portugués", "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"},
+        {"flag": "🇯🇵", "name": "Japonés", "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"}
+      ],
+      "features": [
+        "Gramática Nativa: Reglas y estructuras específicas del idioma",
+        "Contexto Cultural: Imágenes y ejemplos culturalmente relevantes",
+        "Audio Optimizado: Selección de voz que suena nativa por idioma",
+        "Sistemas Verbales: Tiempos e inflexiones apropiadas del idioma"
+      ]
+    },
+    "troubleshooting": {
+      "title": "Solución de Problemas y Soporte",
+      "commonIssues": "Problemas Comunes",
+      "audioNotPlaying": {
+        "title": "Audio no reproduce",
+        "solution": "Revisa el volumen de tu dispositivo y asegúrate de tener una conexión estable a internet. El audio es generado por IA y requiere acceso en línea."
+      },
+      "imagesNotLoading": {
+        "title": "Imágenes no cargan",
+        "solution": "Las imágenes son generadas por IA y pueden tomar unos momentos en aparecer. Actualiza el quiz o usa la función de reporte de errores si persisten los problemas."
+      },
+      "subscriptionNotUpdating": {
+        "title": "Suscripción no se actualiza",
+        "solution": "Después de completar el pago, cierra y reabre la app para actualizar el estado de tu suscripción. Los cambios deberían aparecer en unos minutos."
+      },
+      "errorReporting": {
+        "title": "Reporte de Errores",
+        "description": "Si encuentras problemas con contenido generado por IA, usa nuestro sistema integrado de reporte de errores:",
+        "types": [
+          "Reportar definiciones incorrectas",
+          "Marcar imágenes inapropiadas",
+          "Reportar problemas de reproducción de audio",
+          "Enviar ejemplos irrelevantes",
+          "Marcar problemas de carga"
+        ]
+      },
+      "needHelp": {
+        "title": "¿Necesitas Más Ayuda?",
+        "description": "Nuestro equipo de soporte está aquí para ayudarte a sacar el máximo provecho de Decorebator.",
+        "email": "Contactar Soporte: support@decorebator.com"
+      }
+    },
+    "stillNeedHelp": {
+      "title": "¿Aún Necesitas Ayuda?",
+      "subtitle": "Nuestro equipo de soporte está listo para asistirte con cualquier pregunta o problema.",
+      "emailSupport": "Soporte por Email"
+    }
+  },
   "multiLanguage": {
     "title": "Soporte para 7 idiomas",
     "hero": {

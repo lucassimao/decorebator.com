@@ -477,7 +477,13 @@
   "help": {
     "title": "Help Center",
     "subtitle": "Everything you need to know about Decorebator - AI-powered vocabulary learning",
-    "quickNavigation": "Quick Navigation",
+    "navigation": {
+      "title": "Quick Navigation",
+      "gettingStarted": "Getting Started",
+      "features": "Features",
+      "leitnerSystem": "Leitner System",
+      "troubleshooting": "Troubleshooting"
+    },
     "gettingStarted": {
       "title": "Getting Started",
       "createAccount": {
@@ -498,7 +504,11 @@
           "Begin practicing with interactive quizzes"
         ]
       },
-      "proTip": "Start with 5-10 words in your first wordlist to get familiar with the system before adding more!"
+      "downloadText": "Download the app to get started:",
+      "proTip": {
+        "title": "Pro Tip",
+        "text": "Start with 5-10 words in your first wordlist to get familiar with the system before adding more!"
+      }
     },
     "coreFeatures": {
       "title": "Core Features",
@@ -516,7 +526,7 @@
           "Sentence Completion",
           "Write from Definition",
           "Audio Recognition",
-          "Example Audio"
+          "Example Audio Recognition"
         ]
       },
       "spacedRepetition": {
@@ -565,13 +575,59 @@
       }
     },
     "subscriptionPlans": {
-      "title": "Subscription Plans"
+      "title": "Subscription Plans",
+      "appNotice": "Subscriptions are managed directly within the mobile app. Download the app to view and manage your subscription plans.",
+      "free": {
+        "title": "Free Plan",
+        "price": "$0",
+        "features": [
+          "1 wordlist maximum",
+          "Up to 10 words per wordlist",
+          "Basic quiz modes",
+          "Online-only access"
+        ]
+      },
+      "monthly": {
+        "title": "Monthly Premium",
+        "price": "$6.99",
+        "period": "/month",
+        "badge": "Most Popular",
+        "features": [
+          "Unlimited wordlists",
+          "Unlimited words",
+          "All 8 quiz modes",
+          "Advanced analytics",
+          "Offline support",
+          "Priority support"
+        ]
+      },
+      "annual": {
+        "title": "Annual Premium",
+        "price": "$69.90",
+        "period": "/year",
+        "savings": "Save $13.98!",
+        "features": [
+          "Everything in Monthly",
+          "Best value for money",
+          "Priority customer support",
+          "Early access to features"
+        ]
+      }
     },
     "languageSupport": {
       "title": "Multi-Language Support",
       "description": "Decorebator provides comprehensive multi-language support with native AI processing for authentic learning experiences.",
       "supportedLanguages": "Supported Languages (7)",
       "aiFeatures": "AI Features per Language",
+      "languages": [
+        {"flag": "🇺🇸", "name": "English", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"},
+        {"flag": "🇪🇸", "name": "Spanish", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"},
+        {"flag": "🇫🇷", "name": "French", "bgClass": "bg-gradient-to-r from-blue-50 to-white"},
+        {"flag": "🇩🇪", "name": "German", "bgClass": "bg-gradient-to-r from-black to-red-50"},
+        {"flag": "🇮🇹", "name": "Italian", "bgClass": "bg-gradient-to-r from-green-50 to-red-50"},
+        {"flag": "🇵🇹", "name": "Portuguese", "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"},
+        {"flag": "🇯🇵", "name": "Japanese", "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"}
+      ],
       "features": [
         "Native Grammar: Language-specific rules and structures",
         "Cultural Context: Culturally relevant images and examples",
@@ -595,19 +651,15 @@
         "solution": "After completing payment, close and reopen the app to refresh your subscription status. Changes should appear within a few minutes."
       },
       "errorReporting": {
-        "title": "Smart Error Reporting",
-        "description": "Rate-limited error reporting system with automatic content regeneration. Tier-based limits prevent abuse:",
+        "title": "Error Reporting",
+        "description": "If you encounter issues with AI-generated content, use our built-in error reporting system:",
         "types": [
           "Report incorrect definitions",
           "Flag inappropriate images",
           "Report audio playback issues",
           "Submit irrelevant examples",
           "Flag loading problems"
-        ],
-        "limits": {
-          "free": "Free: 3 reports/hour, 5 reports/day",
-          "premium": "Premium: 10 reports/hour, 30 reports/day"
-        }
+        ]
       },
       "needHelp": {
         "title": "Need More Help?",
@@ -618,8 +670,7 @@
     "stillNeedHelp": {
       "title": "Still Need Help?",
       "subtitle": "Our support team is ready to assist you with any questions or issues.",
-      "emailSupport": "Email Support",
-      "contactForm": "Contact Form"
+      "emailSupport": "Email Support"
     }
   },
   "signup": {

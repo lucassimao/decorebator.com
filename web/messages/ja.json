@@ -180,7 +180,7 @@
     "subtitle": "無料で始めて、準備ができたらアップグレード",
     "free": {
       "title": "無料",
-      "price": "¥0",
+      "price": "$0",
       "period": "/月",
       "description": "語彙学習を始めるのに最適",
       "features": [
@@ -194,7 +194,7 @@
     },
     "monthly": {
       "title": "プレミアム月額",
-      "price": "¥799",
+      "price": "$6.99",
       "period": "/月",
       "description": "真剣な学習者向け",
       "features": [
@@ -212,10 +212,10 @@
     },
     "yearly": {
       "title": "プレミアム年額",
-      "price": "¥7,999",
+      "price": "$69.90",
       "period": "/年",
-      "originalPrice": "¥9,588",
-      "savings": "¥1,589お得",
+      "originalPrice": "$83.88",
+      "savings": "$13.98お得",
       "description": "最高の価値",
       "features": [
         "無制限の単語リスト",
@@ -251,7 +251,7 @@
       },
       "3": {
         "question": "サブスクリプションプランと価格はどうなっていますか？",
-        "answer": "Decorebatorは無料プラン（1単語リスト、最大10単語）とプレミアムプラン：¥799/月または¥7,999/年を提供しています。プレミアムには無制限の単語リストと単語、シームレス同期付きオフラインサポート、完全な分析履歴、エクスポート機能、高度な学習インサイトが含まれます。"
+        "answer": "Decorebatorは無料プラン（1単語リスト、最大10単語）とプレミアムプラン：$6.99/月または$69.90/年を提供しています。プレミアムには無制限の単語リストと単語、シームレス同期付きオフラインサポート、完全な分析履歴、エクスポート機能、高度な学習インサイトが含まれます。"
       },
       "4": {
         "question": "Decorebatorをオフラインで使用できますか？",
@@ -737,6 +737,205 @@
       "twitter": "TwitterでDecorebator",
       "instagram": "InstagramでDecorebator",
       "linkedin": "LinkedInでDecorebator"
+    }
+  },
+  "help": {
+    "title": "ヘルプセンター",
+    "subtitle": "Decorebatorについて知っておくべきすべて - AI搭載語彙学習",
+    "navigation": {
+      "title": "クイックナビゲーション",
+      "gettingStarted": "始める",
+      "features": "機能",
+      "leitnerSystem": "ライトナーシステム",
+      "troubleshooting": "トラブルシューティング"
+    },
+    "gettingStarted": {
+      "title": "始める",
+      "createAccount": {
+        "title": "1. アカウントを作成する",
+        "steps": [
+          "メールアドレスとパスワードでサインアップ",
+          "学習プランを選択（無料またはプレミアム）",
+          "アプリストアからモバイルアプリをダウンロード",
+          "同じ認証情報でサインイン"
+        ]
+      },
+      "startLearning": {
+        "title": "2. 学習を始める",
+        "steps": [
+          "最初の単語リストを作成",
+          "学びたい単語を追加",
+          "AIが自動的に定義とコンテンツを生成",
+          "インタラクティブなクイズで練習を開始"
+        ]
+      },
+      "downloadText": "アプリをダウンロードして始めましょう：",
+      "proTip": {
+        "title": "プロのヒント",
+        "text": "最初のリストは5-10単語から始めて、システムに慣れてからさらに追加しましょう！"
+      }
+    },
+    "coreFeatures": {
+      "title": "主要機能",
+      "aiPowered": {
+        "title": "AI搭載コンテンツ",
+        "description": "追加するすべての単語に対して、定義、画像、音声発音、例文を自動的に生成します。"
+      },
+      "quizModes": {
+        "title": "8つのクイズモード",
+        "modes": [
+          "意味を推測",
+          "意味から単語", 
+          "画像連想",
+          "音声理解",
+          "文章完成",
+          "定義から書く",
+          "音声認識",
+          "例文音声認識"
+        ]
+      },
+      "spacedRepetition": {
+        "title": "間隔反復",
+        "description": "科学的に証明されたライトナーシステムを7つのボックスで使用し、最大限の記憶定着のために単語を復習するタイミングを最適化します。"
+      },
+      "analytics": {
+        "title": "高度な分析",
+        "description": "詳細な統計、単語習得レベル、学習速度、記憶定着率で進歩を追跡します。"
+      },
+      "multiLanguage": {
+        "title": "多言語サポート",
+        "description": "7言語のネイティブAIサポート：英語、スペイン語、フランス語、ドイツ語、イタリア語、ポルトガル語、日本語。"
+      },
+      "offline": {
+        "title": "オフラインサポート",
+        "description": "プレミアムユーザーは単語リストをオフラインアクセス用にダウンロードし、インターネット接続なしで学習を続けることができます。"
+      }
+    },
+    "leitnerSystem": {
+      "title": "ライトナーシステムの仕組み",
+      "description": "Decorebatorは、間隔反復による最適な語彙記憶定着のために洗練された7ボックスライトナーシステムを使用しています。",
+      "table": {
+        "box": "ボックス",
+        "interval": "復習間隔",
+        "purpose": "目的",
+        "boxes": [
+          {"box": "ボックス1", "interval": "即座", "purpose": "新しい単語、失敗した復習"},
+          {"box": "ボックス2", "interval": "1時間", "purpose": "最近の学習"},
+          {"box": "ボックス3", "interval": "1日", "purpose": "短期記憶定着"},
+          {"box": "ボックス4", "interval": "3日", "purpose": "中期記憶定着"},
+          {"box": "ボックス5", "interval": "1週間", "purpose": "長期記憶定着"},
+          {"box": "ボックス6", "interval": "2週間", "purpose": "拡張記憶定着"},
+          {"box": "ボックス7", "interval": "1ヶ月", "purpose": "習得済み単語"}
+        ]
+      },
+      "progressionRules": {
+        "title": "進歩ルール",
+        "correct": "正解：単語は次のボックスに移動",
+        "incorrect": "不正解：単語はボックス1に戻る",
+        "mastered": "ボックス7：単語は正解時にボックス7に留まる（習得済み）"
+      },
+      "quizProgression": {
+        "title": "クイズタイプの進歩",
+        "description": "単語のボックスレベルに基づいて異なるクイズタイプが導入され、各単語を習得するにつれて段階的に難易度が上がります。"
+      }
+    },
+    "subscriptionPlans": {
+      "title": "サブスクリプションプラン",
+      "appNotice": "サブスクリプションはモバイルアプリ内で直接管理されます。アプリをダウンロードして、サブスクリプションプランを表示・管理してください。",
+      "free": {
+        "title": "無料プラン",
+        "price": "$0",
+        "features": [
+          "最大1つの単語リスト",
+          "リストあたり最大10単語",
+          "基本クイズモード",
+          "オンラインアクセスのみ"
+        ]
+      },
+      "monthly": {
+        "title": "月額プレミアム",
+        "price": "$6.99",
+        "period": "/月",
+        "badge": "最も人気",
+        "features": [
+          "無制限の単語リスト",
+          "無制限の単語",
+          "8つすべてのクイズモード",
+          "高度な分析",
+          "オフラインサポート",
+          "優先サポート"
+        ]
+      },
+      "annual": {
+        "title": "年額プレミアム",
+        "price": "$69.90",
+        "period": "/年",
+        "savings": "$13.98お得！",
+        "features": [
+          "月額のすべて",
+          "最高のコストパフォーマンス",
+          "優先カスタマーサポート",
+          "機能への早期アクセス"
+        ]
+      }
+    },
+    "languageSupport": {
+      "title": "多言語サポート",
+      "description": "Decorebatorは、本格的な学習体験のためのネイティブAI処理による包括的な多言語サポートを提供します。",
+      "supportedLanguages": "サポート言語（7言語）",
+      "aiFeatures": "言語別AI機能",
+      "languages": [
+        {"flag": "🇺🇸", "name": "英語", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"},
+        {"flag": "🇪🇸", "name": "スペイン語", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"},
+        {"flag": "🇫🇷", "name": "フランス語", "bgClass": "bg-gradient-to-r from-blue-50 to-white"},
+        {"flag": "🇩🇪", "name": "ドイツ語", "bgClass": "bg-gradient-to-r from-black to-red-50"},
+        {"flag": "🇮🇹", "name": "イタリア語", "bgClass": "bg-gradient-to-r from-green-50 to-red-50"},
+        {"flag": "🇵🇹", "name": "ポルトガル語", "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"},
+        {"flag": "🇯🇵", "name": "日本語", "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"}
+      ],
+      "features": [
+        "ネイティブ文法：言語固有のルールと構造",
+        "文化的コンテキスト：文化的に関連する画像と例",
+        "最適化された音声：言語ごとのネイティブサウンド音声選択",
+        "動詞システム：言語に適した時制と活用"
+      ]
+    },
+    "troubleshooting": {
+      "title": "トラブルシューティングとサポート",
+      "commonIssues": "よくある問題",
+      "audioNotPlaying": {
+        "title": "音声が再生されない",
+        "solution": "デバイスの音量を確認し、安定したインターネット接続があることを確認してください。音声はAIによって生成され、オンラインアクセスが必要です。"
+      },
+      "imagesNotLoading": {
+        "title": "画像が読み込まれない",
+        "solution": "画像はAIによって生成され、表示されるまでに少し時間がかかる場合があります。問題が続く場合は、クイズを更新するか、エラー報告機能を使用してください。"
+      },
+      "subscriptionNotUpdating": {
+        "title": "サブスクリプションが更新されない",
+        "solution": "支払い完了後、アプリを閉じて再度開いてサブスクリプションステータスを更新してください。変更は数分以内に表示されるはずです。"
+      },
+      "errorReporting": {
+        "title": "エラー報告",
+        "description": "AI生成コンテンツで問題が発生した場合は、内蔵エラー報告システムを使用してください：",
+        "types": [
+          "不正確な定義を報告",
+          "不適切な画像をフラグ",
+          "音声再生問題を報告",
+          "関連性のない例を提出",
+          "読み込み問題をフラグ"
+        ]
+      },
+      "needHelp": {
+        "title": "さらなるヘルプが必要ですか？",
+        "description": "私たちのサポートチームは、Decorebatorを最大限に活用するお手伝いをします。",
+        "email": "サポートに連絡：support@decorebator.com"
+      }
+    },
+    "stillNeedHelp": {
+      "title": "まだヘルプが必要ですか？",
+      "subtitle": "私たちのサポートチームは、ご質問や問題について喜んでサポートいたします。",
+      "emailSupport": "メールサポート"
     }
   }
 }

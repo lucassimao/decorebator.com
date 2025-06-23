@@ -17,7 +17,7 @@ export default function TermsOfService() {
               Please read these terms carefully before using Decorebator
             </p>
             <p className="text-sm text-[#636E72] mt-4">
-              Last updated: January 2025
+              Last updated: June 2025
             </p>
           </div>
 

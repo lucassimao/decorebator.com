@@ -345,7 +345,7 @@ export default function PrivacyPolicy() {
                     We take your privacy seriously and are committed to protecting your personal information. If you have any questions or concerns about our privacy practices, please don&apos;t hesitate to contact us.
                   </p>
                   <p className="text-orange-800 mt-3">
-                    Effective Date: January 1, 2025 | Version: 1.0 | Next Review: July 2025
+                    Effective Date: June 1, 2025 | Version: 1.0 | Next Review: July 2026
                   </p>
                 </div>
               </div>
