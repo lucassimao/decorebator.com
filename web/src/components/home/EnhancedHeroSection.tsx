@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import VideoModal from '../common/VideoModal';
 import QuizDemoModal from '../quiz/QuizDemoModal';
 import { Quiz } from '@/lib/quiz-data';
+import AppStoreButton from '../common/AppStoreButton';
+import { statsConfig } from '@/config/statsConfig';
 
 interface EnhancedHeroSectionProps {
   demoQuizzes: Quiz[];
@@ -15,16 +17,65 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
-  const [showAppStoreAlert, setShowAppStoreAlert] = useState(false);
   const t = useTranslations('hero');
-  const tCommon = useTranslations('common');
+  const locale = useLocale();
   
   const words = [
-    t('rotatingWords.aiIntelligence') || 'AI Intelligence',
-    t('rotatingWords.spacedRepetition') || 'Spaced Repetition', 
-    t('rotatingWords.visualLearning') || 'Visual Learning',
-    t('rotatingWords.smartQuizzes') || 'Smart Quizzes'
+    { key: 'aiIntelligence', text: t('rotatingWords.aiIntelligence') || 'AI Intelligence' },
+    { key: 'spacedRepetition', text: t('rotatingWords.spacedRepetition') || 'Spaced Repetition' },
+    { key: 'visualLearning', text: t('rotatingWords.visualLearning') || 'Visual Learning' },
+    { key: 'smartQuizzes', text: t('rotatingWords.smartQuizzes') || 'Smart Quizzes' }
   ];
+
+  // Font size mapping for each language and word combination
+  const getFontSizeClass = (wordKey: string, locale: string) => {
+    const fontSizeMap: Record<string, Record<string, string>> = {
+      en: {
+        aiIntelligence: 'text-4xl sm:text-5xl lg:text-6xl',
+        spacedRepetition: 'text-3xl sm:text-4xl lg:text-5xl', // Longer text
+        visualLearning: 'text-4xl sm:text-5xl lg:text-6xl',
+        smartQuizzes: 'text-4xl sm:text-5xl lg:text-6xl'
+      },
+      es: {
+        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "Intelligence Artificial"
+        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Repetición Espaciada"
+        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Aprendizaje Visual"
+        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl' // "Quiz Inteligentes"
+      },
+      fr: {
+        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "Intelligence Artificielle"
+        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Répétition Espacée"
+        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Apprentissage Visuel"
+        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl' // "Quiz Intelligents"
+      },
+      de: {
+        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "KI-Intelligenz"
+        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Wiederholung mit Abstand"
+        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Visuelles Lernen"
+        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl' // "Intelligente Quiz"
+      },
+      it: {
+        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "Intelligence Artificiale"
+        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Ripetizione Distanziata"
+        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Apprendimento Visivo"
+        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl' // "Quiz Intelligenti"
+      },
+      pt: {
+        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "Inteligência Artificial"
+        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Repetição Espaçada"
+        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Aprendizado Visual"
+        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl' // "Quiz Inteligentes"
+      },
+      ja: {
+        aiIntelligence: 'text-4xl sm:text-5xl lg:text-6xl', // "AI知能"
+        spacedRepetition: 'text-3xl sm:text-4xl lg:text-5xl', // "間隔反復"
+        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "視覚学習"
+        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl' // "スマートクイズ"
+      }
+    };
+
+    return fontSizeMap[locale]?.[wordKey] || 'text-3xl sm:text-4xl lg:text-5xl';
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -41,20 +92,20 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
           <div className="space-y-6 sm:space-y-8 slide-in-left order-1 lg:order-1">
             <div className="inline-flex items-center px-4 py-2 rounded-full glass bg-orange-100/50 text-[#FF7B54] text-sm font-semibold">
               <i className="fas fa-zap mr-2"></i>
-              AI-Powered Learning • 7 Languages • Multi-Platform
+              {t('tagline')}
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
               {t('title')}
-              <span className="block mt-2">
-                <span className="gradient-animation bg-clip-text text-transparent font-bold transition-all duration-500">
-                  {words[currentWordIndex]}
+              <span className="block mt-2 h-16 sm:h-20 lg:h-24 flex items-center">
+                <span className={`gradient-animation bg-clip-text text-transparent font-bold transition-all duration-700 ease-in-out leading-tight ${getFontSizeClass(words[currentWordIndex].key, locale)}`} style={{ transitionProperty: 'opacity, transform, font-size' }}>
+                  {words[currentWordIndex].text}
                 </span>
               </span>
             </h1>
             
-            <p className="text-lg sm:text-xl text-[#636E72] leading-relaxed">
-              {t('subtitle', { count: '10,000' })}
+            <p className="text-lg sm:text-xl text-[#636E72] leading-relaxed -mt-2 sm:-mt-3">
+              {t('subtitle')}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -63,7 +114,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
                 className="group bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
               >
                 <i className="fas fa-brain mr-2 group-hover:scale-110 transition-transform"></i>
-                <span>Try a Quick Quiz</span>
+                <span>{t('startLearningFree')}</span>
                 <i className="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
               </button>
               <button 
@@ -77,53 +128,39 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
 
             {/* App Store Buttons */}
             <div className="flex flex-wrap gap-4 pt-4">
-              <button 
-                onClick={() => setShowAppStoreAlert(true)} 
-                className="group"
-              >
-                <Image 
-                  src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
-                  alt="Download on App Store" 
-                  width={144}
-                  height={48}
-                  className="h-12 transform group-hover:scale-105 transition-transform duration-300"
-                />
-              </button>
-              <button 
-                onClick={() => setShowAppStoreAlert(true)} 
-                className="group"
-              >
-                <Image 
-                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
-                  alt="Get it on Google Play" 
-                  width={144}
-                  height={48}
-                  className="h-12 transform group-hover:scale-105 transition-transform duration-300"
-                />
-              </button>
+              <AppStoreButton store="apple" className="h-12" />
+              <AppStoreButton store="google" className="h-12" />
             </div>
 
             {/* Social Proof */}
-            <div className="flex items-center space-x-8 text-sm text-[#636E72]">
-              <div className="flex items-center space-x-2">
-                <div className="flex -space-x-1">
-                  <i className="fas fa-star text-yellow-400"></i>
-                  <i className="fas fa-star text-yellow-400"></i>
-                  <i className="fas fa-star text-yellow-400"></i>
-                  <i className="fas fa-star text-yellow-400"></i>
-                  <i className="fas fa-star text-yellow-400"></i>
-                </div>
-                <span className="font-semibold">{t('stats.rating')}</span>
+            {statsConfig.locations.heroSection.showSocialProof && (
+              <div className="flex items-center space-x-8 text-sm text-[#636E72]">
+                {statsConfig.showStats.starRating && (
+                  <div className="flex items-center space-x-2">
+                    <div className="flex -space-x-1">
+                      <i className="fas fa-star text-yellow-400"></i>
+                      <i className="fas fa-star text-yellow-400"></i>
+                      <i className="fas fa-star text-yellow-400"></i>
+                      <i className="fas fa-star text-yellow-400"></i>
+                      <i className="fas fa-star text-yellow-400"></i>
+                    </div>
+                    <span className="font-semibold">{statsConfig.values.starRating}</span>
+                  </div>
+                )}
+                {statsConfig.showStats.userCount && (
+                  <div className="flex items-center space-x-2">
+                    <i className="fas fa-users text-[#FF7B54]"></i>
+                    <span>{statsConfig.values.userCount}+ active learners</span>
+                  </div>
+                )}
+                {statsConfig.showStats.languageCount && (
+                  <div className="flex items-center space-x-2">
+                    <i className="fas fa-globe text-[#FF7B54]"></i>
+                    <span>{statsConfig.values.totalLanguages}</span>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center space-x-2">
-                <i className="fas fa-users text-[#FF7B54]"></i>
-                <span>{t('stats.activeLearnersCount')}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <i className="fas fa-globe text-[#FF7B54]"></i>
-                <span>{t('stats.languagesCount')}</span>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Hero Visual */}
@@ -149,7 +186,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
                         {/* Fallback for browsers without video support */}
                         <Image
                           src="/app-screenshot.jpeg"
-                          alt="Decorebator App Demo showing interactive learning features, quiz modes, and progress tracking"
+                          alt={t('imageAlt')}
                           width={320}
                           height={678}
                           className="w-full h-auto object-contain rounded-[2rem]"
@@ -176,7 +213,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
         isOpen={isVideoModalOpen}
         onClose={() => setIsVideoModalOpen(false)}
         videoId="dQw4w9WgXcQ" // Replace with actual demo video ID
-        title="Decorebator Demo - AI-Powered Vocabulary Learning"
+        title={t('videoTitle')}
       />
 
       {/* Quiz Demo Modal */}
@@ -185,32 +222,6 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
         onClose={() => setIsQuizModalOpen(false)}
         demoQuizzes={demoQuizzes}
       />
-
-      {/* App Store Alert Modal */}
-      {showAppStoreAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setShowAppStoreAlert(false)} />
-          <div className="bg-white rounded-2xl p-8 max-w-sm w-full relative z-10 shadow-2xl animate-scale-in">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#FF7B54] to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-rocket text-white text-2xl"></i>
-              </div>
-              <h3 className="text-2xl font-bold text-[#2D3436] mb-3">
-                {tCommon('appStorePending.title')}
-              </h3>
-              <p className="text-[#636E72] mb-6">
-                {tCommon('appStorePending.message')}
-              </p>
-              <button
-                onClick={() => setShowAppStoreAlert(false)}
-                className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300"
-              >
-                {tCommon('appStorePending.okButton')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 };

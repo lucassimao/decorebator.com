@@ -1,0 +1,150 @@
+{
+  "platform": {
+    "name": "Decorebator",
+    "category": "Educational Technology",
+    "subcategory": "Language Learning",
+    "type": "Vocabulary Learning Platform",
+    "target_audience": ["Language Learners", "Students", "Professionals", "Travelers"],
+    "supported_platforms": ["iOS", "Android"],
+    "offline_support": true
+  },
+  "core_features": {
+    "ai_content_generation": {
+      "enabled": true,
+      "capabilities": [
+        "Definition Generation",
+        "AI Image Generation",
+        "Audio Generation",
+        "Example Sentences",
+        "Cultural Context"
+      ],
+      "languages_supported": 7
+    },
+    "spaced_repetition": {
+      "enabled": true,
+      "algorithm": "Leitner System",
+      "boxes": 7,
+      "intervals": ["immediate", "1 hour", "6 hours", "1 day", "3 days", "7 days", "1 month"],
+      "type": "Deterministic"
+    },
+    "quiz_modes": {
+      "total_modes": 8,
+      "types": [
+        "Guess Meaning",
+        "Word from Meaning", 
+        "Image Association",
+        "Audio Comprehension",
+        "Sentence Completion",
+        "Write from Definition",
+        "Audio Recognition",
+        "Example Audio Recognition"
+      ],
+      "adaptive_difficulty": true
+    },
+    "analytics": {
+      "word_mastery_tracking": true,
+      "progress_visualization": true,
+      "performance_metrics": true,
+      "learning_streaks": true,
+      "box_distribution": true,
+      "historical_data": true
+    }
+  },
+  "languages": {
+    "supported_count": 7,
+    "list": [
+      {"code": "en", "name": "English", "native_ai": true},
+      {"code": "es", "name": "Spanish", "native_ai": true},
+      {"code": "fr", "name": "French", "native_ai": true},
+      {"code": "de", "name": "German", "native_ai": true},
+      {"code": "it", "name": "Italian", "native_ai": true},
+      {"code": "pt", "name": "Portuguese", "native_ai": true},
+      {"code": "ja", "name": "Japanese", "native_ai": true}
+    ],
+    "ui_languages": 7,
+    "content_languages": 7
+  },
+  "pricing": {
+    "currency": "USD",
+    "plans": {
+      "free": {
+        "price": 0,
+        "wordlists": 1,
+        "words_per_list": 10,
+        "quiz_modes": "basic",
+        "offline_support": false,
+        "analytics": "limited"
+      },
+      "monthly": {
+        "price": 6.99,
+        "billing_cycle": "monthly",
+        "wordlists": "unlimited",
+        "words_per_list": "unlimited",
+        "quiz_modes": "all_8",
+        "offline_support": true,
+        "analytics": "advanced",
+        "priority_support": true
+      },
+      "annual": {
+        "price": 69.90,
+        "billing_cycle": "yearly",
+        "savings": 13.98,
+        "wordlists": "unlimited", 
+        "words_per_list": "unlimited",
+        "quiz_modes": "all_8",
+        "offline_support": true,
+        "analytics": "advanced",
+        "priority_support": true,
+        "early_access": true
+      }
+    }
+  },
+  "technical_specifications": {
+    "mobile_requirements": {
+      "ios": "iOS 13.0+",
+      "android": "Android 8.0+ (API level 26+)"
+    },
+    "security": {
+      "authentication": "Secure authentication",
+      "encryption": "Industry-standard encryption",
+      "payment_processing": "Secure payment processing",
+      "data_protection": "GDPR compliant"
+    }
+  },
+  "learning_methodology": {
+    "scientific_basis": "Spaced Repetition",
+    "memory_techniques": ["Active Recall", "Visual Association", "Audio Reinforcement"],
+    "progression_system": "Box-based advancement",
+    "feedback_mechanism": "Immediate correction",
+    "motivation_features": ["Progress tracking", "Streak counting", "Mastery levels"]
+  },
+  "content_quality": {
+    "error_reporting": true,
+    "rate_limiting": {
+      "free_users": "3 reports/hour, 5 reports/day",
+      "premium_users": "10 reports/hour, 30 reports/day"
+    },
+    "ai_regeneration": true,
+    "human_review": false
+  },
+  "accessibility": {
+    "screen_reader_support": true,
+    "keyboard_navigation": true,
+    "high_contrast_mode": false,
+    "font_size_adjustment": true,
+    "audio_descriptions": false
+  },
+  "data_export": {
+    "learning_progress": true,
+    "wordlist_export": true,
+    "analytics_export": false,
+    "formats": ["JSON"]
+  },
+  "integrations": {
+    "social_media": false,
+    "calendar_sync": false,
+    "payment_gateway": true,
+    "email_notifications": true,
+    "single_sign_on": false
+  }
+}

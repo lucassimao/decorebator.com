@@ -33,8 +33,23 @@ cd web && npm run lint                 # Web frontend linting
 cd mobile && npm run lint              # Mobile app linting
 ```
 
-### Single Test Execution
+### Advanced Test Script Commands
 ```bash
+# Comprehensive test script (./scripts/run-tests.sh)
+./scripts/run-tests.sh setup           # First-time test environment setup
+./scripts/run-tests.sh unit            # Run unit tests only
+./scripts/run-tests.sh integration     # Run integration tests
+./scripts/run-tests.sh all             # Run all tests
+./scripts/run-tests.sh watch           # Watch mode with auto-reload
+./scripts/run-tests.sh coverage        # Check coverage thresholds
+./scripts/run-tests.sh security        # Security scans (govulncheck)
+./scripts/run-tests.sh clean           # Clean test environment
+
+# Quality Assurance workflow
+cd api && make qa                      # Full QA suite (lint + security + tests)
+cd api && make qa-fast                 # Fast QA checks (no integration tests)
+
+# Single Test Execution
 # API - Run specific test
 go test -v -run TestSpecificFunction ./internal/service/
 
@@ -137,7 +152,7 @@ npm run update:prod    # Update production build
 
 ### Web Frontend (in `/web` directory)
 
-Next.js 15 application with internationalization:
+Next.js 15 application with modern stack and internationalization:
 
 ```bash
 # Start development server (uses Turbopack for fast refresh)
@@ -149,16 +164,22 @@ npm run build
 # Start production server
 npm start
 
+# Generate sitemap
+npm run sitemap
+
 # Lint code
 npm run lint
 ```
 
-#### Internationalization Setup
-- Uses `next-intl` for i18n with 7 supported languages
-- Dynamic routing with locale prefixes (`/[locale]/...`)
-- Middleware for automatic locale detection
-- Localized feature showcase pages
-- Messages stored in `/messages/*.json`
+#### Modern Stack & Features
+- **Next.js 15** with Turbopack for fast development
+- **Tailwind CSS 4** for styling
+- **TypeScript 5** with strict configuration
+- **next-intl 4** for internationalization
+- **7 Language Support**: EN, DE, ES, FR, IT, JA, PT
+- **Dynamic Routing**: `/[locale]/...` pattern with middleware for locale detection
+- **SEO Optimized**: Sitemap generation, structured data
+- **Performance**: Turbopack dev server, optimized builds
 
 ## Architecture Overview
 
@@ -259,8 +280,9 @@ Key tables with recent enhancements:
 
 ## Environment Setup
 
-### Development Environment
+### Multi-Environment Configuration
 
+**Development Environment:**
 1. Copy the environment template:
 ```bash
 cp .env.example .env
@@ -275,22 +297,36 @@ cp .env.example .env
 - JWT secret for authentication
 - Sentry DSN for error monitoring (optional)
 
-### Test Environment
-
+**Test Environment:**
 1. Copy the test environment template:
 ```bash
 cp .env.test.example .env.test
 ```
 
-2. Test services run on different ports:
+2. Test services run on isolated ports:
 - PostgreSQL: 5433 (vs 5432 for dev)
 - MinIO: 9001 (vs 9000 for dev)
 - Redis: 6380 (vs 6379 for dev)
 
-3. Use `docker-compose.test.yml` for isolated test services:
+3. Use isolated test services:
 ```bash
 docker-compose -f docker-compose.test.yml up -d
 ```
+
+### Docker Volume Management
+```bash
+# Create required Docker volumes for persistence
+docker volume create api_postgres_data
+docker volume create api_minio-data
+```
+
+### Tool Version Alignment
+All development tools match GitHub Actions for consistency:
+- Go: 1.23.10
+- PostgreSQL: 15
+- Redis: 7-alpine
+- gotestsum: latest
+- golangci-lint: v1.62.2
 
 ## Subscription System
 
@@ -412,13 +448,12 @@ SELECT ... WHERE user_id = 137 AND wordlist_id = 100;
 ## CI/CD Pipeline
 
 ### GitHub Actions Workflow
-- Automated testing on push/PR to master, main, develop branches
-- Unit tests, integration tests, linting, and security checks
-- Coverage threshold enforcement (70% unit, 80% integration)
-- Build verification for all binaries
-- Uses `golangci-lint` for code quality
-- `gosec` for security scanning
-- Race condition detection in tests
+- **5 Parallel Jobs**: unit-tests, integration-tests, lint-checks, build-verification, security-scan
+- **Structured Output**: JUnit XML reports, coverage uploads to Codecov
+- **Security Integration**: gosec SARIF reports, govulncheck scanning
+- **Coverage Enforcement**: 70% unit, 80% integration coverage thresholds
+- **Artifact Management**: Test results, coverage reports, security scans
+- **Quality Checks**: golangci-lint, gosec, go vet, race condition detection
 
 ## External Services
 
@@ -515,14 +550,9 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - Email templates are located in `internal/mail/` directory
 - API endpoints are documented in `doc/words.http` and `doc/words.prod.http`
 - Recent architecture improvements planned in:
-  - `api/docs/DEPENDENCY_INJECTION_MODERNIZATION_PLAN.md` - DI framework adoption
-  - `api/docs/LOGGING_IMPROVEMENT_PLAN.md` - Enhanced structured logging
-  - `api/docs/ANALYTICS_REVIEW_REPORT.md` - Performance and bug fixes for analytics
-  - `api/docs/PROBABILISTIC_LEITNER_IMPLEMENTATION.md` - Advanced Leitner system solution
   - `api/docs/DETERMINISTIC_LEITNER_IMPLEMENTATION.md` - Deterministic priority-based Leitner algorithm
   - `api/docs/LEITNER_ALGORITHM_OPTIMIZATION_REPORT.md` - Comprehensive Leitner system optimization analysis
   - `api/docs/TESTING_BEST_PRACTICES.md` - Detailed testing guidelines and patterns
-  - `api/docs/WORKER_ABUSE_PREVENTION.md` - Background worker abuse prevention for free users
 
 ## Multi-Language Support
 
