@@ -1,37 +1,45 @@
 import React from 'react';
 import { CheckCircleIcon } from './icons';
+import { getTranslations } from 'next-intl/server';
 
-const PricingSection: React.FC = () => {
+const PricingSection: React.FC = async () => {
+  const t = await getTranslations('pricing');
+  const tCommon = await getTranslations('common');
+
   const plans = [
     {
-      name: 'Free',
-      price: '$0',
-      frequency: 'forever',
-      features: ['1 Wordlist', 'Up to 10 Words', 'Basic Quiz Modes'],
-      cta: 'Download App',
+      key: 'free',
+      name: t('plans.free.name'),
+      price: t('plans.free.price'),
+      frequency: t('plans.free.period'),
+      features: t.raw('plans.free.features') as string[],
+      cta: tCommon('downloadApp'),
       bestValue: false,
       href: '#download',
-      description: 'Perfect for trying out vocabulary learning',
+      description: t('plans.free.description'),
     },
     {
-      name: 'Monthly Premium',
-      price: '$6.99',
-      frequency: '/month',
-      features: ['Unlimited Wordlists', 'Unlimited Words', 'All 8 Quiz Modes', 'Advanced Analytics', 'Offline Support'],
-      cta: 'Download App',
-      bestValue: false,
-      href: '#download',
-      description: 'Full access with monthly flexibility',
-    },
-    {
-      name: 'Annual Premium',
-      price: '$69.90',
-      frequency: '/year',
-      features: ['Everything in Monthly', 'Save $13.98 per year', 'Offline Support', 'Early Access to Features'],
-      cta: 'Download App',
+      key: 'monthly',
+      name: t('plans.monthly.name'),
+      price: t('plans.monthly.price'),
+      frequency: t('plans.monthly.period'),
+      features: t.raw('plans.monthly.features') as string[],
+      cta: tCommon('downloadApp'),
       bestValue: true,
       href: '#download',
-      description: 'Best value for committed learners',
+      description: t('plans.monthly.description'),
+      badge: t('plans.monthly.badge'),
+    },
+    {
+      key: 'annual',
+      name: t('plans.annual.name'),
+      price: t('plans.annual.price'),
+      frequency: t('plans.annual.period'),
+      features: t.raw('plans.annual.features') as string[],
+      cta: tCommon('downloadApp'),
+      bestValue: false,
+      href: '#download',
+      description: t('plans.annual.description'),
     },
   ];
 
@@ -40,11 +48,11 @@ const PricingSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-4">
-            Choose Your 
-            <span className="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent"> Learning Plan</span>
+            <span>{t('title.part1')}</span>
+            <span className="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">{t('title.part2')}</span>
           </h2>
           <p className="text-xl text-[#636E72] max-w-3xl mx-auto">
-            Start free and upgrade anytime. All plans include AI-powered vocabulary enrichment and spaced repetition.
+            {t('subtitle')}
           </p>
         </div>
 
@@ -59,7 +67,7 @@ const PricingSection: React.FC = () => {
             >
               {plan.bestValue && (
                 <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white text-center py-2 text-sm font-semibold">
-                  MOST POPULAR
+                  {plan.badge || t('plans.monthly.badge')}
                 </div>
               )}
               
@@ -102,30 +110,30 @@ const PricingSection: React.FC = () => {
         <div className="mt-16 text-center">
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8 max-w-4xl mx-auto">
             <h3 className="text-xl font-bold text-[#2D3436] mb-4">
-              ✨ All Plans Include
+              {t('allPlansInclude')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm text-[#636E72]">
               <div className="flex items-center space-x-2">
                 <i className="fas fa-brain text-[#FF7B54]"></i>
-                <span>AI-Powered Content</span>
+                <span>{t('features.aiContent')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <i className="fas fa-chart-line text-[#FF7B54]"></i>
-                <span>Spaced Repetition</span>
+                <span>{t('features.spacedRepetition')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <i className="fas fa-mobile-alt text-[#FF7B54]"></i>
-                <span>Mobile App Access</span>
+                <span>{t('features.mobileAccess')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <i className="fas fa-shield-alt text-[#FF7B54]"></i>
-                <span>Secure & Private</span>
+                <span>{t('features.securePrivate')}</span>
               </div>
             </div>
           </div>
           
           <p className="text-[#636E72] mt-6">
-            No contracts • Cancel anytime • Secure payment via Stripe
+            {t('footer')}
           </p>
         </div>
       </div>

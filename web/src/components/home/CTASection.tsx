@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import VideoModal from '../common/VideoModal';
 import AppStoreButton from '../common/AppStoreButton';
 import { statsConfig } from '@/config/statsConfig';
 
 const CTASection: React.FC = () => {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const t = useTranslations('cta');
+  const tCommon = useTranslations('common');
 
   return (
     <section id="download" className="py-20 bg-gradient-to-r from-[#FF7B54] to-orange-600 relative overflow-hidden">
@@ -18,12 +21,12 @@ const CTASection: React.FC = () => {
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-          Ready to Transform Your Language Learning?
+          {t('title')}
         </h2>
         <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
           {statsConfig.locations.ctaSection.showUserCount 
-            ? `Join ${statsConfig.values.userCount}+ learners who are mastering new languages with AI-powered vocabulary learning and spaced repetition.`
-            : "Master new languages with AI-powered vocabulary learning and spaced repetition."
+            ? t('subtitleWithCount', { count: statsConfig.values.userCount })
+            : t('subtitle')
           }
         </p>
         
@@ -33,7 +36,7 @@ const CTASection: React.FC = () => {
             className="group bg-white/20 backdrop-blur text-white px-8 py-4 rounded-full font-semibold text-lg border-2 border-white/50 hover:bg-white/30 transition-all duration-300"
           >
             <i className="fas fa-play-circle mr-2"></i>
-            <span>Watch Demo</span>
+            <span>{tCommon('watchDemo')}</span>
           </button>
         </div>
         

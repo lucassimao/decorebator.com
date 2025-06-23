@@ -247,7 +247,10 @@
     }
   },
   "pricing": {
-    "title": "Choose Your Learning Plan",
+    "title": {
+      "part1": "Choose Your ",
+      "part2": "Learning Plan"
+    },
     "subtitle": "Start free and upgrade anytime. All plans include AI-powered vocabulary enrichment and spaced repetition.",
     "allPlansInclude": "✨ All Plans Include",
     "features": {
@@ -302,6 +305,96 @@
         ],
         "cta": "Start Annual"
       }
+    }
+  },
+  "newFeatures": {
+    "title": {
+      "part1": "Everything You Need to ",
+      "part2": "Master Vocabulary"
+    },
+    "subtitle": "Our comprehensive platform combines cutting-edge AI technology with proven learning science to accelerate your language journey.",
+    "items": {
+      "nativeLanguages": {
+        "title": "7 Native AI Languages",
+        "description": "Native AI processing in English, Spanish, French, German, Italian, Portuguese, and Japanese with language-specific grammar rules."
+      },
+      "aiContent": {
+        "title": "AI-Powered Content Generation",
+        "description": "Automatically generates definitions, examples, images, and audio pronunciations for any word using advanced AI models."
+      },
+      "spacedRepetition": {
+        "title": "Leitner Spaced Repetition",
+        "description": "Scientifically proven system with 7 review boxes that optimizes when you review words for maximum long-term retention."
+      },
+      "quizModes": {
+        "title": "8 Engaging Quiz Modes",
+        "description": "Multiple quiz types: meaning matching, image association, audio comprehension, sentence completion, write from definition, and more."
+      },
+      "visualLearning": {
+        "title": "Visual Learning with AI Images",
+        "description": "AI-generated images help you associate words with visual concepts for better memory retention."
+      },
+      "multiLanguageAudio": {
+        "title": "Multi-Language Audio",
+        "description": "Language-optimized voice selection with advanced text-to-speech. Each language uses native-sounding voices for authentic pronunciation."
+      },
+      "flashcards": {
+        "title": "Interactive Flashcards",
+        "description": "Immersive full-screen flashcards with flip animations, rich content display, and integrated error reporting."
+      },
+      "analytics": {
+        "title": "Advanced Analytics",
+        "description": "Comprehensive progress tracking with word mastery levels, learning velocity, retention rates, and performance insights."
+      },
+      "errorReporting": {
+        "title": "Error Reporting System",
+        "description": "User-driven quality control with 5 error types for AI content. Report issues and get automatic content regeneration."
+      },
+      "offlineSupport": {
+        "title": "Offline Support",
+        "description": "Premium users can download wordlists for offline access. Complete quiz functionality without internet connection."
+      }
+    }
+  },
+  "appShowcase": {
+    "title": {
+      "part1": "Experience the ",
+      "part2": "Future of Learning"
+    },
+    "subtitle": "Our intuitive interface and smart features make vocabulary learning engaging, efficient, and enjoyable.",
+    "features": {
+      "progressTracking": {
+        "title": "Smart Progress Tracking",
+        "description": "Monitor your learning journey with detailed analytics, word mastery tracking, and daily streaks.",
+        "tags": {
+          "wordMastery": "Word Mastery",
+          "boxDistribution": "Box Distribution",
+          "dailyStreaks": "Daily Streaks"
+        }
+      },
+      "aiContent": {
+        "title": "Multi-Language AI Content",
+        "description": "AI generates native-language content with proper grammar, cultural context, and language-optimized voices.",
+        "tags": {
+          "nativeDefinitions": "Native Definitions",
+          "culturalImages": "Cultural Images",
+          "optimizedAudio": "Optimized Audio"
+        }
+      },
+      "leitnerSystem": {
+        "title": "Advanced Leitner System",
+        "description": "7-box spaced repetition system that adapts to your learning pace and optimizes review timing.",
+        "tags": {
+          "newWords": "Box 1-2: New",
+          "learning": "Box 3-5: Learning",
+          "mastered": "Box 6-7: Mastered"
+        }
+      }
+    },
+    "demo": {
+      "videoAlt": "Decorebator App Demo - Live interaction showing quiz features, progress tracking, and learning flow",
+      "liveDemo": "Live Demo!",
+      "seeInAction": "See it in action"
     }
   },
   "cta": {
@@ -1279,5 +1372,97 @@
       "resetFailed": "Failed to reset password. Please try again."
     },
     "success": "Password has been reset successfully!"
+  },
+  "howItWorks": {
+    "title": {
+      "part1": "Your Learning Journey in ",
+      "part2": "3 Simple Steps"
+    },
+    "subtitle": "Transform your vocabulary learning with our scientifically-proven approach that adapts to your learning style.",
+    "step1": {
+      "title": "Create Your Wordlist",
+      "description": "Start by adding words you want to learn. Our AI instantly generates definitions, images, and audio for each word.",
+      "features": [
+        "AI-powered definitions in your target language",
+        "Custom images to enhance memory retention",
+        "Natural-sounding audio pronunciation",
+        "Example sentences with context"
+      ]
+    },
+    "step2": {
+      "title": "Practice with Smart Quizzes",
+      "description": "Engage with 8 different quiz modes designed to reinforce your learning from multiple angles.",
+      "features": [
+        "Multiple choice and fill-in-the-blank questions",
+        "Visual recognition challenges",
+        "Audio comprehension exercises",
+        "Adaptive difficulty based on your progress"
+      ]
+    },
+    "step3": {
+      "title": "Master with Spaced Repetition",
+      "description": "Our advanced Leitner system schedules reviews at optimal intervals to maximize retention.",
+      "features": [
+        "7-box progressive system",
+        "Intelligent review scheduling",
+        "Focus on challenging words",
+        "Long-term retention optimization"
+      ]
+    }
+  },
+  "analytics": {
+    "title": "Advanced Analytics Dashboard",
+    "subtitle": "Track your vocabulary mastery with comprehensive learning insights",
+    "stats": {
+      "wordsStudiedToday": "Words Studied Today",
+      "currentStreak": "Current Streak",
+      "wordsMastered": "Words Mastered",
+      "accuracyToday": "Accuracy Today",
+      "daysSuffix": " days"
+    },
+    "charts": {
+      "wordsStudied": "Words Studied",
+      "minutes": "Minutes",
+      "successRate": "Success Rate",
+      "words": "Words",
+      "weekDays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      "quizTypes": ["Guess Meaning", "Word from Meaning", "Image Association", "Audio Comprehension"],
+      "boxLabels": ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5", "Box 6", "Box 7"],
+      "box1": "Box 1",
+      "box2": "Box 2",
+      "box3": "Box 3",
+      "box4": "Box 4",
+      "box5": "Box 5",
+      "box6": "Box 6",
+      "box7": "Box 7",
+      "learningProgressTitle": "Learning Progress",
+      "wordsStudiedDescription": "Words studied over the last 7 days",
+      "practiceTimeTitle": "Practice Time",
+      "total": "Total",
+      "dailyAvg": "Daily Avg",
+      "quizPerformanceTitle": "Quiz Performance by Type",
+      "wordMasteryTitle": "Word Mastery Progress",
+      "currentBoxTitle": "Current Box Distribution",
+      "leitnerExplanation": "Leitner System: Words progress through 7 boxes based on your quiz performance. Box 1 contains new words, Box 7 contains mastered words.",
+      "boxProgressTitle": "7-Day Box Progress",
+      "box7Description": "Words in Box 7 (Mastered)",
+      "topWordsTitle": "Top Words by Mastery"
+    }
+  },
+  "cta": {
+    "title": "Ready to Transform Your Language Learning?",
+    "subtitle": "Master new languages with AI-powered vocabulary learning and spaced repetition.",
+    "subtitleWithCount": "Join {count}+ learners who are mastering new languages with AI-powered vocabulary learning and spaced repetition."
+  },
+  "footer": {
+    "heading": "Footer",
+    "support": "Support",
+    "copyright": "© {year} Decorebator. All rights reserved.",
+    "social": {
+      "facebook": "Decorebator on Facebook",
+      "twitter": "Decorebator on Twitter", 
+      "instagram": "Decorebator on Instagram",
+      "linkedin": "Decorebator on LinkedIn"
+    }
   }
 }

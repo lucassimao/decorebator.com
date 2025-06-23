@@ -117,19 +117,40 @@
     }
   },
   "howItWorks": {
-    "title": "簡単3ステップで語彙をマスター",
-    "subtitle": "科学に基づいたアプローチで効率的な学習",
+    "title": {
+      "part1": "簡単",
+      "part2": "3ステップ"
+    },
+    "subtitle": "学習スタイルに適応する科学的に証明されたアプローチで語彙学習を変革しましょう。",
     "step1": {
-      "title": "単語を追加",
-      "description": "学びたい単語を入力すると、AIが定義、画像、音声、例文を即座に生成します。"
+      "title": "単語リストを作成",
+      "description": "学習したい単語を追加することから始めます。私たちのAIが各単語の定義、画像、音声を瞬時に生成します。",
+      "features": [
+        "ターゲット言語でのAI搭載定義",
+        "記憶定着を強化するカスタム画像",
+        "自然な音声発音",
+        "文脈付きの例文"
+      ]
     },
     "step2": {
-      "title": "インタラクティブクイズ",
-      "description": "8つの異なるクイズモードで語彙を練習し、包括的な理解を確保します。"
+      "title": "スマートクイズで練習",
+      "description": "複数の角度から学習を強化するように設計された8つの異なるクイズモードに取り組みます。",
+      "features": [
+        "多肢選択問題と穴埋め問題",
+        "視覚認識チャレンジ",
+        "音声理解エクササイズ",
+        "進捗に基づく適応的難易度"
+      ]
     },
     "step3": {
-      "title": "間隔反復",
-      "description": "高度なライトナーシステムが最適なタイミングで単語を復習し、長期記憶を確保します。"
+      "title": "間隔反復でマスター",
+      "description": "私たちの高度なライトナーシステムが記憶定着を最大化するために最適な間隔で復習をスケジュールします。",
+      "features": [
+        "7ボックス段階的システム",
+        "インテリジェント復習スケジューリング",
+        "困難な単語への集中",
+        "長期記憶最適化"
+      ]
     }
   },
   "testimonials": {
@@ -260,6 +281,157 @@
         "question": "AIコンテンツ生成はどの程度信頼できますか？",
         "answer": "私たちのAIコンテンツ生成システムには複数の品質保証措置が含まれています：自動リトライロジック、レート制限、公正な使用分散により信頼できるコンテンツ作成を確保します。エラー報告システムにより、何かが学習ニーズに合わない場合、ユーザーは新しいコンテンツをリクエストできます。"
       }
+    }
+  },
+  "pricing": {
+    "title": {
+      "part1": "あなたの",
+      "part2": "学習プランを選択"
+    },
+    "subtitle": "無料で始めて、いつでもアップグレード。すべてのプランにAI搭載語彙強化と間隔反復が含まれます。",
+    "allPlansInclude": "✨ すべてのプランに含まれるもの",
+    "features": {
+      "aiContent": "AI搭載コンテンツ",
+      "spacedRepetition": "間隔反復",
+      "mobileAccess": "モバイルアプリアクセス",
+      "securePrivate": "安全・プライベート"
+    },
+    "footer": "契約なし • いつでもキャンセル • Stripeによる安全な支払い",
+    "plans": {
+      "free": {
+        "name": "無料",
+        "title": "無料プラン",
+        "price": "$0",
+        "period": "",
+        "description": "語彙学習を試すのに最適",
+        "features": [
+          "1つの単語リスト",
+          "最大10語",
+          "基本クイズモード",
+          "限定分析"
+        ],
+        "cta": "無料で始める"
+      },
+      "monthly": {
+        "name": "月額プレミアム",
+        "title": "月額プレミアム",
+        "price": "$6.99",
+        "period": "/月",
+        "description": "月額の柔軟性でフルアクセス",
+        "badge": "最も人気",
+        "features": [
+          "無制限の単語リスト",
+          "無制限の単語",
+          "8つのクイズモード全て",
+          "高度な分析",
+          "オフラインサポート"
+        ],
+        "cta": "月額を始める"
+      },
+      "annual": {
+        "name": "年額プレミアム",
+        "title": "年額プレミアム",
+        "price": "$69.90",
+        "period": "/年",
+        "description": "真剣な学習者にとって最高の価値",
+        "savings": "年間$13.98節約",
+        "features": [
+          "月額の全て",
+          "年間$13.98節約",
+          "機能への早期アクセス"
+        ],
+        "cta": "年額を始める"
+      }
+    }
+  },
+  "newFeatures": {
+    "title": {
+      "part1": "語彙をマスターするために",
+      "part2": "必要なすべて"
+    },
+    "subtitle": "当社の包括的なプラットフォームは、最先端のAI技術と実証済みの学習科学を組み合わせて、あなたの言語学習の旅を加速します。",
+    "items": {
+      "nativeLanguages": {
+        "title": "7つのネイティブAI言語",
+        "description": "英語、スペイン語、フランス語、ドイツ語、イタリア語、ポルトガル語、日本語での言語固有の文法ルールを持つネイティブAI処理。"
+      },
+      "aiContent": {
+        "title": "AI搭載コンテンツ生成",
+        "description": "高度なAIモデルを使用して、任意の単語の定義、例、画像、音声発音を自動生成します。"
+      },
+      "spacedRepetition": {
+        "title": "ライトナー間隔反復",
+        "description": "最大長期記憶保持のために単語を復習するタイミングを最適化する7つの復習ボックスを持つ科学的に実証されたシステム。"
+      },
+      "quizModes": {
+        "title": "8つの魅力的なクイズモード",
+        "description": "複数のクイズタイプ：意味マッチング、画像連想、音声理解、文章完成、定義から書く、その他。"
+      },
+      "visualLearning": {
+        "title": "AI画像による視覚学習",
+        "description": "AI生成画像は、より良い記憶保持のために単語を視覚的概念と関連付けるのに役立ちます。"
+      },
+      "multiLanguageAudio": {
+        "title": "多言語音声",
+        "description": "高度なテキスト読み上げによる言語最適化音声選択。各言語は本格的な発音のためにネイティブサウンドの音声を使用。"
+      },
+      "flashcards": {
+        "title": "インタラクティブフラッシュカード",
+        "description": "フリップアニメーション、豊富なコンテンツ表示、統合エラー報告を備えた没入型フルスクリーンフラッシュカード。"
+      },
+      "analytics": {
+        "title": "高度な分析",
+        "description": "単語習得レベル、学習速度、保持率、パフォーマンスインサイトによる包括的な進捗追跡。"
+      },
+      "errorReporting": {
+        "title": "エラー報告システム",
+        "description": "AIコンテンツ用の5つのエラータイプによるユーザー主導の品質管理。問題を報告し、自動コンテンツ再生成を取得。"
+      },
+      "offlineSupport": {
+        "title": "オフラインサポート",
+        "description": "プレミアムユーザーはオフラインアクセス用に単語リストをダウンロードできます。インターネット接続なしで完全なクイズ機能。"
+      }
+    }
+  },
+  "appShowcase": {
+    "title": {
+      "part1": "学習の",
+      "part2": "未来を体験"
+    },
+    "subtitle": "直感的なインターフェースとスマート機能により、語彙学習を魅力的で効率的、そして楽しいものにします。",
+    "features": {
+      "progressTracking": {
+        "title": "スマート進捗追跡",
+        "description": "詳細な分析、単語習得追跡、毎日の連続記録であなたの学習の旅を監視します。",
+        "tags": {
+          "wordMastery": "単語習得",
+          "boxDistribution": "ボックス分布",
+          "dailyStreaks": "毎日の連続"
+        }
+      },
+      "aiContent": {
+        "title": "多言語AIコンテンツ",
+        "description": "AIは適切な文法、文化的文脈、言語最適化音声でネイティブ言語コンテンツを生成します。",
+        "tags": {
+          "nativeDefinitions": "ネイティブ定義",
+          "culturalImages": "文化的画像",
+          "optimizedAudio": "最適化音声"
+        }
+      },
+      "leitnerSystem": {
+        "title": "高度なライトナーシステム",
+        "description": "あなたの学習ペースに適応し、復習タイミングを最適化する7ボックス間隔反復システム。",
+        "tags": {
+          "newWords": "ボックス1-2: 新規",
+          "learning": "ボックス3-5: 学習中",
+          "mastered": "ボックス6-7: 習得済み"
+        }
+      }
+    },
+    "demo": {
+      "videoAlt": "Decorebatorアプリデモ - クイズ機能、進捗追跡、学習フローを示すライブインタラクション",
+      "liveDemo": "ライブデモ！",
+      "seeInAction": "実際に見る"
     }
   },
   "cta": {
@@ -429,20 +601,142 @@
         "title": "いつでもどこでも学習",
         "subtitle": "インターネット接続なしで完全な学習体験"
       }
+    }
+  },
+  "pricing": {
+    "title": {
+      "part1": "学習プランを",
+      "part2": "選択"
     },
-    "analytics": {
-      "title": "詳細な学習分析",
-      "hero": {
-        "title": "データドリブンな学習最適化",
-        "subtitle": "進捗を追跡し、学習パターンを理解し、改善領域を特定"
-      }
+    "subtitle": "無料で始めて、いつでもアップグレード。すべてのプランにAI搭載語彙強化と間隔反復が含まれます。",
+    "allPlansInclude": "✨ すべてのプランに含まれる",
+    "features": {
+      "aiContent": "AIコンテンツ",
+      "spacedRepetition": "間隔反復",
+      "mobileAccess": "モバイルアプリアクセス",
+      "securePrivate": "安全でプライベート"
     },
-    "multiLanguage": {
-      "title": "7言語サポート",
-      "hero": {
-        "title": "多言語でのネイティブレベル学習",
-        "subtitle": "7つの言語でAI生成コンテンツを体験"
+    "footer": "契約なし • いつでもキャンセル • Stripe経由の安全な支払い",
+    "plans": {
+      "free": {
+        "name": "無料",
+        "title": "無料プラン",
+        "price": "$0",
+        "period": "",
+        "description": "語彙学習をお試しに最適",
+        "features": [
+          "1つの単語リスト",
+          "最大10語",
+          "基本クイズモード",
+          "限定分析"
+        ],
+        "cta": "無料で始める"
+      },
+      "monthly": {
+        "name": "月額プレミアム",
+        "title": "月額プレミアム",
+        "price": "$6.99",
+        "period": "/月",
+        "description": "月単位の柔軟性で完全アクセス",
+        "badge": "最も人気",
+        "features": [
+          "無制限の単語リスト",
+          "無制限の単語",
+          "8つのクイズモード全て",
+          "高度な分析",
+          "オフラインサポート"
+        ],
+        "cta": "月額を始める"
+      },
+      "annual": {
+        "name": "年額プレミアム",
+        "title": "年額プレミアム",
+        "price": "$69.90",
+        "period": "/年",
+        "description": "コミットした学習者に最高の価値",
+        "savings": "年間$13.98節約",
+        "features": [
+          "月額の全て",
+          "年間$13.98節約",
+          "機能への早期アクセス"
+        ],
+        "cta": "年額を始める"
       }
+    }
+  },
+  "analytics": {
+    "title": "高度な分析ダッシュボード",
+    "subtitle": "包括的な学習インサイトで語彙習得を追跡",
+    "stats": {
+      "wordsStudiedToday": "今日学習した単語",
+      "currentStreak": "現在の連続記録",
+      "wordsMastered": "習得した単語",
+      "accuracyToday": "今日の正答率",
+      "daysSuffix": " 日"
+    },
+    "charts": {
+      "wordsStudied": "学習した単語",
+      "minutes": "分",
+      "successRate": "成功率",
+      "words": "単語",
+      "weekDays": ["月", "火", "水", "木", "金", "土", "日"],
+      "quizTypes": ["意味推測", "定義から単語", "画像連想", "聴解"],
+      "boxLabels": ["ボックス1", "ボックス2", "ボックス3", "ボックス4", "ボックス5", "ボックス6", "ボックス7"],
+      "box1": "ボックス1",
+      "box2": "ボックス2",
+      "box3": "ボックス3",
+      "box4": "ボックス4",
+      "box5": "ボックス5",
+      "box6": "ボックス6",
+      "box7": "ボックス7",
+      "learningProgressTitle": "学習進捗",
+      "wordsStudiedDescription": "過去7日間に学習した単語",
+      "practiceTimeTitle": "練習時間",
+      "total": "合計",
+      "dailyAvg": "1日平均",
+      "quizPerformanceTitle": "タイプ別クイズパフォーマンス",
+      "wordMasteryTitle": "単語習得進捗",
+      "currentBoxTitle": "現在のボックス分布",
+      "leitnerExplanation": "ライトナーシステム：単語はクイズのパフォーマンスに基づいて7つのボックスを進んでいきます。ボックス1には新しい単語、ボックス7には習得済みの単語が含まれます。",
+      "boxProgressTitle": "7日間ボックス進捗",
+      "box7Description": "ボックス7の単語（習得済み）",
+      "topWordsTitle": "習得度別上位単語"
+    }
+  },
+  "cta": {
+    "title": "言語学習を変革する準備はできましたか？",
+    "subtitle": "AI搭載の語彙学習と間隔反復で新しい言語をマスターしましょう。",
+    "subtitleWithStats": "{count}+人の学習者がAI搭載の語彙学習と間隔反復で新しい言語をマスターしています。",
+    "videoTitle": "Decorebatorデモ - AI搭載語彙学習",
+    "startFreeTrial": "無料トライアルを始める"
+  },
+  "footer": {
+    "heading": "フッター",
+    "support": "サポート",
+    "copyright": "© {year} Decorebator. すべての権利を保有します。",
+    "screenReader": "フッター",
+    "navigation": {
+      "features": "機能",
+      "howItWorks": "使い方",
+      "pricing": "料金",
+      "faq": "よくある質問",
+      "support": "サポート",
+      "helpCenter": "ヘルプセンター",
+      "privacy": "プライバシーポリシー",
+      "terms": "利用規約"
+    },
+    "about": {
+      "title": "について",
+      "soloEntrepreneur": "個人起業家",
+      "location": "ブラジル 🇧🇷",
+      "description": "このプロジェクトのアーキテクチャ、完全な実装、デザインを担当。個人的な問題を解決し、他の人と共有することが興味深いと思いました。",
+      "followTwitter": "Twitterでフォロー"
+    },
+    "social": {
+      "facebook": "FacebookでDecorebator",
+      "twitter": "TwitterでDecorebator",
+      "instagram": "InstagramでDecorebator",
+      "linkedin": "LinkedInでDecorebator"
     }
   }
 }

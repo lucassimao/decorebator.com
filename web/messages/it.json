@@ -117,19 +117,37 @@
     }
   },
   "howItWorks": {
-    "title": "Padroneggia il vocabolario in 3 semplici passi",
-    "subtitle": "Approccio di apprendimento efficiente basato sulla scienza",
+    "title": {
+      "part1": "Il Tuo Percorso di Apprendimento in ",
+      "part2": "3 Semplici Passi"
+    },
+    "subtitle": "Il nostro processo semplificato rende l'apprendimento del vocabolario efficiente, coinvolgente ed efficace.",
     "step1": {
-      "title": "Aggiungi parole",
-      "description": "Inserisci parole che vuoi imparare e l'IA genera istantaneamente definizioni, immagini, audio ed esempi."
+      "title": "Crea la Tua Lista di Parole",
+      "description": "Aggiungi semplicemente le parole che vuoi imparare. La nostra IA genera istantaneamente materiali di apprendimento completi.",
+      "features": [
+        "Definizioni ed esempi generati dall'IA",
+        "Associazioni visive IA",
+        "Pronunce audio di alta qualità"
+      ]
     },
     "step2": {
-      "title": "Quiz interattivi",
-      "description": "Pratica il tuo vocabolario con 8 modalità quiz diverse per assicurare una comprensione completa."
+      "title": "Fai Quiz Coinvolgenti",
+      "description": "Pratica con 8 diverse modalità quiz che si adattano ai tuoi progressi di apprendimento.",
+      "features": [
+        "Abbinamento Significato ↔ Parola",
+        "Riconoscimento immagini e audio",
+        "Completamento frasi"
+      ]
     },
     "step3": {
-      "title": "Ripetizione distanziata",
-      "description": "Il sistema Leitner avanzato rivede le parole al momento ottimale, assicurando memoria a lungo termine."
+      "title": "Padroneggia con la Ripetizione",
+      "description": "Il nostro sistema Leitner a 7 scatole programma le revisioni a intervalli ottimali per la massima ritenzione.",
+      "features": [
+        "Programmazione revisioni adattiva",
+        "Monitoraggio progressi e approfondimenti",
+        "Focus sulla ritenzione a lungo termine"
+      ]
     }
   },
   "testimonials": {
@@ -260,6 +278,157 @@
         "question": "Quanto è affidabile la generazione di contenuti con IA?",
         "answer": "Il nostro sistema di generazione contenuti IA include multiple misure di garanzia qualità: logica retry automatico, limitazione velocità e distribuzione uso equo per assicurare creazione contenuti affidabile. Il sistema segnalazione errori permette agli utenti di richiedere nuovo contenuto se qualcosa non soddisfa le loro esigenze di apprendimento."
       }
+    }
+  },
+  "pricing": {
+    "title": {
+      "part1": "Scegli Il Tuo ",
+      "part2": "Piano di Apprendimento"
+    },
+    "subtitle": "Inizia gratis e aggiorna in qualsiasi momento. Tutti i piani includono arricchimento del vocabolario con IA e ripetizione distanziata.",
+    "allPlansInclude": "✨ Tutti i Piani Includono",
+    "features": {
+      "aiContent": "Contenuti con IA",
+      "spacedRepetition": "Ripetizione Distanziata",
+      "mobileAccess": "Accesso App Mobile",
+      "securePrivate": "Sicuro e Privato"
+    },
+    "footer": "Nessun contratto • Cancella in qualsiasi momento • Pagamento sicuro tramite Stripe",
+    "plans": {
+      "free": {
+        "name": "Gratuito",
+        "title": "Piano Gratuito",
+        "price": "$0",
+        "period": "",
+        "description": "Perfetto per provare l'apprendimento del vocabolario",
+        "features": [
+          "1 Lista di Parole",
+          "Fino a 10 Parole",
+          "Modalità Quiz Base",
+          "Analisi Limitate"
+        ],
+        "cta": "Inizia Gratis"
+      },
+      "monthly": {
+        "name": "Premium Mensile",
+        "title": "Premium Mensile",
+        "price": "$6.99",
+        "period": "/mese",
+        "description": "Accesso completo con flessibilità mensile",
+        "badge": "PIÙ POPOLARE",
+        "features": [
+          "Liste di Parole Illimitate",
+          "Parole Illimitate",
+          "Tutte le 8 Modalità Quiz",
+          "Analisi Avanzate",
+          "Supporto Offline"
+        ],
+        "cta": "Inizia Mensile"
+      },
+      "annual": {
+        "name": "Premium Annuale",
+        "title": "Premium Annuale",
+        "price": "$69.90",
+        "period": "/anno",
+        "description": "Miglior valore per studenti impegnati",
+        "savings": "Risparmia $13.98 all'anno",
+        "features": [
+          "Tutto del Mensile",
+          "Risparmia $13.98 all'anno",
+          "Accesso Anticipato alle Funzioni"
+        ],
+        "cta": "Inizia Annuale"
+      }
+    }
+  },
+  "newFeatures": {
+    "title": {
+      "part1": "Tutto Ciò Di Cui Hai Bisogno Per ",
+      "part2": "Padroneggiare il Vocabolario"
+    },
+    "subtitle": "La nostra piattaforma completa combina tecnologia IA all'avanguardia con scienza dell'apprendimento provata per accelerare il tuo viaggio linguistico.",
+    "items": {
+      "nativeLanguages": {
+        "title": "7 Lingue IA Native",
+        "description": "Elaborazione IA nativa in inglese, spagnolo, francese, tedesco, italiano, portoghese e giapponese con regole grammaticali specifiche per lingua."
+      },
+      "aiContent": {
+        "title": "Generazione di Contenuti con IA",
+        "description": "Genera automaticamente definizioni, esempi, immagini e pronunce audio per qualsiasi parola usando modelli IA avanzati."
+      },
+      "spacedRepetition": {
+        "title": "Ripetizione Distanziata Leitner",
+        "description": "Sistema scientificamente provato con 7 scatole di revisione che ottimizza quando rivedi le parole per massima ritenzione a lungo termine."
+      },
+      "quizModes": {
+        "title": "8 Modalità Quiz Coinvolgenti",
+        "description": "Multipli tipi di quiz: corrispondenza significati, associazione immagini, comprensione audio, completamento frasi, scrittura da definizione e altro."
+      },
+      "visualLearning": {
+        "title": "Apprendimento Visivo con Immagini IA",
+        "description": "Le immagini generate dall'IA ti aiutano ad associare parole con concetti visivi per migliore ritenzione memoria."
+      },
+      "multiLanguageAudio": {
+        "title": "Audio Multi-Lingua",
+        "description": "Selezione vocale ottimizzata per lingua con text-to-speech avanzato. Ogni lingua usa voci dal suono nativo per pronuncia autentica."
+      },
+      "flashcards": {
+        "title": "Flashcard Interattive",
+        "description": "Flashcard immersive a schermo intero con animazioni di capovolgimento, visualizzazione contenuti ricchi e segnalazione errori integrata."
+      },
+      "analytics": {
+        "title": "Analisi Avanzate",
+        "description": "Tracciamento completo del progresso con livelli padronanza parole, velocità apprendimento, tassi ritenzione e insights prestazioni."
+      },
+      "errorReporting": {
+        "title": "Sistema Segnalazione Errori",
+        "description": "Controllo qualità guidato dall'utente con 5 tipi errore per contenuti IA. Segnala problemi e ottieni rigenerazione automatica contenuti."
+      },
+      "offlineSupport": {
+        "title": "Supporto Offline",
+        "description": "Gli utenti premium possono scaricare liste parole per accesso offline. Funzionalità completa quiz senza connessione internet."
+      }
+    }
+  },
+  "appShowcase": {
+    "title": {
+      "part1": "Sperimenta il ",
+      "part2": "Futuro dell'Apprendimento"
+    },
+    "subtitle": "La nostra interfaccia intuitiva e le funzionalità intelligenti rendono l'apprendimento del vocabolario coinvolgente, efficiente e piacevole.",
+    "features": {
+      "progressTracking": {
+        "title": "Tracciamento Intelligente dei Progressi",
+        "description": "Monitora il tuo viaggio di apprendimento con analisi dettagliate, tracciamento padronanza parole e serie giornaliere.",
+        "tags": {
+          "wordMastery": "Padronanza Parole",
+          "boxDistribution": "Distribuzione Scatole",
+          "dailyStreaks": "Serie Giornaliere"
+        }
+      },
+      "aiContent": {
+        "title": "Contenuto IA Multi-Lingua",
+        "description": "L'IA genera contenuto in lingua nativa con grammatica appropriata, contesto culturale e voci ottimizzate per lingua.",
+        "tags": {
+          "nativeDefinitions": "Definizioni Native",
+          "culturalImages": "Immagini Culturali",
+          "optimizedAudio": "Audio Ottimizzato"
+        }
+      },
+      "leitnerSystem": {
+        "title": "Sistema Leitner Avanzato",
+        "description": "Sistema ripetizione distanziata a 7 scatole che si adatta al tuo ritmo apprendimento e ottimizza timing revisione.",
+        "tags": {
+          "newWords": "Scatola 1-2: Nuove",
+          "learning": "Scatola 3-5: Apprendimento",
+          "mastered": "Scatola 6-7: Padroneggiato"
+        }
+      }
+    },
+    "demo": {
+      "videoAlt": "Demo App Decorebator - Interazione dal vivo mostrando funzioni quiz, tracciamento progressi e flusso apprendimento",
+      "liveDemo": "Demo dal Vivo!",
+      "seeInAction": "Vedi in azione"
     }
   },
   "cta": {
@@ -429,20 +598,189 @@
         "title": "Impara ovunque, in qualsiasi momento",
         "subtitle": "Esperienza di apprendimento completa senza connessione internet"
       }
+    }
+  },
+  "pricing": {
+    "title": {
+      "part1": "Scegli Il Tuo ",
+      "part2": "Piano di Apprendimento"
     },
-    "analytics": {
-      "title": "Analisi dettagliate dell'apprendimento",
-      "hero": {
-        "title": "Ottimizzazione dell'apprendimento basata sui dati",
-        "subtitle": "Traccia i progressi, comprendi i schemi di apprendimento e identifica le aree di miglioramento"
+    "subtitle": "Inizia gratis e aggiorna in qualsiasi momento. Tutti i piani includono arricchimento del vocabolario alimentato dall'IA e ripetizione spaziata.",
+    "allPlansInclude": "✨ Tutti i Piani Includono",
+    "features": {
+      "aiContent": "Contenuti IA",
+      "spacedRepetition": "Ripetizione Spaziata",
+      "mobileAccess": "Accesso App Mobile",
+      "securePrivate": "Sicuro e Privato"
+    },
+    "footer": "Nessun contratto • Cancella in qualsiasi momento • Pagamento sicuro tramite Stripe",
+    "plans": {
+      "free": {
+        "name": "Gratuito",
+        "title": "Piano Gratuito",
+        "price": "$0",
+        "period": "",
+        "description": "Perfetto per provare l'apprendimento del vocabolario",
+        "features": [
+          "1 Lista di Parole",
+          "Fino a 10 Parole",
+          "Modalità Quiz Base",
+          "Analisi Limitate"
+        ],
+        "cta": "Inizia Gratis"
+      },
+      "monthly": {
+        "name": "Premium Mensile",
+        "title": "Premium Mensile",
+        "price": "$6.99",
+        "period": "/mese",
+        "description": "Accesso completo con flessibilità mensile",
+        "badge": "PIÙ POPOLARE",
+        "features": [
+          "Liste di Parole Illimitate",
+          "Parole Illimitate",
+          "Tutte le 8 Modalità Quiz",
+          "Analisi Avanzate",
+          "Supporto Offline"
+        ],
+        "cta": "Inizia Mensile"
+      },
+      "annual": {
+        "name": "Premium Annuale",
+        "title": "Premium Annuale",
+        "price": "$69.90",
+        "period": "/anno",
+        "description": "Miglior valore per studenti impegnati",
+        "savings": "Risparmia $13.98 all'anno",
+        "features": [
+          "Tutto del Mensile",
+          "Risparmia $13.98 all'anno",
+          "Accesso Anticipato alle Funzioni"
+        ],
+        "cta": "Inizia Annuale"
       }
+    }
+  },
+  "analytics": {
+    "title": "Dashboard di Analisi Avanzata",
+    "subtitle": "Monitora la tua padronanza del vocabolario con approfondimenti completi sull'apprendimento",
+    "stats": {
+      "wordsStudiedToday": "Parole Studiate Oggi",
+      "currentStreak": "Serie Attuale",
+      "wordsMastered": "Parole Padroneggiate",
+      "accuracyToday": "Precisione Oggi",
+      "daysSuffix": " giorni"
     },
+    "charts": {
+      "wordsStudied": "Parole Studiate",
+      "minutes": "Minuti",
+      "successRate": "Tasso di Successo",
+      "words": "Parole",
+      "weekDays": ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
+      "quizTypes": ["Indovina Significato", "Parola dal Significato", "Associazione Immagine", "Comprensione Audio"],
+      "boxLabels": ["Scatola 1", "Scatola 2", "Scatola 3", "Scatola 4", "Scatola 5", "Scatola 6", "Scatola 7"],
+      "box1": "Scatola 1",
+      "box2": "Scatola 2",
+      "box3": "Scatola 3",
+      "box4": "Scatola 4",
+      "box5": "Scatola 5",
+      "box6": "Scatola 6",
+      "box7": "Scatola 7",
+      "learningProgressTitle": "Progresso di Apprendimento",
+      "wordsStudiedDescription": "Parole studiate negli ultimi 7 giorni",
+      "practiceTimeTitle": "Tempo di Pratica",
+      "total": "Totale",
+      "dailyAvg": "Media Giornaliera",
+      "quizPerformanceTitle": "Performance Quiz per Tipo",
+      "wordMasteryTitle": "Progresso Padronanza Parole",
+      "currentBoxTitle": "Distribuzione Scatole Attuale",
+      "leitnerExplanation": "Sistema Leitner: Le parole progrediscono attraverso 7 scatole basate sulla tua performance nei quiz. La Scatola 1 contiene parole nuove, la Scatola 7 contiene parole padroneggiate.",
+      "boxProgressTitle": "Progresso Scatole 7 Giorni",
+      "box7Description": "Parole nella Scatola 7 (Padroneggiate)",
+      "topWordsTitle": "Parole Principali per Padronanza"
+    }
+  },
     "multiLanguage": {
       "title": "Supporto per 7 lingue",
       "hero": {
         "title": "Esperienza di apprendimento nativa in più lingue",
         "subtitle": "Sperimenta contenuti generati dall'IA in 7 lingue diverse"
       }
+    }
+  },
+  "cta": {
+    "title": "Pronto a Trasformare il Tuo Apprendimento Linguistico?",
+    "subtitle": "Padroneggia nuove lingue con l'apprendimento del vocabolario alimentato dall'IA e la ripetizione distanziata.",
+    "subtitleWithStats": "Unisciti a {count}+ studenti che stanno padroneggiando nuove lingue con l'apprendimento del vocabolario alimentato dall'IA e la ripetizione distanziata.",
+    "videoTitle": "Demo Decorebator - Apprendimento del Vocabolario Alimentato dall'IA",
+    "startFreeTrial": "Inizia la Tua Prova Gratuita"
+  },
+  "footer": {
+    "heading": "Piè di pagina",
+    "support": "Supporto",
+    "copyright": "© {year} Decorebator. Tutti i diritti riservati.",
+    "screenReader": "Piè di pagina",
+    "navigation": {
+      "features": "Caratteristiche",
+      "howItWorks": "Come Funziona",
+      "pricing": "Prezzi",
+      "faq": "FAQ",
+      "support": "Supporto",
+      "helpCenter": "Centro Assistenza",
+      "privacy": "Informativa sulla Privacy",
+      "terms": "Termini di Servizio"
+    },
+    "about": {
+      "title": "Chi Siamo",
+      "soloEntrepreneur": "Imprenditore Solitario",
+      "location": "Brasile 🇧🇷",
+      "description": "Responsabile dell'architettura, implementazione completa e design di questo progetto. Risolvendo un problema personale e ho pensato che sarebbe stato interessante condividerlo con altri.",
+      "followTwitter": "Segui su Twitter"
+    },
+    "social": {
+      "facebook": "Decorebator su Facebook",
+      "twitter": "Decorebator su Twitter", 
+      "instagram": "Decorebator su Instagram",
+      "linkedin": "Decorebator su LinkedIn"
+    }
+  },
+  "analytics": {
+    "title": "Dashboard di Analisi Avanzata",
+    "subtitle": "Monitora la tua padronanza del vocabolario con approfondimenti completi sull'apprendimento",
+    "stats": {
+      "wordsStudiedToday": "Parole Studiate Oggi",
+      "currentStreak": "Serie Attuale",
+      "wordsMastered": "Parole Padroneggiate",
+      "accuracyToday": "Precisione Oggi",
+      "daysSuffix": " giorni"
+    },
+    "charts": {
+      "wordsStudied": "Parole Studiate",
+      "minutes": "Minuti",
+      "successRate": "Tasso di Successo",
+      "words": "Parole",
+      "weekDays": ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
+      "quizTypes": ["Indovina Significato", "Parola dal Significato", "Associazione Immagine", "Comprensione Audio"],
+      "boxLabels": ["Scatola 1", "Scatola 2", "Scatola 3", "Scatola 4", "Scatola 5", "Scatola 6", "Scatola 7"],
+      "box1": "Scatola 1",
+      "box2": "Scatola 2",
+      "box3": "Scatola 3",
+      "box4": "Scatola 4",
+      "box5": "Scatola 5",
+      "box6": "Scatola 6",
+      "box7": "Scatola 7",
+      "learningProgressTitle": "Progresso di Apprendimento",
+      "wordsStudiedDescription": "Parole studiate negli ultimi 7 giorni",
+      "practiceTimeTitle": "Tempo di Pratica",
+      "total": "Totale",
+      "dailyAvg": "Media Giornaliera",
+      "quizPerformanceTitle": "Performance Quiz per Tipo",
+      "wordMasteryTitle": "Progresso Padronanza Parole",
+      "currentBoxTitle": "Distribuzione Scatole Attuale",
+      "leitnerExplanation": "Sistema Leitner: Le parole progrediscono attraverso 7 scatole basate sulla tua performance nei quiz. La Scatola 1 contiene parole nuove, la Scatola 7 contiene parole padroneggiate.",
+      "boxProgressTitle": "Progresso Scatole 7 Giorni",
+      "box7Description": "Parole nella Scatola 7 (Padroneggiate)",
+      "topWordsTitle": "Parole Principali per Padronanza"
     }
   }
 }

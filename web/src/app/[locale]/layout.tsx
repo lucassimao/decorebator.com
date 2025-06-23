@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
-import {NextIntlClientProvider} from 'next-intl';
-import {routing} from '../../../i18n';
-import {notFound} from 'next/navigation';
 import { AppStoreModalProvider } from '@/components/common/AppStoreModalProvider';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import StructuredData from '@/components/seo/StructuredData';
+import type { Metadata } from "next";
+import { hasLocale, NextIntlClientProvider } from 'next-intl';
+import { notFound } from 'next/navigation';
+import { routing } from '../../../i18n';
 
 export async function generateMetadata({
   params
@@ -88,18 +88,15 @@ export default async function LocaleLayout({
 }) {
   const {locale} = await params;
   
-  // Validate locale
-  if (!routing.locales.includes(locale as typeof routing.locales[number])) {
+  // Ensure that the incoming `locale` is valid
+  if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
-
-  // Load messages directly
-  const messages = (await import(`../../../messages/${locale}.json`)).default;
-
+ 
   return (
     <html lang={locale}>
       <body>
-        <NextIntlClientProvider messages={messages} locale={locale}>
+        <NextIntlClientProvider>
           <AppStoreModalProvider>
             <StructuredData type="website" />
             {children}

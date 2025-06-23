@@ -117,19 +117,37 @@
     }
   },
   "howItWorks": {
-    "title": "Maîtrisez le vocabulaire en 3 étapes simples",
-    "subtitle": "Approche d'apprentissage efficace basée sur la science",
+    "title": {
+      "part1": "Votre Parcours d'Apprentissage en ",
+      "part2": "3 Étapes Simples"
+    },
+    "subtitle": "Notre processus simplifié rend l'apprentissage du vocabulaire efficace, engageant et efficace.",
     "step1": {
-      "title": "Ajouter des mots",
-      "description": "Saisissez les mots que vous voulez apprendre et l'IA génère instantanément des définitions, images, audio et exemples."
+      "title": "Créez Votre Liste de Mots",
+      "description": "Ajoutez simplement des mots que vous voulez apprendre. Notre IA génère instantanément des matériels d'apprentissage complets.",
+      "features": [
+        "Définitions et exemples générés par IA",
+        "Associations visuelles IA",
+        "Prononciations audio de haute qualité"
+      ]
     },
     "step2": {
-      "title": "Quiz interactifs",
-      "description": "Pratiquez votre vocabulaire avec 8 modes de quiz différents pour assurer une compréhension complète."
+      "title": "Pratiquez avec des Quiz Engageants",
+      "description": "Pratiquez avec 8 modes de quiz différents qui s'adaptent à vos progrès d'apprentissage.",
+      "features": [
+        "Correspondance Signification ↔ Mot",
+        "Reconnaissance image et audio",
+        "Complétion de phrases"
+      ]
     },
     "step3": {
-      "title": "Répétition espacée",
-      "description": "Le système Leitner avancé révise les mots au moment optimal, assurant une mémoire à long terme."
+      "title": "Maîtrisez avec la Répétition",
+      "description": "Notre système Leitner à 7 boîtes programme les révisions à des intervalles optimaux pour une rétention maximale.",
+      "features": [
+        "Programmation de révision adaptative",
+        "Suivi des progrès et insights",
+        "Focus sur la rétention à long terme"
+      ]
     }
   },
   "testimonials": {
@@ -262,63 +280,192 @@
       }
     }
   },
+  "pricing": {
+    "title": {
+      "part1": "Choisissez Votre ",
+      "part2": "Plan d'Apprentissage"
+    },
+    "subtitle": "Commencez gratuitement et mettez à niveau à tout moment. Tous les plans incluent l'enrichissement du vocabulaire par IA et la répétition espacée.",
+    "allPlansInclude": "✨ Tous les Plans Incluent",
+    "features": {
+      "aiContent": "Contenu par IA",
+      "spacedRepetition": "Répétition Espacée",
+      "mobileAccess": "Accès App Mobile",
+      "securePrivate": "Sûr et Privé"
+    },
+    "footer": "Aucun contrat • Annulez à tout moment • Paiement sécurisé via Stripe",
+    "plans": {
+      "free": {
+        "name": "Gratuit",
+        "title": "Plan Gratuit",
+        "price": "$0",
+        "period": "",
+        "description": "Parfait pour essayer l'apprentissage du vocabulaire",
+        "features": [
+          "1 Liste de Mots",
+          "Jusqu'à 10 Mots",
+          "Modes Quiz de Base",
+          "Analyses Limitées"
+        ],
+        "cta": "Commencer Gratuitement"
+      },
+      "monthly": {
+        "name": "Premium Mensuel",
+        "title": "Premium Mensuel",
+        "price": "$6.99",
+        "period": "/mois",
+        "description": "Accès complet avec flexibilité mensuelle",
+        "badge": "PLUS POPULAIRE",
+        "features": [
+          "Listes de Mots Illimitées",
+          "Mots Illimités",
+          "Les 8 Modes de Quiz",
+          "Analyses Avancées",
+          "Support Hors Ligne"
+        ],
+        "cta": "Commencer Mensuel"
+      },
+      "annual": {
+        "name": "Premium Annuel",
+        "title": "Premium Annuel",
+        "price": "$69.90",
+        "period": "/an",
+        "description": "Meilleure valeur pour les apprenants engagés",
+        "savings": "Économisez $13.98 par an",
+        "features": [
+          "Tout du Mensuel",
+          "Économisez $13.98 par an",
+          "Accès Anticipé aux Fonctionnalités"
+        ],
+        "cta": "Commencer Annuel"
+      }
+    }
+  },
+  "newFeatures": {
+    "title": {
+      "part1": "Tout Ce Dont Vous Avez Besoin Pour ",
+      "part2": "Maîtriser le Vocabulaire"
+    },
+    "subtitle": "Notre plateforme complète combine une technologie IA de pointe avec une science d'apprentissage éprouvée pour accélérer votre parcours linguistique.",
+    "items": {
+      "nativeLanguages": {
+        "title": "7 Langues IA Natives",
+        "description": "Traitement IA natif en anglais, espagnol, français, allemand, italien, portugais et japonais avec des règles grammaticales spécifiques aux langues."
+      },
+      "aiContent": {
+        "title": "Génération de Contenu par IA",
+        "description": "Génère automatiquement des définitions, exemples, images et prononciations audio pour tout mot en utilisant des modèles IA avancés."
+      },
+      "spacedRepetition": {
+        "title": "Répétition Espacée Leitner",
+        "description": "Système scientifiquement prouvé avec 7 boîtes de révision qui optimise quand vous révisez les mots pour une rétention maximale à long terme."
+      },
+      "quizModes": {
+        "title": "8 Modes de Quiz Engageants",
+        "description": "Multiples types de quiz : correspondance de significations, association d'images, compréhension audio, complétion de phrases, écriture de définition et plus."
+      },
+      "visualLearning": {
+        "title": "Apprentissage Visuel avec Images IA",
+        "description": "Les images générées par IA vous aident à associer les mots avec des concepts visuels pour une meilleure rétention mémoire."
+      },
+      "multiLanguageAudio": {
+        "title": "Audio Multi-Langues",
+        "description": "Sélection vocale optimisée par langue avec synthèse vocale avancée. Chaque langue utilise des voix au son natif pour une prononciation authentique."
+      },
+      "flashcards": {
+        "title": "Cartes Mémoire Interactives",
+        "description": "Cartes mémoire immersives plein écran avec animations de retournement, affichage de contenu riche et rapport d'erreurs intégré."
+      },
+      "analytics": {
+        "title": "Analyses Avancées",
+        "description": "Suivi complet des progrès avec niveaux de maîtrise des mots, vitesse d'apprentissage, taux de rétention et insights de performance."
+      },
+      "errorReporting": {
+        "title": "Système de Signalement d'Erreurs",
+        "description": "Contrôle qualité dirigé par l'utilisateur avec 5 types d'erreur pour le contenu IA. Signalez des problèmes et obtenez une régénération automatique de contenu."
+      },
+      "offlineSupport": {
+        "title": "Support Hors Ligne",
+        "description": "Les utilisateurs premium peuvent télécharger des listes de mots pour accès hors ligne. Fonctionnalité complète de quiz sans connexion internet."
+      }
+    }
+  },
+  "appShowcase": {
+    "title": {
+      "part1": "Découvrez le ",
+      "part2": "Futur de l'Apprentissage"
+    },
+    "subtitle": "Notre interface intuitive et nos fonctionnalités intelligentes rendent l'apprentissage du vocabulaire engageant, efficace et agréable.",
+    "features": {
+      "progressTracking": {
+        "title": "Suivi Intelligent des Progrès",
+        "description": "Surveillez votre parcours d'apprentissage avec des analyses détaillées, suivi de maîtrise des mots et séries quotidiennes.",
+        "tags": {
+          "wordMastery": "Maîtrise des Mots",
+          "boxDistribution": "Distribution des Boîtes",
+          "dailyStreaks": "Séries Quotidiennes"
+        }
+      },
+      "aiContent": {
+        "title": "Contenu IA Multi-Langues",
+        "description": "L'IA génère du contenu en langue native avec grammaire appropriée, contexte culturel et voix optimisées pour la langue.",
+        "tags": {
+          "nativeDefinitions": "Définitions Natives",
+          "culturalImages": "Images Culturelles",
+          "optimizedAudio": "Audio Optimisé"
+        }
+      },
+      "leitnerSystem": {
+        "title": "Système Leitner Avancé",
+        "description": "Système de répétition espacée à 7 boîtes qui s'adapte à votre rythme d'apprentissage et optimise le timing de révision.",
+        "tags": {
+          "newWords": "Boîte 1-2: Nouveaux",
+          "learning": "Boîte 3-5: Apprentissage",
+          "mastered": "Boîte 6-7: Maîtrisés"
+        }
+      }
+    },
+    "demo": {
+      "videoAlt": "Démo App Decorebator - Interaction en direct montrant les fonctions quiz, suivi des progrès et flux d'apprentissage",
+      "liveDemo": "Démo en Direct !",
+      "seeInAction": "Voir en action"
+    }
+  },
   "cta": {
-    "title": "Commencez votre révolution d'apprentissage du vocabulaire aujourd'hui",
-    "subtitle": "Accélérez votre apprentissage des langues avec du contenu alimenté par IA et une répétition espacée scientifiquement prouvée",
-    "primaryButton": "Commencer gratuitement",
-    "secondaryButton": "Voir la démo",
-    "features": [
-      "Définitions, images et audio générés par IA",
-      "8 modes de quiz interactifs",
-      "Système avancé de répétition espacée",
-      "Analyses détaillées des progrès"
-    ]
+    "title": "Prêt à Transformer Votre Apprentissage des Langues ?",
+    "subtitle": "Maîtrisez de nouvelles langues avec l'apprentissage de vocabulaire alimenté par IA et la répétition espacée.",
+    "subtitleWithStats": "Rejoignez {count}+ apprenants qui maîtrisent de nouvelles langues avec l'apprentissage de vocabulaire alimenté par IA et la répétition espacée.",
+    "videoTitle": "Démo Decorebator - Apprentissage de Vocabulaire Alimenté par IA",
+    "startFreeTrial": "Commencer Votre Essai Gratuit"
   },
   "footer": {
-    "tagline": "Plateforme d'apprentissage du vocabulaire alimentée par IA",
-    "description": "Révolutionnez votre apprentissage du vocabulaire avec une technologie IA avancée et une répétition espacée scientifiquement prouvée.",
-    "product": {
-      "title": "Produit",
+    "heading": "Pied de page",
+    "support": "Support",
+    "copyright": "© {year} Decorebator. Tous droits réservés.",
+    "screenReader": "Pied de page",
+    "navigation": {
       "features": "Fonctionnalités",
+      "howItWorks": "Comment Ça Marche",
       "pricing": "Tarifs",
-      "howItWorks": "Comment ça marche",
-      "downloadApp": "Télécharger l'App"
-    },
-    "support": {
-      "title": "Support",
-      "helpCenter": "Centre d'aide",
       "faq": "FAQ",
-      "contact": "Contact",
-      "feedback": "Commentaires"
+      "support": "Support",
+      "helpCenter": "Centre d'Aide",
+      "privacy": "Politique de Confidentialité",
+      "terms": "Conditions d'Utilisation"
     },
-    "company": {
-      "title": "Entreprise",
-      "about": "À propos",
-      "blog": "Blog",
-      "careers": "Carrières",
-      "press": "Presse"
-    },
-    "legal": {
-      "title": "Légal",
-      "privacy": "Politique de confidentialité",
-      "terms": "Conditions d'utilisation",
-      "cookies": "Paramètres des cookies"
+    "about": {
+      "title": "À Propos",
+      "soloEntrepreneur": "Entrepreneur Solo",
+      "location": "Brésil 🇧🇷",
+      "description": "Responsable de l'architecture, de l'implémentation complète et du design de ce projet. Résoudre un problème personnel et penser qu'il serait intéressant de le partager avec d'autres.",
+      "followTwitter": "Suivre sur Twitter"
     },
     "social": {
-      "title": "Réseaux sociaux",
-      "twitter": "Twitter",
-      "facebook": "Facebook",
-      "instagram": "Instagram",
-      "linkedin": "LinkedIn"
-    },
-    "newsletter": {
-      "title": "S'abonner à la newsletter",
-      "description": "Recevez les dernières fonctionnalités, conseils d'apprentissage et meilleures pratiques pour l'apprentissage des langues",
-      "placeholder": "Entrez votre email",
-      "button": "S'abonner",
-      "success": "Merci de vous être abonné !"
-    },
-    "copyright": "© 2024 Decorebator. Tous droits réservés."
+      "facebook": "Decorebator sur Facebook",
+      "twitter": "Decorebator sur Twitter",
+      "instagram": "Decorebator sur Instagram",
+      "linkedin": "Decorebator sur LinkedIn"
+    }
   },
   "contact": {
     "title": "Contactez-nous",
@@ -431,10 +578,42 @@
       }
     },
     "analytics": {
-      "title": "Analyses détaillées d'apprentissage",
-      "hero": {
-        "title": "Optimisation d'apprentissage basée sur les données",
-        "subtitle": "Suivez les progrès, comprenez les habitudes d'apprentissage et identifiez les domaines d'amélioration"
+      "title": "Tableau de Bord Analytique Avancé",
+      "subtitle": "Suivez votre maîtrise du vocabulaire avec des insights d'apprentissage complets",
+      "stats": {
+        "wordsStudiedToday": "Mots Étudiés Aujourd'hui",
+        "currentStreak": "Série Actuelle",
+        "wordsMastered": "Mots Maîtrisés",
+        "accuracyToday": "Précision Aujourd'hui",
+        "daysSuffix": " jours"
+      },
+      "charts": {
+        "wordsStudied": "Mots Étudiés",
+        "minutes": "Minutes",
+        "successRate": "Taux de Réussite",
+        "words": "Mots",
+        "weekDays": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
+        "quizTypes": ["Deviner le Sens", "Mot du Sens", "Association d'Image", "Compréhension Auditive"],
+        "boxLabels": ["Boîte 1", "Boîte 2", "Boîte 3", "Boîte 4", "Boîte 5", "Boîte 6", "Boîte 7"],
+        "box1": "Boîte 1",
+        "box2": "Boîte 2",
+        "box3": "Boîte 3",
+        "box4": "Boîte 4",
+        "box5": "Boîte 5",
+        "box6": "Boîte 6",
+        "box7": "Boîte 7",
+        "learningProgressTitle": "Progrès d'Apprentissage",
+        "wordsStudiedDescription": "Mots étudiés au cours des 7 derniers jours",
+        "practiceTimeTitle": "Temps de Pratique",
+        "total": "Total",
+        "dailyAvg": "Moy. Quotidienne",
+        "quizPerformanceTitle": "Performance de Quiz par Type",
+        "wordMasteryTitle": "Progrès de Maîtrise des Mots",
+        "currentBoxTitle": "Distribution Actuelle des Boîtes",
+        "leitnerExplanation": "Système Leitner : Les mots progressent à travers 7 boîtes selon vos performances de quiz. La Boîte 1 contient les nouveaux mots, la Boîte 7 contient les mots maîtrisés.",
+        "boxProgressTitle": "Progrès des Boîtes sur 7 Jours",
+        "box7Description": "Mots dans la Boîte 7 (Maîtrisés)",
+        "topWordsTitle": "Top Mots par Maîtrise"
       }
     },
     "multiLanguage": {
@@ -443,6 +622,106 @@
         "title": "Expérience d'apprentissage native en plusieurs langues",
         "subtitle": "Découvrez du contenu généré par IA dans 7 langues différentes"
       }
+    }
+  },
+  "pricing": {
+    "title": {
+      "part1": "Choisissez Votre ",
+      "part2": "Plan d'Apprentissage"
+    },
+    "subtitle": "Commencez gratuitement et mettez à niveau à tout moment. Tous les plans incluent l'enrichissement de vocabulaire alimenté par l'IA et la répétition espacée.",
+    "allPlansInclude": "✨ Tous les Plans Incluent",
+    "features": {
+      "aiContent": "Contenu IA",
+      "spacedRepetition": "Répétition Espacée",
+      "mobileAccess": "Accès App Mobile",
+      "securePrivate": "Sécurisé et Privé"
+    },
+    "footer": "Aucun contrat • Annulez à tout moment • Paiement sécurisé via Stripe",
+    "plans": {
+      "free": {
+        "name": "Gratuit",
+        "title": "Plan Gratuit",
+        "price": "$0",
+        "period": "",
+        "description": "Parfait pour tester l'apprentissage de vocabulaire",
+        "features": [
+          "1 Liste de Mots",
+          "Jusqu'à 10 Mots",
+          "Modes Quiz de Base",
+          "Analyses Limitées"
+        ],
+        "cta": "Commencer Gratuitement"
+      },
+      "monthly": {
+        "name": "Premium Mensuel",
+        "title": "Premium Mensuel",
+        "price": "$6.99",
+        "period": "/mois",
+        "description": "Accès complet avec flexibilité mensuelle",
+        "badge": "PLUS POPULAIRE",
+        "features": [
+          "Listes de Mots Illimitées",
+          "Mots Illimités",
+          "Les 8 Modes de Quiz",
+          "Analyses Avancées",
+          "Support Hors Ligne"
+        ],
+        "cta": "Commencer Mensuel"
+      },
+      "annual": {
+        "name": "Premium Annuel",
+        "title": "Premium Annuel",
+        "price": "$69.90",
+        "period": "/an",
+        "description": "Meilleure valeur pour les apprenants engagés",
+        "savings": "Économisez $13.98 par an",
+        "features": [
+          "Tout du Mensuel",
+          "Économisez $13.98 par an",
+          "Accès Anticipé aux Fonctionnalités"
+        ],
+        "cta": "Commencer Annuel"
+      }
+    }
+  },
+  "analytics": {
+    "title": "Tableau de Bord Analytique Avancé",
+    "subtitle": "Suivez votre maîtrise du vocabulaire avec des insights d'apprentissage complets",
+    "stats": {
+      "wordsStudiedToday": "Mots Étudiés Aujourd'hui",
+      "currentStreak": "Série Actuelle",
+      "wordsMastered": "Mots Maîtrisés",
+      "accuracyToday": "Précision Aujourd'hui",
+      "daysSuffix": " jours"
+    },
+    "charts": {
+      "wordsStudied": "Mots Étudiés",
+      "minutes": "Minutes",
+      "successRate": "Taux de Réussite",
+      "words": "Mots",
+      "weekDays": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
+      "quizTypes": ["Deviner le Sens", "Mot du Sens", "Association d'Image", "Compréhension Auditive"],
+      "boxLabels": ["Boîte 1", "Boîte 2", "Boîte 3", "Boîte 4", "Boîte 5", "Boîte 6", "Boîte 7"],
+      "box1": "Boîte 1",
+      "box2": "Boîte 2",
+      "box3": "Boîte 3",
+      "box4": "Boîte 4",
+      "box5": "Boîte 5",
+      "box6": "Boîte 6",
+      "box7": "Boîte 7",
+      "learningProgressTitle": "Progrès d'Apprentissage",
+      "wordsStudiedDescription": "Mots étudiés au cours des 7 derniers jours",
+      "practiceTimeTitle": "Temps de Pratique",
+      "total": "Total",
+      "dailyAvg": "Moy. Quotidienne",
+      "quizPerformanceTitle": "Performance de Quiz par Type",
+      "wordMasteryTitle": "Progrès de Maîtrise des Mots",
+      "currentBoxTitle": "Distribution Actuelle des Boîtes",
+      "leitnerExplanation": "Système Leitner : Les mots progressent à travers 7 boîtes selon vos performances de quiz. La Boîte 1 contient les nouveaux mots, la Boîte 7 contient les mots maîtrisés.",
+      "boxProgressTitle": "Progrès des Boîtes sur 7 Jours",
+      "box7Description": "Mots dans la Boîte 7 (Maîtrisés)",
+      "topWordsTitle": "Top Mots par Maîtrise"
     }
   }
 }

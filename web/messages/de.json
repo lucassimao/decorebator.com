@@ -117,19 +117,40 @@
     }
   },
   "howItWorks": {
-    "title": "Meistere Vokabeln in 3 einfachen Schritten",
-    "subtitle": "Effizienter Lernansatz basierend auf Wissenschaft",
+    "title": {
+      "part1": "Ihre Lernreise in ",
+      "part2": "3 einfachen Schritten"
+    },
+    "subtitle": "Transformieren Sie Ihr Vokabellernen mit unserem wissenschaftlich bewährten Ansatz, der sich an Ihren Lernstil anpasst.",
     "step1": {
-      "title": "Wörter hinzufügen",
-      "description": "Gib Wörter ein, die du lernen möchtest, und die KI generiert sofort Definitionen, Bilder, Audio und Beispiele."
+      "title": "Erstellen Sie Ihre Wortliste",
+      "description": "Beginnen Sie mit dem Hinzufügen von Wörtern, die Sie lernen möchten. Unsere KI generiert sofort Definitionen, Bilder und Audio für jedes Wort.",
+      "features": [
+        "KI-gestützte Definitionen in Ihrer Zielsprache",
+        "Individuelle Bilder zur Verbesserung der Gedächtnisleistung",
+        "Natürlich klingende Audioaussprache",
+        "Beispielsätze mit Kontext"
+      ]
     },
     "step2": {
-      "title": "Interaktive Quiz",
-      "description": "Übe deine Vokabeln mit 8 verschiedenen Quiz-Modi, um umfassendes Verständnis sicherzustellen."
+      "title": "Üben mit intelligenten Quiz",
+      "description": "Beschäftigen Sie sich mit 8 verschiedenen Quiz-Modi, die darauf ausgelegt sind, Ihr Lernen aus mehreren Blickwinkeln zu verstärken.",
+      "features": [
+        "Multiple-Choice- und Lückentextfragen",
+        "Visuelle Erkennungsherausforderungen",
+        "Hörverständnisübungen",
+        "Adaptive Schwierigkeit basierend auf Ihrem Fortschritt"
+      ]
     },
     "step3": {
-      "title": "Wiederholung mit Abstand",
-      "description": "Das erweiterte Leitner-System wiederholt Wörter zur optimalen Zeit und gewährleistet Langzeitgedächtnis."
+      "title": "Meistern mit Wiederholung mit Abständen",
+      "description": "Unser fortschrittliches Leitner-System plant Wiederholungen in optimalen Intervallen, um die Behaltensleistung zu maximieren.",
+      "features": [
+        "7-Box-Progressionssystem",
+        "Intelligente Wiederholungsplanung",
+        "Fokus auf herausfordernde Wörter",
+        "Optimierung der Langzeitbehaltung"
+      ]
     }
   },
   "testimonials": {
@@ -262,63 +283,192 @@
       }
     }
   },
+  "pricing": {
+    "title": {
+      "part1": "Wählen Sie Ihren ",
+      "part2": "Lernplan"
+    },
+    "subtitle": "Kostenlos starten und jederzeit upgraden. Alle Pläne beinhalten KI-gestützte Vokabelanreicherung und Wiederholung mit Abstand.",
+    "allPlansInclude": "✨ Alle Pläne Beinhalten",
+    "features": {
+      "aiContent": "KI-gestützte Inhalte",
+      "spacedRepetition": "Wiederholung mit Abstand",
+      "mobileAccess": "Mobile App Zugang",
+      "securePrivate": "Sicher & Privat"
+    },
+    "footer": "Keine Verträge • Jederzeit kündbar • Sichere Zahlung über Stripe",
+    "plans": {
+      "free": {
+        "name": "Kostenlos",
+        "title": "Kostenloser Plan",
+        "price": "$0",
+        "period": "",
+        "description": "Perfekt zum Ausprobieren des Vokabellernens",
+        "features": [
+          "1 Wortliste",
+          "Bis zu 10 Wörter",
+          "Basis Quiz-Modi",
+          "Begrenzte Analysen"
+        ],
+        "cta": "Kostenlos Starten"
+      },
+      "monthly": {
+        "name": "Monatlich Premium",
+        "title": "Monatlich Premium",
+        "price": "$6.99",
+        "period": "/Monat",
+        "description": "Vollzugang mit monatlicher Flexibilität",
+        "badge": "BELIEBTESTE",
+        "features": [
+          "Unbegrenzte Wortlisten",
+          "Unbegrenzte Wörter",
+          "Alle 8 Quiz-Modi",
+          "Erweiterte Analysen",
+          "Offline-Unterstützung"
+        ],
+        "cta": "Monatlich Starten"
+      },
+      "annual": {
+        "name": "Jährlich Premium",
+        "title": "Jährlich Premium",
+        "price": "$69.90",
+        "period": "/Jahr",
+        "description": "Bester Wert für engagierte Lernende",
+        "savings": "Sparen Sie $13.98 pro Jahr",
+        "features": [
+          "Alles vom Monatlichen",
+          "Sparen Sie $13.98 pro Jahr",
+          "Früher Zugang zu Features"
+        ],
+        "cta": "Jährlich Starten"
+      }
+    }
+  },
+  "newFeatures": {
+    "title": {
+      "part1": "Alles Was Sie Brauchen Um ",
+      "part2": "Vokabeln Zu Meistern"
+    },
+    "subtitle": "Unsere umfassende Plattform kombiniert modernste KI-Technologie mit bewährter Lernwissenschaft, um Ihre Sprachreise zu beschleunigen.",
+    "items": {
+      "nativeLanguages": {
+        "title": "7 Native KI-Sprachen",
+        "description": "Native KI-Verarbeitung in Englisch, Spanisch, Französisch, Deutsch, Italienisch, Portugiesisch und Japanisch mit sprachspezifischen Grammatikregeln."
+      },
+      "aiContent": {
+        "title": "KI-Gestützte Inhaltserstellung",
+        "description": "Generiert automatisch Definitionen, Beispiele, Bilder und Audioaussprachen für jedes Wort mit fortschrittlichen KI-Modellen."
+      },
+      "spacedRepetition": {
+        "title": "Leitner Wiederholung mit Abstand",
+        "description": "Wissenschaftlich bewährtes System mit 7 Wiederholungskästen, das optimiert, wann Sie Wörter für maximale Langzeitbehalten wiederholen."
+      },
+      "quizModes": {
+        "title": "8 Fesselnde Quiz-Modi",
+        "description": "Mehrere Quiz-Typen: Bedeutungsabgleich, Bildassoziation, Hörverständnis, Satzvervollständigung, Schreiben von Definition und mehr."
+      },
+      "visualLearning": {
+        "title": "Visuelles Lernen mit KI-Bildern",
+        "description": "KI-generierte Bilder helfen Ihnen, Wörter mit visuellen Konzepten für bessere Gedächtnisbehalten zu verknüpfen."
+      },
+      "multiLanguageAudio": {
+        "title": "Mehrsprachiges Audio",
+        "description": "Sprachoptimierte Stimmauswahl mit fortschrittlicher Text-zu-Sprache. Jede Sprache verwendet nativ klingende Stimmen für authentische Aussprache."
+      },
+      "flashcards": {
+        "title": "Interaktive Lernkarten",
+        "description": "Immersive Vollbild-Lernkarten mit Umdreh-Animationen, reiche Inhaltsanzeige und integrierte Fehlermeldung."
+      },
+      "analytics": {
+        "title": "Erweiterte Analysen",
+        "description": "Umfassende Fortschrittsverfolgung mit Wortbeherrschungsebenen, Lerngeschwindigkeit, Behaltenraten und Leistungseinblicken."
+      },
+      "errorReporting": {
+        "title": "Fehlermeldungssystem",
+        "description": "Benutzergesteuerte Qualitätskontrolle mit 5 Fehlertypen für KI-Inhalte. Melden Sie Probleme und erhalten Sie automatische Inhaltsregeneration."
+      },
+      "offlineSupport": {
+        "title": "Offline-Unterstützung",
+        "description": "Premium-Nutzer können Wortlisten für Offline-Zugriff herunterladen. Vollständige Quiz-Funktionalität ohne Internetverbindung."
+      }
+    }
+  },
+  "appShowcase": {
+    "title": {
+      "part1": "Erleben Sie die ",
+      "part2": "Zukunft des Lernens"
+    },
+    "subtitle": "Unsere intuitive Benutzeroberfläche und intelligente Funktionen machen das Vokabellernen ansprechend, effizient und unterhaltsam.",
+    "features": {
+      "progressTracking": {
+        "title": "Intelligente Fortschrittsverfolgung",
+        "description": "Überwachen Sie Ihre Lernreise mit detaillierten Analysen, Wortbeherrschungsverfolgung und täglichen Serien.",
+        "tags": {
+          "wordMastery": "Wortbeherrschung",
+          "boxDistribution": "Kastenverteilung",
+          "dailyStreaks": "Tägliche Serien"
+        }
+      },
+      "aiContent": {
+        "title": "Mehrsprachiger KI-Inhalt",
+        "description": "KI generiert muttersprachlichen Inhalt mit korrekter Grammatik, kulturellem Kontext und sprachoptimierten Stimmen.",
+        "tags": {
+          "nativeDefinitions": "Native Definitionen",
+          "culturalImages": "Kulturelle Bilder",
+          "optimizedAudio": "Optimiertes Audio"
+        }
+      },
+      "leitnerSystem": {
+        "title": "Erweiterte Leitner-System",
+        "description": "7-Kasten-Wiederholungssystem mit Abstand, das sich an Ihr Lerntempo anpasst und den Wiederholungszeitpunkt optimiert.",
+        "tags": {
+          "newWords": "Kasten 1-2: Neu",
+          "learning": "Kasten 3-5: Lernen",
+          "mastered": "Kasten 6-7: Gemeistert"
+        }
+      }
+    },
+    "demo": {
+      "videoAlt": "Decorebator App Demo - Live-Interaktion zeigt Quiz-Funktionen, Fortschrittsverfolgung und Lernablauf",
+      "liveDemo": "Live-Demo!",
+      "seeInAction": "In Aktion sehen"
+    }
+  },
   "cta": {
-    "title": "Beginne heute deine Vokabellern-Revolution",
-    "subtitle": "Beschleunige dein Sprachenlernen mit KI-gestützten Inhalten und wissenschaftlich bewährter Wiederholung mit Abstand",
-    "primaryButton": "Kostenlos beginnen",
-    "secondaryButton": "Demo ansehen",
-    "features": [
-      "KI-generierte Definitionen, Bilder & Audio",
-      "8 interaktive Quiz-Modi",
-      "Erweiterte Wiederholung mit Abstand",
-      "Detaillierte Fortschrittsanalysen"
-    ]
+    "title": "Bereit, Ihr Sprachenlernen zu transformieren?",
+    "subtitle": "Meistern Sie neue Sprachen mit KI-gestütztem Vokabellernen und Wiederholung mit Abständen.",
+    "subtitleWithStats": "Schließen Sie sich {count}+ Lernenden an, die neue Sprachen mit KI-gestütztem Vokabellernen und Wiederholung mit Abständen meistern.",
+    "videoTitle": "Decorebator Demo - KI-gestütztes Vokabellernen",
+    "startFreeTrial": "Starten Sie Ihre kostenlose Testversion"
   },
   "footer": {
-    "tagline": "KI-gestützte Vokabellern-Plattform",
-    "description": "Revolutioniere dein Vokabellernen mit fortschrittlicher KI-Technologie und wissenschaftlich bewährter Wiederholung mit Abstand.",
-    "product": {
-      "title": "Produkt",
+    "heading": "Fußzeile",
+    "support": "Support",
+    "copyright": "© {year} Decorebator. Alle Rechte vorbehalten.",
+    "screenReader": "Fußzeile",
+    "navigation": {
       "features": "Funktionen",
-      "pricing": "Preise",
       "howItWorks": "So funktioniert's",
-      "downloadApp": "App herunterladen"
-    },
-    "support": {
-      "title": "Support",
-      "helpCenter": "Hilfe-Center",
+      "pricing": "Preise",
       "faq": "FAQ",
-      "contact": "Kontakt",
-      "feedback": "Feedback"
+      "support": "Support",
+      "helpCenter": "Hilfe-Center",
+      "privacy": "Datenschutzrichtlinie",
+      "terms": "Nutzungsbedingungen"
     },
-    "company": {
-      "title": "Unternehmen",
-      "about": "Über uns",
-      "blog": "Blog",
-      "careers": "Karriere",
-      "press": "Presse"
-    },
-    "legal": {
-      "title": "Rechtliches",
-      "privacy": "Datenschutz",
-      "terms": "Nutzungsbedingungen",
-      "cookies": "Cookie-Einstellungen"
+    "about": {
+      "title": "Über uns",
+      "soloEntrepreneur": "Solo-Unternehmer",
+      "location": "Brasilien 🇧🇷",
+      "description": "Verantwortlich für die Architektur, vollständige Implementierung und das Design dieses Projekts. Lösung eines persönlichen Problems und dachte, es wäre interessant, es mit anderen zu teilen.",
+      "followTwitter": "Auf Twitter folgen"
     },
     "social": {
-      "title": "Social Media",
-      "twitter": "Twitter",
-      "facebook": "Facebook",
-      "instagram": "Instagram",
-      "linkedin": "LinkedIn"
-    },
-    "newsletter": {
-      "title": "Newsletter abonnieren",
-      "description": "Erhalte die neuesten Features, Lerntipps und bewährte Praktiken für das Sprachenlernen",
-      "placeholder": "E-Mail-Adresse eingeben",
-      "button": "Abonnieren",
-      "success": "Danke für dein Abonnement!"
-    },
-    "copyright": "© 2024 Decorebator. Alle Rechte vorbehalten."
+      "facebook": "Decorebator auf Facebook",
+      "twitter": "Decorebator auf Twitter",
+      "instagram": "Decorebator auf Instagram",
+      "linkedin": "Decorebator auf LinkedIn"
+    }
   },
   "contact": {
     "title": "Kontaktiere uns",
@@ -387,6 +537,24 @@
       "getApp": "App holen"
     }
   },
+  "showcase": {
+    "title": "Decorebator in Aktion erleben",
+    "subtitle": "Erleben Sie das komplette Lernökosystem, das für moderne Sprachlernende entwickelt wurde",
+    "features": {
+      "aiContent": {
+        "title": "KI-generierte Inhalte",
+        "description": "Jedes Wort kommt mit KI-generierten Definitionen, Bildern, Audioaussprachen und kontextuellen Beispielen in Ihrer Zielsprache."
+      },
+      "smartQuizzes": {
+        "title": "Adaptives Quiz-System",
+        "description": "8 verschiedene Quiz-Modi, die sich an Ihren Lernfortschritt anpassen, von der grundlegenden Erkennung bis zum fortgeschrittenen Verständnis."
+      },
+      "analytics": {
+        "title": "Lern-Analytik",
+        "description": "Verfolgen Sie Ihren Fortschritt mit detaillierten Analysen, die Beherrschungsgrade, Lerngeschwindigkeit und Behaltenraten zeigen."
+      }
+    }
+  },
   "featurePages": {
     "aiPowered": {
       "title": "KI-gestützte Inhaltserstellung",
@@ -430,13 +598,6 @@
         "subtitle": "Vollständige Lernerfahrung ohne Internetverbindung"
       }
     },
-    "analytics": {
-      "title": "Detaillierte Lernanalysen",
-      "hero": {
-        "title": "Datengetriebene Lernoptimierung",
-        "subtitle": "Verfolge Fortschritt, verstehe Lernmuster und identifiziere Verbesserungsbereiche"
-      }
-    },
     "multiLanguage": {
       "title": "7-Sprachen-Unterstützung",
       "hero": {
@@ -444,5 +605,112 @@
         "subtitle": "Erlebe KI-generierte Inhalte in 7 verschiedenen Sprachen"
       }
     }
+  },
+  "pricing": {
+    "title": {
+      "part1": "Wählen Sie Ihren ",
+      "part2": "Lernplan"
+    },
+    "subtitle": "Beginnen Sie kostenlos und upgraden Sie jederzeit. Alle Pläne beinhalten KI-gestützte Vokabelerweiterung und verteilte Wiederholung.",
+    "allPlansInclude": "✨ Alle Pläne Beinhalten",
+    "features": {
+      "aiContent": "KI-Inhalte",
+      "spacedRepetition": "Verteilte Wiederholung",
+      "mobileAccess": "Mobile App Zugang",
+      "securePrivate": "Sicher & Privat"
+    },
+    "footer": "Keine Verträge • Jederzeit kündbar • Sichere Zahlung über Stripe",
+    "plans": {
+      "free": {
+        "name": "Kostenlos",
+        "title": "Kostenloser Plan",
+        "price": "$0",
+        "period": "",
+        "description": "Perfekt zum Ausprobieren des Vokabellernens",
+        "features": [
+          "1 Wortliste",
+          "Bis zu 10 Wörter",
+          "Basis Quiz-Modi",
+          "Begrenzte Analysen"
+        ],
+        "cta": "Kostenlos Starten"
+      },
+      "monthly": {
+        "name": "Monatlich Premium",
+        "title": "Monatlich Premium",
+        "price": "$6.99",
+        "period": "/Monat",
+        "description": "Vollzugang mit monatlicher Flexibilität",
+        "badge": "BELIEBTESTE",
+        "features": [
+          "Unbegrenzte Wortlisten",
+          "Unbegrenzte Wörter",
+          "Alle 8 Quiz-Modi",
+          "Erweiterte Analysen",
+          "Offline-Unterstützung"
+        ],
+        "cta": "Monatlich Starten"
+      },
+      "annual": {
+        "name": "Jährlich Premium",
+        "title": "Jährlich Premium",
+        "price": "$69.90",
+        "period": "/Jahr",
+        "description": "Bester Wert für engagierte Lernende",
+        "savings": "Sparen Sie $13.98 pro Jahr",
+        "features": [
+          "Alles vom Monatlichen",
+          "Sparen Sie $13.98 pro Jahr",
+          "Früher Zugang zu Features"
+        ],
+        "cta": "Jährlich Starten"
+      }
+    }
+  },
+  "analytics": {
+    "title": "Erweiterte Analyse-Dashboard",
+    "subtitle": "Verfolgen Sie Ihre Vokabelbeherrschung mit umfassenden Lerneinblicken",
+    "stats": {
+      "wordsStudiedToday": "Heute gelernte Wörter",
+      "currentStreak": "Aktuelle Serie",
+      "wordsMastered": "Beherrschte Wörter",
+      "accuracyToday": "Genauigkeit heute",
+      "daysSuffix": " Tage"
+    },
+    "charts": {
+      "wordsStudied": "Gelernte Wörter",
+      "minutes": "Minuten",
+      "successRate": "Erfolgsrate",
+      "words": "Wörter",
+      "weekDays": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+      "quizTypes": ["Bedeutung erraten", "Wort aus Bedeutung", "Bildassoziation", "Hörverständnis"],
+      "boxLabels": ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5", "Box 6", "Box 7"],
+      "box1": "Box 1",
+      "box2": "Box 2",
+      "box3": "Box 3",
+      "box4": "Box 4",
+      "box5": "Box 5",
+      "box6": "Box 6",
+      "box7": "Box 7",
+      "learningProgressTitle": "Lernfortschritt",
+      "wordsStudiedDescription": "Wörter gelernt in den letzten 7 Tagen",
+      "practiceTimeTitle": "Übungszeit",
+      "total": "Gesamt",
+      "dailyAvg": "Tagesdurchschnitt",
+      "quizPerformanceTitle": "Quiz-Leistung nach Typ",
+      "wordMasteryTitle": "Wort-Beherrschungsfortschritt",
+      "currentBoxTitle": "Aktuelle Box-Verteilung",
+      "leitnerExplanation": "Leitner-System: Wörter schreiten durch 7 Boxen basierend auf Ihrer Quiz-Leistung voran. Box 1 enthält neue Wörter, Box 7 enthält beherrschte Wörter.",
+      "boxProgressTitle": "7-Tage Box-Fortschritt",
+      "box7Description": "Wörter in Box 7 (Beherrscht)",
+      "topWordsTitle": "Top-Wörter nach Beherrschung"
+    }
+  },
+  "cta": {
+    "title": "Bereit, Ihr Sprachenlernen zu transformieren?",
+    "subtitle": "Meistern Sie neue Sprachen mit KI-gestütztem Vokabellernen und Wiederholung mit Abständen.",
+    "subtitleWithStats": "Schließen Sie sich {count}+ Lernenden an, die neue Sprachen mit KI-gestütztem Vokabellernen und Wiederholung mit Abständen meistern.",
+    "videoTitle": "Decorebator Demo - KI-gestütztes Vokabellernen",
+    "startFreeTrial": "Starten Sie Ihre kostenlose Testversion"
   }
 }
