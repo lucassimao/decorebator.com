@@ -239,6 +239,132 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
     ]
   };
 
+  const productStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Decorebator - AI Vocabulary Learning App",
+    "description": "Advanced vocabulary learning platform using AI content generation and spaced repetition",
+    "brand": {
+      "@type": "Brand",
+      "name": "Decorebator"
+    },
+    "category": "Educational Software",
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Free Plan",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "description": "1 wordlist, up to 10 words, basic quiz modes"
+      },
+      {
+        "@type": "Offer",
+        "name": "Monthly Premium",
+        "price": "6.99",
+        "priceCurrency": "USD", 
+        "priceSpecification": {
+          "@type": "RecurringPaymentFrequency",
+          "frequency": "Monthly"
+        },
+        "availability": "https://schema.org/InStock",
+        "description": "Unlimited wordlists and words, all quiz modes, offline support"
+      },
+      {
+        "@type": "Offer",
+        "name": "Annual Premium",
+        "price": "69.90",
+        "priceCurrency": "USD",
+        "priceSpecification": {
+          "@type": "RecurringPaymentFrequency", 
+          "frequency": "Yearly"
+        },
+        "availability": "https://schema.org/InStock",
+        "description": "Best value - includes everything in Monthly plus early access features"
+      }
+    ],
+    "hasFeatureList": [
+      "AI-powered content generation",
+      "7-box Leitner spaced repetition",
+      "8 interactive quiz modes",
+      "Multi-language support (7 languages)",
+      "Offline learning capability",
+      "Advanced progress analytics",
+      "Visual learning with AI images",
+      "Audio pronunciation training"
+    ],
+    "operatingSystem": ["iOS", "Android"],
+    "applicationCategory": "EducationalApplication",
+    "isAccessibleForFree": true
+  };
+
+  const howToStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Learn Vocabulary with Decorebator",
+    "description": "Step-by-step guide to mastering vocabulary using AI-powered spaced repetition",
+    "image": "https://decorebator.com/app-screenshot.jpeg",
+    "estimatedCost": {
+      "@type": "MonetaryAmount",
+      "currency": "USD",
+      "value": "0"
+    },
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "Create Your Account",
+        "text": "Sign up for free and download the mobile app",
+        "image": "https://decorebator.com/step1-signup.jpg"
+      },
+      {
+        "@type": "HowToStep", 
+        "name": "Add Words to Learn",
+        "text": "Create wordlists and add vocabulary words you want to master",
+        "image": "https://decorebator.com/step2-addwords.jpg"
+      },
+      {
+        "@type": "HowToStep",
+        "name": "AI Generates Content",
+        "text": "Our AI automatically creates definitions, images, and audio for each word",
+        "image": "https://decorebator.com/step3-ai-content.jpg"
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Practice with Quizzes", 
+        "text": "Use 8 different quiz modes to test your knowledge and memory",
+        "image": "https://decorebator.com/step4-quiz.jpg"
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Track Your Progress",
+        "text": "Monitor your learning with detailed analytics and mastery levels",
+        "image": "https://decorebator.com/step5-analytics.jpg"
+      }
+    ],
+    "totalTime": "PT30M"
+  };
+
+  const videoObjectData = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "name": "Decorebator App Demo - AI Vocabulary Learning",
+    "description": "See how Decorebator uses AI to generate comprehensive learning materials and spaced repetition for vocabulary mastery",
+    "thumbnailUrl": "https://decorebator.com/app-screenshot.jpeg",
+    "uploadDate": "2024-12-01",
+    "duration": "PT2M30S",
+    "contentUrl": "https://decorebator.com/app-demo.mp4",
+    "embedUrl": "https://decorebator.com/embed/demo",
+    "interactionStatistic": {
+      "@type": "InteractionCounter",
+      "interactionType": "https://schema.org/WatchAction",
+      "userInteractionCount": 15000
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Decorebator"
+    }
+  };
+
   return (
     <>
       <script
@@ -275,6 +401,24 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(courseStructuredData)
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productStructuredData)
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(howToStructuredData)
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(videoObjectData)
         }}
       />
     </>
