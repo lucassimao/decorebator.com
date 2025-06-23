@@ -71,8 +71,8 @@
     "imageAlt": "Démo de l'App Decorebator montrant les fonctionnalités d'apprentissage interactif, les modes de quiz et le suivi des progrès",
     "videoTitle": "Démo Decorebator - Apprentissage du Vocabulaire par IA",
     "socialProof": "+ apprenants actifs",
-    "subtitle": "Transformez votre apprentissage du vocabulaire avec du contenu généré par IA, une répétition espacée scientifiquement prouvée et 8 modes de quiz engageants. Rejoignez {count}+ apprenants qui maîtrisent efficacement de nouvelles langues.",
-    "startLearningFree": "Commencer à apprendre gratuitement",
+    "subtitle": "Transformez votre apprentissage du vocabulaire avec du contenu généré par IA, une répétition espacée scientifiquement prouvée et 8 modes de quiz engageants. Rejoignez des apprenants du monde entier qui maîtrisent efficacement de nouvelles langues.",
+    "startLearningFree": "Commencer gratuitement",
     "watchDemo": "Voir la démo",
     "stats": {
       "rating": "4,9/5",
@@ -166,8 +166,7 @@
         "1 liste de mots",
         "Jusqu'à 10 mots",
         "Modes de quiz de base",
-        "Suivi des progrès",
-        "Support communautaire"
+        "Analyses limitées"
       ],
       "cta": "Commencer gratuitement",
       "popular": false

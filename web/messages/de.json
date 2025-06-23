@@ -71,8 +71,8 @@
     "imageAlt": "Decorebator App Demo zeigt interaktive Lernfunktionen, Quiz-Modi und Fortschrittsverfolgung",
     "videoTitle": "Decorebator Demo - KI-gestütztes Vokabellernen",
     "socialProof": "+ aktive Lernende",
-    "subtitle": "Verwandle dein Vokabellernen mit KI-generierten Inhalten, wissenschaftlich bewährter Wiederholung mit Abstand und 8 fesselnden Quiz-Modi. Schließe dich {count}+ Lernenden an, die effektiv neue Sprachen meistern.",
-    "startLearningFree": "Kostenlos lernen beginnen",
+    "subtitle": "Verwandle dein Vokabellernen mit KI-generierten Inhalten, wissenschaftlich bewährter Wiederholung mit Abstand und 8 fesselnden Quiz-Modi. Schließe dich Lernenden aus aller Welt an, die effektiv neue Sprachen meistern.",
+    "startLearningFree": "Kostenlos starten",
     "watchDemo": "Demo ansehen",
     "stats": {
       "rating": "4,9/5",
@@ -166,8 +166,7 @@
         "1 Wortliste",
         "Bis zu 10 Wörter",
         "Grundlegende Quiz-Modi",
-        "Fortschrittsverfolgung",
-        "Community-Support"
+        "Begrenzte Analysen"
       ],
       "cta": "Kostenlos beginnen",
       "popular": false

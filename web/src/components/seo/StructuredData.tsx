@@ -164,6 +164,81 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
     ]
   };
 
+  const breadcrumbStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://decorebator.com"
+      },
+      {
+        "@type": "ListItem", 
+        "position": 2,
+        "name": "Language Learning App",
+        "item": "https://decorebator.com"
+      }
+    ]
+  };
+
+  const educationalOrganizationData = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "Decorebator",
+    "url": "https://decorebator.com",
+    "logo": "https://decorebator.com/icon-512x512.png",
+    "description": "Advanced AI-powered vocabulary learning platform for language education",
+    "educationalCredentialAwarded": "Vocabulary mastery certification",
+    "hasCredential": {
+      "@type": "EducationalOccupationalCredential",
+      "name": "Language Learning Progress Tracking",
+      "description": "Comprehensive vocabulary learning progress with spaced repetition analytics"
+    },
+    "teaches": [
+      "Vocabulary acquisition",
+      "Language comprehension", 
+      "Spaced repetition methodology",
+      "Interactive language learning",
+      "Multi-language proficiency"
+    ]
+  };
+
+  const courseStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    "name": "AI-Powered Vocabulary Learning",
+    "description": "Master vocabulary in any language using AI-generated content, spaced repetition, and interactive quizzes",
+    "provider": {
+      "@type": "Organization",
+      "name": "Decorebator"
+    },
+    "educationalLevel": "All levels",
+    "courseMode": "online",
+    "numberOfCredits": 0,
+    "timeRequired": "PT30M",
+    "inLanguage": ["en", "es", "fr", "de", "it", "pt", "ja"],
+    "coursePrerequisites": "None",
+    "syllabusSections": [
+      {
+        "@type": "Syllabus",
+        "name": "AI Content Generation",
+        "description": "Learn with AI-generated definitions, images, and audio"
+      },
+      {
+        "@type": "Syllabus", 
+        "name": "Spaced Repetition System",
+        "description": "Master the 7-box Leitner system for optimal retention"
+      },
+      {
+        "@type": "Syllabus",
+        "name": "Interactive Quiz Modes",
+        "description": "Practice with 8 different quiz types and learning approaches"
+      }
+    ]
+  };
+
   return (
     <>
       <script
@@ -182,6 +257,24 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(organizationStructuredData)
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbStructuredData)
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(educationalOrganizationData)
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(courseStructuredData)
         }}
       />
     </>

@@ -77,7 +77,7 @@ const Header: React.FC = () => {
         </div>
 
         {/* Mobile Navigation */}
-        <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden absolute top-16 left-0 right-0 bg-white/95 backdrop-blur-lg shadow-xl rounded-b-2xl max-h-96 overflow-y-auto`}>
+        <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden absolute top-16 left-0 right-0 bg-white/95 backdrop-blur-lg shadow-xl rounded-b-2xl`}>
           <nav className="flex flex-col p-6 space-y-4">
             <a href={`/${locale}`} className="text-[#636E72] hover:text-[#FF7B54] transition-colors font-medium" onClick={() => setIsMobileMenuOpen(false)}>
               {t('home')}

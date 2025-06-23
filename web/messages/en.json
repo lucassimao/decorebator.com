@@ -71,7 +71,7 @@
     "imageAlt": "Decorebator App Demo showing interactive learning features, quiz modes, and progress tracking",
     "videoTitle": "Decorebator Demo - AI-Powered Vocabulary Learning",
     "socialProof": "+ active learners",
-    "subtitle": "Transform your vocabulary learning with AI-generated content, scientifically-proven spaced repetition, and 8 engaging quiz modes. Join {count}+ learners mastering new languages effectively.",
+    "subtitle": "Transform your vocabulary learning with AI-generated content, scientifically-proven spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.",
     "startLearningFree": "Start Learning Free",
     "watchDemo": "Watch Demo",
     "stats": {
@@ -267,7 +267,8 @@
         "features": [
           "1 Wordlist",
           "Up to 10 Words",
-          "Basic Quiz Modes"
+          "Basic Quiz Modes",
+          "Limited Analytics"
         ],
         "cta": "Get Started Free"
       },

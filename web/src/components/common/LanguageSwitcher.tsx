@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -16,11 +16,22 @@ const languages = [
 
 const LanguageSwitcher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
 
   const currentLanguage = languages.find(lang => lang.code === locale) || languages[0];
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleLanguageChange = (newLocale: string) => {
     // Replace the current locale in the pathname with the new one
@@ -29,6 +40,35 @@ const LanguageSwitcher: React.FC = () => {
     setIsOpen(false);
   };
 
+  // Mobile: show all languages inline
+  if (isMobile) {
+    return (
+      <div className="space-y-2">
+        <div className="text-sm font-medium text-gray-600 mb-3">Select Language:</div>
+        <div className="grid grid-cols-2 gap-2">
+          {languages.map((language) => (
+            <button
+              key={language.code}
+              onClick={() => handleLanguageChange(language.code)}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-left text-sm transition-colors duration-200 ${
+                language.code === locale 
+                  ? 'bg-orange-50 text-[#FF7B54] border border-[#FF7B54]' 
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <span className="text-base">{language.flag}</span>
+              <span className="font-medium truncate">{language.name}</span>
+              {language.code === locale && (
+                <i className="fas fa-check text-[#FF7B54] ml-auto"></i>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop: dropdown behavior
   return (
     <div className="relative">
       <button

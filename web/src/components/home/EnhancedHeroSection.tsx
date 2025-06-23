@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import VideoModal from '../common/VideoModal';
 import QuizDemoModal from '../quiz/QuizDemoModal';
@@ -18,13 +18,64 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const t = useTranslations('hero');
+  const locale = useLocale();
   
   const words = [
-    t('rotatingWords.aiIntelligence') || 'AI Intelligence',
-    t('rotatingWords.spacedRepetition') || 'Spaced Repetition', 
-    t('rotatingWords.visualLearning') || 'Visual Learning',
-    t('rotatingWords.smartQuizzes') || 'Smart Quizzes'
+    { key: 'aiIntelligence', text: t('rotatingWords.aiIntelligence') || 'AI Intelligence' },
+    { key: 'spacedRepetition', text: t('rotatingWords.spacedRepetition') || 'Spaced Repetition' },
+    { key: 'visualLearning', text: t('rotatingWords.visualLearning') || 'Visual Learning' },
+    { key: 'smartQuizzes', text: t('rotatingWords.smartQuizzes') || 'Smart Quizzes' }
   ];
+
+  // Font size mapping for each language and word combination
+  const getFontSizeClass = (wordKey: string, locale: string) => {
+    const fontSizeMap: Record<string, Record<string, string>> = {
+      en: {
+        aiIntelligence: 'text-4xl sm:text-5xl lg:text-6xl',
+        spacedRepetition: 'text-3xl sm:text-4xl lg:text-5xl', // Longer text
+        visualLearning: 'text-4xl sm:text-5xl lg:text-6xl',
+        smartQuizzes: 'text-4xl sm:text-5xl lg:text-6xl'
+      },
+      es: {
+        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "Intelligence Artificial"
+        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Repetición Espaciada"
+        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Aprendizaje Visual"
+        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl' // "Quiz Inteligentes"
+      },
+      fr: {
+        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "Intelligence Artificielle"
+        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Répétition Espacée"
+        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Apprentissage Visuel"
+        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl' // "Quiz Intelligents"
+      },
+      de: {
+        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "KI-Intelligenz"
+        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Wiederholung mit Abstand"
+        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Visuelles Lernen"
+        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl' // "Intelligente Quiz"
+      },
+      it: {
+        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "Intelligence Artificiale"
+        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Ripetizione Distanziata"
+        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Apprendimento Visivo"
+        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl' // "Quiz Intelligenti"
+      },
+      pt: {
+        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "Inteligência Artificial"
+        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Repetição Espaçada"
+        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Aprendizado Visual"
+        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl' // "Quiz Inteligentes"
+      },
+      ja: {
+        aiIntelligence: 'text-4xl sm:text-5xl lg:text-6xl', // "AI知能"
+        spacedRepetition: 'text-3xl sm:text-4xl lg:text-5xl', // "間隔反復"
+        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "視覚学習"
+        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl' // "スマートクイズ"
+      }
+    };
+
+    return fontSizeMap[locale]?.[wordKey] || 'text-3xl sm:text-4xl lg:text-5xl';
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -46,15 +97,15 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
               {t('title')}
-              <span className="block mt-2">
-                <span className="gradient-animation bg-clip-text text-transparent font-bold transition-all duration-500">
-                  {words[currentWordIndex]}
+              <span className="block mt-2 h-16 sm:h-20 lg:h-24 flex items-center">
+                <span className={`gradient-animation bg-clip-text text-transparent font-bold transition-all duration-700 ease-in-out leading-tight ${getFontSizeClass(words[currentWordIndex].key, locale)}`} style={{ transitionProperty: 'opacity, transform, font-size' }}>
+                  {words[currentWordIndex].text}
                 </span>
               </span>
             </h1>
             
-            <p className="text-lg sm:text-xl text-[#636E72] leading-relaxed">
-              {t('subtitle', { count: '10,000' })}
+            <p className="text-lg sm:text-xl text-[#636E72] leading-relaxed -mt-2 sm:-mt-3">
+              {t('subtitle')}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
