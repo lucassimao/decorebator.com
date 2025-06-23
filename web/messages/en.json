@@ -623,7 +623,7 @@
         {"flag": "🇺🇸", "name": "English", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"},
         {"flag": "🇪🇸", "name": "Spanish", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"},
         {"flag": "🇫🇷", "name": "French", "bgClass": "bg-gradient-to-r from-blue-50 to-white"},
-        {"flag": "🇩🇪", "name": "German", "bgClass": "bg-gradient-to-r from-black to-red-50"},
+        {"flag": "🇩🇪", "name": "German", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50"},
         {"flag": "🇮🇹", "name": "Italian", "bgClass": "bg-gradient-to-r from-green-50 to-red-50"},
         {"flag": "🇵🇹", "name": "Portuguese", "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"},
         {"flag": "🇯🇵", "name": "Japanese", "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"}

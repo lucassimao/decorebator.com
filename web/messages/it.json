@@ -924,7 +924,7 @@
         {"flag": "🇺🇸", "name": "Inglese", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"},
         {"flag": "🇪🇸", "name": "Spagnolo", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"},
         {"flag": "🇫🇷", "name": "Francese", "bgClass": "bg-gradient-to-r from-blue-50 to-white"},
-        {"flag": "🇩🇪", "name": "Tedesco", "bgClass": "bg-gradient-to-r from-black to-red-50"},
+        {"flag": "🇩🇪", "name": "Tedesco", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50"},
         {"flag": "🇮🇹", "name": "Italiano", "bgClass": "bg-gradient-to-r from-green-50 to-red-50"},
         {"flag": "🇵🇹", "name": "Portoghese", "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"},
         {"flag": "🇯🇵", "name": "Giapponese", "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"}

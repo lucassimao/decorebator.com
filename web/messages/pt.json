@@ -1628,7 +1628,7 @@
         {"flag": "🇺🇸", "name": "Inglês", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"},
         {"flag": "🇪🇸", "name": "Espanhol", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"},
         {"flag": "🇫🇷", "name": "Francês", "bgClass": "bg-gradient-to-r from-blue-50 to-white"},
-        {"flag": "🇩🇪", "name": "Alemão", "bgClass": "bg-gradient-to-r from-black to-red-50"},
+        {"flag": "🇩🇪", "name": "Alemão", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50"},
         {"flag": "🇮🇹", "name": "Italiano", "bgClass": "bg-gradient-to-r from-green-50 to-red-50"},
         {"flag": "🇵🇹", "name": "Português", "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"},
         {"flag": "🇯🇵", "name": "Japonês", "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"}
