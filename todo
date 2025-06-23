@@ -1,8 +1,14 @@
 [ ]  browserstack testing
+        - Config sentry in the expo app        
         - Fix SignUp screen - use transparent PNG as the login scren
         - Integrate Revenue cat for non US users
-        - Config sentry in the expo app        
-        - improve mobile UI and detect default language
+        - Review sentry in the api
+
+        - Settings and account buttons in the top of the dashboard are too blended with the background and don't look like separate interactive buttons. They need more visual separation and definition to appear as distinct UI elements. You should look at the dashboard header area to see how these buttons are currently styled and improve their visibility and distinction from the background.
+
+        - Fix Profile settings UI screen to match theme config
+
+        - gravar demo
 
 
 
@@ -52,6 +58,7 @@
 
 
 # V2
+[ ] Support invite friend to unlock premium features - 1 subscribed friend grants 1 week for the enviter
 [ ] Security plan OWASP
 [ ] What would take to scale our backend to millons of request per min?
 [ ] Otimizar chat completion prompt - could it be cheaper?
@@ -62,7 +69,7 @@
 [ ] Update completion prompt: each definition must have a single meaning
 [ ] Im the flash card we need a way to list all words and jump straight to selected one
 [ ] Configurar Dashboard do river
-[ ] Add words in bulk
+[ ] Add words in bulk (talvez pra outra categoria de usuario - mais caro)
 [ ] Convert wordlist to another language
 [ ] Migrate local PostgreSQL container from 15 to 17
 [ ] Gamification
@@ -88,8 +95,6 @@
     drag-and-drop, word building
     Voice practice (repeat the word aloud and get AI feedback).
 [ ] Support promotion codes in the settings page 
-[ ] Splash screen ? 
-[ ] Support invite friend to unlock premium features - 1 subscribed friend grants 1 week for the enviter
 [ ] Properly handle session expiration
 [ ] Remove the trigger in subscription table and drop user.subscription_* fields. Move logic to the service layer
 [ ] Progress overview and currentStreak in the DashboardStats component
@@ -104,8 +109,6 @@
 [ ] New quiz: Ask chatgpt to create a small text using 5 or more words in a wordlist. 
     Present the text hiding the words and ask the user to write the missing words.
 [ ] Allow to select specific quiz types
-[ ] bulk create words
-[ ] create wordlist from song name
 [ ] quiz from all wordlists
 [ ] display word status: pending, error, no meaning found, etc
 [ ] leverage prompt caching  https://openai.com/index/api-prompt-caching/
@@ -113,12 +116,8 @@
     https://openai.com/index/gpt-4o-fine-tuning/
 
 [ ] support different voices when generating audio from text
-[ ] Add word offline
 [ ] clicking on a word should open a modal defining the clicked word
-[ ] automated tests
 [ ] configurar honnef.co/go/tools/cmd/staticcheck
 [ ] configurar go vet as a pre-commit hook
-[ ] configure govulncheck golang.org/x/vuln/cmd/govulncheck@latest
 [ ] customize quiz algorithm based on user settings ( api/internal/quizzes/handlers.go )
-[ ] display how strong is the definition of a word for an user 
 
