@@ -87,13 +87,13 @@ type NextDefinition struct {
 // - Box 6: Audio recognition (new modality)
 // - Box 7: Mastery level (most challenging types only)
 var boxToQuizTypes = map[int64][]model.QuizType{
-	1: {model.GuessMeaning},                                                                                                                                                                             // Recognition: "What does this word mean?"
-	2: {model.WordFromMeaning, model.GuessMeaning},                                                                                                                                                      // Basic recall: "Which word matches this meaning?" + recognition practice
-	3: {model.WordFromImage, model.WordFromMeaning},                                                                                                                                                     // Visual association: "What word matches this image?" + meaning recall
-	4: {model.CompleteSentence, model.WordFromExampleAudio, model.GuessMeaning},                                                                                                                         // Contextual understanding + recognition reinforcement
-	5: {model.WriteWordFromDefinition, model.WordFromExampleAudio, model.WordFromMeaning},                                                                                                               // Active recall + meaning practice
-	6: {model.WordFromAudio, model.WordFromExampleAudio, model.WordFromImage, model.GuessMeaning},                                                                                                       // Audio/Visual recognition + meaning reinforcement
-	7: {model.MeaningFromAudio, model.WordFromImage, model.WriteWordFromDefinition, model.CompleteSentence, model.WordFromExampleAudio, model.WordFromAudio, model.WordFromMeaning, model.GuessMeaning}, // Mastery: All types for comprehensive review
+	1: {model.GuessMeaning},                                                                                                             // Recognition: "What does this word mean?"
+	2: {model.WordFromMeaning, model.GuessMeaning},                                                                                      // Basic recall: "Which word matches this meaning?" + recognition practice
+	3: {model.WordFromImage, model.WordFromMeaning},                                                                                     // Visual association: "What word matches this image?" + meaning recall
+	4: {model.CompleteSentence, model.WordFromExampleAudio, model.GuessMeaning},                                                         // Contextual understanding + recognition reinforcement
+	5: {model.WriteWordFromDefinition, model.WordFromExampleAudio, model.WordFromMeaning},                                               // Active recall + meaning practice
+	6: {model.WordFromAudio, model.WordFromExampleAudio, model.WordFromImage, model.GuessMeaning},                                       // Audio/Visual recognition + meaning reinforcement
+	7: {model.MeaningFromAudio, model.WordFromImage, model.WriteWordFromDefinition, model.CompleteSentence, model.WordFromExampleAudio}, // Mastery
 }
 
 // ExampleUsage tracks when examples were last used for fair distribution
