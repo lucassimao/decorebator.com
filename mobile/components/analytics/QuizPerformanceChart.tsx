@@ -2,8 +2,9 @@ import React from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { BarChart } from "react-native-chart-kit";
 import { useTranslation } from "react-i18next";
-import { colors, chartConfig } from "./theme";
+import { getChartColors, getChartConfig } from "./theme";
 import { QuizTypePerformance } from "@/api/analytics";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -15,6 +16,10 @@ export const QuizPerformanceChart: React.FC<QuizPerformanceChartProps> = ({
   quizPerformance,
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const chartConfig = getChartConfig(theme);
+  const chartColors = getChartColors(theme);
+  const styles = createStyles(theme);
 
   // Translate quiz type names
   const translateQuizType = (quizType: string): string => {
@@ -51,7 +56,7 @@ export const QuizPerformanceChart: React.FC<QuizPerformanceChartProps> = ({
             yAxisSuffix="%"
             chartConfig={{
               ...chartConfig,
-              color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+              color: (opacity = 1) => chartColors.success(opacity),
               barPercentage: 0.7,
             }}
             style={styles.chart}
@@ -68,7 +73,7 @@ export const QuizPerformanceChart: React.FC<QuizPerformanceChartProps> = ({
                   <View
                     style={[
                       styles.barLegendDot,
-                      { backgroundColor: colors.success },
+                      { backgroundColor: theme.colors.success },
                     ]}
                   />
                   <Text style={styles.barLegendText} numberOfLines={1}>
@@ -93,81 +98,82 @@ export const QuizPerformanceChart: React.FC<QuizPerformanceChartProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  chartCard: {
-    backgroundColor: colors.white,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    chartCard: {
+      backgroundColor: theme.colors.background.surface,
+      marginHorizontal: 16,
+      marginVertical: 8,
+      borderRadius: 16,
+      padding: 20,
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 3.84,
+      elevation: 5,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  chartTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: colors.textDark,
-    marginBottom: 4,
-  },
-  chartSubtitle: {
-    fontSize: 14,
-    color: colors.textMedium,
-    marginBottom: 16,
-  },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 16,
-    marginLeft: -20,
-  },
-  emptyChartContainer: {
-    height: 200,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.lightBackground,
-    borderRadius: 12,
-  },
-  emptyChartText: {
-    fontSize: 16,
-    color: colors.textLight,
-  },
-  barLegendContainer: {
-    marginTop: 16,
-  },
-  barLegendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
-  },
-  barLegendLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  barLegendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  barLegendText: {
-    fontSize: 14,
-    color: colors.textDark,
-    flex: 1,
-  },
-  barLegendValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.success,
-    marginLeft: 8,
-  },
-});
+    chartTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: theme.colors.text.primary,
+      marginBottom: 4,
+    },
+    chartSubtitle: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginBottom: 16,
+    },
+    chart: {
+      marginVertical: 8,
+      borderRadius: 16,
+      marginLeft: -20,
+    },
+    emptyChartContainer: {
+      height: 200,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.background.default,
+      borderRadius: 12,
+    },
+    emptyChartText: {
+      fontSize: 16,
+      color: theme.colors.text.placeholder,
+    },
+    barLegendContainer: {
+      marginTop: 16,
+    },
+    barLegendItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.ui.border,
+    },
+    barLegendLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+    },
+    barLegendDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      marginRight: 8,
+    },
+    barLegendText: {
+      fontSize: 14,
+      color: theme.colors.text.primary,
+      flex: 1,
+    },
+    barLegendValue: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.colors.success,
+      marginLeft: 8,
+    },
+  });

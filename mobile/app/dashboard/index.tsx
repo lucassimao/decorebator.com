@@ -6,19 +6,18 @@ import { Header } from "@/components/dashboard/Header";
 import DashboardStats from "@/components/dashboard/Stats";
 import { WordlistDetailModal } from "@/components/dashboard/WordlistDetailModal";
 import Wordlistitem from "@/components/dashboard/WordlistItem";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
 import { useWordlistProgress } from "@/hooks/useWordlistProgress";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { createCommonStyles } from "@/styles/common";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "@/contexts/ThemeContext";
-import { createCommonStyles } from "@/styles/common";
 import {
   ActivityIndicator,
-  Dimensions,
   FlatList,
   RefreshControl,
   SafeAreaView,
@@ -28,8 +27,7 @@ import {
   View,
 } from "react-native";
 
-const { width, height } = Dimensions.get("window");
-
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface DashboardProps {}
 
 const Dashboard: React.FC<DashboardProps> = () => {
@@ -68,7 +66,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
   });
 
   // Fetch batch progress data
-  const { data: progressData } =  useWordlistProgress();
+  const { data: progressData } = useWordlistProgress();
 
   // Create progress map for O(1) lookup
   const progressMap = useMemo(() => {
@@ -76,7 +74,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
     return new Map(progressData.wordlists.map((p) => [p.wordlistId, p]));
   }, [progressData]);
 
-  const hasNoWordlist = wordlists && wordlists.length == 0;
+  const hasNoWordlist = wordlists && wordlists.length === 0;
 
   useEffect(() => {
     if (isLoading) return;
@@ -84,7 +82,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
     if (hasNoWordlist) {
       router.replace("/dashboard/welcome");
     }
-  }, [wordlists, isLoading, router]);
+  }, [wordlists, isLoading, router, hasNoWordlist]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -106,7 +104,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
   const handleAddNewWordlist = () => {
     const wordlistCount = wordlists?.length || 0;
-    const isFreePlan = !subscription || subscription.plan == "free";
+    const isFreePlan = !subscription || subscription.plan === "free";
 
     // Check if user has reached free plan limit
     if (isFreePlan && wordlistCount >= 1) {
@@ -149,44 +147,48 @@ const Dashboard: React.FC<DashboardProps> = () => {
       <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
         <OfflineIndicator />
         <FlatList
-            data={isLoading ? [] : wordlists}
-            renderItem={renderWordlistItem}
-            keyExtractor={(item) => String(item.id)}
-            ListHeaderComponent={renderHeader}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                colors={[theme.colors.primary]}
-                tintColor={theme.colors.primary}
-              />
-            }
-            ListEmptyComponent={
-              isLoading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color={theme.colors.primary} />
-                  <Text style={styles.loadingText}>{t("common.loading")}</Text>
-                </View>
-              ) : (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>
-                    {t("dashboard.wordlists.noWordlistsYet")}
+          data={isLoading ? [] : wordlists}
+          renderItem={renderWordlistItem}
+          keyExtractor={(item) => String(item.id)}
+          ListHeaderComponent={renderHeader}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[theme.colors.primary]}
+              tintColor={theme.colors.primary}
+            />
+          }
+          ListEmptyComponent={
+            isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+                <Text style={styles.loadingText}>{t("common.loading")}</Text>
+              </View>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
+                  {t("dashboard.wordlists.noWordlistsYet")}
+                </Text>
+                <TouchableOpacity
+                  style={styles.ctaButton}
+                  onPress={() => setShowCreateModal(true)}
+                >
+                  <Text style={styles.ctaButtonText}>
+                    {t("dashboard.wordlists.createFirstWordlist")}
                   </Text>
-                  <TouchableOpacity
-                    style={styles.ctaButton}
-                    onPress={() => setShowCreateModal(true)}
-                  >
-                    <Text style={styles.ctaButtonText}>
-                      {t("dashboard.wordlists.createFirstWordlist")}
-                    </Text>
-                    <Ionicons name="add-circle" size={24} color={theme.colors.text.inverse} />
-                  </TouchableOpacity>
-                </View>
-              )
-            }
-          />
+                  <Ionicons
+                    name="add-circle"
+                    size={24}
+                    color={theme.colors.text.inverse}
+                  />
+                </TouchableOpacity>
+              </View>
+            )
+          }
+        />
       </SafeAreaView>
 
       {/* Create Wordlist Modal */}
@@ -209,119 +211,120 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
 export default Dashboard;
 
-const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.default,
-  },
-  loadingContainer: {
-    paddingVertical: 60,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: theme.colors.text.secondary,
-  },
-  listContent: {
-    paddingBottom: 30,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 10,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-  },
-  settingsButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.background.surface,
-    justifyContent: "center",
-    alignItems: "center",
-    ...theme.shadows.sm,
-  },
-  profileButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    overflow: "hidden",
-    backgroundColor: theme.colors.background.surface,
-    ...theme.shadows.sm,
-  },
-  profileImage: {
-    width: "100%",
-    height: "100%",
-  },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: theme.colors.background.surface,
-    borderRadius: theme.borderRadius.lg,
-    paddingVertical: theme.spacing.lg,
-    paddingHorizontal: 10,
-    marginHorizontal: 20,
-    marginBottom: 24,
-    ...theme.shadows.sm,
-  },
-  statItem: {
-    alignItems: "center",
-    flex: 1,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: theme.colors.text.secondary,
-    marginBottom: 8,
-  },
-  statValue: {
-    fontSize: 36,
-    fontWeight: "700",
-    color: theme.colors.text.primary,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: theme.colors.text.primary,
-  },
-  addButton: {
-    padding: 4,
-  },
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background.default,
+    },
+    loadingContainer: {
+      paddingVertical: 60,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    loadingText: {
+      marginTop: 12,
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+    },
+    listContent: {
+      paddingBottom: 30,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingTop: 10,
+      paddingBottom: 20,
+      paddingHorizontal: 20,
+    },
+    settingsButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.background.surface,
+      justifyContent: "center",
+      alignItems: "center",
+      ...theme.shadows.sm,
+    },
+    profileButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      overflow: "hidden",
+      backgroundColor: theme.colors.background.surface,
+      ...theme.shadows.sm,
+    },
+    profileImage: {
+      width: "100%",
+      height: "100%",
+    },
+    statsContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: theme.borderRadius.lg,
+      paddingVertical: theme.spacing.lg,
+      paddingHorizontal: 10,
+      marginHorizontal: 20,
+      marginBottom: 24,
+      ...theme.shadows.sm,
+    },
+    statItem: {
+      alignItems: "center",
+      flex: 1,
+    },
+    statLabel: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginBottom: 8,
+    },
+    statValue: {
+      fontSize: 36,
+      fontWeight: "700",
+      color: theme.colors.text.primary,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      marginBottom: 16,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+    },
+    addButton: {
+      padding: 4,
+    },
 
-  emptyContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 18,
-    color: theme.colors.text.secondary,
-    marginBottom: 20,
-  },
-  ctaButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 8,
-    ...theme.shadows.md,
-    shadowColor: theme.colors.primary,
-  },
-  ctaButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: 18,
-    fontWeight: "600",
-  },
-});
+    emptyContainer: {
+      paddingHorizontal: 20,
+      paddingTop: 40,
+      alignItems: "center",
+    },
+    emptyText: {
+      fontSize: 18,
+      color: theme.colors.text.secondary,
+      marginBottom: 20,
+    },
+    ctaButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.lg,
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      gap: 8,
+      ...theme.shadows.md,
+      shadowColor: theme.colors.primary,
+    },
+    ctaButtonText: {
+      color: theme.colors.text.inverse,
+      fontSize: 18,
+      fontWeight: "600",
+    },
+  });

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Quiz {
   id: number;
@@ -29,6 +30,8 @@ export const QuizOptions: React.FC<QuizOptionsProps> = ({
   showResult,
   onAnswerSelect,
 }) => {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const getOptionStyle = (index: number) => {
     if (!showResult) return styles.optionButton;
 
@@ -87,9 +90,9 @@ export const QuizOptions: React.FC<QuizOptionsProps> = ({
 
   const getAccessibilityState = (index: number) => {
     if (!showResult) {
-      return { 
+      return {
         selected: selectedAnswer === index,
-        disabled: false 
+        disabled: false,
       };
     }
 
@@ -99,12 +102,12 @@ export const QuizOptions: React.FC<QuizOptionsProps> = ({
     return {
       selected: isSelected,
       disabled: true,
-      checked: isCorrect
+      checked: isCorrect,
     };
   };
 
   return (
-    <View 
+    <View
       style={styles.optionsContainer}
       accessibilityRole="radiogroup"
       accessibilityLabel="Answer options"
@@ -123,20 +126,20 @@ export const QuizOptions: React.FC<QuizOptionsProps> = ({
         >
           <Text style={getOptionTextStyle(index)}>{option}</Text>
           {showResult && index === quiz.answerIndex && (
-            <Ionicons 
-              name="checkmark-circle" 
-              size={24} 
-              color="#4CAF50"
+            <Ionicons
+              name="checkmark-circle"
+              size={24}
+              color={theme.colors.success}
               accessibilityLabel="Correct answer indicator"
             />
           )}
           {showResult &&
             selectedAnswer === index &&
             index !== quiz.answerIndex && (
-              <Ionicons 
-                name="close-circle" 
-                size={24} 
-                color="#FF6B6B"
+              <Ionicons
+                name="close-circle"
+                size={24}
+                color={theme.colors.error}
                 accessibilityLabel="Incorrect answer indicator"
               />
             )}
@@ -146,46 +149,49 @@ export const QuizOptions: React.FC<QuizOptionsProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  optionsContainer: {
-    gap: 12,
-  },
-  optionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#FAFAFA",
-    borderWidth: 2,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-  },
-  correctOption: {
-    borderColor: "#4CAF50",
-    backgroundColor: "#E8F5E9",
-  },
-  incorrectOption: {
-    borderColor: "#FF6B6B",
-    backgroundColor: "#FFEBEE",
-  },
-  disabledOption: {
-    opacity: 0.6,
-  },
-  optionText: {
-    fontSize: 16,
-    color: "#2D3436",
-    flex: 1,
-  },
-  correctOptionText: {
-    color: "#2E7D32",
-    fontWeight: "600",
-  },
-  incorrectOptionText: {
-    color: "#C62828",
-    fontWeight: "600",
-  },
-  disabledOptionText: {
-    color: "#636E72",
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    optionsContainer: {
+      gap: 12,
+    },
+    optionButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: theme.colors.background.surface,
+      borderWidth: 2,
+      borderColor: theme.colors.ui.border,
+      borderRadius: 12,
+      paddingVertical: 16,
+      paddingHorizontal: 20,
+    },
+    correctOption: {
+      borderColor: theme.colors.success,
+      backgroundColor:
+        theme.mode === "light" ? "#E8F5E9" : theme.colors.background.elevated,
+    },
+    incorrectOption: {
+      borderColor: theme.colors.error,
+      backgroundColor:
+        theme.mode === "light" ? "#FFEBEE" : theme.colors.background.elevated,
+    },
+    disabledOption: {
+      opacity: 0.6,
+    },
+    optionText: {
+      fontSize: 16,
+      color: theme.colors.text.primary,
+      flex: 1,
+    },
+    correctOptionText: {
+      color: "#2E7D32",
+      fontWeight: "600",
+    },
+    incorrectOptionText: {
+      color: "#C62828",
+      fontWeight: "600",
+    },
+    disabledOptionText: {
+      color: "#636E72",
+    },
+  });

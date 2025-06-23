@@ -52,31 +52,31 @@ const AnalyticsDashboard = () => {
     <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
       <AnalyticsHeader onBackPress={() => navigation.goBack()} />
 
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
         <StatsGrid stats={stats} />
 
-          <WordMasteryChart wordMastery={wordMastery} />
+        <WordMasteryChart wordMastery={wordMastery} />
 
-          <LearningProgressChart learningProgress={learningProgress} />
+        <LearningProgressChart learningProgress={learningProgress} />
 
-          <PracticeTimeChart practiceTime={practiceTime} />
+        <PracticeTimeChart practiceTime={practiceTime} />
 
-          <QuizPerformanceChart quizPerformance={quizPerformance} />
+        <QuizPerformanceChart quizPerformance={quizPerformance} />
 
-          <TopWordsSection wordMastery={wordMastery} />
+        <TopWordsSection wordMastery={wordMastery} />
 
-          <BoxDistributionChart boxDistribution={boxDistribution} />
+        <BoxDistributionChart boxDistribution={boxDistribution} />
 
-          <HistoricalBoxDistributionChart
-            historicalBoxDistribution={historicalBoxDistribution}
-          />
+        <HistoricalBoxDistributionChart
+          historicalBoxDistribution={historicalBoxDistribution}
+        />
 
-          {/* Bottom spacing */}
-          <View style={{ height: 20 }} />
+        {/* Bottom spacing */}
+        <View style={{ height: 20 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -84,21 +84,22 @@ const AnalyticsDashboard = () => {
 
 export default AnalyticsDashboard;
 
-const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.default,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: theme.colors.background.default,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background.default,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.background.default,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingBottom: 20,
+    },
+  });

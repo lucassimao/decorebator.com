@@ -113,7 +113,7 @@ export default function SignUpScreen() {
       keyboardWillShow.remove();
       keyboardWillHide.remove();
     };
-  }, []);
+  }, [imageHeight, maxViewportHeight]);
 
   const { mutate: signup } = useMutation<void, Error, usersApi.UserSignup>({
     mutationFn: (userData) => usersApi.signup(userData),

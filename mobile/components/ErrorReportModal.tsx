@@ -10,6 +10,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { ErrorType } from "@/api/errorReporting";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface ErrorReportModalProps {
   visible: boolean;
@@ -31,14 +32,8 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
   errorTypes,
 }) => {
   const { t } = useTranslation();
-
-  const colors = {
-    textDark: "#2D3436",
-    textMedium: "#636E72",
-    white: "#FFFFFF",
-    lightBackground: "#FAFAFA",
-    primary: "#FF7B54",
-  };
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
 
   const isUnrelatedImageOptionAvailable =
     !errorTypes || errorTypes.includes(ErrorType.UnrelatedImage);
@@ -79,7 +74,7 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
                 <MaterialIcons
                   name="image"
                   size={24}
-                  color={colors.textMedium}
+                  color={theme.colors.text.secondary}
                 />
                 <Text style={styles.reportOptionText}>
                   {t(`${context}.reportOptions.imageDoesntMatch`)}
@@ -96,7 +91,7 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
                 <MaterialIcons
                   name="broken-image"
                   size={24}
-                  color={colors.textMedium}
+                  color={theme.colors.text.secondary}
                 />
                 <Text style={styles.reportOptionText}>
                   {t(`${context}.reportOptions.imageNotLoading`)}
@@ -113,7 +108,7 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
                 <MaterialIcons
                   name="help-outline"
                   size={24}
-                  color={colors.textMedium}
+                  color={theme.colors.text.secondary}
                 />
                 <Text style={styles.reportOptionText}>
                   {t(`${context}.reportOptions.wrongMeaning`)}
@@ -130,7 +125,7 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
                 <MaterialIcons
                   name="format-quote"
                   size={24}
-                  color={colors.textMedium}
+                  color={theme.colors.text.secondary}
                 />
                 <Text style={styles.reportOptionText}>
                   {t(`${context}.reportOptions.wrongExample`)}
@@ -147,7 +142,7 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
                 <MaterialIcons
                   name="volume-off"
                   size={24}
-                  color={colors.textMedium}
+                  color={theme.colors.text.secondary}
                 />
                 <Text style={styles.reportOptionText}>
                   {t(`${context}.reportOptions.soundNotPlaying`)}
@@ -168,7 +163,7 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
 
           {isLoading && (
             <View style={styles.reportLoadingOverlay}>
-              <ActivityIndicator size="large" color={colors.primary} />
+              <ActivityIndicator size="large" color={theme.colors.primary} />
             </View>
           )}
         </View>
@@ -177,75 +172,79 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  reportModal: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 24,
-    width: "100%",
-    maxWidth: 400,
-    position: "relative",
-  },
-  reportModalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#2D3436",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  reportModalSubtitle: {
-    fontSize: 16,
-    color: "#636E72",
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  reportOptions: {
-    gap: 12,
-    marginBottom: 24,
-  },
-  reportOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#FAFAFA",
-    borderRadius: 12,
-    gap: 12,
-  },
-  reportOptionText: {
-    fontSize: 16,
-    color: "#2D3436",
-    flex: 1,
-  },
-  reportModalActions: {
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  reportCancelButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  reportCancelText: {
-    fontSize: 16,
-    color: "#636E72",
-    fontWeight: "500",
-  },
-  reportLoadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 16,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 20,
+    },
+    reportModal: {
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: 16,
+      padding: 24,
+      width: "100%",
+      maxWidth: 400,
+      position: "relative",
+    },
+    reportModalTitle: {
+      fontSize: 20,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      textAlign: "center",
+      marginBottom: 8,
+    },
+    reportModalSubtitle: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+      textAlign: "center",
+      marginBottom: 24,
+    },
+    reportOptions: {
+      gap: 12,
+      marginBottom: 24,
+    },
+    reportOption: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 16,
+      backgroundColor: theme.colors.background.default,
+      borderRadius: 12,
+      gap: 12,
+    },
+    reportOptionText: {
+      fontSize: 16,
+      color: theme.colors.text.primary,
+      flex: 1,
+    },
+    reportModalActions: {
+      flexDirection: "row",
+      justifyContent: "center",
+    },
+    reportCancelButton: {
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 8,
+    },
+    reportCancelText: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+      fontWeight: "500",
+    },
+    reportLoadingOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(255, 255, 255, 0.8)"
+          : "rgba(0, 0, 0, 0.8)",
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 16,
+    },
+  });

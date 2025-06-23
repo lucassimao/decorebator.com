@@ -67,7 +67,7 @@ export function useAnalytics(wordlistId: number): UseAnalyticsResult {
     refetchOnMount: cacheConfig.alwaysFetchOnMount,
   };
 
-  // 1) Stats (wordlist-specific) 
+  // 1) Stats (wordlist-specific)
   const {
     data: stats,
     isLoading: statsLoading,

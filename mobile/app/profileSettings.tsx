@@ -12,6 +12,7 @@ import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import i18n, { supportedLanguages } from "@/i18n";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   ActivityIndicator,
   Alert,
@@ -95,6 +96,8 @@ const ProfileSettingsScreen: React.FC = () => {
   );
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
 
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
 
@@ -286,7 +289,7 @@ const ProfileSettingsScreen: React.FC = () => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF7B54" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -315,7 +318,11 @@ const ProfileSettingsScreen: React.FC = () => {
                 style={styles.backButton}
                 onPress={() => navigation.goBack()}
               >
-                <Ionicons name="arrow-back" size={24} color="#2D3436" />
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text.primary}
+                />
               </TouchableOpacity>
               <Text style={styles.headerTitle}>{t("profile.title")}</Text>
               <View style={{ width: 40 }} />
@@ -374,7 +381,7 @@ const ProfileSettingsScreen: React.FC = () => {
                         errors.firstName && styles.inputError,
                       ]}
                       placeholder={t("profile.firstNamePlaceholder")}
-                      placeholderTextColor="#B2BEC3"
+                      placeholderTextColor={theme.colors.text.placeholder}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -406,7 +413,7 @@ const ProfileSettingsScreen: React.FC = () => {
                         errors.lastName && styles.inputError,
                       ]}
                       placeholder={t("profile.lastNamePlaceholder")}
-                      placeholderTextColor="#B2BEC3"
+                      placeholderTextColor={theme.colors.text.placeholder}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -444,7 +451,11 @@ const ProfileSettingsScreen: React.FC = () => {
                           ? getCountryName(value)
                           : t("profile.selectCountry")}
                       </Text>
-                      <Ionicons name="chevron-down" size={20} color="#636E72" />
+                      <Ionicons
+                        name="chevron-down"
+                        size={20}
+                        color={theme.colors.text.secondary}
+                      />
                     </TouchableOpacity>
                   )}
                 />
@@ -475,7 +486,11 @@ const ProfileSettingsScreen: React.FC = () => {
                             )?.nativeName || value
                           : t("dashboard.wordlists.selectLanguage")}
                       </Text>
-                      <Ionicons name="chevron-down" size={20} color="#636E72" />
+                      <Ionicons
+                        name="chevron-down"
+                        size={20}
+                        color={theme.colors.text.secondary}
+                      />
                     </TouchableOpacity>
                   )}
                 />
@@ -505,7 +520,7 @@ const ProfileSettingsScreen: React.FC = () => {
                       <Ionicons
                         name="calendar-outline"
                         size={20}
-                        color="#636E72"
+                        color={theme.colors.text.secondary}
                       />
                     </TouchableOpacity>
                   )}
@@ -794,284 +809,288 @@ const ProfileSettingsScreen: React.FC = () => {
 
 export default ProfileSettingsScreen;
 
-const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: SCREEN_WIDTH,
-  },
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FDF6E3",
-  },
-  scrollContent: {
-    paddingBottom: 30,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#2D3436",
-  },
-  profilePictureSection: {
-    alignItems: "center",
-    paddingVertical: 24,
-  },
-  profilePictureContainer: {
-    position: "relative",
-    marginBottom: 12,
-  },
-  profilePicture: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#FFFFFF",
-  },
-  uploadingOverlay: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  editBadge: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#FF7B54",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 3,
-    borderColor: "#FFFFFF",
-  },
-  emailText: {
-    fontSize: 16,
-    color: "#636E72",
-  },
-  formSection: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#2D3436",
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: "#2D3436",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  inputError: {
-    borderColor: "#FF6B6B",
-  },
-  inputText: {
-    fontSize: 16,
-    color: "#2D3436",
-    flex: 1,
-  },
-  placeholderText: {
-    color: "#B2BEC3",
-  },
-  errorText: {
-    color: "#FF6B6B",
-    fontSize: 12,
-    marginTop: 4,
-  },
-  saveButton: {
-    backgroundColor: "#FF7B54",
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 8,
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  saveButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  actionsSection: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  actionText: {
-    flex: 1,
-    fontSize: 16,
-    color: "#2D3436",
-    marginLeft: 12,
-  },
-  deleteButton: {
-    backgroundColor: "rgba(255, 107, 107, 0.1)",
-  },
-  memberInfo: {
-    alignItems: "center",
-    paddingVertical: 16,
-  },
-  memberText: {
-    fontSize: 14,
-    color: "#636E72",
-  },
-  modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  modalBackdrop: {
-    flex: 1,
-  },
-  countryPickerModal: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: SCREEN_WIDTH * 0.8,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#2D3436",
-  },
-  countryList: {
-    paddingHorizontal: 20,
-  },
-  countryItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-  countryFlag: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  countryName: {
-    fontSize: 16,
-    color: "#2D3436",
-    flex: 1,
-  },
-  languageCode: {
-    fontSize: 14,
-    color: "#636E72",
-    marginLeft: 8,
-  },
-  datePickerContainer: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    marginTop: 12,
-    marginBottom: 20,
-    overflow: "hidden",
-  },
-  datePickerModal: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(0, 0, 0, 0.3)", // Move backdrop color here
-  },
-  datePickerBackdrop: {
-    flex: 1,
-  },
-  datePickerContent: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: Platform.OS === "ios" ? 34 : 20, // Account for safe area
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  datePickerHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
-  },
-  datePickerTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#000000",
-  },
-  datePickerDone: {
-    fontSize: 17,
-    color: "#FF7B54",
-    fontWeight: "600",
-  },
-  datePickerCancel: {
-    fontSize: 17,
-    color: "#636E72",
-  },
-  datePickerWrapper: {
-    height: 216, // Standard iOS picker height
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  datePicker: {
-    width: "100%",
-    backgroundColor: "#FFFFFF",
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    backgroundImage: {
+      flex: 1,
+      width: SCREEN_WIDTH,
+    },
+    container: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.background.default,
+    },
+    scrollContent: {
+      paddingBottom: 30,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.background.surface,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+    },
+    profilePictureSection: {
+      alignItems: "center",
+      paddingVertical: 24,
+    },
+    profilePictureContainer: {
+      position: "relative",
+      marginBottom: 12,
+    },
+    profilePicture: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: theme.colors.background.surface,
+    },
+    uploadingOverlay: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    editBadge: {
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.colors.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      borderWidth: 3,
+      borderColor: theme.colors.background.surface,
+    },
+    emailText: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+    },
+    formSection: {
+      paddingHorizontal: 20,
+      marginBottom: 24,
+    },
+    inputGroup: {
+      marginBottom: 20,
+    },
+    inputLabel: {
+      fontSize: 14,
+      fontWeight: "500",
+      color: theme.colors.text.primary,
+      marginBottom: 8,
+    },
+    input: {
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 16,
+      color: theme.colors.text.primary,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    inputError: {
+      borderColor: theme.colors.error,
+    },
+    inputText: {
+      fontSize: 16,
+      color: theme.colors.text.primary,
+      flex: 1,
+    },
+    placeholderText: {
+      color: theme.colors.text.placeholder,
+    },
+    errorText: {
+      color: theme.colors.error,
+      fontSize: 12,
+      marginTop: 4,
+    },
+    saveButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: "center",
+      marginTop: 8,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+    saveButtonText: {
+      color: theme.colors.text.inverse,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    buttonDisabled: {
+      opacity: 0.7,
+    },
+    actionsSection: {
+      paddingHorizontal: 20,
+      marginBottom: 24,
+    },
+    actionButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+    },
+    actionText: {
+      flex: 1,
+      fontSize: 16,
+      color: theme.colors.text.primary,
+      marginLeft: 12,
+    },
+    deleteButton: {
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(255, 107, 107, 0.1)"
+          : theme.colors.background.subtle,
+    },
+    memberInfo: {
+      alignItems: "center",
+      paddingVertical: 16,
+    },
+    memberText: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+    },
+    modalOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "flex-end",
+    },
+    modalBackdrop: {
+      flex: 1,
+    },
+    countryPickerModal: {
+      backgroundColor: theme.colors.background.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      maxHeight: SCREEN_WIDTH * 0.8,
+    },
+    modalHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.ui.divider,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+    },
+    countryList: {
+      paddingHorizontal: 20,
+    },
+    countryItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.ui.divider,
+    },
+    countryFlag: {
+      fontSize: 24,
+      marginRight: 12,
+    },
+    countryName: {
+      fontSize: 16,
+      color: theme.colors.text.primary,
+      flex: 1,
+    },
+    languageCode: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginLeft: 8,
+    },
+    datePickerContainer: {
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: 12,
+      marginTop: 12,
+      marginBottom: 20,
+      overflow: "hidden",
+    },
+    datePickerModal: {
+      flex: 1,
+      justifyContent: "flex-end",
+      backgroundColor: "rgba(0, 0, 0, 0.3)", // Move backdrop color here
+    },
+    datePickerBackdrop: {
+      flex: 1,
+    },
+    datePickerContent: {
+      backgroundColor: theme.colors.background.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingBottom: Platform.OS === "ios" ? 34 : 20, // Account for safe area
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+    datePickerHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.ui.border,
+    },
+    datePickerTitle: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+    },
+    datePickerDone: {
+      fontSize: 17,
+      color: theme.colors.primary,
+      fontWeight: "600",
+    },
+    datePickerCancel: {
+      fontSize: 17,
+      color: theme.colors.text.secondary,
+    },
+    datePickerWrapper: {
+      height: 216, // Standard iOS picker height
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+    datePicker: {
+      width: "100%",
+      backgroundColor: theme.colors.background.surface,
+    },
+  });

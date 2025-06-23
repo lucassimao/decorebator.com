@@ -1,5 +1,5 @@
-import { Theme } from '@/contexts/ThemeContext';
-import { ViewStyle, TextStyle, ImageStyle } from 'react-native';
+import { Theme } from "@/contexts/ThemeContext";
+import { ViewStyle, TextStyle, ImageStyle } from "react-native";
 
 type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
 
@@ -18,7 +18,7 @@ export const createCommonStyles = <T extends NamedStyles<T>>(theme: Theme) => ({
     flexGrow: 1,
     backgroundColor: theme.colors.background.default,
   },
-  
+
   // Cards
   card: {
     backgroundColor: theme.colors.background.surface,
@@ -32,15 +32,15 @@ export const createCommonStyles = <T extends NamedStyles<T>>(theme: Theme) => ({
     padding: theme.spacing.md,
     ...theme.shadows.md,
   },
-  
+
   // Buttons
   buttonPrimary: {
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
     borderRadius: theme.borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     ...theme.shadows.sm,
   },
   buttonSecondary: {
@@ -50,36 +50,36 @@ export const createCommonStyles = <T extends NamedStyles<T>>(theme: Theme) => ({
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
     borderColor: theme.colors.ui.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonText: {
     color: theme.colors.text.inverse,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   buttonTextSecondary: {
     color: theme.colors.text.primary,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
-  
+
   // Text styles
   heading1: {
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.sm,
   },
   heading2: {
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.sm,
   },
   heading3: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.xs,
   },
@@ -98,7 +98,7 @@ export const createCommonStyles = <T extends NamedStyles<T>>(theme: Theme) => ({
     color: theme.colors.text.secondary,
     lineHeight: 16,
   },
-  
+
   // Form elements
   input: {
     backgroundColor: theme.colors.ui.inputBackground,
@@ -115,33 +115,33 @@ export const createCommonStyles = <T extends NamedStyles<T>>(theme: Theme) => ({
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.xs,
   },
-  
+
   // Layout helpers
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   spaceBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   center: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  
+
   // Dividers
   divider: {
     height: 1,
     backgroundColor: theme.colors.ui.divider,
     marginVertical: theme.spacing.md,
   },
-  
+
   // Status styles
   successBadge: {
     backgroundColor: theme.colors.state.correctBackground,
@@ -155,18 +155,18 @@ export const createCommonStyles = <T extends NamedStyles<T>>(theme: Theme) => ({
     paddingVertical: theme.spacing.xs,
     borderRadius: theme.borderRadius.sm,
   },
-  
+
   // Loading states
   loadingContainer: {
     flex: 1,
     backgroundColor: theme.colors.background.default,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  
+
   // Modal styles
   modalBackdrop: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -193,7 +193,7 @@ export const getChartColors = (theme: Theme) => [
 
 // Helper function to create subtle gradients for backgrounds
 export const getSubtleGradient = (theme: Theme) => {
-  if (theme.mode === 'light') {
+  if (theme.mode === "light") {
     return [
       theme.colors.background.default,
       theme.colors.background.subtle,

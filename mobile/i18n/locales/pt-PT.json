@@ -425,7 +425,10 @@
     "pronunciationLoadError": "Falha ao carregar opções de pronúncia",
     "pronunciationDefaultWillBeUsed": "O sistema de pronúncia padrão será usado",
     "errorMessage": "Falha ao criar lista. Por favor, tente novamente.",
-    "createButton": "Criar Lista"
+    "createButton": "Criar Lista",
+    "contentGuidelines": "Diretrizes de Conteúdo",
+    "contentGuidelinesText": "Por favor, certifique-se de que o conteúdo da sua lista de palavras seja apropriado e siga as nossas diretrizes da comunidade.",
+    "viewGuidelines": "Ver diretrizes completas"
   },
   "pronunciationSystems": {
     "ipa": "IPA",

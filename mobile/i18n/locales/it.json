@@ -425,7 +425,10 @@
     "pronunciationLoadError": "Errore nel caricamento delle opzioni di pronuncia",
     "pronunciationDefaultWillBeUsed": "Verrà utilizzato il sistema di pronuncia predefinito",
     "errorMessage": "Impossibile creare la lista. Riprova.",
-    "createButton": "Crea Lista"
+    "createButton": "Crea Lista",
+    "contentGuidelines": "Linee Guida sui Contenuti",
+    "contentGuidelinesText": "Assicurati che il contenuto della tua lista di parole sia appropriato e segua le nostre linee guida della community.",
+    "viewGuidelines": "Visualizza linee guida complete"
   },
   "pronunciationSystems": {
     "ipa": "IPA",

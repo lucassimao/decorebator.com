@@ -1,7 +1,7 @@
+import { useTheme } from "@/contexts/ThemeContext";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "@/contexts/ThemeContext";
 import {
   Animated,
   StyleSheet,
@@ -10,7 +10,6 @@ import {
   View,
 } from "react-native";
 
-import { useUserInfo } from "@/hooks/users";
 import { useWordlistProgress } from "@/hooks/useWordlistProgress";
 
 // Animated Counter Component
@@ -45,12 +44,14 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
     return () => {
       animatedValue.removeListener(listener);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   return <Text style={style}>{displayValue}</Text>;
 };
 
 // Main Component
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type DashboardStatsProps = {};
 
 const PROGRESS_OVERVIEW_ENABLED = true;
@@ -111,6 +112,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
         }),
       ]).start();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, progressSummary]);
 
   const getProgressPercentage = () => {
@@ -147,7 +149,11 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
   if (isError) {
     return (
       <TouchableOpacity onPress={() => refetch()} style={styles.errorContainer}>
-        <MaterialIcons name="error-outline" size={24} color={theme.colors.error} />
+        <MaterialIcons
+          name="error-outline"
+          size={24}
+          color={theme.colors.error}
+        />
         <Text style={styles.errorText}>
           {t("dashboard.stats.failedToLoad")}
         </Text>
@@ -194,7 +200,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
               <Text style={styles.motivationalText}>
                 {getMotivationalMessage()}
               </Text>
-              {stats?.currentStreak && stats.currentStreak > 0 && (
+              {stats && stats.currentStreak > 0 ? (
                 <View style={styles.streakContainer}>
                   <MaterialIcons
                     name="local-fire-department"
@@ -203,11 +209,11 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
                   />
                   <Text style={styles.streakText}>
                     {t("dashboard.stats.dayStreak", {
-                      count: stats.currentStreak,
+                      count: stats?.currentStreak || 0,
                     })}
                   </Text>
                 </View>
-              )}
+              ) : null}
             </View>
           </View>
         )}
@@ -216,7 +222,11 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
         <View style={styles.statsGrid}>
           <View style={[styles.statItem, styles.statItemFirst]}>
             <View style={styles.iconContainer}>
-              <MaterialIcons name="library-books" size={24} color={theme.colors.primary} />
+              <MaterialIcons
+                name="library-books"
+                size={24}
+                color={theme.colors.primary}
+              />
             </View>
             <View style={styles.labelContainer}>
               <Text style={styles.statLabel}>
@@ -252,7 +262,11 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
 
           <View style={[styles.statItem, styles.statItemLast]}>
             <View style={styles.iconContainer}>
-              <MaterialIcons name="school" size={24} color={theme.colors.semantic.info} />
+              <MaterialIcons
+                name="school"
+                size={24}
+                color={theme.colors.semantic.info}
+              />
             </View>
             <View style={styles.labelContainer}>
               <Text style={styles.statLabel}>
@@ -273,183 +287,206 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
 
 export default DashboardStats;
 
-const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
-  statsContainer: {
-    borderRadius: theme.borderRadius.xl,
-    paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.lg,
-    marginHorizontal: 20,
-    marginBottom: 24,
-    backgroundColor: theme.mode === 'light' ? theme.colors.background.surface : theme.colors.background.elevated,
-    borderWidth: 1,
-    borderColor: theme.mode === 'light' ? theme.colors.ui.border : theme.colors.ui.divider,
-    ...theme.shadows.md,
-    // Extra elevation for contrast
-    elevation: theme.mode === 'light' ? 8 : 12,
-  },
-  loadingContainer: {
-    marginHorizontal: 20,
-    marginBottom: 24,
-  },
-  skeletonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: theme.colors.background.surface,
-    borderRadius: theme.borderRadius.xl,
-    paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.ui.border,
-    ...theme.shadows.md,
-  },
-  skeletonItem: {
-    alignItems: "center",
-    flex: 1,
-  },
-  skeletonCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.ui.divider,
-    marginBottom: 8,
-  },
-  skeletonText: {
-    width: 60,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: theme.colors.ui.divider,
-    marginBottom: 8,
-  },
-  skeletonNumber: {
-    width: 40,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: theme.colors.ui.divider,
-  },
-  errorContainer: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background.surface,
-    borderRadius: theme.borderRadius.xl,
-    paddingVertical: 30,
-    marginHorizontal: 20,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: theme.colors.state.incorrectBackground,
-    ...theme.shadows.md,
-  },
-  errorText: {
-    fontSize: 16,
-    color: theme.colors.text.secondary,
-    marginTop: 8,
-  },
-  retryText: {
-    fontSize: 14,
-    color: theme.colors.primary,
-    marginTop: 4,
-    fontWeight: "500",
-  },
-  progressOverview: {
-    marginBottom: 5,
-  },
-  progressLabel: {
-    fontSize: 14,
-    color: theme.colors.text.secondary,
-    marginBottom: 8,
-    fontWeight: "500",
-  },
-  progressBarContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  progressBarBackground: {
-    flex: 1,
-    height: 8,
-    backgroundColor: theme.colors.ui.divider,
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressBarFill: {
-    height: "100%",
-    backgroundColor: theme.colors.success,
-    borderRadius: 4,
-  },
-  progressPercentage: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: theme.colors.success,
-    minWidth: 45,
-  },
-  motivationalText: {
-    fontSize: 13,
-    color: theme.colors.text.secondary,
-    fontStyle: "italic",
-  },
-  statsGrid: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    minHeight: 120,
-  },
-  statItem: {
-    alignItems: "center",
-    flex: 1,
-    paddingVertical: 8,
-    justifyContent: "space-between",
-  },
-  statItemFirst: {
-    paddingLeft: 0,
-  },
-  statItemLast: {
-    paddingRight: 0,
-  },
-  statDivider: {
-    width: 1,
-    height: 60,
-    backgroundColor: theme.colors.ui.divider,
-    marginHorizontal: 16,
-    borderRadius: 0.5,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.mode === 'light' ? 'rgba(255, 123, 84, 0.08)' : theme.colors.background.subtle,
-    borderWidth: 1,
-    borderColor: theme.mode === 'light' ? 'rgba(255, 123, 84, 0.15)' : theme.colors.ui.border,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
-    ...theme.shadows.sm,
-  },
-  labelContainer: {
-    minHeight: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 4,
-    paddingHorizontal: 4,
-  },
-  statLabel: {
-    fontSize: 13,
-    color: theme.colors.text.secondary,
-    fontWeight: "500",
-    textAlign: "center",
-    lineHeight: 16,
-  },
-  statValue: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: theme.colors.text.primary,
-  },
-  streakContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  streakText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: theme.colors.semantic.warning,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    statsContainer: {
+      borderRadius: theme.borderRadius.xl,
+      paddingVertical: theme.spacing.lg,
+      paddingHorizontal: theme.spacing.lg,
+      marginHorizontal: 20,
+      marginBottom: 24,
+      backgroundColor:
+        theme.mode === "light"
+          ? theme.colors.background.surface
+          : theme.colors.background.elevated,
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light"
+          ? theme.colors.ui.border
+          : theme.colors.ui.divider,
+      ...theme.shadows.md,
+      // Extra elevation for contrast with subtle orange shadow
+      shadowColor:
+        theme.mode === "light"
+          ? theme.colors.primary
+          : theme.colors.text.primary,
+      shadowOpacity: theme.mode === "light" ? 0.15 : 0.1,
+      elevation: theme.mode === "light" ? 8 : 12,
+    },
+    loadingContainer: {
+      marginHorizontal: 20,
+      marginBottom: 24,
+    },
+    skeletonContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: theme.borderRadius.xl,
+      paddingVertical: theme.spacing.lg,
+      paddingHorizontal: theme.spacing.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      ...theme.shadows.md,
+      shadowColor:
+        theme.mode === "light"
+          ? theme.colors.primary
+          : theme.colors.text.primary,
+      shadowOpacity: theme.mode === "light" ? 0.15 : 0.1,
+    },
+    skeletonItem: {
+      alignItems: "center",
+      flex: 1,
+    },
+    skeletonCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.ui.divider,
+      marginBottom: 8,
+    },
+    skeletonText: {
+      width: 60,
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: theme.colors.ui.divider,
+      marginBottom: 8,
+    },
+    skeletonNumber: {
+      width: 40,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: theme.colors.ui.divider,
+    },
+    errorContainer: {
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: theme.borderRadius.xl,
+      paddingVertical: 30,
+      marginHorizontal: 20,
+      marginBottom: 24,
+      borderWidth: 1,
+      borderColor: theme.colors.state.incorrectBackground,
+      ...theme.shadows.md,
+    },
+    errorText: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+      marginTop: 8,
+    },
+    retryText: {
+      fontSize: 14,
+      color: theme.colors.primary,
+      marginTop: 4,
+      fontWeight: "500",
+    },
+    progressOverview: {
+      marginBottom: 5,
+    },
+    progressLabel: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginBottom: 8,
+      fontWeight: "500",
+    },
+    progressBarContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    progressBarBackground: {
+      flex: 1,
+      height: 8,
+      backgroundColor: theme.colors.ui.divider,
+      borderRadius: 4,
+      overflow: "hidden",
+    },
+    progressBarFill: {
+      height: "100%",
+      backgroundColor: theme.colors.success,
+      borderRadius: 4,
+    },
+    progressPercentage: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.colors.success,
+      minWidth: 45,
+    },
+    motivationalText: {
+      fontSize: 13,
+      color: theme.colors.text.secondary,
+      fontStyle: "italic",
+    },
+    statsGrid: {
+      flexDirection: "row",
+      alignItems: "stretch",
+      minHeight: 120,
+    },
+    statItem: {
+      alignItems: "center",
+      flex: 1,
+      paddingVertical: 8,
+      justifyContent: "space-between",
+    },
+    statItemFirst: {
+      paddingLeft: 0,
+    },
+    statItemLast: {
+      paddingRight: 0,
+    },
+    statDivider: {
+      width: 1,
+      height: 60,
+      backgroundColor: theme.colors.ui.divider,
+      marginHorizontal: 16,
+      borderRadius: 0.5,
+    },
+    iconContainer: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(255, 123, 84, 0.08)"
+          : theme.colors.background.subtle,
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light"
+          ? "rgba(255, 123, 84, 0.15)"
+          : theme.colors.ui.border,
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 12,
+      ...theme.shadows.sm,
+    },
+    labelContainer: {
+      minHeight: 32,
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 4,
+      paddingHorizontal: 4,
+    },
+    statLabel: {
+      fontSize: 13,
+      color: theme.colors.text.secondary,
+      fontWeight: "500",
+      textAlign: "center",
+      lineHeight: 16,
+    },
+    statValue: {
+      fontSize: 28,
+      fontWeight: "700",
+      color: theme.colors.text.primary,
+    },
+    streakContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    streakText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.colors.semantic.warning,
+    },
+  });

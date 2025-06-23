@@ -425,7 +425,10 @@
     "pronunciationLoadError": "Error al cargar las opciones de pronunciación",
     "pronunciationDefaultWillBeUsed": "Se usará el sistema de pronunciación predeterminado",
     "errorMessage": "Error al crear la lista. Por favor, inténtalo de nuevo.",
-    "createButton": "Crear Lista"
+    "createButton": "Crear Lista",
+    "contentGuidelines": "Pautas de Contenido",
+    "contentGuidelinesText": "Por favor asegúrate de que el contenido de tu lista sea apropiado y siga nuestras pautas de la comunidad.",
+    "viewGuidelines": "Ver pautas completas"
   },
   "pronunciationSystems": {
     "ipa": "AFI",

@@ -1,38 +1,34 @@
-import React, { useState, useRef, useEffect } from "react";
+import { ErrorReportModal } from "@/components/ErrorReportModal";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { useTheme } from "@/contexts/ThemeContext";
+import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useQuery } from "@tanstack/react-query";
+import { useAudioPlayer } from "expo-audio";
+import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  View,
-  Text,
-  StyleSheet,
   Animated,
   Dimensions,
-  ActivityIndicator,
   SafeAreaView,
-  Alert,
+  StyleSheet,
+  Text,
   TouchableOpacity,
-  ImageBackground,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { MaterialIcons } from "@expo/vector-icons";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { ErrorReportModal } from "@/components/ErrorReportModal";
-import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
-import * as offlineWordlistsApi from "@/api/offlineWordlists";
-import { useOffline } from "@/hooks/useOffline";
-import { useErrorReporting } from "@/hooks/useErrorReporting";
 import { ErrorType } from "@/api/errorReporting";
+import * as offlineWordlistsApi from "@/api/offlineWordlists";
+import { useErrorReporting } from "@/hooks/useErrorReporting";
+import { useOffline } from "@/hooks/useOffline";
 
-import { FlashcardHeader } from "@/components/flashcard/FlashcardHeader";
-import { FlashcardProgressBar } from "@/components/flashcard/FlashcardProgressBar";
 import { FlashcardContent } from "@/components/flashcard/FlashcardContent";
-import { FlashcardNavigation } from "@/components/flashcard/FlashcardNavigation";
+import { FlashcardHeader } from "@/components/flashcard/FlashcardHeader";
 import { FlashcardLoadingState } from "@/components/flashcard/FlashcardLoadingState";
-import { ErrorState } from "@/components/ErrorState";
+import { FlashcardNavigation } from "@/components/flashcard/FlashcardNavigation";
+import { FlashcardProgressBar } from "@/components/flashcard/FlashcardProgressBar";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -75,13 +71,16 @@ const FlashcardPractice: React.FC = () => {
   const [isRetrying, setIsRetrying] = useState(false);
   const player = useAudioPlayer();
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { theme } = useTheme();
+  // const commonStyles = createCommonStyles(theme); // Remove if not defined
+  const styles = createStyles(theme);
 
   // Fetch words with definitions only to avoid broken flashcards
   const {
     data: words,
     isLoading,
     error,
-    refetch: refetchWords,
+    // refetch: refetchWords, // Removed unused variable
     isFetching,
   } = useQuery({
     queryKey: ["words", wordlistId, "withDefinitions", retryCount],
@@ -327,11 +326,7 @@ const FlashcardPractice: React.FC = () => {
 
   if (isLoading || isLoadingPosition || (isRetrying && isFetching)) {
     return (
-      <ImageBackground
-        source={require("@/assets/images/dashboard-bg.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
+      <SafeAreaView style={styles.container}>
         <FlashcardLoadingState
           isLoading={true}
           hasTimeout={loadingTimeout}
@@ -341,64 +336,50 @@ const FlashcardPractice: React.FC = () => {
           onGoBack={() => router.back()}
           colors={colors}
         />
-      </ImageBackground>
+      </SafeAreaView>
     );
   }
 
   // Handle offline error state
   if (error && !isOnline && !isOfflineAvailable) {
     return (
-      <ImageBackground
-        source={require("@/assets/images/dashboard-bg.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.container}>
-          <View style={styles.errorContainer}>
-            <MaterialIcons
-              name="cloud-off"
-              size={64}
-              color={colors.textMedium}
-            />
-            <Text style={[styles.errorTitle, { color: colors.textMedium }]}>
-              {t("offline.premiumRequired")}
-            </Text>
-            <Text style={[styles.errorMessage, { color: colors.textMedium }]}>
-              {t("offline.premiumRequiredMessage")}
-            </Text>
-            <TouchableOpacity
-              style={[styles.backButton, { backgroundColor: colors.primary }]}
-              onPress={() => router.back()}
-            >
-              <Text style={[styles.backButtonText, { color: colors.white }]}>
-                {t("common.goBack")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <MaterialIcons
+            name="cloud-off"
+            size={64}
+            color={theme.colors.text.secondary}
+          />
+          <Text style={styles.errorTitle}>{t("offline.premiumRequired")}</Text>
+          <Text style={styles.errorMessage}>
+            {t("offline.premiumRequiredMessage")}
+          </Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backButtonText}>{t("common.goBack")}</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (error || !words || words.length === 0) {
     return (
-      <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <MaterialIcons
             name="error-outline"
             size={64}
             color={theme.colors.error}
           />
-          <Text style={styles.errorTitle}>
-            {t("flashcards.noWordsFound")}
-          </Text>
+          <Text style={styles.errorTitle}>{t("flashcards.noWordsFound")}</Text>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backButtonText}>
-              {t("common.goBack")}
-            </Text>
+            <Text style={styles.backButtonText}>{t("common.goBack")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -406,95 +387,96 @@ const FlashcardPractice: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+    <SafeAreaView style={styles.container}>
       <OfflineIndicator />
 
-        <FlashcardHeader
-          wordlistName={wordlistName || ""}
-          currentIndex={currentIndex}
-          totalWords={words.length}
-          isOnline={isOnline}
-          onClose={() => router.back()}
-          onReportError={openReportModal}
-          savePosition={savePosition}
-          onToggleSavePosition={handleToggleSavePosition}
-        />
+      <FlashcardHeader
+        wordlistName={wordlistName || ""}
+        currentIndex={currentIndex}
+        totalWords={words.length}
+        isOnline={isOnline}
+        onClose={() => router.back()}
+        onReportError={openReportModal}
+        savePosition={savePosition}
+        onToggleSavePosition={handleToggleSavePosition}
+      />
 
-        <FlashcardProgressBar
-          currentIndex={currentIndex}
-          totalWords={words.length}
-        />
+      <FlashcardProgressBar
+        currentIndex={currentIndex}
+        totalWords={words.length}
+      />
 
-        <FlashcardContent
-          currentWord={currentWord!}
-          definitions={definitions}
-          isFlipped={isFlipped}
-          shouldFetchDefinitions={shouldFetchDefinitions}
-          loadingDefinitions={loadingDefinitions}
-          definitionsError={definitionsError}
-          slideAnimation={slideAnimation}
-          scaleAnimation={scaleAnimation}
-          onFlip={flipCard}
-          onRefetchDefinitions={refetchDefinitions}
-        />
+      <FlashcardContent
+        currentWord={currentWord!}
+        definitions={definitions}
+        isFlipped={isFlipped}
+        shouldFetchDefinitions={shouldFetchDefinitions}
+        loadingDefinitions={loadingDefinitions}
+        definitionsError={definitionsError}
+        slideAnimation={slideAnimation}
+        scaleAnimation={scaleAnimation}
+        onFlip={flipCard}
+        onRefetchDefinitions={refetchDefinitions}
+      />
 
-        <FlashcardNavigation
-          currentIndex={currentIndex}
-          totalWords={words.length}
-          onNavigate={navigateCard}
-        />
+      <FlashcardNavigation
+        currentIndex={currentIndex}
+        totalWords={words.length}
+        onNavigate={navigateCard}
+      />
 
-        {/* Error Reporting Modal */}
-        <ErrorReportModal
-          visible={showReportModal}
-          onClose={closeReportModal}
-          onReportError={handleReportError}
-          isLoading={isReporting}
-          context="flashcards"
-          wordName={currentWord?.name}
-          errorTypes={[ErrorType.SoundNotPlaying, ErrorType.UnrelatedMeaning]}
-        />
+      {/* Error Reporting Modal */}
+      <ErrorReportModal
+        visible={showReportModal}
+        onClose={closeReportModal}
+        onReportError={handleReportError}
+        isLoading={isReporting}
+        context="flashcards"
+        wordName={currentWord?.name}
+        errorTypes={[ErrorType.SoundNotPlaying, ErrorType.UnrelatedMeaning]}
+      />
     </SafeAreaView>
   );
 };
 
 export default FlashcardPractice;
 
-const createStyles = (theme: ReturnType<typeof useTheme>['theme']) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.default,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: theme.colors.text.primary,
-    marginTop: 16,
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  errorMessage: {
-    fontSize: 16,
-    color: theme.colors.text.secondary,
-    textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  backButton: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
-  },
-  backButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: theme.colors.text.inverse,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background.default,
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: 40,
+    },
+    errorTitle: {
+      fontSize: 20,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      marginTop: 16,
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    errorMessage: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+      textAlign: "center",
+      lineHeight: 22,
+      marginBottom: 24,
+    },
+    backButton: {
+      backgroundColor: theme.colors.primary,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 25,
+    },
+    backButtonText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.colors.text.inverse,
+    },
+  });

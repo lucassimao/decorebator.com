@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Alert,
+  // Alert, // Removed unused import
   Dimensions,
   Image,
   StyleSheet,
@@ -83,7 +83,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
         }
       }
     }
-  }, [quiz?.value, quiz?.type]); // Remove currentImageUrl from dependencies to avoid loops
+  }, [quiz?.value, quiz?.type, currentImageUrl]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -164,7 +164,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
       case "GUESS_MEANING":
         return (
           <View style={styles.questionContainer}>
-            <Text 
+            <Text
               style={styles.wordText}
               accessibilityRole="text"
               accessibilityLabel={`Word to define: ${quiz.value}`}
@@ -172,7 +172,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
               {quiz.value}
             </Text>
             {quiz.pos && (
-              <Text 
+              <Text
                 style={styles.posText}
                 accessibilityRole="text"
                 accessibilityLabel={`Part of speech: ${quiz.pos}`}
@@ -181,7 +181,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
               </Text>
             )}
             {quiz.pronunciation && (
-              <Text 
+              <Text
                 style={styles.pronunciationText}
                 accessibilityRole="text"
                 accessibilityLabel={`Pronunciation: ${quiz.pronunciation}`}
@@ -190,18 +190,20 @@ export const QuizContent: React.FC<QuizContentProps> = ({
               </Text>
             )}
             {quiz.audioURL && (
-              <TouchableOpacity 
-                style={styles.audioButton} 
+              <TouchableOpacity
+                style={styles.audioButton}
                 onPress={playAudio}
                 accessibilityRole="button"
-                accessibilityLabel={isPlaying ? "Pause pronunciation" : "Play pronunciation"}
+                accessibilityLabel={
+                  isPlaying ? "Pause pronunciation" : "Play pronunciation"
+                }
                 accessibilityHint="Plays the pronunciation of the current word"
                 accessibilityState={{ selected: isPlaying }}
               >
                 <Ionicons
                   name={isPlaying ? "pause-circle" : "play-circle"}
                   size={48}
-                  color="#FF7B54"
+                  color={theme.colors.primary}
                 />
               </TouchableOpacity>
             )}
@@ -211,7 +213,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
       case "COMPLETE_SENTENCE":
         return (
           <View style={styles.questionContainer}>
-            <Text 
+            <Text
               style={styles.sentenceText}
               accessibilityRole="text"
               accessibilityLabel={`Complete this sentence: ${hideSquareBracketContent(quiz.value)}`}
@@ -219,7 +221,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
               {hideSquareBracketContent(quiz.value)}
             </Text>
             {quiz.pos && (
-              <Text 
+              <Text
                 style={styles.posText}
                 accessibilityRole="text"
                 accessibilityLabel={`Part of speech: ${quiz.pos}${quiz.isVerbType ? ", using inflections" : ""}`}
@@ -234,7 +236,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
       case "WORD_FROM_MEANING":
         return (
           <View style={styles.questionContainer}>
-            <Text 
+            <Text
               style={styles.meaningText}
               accessibilityRole="text"
               accessibilityLabel={`Find the word that matches this meaning: ${quiz.value}`}
@@ -250,23 +252,27 @@ export const QuizContent: React.FC<QuizContentProps> = ({
             <View style={styles.imageContainer}>
               {showLoading && !imageError && (
                 <View style={styles.imageLoadingContainer}>
-                  <ActivityIndicator size="large" color="#FF7B54" />
+                  <ActivityIndicator
+                    size="large"
+                    color={theme.colors.primary}
+                  />
                   <Text style={styles.imageLoadingText}>
                     {t("quiz.loadingImage")}
                   </Text>
                 </View>
               )}
               {imageError ? (
-                <View 
+                <View
                   style={styles.imageErrorContainer}
                   accessibilityRole="alert"
                   accessibilityLabel="Image failed to load"
                 >
-                  <Ionicons name="image-outline" size={48} color="#B2BEC3" />
-                  <Text 
-                    style={styles.imageErrorText}
-                    accessibilityRole="text"
-                  >
+                  <Ionicons
+                    name="image-outline"
+                    size={48}
+                    color={theme.colors.ui.disabled}
+                  />
+                  <Text style={styles.imageErrorText} accessibilityRole="text">
                     {t("quiz.imageLoadError")}
                   </Text>
                   <View style={styles.imageErrorActions}>
@@ -277,7 +283,11 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                       accessibilityLabel="Retry loading image"
                       accessibilityHint="Attempts to reload the image"
                     >
-                      <Ionicons name="refresh" size={20} color="#FFFFFF" />
+                      <Ionicons
+                        name="refresh"
+                        size={20}
+                        color={theme.colors.text.inverse}
+                      />
                       <Text style={styles.retryButtonText}>
                         {t("common.retry")}
                       </Text>
@@ -295,7 +305,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                     </TouchableOpacity>
                   </View>
                   {imageRetryCount > 0 && (
-                    <Text 
+                    <Text
                       style={styles.retryCountText}
                       accessibilityRole="text"
                       accessibilityLabel={`Retry attempts: ${imageRetryCount}`}
@@ -314,9 +324,11 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                   resizeMode="contain"
                   accessible={true}
                   accessibilityRole="image"
-                  accessibilityLabel={quiz.imageDescription ? 
-                    `Quiz image: ${hideSquareBracketContent(quiz.imageDescription)}` : 
-                    "Quiz image for word identification"}
+                  accessibilityLabel={
+                    quiz.imageDescription
+                      ? `Quiz image: ${hideSquareBracketContent(quiz.imageDescription)}`
+                      : "Quiz image for word identification"
+                  }
                   accessibilityHint="This image represents the word you need to identify"
                   onLoadStart={() => {
                     // Only set loading if not already loading to prevent rapid state changes
@@ -388,11 +400,17 @@ export const QuizContent: React.FC<QuizContentProps> = ({
         const getAudioQuizLabel = () => {
           switch (quiz.type) {
             case "WORD_FROM_AUDIO":
-              return isPlaying ? "Audio is playing, listen for the word" : "Play audio to hear the word";
+              return isPlaying
+                ? "Audio is playing, listen for the word"
+                : "Play audio to hear the word";
             case "MEANING_FROM_AUDIO":
-              return isPlaying ? "Audio is playing, listen and select the meaning" : "Play audio to hear the word, then select its meaning";
+              return isPlaying
+                ? "Audio is playing, listen and select the meaning"
+                : "Play audio to hear the word, then select its meaning";
             case "WORD_FROM_EXAMPLE_AUDIO":
-              return isPlaying ? "Audio is playing, listen for the example sentence" : "Play audio to hear an example sentence";
+              return isPlaying
+                ? "Audio is playing, listen for the example sentence"
+                : "Play audio to hear an example sentence";
             default:
               return isPlaying ? "Audio is playing" : "Tap to play audio";
           }
@@ -411,12 +429,9 @@ export const QuizContent: React.FC<QuizContentProps> = ({
               <Ionicons
                 name={isPlaying ? "pause-circle" : "play-circle"}
                 size={80}
-                color="#FF7B54"
+                color={theme.colors.primary}
               />
-              <Text 
-                style={styles.audioText}
-                accessibilityRole="text"
-              >
+              <Text style={styles.audioText} accessibilityRole="text">
                 {isPlaying ? t("quiz.audioPlaying") : t("quiz.audioTapToPlay")}
               </Text>
             </TouchableOpacity>
@@ -427,7 +442,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
         const correctAnswer = quiz.options[quiz.answerIndex];
         return (
           <View style={styles.questionContainer}>
-            <Text 
+            <Text
               style={styles.meaningText}
               accessibilityRole="text"
               accessibilityLabel={`Type the word that matches this definition: ${quiz.value}`}
@@ -435,7 +450,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
               {quiz.value}
             </Text>
             {quiz.pos && (
-              <Text 
+              <Text
                 style={styles.posText}
                 accessibilityRole="text"
                 accessibilityLabel={`Part of speech: ${quiz.pos}`}
@@ -444,7 +459,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
               </Text>
             )}
             {quiz.pronunciation && (
-              <Text 
+              <Text
                 style={styles.pronunciationText}
                 accessibilityRole="text"
                 accessibilityLabel={`Pronunciation: ${quiz.pronunciation}`}
@@ -466,7 +481,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                     styles.incorrectInput,
                 ]}
                 placeholder={t("quiz.typeAnswerPlaceholder")}
-                placeholderTextColor="#B2BEC3"
+                placeholderTextColor={theme.colors.text.disabled}
                 value={userInput}
                 onChangeText={setUserInput}
                 autoCapitalize="none"
@@ -476,9 +491,12 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                 accessibilityRole="search"
                 accessibilityLabel="Type your answer here"
                 accessibilityHint="Enter the word that matches the given definition"
-                accessibilityState={{ 
+                accessibilityState={{
                   disabled: isSubmitted,
-                  selected: isSubmitted && userInput.toLowerCase().trim() === correctAnswer.toLowerCase()
+                  selected:
+                    isSubmitted &&
+                    userInput.toLowerCase().trim() ===
+                      correctAnswer.toLowerCase(),
                 }}
               />
               {!isSubmitted && (
@@ -514,7 +532,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
               )}
             </View>
             {isSubmitted && (
-              <View 
+              <View
                 style={styles.answerFeedback}
                 accessibilityRole="alert"
                 accessibilityLiveRegion="assertive"
@@ -525,9 +543,9 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                     <Ionicons
                       name="checkmark-circle"
                       size={24}
-                      color="#4CAF50"
+                      color={theme.colors.success}
                     />
-                    <Text 
+                    <Text
                       style={styles.correctFeedback}
                       accessibilityRole="text"
                       accessibilityLabel={`Correct! ${t("quiz.correctAnswer")}`}
@@ -537,8 +555,12 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                   </>
                 ) : (
                   <>
-                    <Ionicons name="close-circle" size={24} color="#FF6B6B" />
-                    <Text 
+                    <Ionicons
+                      name="close-circle"
+                      size={24}
+                      color={theme.colors.error}
+                    />
+                    <Text
                       style={styles.incorrectFeedback}
                       accessibilityRole="text"
                       accessibilityLabel={`Incorrect. The correct answer is: ${correctAnswer}`}
@@ -558,12 +580,13 @@ export const QuizContent: React.FC<QuizContentProps> = ({
     }
   };
 
+  const styles = createStyles(theme);
+
   return (
     <View style={styles.container}>
-      <Text 
+      <Text
         style={styles.quizTitle}
         accessibilityRole="header"
-        accessibilityLevel={1}
         accessibilityLabel={`Quiz question: ${getQuizTitle()}`}
       >
         {getQuizTitle()}
@@ -573,223 +596,226 @@ export const QuizContent: React.FC<QuizContentProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  quizTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#2D3436",
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  questionContainer: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  wordText: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#FF7B54",
-    marginBottom: 8,
-  },
-  posText: {
-    fontSize: 16,
-    color: "#636E72",
-    fontStyle: "italic",
-    marginBottom: 16,
-  },
-  pronunciationText: {
-    fontSize: 14,
-    color: "#636E72",
-    fontStyle: "italic",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  sentenceText: {
-    fontSize: 18,
-    color: "#2D3436",
-    lineHeight: 28,
-    textAlign: "center",
-  },
-  meaningText: {
-    fontSize: 18,
-    color: "#2D3436",
-    lineHeight: 26,
-    textAlign: "center",
-  },
-  questionImage: {
-    width: SCREEN_WIDTH - 80,
-    height: 200,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  imageDescription: {
-    fontSize: 14,
-    color: "#636E72",
-    fontStyle: "italic",
-  },
-  audioButton: {
-    marginTop: 16,
-  },
-  largeAudioButton: {
-    alignItems: "center",
-    gap: 12,
-  },
-  audioText: {
-    fontSize: 16,
-    color: "#636E72",
-  },
-  imageContainer: {
-    width: SCREEN_WIDTH - 80,
-    height: 200,
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  imageLoadingContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1,
-  },
-  imageLoadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: "#636E72",
-  },
-  hiddenImage: {
-    opacity: 0,
-  },
-  imageErrorContainer: {
-    width: SCREEN_WIDTH - 80,
-    height: 200,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  imageErrorText: {
-    fontSize: 16,
-    color: "#636E72",
-    marginTop: 12,
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  imageErrorActions: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  retryButton: {
-    flexDirection: "row",
-    backgroundColor: "#FF7B54",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    gap: 8,
-  },
-  retryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  skipImageButton: {
-    backgroundColor: "transparent",
-    borderWidth: 2,
-    borderColor: "#E0E0E0",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  skipImageButtonText: {
-    color: "#636E72",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  retryCountText: {
-    fontSize: 12,
-    color: "#B2BEC3",
-    marginTop: 12,
-  },
-  writeInputContainer: {
-    marginTop: 24,
-    width: "100%",
-  },
-  writeInput: {
-    backgroundColor: "#FAFAFA",
-    borderWidth: 2,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 18,
-    color: "#2D3436",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  correctInput: {
-    borderColor: "#4CAF50",
-    backgroundColor: "#E8F5E9",
-  },
-  incorrectInput: {
-    borderColor: "#FF6B6B",
-    backgroundColor: "#FFEBEE",
-  },
-  buttonContainer: {
-    gap: 12,
-  },
-  submitAnswerButton: {
-    backgroundColor: "#FF7B54",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#DFE6E9",
-    opacity: 0.6,
-  },
-  submitAnswerText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  skipButton: {
-    backgroundColor: "transparent",
-    borderWidth: 2,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  skipButtonText: {
-    color: "#636E72",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  answerFeedback: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 16,
-    gap: 8,
-  },
-  correctFeedback: {
-    color: "#4CAF50",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  incorrectFeedback: {
-    color: "#FF6B6B",
-    fontSize: 16,
-    textAlign: "center",
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    quizTitle: {
+      fontSize: 20,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      textAlign: "center",
+      marginBottom: 24,
+    },
+    questionContainer: {
+      alignItems: "center",
+      marginBottom: 32,
+    },
+    wordText: {
+      fontSize: 32,
+      fontWeight: "700",
+      color: theme.colors.primary,
+      marginBottom: 8,
+    },
+    posText: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+      fontStyle: "italic",
+      marginBottom: 16,
+    },
+    pronunciationText: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      fontStyle: "italic",
+      marginBottom: 16,
+      textAlign: "center",
+    },
+    sentenceText: {
+      fontSize: 18,
+      color: theme.colors.text.primary,
+      lineHeight: 28,
+      textAlign: "center",
+    },
+    meaningText: {
+      fontSize: 18,
+      color: theme.colors.text.primary,
+      lineHeight: 26,
+      textAlign: "center",
+    },
+    questionImage: {
+      width: SCREEN_WIDTH - 80,
+      height: 200,
+      borderRadius: 12,
+      marginBottom: 16,
+    },
+    imageDescription: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      fontStyle: "italic",
+    },
+    audioButton: {
+      marginTop: 16,
+    },
+    largeAudioButton: {
+      alignItems: "center",
+      gap: 12,
+    },
+    audioText: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+    },
+    imageContainer: {
+      width: SCREEN_WIDTH - 80,
+      height: 200,
+      position: "relative",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    imageLoadingContainer: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: 12,
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 1,
+    },
+    imageLoadingText: {
+      marginTop: 12,
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+    },
+    hiddenImage: {
+      opacity: 0,
+    },
+    imageErrorContainer: {
+      width: SCREEN_WIDTH - 80,
+      height: 200,
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: 12,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 20,
+    },
+    imageErrorText: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+      marginTop: 12,
+      marginBottom: 20,
+      textAlign: "center",
+    },
+    imageErrorActions: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    retryButton: {
+      flexDirection: "row",
+      backgroundColor: theme.colors.primary,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 8,
+      alignItems: "center",
+      gap: 8,
+    },
+    retryButtonText: {
+      color: theme.colors.text.inverse,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    skipImageButton: {
+      backgroundColor: "transparent",
+      borderWidth: 2,
+      borderColor: theme.colors.ui.border,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 8,
+    },
+    skipImageButtonText: {
+      color: theme.colors.text.secondary,
+      fontSize: 14,
+      fontWeight: "500",
+    },
+    retryCountText: {
+      fontSize: 12,
+      color: theme.colors.ui.disabled,
+      marginTop: 12,
+    },
+    writeInputContainer: {
+      marginTop: 24,
+      width: "100%",
+    },
+    writeInput: {
+      backgroundColor: theme.colors.background.surface,
+      borderWidth: 2,
+      borderColor: theme.colors.ui.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 18,
+      color: theme.colors.text.primary,
+      textAlign: "center",
+      marginBottom: 16,
+    },
+    correctInput: {
+      borderColor: theme.colors.success,
+      backgroundColor:
+        theme.mode === "light" ? "#E8F5E9" : theme.colors.background.elevated,
+    },
+    incorrectInput: {
+      borderColor: theme.colors.error,
+      backgroundColor:
+        theme.mode === "light" ? "#FFEBEE" : theme.colors.background.elevated,
+    },
+    buttonContainer: {
+      gap: 12,
+    },
+    submitAnswerButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: "center",
+    },
+    submitButtonDisabled: {
+      backgroundColor: theme.colors.ui.disabled,
+      opacity: 0.6,
+    },
+    submitAnswerText: {
+      color: theme.colors.text.inverse,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    skipButton: {
+      backgroundColor: "transparent",
+      borderWidth: 2,
+      borderColor: theme.colors.ui.border,
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: "center",
+    },
+    skipButtonText: {
+      color: theme.colors.text.secondary,
+      fontSize: 16,
+      fontWeight: "500",
+    },
+    answerFeedback: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 16,
+      gap: 8,
+    },
+    correctFeedback: {
+      color: theme.colors.success,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    incorrectFeedback: {
+      color: theme.colors.error,
+      fontSize: 16,
+      textAlign: "center",
+    },
+  });

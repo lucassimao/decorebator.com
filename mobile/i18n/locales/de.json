@@ -434,7 +434,10 @@
     "pronunciationLoadError": "Fehler beim Laden der Ausspracheoptionen",
     "pronunciationDefaultWillBeUsed": "Das Standard-Aussprachesystem wird verwendet",
     "errorMessage": "Fehler beim Erstellen der Wortliste. Bitte versuchen Sie es erneut.",
-    "createButton": "Wortliste erstellen"
+    "createButton": "Wortliste erstellen",
+    "contentGuidelines": "Inhaltsrichtlinien",
+    "contentGuidelinesText": "Bitte stellen Sie sicher, dass der Inhalt Ihrer Wortliste angemessen ist und unseren Community-Richtlinien entspricht.",
+    "viewGuidelines": "Vollständige Richtlinien anzeigen"
   },
   "pronunciationSystems": {
     "ipa": "IPA",

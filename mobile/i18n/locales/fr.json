@@ -425,7 +425,10 @@
     "pronunciationLoadError": "Échec du chargement des options de prononciation",
     "pronunciationDefaultWillBeUsed": "Le système de prononciation par défaut sera utilisé",
     "errorMessage": "Échec de la création de la liste. Veuillez réessayer.",
-    "createButton": "Créer la liste"
+    "createButton": "Créer la liste",
+    "contentGuidelines": "Directives de Contenu",
+    "contentGuidelinesText": "Veuillez vous assurer que le contenu de votre liste de mots est approprié et respecte nos directives communautaires.",
+    "viewGuidelines": "Voir les directives complètes"
   },
   "pronunciationSystems": {
     "ipa": "API",

@@ -2,8 +2,9 @@ import React from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { BarChart } from "react-native-chart-kit";
 import { useTranslation } from "react-i18next";
-import { colors, chartConfig } from "./theme";
+import { getChartColors, getChartConfig } from "./theme";
 import { PracticeTimeResponse } from "@/api/analytics";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -15,6 +16,10 @@ export const PracticeTimeChart: React.FC<PracticeTimeChartProps> = ({
   practiceTime,
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const chartConfig = getChartConfig(theme);
+  const chartColors = getChartColors(theme);
+  const styles = createStyles(theme);
 
   const formatDateLabel = (dateString: string): string => {
     try {
@@ -153,7 +158,7 @@ export const PracticeTimeChart: React.FC<PracticeTimeChartProps> = ({
           yAxisSuffix=""
           chartConfig={{
             ...chartConfig,
-            color: (opacity = 1) => `rgba(74, 144, 226, ${opacity})`, // Blue color
+            color: (opacity = 1) => chartColors.secondary(opacity),
             barPercentage: 0.7,
             decimalPlaces: 1,
             formatTopBarValue: (value: number) => formatMinutes(value),
@@ -176,69 +181,70 @@ export const PracticeTimeChart: React.FC<PracticeTimeChartProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  chartCard: {
-    backgroundColor: colors.white,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    chartCard: {
+      backgroundColor: theme.colors.background.surface,
+      marginHorizontal: 16,
+      marginVertical: 8,
+      borderRadius: 16,
+      padding: 20,
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 3.84,
+      elevation: 5,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  chartTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: colors.textDark,
-    marginBottom: 4,
-  },
-  chartSubtitle: {
-    fontSize: 14,
-    color: colors.textMedium,
-    marginBottom: 16,
-  },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 16,
-    paddingVertical: 12,
-    backgroundColor: colors.lightBackground,
-    borderRadius: 12,
-  },
-  statItem: {
-    alignItems: "center",
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: colors.primary,
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: colors.textMedium,
-    textAlign: "center",
-  },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 16,
-    marginLeft: -20,
-  },
-  emptyChartContainer: {
-    height: 200,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.lightBackground,
-    borderRadius: 12,
-  },
-  emptyChartText: {
-    fontSize: 16,
-    color: colors.textLight,
-  },
-});
+    chartTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: theme.colors.text.primary,
+      marginBottom: 4,
+    },
+    chartSubtitle: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginBottom: 16,
+    },
+    statsContainer: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      marginBottom: 16,
+      paddingVertical: 12,
+      backgroundColor: theme.colors.background.subtle,
+      borderRadius: 12,
+    },
+    statItem: {
+      alignItems: "center",
+    },
+    statValue: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: theme.colors.primary,
+      marginBottom: 4,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: theme.colors.text.secondary,
+      textAlign: "center",
+    },
+    chart: {
+      marginVertical: 8,
+      borderRadius: 16,
+      marginLeft: -20,
+    },
+    emptyChartContainer: {
+      height: 200,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.background.default,
+      borderRadius: 12,
+    },
+    emptyChartText: {
+      fontSize: 16,
+      color: theme.colors.text.placeholder,
+    },
+  });

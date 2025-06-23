@@ -29,10 +29,6 @@ export const OfflinePreloader: React.FC<OfflinePreloaderProps> = ({
     cachePercentage: 0,
   });
 
-  useEffect(() => {
-    checkCacheStatus();
-  }, [wordlistId]);
-
   const checkCacheStatus = async () => {
     try {
       const [isAvailable, stats] = await Promise.all([
@@ -46,6 +42,11 @@ export const OfflinePreloader: React.FC<OfflinePreloaderProps> = ({
       console.error("Error checking cache status:", error);
     }
   };
+
+  useEffect(() => {
+    checkCacheStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wordlistId]);
 
   const handlePreload = async () => {
     if (!isOnline || !isOfflineAvailable) return;

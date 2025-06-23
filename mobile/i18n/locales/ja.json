@@ -425,7 +425,10 @@
     "pronunciationLoadError": "発音オプションの読み込みに失敗しました",
     "pronunciationDefaultWillBeUsed": "デフォルトの発音表記システムが使用されます",
     "errorMessage": "リストの作成に失敗しました。もう一度お試しください。",
-    "createButton": "リストを作成"
+    "createButton": "リストを作成",
+    "contentGuidelines": "コンテンツガイドライン",
+    "contentGuidelinesText": "単語リストの内容が適切で、コミュニティガイドラインに従っていることを確認してください。",
+    "viewGuidelines": "完全なガイドラインを表示"
   },
   "pronunciationSystems": {
     "ipa": "IPA",

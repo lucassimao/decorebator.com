@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import {
   Animated,
   Platform,
@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export type SnackBarProps = {
   message: string;
@@ -28,6 +29,25 @@ export default function SnackBar({
   const opacity = useRef(new Animated.Value(0)).current;
   const timeoutRef = useRef<number>(0);
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+
+  const hide = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: 100,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onDismiss();
+    });
+  }, [onDismiss, opacity, translateY]);
 
   useEffect(() => {
     if (visible) {
@@ -60,28 +80,12 @@ export default function SnackBar({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [visible, duration]);
-
-  const hide = () => {
-    Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: 100,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onDismiss();
-    });
-  };
+  }, [visible, duration, hide, opacity, translateY]);
 
   if (!visible) return null;
 
-  const backgroundColor = type === "error" ? "#FF6B6B" : "#4CAF50";
+  const backgroundColor =
+    type === "error" ? theme.colors.error : theme.colors.success;
 
   return (
     <Animated.View
@@ -110,45 +114,46 @@ export default function SnackBar({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    paddingBottom: Platform.OS === "ios" ? 30 : 16,
-    zIndex: 9999,
-  },
-  snackbar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 6,
-    minHeight: 48,
-  },
-  message: {
-    flex: 1,
-    color: "#FFFFFF",
-    fontSize: 14,
-    lineHeight: 20,
-    marginRight: 16,
-  },
-  actionButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  actionText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    container: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      paddingHorizontal: 16,
+      paddingBottom: Platform.OS === "ios" ? 30 : 16,
+      zIndex: 9999,
+    },
+    snackbar: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      shadowColor: theme.colors.text.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 6,
+      minHeight: 48,
+    },
+    message: {
+      flex: 1,
+      color: theme.colors.text.inverse,
+      fontSize: 14,
+      lineHeight: 20,
+      marginRight: 16,
+    },
+    actionButton: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    actionText: {
+      color: theme.colors.text.inverse,
+      fontSize: 14,
+      fontWeight: "600",
+      letterSpacing: 0.5,
+    },
+  });

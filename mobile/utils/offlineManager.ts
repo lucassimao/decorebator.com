@@ -46,7 +46,7 @@ class OfflineManager {
   }
 
   private async ensureAssetDirectory() {
-    if (Platform.OS == "web") return;
+    if (Platform.OS === "web") return;
 
     const dirInfo = await FileSystem.getInfoAsync(ASSET_CACHE_DIR);
     if (!dirInfo.exists) {
@@ -284,7 +284,7 @@ class OfflineManager {
           ) {
             await AsyncStorage.removeItem(cacheKey);
           }
-        } catch (parseError) {
+        } catch {
           // If we can't parse the data, remove it
           await AsyncStorage.removeItem(cacheKey);
         }

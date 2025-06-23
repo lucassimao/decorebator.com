@@ -56,51 +56,60 @@ function RootLayoutNav() {
             <UpgradePromptDialogProvider>
               <PostHogProvider
                 apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
-                options={{ host: "https://us.i.posthog.com", disabled: __DEV__ }}
+                options={{
+                  host: "https://us.i.posthog.com",
+                  disabled: __DEV__,
+                }}
               >
                 <Stack>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="analytics"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="practice"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="signup" options={{ headerShown: false }} />
-                <Stack.Screen name="quiz" options={{ headerShown: false }} />
-                <Stack.Screen name="signin" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="forgotPassword"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="dashboard/index"
-                  options={{
-                    headerShown: false,
-                    headerTitle: "Dashboard",
-                  }}
-                />
-                <Stack.Screen
-                  name="dashboard/welcome"
-                  options={{
-                    headerShown: false,
-                  }}
-                />
-                <Stack.Screen
-                  name="settings"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="profileSettings"
-                  options={{ headerShown: false }}
-                />
-              </Stack>
-            </PostHogProvider>
-          </UpgradePromptDialogProvider>
-        </SnackbarProvider>
-      </ThemeProvider>
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="analytics"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="practice"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="signup"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen name="quiz" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="signin"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="forgotPassword"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="dashboard/index"
+                    options={{
+                      headerShown: false,
+                      headerTitle: "Dashboard",
+                    }}
+                  />
+                  <Stack.Screen
+                    name="dashboard/welcome"
+                    options={{
+                      headerShown: false,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="settings"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="profileSettings"
+                    options={{ headerShown: false }}
+                  />
+                </Stack>
+              </PostHogProvider>
+            </UpgradePromptDialogProvider>
+          </SnackbarProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </I18nextProvider>
   );

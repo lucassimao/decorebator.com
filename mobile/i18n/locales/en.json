@@ -434,7 +434,10 @@
     "pronunciationLoadError": "Failed to load pronunciation options",
     "pronunciationDefaultWillBeUsed": "Default pronunciation system will be used",
     "errorMessage": "Failed to create wordlist. Please try again.",
-    "createButton": "Create Wordlist"
+    "createButton": "Create Wordlist",
+    "contentGuidelines": "Content Guidelines",
+    "contentGuidelinesText": "Please ensure your wordlist content is appropriate and follows our community guidelines.",
+    "viewGuidelines": "View full guidelines"
   },
   "pronunciationSystems": {
     "ipa": "IPA",

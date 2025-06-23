@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface QuizProgressBarProps {
   correctCount: number;
@@ -10,6 +11,8 @@ export const QuizProgressBar: React.FC<QuizProgressBarProps> = ({
   correctCount,
   quizCount,
 }) => {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const progressPercentage =
     quizCount > 0 ? (correctCount / quizCount) * 100 : 0;
 
@@ -29,20 +32,24 @@ export const QuizProgressBar: React.FC<QuizProgressBarProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  progressContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: "#4CAF50",
-    borderRadius: 4,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    progressContainer: {
+      paddingHorizontal: 20,
+      marginBottom: 16,
+    },
+    progressBar: {
+      height: 8,
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(0, 0, 0, 0.1)"
+          : "rgba(255, 255, 255, 0.2)",
+      borderRadius: 4,
+      overflow: "hidden",
+    },
+    progressFill: {
+      height: "100%",
+      backgroundColor: theme.colors.success,
+      borderRadius: 4,
+    },
+  });

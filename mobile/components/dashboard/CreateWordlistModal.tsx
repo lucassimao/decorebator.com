@@ -1,26 +1,27 @@
-import React, { useRef, useEffect, useState } from "react";
+import * as wordlistsApi from "@/api/wordlists";
+import { CreateWordlistDTO } from "@/api/wordlists";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Ionicons } from "@expo/vector-icons";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import {
-  View,
-  Text,
-  StyleSheet,
-  Modal,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  TextInput,
-  ScrollView,
+  ActivityIndicator,
+  Alert,
   Animated,
   Dimensions,
   KeyboardAvoidingView,
+  Modal,
   Platform,
-  ActivityIndicator,
-  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useForm, Controller } from "react-hook-form";
-import { CreateWordlistDTO, PronunciationSystem } from "@/api/wordlists";
-import * as wordlistsApi from "@/api/wordlists";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import { ContentGuidelinesModal } from "./ContentGuidelinesModal";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -57,7 +58,9 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [showContentGuidelines, setShowContentGuidelines] = useState(false);
+  const styles = createStyles(theme);
 
   const mutation = useMutation<
     wordlistsApi.Wordlist,
@@ -204,15 +207,15 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.handle} />
-            <Text 
+            <Text
               style={styles.title}
               accessibilityRole="header"
-              accessibilityLevel={1}
+              // accessibilityLevel={1} // Removed deprecated prop
             >
               {t("createWordlist.title")}
             </Text>
-            <TouchableOpacity 
-              style={styles.closeButton} 
+            <TouchableOpacity
+              style={styles.closeButton}
               onPress={onClose}
               accessibilityRole="button"
               accessibilityLabel={t("common.close")}
@@ -280,7 +283,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                     maxLength={50}
                     accessibilityLabel={t("createWordlist.nameLabel")}
                     accessibilityHint="Enter a name for your new wordlist"
-                    accessibilityRequired={true}
+                    // accessibilityRequired={true} // Not a valid prop
                   />
                 )}
               />
@@ -413,7 +416,10 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                     <View>
                       {isLoadingPronunciation ? (
                         <View style={styles.loadingContainer}>
-                          <ActivityIndicator size="small" color="#FF7B54" />
+                          <ActivityIndicator
+                            size="small"
+                            color={theme.colors.primary}
+                          />
                         </View>
                       ) : pronunciationError ? (
                         <View style={styles.errorContainer}>
@@ -443,7 +449,9 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                               }}
                               accessibilityRole="radio"
                               accessibilityLabel={`Select ${t(`pronunciationSystems.${system}`)} pronunciation system`}
-                              accessibilityState={{ selected: value === system }}
+                              accessibilityState={{
+                                selected: value === system,
+                              }}
                             >
                               <Text
                                 style={[
@@ -500,7 +508,11 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
               onPress={handleSubmit(handleFormSubmit)}
               disabled={mutation.isPending}
               accessibilityRole="button"
-              accessibilityLabel={mutation.isPending ? "Creating wordlist..." : t("createWordlist.createButton")}
+              accessibilityLabel={
+                mutation.isPending
+                  ? "Creating wordlist..."
+                  : t("createWordlist.createButton")
+              }
               accessibilityHint="Create the new wordlist with entered details"
               accessibilityState={{ disabled: mutation.isPending }}
             >
@@ -532,252 +544,258 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  backdrop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: SCREEN_HEIGHT * 0.9,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  header: {
-    paddingTop: 12,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    backgroundColor: "#DFE6E9",
-    borderRadius: 2,
-    alignSelf: "center",
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#2D3436",
-    textAlign: "center",
-  },
-  closeButton: {
-    position: "absolute",
-    right: 20,
-    top: 32,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#F5F5F5",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  form: {
-    padding: 20,
-  },
-  guidelinesNotice: {
-    backgroundColor: "#FFF9F0",
-    borderWidth: 1,
-    borderColor: "#FFE6CC",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-  },
-  guidelinesHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  guidelinesTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#2D3436",
-    marginLeft: 8,
-    flex: 1,
-  },
-  guidelinesText: {
-    fontSize: 14,
-    color: "#636E72",
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  guidelinesLink: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-  },
-  guidelinesLinkText: {
-    fontSize: 14,
-    color: "#FF7B54",
-    fontWeight: "500",
-  },
-  inputGroup: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#2D3436",
-    marginBottom: 8,
-  },
-  required: {
-    color: "#FF7B54",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: "#2D3436",
-    backgroundColor: "#FAFAFA",
-  },
-  inputError: {
-    borderColor: "#FF6B6B",
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: "top",
-    paddingTop: 14,
-  },
-  errorText: {
-    color: "#FF6B6B",
-    fontSize: 14,
-    marginTop: 6,
-  },
-  languageScroll: {
-    marginTop: 8,
-  },
-  languageItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    marginRight: 10,
-    backgroundColor: "#FAFAFA",
-  },
-  languageItemSelected: {
-    borderColor: "#FF7B54",
-    backgroundColor: "#FFF5F0",
-  },
-  languageFlag: {
-    fontSize: 24,
-    marginRight: 8,
-  },
-  languageName: {
-    fontSize: 16,
-    color: "#636E72",
-  },
-  languageNameSelected: {
-    color: "#FF7B54",
-    fontWeight: "500",
-  },
-  submitError: {
-    marginTop: -8,
-    marginBottom: 16,
-  },
-  actions: {
-    flexDirection: "row",
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 32,
-    borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 16,
-    borderRadius: 12,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cancelButton: {
-    backgroundColor: "#F5F5F5",
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#636E72",
-  },
-  createButton: {
-    backgroundColor: "#FF7B54",
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  createButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  buttonIcon: {
-    marginLeft: 6,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  helpText: {
-    fontSize: 14,
-    color: "#636E72",
-    marginBottom: 12,
-    fontStyle: "italic",
-  },
-  loadingContainer: {
-    paddingVertical: 20,
-    alignItems: "center",
-  },
-  pronunciationItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    marginRight: 10,
-    backgroundColor: "#FAFAFA",
-  },
-  pronunciationItemSelected: {
-    borderColor: "#FF7B54",
-    backgroundColor: "#FFF5F0",
-  },
-  pronunciationName: {
-    fontSize: 16,
-    color: "#636E72",
-  },
-  pronunciationNameSelected: {
-    color: "#FF7B54",
-    fontWeight: "500",
-  },
-  errorContainer: {
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    backgroundColor: "#FFF5F5",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#FFE6E6",
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: "flex-end",
+    },
+    backdrop: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor:
+        theme.mode === "light" ? "rgba(0, 0, 0, 0.4)" : "rgba(0, 0, 0, 0.6)",
+    },
+    modalContent: {
+      backgroundColor: theme.colors.background.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      maxHeight: SCREEN_HEIGHT * 0.9,
+      shadowColor: theme.colors.text.primary,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    header: {
+      paddingTop: 12,
+      paddingBottom: 20,
+      paddingHorizontal: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.ui.border,
+    },
+    handle: {
+      width: 40,
+      height: 4,
+      backgroundColor: theme.colors.ui.disabled,
+      borderRadius: 2,
+      alignSelf: "center",
+      marginBottom: 16,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      textAlign: "center",
+    },
+    closeButton: {
+      position: "absolute",
+      right: 20,
+      top: 32,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: theme.colors.background.surface,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    form: {
+      padding: 20,
+    },
+    guidelinesNotice: {
+      backgroundColor:
+        theme.mode === "light" ? "#FFF9F0" : theme.colors.background.secondary,
+      borderWidth: 1,
+      borderColor: theme.mode === "light" ? "#FFE6CC" : theme.colors.ui.border,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 24,
+    },
+    guidelinesHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 8,
+    },
+    guidelinesTitle: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      marginLeft: 8,
+      flex: 1,
+    },
+    guidelinesText: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      lineHeight: 20,
+      marginBottom: 12,
+    },
+    guidelinesLink: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 8,
+    },
+    guidelinesLinkText: {
+      fontSize: 14,
+      color: theme.colors.primary,
+      fontWeight: "500",
+    },
+    inputGroup: {
+      marginBottom: 24,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: "500",
+      color: theme.colors.text.primary,
+      marginBottom: 8,
+    },
+    required: {
+      color: theme.colors.primary,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 16,
+      color: theme.colors.text.primary,
+      backgroundColor: theme.colors.background.default,
+    },
+    inputError: {
+      borderColor: theme.colors.error,
+    },
+    textArea: {
+      height: 80,
+      textAlignVertical: "top",
+      paddingTop: 14,
+    },
+    errorText: {
+      color: theme.colors.error,
+      fontSize: 14,
+      marginTop: 6,
+    },
+    languageScroll: {
+      marginTop: 8,
+    },
+    languageItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      marginRight: 10,
+      backgroundColor: theme.colors.background.default,
+    },
+    languageItemSelected: {
+      borderColor: theme.colors.primary,
+      backgroundColor:
+        theme.mode === "light" ? "#FFF5F0" : theme.colors.background.secondary,
+    },
+    languageFlag: {
+      fontSize: 24,
+      marginRight: 8,
+    },
+    languageName: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+    },
+    languageNameSelected: {
+      color: theme.colors.primary,
+      fontWeight: "500",
+    },
+    submitError: {
+      marginTop: -8,
+      marginBottom: 16,
+    },
+    actions: {
+      flexDirection: "row",
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 32,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.ui.border,
+      gap: 12,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: 16,
+      borderRadius: 12,
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    cancelButton: {
+      backgroundColor: theme.colors.background.surface,
+    },
+    cancelButtonText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.colors.text.secondary,
+    },
+    createButton: {
+      backgroundColor: theme.colors.primary,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+    createButtonText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.colors.text.inverse,
+    },
+    buttonIcon: {
+      marginLeft: 6,
+    },
+    buttonDisabled: {
+      opacity: 0.7,
+    },
+    helpText: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginBottom: 12,
+      fontStyle: "italic",
+    },
+    loadingContainer: {
+      paddingVertical: 20,
+      alignItems: "center",
+    },
+    pronunciationItem: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      marginRight: 10,
+      backgroundColor: theme.colors.background.default,
+    },
+    pronunciationItemSelected: {
+      borderColor: theme.colors.primary,
+      backgroundColor:
+        theme.mode === "light" ? "#FFF5F0" : theme.colors.background.secondary,
+    },
+    pronunciationName: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+    },
+    pronunciationNameSelected: {
+      color: theme.colors.primary,
+      fontWeight: "500",
+    },
+    errorContainer: {
+      paddingVertical: 16,
+      paddingHorizontal: 12,
+      backgroundColor:
+        theme.mode === "light" ? "#FFF5F5" : theme.colors.background.secondary,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.mode === "light" ? "#FFE6E6" : theme.colors.ui.border,
+    },
+  });

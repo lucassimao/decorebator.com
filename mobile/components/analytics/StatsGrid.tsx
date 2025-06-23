@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
-import { colors } from "./theme";
+import { useTheme } from "@/contexts/ThemeContext";
 import { WordlistStats } from "@/api/analytics";
 
 interface StatsGridProps {
@@ -10,6 +10,8 @@ interface StatsGridProps {
 
 export const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
 
   return (
     <View style={styles.statsGrid}>
@@ -17,9 +19,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => {
         <View style={styles.statIconContainer}>
           <Text style={styles.statIcon}>📚</Text>
         </View>
-        <Text style={styles.statValue}>
-          {stats?.wordsStudiedToday || 0}
-        </Text>
+        <Text style={styles.statValue}>{stats?.wordsStudiedToday || 0}</Text>
         <Text style={styles.statLabel}>{t("analytics.stats.wordsToday")}</Text>
       </View>
 
@@ -56,54 +56,56 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    justifyContent: "space-between",
-  },
-  statCard: {
-    backgroundColor: colors.white,
-    width: "48%",
-    marginBottom: 12,
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    statsGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      justifyContent: "space-between",
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    alignItems: "center",
-  },
-  statCardHighlight: {
-    backgroundColor: colors.backgroundOrange,
-  },
-  statIconContainer: {
-    marginBottom: 8,
-  },
-  statIcon: {
-    fontSize: 24,
-  },
-  statValue: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: colors.textDark,
-    marginBottom: 4,
-  },
-  statValueHighlight: {
-    color: colors.primary,
-  },
-  statValueSuccess: {
-    color: colors.success,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: colors.textMedium,
-    textAlign: "center",
-  },
-});
+    statCard: {
+      backgroundColor: theme.colors.background.surface,
+      width: "48%",
+      marginBottom: 12,
+      borderRadius: 16,
+      padding: 16,
+      shadowColor: theme.colors.text.primary,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 3.84,
+      elevation: 5,
+      alignItems: "center",
+    },
+    statCardHighlight: {
+      backgroundColor:
+        theme.mode === "light" ? "#FFDCC3" : theme.colors.background.elevated,
+    },
+    statIconContainer: {
+      marginBottom: 8,
+    },
+    statIcon: {
+      fontSize: 24,
+    },
+    statValue: {
+      fontSize: 32,
+      fontWeight: "bold",
+      color: theme.colors.text.primary,
+      marginBottom: 4,
+    },
+    statValueHighlight: {
+      color: theme.colors.primary,
+    },
+    statValueSuccess: {
+      color: theme.colors.success,
+    },
+    statLabel: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      textAlign: "center",
+    },
+  });
