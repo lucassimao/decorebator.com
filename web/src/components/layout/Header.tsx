@@ -62,11 +62,11 @@ const Header: React.FC = () => {
               {t('pricing')}
             </a>
             <a href={`/${locale}/#faq`} className="text-[#636E72] hover:text-[#FF7B54] transition-colors duration-300 font-medium">
-              FAQ
+              {t('faq')}
             </a>
             <LanguageSwitcher />
             <DownloadAppButton className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 inline-block">
-              Download App
+              {t('getStartedFree')}
             </DownloadAppButton>
           </nav>
 
@@ -92,7 +92,7 @@ const Header: React.FC = () => {
               {t('pricing')}
             </a>
             <a href={`/${locale}/#faq`} className="text-[#636E72] hover:text-[#FF7B54] transition-colors font-medium" onClick={() => setIsMobileMenuOpen(false)}>
-              FAQ
+              {t('faq')}
             </a>
             <div className="pt-2 border-t border-gray-200">
               <LanguageSwitcher />
@@ -101,7 +101,7 @@ const Header: React.FC = () => {
               className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-3 rounded-full font-semibold inline-block text-center" 
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Download App
+              {t('getStartedFree')}
             </DownloadAppButton>
           </nav>
         </div>

@@ -41,7 +41,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
           <div className="space-y-6 sm:space-y-8 slide-in-left order-1 lg:order-1">
             <div className="inline-flex items-center px-4 py-2 rounded-full glass bg-orange-100/50 text-[#FF7B54] text-sm font-semibold">
               <i className="fas fa-zap mr-2"></i>
-              AI-Powered Learning • 7 Languages • Multi-Platform
+              {t('tagline')}
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
@@ -63,7 +63,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
                 className="group bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
               >
                 <i className="fas fa-brain mr-2 group-hover:scale-110 transition-transform"></i>
-                <span>Try a Quick Quiz</span>
+                <span>{t('startLearningFree')}</span>
                 <i className="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
               </button>
               <button 
@@ -135,7 +135,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
                         {/* Fallback for browsers without video support */}
                         <Image
                           src="/app-screenshot.jpeg"
-                          alt="Decorebator App Demo showing interactive learning features, quiz modes, and progress tracking"
+                          alt={t('imageAlt')}
                           width={320}
                           height={678}
                           className="w-full h-auto object-contain rounded-[2rem]"
@@ -162,7 +162,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
         isOpen={isVideoModalOpen}
         onClose={() => setIsVideoModalOpen(false)}
         videoId="dQw4w9WgXcQ" // Replace with actual demo video ID
-        title="Decorebator Demo - AI-Powered Vocabulary Learning"
+        title={t('videoTitle')}
       />
 
       {/* Quiz Demo Modal */}

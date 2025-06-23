@@ -1,17 +1,3 @@
-[ ]  browserstack testing
-        - Config sentry in the expo app        
-        - improve mobile UI and detect default language
-        - Fix SignUp screen - use transparent PNG as the login scren
-        - Integrate Revenue cat for non US users
-
-
-
-- gravar demo
-
-- explore UI options for mobile keeping the current guideline
-- ⁠install sentry api and mobile
-
-
 ### iOS App Store Release Checklist
 
 - [ ] Apple ID with 2FA enabled  
