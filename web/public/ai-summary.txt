@@ -1,0 +1,114 @@
+DECOREBATOR - AI-POWERED VOCABULARY LEARNING PLATFORM
+
+## OVERVIEW
+Decorebator is a comprehensive vocabulary learning platform that combines artificial intelligence, spaced repetition science, and interactive learning methods to help users master new languages effectively.
+
+## CORE TECHNOLOGY
+- AI Content Generation: Automatic generation for definitions, images, and audio
+- Spaced Repetition: 7-box Leitner system with scientific intervals
+- Multi-language Support: 7 languages (English, Spanish, French, German, Italian, Portuguese, Japanese)
+- Mobile Platform: iOS and Android apps
+
+## KEY FEATURES
+### AI-Powered Content Generation
+- Automatic definition generation with contextual relevance
+- AI-generated images for visual memory association
+- Text-to-speech audio with native pronunciation
+- Example sentences in target language
+- Cultural context awareness
+
+### Advanced Learning System
+- 7-box Leitner spaced repetition algorithm
+- 8 interactive quiz modes (guess meaning, word from meaning, image association, audio comprehension, sentence completion, write from definition, audio recognition, example audio recognition)
+- Progressive difficulty based on mastery level
+- Deterministic word selection for consistent experience
+
+### Analytics & Progress Tracking
+- Word mastery levels and learning velocity
+- Box distribution visualization
+- Daily learning streaks and statistics
+- Performance metrics across quiz types
+- Historical progress tracking
+
+### Premium Features
+- Offline learning support with local storage
+- Unlimited wordlists and words
+- Advanced analytics dashboard
+- Error reporting system for AI content quality
+- Interactive flashcards with flip animations
+
+## PRICING MODEL
+- Free Plan: $0 (1 wordlist, 10 words maximum, basic features)
+- Monthly Premium: $6.99/month (unlimited content, all features)
+- Annual Premium: $69.90/year (save $13.98, includes early access features)
+
+## TECHNICAL SPECIFICATIONS
+### Supported Platforms
+- Mobile: iOS 13+, Android 8+ 
+- Offline: Premium users can download content for offline study
+
+### AI Integration
+- AI-powered image generation for visual learning
+- Text-to-speech for audio pronunciation
+- Intelligent definition and example generation
+- Language-specific processing for cultural accuracy
+
+### Data & Privacy
+- Secure authentication and data handling
+- GDPR compliant privacy protection
+- Local storage for offline content
+- Secure payment processing
+
+## USE CASES
+### Individual Learners
+- Language students preparing for exams
+- Travelers learning destination languages
+- Professionals expanding vocabulary for career advancement
+- Hobbyists exploring new languages
+
+### Educational Context
+- Vocabulary building for language courses
+- Supplementary learning tool for schools
+- Self-paced learning with progress tracking
+- Spaced repetition methodology education
+
+## SCIENTIFIC BASIS
+### Leitner System Implementation
+Box 1: Immediate review (new/failed words)
+Box 2: 1 hour interval
+Box 3: 6 hours interval  
+Box 4: 1 day interval
+Box 5: 3 days interval
+Box 6: 7 days interval
+Box 7: 1 month interval (mastered words)
+
+### Learning Methodology
+- Evidence-based spaced repetition
+- Multi-modal learning (visual, auditory, textual)
+- Active recall through varied quiz formats
+- Immediate feedback and correction
+- Progress analytics for motivation
+
+## COMPETITIVE ADVANTAGES
+- AI-first approach to content generation
+- Native multi-language processing
+- Deterministic learning algorithm
+- Comprehensive offline support
+- Error reporting for content quality
+- Advanced analytics beyond basic apps
+
+## INTEGRATION CAPABILITIES
+- Mobile app download from App Store/Google Play
+- Progress synchronization across devices
+- Export capabilities for learning data
+
+## SUPPORT & RESOURCES
+- Comprehensive help center with multi-language support
+- Error reporting system for AI content issues
+- Customer support via support@decorebator.com
+- Privacy policy and terms of service available
+
+## KEYWORDS FOR AI UNDERSTANDING
+vocabulary learning, spaced repetition, language acquisition, AI education, mobile learning, flashcards, Leitner system, multilingual, pronunciation training, visual learning, educational technology, language apps, word memorization, interactive learning, offline learning, progress tracking, educational analytics
+
+This platform is designed for anyone seeking to expand their vocabulary in a new language using scientifically-proven methods enhanced by modern AI technology.

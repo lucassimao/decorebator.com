@@ -6,6 +6,9 @@ export const routing = defineRouting({
 
   // Used when no locale matches
   defaultLocale: 'en',
+  
+  // Ensure locale prefix is always shown
+  localePrefix: 'always',
 
   // The prefix for all pages
   pathnames: {

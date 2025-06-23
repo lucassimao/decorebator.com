@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,6 +33,7 @@ ChartJS.register(
 );
 
 const AnalyticsSection: React.FC = () => {
+  const t = useTranslations('analytics');
   const [animatedValues, setAnimatedValues] = useState({
     wordsStudiedToday: 0,
     currentStreak: 0,
@@ -91,29 +93,29 @@ const AnalyticsSection: React.FC = () => {
   // Stats Grid - matching mobile app exactly
   const statsGrid = [
     {
-      label: 'Words Studied Today',
+      label: t('stats.wordsStudiedToday'),
       value: animatedValues.wordsStudiedToday,
       icon: '📚',
       bgColor: 'bg-white',
       textColor: 'text-[#2D3436]',
     },
     {
-      label: 'Current Streak',
+      label: t('stats.currentStreak'),
       value: animatedValues.currentStreak,
-      suffix: ' days',
+      suffix: t('stats.daysSuffix'),
       icon: '🔥',
       bgColor: 'bg-orange-50',
       textColor: 'text-[#FF7B54]',
     },
     {
-      label: 'Words Mastered',
+      label: t('stats.wordsMastered'),
       value: animatedValues.wordsMastered,
       icon: '🏆',
       bgColor: 'bg-white',
       textColor: 'text-[#4CAF50]',
     },
     {
-      label: 'Accuracy Today',
+      label: t('stats.accuracyToday'),
       value: animatedValues.accuracyToday,
       suffix: '%',
       icon: '🎯',
@@ -166,7 +168,7 @@ const AnalyticsSection: React.FC = () => {
     labels: ['12/20', '12/21', '12/22', '12/23', '12/24', '12/25', '12/26'],
     datasets: [
       {
-        label: 'Words Studied',
+        label: t('charts.wordsStudied'),
         data: [15, 12, 18, 22, 16, 25, 20],
         borderColor: '#FF7B54',
         backgroundColor: 'rgba(255, 123, 84, 0.1)',
@@ -183,10 +185,10 @@ const AnalyticsSection: React.FC = () => {
 
   // 2. Practice Time Chart (Bar Chart)
   const practiceTimeData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    labels: (t.raw('charts.weekDays') as string[]),
     datasets: [
       {
-        label: 'Minutes',
+        label: t('charts.minutes'),
         data: [25, 18, 32, 28, 22, 45, 38],
         backgroundColor: '#4A90E2',
         borderRadius: 4,
@@ -196,10 +198,10 @@ const AnalyticsSection: React.FC = () => {
 
   // 3. Quiz Performance Chart (Bar Chart by quiz type)
   const quizPerformanceData = {
-    labels: ['Guess Meaning', 'Word from Meaning', 'Image Association', 'Audio Comprehension'],
+    labels: (t.raw('charts.quizTypes') as string[]),
     datasets: [
       {
-        label: 'Success Rate',
+        label: t('charts.successRate'),
         data: [94, 88, 87, 85],
         backgroundColor: '#4CAF50',
         borderRadius: 4,
@@ -209,10 +211,10 @@ const AnalyticsSection: React.FC = () => {
 
   // 4. Current Box Distribution (Bar Chart with gradient colors)
   const boxDistributionData = {
-    labels: ['Box 1', 'Box 2', 'Box 3', 'Box 4', 'Box 5', 'Box 6', 'Box 7'],
+    labels: (t.raw('charts.boxLabels') as string[]),
     datasets: [
       {
-        label: 'Words',
+        label: t('charts.words'),
         data: [45, 38, 29, 22, 18, 12, 8],
         backgroundColor: [
           '#EF4444', // red
@@ -232,13 +234,13 @@ const AnalyticsSection: React.FC = () => {
   const historicalBoxData = {
     labels: ['12/20', '12/21', '12/22', '12/23', '12/24', '12/25', '12/26'],
     datasets: [
-      { label: 'Box 1', data: [47, 46, 45, 44, 45, 44, 45], backgroundColor: '#EF4444', stack: 'Stack 0' },
-      { label: 'Box 2', data: [40, 39, 38, 37, 38, 37, 38], backgroundColor: '#F97316', stack: 'Stack 0' },
-      { label: 'Box 3', data: [31, 30, 29, 28, 29, 28, 29], backgroundColor: '#EAB308', stack: 'Stack 0' },
-      { label: 'Box 4', data: [24, 23, 22, 21, 22, 21, 22], backgroundColor: '#84CC16', stack: 'Stack 0' },
-      { label: 'Box 5', data: [19, 18, 17, 16, 18, 17, 18], backgroundColor: '#22C55E', stack: 'Stack 0' },
-      { label: 'Box 6', data: [13, 12, 11, 10, 12, 11, 12], backgroundColor: '#10B981', stack: 'Stack 0' },
-      { label: 'Box 7', data: [6, 7, 8, 9, 8, 9, 8], backgroundColor: '#059669', stack: 'Stack 0' },
+      { label: t('charts.box1'), data: [47, 46, 45, 44, 45, 44, 45], backgroundColor: '#EF4444', stack: 'Stack 0' },
+      { label: t('charts.box2'), data: [40, 39, 38, 37, 38, 37, 38], backgroundColor: '#F97316', stack: 'Stack 0' },
+      { label: t('charts.box3'), data: [31, 30, 29, 28, 29, 28, 29], backgroundColor: '#EAB308', stack: 'Stack 0' },
+      { label: t('charts.box4'), data: [24, 23, 22, 21, 22, 21, 22], backgroundColor: '#84CC16', stack: 'Stack 0' },
+      { label: t('charts.box5'), data: [19, 18, 17, 16, 18, 17, 18], backgroundColor: '#22C55E', stack: 'Stack 0' },
+      { label: t('charts.box6'), data: [13, 12, 11, 10, 12, 11, 12], backgroundColor: '#10B981', stack: 'Stack 0' },
+      { label: t('charts.box7'), data: [6, 7, 8, 9, 8, 9, 8], backgroundColor: '#059669', stack: 'Stack 0' },
     ],
   };
 
@@ -267,10 +269,10 @@ const AnalyticsSection: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl lg:text-4xl font-bold text-[#2D3436] mb-3">
-            Advanced Analytics Dashboard
+            {t('title')}
           </h2>
           <p className="text-lg text-[#636E72] max-w-2xl mx-auto">
-            Track your vocabulary mastery with comprehensive learning insights
+            {t('subtitle')}
           </p>
         </div>
 
@@ -317,7 +319,7 @@ const AnalyticsSection: React.FC = () => {
                 chartsVisible.learningProgress ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
             >
-              <h3 className="text-xl font-bold text-[#2D3436] mb-6">Learning Progress</h3>
+              <h3 className="text-xl font-bold text-[#2D3436] mb-6">{t('charts.learningProgressTitle')}</h3>
               <div className="h-64">
                 {chartsVisible.learningProgress && (
                   <Line 
@@ -340,7 +342,7 @@ const AnalyticsSection: React.FC = () => {
                   />
                 )}
               </div>
-              <p className="text-sm text-[#636E72] mt-4 text-center">Words studied over the last 7 days</p>
+              <p className="text-sm text-[#636E72] mt-4 text-center">{t('charts.wordsStudiedDescription')}</p>
             </div>
 
             {/* Practice Time Chart */}
@@ -350,14 +352,14 @@ const AnalyticsSection: React.FC = () => {
                 chartsVisible.practiceTime ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
             >
-              <h3 className="text-xl font-bold text-[#2D3436] mb-4">Practice Time</h3>
+              <h3 className="text-xl font-bold text-[#2D3436] mb-4">{t('charts.practiceTimeTitle')}</h3>
               <div className="flex justify-between mb-4">
                 <div>
-                  <span className="text-sm text-[#636E72]">Total: </span>
+                  <span className="text-sm text-[#636E72]">{t('charts.total')}: </span>
                   <span className="font-bold text-[#2D3436]">3h 38m</span>
                 </div>
                 <div>
-                  <span className="text-sm text-[#636E72]">Daily Avg: </span>
+                  <span className="text-sm text-[#636E72]">{t('charts.dailyAvg')}: </span>
                   <span className="font-bold text-[#2D3436]">31m</span>
                 </div>
               </div>
@@ -399,7 +401,7 @@ const AnalyticsSection: React.FC = () => {
               chartsVisible.quizPerformance ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
           >
-            <h3 className="text-xl font-bold text-[#2D3436] mb-6">Quiz Performance by Type</h3>
+            <h3 className="text-xl font-bold text-[#2D3436] mb-6">{t('charts.quizPerformanceTitle')}</h3>
             <div className="h-64">
               {chartsVisible.quizPerformance && (
                 <Bar 
@@ -431,7 +433,7 @@ const AnalyticsSection: React.FC = () => {
               )}
             </div>
             <div className="mt-4 flex flex-wrap justify-center gap-4">
-              {['Guess Meaning', 'Word from Meaning', 'Image Association', 'Audio Comprehension'].map((quiz, index) => (
+              {(t.raw('charts.quizTypes') as string[]).map((quiz, index) => (
                 <div key={quiz} className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-[#4CAF50] rounded-full"></div>
                   <span className="text-sm text-[#636E72]">{quiz}: {[94, 88, 87, 85][index]}%</span>
@@ -447,7 +449,7 @@ const AnalyticsSection: React.FC = () => {
               chartsVisible.wordMastery ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
           >
-            <h3 className="text-xl font-bold text-[#2D3436] mb-6">Word Mastery Progress</h3>
+            <h3 className="text-xl font-bold text-[#2D3436] mb-6">{t('charts.wordMasteryTitle')}</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {topWordsMastery.map((word, index) => (
                 <div 
@@ -496,7 +498,7 @@ const AnalyticsSection: React.FC = () => {
                 chartsVisible.boxDistribution ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
             >
-              <h3 className="text-xl font-bold text-[#2D3436] mb-4">Current Box Distribution</h3>
+              <h3 className="text-xl font-bold text-[#2D3436] mb-4">{t('charts.currentBoxTitle')}</h3>
               <div className="h-64">
                 {chartsVisible.boxDistribution && (
                   <Bar 
@@ -524,8 +526,7 @@ const AnalyticsSection: React.FC = () => {
               </div>
               <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                 <p className="text-sm text-[#636E72]">
-                  <strong>Leitner System:</strong> Words progress through 7 boxes based on your quiz performance. 
-                  Box 1 contains new words, Box 7 contains mastered words.
+                  {t('charts.leitnerExplanation')}
                 </p>
               </div>
             </div>
@@ -537,7 +538,7 @@ const AnalyticsSection: React.FC = () => {
                 chartsVisible.historicalBox ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
             >
-              <h3 className="text-xl font-bold text-[#2D3436] mb-4">7-Day Box Progress</h3>
+              <h3 className="text-xl font-bold text-[#2D3436] mb-4">{t('charts.boxProgressTitle')}</h3>
               <div className="h-64">
                 {chartsVisible.historicalBox && (
                   <Bar 
@@ -567,7 +568,7 @@ const AnalyticsSection: React.FC = () => {
                 )}
               </div>
               <div className="mt-4 text-center">
-                <span className="text-sm text-[#636E72]">Words in Box 7 (Mastered): </span>
+                <span className="text-sm text-[#636E72]">{t('charts.box7Description')}: </span>
                 <span className="font-bold text-[#059669]">8 words</span>
               </div>
             </div>
@@ -580,7 +581,7 @@ const AnalyticsSection: React.FC = () => {
               chartsVisible.topWords ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
           >
-            <h3 className="text-xl font-bold text-[#2D3436] mb-6">Top Words by Mastery</h3>
+            <h3 className="text-xl font-bold text-[#2D3436] mb-6">{t('charts.topWordsTitle')}</h3>
             <div className="space-y-3">
               {topWordsList.map((word, index) => (
                 <div 

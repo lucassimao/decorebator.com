@@ -1,4 +1,5 @@
 import React from 'react';
+import { setRequestLocale } from 'next-intl/server';
 import PageLayout from '../../components/layout/PageLayout';
 import EnhancedHeroSection from '../../components/home/EnhancedHeroSection';
 import NewFeaturesSection from '../../components/home/NewFeaturesSection';
@@ -10,7 +11,18 @@ import FAQSection from '../../components/home/FAQSection';
 import CTASection from '../../components/home/CTASection';
 import { fetchDemoQuizzes } from '../../lib/quiz-data';
 
-const HomePage: React.FC = async () => {
+interface HomePageProps {
+  params: Promise<{
+    locale: string;
+  }>;
+}
+
+const HomePage: React.FC<HomePageProps> = async ({ params }) => {
+  const { locale } = await params;
+  
+  // Set the locale for the request - this is crucial for server-side rendering
+  setRequestLocale(locale);
+  
   // Fetch quiz data at build time
   const demoQuizzes = await fetchDemoQuizzes();
 

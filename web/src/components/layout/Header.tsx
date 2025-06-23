@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import LanguageSwitcher from '../common/LanguageSwitcher';
+import DownloadAppButton from '../common/DownloadAppButton';
 
 const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -61,12 +62,12 @@ const Header: React.FC = () => {
               {t('pricing')}
             </a>
             <a href={`/${locale}/#faq`} className="text-[#636E72] hover:text-[#FF7B54] transition-colors duration-300 font-medium">
-              FAQ
+              {t('faq')}
             </a>
             <LanguageSwitcher />
-            <a href="#download" className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 inline-block">
-              Download App
-            </a>
+            <DownloadAppButton className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 inline-block">
+              {t('getStartedFree')}
+            </DownloadAppButton>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -76,7 +77,7 @@ const Header: React.FC = () => {
         </div>
 
         {/* Mobile Navigation */}
-        <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden absolute top-16 left-0 right-0 bg-white/95 backdrop-blur-lg shadow-xl rounded-b-2xl max-h-96 overflow-y-auto`}>
+        <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden absolute top-16 left-0 right-0 bg-white/95 backdrop-blur-lg shadow-xl rounded-b-2xl`}>
           <nav className="flex flex-col p-6 space-y-4">
             <a href={`/${locale}`} className="text-[#636E72] hover:text-[#FF7B54] transition-colors font-medium" onClick={() => setIsMobileMenuOpen(false)}>
               {t('home')}
@@ -91,14 +92,17 @@ const Header: React.FC = () => {
               {t('pricing')}
             </a>
             <a href={`/${locale}/#faq`} className="text-[#636E72] hover:text-[#FF7B54] transition-colors font-medium" onClick={() => setIsMobileMenuOpen(false)}>
-              FAQ
+              {t('faq')}
             </a>
             <div className="pt-2 border-t border-gray-200">
               <LanguageSwitcher />
             </div>
-            <a href="#download" className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-3 rounded-full font-semibold inline-block text-center" onClick={() => setIsMobileMenuOpen(false)}>
-              Download App
-            </a>
+            <DownloadAppButton 
+              className="bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-6 py-3 rounded-full font-semibold inline-block text-center" 
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              {t('getStartedFree')}
+            </DownloadAppButton>
           </nav>
         </div>
       </div>

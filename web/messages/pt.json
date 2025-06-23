@@ -11,149 +11,196 @@
     "next": "Próximo",
     "continue": "Continuar",
     "getStarted": "Começar",
-    "learnMore": "Saiba Mais",
-    "watchDemo": "Ver Demonstração",
-    "signUp": "Criar Conta",
+    "learnMore": "Saiba mais",
+    "watchDemo": "Ver demonstração",
+    "signUp": "Cadastrar-se",
     "signIn": "Entrar",
-    "contactUs": "Fale Conosco",
+    "contactUs": "Entre em contato",
+    "downloadApp": "Baixar App",
+    "tryQuiz": "Fazer um quiz rápido",
+    "submitAnswer": "Enviar resposta",
+    "skip": "Pular",
+    "skipQuestion": "Pular pergunta",
+    "nextQuestion": "Próxima pergunta",
+    "completeQuiz": "Completar quiz",
+    "tryAgain": "Tentar novamente",
+    "reportIssue": "Reportar problema",
+    "scrollToTop": "Voltar ao topo",
+    "selectLanguage": "Selecionar idioma",
+    "processing": "Processando...",
+    "home": "Início",
+    "features": "Recursos",
+    "viewAllFeatures": "Ver todos os recursos",
+    "readyToExperience": "Pronto para experimentar este recurso?",
+    "joinThousands": "Junte-se a milhares de estudantes que já dominam vocabulário com o Decorebator",
+    "viewPricing": "Ver preços",
     "appStorePending": {
       "title": "Em breve!",
-      "message": "Estamos aguardando a aprovação das lojas de aplicativos. O app estará disponível para download em breve!",
+      "message": "Estamos aguardando aprovação da App Store. O app estará disponível para download em breve!",
       "okButton": "OK"
+    },
+    "appStore": {
+      "downloadAppStore": "Baixar na App Store",
+      "downloadGooglePlay": "Baixar no Google Play"
     }
   },
   "navigation": {
     "home": "Início",
     "features": "Recursos",
     "pricing": "Preços",
-    "howItWorks": "Como Funciona",
-    "helpCenter": "Central de Ajuda",
+    "howItWorks": "Como funciona",
+    "helpCenter": "Central de ajuda",
     "faq": "FAQ",
     "about": "Sobre",
     "contact": "Contato",
     "blog": "Blog",
     "careers": "Carreiras",
-    "privacy": "Política de Privacidade",
-    "terms": "Termos de Serviço",
+    "privacy": "Política de privacidade",
+    "terms": "Termos de serviço",
     "getStartedFree": "Baixar App"
   },
   "hero": {
-    "title": "Domine Idiomas com Decorebator",
+    "title": "Domine idiomas com Decorebator",
     "rotatingWords": {
       "aiIntelligence": "Inteligência Artificial",
       "spacedRepetition": "Repetição Espaçada",
       "visualLearning": "Aprendizado Visual",
       "smartQuizzes": "Quizzes Inteligentes"
     },
-    "subtitle": "Transforme seu aprendizado de vocabulário com conteúdo gerado por IA, repetição espaçada cientificamente comprovada e 7 modos de quiz envolventes. Junte-se a {count}+ alunos dominando novos idiomas com eficiência.",
-    "startLearningFree": "Começar a Aprender Grátis",
-    "watchDemo": "Ver Demonstração",
+    "tagline": "Aprendizado com IA • 7 Idiomas • Multi-plataforma",
+    "imageAlt": "Demo do App Decorebator mostrando recursos interativos de aprendizado, modos de quiz e acompanhamento de progresso",
+    "videoTitle": "Demo Decorebator - Aprendizado de Vocabulário com IA",
+    "socialProof": "+ estudantes ativos",
+    "subtitle": "Transforme seu aprendizado de vocabulário com conteúdo gerado por IA, repetição espaçada cientificamente comprovada e 8 modos de quiz envolventes. Junte-se a estudantes de todo o mundo dominando novos idiomas de forma eficaz.",
+    "startLearningFree": "Começar grátis",
+    "watchDemo": "Ver demonstração",
     "stats": {
-      "rating": "4,9/5",
-      "activeLearnersCount": "10.000+ alunos ativos",
-      "languagesCount": "7 idiomas com IA nativa"
+      "rating": "4.9/5",
+      "activeLearnersCount": "10.000+ estudantes ativos",
+      "languagesCount": "7 idiomas nativos com IA"
     }
   },
   "features": {
-    "title": "Recursos Poderosos para Dominar Idiomas",
+    "title": "Recursos poderosos para domínio de idiomas",
     "subtitle": "Tudo que você precisa para acelerar sua jornada de aprendizado de vocabulário",
     "aiPowered": {
-      "title": "Geração de Conteúdo por IA",
-      "description": "Gere instantaneamente definições, imagens, áudio e exemplos para qualquer palavra usando tecnologia de IA avançada."
+      "title": "Geração de conteúdo com IA",
+      "description": "Gere instantaneamente definições, imagens, áudio e exemplos para qualquer palavra usando tecnologia IA avançada."
     },
     "spacedRepetition": {
-      "title": "Sistema Leitner Avançado",
+      "title": "Sistema Leitner avançado",
       "description": "Sistema Leitner probabilístico de 7 caixas com seleção inteligente de palavras - nunca fique sem conteúdo para estudar."
     },
     "multipleQuizModes": {
-      "title": "8 Modos de Quiz Interativos",
+      "title": "8 modos de quiz interativos",
       "description": "Do reconhecimento visual à compreensão auditiva - pratique com diversos tipos de quiz para aprendizado abrangente."
     },
     "visualLearning": {
-      "title": "Aprendizado Visual com Imagens IA",
+      "title": "Aprendizado visual com imagens IA",
       "description": "Imagens geradas por IA ajudam a criar associações de memória mais fortes para retenção de vocabulário mais rápida."
     },
     "audioLearning": {
-      "title": "Áudio de Qualidade Nativa",
+      "title": "Áudio de qualidade nativa",
       "description": "Pronúncia perfeita com áudio gerado por IA em qualidade de falante nativo para todos os idiomas suportados."
     },
     "progressTracking": {
-      "title": "Análises de Alto Desempenho",
-      "description": "Análises em tempo real para usuários Premium com cache Redis, acompanhamento detalhado de domínio e insights instantâneos."
+      "title": "Análise de alto desempenho",
+      "description": "Análise em tempo real para usuários Premium com cache Redis, rastreamento detalhado de domínio e insights instantâneos."
     },
     "multiLanguage": {
-      "title": "7 Idiomas Nativos",
+      "title": "7 idiomas nativos",
       "description": "Suporte completo de IA para inglês, espanhol, francês, alemão, italiano, português e japonês."
     },
     "offlineSupport": {
-      "title": "Aprendizado Offline",
-      "description": "Usuários premium podem baixar listas de palavras e continuar aprendendo sem conexão com a internet."
+      "title": "Aprendizado offline",
+      "description": "Usuários Premium podem baixar listas de palavras e continuar aprendendo sem conexão à internet."
     },
     "errorReporting": {
-      "title": "Controle de Qualidade do Conteúdo",
-      "description": "Relate problemas no conteúdo de IA e ajude a melhorar a experiência de aprendizado para todos."
+      "title": "Relatório inteligente de erros",
+      "description": "Sistema de relatório de erros com limite de taxa, regeneração automática de conteúdo e melhorias orientadas pela comunidade."
     },
     "mobileFirst": {
-      "title": "Aprendizado Multiplataforma",
-      "description": "Experiência perfeita em mobile, tablet e web com sincronização automática."
+      "title": "Aprendizado multiplataforma",
+      "description": "Experiência perfeita em dispositivos móveis, tablets e web com sincronização automática."
     }
   },
   "showcase": {
-    "title": "Veja o Decorebator em Ação",
-    "subtitle": "Experimente o ecossistema completo de aprendizado projetado para estudantes de idiomas modernos",
+    "title": "Veja o Decorebator em ação",
+    "subtitle": "Experimente o ecossistema completo de aprendizado projetado para estudantes modernos de idiomas",
     "features": {
       "aiContent": {
-        "title": "Conteúdo Gerado por IA",
-        "description": "Cada palavra vem com definições, imagens, pronúncias em áudio e exemplos contextuais gerados por IA no seu idioma de destino."
+        "title": "Conteúdo gerado por IA",
+        "description": "Cada palavra vem com definições, imagens, pronúncias em áudio e exemplos contextuais gerados por IA em seu idioma de destino."
       },
       "smartQuizzes": {
-        "title": "Sistema de Quiz Adaptativo",
-        "description": "7 modos diferentes de quiz que se adaptam ao seu progresso de aprendizado, do reconhecimento básico à compreensão avançada."
+        "title": "Sistema de quiz adaptativo",
+        "description": "8 modos de quiz diferentes que se adaptam ao seu progresso de aprendizado, do reconhecimento básico à compreensão avançada."
       },
       "analytics": {
-        "title": "Análises de Aprendizado",
+        "title": "Análise de aprendizado",
         "description": "Acompanhe seu progresso com análises detalhadas mostrando níveis de domínio, velocidade de aprendizado e taxas de retenção."
       }
     }
   },
   "howItWorks": {
-    "title": "Como Funciona",
-    "subtitle": "Domine vocabulário em três passos simples",
+    "title": {
+      "part1": "Sua jornada de aprendizado em ",
+      "part2": "3 passos simples"
+    },
+    "subtitle": "Transforme seu aprendizado de vocabulário com nossa abordagem cientificamente comprovada que se adapta ao seu estilo de aprendizado.",
     "step1": {
-      "title": "Criar e Adicionar Palavras",
-      "description": "Crie listas de palavras e adicione palavras que deseja aprender. A IA gera automaticamente conteúdo rico para cada palavra."
+      "title": "Crie sua lista de palavras",
+      "description": "Comece adicionando palavras que você quer aprender. Nossa IA gera instantaneamente definições, imagens e áudio para cada palavra.",
+      "features": [
+        "Definições geradas por IA no seu idioma alvo",
+        "Imagens personalizadas para melhorar a retenção de memória",
+        "Pronúncia de áudio com som natural",
+        "Frases de exemplo com contexto"
+      ]
     },
     "step2": {
-      "title": "Prática Inteligente",
-      "description": "Pratique com 7 modos de quiz interativos. Nosso sistema Leitner otimiza o tempo de revisão para máxima retenção."
+      "title": "Pratique com quizzes inteligentes",
+      "description": "Envolva-se com 8 modos de quiz diferentes projetados para reforçar seu aprendizado de múltiplos ângulos.",
+      "features": [
+        "Perguntas de múltipla escolha e preenchimento de lacunas",
+        "Desafios de reconhecimento visual",
+        "Exercícios de compreensão auditiva",
+        "Dificuldade adaptativa baseada no seu progresso"
+      ]
     },
     "step3": {
-      "title": "Acompanhar Progresso",
-      "description": "Monitore sua jornada de aprendizado com análises detalhadas e alcance o domínio de vocabulário mais rapidamente."
+      "title": "Domine com repetição espaçada",
+      "description": "Nosso sistema Leitner avançado agenda revisões em intervalos ótimos para maximizar a retenção.",
+      "features": [
+        "Sistema progressivo de 7 caixas",
+        "Agendamento inteligente de revisões",
+        "Foco em palavras desafiadoras",
+        "Otimização da retenção a longo prazo"
+      ]
     }
   },
   "testimonials": {
-    "title": "Amado por Estudantes de Idiomas Mundialmente",
-    "subtitle": "Junte-se a milhares de alunos bem-sucedidos que transformaram seu vocabulário",
+    "title": "Amado por estudantes de idiomas no mundo todo",
+    "subtitle": "Junte-se a milhares de estudantes bem-sucedidos que transformaram seu vocabulário",
     "stats": {
-      "wordsLearned": "2,5M+ palavras aprendidas",
+      "wordsLearned": "2.5M+ palavras aprendidas",
       "retentionRate": "85% taxa de retenção",
-      "satisfaction": "4,9/5 satisfação"
+      "satisfaction": "4.9/5 satisfação"
     },
     "testimonial1": {
-      "text": "O Decorebator mudou completamente como eu aprendo vocabulário. As imagens geradas por IA e o sistema de repetição espaçada me ajudaram a dominar mais de 500 palavras em espanhol em apenas 2 meses!",
+      "text": "O Decorebator mudou completamente como aprendo vocabulário. As imagens geradas por IA e o sistema de repetição espaçada me ajudaram a dominar mais de 500 palavras em espanhol em apenas 2 meses!",
       "author": "Sarah Chen",
-      "role": "Estudante de Espanhol"
+      "role": "Estudante de espanhol"
     },
     "testimonial2": {
-      "text": "Como professor de idiomas, recomendo o Decorebator para todos os meus alunos. O recurso de análises me ajuda a acompanhar o progresso deles e os múltiplos modos de quiz os mantêm engajados.",
-      "author": "Dr. Marcus Weber",
-      "role": "Professor de Idiomas"
+      "text": "Como professora de idiomas, recomendo o Decorebator para todos os meus alunos. O recurso de análise me ajuda a acompanhar seu progresso e os múltiplos modos de quiz os mantêm engajados.",
+      "author": "Dra. Marcus Weber",
+      "role": "Professora de idiomas"
     },
     "testimonial3": {
-      "text": "O recurso offline é perfeito para meu trajeto diário. Posso praticar vocabulário no metrô sem me preocupar com conectividade. A qualidade do conteúdo de IA é impressionante!",
+      "text": "O recurso offline é perfeito para meu trajeto. Posso praticar vocabulário no metrô sem me preocupar com conectividade. A qualidade do conteúdo IA é impressionante!",
       "author": "Yuki Tanaka",
-      "role": "Profissional de Negócios"
+      "role": "Profissional de negócios"
     }
   },
   "faq": {
@@ -164,127 +211,1263 @@
     "subtitle": "Tudo que você precisa saber sobre o Decorebator.",
     "questions": {
       "1": {
-        "question": "Como funciona a geração de conteúdo com IA?",
-        "answer": "Nossa IA gera automaticamente materiais de aprendizado abrangentes para cada palavra que você adiciona. O sistema cria definições contextualmente relevantes, frases de exemplo, imagens culturalmente apropriadas e pronunciação de áudio de alta qualidade no seu idioma de destino, com regras gramaticais específicas do idioma e otimização de voz."
+        "question": "Como funciona a geração de conteúdo por IA?",
+        "answer": "Nossa IA gera automaticamente materiais de aprendizado abrangentes para cada palavra que você adiciona. O sistema cria definições contextualmente relevantes, frases de exemplo, imagens culturalmente conscientes e pronúncias de áudio de alta qualidade em seu idioma de destino, com regras gramaticais específicas do idioma e otimização de voz."
       },
       "2": {
         "question": "O que é o sistema avançado de repetição espaçada Leitner?",
-        "answer": "O Decorebator utiliza um sistema de repetição espaçada de 7 caixas cientificamente otimizado com intervalos: Caixa 1 (imediato), Caixa 2 (1 hora), Caixa 3 (6 horas), Caixa 4 (1 dia), Caixa 5 (3 dias), Caixa 6 (7 dias) e Caixa 7 (1 mês). As palavras progridem através das caixas conforme seu desempenho, com progressão inteligente de tipos de quiz para aprendizado otimizado."
+        "answer": "O Decorebator usa um sistema de repetição espaçada Leitner de 7 caixas cientificamente otimizado com intervalos: Caixa 1 (imediato), Caixa 2 (1 hora), Caixa 3 (6 horas), Caixa 4 (1 dia), Caixa 5 (3 dias), Caixa 6 (7 dias), e Caixa 7 (1 mês). As palavras progridem através das caixas baseadas em seu desempenho, com progressão inteligente de tipos de quiz para aprendizado ideal."
       },
       "3": {
         "question": "Quais são os planos de assinatura e preços?",
-        "answer": "O Decorebator oferece um plano Gratuito (1 lista de vocabulário, máximo 10 palavras) e planos Premium: R$ 34,90/mês ou R$ 349,00/ano. O Premium inclui listas e palavras ilimitadas, suporte offline com sincronização automática, histórico completo de análises, funcionalidade de exportação e insights avançados de aprendizado."
+        "answer": "O Decorebator oferece um plano Gratuito (1 lista de palavras, máximo de 10 palavras) e planos Premium: $6.99/mês ou $69.90/ano. O Premium inclui listas de palavras e palavras ilimitadas, suporte offline com sincronização perfeita, histórico completo de análises, funcionalidade de exportação e insights avançados de aprendizado."
       },
       "4": {
         "question": "Posso usar o Decorebator offline?",
-        "answer": "Sim! Usuários Premium podem baixar suas listas de vocabulário e continuar aprendendo offline com funcionalidade completa. Seu progresso sincroniza automaticamente quando você se reconecta à internet, garantindo que nunca perca uma sessão de aprendizado."
+        "answer": "Sim! Usuários Premium podem baixar suas listas de palavras e continuar aprendendo offline com funcionalidade completa. Seu progresso sincroniza automaticamente quando você se reconecta à internet, garantindo que nunca perca uma sessão de aprendizado."
       },
       "5": {
-        "question": "Quais idiomas são suportados para geração de conteúdo com IA?",
-        "answer": "O Decorebator suporta 7 idiomas com processamento nativo de IA: inglês, espanhol, francês, alemão, italiano, português e japonês. Cada idioma recebe geração de conteúdo culturalmente apropriada, regras gramaticais corretas (como gramática consciente de gênero em português ou sistema de casos alemão) e seleção de voz otimizada."
+        "question": "Quais idiomas são suportados para geração de conteúdo por IA?",
+        "answer": "O Decorebator suporta 7 idiomas com processamento nativo de IA: inglês, espanhol, francês, alemão, italiano, português e japonês. Cada idioma recebe geração de conteúdo culturalmente consciente, regras gramaticais adequadas (como gramática sensível ao gênero em espanhol ou sistema de casos alemão) e seleção de voz otimizada."
       },
       "6": {
         "question": "Quantos modos de quiz estão disponíveis e como funcionam?",
-        "answer": "Há 8 modos de quiz diferentes projetados para abordar vários aspectos do aprendizado de vocabulário: adivinhar significado, palavra pelo significado, associação visual, compreensão auditiva, completar frases, recordação ativa, reconhecimento de áudio e áudio de exemplo. Os tipos de quiz se adaptam progressivamente conforme seu nível atual de aprendizado."
+        "answer": "Existem 8 modos de quiz diferentes projetados para atingir vários aspectos do aprendizado de vocabulário: adivinhar significado, palavra do significado, associação visual, compreensão auditiva, completar frase, recall ativo, reconhecimento de áudio e áudio de exemplo. Os tipos de quiz se adaptam progressivamente baseados em seu nível atual de aprendizado."
       },
       "7": {
-        "question": "Quais recursos de análises e acompanhamento de progresso estão incluídos?",
-        "answer": "O Decorebator fornece análises abrangentes com múltiplas ferramentas de acompanhamento: estatísticas do painel, gráficos de domínio de palavras, tendências de progresso de aprendizado, análise de tempo de prática, detalhamento de desempenho em quiz, ranking das melhores palavras, visualização de distribuição de caixas e acompanhamento de progresso histórico. Usuários Premium obtêm histórico ilimitado e exportação de dados."
+        "question": "Quais recursos de análise e acompanhamento de progresso estão incluídos?",
+        "answer": "O Decorebator fornece análises abrangentes com múltiplas ferramentas de acompanhamento: estatísticas do painel, gráficos de domínio de palavras, tendências de progresso de aprendizado, análises de tempo de prática, detalhamentos de desempenho de quiz, placares de palavras top, visualização de distribuição de caixas e acompanhamento de progresso histórico. Usuários Premium obtêm histórico ilimitado e exportação de dados."
       },
       "8": {
         "question": "Como funciona o sistema de relatório de erros?",
-        "answer": "Os usuários podem relatar problemas com conteúdo gerado por IA (definições, imagens, áudio) diretamente do aplicativo. O sistema inclui limitação de taxa (Gratuito: 3 relatórios/hora, 5/dia; Premium: 10 relatórios/hora, 30/dia) e regeneração automática de conteúdo. Palavras relatadas são temporariamente omitidas durante revisões até que novo conteúdo seja gerado."
+        "answer": "Usuários podem reportar problemas com conteúdo gerado por IA (definições, imagens, áudio) diretamente do app. O sistema inclui limitação de taxa (Gratuito: 3 relatórios/hora, 5/dia; Premium: 10 relatórios/hora, 30/dia) e regeneração automática de conteúdo. Palavras reportadas são temporariamente puladas durante revisões até que novo conteúdo seja gerado."
       },
       "9": {
         "question": "Quais plataformas e dispositivos são suportados?",
-        "answer": "O Decorebator está disponível como aplicativo móvel para dispositivos iOS e Android, além de um aplicativo web abrangente com suporte multi-idiomas. Seu progresso sincroniza automaticamente em todos os dispositivos com gerenciamento automático de sessões."
+        "answer": "O Decorebator está disponível como app móvel para dispositivos iOS e Android, além de uma aplicação web abrangente com suporte multilíngue. Seu progresso sincroniza entre todos os dispositivos com gerenciamento automático de sessão."
       },
       "10": {
-        "question": "Quão confiável é a geração de conteúdo com IA?",
-        "answer": "Nosso sistema de geração de conteúdo com IA inclui múltiplas medidas de garantia de qualidade: lógica de tentativa automática, limitação de taxa e distribuição de uso justo para garantir criação confiável de conteúdo. O sistema de relatório de erros permite que usuários solicitem novo conteúdo se algo não atender suas necessidades de aprendizado."
+        "question": "Quão confiável é a geração de conteúdo por IA?",
+        "answer": "Nosso sistema de geração de conteúdo por IA inclui múltiplas medidas de garantia de qualidade: lógica de retry automática, limitação de taxa e distribuição de uso justo para garantir criação confiável de conteúdo. O sistema de relatório de erros permite que usuários solicitem novo conteúdo se algo não atender suas necessidades de aprendizado."
       }
     }
   },
   "pricing": {
-    "title": "Escolha Seu Plano de Aprendizado",
-    "subtitle": "Comece grátis, faça upgrade quando estiver pronto para acelerar seu aprendizado",
-    "free": {
-      "title": "Plano Gratuito",
-      "price": "R$ 0",
-      "period": "",
-      "description": "Perfeito para experimentar a plataforma",
-      "features": {
-        "wordlists": "1 lista de palavras",
-        "words": "Até 10 palavras",
-        "quizModes": "Modos básicos de quiz",
-        "access": "Acesso apenas online"
-      },
-      "cta": "Começar Grátis"
+    "title": {
+      "part1": "Escolha Seu ",
+      "part2": "Plano de Aprendizado"
     },
-    "monthly": {
-      "title": "Premium Mensal",
-      "price": "R$ 34,90",
-      "period": "/mês",
-      "description": "Acesso completo a todos os recursos premium",
-      "badge": "Mais Popular",
-      "features": {
-        "wordlists": "Listas de palavras ilimitadas",
-        "words": "Palavras ilimitadas",
-        "quizModes": "Todos os 7 modos de quiz",
-        "analytics": "Análises avançadas",
-        "offline": "Suporte offline",
-        "support": "Suporte prioritário"
-      },
-      "cta": "Começar Mensal"
+    "subtitle": "Comece grátis e faça upgrade a qualquer momento. Todos os planos incluem enriquecimento de vocabulário com IA e repetição espaçada.",
+    "allPlansInclude": "✨ Todos os planos incluem",
+    "features": {
+      "aiContent": "Conteúdo com IA",
+      "spacedRepetition": "Repetição espaçada",
+      "mobileAccess": "Acesso ao app móvel",
+      "securePrivate": "Seguro e privado"
     },
-    "annual": {
-      "title": "Premium Anual",
-      "price": "R$ 349,00",
-      "period": "/ano",
-      "description": "Melhor valor para alunos dedicados",
-      "savings": "Economize R$ 69,80!",
-      "features": {
-        "everything": "Tudo do Mensal",
-        "value": "Melhor custo-benefício",
-        "support": "Atendimento ao cliente prioritário",
-        "earlyAccess": "Acesso antecipado a recursos"
+    "footer": "Sem contratos • Cancele a qualquer momento • Pagamento seguro via Stripe",
+    "plans": {
+      "free": {
+        "name": "Gratuito",
+        "title": "Plano gratuito",
+        "price": "$0",
+        "period": "",
+        "description": "Perfeito para experimentar o aprendizado de vocabulário",
+        "features": [
+          "1 lista de palavras",
+          "Até 10 palavras",
+          "Modos básicos de quiz",
+          "Análises limitadas"
+        ],
+        "cta": "Começar grátis"
       },
-      "cta": "Começar Anual"
+      "monthly": {
+        "name": "Premium mensal",
+        "title": "Premium mensal",
+        "price": "$6.99",
+        "period": "/mês",
+        "description": "Acesso completo com flexibilidade mensal",
+        "badge": "MAIS POPULAR",
+        "features": [
+          "Listas de palavras ilimitadas",
+          "Palavras ilimitadas",
+          "Todos os 8 modos de quiz",
+          "Análises avançadas",
+          "Suporte offline"
+        ],
+        "cta": "Começar mensal"
+      },
+      "annual": {
+        "name": "Premium anual",
+        "title": "Premium anual",
+        "price": "$69.90",
+        "period": "/ano",
+        "description": "Melhor valor para estudantes comprometidos",
+        "savings": "Economize $13.98 por ano",
+        "features": [
+          "Tudo do mensal",
+          "Economize $13.98 por ano",
+          "Acesso antecipado a recursos"
+        ],
+        "cta": "Começar anual"
+      }
     }
   },
-  "cta": {
-    "title": "Pronto para Transformar Seu Aprendizado de Idiomas?",
-    "subtitle": "Junte-se a 10.000+ alunos que estão dominando novos idiomas com aprendizado de vocabulário com IA e repetição espaçada.",
-    "startFreeTrial": "Comece Seu Teste Grátis"
+  "newFeatures": {
+    "title": {
+      "part1": "Tudo O Que Você Precisa Para ",
+      "part2": "Dominar Vocabulário"
+    },
+    "subtitle": "Nossa plataforma abrangente combina tecnologia de IA de ponta com ciência de aprendizado comprovada para acelerar sua jornada linguística.",
+    "items": {
+      "nativeLanguages": {
+        "title": "7 Idiomas IA Nativos",
+        "description": "Processamento de IA nativo em inglês, espanhol, francês, alemão, italiano, português e japonês com regras gramaticais específicas do idioma."
+      },
+      "aiContent": {
+        "title": "Geração de Conteúdo com IA",
+        "description": "Gera automaticamente definições, exemplos, imagens e pronúncias de áudio para qualquer palavra usando modelos de IA avançados."
+      },
+      "spacedRepetition": {
+        "title": "Repetição Espaçada Leitner",
+        "description": "Sistema cientificamente comprovado com 7 caixas de revisão que otimiza quando você revisa palavras para máxima retenção a longo prazo."
+      },
+      "quizModes": {
+        "title": "8 Modos de Quiz Envolventes",
+        "description": "Múltiplos tipos de quiz: correspondência de significados, associação de imagens, compreensão auditiva, completar frases, escrever da definição e mais."
+      },
+      "visualLearning": {
+        "title": "Aprendizado Visual com Imagens IA",
+        "description": "Imagens geradas por IA ajudam você a associar palavras com conceitos visuais para melhor retenção de memória."
+      },
+      "multiLanguageAudio": {
+        "title": "Áudio Multi-Idioma",
+        "description": "Seleção de voz otimizada por idioma com texto-para-fala avançado. Cada idioma usa vozes de som nativo para pronúncia autêntica."
+      },
+      "flashcards": {
+        "title": "Flashcards Interativos",
+        "description": "Flashcards imersivos de tela cheia com animações de virar, exibição de conteúdo rico e relatório de erros integrado."
+      },
+      "analytics": {
+        "title": "Análises Avançadas",
+        "description": "Rastreamento abrangente de progresso com níveis de domínio de palavras, velocidade de aprendizado, taxas de retenção e insights de desempenho."
+      },
+      "errorReporting": {
+        "title": "Sistema de Relatório de Erros",
+        "description": "Controle de qualidade dirigido pelo usuário com 5 tipos de erro para conteúdo IA. Relate problemas e obtenha regeneração automática de conteúdo."
+      },
+      "offlineSupport": {
+        "title": "Suporte Offline",
+        "description": "Usuários premium podem baixar listas de palavras para acesso offline. Funcionalidade completa de quiz sem conexão com internet."
+      }
+    }
+  },
+  "appShowcase": {
+    "title": {
+      "part1": "Experimente o ",
+      "part2": "Futuro do Aprendizado"
+    },
+    "subtitle": "Nossa interface intuitiva e recursos inteligentes tornam o aprendizado de vocabulário envolvente, eficiente e prazeroso.",
+    "features": {
+      "progressTracking": {
+        "title": "Acompanhamento Inteligente do Progresso",
+        "description": "Monitore sua jornada de aprendizado com análises detalhadas, acompanhamento de domínio de palavras e sequências diárias.",
+        "tags": {
+          "wordMastery": "Domínio de Palavras",
+          "boxDistribution": "Distribuição de Caixas",
+          "dailyStreaks": "Sequências Diárias"
+        }
+      },
+      "aiContent": {
+        "title": "Conteúdo IA Multi-Idioma",
+        "description": "A IA gera conteúdo em idioma nativo com gramática adequada, contexto cultural e vozes otimizadas para o idioma.",
+        "tags": {
+          "nativeDefinitions": "Definições Nativas",
+          "culturalImages": "Imagens Culturais",
+          "optimizedAudio": "Áudio Otimizado"
+        }
+      },
+      "leitnerSystem": {
+        "title": "Sistema Leitner Avançado",
+        "description": "Sistema de repetição espaçada de 7 caixas que se adapta ao seu ritmo de aprendizado e otimiza o tempo de revisão.",
+        "tags": {
+          "newWords": "Caixa 1-2: Novas",
+          "learning": "Caixa 3-5: Aprendendo",
+          "mastered": "Caixa 6-7: Dominadas"
+        }
+      }
+    },
+    "demo": {
+      "videoAlt": "Demo do App Decorebator - Interação ao vivo mostrando recursos de quiz, acompanhamento de progresso e fluxo de aprendizado",
+      "liveDemo": "Demo ao Vivo!",
+      "seeInAction": "Veja em ação"
+    }
   },
   "contact": {
-    "title": "Entre em Contato",
-    "subtitle": "Tem dúvidas? Adoraríamos ouvir de você.",
+    "title": "Entre em contato",
+    "subtitle": "Tem dúvidas sobre o Decorebator? Adoraríamos ouvir de você. Envie-nos uma mensagem e responderemos o mais rápido possível.",
     "form": {
+      "title": "Entre em contato",
+      "subtitle": "Tem dúvidas sobre o Decorebator? Adoraríamos ouvir de você. Envie-nos uma mensagem e responderemos o mais rápido possível.",
+      "fullName": "Nome completo *",
+      "fullNamePlaceholder": "Digite seu nome completo",
       "name": "Nome",
       "namePlaceholder": "Seu nome",
       "email": "Email",
-      "emailPlaceholder": "seu@email.com",
-      "subject": "Assunto",
-      "subjectPlaceholder": "Sobre o que é?",
-      "message": "Mensagem",
-      "messagePlaceholder": "Conte-nos mais...",
-      "send": "Enviar Mensagem",
+      "emailAddress": "Endereço de email *",
+      "emailPlaceholder": "Digite seu endereço de email",
+      "subject": "Assunto *",
+      "subjectPlaceholder": "Selecione um assunto...",
+      "message": "Mensagem *",
+      "messagePlaceholder": "Diga-nos como podemos ajudá-lo...",
+      "send": "Enviar mensagem",
+      "sendMessage": "Enviar mensagem",
       "sending": "Enviando...",
       "success": "Mensagem enviada com sucesso!",
-      "error": "Falha ao enviar mensagem. Tente novamente."
+      "error": "Falha ao enviar mensagem. Tente novamente.",
+      "subjects": {
+        "general": "Consulta geral",
+        "support": "Suporte técnico",
+        "billing": "Cobrança e assinaturas",
+        "feature": "Solicitação de recurso",
+        "bug": "Relatório de bug",
+        "partnership": "Oportunidade de parceria"
+      }
     },
     "info": {
       "email": "support@decorebator.com",
-      "response": "Normalmente respondemos em até 24 horas",
+      "emailUs": "Envie-nos um email",
+      "emailAddress": "support@decorebator.com",
+      "liveChat": "Chat ao vivo",
+      "availability": "Disponível 24/7",
+      "helpCenter": "Central de ajuda",
+      "quickAnswers": "Encontre respostas rápidas",
+      "response": "Normalmente respondemos em 24 horas",
       "social": "Siga-nos nas redes sociais para atualizações"
     }
   },
+  "help": {
+    "title": "Central de ajuda",
+    "subtitle": "Tudo que você precisa saber sobre o Decorebator - aprendizado de vocabulário com IA",
+    "quickNavigation": "Navegação rápida",
+    "gettingStarted": {
+      "title": "Primeiros passos",
+      "createAccount": {
+        "title": "1. Crie sua conta",
+        "steps": [
+          "Cadastre-se com email e senha",
+          "Escolha seu plano de aprendizado (Gratuito ou Premium)",
+          "Baixe o app móvel da sua loja de aplicativos",
+          "Entre com as mesmas credenciais"
+        ]
+      },
+      "startLearning": {
+        "title": "2. Comece a aprender",
+        "steps": [
+          "Crie sua primeira lista de palavras",
+          "Adicione palavras que deseja aprender",
+          "A IA gera automaticamente definições e conteúdo",
+          "Comece a praticar com quizzes interativos"
+        ]
+      },
+      "proTip": "Comece com 5-10 palavras em sua primeira lista para se familiarizar com o sistema antes de adicionar mais!"
+    },
+    "coreFeatures": {
+      "title": "Recursos principais",
+      "aiPowered": {
+        "title": "Conteúdo com IA",
+        "description": "Gera automaticamente definições, imagens, pronúncias de áudio e frases de exemplo para cada palavra que você adiciona."
+      },
+      "quizModes": {
+        "title": "8 modos de quiz",
+        "modes": [
+          "Adivinhar significado",
+          "Palavra do significado", 
+          "Associação de imagem",
+          "Compreensão auditiva",
+          "Completar frase",
+          "Escrever da definição",
+          "Reconhecimento de áudio",
+          "Áudio de exemplo"
+        ]
+      },
+      "spacedRepetition": {
+        "title": "Repetição espaçada",
+        "description": "Usa o sistema Leitner cientificamente comprovado com 7 caixas para otimizar quando você revisa palavras para máxima retenção."
+      },
+      "analytics": {
+        "title": "Análises avançadas",
+        "description": "Acompanhe seu progresso com estatísticas detalhadas, níveis de domínio de palavras, velocidade de aprendizado e taxas de retenção."
+      },
+      "multiLanguage": {
+        "title": "Suporte multi-idioma",
+        "description": "Suporte nativo de IA para 7 idiomas: inglês, espanhol, francês, alemão, italiano, português e japonês."
+      },
+      "offline": {
+        "title": "Suporte offline",
+        "description": "Usuários Premium podem baixar listas de palavras para acesso offline e continuar aprendendo sem conexão à internet."
+      }
+    },
+    "leitnerSystem": {
+      "title": "Como funciona o sistema Leitner",
+      "description": "O Decorebator usa um sofisticado sistema Leitner de 7 caixas para retenção ideal de vocabulário através de repetição espaçada.",
+      "table": {
+        "box": "Caixa",
+        "interval": "Intervalo de revisão",
+        "purpose": "Propósito",
+        "boxes": [
+          {"box": "Caixa 1", "interval": "Imediato", "purpose": "Palavras novas, revisões falhadas"},
+          {"box": "Caixa 2", "interval": "1 hora", "purpose": "Aprendizado recente"},
+          {"box": "Caixa 3", "interval": "1 dia", "purpose": "Retenção de curto prazo"},
+          {"box": "Caixa 4", "interval": "3 dias", "purpose": "Retenção de médio prazo"},
+          {"box": "Caixa 5", "interval": "1 semana", "purpose": "Retenção de longo prazo"},
+          {"box": "Caixa 6", "interval": "2 semanas", "purpose": "Retenção estendida"},
+          {"box": "Caixa 7", "interval": "1 mês", "purpose": "Palavras dominadas"}
+        ]
+      },
+      "progressionRules": {
+        "title": "Regras de progressão",
+        "correct": "Resposta correta: Palavra move para a próxima caixa",
+        "incorrect": "Resposta incorreta: Palavra volta para a Caixa 1",
+        "mastered": "Caixa 7: Palavras ficam na Caixa 7 quando corretas (dominadas)"
+      },
+      "quizProgression": {
+        "title": "Progressão de tipos de quiz",
+        "description": "Diferentes tipos de quiz são introduzidos baseados no nível da caixa da palavra para aumentar a dificuldade progressivamente conforme você domina cada palavra."
+      }
+    },
+    "subscriptionPlans": {
+      "title": "Planos de assinatura"
+    },
+    "languageSupport": {
+      "title": "Suporte multi-idioma",
+      "description": "O Decorebator fornece suporte abrangente multi-idioma com processamento nativo de IA para experiências de aprendizado autênticas.",
+      "supportedLanguages": "Idiomas suportados (7)",
+      "aiFeatures": "Recursos de IA por idioma",
+      "features": [
+        "Gramática nativa: Regras e estruturas específicas do idioma",
+        "Contexto cultural: Imagens e exemplos culturalmente relevantes",
+        "Áudio otimizado: Seleção de voz com som nativo por idioma",
+        "Sistemas verbais: Tempos e inflexões apropriados ao idioma"
+      ]
+    },
+    "troubleshooting": {
+      "title": "Solução de problemas e suporte",
+      "commonIssues": "Problemas comuns",
+      "audioNotPlaying": {
+        "title": "Áudio não reproduz",
+        "solution": "Verifique o volume do seu dispositivo e certifique-se de ter uma conexão estável à internet. O áudio é gerado por IA e requer acesso online."
+      },
+      "imagesNotLoading": {
+        "title": "Imagens não carregam",
+        "solution": "Imagens são geradas por IA e podem levar alguns momentos para aparecer. Atualize o quiz ou use o recurso de relatório de erro se problemas persistirem."
+      },
+      "subscriptionNotUpdating": {
+        "title": "Assinatura não atualiza",
+        "solution": "Após completar o pagamento, feche e reabra o app para atualizar o status da sua assinatura. Mudanças devem aparecer em alguns minutos."
+      },
+      "errorReporting": {
+        "title": "Relatório inteligente de erros",
+        "description": "Sistema de relatório de erros com limitação de taxa e regeneração automática de conteúdo. Limites baseados em nível para prevenir abuso:",
+        "types": [
+          "Reportar definições incorretas",
+          "Sinalizar imagens inapropriadas",
+          "Reportar problemas de reprodução de áudio",
+          "Enviar exemplos irrelevantes",
+          "Sinalizar problemas de carregamento"
+        ],
+        "limits": {
+          "free": "Gratuito: 3 relatórios/hora, 5 relatórios/dia",
+          "premium": "Premium: 10 relatórios/hora, 30 relatórios/dia"
+        }
+      },
+      "needHelp": {
+        "title": "Precisa de mais ajuda?",
+        "description": "Nossa equipe de suporte está aqui para ajudá-lo a aproveitar ao máximo o Decorebator.",
+        "email": "Contatar suporte: support@decorebator.com"
+      }
+    },
+    "stillNeedHelp": {
+      "title": "Ainda precisa de ajuda?",
+      "subtitle": "Nossa equipe de suporte está pronta para ajudá-lo com qualquer dúvida ou problema.",
+      "emailSupport": "Suporte por email",
+      "contactForm": "Formulário de contato"
+    }
+  },
+  "signup": {
+    "title": "Junte-se ao Decorebator",
+    "subtitle": "Comece sua jornada de aprendizado de idiomas hoje",
+    "planSelection": {
+      "free": "Você está se cadastrando no plano Gratuito",
+      "monthly": "Você está se cadastrando no plano Premium Mensal ($6.99/mês)",
+      "annual": "Você está se cadastrando no plano Premium Anual ($69.90/ano)"
+    },
+    "form": {
+      "firstName": "Nome",
+      "lastName": "Sobrenome",
+      "email": "Endereço de email",
+      "password": "Senha",
+      "confirmPassword": "Confirmar senha",
+      "firstNamePlaceholder": "Digite seu nome",
+      "lastNamePlaceholder": "Digite seu sobrenome",
+      "emailPlaceholder": "Digite seu endereço de email",
+      "passwordPlaceholder": "Crie uma senha segura",
+      "confirmPasswordPlaceholder": "Confirme sua senha"
+    },
+    "features": {
+      "title": "O que você terá:",
+      "free": [
+        "1 lista de palavras com até 10 palavras",
+        "Modos básicos de quiz",
+        "Conteúdo gerado por IA",
+        "Acesso móvel e web"
+      ],
+      "premium": [
+        "Listas de palavras e palavras ilimitadas",
+        "Todos os 8 modos de quiz",
+        "Análises avançadas",
+        "Suporte offline",
+        "Suporte prioritário"
+      ]
+    },
+    "terms": "Ao se cadastrar, você concorda com nossos {termsLink} e {privacyLink}",
+    "createAccount": "Criar conta",
+    "creating": "Criando conta...",
+    "alreadyHaveAccount": "Já tem uma conta? {signInLink}",
+    "errors": {
+      "firstNameRequired": "Nome é obrigatório",
+      "lastNameRequired": "Sobrenome é obrigatório",
+      "emailRequired": "Email é obrigatório",
+      "emailInvalid": "Digite um endereço de email válido",
+      "passwordRequired": "Senha é obrigatória",
+      "passwordTooShort": "Senha deve ter pelo menos 8 caracteres",
+      "passwordsMismatch": "Senhas não coincidem",
+      "signupFailed": "Falha ao criar conta. Tente novamente."
+    }
+  },
+  "signupSuccess": {
+    "title": "Bem-vindo ao Decorebator!",
+    "subtitle": "Sua conta foi criada com sucesso",
+    "freeFlow": {
+      "title": "Você está pronto com o plano Gratuito!",
+      "description": "Baixe o app móvel para começar a aprender vocabulário com conteúdo gerado por IA e repetição espaçada.",
+      "nextSteps": "Próximos passos:",
+      "steps": [
+        "Baixe o app Decorebator",
+        "Entre com sua conta",
+        "Crie sua primeira lista de palavras",
+        "Comece a aprender!"
+      ]
+    },
+    "premiumFlow": {
+      "title": "Complete sua configuração Premium",
+      "description": "Você está a apenas um passo de desbloquear potencial ilimitado de aprendizado.",
+      "redirecting": "Redirecionando você para pagamento seguro...",
+      "manualRedirect": "Se não for redirecionado automaticamente, {clickHere}.",
+      "clickHere": "clique aqui",
+      "afterPayment": "Após completar o pagamento:",
+      "steps": [
+        "Baixe o app móvel",
+        "Entre para ver seus recursos Premium",
+        "Crie listas de palavras ilimitadas",
+        "Acesse todos os 8 modos de quiz e suporte offline"
+      ],
+      "premiumFeatures": "Recursos Premium que você desbloqueará:",
+      "features": [
+        "Listas de palavras e palavras ilimitadas",
+        "Todos os 8 modos de quiz interativos",
+        "Análises avançadas de aprendizado",
+        "Suporte de aprendizado offline",
+        "Suporte ao cliente prioritário"
+      ]
+    },
+    "downloadApp": "Baixar o app",
+    "appStore": "Baixar na App Store",
+    "googlePlay": "Baixar no Google Play",
+    "webVersion": "Ou continue com a versão web",
+    "continueToApp": "Continuar para o app"
+  },
+  "featurePages": {
+    "aiContent": {
+      "title": "Geração de conteúdo com IA",
+      "subtitle": "Enriqueça automaticamente seu vocabulário com definições, exemplos, imagens e áudio",
+      "description": "Transforme qualquer palavra em uma experiência rica de aprendizado com nossa tecnologia IA avançada que gera conteúdo abrangente para cada palavra que você adiciona às suas listas.",
+      "hero": {
+        "title": "Aprimore cada palavra com IA",
+        "subtitle": "Experimente o poder de definições geradas por IA, exemplos contextuais, associações visuais e pronúncia de qualidade nativa para aprendizado acelerado de vocabulário."
+      },
+      "benefits": {
+        "title": "Benefícios do aprendizado com IA",
+        "items": [
+          "Definições abrangentes instantâneas para qualquer palavra",
+          "Exemplos contextuais em seu idioma de destino", 
+          "Imagens geradas por IA para associação visual de memória",
+          "Pronúncia de áudio de qualidade nativa",
+          "Insights de gramática e uso",
+          "Contexto cultural e nuances"
+        ]
+      },
+      "howItWorks": {
+        "title": "Como funciona a geração de conteúdo por IA",
+        "steps": [
+          {
+            "title": "Adicionar palavras",
+            "description": "Simplesmente adicione qualquer palavra à sua lista - não é necessária pesquisa manual."
+          },
+          {
+            "title": "Processamento IA",
+            "description": "Nossos modelos avançados de IA analisam a palavra e geram conteúdo abrangente."
+          },
+          {
+            "title": "Aprendizado rico",
+            "description": "Obtenha definições, exemplos, imagens e áudio instantaneamente para aprendizado eficaz."
+          }
+        ]
+      },
+      "features": {
+        "title": "Recursos de conteúdo IA",
+        "definitions": "Definições abrangentes com múltiplos significados e contextos",
+        "examples": "Exemplos de uso do mundo real em seu idioma de destino",
+        "images": "Associações visuais para fortalecer retenção de memória",
+        "audio": "Pronúncia perfeita com qualidade de falante nativo",
+        "grammar": "Informações de classe gramatical e informações gramaticais",
+        "culture": "Contexto cultural e notas de uso"
+      }
+    },
+    "spacedRepetition": {
+      "title": "Sistema Leitner probabilístico avançado",
+      "subtitle": "Nunca fique sem conteúdo com seleção inteligente de palavras",
+      "description": "Nosso revolucionário sistema Leitner probabilístico de 7 caixas resolve o problema de 'Estagnação da Caixa 7' com disponibilidade inteligente de palavras.",
+      "hero": {
+        "title": "Sempre algo para estudar",
+        "subtitle": "Seleção probabilística de palavras garante que você nunca fique sem conteúdo, mesmo com todas as palavras dominadas na Caixa 7."
+      },
+      "benefits": {
+        "title": "Benefícios da seleção probabilística",
+        "items": [
+          "Nunca travado com sessões de prática vazias",
+          "Palavras da Caixa 7 têm 5% de disponibilidade mínima",
+          "Mantém princípios de repetição espaçada",
+          "Execução de consulta única (sem fallbacks)",
+          "Modela cientificamente o decaimento natural da memória",
+          "Garante momentum contínuo de aprendizado"
+        ]
+      },
+      "system": {
+        "title": "Sistema Leitner de 7 caixas",
+        "description": "Palavras progridem através de 7 caixas baseadas em seu desempenho, com intervalos de revisão crescentes:",
+        "boxes": [
+          { "box": "Caixa 1", "interval": "Imediato", "purpose": "Palavras novas, revisões falhadas" },
+          { "box": "Caixa 2", "interval": "1 hora", "purpose": "Aprendizado recente" },
+          { "box": "Caixa 3", "interval": "1 dia", "purpose": "Retenção de curto prazo" },
+          { "box": "Caixa 4", "interval": "3 dias", "purpose": "Retenção de médio prazo" },
+          { "box": "Caixa 5", "interval": "1 semana", "purpose": "Retenção de longo prazo" },
+          { "box": "Caixa 6", "interval": "2 semanas", "purpose": "Retenção estendida" },
+          { "box": "Caixa 7", "interval": "1 mês", "purpose": "Palavras dominadas" }
+        ]
+      },
+      "progression": {
+        "title": "Regras de progressão inteligente",
+        "correct": "Respostas corretas movem palavras para a próxima caixa com intervalos mais longos",
+        "incorrect": "Respostas incorretas resetam palavras para a Caixa 1 para revisão imediata",
+        "mastered": "Palavras na Caixa 7 permanecem dominadas com revisões mensais de manutenção"
+      },
+      "probabilistic": {
+        "title": "Fórmula de seleção probabilística",
+        "formula": "P(seleção) = probabilidade_base + (progresso_tempo * (1 - probabilidade_base))",
+        "minimums": {
+          "title": "Probabilidades mínimas por caixa",
+          "box1": "Caixa 1: 100% (sempre disponível)",
+          "box2": "Caixa 2: 70% mínimo",
+          "box3": "Caixa 3: 50% mínimo",
+          "box4": "Caixa 4: 30% mínimo",
+          "box5": "Caixa 5: 20% mínimo",
+          "box6": "Caixa 6: 10% mínimo",
+          "box7": "Caixa 7: 5% mínimo (garante conteúdo sempre disponível)"
+        }
+      }
+    },
+    "quizModes": {
+      "title": "8 modos de quiz envolventes",
+      "subtitle": "Teste abrangente com múltiplas abordagens de aprendizado",
+      "description": "Desafie-se com 8 tipos diferentes de quiz projetados para testar e fortalecer diferentes aspectos do conhecimento e recall de vocabulário.",
+      "hero": {
+        "title": "Experiência de aprendizado multimodal",
+        "subtitle": "Engaje diferentes caminhos de aprendizado com modos de quiz variados que testam reconhecimento, recall, compreensão e aplicação."
+      },
+      "modes": {
+        "title": "Modos de quiz disponíveis",
+        "guessMeaning": {
+          "title": "Adivinhar significado",
+          "description": "Escolha a definição correta de múltiplas opções para testar compreensão"
+        },
+        "wordFromMeaning": {
+          "title": "Palavra do significado",
+          "description": "Selecione a palavra correta que corresponde a uma definição dada"
+        },
+        "imageAssociation": {
+          "title": "Associação de imagem",
+          "description": "Identifique palavras de representações visuais geradas por IA"
+        },
+        "audioComprehension": {
+          "title": "Compreensão auditiva",
+          "description": "Reconheça palavras e significados da pronúncia"
+        },
+        "sentenceCompletion": {
+          "title": "Completar frase",
+          "description": "Complete frases usando pistas gramaticais e contextuais"
+        },
+        "writeFromDefinition": {
+          "title": "Escrever da definição",
+          "description": "Digite a palavra correta baseada em seu significado (recall ativo)"
+        },
+        "audioRecognition": {
+          "title": "Reconhecimento de áudio",
+          "description": "Combine palavras faladas com suas formas escritas"
+        },
+        "exampleAudio": {
+          "title": "Áudio de exemplo",
+          "description": "Identifique palavras do áudio de frases de exemplo"
+        }
+      },
+      "benefits": {
+        "title": "Benefícios de múltiplos modos de quiz",
+        "items": [
+          "Engaja diferentes caminhos de aprendizado",
+          "Previne monotonia e tédio",
+          "Testa vários aspectos do conhecimento",
+          "Constrói compreensão abrangente",
+          "Adapta-se a diferentes estilos de aprendizado",
+          "Aumenta retenção através de variedade"
+        ]
+      }
+    },
+    "visualLearning": {
+      "title": "Aprendizado visual com imagens IA",
+      "subtitle": "Fortaleça memória com associações visuais poderosas",
+      "description": "Aproveite o poder da memória visual com imagens geradas por IA que criam associações mentais fortes para cada palavra em seu vocabulário.",
+      "hero": {
+        "title": "Veja, aprenda, lembre",
+        "subtitle": "Transforme palavras abstratas em experiências visuais memoráveis com imagens geradas por IA adaptadas para melhorar seu aprendizado."
+      },
+      "benefits": {
+        "title": "Poder do aprendizado visual",
+        "items": [
+          "Memória visual é 6x mais forte que só texto",
+          "Cria associações mentais duradouras",
+          "Engaja múltiplos caminhos de aprendizado",
+          "Melhora velocidade e precisão do recall",
+          "Torna conceitos abstratos concretos",
+          "Melhora retenção a longo prazo"
+        ]
+      },
+      "features": {
+        "title": "Recursos de imagem IA",
+        "generation": "Imagens personalizadas geradas para cada palavra",
+        "context": "Representações visuais contextualmente relevantes",
+        "culture": "Imagens culturalmente apropriadas",
+        "quality": "Visuais de alta qualidade gerados por IA",
+        "association": "Projetado para associação ideal de memória",
+        "variety": "Estilos visuais e abordagens diversas"
+      },
+      "science": {
+        "title": "A ciência por trás do aprendizado visual",
+        "description": "Pesquisas mostram que aprendizado visual melhora significativamente retenção e recall. Nossas imagens geradas por IA são especificamente projetadas para criar as associações de memória mais fortes possíveis."
+      }
+    },
+    "audioLearning": {
+      "title": "Aprendizado de áudio multi-idioma",
+      "subtitle": "Pronúncia perfeita com vozes de qualidade nativa",
+      "description": "Domine pronúncia com nossa tecnologia avançada de texto para fala com vozes otimizadas por idioma para áudio autêntico com som nativo.",
+      "hero": {
+        "title": "Ouça certo, fale certo",
+        "subtitle": "Experimente pronúncia autêntica com áudio com IA que se adapta às características e sons únicos de cada idioma."
+      },
+      "features": {
+        "title": "Recursos de aprendizado de áudio",
+        "quality": "Qualidade de falante nativo para todos os 7 idiomas suportados",
+        "optimization": "Seleção e otimização de voz específica por idioma",
+        "clarity": "Pronúncia cristalina para cada palavra",
+        "speed": "Velocidade de reprodução ajustável para aprendizado",
+        "repetition": "Repetição de áudio ilimitada para prática",
+        "offline": "Áudio baixado funciona offline (Premium)"
+      },
+      "languages": {
+        "title": "Idiomas suportados",
+        "description": "Geração de áudio de qualidade nativa para:",
+        "list": [
+          "Inglês - Múltiplas variações de sotaque",
+          "Espanhol - Latino-americano e europeu",
+          "Francês - Pronúncia francesa padrão",
+          "Alemão - Padrão alemão alto",
+          "Italiano - Italiano padrão",
+          "Português - Português brasileiro",
+          "Japonês - Pronúncia padrão de Tóquio"
+        ]
+      },
+      "benefits": {
+        "title": "Benefícios do aprendizado de áudio",
+        "items": [
+          "Melhore precisão da pronúncia",
+          "Desenvolva compreensão auditiva",
+          "Aprenda estresse de palavra adequado e entonação",
+          "Construa confiança ao falar",
+          "Melhore memória auditiva",
+          "Pratique pronúncia autêntica"
+        ]
+      }
+    },
+    "analytics": {
+      "title": "Análises em tempo real de alto desempenho",
+      "subtitle": "Análises com cache Redis com insights instantâneos para usuários Premium",
+      "description": "Experimente análises ultrarrápidas com cache Redis para usuários Premium e visualizações materializadas otimizadas para usuários gratuitos.",
+      "hero": {
+        "title": "Desempenho ultrarrápido",
+        "subtitle": "Usuários Premium obtêm análises em tempo real com tempos de resposta <50ms graças ao cache Redis inteligente e otimização de banco de dados."
+      },
+      "metrics": {
+        "title": "Métricas de análise principais",
+        "retention": "Taxas de retenção por palavra e categoria",
+        "speed": "Velocidade de aprendizado e tendências de melhoria",
+        "mastery": "Níveis de domínio de palavra e progressão",
+        "accuracy": "Precisão de quiz em diferentes modos",
+        "time": "Tempo de estudo e análises de sessão",
+        "streaks": "Sequências de aprendizado e consistência"
+      },
+      "insights": {
+        "title": "Insights acionáveis",
+        "items": [
+          "Identifique seus horários de aprendizado mais fortes",
+          "Descubra quais modos de quiz funcionam melhor para você",
+          "Acompanhe padrões de retenção a longo prazo",
+          "Otimize duração da sessão de estudo",
+          "Monitore tendências de velocidade de aprendizado",
+          "Defina e alcance metas de vocabulário"
+        ]
+      },
+      "features": {
+        "title": "Recursos de análise",
+        "dashboard": "Painel de progresso abrangente",
+        "trends": "Análise visual de tendência de aprendizado",
+        "goals": "Definição e acompanhamento de metas",
+        "reports": "Relatórios detalhados de desempenho",
+        "comparison": "Comparação de progresso ao longo do tempo",
+        "export": "Exportar dados de análise (Premium)"
+      },
+      "performance": {
+        "title": "Níveis de desempenho",
+        "premium": {
+          "title": "Premium: Análises em tempo real",
+          "features": [
+            "Dados com cache Redis com atualização de 1 minuto",
+            "Tempos de resposta <50ms para insights instantâneos",
+            "Computação em tempo real sob demanda",
+            "Execução de consulta paralela",
+            "Índices de desempenho avançados"
+          ]
+        },
+        "free": {
+          "title": "Gratuito: Visualizações materializadas otimizadas",
+          "features": [
+            "Visualizações materializadas atualizadas a cada hora",
+            "Tempos de resposta de consulta de 20-50ms",
+            "Eficiente em custo para milhões de usuários",
+            "Processamento de trabalho em segundo plano",
+            "Cobertura essencial de análises"
+          ]
+        }
+      }
+    },
+    "multiLanguage": {
+      "title": "7 idiomas nativos com IA",
+      "subtitle": "Suporte completo de IA com processamento específico por idioma",
+      "description": "Experimente aprendizado autêntico de idiomas com processamento nativo de IA que compreende a gramática, cultura e nuances únicas de cada idioma suportado.",
+      "hero": {
+        "title": "IA verdadeiramente multilíngue",
+        "subtitle": "Cada idioma recebe processamento dedicado de IA com regras gramaticais nativas, contexto cultural e precisão linguística."
+      },
+      "languages": {
+        "title": "Idiomas suportados",
+        "english": "Inglês - Variações e contextos globais",
+        "spanish": "Espanhol - Variantes latino-americanas e europeias",
+        "french": "Francês - Francês padrão com nuances culturais",
+        "german": "Alemão - Alemão alto com suporte a palavras compostas",
+        "italian": "Italiano - Italiano padrão com consciência regional",
+        "portuguese": "Português - Foco no português brasileiro",
+        "japanese": "Japonês - Suporte a hiragana, katakana e kanji"
+      },
+      "features": {
+        "title": "Recursos específicos por idioma",
+        "grammar": "Regras e estruturas gramaticais nativas",
+        "culture": "Contexto cultural e uso apropriado",
+        "pronunciation": "Seleção de voz otimizada por idioma",
+        "examples": "Exemplos autênticos no idioma de destino",
+        "nuances": "Expressões idiomáticas e nuances",
+        "variations": "Variações regionais e dialetais"
+      },
+      "benefits": {
+        "title": "Benefícios do processamento nativo de IA",
+        "items": [
+          "Padrões precisos de gramática e uso",
+          "Conteúdo culturalmente apropriado",
+          "Exemplos autênticos de idioma",
+          "Guias de pronúncia adequados",
+          "Traduções conscientes do contexto",
+          "Conteúdo de qualidade de falante nativo"
+        ]
+      }
+    },
+    "flashcards": {
+      "title": "Flashcards interativos",
+      "subtitle": "Aprendizado imersivo em tela cheia com conteúdo rico",
+      "description": "Estude com flashcards interativos lindamente projetados que apresentam informações abrangentes de palavras em um formato envolvente e livre de distrações.",
+      "hero": {
+        "title": "Foque no que importa",
+        "subtitle": "Imerse-se no aprendizado com flashcards em tela cheia que eliminam distrações e maximizam retenção."
+      },
+      "features": {
+        "title": "Recursos de flashcard",
+        "fullscreen": "Experiência imersiva em tela cheia",
+        "animations": "Animações suaves de virar e transições",
+        "content": "Conteúdo rico com definições, exemplos e áudio",
+        "images": "Associações visuais geradas por IA",
+        "audio": "Reprodução de pronúncia integrada",
+        "reporting": "Sistema de relatório de erro integrado"
+      },
+      "design": {
+        "title": "Design cuidadoso",
+        "items": [
+          "Interface limpa e livre de distrações",
+          "Otimizado para foco e concentração",
+          "Animações suaves melhoram experiência",
+          "Design consistente entre dispositivos",
+          "Recursos amigáveis à acessibilidade",
+          "Preferências de estudo personalizáveis"
+        ]
+      },
+      "integration": {
+        "title": "Integração perfeita",
+        "description": "Flashcards funcionam perfeitamente com o sistema Leitner, agendando automaticamente sessões de revisão baseadas em seu progresso de aprendizado e padrões de retenção."
+      }
+    },
+    "errorReporting": {
+      "title": "Sistema de relatório de erros",
+      "subtitle": "Controle de qualidade orientado pelo usuário para melhoria contínua",
+      "description": "Ajude a melhorar a plataforma para todos reportando problemas com conteúdo gerado por IA através de nosso sistema abrangente de relatório de erros.",
+      "hero": {
+        "title": "Qualidade orientada pela comunidade",
+        "subtitle": "Contribua para melhores experiências de aprendizado reportando problemas de conteúdo e nos ajudando a melhorar continuamente nossos modelos de IA."
+      },
+      "types": {
+        "title": "Tipos de erro que você pode reportar",
+        "definition": "Definições incorretas ou incompletas",
+        "image": "Imagens inapropriadas ou irrelevantes",
+        "audio": "Problemas de reprodução de áudio ou pronúncia",
+        "example": "Frases de exemplo irrelevantes ou incorretas",
+        "loading": "Problemas de carregamento ou exibição de conteúdo"
+      },
+      "process": {
+        "title": "Como funciona o relatório de erros",
+        "steps": [
+          {
+            "title": "Identificar problema",
+            "description": "Perceba um problema com conteúdo gerado por IA durante sua sessão de estudo."
+          },
+          {
+            "title": "Reportar erro",
+            "description": "Use o sistema de relatório integrado para categorizar e descrever o problema."
+          },
+          {
+            "title": "Processamento automático",
+            "description": "Nosso sistema regenera automaticamente conteúdo e melhora modelos de IA."
+          }
+        ]
+      },
+      "benefits": {
+        "title": "Benefícios do relatório de erros",
+        "items": [
+          "Melhora qualidade do conteúdo para todos os usuários",
+          "Ajuda a treinar e refinar modelos de IA",
+          "Garante precisão cultural e linguística",
+          "Fornece feedback para melhoria contínua",
+          "Cria uma experiência melhor de aprendizado",
+          "Constrói uma plataforma orientada pela comunidade"
+        ]
+      }
+    },
+    "offlineSupport": {
+      "title": "Suporte de aprendizado offline",
+      "subtitle": "Aprenda em qualquer lugar, a qualquer hora sem conexão à internet",
+      "description": "Usuários Premium podem baixar listas de palavras e continuar aprendendo offline com funcionalidade completa de quiz e acompanhamento de progresso.",
+      "hero": {
+        "title": "Aprendizado sem limites",
+        "subtitle": "Leve seu aprendizado de vocabulário para qualquer lugar com acesso offline a listas de palavras, quizzes e todos os seus materiais de estudo."
+      },
+      "features": {
+        "title": "Recursos offline",
+        "download": "Baixe listas de palavras para acesso offline",
+        "quizzes": "Funcionalidade completa de quiz sem internet",
+        "flashcards": "Estudo de flashcard offline",
+        "audio": "Pronúncia de áudio baixada",
+        "progress": "Acompanhamento local de progresso",
+        "sync": "Sincronização automática quando voltar online"
+      },
+      "benefits": {
+        "title": "Benefícios do aprendizado offline",
+        "items": [
+          "Aprenda durante trajetos e viagens",
+          "Sem interrupção de conectividade ruim",
+          "Economize uso de dados móveis",
+          "Estude em locais remotos",
+          "Experiência consistente de aprendizado",
+          "Nunca perca momentum de estudo"
+        ]
+      },
+      "howItWorks": {
+        "title": "Como funciona o suporte offline",
+        "steps": [
+          {
+            "title": "Baixar conteúdo",
+            "description": "Baixe suas listas de palavras enquanto conectado à internet."
+          },
+          {
+            "title": "Estudar offline",
+            "description": "Acesse todo conteúdo e modos de quiz sem conexão à internet."
+          },
+          {
+            "title": "Sincronizar progresso",
+            "description": "Progresso sincroniza automaticamente quando você se reconecta à internet."
+          }
+        ]
+      },
+      "premium": {
+        "title": "Recurso Premium",
+        "description": "Suporte offline está disponível para assinantes Premium. Faça upgrade para desbloquear capacidades ilimitadas de aprendizado offline."
+      }
+    }
+  },
+  "terms": {
+    "title": "Termos de serviço",
+    "subtitle": "Termos e condições legais para usar o Decorebator",
+    "lastUpdated": "Última atualização: janeiro 2025",
+    "sections": {
+      "1": {
+        "title": "Acordo com os termos",
+        "content": "Ao baixar, instalar ou usar a aplicação móvel Decorebator (\"App\"), você concorda em estar vinculado a estes Termos de Serviço (\"Termos\"). Se você não concorda com estes Termos, não use o App."
+      },
+      "2": {
+        "title": "Descrição do serviço",
+        "intro": "Decorebator é uma aplicação de aprendizado de vocabulário com IA que fornece:",
+        "features": [
+          "Sistema de aprendizado de repetição espaçada",
+          "Conteúdo de vocabulário gerado por IA",
+          "Múltiplos modos de quiz e flashcards",
+          "Acompanhamento de progresso de aprendizado",
+          "Capacidades de estudo offline",
+          "Suporte multi-idioma"
+        ]
+      },
+      "3": {
+        "title": "Contas de usuário",
+        "accountCreation": {
+          "title": "Criação de conta",
+          "items": [
+            "Você deve fornecer informações precisas e completas",
+            "Você é responsável por manter a segurança da conta",
+            "Uma conta por pessoa",
+            "Idade mínima: 13 anos (com consentimento dos pais se menor de 18)"
+          ]
+        },
+        "accountResponsibilities": {
+          "title": "Responsabilidades da conta",
+          "items": [
+            "Mantenha credenciais de login seguras",
+            "Nos notifique imediatamente de acesso não autorizado",
+            "Atualize informações conforme necessário",
+            "Cumpra todas as leis aplicáveis"
+          ]
+        }
+      },
+      "4": {
+        "title": "Planos de assinatura",
+        "freePlan": {
+          "title": "Plano gratuito",
+          "items": [
+            "Máximo de 1 lista de palavras",
+            "Até 10 palavras por lista",
+            "Modos básicos de quiz",
+            "Recursos limitados"
+          ]
+        },
+        "premiumPlans": {
+          "title": "Planos Premium",
+          "items": [
+            "Mensal: $6.99/mês",
+            "Anual: $69.90/ano",
+            "Listas de palavras e palavras ilimitadas",
+            "Análises avançadas",
+            "Suporte prioritário",
+            "Todos os recursos incluídos"
+          ]
+        },
+        "billingTerms": {
+          "title": "Termos de cobrança",
+          "items": [
+            "Assinaturas renovam automaticamente a menos que canceladas",
+            "Pagamento processado através da App Store/Google Play",
+            "Reembolsos sujeitos às políticas da plataforma",
+            "Mudanças de preço com aviso de 30 dias"
+          ]
+        }
+      },
+      "acknowledgment": {
+        "title": "Reconhecimento",
+        "content": "Ao usar o Decorebator, você reconhece que leu, compreendeu e concorda em estar vinculado a estes Termos de Serviço e nossa Política de Privacidade."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Política de privacidade",
+    "subtitle": "Como coletamos, usamos e protegemos suas informações pessoais",
+    "lastUpdated": "Última atualização: janeiro 2025",
+    "introduction": {
+      "content": "Decorebator (\"nós,\" \"nosso,\" ou \"conosco\") está comprometido em proteger sua privacidade. Esta Política de Privacidade explica como coletamos, usamos e protegemos suas informações quando você usa a aplicação móvel Decorebator."
+    },
+    "sections": {
+      "informationWeCollect": {
+        "title": "Informações que coletamos",
+        "personalInformation": {
+          "title": "Informações pessoais",
+          "items": [
+            "Endereço de email: Necessário para criação e autenticação de conta",
+            "Informações de perfil: Foto de perfil opcional e nome de exibição",
+            "Informações de assinatura: Detalhes de cobrança processados com segurança através do Stripe"
+          ]
+        },
+        "learningData": {
+          "title": "Dados de aprendizado",
+          "items": [
+            "Listas de palavras: Listas de vocabulário que você cria ou modifica",
+            "Progresso de aprendizado: Pontuações de quiz, dados de repetição espaçada e análises de estudo",
+            "Preferências do usuário: Configurações do app, preferências de idioma e escolhas de notificação",
+            "Moderação de conteúdo: Análise automatizada de conteúdo gerado pelo usuário para adequação"
+          ]
+        },
+        "technicalData": {
+          "title": "Dados técnicos",
+          "items": [
+            "Informações do dispositivo: Tipo de dispositivo, sistema operacional, versão do app",
+            "Análises de uso: Uso de recursos, duração da sessão e métricas de desempenho",
+            "Relatórios de erro: Logs de crash e relatórios de erro para melhoria do app"
+          ]
+        }
+      },
+      "conclusion": {
+        "content": "Sua privacidade é fundamental para nossa missão de fornecer aprendizado eficaz de vocabulário. Estamos comprometidos em proteger suas informações pessoais, ser transparentes sobre nossas práticas, dar a você controle sobre seus dados e melhorar continuamente nossas proteções de privacidade.",
+        "agreement": "Ao usar o Decorebator, você concorda com esta Política de Privacidade. Revise-a regularmente para atualizações e entre em contato conosco com qualquer dúvida ou preocupação.",
+        "effectiveDate": "Data efetiva: 1º de janeiro de 2025",
+        "version": "Versão: 1.0",
+        "nextReview": "Próxima revisão: 1º de julho de 2025"
+      }
+    }
+  },
+  "quiz": {
+    "demo": {
+      "title": "Demo de quiz rápido",
+      "fastMode": "Modo rápido",
+      "fastModeEnabled": "Avanço automático habilitado",
+      "fastModeDisabled": "Progressão manual",
+      "errorReport": {
+        "title": "Reportar problema",
+        "subtitle": "O que parece estar errado com esta pergunta?",
+        "options": {
+          "wrongMeaning": "Significado ou definição errada",
+          "imageNotMatch": "Imagem não combina com a palavra",
+          "imageNotLoading": "Imagem não carrega",
+          "wrongExample": "Frase de exemplo errada",
+          "audioNotPlaying": "Áudio não reproduz"
+        },
+        "reporting": "Reportando problema...",
+        "success": "Obrigado pelo seu feedback! Isso nos ajudará a melhorar o conteúdo."
+      },
+      "types": {
+        "guessMeaning": "O que esta palavra significa?",
+        "wordFromMeaning": "Qual palavra corresponde a esta definição?",
+        "wordFromImage": "Qual palavra esta imagem representa?",
+        "completeSentence": "Complete a frase:",
+        "writeFromDefinition": "Qual palavra corresponde a esta definição?",
+        "wordFromAudio": "Qual palavra você ouviu?",
+        "exampleAudio": "Complete a frase:",
+        "default": "Escolha a resposta correta:"
+      },
+      "audioInstructions": "Ouça o áudio e selecione a palavra que você ouve",
+      "imagePlaceholder": "Imagem seria exibida aqui",
+      "inputPlaceholder": "Digite sua resposta aqui...",
+      "correctAnswer": "Resposta correta: {answer}",
+      "completion": {
+        "title": "Quiz completo!",
+        "score": "Você acertou {score} de {total} perguntas"
+      },
+      "unavailable": {
+        "title": "Demo indisponível",
+        "message": "Demo de quiz está temporariamente indisponível"
+      }
+    }
+  },
+  "video": {
+    "modal": {
+      "closeModal": "Fechar modal",
+      "demoTitle": "Demo Decorebator",
+      "seeInAction": "Veja o Decorebator em ação",
+      "description": "Assista como funciona o aprendizado de vocabulário com IA com repetição espaçada, quizzes interativos e análises abrangentes.",
+      "features": {
+        "aiContent": "Conteúdo IA",
+        "spacedRepetition": "Repetição espaçada",
+        "quizModes": "7 modos de quiz",
+        "analytics": "Análises"
+      }
+    }
+  },
+  "resetPassword": {
+    "title": "Redefinir sua senha",
+    "subtitle": "Digite sua nova senha abaixo. Certifique-se de que seja forte e memorável.",
+    "newPassword": "Nova senha",
+    "newPasswordPlaceholder": "Digite nova senha",
+    "confirmPassword": "Confirmar nova senha",
+    "confirmPasswordPlaceholder": "Confirme nova senha",
+    "resetButton": "Redefinir senha",
+    "helpText": "Lembre-se de escolher uma senha forte que você não usou antes.",
+    "errors": {
+      "fillBothFields": "Preencha ambos os campos de senha.",
+      "tooShort": "Senha deve ter pelo menos 4 caracteres.",
+      "noMatch": "Senhas não coincidem.",
+      "resetFailed": "Falha ao redefinir senha. Tente novamente."
+    },
+    "success": "Senha foi redefinida com sucesso!"
+  },
+  "pricing": {
+    "title": {
+      "part1": "Escolha Seu ",
+      "part2": "Plano de Aprendizado"
+    },
+    "subtitle": "Comece grátis e atualize a qualquer momento. Todos os planos incluem enriquecimento de vocabulário com IA e repetição espaçada.",
+    "allPlansInclude": "✨ Todos os Planos Incluem",
+    "features": {
+      "aiContent": "Conteúdo IA",
+      "spacedRepetition": "Repetição Espaçada",
+      "mobileAccess": "Acesso App Móvel",
+      "securePrivate": "Seguro e Privado"
+    },
+    "footer": "Sem contratos • Cancele a qualquer momento • Pagamento seguro via Stripe",
+    "plans": {
+      "free": {
+        "name": "Gratuito",
+        "title": "Plano Gratuito",
+        "price": "$0",
+        "period": "",
+        "description": "Perfeito para experimentar o aprendizado de vocabulário",
+        "features": [
+          "1 Lista de Palavras",
+          "Até 10 Palavras",
+          "Modos Quiz Básicos",
+          "Análises Limitadas"
+        ],
+        "cta": "Começar Grátis"
+      },
+      "monthly": {
+        "name": "Premium Mensal",
+        "title": "Premium Mensal",
+        "price": "$6.99",
+        "period": "/mês",
+        "description": "Acesso completo com flexibilidade mensal",
+        "badge": "MAIS POPULAR",
+        "features": [
+          "Listas de Palavras Ilimitadas",
+          "Palavras Ilimitadas",
+          "Todos os 8 Modos de Quiz",
+          "Análises Avançadas",
+          "Suporte Offline"
+        ],
+        "cta": "Começar Mensal"
+      },
+      "annual": {
+        "name": "Premium Anual",
+        "title": "Premium Anual",
+        "price": "$69.90",
+        "period": "/ano",
+        "description": "Melhor valor para estudantes comprometidos",
+        "savings": "Economize $13.98 por ano",
+        "features": [
+          "Tudo do Mensal",
+          "Economize $13.98 por ano",
+          "Acesso Antecipado a Recursos"
+        ],
+        "cta": "Começar Anual"
+      }
+    }
+  },
+  "analytics": {
+    "title": "Painel de análises avançadas",
+    "subtitle": "Acompanhe seu domínio de vocabulário com insights abrangentes de aprendizado",
+    "stats": {
+      "wordsStudiedToday": "Palavras estudadas hoje",
+      "currentStreak": "Sequência atual",
+      "wordsMastered": "Palavras dominadas",
+      "accuracyToday": "Precisão hoje",
+      "daysSuffix": " dias"
+    },
+    "charts": {
+      "wordsStudied": "Palavras estudadas",
+      "minutes": "Minutos",
+      "successRate": "Taxa de sucesso",
+      "words": "Palavras",
+      "weekDays": ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
+      "quizTypes": ["Adivinhar significado", "Palavra do significado", "Associação de imagem", "Compreensão auditiva"],
+      "boxLabels": ["Caixa 1", "Caixa 2", "Caixa 3", "Caixa 4", "Caixa 5", "Caixa 6", "Caixa 7"],
+      "box1": "Caixa 1",
+      "box2": "Caixa 2",
+      "box3": "Caixa 3",
+      "box4": "Caixa 4",
+      "box5": "Caixa 5",
+      "box6": "Caixa 6",
+      "box7": "Caixa 7",
+      "learningProgressTitle": "Progresso de aprendizado",
+      "wordsStudiedDescription": "Palavras estudadas nos últimos 7 dias",
+      "practiceTimeTitle": "Tempo de prática",
+      "total": "Total",
+      "dailyAvg": "Média diária",
+      "quizPerformanceTitle": "Desempenho de quiz por tipo",
+      "wordMasteryTitle": "Progresso de domínio de palavras",
+      "currentBoxTitle": "Distribuição atual das caixas",
+      "leitnerExplanation": "Sistema Leitner: As palavras progridem através de 7 caixas baseadas no seu desempenho no quiz. A Caixa 1 contém palavras novas, a Caixa 7 contém palavras dominadas.",
+      "boxProgressTitle": "Progresso das caixas em 7 dias",
+      "box7Description": "Palavras na Caixa 7 (Dominadas)",
+      "topWordsTitle": "Principais palavras por domínio"
+    }
+  },
+  "cta": {
+    "title": "Pronto para transformar seu aprendizado de idiomas?",
+    "subtitle": "Domine novos idiomas com aprendizado de vocabulário com IA e repetição espaçada.",
+    "subtitleWithCount": "Junte-se a {count}+ estudantes que estão dominando novos idiomas com aprendizado de vocabulário com IA e repetição espaçada."
+  },
   "footer": {
+    "heading": "Rodapé",
+    "support": "Suporte",
     "copyright": "© {year} Decorebator. Todos os direitos reservados.",
+    "screenReader": "Rodapé",
+    "navigation": {
+      "features": "Recursos",
+      "howItWorks": "Como funciona",
+      "pricing": "Preços",
+      "faq": "FAQ",
+      "support": "Suporte",
+      "helpCenter": "Central de ajuda",
+      "privacy": "Política de privacidade",
+      "terms": "Termos de serviço"
+    },
     "about": {
       "title": "Sobre",
-      "soloEntrepreneur": "Empreendedor Solo",
+      "soloEntrepreneur": "Empreendedor solo",
       "location": "Brasil 🇧🇷",
       "description": "Responsável pela arquitetura, implementação completa e design deste projeto. Resolvendo um problema pessoal e achei interessante compartilhar com outros.",
       "followTwitter": "Seguir no Twitter"
@@ -299,45 +1482,56 @@
   "help": {
     "title": "Central de Ajuda",
     "subtitle": "Tudo que você precisa saber sobre o Decorebator - aprendizado de vocabulário com IA",
-    "quickNavigation": "Navegação Rápida",
+    "navigation": {
+      "title": "Navegação Rápida",
+      "gettingStarted": "Começar",
+      "features": "Funcionalidades",
+      "leitnerSystem": "Sistema Leitner",
+      "troubleshooting": "Solução de Problemas"
+    },
     "gettingStarted": {
-      "title": "Começando",
+      "title": "Começar",
       "createAccount": {
         "title": "1. Crie Sua Conta",
         "steps": [
           "Cadastre-se com email e senha",
           "Escolha seu plano de aprendizado (Gratuito ou Premium)",
-          "Baixe o aplicativo móvel da sua loja de aplicativos",
-          "Entre com as mesmas credenciais"
+          "Baixe o aplicativo móvel na sua loja de apps",
+          "Faça login com as mesmas credenciais"
         ]
       },
       "startLearning": {
         "title": "2. Comece a Aprender",
         "steps": [
           "Crie sua primeira lista de palavras",
-          "Adicione palavras que deseja aprender",
+          "Adicione palavras que quer aprender",
           "A IA gera automaticamente definições e conteúdo",
-          "Comece a praticar com quizzes interativos"
+          "Comece a praticar com questionários interativos"
         ]
       },
-      "proTip": "Comece com 5-10 palavras na sua primeira lista de palavras para se familiarizar com o sistema antes de adicionar mais!"
+      "downloadText": "Baixe o app para começar:",
+      "proTip": {
+        "title": "Dica Pro",
+        "text": "Comece com 5-10 palavras na sua primeira lista para se familiarizar com o sistema antes de adicionar mais!"
+      }
     },
     "coreFeatures": {
-      "title": "Recursos Principais",
+      "title": "Funcionalidades Principais",
       "aiPowered": {
-        "title": "Conteúdo com IA",
+        "title": "Conteúdo Potencializado por IA",
         "description": "Gera automaticamente definições, imagens, pronúncias em áudio e frases de exemplo para cada palavra que você adiciona."
       },
       "quizModes": {
-        "title": "7 Modos de Quiz",
+        "title": "8 Modos de Quiz",
         "modes": [
           "Adivinhar Significado",
-          "Palavra pelo Significado",
-          "Associação de Imagem",
-          "Compreensão Auditiva",
+          "Palavra do Significado", 
+          "Associação de Imagens",
+          "Compreensão de Áudio",
           "Completar Frase",
-          "Escrever pela Definição",
-          "Reconhecimento de Áudio"
+          "Escrever da Definição",
+          "Reconhecimento de Áudio",
+          "Reconhecimento de Áudio de Exemplo"
         ]
       },
       "spacedRepetition": {
@@ -349,17 +1543,17 @@
         "description": "Acompanhe seu progresso com estatísticas detalhadas, níveis de domínio de palavras, velocidade de aprendizado e taxas de retenção."
       },
       "multiLanguage": {
-        "title": "Suporte Multi-idiomas",
+        "title": "Suporte Multi-idioma",
         "description": "Suporte nativo de IA para 7 idiomas: inglês, espanhol, francês, alemão, italiano, português e japonês."
       },
       "offline": {
         "title": "Suporte Offline",
-        "description": "Usuários premium podem baixar listas de palavras para acesso offline e continuar aprendendo sem conexão com a internet."
+        "description": "Usuários Premium podem baixar listas de palavras para acesso offline e continuar aprendendo sem conexão com a internet."
       }
     },
     "leitnerSystem": {
       "title": "Como Funciona o Sistema Leitner",
-      "description": "O Decorebator usa um sofisticado sistema Leitner de 7 caixas para retenção ideal de vocabulário através de repetição espaçada.",
+      "description": "O Decorebator usa um sofisticado sistema Leitner de 7 caixas para retenção ótima de vocabulário através de repetição espaçada.",
       "table": {
         "box": "Caixa",
         "interval": "Intervalo de Revisão",
@@ -376,578 +1570,112 @@
       },
       "progressionRules": {
         "title": "Regras de Progressão",
-        "correct": "Resposta Correta: Palavra move para a próxima caixa",
-        "incorrect": "Resposta Incorreta: Palavra volta para a Caixa 1",
+        "correct": "Resposta Correta: A palavra vai para a próxima caixa",
+        "incorrect": "Resposta Incorreta: A palavra volta para a Caixa 1",
         "mastered": "Caixa 7: Palavras ficam na Caixa 7 quando corretas (dominadas)"
       },
       "quizProgression": {
         "title": "Progressão do Tipo de Quiz",
-        "description": "Diferentes tipos de quiz são introduzidos baseados no nível da caixa da palavra para aumentar a dificuldade progressivamente conforme você domina cada palavra."
+        "description": "Diferentes tipos de quiz são introduzidos baseados no nível da caixa da palavra para aumentar progressivamente a dificuldade conforme você domina cada palavra."
       }
     },
     "subscriptionPlans": {
-      "title": "Planos de Assinatura"
+      "title": "Planos de Assinatura",
+      "appNotice": "As assinaturas são gerenciadas diretamente no aplicativo móvel. Baixe o app para visualizar e gerenciar seus planos de assinatura.",
+      "free": {
+        "title": "Plano Gratuito",
+        "price": "$0",
+        "features": [
+          "Máximo 1 lista de palavras",
+          "Até 10 palavras por lista",
+          "Modos de quiz básicos",
+          "Acesso apenas online"
+        ]
+      },
+      "monthly": {
+        "title": "Premium Mensal",
+        "price": "$6.99",
+        "period": "/mês",
+        "badge": "Mais Popular",
+        "features": [
+          "Listas de palavras ilimitadas",
+          "Palavras ilimitadas",
+          "Todos os 8 modos de quiz",
+          "Análises avançadas",
+          "Suporte offline",
+          "Suporte prioritário"
+        ]
+      },
+      "annual": {
+        "title": "Premium Anual",
+        "price": "$69.90",
+        "period": "/ano",
+        "savings": "Economize $13.98!",
+        "features": [
+          "Tudo do Mensal",
+          "Melhor custo-benefício",
+          "Suporte ao cliente prioritário",
+          "Acesso antecipado às funcionalidades"
+        ]
+      }
     },
     "languageSupport": {
-      "title": "Suporte Multi-idiomas",
-      "description": "O Decorebator oferece suporte abrangente multi-idiomas com processamento nativo de IA para experiências de aprendizado autênticas.",
+      "title": "Suporte Multi-idioma",
+      "description": "O Decorebator fornece suporte multi-idioma abrangente com processamento nativo de IA para experiências de aprendizado autênticas.",
       "supportedLanguages": "Idiomas Suportados (7)",
-      "aiFeatures": "Recursos de IA por Idioma",
+      "aiFeatures": "Funcionalidades de IA por Idioma",
+      "languages": [
+        {"flag": "🇺🇸", "name": "Inglês", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"},
+        {"flag": "🇪🇸", "name": "Espanhol", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"},
+        {"flag": "🇫🇷", "name": "Francês", "bgClass": "bg-gradient-to-r from-blue-50 to-white"},
+        {"flag": "🇩🇪", "name": "Alemão", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50"},
+        {"flag": "🇮🇹", "name": "Italiano", "bgClass": "bg-gradient-to-r from-green-50 to-red-50"},
+        {"flag": "🇵🇹", "name": "Português", "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"},
+        {"flag": "🇯🇵", "name": "Japonês", "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"}
+      ],
       "features": [
         "Gramática Nativa: Regras e estruturas específicas do idioma",
         "Contexto Cultural: Imagens e exemplos culturalmente relevantes",
-        "Áudio Otimizado: Seleção de voz com som nativo por idioma",
-        "Sistemas Verbais: Tempos e inflexões apropriados ao idioma"
+        "Áudio Otimizado: Seleção de voz nativa por idioma",
+        "Sistemas Verbais: Tempos e inflexões apropriadas do idioma"
       ]
     },
     "troubleshooting": {
       "title": "Solução de Problemas e Suporte",
       "commonIssues": "Problemas Comuns",
       "audioNotPlaying": {
-        "title": "Áudio não reproduzindo",
+        "title": "Áudio não reproduz",
         "solution": "Verifique o volume do seu dispositivo e certifique-se de ter uma conexão estável com a internet. O áudio é gerado por IA e requer acesso online."
       },
       "imagesNotLoading": {
-        "title": "Imagens não carregando",
-        "solution": "Imagens são geradas por IA e podem levar alguns momentos para aparecer. Atualize o quiz ou use o recurso de relatório de erro se os problemas persistirem."
+        "title": "Imagens não carregam",
+        "solution": "Imagens são geradas por IA e podem levar alguns instantes para aparecer. Atualize o quiz ou use a função de relatório de erro se os problemas persistirem."
       },
       "subscriptionNotUpdating": {
-        "title": "Assinatura não atualizando",
-        "solution": "Após completar o pagamento, feche e reabra o aplicativo para atualizar o status da sua assinatura. As mudanças devem aparecer em alguns minutos."
+        "title": "Assinatura não atualiza",
+        "solution": "Após completar o pagamento, feche e reabra o app para atualizar o status da sua assinatura. As mudanças devem aparecer em alguns minutos."
       },
       "errorReporting": {
         "title": "Relatório de Erros",
         "description": "Se você encontrar problemas com conteúdo gerado por IA, use nosso sistema integrado de relatório de erros:",
         "types": [
-          "Reportar definições incorretas",
-          "Sinalizar imagens inapropriadas",
-          "Reportar problemas de reprodução de áudio",
+          "Relatar definições incorretas",
+          "Marcar imagens inapropriadas",
+          "Relatar problemas de reprodução de áudio",
           "Enviar exemplos irrelevantes",
-          "Sinalizar problemas de carregamento"
+          "Marcar problemas de carregamento"
         ]
       },
       "needHelp": {
         "title": "Precisa de Mais Ajuda?",
-        "description": "Nossa equipe de suporte está aqui para ajudar você a tirar o máximo proveito do Decorebator.",
+        "description": "Nossa equipe de suporte está aqui para ajudá-lo a aproveitar ao máximo o Decorebator.",
         "email": "Contatar Suporte: support@decorebator.com"
       }
     },
     "stillNeedHelp": {
       "title": "Ainda Precisa de Ajuda?",
-      "subtitle": "Nossa equipe de suporte está pronta para ajudá-lo com qualquer dúvida ou problema.",
-      "emailSupport": "Suporte por Email",
-      "contactForm": "Formulário de Contato"
-    }
-  },
-  "signup": {
-    "title": "Junte-se ao Decorebator",
-    "subtitle": "Comece sua jornada de aprendizado de idiomas hoje",
-    "planSelection": {
-      "free": "Você está se cadastrando no plano Gratuito",
-      "monthly": "Você está se cadastrando no plano Premium Mensal (R$ 34,90/mês)",
-      "annual": "Você está se cadastrando no plano Premium Anual (R$ 349,00/ano)"
-    },
-    "form": {
-      "firstName": "Nome",
-      "lastName": "Sobrenome",
-      "email": "Endereço de Email",
-      "password": "Senha",
-      "confirmPassword": "Confirmar Senha",
-      "firstNamePlaceholder": "Digite seu nome",
-      "lastNamePlaceholder": "Digite seu sobrenome",
-      "emailPlaceholder": "Digite seu endereço de email",
-      "passwordPlaceholder": "Crie uma senha segura",
-      "confirmPasswordPlaceholder": "Confirme sua senha"
-    },
-    "features": {
-      "title": "O que você receberá:",
-      "free": [
-        "1 lista de palavras com até 10 palavras",
-        "Modos básicos de quiz",
-        "Conteúdo gerado por IA",
-        "Acesso móvel e web"
-      ],
-      "premium": [
-        "Listas de palavras e palavras ilimitadas",
-        "Todos os 7 modos de quiz",
-        "Análises avançadas",
-        "Suporte offline",
-        "Suporte prioritário"
-      ]
-    },
-    "terms": "Ao se cadastrar, você concorda com nossos {termsLink} e {privacyLink}",
-    "createAccount": "Criar Conta",
-    "creating": "Criando conta...",
-    "alreadyHaveAccount": "Já tem uma conta? {signInLink}",
-    "errors": {
-      "firstNameRequired": "Nome é obrigatório",
-      "lastNameRequired": "Sobrenome é obrigatório",
-      "emailRequired": "Email é obrigatório",
-      "emailInvalid": "Por favor, digite um endereço de email válido",
-      "passwordRequired": "Senha é obrigatória",
-      "passwordTooShort": "Senha deve ter pelo menos 8 caracteres",
-      "passwordsMismatch": "Senhas não coincidem",
-      "signupFailed": "Falha ao criar conta. Tente novamente."
-    }
-  },
-  "signupSuccess": {
-    "title": "Bem-vindo ao Decorebator!",
-    "subtitle": "Sua conta foi criada com sucesso",
-    "freeFlow": {
-      "title": "Você está pronto com o plano Gratuito!",
-      "description": "Baixe o aplicativo móvel para começar a aprender vocabulário com conteúdo com IA e repetição espaçada.",
-      "nextSteps": "Próximos Passos:",
-      "steps": [
-        "Baixe o aplicativo Decorebator",
-        "Entre com sua conta",
-        "Crie sua primeira lista de palavras",
-        "Comece a aprender!"
-      ]
-    },
-    "premiumFlow": {
-      "title": "Complete Sua Configuração Premium",
-      "description": "Você está a apenas um passo de desbloquear potencial de aprendizado ilimitado.",
-      "redirecting": "Redirecionando você para pagamento seguro...",
-      "manualRedirect": "Se você não for redirecionado automaticamente, {clickHere}.",
-      "clickHere": "clique aqui",
-      "afterPayment": "Após completar o pagamento:",
-      "steps": [
-        "Baixe o aplicativo móvel",
-        "Entre para ver seus recursos Premium",
-        "Crie listas de palavras ilimitadas",
-        "Acesse todos os 7 modos de quiz e suporte offline"
-      ],
-      "premiumFeatures": "Recursos Premium que Você Desbloqueará:",
-      "features": [
-        "Listas de palavras e palavras ilimitadas",
-        "Todos os 7 modos de quiz interativos",
-        "Análises avançadas de aprendizado",
-        "Suporte de aprendizado offline",
-        "Atendimento ao cliente prioritário"
-      ]
-    },
-    "downloadApp": "Baixar o Aplicativo",
-    "appStore": "Baixar na App Store",
-    "googlePlay": "Disponível no Google Play",
-    "webVersion": "Ou continue com a versão web",
-    "continueToApp": "Continuar para o Aplicativo"
-  },
-  "featurePages": {
-    "aiContent": {
-      "title": "Geração de Conteúdo com IA",
-      "subtitle": "Enriqueça automaticamente seu vocabulário com definições, exemplos, imagens e áudio",
-      "description": "Transforme qualquer palavra em uma experiência de aprendizado rica com nossa tecnologia de IA avançada que gera conteúdo abrangente para cada palavra que você adiciona às suas listas de vocabulário.",
-      "hero": {
-        "title": "Aprimore Cada Palavra com IA",
-        "subtitle": "Experimente o poder das definições geradas por IA, exemplos contextuais, associações visuais e pronúncia de qualidade nativa para acelerar o aprendizado de vocabulário."
-      },
-      "benefits": {
-        "title": "Benefícios do Aprendizado com IA",
-        "items": [
-          "Definições abrangentes instantâneas para qualquer palavra",
-          "Exemplos contextuais no seu idioma de destino",
-          "Imagens geradas por IA para associação de memória visual",
-          "Áudio de pronúncia com qualidade nativa",
-          "Insights de gramática e uso",
-          "Contexto cultural e nuances"
-        ]
-      },
-      "howItWorks": {
-        "title": "Como Funciona a Geração de Conteúdo com IA",
-        "steps": [
-          {
-            "title": "Adicionar Palavras",
-            "description": "Simplesmente adicione qualquer palavra à sua lista - nenhuma pesquisa manual necessária."
-          },
-          {
-            "title": "Processamento da IA",
-            "description": "Nossos modelos avançados de IA analisam a palavra e geram conteúdo abrangente."
-          },
-          {
-            "title": "Aprendizado Rico",
-            "description": "Obtenha definições, exemplos, imagens e áudio instantaneamente para aprendizado eficaz."
-          }
-        ]
-      },
-      "features": {
-        "title": "Recursos de Conteúdo com IA",
-        "definitions": "Definições abrangentes com múltiplos significados e contextos",
-        "examples": "Exemplos de uso do mundo real no seu idioma de destino",
-        "images": "Associações visuais para fortalecer a retenção de memória",
-        "audio": "Pronúncia perfeita com qualidade de falante nativo",
-        "grammar": "Classe gramatical e informações gramaticais",
-        "culture": "Contexto cultural e notas de uso"
-      }
-    },
-    "spacedRepetition": {
-      "title": "Sistema de Repetição Espaçada Leitner",
-      "subtitle": "Domine vocabulário com otimização de aprendizado cientificamente comprovada",
-      "description": "Nosso sistema Leitner avançado de 7 caixas otimiza quando você revisa cada palavra para máxima retenção e formação de memória de longo prazo.",
-      "hero": {
-        "title": "Otimização Científica do Aprendizado",
-        "subtitle": "Aumente a retenção de vocabulário em 85% com nosso sistema comprovado de repetição espaçada baseado em pesquisa de ciência cognitiva."
-      },
-      "benefits": {
-        "title": "Por que a Repetição Espaçada Funciona",
-        "items": [
-          "85% de melhoria na retenção de longo prazo",
-          "Tempo de revisão otimizado para cada palavra",
-          "Previne ciclos de memorização e esquecimento",
-          "Constrói caminhos neurais fortes",
-          "Maximiza a eficiência do aprendizado",
-          "Metodologia cientificamente comprovada"
-        ]
-      },
-      "system": {
-        "title": "Sistema Leitner de 7 Caixas",
-        "description": "As palavras progridem através de 7 caixas baseado no seu desempenho, com intervalos de revisão crescentes:",
-        "boxes": [
-          { "box": "Caixa 1", "interval": "Imediato", "purpose": "Palavras novas, revisões falhadas" },
-          { "box": "Caixa 2", "interval": "1 hora", "purpose": "Aprendizado recente" },
-          { "box": "Caixa 3", "interval": "1 dia", "purpose": "Retenção de curto prazo" },
-          { "box": "Caixa 4", "interval": "3 dias", "purpose": "Retenção de médio prazo" },
-          { "box": "Caixa 5", "interval": "1 semana", "purpose": "Retenção de longo prazo" },
-          { "box": "Caixa 6", "interval": "2 semanas", "purpose": "Retenção estendida" },
-          { "box": "Caixa 7", "interval": "1 mês", "purpose": "Palavras dominadas" }
-        ]
-      },
-      "progression": {
-        "title": "Regras de Progressão Inteligente",
-        "correct": "Respostas corretas movem palavras para a próxima caixa com intervalos mais longos",
-        "incorrect": "Respostas incorretas reiniciam palavras para a Caixa 1 para revisão imediata",
-        "mastered": "Palavras na Caixa 7 permanecem dominadas com revisões de manutenção mensais"
-      }
-    },
-    "quizModes": {
-      "title": "7 Modos de Quiz Envolventes",
-      "subtitle": "Testes abrangentes com múltiplas abordagens de aprendizado",
-      "description": "Desafie-se com 7 tipos diferentes de quiz projetados para testar e fortalecer diferentes aspectos do conhecimento e recordação de vocabulário.",
-      "hero": {
-        "title": "Experiência de Aprendizado Multi-Modal",
-        "subtitle": "Engaje diferentes caminhos de aprendizado com modos de quiz variados que testam reconhecimento, recordação, compreensão e aplicação."
-      },
-      "modes": {
-        "title": "Modos de Quiz Disponíveis",
-        "guessMeaning": {
-          "title": "Adivinhar Significado",
-          "description": "Escolha a definição correta entre múltiplas opções para testar compreensão"
-        },
-        "wordFromMeaning": {
-          "title": "Palavra pelo Significado",
-          "description": "Selecione a palavra correta que corresponde a uma definição dada"
-        },
-        "imageAssociation": {
-          "title": "Associação de Imagem",
-          "description": "Identifique palavras a partir de representações visuais geradas por IA"
-        },
-        "audioComprehension": {
-          "title": "Compreensão Auditiva",
-          "description": "Reconheça palavras e significados a partir da pronúncia"
-        },
-        "sentenceCompletion": {
-          "title": "Completar Frase",
-          "description": "Complete frases usando pistas gramaticais e contextuais"
-        },
-        "writeFromDefinition": {
-          "title": "Escrever pela Definição",
-          "description": "Digite a palavra correta baseada no seu significado (recordação ativa)"
-        },
-        "audioRecognition": {
-          "title": "Reconhecimento de Áudio",
-          "description": "Associe palavras faladas com suas formas escritas"
-        }
-      },
-      "benefits": {
-        "title": "Benefícios de Múltiplos Modos de Quiz",
-        "items": [
-          "Engaja diferentes caminhos de aprendizado",
-          "Previne monotonia e tédio",
-          "Testa vários aspectos do conhecimento",
-          "Constrói compreensão abrangente",
-          "Adapta-se a diferentes estilos de aprendizado",
-          "Aumenta retenção através da variedade"
-        ]
-      }
-    },
-    "visualLearning": {
-      "title": "Aprendizado Visual com Imagens IA",
-      "subtitle": "Fortaleça a memória com associações visuais poderosas",
-      "description": "Aproveite o poder da memória visual com imagens geradas por IA que criam associações mentais fortes para cada palavra do seu vocabulário.",
-      "hero": {
-        "title": "Veja, Aprenda, Lembre",
-        "subtitle": "Transforme palavras abstratas em experiências visuais memoráveis com imagens geradas por IA personalizadas para aprimorar seu aprendizado."
-      },
-      "benefits": {
-        "title": "Poder do Aprendizado Visual",
-        "items": [
-          "Memória visual é 6x mais forte que apenas texto",
-          "Cria associações mentais duradouras",
-          "Engaja múltiplos caminhos de aprendizado",
-          "Melhora velocidade e precisão da recordação",
-          "Torna conceitos abstratos concretos",
-          "Aprimora retenção de longo prazo"
-        ]
-      },
-      "features": {
-        "title": "Recursos de Imagens IA",
-        "generation": "Imagens personalizadas geradas para cada palavra",
-        "context": "Representações visuais contextualmente relevantes",
-        "culture": "Imagens culturalmente apropriadas",
-        "quality": "Visuais de alta qualidade gerados por IA",
-        "association": "Projetadas para associação de memória otimizada",
-        "variety": "Estilos visuais e abordagens diversificados"
-      },
-      "science": {
-        "title": "A Ciência por Trás do Aprendizado Visual",
-        "description": "Pesquisas mostram que o aprendizado visual melhora significativamente a retenção e recordação. Nossas imagens geradas por IA são especificamente projetadas para criar as associações de memória mais fortes possíveis."
-      }
-    },
-    "audioLearning": {
-      "title": "Aprendizado de Áudio Multi-idiomas",
-      "subtitle": "Pronúncia perfeita com vozes de qualidade nativa",
-      "description": "Domine a pronúncia com nossa tecnologia avançada de texto para fala com vozes otimizadas por idioma para áudio autêntico e de som nativo.",
-      "hero": {
-        "title": "Ouça Certo, Fale Certo",
-        "subtitle": "Experimente pronúncia autêntica com áudio alimentado por IA que se adapta às características e sons únicos de cada idioma."
-      },
-      "features": {
-        "title": "Recursos de Aprendizado de Áudio",
-        "quality": "Qualidade de falante nativo para todos os 7 idiomas suportados",
-        "optimization": "Seleção e otimização de voz específica por idioma",
-        "clarity": "Pronúncia cristalina para cada palavra",
-        "speed": "Velocidade de reprodução ajustável para aprendizado",
-        "repetition": "Repetição de áudio ilimitada para prática",
-        "offline": "Áudio baixado funciona offline (Premium)"
-      },
-      "languages": {
-        "title": "Idiomas Suportados",
-        "description": "Geração de áudio de qualidade nativa para:",
-        "list": [
-          "Inglês - Múltiplas variações de sotaque",
-          "Espanhol - Latino-americano e europeu",
-          "Francês - Pronúncia francesa padrão",
-          "Alemão - Padrão alemão alto",
-          "Italiano - Italiano padrão",
-          "Português - Português brasileiro",
-          "Japonês - Pronúncia padrão de Tóquio"
-        ]
-      },
-      "benefits": {
-        "title": "Benefícios do Aprendizado de Áudio",
-        "items": [
-          "Melhore a precisão da pronúncia",
-          "Desenvolva compreensão auditiva",
-          "Aprenda ênfase e entonação corretas das palavras",
-          "Construa confiança na fala",
-          "Aprimore memória auditiva",
-          "Pratique pronúncia autêntica"
-        ]
-      }
-    },
-    "analytics": {
-      "title": "Análises Avançadas de Aprendizado",
-      "subtitle": "Acompanhe progresso com insights e estatísticas abrangentes",
-      "description": "Monitore sua jornada de aprendizado de vocabulário com análises detalhadas que fornecem insights acionáveis sobre seu progresso, pontos fortes e áreas para melhoria.",
-      "hero": {
-        "title": "Sucesso de Aprendizado Orientado por Dados",
-        "subtitle": "Tome decisões informadas sobre seus hábitos de estudo com análises abrangentes que rastreiam todos os aspectos do seu aprendizado de vocabulário."
-      },
-      "metrics": {
-        "title": "Métricas Principais de Análises",
-        "retention": "Taxas de retenção por palavra e categoria",
-        "speed": "Velocidade de aprendizado e tendências de melhoria",
-        "mastery": "Níveis de domínio de palavras e progressão",
-        "accuracy": "Precisão de quiz em diferentes modos",
-        "time": "Tempo de estudo e análises de sessão",
-        "streaks": "Sequências de aprendizado e consistência"
-      },
-      "insights": {
-        "title": "Insights Acionáveis",
-        "items": [
-          "Identifique seus horários de aprendizado mais fortes",
-          "Descubra quais modos de quiz funcionam melhor para você",
-          "Rastreie padrões de retenção de longo prazo",
-          "Otimize duração da sessão de estudo",
-          "Monitore tendências de velocidade de aprendizado",
-          "Defina e alcance objetivos de vocabulário"
-        ]
-      },
-      "features": {
-        "title": "Recursos de Análises",
-        "dashboard": "Painel abrangente de progresso",
-        "trends": "Análise visual de tendências de aprendizado",
-        "goals": "Definição e acompanhamento de objetivos",
-        "reports": "Relatórios detalhados de desempenho",
-        "comparison": "Comparação de progresso ao longo do tempo",
-        "export": "Exportar dados de análises (Premium)"
-      }
-    },
-    "multiLanguage": {
-      "title": "7 Idiomas Nativos com IA",
-      "subtitle": "Suporte completo de IA com processamento específico por idioma",
-      "description": "Experimente aprendizado de idiomas autêntico com processamento de IA nativo que compreende a gramática única, cultura e nuances de cada idioma suportado.",
-      "hero": {
-        "title": "IA Verdadeiramente Multilíngue",
-        "subtitle": "Cada idioma recebe processamento de IA dedicado com regras gramaticais nativas, contexto cultural e precisão linguística."
-      },
-      "languages": {
-        "title": "Idiomas Suportados",
-        "english": "Inglês - Variações e contextos globais",
-        "spanish": "Espanhol - Variantes latino-americanas e europeias",
-        "french": "Francês - Francês padrão com nuances culturais",
-        "german": "Alemão - Alto alemão com suporte a palavras compostas",
-        "italian": "Italiano - Italiano padrão com consciência regional",
-        "portuguese": "Português - Foco no português brasileiro",
-        "japanese": "Japonês - Suporte a Hiragana, Katakana e Kanji"
-      },
-      "features": {
-        "title": "Recursos Específicos por Idioma",
-        "grammar": "Regras e estruturas gramaticais nativas",
-        "culture": "Contexto cultural e uso apropriado",
-        "pronunciation": "Seleção de voz otimizada por idioma",
-        "examples": "Exemplos autênticos no idioma de destino",
-        "nuances": "Expressões idiomáticas e nuances",
-        "variations": "Variações regionais e dialetais"
-      },
-      "benefits": {
-        "title": "Benefícios do Processamento Nativo de IA",
-        "items": [
-          "Padrões precisos de gramática e uso",
-          "Conteúdo culturalmente apropriado",
-          "Exemplos autênticos de idioma",
-          "Guias de pronúncia adequados",
-          "Traduções conscientes do contexto",
-          "Conteúdo de qualidade de falante nativo"
-        ]
-      }
-    },
-    "flashcards": {
-      "title": "Flashcards Interativos",
-      "subtitle": "Aprendizado imersivo em tela cheia com conteúdo rico",
-      "description": "Estude com flashcards interativos lindamente projetados que apresentam informações abrangentes de palavras em um formato envolvente e livre de distrações.",
-      "hero": {
-        "title": "Foque no que Importa",
-        "subtitle": "Imergir-se no aprendizado com flashcards em tela cheia que eliminam distrações e maximizam a retenção."
-      },
-      "features": {
-        "title": "Recursos dos Flashcards",
-        "fullscreen": "Experiência imersiva em tela cheia",
-        "animations": "Animações suaves de virar e transições",
-        "content": "Conteúdo rico com definições, exemplos e áudio",
-        "images": "Associações visuais geradas por IA",
-        "audio": "Reprodução de pronúncia integrada",
-        "reporting": "Sistema integrado de relatório de erros"
-      },
-      "design": {
-        "title": "Design Pensado",
-        "items": [
-          "Interface limpa e livre de distrações",
-          "Otimizada para foco e concentração",
-          "Animações suaves aprimoram a experiência",
-          "Design consistente entre dispositivos",
-          "Recursos amigáveis à acessibilidade",
-          "Preferências de estudo personalizáveis"
-        ]
-      },
-      "integration": {
-        "title": "Integração Perfeita",
-        "description": "Os flashcards funcionam perfeitamente com o sistema Leitner, agendando automaticamente sessões de revisão baseadas no seu progresso de aprendizado e padrões de retenção."
-      }
-    },
-    "errorReporting": {
-      "title": "Sistema de Relatório de Erros",
-      "subtitle": "Controle de qualidade orientado pelo usuário para melhoria contínua",
-      "description": "Ajude a melhorar a plataforma para todos relatando problemas com conteúdo gerado por IA através do nosso sistema abrangente de relatório de erros.",
-      "hero": {
-        "title": "Qualidade Orientada pela Comunidade",
-        "subtitle": "Contribua para melhores experiências de aprendizado relatando problemas de conteúdo e nos ajudando a melhorar continuamente nossos modelos de IA."
-      },
-      "types": {
-        "title": "Tipos de Erro que Você Pode Relatar",
-        "definition": "Definições incorretas ou incompletas",
-        "image": "Imagens inapropriadas ou irrelevantes",
-        "audio": "Problemas de reprodução de áudio ou pronúncia",
-        "example": "Frases de exemplo irrelevantes ou incorretas",
-        "loading": "Problemas de carregamento ou exibição de conteúdo"
-      },
-      "process": {
-        "title": "Como Funciona o Relatório de Erros",
-        "steps": [
-          {
-            "title": "Identificar Problema",
-            "description": "Note um problema com conteúdo gerado por IA durante sua sessão de estudo."
-          },
-          {
-            "title": "Relatar Erro",
-            "description": "Use o sistema de relatório integrado para categorizar e descrever o problema."
-          },
-          {
-            "title": "Processamento Automático",
-            "description": "Nosso sistema regenera automaticamente o conteúdo e melhora os modelos de IA."
-          }
-        ]
-      },
-      "benefits": {
-        "title": "Benefícios do Relatório de Erros",
-        "items": [
-          "Melhora qualidade do conteúdo para todos os usuários",
-          "Ajuda a treinar e refinar modelos de IA",
-          "Garante precisão cultural e linguística",
-          "Fornece feedback para melhoria contínua",
-          "Cria uma experiência de aprendizado melhor",
-          "Constrói uma plataforma orientada pela comunidade"
-        ]
-      }
-    },
-    "offlineSupport": {
-      "title": "Suporte de Aprendizado Offline",
-      "subtitle": "Aprenda em qualquer lugar, a qualquer hora sem conexão com a internet",
-      "description": "Usuários premium podem baixar listas de palavras e continuar aprendendo offline com funcionalidade completa de quiz e acompanhamento de progresso.",
-      "hero": {
-        "title": "Aprendizado Sem Limites",
-        "subtitle": "Leve seu aprendizado de vocabulário para qualquer lugar com acesso offline a listas de palavras, quizzes e todos os seus materiais de estudo."
-      },
-      "features": {
-        "title": "Recursos Offline",
-        "download": "Baixe listas de palavras para acesso offline",
-        "quizzes": "Funcionalidade completa de quiz sem internet",
-        "flashcards": "Estudo de flashcards offline",
-        "audio": "Pronúncia de áudio baixada",
-        "progress": "Acompanhamento local de progresso",
-        "sync": "Sincronização automática quando voltar online"
-      },
-      "benefits": {
-        "title": "Benefícios do Aprendizado Offline",
-        "items": [
-          "Aprenda durante trajetos e viagens",
-          "Nenhuma interrupção por conectividade ruim",
-          "Economize no uso de dados móveis",
-          "Estude em locais remotos",
-          "Experiência de aprendizado consistente",
-          "Nunca perca o impulso de estudar"
-        ]
-      },
-      "howItWorks": {
-        "title": "Como Funciona o Suporte Offline",
-        "steps": [
-          {
-            "title": "Baixar Conteúdo",
-            "description": "Baixe suas listas de palavras enquanto conectado à internet."
-          },
-          {
-            "title": "Estudar Offline",
-            "description": "Acesse todo o conteúdo e modos de quiz sem conexão com a internet."
-          },
-          {
-            "title": "Sincronizar Progresso",
-            "description": "O progresso sincroniza automaticamente quando você se reconecta à internet."
-          }
-        ]
-      },
-      "premium": {
-        "title": "Recurso Premium",
-        "description": "O suporte offline está disponível para assinantes Premium. Faça upgrade para desbloquear capacidades ilimitadas de aprendizado offline."
-      }
+      "subtitle": "Nossa equipe de suporte está pronta para ajudá-lo com qualquer pergunta ou problema.",
+      "emailSupport": "Suporte por Email"
     }
   }
 }
