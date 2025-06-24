@@ -16,41 +16,13 @@ func createTestServerWithMockModeration(t *testing.T) *setup.TestServer {
 
 	// Create test server with mock moderation service injected
 	config := &setup.TestConfig{
-		ModerationService: mockModeration,
+		ModerationService:    mockModeration,
+		DisableBurstDetector: true,
 	}
 
 	return setup.NewTestServer(t, config)
 }
 
-// Helper function to create a test user
-func createTestUser(_ *testing.T, server *setup.TestServer) map[string]interface{} {
-	testUser := map[string]interface{}{
-		"email":     "testuser@example.com",
-		"password":  "password123",
-		"firstName": "Test",
-		"lastName":  "User",
-	}
-
-	resp := server.Expect.POST("/users").
-		WithJSON(testUser).
-		Expect().
-		Status(http.StatusCreated)
-
-	return map[string]interface{}{
-		"email":    testUser["email"],
-		"password": testUser["password"],
-		"token":    resp.Header("Authorization").NotEmpty().Raw(),
-	}
-}
-
-// Helper function to create a premium test user
-func createPremiumTestUser(t *testing.T, server *setup.TestServer) map[string]interface{} {
-	token := server.WithPremiumUser(t)
-
-	return map[string]interface{}{
-		"token": token,
-	}
-}
 
 func TestContentFilteringWordlist_Create_ShouldRejectInappropriateName(t *testing.T) {
 	// Arrange
@@ -58,8 +30,7 @@ func TestContentFilteringWordlist_Create_ShouldRejectInappropriateName(t *testin
 	defer server.Cleanup()
 
 	// Use premium user to avoid wordlist limit issues when testing multiple cases
-	user := createPremiumTestUser(t, server)
-	token := user["token"].(string)
+	token := server.WithPremiumUser(t)
 
 	testCases := []struct {
 		name         string
@@ -189,8 +160,7 @@ func TestContentFilteringWordlist_Create_ShouldRejectInappropriateDescription(t 
 	defer server.Cleanup()
 
 	// Use premium user to avoid wordlist limit issues when testing multiple cases
-	user := createPremiumTestUser(t, server)
-	token := user["token"].(string)
+	token := server.WithPremiumUser(t)
 
 	testCases := []struct {
 		name        string
@@ -276,8 +246,7 @@ func TestContentFilteringWord_Create_ShouldRejectInappropriateWords(t *testing.T
 	defer server.Cleanup()
 
 	// Use premium user to avoid word limit issues
-	user := createPremiumTestUser(t, server)
-	token := user["token"].(string)
+	token := server.WithPremiumUser(t)
 
 	// Create a test wordlist first
 	wordlistResp := server.Expect.POST("/wordlists").
@@ -438,8 +407,7 @@ func TestContentFilteringMultiLanguage_FreeUser_ShouldDetectInappropriateContent
 	server := createTestServerWithMockModeration(t)
 	defer server.Cleanup()
 
-	user := createTestUser(t, server)
-	token := user["token"].(string)
+	token := server.WithTestUser(t)
 
 	// Create one wordlist to use for all language tests (free plan limit)
 	wordlistResp := server.Expect.POST("/wordlists").
@@ -521,8 +489,7 @@ func TestContentFilteringMultiLanguage_PremiumUser_ShouldDetectInappropriateCont
 	server := createTestServerWithMockModeration(t)
 	defer server.Cleanup()
 
-	user := createPremiumTestUser(t, server)
-	token := user["token"].(string)
+	token := server.WithPremiumUser(t)
 
 	multiLanguageTests := []struct {
 		language  string

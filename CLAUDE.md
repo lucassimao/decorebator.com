@@ -44,6 +44,10 @@ cd mobile && npm run lint              # Mobile app linting
 ./scripts/run-tests.sh coverage        # Check coverage thresholds
 ./scripts/run-tests.sh security        # Security scans (govulncheck)
 ./scripts/run-tests.sh clean           # Clean test environment
+./scripts/run-tests.sh unit-test TestName      # Run specific unit test by name
+./scripts/run-tests.sh integration-test TestName # Run specific integration test by name
+./scripts/run-tests.sh versions        # Check tool versions vs expected
+./scripts/run-tests.sh report          # Run all tests with detailed reporting
 
 # Quality Assurance workflow
 cd api && make qa                      # Full QA suite (lint + security + tests)
@@ -119,11 +123,24 @@ make lint              # Run golangci-lint on the codebase
 make lint-fix          # Run golangci-lint with automatic fixes
 make lint-watch        # Run linting in watch mode
 
+# Code formatting
+make format            # Format Go code using gofmt and goimports
+make format-check      # Check if Go code is properly formatted
+
+# Security scanning
+make security-scan     # Run basic security scan (gosec + govulncheck)
+make security-scan-full # Comprehensive security scanning with go vet
+
+# Git hooks
+make git-hooks-install # Install pre-commit/pre-push hooks
+make git-hooks-remove  # Remove git hooks
+
 # Other commands
 make build             # Build API binary
 make clean             # Remove build artifacts
 make help              # Show all available commands
 make migrate-drop      # Drop all database tables (destructive)
+make check-all         # Run all code quality checks (format-check + lint + test-unit)
 ```
 
 ### Mobile App (in `/mobile` directory)
@@ -491,6 +508,17 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - Clear error messages with retry times
 - Status endpoint to check remaining quota
 
+## Burst Rate Limiting System
+
+### Overview
+The application implements a comprehensive burst rate limiting system to prevent API abuse:
+
+- **Error Codes**: `BURST_WARNING` for warnings, `ACCOUNT_SUSPENDED_BURST` for suspensions
+- **Suspension Tracking**: Accounts can be temporarily suspended with `suspended_until` timestamps
+- **Retry Headers**: API returns `Retry-After` headers indicating when requests can be retried
+- **Mobile Integration**: Custom `BurstViolationError` class handles burst violations in the mobile app
+- **Automatic Recovery**: Suspensions automatically expire after the specified time period
+
 ## Known Architecture Issues & Modernization Plans
 
 ### Critical Issues Requiring Attention
@@ -548,11 +576,12 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - Subscription limits are enforced at the API level
 - Background jobs use River queue (PostgreSQL-backed) instead of traditional queue systems
 - Email templates are located in `internal/mail/` directory
-- API endpoints are documented in `doc/words.http` and `doc/words.prod.http`
-- Recent architecture improvements planned in:
-  - `api/docs/DETERMINISTIC_LEITNER_IMPLEMENTATION.md` - Deterministic priority-based Leitner algorithm
-  - `api/docs/LEITNER_ALGORITHM_OPTIMIZATION_REPORT.md` - Comprehensive Leitner system optimization analysis
-  - `api/docs/TESTING_BEST_PRACTICES.md` - Detailed testing guidelines and patterns
+- API endpoints are documented in HTTP files:
+  - `api/doc/words.http` and `api/doc/words.prod.http` - Word management endpoints
+  - `api/doc/analytics.http` - Analytics endpoints
+  - `api/doc/analytics-progress.http` - Progress analytics endpoints
+  - `api/doc/profile.http` - User profile endpoints
+  - `api/doc/static.http` - Static/admin endpoints
 
 ## Multi-Language Support
 
@@ -651,3 +680,8 @@ make qa-install         # Install all QA tools with correct versions
 - read all files inside the docs folder for comprehensive documentation and  patterns
 - Update README.md right after introducing major features or refactorings
 - use api/Makefile and api/scripts/run-tests.sh as the source for the main automations and commands in this monorepo
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

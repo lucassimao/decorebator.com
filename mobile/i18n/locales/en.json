@@ -595,7 +595,7 @@
     "warningMessage": "Unusual activity detected. Please slow down. Continued rapid requests may result in temporary suspension.",
     "suspendedTitle": "Account Temporarily Suspended",
     "suspendedMessage": "Your account has been temporarily suspended due to unusual activity. It will be automatically restored at {{until}}.",
-    "tomorrow": "midnight"
+    "tomorrow": "24 hours"
   },
   "flashcards": {
     "noWordsFound": "No words found in this wordlist",

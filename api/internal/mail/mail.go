@@ -401,35 +401,6 @@ func SendPaymentFailedEmail(user *model.User, data SubscriptionEmailData) error 
 	return nil
 }
 
-// SendEmail sends a generic email with both plain text and HTML content
-func SendEmail(toEmail, toName, subject, plainTextContent, htmlContent string) error {
-	logger := slog.With("func", "SendEmail", "to", toEmail)
-
-	from := mail.NewEmail("Decorebator", "support@decorebator.com")
-	to := mail.NewEmail(toName, toEmail)
-
-	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-
-	response, err := client.Send(message)
-	if err != nil {
-		logger.Error("failed to send email", "error", err, "to", toEmail, "subject", subject)
-		return err
-	}
-
-	if response.StatusCode > 299 {
-		logger.Error("sendgrid returned error status",
-			"status_code", response.StatusCode,
-			"body", response.Body,
-			"to", toEmail,
-			"subject", subject)
-		return fmt.Errorf("sendgrid error: %s", response.Body)
-	}
-
-	logger.Info("email sent successfully", "to", toEmail, "subject", subject)
-	return nil
-}
-
 //go:embed burst_blocked.html
 var burstBlockedEmailTemplate string
 
@@ -438,6 +409,11 @@ var welcomeEmailTemplate string
 
 func SendBurstBlockedEmail(userID int64, email, firstName, activityType string, violations int, blockedUntil time.Time) error {
 	logger := slog.With("func", "SendBurstBlockedEmail", "userId", userID, "email", email)
+
+	if os.Getenv("ENV") != "production" {
+		logger.Debug("non-production environment. skipping burst blocked email")
+		return nil
+	}
 
 	tmpl, err := template.New("email").Parse(burstBlockedEmailTemplate)
 	if err != nil {
@@ -471,7 +447,7 @@ Suspension Details:
 - Violations Today: %d
 - Account Will Be Restored: %s
 
-This suspension is temporary and is in place to protect our service and maintain fair usage for all users. Your account will be automatically restored at midnight, and you'll have full access to all features again.
+This suspension is temporary and is in place to protect our service and maintain fair usage for all users. Your account will be automatically restored after 24 hours, and you'll have full access to all features again.
 
 If you believe this is a mistake or if you were performing legitimate actions, please reply to this email with details about your usage, and we'll review your case promptly.
 

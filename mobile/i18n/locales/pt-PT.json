@@ -197,7 +197,7 @@
       "warningMessage": "Atividade invulgar detetada. Por favor, abrande. Pedidos rápidos contínuos podem resultar em suspensão temporária.",
       "suspendedTitle": "Conta temporariamente suspensa",
       "suspendedMessage": "A sua conta foi temporariamente suspensa devido a atividade invulgar. Será restaurada automaticamente às {{until}}.",
-      "tomorrow": "meia-noite"
+      "tomorrow": "24 horas"
     },
     "audioPlaying": "A reproduzir...",
     "audioTapToPlay": "Toque para reproduzir",

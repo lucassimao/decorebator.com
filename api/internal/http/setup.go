@@ -13,12 +13,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// antiBurstMiddleware holds the current burst middleware function (can be overridden for tests)
+var antiBurstMiddleware = AntiBurstMiddleware
+
 // Config holds optional configuration for setting up routes
 type Config struct {
-	WordService       *service.WordService
-	WordlistService   *service.WordlistService
-	ModerationService service.ModerationService
-	Database          *pgxpool.Pool
+	WordService          *service.WordService
+	WordlistService      *service.WordlistService
+	ModerationService    service.ModerationService
+	Database             *pgxpool.Pool
+	DisableBurstDetector bool // Skip burst detection (useful for tests)
 }
 
 func init() {
@@ -78,6 +82,17 @@ func SetupRoutes(config *Config) *gin.Engine {
 		panic(fmt.Sprintf("Failed to apply default configuration: %v", err))
 	}
 
+	// Choose the appropriate middleware for this server instance
+	burstMiddleware := antiBurstMiddleware
+	if config != nil && config.DisableBurstDetector {
+		// Use a no-op middleware for this server instance
+		burstMiddleware = func(_ string) gin.HandlerFunc {
+			return func(c *gin.Context) {
+				c.Next()
+			}
+		}
+	}
+
 	subService := service.NewSubscriptionService(config.Database)
 	subRepo := repository.NewSubscriptionRepository(config.Database)
 
@@ -124,7 +139,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 	authenticatedRoutes.Use(Authenticate)
 	{
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
-		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(subService, "create_wordlist"), AntiBurstMiddleware("wordlist_create"), WordlistRoutes.Create)
+		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(subService, "create_wordlist"), burstMiddleware("wordlist_create"), WordlistRoutes.Create)
 		authenticatedRoutes.GET("/wordlists/pronunciation-systems", WordlistRoutes.GetPronunciationSystems)
 		authenticatedRoutes.GET("/wordlists/:wordlistId", WordlistRoutes.GetById)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId", WordlistRoutes.Update)
@@ -133,10 +148,10 @@ func SetupRoutes(config *Config) *gin.Engine {
 		authenticatedRoutes.DELETE("/wordlists/:wordlistId/words/:wordId", WordRoutes.Delete)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId/words/:wordId", WordRoutes.Update)
 		authenticatedRoutes.GET("/wordlists/:wordlistId/words/:wordId/definitions", WordRoutes.GetDefinitions)
-		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(subService, "add_word"), AntiBurstMiddleware("word_create"), WordRoutes.Create)
+		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(subService, "add_word"), burstMiddleware("word_create"), WordRoutes.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizRoutes.Save)
-		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(), AntiBurstMiddleware("error_report"), ErrorReportsRoutes.Create)
+		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(), burstMiddleware("error_report"), ErrorReportsRoutes.Create)
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus())
 
 		RegisterAnalyticsRoutes(authenticatedRoutes)
@@ -168,6 +183,9 @@ func SetupRoutes(config *Config) *gin.Engine {
 	adminRoutes.Use(AuthenticateStatic)
 	{
 		adminRoutes.GET("/errorReports/stats", GetErrorReportStats())
+		adminRoutes.POST("/burst/unblock/:userId", UnblockUser())
+		adminRoutes.POST("/burst/unblock-all", UnblockAllUsers())
+		adminRoutes.GET("/burst/blocked-users", GetBlockedUsers())
 	}
 
 	return router

@@ -1,0 +1,33 @@
+### Burst Admin Endpoints
+### These are admin-only endpoints for managing burst blocks
+
+@baseUrl = http://localhost:8080
+@staticToken = {{$dotenv STATIC_TOKEN}}
+
+### Get all currently blocked users
+GET {{baseUrl}}/static/admin/burst/blocked-users
+Authorization: Bearer {{staticToken}}
+
+### Unblock a specific user by ID
+POST {{baseUrl}}/static/admin/burst/unblock/123
+Authorization: Bearer {{staticToken}}
+
+### Unblock all users
+POST {{baseUrl}}/static/admin/burst/unblock-all
+Authorization: Bearer {{staticToken}}
+
+### Production endpoints
+@prodBaseUrl = https://api.decorebator.com
+@prodStaticToken = {{$dotenv PROD_STATIC_TOKEN}}
+
+### Get all currently blocked users (Production)
+GET {{prodBaseUrl}}/static/admin/burst/blocked-users
+Authorization: Bearer {{prodStaticToken}}
+
+### Unblock a specific user by ID (Production)
+POST {{prodBaseUrl}}/static/admin/burst/unblock/123
+Authorization: Bearer {{prodStaticToken}}
+
+### Unblock all users (Production)
+POST {{prodBaseUrl}}/static/admin/burst/unblock-all
+Authorization: Bearer {{prodStaticToken}}

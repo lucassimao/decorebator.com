@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"decorebator.com/internal/common"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -20,14 +20,12 @@ var BurstThresholds = map[string]int64{
 // BurstDetector handles burst detection and progressive blocking
 type BurstDetector struct {
 	redis *redis.Client
-	db    *pgxpool.Pool
 }
 
 // NewBurstDetector creates a new burst detector instance
-func NewBurstDetector(redis *redis.Client, db *pgxpool.Pool) *BurstDetector {
+func NewBurstDetector(redis *redis.Client) *BurstDetector {
 	return &BurstDetector{
 		redis: redis,
-		db:    db,
 	}
 }
 
@@ -86,9 +84,9 @@ func (b *BurstDetector) CheckAndTrackBurst(ctx context.Context, userID int64, en
 	return isBurst, dailyViolations, nil
 }
 
-// IsUserBlocked checks if user is blocked for the current day
+// IsUserBlocked checks if user is blocked
 func (b *BurstDetector) IsUserBlocked(ctx context.Context, userID int64) bool {
-	key := fmt.Sprintf("blocked:%d:%s", userID, time.Now().Format("2006-01-02"))
+	key := fmt.Sprintf("blocked:%d", userID)
 	exists, err := b.redis.Exists(ctx, key).Result()
 	if err != nil {
 		common.Logger.Error("Failed to check user block status", "error", err, "user_id", userID)
@@ -98,16 +96,27 @@ func (b *BurstDetector) IsUserBlocked(ctx context.Context, userID int64) bool {
 	return exists > 0
 }
 
-// BlockUserForDay blocks the user until midnight
-func (b *BurstDetector) BlockUserForDay(ctx context.Context, userID int64) error {
-	key := fmt.Sprintf("blocked:%d:%s", userID, time.Now().Format("2006-01-02"))
+// BlockUserFor24Hours blocks the user for exactly 24 hours
+func (b *BurstDetector) BlockUserFor24Hours(ctx context.Context, userID int64) error {
+	key := fmt.Sprintf("blocked:%d", userID)
 
-	// Calculate time until midnight
+	// Block for exactly 24 hours from now
 	now := time.Now()
-	midnight := now.Truncate(24 * time.Hour).Add(24 * time.Hour)
-	ttl := time.Until(midnight)
+	blockedUntil := now.Add(24 * time.Hour)
+	ttl := 24 * time.Hour
 
-	err := b.redis.Set(ctx, key, "blocked", ttl).Err()
+	// Store block information
+	blockData := map[string]interface{}{
+		"blocked_at":    now.Unix(),
+		"blocked_until": blockedUntil.Unix(),
+	}
+
+	// Use pipeline for atomic operations
+	pipe := b.redis.Pipeline()
+	pipe.HMSet(ctx, key, blockData)
+	pipe.Expire(ctx, key, ttl)
+
+	_, err := pipe.Exec(ctx)
 	if err != nil {
 		common.Logger.Error("Failed to block user", "error", err, "user_id", userID, "ttl", ttl)
 		return err
@@ -115,22 +124,36 @@ func (b *BurstDetector) BlockUserForDay(ctx context.Context, userID int64) error
 
 	common.Logger.Info("User blocked for burst abuse",
 		"user_id", userID,
-		"blocked_until", midnight.Format(time.RFC3339),
+		"blocked_until", blockedUntil.Format(time.RFC3339),
 		"ttl_hours", ttl.Hours(),
 	)
 
 	return nil
 }
 
-// GetBlockExpiry returns when the user's block will expire (midnight)
+// GetBlockExpiry returns when the user's block will expire
 func (b *BurstDetector) GetBlockExpiry(ctx context.Context, userID int64) *time.Time {
-	key := fmt.Sprintf("blocked:%d:%s", userID, time.Now().Format("2006-01-02"))
-	ttl, err := b.redis.TTL(ctx, key).Result()
-	if err != nil || ttl <= 0 {
+	key := fmt.Sprintf("blocked:%d", userID)
+
+	// Get the stored blocked_until timestamp
+	blockedUntilStr, err := b.redis.HGet(ctx, key, "blocked_until").Result()
+	if err != nil {
+		// If we can't get the exact time, try to calculate from TTL
+		ttl, err := b.redis.TTL(ctx, key).Result()
+		if err != nil || ttl <= 0 {
+			return nil
+		}
+		expiry := time.Now().Add(ttl)
+		return &expiry
+	}
+
+	// Parse the unix timestamp
+	blockedUntilUnix, err := strconv.ParseInt(blockedUntilStr, 10, 64)
+	if err != nil {
 		return nil
 	}
 
-	expiry := time.Now().Add(ttl)
+	expiry := time.Unix(blockedUntilUnix, 0)
 	return &expiry
 }
 
@@ -152,4 +175,67 @@ func (b *BurstDetector) GetDailyViolations(ctx context.Context, userID int64) (i
 		return 0, nil
 	}
 	return count, err
+}
+
+// UnblockUser removes the block for a specific user
+func (b *BurstDetector) UnblockUser(ctx context.Context, userID int64) error {
+	key := fmt.Sprintf("blocked:%d", userID)
+	
+	err := b.redis.Del(ctx, key).Err()
+	if err != nil {
+		common.Logger.Error("Failed to unblock user", "error", err, "user_id", userID)
+		return err
+	}
+	
+	common.Logger.Info("User unblocked successfully", "user_id", userID)
+	return nil
+}
+
+// UnblockAllUsers removes all user blocks
+func (b *BurstDetector) UnblockAllUsers(ctx context.Context) (int64, error) {
+	// Find all blocked user keys
+	pattern := "blocked:*"
+	keys, err := b.redis.Keys(ctx, pattern).Result()
+	if err != nil {
+		common.Logger.Error("Failed to find blocked user keys", "error", err)
+		return 0, err
+	}
+	
+	if len(keys) == 0 {
+		common.Logger.Info("No blocked users found")
+		return 0, nil
+	}
+	
+	// Delete all blocked user keys
+	deleted, err := b.redis.Del(ctx, keys...).Result()
+	if err != nil {
+		common.Logger.Error("Failed to unblock all users", "error", err, "keys_count", len(keys))
+		return 0, err
+	}
+	
+	common.Logger.Info("All users unblocked successfully", "unblocked_count", deleted)
+	return deleted, nil
+}
+
+// GetBlockedUsers returns a list of all currently blocked user IDs
+func (b *BurstDetector) GetBlockedUsers(ctx context.Context) ([]int64, error) {
+	pattern := "blocked:*"
+	keys, err := b.redis.Keys(ctx, pattern).Result()
+	if err != nil {
+		common.Logger.Error("Failed to find blocked user keys", "error", err)
+		return nil, err
+	}
+	
+	var blockedUsers []int64
+	for _, key := range keys {
+		// Extract user ID from key format "blocked:123"
+		if len(key) > 8 { // "blocked:" is 8 characters
+			userIDStr := key[8:] // Remove "blocked:" prefix
+			if userID, err := strconv.ParseInt(userIDStr, 10, 64); err == nil {
+				blockedUsers = append(blockedUsers, userID)
+			}
+		}
+	}
+	
+	return blockedUsers, nil
 }

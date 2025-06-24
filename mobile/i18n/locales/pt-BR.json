@@ -197,7 +197,7 @@
       "warningMessage": "Atividade incomum detectada. Por favor, diminua a velocidade. Solicitações rápidas contínuas podem resultar em suspensão temporária.",
       "suspendedTitle": "Conta temporariamente suspensa",
       "suspendedMessage": "Sua conta foi temporariamente suspensa devido a atividade incomum. Ela será restaurada automaticamente às {{until}}.",
-      "tomorrow": "meia-noite"
+      "tomorrow": "24 horas"
     },
     "audioPlaying": "Reproduzindo...",
     "audioTapToPlay": "Toque para reproduzir",

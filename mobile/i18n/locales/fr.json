@@ -197,7 +197,7 @@
       "warningMessage": "Activité inhabituelle détectée. Veuillez ralentir. Des demandes rapides continues peuvent entraîner une suspension temporaire.",
       "suspendedTitle": "Compte temporairement suspendu",
       "suspendedMessage": "Votre compte a été temporairement suspendu en raison d'une activité inhabituelle. Il sera automatiquement restauré à {{until}}.",
-      "tomorrow": "minuit"
+      "tomorrow": "24 heures"
     },
     "audioPlaying": "En cours de lecture...",
     "audioTapToPlay": "Touchez pour écouter",

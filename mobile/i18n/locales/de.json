@@ -199,7 +199,7 @@
       "warningMessage": "Ungewöhnliche Aktivität erkannt. Bitte verlangsamen Sie. Weitere schnelle Anfragen können zu einer vorübergehenden Sperrung führen.",
       "suspendedTitle": "Konto vorübergehend gesperrt",
       "suspendedMessage": "Ihr Konto wurde aufgrund ungewöhnlicher Aktivitäten vorübergehend gesperrt. Es wird automatisch um {{until}} wiederhergestellt.",
-      "tomorrow": "Mitternacht"
+      "tomorrow": "24 Stunden"
     },
     "audioPlaying": "Wird abgespielt...",
     "audioTapToPlay": "Zum Abspielen tippen",

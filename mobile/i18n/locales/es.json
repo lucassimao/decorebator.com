@@ -586,7 +586,7 @@
     "warningMessage": "Actividad inusual detectada. Por favor, reduce la velocidad. Las solicitudes rápidas continuas pueden resultar en suspensión temporal.",
     "suspendedTitle": "Cuenta Temporalmente Suspendida",
     "suspendedMessage": "Tu cuenta ha sido suspendida temporalmente debido a actividad inusual. Se restaurará automáticamente a las {{until}}.",
-    "tomorrow": "medianoche"
+    "tomorrow": "24 horas"
   },
   "flashcards": {
     "noWordsFound": "No se encontraron palabras en esta lista",

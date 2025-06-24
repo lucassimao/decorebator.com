@@ -41,23 +41,21 @@ func AntiBurstMiddleware(endpoint string) gin.HandlerFunc {
 			return
 		}
 
-		// Get database connection
-		db, err := common.GetDBConnection()
-		if err != nil {
-			common.Logger.Error("Failed to get database connection", "error", err)
-			// Don't block on database failures, allow the request
-			c.Next()
-			return
-		}
-
 		// Create burst detector
-		detector := service.NewBurstDetector(redisClient, db)
+		detector := service.NewBurstDetector(redisClient)
 
-		// First check if user is blocked for the day
+		// First check if user is blocked
 		if detector.IsUserBlocked(c.Request.Context(), user.ID) {
-			blockedUntil := time.Now().Truncate(24 * time.Hour).Add(24 * time.Hour)
+			// Get the actual block expiry time
+			blockedUntil := detector.GetBlockExpiry(c.Request.Context(), user.ID)
+			if blockedUntil == nil {
+				// Fallback if we can't get expiry time
+				defaultExpiry := time.Now().Add(24 * time.Hour)
+				blockedUntil = &defaultExpiry
+			}
+
 			c.JSON(http.StatusForbidden, gin.H{
-				"error":           "Your account has been temporarily suspended due to unusual activity. It will be automatically restored tomorrow.",
+				"error":           "Your account has been temporarily suspended due to unusual activity. It will be automatically restored after 24 hours.",
 				"error_code":      "ACCOUNT_SUSPENDED_BURST",
 				"suspended_until": blockedUntil.Format(time.RFC3339),
 			})
@@ -77,23 +75,29 @@ func AntiBurstMiddleware(endpoint string) gin.HandlerFunc {
 		if isBurst {
 			if violations >= 2 {
 				// Second violation today - block for the day
-				if err := detector.BlockUserForDay(c.Request.Context(), user.ID); err != nil {
+				if err := detector.BlockUserFor24Hours(c.Request.Context(), user.ID); err != nil {
 					common.Logger.Error("Failed to block user", "error", err)
+				}
+
+				// Get the actual block expiry time after blocking
+				blockedUntil := detector.GetBlockExpiry(c.Request.Context(), user.ID)
+				if blockedUntil == nil {
+					// Fallback - should not happen, but just in case
+					defaultExpiry := time.Now().Add(24 * time.Hour)
+					blockedUntil = &defaultExpiry
 				}
 
 				// Send alerts asynchronously
 				go func() {
-					blockedUntil := time.Now().Truncate(24 * time.Hour).Add(24 * time.Hour)
 					activityType := strings.Replace(endpoint, "_", " ", -1)
-					if err := mail.SendBurstBlockedEmail(user.ID, user.Email, user.FirstName, activityType, violations, blockedUntil); err != nil {
+					if err := mail.SendBurstBlockedEmail(user.ID, user.Email, user.FirstName, activityType, violations, *blockedUntil); err != nil {
 						common.Logger.Error("Failed to send burst block email", "error", err, "user_id", user.ID)
 					}
-					logToSentry(user, endpoint, violations)
+					logToSentry(user, endpoint, violations, *blockedUntil)
 				}()
 
-				blockedUntil := time.Now().Truncate(24 * time.Hour).Add(24 * time.Hour)
 				c.JSON(http.StatusForbidden, gin.H{
-					"error":           "Your account has been temporarily suspended due to repeated unusual activity. It will be automatically restored tomorrow.",
+					"error":           "Your account has been temporarily suspended due to repeated unusual activity. It will be automatically restored after 24 hours.",
 					"error_code":      "ACCOUNT_SUSPENDED_BURST",
 					"suspended_until": blockedUntil.Format(time.RFC3339),
 				})
@@ -120,7 +124,7 @@ func AntiBurstMiddleware(endpoint string) gin.HandlerFunc {
 }
 
 // logToSentry logs burst abuse incidents to Sentry for monitoring
-func logToSentry(user *model.User, endpoint string, violations int) {
+func logToSentry(user *model.User, endpoint string, violations int, blockedUntil time.Time) {
 	sentry.WithScope(func(scope *sentry.Scope) {
 		scope.SetLevel(sentry.LevelWarning)
 		scope.SetTag("alert_type", "burst_abuse")
@@ -133,8 +137,9 @@ func logToSentry(user *model.User, endpoint string, violations int) {
 		scope.SetContext("burst_details", map[string]interface{}{
 			"endpoint":         endpoint,
 			"violations_today": violations,
-			"action":           "day_block",
-			"blocked_until":    time.Now().Truncate(24 * time.Hour).Add(24 * time.Hour).Format(time.RFC3339),
+			"action":           "24h_block",
+			"blocked_until":    blockedUntil.Format(time.RFC3339),
+			"block_duration":   "24 hours",
 		})
 
 		message := fmt.Sprintf("User blocked for burst abuse - %s (ID: %d)", user.Email, user.ID)

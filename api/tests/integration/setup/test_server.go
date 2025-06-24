@@ -47,9 +47,10 @@ func NewTestServer(t *testing.T, config ...*TestConfig) *TestServer {
 	var testConfig *httphandlers.Config
 	switch len(config) {
 	case 0:
-		// No config provided, use defaults
+		// No config provided, use defaults with burst detection disabled for faster tests
 		testConfig = &httphandlers.Config{
-			Database: db,
+			Database:             db,
+			DisableBurstDetector: true,
 		}
 	case 1:
 		// One config provided, use it

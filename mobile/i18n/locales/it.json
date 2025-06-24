@@ -197,7 +197,7 @@
       "warningMessage": "Attività insolita rilevata. Si prega di rallentare. Richieste rapide continue possono comportare una sospensione temporanea.",
       "suspendedTitle": "Account temporaneamente sospeso",
       "suspendedMessage": "Il tuo account è stato temporaneamente sospeso a causa di attività insolite. Verrà ripristinato automaticamente alle {{until}}.",
-      "tomorrow": "mezzanotte"
+      "tomorrow": "24 ore"
     },
     "audioPlaying": "In riproduzione...",
     "audioTapToPlay": "Tocca per riprodurre",

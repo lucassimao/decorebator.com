@@ -197,7 +197,7 @@
       "warningMessage": "異常なアクティビティが検出されました。速度を落としてください。連続した高速リクエストは一時的な停止につながる可能性があります。",
       "suspendedTitle": "アカウント一時停止",
       "suspendedMessage": "異常なアクティビティのため、アカウントが一時的に停止されました。{{until}}に自動的に復元されます。",
-      "tomorrow": "深夜0時"
+      "tomorrow": "24時間"
     },
     "audioPlaying": "再生中...",
     "audioTapToPlay": "タップして再生",
