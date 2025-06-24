@@ -729,7 +729,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     searchBox: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: theme.colors.background.surface,
+      backgroundColor: theme.colors.ui.inputBackground,
       borderRadius: 12,
       paddingHorizontal: 16,
       paddingVertical: 12,

@@ -439,6 +439,36 @@
     "contentGuidelinesText": "Bitte stellen Sie sicher, dass der Inhalt Ihrer Wortliste angemessen ist und unseren Community-Richtlinien entspricht.",
     "viewGuidelines": "Vollständige Richtlinien anzeigen"
   },
+  "contentGuidelines": {
+    "title": "Inhaltsrichtlinien",
+    "description": "Um eine positive Lernerfahrung für alle zu gewährleisten, befolgen Sie bitte diese Richtlinien:",
+    "educational": {
+      "title": "Bildungsinhalte",
+      "description": "Konzentrieren Sie sich auf Vokabeln, die beim Sprachenlernen und praktischen Gebrauch helfen."
+    },
+    "familyFriendly": {
+      "title": "Familienfreundlich",
+      "description": "Halten Sie Inhalte für Lernende aller Altersgruppen angemessen."
+    },
+    "noProfanity": {
+      "title": "Keine Schimpfwörter",
+      "description": "Vermeiden Sie beleidigende Sprache, Beleidigungen oder unangemessene Inhalte."
+    },
+    "noPersonalInfo": {
+      "title": "Keine persönlichen Informationen",
+      "description": "Fügen Sie keine persönlichen Daten, Adressen oder Kontaktinformationen hinzu."
+    },
+    "respectful": {
+      "title": "Respektvolle Inhalte",
+      "description": "Seien Sie kulturell sensibel und vermeiden Sie diskriminierende Inhalte."
+    },
+    "legitimate": {
+      "title": "Legitime Wörter",
+      "description": "Verwenden Sie echte Wörter aus der Zielsprache, keine erfundenen Begriffe."
+    },
+    "footer": "Vielen Dank, dass Sie dabei helfen, eine positive Lernumgebung zu schaffen!",
+    "understand": "Ich Verstehe"
+  },
   "pronunciationSystems": {
     "ipa": "IPA",
     "romaji": "Romaji",

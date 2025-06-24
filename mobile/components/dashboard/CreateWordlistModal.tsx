@@ -11,9 +11,8 @@ import {
   Alert,
   Animated,
   Dimensions,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
+  PanResponder,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,6 +22,7 @@ import {
   View,
 } from "react-native";
 import { ContentGuidelinesModal } from "./ContentGuidelinesModal";
+import { captureException, addBreadcrumb } from "@/utils/sentry";
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type Language = {
@@ -60,7 +60,61 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   const { t } = useTranslation();
   const { theme } = useTheme();
   const [showContentGuidelines, setShowContentGuidelines] = useState(false);
+  const [guidelinesExpanded, setGuidelinesExpanded] = useState(false);
+  const guidelinesHeight = useRef(new Animated.Value(0)).current;
   const styles = createStyles(theme);
+
+  // Handle modal close with animation
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  };
+
+  // Pan responder for swipe to dismiss
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to downward swipes with sufficient movement
+        return (
+          gestureState.dy > 10 &&
+          Math.abs(gestureState.dx) < Math.abs(gestureState.dy)
+        );
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // Only allow downward movement
+        if (gestureState.dy > 0) {
+          slideAnim.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        // If swiped down more than 100 pixels or with velocity, close the modal
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          handleClose();
+        } else {
+          // Bounce back to original position
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 40,
+            friction: 8,
+          }).start();
+        }
+      },
+    }),
+  ).current;
 
   const mutation = useMutation<
     wordlistsApi.Wordlist,
@@ -69,6 +123,10 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   >({
     mutationFn: (dto) => wordlistsApi.addWordlist(dto),
     onSuccess: (data) => {
+      addBreadcrumb("Wordlist created successfully", "user.action", {
+        wordlistName: data.name,
+        language: data.languageCode,
+      });
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
 
@@ -84,6 +142,12 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
       );
     },
     onError: (error) => {
+      captureException(error, {
+        user_action: {
+          action: "create_wordlist",
+          error_message: error.message,
+        },
+      });
       console.log(error);
       onError?.(error);
     },
@@ -181,7 +245,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
       onRequestClose={onClose}
       accessibilityViewIsModal={true}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
+      <TouchableWithoutFeedback onPress={handleClose}>
         <Animated.View
           style={[
             styles.backdrop,
@@ -192,54 +256,316 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
         />
       </TouchableWithoutFeedback>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
+      <Animated.View
+        style={[
+          styles.modalContent,
+          {
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+        {...panResponder.panHandlers}
       >
-        <Animated.View
-          style={[
-            styles.modalContent,
-            {
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
+        {/* Header - Outside KeyboardAvoidingView */}
+        <View style={styles.header}>
+          <View style={styles.handle} />
+          <Text
+            style={styles.title}
+            accessibilityRole="header"
+            // accessibilityLevel={1} // Removed deprecated prop
+          >
+            {t("createWordlist.title")}
+          </Text>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={handleClose}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.close")}
+            accessibilityHint="Close the create wordlist dialog"
+          >
+            <Ionicons name="close" size={24} color="#636E72" />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          style={styles.form}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: 100 }}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.handle} />
-            <Text
-              style={styles.title}
-              accessibilityRole="header"
-              // accessibilityLevel={1} // Removed deprecated prop
-            >
-              {t("createWordlist.title")}
+          {/* Name Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              {t("createWordlist.nameLabel")}{" "}
+              <Text style={styles.required}>*</Text>
             </Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={onClose}
-              accessibilityRole="button"
-              accessibilityLabel={t("common.close")}
-              accessibilityHint="Close the create wordlist dialog"
-            >
-              <Ionicons name="close" size={24} color="#636E72" />
-            </TouchableOpacity>
+            <Controller
+              control={control}
+              name="name"
+              rules={{
+                required: t("createWordlist.nameRequired"),
+                minLength: {
+                  value: 3,
+                  message: t("createWordlist.nameMinLength"),
+                },
+                maxLength: {
+                  value: 50,
+                  message: t("createWordlist.nameMaxLength"),
+                },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={[styles.input, errors.name && styles.inputError]}
+                  placeholder={t("createWordlist.namePlaceholder")}
+                  placeholderTextColor="#B2BEC3"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  autoCapitalize="words"
+                  maxLength={50}
+                  accessibilityLabel={t("createWordlist.nameLabel")}
+                  accessibilityHint="Enter a name for your new wordlist"
+                  // accessibilityRequired={true} // Not a valid prop
+                />
+              )}
+            />
+            {errors.name && (
+              <Text style={styles.errorText}>{errors.name.message}</Text>
+            )}
           </View>
 
-          <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
-            {/* Content Guidelines Notice */}
-            <View style={styles.guidelinesNotice}>
-              <View style={styles.guidelinesHeader}>
-                <Ionicons name="information-circle" size={20} color="#FF7B54" />
-                <Text style={styles.guidelinesTitle}>
-                  {t("createWordlist.contentGuidelines")}
+          {/* Description Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              {t("createWordlist.descriptionLabel")}
+            </Text>
+            <Controller
+              control={control}
+              name="description"
+              rules={{
+                maxLength: {
+                  value: 200,
+                  message: t("createWordlist.descriptionMaxLength"),
+                },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder={t("createWordlist.descriptionPlaceholder")}
+                  placeholderTextColor="#B2BEC3"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  multiline
+                  numberOfLines={3}
+                  maxLength={200}
+                  accessibilityLabel={t("createWordlist.descriptionLabel")}
+                  accessibilityHint="Optionally describe what this wordlist is for"
+                />
+              )}
+            />
+            {errors.description && (
+              <Text style={styles.errorText}>{errors.description.message}</Text>
+            )}
+          </View>
+
+          {/* Language Selection */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              {t("createWordlist.languageLabel")}{" "}
+              <Text style={styles.required}>*</Text>
+            </Text>
+            <Controller
+              control={control}
+              name="languageCode"
+              rules={{
+                required: t("createWordlist.languageRequired"),
+              }}
+              render={({ field: { onChange, value } }) => (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.languageScroll}
+                  accessibilityLabel="Select language for wordlist"
+                >
+                  {LANGUAGES.map((lang) => (
+                    <TouchableOpacity
+                      key={lang.code}
+                      style={[
+                        styles.languageItem,
+                        value === lang.code && styles.languageItemSelected,
+                      ]}
+                      onPress={() => {
+                        onChange(lang.code);
+                      }}
+                      accessibilityRole="radio"
+                      accessibilityLabel={`Select ${t(`dashboard.languages.${lang.name.toLowerCase()}`)} language`}
+                      accessibilityState={{ selected: value === lang.code }}
+                    >
+                      <Text style={styles.languageFlag}>{lang.flag}</Text>
+                      <Text
+                        style={[
+                          styles.languageName,
+                          value === lang.code && styles.languageNameSelected,
+                        ]}
+                      >
+                        {t(`dashboard.languages.${lang.name.toLowerCase()}`)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+            />
+            {errors.languageCode && (
+              <Text style={styles.errorText}>
+                {errors.languageCode.message}
+              </Text>
+            )}
+          </View>
+
+          {/* Pronunciation System Selection */}
+          {pronunciationData?.canChange && (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                {t("createWordlist.pronunciationLabel")}
+              </Text>
+              <Text style={styles.helpText}>
+                {t("createWordlist.pronunciationHelp")}
+              </Text>
+              <Controller
+                control={control}
+                name="pronunciationSystem"
+                rules={{
+                  validate: (value) => {
+                    // If pronunciation system selection is available and required
+                    if (pronunciationData?.canChange && !value) {
+                      return t("createWordlist.pronunciationRequired");
+                    }
+                    // If value is set, ensure it's supported
+                    if (
+                      value &&
+                      pronunciationData?.supportedSystems &&
+                      !pronunciationData.supportedSystems.includes(value)
+                    ) {
+                      return t("createWordlist.pronunciationNotSupported");
+                    }
+                    return true;
+                  },
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <View>
+                    {isLoadingPronunciation ? (
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator
+                          size="small"
+                          color={theme.colors.primary}
+                        />
+                      </View>
+                    ) : pronunciationError ? (
+                      <View style={styles.errorContainer}>
+                        <Text style={styles.errorText}>
+                          {t("createWordlist.pronunciationLoadError")}
+                        </Text>
+                        <Text style={styles.helpText}>
+                          {t("createWordlist.pronunciationDefaultWillBeUsed")}
+                        </Text>
+                      </View>
+                    ) : (
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={styles.languageScroll}
+                      >
+                        {pronunciationData?.supportedSystems.map((system) => (
+                          <TouchableOpacity
+                            key={system}
+                            style={[
+                              styles.pronunciationItem,
+                              value === system &&
+                                styles.pronunciationItemSelected,
+                            ]}
+                            onPress={() => {
+                              onChange(system);
+                            }}
+                            accessibilityRole="radio"
+                            accessibilityLabel={`Select ${t(`pronunciationSystems.${system}`)} pronunciation system`}
+                            accessibilityState={{
+                              selected: value === system,
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.pronunciationName,
+                                value === system &&
+                                  styles.pronunciationNameSelected,
+                              ]}
+                            >
+                              {t(`pronunciationSystems.${system}`)}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    )}
+                  </View>
+                )}
+              />
+              {errors.pronunciationSystem && (
+                <Text style={styles.errorText}>
+                  {errors.pronunciationSystem.message}
                 </Text>
+              )}
+            </View>
+          )}
+
+          {/* Content Guidelines Notice - Expandable */}
+          <TouchableOpacity
+            style={styles.guidelinesNotice}
+            onPress={() => {
+              const toValue = guidelinesExpanded ? 0 : 1;
+              setGuidelinesExpanded(!guidelinesExpanded);
+              Animated.timing(guidelinesHeight, {
+                toValue,
+                duration: 300,
+                useNativeDriver: false,
+              }).start();
+            }}
+            activeOpacity={0.8}
+          >
+            <View style={styles.guidelinesHeader}>
+              <Ionicons
+                name="information-circle"
+                size={20}
+                color={theme.colors.primary}
+              />
+              <Text style={styles.guidelinesTitle}>
+                {t("createWordlist.contentGuidelines")}
+              </Text>
+              <View style={styles.expandIcon}>
+                <Ionicons
+                  name={guidelinesExpanded ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color={theme.colors.text.secondary}
+                />
               </View>
+            </View>
+
+            <Animated.View
+              style={{
+                maxHeight: guidelinesHeight.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 200],
+                }),
+                overflow: "hidden",
+              }}
+            >
               <Text style={styles.guidelinesText}>
                 {t("createWordlist.contentGuidelinesText")}
               </Text>
               <TouchableOpacity
                 style={styles.guidelinesLink}
-                onPress={() => setShowContentGuidelines(true)}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  setShowContentGuidelines(true);
+                }}
                 accessibilityRole="button"
                 accessibilityLabel={t("createWordlist.viewGuidelines")}
                 accessibilityHint="View detailed content guidelines"
@@ -247,294 +573,72 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
                 <Text style={styles.guidelinesLinkText}>
                   {t("createWordlist.viewGuidelines")}
                 </Text>
-                <Ionicons name="chevron-forward" size={16} color="#FF7B54" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Name Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                {t("createWordlist.nameLabel")}{" "}
-                <Text style={styles.required}>*</Text>
-              </Text>
-              <Controller
-                control={control}
-                name="name"
-                rules={{
-                  required: t("createWordlist.nameRequired"),
-                  minLength: {
-                    value: 3,
-                    message: t("createWordlist.nameMinLength"),
-                  },
-                  maxLength: {
-                    value: 50,
-                    message: t("createWordlist.nameMaxLength"),
-                  },
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.name && styles.inputError]}
-                    placeholder={t("createWordlist.namePlaceholder")}
-                    placeholderTextColor="#B2BEC3"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    autoCapitalize="words"
-                    maxLength={50}
-                    accessibilityLabel={t("createWordlist.nameLabel")}
-                    accessibilityHint="Enter a name for your new wordlist"
-                    // accessibilityRequired={true} // Not a valid prop
-                  />
-                )}
-              />
-              {errors.name && (
-                <Text style={styles.errorText}>{errors.name.message}</Text>
-              )}
-            </View>
-
-            {/* Description Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                {t("createWordlist.descriptionLabel")}
-              </Text>
-              <Controller
-                control={control}
-                name="description"
-                rules={{
-                  maxLength: {
-                    value: 200,
-                    message: t("createWordlist.descriptionMaxLength"),
-                  },
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, styles.textArea]}
-                    placeholder={t("createWordlist.descriptionPlaceholder")}
-                    placeholderTextColor="#B2BEC3"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    multiline
-                    numberOfLines={3}
-                    maxLength={200}
-                    accessibilityLabel={t("createWordlist.descriptionLabel")}
-                    accessibilityHint="Optionally describe what this wordlist is for"
-                  />
-                )}
-              />
-              {errors.description && (
-                <Text style={styles.errorText}>
-                  {errors.description.message}
-                </Text>
-              )}
-            </View>
-
-            {/* Language Selection */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                {t("createWordlist.languageLabel")}{" "}
-                <Text style={styles.required}>*</Text>
-              </Text>
-              <Controller
-                control={control}
-                name="languageCode"
-                rules={{
-                  required: t("createWordlist.languageRequired"),
-                }}
-                render={({ field: { onChange, value } }) => (
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.languageScroll}
-                    accessibilityLabel="Select language for wordlist"
-                  >
-                    {LANGUAGES.map((lang) => (
-                      <TouchableOpacity
-                        key={lang.code}
-                        style={[
-                          styles.languageItem,
-                          value === lang.code && styles.languageItemSelected,
-                        ]}
-                        onPress={() => {
-                          onChange(lang.code);
-                        }}
-                        accessibilityRole="radio"
-                        accessibilityLabel={`Select ${t(`dashboard.languages.${lang.name.toLowerCase()}`)} language`}
-                        accessibilityState={{ selected: value === lang.code }}
-                      >
-                        <Text style={styles.languageFlag}>{lang.flag}</Text>
-                        <Text
-                          style={[
-                            styles.languageName,
-                            value === lang.code && styles.languageNameSelected,
-                          ]}
-                        >
-                          {t(`dashboard.languages.${lang.name.toLowerCase()}`)}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                )}
-              />
-              {errors.languageCode && (
-                <Text style={styles.errorText}>
-                  {errors.languageCode.message}
-                </Text>
-              )}
-            </View>
-
-            {/* Pronunciation System Selection */}
-            {pronunciationData?.canChange && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>
-                  {t("createWordlist.pronunciationLabel")}
-                </Text>
-                <Text style={styles.helpText}>
-                  {t("createWordlist.pronunciationHelp")}
-                </Text>
-                <Controller
-                  control={control}
-                  name="pronunciationSystem"
-                  rules={{
-                    validate: (value) => {
-                      // If pronunciation system selection is available and required
-                      if (pronunciationData?.canChange && !value) {
-                        return t("createWordlist.pronunciationRequired");
-                      }
-                      // If value is set, ensure it's supported
-                      if (
-                        value &&
-                        pronunciationData?.supportedSystems &&
-                        !pronunciationData.supportedSystems.includes(value)
-                      ) {
-                        return t("createWordlist.pronunciationNotSupported");
-                      }
-                      return true;
-                    },
-                  }}
-                  render={({ field: { onChange, value } }) => (
-                    <View>
-                      {isLoadingPronunciation ? (
-                        <View style={styles.loadingContainer}>
-                          <ActivityIndicator
-                            size="small"
-                            color={theme.colors.primary}
-                          />
-                        </View>
-                      ) : pronunciationError ? (
-                        <View style={styles.errorContainer}>
-                          <Text style={styles.errorText}>
-                            {t("createWordlist.pronunciationLoadError")}
-                          </Text>
-                          <Text style={styles.helpText}>
-                            {t("createWordlist.pronunciationDefaultWillBeUsed")}
-                          </Text>
-                        </View>
-                      ) : (
-                        <ScrollView
-                          horizontal
-                          showsHorizontalScrollIndicator={false}
-                          style={styles.languageScroll}
-                        >
-                          {pronunciationData?.supportedSystems.map((system) => (
-                            <TouchableOpacity
-                              key={system}
-                              style={[
-                                styles.pronunciationItem,
-                                value === system &&
-                                  styles.pronunciationItemSelected,
-                              ]}
-                              onPress={() => {
-                                onChange(system);
-                              }}
-                              accessibilityRole="radio"
-                              accessibilityLabel={`Select ${t(`pronunciationSystems.${system}`)} pronunciation system`}
-                              accessibilityState={{
-                                selected: value === system,
-                              }}
-                            >
-                              <Text
-                                style={[
-                                  styles.pronunciationName,
-                                  value === system &&
-                                    styles.pronunciationNameSelected,
-                                ]}
-                              >
-                                {t(`pronunciationSystems.${system}`)}
-                              </Text>
-                            </TouchableOpacity>
-                          ))}
-                        </ScrollView>
-                      )}
-                    </View>
-                  )}
+                <Ionicons
+                  name="arrow-forward"
+                  size={16}
+                  color={theme.colors.primary}
                 />
-                {errors.pronunciationSystem && (
-                  <Text style={styles.errorText}>
-                    {errors.pronunciationSystem.message}
-                  </Text>
-                )}
-              </View>
-            )}
+              </TouchableOpacity>
+            </Animated.View>
+          </TouchableOpacity>
 
-            {/* Submit Error */}
-            {mutation.error && (
-              <View style={styles.submitError}>
-                <Text style={styles.errorText}>
-                  {t("createWordlist.errorMessage")}
+          {/* Submit Error */}
+          {mutation.error && (
+            <View style={styles.submitError}>
+              <Text style={styles.errorText}>
+                {t("createWordlist.errorMessage")}
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Action Buttons */}
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={handleClose}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.cancel")}
+            accessibilityHint="Cancel wordlist creation and close dialog"
+          >
+            <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.createButton,
+              mutation.isPending && styles.buttonDisabled,
+            ]}
+            onPress={handleSubmit(handleFormSubmit)}
+            disabled={mutation.isPending}
+            accessibilityRole="button"
+            accessibilityLabel={
+              mutation.isPending
+                ? "Creating wordlist..."
+                : t("createWordlist.createButton")
+            }
+            accessibilityHint="Create the new wordlist with entered details"
+            accessibilityState={{ disabled: mutation.isPending }}
+          >
+            {mutation.isPending ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <>
+                <Text style={styles.createButtonText}>
+                  {t("createWordlist.createButton")}
                 </Text>
-              </View>
+                <Ionicons
+                  name="add-circle"
+                  size={20}
+                  color="#FFFFFF"
+                  style={styles.buttonIcon}
+                />
+              </>
             )}
-          </ScrollView>
-
-          {/* Action Buttons */}
-          <View style={styles.actions}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={onClose}
-              accessibilityRole="button"
-              accessibilityLabel={t("common.cancel")}
-              accessibilityHint="Cancel wordlist creation and close dialog"
-            >
-              <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.createButton,
-                mutation.isPending && styles.buttonDisabled,
-              ]}
-              onPress={handleSubmit(handleFormSubmit)}
-              disabled={mutation.isPending}
-              accessibilityRole="button"
-              accessibilityLabel={
-                mutation.isPending
-                  ? "Creating wordlist..."
-                  : t("createWordlist.createButton")
-              }
-              accessibilityHint="Create the new wordlist with entered details"
-              accessibilityState={{ disabled: mutation.isPending }}
-            >
-              {mutation.isPending ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <>
-                  <Text style={styles.createButtonText}>
-                    {t("createWordlist.createButton")}
-                  </Text>
-                  <Ionicons
-                    name="add-circle"
-                    size={20}
-                    color="#FFFFFF"
-                    style={styles.buttonIcon}
-                  />
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </KeyboardAvoidingView>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
 
       <ContentGuidelinesModal
         visible={showContentGuidelines}
@@ -546,10 +650,6 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
 
 const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: "flex-end",
-    },
     backdrop: {
       position: "absolute",
       top: 0,
@@ -563,12 +663,17 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       backgroundColor: theme.colors.background.surface,
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
+      height: SCREEN_HEIGHT * 0.9,
       maxHeight: SCREEN_HEIGHT * 0.9,
       shadowColor: theme.colors.text.primary,
       shadowOffset: { width: 0, height: -4 },
       shadowOpacity: 0.1,
       shadowRadius: 12,
       elevation: 8,
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
     },
     header: {
       paddingTop: 12,
@@ -617,7 +722,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     guidelinesHeader: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 8,
     },
     guidelinesTitle: {
       fontSize: 16,
@@ -626,10 +730,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       marginLeft: 8,
       flex: 1,
     },
+    expandIcon: {
+      marginLeft: 8,
+    },
     guidelinesText: {
       fontSize: 14,
       color: theme.colors.text.secondary,
       lineHeight: 20,
+      marginTop: 12,
       marginBottom: 12,
     },
     guidelinesLink: {
@@ -663,7 +771,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       paddingVertical: 14,
       fontSize: 16,
       color: theme.colors.text.primary,
-      backgroundColor: theme.colors.background.default,
+      backgroundColor: theme.colors.ui.inputBackground,
     },
     inputError: {
       borderColor: theme.colors.error,

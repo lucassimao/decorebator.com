@@ -439,6 +439,36 @@
     "contentGuidelinesText": "Please ensure your wordlist content is appropriate and follows our community guidelines.",
     "viewGuidelines": "View full guidelines"
   },
+  "contentGuidelines": {
+    "title": "Content Guidelines",
+    "description": "To ensure a positive learning experience for everyone, please follow these guidelines:",
+    "educational": {
+      "title": "Educational Content",
+      "description": "Focus on vocabulary that helps with language learning and practical use."
+    },
+    "familyFriendly": {
+      "title": "Family-Friendly",
+      "description": "Keep content appropriate for learners of all ages."
+    },
+    "noProfanity": {
+      "title": "No Profanity",
+      "description": "Avoid offensive language, slurs, or inappropriate content."
+    },
+    "noPersonalInfo": {
+      "title": "No Personal Information",
+      "description": "Don't include personal data, addresses, or contact information."
+    },
+    "respectful": {
+      "title": "Respectful Content",
+      "description": "Be culturally sensitive and avoid discriminatory content."
+    },
+    "legitimate": {
+      "title": "Legitimate Words",
+      "description": "Use real words from the target language, not made-up terms."
+    },
+    "footer": "Thank you for helping create a positive learning environment!",
+    "understand": "I Understand"
+  },
   "pronunciationSystems": {
     "ipa": "IPA",
     "romaji": "Romaji",

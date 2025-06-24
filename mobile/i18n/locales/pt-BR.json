@@ -430,6 +430,36 @@
     "contentGuidelinesText": "Por favor, certifique-se de que o conteúdo da sua lista de palavras seja apropriado e siga nossas diretrizes da comunidade.",
     "viewGuidelines": "Ver diretrizes completas"
   },
+  "contentGuidelines": {
+    "title": "Diretrizes de Conteúdo",
+    "description": "Para garantir uma experiência de aprendizado positiva para todos, siga estas diretrizes:",
+    "educational": {
+      "title": "Conteúdo Educacional",
+      "description": "Foque em vocabulário que ajude com o aprendizado de idiomas e uso prático."
+    },
+    "familyFriendly": {
+      "title": "Adequado para Famílias",
+      "description": "Mantenha o conteúdo apropriado para estudantes de todas as idades."
+    },
+    "noProfanity": {
+      "title": "Sem Palavrões",
+      "description": "Evite linguagem ofensiva, xingamentos ou conteúdo inadequado."
+    },
+    "noPersonalInfo": {
+      "title": "Sem Informações Pessoais",
+      "description": "Não inclua dados pessoais, endereços ou informações de contato."
+    },
+    "respectful": {
+      "title": "Conteúdo Respeitoso",
+      "description": "Seja culturalmente sensível e evite conteúdo discriminatório."
+    },
+    "legitimate": {
+      "title": "Palavras Legítimas",
+      "description": "Use palavras reais do idioma alvo, não termos inventados."
+    },
+    "footer": "Obrigado por ajudar a criar um ambiente de aprendizado positivo!",
+    "understand": "Eu Entendo"
+  },
   "pronunciationSystems": {
     "ipa": "IPA",
     "romaji": "Romaji",

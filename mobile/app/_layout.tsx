@@ -11,6 +11,23 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProvider } from "posthog-react-native";
 import { useEffect } from "react";
 import { I18nextProvider } from "react-i18next";
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'https://1905051f98d938186e63c776dec05a68@o4509430877257728.ingest.us.sentry.io/4509553206099968',
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // Configure Session Replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
 // Import offline test utility in development
 if (__DEV__) {
   import("@/utils/offlineTest");
@@ -26,7 +43,8 @@ export const unstable_settings = {
   initialRouteName: "index",
 };
 
-export default function RootLayout() {
+
+export default Sentry.wrap(function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     ...FontAwesome.font,
@@ -42,7 +60,7 @@ export default function RootLayout() {
   }
 
   return <RootLayoutNav />;
-}
+});
 
 const queryClient = new QueryClient();
 

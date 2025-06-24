@@ -114,7 +114,7 @@ const lightTheme: Theme = {
   mode: "light",
   colors: {
     background: {
-      default: "#FFFFFF", // Pure white for main background
+      default: "#FDF6E3", // Warm beige from web for main background
       surface: "#FFFFFF", // White for cards
       elevated: "#F8F9FA", // Very light gray for elevation
       subtle: "#F5F6F8", // Subtle gray for sections
@@ -143,7 +143,7 @@ const lightTheme: Theme = {
       border: "#E0E0E0",
       divider: "#F0F0F0",
       disabled: "#DFE6E9",
-      inputBackground: "#FAFAFA",
+      inputBackground: "#FFFFFF",
     },
     semantic: {
       info: "#2196F3",

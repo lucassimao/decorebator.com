@@ -24,9 +24,8 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
-
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface DashboardProps {}
 

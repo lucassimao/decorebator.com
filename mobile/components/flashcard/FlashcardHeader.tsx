@@ -33,13 +33,17 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
     <View>
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.closeButton}
+          style={styles.backButton}
           onPress={onClose}
           accessibilityRole="button"
-          accessibilityLabel="Close flashcards"
+          accessibilityLabel="Go back"
           accessibilityHint="Return to previous screen"
         >
-          <Ionicons name="close" size={28} color={theme.colors.text.primary} />
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={theme.colors.text.primary}
+          />
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
@@ -136,11 +140,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       paddingHorizontal: 16,
       paddingVertical: 12,
     },
-    closeButton: {
-      width: 44,
-      height: 44,
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.background.surface,
       justifyContent: "center",
       alignItems: "center",
+      ...theme.shadows.sm,
     },
     headerCenter: {
       flex: 1,
@@ -157,10 +164,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       marginTop: 2,
     },
     reportButton: {
-      width: 44,
-      height: 44,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.background.surface,
       justifyContent: "center",
       alignItems: "center",
+      ...theme.shadows.sm,
     },
     savePositionContainer: {
       flexDirection: "row",

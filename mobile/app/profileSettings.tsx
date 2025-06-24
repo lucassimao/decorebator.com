@@ -18,7 +18,6 @@ import {
   Alert,
   Dimensions,
   Image,
-  ImageBackground,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -298,512 +297,531 @@ const ProfileSettingsScreen: React.FC = () => {
   const profilePictureUri = tempProfilePicture || profile?.profilePictureUrl;
 
   return (
-    <ImageBackground
-      source={require("@/assets/images/dashboard-bg.png")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <SafeAreaView style={styles.container}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Header */}
-            <View style={styles.header}>
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}
-              >
-                <Ionicons
-                  name="arrow-back"
-                  size={24}
-                  color={theme.colors.text.primary}
-                />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle}>{t("profile.title")}</Text>
-              <View style={{ width: 40 }} />
-            </View>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={24}
+                color={theme.colors.text.primary}
+              />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{t("profile.title")}</Text>
+            <View style={{ width: 40 }} />
+          </View>
 
-            {/* Profile Picture */}
-            <View style={styles.profilePictureSection}>
-              <TouchableOpacity
-                style={styles.profilePictureContainer}
-                onPress={handleProfilePicturePress}
-                disabled={uploadPictureMutation.isPending}
-              >
-                {uploadPictureMutation.isPending ? (
-                  <View style={styles.uploadingOverlay}>
-                    <ActivityIndicator size="large" color="#FFFFFF" />
+          {/* Profile Picture */}
+          <View style={styles.profilePictureSection}>
+            <TouchableOpacity
+              style={styles.profilePictureContainer}
+              onPress={handleProfilePicturePress}
+              disabled={uploadPictureMutation.isPending}
+            >
+              {uploadPictureMutation.isPending ? (
+                <View style={styles.uploadingOverlay}>
+                  <ActivityIndicator
+                    size="large"
+                    color={theme.colors.text.inverse}
+                  />
+                </View>
+              ) : (
+                <>
+                  <Image
+                    source={{
+                      uri:
+                        profilePictureUri || "https://via.placeholder.com/150",
+                    }}
+                    style={styles.profilePicture}
+                  />
+                  <View style={styles.editBadge}>
+                    <MaterialIcons
+                      name="camera-alt"
+                      size={20}
+                      color={theme.colors.text.inverse}
+                    />
                   </View>
-                ) : (
-                  <>
-                    <Image
-                      source={{
-                        uri:
-                          profilePictureUri ||
-                          "https://via.placeholder.com/150",
-                      }}
-                      style={styles.profilePicture}
-                    />
-                    <View style={styles.editBadge}>
-                      <MaterialIcons
-                        name="camera-alt"
-                        size={20}
-                        color="#FFFFFF"
-                      />
-                    </View>
-                  </>
+                </>
+              )}
+            </TouchableOpacity>
+            <Text style={styles.emailText}>{profile?.email}</Text>
+          </View>
+
+          {/* Form Section */}
+          <View style={styles.formSection}>
+            {/* First Name */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>{t("profile.firstName")}</Text>
+              <Controller
+                control={control}
+                name="firstName"
+                rules={{
+                  required: t("errors.fieldRequired"),
+                  minLength: { value: 2, message: t("errors.fieldRequired") },
+                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      errors.firstName && styles.inputError,
+                    ]}
+                    placeholder={t("profile.firstNamePlaceholder")}
+                    placeholderTextColor={theme.colors.text.placeholder}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="words"
+                  />
                 )}
-              </TouchableOpacity>
-              <Text style={styles.emailText}>{profile?.email}</Text>
-            </View>
-
-            {/* Form Section */}
-            <View style={styles.formSection}>
-              {/* First Name */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>{t("profile.firstName")}</Text>
-                <Controller
-                  control={control}
-                  name="firstName"
-                  rules={{
-                    required: t("errors.fieldRequired"),
-                    minLength: { value: 2, message: t("errors.fieldRequired") },
-                  }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      style={[
-                        styles.input,
-                        errors.firstName && styles.inputError,
-                      ]}
-                      placeholder={t("profile.firstNamePlaceholder")}
-                      placeholderTextColor={theme.colors.text.placeholder}
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      autoCapitalize="words"
-                    />
-                  )}
-                />
-                {errors.firstName && (
-                  <Text style={styles.errorText}>
-                    {errors.firstName.message}
-                  </Text>
-                )}
-              </View>
-
-              {/* Last Name */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>{t("profile.lastName")}</Text>
-                <Controller
-                  control={control}
-                  name="lastName"
-                  rules={{
-                    required: t("errors.fieldRequired"),
-                    minLength: { value: 2, message: t("errors.fieldRequired") },
-                  }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      style={[
-                        styles.input,
-                        errors.lastName && styles.inputError,
-                      ]}
-                      placeholder={t("profile.lastNamePlaceholder")}
-                      placeholderTextColor={theme.colors.text.placeholder}
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      autoCapitalize="words"
-                    />
-                  )}
-                />
-                {errors.lastName && (
-                  <Text style={styles.errorText}>
-                    {errors.lastName.message}
-                  </Text>
-                )}
-              </View>
-
-              {/* Country */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  {t("profile.country")} ({t("profile.optional")})
-                </Text>
-                <Controller
-                  control={control}
-                  name="country"
-                  render={({ field: { value } }) => (
-                    <TouchableOpacity
-                      style={styles.input}
-                      onPress={() => setShowCountryPicker(true)}
-                    >
-                      <Text
-                        style={[
-                          styles.inputText,
-                          !value && styles.placeholderText,
-                        ]}
-                      >
-                        {value
-                          ? getCountryName(value)
-                          : t("profile.selectCountry")}
-                      </Text>
-                      <Ionicons
-                        name="chevron-down"
-                        size={20}
-                        color={theme.colors.text.secondary}
-                      />
-                    </TouchableOpacity>
-                  )}
-                />
-              </View>
-
-              {/* Language Preference */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  {t("settings.preferences.language")}
-                </Text>
-                <Controller
-                  control={control}
-                  name="preferredLanguage"
-                  render={({ field: { value } }) => (
-                    <TouchableOpacity
-                      style={styles.input}
-                      onPress={() => setShowLanguagePicker(true)}
-                    >
-                      <Text
-                        style={[
-                          styles.inputText,
-                          !value && styles.placeholderText,
-                        ]}
-                      >
-                        {value
-                          ? supportedLanguages.find(
-                              (lang) => lang.code === value,
-                            )?.nativeName || value
-                          : t("dashboard.wordlists.selectLanguage")}
-                      </Text>
-                      <Ionicons
-                        name="chevron-down"
-                        size={20}
-                        color={theme.colors.text.secondary}
-                      />
-                    </TouchableOpacity>
-                  )}
-                />
-              </View>
-
-              {/* Date of Birth */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  {t("profile.dateOfBirth")}
-                </Text>
-                <Controller
-                  control={control}
-                  name="dateOfBirth"
-                  render={({ field: { value } }) => (
-                    <TouchableOpacity
-                      style={styles.input}
-                      onPress={() => setShowDatePicker(true)}
-                    >
-                      <Text
-                        style={[
-                          styles.inputText,
-                          !value && styles.placeholderText,
-                        ]}
-                      >
-                        {value ? formatDate(value) : t("profile.dateOfBirth")}
-                      </Text>
-                      <Ionicons
-                        name="calendar-outline"
-                        size={20}
-                        color={theme.colors.text.secondary}
-                      />
-                    </TouchableOpacity>
-                  )}
-                />
-              </View>
-
-              {/* Save Button */}
-              {isDirty && (
-                <TouchableOpacity
-                  style={[
-                    styles.saveButton,
-                    updateMutation.isPending && styles.buttonDisabled,
-                  ]}
-                  onPress={handleSubmit(handleSubmitProfile)}
-                  disabled={updateMutation.isPending}
-                >
-                  {updateMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.saveButtonText}>
-                      {t("profile.saveChanges")}
-                    </Text>
-                  )}
-                </TouchableOpacity>
+              />
+              {errors.firstName && (
+                <Text style={styles.errorText}>{errors.firstName.message}</Text>
               )}
             </View>
 
-            {/* Account Actions */}
-            <View style={styles.actionsSection}>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={handleChangePassword}
-              >
-                <MaterialIcons name="lock-outline" size={24} color="#636E72" />
-                <Text style={styles.actionText}>
-                  {t("profile.changePassword.title")}
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color="#636E72" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={async () => {
-                  await WebBrowser.openBrowserAsync(
-                    `https://decorebator.com/${i18n.language}/privacy`,
-                  );
+            {/* Last Name */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>{t("profile.lastName")}</Text>
+              <Controller
+                control={control}
+                name="lastName"
+                rules={{
+                  required: t("errors.fieldRequired"),
+                  minLength: { value: 2, message: t("errors.fieldRequired") },
                 }}
-              >
-                <MaterialIcons name="privacy-tip" size={24} color="#636E72" />
-                <Text style={styles.actionText}>
-                  {t("settings.privacyPolicy")}
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color="#636E72" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => {
-                  Alert.alert(
-                    t("profile.dataExport.title"),
-                    t("profile.dataExport.message"),
-                    [
-                      { text: t("common.cancel"), style: "cancel" },
-                      {
-                        text: t("profile.dataExport.requestButton"),
-                        onPress: async () => {
-                          const isAvailable =
-                            await MailComposer.isAvailableAsync();
-                          if (!isAvailable) {
-                            Alert.alert(t("settings.noEmailClient"));
-                            return;
-                          }
-                          MailComposer.composeAsync({
-                            recipients: ["privacy@decorebator.com"],
-                            subject: t("profile.dataExport.emailSubject"),
-                            body: t("profile.dataExport.emailBody", {
-                              email: profile?.email,
-                            }),
-                          });
-                        },
-                      },
-                    ],
-                  );
-                }}
-              >
-                <MaterialIcons name="download" size={24} color="#636E72" />
-                <Text style={styles.actionText}>
-                  {t("profile.dataExport.title")}
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color="#636E72" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionButton, styles.deleteButton]}
-                onPress={handleDeleteAccount}
-              >
-                <MaterialIcons
-                  name="delete-outline"
-                  size={24}
-                  color="#FF6B6B"
-                />
-                <Text style={[styles.actionText, { color: "#FF6B6B" }]}>
-                  {t("settings.account.deleteAccount")}
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color="#FF6B6B" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Member Since */}
-            <View style={styles.memberInfo}>
-              <Text style={styles.memberText}>
-                {t("profile.memberSince", {
-                  date: new Date(profile?.createdAt || "").toLocaleDateString(
-                    i18n.language.startsWith("en") ? "en-US" : i18n.language,
-                    { year: "numeric", month: "long" },
-                  ),
-                })}
-              </Text>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-
-        {/* Date Picker Modal for iOS */}
-        {showDatePicker && Platform.OS === "ios" && (
-          <Modal
-            transparent
-            visible={showDatePicker}
-            animationType="slide"
-            onRequestClose={() => setShowDatePicker(false)}
-          >
-            <View style={styles.datePickerModal}>
-              <TouchableOpacity
-                style={styles.datePickerBackdrop}
-                onPress={() => setShowDatePicker(false)}
-                activeOpacity={1}
-              />
-              <View style={styles.datePickerContent}>
-                <View style={styles.datePickerHeader}>
-                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                    <Text style={styles.datePickerCancel}>
-                      {t("common.cancel")}
-                    </Text>
-                  </TouchableOpacity>
-                  <Text style={styles.datePickerTitle}>
-                    {t("profile.dateOfBirth")}
-                  </Text>
-                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                    <Text style={styles.datePickerDone}>
-                      {t("common.done")}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.datePickerWrapper}>
-                  <DateTimePicker
-                    value={
-                      watchedDateOfBirth
-                        ? new Date(watchedDateOfBirth)
-                        : new Date()
-                    }
-                    mode="date"
-                    display="spinner"
-                    maximumDate={new Date()}
-                    onChange={(event, selectedDate) => {
-                      if (selectedDate) {
-                        setValue(
-                          "dateOfBirth",
-                          selectedDate.toISOString().split("T")[0],
-                          { shouldDirty: true },
-                        );
-                      }
-                    }}
-                    style={styles.datePicker}
-                    textColor="#000000" // Ensure text is visible
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, errors.lastName && styles.inputError]}
+                    placeholder={t("profile.lastNamePlaceholder")}
+                    placeholderTextColor={theme.colors.text.placeholder}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="words"
                   />
-                </View>
-              </View>
+                )}
+              />
+              {errors.lastName && (
+                <Text style={styles.errorText}>{errors.lastName.message}</Text>
+              )}
             </View>
-          </Modal>
-        )}
-        {/* Android DatePicker */}
-        {showDatePicker && Platform.OS === "android" && (
-          <DateTimePicker
-            value={
-              watchedDateOfBirth ? new Date(watchedDateOfBirth) : new Date()
-            }
-            mode="date"
-            display="default"
-            maximumDate={new Date()}
-            onChange={(event, selectedDate) => {
-              setShowDatePicker(false);
-              if (event.type === "set" && selectedDate) {
-                setValue(
-                  "dateOfBirth",
-                  selectedDate.toISOString().split("T")[0],
-                  { shouldDirty: true },
-                );
-              }
-            }}
-          />
-        )}
-        {/* Country Picker Modal */}
-        {showCountryPicker && (
-          <View style={styles.modalOverlay}>
-            <TouchableOpacity
-              style={styles.modalBackdrop}
-              onPress={() => setShowCountryPicker(false)}
-            />
-            <View style={styles.countryPickerModal}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                  {t("profile.selectCountry")}
-                </Text>
-                <TouchableOpacity onPress={() => setShowCountryPicker(false)}>
-                  <Ionicons name="close" size={24} color="#636E72" />
-                </TouchableOpacity>
-              </View>
-              <ScrollView style={styles.countryList}>
-                {COUNTRIES.map((country) => (
-                  <TouchableOpacity
-                    key={country.code}
-                    style={styles.countryItem}
-                    onPress={() => {
-                      setValue("country", country.code, { shouldDirty: true });
-                      setShowCountryPicker(false);
-                    }}
-                  >
-                    <Text style={styles.countryFlag}>{country.flag}</Text>
-                    <Text style={styles.countryName}>{country.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          </View>
-        )}
 
-        {/* Language Picker Modal */}
-        {showLanguagePicker && (
-          <View style={styles.modalOverlay}>
-            <TouchableOpacity
-              style={styles.modalBackdrop}
-              onPress={() => setShowLanguagePicker(false)}
-            />
-            <View style={styles.countryPickerModal}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                  {t("settings.preferences.language")}
-                </Text>
-                <TouchableOpacity onPress={() => setShowLanguagePicker(false)}>
-                  <Ionicons name="close" size={24} color="#636E72" />
-                </TouchableOpacity>
-              </View>
-              <ScrollView style={styles.countryList}>
-                {supportedLanguages.map((language) => (
+            {/* Country */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                {t("profile.country")} ({t("profile.optional")})
+              </Text>
+              <Controller
+                control={control}
+                name="country"
+                render={({ field: { value } }) => (
                   <TouchableOpacity
-                    key={language.code}
-                    style={styles.countryItem}
-                    onPress={() => {
-                      setValue("preferredLanguage", language.code, {
-                        shouldDirty: true,
-                      });
-                      setShowLanguagePicker(false);
-                    }}
+                    style={styles.input}
+                    onPress={() => setShowCountryPicker(true)}
                   >
-                    <Text style={styles.countryName}>
-                      {language.nativeName}
+                    <Text
+                      style={[
+                        styles.inputText,
+                        !value && styles.placeholderText,
+                      ]}
+                    >
+                      {value
+                        ? getCountryName(value)
+                        : t("profile.selectCountry")}
                     </Text>
-                    <Text style={styles.languageCode}>({language.name})</Text>
+                    <Ionicons
+                      name="chevron-down"
+                      size={20}
+                      color={theme.colors.text.secondary}
+                    />
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
+                )}
+              />
+            </View>
+
+            {/* Language Preference */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                {t("settings.preferences.language")}
+              </Text>
+              <Controller
+                control={control}
+                name="preferredLanguage"
+                render={({ field: { value } }) => (
+                  <TouchableOpacity
+                    style={styles.input}
+                    onPress={() => setShowLanguagePicker(true)}
+                  >
+                    <Text
+                      style={[
+                        styles.inputText,
+                        !value && styles.placeholderText,
+                      ]}
+                    >
+                      {value
+                        ? supportedLanguages.find((lang) => lang.code === value)
+                            ?.nativeName || value
+                        : t("dashboard.wordlists.selectLanguage")}
+                    </Text>
+                    <Ionicons
+                      name="chevron-down"
+                      size={20}
+                      color={theme.colors.text.secondary}
+                    />
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+
+            {/* Date of Birth */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>{t("profile.dateOfBirth")}</Text>
+              <Controller
+                control={control}
+                name="dateOfBirth"
+                render={({ field: { value } }) => (
+                  <TouchableOpacity
+                    style={styles.input}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <Text
+                      style={[
+                        styles.inputText,
+                        !value && styles.placeholderText,
+                      ]}
+                    >
+                      {value ? formatDate(value) : t("profile.dateOfBirth")}
+                    </Text>
+                    <Ionicons
+                      name="calendar-outline"
+                      size={20}
+                      color={theme.colors.text.secondary}
+                    />
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+
+            {/* Save Button */}
+            {isDirty && (
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  updateMutation.isPending && styles.buttonDisabled,
+                ]}
+                onPress={handleSubmit(handleSubmitProfile)}
+                disabled={updateMutation.isPending}
+              >
+                {updateMutation.isPending ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.text.inverse}
+                  />
+                ) : (
+                  <Text style={styles.saveButtonText}>
+                    {t("profile.saveChanges")}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Account Actions */}
+          <View style={styles.actionsSection}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleChangePassword}
+            >
+              <MaterialIcons
+                name="lock-outline"
+                size={24}
+                color={theme.colors.text.secondary}
+              />
+              <Text style={styles.actionText}>
+                {t("profile.changePassword.title")}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.text.secondary}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={async () => {
+                await WebBrowser.openBrowserAsync(
+                  `https://decorebator.com/${i18n.language}/privacy`,
+                );
+              }}
+            >
+              <MaterialIcons
+                name="privacy-tip"
+                size={24}
+                color={theme.colors.text.secondary}
+              />
+              <Text style={styles.actionText}>
+                {t("settings.privacyPolicy")}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.text.secondary}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                Alert.alert(
+                  t("profile.dataExport.title"),
+                  t("profile.dataExport.message"),
+                  [
+                    { text: t("common.cancel"), style: "cancel" },
+                    {
+                      text: t("profile.dataExport.requestButton"),
+                      onPress: async () => {
+                        const isAvailable =
+                          await MailComposer.isAvailableAsync();
+                        if (!isAvailable) {
+                          Alert.alert(t("settings.noEmailClient"));
+                          return;
+                        }
+                        MailComposer.composeAsync({
+                          recipients: ["privacy@decorebator.com"],
+                          subject: t("profile.dataExport.emailSubject"),
+                          body: t("profile.dataExport.emailBody", {
+                            email: profile?.email,
+                          }),
+                        });
+                      },
+                    },
+                  ],
+                );
+              }}
+            >
+              <MaterialIcons
+                name="download"
+                size={24}
+                color={theme.colors.text.secondary}
+              />
+              <Text style={styles.actionText}>
+                {t("profile.dataExport.title")}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.text.secondary}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionButton, styles.deleteButton]}
+              onPress={handleDeleteAccount}
+            >
+              <MaterialIcons
+                name="delete-outline"
+                size={24}
+                color={theme.colors.error}
+              />
+              <Text style={[styles.actionText, { color: theme.colors.error }]}>
+                {t("settings.account.deleteAccount")}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.error}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Member Since */}
+          <View style={styles.memberInfo}>
+            <Text style={styles.memberText}>
+              {t("profile.memberSince", {
+                date: new Date(profile?.createdAt || "").toLocaleDateString(
+                  i18n.language.startsWith("en") ? "en-US" : i18n.language,
+                  { year: "numeric", month: "long" },
+                ),
+              })}
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* Date Picker Modal for iOS */}
+      {showDatePicker && Platform.OS === "ios" && (
+        <Modal
+          transparent
+          visible={showDatePicker}
+          animationType="slide"
+          onRequestClose={() => setShowDatePicker(false)}
+        >
+          <View style={styles.datePickerModal}>
+            <TouchableOpacity
+              style={styles.datePickerBackdrop}
+              onPress={() => setShowDatePicker(false)}
+              activeOpacity={1}
+            />
+            <View style={styles.datePickerContent}>
+              <View style={styles.datePickerHeader}>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Text style={styles.datePickerCancel}>
+                    {t("common.cancel")}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={styles.datePickerTitle}>
+                  {t("profile.dateOfBirth")}
+                </Text>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Text style={styles.datePickerDone}>{t("common.done")}</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.datePickerWrapper}>
+                <DateTimePicker
+                  value={
+                    watchedDateOfBirth
+                      ? new Date(watchedDateOfBirth)
+                      : new Date()
+                  }
+                  mode="date"
+                  display="spinner"
+                  maximumDate={new Date()}
+                  onChange={(event, selectedDate) => {
+                    if (selectedDate) {
+                      setValue(
+                        "dateOfBirth",
+                        selectedDate.toISOString().split("T")[0],
+                        { shouldDirty: true },
+                      );
+                    }
+                  }}
+                  style={styles.datePicker}
+                  textColor={theme.colors.text.primary}
+                />
+              </View>
             </View>
           </View>
-        )}
-
-        {showChangePasswordModal && (
-          <ChangePasswordModal
-            visible
-            onClose={() => setShowChangePasswordModal(false)}
+        </Modal>
+      )}
+      {/* Android DatePicker */}
+      {showDatePicker && Platform.OS === "android" && (
+        <DateTimePicker
+          value={watchedDateOfBirth ? new Date(watchedDateOfBirth) : new Date()}
+          mode="date"
+          display="default"
+          maximumDate={new Date()}
+          onChange={(event, selectedDate) => {
+            setShowDatePicker(false);
+            if (event.type === "set" && selectedDate) {
+              setValue(
+                "dateOfBirth",
+                selectedDate.toISOString().split("T")[0],
+                { shouldDirty: true },
+              );
+            }
+          }}
+        />
+      )}
+      {/* Country Picker Modal */}
+      {showCountryPicker && (
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            onPress={() => setShowCountryPicker(false)}
           />
-        )}
-      </SafeAreaView>
-    </ImageBackground>
+          <View style={styles.countryPickerModal}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {t("profile.selectCountry")}
+              </Text>
+              <TouchableOpacity onPress={() => setShowCountryPicker(false)}>
+                <Ionicons
+                  name="close"
+                  size={24}
+                  color={theme.colors.text.secondary}
+                />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.countryList}>
+              {COUNTRIES.map((country) => (
+                <TouchableOpacity
+                  key={country.code}
+                  style={styles.countryItem}
+                  onPress={() => {
+                    setValue("country", country.code, { shouldDirty: true });
+                    setShowCountryPicker(false);
+                  }}
+                >
+                  <Text style={styles.countryFlag}>{country.flag}</Text>
+                  <Text style={styles.countryName}>{country.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      )}
+
+      {/* Language Picker Modal */}
+      {showLanguagePicker && (
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            onPress={() => setShowLanguagePicker(false)}
+          />
+          <View style={styles.countryPickerModal}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {t("settings.preferences.language")}
+              </Text>
+              <TouchableOpacity onPress={() => setShowLanguagePicker(false)}>
+                <Ionicons
+                  name="close"
+                  size={24}
+                  color={theme.colors.text.secondary}
+                />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.countryList}>
+              {supportedLanguages.map((language) => (
+                <TouchableOpacity
+                  key={language.code}
+                  style={styles.countryItem}
+                  onPress={() => {
+                    setValue("preferredLanguage", language.code, {
+                      shouldDirty: true,
+                    });
+                    setShowLanguagePicker(false);
+                  }}
+                >
+                  <Text style={styles.countryName}>{language.nativeName}</Text>
+                  <Text style={styles.languageCode}>({language.name})</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      )}
+
+      {showChangePasswordModal && (
+        <ChangePasswordModal
+          visible
+          onClose={() => setShowChangePasswordModal(false)}
+        />
+      )}
+    </SafeAreaView>
   );
 };
 
@@ -811,12 +829,9 @@ export default ProfileSettingsScreen;
 
 const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
   StyleSheet.create({
-    backgroundImage: {
-      flex: 1,
-      width: SCREEN_WIDTH,
-    },
     container: {
       flex: 1,
+      backgroundColor: theme.colors.background.default,
     },
     loadingContainer: {
       flex: 1,
@@ -865,7 +880,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       width: 120,
       height: 120,
       borderRadius: 60,
-      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      backgroundColor: theme.colors.overlay.backdropHeavy,
       justifyContent: "center",
       alignItems: "center",
     },
@@ -900,7 +915,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       marginBottom: 8,
     },
     input: {
-      backgroundColor: theme.colors.background.surface,
+      backgroundColor: theme.colors.ui.inputBackground,
       borderRadius: 12,
       paddingHorizontal: 16,
       paddingVertical: 14,
@@ -986,7 +1001,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      backgroundColor: theme.colors.overlay.backdropHeavy,
       justifyContent: "flex-end",
     },
     modalBackdrop: {
@@ -1045,7 +1060,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     datePickerModal: {
       flex: 1,
       justifyContent: "flex-end",
-      backgroundColor: "rgba(0, 0, 0, 0.3)", // Move backdrop color here
+      backgroundColor: theme.colors.overlay.backdropLight,
     },
     datePickerBackdrop: {
       flex: 1,
@@ -1055,11 +1070,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
       paddingBottom: Platform.OS === "ios" ? 34 : 20, // Account for safe area
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: -2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 5,
+      ...theme.shadows.md,
     },
     datePickerHeader: {
       flexDirection: "row",

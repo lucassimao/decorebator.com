@@ -302,7 +302,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       borderWidth: 1,
       borderColor:
         theme.mode === "light"
-          ? theme.colors.ui.border
+          ? "rgba(253, 246, 227, 0.5)" // Subtle web beige border
           : theme.colors.ui.divider,
       ...theme.shadows.md,
       // Extra elevation for contrast with subtle orange shadow
@@ -448,7 +448,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       borderRadius: 24,
       backgroundColor:
         theme.mode === "light"
-          ? "rgba(255, 123, 84, 0.08)"
+          ? "rgba(253, 246, 227, 0.4)" // Web beige background
           : theme.colors.background.subtle,
       borderWidth: 1,
       borderColor:

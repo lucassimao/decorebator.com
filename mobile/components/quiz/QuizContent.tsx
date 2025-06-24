@@ -749,7 +749,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       width: "100%",
     },
     writeInput: {
-      backgroundColor: theme.colors.background.surface,
+      backgroundColor: theme.colors.ui.inputBackground,
       borderWidth: 2,
       borderColor: theme.colors.ui.border,
       borderRadius: 12,

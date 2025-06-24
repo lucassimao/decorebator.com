@@ -430,6 +430,36 @@
     "contentGuidelinesText": "単語リストの内容が適切で、コミュニティガイドラインに従っていることを確認してください。",
     "viewGuidelines": "完全なガイドラインを表示"
   },
+  "contentGuidelines": {
+    "title": "コンテンツガイドライン",
+    "description": "すべての人に前向きな学習体験を提供するため、これらのガイドラインに従ってください：",
+    "educational": {
+      "title": "教育的コンテンツ",
+      "description": "語学学習と実用的な使用に役立つ語彙に焦点を当ててください。"
+    },
+    "familyFriendly": {
+      "title": "家族向け",
+      "description": "あらゆる年齢の学習者に適したコンテンツを保持してください。"
+    },
+    "noProfanity": {
+      "title": "冒涜的な言葉の禁止",
+      "description": "攻撃的な言語、侮辱、不適切なコンテンツを避けてください。"
+    },
+    "noPersonalInfo": {
+      "title": "個人情報の禁止",
+      "description": "個人データ、住所、連絡先情報を含めないでください。"
+    },
+    "respectful": {
+      "title": "敬意あるコンテンツ",
+      "description": "文化的に配慮し、差別的なコンテンツを避けてください。"
+    },
+    "legitimate": {
+      "title": "正当な単語",
+      "description": "作り物の用語ではなく、対象言語の実際の単語を使用してください。"
+    },
+    "footer": "前向きな学習環境の構築にご協力いただき、ありがとうございます！",
+    "understand": "理解しました"
+  },
   "pronunciationSystems": {
     "ipa": "IPA",
     "romaji": "ローマ字",

@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import { DEFAULT_ERROR } from "./constants";
 import { decode } from "./jwt";
 import offlineManager from "@/utils/offlineManager";
+import { setUserContext, clearUserContext } from "@/utils/sentry";
 
 export type UserProfile = {
   id: number;
@@ -87,6 +88,9 @@ export async function sigout() {
   } catch (error) {
     console.error("Error clearing offline cache:", error);
   }
+
+  // Clear Sentry user context
+  clearUserContext();
 
   if (Platform.OS === "web") {
     localStorage.removeItem("authorization");
@@ -243,6 +247,12 @@ function saveAuthorization(authorization: string) {
       decoded.payload.subscriptionPlan === "monthly" ||
       decoded.payload.subscriptionPlan === "annual";
     offlineManager.setUserPremiumStatus(isPremium);
+
+    // Set Sentry user context
+    setUserContext({
+      id: decoded.payload.sub.toString(),
+      email: decoded.payload.email,
+    });
   } catch (error) {
     console.error("Error updating offline manager:", error);
   }

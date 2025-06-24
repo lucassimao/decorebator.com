@@ -23,7 +23,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTheme } from "@/contexts/ThemeContext";
+import { authLightTheme } from "@/theme/authTheme";
+import type { Theme } from "@/contexts/ThemeContext";
+import * as Sentry from "@sentry/react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -36,7 +38,8 @@ const LoginScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { t } = useTranslation();
   const posthog = usePostHog();
-  const { theme } = useTheme();
+  // Always use light theme for auth screens
+  const theme = authLightTheme;
   const styles = createStyles(theme);
 
   const {
@@ -58,6 +61,11 @@ const LoginScreen: React.FC = () => {
       posthog.capture("user_signed_in", {
         email: variables.email,
       });
+      Sentry.setUser({
+        // id: variables.id,
+        email: variables.email,
+        // username: variables.name,
+      });      
       router.replace("/dashboard");
     },
     onError: (error: Error) => {
@@ -307,7 +315,7 @@ const LoginScreen: React.FC = () => {
 };
 
 export default LoginScreen;
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (theme: Theme) =>
   StyleSheet.create({
     backgroundImage: {
       flex: 1,
@@ -392,7 +400,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.colors.text.primary,
     },
     input: {
-      backgroundColor: theme.colors.background.default,
+      backgroundColor: theme.colors.ui.inputBackground,
       borderWidth: 1,
       borderColor: theme.colors.ui.border,
       borderRadius: 12,

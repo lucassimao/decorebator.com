@@ -67,10 +67,11 @@ export const Header = () => {
         <TouchableOpacity
           style={styles.settingsButton}
           onPress={handleSettingsPress}
+          activeOpacity={0.7}
         >
           <Ionicons
             name="settings-outline"
-            size={24}
+            size={26}
             color={theme.colors.text.primary}
           />
         </TouchableOpacity>
@@ -78,6 +79,7 @@ export const Header = () => {
         <TouchableOpacity
           style={styles.profileButton}
           onPress={handleProfilePress}
+          activeOpacity={0.7}
         >
           <View style={styles.avatarContainer}>
             {profilePicture ? (
@@ -118,21 +120,29 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       paddingHorizontal: 20,
     },
     settingsButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: theme.colors.background.surface,
       justifyContent: "center",
       alignItems: "center",
-      ...theme.shadows.sm,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      ...theme.shadows.md,
+      shadowColor: theme.colors.text.primary,
+      shadowOpacity: theme.mode === "light" ? 0.08 : 0.2,
     },
     profileButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       overflow: "hidden",
       backgroundColor: theme.colors.background.surface,
-      ...theme.shadows.sm,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      ...theme.shadows.md,
+      shadowColor: theme.colors.text.primary,
+      shadowOpacity: theme.mode === "light" ? 0.08 : 0.2,
     },
     avatarContainer: {
       width: "100%",
@@ -141,7 +151,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     profileImage: {
       width: "100%",
       height: "100%",
-      borderRadius: 20,
+      borderRadius: 22,
     },
     avatarPlaceholder: {
       width: "100%",
@@ -149,7 +159,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       backgroundColor: theme.colors.primary,
       justifyContent: "center",
       alignItems: "center",
-      borderRadius: 20,
+      borderRadius: 22,
     },
     avatarText: {
       fontSize: 18,

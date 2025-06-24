@@ -26,6 +26,8 @@ import {
   View,
 } from "react-native";
 import z from "zod";
+import { authLightTheme } from "@/theme/authTheme";
+import type { Theme } from "@/contexts/ThemeContext";
 
 const schema = z
   .object({
@@ -61,6 +63,9 @@ export default function SignUpScreen() {
   const snackbar = useSnackbar();
   const { t } = useTranslation();
   const posthog = usePostHog();
+  // Always use light theme for auth screens
+  const theme = authLightTheme;
+  const styles = createStyles(theme);
 
   const scrollViewRef = React.useRef<ScrollView>(null);
 
@@ -296,7 +301,11 @@ export default function SignUpScreen() {
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View style={styles.inputGroup}>
                     <View style={styles.inputLabelRow}>
-                      <MaterialIcons name="lock" size={20} color="#636E72" />
+                      <MaterialIcons
+                        name="lock"
+                        size={20}
+                        color={theme.colors.text.secondary}
+                      />
                       <Text style={styles.inputLabel}>Password</Text>
                     </View>
                     <View style={styles.passwordContainer}>
@@ -315,7 +324,7 @@ export default function SignUpScreen() {
                           errors.password && styles.inputError,
                         ]}
                         placeholder={t("auth.signup.passwordPlaceholder")}
-                        placeholderTextColor="#B2BEC3"
+                        placeholderTextColor={theme.colors.text.placeholder}
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
@@ -329,7 +338,7 @@ export default function SignUpScreen() {
                         <Ionicons
                           name={secureTextEntry ? "eye" : "eye-off"}
                           size={20}
-                          color="#636E72"
+                          color={theme.colors.text.secondary}
                         />
                       </TouchableOpacity>
                     </View>
@@ -355,7 +364,11 @@ export default function SignUpScreen() {
                       style={[styles.checkbox, value && styles.checkboxChecked]}
                     >
                       {value && (
-                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                        <Ionicons
+                          name="checkmark"
+                          size={16}
+                          color={theme.colors.text.inverse}
+                        />
                       )}
                     </View>
                     <Text style={styles.termsText}>
@@ -415,175 +428,169 @@ export default function SignUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FDF6E3", // Updated to match your color scheme
-  },
-  imageViewport: {
-    width: "100%",
-    overflow: "hidden",
-  },
-  illustration: {
-    width: "100%",
-  },
-  content: {
-    // paddingHorizontal: 24,
-    // paddingBottom: 24,
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background.default,
+    },
+    imageViewport: {
+      width: "100%",
+      overflow: "hidden",
+    },
+    illustration: {
+      width: "100%",
+    },
+    content: {
+      // paddingHorizontal: 24,
+      // paddingBottom: 24,
 
-    paddingHorizontal: 24,
-    paddingBottom: 100, // Increase this to ensure space at bottom
-  },
-  formCard: {
-    backgroundColor: "white",
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#2D3436",
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  inputGroup: {
-    marginBottom: 10,
-  },
-  inputLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-    gap: 6,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#2D3436",
-  },
-  input: {
-    backgroundColor: "#FAFAFA",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: "#2D3436",
-  },
-  inputError: {
-    borderColor: "#FF6B6B",
-    backgroundColor: "#FFF5F5",
-  },
-  passwordContainer: {
-    position: "relative",
-  },
-  passwordInput: {
-    paddingRight: 48,
-  },
-  passwordToggle: {
-    position: "absolute",
-    right: 16,
-    top: "50%",
-    transform: [{ translateY: -10 }],
-  },
-  row: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  inputHalf: {
-    flex: 1,
-  },
-  errorRow: {
-    flexDirection: "row",
-    marginTop: -6,
-    marginBottom: 6,
-  },
-  errorColumn: {
-    flex: 1,
-    paddingHorizontal: 4,
-  },
-  errorMessage: {
-    fontSize: 12,
-    color: "#FF6B6B",
-    marginTop: 4,
-  },
-  button: {
-    backgroundColor: "#FF7B54", // Updated to match your color scheme
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 8,
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  footer: {
-    textAlign: "center",
-    marginTop: 16,
-    color: "#636E72",
-    fontSize: 14,
-  },
-  link: {
-    color: "#FF7B54", // Updated to match your color scheme
-    fontWeight: "600",
-  },
+      paddingHorizontal: 24,
+      paddingBottom: 100, // Increase this to ensure space at bottom
+    },
+    formCard: {
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: theme.borderRadius.xl,
+      padding: theme.spacing.lg,
+      ...theme.shadows.md,
+    },
+    title: {
+      fontSize: 26,
+      fontWeight: "700",
+      color: theme.colors.text.primary,
+      textAlign: "center",
+      marginBottom: theme.spacing.lg,
+    },
+    inputGroup: {
+      marginBottom: 10,
+    },
+    inputLabelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 8,
+      gap: 6,
+    },
+    inputLabel: {
+      fontSize: 14,
+      fontWeight: "500",
+      color: theme.colors.text.primary,
+    },
+    input: {
+      backgroundColor: theme.colors.ui.inputBackground,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      borderRadius: theme.borderRadius.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: 14,
+      fontSize: 16,
+      color: theme.colors.text.primary,
+    },
+    inputError: {
+      borderColor: theme.colors.error,
+      backgroundColor: theme.colors.state.incorrectBackground,
+    },
+    passwordContainer: {
+      position: "relative",
+    },
+    passwordInput: {
+      paddingRight: 48,
+    },
+    passwordToggle: {
+      position: "absolute",
+      right: 16,
+      top: "50%",
+      transform: [{ translateY: -10 }],
+    },
+    row: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    inputHalf: {
+      flex: 1,
+    },
+    errorRow: {
+      flexDirection: "row",
+      marginTop: -6,
+      marginBottom: 6,
+    },
+    errorColumn: {
+      flex: 1,
+      paddingHorizontal: 4,
+    },
+    errorMessage: {
+      fontSize: 12,
+      color: theme.colors.error,
+      marginTop: 4,
+    },
+    button: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: theme.spacing.md,
+      alignItems: "center",
+      marginTop: theme.spacing.sm,
+      ...theme.shadows.md,
+      shadowColor: theme.colors.primary,
+    },
+    buttonText: {
+      color: theme.colors.text.inverse,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    footer: {
+      textAlign: "center",
+      marginTop: theme.spacing.md,
+      color: theme.colors.text.secondary,
+      fontSize: 14,
+    },
+    link: {
+      color: theme.colors.primary,
+      fontWeight: "600",
+    },
 
-  contentStyleError: {
-    color: "#c60000",
-  },
-  gridRow: {
-    flexDirection: "row",
-  },
-  gridColumn: {
-    flex: 1,
-  },
-  placeholder: {
-    minHeight: 16, // Height matching the ErrorMessage height
-  },
-  termsContainer: {
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    borderColor: "#E0E0E0",
-    borderRadius: 4,
-    marginRight: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 2,
-  },
-  checkboxChecked: {
-    backgroundColor: "#FF7B54",
-    borderColor: "#FF7B54",
-  },
-  termsText: {
-    flex: 1,
-    fontSize: 14,
-    color: "#636E72",
-    lineHeight: 20,
-  },
-  termsLink: {
-    color: "#FF7B54",
-    fontWeight: "600",
-    textDecorationLine: "underline",
-  },
-});
+    contentStyleError: {
+      color: theme.colors.error,
+    },
+    gridRow: {
+      flexDirection: "row",
+    },
+    gridColumn: {
+      flex: 1,
+    },
+    placeholder: {
+      minHeight: 16, // Height matching the ErrorMessage height
+    },
+    termsContainer: {
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    checkboxContainer: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+    },
+    checkbox: {
+      width: 20,
+      height: 20,
+      borderWidth: 2,
+      borderColor: theme.colors.ui.border,
+      borderRadius: 4,
+      marginRight: theme.spacing.sm,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 2,
+    },
+    checkboxChecked: {
+      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.primary,
+    },
+    termsText: {
+      flex: 1,
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      lineHeight: 20,
+    },
+    termsLink: {
+      color: theme.colors.primary,
+      fontWeight: "600",
+      textDecorationLine: "underline",
+    },
+  });
