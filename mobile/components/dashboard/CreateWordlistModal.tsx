@@ -235,6 +235,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
         reset(); // Reset form when modal is fully closed
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const handleFormSubmit = (data: CreateWordlistDTO) =>

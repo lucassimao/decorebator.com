@@ -58,6 +58,7 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
   // Reset flip animation when word changes
   useEffect(() => {
     flipAnimation.setValue(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWord?.id]);
 
   // Audio setup - replace audio when word changes

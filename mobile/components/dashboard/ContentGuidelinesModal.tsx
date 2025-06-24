@@ -58,6 +58,7 @@ export const ContentGuidelinesModal: React.FC<ContentGuidelinesModalProps> = ({
         }),
       ]).start();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   if (!visible) return null;

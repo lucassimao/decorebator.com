@@ -64,13 +64,24 @@
       "signIn": "Iniciar Sesión"
     },
     "forgotPassword": {
-      "title": "Contraseña Olvidada",
-      "subtitle": "Introduce tu correo y te enviaremos instrucciones para restablecer tu contraseña",
-      "email": "Correo electrónico",
-      "emailPlaceholder": "Introduce tu correo electrónico",
-      "sendButton": "Enviar Instrucciones",
-      "backToSignIn": "Volver a Iniciar Sesión",
-      "successMessage": "Revisa tu correo para las instrucciones de restablecimiento"
+      "title": "¿Olvidaste tu contraseña?",
+      "subtitle": "¡No te preocupes! Introduce tu dirección de correo electrónico y te enviaremos instrucciones para restablecer tu contraseña.",
+      "email": "Dirección de correo electrónico",
+      "emailPlaceholder": "Introduce tu dirección de correo electrónico",
+      "sendButton": "Enviar correo de restablecimiento",
+      "backToSignIn": "Volver a iniciar sesión",
+      "successMessage": "Revisa tu correo para las instrucciones de restablecimiento",
+      "successTitle": "¡Revisa tu correo!",
+      "successSubtitle": "Hemos enviado instrucciones de restablecimiento de contraseña a:",
+      "instructionText": "Si no ves el correo, revisa tu carpeta de spam o haz clic abajo para reenviarlo.",
+      "resendButton": "Reenviar correo",
+      "rememberPassword": "¿Recuerdas tu contraseña?",
+      "signIn": "Iniciar sesión",
+      "securityNotice": "Por razones de seguridad, enviaremos un enlace de restablecimiento tanto si existe una cuenta con este correo como si no.",
+      "errorTitle": "Error",
+      "errorMessage": "No se pudo enviar el correo de restablecimiento. Por favor, inténtalo de nuevo más tarde.",
+      "emailRequired": "El correo electrónico es obligatorio",
+      "emailInvalid": "Por favor, introduce una dirección de correo electrónico válida"
     },
     "tagline": "Aprende idiomas, conecta mundos"
   },

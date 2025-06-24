@@ -248,13 +248,6 @@ function saveAuthorization(authorization: string) {
       decoded.payload.subscriptionPlan === "monthly" ||
       decoded.payload.subscriptionPlan === "annual";
     offlineManager.setUserPremiumStatus(isPremium);
-
-    // Set Sentry user context
-    Sentry.setUser({
-      id: decoded.payload.sub.toString(),
-      email: decoded.payload.email,
-      isPremium,
-    });
   } catch (error) {
     console.error("Error updating offline manager:", error);
   }

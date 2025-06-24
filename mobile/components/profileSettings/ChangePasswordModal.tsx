@@ -134,6 +134,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
         setShowConfirmPassword(false);
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const handlePasswordChange = (data: ChangePasswordFormData) => {

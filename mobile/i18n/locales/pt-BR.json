@@ -64,13 +64,24 @@
       "signIn": "Entrar"
     },
     "forgotPassword": {
-      "title": "Esqueceu a Senha",
-      "subtitle": "Digite seu e-mail e enviaremos instruções para redefinir sua senha",
-      "email": "E-mail",
-      "emailPlaceholder": "Digite seu e-mail",
-      "sendButton": "Enviar Instruções",
-      "backToSignIn": "Voltar para Login",
-      "successMessage": "Verifique seu e-mail para instruções de redefinição"
+      "title": "Esqueceu sua senha?",
+      "subtitle": "Sem problemas! Digite seu endereço de e-mail e enviaremos instruções para redefinir sua senha.",
+      "email": "Endereço de e-mail",
+      "emailPlaceholder": "Digite seu endereço de e-mail",
+      "sendButton": "Enviar e-mail de redefinição",
+      "backToSignIn": "Voltar para o login",
+      "successMessage": "Verifique seu e-mail para instruções de redefinição",
+      "successTitle": "Verifique seu e-mail!",
+      "successSubtitle": "Enviamos instruções de redefinição de senha para:",
+      "instructionText": "Se você não vir o e-mail, verifique sua pasta de spam ou clique abaixo para reenviar.",
+      "resendButton": "Reenviar e-mail",
+      "rememberPassword": "Lembra da sua senha?",
+      "signIn": "Entrar",
+      "securityNotice": "Por razões de segurança, enviaremos um link de redefinição independentemente de existir ou não uma conta com este e-mail.",
+      "errorTitle": "Erro",
+      "errorMessage": "Não foi possível enviar o e-mail de redefinição. Tente novamente mais tarde.",
+      "emailRequired": "E-mail é obrigatório",
+      "emailInvalid": "Digite um endereço de e-mail válido"
     },
     "tagline": "Aprenda idiomas, conecte mundos"
   },

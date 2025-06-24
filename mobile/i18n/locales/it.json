@@ -64,13 +64,24 @@
       "signIn": "Accedi"
     },
     "forgotPassword": {
-      "title": "Password Dimenticata",
-      "subtitle": "Inserisci la tua email e ti invieremo le istruzioni per reimpostare la password",
-      "email": "Email",
-      "emailPlaceholder": "Inserisci la tua email",
-      "sendButton": "Invia Istruzioni",
-      "backToSignIn": "Torna al Login",
-      "successMessage": "Controlla la tua email per le istruzioni di reimpostazione"
+      "title": "Password dimenticata?",
+      "subtitle": "Nessun problema! Inserisci il tuo indirizzo email e ti invieremo le istruzioni per reimpostare la tua password.",
+      "email": "Indirizzo email",
+      "emailPlaceholder": "Inserisci il tuo indirizzo email",
+      "sendButton": "Invia email di reimpostazione",
+      "backToSignIn": "Torna al login",
+      "successMessage": "Controlla la tua email per le istruzioni di reimpostazione",
+      "successTitle": "Controlla la tua email!",
+      "successSubtitle": "Abbiamo inviato le istruzioni per reimpostare la password a:",
+      "instructionText": "Se non vedi l'email, controlla la cartella spam o clicca qui sotto per inviarla di nuovo.",
+      "resendButton": "Invia di nuovo l'email",
+      "rememberPassword": "Ti ricordi la tua password?",
+      "signIn": "Accedi",
+      "securityNotice": "Per motivi di sicurezza, invieremo un link di reimpostazione indipendentemente dal fatto che esista o meno un account con questa email.",
+      "errorTitle": "Errore",
+      "errorMessage": "Impossibile inviare l'email di reimpostazione. Riprova più tardi.",
+      "emailRequired": "L'email è obbligatoria",
+      "emailInvalid": "Inserisci un indirizzo email valido"
     },
     "tagline": "Impara le lingue, connetti i mondi"
   },

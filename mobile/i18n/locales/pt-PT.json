@@ -64,13 +64,24 @@
       "signIn": "Iniciar Sessão"
     },
     "forgotPassword": {
-      "title": "Esqueceu-se da Palavra-passe",
-      "subtitle": "Introduza o seu e-mail e enviaremos instruções para redefinir a sua palavra-passe",
-      "email": "E-mail",
-      "emailPlaceholder": "Introduza o seu e-mail",
-      "sendButton": "Enviar Instruções",
-      "backToSignIn": "Voltar ao Login",
-      "successMessage": "Verifique o seu e-mail para instruções de redefinição"
+      "title": "Esqueceu-se da sua palavra-passe?",
+      "subtitle": "Não se preocupe! Introduza o seu endereço de e-mail e enviaremos instruções para redefinir a sua palavra-passe.",
+      "email": "Endereço de e-mail",
+      "emailPlaceholder": "Introduza o seu endereço de e-mail",
+      "sendButton": "Enviar e-mail de redefinição",
+      "backToSignIn": "Voltar ao início de sessão",
+      "successMessage": "Verifique o seu e-mail para instruções de redefinição",
+      "successTitle": "Verifique o seu e-mail!",
+      "successSubtitle": "Enviámos instruções de redefinição de palavra-passe para:",
+      "instructionText": "Se não vir o e-mail, verifique a sua pasta de spam ou clique abaixo para reenviar.",
+      "resendButton": "Reenviar e-mail",
+      "rememberPassword": "Lembra-se da sua palavra-passe?",
+      "signIn": "Iniciar sessão",
+      "securityNotice": "Por razões de segurança, enviaremos um link de redefinição independentemente de existir ou não uma conta com este e-mail.",
+      "errorTitle": "Erro",
+      "errorMessage": "Não foi possível enviar o e-mail de redefinição. Tente novamente mais tarde.",
+      "emailRequired": "E-mail é obrigatório",
+      "emailInvalid": "Introduza um endereço de e-mail válido"
     },
     "tagline": "Aprenda idiomas, conecte mundos"
   },

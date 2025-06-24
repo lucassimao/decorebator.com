@@ -46,15 +46,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 type ErrorMessageProps = {
   error?: FieldError | null;
   style?: StyleProp<TextStyle>;
-};
-const ErrorMessage = ({ error, style }: ErrorMessageProps) => {
-  if (!error) return null;
-
-  return (
-    <Text style={[styles.errorMessage, style]}>
-      {error?.message || "Invalid"}
-    </Text>
-  );
+  errorStyle?: StyleProp<TextStyle>;
 };
 
 export default function SignUpScreen() {
@@ -66,6 +58,16 @@ export default function SignUpScreen() {
   // Always use light theme for auth screens
   const theme = authLightTheme;
   const styles = createStyles(theme);
+
+  const ErrorMessage = ({ error, style, errorStyle }: ErrorMessageProps) => {
+    if (!error) return null;
+
+    return (
+      <Text style={[styles.errorMessage, errorStyle, style]}>
+        {error?.message || "Invalid"}
+      </Text>
+    );
+  };
 
   const scrollViewRef = React.useRef<ScrollView>(null);
 
@@ -171,7 +173,7 @@ export default function SignUpScreen() {
       <View style={{ flex: 1, marginTop: -(screenHeight * 0.29) }}>
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.formCard}>
-            <Text style={styles.title}>Sign Up</Text>
+            <Text style={styles.title}>{t("auth.signup.title")}</Text>
 
             <Controller
               control={control}
@@ -181,11 +183,13 @@ export default function SignUpScreen() {
                 <View style={styles.inputGroup}>
                   <View style={styles.inputLabelRow}>
                     <MaterialIcons name="email" size={20} color="#636E72" />
-                    <Text style={styles.inputLabel}>Email</Text>
+                    <Text style={styles.inputLabel}>
+                      {t("auth.signup.email")}
+                    </Text>
                   </View>
                   <TextInput
                     style={[styles.input, errors.email && styles.inputError]}
-                    placeholder="Enter your email"
+                    placeholder={t("auth.signup.emailPlaceholder")}
                     placeholderTextColor="#B2BEC3"
                     value={value}
                     onChangeText={onChange}
@@ -214,7 +218,9 @@ export default function SignUpScreen() {
                   <View style={[styles.inputGroup, styles.inputHalf]}>
                     <View style={styles.inputLabelRow}>
                       <MaterialIcons name="person" size={20} color="#636E72" />
-                      <Text style={styles.inputLabel}>First Name</Text>
+                      <Text style={styles.inputLabel}>
+                        {t("auth.signup.firstName")}
+                      </Text>
                     </View>
                     <TextInput
                       style={[
@@ -229,7 +235,7 @@ export default function SignUpScreen() {
                           });
                         }, 300);
                       }}
-                      placeholder="Enter first name"
+                      placeholder={t("auth.signup.firstNamePlaceholder")}
                       placeholderTextColor="#B2BEC3"
                       value={value}
                       onChangeText={onChange}
@@ -254,7 +260,9 @@ export default function SignUpScreen() {
                   >
                     <View style={styles.inputLabelRow}>
                       <MaterialIcons name="person" size={20} color="#636E72" />
-                      <Text style={styles.inputLabel}>Last Name</Text>
+                      <Text style={styles.inputLabel}>
+                        {t("auth.signup.lastName")}
+                      </Text>
                     </View>
                     <TextInput
                       onFocus={(event) => {
@@ -269,7 +277,7 @@ export default function SignUpScreen() {
                         styles.input,
                         errors.lastName && styles.inputError,
                       ]}
-                      placeholder="Enter last name"
+                      placeholder={t("auth.signup.lastNamePlaceholder")}
                       placeholderTextColor="#B2BEC3"
                       value={value}
                       onChangeText={onChange}
@@ -306,7 +314,9 @@ export default function SignUpScreen() {
                         size={20}
                         color={theme.colors.text.secondary}
                       />
-                      <Text style={styles.inputLabel}>Password</Text>
+                      <Text style={styles.inputLabel}>
+                        {t("auth.signup.password")}
+                      </Text>
                     </View>
                     <View style={styles.passwordContainer}>
                       <TextInput

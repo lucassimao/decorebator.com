@@ -54,6 +54,7 @@ const UpgradePromptDialog = ({ visible, onDismiss }: Props) => {
         }),
       ]).start();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const handleUpgrade = () => {

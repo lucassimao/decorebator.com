@@ -66,13 +66,24 @@
       "mustAgreeToTerms": "You must agree to the Terms of Service and Privacy Policy to continue"
     },
     "forgotPassword": {
-      "title": "Forgot Password",
-      "subtitle": "Enter your email and we'll send you instructions to reset your password",
-      "email": "Email",
-      "emailPlaceholder": "Enter your email",
-      "sendButton": "Send Reset Instructions",
+      "title": "Forgot your password?",
+      "subtitle": "No worries! Enter your email address and we'll send you instructions to reset your password.",
+      "email": "Email Address",
+      "emailPlaceholder": "Enter your email address",
+      "sendButton": "Send Reset Email",
       "backToSignIn": "Back to Sign In",
-      "successMessage": "Check your email for reset instructions"
+      "successMessage": "Check your email for reset instructions",
+      "successTitle": "Check your email!",
+      "successSubtitle": "We've sent password reset instructions to:",
+      "instructionText": "If you don't see the email, check your spam folder or click below to resend.",
+      "resendButton": "Resend Email",
+      "rememberPassword": "Remember your password?",
+      "signIn": "Sign In",
+      "securityNotice": "For security reasons, we'll send a reset link whether or not an account exists with this email.",
+      "errorTitle": "Error",
+      "errorMessage": "Unable to send reset email. Please try again later.",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address"
     },
     "tagline": "Learn languages, connect worlds"
   },

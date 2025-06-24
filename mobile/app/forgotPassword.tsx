@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -32,6 +33,7 @@ interface PasswordResetFormData {
 const ForgotPasswordScreen: React.FC = () => {
   const navigation = useNavigation();
   const [emailSent, setEmailSent] = useState(false);
+  const { t } = useTranslation();
   // Always use light theme for auth screens
   const theme = authLightTheme;
   const styles = createStyles(theme);
@@ -57,9 +59,9 @@ const ForgotPasswordScreen: React.FC = () => {
     },
     onError: (error: Error) => {
       Alert.alert(
-        "Error",
-        error.message || "Unable to send reset email. Please try again later.",
-        [{ text: "OK" }],
+        t("auth.forgotPassword.errorTitle"),
+        error.message || t("auth.forgotPassword.errorMessage"),
+        [{ text: t("common.ok") }],
       );
     },
   });
@@ -102,15 +104,16 @@ const ForgotPasswordScreen: React.FC = () => {
                 />
               </View>
 
-              <Text style={styles.successTitle}>Check your email!</Text>
+              <Text style={styles.successTitle}>
+                {t("auth.forgotPassword.successTitle")}
+              </Text>
               <Text style={styles.successMessage}>
-                We've sent password reset instructions to:
+                {t("auth.forgotPassword.successSubtitle")}
               </Text>
               <Text style={styles.emailText}>{watchedEmail}</Text>
 
               <Text style={styles.instructionText}>
-                If you don't see the email, check your spam folder or click
-                below to resend.
+                {t("auth.forgotPassword.instructionText")}
               </Text>
 
               <TouchableOpacity
@@ -133,7 +136,9 @@ const ForgotPasswordScreen: React.FC = () => {
                       size={20}
                       color={theme.colors.primary}
                     />
-                    <Text style={styles.resendButtonText}>Resend Email</Text>
+                    <Text style={styles.resendButtonText}>
+                      {t("auth.forgotPassword.resendButton")}
+                    </Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -149,7 +154,9 @@ const ForgotPasswordScreen: React.FC = () => {
                   size={20}
                   color={theme.colors.text.primary}
                 />
-                <Text style={styles.backToLoginText}>Back to Sign In</Text>
+                <Text style={styles.backToLoginText}>
+                  {t("auth.forgotPassword.backToSignIn")}
+                </Text>
               </TouchableOpacity>
             </LinearGradient>
           </View>
@@ -211,10 +218,11 @@ const ForgotPasswordScreen: React.FC = () => {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={styles.title}>Forgot your password?</Text>
+                <Text style={styles.title}>
+                  {t("auth.forgotPassword.title")}
+                </Text>
                 <Text style={styles.subtitle}>
-                  No worries! Enter your email address and we'll send you
-                  instructions to reset your password.
+                  {t("auth.forgotPassword.subtitle")}
                 </Text>
 
                 {/* Email Input */}
@@ -225,16 +233,18 @@ const ForgotPasswordScreen: React.FC = () => {
                       size={20}
                       color={theme.colors.text.secondary}
                     />
-                    <Text style={styles.inputLabel}>Email Address</Text>
+                    <Text style={styles.inputLabel}>
+                      {t("auth.forgotPassword.email")}
+                    </Text>
                   </View>
                   <Controller
                     control={control}
                     name="email"
                     rules={{
-                      required: "Email is required",
+                      required: t("auth.forgotPassword.emailRequired"),
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: "Please enter a valid email address",
+                        message: t("auth.forgotPassword.emailInvalid"),
                       },
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
@@ -243,7 +253,7 @@ const ForgotPasswordScreen: React.FC = () => {
                           styles.input,
                           errors.email && styles.inputError,
                         ]}
-                        placeholder="Enter your email address"
+                        placeholder={t("auth.forgotPassword.emailPlaceholder")}
                         placeholderTextColor={theme.colors.text.placeholder}
                         value={value}
                         onChangeText={onChange}
@@ -278,7 +288,7 @@ const ForgotPasswordScreen: React.FC = () => {
                   ) : (
                     <>
                       <Text style={styles.submitButtonText}>
-                        Send Reset Email
+                        {t("auth.forgotPassword.sendButton")}
                       </Text>
                       <MaterialIcons
                         name="send"
@@ -297,8 +307,7 @@ const ForgotPasswordScreen: React.FC = () => {
                     color={theme.colors.text.secondary}
                   />
                   <Text style={styles.infoText}>
-                    For security reasons, we'll send a reset link whether or not
-                    an account exists with this email.
+                    {t("auth.forgotPassword.securityNotice")}
                   </Text>
                 </View>
 
@@ -309,8 +318,10 @@ const ForgotPasswordScreen: React.FC = () => {
                   disabled={resetMutation.isPending}
                 >
                   <Text style={styles.textButtonText}>
-                    Remember your password?{" "}
-                    <Text style={styles.linkText}>Sign In</Text>
+                    {t("auth.forgotPassword.rememberPassword")}{" "}
+                    <Text style={styles.linkText}>
+                      {t("auth.forgotPassword.signIn")}
+                    </Text>
                   </Text>
                 </TouchableOpacity>
               </LinearGradient>

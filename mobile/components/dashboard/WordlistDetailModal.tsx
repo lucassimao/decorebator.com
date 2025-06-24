@@ -19,6 +19,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Modal,
+  PanResponder,
   Platform,
   ScrollView,
   StyleSheet,
@@ -60,6 +61,58 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   const { isOnline } = useOffline();
   const { t } = useTranslation();
   const { isPremium } = useUserInfo();
+
+  // Handle modal close with animation
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  };
+
+  // Pan responder for swipe to dismiss
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to downward swipes with sufficient movement
+        return (
+          gestureState.dy > 10 &&
+          Math.abs(gestureState.dx) < Math.abs(gestureState.dy)
+        );
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // Only allow downward movement
+        if (gestureState.dy > 0) {
+          slideAnim.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        // If swipe is significant enough, close the modal
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          handleClose();
+        } else {
+          // Otherwise, spring back to original position
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 40,
+            friction: 8,
+          }).start();
+        }
+      },
+    }),
+  ).current;
 
   const {
     control,
@@ -149,6 +202,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
         }),
       ]).start();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   // Filter words
@@ -251,9 +305,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       transparent
       visible={visible}
       animationType="none"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
+      <TouchableWithoutFeedback onPress={handleClose}>
         <Animated.View style={[styles.backdrop, { opacity: backdropAnim }]} />
       </TouchableWithoutFeedback>
 
@@ -263,6 +317,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
             styles.modalContent,
             { transform: [{ translateY: slideAnim }] },
           ]}
+          {...panResponder.panHandlers}
         >
           <OfflineIndicator />
 
@@ -277,7 +332,10 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                   <Text style={styles.subtitle}>{wordlist.description}</Text>
                 )}
               </View>
-              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={handleClose}
+              >
                 <Ionicons name="close" size={24} color="#636E72" />
               </TouchableOpacity>
             </View>
