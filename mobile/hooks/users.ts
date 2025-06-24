@@ -1,5 +1,6 @@
 import { getProfile } from "@/api/users";
 import offlineManager from "@/utils/offlineManager";
+import * as Sentry from "@sentry/react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 
@@ -30,6 +31,12 @@ export const useUserInfo = () => {
   useEffect(() => {
     if (user) {
       offlineManager.setUserPremiumStatus(isPremium);
+      // Set Sentry user context
+      Sentry.setUser({
+        id: user.id.toString(),
+        email: user.email,
+        username: `${user.firstName} ${user.lastName}`,
+      });
     }
   }, [user, isPremium]);
 

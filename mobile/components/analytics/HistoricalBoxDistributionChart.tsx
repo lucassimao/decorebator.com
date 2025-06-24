@@ -1,10 +1,11 @@
-import React from "react";
-import { View, Text, StyleSheet, Dimensions, ScrollView } from "react-native";
-import { StackedBarChart } from "react-native-chart-kit";
-import { MaterialIcons } from "@expo/vector-icons";
-import { useTranslation } from "react-i18next";
-import { colors, chartConfig } from "./theme";
 import { HistoricalBoxDistributionResponse } from "@/api/analytics";
+import { useTheme } from "@/contexts/ThemeContext";
+import { MaterialIcons } from "@expo/vector-icons";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { StackedBarChart } from "react-native-chart-kit";
+import { getChartConfig } from "./theme";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -16,6 +17,9 @@ export const HistoricalBoxDistributionChart: React.FC<
   HistoricalBoxDistributionChartProps
 > = ({ historicalBoxDistribution }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const chartConfig = getChartConfig(theme);
+  const styles = createStyles(theme);
 
   const boxColors = {
     box1: "#FF6B6B", // Red - New/Difficult
@@ -210,7 +214,7 @@ export const HistoricalBoxDistributionChart: React.FC<
             <MaterialIcons
               name="info-outline"
               size={20}
-              color={colors.textMedium}
+              color={theme.colors.text.secondary}
             />
             <Text style={styles.explanationText}>
               {t(
@@ -230,129 +234,130 @@ export const HistoricalBoxDistributionChart: React.FC<
   );
 };
 
-const styles = StyleSheet.create({
-  chartCard: {
-    backgroundColor: colors.white,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    chartCard: {
+      backgroundColor: theme.colors.background.surface,
+      marginHorizontal: 16,
+      marginVertical: 8,
+      borderRadius: 16,
+      padding: 20,
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 3.84,
+      elevation: 5,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  chartTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: colors.textDark,
-    marginBottom: 4,
-  },
-  chartSubtitle: {
-    fontSize: 14,
-    color: colors.textMedium,
-    marginBottom: 16,
-  },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 16,
-  },
-  emptyChartContainer: {
-    height: 200,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.lightBackground,
-    borderRadius: 12,
-  },
-  emptyChartText: {
-    fontSize: 16,
-    color: colors.textLight,
-  },
-  legendContainer: {
-    marginTop: 16,
-    marginBottom: 8,
-    paddingHorizontal: 8,
-  },
-  legendTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.textDark,
-    marginBottom: 12,
-  },
-  boxLegendWrapper: {
-    flexDirection: "column",
-  },
-  boxLegendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 6,
-  },
-  boxLegendLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  boxLegendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  boxLegendText: {
-    fontSize: 13,
-    color: colors.textDark,
-    flex: 1,
-  },
-  boxLegendPercentage: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textDark,
-    minWidth: 45,
-    textAlign: "right",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.divider,
-    marginHorizontal: 8,
-    marginVertical: 12,
-  },
-  progressSummaryContainer: {
-    paddingHorizontal: 8,
-  },
-  progressSummaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  progressSummaryLabel: {
-    fontSize: 14,
-    color: colors.textMedium,
-  },
-  progressSummaryValue: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#4CAF50", // Box 7 green color
-  },
-  explanationContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginTop: 16,
-    paddingHorizontal: 8,
-    paddingVertical: 12,
-    backgroundColor: colors.backgroundLight,
-    borderRadius: 8,
-  },
-  explanationText: {
-    fontSize: 13,
-    color: colors.textMedium,
-    lineHeight: 18,
-    flex: 1,
-    marginLeft: 8,
-  },
-});
+    chartTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: theme.colors.text.primary,
+      marginBottom: 4,
+    },
+    chartSubtitle: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginBottom: 16,
+    },
+    chart: {
+      marginVertical: 8,
+      borderRadius: 16,
+    },
+    emptyChartContainer: {
+      height: 200,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.background.default,
+      borderRadius: 12,
+    },
+    emptyChartText: {
+      fontSize: 16,
+      color: theme.colors.text.placeholder,
+    },
+    legendContainer: {
+      marginTop: 16,
+      marginBottom: 8,
+      paddingHorizontal: 8,
+    },
+    legendTitle: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      marginBottom: 12,
+    },
+    boxLegendWrapper: {
+      flexDirection: "column",
+    },
+    boxLegendItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 6,
+    },
+    boxLegendLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+    },
+    boxLegendDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      marginRight: 8,
+    },
+    boxLegendText: {
+      fontSize: 13,
+      color: theme.colors.text.primary,
+      flex: 1,
+    },
+    boxLegendPercentage: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      minWidth: 45,
+      textAlign: "right",
+    },
+    divider: {
+      height: 1,
+      backgroundColor: theme.colors.ui.border,
+      marginHorizontal: 8,
+      marginVertical: 12,
+    },
+    progressSummaryContainer: {
+      paddingHorizontal: 8,
+    },
+    progressSummaryRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 8,
+    },
+    progressSummaryLabel: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+    },
+    progressSummaryValue: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#4CAF50", // Box 7 green color
+    },
+    explanationContainer: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      marginTop: 16,
+      paddingHorizontal: 8,
+      paddingVertical: 12,
+      backgroundColor: theme.colors.background.subtle,
+      borderRadius: 8,
+    },
+    explanationText: {
+      fontSize: 13,
+      color: theme.colors.text.secondary,
+      lineHeight: 18,
+      flex: 1,
+      marginLeft: 8,
+    },
+  });

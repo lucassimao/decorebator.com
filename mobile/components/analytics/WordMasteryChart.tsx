@@ -2,7 +2,8 @@ import React from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { ProgressChart } from "react-native-chart-kit";
 import { useTranslation } from "react-i18next";
-import { colors, chartColors, chartConfig } from "./theme";
+import { useTheme } from "@/contexts/ThemeContext";
+import { getChartColors, getChartConfig } from "./theme";
 import { WordMasteryStats } from "@/api/analytics";
 
 const screenWidth = Dimensions.get("window").width;
@@ -15,6 +16,10 @@ export const WordMasteryChart: React.FC<WordMasteryChartProps> = ({
   wordMastery,
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  const chartColors = getChartColors(theme);
+  const chartConfig = getChartConfig(theme);
 
   const progressChartData = {
     labels: wordMastery?.slice(0, 6).map((w) => w.word.substring(0, 8)) || [],
@@ -40,7 +45,8 @@ export const WordMasteryChart: React.FC<WordMasteryChartProps> = ({
             chartConfig={{
               ...chartConfig,
               color: (opacity = 1, index = 0) => {
-                const color = chartColors[index % chartColors.length];
+                const color =
+                  chartColors.colors[index % chartColors.colors.length];
                 return `rgba(${parseInt(color.slice(1, 3), 16)}, ${parseInt(color.slice(3, 5), 16)}, ${parseInt(color.slice(5, 7), 16)}, ${opacity})`;
               },
             }}
@@ -55,7 +61,8 @@ export const WordMasteryChart: React.FC<WordMasteryChartProps> = ({
                   style={[
                     styles.legendDot,
                     {
-                      backgroundColor: chartColors[index % chartColors.length],
+                      backgroundColor:
+                        chartColors.colors[index % chartColors.colors.length],
                     },
                   ]}
                 />
@@ -78,75 +85,76 @@ export const WordMasteryChart: React.FC<WordMasteryChartProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  chartCard: {
-    backgroundColor: colors.white,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    chartCard: {
+      backgroundColor: theme.colors.background.surface,
+      marginHorizontal: 16,
+      marginVertical: 8,
+      borderRadius: 16,
+      padding: 20,
+      shadowColor: theme.colors.text.primary,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 3.84,
+      elevation: 5,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  chartTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: colors.textDark,
-    marginBottom: 4,
-  },
-  chartSubtitle: {
-    fontSize: 14,
-    color: colors.textMedium,
-    marginBottom: 16,
-  },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 16,
-    marginLeft: -20,
-  },
-  emptyChartContainer: {
-    height: 200,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.lightBackground,
-    borderRadius: 12,
-  },
-  emptyChartText: {
-    fontSize: 16,
-    color: colors.textLight,
-  },
-  legendContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 16,
-    paddingHorizontal: 8,
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 16,
-    marginBottom: 8,
-  },
-  legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 6,
-  },
-  legendText: {
-    fontSize: 12,
-    color: colors.textMedium,
-    marginRight: 4,
-  },
-  legendValue: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.textDark,
-  },
-});
+    chartTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: theme.colors.text.primary,
+      marginBottom: 4,
+    },
+    chartSubtitle: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginBottom: 16,
+    },
+    chart: {
+      marginVertical: 8,
+      borderRadius: 16,
+      marginLeft: -20,
+    },
+    emptyChartContainer: {
+      height: 200,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.background.default,
+      borderRadius: 12,
+    },
+    emptyChartText: {
+      fontSize: 16,
+      color: theme.colors.text.disabled,
+    },
+    legendContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      marginTop: 16,
+      paddingHorizontal: 8,
+    },
+    legendItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginRight: 16,
+      marginBottom: 8,
+    },
+    legendDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      marginRight: 6,
+    },
+    legendText: {
+      fontSize: 12,
+      color: theme.colors.text.secondary,
+      marginRight: 4,
+    },
+    legendValue: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+    },
+  });

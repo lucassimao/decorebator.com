@@ -40,7 +40,7 @@ export async function callAPI<T>(
 
   let responseBody: any;
 
-  if (response.status != 204) {
+  if (response.status !== 204) {
     responseBody = await response.json();
   }
   if (!response.ok) {
@@ -49,7 +49,7 @@ export async function callAPI<T>(
       Object.values(responseBody?.validationErrors)?.[0] ||
       DEFAULT_ERROR;
 
-    if (message == TOKEN_VALIDATION_ERROR) {
+    if (message === TOKEN_VALIDATION_ERROR) {
       await sigout();
       router.dismissAll();
       router.replace("/signin");

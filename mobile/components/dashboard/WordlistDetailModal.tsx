@@ -19,6 +19,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Modal,
+  PanResponder,
   Platform,
   ScrollView,
   StyleSheet,
@@ -30,6 +31,7 @@ import {
 } from "react-native";
 import { LANGUAGES } from "./CreateWordlistModal";
 import { useUserInfo } from "@/hooks/users";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -48,6 +50,8 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const queryClient = useQueryClient();
   const [showAddForm, setShowAddForm] = useState(false);
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterLearned, setFilterLearned] = useState<
     "all" | "learned" | "unlearned"
@@ -57,6 +61,58 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   const { isOnline } = useOffline();
   const { t } = useTranslation();
   const { isPremium } = useUserInfo();
+
+  // Handle modal close with animation
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  };
+
+  // Pan responder for swipe to dismiss
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to downward swipes with sufficient movement
+        return (
+          gestureState.dy > 10 &&
+          Math.abs(gestureState.dx) < Math.abs(gestureState.dy)
+        );
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // Only allow downward movement
+        if (gestureState.dy > 0) {
+          slideAnim.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        // If swipe is significant enough, close the modal
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          handleClose();
+        } else {
+          // Otherwise, spring back to original position
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 40,
+            friction: 8,
+          }).start();
+        }
+      },
+    }),
+  ).current;
 
   const {
     control,
@@ -79,9 +135,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   });
 
   // Get analytics data for this wordlist
-  const { wordlistProgress } = useAnalytics(
-    wordlist.id,
-  );
+  const { wordlistProgress } = useAnalytics(wordlist.id);
 
   // Add word mutation
   const addWordMutation = useMutation({
@@ -148,6 +202,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
         }),
       ]).start();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   // Filter words
@@ -250,9 +305,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       transparent
       visible={visible}
       animationType="none"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
+      <TouchableWithoutFeedback onPress={handleClose}>
         <Animated.View style={[styles.backdrop, { opacity: backdropAnim }]} />
       </TouchableWithoutFeedback>
 
@@ -262,6 +317,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
             styles.modalContent,
             { transform: [{ translateY: slideAnim }] },
           ]}
+          {...panResponder.panHandlers}
         >
           <OfflineIndicator />
 
@@ -276,7 +332,10 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                   <Text style={styles.subtitle}>{wordlist.description}</Text>
                 )}
               </View>
-              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={handleClose}
+              >
                 <Ionicons name="close" size={24} color="#636E72" />
               </TouchableOpacity>
             </View>
@@ -289,7 +348,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
               <Text style={styles.statLabel}>{t("wordDetail.total")}</Text>
             </View>
             <View style={styles.stat}>
-              <Text style={[styles.statValue, { color: "#4CAF50" }]}>
+              <Text style={[styles.statValue, { color: theme.colors.success }]}>
                 {stats.learned}
               </Text>
               <Text style={styles.statLabel}>
@@ -299,7 +358,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
               </Text>
             </View>
             <View style={styles.stat}>
-              <Text style={[styles.statValue, { color: "#FF7B54" }]}>
+              <Text style={[styles.statValue, { color: theme.colors.primary }]}>
                 {Math.round(stats.progress)}%
               </Text>
               <Text style={styles.statLabel}>
@@ -313,7 +372,11 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
           {/* Stats Explanation */}
           {learnedFromAnalytics !== null && (
             <View style={styles.statsExplanation}>
-              <MaterialIcons name="info-outline" size={16} color="#636E72" />
+              <MaterialIcons
+                name="info-outline"
+                size={16}
+                color={theme.colors.text.secondary}
+              />
               <Text style={styles.explanationText}>
                 {t("wordDetail.masteryExplanation")}
               </Text>
@@ -325,7 +388,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
             <MaterialIcons
               name="check-circle-outline"
               size={16}
-              color="#636E72"
+              color={theme.colors.text.secondary}
             />
             <Text style={styles.explanationText}>
               {t("wordDetail.learnedToggleExplanation")}
@@ -336,11 +399,15 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
           <View style={{ flex: 1 }}>
             <View style={styles.searchContainer}>
               <View style={styles.searchBox}>
-                <Ionicons name="search" size={20} color="#636E72" />
+                <Ionicons
+                  name="search"
+                  size={20}
+                  color={theme.colors.text.secondary}
+                />
                 <TextInput
                   style={styles.searchInput}
                   placeholder={t("wordDetail.searchPlaceholder")}
-                  placeholderTextColor="#B2BEC3"
+                  placeholderTextColor={theme.colors.text.tertiary}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
@@ -426,7 +493,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                     <MaterialIcons
                       name="library-books"
                       size={48}
-                      color="#DFE6E9"
+                      color={theme.colors.text.tertiary}
                     />
                     <Text style={styles.emptyText}>
                       {searchQuery
@@ -467,7 +534,11 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                       reset();
                     }}
                   >
-                    <Ionicons name="close" size={24} color="#636E72" />
+                    <Ionicons
+                      name="close"
+                      size={24}
+                      color={theme.colors.text.secondary}
+                    />
                   </TouchableOpacity>
                 </View>
 
@@ -490,7 +561,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                         autoFocus
                         style={[styles.input, errors.name && styles.inputError]}
                         placeholder={t("wordDetail.wordPhrasePlaceholder")}
-                        placeholderTextColor="#B2BEC3"
+                        placeholderTextColor={theme.colors.text.tertiary}
                         value={value}
                         onChangeText={(text) => {
                           onChange(text);
@@ -518,7 +589,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                       <TextInput
                         style={[styles.input, styles.textArea]}
                         placeholder={t("wordDetail.notesPlaceholder")}
-                        placeholderTextColor="#B2BEC3"
+                        placeholderTextColor={theme.colors.text.tertiary}
                         value={value}
                         onChangeText={(text) => {
                           onChange(text);
@@ -538,7 +609,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                     <MaterialIcons
                       name="error-outline"
                       size={20}
-                      color="#FF6B6B"
+                      color={theme.colors.error}
                     />
                     <Text style={styles.errorMessage}>
                       {t("wordDetail.addWordError")}
@@ -554,7 +625,10 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                   disabled={addWordMutation.isPending}
                 >
                   {addWordMutation.isPending ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
+                    <ActivityIndicator
+                      color={theme.colors.text.inverse}
+                      size="small"
+                    />
                   ) : (
                     <Text style={styles.submitButtonText}>
                       {t("wordDetail.addWordButton")}
@@ -572,7 +646,11 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
               onPress={onPressAddWord}
               activeOpacity={0.8}
             >
-              <Ionicons name="add" size={28} color="#FFFFFF" />
+              <Ionicons
+                name="add"
+                size={28}
+                color={theme.colors.text.inverse}
+              />
             </TouchableOpacity>
           )}
         </Animated.View>
@@ -581,348 +659,352 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  backdrop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-  },
-  modalContent: {
-    backgroundColor: "#FDF6E3",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    height: SCREEN_HEIGHT * 0.95, // Changed from height to maxHeight
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  header: {
-    paddingTop: 12,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    backgroundColor: "#DFE6E9",
-    borderRadius: 2,
-    alignSelf: "center",
-    marginBottom: 16,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  languageFlag: {
-    fontSize: 32,
-    marginRight: 12,
-  },
-  titleContainer: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#2D3436",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#636E72",
-    marginTop: 2,
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#F5F5F5",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-  stat: {
-    alignItems: "center",
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#2D3436",
-  },
-  statLabel: {
-    fontSize: 14,
-    color: "#636E72",
-    marginTop: 4,
-  },
-  statsExplanation: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: "#F8F9FA",
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-    gap: 8,
-  },
-  toggleExplanation: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: "#F8F9FA",
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-    gap: 8,
-  },
-  explanationText: {
-    flex: 1,
-    fontSize: 13,
-    color: "#636E72",
-    lineHeight: 18,
-  },
-  searchContainer: {
-    padding: 20,
-    paddingBottom: 0,
-  },
-  searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#2D3436",
-  },
-  filterContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    maxHeight: 60,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#FFFFFF",
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-  },
-  filterChipActive: {
-    backgroundColor: "#FF7B54",
-    borderColor: "#FF7B54",
-  },
-  filterChipText: {
-    fontSize: 14,
-    color: "#636E72",
-  },
-  filterChipTextActive: {
-    color: "#FFFFFF",
-    fontWeight: "500",
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
-    paddingTop: 10, // Add this
-  },
-  wordCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  learnedToggle: {
-    marginRight: 12,
-  },
-  wordContent: {
-    flex: 1,
-  },
-  wordTerm: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#2D3436",
-    marginBottom: 4,
-  },
-  wordTranslation: {
-    fontSize: 16,
-    color: "#FF7B54",
-    marginBottom: 2,
-  },
-  wordPronunciation: {
-    fontSize: 14,
-    color: "#636E72",
-    fontStyle: "italic",
-  },
-  wordNotes: {
-    fontSize: 14,
-    color: "#636E72",
-    marginTop: 4,
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 18,
-    color: "#636E72",
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: "#B2BEC3",
-    marginTop: 8,
-  },
-  fab: {
-    position: "absolute",
-    right: 20,
-    bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#FF7B54",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  addFormContainer: {
-    // position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    paddingBottom: 40,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  keyboardAvoidingView: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  formHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  formTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#2D3436",
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#2D3436",
-    marginBottom: 8,
-  },
-  textArea: {
-    height: 80,
-    paddingTop: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: "#2D3436",
-    backgroundColor: "#FAFAFA",
-  },
-  inputError: {
-    borderColor: "#FF6B6B",
-  },
-  errorText: {
-    color: "#FF6B6B",
-    fontSize: 12,
-    marginTop: 4,
-  },
-  submitButton: {
-    backgroundColor: "#FF7B54",
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  submitButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  errorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF5F5",
-    borderWidth: 1,
-    borderColor: "#FFE0E0",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    gap: 8,
-  },
-  errorMessage: {
-    flex: 1,
-    color: "#FF6B6B",
-    fontSize: 14,
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: "flex-end",
+    },
+    backdrop: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor:
+        theme.mode === "light" ? "rgba(0, 0, 0, 0.4)" : "rgba(0, 0, 0, 0.6)",
+    },
+    modalContent: {
+      backgroundColor: theme.colors.background.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      height: SCREEN_HEIGHT * 0.95, // Changed from height to maxHeight
+      shadowColor: theme.colors.text.primary,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    header: {
+      paddingTop: 12,
+      paddingBottom: 16,
+      paddingHorizontal: 20,
+      backgroundColor: theme.colors.background.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border.light,
+    },
+    handle: {
+      width: 40,
+      height: 4,
+      backgroundColor: theme.colors.text.tertiary,
+      borderRadius: 2,
+      alignSelf: "center",
+      marginBottom: 16,
+    },
+    titleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    languageFlag: {
+      fontSize: 32,
+      marginRight: 12,
+    },
+    titleContainer: {
+      flex: 1,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+    },
+    subtitle: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginTop: 2,
+    },
+    closeButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: theme.colors.background.default,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    statsRow: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      paddingVertical: 16,
+      paddingHorizontal: 20,
+      backgroundColor: theme.colors.background.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border.light,
+    },
+    stat: {
+      alignItems: "center",
+    },
+    statValue: {
+      fontSize: 24,
+      fontWeight: "700",
+      color: theme.colors.text.primary,
+    },
+    statLabel: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginTop: 4,
+    },
+    statsExplanation: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      backgroundColor: theme.colors.background.secondary,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border.light,
+      gap: 8,
+    },
+    toggleExplanation: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      backgroundColor: theme.colors.background.secondary,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border.light,
+      gap: 8,
+    },
+    explanationText: {
+      flex: 1,
+      fontSize: 13,
+      color: theme.colors.text.secondary,
+      lineHeight: 18,
+    },
+    searchContainer: {
+      padding: 20,
+      paddingBottom: 0,
+    },
+    searchBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.ui.inputBackground,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      gap: 12,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: 16,
+      color: theme.colors.text.primary,
+    },
+    filterContainer: {
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      maxHeight: 60,
+    },
+    filterChip: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: theme.colors.background.surface,
+      marginRight: 8,
+      borderWidth: 1,
+      borderColor: theme.colors.border.light,
+    },
+    filterChipActive: {
+      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.primary,
+    },
+    filterChipText: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+    },
+    filterChipTextActive: {
+      color: theme.colors.text.inverse,
+      fontWeight: "500",
+    },
+    listContent: {
+      paddingHorizontal: 20,
+      paddingBottom: 100,
+      paddingTop: 10, // Add this
+    },
+    wordCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 8,
+      shadowColor: theme.colors.text.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    learnedToggle: {
+      marginRight: 12,
+    },
+    wordContent: {
+      flex: 1,
+    },
+    wordTerm: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      marginBottom: 4,
+    },
+    wordTranslation: {
+      fontSize: 16,
+      color: theme.colors.primary,
+      marginBottom: 2,
+    },
+    wordPronunciation: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      fontStyle: "italic",
+    },
+    wordNotes: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginTop: 4,
+    },
+    deleteButton: {
+      padding: 8,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    emptyState: {
+      alignItems: "center",
+      paddingVertical: 60,
+    },
+    emptyText: {
+      fontSize: 18,
+      color: theme.colors.text.secondary,
+      marginTop: 16,
+    },
+    emptySubtext: {
+      fontSize: 14,
+      color: theme.colors.text.tertiary,
+      marginTop: 8,
+    },
+    fab: {
+      position: "absolute",
+      right: 20,
+      bottom: 20,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: theme.colors.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    addFormContainer: {
+      // position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: theme.colors.background.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 20,
+      paddingBottom: 40,
+      shadowColor: theme.colors.text.primary,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    keyboardAvoidingView: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+    },
+    formHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    formTitle: {
+      fontSize: 20,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+    },
+    inputGroup: {
+      marginBottom: 16,
+    },
+    inputLabel: {
+      fontSize: 14,
+      fontWeight: "500",
+      color: theme.colors.text.primary,
+      marginBottom: 8,
+    },
+    textArea: {
+      height: 80,
+      paddingTop: 12,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: theme.colors.border.light,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: theme.colors.text.primary,
+      backgroundColor: theme.colors.background.default,
+    },
+    inputError: {
+      borderColor: theme.colors.error,
+    },
+    errorText: {
+      color: theme.colors.error,
+      fontSize: 12,
+      marginTop: 4,
+    },
+    submitButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: "center",
+      marginTop: 8,
+    },
+    submitButtonText: {
+      color: theme.colors.text.inverse,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    buttonDisabled: {
+      opacity: 0.7,
+    },
+    errorContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor:
+        theme.mode === "light" ? "#FFF5F5" : theme.colors.background.secondary,
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light" ? "#FFE0E0" : theme.colors.border.medium,
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 16,
+      gap: 8,
+    },
+    errorMessage: {
+      flex: 1,
+      color: theme.colors.error,
+      fontSize: 14,
+    },
+    disabledButton: {
+      opacity: 0.5,
+    },
+  });

@@ -47,8 +47,16 @@
           "photosPermission": "The app accesses your photos to let you set your profile picture."
         }
       ],
-      "expo-localization"
-    ],
+      "expo-localization",
+      "expo-web-browser",
+  [
+      "@sentry/react-native/expo",
+      {
+        "url": "https://sentry.io/",
+        "project": "decorebator-mobile",
+        "organization": "lucas-apps"
+      }
+    ]    ],
     "experiments": {
       "typedRoutes": true
     },

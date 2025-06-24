@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import { DEFAULT_ERROR } from "./constants";
 import { decode } from "./jwt";
 import offlineManager from "@/utils/offlineManager";
+import * as Sentry from "@sentry/react-native";
 
 export type UserProfile = {
   id: number;
@@ -87,6 +88,8 @@ export async function sigout() {
   } catch (error) {
     console.error("Error clearing offline cache:", error);
   }
+
+  Sentry.setUser(null);
 
   if (Platform.OS === "web") {
     localStorage.removeItem("authorization");
@@ -224,6 +227,8 @@ export async function deleteProfile(): Promise<void> {
       DEFAULT_ERROR;
     throw new Error(message);
   }
+
+  Sentry.setUser(null);
 }
 
 function saveAuthorization(authorization: string) {

@@ -64,13 +64,24 @@
       "signIn": "Accedi"
     },
     "forgotPassword": {
-      "title": "Password Dimenticata",
-      "subtitle": "Inserisci la tua email e ti invieremo le istruzioni per reimpostare la password",
-      "email": "Email",
-      "emailPlaceholder": "Inserisci la tua email",
-      "sendButton": "Invia Istruzioni",
-      "backToSignIn": "Torna al Login",
-      "successMessage": "Controlla la tua email per le istruzioni di reimpostazione"
+      "title": "Password dimenticata?",
+      "subtitle": "Nessun problema! Inserisci il tuo indirizzo email e ti invieremo le istruzioni per reimpostare la tua password.",
+      "email": "Indirizzo email",
+      "emailPlaceholder": "Inserisci il tuo indirizzo email",
+      "sendButton": "Invia email di reimpostazione",
+      "backToSignIn": "Torna al login",
+      "successMessage": "Controlla la tua email per le istruzioni di reimpostazione",
+      "successTitle": "Controlla la tua email!",
+      "successSubtitle": "Abbiamo inviato le istruzioni per reimpostare la password a:",
+      "instructionText": "Se non vedi l'email, controlla la cartella spam o clicca qui sotto per inviarla di nuovo.",
+      "resendButton": "Invia di nuovo l'email",
+      "rememberPassword": "Ti ricordi la tua password?",
+      "signIn": "Accedi",
+      "securityNotice": "Per motivi di sicurezza, invieremo un link di reimpostazione indipendentemente dal fatto che esista o meno un account con questa email.",
+      "errorTitle": "Errore",
+      "errorMessage": "Impossibile inviare l'email di reimpostazione. Riprova più tardi.",
+      "emailRequired": "L'email è obbligatoria",
+      "emailInvalid": "Inserisci un indirizzo email valido"
     },
     "tagline": "Impara le lingue, connetti i mondi"
   },
@@ -425,7 +436,40 @@
     "pronunciationLoadError": "Errore nel caricamento delle opzioni di pronuncia",
     "pronunciationDefaultWillBeUsed": "Verrà utilizzato il sistema di pronuncia predefinito",
     "errorMessage": "Impossibile creare la lista. Riprova.",
-    "createButton": "Crea Lista"
+    "createButton": "Crea Lista",
+    "contentGuidelines": "Linee Guida sui Contenuti",
+    "contentGuidelinesText": "Assicurati che il contenuto della tua lista di parole sia appropriato e segua le nostre linee guida della community.",
+    "viewGuidelines": "Visualizza linee guida complete"
+  },
+  "contentGuidelines": {
+    "title": "Linee Guida del Contenuto",
+    "description": "Per garantire un'esperienza di apprendimento positiva per tutti, segui queste linee guida:",
+    "educational": {
+      "title": "Contenuto Educativo",
+      "description": "Concentrati sul vocabolario che aiuta con l'apprendimento delle lingue e l'uso pratico."
+    },
+    "familyFriendly": {
+      "title": "Adatto alle Famiglie",
+      "description": "Mantieni il contenuto appropriato per studenti di tutte le età."
+    },
+    "noProfanity": {
+      "title": "Niente Parolacce",
+      "description": "Evita linguaggio offensivo, insulti o contenuti inappropriati."
+    },
+    "noPersonalInfo": {
+      "title": "Nessuna Informazione Personale",
+      "description": "Non includere dati personali, indirizzi o informazioni di contatto."
+    },
+    "respectful": {
+      "title": "Contenuto Rispettoso",
+      "description": "Sii culturalmente sensibile ed evita contenuti discriminatori."
+    },
+    "legitimate": {
+      "title": "Parole Legittime",
+      "description": "Usa parole reali della lingua di destinazione, non termini inventati."
+    },
+    "footer": "Grazie per aver contribuito a creare un ambiente di apprendimento positivo!",
+    "understand": "Capisco"
   },
   "pronunciationSystems": {
     "ipa": "IPA",

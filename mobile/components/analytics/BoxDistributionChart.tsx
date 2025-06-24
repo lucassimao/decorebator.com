@@ -1,10 +1,11 @@
-import React from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
-import { BarChart } from "react-native-chart-kit";
-import { MaterialIcons } from "@expo/vector-icons";
-import { useTranslation } from "react-i18next";
-import { colors, chartConfig } from "./theme";
 import { BoxDistributionResponse } from "@/api/analytics";
+import { useTheme } from "@/contexts/ThemeContext";
+import { MaterialIcons } from "@expo/vector-icons";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { BarChart } from "react-native-chart-kit";
+import { getChartConfig } from "./theme";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -16,15 +17,18 @@ export const BoxDistributionChart: React.FC<BoxDistributionChartProps> = ({
   boxDistribution,
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  const chartConfig = getChartConfig(theme);
 
   const boxColorGradient = [
-    "#FF6B6B", // Box 1 - Red (hardest)
+    theme.colors.error, // Box 1 - Red (hardest)
     "#FF8E53", // Box 2 - Orange Red
     "#FFB74D", // Box 3 - Orange
-    "#FFD54F", // Box 4 - Yellow
+    theme.colors.semantic.warning, // Box 4 - Yellow
     "#AED581", // Box 5 - Light Green
     "#81C784", // Box 6 - Green
-    "#4CAF50", // Box 7 - Full Green (mastered)
+    theme.colors.success, // Box 7 - Full Green (mastered)
   ];
 
   return (
@@ -110,7 +114,7 @@ export const BoxDistributionChart: React.FC<BoxDistributionChartProps> = ({
             <MaterialIcons
               name="info-outline"
               size={20}
-              color={colors.textMedium}
+              color={theme.colors.text.secondary}
             />
             <Text style={styles.explanationText}>
               {t("analytics.charts.boxDistribution.explanation")}
@@ -128,95 +132,96 @@ export const BoxDistributionChart: React.FC<BoxDistributionChartProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  chartCard: {
-    backgroundColor: colors.white,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    chartCard: {
+      backgroundColor: theme.colors.background.surface,
+      marginHorizontal: 16,
+      marginVertical: 8,
+      borderRadius: 16,
+      padding: 20,
+      shadowColor: theme.colors.text.primary,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 3.84,
+      elevation: 5,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  chartTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: colors.textDark,
-    marginBottom: 4,
-  },
-  chartSubtitle: {
-    fontSize: 14,
-    color: colors.textMedium,
-    marginBottom: 16,
-  },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 16,
-    marginLeft: -20,
-  },
-  emptyChartContainer: {
-    height: 200,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.lightBackground,
-    borderRadius: 12,
-  },
-  emptyChartText: {
-    fontSize: 16,
-    color: colors.textLight,
-  },
-  boxLegendContainer: {
-    marginTop: 16,
-  },
-  boxLegendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-  },
-  boxLegendLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  boxLegendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  boxLegendText: {
-    fontSize: 14,
-    color: colors.textDark,
-    flex: 1,
-  },
-  boxLegendCount: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textMedium,
-    marginLeft: 8,
-  },
-  explanationContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginTop: 16,
-    paddingHorizontal: 8,
-    paddingVertical: 12,
-    backgroundColor: colors.backgroundLight,
-    borderRadius: 8,
-  },
-  explanationText: {
-    fontSize: 13,
-    color: colors.textMedium,
-    lineHeight: 18,
-    flex: 1,
-    marginLeft: 8,
-  },
-});
+    chartTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: theme.colors.text.primary,
+      marginBottom: 4,
+    },
+    chartSubtitle: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginBottom: 16,
+    },
+    chart: {
+      marginVertical: 8,
+      borderRadius: 16,
+      marginLeft: -20,
+    },
+    emptyChartContainer: {
+      height: 200,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.background.secondary,
+      borderRadius: 12,
+    },
+    emptyChartText: {
+      fontSize: 16,
+      color: theme.colors.text.tertiary,
+    },
+    boxLegendContainer: {
+      marginTop: 16,
+    },
+    boxLegendItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+    },
+    boxLegendLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+    },
+    boxLegendDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      marginRight: 8,
+    },
+    boxLegendText: {
+      fontSize: 14,
+      color: theme.colors.text.primary,
+      flex: 1,
+    },
+    boxLegendCount: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.colors.text.secondary,
+      marginLeft: 8,
+    },
+    explanationContainer: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      marginTop: 16,
+      paddingHorizontal: 8,
+      paddingVertical: 12,
+      backgroundColor: theme.colors.background.secondary,
+      borderRadius: 8,
+    },
+    explanationText: {
+      fontSize: 13,
+      color: theme.colors.text.secondary,
+      lineHeight: 18,
+      flex: 1,
+      marginLeft: 8,
+    },
+  });

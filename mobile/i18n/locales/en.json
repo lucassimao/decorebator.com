@@ -66,13 +66,24 @@
       "mustAgreeToTerms": "You must agree to the Terms of Service and Privacy Policy to continue"
     },
     "forgotPassword": {
-      "title": "Forgot Password",
-      "subtitle": "Enter your email and we'll send you instructions to reset your password",
-      "email": "Email",
-      "emailPlaceholder": "Enter your email",
-      "sendButton": "Send Reset Instructions",
+      "title": "Forgot your password?",
+      "subtitle": "No worries! Enter your email address and we'll send you instructions to reset your password.",
+      "email": "Email Address",
+      "emailPlaceholder": "Enter your email address",
+      "sendButton": "Send Reset Email",
       "backToSignIn": "Back to Sign In",
-      "successMessage": "Check your email for reset instructions"
+      "successMessage": "Check your email for reset instructions",
+      "successTitle": "Check your email!",
+      "successSubtitle": "We've sent password reset instructions to:",
+      "instructionText": "If you don't see the email, check your spam folder or click below to resend.",
+      "resendButton": "Resend Email",
+      "rememberPassword": "Remember your password?",
+      "signIn": "Sign In",
+      "securityNotice": "For security reasons, we'll send a reset link whether or not an account exists with this email.",
+      "errorTitle": "Error",
+      "errorMessage": "Unable to send reset email. Please try again later.",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address"
     },
     "tagline": "Learn languages, connect worlds"
   },
@@ -434,7 +445,40 @@
     "pronunciationLoadError": "Failed to load pronunciation options",
     "pronunciationDefaultWillBeUsed": "Default pronunciation system will be used",
     "errorMessage": "Failed to create wordlist. Please try again.",
-    "createButton": "Create Wordlist"
+    "createButton": "Create Wordlist",
+    "contentGuidelines": "Content Guidelines",
+    "contentGuidelinesText": "Please ensure your wordlist content is appropriate and follows our community guidelines.",
+    "viewGuidelines": "View full guidelines"
+  },
+  "contentGuidelines": {
+    "title": "Content Guidelines",
+    "description": "To ensure a positive learning experience for everyone, please follow these guidelines:",
+    "educational": {
+      "title": "Educational Content",
+      "description": "Focus on vocabulary that helps with language learning and practical use."
+    },
+    "familyFriendly": {
+      "title": "Family-Friendly",
+      "description": "Keep content appropriate for learners of all ages."
+    },
+    "noProfanity": {
+      "title": "No Profanity",
+      "description": "Avoid offensive language, slurs, or inappropriate content."
+    },
+    "noPersonalInfo": {
+      "title": "No Personal Information",
+      "description": "Don't include personal data, addresses, or contact information."
+    },
+    "respectful": {
+      "title": "Respectful Content",
+      "description": "Be culturally sensitive and avoid discriminatory content."
+    },
+    "legitimate": {
+      "title": "Legitimate Words",
+      "description": "Use real words from the target language, not made-up terms."
+    },
+    "footer": "Thank you for helping create a positive learning environment!",
+    "understand": "I Understand"
   },
   "pronunciationSystems": {
     "ipa": "IPA",

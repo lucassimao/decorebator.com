@@ -1,59 +1,35 @@
-import { ErrorType } from "@/api/errorReporting";
 import * as offlineQuizApi from "@/api/offlineWordlists";
 import { ErrorReportModal } from "@/components/ErrorReportModal";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { QuizContent } from "@/components/quiz/QuizContent";
 import { QuizHeader } from "@/components/quiz/QuizHeader";
+import { QuizLoadingState } from "@/components/quiz/QuizLoadingState";
 import { QuizModeToggle } from "@/components/quiz/QuizModeToggle";
 import { QuizNextButton } from "@/components/quiz/QuizNextButton";
 import { QuizOptions } from "@/components/quiz/QuizOptions";
 import { QuizProgressBar } from "@/components/quiz/QuizProgressBar";
-import { QuizLoadingState } from "@/components/quiz/QuizLoadingState";
-import { useOffline } from "@/hooks/useOffline";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useErrorReporting } from "@/hooks/useErrorReporting";
 import { useInvalidateAnalytics } from "@/hooks/useInvalidateAnalytics";
+import { useOffline } from "@/hooks/useOffline";
+import { createCommonStyles } from "@/styles/common";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  ImageBackground,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
-interface Quiz {
-  id: number;
-  type: string;
-  value: string;
-  options: string[];
-  answerIndex: number;
-  pos?: string;
-  pronunciation?: string;
-  audioURL?: string;
-  imageDescription?: string;
-  wordId: number;
-  definitionId: number;
-}
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 
 const QuizScreen: React.FC = () => {
   const navigation = useNavigation();
   const { wordlistId, wordlistName } = useLocalSearchParams();
   const { t } = useTranslation();
   const { isOnline, isOfflineAvailable } = useOffline();
-  const { invalidateBoxDistribution, invalidateAllAnalytics } =
-    useInvalidateAnalytics();
+  const { invalidateAllAnalytics } = useInvalidateAnalytics();
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme);
 
   // State
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -109,13 +85,13 @@ const QuizScreen: React.FC = () => {
     },
   });
 
-  const [currentQuizId, setCurrentQuizId] = useState<number | null>(null);
+  // const [currentQuizId, setCurrentQuizId] = useState<number | null>(null); // Removed unused state
 
   useEffect(() => {
     if (quiz?.id) {
       // Quiz received (even if it's the same ID)
       quizDisplayedAtRef.current = Date.now();
-      setCurrentQuizId(quiz.id);
+      // setCurrentQuizId(quiz.id); // Removed unused state setter
       setIsLoadingNext(false);
       setLoadingTimeout(false);
       setRetryCount(0);
@@ -229,7 +205,7 @@ const QuizScreen: React.FC = () => {
     setUserInput("");
     setIsSubmitted(false);
     setLoadingTimeout(false);
-    setCurrentQuizId(null); // Reset current quiz ID to ensure loading state shows
+    // setCurrentQuizId(null); // Reset current quiz ID to ensure loading state shows
     refetch();
   };
 
@@ -237,7 +213,7 @@ const QuizScreen: React.FC = () => {
     setRetryCount((prev) => prev + 1);
     setLoadingTimeout(false);
     setIsLoadingNext(true);
-    setCurrentQuizId(null); // Reset current quiz ID to ensure loading state shows
+    // setCurrentQuizId(null); // Reset current quiz ID to ensure loading state shows
     refetch(); // Explicitly trigger refetch
   };
 
@@ -256,66 +232,24 @@ const QuizScreen: React.FC = () => {
   // Show initial loading screen while fetching first quiz
   if ((isLoading || isFetching || !quiz) && quizCount === 0) {
     return (
-      <ImageBackground
-        source={require("@/assets/images/dashboard-bg.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.container}>
-          <View style={[styles.quizCard, { margin: 20 }]}>
-            <QuizLoadingState
-              isLoading={isLoading || isFetching}
-              hasTimeout={loadingTimeout}
-              error={error}
-              onRetry={handleRetryQuiz}
-              onGoBack={handleGoBack}
-            />
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
+      <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+        <View style={[styles.quizCard, { margin: 20 }]}>
+          <QuizLoadingState
+            isLoading={isLoading || isFetching}
+            hasTimeout={loadingTimeout}
+            error={error}
+            onRetry={handleRetryQuiz}
+            onGoBack={handleGoBack}
+          />
+        </View>
+      </SafeAreaView>
     );
   }
 
   // Handle offline error state
   if (error && !isOnline && !isOfflineAvailable) {
     return (
-      <ImageBackground
-        source={require("@/assets/images/dashboard-bg.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.container}>
-          <QuizHeader
-            wordlistName={String(wordlistName)}
-            correctCount={correctCount}
-            quizCount={quizCount}
-            isOnline={isOnline}
-            onBackPress={() => navigation.goBack()}
-            onReportPress={openReportModal}
-          />
-          <View style={styles.errorContainer}>
-            <MaterialIcons name="cloud-off" size={64} color="#636E72" />
-            <Text style={styles.errorTitle}>
-              {t("offline.premiumRequired")}
-            </Text>
-            <Text style={styles.errorMessage}>
-              {t("offline.premiumRequiredMessage")}
-            </Text>
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
-    );
-  }
-
-  return (
-    <ImageBackground
-      source={require("@/assets/images/dashboard-bg.png")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <SafeAreaView style={styles.container}>
-        <OfflineIndicator />
-
+      <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
         <QuizHeader
           wordlistName={String(wordlistName)}
           correctCount={correctCount}
@@ -324,116 +258,144 @@ const QuizScreen: React.FC = () => {
           onBackPress={() => navigation.goBack()}
           onReportPress={openReportModal}
         />
-
-        <QuizProgressBar correctCount={correctCount} quizCount={quizCount} />
-
-        <QuizModeToggle fastMode={fastMode} onToggle={onPressFastModeToggle} />
-
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.quizCard}>
-            {isLoadingNext || isFetching || !quiz ? (
-              <QuizLoadingState
-                isLoading={isLoadingNext || isFetching}
-                hasTimeout={loadingTimeout}
-                error={error}
-                onRetry={handleRetryQuiz}
-                onGoBack={handleGoBack}
-              />
-            ) : (
-              <>
-                {quiz && (
-                  <QuizContent
-                    quiz={quiz}
-                    userInput={userInput}
-                    setUserInput={setUserInput}
-                    isSubmitted={isSubmitted}
-                    onSubmitAnswer={handleWriteAnswer}
-                    onSkipQuestion={handleSkipQuestion}
-                  />
-                )}
-
-                <QuizOptions
-                  quiz={quiz!}
-                  selectedAnswer={selectedAnswer}
-                  showResult={showResult}
-                  onAnswerSelect={handleAnswerSelect}
-                />
-
-                <QuizNextButton
-                  showResult={showResult}
-                  fastMode={fastMode}
-                  quizType={quiz?.type || ""}
-                  isSubmitted={isSubmitted}
-                  onNextQuiz={handleNextQuiz}
-                />
-              </>
-            )}
-          </View>
-        </ScrollView>
-
-        <ErrorReportModal
-          visible={showReportModal}
-          onClose={closeReportModal}
-          onReportError={handleReportError}
-          isLoading={isReporting}
-          context="quiz"
-        />
+        <View style={styles.errorContainer}>
+          <MaterialIcons
+            name="cloud-off"
+            size={64}
+            color={theme.colors.text.secondary}
+          />
+          <Text style={styles.errorTitle}>{t("offline.premiumRequired")}</Text>
+          <Text style={styles.errorMessage}>
+            {t("offline.premiumRequiredMessage")}
+          </Text>
+        </View>
       </SafeAreaView>
-    </ImageBackground>
+    );
+  }
+
+  return (
+    <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+      <OfflineIndicator />
+
+      <QuizHeader
+        wordlistName={String(wordlistName)}
+        correctCount={correctCount}
+        quizCount={quizCount}
+        isOnline={isOnline}
+        onBackPress={() => navigation.goBack()}
+        onReportPress={openReportModal}
+      />
+
+      <QuizProgressBar correctCount={correctCount} quizCount={quizCount} />
+
+      <QuizModeToggle fastMode={fastMode} onToggle={onPressFastModeToggle} />
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.quizCard}>
+          {isLoadingNext || isFetching || !quiz ? (
+            <QuizLoadingState
+              isLoading={isLoadingNext || isFetching}
+              hasTimeout={loadingTimeout}
+              error={error}
+              onRetry={handleRetryQuiz}
+              onGoBack={handleGoBack}
+            />
+          ) : (
+            <>
+              {quiz && (
+                <QuizContent
+                  quiz={quiz}
+                  userInput={userInput}
+                  setUserInput={setUserInput}
+                  isSubmitted={isSubmitted}
+                  onSubmitAnswer={handleWriteAnswer}
+                  onSkipQuestion={handleSkipQuestion}
+                />
+              )}
+
+              <QuizOptions
+                quiz={quiz!}
+                selectedAnswer={selectedAnswer}
+                showResult={showResult}
+                onAnswerSelect={handleAnswerSelect}
+              />
+
+              <QuizNextButton
+                showResult={showResult}
+                fastMode={fastMode}
+                quizType={quiz?.type || ""}
+                isSubmitted={isSubmitted}
+                onNextQuiz={handleNextQuiz}
+              />
+            </>
+          )}
+        </View>
+      </ScrollView>
+
+      <ErrorReportModal
+        visible={showReportModal}
+        onClose={closeReportModal}
+        onReportError={handleReportError}
+        isLoading={isReporting}
+        context="quiz"
+      />
+    </SafeAreaView>
   );
 };
 
 export default QuizScreen;
 
-const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-  },
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FDF6E3",
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  quizCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#2D3436",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  errorMessage: {
-    fontSize: 16,
-    color: "#636E72",
-    textAlign: "center",
-    lineHeight: 22,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background.default,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.background.default,
+    },
+    scrollContent: {
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+    },
+    quizCard: {
+      backgroundColor:
+        theme.mode === "light"
+          ? theme.colors.background.surface
+          : theme.colors.background.elevated,
+      borderRadius: theme.borderRadius.xl,
+      padding: theme.spacing.lg,
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light"
+          ? theme.colors.ui.border
+          : theme.colors.ui.divider,
+      ...theme.shadows.md,
+      elevation: theme.mode === "light" ? 6 : 10,
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: 40,
+    },
+    errorTitle: {
+      fontSize: 20,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    errorMessage: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+      textAlign: "center",
+      lineHeight: 22,
+    },
+  });

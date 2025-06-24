@@ -20,6 +20,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import * as userApi from "@/api/users";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -42,6 +43,8 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -131,6 +134,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
         setShowConfirmPassword(false);
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const handlePasswordChange = (data: ChangePasswordFormData) => {
@@ -143,7 +147,8 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   const getPasswordStrength = (
     password: string,
   ): { text: string; color: string; percentage: number } => {
-    if (!password) return { text: "", color: "#E0E0E0", percentage: 0 };
+    if (!password)
+      return { text: "", color: theme.colors.ui.border, percentage: 0 };
 
     let strength = 0;
     if (password.length >= 8) strength++;
@@ -155,18 +160,18 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     if (strength <= 2)
       return {
         text: t("profile.changePassword.passwordStrength.weak"),
-        color: "#FF6B6B",
+        color: theme.colors.error,
         percentage: 33,
       };
     if (strength <= 4)
       return {
         text: t("profile.changePassword.passwordStrength.good"),
-        color: "#FF7B54",
+        color: theme.colors.primary,
         percentage: 66,
       };
     return {
       text: t("profile.changePassword.passwordStrength.strong"),
-      color: "#4CAF50",
+      color: theme.colors.success,
       percentage: 100,
     };
   };
@@ -204,7 +209,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                 {t("profile.changePassword.title")}
               </Text>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                <Ionicons name="close" size={24} color="#636E72" />
+                <Ionicons
+                  name="close"
+                  size={24}
+                  color={theme.colors.text.secondary}
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -235,7 +244,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                       placeholder={t(
                         "profile.changePassword.enterCurrentPassword",
                       )}
-                      placeholderTextColor="#B2BEC3"
+                      placeholderTextColor={theme.colors.text.placeholder}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -252,7 +261,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                       <Ionicons
                         name={showCurrentPassword ? "eye-off" : "eye"}
                         size={20}
-                        color="#636E72"
+                        color={theme.colors.text.secondary}
                       />
                     </TouchableOpacity>
                   </View>
@@ -294,7 +303,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                         errors.newPassword && styles.inputError,
                       ]}
                       placeholder={t("profile.changePassword.enterNewPassword")}
-                      placeholderTextColor="#B2BEC3"
+                      placeholderTextColor={theme.colors.text.placeholder}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -309,7 +318,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                       <Ionicons
                         name={showNewPassword ? "eye-off" : "eye"}
                         size={20}
-                        color="#636E72"
+                        color={theme.colors.text.secondary}
                       />
                     </TouchableOpacity>
                   </View>
@@ -371,7 +380,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                       placeholder={t(
                         "profile.changePassword.confirmNewPassword",
                       )}
-                      placeholderTextColor="#B2BEC3"
+                      placeholderTextColor={theme.colors.text.placeholder}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -388,7 +397,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                       <Ionicons
                         name={showConfirmPassword ? "eye-off" : "eye"}
                         size={20}
-                        color="#636E72"
+                        color={theme.colors.text.secondary}
                       />
                     </TouchableOpacity>
                   </View>
@@ -410,7 +419,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                 <MaterialIcons
                   name="check-circle"
                   size={16}
-                  color={newPassword?.length >= 8 ? "#4CAF50" : "#DFE6E9"}
+                  color={
+                    newPassword?.length >= 8
+                      ? theme.colors.success
+                      : theme.colors.ui.disabled
+                  }
                 />
                 <Text style={styles.requirementText}>
                   {t("profile.changePassword.atLeast8Characters")}
@@ -422,8 +435,8 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   size={16}
                   color={
                     /[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword)
-                      ? "#4CAF50"
-                      : "#DFE6E9"
+                      ? theme.colors.success
+                      : theme.colors.ui.disabled
                   }
                 />
                 <Text style={styles.requirementText}>
@@ -434,7 +447,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                 <MaterialIcons
                   name="check-circle"
                   size={16}
-                  color={/\d/.test(newPassword) ? "#4CAF50" : "#DFE6E9"}
+                  color={
+                    /\d/.test(newPassword)
+                      ? theme.colors.success
+                      : theme.colors.ui.disabled
+                  }
                 />
                 <Text style={styles.requirementText}>
                   {t("profile.changePassword.atLeastOneNumber")}
@@ -458,7 +475,10 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               disabled={changePasswordMutation.isPending}
             >
               {changePasswordMutation.isPending ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator
+                  size="small"
+                  color={theme.colors.text.inverse}
+                />
               ) : (
                 <Text style={styles.submitButtonText}>
                   {t("profile.changePassword.title")}
@@ -472,186 +492,180 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  backdrop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: SCREEN_HEIGHT * 0.9,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  header: {
-    paddingTop: 12,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    backgroundColor: "#DFE6E9",
-    borderRadius: 2,
-    alignSelf: "center",
-    marginBottom: 16,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#2D3436",
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#F5F5F5",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scrollContent: {
-    padding: 20,
-    maxHeight: SCREEN_HEIGHT * 0.6,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#2D3436",
-    marginBottom: 8,
-  },
-  passwordContainer: {
-    position: "relative",
-  },
-  input: {
-    backgroundColor: "#FAFAFA",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    paddingRight: 48,
-    fontSize: 16,
-    color: "#2D3436",
-  },
-  inputError: {
-    borderColor: "#FF6B6B",
-  },
-  passwordToggle: {
-    position: "absolute",
-    right: 16,
-    top: "50%",
-    transform: [{ translateY: -10 }],
-  },
-  errorText: {
-    color: "#FF6B6B",
-    fontSize: 12,
-    marginTop: 4,
-  },
-  strengthContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-    gap: 12,
-  },
-  strengthBar: {
-    flex: 1,
-    height: 4,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 2,
-    overflow: "hidden",
-  },
-  strengthFill: {
-    height: "100%",
-    borderRadius: 2,
-  },
-  strengthText: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  requirementsContainer: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 8,
-  },
-  requirementsTitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#2D3436",
-    marginBottom: 12,
-  },
-  requirement: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 8,
-  },
-  requirementText: {
-    fontSize: 14,
-    color: "#636E72",
-  },
-  actions: {
-    flexDirection: "row",
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: Platform.OS === "ios" ? 34 : 24,
-    borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 16,
-    borderRadius: 12,
-    backgroundColor: "#F5F5F5",
-    alignItems: "center",
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#636E72",
-  },
-  submitButton: {
-    flex: 1,
-    paddingVertical: 16,
-    borderRadius: 12,
-    backgroundColor: "#FF7B54",
-    alignItems: "center",
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  submitButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: "flex-end",
+    },
+    backdrop: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: theme.colors.overlay.backdrop,
+    },
+    modalContent: {
+      backgroundColor: theme.colors.background.surface,
+      borderTopLeftRadius: theme.borderRadius.xl,
+      borderTopRightRadius: theme.borderRadius.xl,
+      maxHeight: SCREEN_HEIGHT * 0.9,
+      ...theme.shadows.lg,
+    },
+    header: {
+      paddingTop: theme.spacing.sm,
+      paddingBottom: theme.spacing.lg,
+      paddingHorizontal: theme.spacing.lg,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.ui.divider,
+    },
+    handle: {
+      width: 40,
+      height: 4,
+      backgroundColor: theme.colors.ui.disabled,
+      borderRadius: 2,
+      alignSelf: "center",
+      marginBottom: theme.spacing.md,
+    },
+    titleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+    },
+    closeButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: theme.colors.ui.subtleBackground,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    scrollContent: {
+      padding: theme.spacing.lg,
+      maxHeight: SCREEN_HEIGHT * 0.6,
+    },
+    inputGroup: {
+      marginBottom: theme.spacing.lg,
+    },
+    inputLabel: {
+      fontSize: 14,
+      fontWeight: "500",
+      color: theme.colors.text.primary,
+      marginBottom: theme.spacing.sm,
+    },
+    passwordContainer: {
+      position: "relative",
+    },
+    input: {
+      backgroundColor: theme.colors.ui.inputBackground,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      borderRadius: theme.borderRadius.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: 14,
+      paddingRight: 48,
+      fontSize: 16,
+      color: theme.colors.text.primary,
+    },
+    inputError: {
+      borderColor: theme.colors.error,
+    },
+    passwordToggle: {
+      position: "absolute",
+      right: 16,
+      top: "50%",
+      transform: [{ translateY: -10 }],
+    },
+    errorText: {
+      color: theme.colors.error,
+      fontSize: 12,
+      marginTop: 4,
+    },
+    strengthContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: theme.spacing.sm,
+      gap: 12,
+    },
+    strengthBar: {
+      flex: 1,
+      height: 4,
+      backgroundColor: theme.colors.ui.divider,
+      borderRadius: 2,
+      overflow: "hidden",
+    },
+    strengthFill: {
+      height: "100%",
+      borderRadius: 2,
+    },
+    strengthText: {
+      fontSize: 12,
+      fontWeight: "500",
+    },
+    requirementsContainer: {
+      backgroundColor: theme.colors.ui.subtleBackground,
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.md,
+      marginTop: theme.spacing.sm,
+    },
+    requirementsTitle: {
+      fontSize: 14,
+      fontWeight: "500",
+      color: theme.colors.text.primary,
+      marginBottom: theme.spacing.sm,
+    },
+    requirement: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: theme.spacing.sm,
+    },
+    requirementText: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+    },
+    actions: {
+      flexDirection: "row",
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.md,
+      paddingBottom: Platform.OS === "ios" ? 34 : theme.spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.ui.divider,
+      gap: 12,
+    },
+    cancelButton: {
+      flex: 1,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: theme.colors.ui.subtleBackground,
+      alignItems: "center",
+    },
+    cancelButtonText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.colors.text.secondary,
+    },
+    submitButton: {
+      flex: 1,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: theme.colors.primary,
+      alignItems: "center",
+      ...theme.shadows.md,
+      shadowColor: theme.colors.primary,
+    },
+    submitButtonText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.colors.text.inverse,
+    },
+    buttonDisabled: {
+      opacity: 0.7,
+    },
+  });

@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import * as Localization from "expo-localization";
 
 // Import all language files
 import en from "./locales/en.json";
@@ -41,9 +42,55 @@ export const supportedLanguages = [
   { code: "ja", name: "Japanese", nativeName: "日本語" },
 ];
 
+// Function to get the best matching language based on device locale
+export function getDeviceLanguage(): string {
+  // Get the device locale
+  const deviceLocale = Localization.getLocales()[0];
+
+  if (!deviceLocale) {
+    return "en"; // Fallback to English if no locale found
+  }
+
+  const deviceLanguageCode = deviceLocale.languageCode;
+  const deviceRegion = deviceLocale.regionCode;
+
+  // First, try to find exact match (e.g., pt-BR)
+  const exactMatch = `${deviceLanguageCode}-${deviceRegion}`;
+  if (resources[exactMatch]) {
+    return exactMatch;
+  }
+
+  // Special handling for Portuguese
+  if (deviceLanguageCode === "pt") {
+    // If the device is set to Portuguese from Brazil, use pt-BR
+    if (deviceRegion === "BR") {
+      return "pt-BR";
+    }
+    // For Portugal or any other Portuguese variant, use pt-PT
+    // This includes when just "pt" is set without a region
+    return "pt-PT";
+  }
+
+  // For other languages, try to find a match by language code only
+  const supportedLanguageCodes = Object.keys(resources);
+  const languageMatch = supportedLanguageCodes.find(
+    (code) => code.split("-")[0] === deviceLanguageCode,
+  );
+
+  if (languageMatch) {
+    return languageMatch;
+  }
+
+  // If no match found, fallback to English
+  return "en";
+}
+
+// Get the initial language based on device settings
+const initialLanguage = getDeviceLanguage();
+
 i18n.use(initReactI18next).init({
   resources,
-  lng: "en", // Default language
+  lng: initialLanguage,
   fallbackLng: "en",
   interpolation: {
     escapeValue: false, // React already escapes values

@@ -38,9 +38,23 @@ export function useI18n() {
     // Update i18n immediately for responsive UI
     await i18n.changeLanguage(language);
 
+    // Map i18n language codes to backend language codes
+    const backendLanguageMap: Record<string, string> = {
+      en: "en",
+      "pt-BR": "pt_BR",
+      "pt-PT": "pt_PT",
+      de: "de",
+      it: "it",
+      fr: "fr",
+      es: "es",
+      ja: "ja",
+    };
+
+    const backendLanguage = backendLanguageMap[language] || language;
+
     // Update user profile with new language preference
     try {
-      await userApi.update({ preferredLanguage: language });
+      await userApi.update({ preferredLanguage: backendLanguage });
     } catch (error) {
       console.error("Failed to update language preference:", error);
       // Optionally revert language change if API call fails

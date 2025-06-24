@@ -64,13 +64,24 @@
       "signIn": "Se connecter"
     },
     "forgotPassword": {
-      "title": "Mot de passe oublié",
-      "subtitle": "Entrez votre email et nous vous enverrons des instructions pour réinitialiser votre mot de passe",
-      "email": "Email",
-      "emailPlaceholder": "Entrez votre email",
-      "sendButton": "Envoyer les instructions",
+      "title": "Mot de passe oublié ?",
+      "subtitle": "Pas de souci ! Entrez votre adresse e-mail et nous vous enverrons des instructions pour réinitialiser votre mot de passe.",
+      "email": "Adresse e-mail",
+      "emailPlaceholder": "Entrez votre adresse e-mail",
+      "sendButton": "Envoyer l'e-mail de réinitialisation",
       "backToSignIn": "Retour à la connexion",
-      "successMessage": "Vérifiez votre email pour les instructions de réinitialisation"
+      "successMessage": "Vérifiez votre e-mail pour les instructions de réinitialisation",
+      "successTitle": "Vérifiez votre e-mail !",
+      "successSubtitle": "Nous avons envoyé des instructions de réinitialisation du mot de passe à :",
+      "instructionText": "Si vous ne voyez pas l'e-mail, vérifiez votre dossier spam ou cliquez ci-dessous pour le renvoyer.",
+      "resendButton": "Renvoyer l'e-mail",
+      "rememberPassword": "Vous vous souvenez de votre mot de passe ?",
+      "signIn": "Se connecter",
+      "securityNotice": "Pour des raisons de sécurité, nous enverrons un lien de réinitialisation qu'un compte existe ou non avec cette adresse e-mail.",
+      "errorTitle": "Erreur",
+      "errorMessage": "Impossible d'envoyer l'e-mail de réinitialisation. Veuillez réessayer plus tard.",
+      "emailRequired": "L'e-mail est obligatoire",
+      "emailInvalid": "Veuillez entrer une adresse e-mail valide"
     },
     "tagline": "Apprenez des langues, connectez des mondes"
   },
@@ -425,7 +436,40 @@
     "pronunciationLoadError": "Échec du chargement des options de prononciation",
     "pronunciationDefaultWillBeUsed": "Le système de prononciation par défaut sera utilisé",
     "errorMessage": "Échec de la création de la liste. Veuillez réessayer.",
-    "createButton": "Créer la liste"
+    "createButton": "Créer la liste",
+    "contentGuidelines": "Directives de Contenu",
+    "contentGuidelinesText": "Veuillez vous assurer que le contenu de votre liste de mots est approprié et respecte nos directives communautaires.",
+    "viewGuidelines": "Voir les directives complètes"
+  },
+  "contentGuidelines": {
+    "title": "Directives de Contenu",
+    "description": "Pour assurer une expérience d'apprentissage positive pour tous, veuillez suivre ces directives :",
+    "educational": {
+      "title": "Contenu Éducatif",
+      "description": "Concentrez-vous sur le vocabulaire qui aide à l'apprentissage des langues et à l'usage pratique."
+    },
+    "familyFriendly": {
+      "title": "Adapté aux Familles",
+      "description": "Gardez le contenu approprié pour les apprenants de tous âges."
+    },
+    "noProfanity": {
+      "title": "Pas de Grossièretés",
+      "description": "Évitez le langage offensant, les insultes ou le contenu inapproprié."
+    },
+    "noPersonalInfo": {
+      "title": "Pas d'Informations Personnelles",
+      "description": "N'incluez pas de données personnelles, d'adresses ou d'informations de contact."
+    },
+    "respectful": {
+      "title": "Contenu Respectueux",
+      "description": "Soyez culturellement sensible et évitez le contenu discriminatoire."
+    },
+    "legitimate": {
+      "title": "Mots Légitimes",
+      "description": "Utilisez de vrais mots de la langue cible, pas des termes inventés."
+    },
+    "footer": "Merci d'aider à créer un environnement d'apprentissage positif !",
+    "understand": "Je Comprends"
   },
   "pronunciationSystems": {
     "ipa": "API",

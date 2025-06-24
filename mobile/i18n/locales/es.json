@@ -64,13 +64,24 @@
       "signIn": "Iniciar Sesión"
     },
     "forgotPassword": {
-      "title": "Contraseña Olvidada",
-      "subtitle": "Introduce tu correo y te enviaremos instrucciones para restablecer tu contraseña",
-      "email": "Correo electrónico",
-      "emailPlaceholder": "Introduce tu correo electrónico",
-      "sendButton": "Enviar Instrucciones",
-      "backToSignIn": "Volver a Iniciar Sesión",
-      "successMessage": "Revisa tu correo para las instrucciones de restablecimiento"
+      "title": "¿Olvidaste tu contraseña?",
+      "subtitle": "¡No te preocupes! Introduce tu dirección de correo electrónico y te enviaremos instrucciones para restablecer tu contraseña.",
+      "email": "Dirección de correo electrónico",
+      "emailPlaceholder": "Introduce tu dirección de correo electrónico",
+      "sendButton": "Enviar correo de restablecimiento",
+      "backToSignIn": "Volver a iniciar sesión",
+      "successMessage": "Revisa tu correo para las instrucciones de restablecimiento",
+      "successTitle": "¡Revisa tu correo!",
+      "successSubtitle": "Hemos enviado instrucciones de restablecimiento de contraseña a:",
+      "instructionText": "Si no ves el correo, revisa tu carpeta de spam o haz clic abajo para reenviarlo.",
+      "resendButton": "Reenviar correo",
+      "rememberPassword": "¿Recuerdas tu contraseña?",
+      "signIn": "Iniciar sesión",
+      "securityNotice": "Por razones de seguridad, enviaremos un enlace de restablecimiento tanto si existe una cuenta con este correo como si no.",
+      "errorTitle": "Error",
+      "errorMessage": "No se pudo enviar el correo de restablecimiento. Por favor, inténtalo de nuevo más tarde.",
+      "emailRequired": "El correo electrónico es obligatorio",
+      "emailInvalid": "Por favor, introduce una dirección de correo electrónico válida"
     },
     "tagline": "Aprende idiomas, conecta mundos"
   },
@@ -425,7 +436,40 @@
     "pronunciationLoadError": "Error al cargar las opciones de pronunciación",
     "pronunciationDefaultWillBeUsed": "Se usará el sistema de pronunciación predeterminado",
     "errorMessage": "Error al crear la lista. Por favor, inténtalo de nuevo.",
-    "createButton": "Crear Lista"
+    "createButton": "Crear Lista",
+    "contentGuidelines": "Pautas de Contenido",
+    "contentGuidelinesText": "Por favor asegúrate de que el contenido de tu lista sea apropiado y siga nuestras pautas de la comunidad.",
+    "viewGuidelines": "Ver pautas completas"
+  },
+  "contentGuidelines": {
+    "title": "Pautas de Contenido",
+    "description": "Para garantizar una experiencia de aprendizaje positiva para todos, por favor sigue estas pautas:",
+    "educational": {
+      "title": "Contenido Educativo",
+      "description": "Enfócate en vocabulario que ayude con el aprendizaje de idiomas y el uso práctico."
+    },
+    "familyFriendly": {
+      "title": "Apto para Familias",
+      "description": "Mantén el contenido apropiado para estudiantes de todas las edades."
+    },
+    "noProfanity": {
+      "title": "Sin Blasfemias",
+      "description": "Evita lenguaje ofensivo, insultos o contenido inapropiado."
+    },
+    "noPersonalInfo": {
+      "title": "Sin Información Personal",
+      "description": "No incluyas datos personales, direcciones o información de contacto."
+    },
+    "respectful": {
+      "title": "Contenido Respetuoso",
+      "description": "Sé culturalmente sensible y evita contenido discriminatorio."
+    },
+    "legitimate": {
+      "title": "Palabras Legítimas",
+      "description": "Usa palabras reales del idioma objetivo, no términos inventados."
+    },
+    "footer": "¡Gracias por ayudar a crear un ambiente de aprendizaje positivo!",
+    "understand": "Entiendo"
   },
   "pronunciationSystems": {
     "ipa": "AFI",

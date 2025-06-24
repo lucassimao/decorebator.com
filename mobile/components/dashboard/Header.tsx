@@ -6,10 +6,13 @@ import React, { useEffect } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export const Header = () => {
   const { t } = useTranslation();
   const posthog = usePostHog();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
 
   // Fetch user profile
   const { data: user, isLoading } = useQuery({
@@ -27,6 +30,7 @@ export const Header = () => {
         name: user.firstName + ` ` + user.lastName,
       },
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Refresh user session when screen comes into focus
@@ -63,13 +67,19 @@ export const Header = () => {
         <TouchableOpacity
           style={styles.settingsButton}
           onPress={handleSettingsPress}
+          activeOpacity={0.7}
         >
-          <Ionicons name="settings-outline" size={24} color="#2D3436" />
+          <Ionicons
+            name="settings-outline"
+            size={26}
+            color={theme.colors.text.primary}
+          />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.profileButton}
           onPress={handleProfilePress}
+          activeOpacity={0.7}
         >
           <View style={styles.avatarContainer}>
             {profilePicture ? (
@@ -99,81 +109,82 @@ export const Header = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 10,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-  },
-  settingsButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  profileButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    backgroundColor: "#FFFFFF",
-  },
-  avatarContainer: {
-    width: "100%",
-    height: "100%",
-  },
-  profileImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 20,
-  },
-  avatarPlaceholder: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#FF7B54",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 20,
-  },
-  avatarText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  greetingContainer: {
-    marginBottom: 20,
-    paddingHorizontal: 20,
-  },
-  greeting: {
-    fontSize: 28,
-    fontWeight: "600",
-    color: "#2D3436",
-    marginBottom: 4,
-  },
-  userName: {
-    fontSize: 28,
-    fontWeight: "600",
-    color: "#2D3436",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#636E72",
-    marginTop: 4,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingTop: 10,
+      paddingBottom: 20,
+      paddingHorizontal: 20,
+    },
+    settingsButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: theme.colors.background.surface,
+      justifyContent: "center",
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      ...theme.shadows.md,
+      shadowColor: theme.colors.text.primary,
+      shadowOpacity: theme.mode === "light" ? 0.08 : 0.2,
+    },
+    profileButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      overflow: "hidden",
+      backgroundColor: theme.colors.background.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      ...theme.shadows.md,
+      shadowColor: theme.colors.text.primary,
+      shadowOpacity: theme.mode === "light" ? 0.08 : 0.2,
+    },
+    avatarContainer: {
+      width: "100%",
+      height: "100%",
+    },
+    profileImage: {
+      width: "100%",
+      height: "100%",
+      borderRadius: 22,
+    },
+    avatarPlaceholder: {
+      width: "100%",
+      height: "100%",
+      backgroundColor: theme.colors.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 22,
+    },
+    avatarText: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: theme.colors.text.inverse,
+    },
+    greetingContainer: {
+      marginBottom: 20,
+      paddingHorizontal: 20,
+    },
+    greeting: {
+      fontSize: 28,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      marginBottom: 4,
+    },
+    userName: {
+      fontSize: 28,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+      marginTop: 4,
+    },
+  });

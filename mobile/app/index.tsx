@@ -32,7 +32,7 @@ export default function Index() {
       usersApi.sigout();
       router.replace("/signin");
     }
-  }, [error]);
+  }, [error, router]);
 
   // Show loading only during initial authentication check
   if (loading) {
