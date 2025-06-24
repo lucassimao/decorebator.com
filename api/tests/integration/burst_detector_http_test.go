@@ -73,7 +73,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 				WithHeader("Authorization", "Bearer "+token).
 				WithJSON(map[string]interface{}{
 					"wordId":      wordID,
-					"reportType":  "incorrect_definition",
+					"errorType":   "_unrelated_example",
 					"description": fmt.Sprintf("Error report %d", i),
 				}).
 				Expect().
@@ -86,7 +86,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 				WithHeader("Authorization", "Bearer "+token).
 				WithJSON(map[string]interface{}{
 					"wordId":      wordID,
-					"reportType":  "incorrect_definition",
+					"errorType":   "_unrelated_example",
 					"description": fmt.Sprintf("Burst report %d", i),
 				}).
 				Expect()
@@ -115,7 +115,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 				WithHeader("Authorization", "Bearer "+token).
 				WithJSON(map[string]interface{}{
 					"wordId":      wordID,
-					"reportType":  "incorrect_definition",
+					"errorType":   "_unrelated_example",
 					"description": fmt.Sprintf("Block report %d", i),
 				}).
 				Expect()
@@ -138,7 +138,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 			WithHeader("Authorization", "Bearer "+token).
 			WithJSON(map[string]interface{}{
 				"wordId":      wordID,
-				"reportType":  "incorrect_definition",
+				"errorType":   "_unrelated_example",
 				"description": "Should be blocked",
 			}).
 			Expect().
@@ -235,7 +235,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 				WithHeader("Authorization", "Bearer "+token).
 				WithJSON(map[string]interface{}{
 					"wordId":      wordID,
-					"reportType":  "_unrelated_example",
+					"errorType":   "_unrelated_example",
 					"description": fmt.Sprintf("Error report %d", i),
 				}).
 				Expect()
@@ -283,7 +283,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 				"POST", "/errorReports",
 				map[string]interface{}{
 					"wordId":      1,
-					"reportType":  "_unrelated_example",
+					"errorType":   "_unrelated_example",
 					"description": "Should fail",
 				},
 			},
