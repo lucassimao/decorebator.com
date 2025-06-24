@@ -65,7 +65,7 @@ const LoginScreen: React.FC = () => {
         // id: variables.id,
         email: variables.email,
         // username: variables.name,
-      });      
+      });
       router.replace("/dashboard");
     },
     onError: (error: Error) => {

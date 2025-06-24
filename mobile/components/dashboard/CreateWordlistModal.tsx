@@ -22,7 +22,8 @@ import {
   View,
 } from "react-native";
 import { ContentGuidelinesModal } from "./ContentGuidelinesModal";
-import { captureException, addBreadcrumb } from "@/utils/sentry";
+import * as Sentry from "@sentry/react-native";
+
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type Language = {
@@ -123,9 +124,13 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   >({
     mutationFn: (dto) => wordlistsApi.addWordlist(dto),
     onSuccess: (data) => {
-      addBreadcrumb("Wordlist created successfully", "user.action", {
-        wordlistName: data.name,
-        language: data.languageCode,
+      Sentry.addBreadcrumb({
+        message: "Wordlist created successfully",
+        type: "user.action",
+        data: {
+          wordlistName: data.name,
+          language: data.languageCode,
+        },
       });
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
@@ -142,8 +147,8 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
       );
     },
     onError: (error) => {
-      captureException(error, {
-        user_action: {
+      Sentry.captureException(error, {
+        data: {
           action: "create_wordlist",
           error_message: error.message,
         },

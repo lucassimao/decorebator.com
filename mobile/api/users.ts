@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 import { DEFAULT_ERROR } from "./constants";
 import { decode } from "./jwt";
 import offlineManager from "@/utils/offlineManager";
-import { setUserContext, clearUserContext } from "@/utils/sentry";
+import * as Sentry from "@sentry/react-native";
 
 export type UserProfile = {
   id: number;
@@ -89,8 +89,7 @@ export async function sigout() {
     console.error("Error clearing offline cache:", error);
   }
 
-  // Clear Sentry user context
-  clearUserContext();
+  Sentry.setUser(null);
 
   if (Platform.OS === "web") {
     localStorage.removeItem("authorization");
@@ -228,6 +227,8 @@ export async function deleteProfile(): Promise<void> {
       DEFAULT_ERROR;
     throw new Error(message);
   }
+
+  Sentry.setUser(null);
 }
 
 function saveAuthorization(authorization: string) {
@@ -249,9 +250,10 @@ function saveAuthorization(authorization: string) {
     offlineManager.setUserPremiumStatus(isPremium);
 
     // Set Sentry user context
-    setUserContext({
+    Sentry.setUser({
       id: decoded.payload.sub.toString(),
       email: decoded.payload.email,
+      isPremium,
     });
   } catch (error) {
     console.error("Error updating offline manager:", error);
