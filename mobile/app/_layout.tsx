@@ -1,5 +1,3 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 
 import { useI18n } from "@/hooks/useI18n";
@@ -9,7 +7,6 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import i18n from "@/i18n";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProvider } from "posthog-react-native";
-import { useEffect } from "react";
 import { I18nextProvider } from "react-i18next";
 import * as Sentry from "@sentry/react-native";
 
@@ -44,20 +41,6 @@ export const unstable_settings = {
 };
 
 export default Sentry.wrap(function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-    ...FontAwesome.font,
-  });
-
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  if (!loaded) {
-    return null;
-  }
-
   return <RootLayoutNav />;
 });
 
