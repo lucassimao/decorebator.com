@@ -77,7 +77,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 					"description": fmt.Sprintf("Error report %d", i),
 				}).
 				Expect().
-				Status(http.StatusCreated)
+				Status(http.StatusOK)
 		}
 
 		// Trigger burst detection (exceed threshold of 20 error reports per minute)
@@ -93,7 +93,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 
 			if i < 20 {
 				// Should still succeed
-				resp.Status(http.StatusCreated)
+				resp.Status(http.StatusOK)
 			} else if i == 20 {
 				// 21st request - first violation should return warning
 				resp.Status(http.StatusTooManyRequests)
@@ -122,7 +122,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 
 			if i < 20 {
 				// Should succeed
-				resp.Status(http.StatusCreated)
+				resp.Status(http.StatusOK)
 			} else if i == 20 {
 				// Should trigger blocking
 				resp.Status(http.StatusForbidden)
@@ -241,7 +241,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 				Expect()
 
 			if i < 20 {
-				resp.Status(http.StatusCreated)
+				resp.Status(http.StatusOK)
 			} else if i == 20 {
 				// First violation
 				resp.Status(http.StatusTooManyRequests)
