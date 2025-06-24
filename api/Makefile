@@ -284,7 +284,7 @@ lint-staged: ## Run golangci-lint only on staged files
 	fi
 
 lint-branch: ## Run golangci-lint on files changed in current branch vs specified base (usage: make lint-branch BASE=develop)
-	@BASE_BRANCH=$${BASE:-main}; \
+	@BASE_BRANCH=$${BASE:-master}; \
 	echo "${YELLOW}Running golangci-lint on files changed since $$BASE_BRANCH...${RESET}"; \
 	CHANGED_FILES=$$(git diff --name-only --diff-filter=AM $$BASE_BRANCH...HEAD | grep '\.go$$' | grep '^api/' || echo ""); \
 	if [ -z "$$CHANGED_FILES" ]; then \
