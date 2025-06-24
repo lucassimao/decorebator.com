@@ -233,7 +233,10 @@ func buildLanguageSpecificPrompt(token string, languageCode string, pronunciatio
 		"You are a dictionary assistant for %s language. "+
 			"Your job is to look up exactly one %s token (word or phrase) provided by the user "+
 			"and respond ONLY with a JSON object that matches this schema exactly. "+
-			"All definitions, examples, and grammatical information must be in %s. %s",
+			"All definitions, examples, and grammatical information must be in %s. "+
+			"CRITICAL: If a word has multiple distinct meanings for the same part of speech, you MUST create separate definition objects for each meaning. "+
+			"For example, 'bank' (noun) must have TWO separate objects: one for 'financial institution' and another for 'edge of a river'. "+
+			"Each definition object must represent exactly ONE semantic concept or meaning. %s",
 		languageConfig.Name,
 		languageConfig.Name,
 		languageConfig.Name,
@@ -247,12 +250,15 @@ func buildLanguageSpecificPrompt(token string, languageCode string, pronunciatio
 			" • Each item inside \"results\" must be an object with exactly these required fields: \"language\", \"partOfSpeech\", \"meaning\", \"examples\", and \"inflections\". "+
 			" • \"language\" must be exactly: %s. "+
 			" • \"partOfSpeech\" must be one of: %s. "+
-			" • \"meaning\" must be a non-empty string in %s. "+
+			" • \"meaning\" must be a non-empty string in %s representing exactly ONE semantic concept. Never combine multiple meanings. "+
+			" • MULTIPLE MEANINGS RULE: When a word has multiple distinct meanings for the same part of speech, create separate objects in the results array. Each object must have: the same partOfSpeech, but a different and specific meaning. Never combine multiple meanings into one definition. "+
+			" • Examples of multiple meanings requiring separation: 'bank' (financial vs. river edge), 'bark' (tree covering vs. dog sound), 'match' (competition vs. fire starter), 'light' (illumination vs. not heavy). "+
+			" • Each meaning field must be concise and represent exactly ONE semantic concept. If you find yourself using 'or', 'also means', or listing multiple interpretations, split them into separate objects. "+
 			" • \"examples\" must be an array of strings. Each string must include the original token wrapped in square brackets. If the partOfSpeech is \"verb\" or equivalent, \"examples\" should be an empty array. "+
 			" • \"inflections\" must be an array. If partOfSpeech is \"verb\" or equivalent, you must include one item for each valid verb tense (%s). Otherwise, \"inflections\" must be an empty array. "+
 			" • Each inflection object must have exactly these required keys: \"inflection\" (string), \"tense\" (one of: %s), and \"examples\" (an array of exactly 7 strings). "+
 			" • Each of the 7 example strings inside \"inflection.examples\" must contain that inflected form wrapped in square brackets. "+
-			" • You may include multiple \"results\" items if the word can function in multiple parts of speech, but only one object per POS. "+
+			" • You may include multiple \"results\" items if the word can function in multiple parts of speech OR has multiple meanings for the same part of speech. "+
 			" • If the token is not found (or the user provided an invalid word), respond with: { \"results\": [], \"pronunciation\": \"\" } "+
 			" • Under no circumstances should you output any text other than valid JSON that matches the schema exactly. "+
 			" • When you do provide \"pronunciation\", %s "+
@@ -475,7 +481,7 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 			"properties": map[string]any{
 				"results": map[string]any{
 					"type":        "array",
-					"description": fmt.Sprintf("Array containing definitions of the word for each part of speech in %s", config.Name),
+					"description": fmt.Sprintf("Array containing definitions of the word. Create separate objects for each distinct meaning, even if they share the same part of speech. Each object represents exactly ONE semantic concept in %s", config.Name),
 					"items": map[string]any{
 						"type":                 "object",
 						"additionalProperties": false,
@@ -498,7 +504,7 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 							},
 							"meaning": map[string]string{
 								"type":        "string",
-								"description": fmt.Sprintf("A clear definition in %s", config.Name),
+								"description": fmt.Sprintf("A clear and concise definition representing exactly ONE semantic concept in %s. Never combine multiple meanings.", config.Name),
 							},
 							"examples": map[string]any{
 								"type": "array",
@@ -569,7 +575,7 @@ var DEFINITION_RESPONSE_SCHEMA = map[string]any{
 		"properties": map[string]any{
 			"results": map[string]any{
 				"type":        "array",
-				"description": "Array containing definitions of the word for each part of speech it can assume. If the word cannot be found, this array should be empty.",
+				"description": "Array containing definitions of the word. Create separate objects for each distinct meaning, even if they share the same part of speech. Each object represents exactly ONE semantic concept. If the word cannot be found, this array should be empty.",
 				"items": map[string]any{
 					"type":                 "object",
 					"additionalProperties": false,
@@ -590,7 +596,7 @@ var DEFINITION_RESPONSE_SCHEMA = map[string]any{
 						},
 						"meaning": map[string]string{
 							"type":        "string",
-							"description": "A clear and concise definition of the word for this part of speech.",
+							"description": "A clear and concise definition representing exactly ONE semantic concept. Never combine multiple meanings.",
 						},
 						"examples": map[string]any{
 							"type":        "array",
