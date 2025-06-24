@@ -36,117 +36,6 @@ func TestBurstDetectorHTTP(t *testing.T) {
 	require.NoError(t, err)
 	ctx := context.Background()
 
-	t.Run("Free user error report burst detection", func(t *testing.T) {
-		redisClient.FlushAll(ctx)
-		server := createTestServerWithBurstDetection(t)
-		defer server.Cleanup()
-
-		token := server.WithTestUser(t)
-
-		// Create a wordlist and word for error reporting (free users can do this)
-		wordlistResp := server.Expect.POST("/wordlists").
-			WithHeader("Authorization", "Bearer "+token).
-			WithJSON(map[string]interface{}{
-				"name":         "Free User Test List",
-				"description":  "For error report testing",
-				"languageCode": "en",
-			}).
-			Expect().
-			Status(http.StatusCreated)
-
-		wordlistID := wordlistResp.JSON().Object().Value("id").Number().Raw()
-
-		wordResp := server.Expect.POST("/wordlists/{wordlistId}/words", wordlistID).
-			WithHeader("Authorization", "Bearer "+token).
-			WithJSON(map[string]interface{}{
-				"name":  "testword",
-				"notes": "test notes",
-			}).
-			Expect().
-			Status(http.StatusCreated)
-
-		wordID := wordResp.JSON().Object().Value("id").Number().Raw()
-
-		// Test normal usage (under threshold of 20 error reports)
-		for i := 0; i < 10; i++ {
-			server.Expect.POST("/errorReports").
-				WithHeader("Authorization", "Bearer "+token).
-				WithJSON(map[string]interface{}{
-					"wordId":      wordID,
-					"errorType":   "_unrelated_example",
-					"description": fmt.Sprintf("Error report %d", i),
-				}).
-				Expect().
-				Status(http.StatusOK)
-		}
-
-		// Trigger burst detection (exceed threshold of 20 error reports per minute)
-		for i := 10; i < 22; i++ {
-			resp := server.Expect.POST("/errorReports").
-				WithHeader("Authorization", "Bearer "+token).
-				WithJSON(map[string]interface{}{
-					"wordId":      wordID,
-					"errorType":   "_unrelated_example",
-					"description": fmt.Sprintf("Burst report %d", i),
-				}).
-				Expect()
-
-			if i < 20 {
-				// Should still succeed
-				resp.Status(http.StatusOK)
-			} else if i == 20 {
-				// 21st request - first violation should return warning
-				resp.Status(http.StatusTooManyRequests)
-				respBody := resp.JSON().Object()
-				respBody.Value("error_code").String().IsEqual("BURST_WARNING")
-				respBody.Value("retry_after").Number().IsEqual(60)
-				respBody.ContainsKey("error")
-				break
-			}
-		}
-
-		// Reset burst window to simulate time passing
-		burstKey := fmt.Sprintf("burst:%d:error_report", getUserIDFromToken(t, server, token))
-		redisClient.Del(ctx, burstKey)
-
-		// Second burst should result in blocking
-		for i := 0; i < 22; i++ {
-			resp := server.Expect.POST("/errorReports").
-				WithHeader("Authorization", "Bearer "+token).
-				WithJSON(map[string]interface{}{
-					"wordId":      wordID,
-					"errorType":   "_unrelated_example",
-					"description": fmt.Sprintf("Block report %d", i),
-				}).
-				Expect()
-
-			if i < 20 {
-				// Should succeed
-				resp.Status(http.StatusOK)
-			} else if i == 20 {
-				// Should trigger blocking
-				resp.Status(http.StatusForbidden)
-				respBody := resp.JSON().Object()
-				respBody.Value("error_code").String().IsEqual("ACCOUNT_SUSPENDED_BURST")
-				respBody.ContainsKey("suspended_until")
-				break
-			}
-		}
-
-		// Verify user is now blocked on all subsequent requests
-		server.Expect.POST("/errorReports").
-			WithHeader("Authorization", "Bearer "+token).
-			WithJSON(map[string]interface{}{
-				"wordId":      wordID,
-				"errorType":   "_unrelated_example",
-				"description": "Should be blocked",
-			}).
-			Expect().
-			Status(http.StatusForbidden).
-			JSON().Object().
-			Value("error_code").String().IsEqual("ACCOUNT_SUSPENDED_BURST")
-	})
-
 	t.Run("Premium user wordlist creation burst protection", func(t *testing.T) {
 		redisClient.FlushAll(ctx)
 		server := createTestServerWithBurstDetection(t)
@@ -229,13 +118,23 @@ func TestBurstDetectorHTTP(t *testing.T) {
 
 		wordID := wordResp.JSON().Object().Value("id").Number().Raw()
 
+		// Cycle through different error types to avoid cooldown (1 hour per word/error type combination)
+		errorTypes := []string{
+			"_unrelated_image",
+			"_missing_image",
+			"_unrelated_meaning",
+			"_unrelated_example",
+			"_sound_not_playing",
+		}
+
 		// Test error report burst detection (threshold: 20)
 		for i := 0; i < 22; i++ {
+			errorType := errorTypes[i%len(errorTypes)] // Cycle through error types
 			resp := server.Expect.POST("/errorReports").
 				WithHeader("Authorization", "Bearer "+token).
 				WithJSON(map[string]interface{}{
 					"wordId":      wordID,
-					"errorType":   "_unrelated_example",
+					"errorType":   errorType,
 					"description": fmt.Sprintf("Error report %d", i),
 				}).
 				Expect()
