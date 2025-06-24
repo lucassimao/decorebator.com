@@ -27,7 +27,8 @@
     "hide": "MASQUER",
     "goBack": "Retour",
     "more": "Plus",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "warning": "Avertissement"
   },
   "auth": {
     "signin": {
@@ -191,6 +192,12 @@
       "wrongMeaning": "Mauvais sens",
       "wrongExample": "Mauvais exemple",
       "soundNotPlaying": "Le son ne fonctionne pas"
+    },
+    "burst": {
+      "warningMessage": "Activité inhabituelle détectée. Veuillez ralentir. Des demandes rapides continues peuvent entraîner une suspension temporaire.",
+      "suspendedTitle": "Compte temporairement suspendu",
+      "suspendedMessage": "Votre compte a été temporairement suspendu en raison d'une activité inhabituelle. Il sera automatiquement restauré à {{until}}.",
+      "tomorrow": "minuit"
     },
     "audioPlaying": "En cours de lecture...",
     "audioTapToPlay": "Touchez pour écouter",
@@ -504,12 +511,11 @@
     "practice": "Pratiquer",
     "quiz": "Quiz"
   },
-    "analytics": {
+  "analytics": {
     "header": {
       "title": "Analyse d'Apprentissage",
       "subtitle": "Suivez vos progrès et votre maîtrise",
-"updateNote":"Statistiques mises à jour toutes les heures"
-
+      "updateNote": "Statistiques mises à jour toutes les heures"
     },
     "stats": {
       "wordsToday": "Mots Aujourd'hui",

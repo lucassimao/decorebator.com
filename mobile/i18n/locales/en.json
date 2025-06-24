@@ -27,7 +27,8 @@
     "hide": "HIDE",
     "goBack": "Go Back",
     "more": "More",
-    "retry": "Retry"
+    "retry": "Retry",
+    "warning": "Warning"
   },
   "auth": {
     "signin": {
@@ -589,6 +590,12 @@
       "meaning_from_audio": "Meaning from Audio",
       "word_from_example_audio": "Word from Example Audio"
     }
+  },
+  "burst": {
+    "warningMessage": "Unusual activity detected. Please slow down. Continued rapid requests may result in temporary suspension.",
+    "suspendedTitle": "Account Temporarily Suspended",
+    "suspendedMessage": "Your account has been temporarily suspended due to unusual activity. It will be automatically restored at {{until}}.",
+    "tomorrow": "midnight"
   },
   "flashcards": {
     "noWordsFound": "No words found in this wordlist",

@@ -27,7 +27,8 @@
     "hide": "AUSBLENDEN",
     "goBack": "Zurück",
     "more": "Mehr",
-    "retry": "Wiederholen"
+    "retry": "Wiederholen",
+    "warning": "Warnung"
   },
   "auth": {
     "signin": {
@@ -193,6 +194,12 @@
       "wrongMeaning": "Falsche Bedeutung",
       "wrongExample": "Falsches Beispiel",
       "soundNotPlaying": "Ton wird nicht abgespielt"
+    },
+    "burst": {
+      "warningMessage": "Ungewöhnliche Aktivität erkannt. Bitte verlangsamen Sie. Weitere schnelle Anfragen können zu einer vorübergehenden Sperrung führen.",
+      "suspendedTitle": "Konto vorübergehend gesperrt",
+      "suspendedMessage": "Ihr Konto wurde aufgrund ungewöhnlicher Aktivitäten vorübergehend gesperrt. Es wird automatisch um {{until}} wiederhergestellt.",
+      "tomorrow": "Mitternacht"
     },
     "audioPlaying": "Wird abgespielt...",
     "audioTapToPlay": "Zum Abspielen tippen",
@@ -513,11 +520,11 @@
     "practice": "Üben",
     "quiz": "Quiz"
   },
-   "analytics": {
+  "analytics": {
     "header": {
       "title": "Lernanalyse",
       "subtitle": "Verfolgen Sie Ihren Fortschritt und Ihre Beherrschung",
-"updateNote":"Statistiken werden stündlich aktualisiert"
+      "updateNote": "Statistiken werden stündlich aktualisiert"
     },
     "stats": {
       "wordsToday": "Wörter Heute",

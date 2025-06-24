@@ -27,7 +27,8 @@
     "hide": "非表示",
     "goBack": "戻る",
     "more": "もっと",
-    "retry": "再試行"
+    "retry": "再試行",
+    "warning": "警告"
   },
   "auth": {
     "signin": {
@@ -97,7 +98,7 @@
       "afternoon": "こんにちは",
       "evening": "こんばんは"
     },
-        "stats": {
+    "stats": {
       "failedToLoad": "統計の読み込みに失敗しました",
       "tapToRetry": "タップして再試行",
       "learningProgress": "学習進捗",
@@ -191,6 +192,12 @@
       "wrongMeaning": "間違った意味",
       "wrongExample": "間違った例",
       "soundNotPlaying": "音が再生されません"
+    },
+    "burst": {
+      "warningMessage": "異常なアクティビティが検出されました。速度を落としてください。連続した高速リクエストは一時的な停止につながる可能性があります。",
+      "suspendedTitle": "アカウント一時停止",
+      "suspendedMessage": "異常なアクティビティのため、アカウントが一時的に停止されました。{{until}}に自動的に復元されます。",
+      "tomorrow": "深夜0時"
     },
     "audioPlaying": "再生中...",
     "audioTapToPlay": "タップして再生",
@@ -508,7 +515,7 @@
     "header": {
       "title": "学習分析",
       "subtitle": "進捗と習熟度を追跡",
-      "updateNote":"統計は毎時更新されます"
+      "updateNote": "統計は毎時更新されます"
     },
     "stats": {
       "wordsToday": "今日の単語",

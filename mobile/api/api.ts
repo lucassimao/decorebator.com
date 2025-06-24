@@ -5,6 +5,7 @@ import {
 } from "./constants";
 import { getAuthorization, sigout } from "./users";
 import { router } from "expo-router";
+import { BurstViolationError, BurstErrorData } from "./burst";
 
 export async function callAPI<T>(
   method: "GET" | "POST" | "DELETE" | "PATCH" | "PUT",
@@ -54,7 +55,17 @@ export async function callAPI<T>(
       router.dismissAll();
       router.replace("/signin");
     } else {
-      // For rate limit errors, we want to pass the full response body
+      // Check for burst violations
+      if (
+        (response.status === 429 || response.status === 403) &&
+        responseBody?.error_code &&
+        (responseBody.error_code === "BURST_WARNING" ||
+          responseBody.error_code === "ACCOUNT_SUSPENDED_BURST")
+      ) {
+        throw new BurstViolationError(responseBody as BurstErrorData);
+      }
+      
+      // For other rate limit errors, we want to pass the full response body
       if (response.status === 429) {
         const error: any = new Error(message);
         error.status = response.status;

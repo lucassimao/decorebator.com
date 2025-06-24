@@ -1,5 +1,6 @@
 import * as wordlistsApi from "@/api/wordlists";
 import { CreateWordlistDTO } from "@/api/wordlists";
+import { BurstViolationError } from "@/api/burst";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -147,12 +148,38 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
       );
     },
     onError: (error) => {
-      Sentry.captureException(error, {
-        data: {
-          action: "create_wordlist",
-          error_message: error.message,
-        },
-      });
+      if (error instanceof BurstViolationError) {
+        let title = t("common.warning");
+        let message = "";
+        
+        if (error.isWarning()) {
+          message = t("burst.warningMessage");
+        } else if (error.isSuspended()) {
+          title = t("burst.suspendedTitle");
+          const suspendedUntil = error.suspendedUntil
+            ? error.suspendedUntil.toLocaleString()
+            : t("burst.tomorrow");
+          message = t("burst.suspendedMessage", { until: suspendedUntil });
+        }
+        
+        Alert.alert(title, message);
+        Sentry.addBreadcrumb({
+          message: "Burst violation detected",
+          type: "warning",
+          data: {
+            action: "create_wordlist",
+            error_code: error.errorCode,
+          },
+        });
+      } else {
+        Sentry.captureException(error, {
+          data: {
+            action: "create_wordlist",
+            error_message: error.message,
+          },
+        });
+        Alert.alert(t("common.error"), t("createWordlist.errorMessage"));
+      }
       console.log(error);
       onError?.(error);
     },

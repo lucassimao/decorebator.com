@@ -401,8 +401,111 @@ func SendPaymentFailedEmail(user *model.User, data SubscriptionEmailData) error 
 	return nil
 }
 
+// SendEmail sends a generic email with both plain text and HTML content
+func SendEmail(toEmail, toName, subject, plainTextContent, htmlContent string) error {
+	logger := slog.With("func", "SendEmail", "to", toEmail)
+	
+	from := mail.NewEmail("Decorebator", "support@decorebator.com")
+	to := mail.NewEmail(toName, toEmail)
+	
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
+	
+	response, err := client.Send(message)
+	if err != nil {
+		logger.Error("failed to send email", "error", err, "to", toEmail, "subject", subject)
+		return err
+	}
+	
+	if response.StatusCode > 299 {
+		logger.Error("sendgrid returned error status", 
+			"status_code", response.StatusCode, 
+			"body", response.Body,
+			"to", toEmail,
+			"subject", subject)
+		return fmt.Errorf("sendgrid error: %s", response.Body)
+	}
+	
+	logger.Info("email sent successfully", "to", toEmail, "subject", subject)
+	return nil
+}
+
+//go:embed burst_blocked.html
+var burstBlockedEmailTemplate string
+
 //go:embed welcome.html
 var welcomeEmailTemplate string
+
+func SendBurstBlockedEmail(userID int64, email, firstName, activityType string, violations int, blockedUntil time.Time) error {
+	logger := slog.With("func", "SendBurstBlockedEmail", "userId", userID, "email", email)
+
+	tmpl, err := template.New("email").Parse(burstBlockedEmailTemplate)
+	if err != nil {
+		logger.Error("failed to parse burst blocked email template", "error", err)
+		return err
+	}
+
+	data := map[string]interface{}{
+		"FirstName":    firstName,
+		"ActivityType": activityType,
+		"Violations":   violations,
+		"BlockedUntil": blockedUntil.Format("January 2, 2006 at 3:04 PM MST"),
+	}
+
+	var htmlBuilder strings.Builder
+	err = tmpl.Execute(&htmlBuilder, data)
+	if err != nil {
+		logger.Error("failed to execute burst blocked email template", "error", err)
+		return err
+	}
+
+	// Create plain text version
+	plainTextContent := fmt.Sprintf(`Dear %s,
+
+We've detected unusual activity on your Decorebator account that appears to be automated or scripted behavior.
+
+Your account has been temporarily suspended due to unusual activity.
+
+Suspension Details:
+- Activity Detected: Rapid %s
+- Violations Today: %d
+- Account Will Be Restored: %s
+
+This suspension is temporary and is in place to protect our service and maintain fair usage for all users. Your account will be automatically restored at midnight, and you'll have full access to all features again.
+
+If you believe this is a mistake or if you were performing legitimate actions, please reply to this email with details about your usage, and we'll review your case promptly.
+
+Best regards,
+The Decorebator Team
+
+This is an automated message sent due to unusual account activity. Please do not reply unless you need to report an issue.`,
+		firstName,
+		activityType,
+		violations,
+		blockedUntil.Format("January 2, 2006 at 3:04 PM MST"),
+	)
+
+	from := mail.NewEmail("Decorebator", "support@decorebator.com")
+	subject := "Account Temporarily Suspended - Unusual Activity Detected"
+	to := mail.NewEmail(firstName, email)
+
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlBuilder.String())
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
+	response, err := client.Send(message)
+
+	if err != nil {
+		logger.Error("failed to send burst blocked email", "error", err)
+		return err
+	}
+
+	if response.StatusCode > 299 {
+		logger.Error("sendgrid returned error status", "statusCode", response.StatusCode, "body", response.Body)
+		return fmt.Errorf("failed to send burst blocked email: %v", response.Body)
+	}
+
+	logger.Info("burst blocked email sent successfully")
+	return nil
+}
 
 func SendWelcomeEmail(email string) error {
 	userRepo, err := GetUserRepositoryForMail()

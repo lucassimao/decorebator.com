@@ -124,7 +124,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 	authenticatedRoutes.Use(Authenticate)
 	{
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
-		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(subService, "create_wordlist"), WordlistRoutes.Create)
+		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(subService, "create_wordlist"), AntiBurstMiddleware("wordlist_create"), WordlistRoutes.Create)
 		authenticatedRoutes.GET("/wordlists/pronunciation-systems", WordlistRoutes.GetPronunciationSystems)
 		authenticatedRoutes.GET("/wordlists/:wordlistId", WordlistRoutes.GetById)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId", WordlistRoutes.Update)
@@ -133,10 +133,10 @@ func SetupRoutes(config *Config) *gin.Engine {
 		authenticatedRoutes.DELETE("/wordlists/:wordlistId/words/:wordId", WordRoutes.Delete)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId/words/:wordId", WordRoutes.Update)
 		authenticatedRoutes.GET("/wordlists/:wordlistId/words/:wordId/definitions", WordRoutes.GetDefinitions)
-		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(subService, "add_word"), WordRoutes.Create)
+		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(subService, "add_word"), AntiBurstMiddleware("word_create"), WordRoutes.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizRoutes.Save)
-		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(), ErrorReportsRoutes.Create)
+		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(), AntiBurstMiddleware("error_report"), ErrorReportsRoutes.Create)
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus())
 
 		RegisterAnalyticsRoutes(authenticatedRoutes)

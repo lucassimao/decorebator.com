@@ -27,7 +27,8 @@
     "hide": "OCULTAR",
     "goBack": "Voltar",
     "more": "Mais",
-    "retry": "Tentar novamente"
+    "retry": "Tentar novamente",
+    "warning": "Aviso"
   },
   "auth": {
     "signin": {
@@ -97,7 +98,7 @@
       "afternoon": "Boa Tarde",
       "evening": "Boa Noite"
     },
-      "stats": {
+    "stats": {
       "failedToLoad": "Falha ao carregar estatísticas",
       "tapToRetry": "Toque para tentar novamente",
       "learningProgress": "Progresso de Aprendizado",
@@ -191,6 +192,12 @@
       "wrongMeaning": "Significado errado",
       "wrongExample": "Exemplo errado",
       "soundNotPlaying": "Som não está tocando"
+    },
+    "burst": {
+      "warningMessage": "Atividade incomum detectada. Por favor, diminua a velocidade. Solicitações rápidas contínuas podem resultar em suspensão temporária.",
+      "suspendedTitle": "Conta temporariamente suspensa",
+      "suspendedMessage": "Sua conta foi temporariamente suspensa devido a atividade incomum. Ela será restaurada automaticamente às {{until}}.",
+      "tomorrow": "meia-noite"
     },
     "audioPlaying": "Reproduzindo...",
     "audioTapToPlay": "Toque para reproduzir",
@@ -505,7 +512,7 @@
     "practice": "Praticar",
     "quiz": "Quiz"
   },
-    "analytics": {
+  "analytics": {
     "header": {
       "title": "Análise de Aprendizado",
       "subtitle": "Acompanhe seu progresso e domínio",

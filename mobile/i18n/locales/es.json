@@ -27,7 +27,8 @@
     "hide": "OCULTAR",
     "goBack": "Volver",
     "more": "Más",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "warning": "Advertencia"
   },
   "auth": {
     "signin": {
@@ -580,6 +581,12 @@
       "meaning_from_audio": "Significado por Audio",
       "word_from_example_audio": "Palabra por Audio de Ejemplo"
     }
+  },
+  "burst": {
+    "warningMessage": "Actividad inusual detectada. Por favor, reduce la velocidad. Las solicitudes rápidas continuas pueden resultar en suspensión temporal.",
+    "suspendedTitle": "Cuenta Temporalmente Suspendida",
+    "suspendedMessage": "Tu cuenta ha sido suspendida temporalmente debido a actividad inusual. Se restaurará automáticamente a las {{until}}.",
+    "tomorrow": "medianoche"
   },
   "flashcards": {
     "noWordsFound": "No se encontraron palabras en esta lista",

@@ -1,6 +1,7 @@
 import * as wordlistsApi from "@/api/wordlists";
 import * as offlineWordsApi from "@/api/offlineWords";
 import { Wordlist } from "@/api/wordlists";
+import { BurstViolationError } from "@/api/burst";
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
 import { useOffline } from "@/hooks/useOffline";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -148,7 +149,27 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       reset();
       setShowAddForm(false);
     },
-    onError: console.error,
+    onError: (error) => {
+      if (error instanceof BurstViolationError) {
+        let title = t("common.warning");
+        let message = "";
+        
+        if (error.isWarning()) {
+          message = t("burst.warningMessage");
+        } else if (error.isSuspended()) {
+          title = t("burst.suspendedTitle");
+          const suspendedUntil = error.suspendedUntil
+            ? error.suspendedUntil.toLocaleString()
+            : t("burst.tomorrow");
+          message = t("burst.suspendedMessage", { until: suspendedUntil });
+        }
+        
+        Alert.alert(title, message);
+      } else {
+        Alert.alert(t("common.error"), t("wordDetail.addWordError"));
+      }
+      console.error(error);
+    },
   });
 
   const deleteWordMutation = useMutation({

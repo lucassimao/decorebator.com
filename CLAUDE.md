@@ -608,6 +608,44 @@ The system uses a deterministic priority-based algorithm for word selection, ens
 - Progressive quiz difficulty matching box level
 - Consistent user experience across sessions
 
+## Recent Updates & Quality Assurance
+
+### Comprehensive QA Commands (January 2025)
+The Makefile now includes advanced QA workflows matching the GitHub Actions pipeline:
+
+```bash
+# Quality Assurance Suite
+make qa                      # Full QA suite (lint + security + all tests)
+make qa-fast                # Fast QA checks (excludes integration tests)
+make qa-ci                  # CI-style output with JUnit XML reports
+make security-scan-full     # Comprehensive security scanning (gosec + govulncheck + go vet)
+
+# Advanced Test Commands
+make test-report            # Unit tests with detailed reporting (gotestsum)
+make test-report-full       # Full test suite with detailed reporting
+make test-ci               # CI-style tests with JUnit XML output
+make coverage-threshold    # Verify coverage meets 70% unit / 80% integration thresholds
+
+# Advanced Linting Workflows
+make lint-changed          # Lint only files changed since master
+make lint-staged          # Lint only staged files
+make lint-branch BASE=main # Lint files changed vs specified branch
+make lint-fix             # Auto-fix linting issues
+make lint-diff            # Preview what lint-fix would change
+
+# Git Integration
+make git-hooks-install    # Install pre-commit/pre-push hooks
+make pre-commit          # Run pre-commit checks (staged files)
+make pre-push           # Run pre-push checks (changed files + tests)
+```
+
+### Tool Version Alignment
+All development tools match GitHub Actions versions for consistency:
+```bash
+make check-versions      # Verify installed tool versions match expected
+make qa-install         # Install all QA tools with correct versions
+```
+
 ## Memories
 - read README.md for more additional context on decorebator project
 - read all files inside the docs folder for comprehensive documentation and  patterns
