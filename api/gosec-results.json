@@ -1,0 +1,124 @@
+{
+	"Golang errors": {},
+	"Issues": [
+		{
+			"severity": "HIGH",
+			"confidence": "MEDIUM",
+			"cwe": {
+				"id": "338",
+				"url": "https://cwe.mitre.org/data/definitions/338.html"
+			},
+			"rule_id": "G404",
+			"details": "Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand)",
+			"file": "/home/lucas/workspace/decorebator-v2/api/tests/integration/setup/fixtures.go",
+			"code": "132: \t\tMeaning:      fake.Sentence(8),\n133: \t\tPartOfSpeech: partsOfSpeech[rand.Intn(len(partsOfSpeech))], //nolint:gosec // G404 - test fixtures only\n134: \t\tExamples:     []string{fake.Sentence(6), fake.Sentence(7)},\n",
+			"line": "133",
+			"column": "31",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "HIGH",
+			"confidence": "MEDIUM",
+			"cwe": {
+				"id": "338",
+				"url": "https://cwe.mitre.org/data/definitions/338.html"
+			},
+			"rule_id": "G404",
+			"details": "Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand)",
+			"file": "/home/lucas/workspace/decorebator-v2/api/tests/integration/setup/fixtures.go",
+			"code": "80: \tlanguages := []string{\"en\", \"es\", \"fr\", \"de\", \"it\", \"pt\", \"ja\"}\n81: \tlanguageCode := languages[rand.Intn(len(languages))] //nolint:gosec // G404 - test fixtures only\n82: \n",
+			"line": "81",
+			"column": "28",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "HIGH",
+			"confidence": "MEDIUM",
+			"cwe": {
+				"id": "338",
+				"url": "https://cwe.mitre.org/data/definitions/338.html"
+			},
+			"rule_id": "G404",
+			"details": "Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand)",
+			"file": "/home/lucas/workspace/decorebator-v2/api/internal/service/text_to_speech_worker.go",
+			"code": "78: \t\t\t//nolint:gosec // G404 - using weak random for rate limiting jitter, not cryptographic security\n79: \t\t\treturn river.JobSnooze(time.Minute + (time.Duration(rand.Intn(60)) * time.Second))\n80: \t\tcase \"billing_hard_limit_reached\":\n",
+			"line": "79",
+			"column": "56",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "HIGH",
+			"confidence": "MEDIUM",
+			"cwe": {
+				"id": "338",
+				"url": "https://cwe.mitre.org/data/definitions/338.html"
+			},
+			"rule_id": "G404",
+			"details": "Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand)",
+			"file": "/home/lucas/workspace/decorebator-v2/api/internal/service/leitner_system_strategy.go",
+			"code": "595: \t\t\t//nolint:gosec // G404 - fallback random selection, not security-critical\n596: \t\t\ti := mathrand.Intn(len(availableExamples))\n597: \t\t\tselectedExample = availableExamples[i]\n",
+			"line": "596",
+			"column": "9",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "HIGH",
+			"confidence": "MEDIUM",
+			"cwe": {
+				"id": "338",
+				"url": "https://cwe.mitre.org/data/definitions/338.html"
+			},
+			"rule_id": "G404",
+			"details": "Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand)",
+			"file": "/home/lucas/workspace/decorebator-v2/api/internal/service/leitner_system_strategy.go",
+			"code": "32: \t\t//nolint:gosec // G404 - fallback random when crypto/rand is unavailable\n33: \t\treturn mathrand.Intn(limit)\n34: \t}\n",
+			"line": "33",
+			"column": "10",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "HIGH",
+			"confidence": "MEDIUM",
+			"cwe": {
+				"id": "338",
+				"url": "https://cwe.mitre.org/data/definitions/338.html"
+			},
+			"rule_id": "G404",
+			"details": "Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand)",
+			"file": "/home/lucas/workspace/decorebator-v2/api/internal/service/image_generator_worker.go",
+			"code": "178: \t\t\t//nolint:gosec // G404 - using weak random for rate limiting jitter, not cryptographic security\n179: \t\t\treturn nil, river.JobSnooze(time.Minute + (time.Duration(rand.Intn(60)) * time.Second))\n180: \t\tcase \"billing_hard_limit_reached\":\n",
+			"line": "179",
+			"column": "61",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "HIGH",
+			"confidence": "MEDIUM",
+			"cwe": {
+				"id": "338",
+				"url": "https://cwe.mitre.org/data/definitions/338.html"
+			},
+			"rule_id": "G404",
+			"details": "Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand)",
+			"file": "/home/lucas/workspace/decorebator-v2/api/internal/service/example_audio_worker.go",
+			"code": "96: \t\t\t\t//nolint:gosec // G404 - using weak random for rate limiting jitter, not cryptographic security\n97: \t\t\t\treturn river.JobSnooze(time.Minute + (time.Duration(rand.Intn(60)) * time.Second))\n98: \t\t\tcase \"billing_hard_limit_reached\":\n",
+			"line": "97",
+			"column": "57",
+			"nosec": false,
+			"suppressions": null
+		}
+	],
+	"Stats": {
+		"files": 79,
+		"lines": 15011,
+		"nosec": 0,
+		"found": 7
+	},
+	"GosecVersion": "dev"
+}

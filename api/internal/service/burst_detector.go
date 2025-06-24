@@ -139,8 +139,8 @@ func (b *BurstDetector) GetBlockExpiry(ctx context.Context, userID int64) *time.
 	blockedUntilStr, err := b.redis.HGet(ctx, key, "blocked_until").Result()
 	if err != nil {
 		// If we can't get the exact time, try to calculate from TTL
-		ttl, err := b.redis.TTL(ctx, key).Result()
-		if err != nil || ttl <= 0 {
+		ttl, ttlErr := b.redis.TTL(ctx, key).Result()
+		if ttlErr != nil || ttl <= 0 {
 			return nil
 		}
 		expiry := time.Now().Add(ttl)
@@ -180,13 +180,13 @@ func (b *BurstDetector) GetDailyViolations(ctx context.Context, userID int64) (i
 // UnblockUser removes the block for a specific user
 func (b *BurstDetector) UnblockUser(ctx context.Context, userID int64) error {
 	key := fmt.Sprintf("blocked:%d", userID)
-	
+
 	err := b.redis.Del(ctx, key).Err()
 	if err != nil {
 		common.Logger.Error("Failed to unblock user", "error", err, "user_id", userID)
 		return err
 	}
-	
+
 	common.Logger.Info("User unblocked successfully", "user_id", userID)
 	return nil
 }
@@ -200,19 +200,19 @@ func (b *BurstDetector) UnblockAllUsers(ctx context.Context) (int64, error) {
 		common.Logger.Error("Failed to find blocked user keys", "error", err)
 		return 0, err
 	}
-	
+
 	if len(keys) == 0 {
 		common.Logger.Info("No blocked users found")
 		return 0, nil
 	}
-	
+
 	// Delete all blocked user keys
 	deleted, err := b.redis.Del(ctx, keys...).Result()
 	if err != nil {
 		common.Logger.Error("Failed to unblock all users", "error", err, "keys_count", len(keys))
 		return 0, err
 	}
-	
+
 	common.Logger.Info("All users unblocked successfully", "unblocked_count", deleted)
 	return deleted, nil
 }
@@ -225,7 +225,7 @@ func (b *BurstDetector) GetBlockedUsers(ctx context.Context) ([]int64, error) {
 		common.Logger.Error("Failed to find blocked user keys", "error", err)
 		return nil, err
 	}
-	
+
 	var blockedUsers []int64
 	for _, key := range keys {
 		// Extract user ID from key format "blocked:123"
@@ -236,6 +236,6 @@ func (b *BurstDetector) GetBlockedUsers(ctx context.Context) ([]int64, error) {
 			}
 		}
 	}
-	
+
 	return blockedUsers, nil
 }

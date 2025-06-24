@@ -273,8 +273,8 @@ func TestBurstDetector(t *testing.T) {
 		// Block some users
 		expectedUserIDs := []int64{12358, 12359, 12360}
 		for _, userID := range expectedUserIDs {
-			err := detector.BlockUserFor24Hours(ctx, userID)
-			assert.NoError(t, err)
+			blockErr := detector.BlockUserFor24Hours(ctx, userID)
+			assert.NoError(t, blockErr)
 		}
 
 		// Get blocked users

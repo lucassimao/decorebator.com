@@ -77,7 +77,7 @@ func UnblockAllUsers() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"message":        "All users unblocked successfully",
+			"message":         "All users unblocked successfully",
 			"unblocked_count": unlockedCount,
 		})
 	}
