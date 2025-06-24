@@ -36,19 +36,133 @@ func TestBurstDetectorHTTP(t *testing.T) {
 	require.NoError(t, err)
 	ctx := context.Background()
 
-	t.Run("Free user wordlist creation burst detection", func(t *testing.T) {
+	t.Run("Free user error report burst detection", func(t *testing.T) {
 		redisClient.FlushAll(ctx)
 		server := createTestServerWithBurstDetection(t)
 		defer server.Cleanup()
 
 		token := server.WithTestUser(t)
 
+		// Create a wordlist and word for error reporting (free users can do this)
+		wordlistResp := server.Expect.POST("/wordlists").
+			WithHeader("Authorization", "Bearer "+token).
+			WithJSON(map[string]interface{}{
+				"name":         "Free User Test List",
+				"description":  "For error report testing",
+				"languageCode": "en",
+			}).
+			Expect().
+			Status(http.StatusCreated)
+
+		wordlistID := wordlistResp.JSON().Object().Value("id").Number().Raw()
+
+		wordResp := server.Expect.POST("/wordlists/{wordlistId}/words", wordlistID).
+			WithHeader("Authorization", "Bearer "+token).
+			WithJSON(map[string]interface{}{
+				"name":  "testword",
+				"notes": "test notes",
+			}).
+			Expect().
+			Status(http.StatusCreated)
+
+		wordID := wordResp.JSON().Object().Value("id").Number().Raw()
+
+		// Test normal usage (under threshold of 20 error reports)
+		for i := 0; i < 10; i++ {
+			server.Expect.POST("/errorReports").
+				WithHeader("Authorization", "Bearer "+token).
+				WithJSON(map[string]interface{}{
+					"wordId":      wordID,
+					"reportType":  "incorrect_definition",
+					"description": fmt.Sprintf("Error report %d", i),
+				}).
+				Expect().
+				Status(http.StatusCreated)
+		}
+
+		// Trigger burst detection (exceed threshold of 20 error reports per minute)
+		for i := 10; i < 22; i++ {
+			resp := server.Expect.POST("/errorReports").
+				WithHeader("Authorization", "Bearer "+token).
+				WithJSON(map[string]interface{}{
+					"wordId":      wordID,
+					"reportType":  "incorrect_definition",
+					"description": fmt.Sprintf("Burst report %d", i),
+				}).
+				Expect()
+
+			if i < 20 {
+				// Should still succeed
+				resp.Status(http.StatusCreated)
+			} else if i == 20 {
+				// 21st request - first violation should return warning
+				resp.Status(http.StatusTooManyRequests)
+				respBody := resp.JSON().Object()
+				respBody.Value("error_code").String().IsEqual("BURST_WARNING")
+				respBody.Value("retry_after").Number().IsEqual(60)
+				respBody.ContainsKey("error")
+				break
+			}
+		}
+
+		// Reset burst window to simulate time passing
+		burstKey := fmt.Sprintf("burst:%d:error_report", getUserIDFromToken(t, server, token))
+		redisClient.Del(ctx, burstKey)
+
+		// Second burst should result in blocking
+		for i := 0; i < 22; i++ {
+			resp := server.Expect.POST("/errorReports").
+				WithHeader("Authorization", "Bearer "+token).
+				WithJSON(map[string]interface{}{
+					"wordId":      wordID,
+					"reportType":  "incorrect_definition",
+					"description": fmt.Sprintf("Block report %d", i),
+				}).
+				Expect()
+
+			if i < 20 {
+				// Should succeed
+				resp.Status(http.StatusCreated)
+			} else if i == 20 {
+				// Should trigger blocking
+				resp.Status(http.StatusForbidden)
+				respBody := resp.JSON().Object()
+				respBody.Value("error_code").String().IsEqual("ACCOUNT_SUSPENDED_BURST")
+				respBody.ContainsKey("suspended_until")
+				break
+			}
+		}
+
+		// Verify user is now blocked on all subsequent requests
+		server.Expect.POST("/errorReports").
+			WithHeader("Authorization", "Bearer "+token).
+			WithJSON(map[string]interface{}{
+				"wordId":      wordID,
+				"reportType":  "incorrect_definition",
+				"description": "Should be blocked",
+			}).
+			Expect().
+			Status(http.StatusForbidden).
+			JSON().Object().
+			Value("error_code").String().IsEqual("ACCOUNT_SUSPENDED_BURST")
+	})
+
+	t.Run("Premium user wordlist creation burst protection", func(t *testing.T) {
+		redisClient.FlushAll(ctx)
+		server := createTestServerWithBurstDetection(t)
+		defer server.Cleanup()
+
+		token := server.WithPremiumUser(t)
+
+		// Premium users should have same burst detection (no bypass)
+		// Test wordlist creation burst (threshold: 10) since premium users have unlimited wordlists
+
 		// Test normal usage (under threshold of 10)
 		for i := 0; i < 5; i++ {
 			server.Expect.POST("/wordlists").
 				WithHeader("Authorization", "Bearer "+token).
 				WithJSON(map[string]interface{}{
-					"name":         fmt.Sprintf("Test List %d", i),
+					"name":         fmt.Sprintf("Premium List %d", i),
 					"description":  "Test description",
 					"languageCode": "en",
 				}).
@@ -56,8 +170,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 				Status(http.StatusCreated)
 		}
 
-		// Trigger burst detection (exceed threshold of 10)
-		// var firstViolationResp *http.Response
+		// Exceed threshold to trigger burst detection (10 wordlists per minute)
 		for i := 5; i < 12; i++ {
 			resp := server.Expect.POST("/wordlists").
 				WithHeader("Authorization", "Bearer "+token).
@@ -69,116 +182,14 @@ func TestBurstDetectorHTTP(t *testing.T) {
 				Expect()
 
 			if i < 10 {
-				// Should still succeed
 				resp.Status(http.StatusCreated)
 			} else if i == 10 {
-				// 11th request - first violation should return warning
+				// First violation - warning
 				resp.Status(http.StatusTooManyRequests)
 				respBody := resp.JSON().Object()
 				respBody.Value("error_code").String().IsEqual("BURST_WARNING")
 				respBody.Value("retry_after").Number().IsEqual(60)
 				respBody.ContainsKey("error")
-			} else {
-				// After first violation, should continue with warnings
-				resp.Status(http.StatusTooManyRequests)
-			}
-		}
-
-		// Reset burst window to simulate time passing
-		// detector := service.NewBurstDetector(redisClient)
-		burstKey := fmt.Sprintf("burst:%d:wordlist_create", getUserIDFromToken(t, server, token))
-		redisClient.Del(ctx, burstKey)
-
-		// Second burst should result in blocking
-		for i := 0; i < 12; i++ {
-			resp := server.Expect.POST("/wordlists").
-				WithHeader("Authorization", "Bearer "+token).
-				WithJSON(map[string]interface{}{
-					"name":         fmt.Sprintf("Block List %d", i),
-					"description":  "Test description",
-					"languageCode": "en",
-				}).
-				Expect()
-
-			if i < 10 {
-				// Should succeed
-				resp.Status(http.StatusCreated)
-			} else if i == 10 {
-				// Should trigger blocking
-				resp.Status(http.StatusForbidden)
-				respBody := resp.JSON().Object()
-				respBody.Value("error_code").String().IsEqual("ACCOUNT_SUSPENDED_BURST")
-				respBody.ContainsKey("suspended_until")
-				break
-			}
-		}
-
-		// Verify user is now blocked on all subsequent requests
-		server.Expect.POST("/wordlists").
-			WithHeader("Authorization", "Bearer "+token).
-			WithJSON(map[string]interface{}{
-				"name":         "Should be blocked",
-				"description":  "Test description",
-				"languageCode": "en",
-			}).
-			Expect().
-			Status(http.StatusForbidden).
-			JSON().Object().
-			Value("error_code").String().IsEqual("ACCOUNT_SUSPENDED_BURST")
-	})
-
-	t.Run("Premium user has same burst protection", func(t *testing.T) {
-		redisClient.FlushAll(ctx)
-		server := createTestServerWithBurstDetection(t)
-		defer server.Cleanup()
-
-		token := server.WithPremiumUser(t)
-
-		// Premium users should have same burst detection (no bypass)
-		// Trigger burst detection on word creation (threshold: 50)
-
-		// First create a wordlist for word creation
-		wordlistResp := server.Expect.POST("/wordlists").
-			WithHeader("Authorization", "Bearer "+token).
-			WithJSON(map[string]interface{}{
-				"name":         "Premium Test List",
-				"description":  "For burst testing",
-				"languageCode": "en",
-			}).
-			Expect().
-			Status(http.StatusCreated)
-
-		wordlistID := wordlistResp.JSON().Object().Value("id").Number().Raw()
-
-		// Test normal usage (under threshold of 50)
-		for i := 0; i < 25; i++ {
-			server.Expect.POST("/wordlists/{wordlistId}/words", wordlistID).
-				WithHeader("Authorization", "Bearer "+token).
-				WithJSON(map[string]interface{}{
-					"name":  fmt.Sprintf("word%d", i),
-					"notes": "test notes",
-				}).
-				Expect().
-				Status(http.StatusCreated)
-		}
-
-		// Exceed threshold to trigger burst detection
-		for i := 25; i < 52; i++ {
-			resp := server.Expect.POST("/wordlists/{wordlistId}/words", wordlistID).
-				WithHeader("Authorization", "Bearer "+token).
-				WithJSON(map[string]interface{}{
-					"name":  fmt.Sprintf("burstword%d", i),
-					"notes": "test notes",
-				}).
-				Expect()
-
-			if i < 50 {
-				resp.Status(http.StatusCreated)
-			} else if i == 50 {
-				// First violation - warning
-				resp.Status(http.StatusTooManyRequests)
-				respBody := resp.JSON().Object()
-				respBody.Value("error_code").String().IsEqual("BURST_WARNING")
 				break
 			}
 		}
@@ -224,7 +235,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 				WithHeader("Authorization", "Bearer "+token).
 				WithJSON(map[string]interface{}{
 					"wordId":      wordID,
-					"reportType":  "incorrect_definition",
+					"reportType":  "_unrelated_example",
 					"description": fmt.Sprintf("Error report %d", i),
 				}).
 				Expect()
@@ -272,7 +283,7 @@ func TestBurstDetectorHTTP(t *testing.T) {
 				"POST", "/errorReports",
 				map[string]interface{}{
 					"wordId":      1,
-					"reportType":  "incorrect_definition",
+					"reportType":  "_unrelated_example",
 					"description": "Should fail",
 				},
 			},

@@ -23,7 +23,6 @@ func createTestServerWithMockModeration(t *testing.T) *setup.TestServer {
 	return setup.NewTestServer(t, config)
 }
 
-
 func TestContentFilteringWordlist_Create_ShouldRejectInappropriateName(t *testing.T) {
 	// Arrange
 	server := createTestServerWithMockModeration(t)
