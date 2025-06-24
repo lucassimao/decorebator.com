@@ -153,4 +153,3 @@ func (b *BurstDetector) GetDailyViolations(ctx context.Context, userID int64) (i
 	}
 	return count, err
 }
-

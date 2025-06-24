@@ -157,4 +157,3 @@ func TestBurstDetector(t *testing.T) {
 		assert.WithinDuration(t, midnight, *expiry, 2*time.Minute)
 	})
 }
-

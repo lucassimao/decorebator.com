@@ -404,28 +404,28 @@ func SendPaymentFailedEmail(user *model.User, data SubscriptionEmailData) error 
 // SendEmail sends a generic email with both plain text and HTML content
 func SendEmail(toEmail, toName, subject, plainTextContent, htmlContent string) error {
 	logger := slog.With("func", "SendEmail", "to", toEmail)
-	
+
 	from := mail.NewEmail("Decorebator", "support@decorebator.com")
 	to := mail.NewEmail(toName, toEmail)
-	
+
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
 	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-	
+
 	response, err := client.Send(message)
 	if err != nil {
 		logger.Error("failed to send email", "error", err, "to", toEmail, "subject", subject)
 		return err
 	}
-	
+
 	if response.StatusCode > 299 {
-		logger.Error("sendgrid returned error status", 
-			"status_code", response.StatusCode, 
+		logger.Error("sendgrid returned error status",
+			"status_code", response.StatusCode,
 			"body", response.Body,
 			"to", toEmail,
 			"subject", subject)
 		return fmt.Errorf("sendgrid error: %s", response.Body)
 	}
-	
+
 	logger.Info("email sent successfully", "to", toEmail, "subject", subject)
 	return nil
 }
