@@ -29,10 +29,17 @@ func init() {
 
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn:            sentryDsn,
-		Debug:          true,
+		Debug:          false, // Set to false in production to reduce overhead
 		SendDefaultPII: true,
+		// Performance optimizations
+		SampleRate:       1.0, // Capture 100% of errors
+		TracesSampleRate: 0.1, // Only capture 10% of performance traces
+		// Buffering settings
+		MaxBreadcrumbs: 50,
+		// The SDK handles async sending internally
+		AttachStacktrace: true,
 	}); err != nil {
-		fmt.Printf("Sentry initialization failed: %v\n", err)
+		common.Logger.Error("Sentry initialization failed", "error", err)
 	}
 
 }

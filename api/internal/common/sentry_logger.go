@@ -10,6 +10,7 @@ import (
 )
 
 // SentryHandler wraps slog.Handler to send errors to Sentry
+// It sends events asynchronously to avoid blocking the main request flow
 type SentryHandler struct {
 	handler slog.Handler
 }
@@ -67,8 +68,12 @@ func (h *SentryHandler) Handle(ctx context.Context, r slog.Record) error {
 			}
 		}
 
-		// Send to Sentry
-		sentry.CaptureEvent(event)
+		// Send to Sentry asynchronously to avoid blocking
+		// The Sentry SDK handles buffering and retries internally
+		go func() {
+			hub := sentry.CurrentHub().Clone()
+			hub.CaptureEvent(event)
+		}()
 	}
 
 	return nil
