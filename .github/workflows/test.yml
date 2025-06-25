@@ -61,7 +61,8 @@ jobs:
           go install gotest.tools/gotestsum@latest
           
           # Run tests with structured output and junit report
-          gotestsum --junitfile unit-tests.xml --format testname -- \
+          # Use pkgname-and-test-fails format for better failure visibility
+          gotestsum --junitfile unit-tests.xml --format pkgname-and-test-fails --jsonfile unit-tests.json -- \
             -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
           
           # Display coverage summary
@@ -82,26 +83,84 @@ jobs:
         if: always()
         with:
           name: unit-test-results
-          path: api/unit-tests.xml
+          path: |
+            api/unit-tests.xml
+            api/unit-tests.json
           
       - name: Generate unit test summary
         if: always()
         run: |
           echo "## 📊 Unit Test Results" >> $GITHUB_STEP_SUMMARY
+          
           if [ -f "unit-tests.xml" ]; then
             # Parse basic info from XML
             TESTS=$(grep -o 'tests="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
             FAILURES=$(grep -o 'failures="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
             ERRORS=$(grep -o 'errors="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
             
+            echo "### 📈 Test Summary" >> $GITHUB_STEP_SUMMARY
             echo "- **Total Tests**: $TESTS" >> $GITHUB_STEP_SUMMARY
             echo "- **Failures**: $FAILURES" >> $GITHUB_STEP_SUMMARY
             echo "- **Errors**: $ERRORS" >> $GITHUB_STEP_SUMMARY
             
             if [ "$FAILURES" = "0" ] && [ "$ERRORS" = "0" ]; then
-              echo "✅ All unit tests passed!" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "✅ **All unit tests passed!**" >> $GITHUB_STEP_SUMMARY
             else
-              echo "❌ Some unit tests failed. Check logs above for details." >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "❌ **Some unit tests failed**" >> $GITHUB_STEP_SUMMARY
+              
+              # Extract failed test details from XML
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### 🚨 Failed Tests Details" >> $GITHUB_STEP_SUMMARY
+              
+              # Use awk to parse XML and extract failure details
+              awk '
+              BEGIN { in_testcase = 0; test_name = ""; failure_msg = "" }
+              /<testcase/ { 
+                in_testcase = 1
+                # Extract test name from testcase tag
+                match($0, /name="([^"]*)"/, arr)
+                test_name = arr[1]
+              }
+              /<failure/ && in_testcase {
+                getline failure_line
+                # Extract failure message (remove CDATA wrapper if present)
+                gsub(/^[[:space:]]*<!\[CDATA\[/, "", failure_line)
+                gsub(/\]\]>[[:space:]]*$/, "", failure_line)
+                failure_msg = failure_line
+                print "#### ❌ " test_name
+                print "```"
+                print failure_msg
+                print "```"
+                print ""
+              }
+              /<\/testcase>/ { in_testcase = 0; test_name = ""; failure_msg = "" }
+              ' unit-tests.xml >> $GITHUB_STEP_SUMMARY
+              
+              # If JSON file exists, try to extract additional timing information
+              if [ -f "unit-tests.json" ]; then
+                echo "### ⏱️ Test Execution Details" >> $GITHUB_STEP_SUMMARY
+                
+                # Extract failed tests with timing from JSON using jq if available
+                if command -v jq >/dev/null 2>&1; then
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "| Test Name | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+                  echo "|-----------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+                  
+                  # Parse JSON for test results
+                  jq -r '
+                  select(.Action == "fail" and .Test != null) |
+                  "| \(.Package).\(.Test) | ❌ FAIL | \(.Elapsed // "N/A")s |"
+                  ' unit-tests.json >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "| JSON parsing failed | - | - |" >> $GITHUB_STEP_SUMMARY
+                  
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "jq not available for JSON parsing" >> $GITHUB_STEP_SUMMARY
+                fi
+              fi
+              
+              echo "📝 **Check the full logs above for complete error details and stack traces.**" >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "⚠️ No test results file found" >> $GITHUB_STEP_SUMMARY
@@ -128,6 +187,7 @@ jobs:
           name: unit-test-reports
           path: |
             api/unit-tests.xml
+            api/unit-tests.json
             api/unit.out
 
   integration-tests:
@@ -261,7 +321,8 @@ jobs:
           set +a
           
           # Run tests with structured output and junit report
-          gotestsum --junitfile integration-tests.xml --format testname -- \
+          # Use pkgname-and-test-fails format for better failure visibility
+          gotestsum --junitfile integration-tests.xml --format pkgname-and-test-fails --jsonfile integration-tests.json -- \
             -v -race -count=1 -p=1 -coverprofile=integration.out -covermode=atomic ./tests/integration/...
           
           # Display coverage summary
@@ -282,26 +343,84 @@ jobs:
         if: always()
         with:
           name: integration-test-results
-          path: api/integration-tests.xml
+          path: |
+            api/integration-tests.xml
+            api/integration-tests.json
           
       - name: Generate integration test summary
         if: always()
         run: |
           echo "## 🔧 Integration Test Results" >> $GITHUB_STEP_SUMMARY
+          
           if [ -f "integration-tests.xml" ]; then
             # Parse basic info from XML
             TESTS=$(grep -o 'tests="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
             FAILURES=$(grep -o 'failures="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
             ERRORS=$(grep -o 'errors="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
             
+            echo "### 📊 Test Summary" >> $GITHUB_STEP_SUMMARY
             echo "- **Total Tests**: $TESTS" >> $GITHUB_STEP_SUMMARY
             echo "- **Failures**: $FAILURES" >> $GITHUB_STEP_SUMMARY
             echo "- **Errors**: $ERRORS" >> $GITHUB_STEP_SUMMARY
             
             if [ "$FAILURES" = "0" ] && [ "$ERRORS" = "0" ]; then
-              echo "✅ All integration tests passed!" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "✅ **All integration tests passed!**" >> $GITHUB_STEP_SUMMARY
             else
-              echo "❌ Some integration tests failed. Check logs above for details." >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "❌ **Some integration tests failed**" >> $GITHUB_STEP_SUMMARY
+              
+              # Extract failed test details from XML
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### 🚨 Failed Tests Details" >> $GITHUB_STEP_SUMMARY
+              
+              # Use awk to parse XML and extract failure details
+              awk '
+              BEGIN { in_testcase = 0; test_name = ""; failure_msg = "" }
+              /<testcase/ { 
+                in_testcase = 1
+                # Extract test name from testcase tag
+                match($0, /name="([^"]*)"/, arr)
+                test_name = arr[1]
+              }
+              /<failure/ && in_testcase {
+                getline failure_line
+                # Extract failure message (remove CDATA wrapper if present)
+                gsub(/^[[:space:]]*<!\[CDATA\[/, "", failure_line)
+                gsub(/\]\]>[[:space:]]*$/, "", failure_line)
+                failure_msg = failure_line
+                print "#### ❌ " test_name
+                print "```"
+                print failure_msg
+                print "```"
+                print ""
+              }
+              /<\/testcase>/ { in_testcase = 0; test_name = ""; failure_msg = "" }
+              ' integration-tests.xml >> $GITHUB_STEP_SUMMARY
+              
+              # If JSON file exists, try to extract additional timing information
+              if [ -f "integration-tests.json" ]; then
+                echo "### ⏱️ Test Execution Details" >> $GITHUB_STEP_SUMMARY
+                
+                # Extract failed tests with timing from JSON using jq if available
+                if command -v jq >/dev/null 2>&1; then
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "| Test Name | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+                  echo "|-----------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+                  
+                  # Parse JSON for test results
+                  jq -r '
+                  select(.Action == "fail" and .Test != null) |
+                  "| \(.Package).\(.Test) | ❌ FAIL | \(.Elapsed // "N/A")s |"
+                  ' integration-tests.json >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "| JSON parsing failed | - | - |" >> $GITHUB_STEP_SUMMARY
+                  
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "jq not available for JSON parsing" >> $GITHUB_STEP_SUMMARY
+                fi
+              fi
+              
+              echo "📝 **Check the full logs above for complete error details and stack traces.**" >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "⚠️ No test results file found" >> $GITHUB_STEP_SUMMARY
@@ -338,6 +457,7 @@ jobs:
           name: integration-test-reports
           path: |
             api/integration-tests.xml
+            api/integration-tests.json
             api/integration.out
             api/.env.test
 

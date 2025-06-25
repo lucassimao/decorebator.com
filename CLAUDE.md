@@ -449,11 +449,20 @@ SELECT ... WHERE user_id = 137 AND wordlist_id = 100;
 
 ### GitHub Actions Workflow
 - **5 Parallel Jobs**: unit-tests, integration-tests, lint-checks, build-verification, security-scan
-- **Structured Output**: JUnit XML reports, coverage uploads to Codecov
+- **Enhanced Test Reporting**: JUnit XML + JSON reports with detailed failure analysis
+- **Structured Output**: Individual test failure names, error messages, and execution timing
 - **Security Integration**: gosec SARIF reports, govulncheck scanning
 - **Coverage Enforcement**: 70% unit, 80% integration coverage thresholds
-- **Artifact Management**: Test results, coverage reports, security scans
+- **Artifact Management**: Test results, coverage reports, security scans, detailed failure logs
 - **Quality Checks**: golangci-lint, gosec, go vet, race condition detection
+
+#### Enhanced Test Failure Reporting (January 2025)
+- **Specific Test Names**: Shows exact test functions that failed instead of just counts
+- **Error Messages**: Displays actual failure messages and assertion details
+- **Execution Timing**: Reports test duration and performance metrics
+- **Structured Summaries**: Markdown tables with test status, duration, and failure reasons
+- **Multiple Formats**: Both XML (JUnit) and JSON output for comprehensive analysis
+- **Gotestsum Integration**: Uses `pkgname-and-test-fails` format for enhanced failure visibility
 
 ## External Services
 
