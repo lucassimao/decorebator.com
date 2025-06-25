@@ -98,14 +98,30 @@ jobs:
             FAILURES=$(grep -o 'failures="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
             ERRORS=$(grep -o 'errors="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
             
+            # Extract coverage percentage
+            COVERAGE="N/A"
+            if [ -f "unit.out" ]; then
+              COVERAGE=$(go tool cover -func=unit.out | grep total | awk '{print $3}' || echo "N/A")
+            fi
+            
             echo "### 📈 Test Summary" >> $GITHUB_STEP_SUMMARY
             echo "- **Total Tests**: $TESTS" >> $GITHUB_STEP_SUMMARY
             echo "- **Failures**: $FAILURES" >> $GITHUB_STEP_SUMMARY
             echo "- **Errors**: $ERRORS" >> $GITHUB_STEP_SUMMARY
+            echo "- **Coverage**: $COVERAGE" >> $GITHUB_STEP_SUMMARY
             
             if [ "$FAILURES" = "0" ] && [ "$ERRORS" = "0" ]; then
               echo "" >> $GITHUB_STEP_SUMMARY
-              echo "✅ **All unit tests passed!**" >> $GITHUB_STEP_SUMMARY
+              if [ "$COVERAGE" != "N/A" ]; then
+                COVERAGE_NUM=$(echo $COVERAGE | sed 's/%//')
+                if (( $(echo "$COVERAGE_NUM >= 70" | bc -l) 2>/dev/null )); then
+                  echo "✅ **All unit tests passed!** Coverage: $COVERAGE ≥ 70% target" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "⚠️ **Unit tests passed but coverage below target** Coverage: $COVERAGE < 70%" >> $GITHUB_STEP_SUMMARY
+                fi
+              else
+                echo "✅ **All unit tests passed!**" >> $GITHUB_STEP_SUMMARY
+              fi
             else
               echo "" >> $GITHUB_STEP_SUMMARY
               echo "❌ **Some unit tests failed**" >> $GITHUB_STEP_SUMMARY
@@ -363,14 +379,30 @@ jobs:
             FAILURES=$(grep -o 'failures="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
             ERRORS=$(grep -o 'errors="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
             
+            # Extract coverage percentage
+            COVERAGE="N/A"
+            if [ -f "integration.out" ]; then
+              COVERAGE=$(go tool cover -func=integration.out | grep total | awk '{print $3}' || echo "N/A")
+            fi
+            
             echo "### 📊 Test Summary" >> $GITHUB_STEP_SUMMARY
             echo "- **Total Tests**: $TESTS" >> $GITHUB_STEP_SUMMARY
             echo "- **Failures**: $FAILURES" >> $GITHUB_STEP_SUMMARY
             echo "- **Errors**: $ERRORS" >> $GITHUB_STEP_SUMMARY
+            echo "- **Coverage**: $COVERAGE" >> $GITHUB_STEP_SUMMARY
             
             if [ "$FAILURES" = "0" ] && [ "$ERRORS" = "0" ]; then
               echo "" >> $GITHUB_STEP_SUMMARY
-              echo "✅ **All integration tests passed!**" >> $GITHUB_STEP_SUMMARY
+              if [ "$COVERAGE" != "N/A" ]; then
+                COVERAGE_NUM=$(echo $COVERAGE | sed 's/%//')
+                if (( $(echo "$COVERAGE_NUM >= 80" | bc -l) 2>/dev/null )); then
+                  echo "✅ **All integration tests passed!** Coverage: $COVERAGE ≥ 80% target" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "⚠️ **Integration tests passed but coverage below target** Coverage: $COVERAGE < 80%" >> $GITHUB_STEP_SUMMARY
+                fi
+              else
+                echo "✅ **All integration tests passed!**" >> $GITHUB_STEP_SUMMARY
+              fi
             else
               echo "" >> $GITHUB_STEP_SUMMARY
               echo "❌ **Some integration tests failed**" >> $GITHUB_STEP_SUMMARY
@@ -706,6 +738,21 @@ jobs:
     if: always()
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: "*-coverage"
+          path: coverage/
+
       - name: Generate test summary
         run: |
           {
@@ -718,6 +765,24 @@ jobs:
             echo "- **Build Verification**: ${{ needs.build-verification.result }}"
             echo "- **Security Scan**: ${{ needs.security-scan.result }}"
             echo ""
+            
+            # Display coverage information if available
+            echo "### 📊 Coverage Results"
+            UNIT_COVERAGE="N/A"
+            INTEGRATION_COVERAGE="N/A"
+            
+            if [ -f "coverage/unit-coverage/unit.out" ]; then
+              UNIT_COVERAGE=$(go tool cover -func=coverage/unit-coverage/unit.out | grep total | awk '{print $3}' || echo "N/A")
+            fi
+            
+            if [ -f "coverage/integration-coverage/integration.out" ]; then
+              INTEGRATION_COVERAGE=$(go tool cover -func=coverage/integration-coverage/integration.out | grep total | awk '{print $3}' || echo "N/A")
+            fi
+            
+            echo "- **Unit Test Coverage**: $UNIT_COVERAGE (Target: ≥70%)"
+            echo "- **Integration Test Coverage**: $INTEGRATION_COVERAGE (Target: ≥80%)"
+            echo ""
+            
             echo "### Quick Status"
             if [ "${{ needs.integration-tests.result }}" == "failure" ]; then
               echo "❌ **Integration tests failed** - Check logs above for details"
@@ -726,4 +791,10 @@ jobs:
             else
               echo "✅ **All tests passed!**"
             fi
+            
+            # Add coverage links
+            echo ""
+            echo "### 📈 Coverage Reports"
+            echo "- [📋 Codecov Dashboard](https://codecov.io/gh/${{ github.repository }})"
+            echo "- [📊 Coverage Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
           } >> $GITHUB_STEP_SUMMARY

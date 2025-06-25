@@ -413,60 +413,6 @@ func (s *RevenueCatService) LinkUserToRevenueCat(ctx context.Context, userID int
 	return err
 }
 
-// createSubscriptionFromWebhook creates a subscription directly from webhook data (test mode only)
-func (s *RevenueCatService) createSubscriptionFromWebhook(ctx context.Context, userID int64, event WebhookEvent, platform model.PlatformType) error {
-	// Determine plan from product ID
-	plan := s.getPlanFromProductID(event.ProductID)
-	if plan == model.PlanFree {
-		return fmt.Errorf("unknown product ID: %s", event.ProductID)
-	}
-
-	// Convert timestamps to time.Time
-	purchaseDate := time.UnixMilli(event.PurchasedAtMS)
-	expirationDate := time.UnixMilli(event.ExpirationAtMS)
-
-	// Check for existing subscription
-	existing, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
-	if err != nil {
-		return fmt.Errorf("failed to get existing subscription: %w", err)
-	}
-
-	if existing != nil && existing.Provider == model.ProviderRevenueCat {
-		// Update existing RevenueCat subscription
-		existing.Plan = plan
-		existing.Status = model.StatusActive
-		existing.CurrentPeriodStart = purchaseDate
-		existing.CurrentPeriodEnd = expirationDate
-		existing.Platform = &platform
-		existing.AppStoreProductID = &event.ProductID
-
-		if err := s.subRepo.UpdateSubscription(ctx, existing); err != nil {
-			return fmt.Errorf("failed to update subscription: %w", err)
-		}
-	} else {
-		// Create new subscription
-		sub := &model.Subscription{
-			UserID:                   userID,
-			Provider:                 model.ProviderRevenueCat,
-			RevenueCatSubscriptionID: &event.AppUserID,
-			AppStoreProductID:        &event.ProductID,
-			Platform:                 &platform,
-			Plan:                     plan,
-			Status:                   model.StatusActive,
-			CurrentPeriodStart:       purchaseDate,
-			CurrentPeriodEnd:         expirationDate,
-			AmountCents:              model.SubscriptionPrices[plan].AmountCents,
-			Currency:                 event.Currency,
-		}
-
-		if _, err := s.subRepo.CreateSubscription(ctx, sub); err != nil {
-			return fmt.Errorf("failed to create subscription: %w", err)
-		}
-	}
-
-	return nil
-}
-
 // RestorePurchases checks RevenueCat for any active subscriptions and updates local state
 func (s *RevenueCatService) RestorePurchases(ctx context.Context, userID int64, appUserID string, platform model.PlatformType) error {
 	// Link user to RevenueCat customer
@@ -512,21 +458,14 @@ func (s *RevenueCatService) processRevenueCatEvent(ctx context.Context, event We
 func (s *RevenueCatService) processSubscriptionEvent(ctx context.Context, event WebhookEvent, userID int64) error {
 	platform := s.getPlatformFromStore(event.Store)
 
-	// In test mode, create subscription directly from webhook data
-	if os.Getenv("ENV") == "test" || os.Getenv("TEST_MODE") == "true" {
-		if err := s.createSubscriptionFromWebhook(ctx, userID, event, platform); err != nil {
-			return fmt.Errorf("failed to create subscription from webhook: %w", err)
-		}
-	} else {
-		// Fetch latest customer info and update subscription
-		customerInfo, err := s.GetCustomerInfo(ctx, event.AppUserID, platform)
-		if err != nil {
-			return fmt.Errorf("failed to get customer info: %w", err)
-		}
+	// Fetch latest customer info and update subscription
+	customerInfo, err := s.GetCustomerInfo(ctx, event.AppUserID, platform)
+	if err != nil {
+		return fmt.Errorf("failed to get customer info: %w", err)
+	}
 
-		if err := s.CreateOrUpdateSubscriptionFromRevenueCat(ctx, userID, customerInfo, platform); err != nil {
-			return fmt.Errorf("failed to update subscription: %w", err)
-		}
+	if err := s.CreateOrUpdateSubscriptionFromRevenueCat(ctx, userID, customerInfo, platform); err != nil {
+		return fmt.Errorf("failed to update subscription: %w", err)
 	}
 
 	return nil

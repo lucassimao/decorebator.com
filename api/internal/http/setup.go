@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"decorebator.com/internal/common"
@@ -10,7 +11,9 @@ import (
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
 )
 
 // Config holds optional configuration for setting up routes
@@ -19,6 +22,7 @@ type Config struct {
 	WordlistService   *service.WordlistService
 	ModerationService service.ModerationService
 	Database          *pgxpool.Pool
+	riverClient       *river.Client[pgx.Tx]
 }
 
 func init() {
@@ -49,6 +53,15 @@ func applyDefaults(config *Config) (*Config, error) {
 	// Start with empty config if nil
 	if config == nil {
 		config = &Config{}
+	}
+
+	// Set default database connection if not provided
+	if config.riverClient == nil {
+		riverClient, err := service.GetRiverClient()
+		if err != nil {
+			log.Fatalf("failed to create river client: %s\n", err)
+		}
+		config.riverClient = riverClient
 	}
 
 	// Set default database connection if not provided
@@ -122,7 +135,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 		router.POST("/webhook/stripe", HandleStripeWebhook(subService))
 
 		// RevenueCat webhook endpoint (no auth needed)
-		router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(rcService))
+		router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(config.riverClient))
 
 		// Redirect to local expo scheme
 		router.GET("/subscription/checkout-redirect", CheckoutRedirect())
@@ -154,10 +167,12 @@ func SetupRoutes(config *Config) *gin.Engine {
 		RegisterAnalyticsRoutes(authenticatedRoutes)
 
 		// Subscription routes
+		// Subscription routes
 		authenticatedRoutes.POST("/subscription/checkout-session", CreateCheckoutSession(subService))
 		authenticatedRoutes.GET("/subscription/status", GetSubscriptionStatus(subRepo))
 		authenticatedRoutes.POST("/subscription/cancel", CancelSubscription(subService))
 		authenticatedRoutes.GET("/subscription/history", GetSubscriptionHistory(subRepo))
+		authenticatedRoutes.GET("/subscription/provider", GetPaymentProvider())
 
 		// RevenueCat routes
 		authenticatedRoutes.POST("/subscription/revenuecat/restore", RestorePurchases(rcService))

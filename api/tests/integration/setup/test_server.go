@@ -2,15 +2,19 @@ package setup
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	httphandlers "decorebator.com/internal/http"
+	http_internal "decorebator.com/internal/http"
+	"decorebator.com/internal/service"
 	"github.com/gavv/httpexpect/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,7 +29,7 @@ type TestServer struct {
 }
 
 // TestConfig holds configuration for test server (alias for HTTP config)
-type TestConfig = httphandlers.Config
+type TestConfig = http_internal.Config
 
 // NewTestServer creates a new test server instance using the real API routes
 func NewTestServer(t *testing.T, config ...*TestConfig) *TestServer {
@@ -44,11 +48,11 @@ func NewTestServer(t *testing.T, config ...*TestConfig) *TestServer {
 	require.NoError(t, err, "Failed to clean test data before starting")
 
 	// Configure services for testing
-	var testConfig *httphandlers.Config
+	var testConfig *http_internal.Config
 	switch len(config) {
 	case 0:
 		// No config provided, use defaults
-		testConfig = &httphandlers.Config{
+		testConfig = &http_internal.Config{
 			Database: db,
 		}
 	case 1:
@@ -64,7 +68,7 @@ func NewTestServer(t *testing.T, config ...*TestConfig) *TestServer {
 	}
 
 	// Use the real API routes from internal/http/setup.go with test configuration
-	engine := httphandlers.SetupRoutes(testConfig)
+	engine := http_internal.SetupRoutes(testConfig)
 
 	// Create test server
 	server := httptest.NewServer(engine)
@@ -107,7 +111,7 @@ func (ts *TestServer) WithTestUser(_ *testing.T) string {
 
 	// Login to get token
 	loginResp := ts.Expect.POST("/login").
-		WithJSON(httphandlers.LoginInput{
+		WithJSON(http_internal.LoginInput{
 			Email:    signupInput.Email,
 			Password: signupInput.Password,
 		}).
@@ -167,7 +171,7 @@ func (ts *TestServer) WithPremiumUser(t *testing.T) string {
 
 	// Login to get token with premium subscription
 	loginResp := ts.Expect.POST("/login").
-		WithJSON(httphandlers.LoginInput{
+		WithJSON(http_internal.LoginInput{
 			Email:    signupInput.Email,
 			Password: signupInput.Password,
 		}).
@@ -216,4 +220,70 @@ func (ts *TestServer) isHealthy() bool {
 		Expect()
 
 	return resp.Raw().StatusCode == 200
+}
+
+// ProcessNextRiverJob fetches and processes the next available River job from a given queue.
+// This makes asynchronous worker processing synchronous for testing purposes.
+func (ts *TestServer) ProcessNextRiverJob(t *testing.T, queue string) {
+	ctx := context.Background()
+	tx, err := ts.DB.Begin(ctx)
+	require.NoError(t, err)
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	var (
+		id   int64
+		args json.RawMessage
+		kind string
+	)
+
+	// Find and lock the next available job in the specified queue.
+	err = tx.QueryRow(ctx, `
+		SELECT id, args, kind
+		FROM river_job
+		WHERE queue = $1 AND state = 'available'
+		ORDER BY created_at ASC
+		LIMIT 1
+		FOR UPDATE SKIP LOCKED
+	`, queue).Scan(&id, &args, &kind)
+
+	if err == pgx.ErrNoRows {
+		t.Logf("No available jobs in queue '%s'", queue)
+		return
+	}
+	require.NoError(t, err)
+
+	var workerErr error
+
+	// Based on the job kind, instantiate and run the corresponding worker.
+	switch kind {
+	case "revenuecat-webhook":
+		var jobArgs service.RevenueCatWebhookArgs
+		err = json.Unmarshal(args, &jobArgs)
+		require.NoError(t, err)
+
+		riverJob := &river.Job[service.RevenueCatWebhookArgs]{
+			Args: jobArgs,
+		}
+
+		rcService := service.NewRevenueCatService(ts.DB)
+		worker := service.NewRevenueCatWebhookWorker(rcService)
+		workerErr = worker.Work(ctx, riverJob)
+
+	default:
+		t.Fatalf("test runner does not support job kind: %s", kind)
+	}
+
+	// Update the job's status in the database based on the worker's result.
+	if workerErr != nil {
+		t.Logf("worker for job %d failed: %v", id, workerErr)
+		_, err = tx.Exec(ctx, "UPDATE river_jobs SET state = 'failed', final_err = $1 WHERE id = $2", workerErr.Error(), id)
+		require.NoError(t, err)
+	} else {
+		_, err = tx.Exec(ctx, "DELETE FROM river_jobs WHERE id = $1", id)
+		require.NoError(t, err)
+	}
+
+	// Commit the transaction to finalize the job processing.
+	err = tx.Commit(ctx)
+	require.NoError(t, err)
 }

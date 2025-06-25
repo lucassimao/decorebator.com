@@ -8,10 +8,12 @@ import (
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
+	"github.com/riverqueue/river"
 )
 
 // HandleRevenueCatWebhook handles RevenueCat webhook events
-func HandleRevenueCatWebhook(rcService *service.RevenueCatService) gin.HandlerFunc {
+func HandleRevenueCatWebhook(riverClient *river.Client[pgx.Tx]) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Read the request body
 		payload, err := io.ReadAll(c.Request.Body)
@@ -23,12 +25,17 @@ func HandleRevenueCatWebhook(rcService *service.RevenueCatService) gin.HandlerFu
 		// Get authorization header for webhook verification
 		authHeader := c.GetHeader("Authorization")
 
-		// Handle the webhook
-		if err := rcService.HandleWebhook(c.Request.Context(), payload, authHeader); err != nil {
-			// Log the error but return 200 to RevenueCat to avoid retries
-			common.Logger.Error("Failed to handle RevenueCat webhook", "error", err)
-			// Return 200 to acknowledge receipt and prevent retries
-			c.JSON(http.StatusOK, gin.H{"received": true})
+		// Enqueue a job to process the webhook
+		_, err = riverClient.Insert(c.Request.Context(), service.RevenueCatWebhookArgs{
+			Payload:    payload,
+			AuthHeader: authHeader,
+		}, &river.InsertOpts{
+			Queue: "revenuecat-webhook",
+		})
+
+		if err != nil {
+			common.Logger.Error("failed to enqueue revenuecat webhook job", "error", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to enqueue webhook job"})
 			return
 		}
 

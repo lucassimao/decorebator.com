@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
+	"decorebator.com/tests/integration/mocks"
 	"decorebator.com/tests/integration/setup"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,7 +31,13 @@ func TestRevenueCatIntegration(t *testing.T) {
 	// Create test user and get auth token
 	authToken := ts.WithTestUser(t)
 
-	// Provider detection tests removed - now handled locally in mobile app
+	// Start mock RevenueCat server
+	rcMock := mocks.NewRevenueCatMock()
+	defer rcMock.Close()
+
+	// Set environment variable to use mock server
+	os.Setenv("REVENUECAT_API_BASE_URL", rcMock.Server.URL)
+	defer os.Unsetenv("REVENUECAT_API_BASE_URL")
 
 	t.Run("RevenueCatWebhook_ProcessesInitialPurchase", func(t *testing.T) {
 		// Create a test user to link with RevenueCat
@@ -53,6 +61,21 @@ func TestRevenueCatIntegration(t *testing.T) {
 			"UPDATE users SET revenuecat_customer_id = $1 WHERE id = $2",
 			revenueCatCustomerID, userID)
 		require.NoError(t, err)
+
+		// Mock the GetCustomerInfo response
+		rcMock.MockGetCustomerInfo(map[string]interface{}{
+			"request_date": "2024-01-01T00:00:00Z",
+			"subscriber": map[string]interface{}{
+				"original_app_user_id": revenueCatCustomerID,
+				"entitlements": map[string]interface{}{
+					"premium": map[string]interface{}{
+						"expires_date":       time.Now().Add(30 * 24 * time.Hour).Format(time.RFC3339),
+						"product_identifier": "com.decorebator.premium.monthly",
+						"purchase_date":      time.Now().Format(time.RFC3339),
+					},
+				},
+			},
+		})
 
 		// Create webhook payload following exact RevenueCat structure
 		webhook := map[string]interface{}{
@@ -96,7 +119,17 @@ func TestRevenueCatIntegration(t *testing.T) {
 		// RevenueCat webhooks always return 200 to prevent retries
 		assert.Equal(t, http.StatusOK, resp2.StatusCode)
 
+		// Process the job that was just enqueued by the webhook.
+		ts.ProcessNextRiverJob(t, "revenuecat-webhook")
+
 		// Verify subscription was created
+		require.Eventually(t, func() bool {
+			subRepo := repository.NewSubscriptionRepository(ts.DB)
+			sub, _ := subRepo.GetActiveSubscriptionForUser(ctx, userID)
+			return sub != nil
+		}, 5*time.Second, 100*time.Millisecond)
+
+		// Now, assert the details of the subscription
 		subRepo := repository.NewSubscriptionRepository(ts.DB)
 		sub, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
 		assert.NoError(t, err)
