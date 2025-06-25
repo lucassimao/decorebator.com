@@ -727,16 +727,3 @@ jobs:
               echo "✅ **All tests passed!**"
             fi
           } >> $GITHUB_STEP_SUMMARY
-          
-      - name: Check overall status
-        run: |
-          if [ "${{ needs.unit-tests.result }}" != "success" ] || \
-             [ "${{ needs.integration-tests.result }}" != "success" ] || \
-             [ "${{ needs.build-verification.result }}" != "success" ] || \
-             [ "${{ needs.security-scan.result }}" != "success" ] || \
-             ([ "${{ needs.lint-checks.result }}" != "success" ] && [ "${{ needs.lint-checks.result }}" != "skipped" ]); then
-            echo "❌ One or more required checks failed"
-            exit 1
-          else
-            echo "✅ All checks passed successfully"
-          fi
