@@ -69,17 +69,18 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 }
 
 type FindUserArgs struct {
-	Email            *string
-	ID               *int64
-	StripeCustomerID *string
+	Email                   *string
+	ID                      *int64
+	StripeCustomerID        *string
+	RevenueCatCustomerID    *string
 }
 
 func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 	var builder strings.Builder
 	builder.WriteString(`SELECT id, email, first_name, last_name, password_hash, 
 		profile_picture_url, country, date_of_birth, preferred_language,
-		subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at,
-		created_at, updated_at FROM users`)
+		subscription_plan, subscription_status, stripe_customer_id, revenuecat_customer_id,
+		platform, subscription_ends_at, created_at, updated_at FROM users`)
 	var queryArgs []interface{}
 	var whereConditions []string
 
@@ -99,6 +100,12 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 	if args.StripeCustomerID != nil {
 		whereConditions = append(whereConditions, fmt.Sprintf("stripe_customer_id = $%d", argIndex))
 		queryArgs = append(queryArgs, args.StripeCustomerID)
+		argIndex++
+	}
+
+	if args.RevenueCatCustomerID != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf("revenuecat_customer_id = $%d", argIndex))
+		queryArgs = append(queryArgs, args.RevenueCatCustomerID)
 		argIndex++
 	}
 
@@ -123,8 +130,8 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 		user := User{}
 		err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
 			&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
-			&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt,
-			&user.CreatedAt, &user.UpdatedAt)
+			&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.RevenueCatCustomerID,
+			&user.Platform, &user.SubscriptionEndsAt, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -217,29 +224,3 @@ func (repository *UserRepository) UpdateUserProfile(args UpdateUserProfileArgs) 
 	return &user, nil
 }
 
-// GetUserByRevenueCatCustomerID retrieves a user by their RevenueCat customer ID
-func (repository *UserRepository) GetUserByRevenueCatCustomerID(ctx context.Context, revenueCatCustomerID string) (*model.User, error) {
-	query := `
-		SELECT id, first_name, last_name, password_hash, email, profile_picture_url, 
-		       country, date_of_birth, preferred_language, subscription_plan, 
-		       subscription_status, stripe_customer_id, revenuecat_customer_id, 
-		       platform, subscription_ends_at, created_at, updated_at
-		FROM users 
-		WHERE revenuecat_customer_id = $1
-	`
-
-	var user model.User
-	err := repository.Db.QueryRow(ctx, query, revenueCatCustomerID).Scan(
-		&user.ID, &user.FirstName, &user.LastName, &user.PasswordHash, &user.Email,
-		&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
-		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID,
-		&user.RevenueCatCustomerID, &user.Platform, &user.SubscriptionEndsAt,
-		&user.CreatedAt, &user.UpdatedAt,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &user, nil
-}

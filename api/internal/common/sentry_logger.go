@@ -89,7 +89,11 @@ func (h *SentryHandler) WithGroup(name string) slog.Handler {
 	return &SentryHandler{handler: h.handler.WithGroup(name)}
 }
 
-// CaptureError is a helper function to log an error and send it to Sentry
+// CaptureError logs an error using the application's standard logger.
+// It is a logging-first approach. If the environment is set to production,
+// the SentryHandler will intercept the log entry and send it to Sentry as an event.
+// This is best used for notable errors that should be recorded in application logs
+// and also appear in Sentry.
 func CaptureError(ctx context.Context, err error, message string, attrs ...any) {
 	// Add error to attributes if not already present
 	hasError := false
@@ -107,7 +111,11 @@ func CaptureError(ctx context.Context, err error, message string, attrs ...any) 
 	Logger.ErrorContext(ctx, message, attrs...)
 }
 
-// CaptureException sends an exception directly to Sentry with additional context
+// CaptureException sends an exception directly to the Sentry SDK, bypassing the
+// application's standard logger. This is a direct reporting mechanism intended for
+// critical, unexpected errors (e.g., in a panic recovery middleware).
+// It provides Sentry with a more detailed report, including a full stack trace,
+// which allows for better grouping and analysis of critical failures.
 func CaptureException(ctx context.Context, err error, attrs map[string]interface{}) {
 	if os.Getenv("ENV") != productionEnv || err == nil {
 		return

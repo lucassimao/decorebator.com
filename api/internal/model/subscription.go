@@ -132,8 +132,8 @@ type Subscription struct {
 	ID                       int64                `json:"id"`
 	UserID                   int64                `json:"userId"`
 	Provider                 SubscriptionProvider `json:"provider"`
-	StripeSubscriptionID     string               `json:"stripeSubscriptionId,omitempty"`
-	StripeCustomerID         string               `json:"stripeCustomerId,omitempty"`
+	StripeSubscriptionID     *string              `json:"stripeSubscriptionId,omitempty"`
+	StripeCustomerID         *string              `json:"stripeCustomerId,omitempty"`
 	RevenueCatSubscriptionID *string              `json:"revenuecatSubscriptionId,omitempty"`
 	AppStoreProductID        *string              `json:"appStoreProductId,omitempty"`
 	Platform                 *PlatformType        `json:"platform,omitempty"`
@@ -158,19 +158,6 @@ type SubscriptionEvent struct {
 	EventType      string    `json:"eventType"`
 	EventData      string    `json:"eventData"` // JSON string
 	ProcessedAt    time.Time `json:"processedAt"`
-}
-
-// RevenueCatEvent represents a RevenueCat webhook event
-type RevenueCatEvent struct {
-	ID            int64     `json:"id"`
-	UserID        *int64    `json:"userId"`
-	EventID       string    `json:"eventId"`
-	EventType     string    `json:"eventType"`
-	AppUserID     string    `json:"appUserId"`
-	ProductID     *string   `json:"productId,omitempty"`
-	EntitlementID *string   `json:"entitlementId,omitempty"`
-	EventData     string    `json:"eventData"` // JSON string
-	ProcessedAt   time.Time `json:"processedAt"`
 }
 
 // Pricing configuration

@@ -194,8 +194,9 @@ func (s *SubscriptionService) handleSubscriptionCreated(ctx context.Context, eve
 	// Create subscription record
 	sub := &model.Subscription{
 		UserID:               userID,
-		StripeSubscriptionID: stripeSubscription.ID,
-		StripeCustomerID:     stripeSubscription.Customer.ID,
+		Provider:             model.ProviderStripe,
+		StripeSubscriptionID: &stripeSubscription.ID,
+		StripeCustomerID:     &stripeSubscription.Customer.ID,
 		Plan:                 plan,
 		Status:               model.SubscriptionStatus(stripeSubscription.Status),
 		CurrentPeriodStart:   time.Unix(stripeSubscription.Items.Data[0].CurrentPeriodStart, 0),
@@ -493,7 +494,10 @@ func (s *SubscriptionService) CancelSubscription(ctx context.Context, userID int
 			CancelAtPeriodEnd: stripe.Bool(true),
 		}
 
-		_, err = subscription.Update(sub.StripeSubscriptionID, params)
+		if sub.StripeSubscriptionID == nil {
+			return fmt.Errorf("stripe subscription ID is nil")
+		}
+		_, err = subscription.Update(*sub.StripeSubscriptionID, params)
 		if err != nil {
 			return fmt.Errorf("failed to cancel stripe subscription: %w", err)
 		}

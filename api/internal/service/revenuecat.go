@@ -56,6 +56,11 @@ func NewRevenueCatService(db *pgxpool.Pool) RevenueCatService {
 		common.Logger.Warn("REVENUECAT_API_KEY not set - RevenueCat support disabled")
 	}
 
+	baseURL := os.Getenv("REVENUECAT_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://api.revenuecat.com/v1"
+	}
+
 	return &revenueCatService{
 		db:       db,
 		subRepo:  repository.NewSubscriptionRepository(db),
@@ -64,7 +69,7 @@ func NewRevenueCatService(db *pgxpool.Pool) RevenueCatService {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		baseURL: "https://api.revenuecat.com/v1",
+		baseURL: baseURL,
 	}
 }
 
@@ -213,7 +218,7 @@ func (s *revenueCatService) CreateOrUpdateSubscriptionFromRevenueCat(ctx context
 
 // HandleWebhook processes RevenueCat webhook events
 func (s *revenueCatService) HandleWebhook(ctx context.Context, payload []byte) error {
-	var webhook WebhookPayload
+	var webhook model.RevenueCatWebhook
 	if err := json.Unmarshal(payload, &webhook); err != nil {
 		return fmt.Errorf("failed to unmarshal webhook: %w", err)
 	}
@@ -236,39 +241,20 @@ func (s *revenueCatService) HandleWebhook(ctx context.Context, payload []byte) e
 		return nil
 	}
 
-	// Store the event
-	eventData, _ := json.Marshal(webhook)
-
-	// Get first entitlement ID if available
-	var entitlementID *string
-	if len(webhook.Event.EntitlementIDs) > 0 {
-		entitlementID = &webhook.Event.EntitlementIDs[0]
-	}
-
-	event := &model.RevenueCatEvent{
-		EventID:       webhook.Event.ID,
-		EventType:     webhook.Event.Type,
-		AppUserID:     webhook.Event.AppUserID,
-		ProductID:     &webhook.Event.ProductID,
-		EntitlementID: entitlementID,
-		EventData:     string(eventData),
-	}
-
 	// Find user by RevenueCat customer ID
-	user, err := s.userRepo.GetUserByRevenueCatCustomerID(ctx, webhook.Event.AppUserID)
-	if err != nil {
+	users, err := s.userRepo.Find(repository.FindUserArgs{RevenueCatCustomerID: &webhook.Event.AppUserID})
+	if err != nil || len(users) == 0 {
 		common.Logger.Warn("User not found for RevenueCat customer",
 			"app_user_id", webhook.Event.AppUserID,
 			"error", err,
 		)
 		// Store event without user ID for debugging
-		if err := s.storeRevenueCatEvent(ctx, event); err != nil {
+		if err := s.storeRevenueCatEvent(ctx, &webhook.Event, nil); err != nil {
 			return fmt.Errorf("failed to store event: %w", err)
 		}
 		return nil
 	}
-
-	event.UserID = &user.ID
+	user := &users[0]
 
 	// Process event based on type
 	if err := s.processRevenueCatEvent(ctx, webhook.Event, user.ID); err != nil {
@@ -276,39 +262,11 @@ func (s *revenueCatService) HandleWebhook(ctx context.Context, payload []byte) e
 	}
 
 	// Store the event
-	if err := s.storeRevenueCatEvent(ctx, event); err != nil {
+	if err := s.storeRevenueCatEvent(ctx, &webhook.Event, &user.ID); err != nil {
 		return fmt.Errorf("failed to store event: %w", err)
 	}
 
 	return nil
-}
-
-// WebhookPayload represents the RevenueCat webhook structure
-type WebhookPayload struct {
-	APIVersion string       `json:"api_version"`
-	Event      WebhookEvent `json:"event"`
-}
-
-type WebhookEvent struct {
-	ID                    string   `json:"id"`
-	Type                  string   `json:"type"`
-	AppID                 string   `json:"app_id"`
-	AppUserID             string   `json:"app_user_id"`
-	OriginalAppUserID     string   `json:"original_app_user_id,omitempty"`
-	ProductID             string   `json:"product_id"`
-	EntitlementIDs        []string `json:"entitlement_ids,omitempty"`
-	PeriodType            string   `json:"period_type,omitempty"`
-	PurchasedAtMS         int64    `json:"purchased_at_ms,omitempty"`
-	ExpirationAtMS        int64    `json:"expiration_at_ms,omitempty"`
-	Environment           string   `json:"environment"`
-	Store                 string   `json:"store"`
-	Currency              string   `json:"currency,omitempty"`
-	Price                 float64  `json:"price,omitempty"`
-	TransactionID         string   `json:"transaction_id,omitempty"`
-	OriginalTransactionID string   `json:"original_transaction_id,omitempty"`
-	CountryCode           string   `json:"country_code,omitempty"`
-	EventTimestampMS      int64    `json:"event_timestamp_ms"`
-	Aliases               []string `json:"aliases,omitempty"`
 }
 
 func (s *revenueCatService) GetPlanFromProductID(productID string) model.SubscriptionPlan {
@@ -342,7 +300,7 @@ func (s *revenueCatService) checkEventExists(ctx context.Context, eventID string
 	return exists, err
 }
 
-func (s *revenueCatService) storeRevenueCatEvent(ctx context.Context, event *model.RevenueCatEvent) error {
+func (s *revenueCatService) storeRevenueCatEvent(ctx context.Context, event *model.RevenueCatEvent, userID *int64) error {
 	query := `
 		INSERT INTO revenuecat_events 
 		(user_id, event_id, event_type, app_user_id, product_id, entitlement_id, event_data)
@@ -350,14 +308,21 @@ func (s *revenueCatService) storeRevenueCatEvent(ctx context.Context, event *mod
 		ON CONFLICT (event_id) DO NOTHING
 	`
 
+	var entitlementID *string
+	if len(event.EntitlementIDs) > 0 {
+		entitlementID = &event.EntitlementIDs[0]
+	}
+
+	eventData, _ := json.Marshal(event)
+
 	_, err := s.db.Exec(ctx, query,
-		event.UserID,
-		event.EventID,
-		event.EventType,
+		userID,
+		event.ID,
+		event.Type,
 		event.AppUserID,
 		event.ProductID,
-		event.EntitlementID,
-		event.EventData,
+		entitlementID,
+		eventData,
 	)
 
 	return err
@@ -402,7 +367,7 @@ func (s *revenueCatService) RestorePurchases(ctx context.Context, userID int64, 
 }
 
 // processRevenueCatEvent processes different types of RevenueCat events
-func (s *revenueCatService) processRevenueCatEvent(ctx context.Context, event WebhookEvent, userID int64) error {
+func (s *revenueCatService) processRevenueCatEvent(ctx context.Context, event model.RevenueCatEvent, userID int64) error {
 	switch event.Type {
 	case EventInitialPurchase, EventRenewal, EventUncancellation:
 		return s.processSubscriptionEvent(ctx, event, userID)
@@ -417,7 +382,7 @@ func (s *revenueCatService) processRevenueCatEvent(ctx context.Context, event We
 }
 
 // processSubscriptionEvent handles subscription creation/renewal events
-func (s *revenueCatService) processSubscriptionEvent(ctx context.Context, event WebhookEvent, userID int64) error {
+func (s *revenueCatService) processSubscriptionEvent(ctx context.Context, event model.RevenueCatEvent, userID int64) error {
 	platform := s.getPlatformFromStore(event.Store)
 
 	// Fetch latest customer info and update subscription
@@ -434,7 +399,7 @@ func (s *revenueCatService) processSubscriptionEvent(ctx context.Context, event 
 }
 
 // processCancellationEvent handles subscription cancellation events
-func (s *revenueCatService) processCancellationEvent(ctx context.Context, event WebhookEvent, userID int64) error {
+func (s *revenueCatService) processCancellationEvent(ctx context.Context, event model.RevenueCatEvent, userID int64) error {
 	sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("failed to get subscription: %w", err)

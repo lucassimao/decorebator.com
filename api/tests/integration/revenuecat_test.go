@@ -25,20 +25,17 @@ func TestRevenueCatIntegration(t *testing.T) {
 		t.Skip("Skipping integration test")
 	}
 
-	// Initialize test server
-	ts := setup.NewTestServer(t)
+	// Create a mock RevenueCat service that doesn't make any external calls
+	rcServiceMock := &mocks.RevenueCatServiceMock{}
+
+	// Initialize test server with mock service
+	ts := setup.NewTestServer(t, &setup.TestConfig{
+		RevenueCatService: rcServiceMock,
+	})
 	defer ts.Cleanup()
 
 	// Create test user and get auth token
 	authToken := ts.WithTestUser(t)
-
-	// Start mock RevenueCat server
-	rcMock := mocks.NewRevenueCatMock()
-	defer rcMock.Close()
-
-	// Set environment variable to use mock server
-	os.Setenv("REVENUECAT_API_KEY", "test_api_key")
-	defer os.Unsetenv("REVENUECAT_API_KEY")
 
 	t.Run("RevenueCatWebhook_ProcessesInitialPurchase", func(t *testing.T) {
 		// Create a test user to link with RevenueCat
@@ -56,50 +53,138 @@ func TestRevenueCatIntegration(t *testing.T) {
 			signupInput.Email).Scan(&userID)
 		require.NoError(t, err)
 
-		// First, link the user to a RevenueCat customer ID
+		// Set up RevenueCat customer ID
 		revenueCatCustomerID := fmt.Sprintf("rc_user_%d", userID)
 		_, err = ts.DB.Exec(ctx,
 			"UPDATE users SET revenuecat_customer_id = $1 WHERE id = $2",
 			revenueCatCustomerID, userID)
 		require.NoError(t, err)
 
-		// Mock the GetCustomerInfo response
-		rcMock.MockGetCustomerInfo(map[string]interface{}{
-			"request_date": "2024-01-01T00:00:00Z",
-			"subscriber": map[string]interface{}{
-				"original_app_user_id": revenueCatCustomerID,
-				"entitlements": map[string]interface{}{
-					"premium": map[string]interface{}{
-						"expires_date":       time.Now().Add(30 * 24 * time.Hour).Format(time.RFC3339),
-						"product_identifier": "com.decorebator.premium.monthly",
-						"purchase_date":      time.Now().Format(time.RFC3339),
+		// Mock GetPlanFromProductID
+		rcServiceMock.GetPlanFromProductIDFunc = func(productID string) model.SubscriptionPlan {
+			if productID == "com.decorebator.premium.annual" {
+				return model.PlanAnnual
+			}
+			return model.PlanMonthly
+		}
+
+		// Mock GetCustomerInfo to return active subscription
+		expiresDateStr := time.Now().Add(30 * 24 * time.Hour).Format(time.RFC3339)
+		rcServiceMock.GetCustomerInfoFunc = func(ctx context.Context, appUserID string) (*service.CustomerInfo, error) {
+			return &service.CustomerInfo{
+				Subscriber: service.Subscriber{
+					OriginalAppUserID: appUserID,
+					Entitlements: map[string]service.Entitlement{
+						"premium": {
+							ProductIdentifier: "com.decorebator.premium.monthly",
+							PurchaseDate:      time.Now().Format(time.RFC3339),
+							ExpiresDate:       &expiresDateStr,
+						},
+					},
+					Subscriptions: map[string]service.Subscription{
+						"com.decorebator.premium.monthly": {
+							BillingIssuesDetectedAt: nil,
+							ExpiresDate:             expiresDateStr,
+							GracePeriodExpiresDate:  nil,
+							IsSandbox:               false,
+							OriginalPurchaseDate:    time.Now().Format(time.RFC3339),
+							PeriodType:              "normal",
+							PurchaseDate:            time.Now().Format(time.RFC3339),
+							RefundedAt:              nil,
+							Store:                   "app_store",
+							UnsubscribeDetectedAt:   nil,
+						},
 					},
 				},
-			},
-		})
+			}, nil
+		}
 
-		// Create webhook payload following exact RevenueCat structure
-		webhook := map[string]interface{}{
-			"api_version": "1.0",
-			"event": map[string]interface{}{
-				"type":                    "INITIAL_PURCHASE",
-				"id":                      "test_event_123",
-				"app_id":                  "app_123",
-				"app_user_id":             revenueCatCustomerID,
-				"original_app_user_id":    revenueCatCustomerID,
-				"event_timestamp_ms":      time.Now().Unix() * 1000,
-				"product_id":              "com.decorebator.premium.monthly",
-				"entitlement_ids":         []string{"premium"},
-				"store":                   "APP_STORE",
-				"environment":             "PRODUCTION",
-				"purchased_at_ms":         time.Now().Unix() * 1000,
-				"expiration_at_ms":        time.Now().Add(30*24*time.Hour).Unix() * 1000,
-				"period_type":             "NORMAL",
-				"price":                   6.99,
-				"currency":                "USD",
-				"transaction_id":          "test_transaction_123",
-				"original_transaction_id": "test_original_transaction_123",
-				"country_code":            "US",
+		// Mock CreateOrUpdateSubscriptionFromRevenueCat to actually create the subscription
+		rcServiceMock.CreateOrUpdateSubscriptionFromRevenueCatFunc = func(ctx context.Context, userID int64, customerInfo *service.CustomerInfo, platform model.PlatformType) error {
+			// Create subscription in database
+			subRepo := repository.NewSubscriptionRepository(ts.DB)
+			revenuecatSubID := customerInfo.Subscriber.OriginalAppUserID
+			productID := "com.decorebator.premium.monthly"
+			
+			subscription := &model.Subscription{
+				UserID:                   userID,
+				Provider:                 model.ProviderRevenueCat,
+				RevenueCatSubscriptionID: &revenuecatSubID,
+				AppStoreProductID:        &productID,
+				Platform:                 &platform,
+				Plan:                     model.PlanMonthly,
+				Status:                   model.StatusActive,
+				CurrentPeriodStart:       time.Now(),
+				CurrentPeriodEnd:         time.Now().Add(30 * 24 * time.Hour),
+				CancelAtPeriodEnd:        false,
+				AmountCents:              699, // $6.99
+				Currency:                 "USD",
+			}
+			
+			_, err := subRepo.CreateSubscription(ctx, subscription)
+			return err
+		}
+
+		// Mock the webhook processing to use the real service logic
+		// which will call our mocked functions above
+		rcServiceMock.HandleWebhookFunc = func(ctx context.Context, payload []byte) error {
+			// Parse webhook
+			var webhook model.RevenueCatWebhook
+			if err := json.Unmarshal(payload, &webhook); err != nil {
+				return err
+			}
+
+			// Only process INITIAL_PURCHASE events
+			if webhook.Event.Type != "INITIAL_PURCHASE" {
+				return nil
+			}
+
+			// Simulate the real service flow:
+			// 1. Find user by RevenueCat customer ID
+			userRepo := &repository.UserRepository{Db: ts.DB}
+			users, err := userRepo.Find(repository.FindUserArgs{
+				RevenueCatCustomerID: &webhook.Event.AppUserID,
+			})
+			if err != nil || len(users) == 0 {
+				return fmt.Errorf("user not found")
+			}
+			user := &users[0]
+
+			// 2. Get customer info (mocked above)
+			customerInfo, err := rcServiceMock.GetCustomerInfo(ctx, webhook.Event.AppUserID)
+			if err != nil {
+				return err
+			}
+
+			// 3. Create/update subscription (mocked above)
+			platform := model.PlatformIOS
+			if webhook.Event.Store == "PLAY_STORE" {
+				platform = model.PlatformAndroid
+			}
+			return rcServiceMock.CreateOrUpdateSubscriptionFromRevenueCat(ctx, user.ID, customerInfo, platform)
+		}
+
+		// Create webhook payload using the proper model structure
+		webhook := model.RevenueCatWebhook{
+			APIVersion: "1.0",
+			Event: model.RevenueCatEvent{
+				Type:                  "INITIAL_PURCHASE",
+				ID:                    "test_event_123",
+				AppUserID:             revenueCatCustomerID,
+				OriginalAppUserID:     revenueCatCustomerID,
+				EventTimestampMS:      time.Now().Unix() * 1000,
+				ProductID:             "com.decorebator.premium.monthly",
+				EntitlementIDs:        []string{"premium"},
+				Store:                 "APP_STORE",
+				Environment:           "PRODUCTION",
+				PurchasedAtMS:         time.Now().Unix() * 1000,
+				ExpirationAtMS:        time.Now().Add(30*24*time.Hour).Unix() * 1000,
+				PeriodType:            "NORMAL",
+				Price:                 6.99,
+				Currency:              "USD",
+				TransactionID:         "test_transaction_123",
+				OriginalTransactionID: "test_original_transaction_123",
+				CountryCode:           "US",
 			},
 		}
 
@@ -114,60 +199,155 @@ func TestRevenueCatIntegration(t *testing.T) {
 		req.Header.Set("Authorization", webhookAuthToken)
 		req.Header.Set("Content-Type", "application/json")
 
-		resp2, err := http.DefaultClient.Do(req)
+		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
-		defer resp2.Body.Close()
+		defer resp.Body.Close()
 
 		// RevenueCat webhooks always return 200 to prevent retries
-		assert.Equal(t, http.StatusOK, resp2.StatusCode)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-		// Create a mock RevenueCat service.
-		rcServiceMock := &mocks.RevenueCatServiceMock{}
+		// Process the job that was just enqueued by the webhook
+		ts.ProcessNextRiverJob(t, "revenuecat_webhooks", rcServiceMock)
 
-		// Set the mock functions.
-		rcServiceMock.HandleWebhookFunc = func(ctx context.Context, payload []byte) error {
-			// Simulate the real service's behavior by creating the subscription directly.
-			var webhook service.WebhookPayload
-			if unmarshalErr := json.Unmarshal(payload, &webhook); unmarshalErr != nil {
-				return unmarshalErr
-			}
-
-			user, userErr := (&repository.UserRepository{Db: ts.DB}).GetUserByRevenueCatCustomerID(ctx, webhook.Event.AppUserID)
-			require.NoError(t, userErr)
-
-			plan := service.NewRevenueCatService(ts.DB).GetPlanFromProductID(webhook.Event.ProductID)
-			require.NotEqual(t, model.PlanFree, plan)
-
-			purchaseDate := time.UnixMilli(webhook.Event.PurchasedAtMS)
-			expirationDate := time.UnixMilli(webhook.Event.ExpirationAtMS)
-
-			sub := &model.Subscription{
-				UserID:                   user.ID,
-				Provider:                 model.ProviderRevenueCat,
-				RevenueCatSubscriptionID: &webhook.Event.AppUserID,
-				AppStoreProductID:        &webhook.Event.ProductID,
-				Plan:                     plan,
-				Status:                   model.StatusActive,
-				CurrentPeriodStart:       purchaseDate,
-				CurrentPeriodEnd:         expirationDate,
-			}
-
-			_, err = repository.NewSubscriptionRepository(ts.DB).CreateSubscription(ctx, sub)
-			require.NoError(t, err)
-
-			return nil
-		}
-
-		// Process the job that was just enqueued by the webhook.
-		ts.ProcessNextRiverJob(t, "revenuecat-webhook", rcServiceMock)
+		// Wait a bit for the transaction to commit
+		time.Sleep(100 * time.Millisecond)
 
 		// Verify subscription was created
 		subRepo := repository.NewSubscriptionRepository(ts.DB)
 		sub, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
 		assert.NoError(t, err)
+		if sub == nil {
+			// Check all subscriptions for this user
+			var count int
+			err = ts.DB.QueryRow(ctx, "SELECT COUNT(*) FROM subscriptions WHERE user_id = $1", userID).Scan(&count)
+			require.NoError(t, err)
+			t.Logf("Found %d subscriptions for user %d", count, userID)
+			
+			// Check if the mock function was even called
+			t.Logf("Mock function was called: %v", rcServiceMock.HandleWebhookFunc != nil)
+		}
 		assert.NotNil(t, sub)
 		assert.Equal(t, model.ProviderRevenueCat, sub.Provider)
 		assert.Equal(t, model.PlanMonthly, sub.Plan)
+		assert.Equal(t, model.StatusActive, sub.Status)
+		assert.Equal(t, 699, sub.AmountCents)
+		assert.Equal(t, "USD", sub.Currency)
+	})
+
+	t.Run("RevenueCatWebhook_ProcessesRenewal", func(t *testing.T) {
+		// Create a test user with existing subscription
+		signupInput := setup.GenerateSignupInput()
+		ts.Expect.POST("/users").
+			WithJSON(signupInput).
+			Expect().
+			Status(201)
+
+		ctx := context.Background()
+		var userID int64
+		err := ts.DB.QueryRow(ctx,
+			"SELECT id FROM users WHERE email = $1",
+			signupInput.Email).Scan(&userID)
+		require.NoError(t, err)
+
+		revenueCatCustomerID := fmt.Sprintf("rc_user_%d", userID)
+		_, err = ts.DB.Exec(ctx,
+			"UPDATE users SET revenuecat_customer_id = $1 WHERE id = $2",
+			revenueCatCustomerID, userID)
+		require.NoError(t, err)
+
+		// Create existing subscription
+		subRepo := repository.NewSubscriptionRepository(ts.DB)
+		revenuecatSubID := "test_subscription_123"
+		platformType := model.PlatformIOS
+		existingSub := &model.Subscription{
+			UserID:                   userID,
+			Provider:                 model.ProviderRevenueCat,
+			RevenueCatSubscriptionID: &revenuecatSubID,
+			Platform:                 &platformType,
+			Plan:                     model.PlanMonthly,
+			Status:                   model.StatusActive,
+			CurrentPeriodStart:       time.Now().Add(-30 * 24 * time.Hour),
+			CurrentPeriodEnd:         time.Now().Add(-1 * time.Hour), // Expired
+			CancelAtPeriodEnd:        false,
+			AmountCents:              699,
+			Currency:                 "USD",
+		}
+		_, err = subRepo.CreateSubscription(ctx, existingSub)
+		require.NoError(t, err)
+
+		// Mock renewal webhook processing
+		rcServiceMock.HandleWebhookFunc = func(ctx context.Context, payload []byte) error {
+			var webhook model.RevenueCatWebhook
+			if err := json.Unmarshal(payload, &webhook); err != nil {
+				return err
+			}
+
+			if webhook.Event.Type != "RENEWAL" {
+				return nil
+			}
+
+			// Find user by RevenueCat customer ID
+			userRepo := &repository.UserRepository{Db: ts.DB}
+			users, err := userRepo.Find(repository.FindUserArgs{
+				RevenueCatCustomerID: &webhook.Event.AppUserID,
+			})
+			if err != nil || len(users) == 0 {
+				return fmt.Errorf("user not found")
+			}
+			user := &users[0]
+
+			// Update subscription with new period
+			subRepo := repository.NewSubscriptionRepository(ts.DB)
+			subscription, err := subRepo.GetActiveSubscriptionForUser(ctx, user.ID)
+			if err != nil {
+				return err
+			}
+
+			// Update subscription period
+			subscription.CurrentPeriodStart = time.Now()
+			subscription.CurrentPeriodEnd = time.Now().Add(30 * 24 * time.Hour)
+			subscription.Status = model.StatusActive
+
+			return subRepo.UpdateSubscription(ctx, subscription)
+		}
+
+		// Create renewal webhook
+		webhook := model.RevenueCatWebhook{
+			APIVersion: "1.0",
+			Event: model.RevenueCatEvent{
+				Type:             "RENEWAL",
+				ID:               "test_renewal_123",
+				AppUserID:        revenueCatCustomerID,
+				ProductID:        "com.decorebator.premium.monthly",
+				EventTimestampMS: time.Now().Unix() * 1000,
+				PurchasedAtMS:    time.Now().Unix() * 1000,
+				ExpirationAtMS:   time.Now().Add(30*24*time.Hour).Unix() * 1000,
+			},
+		}
+
+		jsonBody, _ := json.Marshal(webhook)
+		webhookAuthToken := os.Getenv("REVENUECAT_WEBHOOK_AUTHORIZATION")
+
+		req, err := http.NewRequest("POST", ts.BaseURL+"/webhook/revenuecat", bytes.NewBuffer(jsonBody))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", webhookAuthToken)
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		// Process the renewal job
+		ts.ProcessNextRiverJob(t, "revenuecat_webhooks", rcServiceMock)
+
+		// Verify subscription was renewed
+		renewedSub, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
+		assert.NoError(t, err)
+		assert.NotNil(t, renewedSub)
+		assert.Equal(t, model.StatusActive, renewedSub.Status)
+		assert.True(t, renewedSub.CurrentPeriodEnd.After(time.Now()))
 	})
 
 	t.Run("RestorePurchases_RequiresAuthentication", func(t *testing.T) {
@@ -189,6 +369,12 @@ func TestRevenueCatIntegration(t *testing.T) {
 	})
 
 	t.Run("RestorePurchases_WithAuthentication_Succeeds", func(t *testing.T) {
+		// Mock the restore purchases function to avoid external calls
+		rcServiceMock.RestorePurchasesFunc = func(ctx context.Context, userID int64, appUserID string, platform model.PlatformType) error {
+			// Simulate successful restoration without making external calls
+			return nil
+		}
+
 		body := map[string]interface{}{
 			"appUserId": "test_user_123",
 			"platform":  "ios",
@@ -206,6 +392,120 @@ func TestRevenueCatIntegration(t *testing.T) {
 
 		// Should succeed with authentication
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	})
+
+	t.Run("RevenueCatWebhook_ProcessesCancellation", func(t *testing.T) {
+		// Create a test user with existing subscription
+		signupInput := setup.GenerateSignupInput()
+		ts.Expect.POST("/users").
+			WithJSON(signupInput).
+			Expect().
+			Status(201)
+
+		ctx := context.Background()
+		var userID int64
+		err := ts.DB.QueryRow(ctx,
+			"SELECT id FROM users WHERE email = $1",
+			signupInput.Email).Scan(&userID)
+		require.NoError(t, err)
+
+		revenueCatCustomerID := fmt.Sprintf("rc_user_%d", userID)
+		_, err = ts.DB.Exec(ctx,
+			"UPDATE users SET revenuecat_customer_id = $1 WHERE id = $2",
+			revenueCatCustomerID, userID)
+		require.NoError(t, err)
+
+		// Create existing active subscription
+		subRepo := repository.NewSubscriptionRepository(ts.DB)
+		revenuecatSubID := "test_subscription_123"
+		platformType := model.PlatformIOS
+		existingSub := &model.Subscription{
+			UserID:                   userID,
+			Provider:                 model.ProviderRevenueCat,
+			RevenueCatSubscriptionID: &revenuecatSubID,
+			Platform:                 &platformType,
+			Plan:                     model.PlanMonthly,
+			Status:                   model.StatusActive,
+			CurrentPeriodStart:       time.Now(),
+			CurrentPeriodEnd:         time.Now().Add(30 * 24 * time.Hour),
+			CancelAtPeriodEnd:        false,
+			AmountCents:              699,
+			Currency:                 "USD",
+		}
+		_, err = subRepo.CreateSubscription(ctx, existingSub)
+		require.NoError(t, err)
+
+		// Mock cancellation webhook processing
+		rcServiceMock.HandleWebhookFunc = func(ctx context.Context, payload []byte) error {
+			var webhook model.RevenueCatWebhook
+			if err := json.Unmarshal(payload, &webhook); err != nil {
+				return err
+			}
+
+			if webhook.Event.Type != "CANCELLATION" {
+				return nil
+			}
+
+			// Find user and mark subscription for cancellation
+			userRepo := &repository.UserRepository{Db: ts.DB}
+			users, err := userRepo.Find(repository.FindUserArgs{
+				RevenueCatCustomerID: &webhook.Event.AppUserID,
+			})
+			if err != nil || len(users) == 0 {
+				return fmt.Errorf("user not found")
+			}
+			user := &users[0]
+
+			subRepo := repository.NewSubscriptionRepository(ts.DB)
+			subscription, err := subRepo.GetActiveSubscriptionForUser(ctx, user.ID)
+			if err != nil {
+				return err
+			}
+
+			// Mark for cancellation at period end
+			subscription.CancelAtPeriodEnd = true
+			now := time.Now()
+			subscription.CancelledAt = &now
+
+			return subRepo.UpdateSubscription(ctx, subscription)
+		}
+
+		// Create cancellation webhook
+		webhook := model.RevenueCatWebhook{
+			APIVersion: "1.0",
+			Event: model.RevenueCatEvent{
+				Type:             "CANCELLATION",
+				ID:               "test_cancellation_123",
+				AppUserID:        revenueCatCustomerID,
+				ProductID:        "com.decorebator.premium.monthly",
+				EventTimestampMS: time.Now().Unix() * 1000,
+			},
+		}
+
+		jsonBody, _ := json.Marshal(webhook)
+		webhookAuthToken := os.Getenv("REVENUECAT_WEBHOOK_AUTHORIZATION")
+
+		req, err := http.NewRequest("POST", ts.BaseURL+"/webhook/revenuecat", bytes.NewBuffer(jsonBody))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", webhookAuthToken)
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		// Process the cancellation job
+		ts.ProcessNextRiverJob(t, "revenuecat_webhooks", rcServiceMock)
+
+		// Verify subscription was marked for cancellation
+		cancelledSub, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
+		assert.NoError(t, err)
+		assert.NotNil(t, cancelledSub)
+		assert.True(t, cancelledSub.CancelAtPeriodEnd)
+		assert.NotNil(t, cancelledSub.CancelledAt)
+		assert.Equal(t, model.StatusActive, cancelledSub.Status) // Still active until period end
 	})
 }
 

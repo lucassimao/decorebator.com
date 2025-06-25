@@ -57,12 +57,20 @@ func (w *SubscriptionReminderWorker) Work(ctx context.Context, job *river.Job[Su
 	user := &users[0]
 
 	// Send reminder email
+	// Get subscription ID based on provider
+	var subscriptionID string
+	if sub.Provider == model.ProviderStripe && sub.StripeSubscriptionID != nil {
+		subscriptionID = *sub.StripeSubscriptionID
+	} else if sub.Provider == model.ProviderRevenueCat && sub.RevenueCatSubscriptionID != nil {
+		subscriptionID = *sub.RevenueCatSubscriptionID
+	}
+
 	emailData := mail.SubscriptionEmailData{
 		PlanName:        string(sub.Plan),
 		AmountCents:     sub.AmountCents,
 		Currency:        sub.Currency,
 		NextBillingDate: sub.CurrentPeriodEnd,
-		SubscriptionID:  sub.StripeSubscriptionID,
+		SubscriptionID:  subscriptionID,
 	}
 
 	if err := mail.SendRenewalReminderEmail(user, emailData); err != nil {
@@ -119,12 +127,20 @@ func ScheduleRenewalReminders(ctx context.Context, db *pgxpool.Pool) error {
 		user := &users[0]
 
 		// Send reminder email
+		// Get subscription ID based on provider
+		var subscriptionID string
+		if sub.Provider == model.ProviderStripe && sub.StripeSubscriptionID != nil {
+			subscriptionID = *sub.StripeSubscriptionID
+		} else if sub.Provider == model.ProviderRevenueCat && sub.RevenueCatSubscriptionID != nil {
+			subscriptionID = *sub.RevenueCatSubscriptionID
+		}
+
 		emailData := mail.SubscriptionEmailData{
 			PlanName:        string(sub.Plan),
 			AmountCents:     sub.AmountCents,
 			Currency:        sub.Currency,
 			NextBillingDate: sub.CurrentPeriodEnd,
-			SubscriptionID:  sub.StripeSubscriptionID,
+			SubscriptionID:  subscriptionID,
 		}
 
 		if err := mail.SendRenewalReminderEmail(user, emailData); err != nil {
