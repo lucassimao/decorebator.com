@@ -405,6 +405,13 @@ func SendPaymentFailedEmail(user *model.User, data SubscriptionEmailData) error 
 var welcomeEmailTemplate string
 
 func SendWelcomeEmail(email string) error {
+	logger := common.Logger.With("func", "SendWelcomeEmail", "email", email)
+
+	if os.Getenv("ENV") != "production" {
+		logger.Debug("non-production environment. skipping")
+		return nil
+	}
+
 	userRepo, err := GetUserRepositoryForMail()
 	if err != nil {
 		return fmt.Errorf("failed to get user repository: %w", err)

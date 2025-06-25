@@ -11,6 +11,33 @@ interface RestorePurchasesRequest {
   platform: "ios" | "android";
 }
 
+export async function getPaymentProvider(): Promise<{
+  provider: PaymentProvider;
+}> {
+  const endpoint = `${API_URL}/subscription/provider`;
+  const authorization = getAuthorization();
+
+  if (!authorization) {
+    throw new Error("Authentication required");
+  }
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: authorization,
+      "X-Platform": Platform.OS,
+    },
+  });
+
+  if (!response.ok) {
+    const body = await response.json();
+    throw new Error(body?.error || DEFAULT_ERROR);
+  }
+
+  return response.json();
+}
+
 export async function restorePurchases(appUserId: string): Promise<void> {
   const endpoint = `${API_URL}/subscription/revenuecat/restore`;
   const authorization = getAuthorization();
@@ -46,6 +73,6 @@ export async function restorePurchases(appUserId: string): Promise<void> {
 
   if (!response.ok) {
     const body = await response.json();
-    throw new Error(body?.error || DEFAULT_ERROR);
+    throw new Error(body?.error || DEFAULT_.ERROR);
   }
 }

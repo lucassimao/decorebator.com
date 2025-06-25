@@ -16,10 +16,10 @@ func (RevenueCatWebhookArgs) Kind() string { return "revenuecat-webhook" }
 
 type RevenueCatWebhookWorker struct {
 	river.WorkerDefaults[RevenueCatWebhookArgs]
-	rcService *RevenueCatService
+	rcService RevenueCatService
 }
 
-func NewRevenueCatWebhookWorker(rcService *RevenueCatService) *RevenueCatWebhookWorker {
+func NewRevenueCatWebhookWorker(rcService RevenueCatService) *RevenueCatWebhookWorker {
 	return &RevenueCatWebhookWorker{
 		rcService: rcService,
 	}

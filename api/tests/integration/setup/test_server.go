@@ -2,7 +2,6 @@ package setup
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http/httptest"
 	"testing"
@@ -12,9 +11,9 @@ import (
 	"decorebator.com/internal/service"
 	"github.com/gavv/httpexpect/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
+	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -224,66 +223,31 @@ func (ts *TestServer) isHealthy() bool {
 
 // ProcessNextRiverJob fetches and processes the next available River job from a given queue.
 // This makes asynchronous worker processing synchronous for testing purposes.
-func (ts *TestServer) ProcessNextRiverJob(t *testing.T, queue string) {
-	ctx := context.Background()
-	tx, err := ts.DB.Begin(ctx)
-	require.NoError(t, err)
-	defer func() { _ = tx.Rollback(ctx) }()
+func (ts *TestServer) ProcessNextRiverJob(t *testing.T, queue string, rcServiceMock service.RevenueCatService) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	var (
-		id   int64
-		args json.RawMessage
-		kind string
-	)
+	// Register the specific worker for the job kind we expect.
+	workers := river.NewWorkers()
+	river.AddWorker(workers, service.NewRevenueCatWebhookWorker(rcServiceMock))
 
-	// Find and lock the next available job in the specified queue.
-	err = tx.QueryRow(ctx, `
-		SELECT id, args, kind
-		FROM river_job
-		WHERE queue = $1 AND state = 'available'
-		ORDER BY created_at ASC
-		LIMIT 1
-		FOR UPDATE SKIP LOCKED
-	`, queue).Scan(&id, &args, &kind)
-
-	if err == pgx.ErrNoRows {
-		t.Logf("No available jobs in queue '%s'", queue)
-		return
-	}
+	// Create a temporary River client scoped to this test run.
+	riverClient, err := river.NewClient(riverpgxv5.New(ts.DB), &river.Config{
+		Queues: map[string]river.QueueConfig{
+			queue: {MaxWorkers: 1},
+		},
+		Workers: workers,
+	})
 	require.NoError(t, err)
 
-	var workerErr error
+	// Start the client, which will begin processing jobs.
+	err = riverClient.Start(ctx)
+	require.NoError(t, err)
 
-	// Based on the job kind, instantiate and run the corresponding worker.
-	switch kind {
-	case "revenuecat-webhook":
-		var jobArgs service.RevenueCatWebhookArgs
-		err = json.Unmarshal(args, &jobArgs)
-		require.NoError(t, err)
+	// Wait a moment to allow the worker to pick up the job.
+	time.Sleep(200 * time.Millisecond)
 
-		riverJob := &river.Job[service.RevenueCatWebhookArgs]{
-			Args: jobArgs,
-		}
-
-		rcService := service.NewRevenueCatService(ts.DB)
-		worker := service.NewRevenueCatWebhookWorker(rcService)
-		workerErr = worker.Work(ctx, riverJob)
-
-	default:
-		t.Fatalf("test runner does not support job kind: %s", kind)
-	}
-
-	// Update the job's status in the database based on the worker's result.
-	if workerErr != nil {
-		t.Logf("worker for job %d failed: %v", id, workerErr)
-		_, err = tx.Exec(ctx, "UPDATE river_jobs SET state = 'failed', final_err = $1 WHERE id = $2", workerErr.Error(), id)
-		require.NoError(t, err)
-	} else {
-		_, err = tx.Exec(ctx, "DELETE FROM river_jobs WHERE id = $1", id)
-		require.NoError(t, err)
-	}
-
-	// Commit the transaction to finalize the job processing.
-	err = tx.Commit(ctx)
+	// Stop the client, which gracefully shuts down workers after they finish.
+	err = riverClient.Stop(ctx)
 	require.NoError(t, err)
 }

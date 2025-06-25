@@ -55,7 +55,7 @@ func applyDefaults(config *Config) (*Config, error) {
 		config = &Config{}
 	}
 
-	// Set default database connection if not provided
+	// Set riverClient if not provided
 	if config.riverClient == nil {
 		riverClient, err := service.GetRiverClient()
 		if err != nil {

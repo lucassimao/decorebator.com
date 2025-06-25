@@ -15,11 +15,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// RevenueCat API endpoints
-const (
-	revenueCatAPIBaseURL = "https://api.revenuecat.com/v1"
-)
-
 // RevenueCat webhook event types
 const (
 	EventInitialPurchase     = "INITIAL_PURCHASE"
@@ -46,7 +41,7 @@ const (
 	ProductAnnualAndroid  = "premium_annual"
 )
 
-type RevenueCatService struct {
+type revenueCatService struct {
 	db            *pgxpool.Pool
 	subRepo       *repository.SubscriptionRepository
 	userRepo      *repository.UserRepository
@@ -54,9 +49,10 @@ type RevenueCatService struct {
 	apiKeyAndroid string
 	webhookSecret string
 	httpClient    *http.Client
+	baseURL       string
 }
 
-func NewRevenueCatService(db *pgxpool.Pool) *RevenueCatService {
+func NewRevenueCatService(db *pgxpool.Pool) RevenueCatService {
 	// Get API keys from environment
 	apiKeyIOS := os.Getenv("REVENUECAT_API_KEY_IOS")
 	if apiKeyIOS == "" {
@@ -73,7 +69,7 @@ func NewRevenueCatService(db *pgxpool.Pool) *RevenueCatService {
 		common.Logger.Warn("REVENUECAT_WEBHOOK_SECRET not set - webhook verification disabled")
 	}
 
-	return &RevenueCatService{
+	return &revenueCatService{
 		db:            db,
 		subRepo:       repository.NewSubscriptionRepository(db),
 		userRepo:      &repository.UserRepository{Db: db},
@@ -83,6 +79,7 @@ func NewRevenueCatService(db *pgxpool.Pool) *RevenueCatService {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		baseURL: "https://api.revenuecat.com/v1",
 	}
 }
 
@@ -122,14 +119,14 @@ type Subscription struct {
 }
 
 // GetCustomerInfo fetches customer info from RevenueCat
-func (s *RevenueCatService) GetCustomerInfo(ctx context.Context, appUserID string, platform model.PlatformType) (*CustomerInfo, error) {
+func (s *revenueCatService) GetCustomerInfo(ctx context.Context, appUserID string, platform model.PlatformType) (*CustomerInfo, error) {
 	// Select API key based on platform
 	apiKey := s.getAPIKey(platform)
 	if apiKey == "" {
 		return nil, fmt.Errorf("RevenueCat API key not configured for platform: %s", platform)
 	}
 
-	url := fmt.Sprintf("%s/subscribers/%s", revenueCatAPIBaseURL, appUserID)
+	url := fmt.Sprintf("%s/subscribers/%s", s.baseURL, appUserID)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
@@ -159,7 +156,7 @@ func (s *RevenueCatService) GetCustomerInfo(ctx context.Context, appUserID strin
 }
 
 // CreateOrUpdateSubscriptionFromRevenueCat creates or updates a subscription based on RevenueCat data
-func (s *RevenueCatService) CreateOrUpdateSubscriptionFromRevenueCat(ctx context.Context, userID int64, customerInfo *CustomerInfo, platform model.PlatformType) error {
+func (s *revenueCatService) CreateOrUpdateSubscriptionFromRevenueCat(ctx context.Context, userID int64, customerInfo *CustomerInfo, platform model.PlatformType) error {
 	// Check if user has premium entitlement
 	entitlement, hasPremium := customerInfo.Subscriber.Entitlements[EntitlementPremium]
 	if !hasPremium {
@@ -168,7 +165,7 @@ func (s *RevenueCatService) CreateOrUpdateSubscriptionFromRevenueCat(ctx context
 	}
 
 	// Determine plan based on product ID
-	plan := s.getPlanFromProductID(entitlement.ProductIdentifier)
+	plan := s.GetPlanFromProductID(entitlement.ProductIdentifier)
 	if plan == model.PlanFree {
 		return fmt.Errorf("unknown product ID: %s", entitlement.ProductIdentifier)
 	}
@@ -232,7 +229,7 @@ func (s *RevenueCatService) CreateOrUpdateSubscriptionFromRevenueCat(ctx context
 }
 
 // HandleWebhook processes RevenueCat webhook events
-func (s *RevenueCatService) HandleWebhook(ctx context.Context, payload []byte, authHeader string) error {
+func (s *revenueCatService) HandleWebhook(ctx context.Context, payload []byte, authHeader string) error {
 	// Verify webhook if secret is configured
 	if s.webhookSecret != "" && authHeader != s.webhookSecret {
 		return fmt.Errorf("invalid webhook authorization")
@@ -338,7 +335,7 @@ type WebhookEvent struct {
 
 // Helper methods
 
-func (s *RevenueCatService) getAPIKey(platform model.PlatformType) string {
+func (s *revenueCatService) getAPIKey(platform model.PlatformType) string {
 	switch platform {
 	case model.PlatformIOS:
 		return s.apiKeyIOS
@@ -349,7 +346,7 @@ func (s *RevenueCatService) getAPIKey(platform model.PlatformType) string {
 	}
 }
 
-func (s *RevenueCatService) getPlanFromProductID(productID string) model.SubscriptionPlan {
+func (s *revenueCatService) GetPlanFromProductID(productID string) model.SubscriptionPlan {
 	switch productID {
 	case ProductMonthlyIOS, ProductMonthlyAndroid:
 		return model.PlanMonthly
@@ -360,7 +357,7 @@ func (s *RevenueCatService) getPlanFromProductID(productID string) model.Subscri
 	}
 }
 
-func (s *RevenueCatService) getPlatformFromStore(store string) model.PlatformType {
+func (s *revenueCatService) getPlatformFromStore(store string) model.PlatformType {
 	switch store {
 	case "app_store", "APP_STORE":
 		return model.PlatformIOS
@@ -371,7 +368,7 @@ func (s *RevenueCatService) getPlatformFromStore(store string) model.PlatformTyp
 	}
 }
 
-func (s *RevenueCatService) checkEventExists(ctx context.Context, eventID string) (bool, error) {
+func (s *revenueCatService) checkEventExists(ctx context.Context, eventID string) (bool, error) {
 	var exists bool
 	err := s.db.QueryRow(ctx,
 		"SELECT EXISTS(SELECT 1 FROM revenuecat_events WHERE event_id = $1)",
@@ -380,7 +377,7 @@ func (s *RevenueCatService) checkEventExists(ctx context.Context, eventID string
 	return exists, err
 }
 
-func (s *RevenueCatService) storeRevenueCatEvent(ctx context.Context, event *model.RevenueCatEvent) error {
+func (s *revenueCatService) storeRevenueCatEvent(ctx context.Context, event *model.RevenueCatEvent) error {
 	query := `
 		INSERT INTO revenuecat_events 
 		(user_id, event_id, event_type, app_user_id, product_id, entitlement_id, event_data)
@@ -402,7 +399,7 @@ func (s *RevenueCatService) storeRevenueCatEvent(ctx context.Context, event *mod
 }
 
 // LinkUserToRevenueCat links a user to their RevenueCat customer ID
-func (s *RevenueCatService) LinkUserToRevenueCat(ctx context.Context, userID int64, appUserID string) error {
+func (s *revenueCatService) LinkUserToRevenueCat(ctx context.Context, userID int64, appUserID string) error {
 	query := `
 		UPDATE users 
 		SET revenuecat_customer_id = $1 
@@ -414,7 +411,7 @@ func (s *RevenueCatService) LinkUserToRevenueCat(ctx context.Context, userID int
 }
 
 // RestorePurchases checks RevenueCat for any active subscriptions and updates local state
-func (s *RevenueCatService) RestorePurchases(ctx context.Context, userID int64, appUserID string, platform model.PlatformType) error {
+func (s *revenueCatService) RestorePurchases(ctx context.Context, userID int64, appUserID string, platform model.PlatformType) error {
 	// Link user to RevenueCat customer
 	if err := s.LinkUserToRevenueCat(ctx, userID, appUserID); err != nil {
 		return fmt.Errorf("failed to link user: %w", err)
@@ -440,7 +437,7 @@ func (s *RevenueCatService) RestorePurchases(ctx context.Context, userID int64, 
 }
 
 // processRevenueCatEvent processes different types of RevenueCat events
-func (s *RevenueCatService) processRevenueCatEvent(ctx context.Context, event WebhookEvent, userID int64) error {
+func (s *revenueCatService) processRevenueCatEvent(ctx context.Context, event WebhookEvent, userID int64) error {
 	switch event.Type {
 	case EventInitialPurchase, EventRenewal, EventUncancellation:
 		return s.processSubscriptionEvent(ctx, event, userID)
@@ -455,7 +452,7 @@ func (s *RevenueCatService) processRevenueCatEvent(ctx context.Context, event We
 }
 
 // processSubscriptionEvent handles subscription creation/renewal events
-func (s *RevenueCatService) processSubscriptionEvent(ctx context.Context, event WebhookEvent, userID int64) error {
+func (s *revenueCatService) processSubscriptionEvent(ctx context.Context, event WebhookEvent, userID int64) error {
 	platform := s.getPlatformFromStore(event.Store)
 
 	// Fetch latest customer info and update subscription
@@ -472,7 +469,7 @@ func (s *RevenueCatService) processSubscriptionEvent(ctx context.Context, event 
 }
 
 // processCancellationEvent handles subscription cancellation events
-func (s *RevenueCatService) processCancellationEvent(ctx context.Context, event WebhookEvent, userID int64) error {
+func (s *revenueCatService) processCancellationEvent(ctx context.Context, event WebhookEvent, userID int64) error {
 	sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("failed to get subscription: %w", err)
@@ -496,7 +493,7 @@ func (s *RevenueCatService) processCancellationEvent(ctx context.Context, event 
 }
 
 // processBillingIssueEvent handles billing issue events
-func (s *RevenueCatService) processBillingIssueEvent(ctx context.Context, userID int64) error {
+func (s *revenueCatService) processBillingIssueEvent(ctx context.Context, userID int64) error {
 	sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("failed to get subscription: %w", err)

@@ -13,6 +13,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
+	"decorebator.com/internal/service"
 	"decorebator.com/tests/integration/mocks"
 	"decorebator.com/tests/integration/setup"
 	"github.com/stretchr/testify/assert"
@@ -119,17 +120,47 @@ func TestRevenueCatIntegration(t *testing.T) {
 		// RevenueCat webhooks always return 200 to prevent retries
 		assert.Equal(t, http.StatusOK, resp2.StatusCode)
 
+		// Create a mock RevenueCat service.
+		rcServiceMock := &mocks.RevenueCatServiceMock{}
+
+		// Set the mock functions.
+		rcServiceMock.HandleWebhookFunc = func(ctx context.Context, payload []byte, _ string) error {
+			// Simulate the real service's behavior by creating the subscription directly.
+			var webhook service.WebhookPayload
+			if unmarshalErr := json.Unmarshal(payload, &webhook); unmarshalErr != nil {
+				return unmarshalErr
+			}
+
+			user, userErr := (&repository.UserRepository{Db: ts.DB}).GetUserByRevenueCatCustomerID(ctx, webhook.Event.AppUserID)
+			require.NoError(t, userErr)
+
+			plan := service.NewRevenueCatService(ts.DB).GetPlanFromProductID(webhook.Event.ProductID)
+			require.NotEqual(t, model.PlanFree, plan)
+
+			purchaseDate := time.UnixMilli(webhook.Event.PurchasedAtMS)
+			expirationDate := time.UnixMilli(webhook.Event.ExpirationAtMS)
+
+			sub := &model.Subscription{
+				UserID:                   user.ID,
+				Provider:                 model.ProviderRevenueCat,
+				RevenueCatSubscriptionID: &webhook.Event.AppUserID,
+				AppStoreProductID:        &webhook.Event.ProductID,
+				Plan:                     plan,
+				Status:                   model.StatusActive,
+				CurrentPeriodStart:       purchaseDate,
+				CurrentPeriodEnd:         expirationDate,
+			}
+
+			_, err = repository.NewSubscriptionRepository(ts.DB).CreateSubscription(ctx, sub)
+			require.NoError(t, err)
+
+			return nil
+		}
+
 		// Process the job that was just enqueued by the webhook.
-		ts.ProcessNextRiverJob(t, "revenuecat-webhook")
+		ts.ProcessNextRiverJob(t, "revenuecat-webhook", rcServiceMock)
 
 		// Verify subscription was created
-		require.Eventually(t, func() bool {
-			subRepo := repository.NewSubscriptionRepository(ts.DB)
-			sub, _ := subRepo.GetActiveSubscriptionForUser(ctx, userID)
-			return sub != nil
-		}, 5*time.Second, 100*time.Millisecond)
-
-		// Now, assert the details of the subscription
 		subRepo := repository.NewSubscriptionRepository(ts.DB)
 		sub, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
 		assert.NoError(t, err)

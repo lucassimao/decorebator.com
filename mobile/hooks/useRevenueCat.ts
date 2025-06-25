@@ -6,10 +6,9 @@ import Purchases, {
   PurchasesPackage,
   PURCHASES_ERROR_CODE,
 } from "react-native-purchases";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { restorePurchases } from "@/api/revenuecat";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getPaymentProvider, restorePurchases } from "@/api/revenuecat";
 import { useUserInfo } from "./users";
-import type { PaymentProvider } from "@/api/revenuecat";
 
 const REVENUECAT_API_KEY_IOS =
   process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS || "";
@@ -169,40 +168,16 @@ export function useRevenueCat() {
 export function usePaymentProvider() {
   const { userInfo: user } = useUserInfo();
 
-  // Determine provider based on platform and user location
-  const getProvider = (): {
-    provider: PaymentProvider;
-    platform: "ios" | "android" | "web";
-  } | null => {
-    if (!user) return null;
-
-    const platform =
-      Platform.OS === "ios"
-        ? "ios"
-        : Platform.OS === "android"
-          ? "android"
-          : "web";
-
-    // Android always uses RevenueCat
-    if (platform === "android") {
-      return { provider: "revenuecat", platform };
-    }
-
-    // iOS: US users use Stripe, others use RevenueCat
-    if (platform === "ios") {
-      const isUS = user.country === "US";
-      return { provider: isUS ? "stripe" : "revenuecat", platform };
-    }
-
-    // Web always uses Stripe
-    return { provider: "stripe", platform };
-  };
-
-  const providerInfo = getProvider();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["paymentProvider", user?.id],
+    queryFn: getPaymentProvider,
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   return {
-    data: providerInfo,
-    isLoading: false,
-    error: null,
+    data,
+    isLoading,
+    error,
   };
 }

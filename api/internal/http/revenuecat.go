@@ -44,7 +44,7 @@ func HandleRevenueCatWebhook(riverClient *river.Client[pgx.Tx]) gin.HandlerFunc 
 }
 
 // RestorePurchases handles purchase restoration from RevenueCat
-func RestorePurchases(rcService *service.RevenueCatService) gin.HandlerFunc {
+func RestorePurchases(rcService service.RevenueCatService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get user from context
 		userAny, exists := c.Get("user")
