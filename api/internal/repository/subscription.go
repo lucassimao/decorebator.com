@@ -386,7 +386,6 @@ func (r *SubscriptionRepository) MarkRenewalReminderSent(ctx context.Context, su
 func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscription *model.Subscription) error {
 	// gofmt:off
 	//
-	//nolint:misspell cancelled_at instead of canceled_at
 	query := `
 		UPDATE subscriptions SET
 			provider = $2,
@@ -400,7 +399,7 @@ func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscri
 			current_period_start = $10,
 			current_period_end = $11,
 			cancel_at_period_end = $12,
-			cancelled_at = $13,
+			canceled_at = $13,
 			trial_end = $14,
 			amount_cents = $15,
 			currency = $16,

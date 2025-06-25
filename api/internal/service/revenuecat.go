@@ -347,11 +347,6 @@ func (s *revenueCatService) RestorePurchases(ctx context.Context, userID int64, 
 		return fmt.Errorf("failed to link user: %w", err)
 	}
 
-	// In test mode, skip API calls and just return success
-	if os.Getenv("ENV") == "test" || os.Getenv("TEST_MODE") == "true" {
-		return nil
-	}
-
 	// Fetch customer info
 	customerInfo, err := s.GetCustomerInfo(ctx, appUserID)
 	if err != nil {

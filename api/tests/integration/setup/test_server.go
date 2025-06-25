@@ -227,6 +227,24 @@ func (ts *TestServer) ProcessNextRiverJob(t *testing.T, queue string, rcService 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	// First, check if there's a job available in the queue
+	var jobID int64
+	var jobKind string
+	err := ts.DB.QueryRow(ctx, `
+		SELECT id, kind FROM river_job 
+		WHERE state = 'available' 
+		AND queue = $1
+		ORDER BY id ASC
+		LIMIT 1
+	`, queue).Scan(&jobID, &jobKind)
+
+	if err != nil {
+		t.Logf("No job found in queue %s: %v", queue, err)
+		return
+	}
+
+	t.Logf("Found job %d of kind %s in queue %s", jobID, jobKind, queue)
+
 	// Register the specific worker for the job kind we expect.
 	workers := river.NewWorkers()
 	river.AddWorker(workers, service.NewRevenueCatWebhookWorker(rcService))
@@ -236,7 +254,9 @@ func (ts *TestServer) ProcessNextRiverJob(t *testing.T, queue string, rcService 
 		Queues: map[string]river.QueueConfig{
 			queue: {MaxWorkers: 1},
 		},
-		Workers: workers,
+		Workers:           workers,
+		FetchCooldown:     100 * time.Millisecond,
+		FetchPollInterval: 100 * time.Millisecond,
 	})
 	require.NoError(t, err)
 
@@ -244,10 +264,38 @@ func (ts *TestServer) ProcessNextRiverJob(t *testing.T, queue string, rcService 
 	err = riverClient.Start(ctx)
 	require.NoError(t, err)
 
-	// Wait a moment to allow the worker to pick up the job.
-	time.Sleep(200 * time.Millisecond)
+	// Wait for the specific job to be processed
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
 
+	for {
+		select {
+		case <-ctx.Done():
+			t.Fatalf("Timeout waiting for job %d to be processed", jobID)
+		case <-ticker.C:
+			var state string
+			err = ts.DB.QueryRow(ctx, `
+				SELECT state FROM river_job WHERE id = $1
+			`, jobID).Scan(&state)
+
+			if err != nil {
+				t.Fatalf("Failed to check job status: %v", err)
+			}
+
+			t.Logf("Job %d is in state: %s", jobID, state)
+
+			if state == "completed" || state == "discarded" {
+				// Job has been processed
+				goto done
+			}
+		}
+	}
+
+done:
 	// Stop the client, which gracefully shuts down workers after they finish.
 	err = riverClient.Stop(ctx)
 	require.NoError(t, err)
+
+	// Give a moment for any database transactions to commit
+	time.Sleep(100 * time.Millisecond)
 }
