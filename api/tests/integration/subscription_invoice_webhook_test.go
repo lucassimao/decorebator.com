@@ -44,7 +44,7 @@ func TestInvoicePaymentSucceededWebhook(t *testing.T) {
 		subRepo := repository.NewSubscriptionRepository(ts.DB)
 		stripeSubID := fmt.Sprintf("sub_test_%d", userID)
 		stripeCustomerID := fmt.Sprintf("cus_test_%d", userID)
-		
+
 		// Use consistent timestamps for testing
 		periodStart := time.Now().UTC().AddDate(0, -1, 0).Truncate(time.Second)
 		periodEnd := time.Now().UTC().AddDate(0, 0, 7).Truncate(time.Second)
@@ -119,13 +119,13 @@ func TestInvoicePaymentSucceededWebhook(t *testing.T) {
 		// The actual business logic works correctly, this is just a test environment issue
 		expectedTime := time.Unix(invoice.PeriodEnd, 0)
 		actualTime := updatedSub.CurrentPeriodEnd
-		
+
 		// Check if times are equal or differ by timezone offset (3 hours = 10800 seconds)
 		timeDiff := expectedTime.Unix() - actualTime.Unix()
 		isExactMatch := timeDiff == 0
 		isTimezoneOffset := timeDiff == 10800 || timeDiff == -10800
-		
-		assert.True(t, isExactMatch || isTimezoneOffset, 
+
+		assert.True(t, isExactMatch || isTimezoneOffset,
 			"Period end times should match or differ by timezone offset (got diff: %d seconds)", timeDiff)
 	})
 
@@ -255,7 +255,7 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 		subRepo := repository.NewSubscriptionRepository(ts.DB)
 		stripeSubID := fmt.Sprintf("sub_test_%d", userID)
 		stripeCustomerID := fmt.Sprintf("cus_test_%d", userID)
-		
+
 		// Use consistent timestamps for testing
 		periodStart := time.Now().UTC().AddDate(0, -1, 0).Truncate(time.Second)
 		periodEnd := time.Now().UTC().AddDate(0, 0, 7).Truncate(time.Second)
@@ -433,7 +433,7 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 		subRepo := repository.NewSubscriptionRepository(ts.DB)
 		stripeSubID := fmt.Sprintf("sub_test_email_%d", userID)
 		stripeCustomerID := fmt.Sprintf("cus_test_email_%d", userID)
-		
+
 		// Use consistent timestamps for testing
 		periodStart := time.Now().UTC().AddDate(0, -1, 0).Truncate(time.Second)
 		periodEnd := time.Now().UTC().AddDate(0, 0, 7).Truncate(time.Second)
