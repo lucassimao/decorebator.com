@@ -23,7 +23,7 @@ type Config struct {
 
 func init() {
 	sentryDsn, exists := os.LookupEnv("SENTRY_DSN")
-	if os.Getenv("ENV") == "production" && !exists {
+	if os.Getenv("ENV") == productionEnv && !exists {
 		panic("SENTRY_DSN not found")
 	}
 
@@ -93,7 +93,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 
 	router := gin.New()
 	// Sentry middleware must be first to capture all errors
-	if os.Getenv("ENV") == "production" && os.Getenv("SENTRY_DSN") != "" {
+	if os.Getenv("ENV") == productionEnv && os.Getenv("SENTRY_DSN") != "" {
 		router.Use(sentrygin.New(sentrygin.Options{
 			Repanic:         true,
 			WaitForDelivery: false,

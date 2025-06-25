@@ -27,7 +27,11 @@ func CreateCheckoutSession(subService *service.SubscriptionService) gin.HandlerF
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 			return
 		}
-		user := userAny.(*model.User)
+		user, ok := userAny.(*model.User)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
+			return
+		}
 
 		// Parse request
 		var req CreateCheckoutSessionRequest
@@ -101,7 +105,11 @@ func GetSubscriptionStatus(subRepo *repository.SubscriptionRepository) gin.Handl
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 			return
 		}
-		user := userAny.(*model.User)
+		user, ok := userAny.(*model.User)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
+			return
+		}
 
 		// Get active subscription
 		subscription, err := subRepo.GetActiveSubscriptionForUser(c.Request.Context(), user.ID)
@@ -137,7 +145,11 @@ func CancelSubscription(subService *service.SubscriptionService) gin.HandlerFunc
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 			return
 		}
-		user := userAny.(*model.User)
+		user, ok := userAny.(*model.User)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
+			return
+		}
 
 		// Cancel subscription
 		if err := subService.CancelSubscription(c.Request.Context(), user.ID); err != nil {
@@ -158,7 +170,11 @@ func GetSubscriptionHistory(subRepo *repository.SubscriptionRepository) gin.Hand
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 			return
 		}
-		user := userAny.(*model.User)
+		user, ok := userAny.(*model.User)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
+			return
+		}
 
 		// Get subscription history
 		subscriptions, err := subRepo.GetUserSubscriptionHistory(c.Request.Context(), user.ID)
@@ -181,7 +197,11 @@ func CheckSubscriptionLimits(subService *service.SubscriptionService, action str
 			c.Abort()
 			return
 		}
-		user := userAny.(*model.User)
+		user, ok := userAny.(*model.User)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
+			return
+		}
 
 		// For word operations, we might need wordlist ID
 		if action == "add_word" {

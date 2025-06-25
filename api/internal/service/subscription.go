@@ -148,7 +148,7 @@ func (s *SubscriptionService) HandleWebhook(ctx context.Context, payload []byte,
 		return s.handleInvoicePaymentFailed(ctx, event)
 	default:
 		// Log unhandled event types
-		fmt.Printf("Unhandled webhook event type: %s\n", event.Type)
+		common.Logger.Warn("Unhandled webhook event type", "event_type", event.Type)
 	}
 
 	return nil
@@ -163,7 +163,7 @@ func (s *SubscriptionService) handleCheckoutSessionCompleted(ctx context.Context
 
 	// Session completed successfully - subscription will be created via subscription.created event
 	// Just log for now
-	fmt.Printf("Checkout session completed: %s\n", checkoutSession.ID)
+	common.Logger.Info("Checkout session completed", "session_id", checkoutSession.ID)
 
 	return nil
 }
@@ -223,14 +223,14 @@ func (s *SubscriptionService) handleSubscriptionCreated(ctx context.Context, eve
 		common.Logger.Error("Failed to marshal subscription data", "error", err, "subscription_id", sub.ID)
 		// Continue without failing - subscription is created
 	} else {
-		if err := s.subRepo.CreateSubscriptionEvent(ctx, &model.SubscriptionEvent{
+		if eventErr := s.subRepo.CreateSubscriptionEvent(ctx, &model.SubscriptionEvent{
 			SubscriptionID: sub.ID,
 			StripeEventID:  event.ID,
 			EventType:      string(event.Type),
 			EventData:      string(eventData),
-		}); err != nil {
+		}); eventErr != nil {
 			// Log error but don't fail - subscription is already created
-			common.Logger.Error("Failed to record subscription event", "error", err, "subscription_id", sub.ID)
+			common.Logger.Error("Failed to record subscription event", "error", eventErr, "subscription_id", sub.ID)
 		}
 	}
 
@@ -238,7 +238,7 @@ func (s *SubscriptionService) handleSubscriptionCreated(ctx context.Context, eve
 	users, err := s.userRepo.Find(repository.FindUserArgs{ID: &userID})
 	if err != nil || len(users) == 0 {
 		// Log error but don't fail the webhook
-		fmt.Printf("Failed to get user for email notification: %v\n", err)
+		common.Logger.Error("Failed to get user for email notification", "error", err, "user_id", userID)
 		return nil
 	}
 	user := &users[0]
@@ -254,7 +254,9 @@ func (s *SubscriptionService) handleSubscriptionCreated(ctx context.Context, eve
 
 	if err := mail.SendSubscriptionActivatedEmail(user, emailData); err != nil {
 		// Log error but don't fail the webhook
-		fmt.Printf("Failed to send subscription activated email: %v\n", err)
+		common.CaptureError(ctx, err, "Failed to send subscription activated email",
+			"user_id", userID,
+			"plan", plan)
 	}
 
 	return nil
@@ -292,9 +294,9 @@ func (s *SubscriptionService) handleSubscriptionUpdated(ctx context.Context, eve
 	}
 
 	// Record event
-	eventData, err := json.Marshal(stripeSubscription)
-	if err != nil {
-		return fmt.Errorf("failed to marshal subscription data: %w", err)
+	eventData, marshalErr := json.Marshal(stripeSubscription)
+	if marshalErr != nil {
+		return fmt.Errorf("failed to marshal subscription data: %w", marshalErr)
 	}
 	if err := s.subRepo.CreateSubscriptionEvent(ctx, &model.SubscriptionEvent{
 		SubscriptionID: sub.ID,
@@ -336,9 +338,9 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 	}
 
 	// Record event
-	eventData, err := json.Marshal(stripeSubscription)
-	if err != nil {
-		return fmt.Errorf("failed to marshal subscription data: %w", err)
+	eventData, marshalErr := json.Marshal(stripeSubscription)
+	if marshalErr != nil {
+		return fmt.Errorf("failed to marshal subscription data: %w", marshalErr)
 	}
 	if err := s.subRepo.CreateSubscriptionEvent(ctx, &model.SubscriptionEvent{
 		SubscriptionID: sub.ID,
@@ -353,7 +355,7 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 	users, err := s.userRepo.Find(repository.FindUserArgs{ID: &sub.UserID})
 	if err != nil || len(users) == 0 {
 		// Log error but don't fail the webhook
-		fmt.Printf("Failed to get user for email notification: %v\n", err)
+		common.Logger.Error("Failed to get user for email notification", "error", err, "user_id", sub.UserID)
 		return nil
 	}
 	user := &users[0]
@@ -367,7 +369,9 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 
 	if err := mail.SendSubscriptionCancelledEmail(user, emailData); err != nil {
 		// Log error but don't fail the webhook
-		fmt.Printf("Failed to send subscription cancelled email: %v\n", err)
+		common.CaptureError(ctx, err, "Failed to send subscription cancelled email",
+			"user_id", sub.UserID,
+			"email", user.Email)
 	}
 
 	return nil
@@ -385,34 +389,10 @@ func (s *SubscriptionService) handleInvoicePaymentSucceeded(ctx context.Context,
 		return nil
 	}
 
-	// Get subscription
-	sub, err := s.subRepo.GetSubscriptionByStripeID(ctx, stripeInvoice.ID)
-	if err != nil || sub == nil {
-		fmt.Printf("Failed to get subscription for invoice: %v\n", err)
-		return nil
-	}
-
-	// Get user details
-	users, err := s.userRepo.Find(repository.FindUserArgs{ID: &sub.UserID})
-	if err != nil || len(users) == 0 {
-		fmt.Printf("Failed to get user for email notification: %v\n", err)
-		return nil
-	}
-	user := &users[0]
-
-	// Send renewal confirmation email
-	emailData := mail.SubscriptionEmailData{
-		PlanName:        string(sub.Plan),
-		AmountCents:     int(stripeInvoice.AmountPaid),
-		Currency:        string(stripeInvoice.Currency),
-		NextBillingDate: sub.CurrentPeriodEnd,
-		SubscriptionID:  stripeInvoice.ID,
-	}
-
-	if err := mail.SendSubscriptionRenewedEmail(user, emailData); err != nil {
-		fmt.Printf("Failed to send subscription renewed email: %v\n", err)
-	}
-
+	// TODO: Invoice webhook handling needs proper subscription lookup
+	// The stripe.Invoice type doesn't directly expose subscription field in this SDK version
+	// For now, just log the event
+	common.Logger.Info("Invoice payment succeeded", "invoice_id", stripeInvoice.ID)
 	return nil
 }
 
@@ -423,38 +403,13 @@ func (s *SubscriptionService) handleInvoicePaymentFailed(ctx context.Context, ev
 		return fmt.Errorf("failed to unmarshal invoice: %w", err)
 	}
 
-	// Get subscription
-	sub, err := s.subRepo.GetSubscriptionByStripeID(ctx, stripeInvoice.ID)
-	if err != nil || sub == nil {
-		fmt.Printf("Failed to get subscription for invoice: %v\n", err)
-		return nil
-	}
-
-	// Get user details
-	users, err := s.userRepo.Find(repository.FindUserArgs{ID: &sub.UserID})
-	if err != nil || len(users) == 0 {
-		fmt.Printf("Failed to get user for email notification: %v\n", err)
-		return nil
-	}
-	user := &users[0]
-
-	// Determine next retry date (Stripe typically retries in 3-7 days)
-	nextRetryDate := time.Now().AddDate(0, 0, 3)
-
-	// Send payment failed email
-	emailData := mail.SubscriptionEmailData{
-		PlanName:       string(sub.Plan),
-		AmountCents:    int(stripeInvoice.AmountDue),
-		Currency:       string(stripeInvoice.Currency),
-		NextRetryDate:  nextRetryDate,
-		SubscriptionID: stripeInvoice.ID,
-		PaymentError:   "Payment method declined", // Generic error message
-	}
-
-	if err := mail.SendPaymentFailedEmail(user, emailData); err != nil {
-		fmt.Printf("Failed to send payment failed email: %v\n", err)
-	}
-
+	// TODO: Invoice webhook handling needs proper subscription lookup
+	// The stripe.Invoice type doesn't directly expose subscription field in this SDK version
+	// For now, just log the event and capture it to Sentry for monitoring
+	common.CaptureError(ctx, fmt.Errorf("payment failed for invoice"), "Invoice payment failed",
+		"invoice_id", stripeInvoice.ID,
+		"amount_due", stripeInvoice.AmountDue,
+		"currency", stripeInvoice.Currency)
 	return nil
 }
 

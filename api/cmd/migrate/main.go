@@ -27,7 +27,6 @@ func (*verboseLogger) Verbose() bool {
 }
 
 func main() {
-
 	// Use database/sql
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {

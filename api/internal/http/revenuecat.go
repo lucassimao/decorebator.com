@@ -45,7 +45,11 @@ func RestorePurchases(rcService *service.RevenueCatService) gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
 			return
 		}
-		user := userAny.(*model.User)
+		user, ok := userAny.(*model.User)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
+			return
+		}
 
 		// Parse request
 		var req struct {

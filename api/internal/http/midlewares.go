@@ -154,7 +154,8 @@ func ErrorMiddleware() gin.HandlerFunc {
 				if os.Getenv("ENV") == productionEnv {
 					attrs = append(attrs, slog.Any("stack_trace", stackTrace))
 				} else {
-					fmt.Println(stackTrace)
+					// In development, include stack trace in the log
+					attrs = append(attrs, slog.Any("stack_trace", stackTrace))
 				}
 
 				// Capture the error with Sentry if available
