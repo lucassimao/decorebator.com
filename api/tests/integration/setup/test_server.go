@@ -307,10 +307,10 @@ done:
 // This is a much simpler approach than the old ProcessNextRiverJob
 func (ts *TestServer) ProcessRevenueCatWebhookJob(t *testing.T, rcService service.RevenueCatService) error {
 	ctx := context.Background()
-	
+
 	// Create the worker
 	worker := service.NewRevenueCatWebhookWorker(rcService)
-	
+
 	// Find the next available job
 	var jobID int64
 	var args []byte
@@ -322,31 +322,33 @@ func (ts *TestServer) ProcessRevenueCatWebhookJob(t *testing.T, rcService servic
 		ORDER BY id ASC
 		LIMIT 1
 	`, "revenuecat-webhook").Scan(&jobID, &args, &queue)
-	
+
 	if err != nil {
 		t.Logf("No RevenueCat webhook job found: %v", err)
 		return err
 	}
-	
+
 	t.Logf("Found RevenueCat webhook job %d in queue %s", jobID, queue)
-	
+
 	// Decode the args
 	var jobArgs service.RevenueCatWebhookArgs
-	if err := json.Unmarshal(args, &jobArgs); err != nil {
-		return fmt.Errorf("failed to unmarshal job args: %w", err)
+	unmarshalErr := json.Unmarshal(args, &jobArgs)
+	if unmarshalErr != nil {
+		return fmt.Errorf("failed to unmarshal job args: %w", unmarshalErr)
 	}
-	
+
 	// Process the job directly using the worker's Work method
 	// River's Job struct in the newer version has different fields
 	job := &river.Job[service.RevenueCatWebhookArgs]{
 		Args: jobArgs,
 	}
-	
+
 	// Call the worker's Work method directly
-	if err := worker.Work(ctx, job); err != nil {
-		return fmt.Errorf("worker failed: %w", err)
+	workErr := worker.Work(ctx, job)
+	if workErr != nil {
+		return fmt.Errorf("worker failed: %w", workErr)
 	}
-	
+
 	// Update the job status to completed
 	_, err = ts.DB.Exec(ctx, `
 		UPDATE river_job 
@@ -356,7 +358,7 @@ func (ts *TestServer) ProcessRevenueCatWebhookJob(t *testing.T, rcService servic
 	if err != nil {
 		return fmt.Errorf("failed to update job status: %w", err)
 	}
-	
+
 	t.Logf("Successfully processed RevenueCat webhook job %d", jobID)
 	return nil
 }

@@ -118,7 +118,7 @@ func (s *SubscriptionService) CreateCheckoutSession(ctx context.Context, userID 
 // HandleWebhook processes Stripe webhook events
 func (s *SubscriptionService) HandleWebhook(ctx context.Context, payload []byte, signature string) error {
 	var event stripe.Event
-	
+
 	// In test mode with test webhook secret, bypass signature verification
 	if s.webhookSecret == "test-stripe-webhook-secret" && signature == "test_signature" {
 		// Parse the event directly without signature verification

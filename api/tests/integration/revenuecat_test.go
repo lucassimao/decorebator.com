@@ -100,24 +100,24 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 		assert.Greater(t, jobCount, 0, "Should have enqueued at least one job")
 
 		// Create the RevenueCat service with the test database
-		rcService := service.NewRevenueCatService(ts.DB, nil)
-		
+		rcService := service.NewRevenueCatService(ts.DB)
+
 		// Process the job using our new simplified method
 		err = ts.ProcessRevenueCatWebhookJob(t, rcService)
 		require.NoError(t, err)
-		
+
 		// Verify the subscription was created
 		subRepo := repository.NewSubscriptionRepository(ts.DB)
 		subscription, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
 		require.NoError(t, err)
 		require.NotNil(t, subscription)
-		
+
 		// Verify subscription details
 		assert.Equal(t, model.ProviderRevenueCat, subscription.Provider)
 		assert.Equal(t, model.PlanMonthly, subscription.Plan)
 		assert.Equal(t, model.StatusActive, subscription.Status)
 		assert.NotNil(t, subscription.RevenueCatSubscriptionID)
-		
+
 		// Verify user's subscription status was updated
 		var updatedUser model.User
 		err = ts.DB.QueryRow(ctx,
