@@ -218,7 +218,7 @@ func (repository *UserRepository) UpdateUserProfile(args UpdateUserProfileArgs) 
 }
 
 // GetUserByRevenueCatCustomerID retrieves a user by their RevenueCat customer ID
-func (r *UserRepository) GetUserByRevenueCatCustomerID(ctx context.Context, revenueCatCustomerID string) (*model.User, error) {
+func (repository *UserRepository) GetUserByRevenueCatCustomerID(ctx context.Context, revenueCatCustomerID string) (*model.User, error) {
 	query := `
 		SELECT id, first_name, last_name, password_hash, email, profile_picture_url, 
 		       country, date_of_birth, preferred_language, subscription_plan, 
@@ -229,7 +229,7 @@ func (r *UserRepository) GetUserByRevenueCatCustomerID(ctx context.Context, reve
 	`
 
 	var user model.User
-	err := r.Db.QueryRow(ctx, query, revenueCatCustomerID).Scan(
+	err := repository.Db.QueryRow(ctx, query, revenueCatCustomerID).Scan(
 		&user.ID, &user.FirstName, &user.LastName, &user.PasswordHash, &user.Email,
 		&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
 		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID,

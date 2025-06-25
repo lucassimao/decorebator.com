@@ -263,13 +263,13 @@ func (s *RevenueCatService) HandleWebhook(ctx context.Context, payload []byte, a
 
 	// Store the event
 	eventData, _ := json.Marshal(webhook)
-	
+
 	// Get first entitlement ID if available
 	var entitlementID *string
 	if len(webhook.Event.EntitlementIDs) > 0 {
 		entitlementID = &webhook.Event.EntitlementIDs[0]
 	}
-	
+
 	event := &model.RevenueCatEvent{
 		EventID:       webhook.Event.ID,
 		EventType:     webhook.Event.Type,
@@ -296,61 +296,8 @@ func (s *RevenueCatService) HandleWebhook(ctx context.Context, payload []byte, a
 	event.UserID = &user.ID
 
 	// Process event based on type
-	switch webhook.Event.Type {
-	case EventInitialPurchase, EventRenewal, EventUncancellation:
-		platform := s.getPlatformFromStore(webhook.Event.Store)
-		
-		// In test mode, create subscription directly from webhook data
-		if os.Getenv("ENV") == "test" || os.Getenv("TEST_MODE") == "true" {
-			if err := s.createSubscriptionFromWebhook(ctx, user.ID, webhook.Event, platform); err != nil {
-				return fmt.Errorf("failed to create subscription from webhook: %w", err)
-			}
-		} else {
-			// Fetch latest customer info and update subscription
-			customerInfo, err := s.GetCustomerInfo(ctx, webhook.Event.AppUserID, platform)
-			if err != nil {
-				return fmt.Errorf("failed to get customer info: %w", err)
-			}
-
-			if err := s.CreateOrUpdateSubscriptionFromRevenueCat(ctx, user.ID, customerInfo, platform); err != nil {
-				return fmt.Errorf("failed to update subscription: %w", err)
-			}
-		}
-
-	case EventCancellation, EventExpiration:
-		// Mark subscription as canceled
-		sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, user.ID)
-		if err != nil {
-			return fmt.Errorf("failed to get subscription: %w", err)
-		}
-
-		if sub != nil && sub.Provider == model.ProviderRevenueCat {
-			sub.Status = model.StatusCanceled
-			now := time.Now()
-			sub.CancelledAt = &now
-
-			if webhook.Event.Type == EventCancellation {
-				sub.CancelAtPeriodEnd = true
-			}
-
-			if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
-				return fmt.Errorf("failed to update subscription: %w", err)
-			}
-		}
-
-	case EventBillingIssue:
-		// Mark subscription as past due
-		sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, user.ID)
-		if err != nil {
-			return fmt.Errorf("failed to get subscription: %w", err)
-		}
-
-		if sub != nil && sub.Provider == model.ProviderRevenueCat {
-			sub.Status = model.StatusPastDue
-			if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
-				return fmt.Errorf("failed to update subscription: %w", err)
-			}
-		}
+	if err := s.processRevenueCatEvent(ctx, webhook.Event, user.ID); err != nil {
+		return fmt.Errorf("failed to process event: %w", err)
 	}
 
 	// Store the event
@@ -368,25 +315,25 @@ type WebhookPayload struct {
 }
 
 type WebhookEvent struct {
-	ID                   string   `json:"id"`
-	Type                 string   `json:"type"`
-	AppID                string   `json:"app_id"`
-	AppUserID            string   `json:"app_user_id"`
-	OriginalAppUserID    string   `json:"original_app_user_id,omitempty"`
-	ProductID            string   `json:"product_id"`
-	EntitlementIDs       []string `json:"entitlement_ids,omitempty"`
-	PeriodType           string   `json:"period_type,omitempty"`
-	PurchasedAtMS        int64    `json:"purchased_at_ms,omitempty"`
-	ExpirationAtMS       int64    `json:"expiration_at_ms,omitempty"`
-	Environment          string   `json:"environment"`
-	Store                string   `json:"store"`
-	Currency             string   `json:"currency,omitempty"`
-	Price                float64  `json:"price,omitempty"`
-	TransactionID        string   `json:"transaction_id,omitempty"`
-	OriginalTransactionID string  `json:"original_transaction_id,omitempty"`
-	CountryCode          string   `json:"country_code,omitempty"`
-	EventTimestampMS     int64    `json:"event_timestamp_ms"`
-	Aliases              []string `json:"aliases,omitempty"`
+	ID                    string   `json:"id"`
+	Type                  string   `json:"type"`
+	AppID                 string   `json:"app_id"`
+	AppUserID             string   `json:"app_user_id"`
+	OriginalAppUserID     string   `json:"original_app_user_id,omitempty"`
+	ProductID             string   `json:"product_id"`
+	EntitlementIDs        []string `json:"entitlement_ids,omitempty"`
+	PeriodType            string   `json:"period_type,omitempty"`
+	PurchasedAtMS         int64    `json:"purchased_at_ms,omitempty"`
+	ExpirationAtMS        int64    `json:"expiration_at_ms,omitempty"`
+	Environment           string   `json:"environment"`
+	Store                 string   `json:"store"`
+	Currency              string   `json:"currency,omitempty"`
+	Price                 float64  `json:"price,omitempty"`
+	TransactionID         string   `json:"transaction_id,omitempty"`
+	OriginalTransactionID string   `json:"original_transaction_id,omitempty"`
+	CountryCode           string   `json:"country_code,omitempty"`
+	EventTimestampMS      int64    `json:"event_timestamp_ms"`
+	Aliases               []string `json:"aliases,omitempty"`
 }
 
 // Helper methods
@@ -541,6 +488,86 @@ func (s *RevenueCatService) RestorePurchases(ctx context.Context, userID int64, 
 	// Update subscription based on customer info
 	if err := s.CreateOrUpdateSubscriptionFromRevenueCat(ctx, userID, customerInfo, platform); err != nil {
 		return fmt.Errorf("failed to update subscription: %w", err)
+	}
+
+	return nil
+}
+
+// processRevenueCatEvent processes different types of RevenueCat events
+func (s *RevenueCatService) processRevenueCatEvent(ctx context.Context, event WebhookEvent, userID int64) error {
+	switch event.Type {
+	case EventInitialPurchase, EventRenewal, EventUncancellation:
+		return s.processSubscriptionEvent(ctx, event, userID)
+	case EventCancellation, EventExpiration:
+		return s.processCancellationEvent(ctx, event, userID)
+	case EventBillingIssue:
+		return s.processBillingIssueEvent(ctx, userID)
+	default:
+		common.Logger.Info("Unhandled RevenueCat event type", "type", event.Type)
+		return nil
+	}
+}
+
+// processSubscriptionEvent handles subscription creation/renewal events
+func (s *RevenueCatService) processSubscriptionEvent(ctx context.Context, event WebhookEvent, userID int64) error {
+	platform := s.getPlatformFromStore(event.Store)
+
+	// In test mode, create subscription directly from webhook data
+	if os.Getenv("ENV") == "test" || os.Getenv("TEST_MODE") == "true" {
+		if err := s.createSubscriptionFromWebhook(ctx, userID, event, platform); err != nil {
+			return fmt.Errorf("failed to create subscription from webhook: %w", err)
+		}
+	} else {
+		// Fetch latest customer info and update subscription
+		customerInfo, err := s.GetCustomerInfo(ctx, event.AppUserID, platform)
+		if err != nil {
+			return fmt.Errorf("failed to get customer info: %w", err)
+		}
+
+		if err := s.CreateOrUpdateSubscriptionFromRevenueCat(ctx, userID, customerInfo, platform); err != nil {
+			return fmt.Errorf("failed to update subscription: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// processCancellationEvent handles subscription cancellation events
+func (s *RevenueCatService) processCancellationEvent(ctx context.Context, event WebhookEvent, userID int64) error {
+	sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to get subscription: %w", err)
+	}
+
+	if sub != nil && sub.Provider == model.ProviderRevenueCat {
+		sub.Status = model.StatusCanceled
+		now := time.Now()
+		sub.CancelledAt = &now
+
+		if event.Type == EventCancellation {
+			sub.CancelAtPeriodEnd = true
+		}
+
+		if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
+			return fmt.Errorf("failed to update subscription: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// processBillingIssueEvent handles billing issue events
+func (s *RevenueCatService) processBillingIssueEvent(ctx context.Context, userID int64) error {
+	sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to get subscription: %w", err)
+	}
+
+	if sub != nil && sub.Provider == model.ProviderRevenueCat {
+		sub.Status = model.StatusPastDue
+		if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
+			return fmt.Errorf("failed to update subscription: %w", err)
+		}
 	}
 
 	return nil
