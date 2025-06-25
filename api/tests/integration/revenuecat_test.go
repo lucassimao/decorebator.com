@@ -37,8 +37,8 @@ func TestRevenueCatIntegration(t *testing.T) {
 	defer rcMock.Close()
 
 	// Set environment variable to use mock server
-	os.Setenv("REVENUECAT_API_BASE_URL", rcMock.Server.URL)
-	defer os.Unsetenv("REVENUECAT_API_BASE_URL")
+	os.Setenv("REVENUECAT_API_KEY", "test_api_key")
+	defer os.Unsetenv("REVENUECAT_API_KEY")
 
 	t.Run("RevenueCatWebhook_ProcessesInitialPurchase", func(t *testing.T) {
 		// Create a test user to link with RevenueCat
@@ -105,12 +105,13 @@ func TestRevenueCatIntegration(t *testing.T) {
 
 		jsonBody, _ := json.Marshal(webhook)
 
-		// Get webhook secret from config (would be set in test config)
-		webhookSecret := "test_webhook_secret"
+		// Get webhook auth token from environment
+		webhookAuthToken := os.Getenv("REVENUECAT_WEBHOOK_AUTHORIZATION")
+		require.NotEmpty(t, webhookAuthToken, "REVENUECAT_WEBHOOK_AUTHORIZATION must be set in .env.test")
 
 		req, err := http.NewRequest("POST", ts.BaseURL+"/webhook/revenuecat", bytes.NewBuffer(jsonBody))
 		require.NoError(t, err)
-		req.Header.Set("Authorization", webhookSecret)
+		req.Header.Set("Authorization", webhookAuthToken)
 		req.Header.Set("Content-Type", "application/json")
 
 		resp2, err := http.DefaultClient.Do(req)
@@ -124,7 +125,7 @@ func TestRevenueCatIntegration(t *testing.T) {
 		rcServiceMock := &mocks.RevenueCatServiceMock{}
 
 		// Set the mock functions.
-		rcServiceMock.HandleWebhookFunc = func(ctx context.Context, payload []byte, _ string) error {
+		rcServiceMock.HandleWebhookFunc = func(ctx context.Context, payload []byte) error {
 			// Simulate the real service's behavior by creating the subscription directly.
 			var webhook service.WebhookPayload
 			if unmarshalErr := json.Unmarshal(payload, &webhook); unmarshalErr != nil {

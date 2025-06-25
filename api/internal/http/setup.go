@@ -167,12 +167,10 @@ func SetupRoutes(config *Config) *gin.Engine {
 		RegisterAnalyticsRoutes(authenticatedRoutes)
 
 		// Subscription routes
-		// Subscription routes
 		authenticatedRoutes.POST("/subscription/checkout-session", CreateCheckoutSession(subService))
 		authenticatedRoutes.GET("/subscription/status", GetSubscriptionStatus(subRepo))
 		authenticatedRoutes.POST("/subscription/cancel", CancelSubscription(subService))
 		authenticatedRoutes.GET("/subscription/history", GetSubscriptionHistory(subRepo))
-		authenticatedRoutes.GET("/subscription/provider", GetPaymentProvider())
 
 		// RevenueCat routes
 		authenticatedRoutes.POST("/subscription/revenuecat/restore", RestorePurchases(rcService))

@@ -3,6 +3,7 @@ package http
 import (
 	"io"
 	"net/http"
+	"os"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -15,15 +16,23 @@ import (
 // HandleRevenueCatWebhook handles RevenueCat webhook events
 func HandleRevenueCatWebhook(riverClient *river.Client[pgx.Tx]) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Read the request body
+		// 1. Verify Authorization header
+		authHeader := c.GetHeader("Authorization")
+		expectedToken := os.Getenv("REVENUECAT_WEBHOOK_AUTHORIZATION")
+
+		if expectedToken == "" {
+			common.Logger.Error("REVENUECAT_WEBHOOK_AUTHORIZATION is not set, skipping validation")
+		} else if authHeader != expectedToken {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization token"})
+			return
+		}
+
+		// 2. Read the request body
 		payload, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
 			return
 		}
-
-		// Get authorization header for webhook verification
-		authHeader := c.GetHeader("Authorization")
 
 		// Enqueue a job to process the webhook
 		_, err = riverClient.Insert(c.Request.Context(), service.RevenueCatWebhookArgs{

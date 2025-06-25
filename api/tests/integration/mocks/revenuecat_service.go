@@ -9,23 +9,23 @@ import (
 
 // RevenueCatServiceMock is a mock implementation of the RevenueCatService interface.
 type RevenueCatServiceMock struct {
-	GetCustomerInfoFunc                          func(ctx context.Context, appUserID string, platform model.PlatformType) (*service.CustomerInfo, error)
+	GetCustomerInfoFunc                          func(ctx context.Context, appUserID string) (*service.CustomerInfo, error)
 	CreateOrUpdateSubscriptionFromRevenueCatFunc func(ctx context.Context, userID int64, customerInfo *service.CustomerInfo, platform model.PlatformType) error
-	HandleWebhookFunc                            func(ctx context.Context, payload []byte, authHeader string) error
+	HandleWebhookFunc                            func(ctx context.Context, payload []byte) error
 	RestorePurchasesFunc                         func(ctx context.Context, userID int64, appUserID string, platform model.PlatformType) error
 	GetPlanFromProductIDFunc                     func(productID string) model.SubscriptionPlan
 }
 
-func (m *RevenueCatServiceMock) GetCustomerInfo(ctx context.Context, appUserID string, platform model.PlatformType) (*service.CustomerInfo, error) {
-	return m.GetCustomerInfoFunc(ctx, appUserID, platform)
+func (m *RevenueCatServiceMock) GetCustomerInfo(ctx context.Context, appUserID string) (*service.CustomerInfo, error) {
+	return m.GetCustomerInfoFunc(ctx, appUserID)
 }
 
 func (m *RevenueCatServiceMock) CreateOrUpdateSubscriptionFromRevenueCat(ctx context.Context, userID int64, customerInfo *service.CustomerInfo, platform model.PlatformType) error {
 	return m.CreateOrUpdateSubscriptionFromRevenueCatFunc(ctx, userID, customerInfo, platform)
 }
 
-func (m *RevenueCatServiceMock) HandleWebhook(ctx context.Context, payload []byte, authHeader string) error {
-	return m.HandleWebhookFunc(ctx, payload, authHeader)
+func (m *RevenueCatServiceMock) HandleWebhook(ctx context.Context, payload []byte) error {
+	return m.HandleWebhookFunc(ctx, payload)
 }
 
 func (m *RevenueCatServiceMock) RestorePurchases(ctx context.Context, userID int64, appUserID string, platform model.PlatformType) error {

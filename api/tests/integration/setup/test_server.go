@@ -223,13 +223,13 @@ func (ts *TestServer) isHealthy() bool {
 
 // ProcessNextRiverJob fetches and processes the next available River job from a given queue.
 // This makes asynchronous worker processing synchronous for testing purposes.
-func (ts *TestServer) ProcessNextRiverJob(t *testing.T, queue string, rcServiceMock service.RevenueCatService) {
+func (ts *TestServer) ProcessNextRiverJob(t *testing.T, queue string, rcService service.RevenueCatService) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// Register the specific worker for the job kind we expect.
 	workers := river.NewWorkers()
-	river.AddWorker(workers, service.NewRevenueCatWebhookWorker(rcServiceMock))
+	river.AddWorker(workers, service.NewRevenueCatWebhookWorker(rcService))
 
 	// Create a temporary River client scoped to this test run.
 	riverClient, err := river.NewClient(riverpgxv5.New(ts.DB), &river.Config{

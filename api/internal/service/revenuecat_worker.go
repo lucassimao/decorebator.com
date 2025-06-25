@@ -28,7 +28,7 @@ func NewRevenueCatWebhookWorker(rcService RevenueCatService) *RevenueCatWebhookW
 func (w *RevenueCatWebhookWorker) Work(ctx context.Context, job *river.Job[RevenueCatWebhookArgs]) error {
 	logger := common.Logger.With("worker", "revenuecat-webhook")
 
-	err := w.rcService.HandleWebhook(ctx, job.Args.Payload, job.Args.AuthHeader)
+	err := w.rcService.HandleWebhook(ctx, job.Args.Payload)
 	if err != nil {
 		logger.Error("failed to process revenuecat webhook", "error", err)
 		return err

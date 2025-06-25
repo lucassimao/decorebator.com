@@ -265,42 +265,6 @@ func CheckSubscriptionLimits(subService *service.SubscriptionService, action str
 	}
 }
 
-// GetPaymentProvider returns the appropriate payment provider for the user
-func GetPaymentProvider() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Get user from context
-		userAny, exists := c.Get("user")
-		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
-			return
-		}
-		user, ok := userAny.(*model.User)
-		if !ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
-			return
-		}
-
-		// Get platform from request header
-		platform := c.GetHeader("X-Platform")
-
-		// Determine provider based on platform and user country
-		var provider string
-		if platform == "android" {
-			provider = "revenuecat"
-		} else if platform == "ios" {
-			if user.Country != nil && *user.Country == "US" {
-				provider = "stripe"
-			} else {
-				provider = "revenuecat"
-			}
-		} else {
-			provider = "stripe"
-		}
-
-		c.JSON(http.StatusOK, gin.H{"provider": provider})
-	}
-}
-
 func CheckoutRedirect() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		expoURI := c.Query("redirect_uri")

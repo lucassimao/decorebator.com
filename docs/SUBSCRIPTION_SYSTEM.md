@@ -1,3 +1,4 @@
+
 # Subscription System Documentation
 
 ## Overview
@@ -149,19 +150,6 @@ CREATE TYPE platform_type AS ENUM ('ios', 'android', 'web');
 
 ## API Endpoints
 
-### Provider Detection
-
-Provider detection is now handled locally in the mobile app. No API endpoint is needed as the mobile client determines the provider based on:
-- Platform (iOS/Android)
-- User country (from profile)
-
-The logic is implemented in `mobile/hooks/useRevenueCat.ts`:
-```typescript
-const isUS = user.country === "US";
-const provider = platform === "android" ? "revenuecat" : 
-                platform === "ios" && !isUS ? "revenuecat" : "stripe";
-```
-
 ### Stripe Checkout
 ```http
 POST /subscription/checkout
@@ -260,14 +248,44 @@ Content-Type: application/json
 ```typescript
 // hooks/useRevenueCat.ts
 export function usePaymentProvider() {
-  const { user } = useUserInfo();
-  
-  return useQuery({
-    queryKey: ["paymentProvider", user?.id],
-    queryFn: getPaymentProvider,
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-  });
+  const { userInfo: user } = useUserInfo();
+
+  // Determine provider based on platform and user location
+  const getProvider = (): {
+    provider: PaymentProvider;
+    platform: "ios" | "android" | "web";
+  } | null => {
+    if (!user) return null;
+
+    const platform =
+      Platform.OS === "ios"
+        ? "ios"
+        : Platform.OS === "android"
+          ? "android"
+          : "web";
+
+    // Android always uses RevenueCat
+    if (platform === "android") {
+      return { provider: "revenuecat", platform };
+    }
+
+    // iOS: US users use Stripe, others use RevenueCat
+    if (platform === "ios") {
+      const isUS = user.country === "US";
+      return { provider: isUS ? "stripe" : "revenuecat", platform };
+    }
+
+    // Web always uses Stripe
+    return { provider: "stripe", platform };
+  };
+
+  const providerInfo = getProvider();
+
+  return {
+    data: providerInfo,
+    isLoading: false,
+    error: null,
+  };
 }
 ```
 
@@ -334,46 +352,73 @@ func (s *SubscriptionService) HandleStripeWebhook(ctx context.Context, payload [
 ```
 
 ### RevenueCat Webhook Handler
+
+RevenueCat webhooks are handled asynchronously using a background worker to ensure reliability. The HTTP handler immediately enqueues a job and returns a `200 OK` to RevenueCat.
+
 ```go
-func (s *RevenueCatService) HandleWebhook(ctx context.Context, payload []byte, authHeader string) error {
-    // 1. Verify authorization header
-    if authHeader != s.webhookSecret {
-        return ErrUnauthorized
-    }
-    
-    // 2. Parse webhook payload
-    var webhook RevenueCatWebhook
-    json.Unmarshal(payload, &webhook)
-    
-    // 3. Process based on event type
-    switch webhook.Event.Type {
-    case "INITIAL_PURCHASE":
-        return s.handleInitialPurchase(ctx, webhook.Event)
-    case "RENEWAL":
-        return s.handleRenewal(ctx, webhook.Event)
-    case "CANCELLATION":
-        return s.handleCancellation(ctx, webhook.Event)
-    }
+// internal/http/revenuecat.go
+func HandleRevenueCatWebhook(riverClient *river.Client[pgx.Tx]) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 1. Verify Authorization header
+		authHeader := c.GetHeader("Authorization")
+		expectedToken := os.Getenv("REVENUECAT_WEBHOOK_AUTHORIZATION")
+
+		if expectedToken == "" {
+			common.Logger.Error("REVENUECAT_WEBHOOK_AUTHORIZATION is not set, skipping validation")
+		} else if authHeader != expectedToken {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization token"})
+			return
+		}
+
+		// 2. Read the request body
+		payload, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
+			return
+		}
+
+		// Enqueue a job to process the webhook
+		_, err = riverClient.Insert(c.Request.Context(), service.RevenueCatWebhookArgs{
+			Payload:    payload,
+		}, &river.InsertOpts{
+			Queue: "revenuecat-webhook",
+		})
+
+		if err != nil {
+			common.Logger.Error("failed to enqueue revenuecat webhook job", "error", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to enqueue webhook job"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"status": "success"})
+	}
 }
 ```
 
 ## Testing
 
 ### Integration Tests
+
+The RevenueCat integration is tested using a mock RevenueCat service that implements the `RevenueCatService` interface. This allows for testing the webhook processing logic without making actual calls to the RevenueCat API.
+
 ```go
 // tests/integration/revenuecat_test.go
 func TestRevenueCatIntegration(t *testing.T) {
-    t.Run("GetPaymentProvider_ForAndroidUser_ReturnsRevenueCat", func(t *testing.T) {
-        // Test Android users get RevenueCat
-    })
-    
-    t.Run("GetPaymentProvider_ForUSiOSUser_ReturnsStripe", func(t *testing.T) {
-        // Test US iOS users get Stripe
-    })
-    
-    t.Run("RevenueCatWebhook_ProcessesInitialPurchase", func(t *testing.T) {
-        // Test webhook creates subscription
-    })
+    // ... test setup ...
+
+	// Create a mock RevenueCat service.
+	rcServiceMock := &mocks.RevenueCatServiceMock{}
+
+	// Set the mock functions.
+	rcServiceMock.HandleWebhookFunc = func(ctx context.Context, payload []byte) error {
+		// Simulate the real service's behavior by creating the subscription directly.
+		// ... implementation ...
+	}
+
+	// Process the job that was just enqueued by the webhook.
+	ts.ProcessNextRiverJob(t, "revenuecat-webhook", rcServiceMock)
+
+    // ... assertions ...
 }
 ```
 
@@ -399,9 +444,8 @@ STRIPE_MONTHLY_PRICE_ID=price_...
 STRIPE_ANNUAL_PRICE_ID=price_...
 
 # RevenueCat Configuration
-REVENUECAT_API_KEY_IOS=appl_...
-REVENUECAT_API_KEY_ANDROID=goog_...
-REVENUECAT_WEBHOOK_SECRET=rc_webhook_secret
+REVENUECAT_API_KEY=your_revenuecat_api_key
+REVENUECAT_WEBHOOK_AUTHORIZATION=your_webhook_authorization_token
 ```
 
 #### Mobile App
@@ -429,7 +473,7 @@ EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID=goog_...
 
 4. **Configure Webhook**
    - URL: `https://api.decorebator.com/webhook/revenuecat`
-   - Authorization Header: Your webhook secret
+   - Authorization Header: Your webhook authorization token
 
 ### Stripe Dashboard Setup
 
@@ -543,7 +587,6 @@ If issues arise:
 1. **User sees wrong provider**
    - Check user's country in database
    - Verify platform detection is working
-   - Check provider selection endpoint response
 
 2. **Subscription not activating**
    - Check webhook logs for errors
@@ -582,7 +625,7 @@ ORDER BY created_at DESC;
 ## Security Considerations
 
 1. **API Keys**: Never expose RevenueCat API keys in client code
-2. **Webhook Secrets**: Use strong, unique secrets for each provider
+2. **Webhook Authorization**: Use a strong, unique token for webhook authorization
 3. **User Association**: Always verify user ownership before modifying subscriptions
 4. **PII Handling**: Don't log sensitive customer information
 5. **Rate Limiting**: Implement rate limits on subscription endpoints

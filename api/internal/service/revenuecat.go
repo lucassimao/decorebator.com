@@ -42,40 +42,25 @@ const (
 )
 
 type revenueCatService struct {
-	db            *pgxpool.Pool
-	subRepo       *repository.SubscriptionRepository
-	userRepo      *repository.UserRepository
-	apiKeyIOS     string
-	apiKeyAndroid string
-	webhookSecret string
-	httpClient    *http.Client
-	baseURL       string
+	db         *pgxpool.Pool
+	subRepo    *repository.SubscriptionRepository
+	userRepo   *repository.UserRepository
+	apiKey     string
+	httpClient *http.Client
+	baseURL    string
 }
 
 func NewRevenueCatService(db *pgxpool.Pool) RevenueCatService {
-	// Get API keys from environment
-	apiKeyIOS := os.Getenv("REVENUECAT_API_KEY_IOS")
-	if apiKeyIOS == "" {
-		common.Logger.Warn("REVENUECAT_API_KEY_IOS not set - RevenueCat iOS support disabled")
-	}
-
-	apiKeyAndroid := os.Getenv("REVENUECAT_API_KEY_ANDROID")
-	if apiKeyAndroid == "" {
-		common.Logger.Warn("REVENUECAT_API_KEY_ANDROID not set - RevenueCat Android support disabled")
-	}
-
-	webhookSecret := os.Getenv("REVENUECAT_WEBHOOK_SECRET")
-	if webhookSecret == "" {
-		common.Logger.Warn("REVENUECAT_WEBHOOK_SECRET not set - webhook verification disabled")
+	apiKey := os.Getenv("REVENUECAT_API_KEY")
+	if apiKey == "" {
+		common.Logger.Warn("REVENUECAT_API_KEY not set - RevenueCat support disabled")
 	}
 
 	return &revenueCatService{
-		db:            db,
-		subRepo:       repository.NewSubscriptionRepository(db),
-		userRepo:      &repository.UserRepository{Db: db},
-		apiKeyIOS:     apiKeyIOS,
-		apiKeyAndroid: apiKeyAndroid,
-		webhookSecret: webhookSecret,
+		db:       db,
+		subRepo:  repository.NewSubscriptionRepository(db),
+		userRepo: &repository.UserRepository{Db: db},
+		apiKey:   apiKey,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -119,11 +104,9 @@ type Subscription struct {
 }
 
 // GetCustomerInfo fetches customer info from RevenueCat
-func (s *revenueCatService) GetCustomerInfo(ctx context.Context, appUserID string, platform model.PlatformType) (*CustomerInfo, error) {
-	// Select API key based on platform
-	apiKey := s.getAPIKey(platform)
-	if apiKey == "" {
-		return nil, fmt.Errorf("RevenueCat API key not configured for platform: %s", platform)
+func (s *revenueCatService) GetCustomerInfo(ctx context.Context, appUserID string) (*CustomerInfo, error) {
+	if s.apiKey == "" {
+		return nil, fmt.Errorf("RevenueCat API key not configured")
 	}
 
 	url := fmt.Sprintf("%s/subscribers/%s", s.baseURL, appUserID)
@@ -133,7 +116,7 @@ func (s *revenueCatService) GetCustomerInfo(ctx context.Context, appUserID strin
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.apiKey))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := s.httpClient.Do(req)
@@ -229,12 +212,7 @@ func (s *revenueCatService) CreateOrUpdateSubscriptionFromRevenueCat(ctx context
 }
 
 // HandleWebhook processes RevenueCat webhook events
-func (s *revenueCatService) HandleWebhook(ctx context.Context, payload []byte, authHeader string) error {
-	// Verify webhook if secret is configured
-	if s.webhookSecret != "" && authHeader != s.webhookSecret {
-		return fmt.Errorf("invalid webhook authorization")
-	}
-
+func (s *revenueCatService) HandleWebhook(ctx context.Context, payload []byte) error {
 	var webhook WebhookPayload
 	if err := json.Unmarshal(payload, &webhook); err != nil {
 		return fmt.Errorf("failed to unmarshal webhook: %w", err)
@@ -333,19 +311,6 @@ type WebhookEvent struct {
 	Aliases               []string `json:"aliases,omitempty"`
 }
 
-// Helper methods
-
-func (s *revenueCatService) getAPIKey(platform model.PlatformType) string {
-	switch platform {
-	case model.PlatformIOS:
-		return s.apiKeyIOS
-	case model.PlatformAndroid:
-		return s.apiKeyAndroid
-	default:
-		return ""
-	}
-}
-
 func (s *revenueCatService) GetPlanFromProductID(productID string) model.SubscriptionPlan {
 	switch productID {
 	case ProductMonthlyIOS, ProductMonthlyAndroid:
@@ -423,7 +388,7 @@ func (s *revenueCatService) RestorePurchases(ctx context.Context, userID int64, 
 	}
 
 	// Fetch customer info
-	customerInfo, err := s.GetCustomerInfo(ctx, appUserID, platform)
+	customerInfo, err := s.GetCustomerInfo(ctx, appUserID)
 	if err != nil {
 		return fmt.Errorf("failed to get customer info: %w", err)
 	}
@@ -456,7 +421,7 @@ func (s *revenueCatService) processSubscriptionEvent(ctx context.Context, event 
 	platform := s.getPlatformFromStore(event.Store)
 
 	// Fetch latest customer info and update subscription
-	customerInfo, err := s.GetCustomerInfo(ctx, event.AppUserID, platform)
+	customerInfo, err := s.GetCustomerInfo(ctx, event.AppUserID)
 	if err != nil {
 		return fmt.Errorf("failed to get customer info: %w", err)
 	}
