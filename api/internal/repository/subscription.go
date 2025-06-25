@@ -57,7 +57,8 @@ func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscri
 // GetSubscriptionByStripeID retrieves a subscription by Stripe subscription ID
 func (r *SubscriptionRepository) GetSubscriptionByStripeID(ctx context.Context, stripeSubscriptionID string) (*model.Subscription, error) {
 	query := `
-		SELECT id, user_id, stripe_subscription_id, stripe_customer_id,
+		SELECT id, user_id, provider, stripe_subscription_id, stripe_customer_id,
+			   revenuecat_subscription_id, app_store_product_id, platform,
 			   plan, status, current_period_start, current_period_end,
 			   cancel_at_period_end, cancelled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
@@ -71,8 +72,12 @@ func (r *SubscriptionRepository) GetSubscriptionByStripeID(ctx context.Context, 
 	err := r.db.QueryRow(ctx, query, stripeSubscriptionID).Scan(
 		&subscription.ID,
 		&subscription.UserID,
+		&subscription.Provider,
 		&subscription.StripeSubscriptionID,
 		&subscription.StripeCustomerID,
+		&subscription.RevenueCatSubscriptionID,
+		&subscription.AppStoreProductID,
+		&subscription.Platform,
 		&subscription.Plan,
 		&subscription.Status,
 		&subscription.CurrentPeriodStart,
@@ -399,7 +404,7 @@ func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscri
 			current_period_start = $10,
 			current_period_end = $11,
 			cancel_at_period_end = $12,
-			canceled_at = $13,
+			cancelled_at = $13,
 			trial_end = $14,
 			amount_cents = $15,
 			currency = $16,
