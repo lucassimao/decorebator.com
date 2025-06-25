@@ -216,3 +216,30 @@ func (repository *UserRepository) UpdateUserProfile(args UpdateUserProfileArgs) 
 
 	return &user, nil
 }
+
+// GetUserByRevenueCatCustomerID retrieves a user by their RevenueCat customer ID
+func (r *UserRepository) GetUserByRevenueCatCustomerID(ctx context.Context, revenueCatCustomerID string) (*model.User, error) {
+	query := `
+		SELECT id, first_name, last_name, password_hash, email, profile_picture_url, 
+		       country, date_of_birth, preferred_language, subscription_plan, 
+		       subscription_status, stripe_customer_id, revenuecat_customer_id, 
+		       platform, subscription_ends_at, created_at, updated_at
+		FROM users 
+		WHERE revenuecat_customer_id = $1
+	`
+
+	var user model.User
+	err := r.Db.QueryRow(ctx, query, revenueCatCustomerID).Scan(
+		&user.ID, &user.FirstName, &user.LastName, &user.PasswordHash, &user.Email,
+		&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
+		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID,
+		&user.RevenueCatCustomerID, &user.Platform, &user.SubscriptionEndsAt,
+		&user.CreatedAt, &user.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}

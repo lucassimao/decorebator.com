@@ -13,9 +13,12 @@ import i18n from "@/i18n";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { createCommonStyles } from "@/styles/common";
+import { usePaymentProvider } from "@/hooks/useRevenueCat";
+import RevenueCatPaywall from "@/components/RevenueCatPaywall";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -76,10 +79,14 @@ const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<PlanRecurrence | null>(null);
+  const [showRevenueCatPaywall, setShowRevenueCatPaywall] = useState(false);
   const { t } = useTranslation();
   const previousSubscriptionRef = useRef<string | null>(null);
   const { theme, themeMode, setThemeMode } = useTheme();
   const commonStyles = createCommonStyles(theme);
+
+  // Get payment provider
+  const { data: providerInfo } = usePaymentProvider();
 
   const PRICING_PLANS = React.useMemo(() => getPricingPlans(t), [t]);
 
@@ -393,64 +400,77 @@ const SettingsScreen: React.FC = () => {
               ))}
             </View>
 
-            {/* Pricing Plans */}
-            <View style={styles.pricingContainer}>
-              {PRICING_PLANS.map((plan) => (
-                <TouchableOpacity
-                  key={plan.id}
-                  style={[
-                    styles.pricingCard,
-                    selectedPlan === plan.id && styles.pricingCardSelected,
-                    plan.popular && styles.pricingCardPopular,
-                  ]}
-                  onPress={() => setSelectedPlan(plan.id)}
-                  activeOpacity={0.8}
-                >
-                  {plan.popular && (
-                    <View style={styles.popularBadge}>
-                      <Text style={styles.popularText}>
-                        {t("settings.subscription.bestValue")}
-                      </Text>
-                    </View>
-                  )}
-
-                  <Text style={styles.planInterval}>{plan.name}</Text>
-                  <View style={styles.priceRow}>
-                    <Text style={styles.priceSymbol}>$</Text>
-                    <Text style={styles.priceAmount}>{plan.price}</Text>
-                    <Text style={styles.priceInterval}>/{plan.interval}</Text>
-                  </View>
-
-                  {plan.savings && (
-                    <View style={styles.savingsBadge}>
-                      <Text style={styles.savingsText}>{plan.savings}</Text>
-                    </View>
-                  )}
-
-                  <View
+            {/* Pricing Plans - Only show for Stripe */}
+            {providerInfo?.provider === "stripe" && (
+              <View style={styles.pricingContainer}>
+                {PRICING_PLANS.map((plan) => (
+                  <TouchableOpacity
+                    key={plan.id}
                     style={[
-                      styles.radioButton,
-                      selectedPlan === plan.id && styles.radioButtonSelected,
+                      styles.pricingCard,
+                      selectedPlan === plan.id && styles.pricingCardSelected,
+                      plan.popular && styles.pricingCardPopular,
                     ]}
+                    onPress={() => setSelectedPlan(plan.id)}
+                    activeOpacity={0.8}
                   >
-                    {selectedPlan === plan.id && (
-                      <View style={styles.radioButtonInner} />
+                    {plan.popular && (
+                      <View style={styles.popularBadge}>
+                        <Text style={styles.popularText}>
+                          {t("settings.subscription.bestValue")}
+                        </Text>
+                      </View>
                     )}
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
+
+                    <Text style={styles.planInterval}>{plan.name}</Text>
+                    <View style={styles.priceRow}>
+                      <Text style={styles.priceSymbol}>$</Text>
+                      <Text style={styles.priceAmount}>{plan.price}</Text>
+                      <Text style={styles.priceInterval}>/{plan.interval}</Text>
+                    </View>
+
+                    {plan.savings && (
+                      <View style={styles.savingsBadge}>
+                        <Text style={styles.savingsText}>{plan.savings}</Text>
+                      </View>
+                    )}
+
+                    <View
+                      style={[
+                        styles.radioButton,
+                        selectedPlan === plan.id && styles.radioButtonSelected,
+                      ]}
+                    >
+                      {selectedPlan === plan.id && (
+                        <View style={styles.radioButtonInner} />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
             {/* Subscribe Button */}
             <TouchableOpacity
               style={[
                 styles.subscribeButton,
-                !selectedPlan && styles.subscribeButtonDisabled,
+                !selectedPlan &&
+                  providerInfo?.provider === "stripe" &&
+                  styles.subscribeButtonDisabled,
               ]}
-              onPress={() =>
-                selectedPlan && checkoutMutation.mutateAsync(selectedPlan)
+              onPress={() => {
+                if (providerInfo?.provider === "revenuecat") {
+                  // Show RevenueCat paywall
+                  setShowRevenueCatPaywall(true);
+                } else {
+                  // Use Stripe checkout
+                  selectedPlan && checkoutMutation.mutateAsync(selectedPlan);
+                }
+              }}
+              disabled={
+                providerInfo?.provider === "stripe" &&
+                (!selectedPlan || checkoutMutation.isPending)
               }
-              disabled={!selectedPlan || checkoutMutation.isPending}
               activeOpacity={0.8}
             >
               {checkoutMutation.isPending ? (
@@ -461,9 +481,11 @@ const SettingsScreen: React.FC = () => {
               ) : (
                 <>
                   <Text style={styles.subscribeButtonText}>
-                    {selectedPlan
-                      ? t("settings.subscription.continueToPayment")
-                      : t("settings.subscription.selectPlan")}
+                    {providerInfo?.provider === "revenuecat"
+                      ? t("settings.subscription.viewPlans")
+                      : selectedPlan
+                        ? t("settings.subscription.continueToPayment")
+                        : t("settings.subscription.selectPlan")}
                   </Text>
                   <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
                 </>
@@ -655,6 +677,26 @@ const SettingsScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* RevenueCat Paywall Modal */}
+      <Modal
+        visible={showRevenueCatPaywall}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowRevenueCatPaywall(false)}
+      >
+        <RevenueCatPaywall
+          onClose={() => setShowRevenueCatPaywall(false)}
+          onSuccess={() => {
+            setShowRevenueCatPaywall(false);
+            refetchSubscription();
+            Alert.alert(
+              t("common.success"),
+              t("settings.subscription.activatedSuccess"),
+            );
+          }}
+        />
+      </Modal>
     </SafeAreaView>
   );
 };

@@ -248,6 +248,7 @@
       "cancelConfirmMessage": "Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your current billing period.",
       "keepSubscription": "Keep Subscription",
       "features": {
+        "title": "Premium Features",
         "unlimitedWordlists": "Unlimited wordlists",
         "aiEnrichment": "AI-powered word enrichment",
         "allQuizModes": "All quiz modes unlocked",
@@ -258,7 +259,21 @@
       "manageSubscription": "Manage Subscription",
       "cancelSubscription": "Cancel Subscription",
       "reactivateSubscription": "Reactivate Subscription",
-      "billingCycle": "Billing Cycle"
+      "billingCycle": "Billing Cycle",
+      "mostPopular": "MOST POPULAR",
+      "billedMonthly": "Billed monthly",
+      "billedYearly": "Billed annually",
+      "processing": "Processing...",
+      "noOfferings": "No subscription plans available",
+      "upgradeToPremium": "Upgrade to Premium",
+      "loadError": "Failed to load subscription options",
+      "purchaseSuccess": "Purchase completed successfully!",
+      "purchaseError": "Purchase failed. Please try again.",
+      "restoreSuccess": "Purchases restored successfully!",
+      "restoreError": "Failed to restore purchases. Please try again.",
+      "restorePurchases": "Restore Purchases",
+      "terms": "By continuing, you agree to our Terms of Service and Privacy Policy. Subscriptions auto-renew unless cancelled.",
+      "viewPlans": "View Plans"
     },
     "account": {
       "title": "Account",

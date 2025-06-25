@@ -120,13 +120,18 @@ SENDGRID_API_KEY=your_sendgrid_key
 OPENAI_API_KEY=your_openai_key
 JWT_SECRET=your_jwt_secret
 
-# Stripe (Required for subscriptions)
+# Stripe (For web and US iOS subscriptions)
 STRIPE_API_KEY=your_stripe_api_key
 STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
 STRIPE_PRICE_ID_MONTHLY=price_monthly_id_from_stripe
 STRIPE_PRICE_ID_ANNUAL=price_annual_id_from_stripe
 STRIPE_SUCCESS_URL=https://yourapp.com/subscription?status=success
 STRIPE_CANCEL_URL=https://yourapp.com/subscription?status=cancel
+
+# RevenueCat (For Android and non-US iOS subscriptions)
+REVENUECAT_API_KEY_IOS=your_revenuecat_ios_api_key
+REVENUECAT_API_KEY_ANDROID=your_revenuecat_android_api_key
+REVENUECAT_WEBHOOK_SECRET=your_revenuecat_webhook_secret
 ```
 
 4. Start infrastructure services:
@@ -331,14 +336,34 @@ Premium users get:
    - `STRIPE_SUCCESS_URL`: Success redirect URL
    - `STRIPE_CANCEL_URL`: Cancel redirect URL
 
-### Subscription Flow
-1. User initiates checkout from mobile app
+### Dual-Provider Subscription System
+
+The platform uses a intelligent dual-provider system that routes users to the appropriate payment processor:
+
+#### Provider Selection Logic
+- **Android Users** → RevenueCat (Google Play Store)
+- **US iOS Users** → Stripe (Direct payment)
+- **Non-US iOS Users** → RevenueCat (App Store)
+- **Web Users** → Stripe (Direct payment)
+
+#### Stripe Flow (Web & US iOS)
+1. User initiates checkout from app
 2. Stripe checkout session created with user metadata
 3. User completes payment on Stripe hosted page
 4. Webhook updates subscription in database
 5. User returns to app → automatic session refresh
 6. New JWT issued with updated subscription plan
 7. Premium features instantly available
+
+#### RevenueCat Flow (Android & Non-US iOS)
+1. User opens native paywall in app
+2. RevenueCat displays available packages from App Store/Play Store
+3. User completes purchase using platform payment method
+4. RevenueCat webhook notifies backend
+5. Subscription status synced to database
+6. Premium features instantly available
+
+For detailed documentation, see [Subscription System Documentation](docs/SUBSCRIPTION_SYSTEM.md)
 
 ### Email Notifications
 Subscribers receive automated emails for:
@@ -715,7 +740,9 @@ npm start
 - `GET /subscription/status` - Get current subscription status
 - `POST /subscription/cancel` - Cancel subscription at period end
 - `GET /subscription/history` - View subscription history
+- `POST /subscription/revenuecat/restore` - Restore RevenueCat purchases
 - `POST /webhook/stripe` - Stripe webhook handler (no auth required)
+- `POST /webhook/revenuecat` - RevenueCat webhook handler (no auth required)
 
 ### Wordlists & Words
 - `GET /wordlists` - Get user's wordlists with stats

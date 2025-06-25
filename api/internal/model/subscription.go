@@ -68,23 +68,86 @@ func (s SubscriptionStatus) Value() (driver.Value, error) {
 	return string(s), nil
 }
 
+// SubscriptionProvider represents the payment provider
+type SubscriptionProvider string
+
+const (
+	ProviderStripe     SubscriptionProvider = "stripe"
+	ProviderRevenueCat SubscriptionProvider = "revenuecat"
+)
+
+// Scan implements the sql.Scanner interface
+func (p *SubscriptionProvider) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		*p = SubscriptionProvider(v)
+	case []byte:
+		*p = SubscriptionProvider(v)
+	default:
+		return fmt.Errorf("cannot scan type %T into SubscriptionProvider", value)
+	}
+	return nil
+}
+
+// Value implements the driver.Valuer interface
+func (p SubscriptionProvider) Value() (driver.Value, error) {
+	return string(p), nil
+}
+
+// PlatformType represents the platform
+type PlatformType string
+
+const (
+	PlatformIOS     PlatformType = "ios"
+	PlatformAndroid PlatformType = "android"
+	PlatformWeb     PlatformType = "web"
+)
+
+// Scan implements the sql.Scanner interface
+func (p *PlatformType) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		*p = PlatformType(v)
+	case []byte:
+		*p = PlatformType(v)
+	default:
+		return fmt.Errorf("cannot scan type %T into PlatformType", value)
+	}
+	return nil
+}
+
+// Value implements the driver.Valuer interface
+func (p PlatformType) Value() (driver.Value, error) {
+	return string(p), nil
+}
+
 // Subscription represents a user's subscription
 type Subscription struct {
-	ID                   int64              `json:"id"`
-	UserID               int64              `json:"userId"`
-	StripeSubscriptionID string             `json:"stripeSubscriptionId"`
-	StripeCustomerID     string             `json:"stripeCustomerId"`
-	Plan                 SubscriptionPlan   `json:"plan"`
-	Status               SubscriptionStatus `json:"status"`
-	CurrentPeriodStart   time.Time          `json:"currentPeriodStart"`
-	CurrentPeriodEnd     time.Time          `json:"currentPeriodEnd"`
-	CancelAtPeriodEnd    bool               `json:"cancelAtPeriodEnd"`
-	CancelledAt          *time.Time         `json:"cancelledAt,omitempty"`
-	TrialEnd             *time.Time         `json:"trialEnd,omitempty"`
-	AmountCents          int                `json:"amountCents"`
-	Currency             string             `json:"currency"`
-	CreatedAt            time.Time          `json:"createdAt"`
-	UpdatedAt            time.Time          `json:"updatedAt"`
+	ID                       int64                `json:"id"`
+	UserID                   int64                `json:"userId"`
+	Provider                 SubscriptionProvider `json:"provider"`
+	StripeSubscriptionID     string               `json:"stripeSubscriptionId,omitempty"`
+	StripeCustomerID         string               `json:"stripeCustomerId,omitempty"`
+	RevenueCatSubscriptionID *string              `json:"revenuecatSubscriptionId,omitempty"`
+	AppStoreProductID        *string              `json:"appStoreProductId,omitempty"`
+	Platform                 *PlatformType        `json:"platform,omitempty"`
+	Plan                     SubscriptionPlan     `json:"plan"`
+	Status                   SubscriptionStatus   `json:"status"`
+	CurrentPeriodStart       time.Time            `json:"currentPeriodStart"`
+	CurrentPeriodEnd         time.Time            `json:"currentPeriodEnd"`
+	CancelAtPeriodEnd        bool                 `json:"cancelAtPeriodEnd"`
+	CancelledAt              *time.Time           `json:"cancelledAt,omitempty"`
+	TrialEnd                 *time.Time           `json:"trialEnd,omitempty"`
+	AmountCents              int                  `json:"amountCents"`
+	Currency                 string               `json:"currency"`
+	CreatedAt                time.Time            `json:"createdAt"`
+	UpdatedAt                time.Time            `json:"updatedAt"`
 }
 
 // SubscriptionEvent represents a Stripe webhook event
@@ -95,6 +158,19 @@ type SubscriptionEvent struct {
 	EventType      string    `json:"eventType"`
 	EventData      string    `json:"eventData"` // JSON string
 	ProcessedAt    time.Time `json:"processedAt"`
+}
+
+// RevenueCatEvent represents a RevenueCat webhook event
+type RevenueCatEvent struct {
+	ID            int64     `json:"id"`
+	UserID        *int64    `json:"userId"`
+	EventID       string    `json:"eventId"`
+	EventType     string    `json:"eventType"`
+	AppUserID     string    `json:"appUserId"`
+	ProductID     *string   `json:"productId,omitempty"`
+	EntitlementID *string   `json:"entitlementId,omitempty"`
+	EventData     string    `json:"eventData"` // JSON string
+	ProcessedAt   time.Time `json:"processedAt"`
 }
 
 // Pricing configuration

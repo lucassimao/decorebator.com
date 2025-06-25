@@ -211,9 +211,11 @@ func (s *SubscriptionService) handleSubscriptionCreated(ctx context.Context, eve
 	}
 
 	// Save subscription
-	if err := s.subRepo.CreateSubscription(ctx, sub); err != nil {
+	subID, err := s.subRepo.CreateSubscription(ctx, sub)
+	if err != nil {
 		return fmt.Errorf("failed to create subscription: %w", err)
 	}
+	sub.ID = subID
 
 	// Record event
 	eventData, err := json.Marshal(stripeSubscription)
@@ -528,14 +530,34 @@ func (s *SubscriptionService) CancelSubscription(ctx context.Context, userID int
 		return fmt.Errorf("no active subscription found")
 	}
 
-	// Cancel at period end in Stripe
-	params := &stripe.SubscriptionParams{
-		CancelAtPeriodEnd: stripe.Bool(true),
-	}
+	// Handle cancellation based on provider
+	switch sub.Provider {
+	case model.ProviderStripe:
+		// Cancel at period end in Stripe
+		params := &stripe.SubscriptionParams{
+			CancelAtPeriodEnd: stripe.Bool(true),
+		}
 
-	_, err = subscription.Update(sub.StripeSubscriptionID, params)
-	if err != nil {
-		return fmt.Errorf("failed to cancel stripe subscription: %w", err)
+		_, err = subscription.Update(sub.StripeSubscriptionID, params)
+		if err != nil {
+			return fmt.Errorf("failed to cancel stripe subscription: %w", err)
+		}
+
+	case model.ProviderRevenueCat:
+		// RevenueCat cancellations are handled through the App Store/Google Play
+		// We just mark it locally and wait for webhook
+		sub.CancelAtPeriodEnd = true
+		now := time.Now()
+		sub.CancelledAt = &now
+
+		if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
+			return fmt.Errorf("failed to update subscription: %w", err)
+		}
+
+		return fmt.Errorf("RevenueCat subscriptions must be cancelled through the App Store or Google Play Store")
+
+	default:
+		return fmt.Errorf("unknown provider: %s", sub.Provider)
 	}
 
 	return nil

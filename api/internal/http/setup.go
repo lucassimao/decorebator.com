@@ -80,6 +80,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 
 	subService := service.NewSubscriptionService(config.Database)
 	subRepo := repository.NewSubscriptionRepository(config.Database)
+	rcService := service.NewRevenueCatService(config.Database)
 
 	// Initialize route handlers with dependency injection
 	var WordRoutes = NewWordRoutes(config.WordService)
@@ -112,6 +113,10 @@ func SetupRoutes(config *Config) *gin.Engine {
 
 		// Stripe webhook endpoint (no auth needed)
 		router.POST("/webhook/stripe", HandleStripeWebhook(subService))
+
+		// RevenueCat webhook endpoint (no auth needed)
+		router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(rcService))
+
 		// Redirect to local expo scheme
 		router.GET("/subscription/checkout-redirect", CheckoutRedirect())
 
@@ -146,6 +151,9 @@ func SetupRoutes(config *Config) *gin.Engine {
 		authenticatedRoutes.GET("/subscription/status", GetSubscriptionStatus(subRepo))
 		authenticatedRoutes.POST("/subscription/cancel", CancelSubscription(subService))
 		authenticatedRoutes.GET("/subscription/history", GetSubscriptionHistory(subRepo))
+
+		// RevenueCat routes
+		authenticatedRoutes.POST("/subscription/revenuecat/restore", RestorePurchases(rcService))
 
 		// User profile routes
 		authenticatedRoutes.GET("/users", UserRoutes.GetProfile)

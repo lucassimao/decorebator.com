@@ -56,7 +56,7 @@ export function getDeviceLanguage(): string {
 
   // First, try to find exact match (e.g., pt-BR)
   const exactMatch = `${deviceLanguageCode}-${deviceRegion}`;
-  if (resources[exactMatch]) {
+  if (exactMatch in resources) {
     return exactMatch;
   }
 

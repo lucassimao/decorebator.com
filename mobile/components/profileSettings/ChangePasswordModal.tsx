@@ -542,7 +542,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       width: 32,
       height: 32,
       borderRadius: 16,
-      backgroundColor: theme.colors.ui.subtleBackground,
+      backgroundColor: theme.colors.background.subtle,
       justifyContent: "center",
       alignItems: "center",
     },
@@ -609,7 +609,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontWeight: "500",
     },
     requirementsContainer: {
-      backgroundColor: theme.colors.ui.subtleBackground,
+      backgroundColor: theme.colors.background.subtle,
       borderRadius: theme.borderRadius.md,
       padding: theme.spacing.md,
       marginTop: theme.spacing.sm,
@@ -643,7 +643,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
       paddingVertical: theme.spacing.md,
       borderRadius: theme.borderRadius.md,
-      backgroundColor: theme.colors.ui.subtleBackground,
+      backgroundColor: theme.colors.background.subtle,
       alignItems: "center",
     },
     cancelButtonText: {
