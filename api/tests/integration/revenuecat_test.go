@@ -12,6 +12,7 @@ import (
 
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
+	"decorebator.com/internal/service"
 	"decorebator.com/tests/integration/setup"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -98,9 +99,33 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 		require.NoError(t, err)
 		assert.Greater(t, jobCount, 0, "Should have enqueued at least one job")
 
-		// For now, we'll just verify the job was enqueued
-		// In a real test environment, we'd process the job and verify the subscription
-		// But that requires more complex setup with the RevenueCat service mocking
+		// Create the RevenueCat service with the test database
+		rcService := service.NewRevenueCatService(ts.DB, nil)
+		
+		// Process the job using our new simplified method
+		err = ts.ProcessRevenueCatWebhookJob(t, rcService)
+		require.NoError(t, err)
+		
+		// Verify the subscription was created
+		subRepo := repository.NewSubscriptionRepository(ts.DB)
+		subscription, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
+		require.NoError(t, err)
+		require.NotNil(t, subscription)
+		
+		// Verify subscription details
+		assert.Equal(t, model.ProviderRevenueCat, subscription.Provider)
+		assert.Equal(t, model.PlanMonthly, subscription.Plan)
+		assert.Equal(t, model.StatusActive, subscription.Status)
+		assert.NotNil(t, subscription.RevenueCatSubscriptionID)
+		
+		// Verify user's subscription status was updated
+		var updatedUser model.User
+		err = ts.DB.QueryRow(ctx,
+			"SELECT subscription_plan, subscription_status FROM users WHERE id = $1",
+			userID).Scan(&updatedUser.SubscriptionPlan, &updatedUser.SubscriptionStatus)
+		require.NoError(t, err)
+		assert.Equal(t, model.PlanMonthly, updatedUser.SubscriptionPlan)
+		assert.Equal(t, model.StatusActive, updatedUser.SubscriptionStatus)
 	})
 
 	t.Run("DirectSubscriptionCreation_Works", func(t *testing.T) {

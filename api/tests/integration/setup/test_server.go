@@ -2,6 +2,7 @@ package setup
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http/httptest"
 	"testing"
@@ -223,6 +224,8 @@ func (ts *TestServer) isHealthy() bool {
 
 // ProcessNextRiverJob fetches and processes the next available River job from a given queue.
 // This makes asynchronous worker processing synchronous for testing purposes.
+// DEPRECATED: Use ProcessRevenueCatWebhookJob or similar type-specific methods instead.
+// This function is overly complex and not currently used in tests.
 func (ts *TestServer) ProcessNextRiverJob(t *testing.T, queue string, rcService service.RevenueCatService) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -298,4 +301,62 @@ done:
 
 	// Give a moment for any database transactions to commit
 	time.Sleep(100 * time.Millisecond)
+}
+
+// ProcessRevenueCatWebhookJob processes a RevenueCat webhook job
+// This is a much simpler approach than the old ProcessNextRiverJob
+func (ts *TestServer) ProcessRevenueCatWebhookJob(t *testing.T, rcService service.RevenueCatService) error {
+	ctx := context.Background()
+	
+	// Create the worker
+	worker := service.NewRevenueCatWebhookWorker(rcService)
+	
+	// Find the next available job
+	var jobID int64
+	var args []byte
+	var queue string
+	err := ts.DB.QueryRow(ctx, `
+		SELECT id, args, queue FROM river_job 
+		WHERE state = 'available' 
+		AND kind = $1
+		ORDER BY id ASC
+		LIMIT 1
+	`, "revenuecat-webhook").Scan(&jobID, &args, &queue)
+	
+	if err != nil {
+		t.Logf("No RevenueCat webhook job found: %v", err)
+		return err
+	}
+	
+	t.Logf("Found RevenueCat webhook job %d in queue %s", jobID, queue)
+	
+	// Decode the args
+	var jobArgs service.RevenueCatWebhookArgs
+	if err := json.Unmarshal(args, &jobArgs); err != nil {
+		return fmt.Errorf("failed to unmarshal job args: %w", err)
+	}
+	
+	// Process the job directly using the worker's Work method
+	// River's Job struct in the newer version has different fields
+	job := &river.Job[service.RevenueCatWebhookArgs]{
+		Args: jobArgs,
+	}
+	
+	// Call the worker's Work method directly
+	if err := worker.Work(ctx, job); err != nil {
+		return fmt.Errorf("worker failed: %w", err)
+	}
+	
+	// Update the job status to completed
+	_, err = ts.DB.Exec(ctx, `
+		UPDATE river_job 
+		SET state = 'completed', finalized_at = NOW() 
+		WHERE id = $1
+	`, jobID)
+	if err != nil {
+		return fmt.Errorf("failed to update job status: %w", err)
+	}
+	
+	t.Logf("Successfully processed RevenueCat webhook job %d", jobID)
+	return nil
 }
