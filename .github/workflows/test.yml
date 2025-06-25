@@ -293,6 +293,11 @@ jobs:
           SENDGRID_API_KEY=test-sendgrid-key-mock
           RESET_PASSWORD_PRIVATE_KEY=test-reset-password-key-32-chars
           
+          # RevenueCat Configuration (mock keys for testing)
+          REVENUECAT_API_KEY_IOS=test-revenuecat-ios-key
+          REVENUECAT_API_KEY_ANDROID=test-revenuecat-android-key
+          REVENUECAT_WEBHOOK_SECRET=test_webhook_secret
+          
           # Feature Flags for Testing
           DISABLE_WORKERS=true
           DISABLE_WEBHOOKS=true

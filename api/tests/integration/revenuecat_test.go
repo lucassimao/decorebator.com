@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -46,22 +47,35 @@ func TestRevenueCatIntegration(t *testing.T) {
 			signupInput.Email).Scan(&userID)
 		require.NoError(t, err)
 
-		// Create webhook payload
+		// First, link the user to a RevenueCat customer ID
+		revenueCatCustomerID := fmt.Sprintf("rc_user_%d", userID)
+		_, err = ts.DB.Exec(ctx,
+			"UPDATE users SET revenuecat_customer_id = $1 WHERE id = $2",
+			revenueCatCustomerID, userID)
+		require.NoError(t, err)
+
+		// Create webhook payload following exact RevenueCat structure
 		webhook := map[string]interface{}{
 			"api_version": "1.0",
 			"event": map[string]interface{}{
-				"id":               "test_event_123",
-				"type":             "INITIAL_PURCHASE",
-				"app_id":           "app_123",
-				"app_user_id":      userID,
-				"product_id":       "com.decorebator.premium.monthly",
-				"period_type":      "NORMAL",
-				"purchased_at_ms":  time.Now().Unix() * 1000,
-				"expiration_at_ms": time.Now().Add(30*24*time.Hour).Unix() * 1000,
-				"environment":      "PRODUCTION",
-				"store":            "app_store",
-				"currency":         "USD",
-				"price":            6.99,
+				"type":                     "INITIAL_PURCHASE",
+				"id":                       "test_event_123",
+				"app_id":                   "app_123",
+				"app_user_id":              revenueCatCustomerID,
+				"original_app_user_id":     revenueCatCustomerID,
+				"event_timestamp_ms":       time.Now().Unix() * 1000,
+				"product_id":               "com.decorebator.premium.monthly",
+				"entitlement_ids":          []string{"premium"},
+				"store":                    "APP_STORE",
+				"environment":              "PRODUCTION",
+				"purchased_at_ms":          time.Now().Unix() * 1000,
+				"expiration_at_ms":         time.Now().Add(30*24*time.Hour).Unix() * 1000,
+				"period_type":              "NORMAL",
+				"price":                    6.99,
+				"currency":                 "USD",
+				"transaction_id":           "test_transaction_123",
+				"original_transaction_id":  "test_original_transaction_123",
+				"country_code":             "US",
 			},
 		}
 

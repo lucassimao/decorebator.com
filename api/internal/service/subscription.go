@@ -369,7 +369,7 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 
 	if err := mail.SendSubscriptionCancelledEmail(user, emailData); err != nil {
 		// Log error but don't fail the webhook
-		common.CaptureError(ctx, err, "Failed to send subscription cancelled email",
+		common.CaptureError(ctx, err, "Failed to send subscription canceled email",
 			"user_id", sub.UserID,
 			"email", user.Email)
 	}
@@ -509,7 +509,7 @@ func (s *SubscriptionService) CancelSubscription(ctx context.Context, userID int
 			return fmt.Errorf("failed to update subscription: %w", err)
 		}
 
-		return fmt.Errorf("RevenueCat subscriptions must be cancelled through the App Store or Google Play Store")
+		return fmt.Errorf("RevenueCat subscriptions must be canceled through the App Store or Google Play Store")
 
 	default:
 		return fmt.Errorf("unknown provider: %s", sub.Provider)
