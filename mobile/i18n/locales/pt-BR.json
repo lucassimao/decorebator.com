@@ -246,6 +246,7 @@
       "cancelConfirmMessage": "Tem certeza que deseja cancelar sua assinatura? Você perderá acesso aos recursos premium no final do seu período de cobrança atual.",
       "keepSubscription": "Manter Assinatura",
       "features": {
+        "title": "Recursos Premium",
         "unlimitedWordlists": "Listas de palavras ilimitadas",
         "aiEnrichment": "Enriquecimento de palavras com IA",
         "allQuizModes": "Todos os modos de quiz desbloqueados",
@@ -256,7 +257,20 @@
       "manageSubscription": "Gerenciar Assinatura",
       "cancelSubscription": "Cancelar Assinatura",
       "reactivateSubscription": "Reativar Assinatura",
-      "billingCycle": "Ciclo de Cobrança"
+      "billingCycle": "Ciclo de Cobrança",
+      "mostPopular": "MAIS POPULAR",
+      "billedMonthly": "Cobrado mensalmente",
+      "billedYearly": "Cobrado anualmente",
+      "processing": "Processando...",
+      "noOfferings": "Nenhum plano de assinatura disponível",
+      "upgradeToPremium": "Atualizar para Premium",
+      "loadError": "Falha ao carregar opções de assinatura",
+      "purchaseSuccess": "Compra concluída com sucesso!",
+      "purchaseError": "Compra falhou. Por favor, tente novamente.",
+      "restoreSuccess": "Compras restauradas com sucesso!",
+      "restoreError": "Falha ao restaurar compras. Por favor, tente novamente.",
+      "restorePurchases": "Restaurar Compras",
+      "terms": "Ao continuar, você concorda com nossos Termos de Serviço e Política de Privacidade. As assinaturas se renovam automaticamente, a menos que sejam canceladas."
     },
     "account": {
       "title": "Conta",

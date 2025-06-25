@@ -246,6 +246,7 @@
       "cancelConfirmMessage": "本当にサブスクリプションをキャンセルしますか？現在の請求期間の終了時にプレミアム機能へのアクセスが失われます。",
       "keepSubscription": "サブスクリプションを維持",
       "features": {
+        "title": "プレミアム機能",
         "unlimitedWordlists": "無制限の単語リスト",
         "aiEnrichment": "AI による単語の充実",
         "allQuizModes": "すべてのクイズモード解除",
@@ -256,7 +257,20 @@
       "manageSubscription": "サブスクリプション管理",
       "cancelSubscription": "サブスクリプションをキャンセル",
       "reactivateSubscription": "サブスクリプションを再開",
-      "billingCycle": "請求サイクル"
+      "billingCycle": "請求サイクル",
+      "mostPopular": "最人気",
+      "billedMonthly": "月料金",
+      "billedYearly": "年料金",
+      "processing": "処理中...",
+      "noOfferings": "利用可能なサブスクリプションプランがありません",
+      "upgradeToPremium": "プレミアムにアップグレード",
+      "loadError": "サブスクリプションオプションの読み込みに失敗しました",
+      "purchaseSuccess": "購入が正常に完了しました！",
+      "purchaseError": "購入に失敗しました。もう一度お試しください。",
+      "restoreSuccess": "購入の復元が正常に完了しました！",
+      "restoreError": "購入の復元に失敗しました。もう一度お試しください。",
+      "restorePurchases": "購入を復元",
+      "terms": "継続することで、サービス利用規約とプライバシーポリシーに同意したことになります。サブスクリプションはキャンセルされない限り自動更新されます。"
     },
     "account": {
       "title": "アカウント",

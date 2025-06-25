@@ -246,6 +246,7 @@
       "cancelConfirmMessage": "Tem a certeza que deseja cancelar a sua subscrição? Perderá acesso às funcionalidades premium no final do seu período de faturação atual.",
       "keepSubscription": "Manter Subscrição",
       "features": {
+        "title": "Funcionalidades Premium",
         "unlimitedWordlists": "Listas de palavras ilimitadas",
         "aiEnrichment": "Enriquecimento de palavras com IA",
         "allQuizModes": "Todos os modos de quiz desbloqueados",
@@ -256,7 +257,20 @@
       "manageSubscription": "Gerir Subscrição",
       "cancelSubscription": "Cancelar Subscrição",
       "reactivateSubscription": "Reativar Subscrição",
-      "billingCycle": "Ciclo de Faturação"
+      "billingCycle": "Ciclo de Faturação",
+      "mostPopular": "MAIS POPULAR",
+      "billedMonthly": "Faturado mensalmente",
+      "billedYearly": "Faturado anualmente",
+      "processing": "A processar...",
+      "noOfferings": "Nenhum plano de subscrição disponível",
+      "upgradeToPremium": "Atualizar para Premium",
+      "loadError": "Falha ao carregar opções de subscrição",
+      "purchaseSuccess": "Compra concluída com sucesso!",
+      "purchaseError": "Compra falhou. Por favor, tente novamente.",
+      "restoreSuccess": "Compras restauradas com sucesso!",
+      "restoreError": "Falha ao restaurar compras. Por favor, tente novamente.",
+      "restorePurchases": "Restaurar Compras",
+      "terms": "Ao continuar, concorda com os nossos Termos de Serviço e Política de Privacidade. As subscrições renovam-se automaticamente, a menos que sejam canceladas."
     },
     "account": {
       "title": "Conta",

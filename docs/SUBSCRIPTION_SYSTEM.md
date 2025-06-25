@@ -10,13 +10,14 @@ Decorebator implements a dual-provider subscription system that intelligently ro
 1. [Architecture](#architecture)
 2. [Payment Providers](#payment-providers)
 3. [Database Schema](#database-schema)
-4. [API Endpoints](#api-endpoints)
-5. [Mobile Integration](#mobile-integration)
-6. [Webhook Processing](#webhook-processing)
-7. [Testing](#testing)
-8. [Configuration](#configuration)
-9. [Monitoring & Analytics](#monitoring--analytics)
-10. [Migration Guide](#migration-guide)
+4. [User Flow & Lifecycle](#user-flow--lifecycle)
+5. [API Endpoints](#api-endpoints)
+6. [Mobile Integration](#mobile-integration)
+7. [Webhook Processing](#webhook-processing)
+8. [Testing](#testing)
+9. [Configuration](#configuration)
+10. [Monitoring & Analytics](#monitoring--analytics)
+11. [Migration Guide](#migration-guide)
 
 ## Architecture
 
@@ -147,6 +148,151 @@ ALTER TABLE users ADD COLUMN platform platform_type;
 CREATE TYPE subscription_provider AS ENUM ('stripe', 'revenuecat');
 CREATE TYPE platform_type AS ENUM ('ios', 'android', 'web');
 ```
+
+## User Flow & Lifecycle
+
+### Complete Subscription Purchase Flow
+
+#### For RevenueCat Users (Android + Non-US iOS)
+
+1. **User taps "View Plans"** → Opens RevenueCat native paywall modal
+2. **RevenueCat Paywall displays**:
+   - Native App Store/Google Play pricing
+   - Available packages (Monthly $6.99/Annual $69.90)
+   - Premium features list with translations
+   - "Restore Purchases" option
+3. **User selects plan** → Native platform purchase flow begins
+4. **Purchase completes** → RevenueCat SDK immediately updates customer info
+5. **App syncs with backend** → JWT token refreshed with premium status
+6. **Premium features activate** → User sees premium status immediately
+
+#### For Stripe Users (US iOS + Web)
+
+1. **User selects plan** → Pricing cards show monthly/annual options
+2. **User taps "Continue to Payment"** → Redirects to Stripe checkout
+3. **User completes payment** → Stripe webhook processes subscription
+4. **User returns to app** → Automatic session refresh
+5. **Premium status activates** → New JWT issued with subscription plan
+
+### When Users See Premium Status
+
+Users see their account as premium in these scenarios:
+
+1. **Immediately after purchase** - RevenueCat SDK provides instant feedback
+2. **On app focus/resume** - Automatic subscription status check
+3. **JWT refresh** - New token includes updated subscription plan  
+4. **Manual refresh** - Pull-to-refresh or settings screen reload
+
+**Key Difference**: RevenueCat users see premium status **instantly** due to SDK integration, while Stripe users see it **after webhook processing** (usually within seconds).
+
+### Payment Failure Handling
+
+#### RevenueCat (App Store/Google Play)
+- **Platform handles failures automatically**
+- `BILLING_ISSUE` webhook sets subscription to `past_due` status  
+- **Grace period managed by app stores** (typically 7-16 days)
+- **User retains access during grace period**
+- App stores retry failed payments automatically
+- Users receive platform notifications about payment issues
+
+#### Stripe
+- Failed payment webhooks trigger **email notifications via SendGrid**
+- Customer portal allows users to update payment methods
+- Subscription remains active during retry period
+- Multiple retry attempts over 23 days before cancellation
+- Email notifications at each stage of dunning sequence
+
+### Subscription Renewal Process
+
+#### Automatic Renewals
+
+**RevenueCat:**
+- App Store/Google Play handles renewals automatically
+- `RENEWAL` webhook updates local subscription period
+- No user action required for successful renewals
+- Users get renewal notifications from app stores
+
+**Stripe:**
+- Automatic renewal handled by Stripe
+- `customer.subscription.updated` webhook processes renewal
+- Invoice generated and sent automatically
+- SendGrid sends renewal confirmation emails
+
+#### Near Renewal Notifications
+
+The system includes **subscription reminder emails** via background workers:
+- Reminder emails sent 3-7 days before renewal date
+- Uses SendGrid for delivery via `subscription_reminder` worker queue
+- Includes renewal amount and next billing date
+- Configurable timing in worker configuration
+
+### Purchase Restoration Flow
+
+For users who reinstall the app or switch devices:
+
+**RevenueCat Users:**
+1. **"Restore Purchases" button** in paywall component
+2. **Calls RevenueCat SDK** `Purchases.restorePurchases()`
+3. **Syncs with backend** via `POST /subscription/revenuecat/restore` endpoint
+4. **Links RevenueCat customer** to user account automatically
+5. **Premium status restored** immediately in app
+
+**Stripe Users:**
+- Subscription linked to email address in database
+- Login automatically restores premium status
+- No additional restoration process needed
+
+### Subscription Cancellation Scenarios
+
+#### User-Initiated Cancellation
+
+**RevenueCat:**
+- Users cancel through App Store/Google Play settings (external to app)
+- `CANCELLATION` webhook sets `cancel_at_period_end = true`
+- User retains premium access until period ends
+- No immediate loss of premium features
+
+**Stripe:**
+- Users cancel through customer portal or in-app cancellation
+- Immediate webhook processing updates status
+- Access continues until current period end
+- Cancellation confirmation email sent via SendGrid
+
+#### Failed Payment Cancellation
+
+**RevenueCat:**
+- App stores handle failed payment grace periods
+- `EXPIRATION` webhook marks subscription as canceled after grace period
+- Multiple platform retry attempts before final cancellation
+
+**Stripe:**
+- Failed payments trigger comprehensive dunning sequence
+- Multiple retry attempts over 23-day period
+- Email notifications at each dunning stage
+- Final cancellation if payment not recovered
+
+### Error Handling & Edge Cases
+
+**Network Issues:**
+- Mobile app caches purchase state locally until sync possible
+- Retry mechanisms for failed API calls with exponential backoff
+- Graceful degradation when offline (cached subscription status)
+
+**Purchase Cancellation During Flow:**
+- Handles user cancelling during purchase process
+- No charges occur for cancelled purchases
+- App handles `PURCHASE_CANCELLED_ERROR` gracefully with user-friendly messages
+
+**Account Linking Security:**
+- RevenueCat customer ID automatically linked to prevent subscription sharing
+- Robust validation prevents subscription transfer between accounts
+- Handles device switching and app reinstallation seamlessly
+
+**Webhook Processing Reliability:**
+- All webhooks processed asynchronously via River background jobs
+- Immediate 200 OK response prevents provider retries
+- Failed webhook jobs can be retried manually
+- Comprehensive audit trail in `revenuecat_events` and `subscription_events` tables
 
 ## API Endpoints
 
@@ -353,7 +499,13 @@ func (s *SubscriptionService) HandleStripeWebhook(ctx context.Context, payload [
 
 ### RevenueCat Webhook Handler
 
-RevenueCat webhooks are handled asynchronously using a background worker to ensure reliability. The HTTP handler immediately enqueues a job and returns a `200 OK` to RevenueCat.
+RevenueCat webhooks are handled asynchronously using a background worker to ensure reliability and prevent webhook timeouts. The HTTP handler immediately enqueues a job and returns a `200 OK` to RevenueCat to prevent retries.
+
+#### Asynchronous Processing Flow
+
+1. **HTTP Handler** receives webhook → Validates authorization → Enqueues River job → Returns 200 OK
+2. **Background Worker** processes job → Updates subscription in database → Logs event for audit
+3. **Error Handling** → Failed jobs can be manually retried → Comprehensive logging for debugging
 
 ```go
 // internal/http/revenuecat.go
@@ -394,6 +546,33 @@ func HandleRevenueCatWebhook(riverClient *river.Client[pgx.Tx]) gin.HandlerFunc 
 	}
 }
 ```
+
+#### Background Worker Implementation
+
+```go
+// internal/service/revenuecat_worker.go
+type RevenueCatWebhookWorker struct {
+	service RevenueCatService
+}
+
+func (w *RevenueCatWebhookWorker) Work(ctx context.Context, job *river.Job[RevenueCatWebhookArgs]) error {
+	// Process the webhook payload
+	return w.service.HandleWebhook(ctx, job.Args.Payload)
+}
+```
+
+**Worker Queue Configuration:**
+- Queue: `revenuecat_webhooks`
+- Max Workers: 10 concurrent workers
+- Retry Policy: Exponential backoff with maximum 5 retries
+- Job Timeout: 30 seconds
+
+**Supported RevenueCat Event Types:**
+- `INITIAL_PURCHASE` → Creates new subscription record
+- `RENEWAL` → Updates subscription period and status
+- `CANCELLATION` → Sets `cancel_at_period_end = true`
+- `EXPIRATION` → Marks subscription as canceled
+- `BILLING_ISSUE` → Sets status to `past_due`
 
 ## Testing
 

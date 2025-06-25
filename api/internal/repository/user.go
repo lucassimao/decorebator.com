@@ -69,10 +69,10 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 }
 
 type FindUserArgs struct {
-	Email                   *string
-	ID                      *int64
-	StripeCustomerID        *string
-	RevenueCatCustomerID    *string
+	Email                *string
+	ID                   *int64
+	StripeCustomerID     *string
+	RevenueCatCustomerID *string
 }
 
 func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
@@ -106,7 +106,6 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 	if args.RevenueCatCustomerID != nil {
 		whereConditions = append(whereConditions, fmt.Sprintf("revenuecat_customer_id = $%d", argIndex))
 		queryArgs = append(queryArgs, args.RevenueCatCustomerID)
-		argIndex++
 	}
 
 	if len(whereConditions) > 0 {
@@ -223,4 +222,3 @@ func (repository *UserRepository) UpdateUserProfile(args UpdateUserProfileArgs) 
 
 	return &user, nil
 }
-

@@ -23,6 +23,7 @@ type Config struct {
 	ModerationService service.ModerationService
 	Database          *pgxpool.Pool
 	riverClient       *river.Client[pgx.Tx]
+	RevenueCatService service.RevenueCatService
 }
 
 func init() {
@@ -100,7 +101,10 @@ func SetupRoutes(config *Config) *gin.Engine {
 
 	subService := service.NewSubscriptionService(config.Database)
 	subRepo := repository.NewSubscriptionRepository(config.Database)
-	rcService := service.NewRevenueCatService(config.Database)
+	rcService := config.RevenueCatService
+	if rcService == nil {
+		rcService = service.NewRevenueCatService(config.Database)
+	}
 
 	// Initialize route handlers with dependency injection
 	var WordRoutes = NewWordRoutes(config.WordService)

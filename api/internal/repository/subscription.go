@@ -384,6 +384,9 @@ func (r *SubscriptionRepository) MarkRenewalReminderSent(ctx context.Context, su
 
 // UpdateSubscription updates an existing subscription
 func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscription *model.Subscription) error {
+	// gofmt:off
+	//
+	//nolint:misspell cancelled_at instead of canceled_at
 	query := `
 		UPDATE subscriptions SET
 			provider = $2,
@@ -404,6 +407,7 @@ func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscri
 			updated_at = NOW()
 		WHERE id = $1
 	`
+	// gofmt:on
 
 	_, err := r.db.Exec(
 		ctx, query,

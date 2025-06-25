@@ -50,7 +50,9 @@ func (m *RevenueCatMock) handle(w http.ResponseWriter, r *http.Request) {
 			for k, v := range m.CustomerInfoResponse {
 				dynamicResponse[k] = v
 			}
-			dynamicResponse["subscriber"].(map[string]interface{})["original_app_user_id"] = appUserID
+			if subscriber, ok := dynamicResponse["subscriber"].(map[string]interface{}); ok {
+				subscriber["original_app_user_id"] = appUserID
+			}
 			_ = json.NewEncoder(w).Encode(dynamicResponse)
 			return
 		}

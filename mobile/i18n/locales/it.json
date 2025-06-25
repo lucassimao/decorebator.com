@@ -246,6 +246,7 @@
       "cancelConfirmMessage": "Sei sicuro di voler cancellare il tuo abbonamento? Perderai l'accesso alle funzionalità premium alla fine del tuo periodo di fatturazione corrente.",
       "keepSubscription": "Mantieni Abbonamento",
       "features": {
+        "title": "Funzionalità Premium",
         "unlimitedWordlists": "Liste di parole illimitate",
         "aiEnrichment": "Arricchimento parole con IA",
         "allQuizModes": "Tutti i modi quiz sbloccati",
@@ -256,7 +257,20 @@
       "manageSubscription": "Gestisci Abbonamento",
       "cancelSubscription": "Annulla Abbonamento",
       "reactivateSubscription": "Riattiva Abbonamento",
-      "billingCycle": "Ciclo di Fatturazione"
+      "billingCycle": "Ciclo di Fatturazione",
+      "mostPopular": "PIÙ POPOLARE",
+      "billedMonthly": "Fatturato mensilmente",
+      "billedYearly": "Fatturato annualmente",
+      "processing": "Elaborazione...",
+      "noOfferings": "Nessun piano di abbonamento disponibile",
+      "upgradeToPremium": "Passa a Premium",
+      "loadError": "Impossibile caricare le opzioni di abbonamento",
+      "purchaseSuccess": "Acquisto completato con successo!",
+      "purchaseError": "Acquisto fallito. Per favore riprova.",
+      "restoreSuccess": "Acquisti ripristinati con successo!",
+      "restoreError": "Impossibile ripristinare gli acquisti. Per favore riprova.",
+      "restorePurchases": "Ripristina Acquisti",
+      "terms": "Continuando, accetti i nostri Termini di Servizio e l'Informativa sulla Privacy. Gli abbonamenti si rinnovano automaticamente a meno che non vengano cancellati."
     },
     "account": {
       "title": "Account",

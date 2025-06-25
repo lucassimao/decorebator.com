@@ -70,7 +70,7 @@ func TestRevenueCatIntegration(t *testing.T) {
 
 		// Mock GetCustomerInfo to return active subscription
 		expiresDateStr := time.Now().Add(30 * 24 * time.Hour).Format(time.RFC3339)
-		rcServiceMock.GetCustomerInfoFunc = func(ctx context.Context, appUserID string) (*service.CustomerInfo, error) {
+		rcServiceMock.GetCustomerInfoFunc = func(_ context.Context, appUserID string) (*service.CustomerInfo, error) {
 			return &service.CustomerInfo{
 				Subscriber: service.Subscriber{
 					OriginalAppUserID: appUserID,
@@ -105,7 +105,7 @@ func TestRevenueCatIntegration(t *testing.T) {
 			subRepo := repository.NewSubscriptionRepository(ts.DB)
 			revenuecatSubID := customerInfo.Subscriber.OriginalAppUserID
 			productID := "com.decorebator.premium.monthly"
-			
+
 			subscription := &model.Subscription{
 				UserID:                   userID,
 				Provider:                 model.ProviderRevenueCat,
@@ -120,9 +120,9 @@ func TestRevenueCatIntegration(t *testing.T) {
 				AmountCents:              699, // $6.99
 				Currency:                 "USD",
 			}
-			
-			_, err := subRepo.CreateSubscription(ctx, subscription)
-			return err
+
+			_, createErr := subRepo.CreateSubscription(ctx, subscription)
+			return createErr
 		}
 
 		// Mock the webhook processing to use the real service logic
@@ -130,8 +130,8 @@ func TestRevenueCatIntegration(t *testing.T) {
 		rcServiceMock.HandleWebhookFunc = func(ctx context.Context, payload []byte) error {
 			// Parse webhook
 			var webhook model.RevenueCatWebhook
-			if err := json.Unmarshal(payload, &webhook); err != nil {
-				return err
+			if unmarshalErr := json.Unmarshal(payload, &webhook); unmarshalErr != nil {
+				return unmarshalErr
 			}
 
 			// Only process INITIAL_PURCHASE events
@@ -142,18 +142,18 @@ func TestRevenueCatIntegration(t *testing.T) {
 			// Simulate the real service flow:
 			// 1. Find user by RevenueCat customer ID
 			userRepo := &repository.UserRepository{Db: ts.DB}
-			users, err := userRepo.Find(repository.FindUserArgs{
+			users, findErr := userRepo.Find(repository.FindUserArgs{
 				RevenueCatCustomerID: &webhook.Event.AppUserID,
 			})
-			if err != nil || len(users) == 0 {
+			if findErr != nil || len(users) == 0 {
 				return fmt.Errorf("user not found")
 			}
 			user := &users[0]
 
 			// 2. Get customer info (mocked above)
-			customerInfo, err := rcServiceMock.GetCustomerInfo(ctx, webhook.Event.AppUserID)
-			if err != nil {
-				return err
+			customerInfo, getInfoErr := rcServiceMock.GetCustomerInfo(ctx, webhook.Event.AppUserID)
+			if getInfoErr != nil {
+				return getInfoErr
 			}
 
 			// 3. Create/update subscription (mocked above)
@@ -221,12 +221,9 @@ func TestRevenueCatIntegration(t *testing.T) {
 			var count int
 			err = ts.DB.QueryRow(ctx, "SELECT COUNT(*) FROM subscriptions WHERE user_id = $1", userID).Scan(&count)
 			require.NoError(t, err)
-			t.Logf("Found %d subscriptions for user %d", count, userID)
-			
-			// Check if the mock function was even called
-			t.Logf("Mock function was called: %v", rcServiceMock.HandleWebhookFunc != nil)
+			t.Fatalf("Subscription not found. Found %d subscriptions for user %d. Mock function was called: %v",
+				count, userID, rcServiceMock.HandleWebhookFunc != nil)
 		}
-		assert.NotNil(t, sub)
 		assert.Equal(t, model.ProviderRevenueCat, sub.Provider)
 		assert.Equal(t, model.PlanMonthly, sub.Plan)
 		assert.Equal(t, model.StatusActive, sub.Status)
@@ -278,8 +275,8 @@ func TestRevenueCatIntegration(t *testing.T) {
 		// Mock renewal webhook processing
 		rcServiceMock.HandleWebhookFunc = func(ctx context.Context, payload []byte) error {
 			var webhook model.RevenueCatWebhook
-			if err := json.Unmarshal(payload, &webhook); err != nil {
-				return err
+			if unmarshalErr := json.Unmarshal(payload, &webhook); unmarshalErr != nil {
+				return unmarshalErr
 			}
 
 			if webhook.Event.Type != "RENEWAL" {
@@ -288,19 +285,19 @@ func TestRevenueCatIntegration(t *testing.T) {
 
 			// Find user by RevenueCat customer ID
 			userRepo := &repository.UserRepository{Db: ts.DB}
-			users, err := userRepo.Find(repository.FindUserArgs{
+			users, findErr := userRepo.Find(repository.FindUserArgs{
 				RevenueCatCustomerID: &webhook.Event.AppUserID,
 			})
-			if err != nil || len(users) == 0 {
+			if findErr != nil || len(users) == 0 {
 				return fmt.Errorf("user not found")
 			}
 			user := &users[0]
 
 			// Update subscription with new period
-			subRepo := repository.NewSubscriptionRepository(ts.DB)
-			subscription, err := subRepo.GetActiveSubscriptionForUser(ctx, user.ID)
-			if err != nil {
-				return err
+			renewalSubRepo := repository.NewSubscriptionRepository(ts.DB)
+			subscription, getErr := renewalSubRepo.GetActiveSubscriptionForUser(ctx, user.ID)
+			if getErr != nil {
+				return getErr
 			}
 
 			// Update subscription period
@@ -308,7 +305,7 @@ func TestRevenueCatIntegration(t *testing.T) {
 			subscription.CurrentPeriodEnd = time.Now().Add(30 * 24 * time.Hour)
 			subscription.Status = model.StatusActive
 
-			return subRepo.UpdateSubscription(ctx, subscription)
+			return renewalSubRepo.UpdateSubscription(ctx, subscription)
 		}
 
 		// Create renewal webhook
@@ -370,7 +367,7 @@ func TestRevenueCatIntegration(t *testing.T) {
 
 	t.Run("RestorePurchases_WithAuthentication_Succeeds", func(t *testing.T) {
 		// Mock the restore purchases function to avoid external calls
-		rcServiceMock.RestorePurchasesFunc = func(ctx context.Context, userID int64, appUserID string, platform model.PlatformType) error {
+		rcServiceMock.RestorePurchasesFunc = func(_ context.Context, _ int64, _ string, _ model.PlatformType) error {
 			// Simulate successful restoration without making external calls
 			return nil
 		}
@@ -438,8 +435,8 @@ func TestRevenueCatIntegration(t *testing.T) {
 		// Mock cancellation webhook processing
 		rcServiceMock.HandleWebhookFunc = func(ctx context.Context, payload []byte) error {
 			var webhook model.RevenueCatWebhook
-			if err := json.Unmarshal(payload, &webhook); err != nil {
-				return err
+			if unmarshalErr := json.Unmarshal(payload, &webhook); unmarshalErr != nil {
+				return unmarshalErr
 			}
 
 			if webhook.Event.Type != "CANCELLATION" {
@@ -448,18 +445,18 @@ func TestRevenueCatIntegration(t *testing.T) {
 
 			// Find user and mark subscription for cancellation
 			userRepo := &repository.UserRepository{Db: ts.DB}
-			users, err := userRepo.Find(repository.FindUserArgs{
+			users, findErr := userRepo.Find(repository.FindUserArgs{
 				RevenueCatCustomerID: &webhook.Event.AppUserID,
 			})
-			if err != nil || len(users) == 0 {
+			if findErr != nil || len(users) == 0 {
 				return fmt.Errorf("user not found")
 			}
 			user := &users[0]
 
-			subRepo := repository.NewSubscriptionRepository(ts.DB)
-			subscription, err := subRepo.GetActiveSubscriptionForUser(ctx, user.ID)
-			if err != nil {
-				return err
+			cancelSubRepo := repository.NewSubscriptionRepository(ts.DB)
+			subscription, getErr := cancelSubRepo.GetActiveSubscriptionForUser(ctx, user.ID)
+			if getErr != nil {
+				return getErr
 			}
 
 			// Mark for cancellation at period end
@@ -467,7 +464,7 @@ func TestRevenueCatIntegration(t *testing.T) {
 			now := time.Now()
 			subscription.CancelledAt = &now
 
-			return subRepo.UpdateSubscription(ctx, subscription)
+			return cancelSubRepo.UpdateSubscription(ctx, subscription)
 		}
 
 		// Create cancellation webhook

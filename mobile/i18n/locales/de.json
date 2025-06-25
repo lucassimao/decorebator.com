@@ -248,6 +248,7 @@
       "cancelConfirmMessage": "Sind Sie sicher, dass Sie Ihr Abonnement kündigen möchten? Sie verlieren den Zugang zu Premium-Funktionen am Ende Ihres aktuellen Abrechnungszeitraums.",
       "keepSubscription": "Abonnement behalten",
       "features": {
+        "title": "Premium-Funktionen",
         "unlimitedWordlists": "Unbegrenzte Wortlisten",
         "aiEnrichment": "KI-gestützte Wortanreicherung",
         "allQuizModes": "Alle Quiz-Modi freigeschaltet",
@@ -258,7 +259,20 @@
       "manageSubscription": "Abonnement verwalten",
       "cancelSubscription": "Abonnement kündigen",
       "reactivateSubscription": "Abonnement reaktivieren",
-      "billingCycle": "Abrechnungszyklus"
+      "billingCycle": "Abrechnungszyklus",
+      "mostPopular": "BELIEBTESTE",
+      "billedMonthly": "Monatlich abgerechnet",
+      "billedYearly": "Jährlich abgerechnet",
+      "processing": "Verarbeitung...",
+      "noOfferings": "Keine Abonnement-Pläne verfügbar",
+      "upgradeToPremium": "Auf Premium upgraden",
+      "loadError": "Fehler beim Laden der Abonnement-Optionen",
+      "purchaseSuccess": "Kauf erfolgreich abgeschlossen!",
+      "purchaseError": "Kauf fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "restoreSuccess": "Käufe erfolgreich wiederhergestellt!",
+      "restoreError": "Fehler beim Wiederherstellen der Käufe. Bitte versuchen Sie es erneut.",
+      "restorePurchases": "Käufe wiederherstellen",
+      "terms": "Durch Fortfahren stimmen Sie unseren Nutzungsbedingungen und Datenschutzrichtlinien zu. Abonnements verlängern sich automatisch, es sei denn, sie werden gekündigt."
     },
     "account": {
       "title": "Konto",
