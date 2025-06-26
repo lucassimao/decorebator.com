@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"decorebator.com/internal/repository"
+	"decorebator.com/internal/service"
 	"decorebator.com/tests/integration/setup"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
@@ -444,6 +444,6 @@ func TestWordProcessingStatus_ErrorReporting(t *testing.T) {
 
 // Helper function to update word processing status (simulates worker behavior)
 func updateWordProcessingStatus(db *pgxpool.Pool, wordID int64, status, errorMsg string) error {
-	repo := &repository.WordRepository{Db: db}
-	return repo.UpdateProcessingStatus(wordID, status, errorMsg, nil)
+	wordService := service.NewWordService(db, &service.MockModerationService{})
+	return wordService.UpdateProcessingStatus(wordID, status, errorMsg, nil)
 }

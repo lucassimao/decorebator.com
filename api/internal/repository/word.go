@@ -171,17 +171,43 @@ func (repository *WordRepository) Delete(userID, wordID int64) (int64, error) {
 }
 
 func (repository *WordRepository) Update(word *Word, tx *pgx.Tx) (int64, error) {
-	query := `UPDATE words SET name=$1, updated_at=NOW(), audio_url=$4, wordlist_id=$5, notes=$6, learned=$7 WHERE user_id=$2 AND ID=$3`
+	updates := map[string]interface{}{
+		"name":        word.Name,
+		"audio_url":   word.AudioURL,
+		"wordlist_id": word.WordlistID,
+		"notes":       word.Notes,
+		"learned":     word.Learned,
+	}
 
+	// Build query with user_id check for security
+	var setParts []string
+	var args []interface{}
+	argIndex := 1
+
+	// Always update the updated_at timestamp
+	setParts = append(setParts, "updated_at = NOW()")
+
+	// Handle all the update fields
+	for field, value := range updates {
+		setParts = append(setParts, fmt.Sprintf("%s = $%d", field, argIndex))
+		args = append(args, value)
+		argIndex++
+	}
+
+	// Build the complete query with user_id check for security
+	query := fmt.Sprintf("UPDATE words SET %s WHERE user_id = $%d AND id = $%d",
+		strings.Join(setParts, ", "), argIndex, argIndex+1)
+	args = append(args, word.UserID, word.ID)
+
+	// Execute the query
 	var result pgconn.CommandTag
 	var err error
 
-	exec := repository.Db.Exec
 	if tx != nil {
-		exec = (*tx).Exec
+		result, err = (*tx).Exec(context.Background(), query, args...)
+	} else {
+		result, err = repository.Db.Exec(context.Background(), query, args...)
 	}
-	result, err = exec(context.Background(), query, word.Name, word.UserID,
-		word.ID, word.AudioURL, word.WordlistID, word.Notes, word.Learned)
 
 	if err != nil {
 		return 0, err
@@ -204,44 +230,81 @@ func (repository *WordRepository) GetLatestAudioURL(word string) (string, error)
 	return audioURL, nil
 }
 
-// UpdateProcessingStatus updates the processing status and related fields for a word
-func (repository *WordRepository) UpdateProcessingStatus(wordID int64, status string, errorMsg string, tx *pgx.Tx) error {
-	var query string
-	var args []any
-
-	switch status {
-	case "processing":
-		query = `UPDATE words SET processing_status = $2, processing_started_at = NOW() WHERE id = $1`
-		args = []any{wordID, status}
-	case "completed":
-		query = `UPDATE words SET processing_status = $2, processing_completed_at = NOW(), processing_error = NULL WHERE id = $1`
-		args = []any{wordID, status}
-	case "failed":
-		query = `UPDATE words SET processing_status = $2, processing_completed_at = NOW(), processing_error = $3 WHERE id = $1`
-		args = []any{wordID, status, errorMsg}
-	default:
-		return fmt.Errorf("invalid processing status: %s", status)
+// UpdateFields updates specified fields for a word using a flexible map-based approach
+func (repository *WordRepository) UpdateFields(wordID int64, updates map[string]interface{}, tx *pgx.Tx) error {
+	if len(updates) == 0 {
+		return fmt.Errorf("no fields specified for update")
 	}
 
+	var setParts []string
+	var args []interface{}
+	argIndex := 1
+
+	// Always update the updated_at timestamp
+	setParts = append(setParts, "updated_at = NOW()")
+
+	// Handle special processing status logic
+	if status, hasStatus := updates["processing_status"]; hasStatus {
+		statusStr, ok := status.(string)
+		if !ok {
+			return fmt.Errorf("processing_status must be a string")
+		}
+
+		setParts = append(setParts, fmt.Sprintf("processing_status = $%d", argIndex))
+		args = append(args, statusStr)
+		argIndex++
+
+		switch statusStr {
+		case "processing":
+			setParts = append(setParts, "processing_started_at = NOW()")
+		case "completed":
+			setParts = append(setParts, "processing_completed_at = NOW()")
+			setParts = append(setParts, "processing_error = NULL")
+		case "failed":
+			setParts = append(setParts, "processing_completed_at = NOW()")
+			if errorMsg, hasError := updates["processing_error"]; hasError {
+				setParts = append(setParts, fmt.Sprintf("processing_error = $%d", argIndex))
+				args = append(args, errorMsg)
+				argIndex++
+			}
+		default:
+			return fmt.Errorf("invalid processing status: %s", statusStr)
+		}
+		// Remove processing_status and processing_error from further processing
+		delete(updates, "processing_status")
+		delete(updates, "processing_error")
+	}
+
+	// Handle other fields
+	validFields := map[string]bool{
+		"name":          true,
+		"audio_url":     true,
+		"notes":         true,
+		"learned":       true,
+		"wordlist_id":   true,
+		"pronunciation": true,
+	}
+
+	for field, value := range updates {
+		if !validFields[field] {
+			return fmt.Errorf("invalid field for update: %s", field)
+		}
+
+		setParts = append(setParts, fmt.Sprintf("%s = $%d", field, argIndex))
+		args = append(args, value)
+		argIndex++
+	}
+
+	// Build the complete query
+	query := fmt.Sprintf("UPDATE words SET %s WHERE id = $%d", strings.Join(setParts, ", "), argIndex)
+	args = append(args, wordID)
+
+	// Execute the query
 	var err error
 	if tx != nil {
 		_, err = (*tx).Exec(context.Background(), query, args...)
 	} else {
 		_, err = repository.Db.Exec(context.Background(), query, args...)
-	}
-
-	return err
-}
-
-// UpdatePronunciation updates the pronunciation for a word
-func (repository *WordRepository) UpdatePronunciation(wordID int64, pronunciation string, tx *pgx.Tx) error {
-	query := `UPDATE words SET pronunciation = $1 WHERE id = $2`
-
-	var err error
-	if tx != nil {
-		_, err = (*tx).Exec(context.Background(), query, pronunciation, wordID)
-	} else {
-		_, err = repository.Db.Exec(context.Background(), query, pronunciation, wordID)
 	}
 
 	return err
