@@ -28,6 +28,10 @@ export type Word = {
   pronunciation?: string;
   notes?: string;
   audioURL?: string;
+  processingStatus?: string;
+  processingError?: string;
+  processingStartedAt?: string;
+  processingCompletedAt?: string;
 };
 
 export type Definition = {
@@ -198,5 +202,36 @@ export async function getPronunciationSystems(
     `/wordlists/pronunciation-systems?languageCode=${languageCode}`;
 
   const body = await callAPI<PronunciationSystemsResponse>("GET", endpoint);
+  return body;
+}
+
+export type ProcessingInfo = {
+  id: number;
+  name: string;
+  processingStatus: string;
+  processingError?: string;
+  processingStartedAt?: string;
+  processingCompletedAt?: string;
+};
+
+export type ProcessingStatusResponse = {
+  words: ProcessingInfo[];
+  summary: {
+    total: number;
+    pending: number;
+    processing: number;
+    completed: number;
+    failed: number;
+  };
+};
+
+export async function getProcessingStatus(
+  wordlistId: number,
+): Promise<ProcessingStatusResponse> {
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL +
+    `/wordlists/${wordlistId}/processing-status`;
+
+  const body = await callAPI<ProcessingStatusResponse>("GET", endpoint);
   return body;
 }

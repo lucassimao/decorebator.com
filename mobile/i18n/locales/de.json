@@ -179,6 +179,8 @@
     "loadingTakingLonger": "Das dauert länger als gewöhnlich...",
     "requestTimedOut": "Zeitüberschreitung der Anfrage. Ihre Verbindung könnte langsam oder instabil sein.",
     "slowConnection": "Langsame Verbindung erkannt. Das könnte etwas länger dauern.",
+    "wordsProcessing": "Wörter werden verarbeitet",
+    "wordsProcessingMessage": "Ihre Wörter werden verarbeitet und sind in Kürze bereit. Bitte schauen Sie in wenigen Momenten noch einmal nach.",
     "writeWordFromDefinition": "Schreiben Sie das Wort für diese Definition",
     "whatDoesThisWordMean": "Was bedeutet dieses Wort?",
     "completeSentence": "Vervollständigen Sie den Satz",
@@ -248,6 +250,7 @@
       "cancelConfirmMessage": "Sind Sie sicher, dass Sie Ihr Abonnement kündigen möchten? Sie verlieren den Zugang zu Premium-Funktionen am Ende Ihres aktuellen Abrechnungszeitraums.",
       "keepSubscription": "Abonnement behalten",
       "features": {
+        "title": "Premium-Funktionen",
         "unlimitedWordlists": "Unbegrenzte Wortlisten",
         "aiEnrichment": "KI-gestützte Wortanreicherung",
         "allQuizModes": "Alle Quiz-Modi freigeschaltet",
@@ -258,7 +261,20 @@
       "manageSubscription": "Abonnement verwalten",
       "cancelSubscription": "Abonnement kündigen",
       "reactivateSubscription": "Abonnement reaktivieren",
-      "billingCycle": "Abrechnungszyklus"
+      "billingCycle": "Abrechnungszyklus",
+      "mostPopular": "BELIEBTESTE",
+      "billedMonthly": "Monatlich abgerechnet",
+      "billedYearly": "Jährlich abgerechnet",
+      "processing": "Verarbeitung...",
+      "noOfferings": "Keine Abonnement-Pläne verfügbar",
+      "upgradeToPremium": "Auf Premium upgraden",
+      "loadError": "Fehler beim Laden der Abonnement-Optionen",
+      "purchaseSuccess": "Kauf erfolgreich abgeschlossen!",
+      "purchaseError": "Kauf fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "restoreSuccess": "Käufe erfolgreich wiederhergestellt!",
+      "restoreError": "Fehler beim Wiederherstellen der Käufe. Bitte versuchen Sie es erneut.",
+      "restorePurchases": "Käufe wiederherstellen",
+      "terms": "Durch Fortfahren stimmen Sie unseren Nutzungsbedingungen und Datenschutzrichtlinien zu. Abonnements verlängern sich automatisch, es sei denn, sie werden gekündigt."
     },
     "account": {
       "title": "Konto",
@@ -423,7 +439,20 @@
     "mastered": "Beherrscht",
     "masteryProgress": "Beherrschung",
     "masteryExplanation": "Beherrschte Wörter sind solche mit 80%+ Quiz-Genauigkeit basierend auf Ihrer Lernleistung.",
-    "learnedToggleExplanation": "Häkchen umschalten, um Wörter in Quiz und Lernkarten ein-/auszublenden, ohne sie zu löschen."
+    "learnedToggleExplanation": "Häkchen umschalten, um Wörter in Quiz und Lernkarten ein-/auszublenden, ohne sie zu löschen.",
+    "processing": "Verarbeitung",
+    "failed": "Fehlgeschlagen",
+    "retryProcessing": "Erneut versuchen",
+    "retryProcessingConfirm": "Möchten Sie die Verarbeitung von \"{{word}}\" erneut versuchen? Dies wird das Wort löschen und erneut hinzufügen.",
+    "retryFailed": "Erneuter Versuch fehlgeschlagen. Bitte versuchen Sie es später noch einmal.",
+    "processingError": "Beim Verarbeiten dieses Wortes ist ein Fehler aufgetreten",
+    "noDefinitionsFound": "Keine Definitionen für dieses Wort gefunden",
+    "contentNotAppropriate": "Dieses Wort enthält unangemessene Inhalte",
+    "validationFailed": "Das Wort konnte nicht validiert werden",
+    "technicalError": "Ein technischer Fehler ist aufgetreten. Bitte versuchen Sie es später erneut",
+    "cannotRetry": "Wiederholen nicht möglich",
+    "cannotRetryMessage": "Dieser Fehler kann nicht wiederholt werden. Sie können dieses Wort nur löschen.",
+    "retryStarted": "Die Verarbeitung wurde neu gestartet. Bitte warten Sie einen Moment."
   },
   "createWordlist": {
     "title": "Neue Wortliste erstellen",
@@ -614,6 +643,19 @@
     "loadingTakingLonger": "Das dauert länger als gewöhnlich...",
     "requestTimedOut": "Zeitüberschreitung der Anfrage. Ihre Verbindung könnte langsam oder instabil sein.",
     "slowConnection": "Langsame Verbindung erkannt. Das könnte etwas länger dauern.",
+    "wordsProcessing": "Wörter werden verarbeitet",
+    "wordsProcessingMessage": "Ihre Wörter werden verarbeitet und sind in Kürze bereit. Bitte schauen Sie in wenigen Momenten noch einmal nach.",
     "savePosition": "Position speichern"
+  },
+  "rateLimit": {
+    "title": "Rate Limit",
+    "cooldownMessage": "Sie haben diesen Fehler kürzlich bereits gemeldet. Bitte warten Sie {{minutes}} Minuten, bevor Sie es erneut versuchen.",
+    "limitReachedMessage": "Sie haben die maximale Anzahl an Fehlermeldungen erreicht. Bitte versuchen Sie es später erneut."
+  },
+  "success": {
+    "title": "Erfolg"
+  },
+  "error": {
+    "title": "Fehler"
   }
 }

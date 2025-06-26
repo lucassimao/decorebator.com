@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
-	"time"
 
 	httphandlers "decorebator.com/internal/http"
 	"decorebator.com/tests/integration/setup"
@@ -404,8 +403,6 @@ func TestMultipleRequests(t *testing.T) {
 				successCount++
 			}
 
-			// Small delay to avoid overwhelming the system
-			time.Sleep(50 * time.Millisecond)
 		}
 
 		assert.Equal(t, 5, successCount, "All registrations should succeed without rate limiting")
@@ -436,7 +433,6 @@ func TestMultipleRequests(t *testing.T) {
 				unauthorizedCount++
 			}
 
-			time.Sleep(50 * time.Millisecond)
 		}
 
 		assert.Equal(t, 5, unauthorizedCount, "All wrong password attempts should return 400 without rate limiting")

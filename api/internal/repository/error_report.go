@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -192,31 +191,29 @@ func (r *ErrorReportRepository) GetErrorReportStats(ctx context.Context, startTi
 }
 
 // CheckCooldown checks if a user is in cooldown for a specific error report
-func (r *ErrorReportRepository) CheckCooldown(ctx context.Context, userID int64, wordID int64, definitionID int64, errorType string) (*time.Time, error) {
+func (r *ErrorReportRepository) CheckCooldown(ctx context.Context, userID int64, wordID int64, definitionID *int64, errorType string) (*time.Time, error) {
 	var cooldownUntil *time.Time
+
+	// Convert pointer to interface{} for SQL parameter
+	var defIDParam interface{}
+	if definitionID != nil {
+		defIDParam = *definitionID
+	} else {
+		defIDParam = nil
+	}
 
 	query := `
 		SELECT cooldown_until 
 		FROM error_report_cooldowns 
 		WHERE user_id = $1 
-			AND ($2 = -1 OR word_id = $2)
-			AND ($3 = -1 OR definition_id = $3)
+			AND word_id = $2
+			AND definition_id IS NOT DISTINCT FROM $3
 			AND error_type = $4
 			AND cooldown_until > NOW()
 		LIMIT 1
 	`
 
-	wordIDParam := sql.NullInt64{Int64: wordID, Valid: wordID > 0}
-	defIDParam := sql.NullInt64{Int64: definitionID, Valid: definitionID > 0}
-
-	if !wordIDParam.Valid {
-		wordIDParam.Int64 = -1
-	}
-	if !defIDParam.Valid {
-		defIDParam.Int64 = -1
-	}
-
-	err := r.db.QueryRow(ctx, query, userID, wordIDParam.Int64, defIDParam.Int64, errorType).Scan(&cooldownUntil)
+	err := r.db.QueryRow(ctx, query, userID, wordID, defIDParam, errorType).Scan(&cooldownUntil)
 	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
@@ -225,7 +222,15 @@ func (r *ErrorReportRepository) CheckCooldown(ctx context.Context, userID int64,
 }
 
 // SetCooldown sets a cooldown period for a specific error report
-func (r *ErrorReportRepository) SetCooldown(ctx context.Context, tx pgx.Tx, userID int64, wordID int64, definitionID int64, errorType string, cooldownUntil time.Time) error {
+func (r *ErrorReportRepository) SetCooldown(ctx context.Context, tx pgx.Tx, userID int64, wordID int64, definitionID *int64, errorType string, cooldownUntil time.Time) error {
+	// Convert pointer to interface{} for SQL parameter
+	var defIDParam interface{}
+	if definitionID != nil {
+		defIDParam = *definitionID
+	} else {
+		defIDParam = nil
+	}
+
 	query := `
 		INSERT INTO error_report_cooldowns (user_id, word_id, definition_id, error_type, cooldown_until)
 		VALUES ($1, $2, $3, $4, $5)
@@ -235,10 +240,7 @@ func (r *ErrorReportRepository) SetCooldown(ctx context.Context, tx pgx.Tx, user
 			updated_at = NOW()
 	`
 
-	wordIDParam := sql.NullInt64{Int64: wordID, Valid: wordID > 0}
-	defIDParam := sql.NullInt64{Int64: definitionID, Valid: definitionID > 0}
-
-	_, err := tx.Exec(ctx, query, userID, wordIDParam, defIDParam, errorType, cooldownUntil)
+	_, err := tx.Exec(ctx, query, userID, wordID, defIDParam, errorType, cooldownUntil)
 	return err
 }
 
@@ -259,6 +261,14 @@ func (r *ErrorReportRepository) UpdateDefinitionLastRegeneratedAt(ctx context.Co
 
 // UpsertErrorReport updates or inserts an error report
 func (r *ErrorReportRepository) UpsertErrorReport(ctx context.Context, tx pgx.Tx, userID int64, definitionID *int64, wordID int64, errorType string) error {
+	// Convert pointer to interface{} for SQL parameter
+	var defIDParam interface{}
+	if definitionID != nil {
+		defIDParam = *definitionID
+	} else {
+		defIDParam = nil
+	}
+
 	// First, try to update an existing row
 	tag, err := tx.Exec(ctx, `
 		UPDATE error_reports
@@ -271,7 +281,7 @@ func (r *ErrorReportRepository) UpsertErrorReport(ctx context.Context, tx pgx.Tx
 			AND definition_id IS NOT DISTINCT FROM $2
 			AND word_id = $3
 			AND status = 'pending'
-	`, userID, definitionID, wordID, errorType)
+	`, userID, defIDParam, wordID, errorType)
 	if err != nil {
 		return err
 	}
@@ -283,7 +293,7 @@ func (r *ErrorReportRepository) UpsertErrorReport(ctx context.Context, tx pgx.Tx
 				(user_id, definition_id, word_id, error_type, reported_at, status)
 			VALUES
 				($1, $2, $3, $4, NOW(), 'pending')
-		`, userID, definitionID, wordID, errorType)
+		`, userID, defIDParam, wordID, errorType)
 		if err != nil {
 			return err
 		}

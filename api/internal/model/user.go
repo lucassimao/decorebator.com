@@ -8,21 +8,23 @@ import (
 )
 
 type User struct {
-	ID                 int64               `json:"id"`
-	FirstName          string              `json:"firstName"`
-	LastName           string              `json:"lastName"`
-	PasswordHash       string              `json:"passwordHash"`
-	Email              string              `json:"email"`
-	ProfilePictureURL  *string             `json:"profilePictureUrl,omitempty"`
-	Country            *string             `json:"country,omitempty"`
-	DateOfBirth        *time.Time          `json:"dateOfBirth,omitempty"`
-	PreferredLanguage  *string             `json:"preferredLanguage,omitempty"`
-	SubscriptionPlan   SubscriptionPlan    `json:"subscriptionPlan"`
-	SubscriptionStatus *SubscriptionStatus `json:"subscriptionStatus,omitempty"`
-	StripeCustomerID   *string             `json:"stripeCustomerId,omitempty"`
-	SubscriptionEndsAt *time.Time          `json:"subscriptionEndsAt,omitempty"`
-	CreatedAt          pgtype.Timestamp    `json:"createdAt"`
-	UpdatedAt          pgtype.Timestamp    `json:"updatedAt"`
+	ID                   int64               `json:"id"`
+	FirstName            string              `json:"firstName"`
+	LastName             string              `json:"lastName"`
+	PasswordHash         string              `json:"passwordHash"`
+	Email                string              `json:"email"`
+	ProfilePictureURL    *string             `json:"profilePictureUrl,omitempty"`
+	Country              *string             `json:"country,omitempty"`
+	DateOfBirth          *time.Time          `json:"dateOfBirth,omitempty"`
+	PreferredLanguage    *string             `json:"preferredLanguage,omitempty"`
+	SubscriptionPlan     SubscriptionPlan    `json:"subscriptionPlan"`
+	SubscriptionStatus   *SubscriptionStatus `json:"subscriptionStatus,omitempty"`
+	StripeCustomerID     *string             `json:"stripeCustomerId,omitempty"`
+	RevenueCatCustomerID *string             `json:"revenuecatCustomerId,omitempty"`
+	Platform             *PlatformType       `json:"platform,omitempty"`
+	SubscriptionEndsAt   *time.Time          `json:"subscriptionEndsAt,omitempty"`
+	CreatedAt            pgtype.Timestamp    `json:"createdAt"`
+	UpdatedAt            pgtype.Timestamp    `json:"updatedAt"`
 }
 
 func (u User) MarshalJSON() ([]byte, error) {
@@ -57,6 +59,14 @@ func (u User) MarshalJSON() ([]byte, error) {
 
 	if u.StripeCustomerID != nil {
 		userMap["stripeCustomerId"] = *u.StripeCustomerID
+	}
+
+	if u.RevenueCatCustomerID != nil {
+		userMap["revenuecatCustomerId"] = *u.RevenueCatCustomerID
+	}
+
+	if u.Platform != nil {
+		userMap["platform"] = *u.Platform
 	}
 
 	if u.SubscriptionEndsAt != nil {

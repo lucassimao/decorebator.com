@@ -69,17 +69,18 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 }
 
 type FindUserArgs struct {
-	Email            *string
-	ID               *int64
-	StripeCustomerID *string
+	Email                *string
+	ID                   *int64
+	StripeCustomerID     *string
+	RevenueCatCustomerID *string
 }
 
-func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
+func (repository *UserRepository) Find(ctx context.Context, args FindUserArgs) ([]User, error) {
 	var builder strings.Builder
 	builder.WriteString(`SELECT id, email, first_name, last_name, password_hash, 
 		profile_picture_url, country, date_of_birth, preferred_language,
-		subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at,
-		created_at, updated_at FROM users`)
+		subscription_plan, subscription_status, stripe_customer_id, revenuecat_customer_id,
+		platform, subscription_ends_at, created_at, updated_at FROM users`)
 	var queryArgs []interface{}
 	var whereConditions []string
 
@@ -102,6 +103,11 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 		argIndex++
 	}
 
+	if args.RevenueCatCustomerID != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf("revenuecat_customer_id = $%d", argIndex))
+		queryArgs = append(queryArgs, args.RevenueCatCustomerID)
+	}
+
 	if len(whereConditions) > 0 {
 		builder.WriteString(" WHERE ")
 		builder.WriteString(strings.Join(whereConditions, " AND "))
@@ -109,7 +115,7 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 
 	users := []User{}
 	query := builder.String()
-	rows, err := repository.Db.Query(context.Background(), query, queryArgs...)
+	rows, err := repository.Db.Query(ctx, query, queryArgs...)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return users, nil
@@ -123,8 +129,8 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 		user := User{}
 		err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
 			&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
-			&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt,
-			&user.CreatedAt, &user.UpdatedAt)
+			&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.RevenueCatCustomerID,
+			&user.Platform, &user.SubscriptionEndsAt, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}

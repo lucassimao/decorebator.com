@@ -19,42 +19,48 @@ func NewSubscriptionRepository(db *pgxpool.Pool) *SubscriptionRepository {
 }
 
 // CreateSubscription creates a new subscription record
-func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscription *model.Subscription) error {
+func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscription *model.Subscription) (int64, error) {
 	query := `
 		INSERT INTO subscriptions (
-			user_id, stripe_subscription_id, stripe_customer_id,
+			user_id, provider, stripe_subscription_id, stripe_customer_id,
+			revenuecat_subscription_id, app_store_product_id, platform,
 			plan, status, current_period_start, current_period_end,
-			cancel_at_period_end, cancelled_at, trial_end,
+			cancel_at_period_end, canceled_at, trial_end,
 			amount_cents, currency
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 		RETURNING id, created_at, updated_at
 	`
 
 	err := r.db.QueryRow(
 		ctx, query,
 		subscription.UserID,
+		subscription.Provider,
 		subscription.StripeSubscriptionID,
 		subscription.StripeCustomerID,
+		subscription.RevenueCatSubscriptionID,
+		subscription.AppStoreProductID,
+		subscription.Platform,
 		subscription.Plan,
 		subscription.Status,
 		subscription.CurrentPeriodStart,
 		subscription.CurrentPeriodEnd,
 		subscription.CancelAtPeriodEnd,
-		subscription.CancelledAt,
+		subscription.CanceledAt,
 		subscription.TrialEnd,
 		subscription.AmountCents,
 		subscription.Currency,
 	).Scan(&subscription.ID, &subscription.CreatedAt, &subscription.UpdatedAt)
 
-	return err
+	return subscription.ID, err
 }
 
 // GetSubscriptionByStripeID retrieves a subscription by Stripe subscription ID
 func (r *SubscriptionRepository) GetSubscriptionByStripeID(ctx context.Context, stripeSubscriptionID string) (*model.Subscription, error) {
 	query := `
-		SELECT id, user_id, stripe_subscription_id, stripe_customer_id,
+		SELECT id, user_id, provider, stripe_subscription_id, stripe_customer_id,
+			   revenuecat_subscription_id, app_store_product_id, platform,
 			   plan, status, current_period_start, current_period_end,
-			   cancel_at_period_end, cancelled_at, trial_end,
+			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
 		FROM subscriptions
 		WHERE stripe_subscription_id = $1
@@ -66,14 +72,18 @@ func (r *SubscriptionRepository) GetSubscriptionByStripeID(ctx context.Context, 
 	err := r.db.QueryRow(ctx, query, stripeSubscriptionID).Scan(
 		&subscription.ID,
 		&subscription.UserID,
+		&subscription.Provider,
 		&subscription.StripeSubscriptionID,
 		&subscription.StripeCustomerID,
+		&subscription.RevenueCatSubscriptionID,
+		&subscription.AppStoreProductID,
+		&subscription.Platform,
 		&subscription.Plan,
 		&subscription.Status,
 		&subscription.CurrentPeriodStart,
 		&subscription.CurrentPeriodEnd,
 		&subscription.CancelAtPeriodEnd,
-		&subscription.CancelledAt,
+		&subscription.CanceledAt,
 		&subscription.TrialEnd,
 		&subscription.AmountCents,
 		&subscription.Currency,
@@ -94,9 +104,10 @@ func (r *SubscriptionRepository) GetSubscriptionByStripeID(ctx context.Context, 
 // GetActiveSubscriptionForUser retrieves the active subscription for a user
 func (r *SubscriptionRepository) GetActiveSubscriptionForUser(ctx context.Context, userID int64) (*model.Subscription, error) {
 	query := `
-		SELECT id, user_id, stripe_subscription_id, stripe_customer_id,
+		SELECT id, user_id, provider, stripe_subscription_id, stripe_customer_id,
+			   revenuecat_subscription_id, app_store_product_id, platform,
 			   plan, status, current_period_start, current_period_end,
-			   cancel_at_period_end, cancelled_at, trial_end,
+			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
 		FROM subscriptions
 		WHERE user_id = $1 AND status IN ('active', 'trialing')
@@ -108,14 +119,18 @@ func (r *SubscriptionRepository) GetActiveSubscriptionForUser(ctx context.Contex
 	err := r.db.QueryRow(ctx, query, userID).Scan(
 		&subscription.ID,
 		&subscription.UserID,
+		&subscription.Provider,
 		&subscription.StripeSubscriptionID,
 		&subscription.StripeCustomerID,
+		&subscription.RevenueCatSubscriptionID,
+		&subscription.AppStoreProductID,
+		&subscription.Platform,
 		&subscription.Plan,
 		&subscription.Status,
 		&subscription.CurrentPeriodStart,
 		&subscription.CurrentPeriodEnd,
 		&subscription.CancelAtPeriodEnd,
-		&subscription.CancelledAt,
+		&subscription.CanceledAt,
 		&subscription.TrialEnd,
 		&subscription.AmountCents,
 		&subscription.Currency,
@@ -131,35 +146,6 @@ func (r *SubscriptionRepository) GetActiveSubscriptionForUser(ctx context.Contex
 	}
 
 	return subscription, nil
-}
-
-// UpdateSubscription updates an existing subscription
-func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscription *model.Subscription) error {
-	query := `
-		UPDATE subscriptions
-		SET status = $2,
-			current_period_start = $3,
-			current_period_end = $4,
-			cancel_at_period_end = $5,
-			cancelled_at = $6,
-			trial_end = $7,
-			updated_at = NOW()
-		WHERE id = $1
-		RETURNING updated_at
-	`
-
-	err := r.db.QueryRow(
-		ctx, query,
-		subscription.ID,
-		subscription.Status,
-		subscription.CurrentPeriodStart,
-		subscription.CurrentPeriodEnd,
-		subscription.CancelAtPeriodEnd,
-		subscription.CancelledAt,
-		subscription.TrialEnd,
-	).Scan(&subscription.UpdatedAt)
-
-	return err
 }
 
 // CreateSubscriptionEvent records a Stripe webhook event
@@ -200,7 +186,7 @@ func (r *SubscriptionRepository) GetUserSubscriptionHistory(ctx context.Context,
 	query := `
 		SELECT id, user_id, stripe_subscription_id, stripe_customer_id,
 			   plan, status, current_period_start, current_period_end,
-			   cancel_at_period_end, cancelled_at, trial_end,
+			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
 		FROM subscriptions
 		WHERE user_id = $1
@@ -226,7 +212,7 @@ func (r *SubscriptionRepository) GetUserSubscriptionHistory(ctx context.Context,
 			&subscription.CurrentPeriodStart,
 			&subscription.CurrentPeriodEnd,
 			&subscription.CancelAtPeriodEnd,
-			&subscription.CancelledAt,
+			&subscription.CanceledAt,
 			&subscription.TrialEnd,
 			&subscription.AmountCents,
 			&subscription.Currency,
@@ -280,7 +266,7 @@ func (r *SubscriptionRepository) GetSubscriptionByID(ctx context.Context, id int
 	query := `
 		SELECT id, user_id, stripe_subscription_id, stripe_customer_id,
 			   plan, status, current_period_start, current_period_end,
-			   cancel_at_period_end, cancelled_at, trial_end,
+			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
 		FROM subscriptions
 		WHERE id = $1
@@ -297,7 +283,7 @@ func (r *SubscriptionRepository) GetSubscriptionByID(ctx context.Context, id int
 		&subscription.CurrentPeriodStart,
 		&subscription.CurrentPeriodEnd,
 		&subscription.CancelAtPeriodEnd,
-		&subscription.CancelledAt,
+		&subscription.CanceledAt,
 		&subscription.TrialEnd,
 		&subscription.AmountCents,
 		&subscription.Currency,
@@ -320,7 +306,7 @@ func (r *SubscriptionRepository) GetSubscriptionsRenewingBetween(ctx context.Con
 	query := `
 		SELECT id, user_id, stripe_subscription_id, stripe_customer_id,
 			   plan, status, current_period_start, current_period_end,
-			   cancel_at_period_end, cancelled_at, trial_end,
+			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
 		FROM subscriptions
 		WHERE status = 'active' 
@@ -349,7 +335,7 @@ func (r *SubscriptionRepository) GetSubscriptionsRenewingBetween(ctx context.Con
 			&subscription.CurrentPeriodStart,
 			&subscription.CurrentPeriodEnd,
 			&subscription.CancelAtPeriodEnd,
-			&subscription.CancelledAt,
+			&subscription.CanceledAt,
 			&subscription.TrialEnd,
 			&subscription.AmountCents,
 			&subscription.Currency,
@@ -398,5 +384,51 @@ func (r *SubscriptionRepository) MarkRenewalReminderSent(ctx context.Context, su
 	// Generate a unique event ID for this internal event
 	eventID := fmt.Sprintf("reminder_%d_%d", subscriptionID, time.Now().Unix())
 	_, err := r.db.Exec(ctx, query, subscriptionID, eventID)
+	return err
+}
+
+// UpdateSubscription updates an existing subscription
+func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscription *model.Subscription) error {
+	query := `
+		UPDATE subscriptions SET
+			provider = $2,
+			stripe_subscription_id = $3,
+			stripe_customer_id = $4,
+			revenuecat_subscription_id = $5,
+			app_store_product_id = $6,
+			platform = $7,
+			plan = $8,
+			status = $9,
+			current_period_start = $10,
+			current_period_end = $11,
+			cancel_at_period_end = $12,
+			canceled_at = $13,
+			trial_end = $14,
+			amount_cents = $15,
+			currency = $16,
+			updated_at = NOW()
+		WHERE id = $1
+	`
+
+	_, err := r.db.Exec(
+		ctx, query,
+		subscription.ID,
+		subscription.Provider,
+		subscription.StripeSubscriptionID,
+		subscription.StripeCustomerID,
+		subscription.RevenueCatSubscriptionID,
+		subscription.AppStoreProductID,
+		subscription.Platform,
+		subscription.Plan,
+		subscription.Status,
+		subscription.CurrentPeriodStart,
+		subscription.CurrentPeriodEnd,
+		subscription.CancelAtPeriodEnd,
+		subscription.CanceledAt,
+		subscription.TrialEnd,
+		subscription.AmountCents,
+		subscription.Currency,
+	)
+
 	return err
 }

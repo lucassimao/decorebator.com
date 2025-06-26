@@ -6,11 +6,12 @@ export enum ErrorType {
   UnrelatedMeaning = "_unrelated_meaning",
   UnrelatedExample = "_unrelated_example",
   SoundNotPlaying = "_sound_not_playing",
+  ProcessingFailed = "_processing_failed",
 }
 
 export interface ErrorReportRequest {
   wordId: number;
-  definitionId: number;
+  definitionId: number | null;
   errorType: ErrorType;
 }
 

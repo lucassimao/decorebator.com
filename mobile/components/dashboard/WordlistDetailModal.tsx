@@ -1,6 +1,7 @@
 import * as wordlistsApi from "@/api/wordlists";
 import * as offlineWordsApi from "@/api/offlineWords";
-import { Wordlist } from "@/api/wordlists";
+import { Wordlist, getProcessingStatus } from "@/api/wordlists";
+import { reportError, ErrorType, ErrorReportRateLimitError } from "@/api/errorReporting";
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
 import { useOffline } from "@/hooks/useOffline";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -137,6 +138,20 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   // Get analytics data for this wordlist
   const { wordlistProgress } = useAnalytics(wordlist.id);
 
+  // Fetch processing status for words (only when online)
+  const { data: processingStatus } = useQuery({
+    queryKey: ["processingStatus", wordlist.id],
+    queryFn: () => getProcessingStatus(wordlist.id),
+    enabled: visible && isOnline,
+    refetchInterval: ({ state: { data } }) => {
+      // Refetch every 5 seconds if there are pending or processing words
+      if (!data) return false;
+      const hasPendingOrProcessing =
+        data.summary.pending > 0 || data.summary.processing > 0;
+      return hasPendingOrProcessing ? 5000 : false;
+    },
+  });
+
   // Add word mutation
   const addWordMutation = useMutation({
     mutationFn: (data: wordlistsApi.CreateWordDTO) =>
@@ -234,6 +249,116 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     );
   };
 
+  // Helper function to determine if an error is retryable
+  const isRetryableError = (error: string | undefined): boolean => {
+    if (!error) return false;
+    
+    // Non-retryable errors (content issues)
+    const nonRetryablePatterns = [
+      "No definitions found",
+      "no definition found",
+      "Word not found",
+      "content not appropriate",
+      "validation failed",
+      "Definition validation failed",
+    ];
+    
+    return !nonRetryablePatterns.some(pattern => 
+      error.toLowerCase().includes(pattern.toLowerCase())
+    );
+  };
+
+  // Helper function to get user-friendly error message
+  const getUserFriendlyErrorMessage = (error: string | undefined): string => {
+    if (!error) return t("wordDetail.processingError");
+    
+    // Check for specific non-retryable errors
+    if (error.toLowerCase().includes("no definitions found") || 
+        error.toLowerCase().includes("no definition found")) {
+      return t("wordDetail.noDefinitionsFound");
+    }
+    
+    if (error.toLowerCase().includes("content not appropriate")) {
+      return t("wordDetail.contentNotAppropriate");
+    }
+    
+    if (error.toLowerCase().includes("validation failed")) {
+      return t("wordDetail.validationFailed");
+    }
+    
+    // For technical errors, show a generic message
+    return t("wordDetail.technicalError");
+  };
+
+  const handleRetryWord = async (word: wordlistsApi.Word) => {
+    const processingInfo = processingStatus?.words.find(w => w.id === word.id);
+    const isRetryable = isRetryableError(processingInfo?.processingError);
+    
+    if (!isRetryable) {
+      Alert.alert(
+        t("wordDetail.cannotRetry"),
+        t("wordDetail.cannotRetryMessage"),
+        [{ text: t("common.ok"), style: "default" }]
+      );
+      return;
+    }
+
+    Alert.alert(
+      t("wordDetail.retryProcessing"),
+      t("wordDetail.retryProcessingConfirm", { word: word.name }),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.retry"),
+          style: "default",
+          onPress: async () => {
+            try {
+              // Use error reports endpoint to trigger retry with rate limiting
+              await reportError({
+                wordId: word.id,
+                definitionId: null, // No definition ID for processing errors
+                errorType: ErrorType.ProcessingFailed,
+              });
+
+              // Invalidate queries to refresh the list
+              queryClient.invalidateQueries({
+                queryKey: ["words", wordlist.id],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["processingStatus", wordlist.id],
+              });
+
+              Alert.alert(
+                t("success.title"),
+                t("wordDetail.retryStarted"),
+                [{ text: t("common.ok"), style: "default" }]
+              );
+            } catch (error) {
+              console.error("Retry failed:", error);
+              
+              if (error instanceof ErrorReportRateLimitError) {
+                const retryAfter = error.retryAfter || 60;
+                Alert.alert(
+                  t("rateLimit.title"),
+                  error.windowType === "cooldown" 
+                    ? t("rateLimit.cooldownMessage", { minutes: Math.ceil(retryAfter / 60) })
+                    : t("rateLimit.limitReachedMessage"),
+                  [{ text: t("common.ok"), style: "default" }]
+                );
+              } else {
+                Alert.alert(
+                  t("error.title"),
+                  t("wordDetail.retryFailed"),
+                  [{ text: t("common.ok"), style: "default" }],
+                );
+              }
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const handleAddWord = (data: wordlistsApi.CreateWordDTO) => {
     Keyboard.dismiss();
     addWordMutation.mutate(data);
@@ -248,45 +373,110 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     }
   };
 
-  const renderWordItem = ({ item }: { item: wordlistsApi.Word }) => (
-    <View style={styles.wordCard}>
-      <TouchableOpacity
-        style={[styles.learnedToggle, !isOnline && styles.disabledButton]}
-        onPress={() =>
-          isOnline &&
-          toggleLearnedMutation.mutate({
-            ...item,
-            learned: !item.learned,
-          })
-        }
-        disabled={!isOnline}
-      >
-        <MaterialIcons
-          name={item.learned ? "check-circle" : "radio-button-unchecked"}
-          size={24}
-          color={item.learned ? "#4CAF50" : "#DFE6E9"}
-        />
-      </TouchableOpacity>
+  // Helper function to get processing info for a word
+  const getWordProcessingInfo = (wordId: number) => {
+    return processingStatus?.words.find((w) => w.id === wordId);
+  };
 
-      <View style={styles.wordContent}>
-        <Text style={styles.wordTerm}>{item.name}</Text>
-        {/* <Text style={styles.wordTranslation}>{item.translation}</Text> */}
-        {item.pronunciation && (
-          <Text style={styles.wordPronunciation}>[{item.pronunciation}]</Text>
-        )}
-        {item.notes && <Text style={styles.wordNotes}>{item.notes}</Text>}
-      </View>
+  const renderWordItem = ({ item }: { item: wordlistsApi.Word }) => {
+    const processingInfo = getWordProcessingInfo(item.id);
+    const status =
+      processingInfo?.processingStatus || item.processingStatus || "completed";
 
-      {isOnline && (
+    return (
+      <View style={styles.wordCard}>
         <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteWord(item)}
+          style={[styles.learnedToggle, !isOnline && styles.disabledButton]}
+          onPress={() =>
+            isOnline &&
+            toggleLearnedMutation.mutate({
+              ...item,
+              learned: !item.learned,
+            })
+          }
+          disabled={!isOnline}
         >
-          <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
+          <MaterialIcons
+            name={item.learned ? "check-circle" : "radio-button-unchecked"}
+            size={24}
+            color={item.learned ? "#4CAF50" : "#DFE6E9"}
+          />
         </TouchableOpacity>
-      )}
-    </View>
-  );
+
+        <View style={styles.wordContent}>
+          <View style={styles.wordHeader}>
+            <Text style={styles.wordTerm}>{item.name}</Text>
+            {status === "pending" && (
+              <View style={styles.statusIndicator}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+                <Text style={styles.statusText}>
+                  {t("wordDetail.processing")}
+                </Text>
+              </View>
+            )}
+            {status === "processing" && (
+              <View style={styles.statusIndicator}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+                <Text style={styles.statusText}>
+                  {t("wordDetail.processing")}
+                </Text>
+              </View>
+            )}
+            {status === "failed" && (
+              <View style={styles.statusIndicator}>
+                <MaterialIcons name="error-outline" size={20} color="#FF6B6B" />
+                <Text style={[styles.statusText, { color: "#FF6B6B" }]}>
+                  {t("wordDetail.failed")}
+                </Text>
+              </View>
+            )}
+          </View>
+          {item.pronunciation && (
+            <Text style={styles.wordPronunciation}>[{item.pronunciation}]</Text>
+          )}
+          {item.notes && <Text style={styles.wordNotes}>{item.notes}</Text>}
+          {status === "failed" && processingInfo?.processingError && (
+            <Text style={styles.wordErrorMessage}>
+              {getUserFriendlyErrorMessage(processingInfo.processingError)}
+            </Text>
+          )}
+        </View>
+
+        {isOnline && status === "failed" && (
+          <>
+            {isRetryableError(processingInfo?.processingError) ? (
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={() => handleRetryWord(item)}
+              >
+                <MaterialIcons
+                  name="refresh"
+                  size={20}
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteWord(item)}
+              >
+                <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+
+        {isOnline && status === "completed" && (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => handleDeleteWord(item)}
+          >
+            <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
 
   // Use analytics data for learned count if available, fallback to local calculation
   const learnedFromAnalytics = wordlistProgress?.wordsMastered ?? 0;
@@ -871,6 +1061,28 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     deleteButton: {
       padding: 8,
+    },
+    retryButton: {
+      padding: 8,
+    },
+    wordHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    statusIndicator: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    statusText: {
+      fontSize: 12,
+      color: theme.colors.text.secondary,
+    },
+    wordErrorMessage: {
+      fontSize: 12,
+      color: "#FF6B6B",
+      marginTop: 4,
     },
     loadingContainer: {
       flex: 1,

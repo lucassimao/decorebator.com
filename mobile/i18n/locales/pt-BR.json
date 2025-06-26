@@ -177,6 +177,8 @@
     "loadingTakingLonger": "Isso está demorando mais que o normal...",
     "requestTimedOut": "Solicitação expirou. Sua conexão pode estar lenta ou instável.",
     "slowConnection": "Conexão lenta detectada. Isso pode demorar um pouco mais.",
+    "wordsProcessing": "Palavras em Processamento",
+    "wordsProcessingMessage": "Suas palavras estão sendo processadas e estarão prontas em breve. Por favor, verifique novamente em alguns momentos.",
     "writeWordFromDefinition": "Escreva a palavra para esta definição",
     "whatDoesThisWordMean": "O que significa esta palavra?",
     "completeSentence": "Complete a frase",
@@ -246,6 +248,7 @@
       "cancelConfirmMessage": "Tem certeza que deseja cancelar sua assinatura? Você perderá acesso aos recursos premium no final do seu período de cobrança atual.",
       "keepSubscription": "Manter Assinatura",
       "features": {
+        "title": "Recursos Premium",
         "unlimitedWordlists": "Listas de palavras ilimitadas",
         "aiEnrichment": "Enriquecimento de palavras com IA",
         "allQuizModes": "Todos os modos de quiz desbloqueados",
@@ -256,7 +259,20 @@
       "manageSubscription": "Gerenciar Assinatura",
       "cancelSubscription": "Cancelar Assinatura",
       "reactivateSubscription": "Reativar Assinatura",
-      "billingCycle": "Ciclo de Cobrança"
+      "billingCycle": "Ciclo de Cobrança",
+      "mostPopular": "MAIS POPULAR",
+      "billedMonthly": "Cobrado mensalmente",
+      "billedYearly": "Cobrado anualmente",
+      "processing": "Processando...",
+      "noOfferings": "Nenhum plano de assinatura disponível",
+      "upgradeToPremium": "Atualizar para Premium",
+      "loadError": "Falha ao carregar opções de assinatura",
+      "purchaseSuccess": "Compra concluída com sucesso!",
+      "purchaseError": "Compra falhou. Por favor, tente novamente.",
+      "restoreSuccess": "Compras restauradas com sucesso!",
+      "restoreError": "Falha ao restaurar compras. Por favor, tente novamente.",
+      "restorePurchases": "Restaurar Compras",
+      "terms": "Ao continuar, você concorda com nossos Termos de Serviço e Política de Privacidade. As assinaturas se renovam automaticamente, a menos que sejam canceladas."
     },
     "account": {
       "title": "Conta",
@@ -414,7 +430,20 @@
     "mastered": "Dominado",
     "masteryProgress": "Domínio",
     "masteryExplanation": "Palavras dominadas são aquelas com 80%+ de precisão nos quizzes baseada no seu desempenho de aprendizado.",
-    "learnedToggleExplanation": "Alterne as marcações para ocultar/mostrar palavras em quizzes e flashcards sem excluí-las."
+    "learnedToggleExplanation": "Alterne as marcações para ocultar/mostrar palavras em quizzes e flashcards sem excluí-las.",
+    "processing": "Processando",
+    "failed": "Falhou",
+    "retryProcessing": "Tentar Novamente",
+    "retryProcessingConfirm": "Deseja tentar processar \"{{word}}\" novamente? Isso excluirá e adicionará a palavra novamente.",
+    "retryFailed": "Falha ao tentar novamente. Por favor, tente mais tarde.",
+    "processingError": "Ocorreu um erro ao processar esta palavra",
+    "noDefinitionsFound": "Nenhuma definição encontrada para esta palavra",
+    "contentNotAppropriate": "Esta palavra contém conteúdo inapropriado",
+    "validationFailed": "A palavra não pôde ser validada",
+    "technicalError": "Ocorreu um erro técnico. Por favor, tente novamente mais tarde",
+    "cannotRetry": "Não é possível tentar novamente",
+    "cannotRetryMessage": "Este erro não pode ser tentado novamente. Você só pode excluir esta palavra.",
+    "retryStarted": "O processamento foi reiniciado. Por favor, aguarde um momento."
   },
   "createWordlist": {
     "title": "Criar Nova Lista",
@@ -606,6 +635,19 @@
     "loadingTakingLonger": "Isso está demorando mais que o normal...",
     "requestTimedOut": "Solicitação expirou. Sua conexão pode estar lenta ou instável.",
     "slowConnection": "Conexão lenta detectada. Isso pode demorar um pouco mais.",
+    "wordsProcessing": "Palavras em Processamento",
+    "wordsProcessingMessage": "Suas palavras estão sendo processadas e estarão prontas em breve. Por favor, verifique novamente em alguns momentos.",
     "savePosition": "Salvar posição"
+  },
+  "rateLimit": {
+    "title": "Limite de Taxa",
+    "cooldownMessage": "Você já reportou este erro recentemente. Por favor, aguarde {{minutes}} minutos antes de tentar novamente.",
+    "limitReachedMessage": "Você atingiu o número máximo de relatórios de erro. Por favor, tente novamente mais tarde."
+  },
+  "success": {
+    "title": "Sucesso"
+  },
+  "error": {
+    "title": "Erro"
   }
 }

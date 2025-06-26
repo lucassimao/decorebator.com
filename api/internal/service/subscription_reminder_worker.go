@@ -50,19 +50,27 @@ func (w *SubscriptionReminderWorker) Work(ctx context.Context, job *river.Job[Su
 	}
 
 	// Get user
-	users, err := w.userRepo.Find(repository.FindUserArgs{ID: &sub.UserID})
+	users, err := w.userRepo.Find(ctx, repository.FindUserArgs{ID: &sub.UserID})
 	if err != nil || len(users) == 0 {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
 	user := &users[0]
 
 	// Send reminder email
+	// Get subscription ID based on provider
+	var subscriptionID string
+	if sub.Provider == model.ProviderStripe && sub.StripeSubscriptionID != nil {
+		subscriptionID = *sub.StripeSubscriptionID
+	} else if sub.Provider == model.ProviderRevenueCat && sub.RevenueCatSubscriptionID != nil {
+		subscriptionID = *sub.RevenueCatSubscriptionID
+	}
+
 	emailData := mail.SubscriptionEmailData{
 		PlanName:        string(sub.Plan),
 		AmountCents:     sub.AmountCents,
 		Currency:        sub.Currency,
 		NextBillingDate: sub.CurrentPeriodEnd,
-		SubscriptionID:  sub.StripeSubscriptionID,
+		SubscriptionID:  subscriptionID,
 	}
 
 	if err := mail.SendRenewalReminderEmail(user, emailData); err != nil {
@@ -111,7 +119,7 @@ func ScheduleRenewalReminders(ctx context.Context, db *pgxpool.Pool) error {
 		}
 
 		// Get user
-		users, err := userRepo.Find(repository.FindUserArgs{ID: &sub.UserID})
+		users, err := userRepo.Find(ctx, repository.FindUserArgs{ID: &sub.UserID})
 		if err != nil || len(users) == 0 {
 			logger.Error("Failed to get user", "error", err, "subscription_id", sub.ID)
 			continue
@@ -119,12 +127,20 @@ func ScheduleRenewalReminders(ctx context.Context, db *pgxpool.Pool) error {
 		user := &users[0]
 
 		// Send reminder email
+		// Get subscription ID based on provider
+		var subscriptionID string
+		if sub.Provider == model.ProviderStripe && sub.StripeSubscriptionID != nil {
+			subscriptionID = *sub.StripeSubscriptionID
+		} else if sub.Provider == model.ProviderRevenueCat && sub.RevenueCatSubscriptionID != nil {
+			subscriptionID = *sub.RevenueCatSubscriptionID
+		}
+
 		emailData := mail.SubscriptionEmailData{
 			PlanName:        string(sub.Plan),
 			AmountCents:     sub.AmountCents,
 			Currency:        sub.Currency,
 			NextBillingDate: sub.CurrentPeriodEnd,
-			SubscriptionID:  sub.StripeSubscriptionID,
+			SubscriptionID:  subscriptionID,
 		}
 
 		if err := mail.SendRenewalReminderEmail(user, emailData); err != nil {

@@ -9,21 +9,27 @@ import (
 )
 
 type Word struct {
-	ID            int64              `json:"id"`
-	Name          string             `json:"name"`
-	CreatedAt     pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt     pgtype.Timestamptz `json:"updatedAt"`
-	WordlistID    int64              `json:"wordlistId"`
-	UserID        int64              `json:"userId"`
-	AudioURL      string             `json:"audioURL"`
-	Notes         string             `json:"notes"`
-	Pronunciation string             `json:"pronunciation"`
-	Learned       bool               `json:"learned"`
+	ID                    int64              `json:"id"`
+	Name                  string             `json:"name"`
+	CreatedAt             pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt             pgtype.Timestamptz `json:"updatedAt"`
+	WordlistID            int64              `json:"wordlistId"`
+	UserID                int64              `json:"userId"`
+	AudioURL              string             `json:"audioURL"`
+	Notes                 string             `json:"notes"`
+	Pronunciation         string             `json:"pronunciation"`
+	Learned               bool               `json:"learned"`
+	ProcessingStatus      string             `json:"processingStatus"`
+	ProcessingError       string             `json:"processingError"`
+	ProcessingStartedAt   pgtype.Timestamptz `json:"processingStartedAt"`
+	ProcessingCompletedAt pgtype.Timestamptz `json:"processingCompletedAt"`
 }
 
 func (w Word) MarshalJSON() ([]byte, error) {
 	createdAt := "null"
 	updatedAt := "null"
+	processingStartedAt := "null"
+	processingCompletedAt := "null"
 
 	if w.CreatedAt.Status == pgtype.Present {
 		createdAt = w.CreatedAt.Time.UTC().Format(time.RFC3339)
@@ -31,6 +37,14 @@ func (w Word) MarshalJSON() ([]byte, error) {
 
 	if w.UpdatedAt.Status == pgtype.Present {
 		updatedAt = w.UpdatedAt.Time.UTC().Format(time.RFC3339)
+	}
+
+	if w.ProcessingStartedAt.Status == pgtype.Present {
+		processingStartedAt = w.ProcessingStartedAt.Time.UTC().Format(time.RFC3339)
+	}
+
+	if w.ProcessingCompletedAt.Status == pgtype.Present {
+		processingCompletedAt = w.ProcessingCompletedAt.Time.UTC().Format(time.RFC3339)
 	}
 
 	audioURL := ""
@@ -48,16 +62,23 @@ func (w Word) MarshalJSON() ([]byte, error) {
         "wordlistId": %d,
         "notes": %q,
         "pronunciation": %q,
-        "userId": %d
-    }`, w.ID, w.Name, createdAt, audioURL, w.Learned, updatedAt, w.WordlistID, w.Notes, w.Pronunciation, w.UserID)), nil
+        "userId": %d,
+        "processingStatus": %q,
+        "processingError": %q,
+        "processingStartedAt": %q,
+        "processingCompletedAt": %q
+    }`, w.ID, w.Name, createdAt, audioURL, w.Learned, updatedAt, w.WordlistID, w.Notes, w.Pronunciation, w.UserID,
+		w.ProcessingStatus, w.ProcessingError, processingStartedAt, processingCompletedAt)), nil
 }
 
 func (w *Word) UnmarshalJSON(data []byte) error {
 	type Alias Word // Create an alias to avoid recursion
 
 	aux := &struct {
-		CreatedAt *string `json:"createdAt"`
-		UpdatedAt *string `json:"updatedAt"`
+		CreatedAt             *string `json:"createdAt"`
+		UpdatedAt             *string `json:"updatedAt"`
+		ProcessingStartedAt   *string `json:"processingStartedAt"`
+		ProcessingCompletedAt *string `json:"processingCompletedAt"`
 		*Alias
 	}{
 		Alias: (*Alias)(w),
@@ -88,6 +109,28 @@ func (w *Word) UnmarshalJSON(data []byte) error {
 		w.UpdatedAt = pgtype.Timestamptz{Time: updatedAtTime, Status: pgtype.Present}
 	} else {
 		w.UpdatedAt = pgtype.Timestamptz{Status: pgtype.Null}
+	}
+
+	// Handle ProcessingStartedAt
+	if aux.ProcessingStartedAt != nil {
+		processingStartedAtTime, err := time.Parse(time.RFC3339, *aux.ProcessingStartedAt)
+		if err != nil {
+			return err
+		}
+		w.ProcessingStartedAt = pgtype.Timestamptz{Time: processingStartedAtTime, Status: pgtype.Present}
+	} else {
+		w.ProcessingStartedAt = pgtype.Timestamptz{Status: pgtype.Null}
+	}
+
+	// Handle ProcessingCompletedAt
+	if aux.ProcessingCompletedAt != nil {
+		processingCompletedAtTime, err := time.Parse(time.RFC3339, *aux.ProcessingCompletedAt)
+		if err != nil {
+			return err
+		}
+		w.ProcessingCompletedAt = pgtype.Timestamptz{Time: processingCompletedAtTime, Status: pgtype.Present}
+	} else {
+		w.ProcessingCompletedAt = pgtype.Timestamptz{Status: pgtype.Null}
 	}
 
 	return nil

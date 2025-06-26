@@ -2,15 +2,18 @@ package setup
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	httphandlers "decorebator.com/internal/http"
+	http_internal "decorebator.com/internal/http"
+	"decorebator.com/internal/service"
 	"github.com/gavv/httpexpect/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,10 +28,13 @@ type TestServer struct {
 }
 
 // TestConfig holds configuration for test server (alias for HTTP config)
-type TestConfig = httphandlers.Config
+type TestConfig = http_internal.Config
+
+// TestConfigFunc is a function that receives a database and returns a TestConfig
+type TestConfigFunc func(db *pgxpool.Pool) *TestConfig
 
 // NewTestServer creates a new test server instance using the real API routes
-func NewTestServer(t *testing.T, config ...*TestConfig) *TestServer {
+func NewTestServer(t *testing.T, configFunc ...TestConfigFunc) *TestServer {
 	// Set gin to test mode
 	gin.SetMode(gin.TestMode)
 
@@ -44,27 +50,27 @@ func NewTestServer(t *testing.T, config ...*TestConfig) *TestServer {
 	require.NoError(t, err, "Failed to clean test data before starting")
 
 	// Configure services for testing
-	var testConfig *httphandlers.Config
-	switch len(config) {
+	var testConfig *http_internal.Config
+	switch len(configFunc) {
 	case 0:
 		// No config provided, use defaults
-		testConfig = &httphandlers.Config{
+		testConfig = &http_internal.Config{
 			Database: db,
 		}
 	case 1:
-		// One config provided, use it
-		testConfig = config[0]
+		// Config function provided, call it with the database
+		testConfig = configFunc[0](db)
 		// Ensure database is set for test config
 		if testConfig.Database == nil {
 			testConfig.Database = db
 		}
 	default:
 		// Multiple configs provided - this is an error
-		panic("NewTestServer accepts at most one config parameter")
+		panic("NewTestServer accepts at most one config function")
 	}
 
 	// Use the real API routes from internal/http/setup.go with test configuration
-	engine := httphandlers.SetupRoutes(testConfig)
+	engine := http_internal.SetupRoutes(testConfig)
 
 	// Create test server
 	server := httptest.NewServer(engine)
@@ -107,7 +113,7 @@ func (ts *TestServer) WithTestUser(_ *testing.T) string {
 
 	// Login to get token
 	loginResp := ts.Expect.POST("/login").
-		WithJSON(httphandlers.LoginInput{
+		WithJSON(http_internal.LoginInput{
 			Email:    signupInput.Email,
 			Password: signupInput.Password,
 		}).
@@ -167,7 +173,7 @@ func (ts *TestServer) WithPremiumUser(t *testing.T) string {
 
 	// Login to get token with premium subscription
 	loginResp := ts.Expect.POST("/login").
-		WithJSON(httphandlers.LoginInput{
+		WithJSON(http_internal.LoginInput{
 			Email:    signupInput.Email,
 			Password: signupInput.Password,
 		}).
@@ -216,4 +222,63 @@ func (ts *TestServer) isHealthy() bool {
 		Expect()
 
 	return resp.Raw().StatusCode == 200
+}
+
+// ProcessRevenueCatWebhookJob processes a RevenueCat webhook job
+func (ts *TestServer) ProcessRevenueCatWebhookJob(t *testing.T, rcService service.RevenueCatService) error {
+	ctx := context.Background()
+
+	// Create the worker
+	worker := service.NewRevenueCatWebhookWorker(rcService)
+
+	// Find the next available job
+	var jobID int64
+	var args []byte
+	var queue string
+	err := ts.DB.QueryRow(ctx, `
+		SELECT id, args, queue FROM river_job 
+		WHERE state = 'available' 
+		AND kind = $1
+		ORDER BY id ASC
+		LIMIT 1
+	`, "revenuecat-webhook").Scan(&jobID, &args, &queue)
+
+	if err != nil {
+		t.Logf("No RevenueCat webhook job found: %v", err)
+		return err
+	}
+
+	t.Logf("Found RevenueCat webhook job %d in queue %s", jobID, queue)
+
+	// Decode the args
+	var jobArgs service.RevenueCatWebhookArgs
+	unmarshalErr := json.Unmarshal(args, &jobArgs)
+	if unmarshalErr != nil {
+		return fmt.Errorf("failed to unmarshal job args: %w", unmarshalErr)
+	}
+
+	// Process the job directly using the worker's Work method
+	// River's Job struct in the newer version has different fields
+	job := &river.Job[service.RevenueCatWebhookArgs]{
+		Args: jobArgs,
+	}
+
+	// Call the worker's Work method directly
+	workErr := worker.Work(ctx, job)
+	if workErr != nil {
+		return fmt.Errorf("worker failed: %w", workErr)
+	}
+
+	// Update the job status to completed
+	_, err = ts.DB.Exec(ctx, `
+		UPDATE river_job 
+		SET state = 'completed', finalized_at = NOW() 
+		WHERE id = $1
+	`, jobID)
+	if err != nil {
+		return fmt.Errorf("failed to update job status: %w", err)
+	}
+
+	t.Logf("Successfully processed RevenueCat webhook job %d", jobID)
+	return nil
 }

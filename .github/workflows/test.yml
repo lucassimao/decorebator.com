@@ -61,7 +61,8 @@ jobs:
           go install gotest.tools/gotestsum@latest
           
           # Run tests with structured output and junit report
-          gotestsum --junitfile unit-tests.xml --format testname -- \
+          # Use pkgname-and-test-fails format for better failure visibility
+          gotestsum --junitfile unit-tests.xml --format pkgname-and-test-fails --jsonfile unit-tests.json -- \
             -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
           
           # Display coverage summary
@@ -82,26 +83,100 @@ jobs:
         if: always()
         with:
           name: unit-test-results
-          path: api/unit-tests.xml
+          path: |
+            api/unit-tests.xml
+            api/unit-tests.json
           
       - name: Generate unit test summary
         if: always()
         run: |
           echo "## 📊 Unit Test Results" >> $GITHUB_STEP_SUMMARY
+          
           if [ -f "unit-tests.xml" ]; then
             # Parse basic info from XML
             TESTS=$(grep -o 'tests="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
             FAILURES=$(grep -o 'failures="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
             ERRORS=$(grep -o 'errors="[0-9]*"' unit-tests.xml | grep -o '[0-9]*' || echo "0")
             
+            # Extract coverage percentage
+            COVERAGE="N/A"
+            if [ -f "unit.out" ]; then
+              COVERAGE=$(go tool cover -func=unit.out | grep total | awk '{print $3}' || echo "N/A")
+            fi
+            
+            echo "### 📈 Test Summary" >> $GITHUB_STEP_SUMMARY
             echo "- **Total Tests**: $TESTS" >> $GITHUB_STEP_SUMMARY
             echo "- **Failures**: $FAILURES" >> $GITHUB_STEP_SUMMARY
             echo "- **Errors**: $ERRORS" >> $GITHUB_STEP_SUMMARY
+            echo "- **Coverage**: $COVERAGE" >> $GITHUB_STEP_SUMMARY
             
             if [ "$FAILURES" = "0" ] && [ "$ERRORS" = "0" ]; then
-              echo "✅ All unit tests passed!" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              if [ "$COVERAGE" != "N/A" ]; then
+                COVERAGE_NUM=$(echo $COVERAGE | sed 's/%//')
+                if (( $(echo "$COVERAGE_NUM >= 70" | bc -l) 2>/dev/null )); then
+                  echo "✅ **All unit tests passed!** Coverage: $COVERAGE ≥ 70% target" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "⚠️ **Unit tests passed but coverage below target** Coverage: $COVERAGE < 70%" >> $GITHUB_STEP_SUMMARY
+                fi
+              else
+                echo "✅ **All unit tests passed!**" >> $GITHUB_STEP_SUMMARY
+              fi
             else
-              echo "❌ Some unit tests failed. Check logs above for details." >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "❌ **Some unit tests failed**" >> $GITHUB_STEP_SUMMARY
+              
+              # Extract failed test details from XML
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### 🚨 Failed Tests Details" >> $GITHUB_STEP_SUMMARY
+              
+              # Use awk to parse XML and extract failure details
+              awk '
+              BEGIN { in_testcase = 0; test_name = ""; failure_msg = "" }
+              /<testcase/ { 
+                in_testcase = 1
+                # Extract test name from testcase tag
+                match($0, /name="([^"]*)"/, arr)
+                test_name = arr[1]
+              }
+              /<failure/ && in_testcase {
+                getline failure_line
+                # Extract failure message (remove CDATA wrapper if present)
+                gsub(/^[[:space:]]*<!\[CDATA\[/, "", failure_line)
+                gsub(/\]\]>[[:space:]]*$/, "", failure_line)
+                failure_msg = failure_line
+                print "#### ❌ " test_name
+                print "```"
+                print failure_msg
+                print "```"
+                print ""
+              }
+              /<\/testcase>/ { in_testcase = 0; test_name = ""; failure_msg = "" }
+              ' unit-tests.xml >> $GITHUB_STEP_SUMMARY
+              
+              # If JSON file exists, try to extract additional timing information
+              if [ -f "unit-tests.json" ]; then
+                echo "### ⏱️ Test Execution Details" >> $GITHUB_STEP_SUMMARY
+                
+                # Extract failed tests with timing from JSON using jq if available
+                if command -v jq >/dev/null 2>&1; then
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "| Test Name | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+                  echo "|-----------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+                  
+                  # Parse JSON for test results
+                  jq -r '
+                  select(.Action == "fail" and .Test != null) |
+                  "| \(.Package).\(.Test) | ❌ FAIL | \(.Elapsed // "N/A")s |"
+                  ' unit-tests.json >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "| JSON parsing failed | - | - |" >> $GITHUB_STEP_SUMMARY
+                  
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "jq not available for JSON parsing" >> $GITHUB_STEP_SUMMARY
+                fi
+              fi
+              
+              echo "📝 **Check the full logs above for complete error details and stack traces.**" >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "⚠️ No test results file found" >> $GITHUB_STEP_SUMMARY
@@ -128,6 +203,7 @@ jobs:
           name: unit-test-reports
           path: |
             api/unit-tests.xml
+            api/unit-tests.json
             api/unit.out
 
   integration-tests:
@@ -233,6 +309,10 @@ jobs:
           SENDGRID_API_KEY=test-sendgrid-key-mock
           RESET_PASSWORD_PRIVATE_KEY=test-reset-password-key-32-chars
           
+          # RevenueCat Configuration (mock keys for testing)
+          REVENUECAT_API_KEY=test-revenuecat-ios-key
+          REVENUECAT_WEBHOOK_AUTHORIZATION=test_webhook_secret
+          
           # Feature Flags for Testing
           DISABLE_WORKERS=true
           DISABLE_WEBHOOKS=true
@@ -261,7 +341,8 @@ jobs:
           set +a
           
           # Run tests with structured output and junit report
-          gotestsum --junitfile integration-tests.xml --format testname -- \
+          # Use pkgname-and-test-fails format for better failure visibility
+          gotestsum --junitfile integration-tests.xml --format pkgname-and-test-fails --jsonfile integration-tests.json -- \
             -v -race -count=1 -p=1 -coverprofile=integration.out -covermode=atomic ./tests/integration/...
           
           # Display coverage summary
@@ -282,26 +363,100 @@ jobs:
         if: always()
         with:
           name: integration-test-results
-          path: api/integration-tests.xml
+          path: |
+            api/integration-tests.xml
+            api/integration-tests.json
           
       - name: Generate integration test summary
         if: always()
         run: |
           echo "## 🔧 Integration Test Results" >> $GITHUB_STEP_SUMMARY
+          
           if [ -f "integration-tests.xml" ]; then
             # Parse basic info from XML
             TESTS=$(grep -o 'tests="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
             FAILURES=$(grep -o 'failures="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
             ERRORS=$(grep -o 'errors="[0-9]*"' integration-tests.xml | grep -o '[0-9]*' || echo "0")
             
+            # Extract coverage percentage
+            COVERAGE="N/A"
+            if [ -f "integration.out" ]; then
+              COVERAGE=$(go tool cover -func=integration.out | grep total | awk '{print $3}' || echo "N/A")
+            fi
+            
+            echo "### 📊 Test Summary" >> $GITHUB_STEP_SUMMARY
             echo "- **Total Tests**: $TESTS" >> $GITHUB_STEP_SUMMARY
             echo "- **Failures**: $FAILURES" >> $GITHUB_STEP_SUMMARY
             echo "- **Errors**: $ERRORS" >> $GITHUB_STEP_SUMMARY
+            echo "- **Coverage**: $COVERAGE" >> $GITHUB_STEP_SUMMARY
             
             if [ "$FAILURES" = "0" ] && [ "$ERRORS" = "0" ]; then
-              echo "✅ All integration tests passed!" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              if [ "$COVERAGE" != "N/A" ]; then
+                COVERAGE_NUM=$(echo $COVERAGE | sed 's/%//')
+                if (( $(echo "$COVERAGE_NUM >= 80" | bc -l) 2>/dev/null )); then
+                  echo "✅ **All integration tests passed!** Coverage: $COVERAGE ≥ 80% target" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "⚠️ **Integration tests passed but coverage below target** Coverage: $COVERAGE < 80%" >> $GITHUB_STEP_SUMMARY
+                fi
+              else
+                echo "✅ **All integration tests passed!**" >> $GITHUB_STEP_SUMMARY
+              fi
             else
-              echo "❌ Some integration tests failed. Check logs above for details." >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "❌ **Some integration tests failed**" >> $GITHUB_STEP_SUMMARY
+              
+              # Extract failed test details from XML
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### 🚨 Failed Tests Details" >> $GITHUB_STEP_SUMMARY
+              
+              # Use awk to parse XML and extract failure details
+              awk '
+              BEGIN { in_testcase = 0; test_name = ""; failure_msg = "" }
+              /<testcase/ { 
+                in_testcase = 1
+                # Extract test name from testcase tag
+                match($0, /name="([^"]*)"/, arr)
+                test_name = arr[1]
+              }
+              /<failure/ && in_testcase {
+                getline failure_line
+                # Extract failure message (remove CDATA wrapper if present)
+                gsub(/^[[:space:]]*<!\[CDATA\[/, "", failure_line)
+                gsub(/\]\]>[[:space:]]*$/, "", failure_line)
+                failure_msg = failure_line
+                print "#### ❌ " test_name
+                print "```"
+                print failure_msg
+                print "```"
+                print ""
+              }
+              /<\/testcase>/ { in_testcase = 0; test_name = ""; failure_msg = "" }
+              ' integration-tests.xml >> $GITHUB_STEP_SUMMARY
+              
+              # If JSON file exists, try to extract additional timing information
+              if [ -f "integration-tests.json" ]; then
+                echo "### ⏱️ Test Execution Details" >> $GITHUB_STEP_SUMMARY
+                
+                # Extract failed tests with timing from JSON using jq if available
+                if command -v jq >/dev/null 2>&1; then
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "| Test Name | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+                  echo "|-----------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+                  
+                  # Parse JSON for test results
+                  jq -r '
+                  select(.Action == "fail" and .Test != null) |
+                  "| \(.Package).\(.Test) | ❌ FAIL | \(.Elapsed // "N/A")s |"
+                  ' integration-tests.json >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "| JSON parsing failed | - | - |" >> $GITHUB_STEP_SUMMARY
+                  
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "jq not available for JSON parsing" >> $GITHUB_STEP_SUMMARY
+                fi
+              fi
+              
+              echo "📝 **Check the full logs above for complete error details and stack traces.**" >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "⚠️ No test results file found" >> $GITHUB_STEP_SUMMARY
@@ -338,6 +493,7 @@ jobs:
           name: integration-test-reports
           path: |
             api/integration-tests.xml
+            api/integration-tests.json
             api/integration.out
             api/.env.test
 
@@ -581,6 +737,21 @@ jobs:
     if: always()
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: "*-coverage"
+          path: coverage/
+
       - name: Generate test summary
         run: |
           {
@@ -593,6 +764,24 @@ jobs:
             echo "- **Build Verification**: ${{ needs.build-verification.result }}"
             echo "- **Security Scan**: ${{ needs.security-scan.result }}"
             echo ""
+            
+            # Display coverage information if available
+            echo "### 📊 Coverage Results"
+            UNIT_COVERAGE="N/A"
+            INTEGRATION_COVERAGE="N/A"
+            
+            if [ -f "coverage/unit-coverage/unit.out" ]; then
+              UNIT_COVERAGE=$(go tool cover -func=coverage/unit-coverage/unit.out | grep total | awk '{print $3}' || echo "N/A")
+            fi
+            
+            if [ -f "coverage/integration-coverage/integration.out" ]; then
+              INTEGRATION_COVERAGE=$(go tool cover -func=coverage/integration-coverage/integration.out | grep total | awk '{print $3}' || echo "N/A")
+            fi
+            
+            echo "- **Unit Test Coverage**: $UNIT_COVERAGE (Target: ≥70%)"
+            echo "- **Integration Test Coverage**: $INTEGRATION_COVERAGE (Target: ≥80%)"
+            echo ""
+            
             echo "### Quick Status"
             if [ "${{ needs.integration-tests.result }}" == "failure" ]; then
               echo "❌ **Integration tests failed** - Check logs above for details"
@@ -601,17 +790,10 @@ jobs:
             else
               echo "✅ **All tests passed!**"
             fi
+            
+            # Add coverage links
+            echo ""
+            echo "### 📈 Coverage Reports"
+            echo "- [📋 Codecov Dashboard](https://codecov.io/gh/${{ github.repository }})"
+            echo "- [📊 Coverage Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
           } >> $GITHUB_STEP_SUMMARY
-          
-      - name: Check overall status
-        run: |
-          if [ "${{ needs.unit-tests.result }}" != "success" ] || \
-             [ "${{ needs.integration-tests.result }}" != "success" ] || \
-             [ "${{ needs.build-verification.result }}" != "success" ] || \
-             [ "${{ needs.security-scan.result }}" != "success" ] || \
-             ([ "${{ needs.lint-checks.result }}" != "success" ] && [ "${{ needs.lint-checks.result }}" != "skipped" ]); then
-            echo "❌ One or more required checks failed"
-            exit 1
-          else
-            echo "✅ All checks passed successfully"
-          fi

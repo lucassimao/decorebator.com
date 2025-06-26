@@ -179,6 +179,8 @@
     "loadingTakingLonger": "This is taking longer than usual...",
     "requestTimedOut": "Request timed out. Your connection might be slow or unstable.",
     "slowConnection": "Slow connection detected. This might take a bit longer.",
+    "wordsProcessing": "Words Still Processing",
+    "wordsProcessingMessage": "Your words are being processed and will be ready shortly. Please check back in a few moments.",
     "writeWordFromDefinition": "Write the word for this definition",
     "whatDoesThisWordMean": "What does this word mean?",
     "completeSentence": "Complete the sentence",
@@ -248,6 +250,7 @@
       "cancelConfirmMessage": "Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your current billing period.",
       "keepSubscription": "Keep Subscription",
       "features": {
+        "title": "Premium Features",
         "unlimitedWordlists": "Unlimited wordlists",
         "aiEnrichment": "AI-powered word enrichment",
         "allQuizModes": "All quiz modes unlocked",
@@ -258,7 +261,21 @@
       "manageSubscription": "Manage Subscription",
       "cancelSubscription": "Cancel Subscription",
       "reactivateSubscription": "Reactivate Subscription",
-      "billingCycle": "Billing Cycle"
+      "billingCycle": "Billing Cycle",
+      "mostPopular": "MOST POPULAR",
+      "billedMonthly": "Billed monthly",
+      "billedYearly": "Billed annually",
+      "processing": "Processing...",
+      "noOfferings": "No subscription plans available",
+      "upgradeToPremium": "Upgrade to Premium",
+      "loadError": "Failed to load subscription options",
+      "purchaseSuccess": "Purchase completed successfully!",
+      "purchaseError": "Purchase failed. Please try again.",
+      "restoreSuccess": "Purchases restored successfully!",
+      "restoreError": "Failed to restore purchases. Please try again.",
+      "restorePurchases": "Restore Purchases",
+      "terms": "By continuing, you agree to our Terms of Service and Privacy Policy. Subscriptions auto-renew unless cancelled.",
+      "viewPlans": "View Plans"
     },
     "account": {
       "title": "Account",
@@ -423,7 +440,20 @@
     "mastered": "Mastered",
     "masteryProgress": "Mastery",
     "masteryExplanation": "Mastered words are those with 80%+ quiz accuracy based on your learning performance.",
-    "learnedToggleExplanation": "Toggle checkmarks to hide/show words in quizzes and flashcards without deleting them."
+    "learnedToggleExplanation": "Toggle checkmarks to hide/show words in quizzes and flashcards without deleting them.",
+    "processing": "Processing",
+    "failed": "Failed",
+    "retryProcessing": "Retry Processing",
+    "retryProcessingConfirm": "Do you want to retry processing \"{{word}}\"? This will delete and re-add the word.",
+    "retryFailed": "Failed to retry processing. Please try again later.",
+    "processingError": "An error occurred while processing this word",
+    "noDefinitionsFound": "No definitions found for this word",
+    "contentNotAppropriate": "This word contains inappropriate content",
+    "validationFailed": "The word could not be validated",
+    "technicalError": "A technical error occurred. Please try again later",
+    "cannotRetry": "Cannot Retry",
+    "cannotRetryMessage": "This error cannot be retried. You can only delete this word.",
+    "retryStarted": "Processing has been restarted. Please wait a moment."
   },
   "createWordlist": {
     "title": "Create New Wordlist",
@@ -590,6 +620,17 @@
       "word_from_example_audio": "Word from Example Audio"
     }
   },
+  "rateLimit": {
+    "title": "Rate Limit",
+    "cooldownMessage": "You've already reported this error recently. Please wait {{minutes}} minutes before trying again.",
+    "limitReachedMessage": "You've reached the maximum number of error reports. Please try again later."
+  },
+  "success": {
+    "title": "Success"
+  },
+  "error": {
+    "title": "Error"
+  },
   "flashcards": {
     "noWordsFound": "No words found in this wordlist",
     "cardCounter": "{{current}} / {{total}}",
@@ -614,6 +655,8 @@
     "loadingTakingLonger": "This is taking longer than usual...",
     "requestTimedOut": "Request timed out. Your connection might be slow or unstable.",
     "slowConnection": "Slow connection detected. This might take a bit longer.",
+    "wordsProcessing": "Words Still Processing",
+    "wordsProcessingMessage": "Your words are being processed and will be ready shortly. Please check back in a few moments.",
     "savePosition": "Save position"
   }
 }

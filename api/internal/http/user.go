@@ -330,7 +330,11 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 		return
 	}
 
-	userID := userIDAny.(int64)
+	userID, ok := userIDAny.(int64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID type in context"})
+		return
+	}
 
 	user, err := service.GetProfile(userID)
 	if err != nil {
@@ -359,7 +363,11 @@ func (h *UserRoutes) DeleteProfile(c *gin.Context) {
 		return
 	}
 
-	userID := userIDAny.(int64)
+	userID, ok := userIDAny.(int64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID type in context"})
+		return
+	}
 
 	err := service.Delete(userID)
 	if err != nil {

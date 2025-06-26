@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"fmt"
@@ -11,6 +12,10 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+	"github.com/riverqueue/river/rivermigrate"
+	"github.com/riverqueue/river/rivershared/riversharedtest"
 )
 
 //go:embed migrations/*.sql
@@ -27,7 +32,6 @@ func (*verboseLogger) Verbose() bool {
 }
 
 func main() {
-
 	// Use database/sql
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
@@ -74,6 +78,24 @@ func main() {
 
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		log.Fatalf("Migration failed: %v", err)
+	}
+
+	ctx := context.Background()
+
+	dbPool, err := pgxpool.New(ctx, riversharedtest.TestDatabaseURL())
+	if err != nil {
+		panic(err)
+	}
+	defer dbPool.Close()
+
+	// Apply river specific migrations
+	migrator, err := rivermigrate.New(riverpgxv5.New(dbPool), nil)
+	if err != nil {
+		panic(err)
+	}
+	_, err = migrator.Migrate(ctx, rivermigrate.DirectionUp, nil)
+	if err != nil {
+		panic(err)
 	}
 
 	log.Println("✅ Migration applied successfully")

@@ -39,6 +39,51 @@ func (ws *WordService) GetWordByID(id int64) (*Word, error) {
 	return ws.repository.GetByID(id)
 }
 
+// UpdateProcessingStatus updates the processing status and related fields for a word
+func (ws *WordService) UpdateProcessingStatus(wordID int64, status string, errorMsg string, tx *pgx.Tx) error {
+	updates := map[string]interface{}{
+		"processing_status": status,
+	}
+	if status == "failed" && errorMsg != "" {
+		updates["processing_error"] = errorMsg
+	}
+	return ws.repository.UpdateFields(wordID, updates, tx)
+}
+
+// GetWordlistLanguageAndPronunciation retrieves the language code and pronunciation system for a wordlist from a word ID
+func (ws *WordService) GetWordlistLanguageAndPronunciation(wordID int64) (string, model.PronunciationSystem, error) {
+	query := `
+		SELECT w.language_code, w.pronunciation_system
+		FROM words wd 
+		JOIN wordlists w ON wd.wordlist_id = w.id 
+		WHERE wd.id = $1`
+
+	var languageCode string
+	var pronunciationSystem model.PronunciationSystem
+	err := ws.repository.Db.QueryRow(context.Background(), query, wordID).Scan(&languageCode, &pronunciationSystem)
+	if err != nil {
+		return "", "", err
+	}
+
+	return languageCode, pronunciationSystem, nil
+}
+
+// UpdatePronunciation updates the pronunciation for a word
+func (ws *WordService) UpdatePronunciation(wordID int64, pronunciation string, tx *pgx.Tx) error {
+	updates := map[string]interface{}{
+		"pronunciation": pronunciation,
+	}
+	return ws.repository.UpdateFields(wordID, updates, tx)
+}
+
+// UpdateWordFields provides a flexible way to update specific word fields
+func (ws *WordService) UpdateWordFields(wordID int64, updates map[string]interface{}, tx *pgx.Tx) error {
+	if len(updates) == 0 {
+		return fmt.Errorf("no fields specified for update")
+	}
+	return ws.repository.UpdateFields(wordID, updates, tx)
+}
+
 func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 	var lowerCasedName = strings.ToLower(dto.Name)
 	var trimmedName = strings.TrimSpace(lowerCasedName)

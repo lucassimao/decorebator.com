@@ -28,6 +28,7 @@ setup: ## Install all dev and build dependencies (matching GitHub workflow versi
 	go install github.com/go-delve/delve/cmd/dlv@$(DELVE_VERSION)
 	go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION)
 	go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION)
+	go install github.com/riverqueue/river/cmd/river@latest
 	@echo "${YELLOW}Installing system dependencies...${RESET}"
 	sudo apt-get update && sudo apt-get install -y inotify-tools migrate
 	@echo "${GREEN}✅ All dependencies installed successfully${RESET}"
@@ -39,7 +40,8 @@ setup: ## Install all dev and build dependencies (matching GitHub workflow versi
 
 migrate-up: ## Run database migrations
 	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable'); \
-	migrate -database $$POSTGRESQL_URL -path cmd/migrate/migrations up
+	migrate -database $$POSTGRESQL_URL -path cmd/migrate/migrations up && \
+	river migrate-up --database-url $$POSTGRESQL_URL
 
 migrate-down: ## Rollback the last database migration executed
 	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env sh -c 'echo postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@localhost:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable'); \
@@ -79,7 +81,8 @@ test-clean: ## Clean up test environment (stop containers, remove volumes)
 
 migrate-up-test: ## Run database migrations for test database
 	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env.test sh -c 'echo $$TEST_DATABASE_URL'); \
-	migrate -database $$POSTGRESQL_URL -path cmd/migrate/migrations up
+	migrate -database $$POSTGRESQL_URL -path cmd/migrate/migrations up && \
+	river migrate-up --database-url $$POSTGRESQL_URL
 
 migrate-down-test: ## Rollback test database migration
 	@POSTGRESQL_URL=$$($(GODOTENV_PATH) -f .env.test sh -c 'echo $$TEST_DATABASE_URL'); \
