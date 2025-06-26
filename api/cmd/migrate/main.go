@@ -82,7 +82,7 @@ func main() {
 
 	ctx := context.Background()
 
-	dbPool, err := pgxpool.New(ctx, riversharedtest.TestDatabaseURL())
+	dbPool, err := pgxpool.New(ctx, databaseURL)
 	if err != nil {
 		panic(err)
 	}
