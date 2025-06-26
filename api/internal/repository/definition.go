@@ -22,7 +22,32 @@ type DefinitionRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Definition, tx pgx.Tx) ([]*Definition, error) {
+func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Definition, tx *pgx.Tx) ([]*Definition, error) {
+	var managedTx pgx.Tx
+	var err error
+	ctx := context.Background()
+
+	// If no transaction provided, create and manage our own
+	if tx == nil {
+		managedTx, err = repository.Db.Begin(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to begin transaction: %w", err)
+		}
+		defer func() {
+			if err == nil {
+				if commitErr := managedTx.Commit(ctx); commitErr != nil {
+					common.Logger.Error("failed to commit transaction in definition repository", "error", commitErr)
+				}
+			} else {
+				if rollbackErr := managedTx.Rollback(ctx); rollbackErr != nil {
+					common.Logger.Error("failed to rollback transaction in definition repository", "error", rollbackErr)
+				}
+			}
+		}()
+	} else {
+		managedTx = *tx
+	}
+
 	// Prepare the definitions insert
 	definitionsInsert := `
         INSERT INTO 
@@ -45,7 +70,7 @@ func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Defin
 		meaning := strings.ToValidUTF8(def.Meaning, "")
 
 		// Execute the query within the transaction
-		err := tx.QueryRow(context.Background(), definitionsInsert, def.Token,
+		err := managedTx.QueryRow(context.Background(), definitionsInsert, def.Token,
 			def.Language, def.PartOfSpeech, def.PartOfSpeechNormalized, meaning, def.Examples, def.Inflections,
 			def.Source, def.SourceID, def.Sounds, def.PhoneticNotations).Scan(&def.ID, &createdAt, &updatedAt)
 
@@ -60,7 +85,7 @@ func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Defin
 		def.UpdatedAt = updatedAt
 		definitions[i] = def
 
-		_, err = tx.Exec(context.Background(), wordDefinitionsInsert, tokenID, def.ID)
+		_, err = managedTx.Exec(context.Background(), wordDefinitionsInsert, tokenID, def.ID)
 
 		if err != nil {
 			common.Logger.Error("failed to insert word_definition", "def.ID", def.ID, "tokenID", tokenID)

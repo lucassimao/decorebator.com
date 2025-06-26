@@ -177,6 +177,8 @@
     "loadingTakingLonger": "Isto está a demorar mais que o normal...",
     "requestTimedOut": "Pedido expirou. A sua ligação pode estar lenta ou instável.",
     "slowConnection": "Ligação lenta detectada. Isto pode demorar um pouco mais.",
+    "wordsProcessing": "Palavras em Processamento",
+    "wordsProcessingMessage": "As suas palavras estão a ser processadas e estarão prontas em breve. Por favor, verifique novamente dentro de momentos.",
     "writeWordFromDefinition": "Escreva a palavra para esta definição",
     "whatDoesThisWordMean": "O que significa esta palavra?",
     "completeSentence": "Complete a frase",
@@ -428,7 +430,20 @@
     "mastered": "Dominado",
     "masteryProgress": "Domínio",
     "masteryExplanation": "Palavras dominadas são aquelas com 80%+ de precisão nos questionários baseada no seu desempenho de aprendizagem.",
-    "learnedToggleExplanation": "Alterne as marcações para ocultar/mostrar palavras em questionários e cartões de estudo sem as eliminar."
+    "learnedToggleExplanation": "Alterne as marcações para ocultar/mostrar palavras em questionários e cartões de estudo sem as eliminar.",
+    "processing": "A processar",
+    "failed": "Falhou",
+    "retryProcessing": "Tentar Novamente",
+    "retryProcessingConfirm": "Deseja tentar processar \"{{word}}\" novamente? Isto irá eliminar e adicionar a palavra novamente.",
+    "retryFailed": "Falha ao tentar novamente. Por favor, tente mais tarde.",
+    "processingError": "Ocorreu um erro ao processar esta palavra",
+    "noDefinitionsFound": "Nenhuma definição encontrada para esta palavra",
+    "contentNotAppropriate": "Esta palavra contém conteúdo inapropriado",
+    "validationFailed": "A palavra não pôde ser validada",
+    "technicalError": "Ocorreu um erro técnico. Por favor, tente novamente mais tarde",
+    "cannotRetry": "Não é possível tentar novamente",
+    "cannotRetryMessage": "Este erro não pode ser tentado novamente. Só pode eliminar esta palavra.",
+    "retryStarted": "O processamento foi reiniciado. Por favor, aguarde um momento."
   },
   "createWordlist": {
     "title": "Criar Nova Lista",
@@ -619,6 +634,19 @@
     "loadingTakingLonger": "Isto está a demorar mais que o normal...",
     "requestTimedOut": "Pedido expirou. A sua ligação pode estar lenta ou instável.",
     "slowConnection": "Ligação lenta detectada. Isto pode demorar um pouco mais.",
+    "wordsProcessing": "Palavras em Processamento",
+    "wordsProcessingMessage": "As suas palavras estão a ser processadas e estarão prontas em breve. Por favor, verifique novamente dentro de momentos.",
     "savePosition": "Guardar posição"
+  },
+  "rateLimit": {
+    "title": "Limite de Taxa",
+    "cooldownMessage": "Já reportou este erro recentemente. Por favor, aguarde {{minutes}} minutos antes de tentar novamente.",
+    "limitReachedMessage": "Atingiu o número máximo de relatórios de erro. Por favor, tente novamente mais tarde."
+  },
+  "success": {
+    "title": "Sucesso"
+  },
+  "error": {
+    "title": "Erro"
   }
 }

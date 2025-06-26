@@ -114,7 +114,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 	// Initialize route handlers with dependency injection
 	var WordRoutes = NewWordRoutes(config.WordService)
 	var WorkerRoutes = WorkerRoutes{}
-	var WordlistRoutes = NewWordlistsRoutes(config.WordlistService)
+	var WordlistRoutes = NewWordlistsRoutes(config.WordlistService, config.WordService)
 	var UserRoutes = UserRoutes{}
 	var quizRoutes = QuizRoutes{}
 	var ErrorReportsRoutes = ErrorReportRoutes{}
@@ -163,6 +163,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 		authenticatedRoutes.GET("/wordlists/:wordlistId", WordlistRoutes.GetById)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId", WordlistRoutes.Update)
 		authenticatedRoutes.DELETE("/wordlists/:wordlistId", WordlistRoutes.Delete)
+		authenticatedRoutes.GET("/wordlists/:wordlistId/processing-status", WordlistRoutes.GetProcessingStatus)
 		authenticatedRoutes.GET("/wordlists/:wordlistId/words", WordRoutes.GetAll)
 		authenticatedRoutes.DELETE("/wordlists/:wordlistId/words/:wordId", WordRoutes.Delete)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId/words/:wordId", WordRoutes.Update)

@@ -23,13 +23,13 @@ func init() {
 	definitionRepository = &repo.DefinitionRepository{Db: db}
 }
 
-func SaveDefinition(token string, tokenId int64, definitions []*model.Definition, tx pgx.Tx) ([]*model.Definition, error) {
+func SaveDefinition(tokenID int64, definitions []*model.Definition, tx *pgx.Tx) ([]*model.Definition, error) {
 	// Set normalized part-of-speech for each definition before saving
 	for _, def := range definitions {
 		def.PartOfSpeechNormalized = NormalizePartOfSpeech(def.PartOfSpeech, def.Language)
 	}
 
-	definitions, err := definitionRepository.Save(tokenId, definitions, tx)
+	definitions, err := definitionRepository.Save(tokenID, definitions, tx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save definitions: %w", err)
 	}

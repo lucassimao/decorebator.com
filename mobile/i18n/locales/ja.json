@@ -177,6 +177,8 @@
     "loadingTakingLonger": "通常より時間がかかっています...",
     "requestTimedOut": "リクエストがタイムアウトしました。接続が遅いか不安定な可能性があります。",
     "slowConnection": "低速接続が検出されました。もう少し時間がかかる場合があります。",
+    "wordsProcessing": "単語を処理中",
+    "wordsProcessingMessage": "単語を処理中です。もうしばらくお待ちください。",
     "writeWordFromDefinition": "この定義に対応する単語を書いてください",
     "whatDoesThisWordMean": "この単語の意味は何ですか？",
     "completeSentence": "文を完成させてください",
@@ -428,7 +430,20 @@
     "mastered": "習得済み",
     "masteryProgress": "習得度",
     "masteryExplanation": "習得済みの単語は、学習パフォーマンスに基づいてクイズの正答率が80%以上の単語です。",
-    "learnedToggleExplanation": "チェックマークを切り替えて、削除せずにクイズとフラッシュカードで単語を非表示/表示します。"
+    "learnedToggleExplanation": "チェックマークを切り替えて、削除せずにクイズとフラッシュカードで単語を非表示/表示します。",
+    "processing": "処理中",
+    "failed": "失敗",
+    "retryProcessing": "処理を再試行",
+    "retryProcessingConfirm": "「{{word}}」の処理を再試行しますか？これにより単語が削除され、再度追加されます。",
+    "retryFailed": "再試行に失敗しました。後でもう一度お試しください。",
+    "processingError": "この単語の処理中にエラーが発生しました",
+    "noDefinitionsFound": "この単語の定義が見つかりませんでした",
+    "contentNotAppropriate": "この単語には不適切なコンテンツが含まれています",
+    "validationFailed": "単語を検証できませんでした",
+    "technicalError": "技術的なエラーが発生しました。後でもう一度お試しください",
+    "cannotRetry": "再試行できません",
+    "cannotRetryMessage": "このエラーは再試行できません。この単語を削除することのみ可能です。",
+    "retryStarted": "処理が再開されました。しばらくお待ちください。"
   },
   "createWordlist": {
     "title": "新しいリストを作成",
@@ -619,6 +634,19 @@
     "loadingTakingLonger": "通常より時間がかかっています...",
     "requestTimedOut": "リクエストがタイムアウトしました。接続が遅いか不安定な可能性があります。",
     "slowConnection": "低速接続が検出されました。もう少し時間がかかる場合があります。",
+    "wordsProcessing": "単語を処理中",
+    "wordsProcessingMessage": "単語を処理中です。もうしばらくお待ちください。",
     "savePosition": "位置を保存"
+  },
+  "rateLimit": {
+    "title": "レート制限",
+    "cooldownMessage": "このエラーを最近すでに報告しています。{{minutes}}分待ってから再度お試しください。",
+    "limitReachedMessage": "エラー報告の最大回数に達しました。後でもう一度お試しください。"
+  },
+  "success": {
+    "title": "成功"
+  },
+  "error": {
+    "title": "エラー"
   }
 }

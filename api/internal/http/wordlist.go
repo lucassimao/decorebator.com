@@ -4,11 +4,13 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/pgtype"
 )
 
 type WordlistInput struct {
@@ -20,12 +22,14 @@ type WordlistInput struct {
 
 type WordlistsRoutes struct {
 	wordlistService *service.WordlistService
+	wordService     *service.WordService
 }
 type Wordlist = service.Wordlist
 
-func NewWordlistsRoutes(wordlistService *service.WordlistService) *WordlistsRoutes {
+func NewWordlistsRoutes(wordlistService *service.WordlistService, wordService *service.WordService) *WordlistsRoutes {
 	return &WordlistsRoutes{
 		wordlistService: wordlistService,
+		wordService:     wordService,
 	}
 }
 
@@ -173,4 +177,91 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+// GetProcessingStatus returns the processing status of words in a wordlist
+func (h *WordlistsRoutes) GetProcessingStatus(c *gin.Context) {
+	wordlistIDStr := c.Param("wordlistId")
+	wordlistID, err := strconv.ParseInt(wordlistIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
+	userID := c.GetInt64("userID")
+
+	// First check if the wordlist belongs to the user
+	wordlist, err := h.wordlistService.GetWordlistByID(wordlistID, userID)
+	if err != nil {
+		var notFoundErr common.NotFoundError
+		if errors.As(err, &notFoundErr) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
+		} else {
+			common.Logger.Error("failed to get wordlist", "wordlistId", wordlistID, "error", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get wordlist"})
+		}
+		return
+	}
+
+	// Get words from wordlist using word service
+	words, err := h.wordService.GetWordByWordlist(wordlist.ID, userID, false)
+
+	if err != nil {
+		common.Logger.Error("failed to get words processing status", "wordlistId", wordlistID, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get processing status"})
+		return
+	}
+
+	// Build response with only relevant processing info
+	type ProcessingInfo struct {
+		ID                    int64  `json:"id"`
+		Name                  string `json:"name"`
+		ProcessingStatus      string `json:"processingStatus"`
+		ProcessingError       string `json:"processingError,omitempty"`
+		ProcessingStartedAt   string `json:"processingStartedAt,omitempty"`
+		ProcessingCompletedAt string `json:"processingCompletedAt,omitempty"`
+	}
+
+	var processingInfos []ProcessingInfo
+	for _, word := range words {
+		info := ProcessingInfo{
+			ID:               word.ID,
+			Name:             word.Name,
+			ProcessingStatus: word.ProcessingStatus,
+		}
+
+		if word.ProcessingError != "" {
+			info.ProcessingError = word.ProcessingError
+		}
+
+		// Format timestamps
+		if word.ProcessingStartedAt.Status == pgtype.Present {
+			info.ProcessingStartedAt = word.ProcessingStartedAt.Time.Format(time.RFC3339)
+		}
+		if word.ProcessingCompletedAt.Status == pgtype.Present {
+			info.ProcessingCompletedAt = word.ProcessingCompletedAt.Time.Format(time.RFC3339)
+		}
+
+		processingInfos = append(processingInfos, info)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"words": processingInfos,
+		"summary": gin.H{
+			"total":      len(words),
+			"pending":    countByStatus(words, "pending"),
+			"processing": countByStatus(words, "processing"),
+			"completed":  countByStatus(words, "completed"),
+			"failed":     countByStatus(words, "failed"),
+		},
+	})
+}
+
+func countByStatus(words []model.Word, status string) int {
+	count := 0
+	for _, w := range words {
+		if w.ProcessingStatus == status {
+			count++
+		}
+	}
+	return count
 }

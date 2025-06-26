@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"decorebator.com/internal/model"
@@ -56,8 +57,10 @@ type FindWordlistArgs struct {
 
 func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, error) {
 	var (
-		builder   strings.Builder
-		queryArgs []interface{}
+		builder         strings.Builder
+		queryArgs       []any
+		whereConditions []string
+		index           int
 	)
 
 	// Build SELECT clause
@@ -77,11 +80,20 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 
 	// Build WHERE clause
 	if args.ID != nil {
-		builder.WriteString(" WHERE wordlists.id = $1")
+		index = index + 1
+		whereConditions = append(whereConditions, fmt.Sprintf("wordlists.id = $%d", index))
 		queryArgs = append(queryArgs, *args.ID)
-	} else if args.OwnerID != nil {
-		builder.WriteString(" WHERE wordlists.user_id = $1")
+	}
+
+	if args.OwnerID != nil {
+		index = index + 1
+		whereConditions = append(whereConditions, fmt.Sprintf("wordlists.user_id = $%d", index))
 		queryArgs = append(queryArgs, *args.OwnerID)
+	}
+
+	if len(whereConditions) > 0 {
+		builder.WriteString(" WHERE ")
+		builder.WriteString(strings.Join(whereConditions, " AND "))
 	}
 
 	// Add GROUP BY if aggregating

@@ -319,7 +319,7 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 			PartOfSpeechNormalized: "noun",
 		}
 
-		definitions, saveErr := service.SaveDefinition(fmt.Sprintf("word1_def%d", i+2), wordID1, []*model.Definition{definition}, tx)
+		definitions, saveErr := service.SaveDefinition(wordID1, []*model.Definition{definition}, &tx)
 		require.NoError(t, saveErr)
 		require.Len(t, definitions, 1)
 
@@ -370,7 +370,7 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 			PartOfSpeechNormalized: "noun",
 		}
 
-		definitions, saveErr := service.SaveDefinition(fmt.Sprintf("word2_def%d", i+2), wordID2, []*model.Definition{definition}, tx)
+		definitions, saveErr := service.SaveDefinition(wordID2, []*model.Definition{definition}, &tx)
 		require.NoError(t, saveErr)
 		require.Len(t, definitions, 1)
 

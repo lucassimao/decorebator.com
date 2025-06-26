@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/repository"
+	"github.com/jackc/pgx/v5"
 )
 
 type ErrorReportType string
@@ -18,10 +20,11 @@ const (
 	UnrelatedMeaning ErrorReportType = "_unrelated_meaning"
 	UnrelatedExample ErrorReportType = "_unrelated_example"
 	SoundNotPlaying  ErrorReportType = "_sound_not_playing"
+	ProcessingFailed ErrorReportType = "_processing_failed" // For retrying failed word processing
 )
 
-func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, userId int64, ctx context.Context) error {
-	logger := common.Logger.With("errorType", errorType, "wordID", wordID, "definitionID", definitionID, "userId", userId)
+func ReportError(ctx context.Context, errorType ErrorReportType, wordID int64, definitionID *int64, userID int64) error {
+	logger := common.Logger.With("errorType", errorType, "wordID", wordID, "definitionID", definitionID, "userID", userID)
 
 	// Log error report attempt for monitoring
 	logger.Info("Error report attempt",
@@ -29,28 +32,44 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 		"timestamp", time.Now().Unix(),
 	)
 
-	isValid, err := didUserCreateWord(wordID, userId)
+	// Validate user owns the word
+	if err := validateUserOwnsWord(wordID, userID, logger); err != nil {
+		return err
+	}
 
+	// Check cooldown period
+	repo, err := checkErrorReportCooldown(ctx, userID, wordID, definitionID, string(errorType), logger)
+	if err != nil {
+		return err
+	}
+
+	// Execute error report in transaction
+	return executeErrorReportTransaction(ctx, repo, errorType, wordID, definitionID, userID, logger)
+}
+
+func validateUserOwnsWord(wordID int64, userID int64, logger *slog.Logger) error {
+	isValid, err := didUserCreateWord(wordID, userID)
 	if err != nil || !isValid {
 		if err != nil {
 			logger.Error("validation failed", "error", err)
 		}
 		return errors.New("validation failed")
 	}
+	return nil
+}
 
+func checkErrorReportCooldown(ctx context.Context, userID int64, wordID int64, definitionID *int64, errorType string, logger *slog.Logger) (*repository.ErrorReportRepository, error) {
 	db, err := common.GetDBConnection()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// Create repository
 	repo := repository.NewErrorReportRepository(db)
 
-	// Check cooldown period
-	cooldownUntil, err := repo.CheckCooldown(ctx, userId, wordID, definitionID, string(errorType))
+	cooldownUntil, err := repo.CheckCooldown(ctx, userID, wordID, definitionID, errorType)
 	if err != nil {
 		logger.Error("failed to check cooldown", "error", err)
-		return err
+		return nil, err
 	}
 
 	if cooldownUntil != nil {
@@ -59,11 +78,20 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 			"action", "error_report_cooldown_blocked",
 			"timestamp", time.Now().Unix(),
 		)
-		return CooldownError{
+		return nil, CooldownError{
 			Message:       fmt.Sprintf("Please wait before reporting this error again. You can retry in %d minutes.", int(retryAfter.Minutes())),
 			CooldownUntil: *cooldownUntil,
 			RetryAfter:    retryAfter,
 		}
+	}
+
+	return repo, nil
+}
+
+func executeErrorReportTransaction(ctx context.Context, repo *repository.ErrorReportRepository, errorType ErrorReportType, wordID int64, definitionID *int64, userID int64, logger *slog.Logger) error {
+	db, err := common.GetDBConnection()
+	if err != nil {
+		return err
 	}
 
 	tx, err := db.Begin(ctx)
@@ -82,71 +110,76 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 		}
 	}()
 
-	var report ErrorReport
-
-	switch errorType {
-	case SoundNotPlaying:
-		report = ErrorReport{WordId: &wordID, UserId: userId}
-		_, err = TriggerTextToSpeechWorker(wordID, &userId, &report, &tx)
-
-	case UnrelatedImage, MissingImage:
-		report = ErrorReport{DefinitionId: &definitionID, UserId: userId}
-		_, err = TriggerGenerateImageWorker(definitionID, &userId, &report, &tx)
-
-	case UnrelatedExample, UnrelatedMeaning:
-		err = DeleteWordDefinitions(wordID, &tx)
-		if err == nil {
-			report = ErrorReport{WordId: &wordID, UserId: userId}
-			_, err = TriggerFetchDefinitionWorker(wordID, &userId, &report, &tx)
-		}
-	default:
-		err = fmt.Errorf("invalid error type %s", errorType)
-	}
-
+	// Process the error type and trigger appropriate workers
+	report, err := processErrorType(errorType, wordID, definitionID, userID, &tx)
 	if err != nil {
 		common.Logger.Error("failed to trigger jobs", "error", err)
 		return err
 	}
 
-	// Update last regenerated timestamp
+	// Handle post-processing steps
+	return completeErrorReport(ctx, repo, tx, errorType, wordID, definitionID, userID, report, logger)
+}
+
+func processErrorType(errorType ErrorReportType, wordID int64, definitionID *int64, userID int64, tx *pgx.Tx) (ErrorReport, error) {
+	var report ErrorReport
+	var err error
+
 	switch errorType {
 	case SoundNotPlaying:
-		err = repo.UpdateWordAudioLastRegeneratedAt(ctx, tx, wordID)
-	case UnrelatedImage, MissingImage, UnrelatedExample, UnrelatedMeaning:
-		if definitionID > 0 {
-			err = repo.UpdateDefinitionLastRegeneratedAt(ctx, tx, definitionID)
+		report = ErrorReport{WordId: &wordID, UserId: userID}
+		_, err = TriggerTextToSpeechWorker(wordID, &userID, &report, tx)
+
+	case UnrelatedImage, MissingImage:
+		if definitionID == nil {
+			return report, fmt.Errorf("definition ID required for image-related errors")
 		}
+		report = ErrorReport{DefinitionId: definitionID, UserId: userID}
+		_, err = TriggerGenerateImageWorker(*definitionID, &userID, &report, tx)
+
+	case UnrelatedExample, UnrelatedMeaning:
+		err = DeleteWordDefinitions(wordID, tx)
+		if err == nil {
+			report = ErrorReport{WordId: &wordID, UserId: userID}
+			_, err = TriggerFetchDefinitionWorker(wordID, &userID, &report, tx)
+		}
+
+	case ProcessingFailed:
+		err = DeleteWordDefinitions(wordID, tx)
+		if err == nil {
+			report = ErrorReport{WordId: &wordID, UserId: userID}
+			_, err = TriggerFetchDefinitionWorker(wordID, &userID, &report, tx)
+		}
+
+	default:
+		err = fmt.Errorf("invalid error type %s", errorType)
 	}
-	if err != nil {
+
+	return report, err
+}
+
+func completeErrorReport(ctx context.Context, repo *repository.ErrorReportRepository, tx pgx.Tx, errorType ErrorReportType, wordID int64, definitionID *int64, userID int64, report ErrorReport, logger *slog.Logger) error {
+	// Update last regenerated timestamp
+	if err := updateLastRegeneratedTimestamp(ctx, repo, tx, errorType, wordID, definitionID, logger); err != nil {
 		logger.Error("failed to update last regenerated timestamp", "error", err)
 		// Don't fail the whole operation for this
 	}
 
 	// Set cooldown for this error report
-	cooldownDuration := time.Hour // 1 hour cooldown as agreed
-	cooldownUntilTime := time.Now().Add(cooldownDuration)
-	err = repo.SetCooldown(ctx, tx, userId, wordID, definitionID, string(errorType), cooldownUntilTime)
-	if err != nil {
+	if err := setCooldownPeriod(ctx, repo, tx, userID, wordID, definitionID, string(errorType), logger); err != nil {
 		logger.Error("failed to set cooldown", "error", err)
 		// Don't fail the whole operation for this
 	}
 
-	// marking the definition temporarily as unavailable
+	// Mark definition temporarily as unavailable
 	strategy := DefaultLeitnerSystemStrategy()
-	err = strategy.ReportError(userId, report, tx, ctx)
-
-	if err != nil {
+	if err := strategy.ReportError(userID, report, tx, ctx); err != nil {
 		common.Logger.Error("failed to report error", "error", err)
 		return err
 	}
 
 	// Upsert error report
-	var defIDPtr *int64
-	if definitionID > 0 {
-		defIDPtr = &definitionID
-	}
-	err = repo.UpsertErrorReport(ctx, tx, userId, defIDPtr, wordID, string(errorType))
-	if err != nil {
+	if err := repo.UpsertErrorReport(ctx, tx, userID, definitionID, wordID, string(errorType)); err != nil {
 		common.Logger.Error("failed to save error report", "error", err)
 		return err
 	}
@@ -161,14 +194,32 @@ func ReportError(errorType ErrorReportType, wordID int64, definitionID int64, us
 	return nil
 }
 
-func DeleteUserErrorReports(userId int64) (int64, error) {
+func updateLastRegeneratedTimestamp(ctx context.Context, repo *repository.ErrorReportRepository, tx pgx.Tx, errorType ErrorReportType, wordID int64, definitionID *int64, _ *slog.Logger) error {
+	switch errorType {
+	case SoundNotPlaying:
+		return repo.UpdateWordAudioLastRegeneratedAt(ctx, tx, wordID)
+	case UnrelatedImage, MissingImage, UnrelatedExample, UnrelatedMeaning:
+		if definitionID != nil {
+			return repo.UpdateDefinitionLastRegeneratedAt(ctx, tx, *definitionID)
+		}
+	}
+	return nil
+}
+
+func setCooldownPeriod(ctx context.Context, repo *repository.ErrorReportRepository, tx pgx.Tx, userID int64, wordID int64, definitionID *int64, errorType string, _ *slog.Logger) error {
+	cooldownDuration := time.Hour // 1 hour cooldown as agreed
+	cooldownUntilTime := time.Now().Add(cooldownDuration)
+	return repo.SetCooldown(ctx, tx, userID, wordID, definitionID, errorType, cooldownUntilTime)
+}
+
+func DeleteUserErrorReports(userID int64) (int64, error) {
 	db, err := common.GetDBConnection()
 	if err != nil {
 		return 0, err
 	}
 
 	repo := repository.NewErrorReportRepository(db)
-	return repo.DeleteUserErrorReports(context.Background(), userId)
+	return repo.DeleteUserErrorReports(context.Background(), userID)
 }
 
 // CooldownError represents an error when a cooldown is active

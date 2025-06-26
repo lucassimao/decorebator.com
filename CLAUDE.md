@@ -195,10 +195,10 @@ Key architectural decisions:
 - Singleton pattern for database connections using `sync.Once`
 - Manual dependency injection without frameworks (modernization planned)
 - JWT-based authentication with automatic session refresh
-- River queue system for background jobs (PostgreSQL-backed)
+- Background job processing using River queue system (PostgreSQL-backed, replaces Redis-based queues)
 - MinIO for S3-compatible object storage (images, audio)
 - OpenAI API integration (DALL-E, TTS, GPT) for AI-powered content generation
-- Stripe integration for subscription management with webhook processing
+- Dual subscription system: Stripe (web, US iOS) + RevenueCat (Android, non-US iOS)
 - SendGrid for email services (subscription notifications)
 - Sentry for error monitoring and logging
 - Structured logging with `slog` (enhancement planned)
@@ -206,12 +206,15 @@ Key architectural decisions:
 
 ### Background Job Processing
 
-Five worker queues process asynchronous tasks:
+River-based PostgreSQL queue system with dedicated worker types:
 - `image_generator` - Generates images using OpenAI DALL-E (max 5 workers)
 - `text_to_speech` - Converts text to audio using OpenAI TTS (max 30 workers)
 - `definition_fetcher` - Fetches word definitions from external sources (max 50 workers)
 - `subscription_reminder` - Sends renewal reminder emails (max 10 workers)
 - `example_audio_generator` - Generates audio for example sentences with fair usage distribution (max 20 workers)
+- `revenuecat_worker` - Processes RevenueCat webhook events and subscription syncing
+
+**Note**: River tables were removed in migration 000052. The system now uses PostgreSQL-native queuing for better transaction safety and simplified architecture.
 
 Workers run as a separate process and include retry logic, rate limiting, and error handling.
 
@@ -273,7 +276,8 @@ Key tables with recent enhancements:
 - `definition_example_audio` - Audio files for example sentences
 - `example_audio_usage` - Tracks audio generation for fair usage distribution
 - `example_usage` - Ensures variety in quiz example selection
-- `river_job` - Background job queue
+- `river_job` - Background job queue (deprecated - tables removed in migration 000052)
+- `revenuecat_events` - RevenueCat webhook event audit trail
 - Materialized views refreshed hourly:
   - `mv_word_mastery_current` - Current word mastery state
   - `mv_quiz_type_performance` - Quiz performance analytics
@@ -292,7 +296,8 @@ cp .env.example .env
 - PostgreSQL connection details
 - MinIO credentials for object storage
 - OpenAI API key for AI features
-- Stripe API keys and webhook secret
+- Stripe API keys and webhook secret (for web and US iOS)
+- RevenueCat API keys and webhook secret (for Android and non-US iOS)
 - SendGrid API key for emails
 - JWT secret for authentication
 - Sentry DSN for error monitoring (optional)
@@ -330,14 +335,28 @@ All development tools match GitHub Actions for consistency:
 
 ## Subscription System
 
+### Dual-Provider Architecture
+The platform uses an intelligent dual-provider system:
+- **Stripe**: Web users and US iOS users (direct payment processing)
+- **RevenueCat**: Android users and non-US iOS users (native app store integration)
+
 ### Features
-- Stripe integration for payment processing
+- Dual payment provider support (Stripe + RevenueCat)
 - Monthly ($6.99) and Annual ($69.9) plans
 - Free plan with limits (1 wordlist, 10 words max)
-- Webhook processing for real-time updates
+- Webhook processing for real-time updates from both providers
 - Automatic email notifications for subscription events
+- Purchase restoration for RevenueCat subscriptions
 
-### Subscription Flow
+### Provider Selection Logic
+```
+- Android users → RevenueCat (Google Play Store)
+- US iOS users → Stripe (direct payment)  
+- Non-US iOS users → RevenueCat (App Store)
+- Web users → Stripe (direct payment)
+```
+
+### Stripe Subscription Flow
 1. User initiates checkout from mobile app
 2. Stripe checkout session created with user metadata
 3. User completes payment on Stripe hosted page
@@ -345,6 +364,14 @@ All development tools match GitHub Actions for consistency:
 5. User returns to app → automatic session refresh
 6. New JWT issued with updated subscription plan
 7. Premium features instantly available
+
+### RevenueCat Subscription Flow
+1. User opens native paywall in app
+2. RevenueCat displays available packages from App Store/Play Store
+3. User completes purchase using platform payment method
+4. RevenueCat webhook notifies backend
+5. Subscription status synced to database
+6. Premium features instantly available
 
 ## Testing Strategy
 
@@ -558,10 +585,13 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - Background jobs use River queue (PostgreSQL-backed) instead of traditional queue systems
 - Email templates are located in `internal/mail/` directory
 - API endpoints are documented in `doc/words.http` and `doc/words.prod.http`
-- Recent architecture improvements planned in:
-  - `api/docs/DETERMINISTIC_LEITNER_IMPLEMENTATION.md` - Deterministic priority-based Leitner algorithm
-  - `api/docs/LEITNER_ALGORITHM_OPTIMIZATION_REPORT.md` - Comprehensive Leitner system optimization analysis
-  - `api/docs/TESTING_BEST_PRACTICES.md` - Detailed testing guidelines and patterns
+- Dual subscription system: Existing Stripe subscriptions remain unchanged; new subscriptions route to appropriate provider
+- RevenueCat integration documented in `REVENUECAT_INTEGRATION.md`
+- Recent architecture improvements documented in:
+  - `docs/DETERMINISTIC_LEITNER_IMPLEMENTATION.md` - Deterministic priority-based Leitner algorithm
+  - `docs/TESTING_BEST_PRACTICES.md` - Detailed testing guidelines and patterns
+  - `docs/SUBSCRIPTION_SYSTEM.md` - Complete subscription system documentation
+  - `docs/WORKER_ABUSE_PREVENTION.md` - Background job abuse prevention strategies
 
 ## Multi-Language Support
 

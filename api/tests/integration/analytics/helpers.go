@@ -65,7 +65,7 @@ func createBasicWordStructure(t *testing.T, server *setup.TestServer, token stri
 		PartOfSpeechNormalized: "noun",
 	}
 
-	definitions, err := service.SaveDefinition(wordName, wordID, []*model.Definition{definition}, tx)
+	definitions, err := service.SaveDefinition(wordID, []*model.Definition{definition}, &tx)
 	require.NoError(t, err)
 	require.Len(t, definitions, 1)
 

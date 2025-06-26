@@ -23,11 +23,15 @@ func (repository *WordRepository) Save(name, notes string, userID, wordlistID in
 	query := `
 		INSERT INTO words (name, wordlist_id, user_id, created_at, notes)
 		VALUES ($1, $2,$3, now(),$4)
-		RETURNING id, created_at, updated_at`
+		RETURNING id, created_at, updated_at, processing_status, processing_error, processing_started_at, processing_completed_at`
 
 	var createdAt pgtype.Timestamptz
 	var updatedAt pgtype.Timestamptz
+	var processingStartedAt pgtype.Timestamptz
+	var processingCompletedAt pgtype.Timestamptz
 	var wordID int64
+	var processingStatus string
+	var processingError *string
 
 	args := []any{name, wordlistID, userID, notes}
 
@@ -38,14 +42,23 @@ func (repository *WordRepository) Save(name, notes string, userID, wordlistID in
 		row = repository.Db.QueryRow(context.Background(), query, args...)
 	}
 
-	err := row.Scan(&wordID, &createdAt, &updatedAt)
+	err := row.Scan(&wordID, &createdAt, &updatedAt, &processingStatus, &processingError, &processingStartedAt, &processingCompletedAt)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &Word{ID: wordID, Name: name, CreatedAt: createdAt, Notes: notes,
-		UpdatedAt: updatedAt, WordlistID: wordlistID, UserID: userID, AudioURL: ""}, nil
+	processingErrorStr := ""
+	if processingError != nil {
+		processingErrorStr = *processingError
+	}
+
+	return &Word{
+		ID: wordID, Name: name, CreatedAt: createdAt, Notes: notes,
+		UpdatedAt: updatedAt, WordlistID: wordlistID, UserID: userID, AudioURL: "",
+		ProcessingStatus: processingStatus, ProcessingError: processingErrorStr,
+		ProcessingStartedAt: processingStartedAt, ProcessingCompletedAt: processingCompletedAt,
+	}, nil
 }
 
 func (repository *WordRepository) ReuseDefinitions(wordID int64, definitionIDs []int64, tx pgx.Tx) error {
@@ -82,7 +95,9 @@ func (repository *WordRepository) GetWordsByWordlist(wordlistID, userID int64, o
 	if onlyWithDefinitions {
 		query = `SELECT DISTINCT w.id, w.name, w.created_at, w.updated_at, 
 					COALESCE(w.audio_url,''), COALESCE(w.notes,''), 
-					COALESCE(w.pronunciation,''), w.learned
+					COALESCE(w.pronunciation,''), w.learned,
+					w.processing_status, COALESCE(w.processing_error,''), 
+					w.processing_started_at, w.processing_completed_at
 				FROM words w
 				INNER JOIN word_definitions wd ON w.id = wd.word_id
 				INNER JOIN definitions d ON wd.definition_id = d.id
@@ -90,7 +105,9 @@ func (repository *WordRepository) GetWordsByWordlist(wordlistID, userID int64, o
 				ORDER BY w.id DESC`
 	} else {
 		query = `SELECT id, name, created_at, updated_at, COALESCE(audio_url,''), 
-					COALESCE(notes,''), COALESCE(pronunciation,''), learned
+					COALESCE(notes,''), COALESCE(pronunciation,''), learned,
+					processing_status, COALESCE(processing_error,''), 
+					processing_started_at, processing_completed_at
 				FROM words WHERE wordlist_id=$1 AND user_id=$2 ORDER BY id DESC`
 	}
 
@@ -103,10 +120,13 @@ func (repository *WordRepository) GetWordsByWordlist(wordlistID, userID int64, o
 
 	words := []Word{}
 	for rows.Next() {
+		var scanErr error
 		w := Word{WordlistID: wordlistID, UserID: userID}
-		err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.AudioURL, &w.Notes, &w.Pronunciation, &w.Learned)
-		if err != nil {
-			return nil, err
+		scanErr = rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.AudioURL, &w.Notes,
+			&w.Pronunciation, &w.Learned, &w.ProcessingStatus, &w.ProcessingError,
+			&w.ProcessingStartedAt, &w.ProcessingCompletedAt)
+		if scanErr != nil {
+			return nil, scanErr
 		}
 		words = append(words, w)
 	}
@@ -119,12 +139,16 @@ func (repository *WordRepository) GetWordsByWordlist(wordlistID, userID int64, o
 
 func (repository *WordRepository) GetByID(wordID int64) (*Word, error) {
 	query := `SELECT id, name, created_at, updated_at, wordlist_id, user_id, 
-				COALESCE(audio_url,''), COALESCE(notes,''), COALESCE(pronunciation,''), learned
+				COALESCE(audio_url,''), COALESCE(notes,''), COALESCE(pronunciation,''), learned,
+				processing_status, COALESCE(processing_error,''), 
+				processing_started_at, processing_completed_at
 			FROM words WHERE id=$1`
 	row := repository.Db.QueryRow(context.Background(), query, wordID)
 	var w Word
 
-	err := row.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.WordlistID, &w.UserID, &w.AudioURL, &w.Notes, &w.Pronunciation, &w.Learned)
+	err := row.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.WordlistID, &w.UserID,
+		&w.AudioURL, &w.Notes, &w.Pronunciation, &w.Learned,
+		&w.ProcessingStatus, &w.ProcessingError, &w.ProcessingStartedAt, &w.ProcessingCompletedAt)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, common.NotFoundError{ID: wordID, Entity: "word"}
@@ -178,4 +202,47 @@ func (repository *WordRepository) GetLatestAudioURL(word string) (string, error)
 		return "", err
 	}
 	return audioURL, nil
+}
+
+// UpdateProcessingStatus updates the processing status and related fields for a word
+func (repository *WordRepository) UpdateProcessingStatus(wordID int64, status string, errorMsg string, tx *pgx.Tx) error {
+	var query string
+	var args []any
+
+	switch status {
+	case "processing":
+		query = `UPDATE words SET processing_status = $2, processing_started_at = NOW() WHERE id = $1`
+		args = []any{wordID, status}
+	case "completed":
+		query = `UPDATE words SET processing_status = $2, processing_completed_at = NOW(), processing_error = NULL WHERE id = $1`
+		args = []any{wordID, status}
+	case "failed":
+		query = `UPDATE words SET processing_status = $2, processing_completed_at = NOW(), processing_error = $3 WHERE id = $1`
+		args = []any{wordID, status, errorMsg}
+	default:
+		return fmt.Errorf("invalid processing status: %s", status)
+	}
+
+	var err error
+	if tx != nil {
+		_, err = (*tx).Exec(context.Background(), query, args...)
+	} else {
+		_, err = repository.Db.Exec(context.Background(), query, args...)
+	}
+
+	return err
+}
+
+// UpdatePronunciation updates the pronunciation for a word
+func (repository *WordRepository) UpdatePronunciation(wordID int64, pronunciation string, tx *pgx.Tx) error {
+	query := `UPDATE words SET pronunciation = $1 WHERE id = $2`
+
+	var err error
+	if tx != nil {
+		_, err = (*tx).Exec(context.Background(), query, pronunciation, wordID)
+	} else {
+		_, err = repository.Db.Exec(context.Background(), query, pronunciation, wordID)
+	}
+
+	return err
 }
