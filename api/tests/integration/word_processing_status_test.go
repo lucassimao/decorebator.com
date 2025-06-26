@@ -31,6 +31,17 @@ func TestWordProcessingStatus_InitialState(t *testing.T) {
 
 	wordlistID := int(createResp.JSON().Object().Value("id").Number().Raw())
 
+	// Get processing status
+	statusResp := server.Expect.GET("/wordlists/{wordlistId}/processing-status", wordlistID).
+		WithHeader("Authorization", token).
+		Expect().
+		Status(200).
+		JSON().Object()
+
+	// Verify response structure
+	statusResp.ContainsKey("words")
+	statusResp.Value("words").Array().Length().IsEqual(0)
+
 	// Add a word
 	server.Expect.POST("/wordlists/{wordlistId}/words", wordlistID).
 		WithHeader("Authorization", token).

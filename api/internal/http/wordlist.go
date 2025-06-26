@@ -221,7 +221,8 @@ func (h *WordlistsRoutes) GetProcessingStatus(c *gin.Context) {
 		ProcessingCompletedAt string `json:"processingCompletedAt,omitempty"`
 	}
 
-	var processingInfos []ProcessingInfo
+	var processingInfos = []ProcessingInfo{}
+
 	for _, word := range words {
 		info := ProcessingInfo{
 			ID:               word.ID,
