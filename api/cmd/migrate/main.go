@@ -15,7 +15,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 	"github.com/riverqueue/river/rivermigrate"
-	"github.com/riverqueue/river/rivershared/riversharedtest"
 )
 
 //go:embed migrations/*.sql
