@@ -14,7 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
-	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,8 +30,11 @@ type TestServer struct {
 // TestConfig holds configuration for test server (alias for HTTP config)
 type TestConfig = http_internal.Config
 
+// TestConfigFunc is a function that receives a database and returns a TestConfig
+type TestConfigFunc func(db *pgxpool.Pool) *TestConfig
+
 // NewTestServer creates a new test server instance using the real API routes
-func NewTestServer(t *testing.T, config ...*TestConfig) *TestServer {
+func NewTestServer(t *testing.T, configFunc ...TestConfigFunc) *TestServer {
 	// Set gin to test mode
 	gin.SetMode(gin.TestMode)
 
@@ -49,22 +51,22 @@ func NewTestServer(t *testing.T, config ...*TestConfig) *TestServer {
 
 	// Configure services for testing
 	var testConfig *http_internal.Config
-	switch len(config) {
+	switch len(configFunc) {
 	case 0:
 		// No config provided, use defaults
 		testConfig = &http_internal.Config{
 			Database: db,
 		}
 	case 1:
-		// One config provided, use it
-		testConfig = config[0]
+		// Config function provided, call it with the database
+		testConfig = configFunc[0](db)
 		// Ensure database is set for test config
 		if testConfig.Database == nil {
 			testConfig.Database = db
 		}
 	default:
 		// Multiple configs provided - this is an error
-		panic("NewTestServer accepts at most one config parameter")
+		panic("NewTestServer accepts at most one config function")
 	}
 
 	// Use the real API routes from internal/http/setup.go with test configuration
@@ -222,89 +224,7 @@ func (ts *TestServer) isHealthy() bool {
 	return resp.Raw().StatusCode == 200
 }
 
-// ProcessNextRiverJob fetches and processes the next available River job from a given queue.
-// This makes asynchronous worker processing synchronous for testing purposes.
-// DEPRECATED: Use ProcessRevenueCatWebhookJob or similar type-specific methods instead.
-// This function is overly complex and not currently used in tests.
-func (ts *TestServer) ProcessNextRiverJob(t *testing.T, queue string, rcService service.RevenueCatService) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// First, check if there's a job available in the queue
-	var jobID int64
-	var jobKind string
-	err := ts.DB.QueryRow(ctx, `
-		SELECT id, kind FROM river_job 
-		WHERE state = 'available' 
-		AND queue = $1
-		ORDER BY id ASC
-		LIMIT 1
-	`, queue).Scan(&jobID, &jobKind)
-
-	if err != nil {
-		t.Logf("No job found in queue %s: %v", queue, err)
-		return
-	}
-
-	t.Logf("Found job %d of kind %s in queue %s", jobID, jobKind, queue)
-
-	// Register the specific worker for the job kind we expect.
-	workers := river.NewWorkers()
-	river.AddWorker(workers, service.NewRevenueCatWebhookWorker(rcService))
-
-	// Create a temporary River client scoped to this test run.
-	riverClient, err := river.NewClient(riverpgxv5.New(ts.DB), &river.Config{
-		Queues: map[string]river.QueueConfig{
-			queue: {MaxWorkers: 1},
-		},
-		Workers:           workers,
-		FetchCooldown:     100 * time.Millisecond,
-		FetchPollInterval: 100 * time.Millisecond,
-	})
-	require.NoError(t, err)
-
-	// Start the client, which will begin processing jobs.
-	err = riverClient.Start(ctx)
-	require.NoError(t, err)
-
-	// Wait for the specific job to be processed
-	ticker := time.NewTicker(100 * time.Millisecond)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			t.Fatalf("Timeout waiting for job %d to be processed", jobID)
-		case <-ticker.C:
-			var state string
-			err = ts.DB.QueryRow(ctx, `
-				SELECT state FROM river_job WHERE id = $1
-			`, jobID).Scan(&state)
-
-			if err != nil {
-				t.Fatalf("Failed to check job status: %v", err)
-			}
-
-			t.Logf("Job %d is in state: %s", jobID, state)
-
-			if state == "completed" || state == "discarded" {
-				// Job has been processed
-				goto done
-			}
-		}
-	}
-
-done:
-	// Stop the client, which gracefully shuts down workers after they finish.
-	err = riverClient.Stop(ctx)
-	require.NoError(t, err)
-
-	// Give a moment for any database transactions to commit
-	time.Sleep(100 * time.Millisecond)
-}
-
 // ProcessRevenueCatWebhookJob processes a RevenueCat webhook job
-// This is a much simpler approach than the old ProcessNextRiverJob
 func (ts *TestServer) ProcessRevenueCatWebhookJob(t *testing.T, rcService service.RevenueCatService) error {
 	ctx := context.Background()
 

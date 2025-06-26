@@ -75,7 +75,7 @@ type FindUserArgs struct {
 	RevenueCatCustomerID *string
 }
 
-func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
+func (repository *UserRepository) Find(ctx context.Context, args FindUserArgs) ([]User, error) {
 	var builder strings.Builder
 	builder.WriteString(`SELECT id, email, first_name, last_name, password_hash, 
 		profile_picture_url, country, date_of_birth, preferred_language,
@@ -115,7 +115,7 @@ func (repository *UserRepository) Find(args FindUserArgs) ([]User, error) {
 
 	users := []User{}
 	query := builder.String()
-	rows, err := repository.Db.Query(context.Background(), query, queryArgs...)
+	rows, err := repository.Db.Query(ctx, query, queryArgs...)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return users, nil

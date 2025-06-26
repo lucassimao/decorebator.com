@@ -50,7 +50,7 @@ func (w *SubscriptionReminderWorker) Work(ctx context.Context, job *river.Job[Su
 	}
 
 	// Get user
-	users, err := w.userRepo.Find(repository.FindUserArgs{ID: &sub.UserID})
+	users, err := w.userRepo.Find(ctx, repository.FindUserArgs{ID: &sub.UserID})
 	if err != nil || len(users) == 0 {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
@@ -119,7 +119,7 @@ func ScheduleRenewalReminders(ctx context.Context, db *pgxpool.Pool) error {
 		}
 
 		// Get user
-		users, err := userRepo.Find(repository.FindUserArgs{ID: &sub.UserID})
+		users, err := userRepo.Find(ctx, repository.FindUserArgs{ID: &sub.UserID})
 		if err != nil || len(users) == 0 {
 			logger.Error("Failed to get user", "error", err, "subscription_id", sub.ID)
 			continue

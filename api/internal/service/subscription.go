@@ -146,7 +146,7 @@ func (s *SubscriptionService) HandleWebhook(ctx context.Context, payload []byte,
 	// Handle different event types
 	switch event.Type {
 	case "checkout.session.completed":
-		return s.handleCheckoutSessionCompleted(ctx, event)
+		return s.handleCheckoutSessionCompleted(event)
 	case "customer.subscription.created":
 		return s.handleSubscriptionCreated(ctx, event)
 	case "customer.subscription.updated":
@@ -166,7 +166,7 @@ func (s *SubscriptionService) HandleWebhook(ctx context.Context, payload []byte,
 }
 
 // handleCheckoutSessionCompleted handles successful checkout completion
-func (s *SubscriptionService) handleCheckoutSessionCompleted(ctx context.Context, event stripe.Event) error {
+func (s *SubscriptionService) handleCheckoutSessionCompleted(event stripe.Event) error {
 	var checkoutSession stripe.CheckoutSession
 	if err := json.Unmarshal(event.Data.Raw, &checkoutSession); err != nil {
 		return fmt.Errorf("failed to unmarshal checkout session: %w", err)
@@ -247,7 +247,7 @@ func (s *SubscriptionService) handleSubscriptionCreated(ctx context.Context, eve
 	}
 
 	// Get user details for email
-	users, err := s.userRepo.Find(repository.FindUserArgs{ID: &userID})
+	users, err := s.userRepo.Find(ctx, repository.FindUserArgs{ID: &userID})
 	if err != nil || len(users) == 0 {
 		// Log error but don't fail the webhook
 		common.Logger.Error("Failed to get user for email notification", "error", err, "user_id", userID)
@@ -298,7 +298,7 @@ func (s *SubscriptionService) handleSubscriptionUpdated(ctx context.Context, eve
 
 	if stripeSubscription.CanceledAt > 0 {
 		cancelledAt := time.Unix(stripeSubscription.CanceledAt, 0)
-		sub.CancelledAt = &cancelledAt
+		sub.CanceledAt = &cancelledAt
 	}
 
 	if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
@@ -342,7 +342,7 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 	sub.Status = model.StatusCanceled
 	if stripeSubscription.CanceledAt > 0 {
 		cancelledAt := time.Unix(stripeSubscription.CanceledAt, 0)
-		sub.CancelledAt = &cancelledAt
+		sub.CanceledAt = &cancelledAt
 	}
 
 	if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
@@ -364,7 +364,7 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 	}
 
 	// Get user details for email
-	users, err := s.userRepo.Find(repository.FindUserArgs{ID: &sub.UserID})
+	users, err := s.userRepo.Find(ctx, repository.FindUserArgs{ID: &sub.UserID})
 	if err != nil || len(users) == 0 {
 		// Log error but don't fail the webhook
 		common.Logger.Error("Failed to get user for email notification", "error", err, "user_id", sub.UserID)
@@ -518,7 +518,7 @@ func (s *SubscriptionService) handleInvoicePaymentFailed(ctx context.Context, ev
 // sendPaymentFailedEmail sends a notification email about failed payment
 func (s *SubscriptionService) sendPaymentFailedEmail(ctx context.Context, userID int64, subscriptionID string, invoice stripe.Invoice) error {
 	// Get user details
-	users, err := s.userRepo.Find(repository.FindUserArgs{ID: &userID})
+	users, err := s.userRepo.Find(ctx, repository.FindUserArgs{ID: &userID})
 	if err != nil || len(users) == 0 {
 		return fmt.Errorf("user not found: %d", userID)
 	}
@@ -547,7 +547,7 @@ func (s *SubscriptionService) sendPaymentFailedEmail(ctx context.Context, userID
 // getOrCreateStripeCustomer gets existing or creates new Stripe customer
 func (s *SubscriptionService) getOrCreateStripeCustomer(ctx context.Context, userID int64, email string) (string, error) {
 
-	users, err := s.userRepo.Find(repository.FindUserArgs{ID: &userID})
+	users, err := s.userRepo.Find(ctx, repository.FindUserArgs{ID: &userID})
 	if err != nil || len(users) == 0 {
 		return "", fmt.Errorf("no user for id %d", userID)
 	}
@@ -579,7 +579,6 @@ func (s *SubscriptionService) getOrCreateStripeCustomer(ctx context.Context, use
 // getPriceIDForPlan returns the Stripe price ID for a plan
 func (s *SubscriptionService) getPriceIDForPlan(plan model.SubscriptionPlan) string {
 	// These should be configured as environment variables
-	// For now, using placeholders
 	switch plan {
 	case model.PlanMonthly:
 		return os.Getenv("STRIPE_PRICE_ID_MONTHLY")
@@ -637,7 +636,7 @@ func (s *SubscriptionService) CancelSubscription(ctx context.Context, userID int
 		// We just mark it locally and wait for webhook
 		sub.CancelAtPeriodEnd = true
 		now := time.Now()
-		sub.CancelledAt = &now
+		sub.CanceledAt = &now
 
 		if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
 			return fmt.Errorf("failed to update subscription: %w", err)

@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"log/slog"
@@ -77,7 +78,7 @@ func SendResetPasswordEmail(email string) error {
 		return fmt.Errorf("failed to get user repository: %w", err)
 	}
 
-	result, err := userRepo.Find(repository.FindUserArgs{Email: &email})
+	result, err := userRepo.Find(context.Background(), repository.FindUserArgs{Email: &email})
 
 	if err != nil || len(result) != 1 {
 		return fmt.Errorf("no user found")
@@ -417,7 +418,7 @@ func SendWelcomeEmail(email string) error {
 		return fmt.Errorf("failed to get user repository: %w", err)
 	}
 
-	result, err := userRepo.Find(repository.FindUserArgs{Email: &email})
+	result, err := userRepo.Find(context.Background(), repository.FindUserArgs{Email: &email})
 
 	if err != nil || len(result) != 1 {
 		return fmt.Errorf("no user found")

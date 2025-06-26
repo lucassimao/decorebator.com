@@ -18,11 +18,14 @@ func HandleRevenueCatWebhook(riverClient *river.Client[pgx.Tx]) gin.HandlerFunc 
 	return func(c *gin.Context) {
 		// 1. Verify Authorization header
 		authHeader := c.GetHeader("Authorization")
-		expectedToken := os.Getenv("REVENUECAT_WEBHOOK_AUTHORIZATION")
+		expectedToken, exists := os.LookupEnv("REVENUECAT_WEBHOOK_AUTHORIZATION")
 
-		if expectedToken == "" {
-			common.Logger.Error("REVENUECAT_WEBHOOK_AUTHORIZATION is not set, skipping validation")
-		} else if authHeader != expectedToken {
+		if !exists {
+			common.Logger.Error("REVENUECAT_WEBHOOK_AUTHORIZATION is not set")
+			panic("REVENUECAT_WEBHOOK_AUTHORIZATION env is missing")
+		}
+
+		if authHeader != expectedToken {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization token"})
 			return
 		}
@@ -36,8 +39,7 @@ func HandleRevenueCatWebhook(riverClient *river.Client[pgx.Tx]) gin.HandlerFunc 
 
 		// Enqueue a job to process the webhook
 		_, err = riverClient.Insert(c.Request.Context(), service.RevenueCatWebhookArgs{
-			Payload:    payload,
-			AuthHeader: authHeader,
+			Payload: payload,
 		}, &river.InsertOpts{
 			Queue: "revenuecat-webhook",
 		})

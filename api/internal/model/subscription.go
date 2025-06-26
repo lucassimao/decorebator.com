@@ -142,7 +142,7 @@ type Subscription struct {
 	CurrentPeriodStart       time.Time            `json:"currentPeriodStart"`
 	CurrentPeriodEnd         time.Time            `json:"currentPeriodEnd"`
 	CancelAtPeriodEnd        bool                 `json:"cancelAtPeriodEnd"`
-	CancelledAt              *time.Time           `json:"cancelledAt,omitempty"`
+	CanceledAt               *time.Time           `json:"canceledAt,omitempty"`
 	TrialEnd                 *time.Time           `json:"trialEnd,omitempty"`
 	AmountCents              int                  `json:"amountCents"`
 	Currency                 string               `json:"currency"`

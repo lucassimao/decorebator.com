@@ -103,7 +103,12 @@ func SetupRoutes(config *Config) *gin.Engine {
 	subRepo := repository.NewSubscriptionRepository(config.Database)
 	rcService := config.RevenueCatService
 	if rcService == nil {
-		rcService = service.NewRevenueCatService(config.Database)
+		apiKey, exists := os.LookupEnv("REVENUECAT_API_KEY")
+		if !exists {
+			panic("REVENUECAT_API_KEY not set")
+		}
+		apiClient := service.NewRevenueCatAPIClient(apiKey)
+		rcService = service.NewRevenueCatService(config.Database, apiClient)
 	}
 
 	// Initialize route handlers with dependency injection
@@ -135,10 +140,10 @@ func SetupRoutes(config *Config) *gin.Engine {
 		router.PATCH("/password/reset", UserRoutes.ResetPassword)
 		router.POST("/password/send-reset-email", UserRoutes.SendResetPasswordEmail)
 
-		// Stripe webhook endpoint (no auth needed)
+		// Stripe webhook endpoint
 		router.POST("/webhook/stripe", HandleStripeWebhook(subService))
 
-		// RevenueCat webhook endpoint (no auth needed)
+		// RevenueCat webhook endpoint
 		router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(config.riverClient))
 
 		// Redirect to local expo scheme
@@ -175,7 +180,6 @@ func SetupRoutes(config *Config) *gin.Engine {
 		authenticatedRoutes.GET("/subscription/status", GetSubscriptionStatus(subRepo))
 		authenticatedRoutes.POST("/subscription/cancel", CancelSubscription(subService))
 		authenticatedRoutes.GET("/subscription/history", GetSubscriptionHistory(subRepo))
-
 		// RevenueCat routes
 		authenticatedRoutes.POST("/subscription/revenuecat/restore", RestorePurchases(rcService))
 

@@ -25,7 +25,7 @@ func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscri
 			user_id, provider, stripe_subscription_id, stripe_customer_id,
 			revenuecat_subscription_id, app_store_product_id, platform,
 			plan, status, current_period_start, current_period_end,
-			cancel_at_period_end, cancelled_at, trial_end,
+			cancel_at_period_end, canceled_at, trial_end,
 			amount_cents, currency
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 		RETURNING id, created_at, updated_at
@@ -45,7 +45,7 @@ func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscri
 		subscription.CurrentPeriodStart,
 		subscription.CurrentPeriodEnd,
 		subscription.CancelAtPeriodEnd,
-		subscription.CancelledAt,
+		subscription.CanceledAt,
 		subscription.TrialEnd,
 		subscription.AmountCents,
 		subscription.Currency,
@@ -60,7 +60,7 @@ func (r *SubscriptionRepository) GetSubscriptionByStripeID(ctx context.Context, 
 		SELECT id, user_id, provider, stripe_subscription_id, stripe_customer_id,
 			   revenuecat_subscription_id, app_store_product_id, platform,
 			   plan, status, current_period_start, current_period_end,
-			   cancel_at_period_end, cancelled_at, trial_end,
+			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
 		FROM subscriptions
 		WHERE stripe_subscription_id = $1
@@ -83,7 +83,7 @@ func (r *SubscriptionRepository) GetSubscriptionByStripeID(ctx context.Context, 
 		&subscription.CurrentPeriodStart,
 		&subscription.CurrentPeriodEnd,
 		&subscription.CancelAtPeriodEnd,
-		&subscription.CancelledAt,
+		&subscription.CanceledAt,
 		&subscription.TrialEnd,
 		&subscription.AmountCents,
 		&subscription.Currency,
@@ -107,7 +107,7 @@ func (r *SubscriptionRepository) GetActiveSubscriptionForUser(ctx context.Contex
 		SELECT id, user_id, provider, stripe_subscription_id, stripe_customer_id,
 			   revenuecat_subscription_id, app_store_product_id, platform,
 			   plan, status, current_period_start, current_period_end,
-			   cancel_at_period_end, cancelled_at, trial_end,
+			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
 		FROM subscriptions
 		WHERE user_id = $1 AND status IN ('active', 'trialing')
@@ -130,7 +130,7 @@ func (r *SubscriptionRepository) GetActiveSubscriptionForUser(ctx context.Contex
 		&subscription.CurrentPeriodStart,
 		&subscription.CurrentPeriodEnd,
 		&subscription.CancelAtPeriodEnd,
-		&subscription.CancelledAt,
+		&subscription.CanceledAt,
 		&subscription.TrialEnd,
 		&subscription.AmountCents,
 		&subscription.Currency,
@@ -186,7 +186,7 @@ func (r *SubscriptionRepository) GetUserSubscriptionHistory(ctx context.Context,
 	query := `
 		SELECT id, user_id, stripe_subscription_id, stripe_customer_id,
 			   plan, status, current_period_start, current_period_end,
-			   cancel_at_period_end, cancelled_at, trial_end,
+			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
 		FROM subscriptions
 		WHERE user_id = $1
@@ -212,7 +212,7 @@ func (r *SubscriptionRepository) GetUserSubscriptionHistory(ctx context.Context,
 			&subscription.CurrentPeriodStart,
 			&subscription.CurrentPeriodEnd,
 			&subscription.CancelAtPeriodEnd,
-			&subscription.CancelledAt,
+			&subscription.CanceledAt,
 			&subscription.TrialEnd,
 			&subscription.AmountCents,
 			&subscription.Currency,
@@ -266,7 +266,7 @@ func (r *SubscriptionRepository) GetSubscriptionByID(ctx context.Context, id int
 	query := `
 		SELECT id, user_id, stripe_subscription_id, stripe_customer_id,
 			   plan, status, current_period_start, current_period_end,
-			   cancel_at_period_end, cancelled_at, trial_end,
+			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
 		FROM subscriptions
 		WHERE id = $1
@@ -283,7 +283,7 @@ func (r *SubscriptionRepository) GetSubscriptionByID(ctx context.Context, id int
 		&subscription.CurrentPeriodStart,
 		&subscription.CurrentPeriodEnd,
 		&subscription.CancelAtPeriodEnd,
-		&subscription.CancelledAt,
+		&subscription.CanceledAt,
 		&subscription.TrialEnd,
 		&subscription.AmountCents,
 		&subscription.Currency,
@@ -306,7 +306,7 @@ func (r *SubscriptionRepository) GetSubscriptionsRenewingBetween(ctx context.Con
 	query := `
 		SELECT id, user_id, stripe_subscription_id, stripe_customer_id,
 			   plan, status, current_period_start, current_period_end,
-			   cancel_at_period_end, cancelled_at, trial_end,
+			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
 		FROM subscriptions
 		WHERE status = 'active' 
@@ -335,7 +335,7 @@ func (r *SubscriptionRepository) GetSubscriptionsRenewingBetween(ctx context.Con
 			&subscription.CurrentPeriodStart,
 			&subscription.CurrentPeriodEnd,
 			&subscription.CancelAtPeriodEnd,
-			&subscription.CancelledAt,
+			&subscription.CanceledAt,
 			&subscription.TrialEnd,
 			&subscription.AmountCents,
 			&subscription.Currency,
@@ -389,8 +389,6 @@ func (r *SubscriptionRepository) MarkRenewalReminderSent(ctx context.Context, su
 
 // UpdateSubscription updates an existing subscription
 func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscription *model.Subscription) error {
-	// gofmt:off
-	//
 	query := `
 		UPDATE subscriptions SET
 			provider = $2,
@@ -411,7 +409,6 @@ func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscri
 			updated_at = NOW()
 		WHERE id = $1
 	`
-	// gofmt:on
 
 	_, err := r.db.Exec(
 		ctx, query,
@@ -427,7 +424,7 @@ func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscri
 		subscription.CurrentPeriodStart,
 		subscription.CurrentPeriodEnd,
 		subscription.CancelAtPeriodEnd,
-		subscription.CancelledAt,
+		subscription.CanceledAt,
 		subscription.TrialEnd,
 		subscription.AmountCents,
 		subscription.Currency,

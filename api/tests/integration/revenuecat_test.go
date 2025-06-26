@@ -13,6 +13,7 @@ import (
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/service"
+	"decorebator.com/tests/integration/mocks"
 	"decorebator.com/tests/integration/setup"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -99,11 +100,42 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 		require.NoError(t, err)
 		assert.Greater(t, jobCount, 0, "Should have enqueued at least one job")
 
-		// Create the RevenueCat service with the test database
-		rcService := service.NewRevenueCatService(ts.DB)
+		// Create a mock API client that returns test data without making external calls
+		mockAPIClient := &mocks.MockRevenueCatAPIClient{
+			GetCustomerInfoFunc: func(_ context.Context, appUserID string) (*service.CustomerInfo, error) {
+				// Return a mock customer info with active subscription
+				expiresDateStr := time.Now().Add(30 * 24 * time.Hour).Format(time.RFC3339)
+				return &service.CustomerInfo{
+					RequestDate:   time.Now().Format(time.RFC3339),
+					RequestDateMS: time.Now().Unix() * 1000,
+					Subscriber: service.Subscriber{
+						OriginalAppUserID: appUserID,
+						Entitlements: map[string]service.Entitlement{
+							"premium": {
+								ProductIdentifier: "com.decorebator.premium.monthly",
+								PurchaseDate:      time.Now().Format(time.RFC3339),
+								ExpiresDate:       &expiresDateStr,
+							},
+						},
+						Subscriptions: map[string]service.Subscription{
+							"com.decorebator.premium.monthly": {
+								ExpiresDate:          expiresDateStr,
+								OriginalPurchaseDate: time.Now().Format(time.RFC3339),
+								PurchaseDate:         time.Now().Format(time.RFC3339),
+								Store:                "app_store",
+								PeriodType:           "normal",
+							},
+						},
+					},
+				}, nil
+			},
+		}
 
-		// Process the job using our new simplified method
-		err = ts.ProcessRevenueCatWebhookJob(t, rcService)
+		// Create the real RevenueCat service with the mock API client
+		rcServiceWithMockAPI := service.NewRevenueCatService(ts.DB, mockAPIClient)
+
+		// Process the job using the service with mocked API client
+		err = ts.ProcessRevenueCatWebhookJob(t, rcServiceWithMockAPI)
 		require.NoError(t, err)
 
 		// Verify the subscription was created
@@ -125,7 +157,12 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 			userID).Scan(&updatedUser.SubscriptionPlan, &updatedUser.SubscriptionStatus)
 		require.NoError(t, err)
 		assert.Equal(t, model.PlanMonthly, updatedUser.SubscriptionPlan)
-		assert.Equal(t, model.StatusActive, updatedUser.SubscriptionStatus)
+		require.NotNil(t, updatedUser.SubscriptionStatus)
+		assert.Equal(t, model.StatusActive, *updatedUser.SubscriptionStatus)
+
+		// Verify mock API client was called
+		assert.Equal(t, 1, len(mockAPIClient.GetCustomerInfoCalls), "GetCustomerInfo should be called once")
+		assert.Equal(t, revenueCatCustomerID, mockAPIClient.GetCustomerInfoCalls[0].AppUserID, "GetCustomerInfo should be called with correct app user ID")
 	})
 
 	t.Run("DirectSubscriptionCreation_Works", func(t *testing.T) {

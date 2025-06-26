@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"decorebator.com/internal/common"
@@ -15,7 +16,6 @@ const IMAGE_GENERATOR_QUEUE = "image_generator"
 const TEXT_TO_SPEECH_QUEUE = "text_to_speech"
 const DEFINITION_FETCHER_QUEUE = "definition_fetcher"
 const SUBSCRIPTION_REMINDER_QUEUE = "subscription_reminder"
-const BACKFILL_INFLECTIONS_QUEUE = "backfill_inflections"
 const EXAMPLE_AUDIO_QUEUE = "example_audio"
 
 // NoOpJobArgs is a no-op job used for periodic jobs that execute inline
@@ -53,7 +53,12 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 		userRepo: &repository.UserRepository{Db: db},
 	})
 	river.AddWorker(riverWorkers, &NoOpWorker{})
-	river.AddWorker(riverWorkers, NewRevenueCatWebhookWorker(NewRevenueCatService(db)))
+	apiKey, exists := os.LookupEnv("REVENUECAT_API_KEY")
+	if !exists {
+		panic("REVENUECAT_API_KEY not set")
+	}
+	apiClient := NewRevenueCatAPIClient(apiKey)
+	river.AddWorker(riverWorkers, NewRevenueCatWebhookWorker(NewRevenueCatService(db, apiClient)))
 
 	// Create periodic jobs for renewal reminders
 	periodicJobs := []*river.PeriodicJob{
@@ -84,7 +89,6 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 			TEXT_TO_SPEECH_QUEUE:        {MaxWorkers: 30}, //max of 50 per openai docs
 			DEFINITION_FETCHER_QUEUE:    {MaxWorkers: 50},
 			SUBSCRIPTION_REMINDER_QUEUE: {MaxWorkers: 10},
-			BACKFILL_INFLECTIONS_QUEUE:  {MaxWorkers: 1}, // Single worker to respect API rate limits
 			EXAMPLE_AUDIO_QUEUE:         {MaxWorkers: 20},
 			"revenuecat-webhook":        {MaxWorkers: 5},
 		},

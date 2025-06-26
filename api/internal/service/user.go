@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -95,7 +96,7 @@ func LoginUser(email, password string) (string, error) {
 	args := repo.FindUserArgs{
 		Email: &lowerCaseEmail,
 	}
-	results, err := userRepository.Find(args)
+	results, err := userRepository.Find(context.Background(), args)
 	if err != nil {
 		common.Logger.Error("failed to login user", "error", err)
 		return "", errors.New("could not process your request. Try again later")
@@ -117,7 +118,7 @@ func LoginUser(email, password string) (string, error) {
 }
 
 func GetProfile(userID int64) (*User, error) {
-	users, err := userRepository.Find(repository.FindUserArgs{
+	users, err := userRepository.Find(context.Background(), repository.FindUserArgs{
 		ID: &userID,
 	})
 	if err != nil {
