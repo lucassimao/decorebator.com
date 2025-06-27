@@ -9,7 +9,6 @@ import (
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/service"
 	"github.com/getsentry/sentry-go"
-	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -89,6 +88,12 @@ func applyDefaults(config *Config) (*Config, error) {
 		config.WordlistService = service.NewWordlistService(config.Database, config.ModerationService)
 	}
 
+	// Set default RevenueCat service if not provided
+	if config.RevenueCatService == nil {
+		apiClient := service.NewRevenueCatAPIClient()
+		config.RevenueCatService = service.NewRevenueCatService(config.Database, apiClient)
+	}
+
 	return config, nil
 }
 
@@ -102,14 +107,6 @@ func SetupRoutes(config *Config) *gin.Engine {
 	subService := service.NewSubscriptionService(config.Database)
 	subRepo := repository.NewSubscriptionRepository(config.Database)
 	rcService := config.RevenueCatService
-	if rcService == nil {
-		apiKey, exists := os.LookupEnv("REVENUECAT_API_KEY")
-		if !exists {
-			panic("REVENUECAT_API_KEY not set")
-		}
-		apiClient := service.NewRevenueCatAPIClient(apiKey)
-		rcService = service.NewRevenueCatService(config.Database, apiClient)
-	}
 
 	// Initialize route handlers with dependency injection
 	var WordRoutes = NewWordRoutes(config.WordService)
@@ -121,13 +118,8 @@ func SetupRoutes(config *Config) *gin.Engine {
 	var demoRoutes = DemoRoutes{}
 
 	router := gin.New()
-	// Sentry middleware must be first to capture all errors
-	if os.Getenv("ENV") == productionEnv && os.Getenv("SENTRY_DSN") != "" {
-		router.Use(sentrygin.New(sentrygin.Options{
-			Repanic:         true,
-			WaitForDelivery: false,
-		}))
-	}
+	// Sentry middlewares (includes sentrygin + context capture) - completely self-contained
+	router.Use(SentryMiddlewares()...)
 	router.Use(gin.Logger())
 	router.Use(ErrorMiddleware())
 	router.Use(CORSMiddleware())
@@ -155,7 +147,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 
 	// Routes with authentication
 	authenticatedRoutes := router.Group("/")
-	authenticatedRoutes.Use(Authenticate)
+	authenticatedRoutes.Use(Authenticate, SentryUserContextMiddleware())
 	{
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
 		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(subService, "create_wordlist"), WordlistRoutes.Create)
