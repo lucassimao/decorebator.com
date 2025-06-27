@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"runtime/debug"
 
 	"github.com/getsentry/sentry-go"
 )
@@ -47,24 +48,89 @@ func (h *SentryHandler) Handle(ctx context.Context, r slog.Record) error {
 		event.Message = r.Message
 		event.Extra = attrs
 
+		// Capture current stack trace for better debugging
+		stack := debug.Stack()
+		stacktrace := parseGoStackTrace(stack)
+
+		// Add caller information to extra context
+		if callerFrame := createCallerFrame(3); callerFrame != nil { // Skip: Handle -> slog internals -> caller
+			if event.Extra == nil {
+				event.Extra = make(map[string]interface{})
+			}
+			event.Extra["caller_file"] = callerFrame.Filename
+			event.Extra["caller_line"] = callerFrame.Lineno
+			event.Extra["caller_function"] = callerFrame.Function
+			event.Extra["caller_package"] = callerFrame.Package
+		}
+
 		// Add error if present
 		if err, ok := attrs["error"].(error); ok {
 			event.Exception = []sentry.Exception{
 				{
-					Type:  fmt.Sprintf("%T", err),
-					Value: err.Error(),
+					Type:       fmt.Sprintf("%T", err),
+					Value:      err.Error(),
+					Stacktrace: stacktrace,
+				},
+			}
+		} else {
+			// Even without an explicit error, create an exception with stack trace
+			// This helps pinpoint where the error log was generated
+			event.Exception = []sentry.Exception{
+				{
+					Type:       "LogError",
+					Value:      r.Message,
+					Stacktrace: stacktrace,
 				},
 			}
 		}
 
-		// Add user context if available
-		if userID, ok := attrs["userId"].(int64); ok {
-			event.User = sentry.User{
-				ID: fmt.Sprintf("%d", userID),
+		// Add request context from Go context if available
+		if reqCtx := GetRequestContext(ctx); reqCtx != nil {
+			event.Request = &sentry.Request{
+				URL:    reqCtx.URL,
+				Method: reqCtx.Method,
+				Headers: map[string]string{
+					"User-Agent": reqCtx.UserAgent,
+				},
+				QueryString: reqCtx.QueryParams,
 			}
-		} else if userID, ok := attrs["user_id"].(int64); ok {
+			// Also add as context for additional detail
+			event.Contexts["request"] = map[string]interface{}{
+				"url":          reqCtx.URL,
+				"method":       reqCtx.Method,
+				"path":         reqCtx.Path,
+				"query_params": reqCtx.QueryParams,
+				"user_agent":   reqCtx.UserAgent,
+				"remote_ip":    reqCtx.RemoteIP,
+			}
+		}
+
+		// Add user context from Go context if available
+		if userCtx := GetUserContext(ctx); userCtx != nil && userCtx.ID != "" {
 			event.User = sentry.User{
-				ID: fmt.Sprintf("%d", userID),
+				ID:    userCtx.ID,
+				Email: userCtx.Email,
+			}
+			// Add user tags
+			if event.Tags == nil {
+				event.Tags = make(map[string]string)
+			}
+			event.Tags["auth_type"] = userCtx.AuthType
+			if userCtx.SubscriptionPlan != "" {
+				event.Tags["subscription_plan"] = userCtx.SubscriptionPlan
+			}
+		}
+
+		// Fallback: Add user context from log attributes if not in context
+		if event.User.ID == "" {
+			if userID, ok := attrs["userId"].(int64); ok {
+				event.User = sentry.User{
+					ID: fmt.Sprintf("%d", userID),
+				}
+			} else if userID, ok := attrs["user_id"].(int64); ok {
+				event.User = sentry.User{
+					ID: fmt.Sprintf("%d", userID),
+				}
 			}
 		}
 
@@ -107,7 +173,7 @@ func CaptureError(ctx context.Context, err error, message string, attrs ...any) 
 		attrs = append(attrs, "error", err)
 	}
 
-	// Log the error
+	// Log the error (SentryHandler will pick up context automatically)
 	Logger.ErrorContext(ctx, message, attrs...)
 }
 
@@ -123,7 +189,31 @@ func CaptureException(ctx context.Context, err error, attrs map[string]interface
 
 	hub := sentry.CurrentHub().Clone()
 	hub.WithScope(func(scope *sentry.Scope) {
-		// Set context
+		// Set request context from enhanced context
+		if reqCtx := GetRequestContext(ctx); reqCtx != nil {
+			scope.SetContext("request", map[string]interface{}{
+				"url":          reqCtx.URL,
+				"method":       reqCtx.Method,
+				"path":         reqCtx.Path,
+				"query_params": reqCtx.QueryParams,
+				"user_agent":   reqCtx.UserAgent,
+				"remote_ip":    reqCtx.RemoteIP,
+			})
+		}
+
+		// Set user context from enhanced context
+		if userCtx := GetUserContext(ctx); userCtx != nil && userCtx.ID != "" {
+			scope.SetUser(sentry.User{
+				ID:    userCtx.ID,
+				Email: userCtx.Email,
+			})
+			scope.SetTag("auth_type", userCtx.AuthType)
+			if userCtx.SubscriptionPlan != "" {
+				scope.SetTag("subscription_plan", userCtx.SubscriptionPlan)
+			}
+		}
+
+		// Fallback: Set context from legacy format
 		if ctx != nil {
 			if reqCtx, ok := ctx.Value("request").(map[string]interface{}); ok {
 				scope.SetContext("request", reqCtx)
@@ -135,7 +225,15 @@ func CaptureException(ctx context.Context, err error, attrs map[string]interface
 			scope.SetExtra(k, v)
 		}
 
-		// Capture the exception
+		// Add caller information
+		if callerFrame := createCallerFrame(1); callerFrame != nil { // Skip: CaptureException -> caller
+			scope.SetExtra("caller_file", callerFrame.Filename)
+			scope.SetExtra("caller_line", callerFrame.Lineno)
+			scope.SetExtra("caller_function", callerFrame.Function)
+			scope.SetExtra("caller_package", callerFrame.Package)
+		}
+
+		// Capture the exception with stack trace
 		hub.CaptureException(err)
 	})
 }

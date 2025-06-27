@@ -266,15 +266,21 @@ lint: ## Run golangci-lint on all Go files
 	@echo "${YELLOW}Running golangci-lint on all files...${RESET}"
 	golangci-lint run --timeout=5m
 
-lint-changed: ## Run golangci-lint only on files changed since master branch
-	@echo "${YELLOW}Running golangci-lint on changed files since master...${RESET}"
-	@CHANGED_FILES=$$(git diff --name-only --diff-filter=AM origin/master...HEAD | grep '\.go$$' | grep '^api/' | sed 's|^api/||' || echo ""); \
-	if [ -z "$$CHANGED_FILES" ]; then \
-		echo "${GREEN}No Go files changed since master branch${RESET}"; \
+lint-changed: ## Run golangci-lint on all changed files (committed + staged + working)
+	@echo "${YELLOW}Running golangci-lint on all changed files (committed, staged, and working)...${RESET}"
+	@{ \
+		git diff --name-only --diff-filter=AM origin/master...HEAD 2>/dev/null || true; \
+		git diff --cached --name-only --diff-filter=AM 2>/dev/null || true; \
+		git diff --name-only --diff-filter=AM 2>/dev/null || true; \
+	} | grep '\.go$$' | grep '^api/' | sed 's|^api/||' | sort | uniq > /tmp/changed_files.txt || true
+	@if [ ! -s /tmp/changed_files.txt ]; then \
+		echo "${GREEN}No Go files changed (committed, staged, or working directory)${RESET}"; \
 	else \
-		echo "${CYAN}Changed files: $$CHANGED_FILES${RESET}"; \
-		golangci-lint run --timeout=5m --new-from-rev=$$(git merge-base origin/master HEAD); \
+		echo "${CYAN}Changed files: $$(tr '\n' ' ' < /tmp/changed_files.txt)${RESET}"; \
+		echo "${CYAN}Running golangci-lint with --new-from-rev (includes all committed + uncommitted changes)${RESET}"; \
+		golangci-lint run --timeout=5m --new-from-rev=$$(git merge-base origin/master HEAD 2>/dev/null || echo "HEAD~10"); \
 	fi
+	@rm -f /tmp/changed_files.txt
 
 lint-staged: ## Run golangci-lint only on staged files
 	@echo "${YELLOW}Running golangci-lint on staged files...${RESET}"

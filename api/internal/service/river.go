@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"decorebator.com/internal/common"
@@ -53,11 +52,7 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 		userRepo: &repository.UserRepository{Db: db},
 	})
 	river.AddWorker(riverWorkers, &NoOpWorker{})
-	apiKey, exists := os.LookupEnv("REVENUECAT_API_KEY")
-	if !exists {
-		panic("REVENUECAT_API_KEY not set")
-	}
-	apiClient := NewRevenueCatAPIClient(apiKey)
+	apiClient := NewRevenueCatAPIClient()
 	river.AddWorker(riverWorkers, NewRevenueCatWebhookWorker(NewRevenueCatService(db, apiClient)))
 
 	// Create periodic jobs for renewal reminders
