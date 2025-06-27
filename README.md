@@ -573,22 +573,27 @@ The system uses **7 boxes** with increasing review intervals:
 - **Box 7**: Words stay in Box 7 when answered correctly (mastered state)
 - **Temporary Skip**: Incorrect answers trigger 10-minute skip to prevent immediate repetition
 
-### Deterministic Selection Algorithm
+### Pure Priority Selection Algorithm
 
-The system uses a **100% deterministic priority-based selection** that guarantees word availability:
+The system uses a **100% deterministic pure priority-based selection** with clean 3-tier tiebreaking:
 
 1. **Progress Calculation**: Each definition has a progress ratio (time_elapsed / target_interval)
-2. **Priority Buckets**:
-   - Priority 1: Overdue definitions (100%+ of interval elapsed)
-   - Priority 2: Due soon definitions (80-100% of interval)
-   - Priority 3: Available definitions (50-80% of interval)
-   - Priority 4: All other definitions (sorted by progress %)
-3. **Selection**: Always picks the highest priority definition deterministically
+2. **Pure Priority Weights**:
+   - **Overdue** (100%+ interval): Weight = 1000 (highest priority)
+   - **Due Soon** (80-100% interval): Weight = 800 (high priority)
+   - **Available** (50-80% interval): Weight = 500 (medium priority)
+   - **Not Ready** (<50% interval): Weight = progress_ratio × 100 (proportional priority)
+3. **3-Tier Tiebreaking**:
+   - **Primary**: Highest weight wins (respects spaced repetition science)
+   - **Secondary**: Oldest reviewed first (new words with NULL = highest priority)
+   - **Tertiary**: Definition ID (deterministic final tiebreaker)
 4. **Benefits**:
-   - No randomness - same data always produces same result
-   - Guaranteed selection - never "no words available" errors
-   - Respects Leitner intervals precisely
-   - Easy to debug and test
+   - 100% deterministic and predictable behavior
+   - No artificial randomness - respects spaced repetition science exactly
+   - Clean priority buckets with simple tiebreaking
+   - Fast performance with minimal complex calculations
+   - Easy to debug, test, and maintain
+   - Transparent system that users can understand and trust
 
 ### Quiz Type Progression
 
