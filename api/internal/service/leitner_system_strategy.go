@@ -176,7 +176,14 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 					ELSE (CASE 
 						WHEN lst.updated_at IS NULL THEN 999999  
 						ELSE EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600
-					END) / NULLIF(target_hours, 0)
+					END) / NULLIF(CASE lst.box_id
+						WHEN 2 THEN 6
+						WHEN 3 THEN 24
+						WHEN 4 THEN 72
+						WHEN 5 THEN 168
+						WHEN 6 THEN 336
+						WHEN 7 THEN 720
+					END, 0)
 				END as progress_ratio
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
