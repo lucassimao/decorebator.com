@@ -244,7 +244,7 @@
       },
       "2": {
         "question": "Qu'est-ce que le système Leitner avancé de répétition espacée ?",
-        "answer": "Decorebator utilise un système de répétition espacée à 7 boîtes scientifiquement optimisé avec des intervalles : Boîte 1 (immédiat), Boîte 2 (1 heure), Boîte 3 (6 heures), Boîte 4 (1 jour), Boîte 5 (3 jours), Boîte 6 (7 jours) et Boîte 7 (1 mois). Les mots progressent à travers les boîtes selon vos performances, avec une progression intelligente des types de quiz pour un apprentissage optimal."
+        "answer": "Decorebator utilise un système de répétition espacée à 7 boîtes scientifiquement optimisé avec des intervalles : Boîte 1 (immédiat), Boîte 2 (6 heures), Boîte 3 (1 jour), Boîte 4 (3 jours), Boîte 5 (1 semaine), Boîte 6 (2 semaines) et Boîte 7 (1 mois). Les mots progressent à travers les boîtes selon vos performances, avec une progression intelligente des types de quiz pour un apprentissage optimal."
       },
       "3": {
         "question": "Quels sont les plans d'abonnement et les tarifs ?",
@@ -805,7 +805,7 @@
         "purpose": "Objectif",
         "boxes": [
           {"box": "Boîte 1", "interval": "Immédiat", "purpose": "Nouveaux mots, révisions échouées"},
-          {"box": "Boîte 2", "interval": "1 heure", "purpose": "Apprentissage récent"},
+          {"box": "Boîte 2", "interval": "6 heures", "purpose": "Apprentissage récent"},
           {"box": "Boîte 3", "interval": "1 jour", "purpose": "Rétention à court terme"},
           {"box": "Boîte 4", "interval": "3 jours", "purpose": "Rétention à moyen terme"},
           {"box": "Boîte 5", "interval": "1 semaine", "purpose": "Rétention à long terme"},

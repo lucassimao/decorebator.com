@@ -567,7 +567,7 @@
         "subtitle": "Palabras distribuidas en las cajas Leitner",
         "explanation": "El sistema Leitner usa 7 cajas con intervalos de revisión crecientes. Las palabras suben cuando se responden correctamente y vuelven a la Caja 1 cuando son incorrectas. Las cajas más altas indican mejor retención.",
         "box1": "Nuevas (Ahora)",
-        "box2": "Aprendiendo (1h)",
+        "box2": "Aprendiendo (6h)",
         "box3": "Familiares (1d)",
         "box4": "Conocidas (3d)",
         "box5": "Retenidas (1s)",

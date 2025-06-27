@@ -361,7 +361,7 @@
       },
       "2": {
         "question": "Was ist das erweiterte Leitner verteilte Wiederholungssystem?",
-        "answer": "Decorebator verwendet ein wissenschaftlich optimiertes 7-Box-System für verteilte Wiederholung mit Intervallen: Box 1 (sofort), Box 2 (1 Stunde), Box 3 (6 Stunden), Box 4 (1 Tag), Box 5 (3 Tage), Box 6 (7 Tage) und Box 7 (1 Monat). Wörter durchlaufen Boxen basierend auf Ihrer Leistung, mit intelligenter Quiz-Typ-Progression für optimales Lernen."
+        "answer": "Decorebator verwendet ein wissenschaftlich optimiertes 7-Box-System für verteilte Wiederholung mit Intervallen: Box 1 (sofort), Box 2 (6 Stunden), Box 3 (1 Tag), Box 4 (3 Tage), Box 5 (1 Woche), Box 6 (2 Wochen) und Box 7 (1 Monat). Wörter durchlaufen Boxen basierend auf Ihrer Leistung, mit intelligenter Quiz-Typ-Progression für optimales Lernen."
       },
       "3": {
         "question": "Was sind die Abonnement-Pläne und Preise?",
@@ -514,7 +514,7 @@
         "purpose": "Zweck",
         "boxes": [
           {"box": "Box 1", "interval": "Sofort", "purpose": "Neue Wörter, fehlgeschlagene Wiederholungen"},
-          {"box": "Box 2", "interval": "1 Stunde", "purpose": "Kürzliches Lernen"},
+          {"box": "Box 2", "interval": "6 Stunden", "purpose": "Kürzliches Lernen"},
           {"box": "Box 3", "interval": "1 Tag", "purpose": "Kurzfristige Behaltensfähigkeit"},
           {"box": "Box 4", "interval": "3 Tage", "purpose": "Mittelfristige Behaltensfähigkeit"},
           {"box": "Box 5", "interval": "1 Woche", "purpose": "Langfristige Behaltensfähigkeit"},

@@ -22,7 +22,7 @@ Instead of probability calculations and random selection, definitions are select
 | Box | Target Interval | Description |
 |-----|----------------|-------------|
 | 1 | Immediate | Always 100% progress (highest priority) |
-| 2 | 1 hour | Quick review cycle |
+| 2 | 6 hours | Quick review cycle |
 | 3 | 1 day (24h) | Daily review |
 | 4 | 3 days (72h) | Every few days |
 | 5 | 1 week (168h) | Weekly review |

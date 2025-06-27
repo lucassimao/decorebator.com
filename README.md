@@ -560,7 +560,7 @@ The system uses **7 boxes** with increasing review intervals:
 | Box | Review Interval | Purpose |
 |-----|----------------|---------|
 | **Box 1** | Immediate (always available) | New words, failed reviews |
-| **Box 2** | 1 hour | Recent learning |
+| **Box 2** | 6 hours | Recent learning |
 | **Box 3** | 1 day (24 hours) | Short-term retention |
 | **Box 4** | 3 days (72 hours) | Medium-term retention |
 | **Box 5** | 1 week (168 hours) | Long-term retention |

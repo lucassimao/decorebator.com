@@ -244,7 +244,7 @@
       },
       "2": {
         "question": "Cos'è il sistema Leitner avanzato di ripetizione distanziata?",
-        "answer": "Decorebator utilizza un sistema di ripetizione distanziata a 7 scatole scientificamente ottimizzato con intervalli: Scatola 1 (immediato), Scatola 2 (1 ora), Scatola 3 (6 ore), Scatola 4 (1 giorno), Scatola 5 (3 giorni), Scatola 6 (7 giorni) e Scatola 7 (1 mese). Le parole progrediscono attraverso le scatole in base alle tue prestazioni, con progressione intelligente dei tipi di quiz per un apprendimento ottimale."
+        "answer": "Decorebator utilizza un sistema di ripetizione distanziata a 7 scatole scientificamente ottimizzato con intervalli: Scatola 1 (immediato), Scatola 2 (6 ore), Scatola 3 (1 giorno), Scatola 4 (3 giorni), Scatola 5 (1 settimana), Scatola 6 (2 settimane) e Scatola 7 (1 mese). Le parole progrediscono attraverso le scatole in base alle tue prestazioni, con progressione intelligente dei tipi di quiz per un apprendimento ottimale."
       },
       "3": {
         "question": "Quali sono i piani di abbonamento e i prezzi?",
@@ -856,7 +856,7 @@
         "purpose": "Scopo",
         "boxes": [
           {"box": "Scatola 1", "interval": "Immediato", "purpose": "Parole nuove, ripassi falliti"},
-          {"box": "Scatola 2", "interval": "1 ora", "purpose": "Apprendimento recente"},
+          {"box": "Scatola 2", "interval": "6 ore", "purpose": "Apprendimento recente"},
           {"box": "Scatola 3", "interval": "1 giorno", "purpose": "Ritenzione a breve termine"},
           {"box": "Scatola 4", "interval": "3 giorni", "purpose": "Ritenzione a medio termine"},
           {"box": "Scatola 5", "interval": "1 settimana", "purpose": "Ritenzione a lungo termine"},

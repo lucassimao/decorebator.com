@@ -576,7 +576,7 @@
         "subtitle": "Wörter verteilt über Leitner-Boxen",
         "explanation": "Das Leitner-System verwendet 7 Boxen mit steigenden Wiederholungsintervallen. Wörter steigen bei richtiger Antwort auf und werden bei falscher Antwort auf Box 1 zurückgesetzt. Höhere Boxen zeigen bessere Merkfähigkeit.",
         "box1": "Neu (Jetzt)",
-        "box2": "Lernend (1h)",
+        "box2": "Lernend (6h)",
         "box3": "Vertraut (1T)",
         "box4": "Bekannt (3T)",
         "box5": "Behalten (1W)",

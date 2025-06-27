@@ -210,7 +210,7 @@
       },
       "2": {
         "question": "What is the Advanced Leitner spaced repetition system?",
-        "answer": "Decorebator uses a scientifically optimized 7-box spaced repetition system with intervals: Box 1 (immediate), Box 2 (1 hour), Box 3 (6 hours), Box 4 (1 day), Box 5 (3 days), Box 6 (7 days), and Box 7 (1 month). Words progress through boxes based on your performance, with intelligent quiz type progression for optimal learning."
+        "answer": "Decorebator uses a scientifically optimized 7-box spaced repetition system with intervals: Box 1 (immediate), Box 2 (6 hours), Box 3 (1 day), Box 4 (3 days), Box 5 (1 week), Box 6 (2 weeks), and Box 7 (1 month). Words progress through boxes based on your performance, with intelligent quiz type progression for optimal learning."
       },
       "3": {
         "question": "What are the subscription plans and pricing?",
@@ -555,7 +555,7 @@
         "purpose": "Purpose",
         "boxes": [
           {"box": "Box 1", "interval": "Immediate", "purpose": "New words, failed reviews"},
-          {"box": "Box 2", "interval": "1 hour", "purpose": "Recent learning"},
+          {"box": "Box 2", "interval": "6 hours", "purpose": "Recent learning"},
           {"box": "Box 3", "interval": "1 day", "purpose": "Short-term retention"},
           {"box": "Box 4", "interval": "3 days", "purpose": "Medium-term retention"},
           {"box": "Box 5", "interval": "1 week", "purpose": "Long-term retention"},
@@ -837,7 +837,7 @@
         "description": "Words progress through 7 boxes based on your performance, with increasing review intervals:",
         "boxes": [
           { "box": "Box 1", "interval": "Immediate", "purpose": "New words, failed reviews" },
-          { "box": "Box 2", "interval": "1 hour", "purpose": "Recent learning" },
+          { "box": "Box 2", "interval": "6 hours", "purpose": "Recent learning" },
           { "box": "Box 3", "interval": "1 day", "purpose": "Short-term retention" },
           { "box": "Box 4", "interval": "3 days", "purpose": "Medium-term retention" },
           { "box": "Box 5", "interval": "1 week", "purpose": "Long-term retention" },
