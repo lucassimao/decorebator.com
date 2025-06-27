@@ -154,11 +154,17 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				di.url as image_url, di.description as image_description, 
 				wd.word_id AS word_id,
 				lst.updated_at,
+				lst.consecutive_failures,
 				-- Calculate hours since last review
 				COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/3600, 0) as hours_since_review,
-				-- Get target interval hours based on box
+				-- Get target interval hours based on box and consecutive failures (progressive penalties for Box 1)
 				CASE lst.box_id
-					WHEN 1 THEN 0     -- Always available
+					WHEN 1 THEN 
+						CASE lst.consecutive_failures
+							WHEN 0 THEN 2.0/60     -- 2 minutes in hours (first failure)
+							WHEN 1 THEN 5.0/60     -- 5 minutes in hours (second failure)
+							ELSE 15.0/60           -- 15 minutes in hours (third+ failure)
+						END
 					WHEN 2 THEN 6     -- 6 hours
 					WHEN 3 THEN 24    -- 1 day
 					WHEN 4 THEN 72    -- 3 days
@@ -168,7 +174,17 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				END as target_hours,
 				-- Calculate progress ratio (how close to target interval)
 				CASE 
-					WHEN lst.box_id = 1 THEN 1.0  -- Box 1 always 100% ready
+					WHEN lst.box_id = 1 THEN 
+						-- For Box 1, calculate based on progressive penalty timing
+						COALESCE(
+							EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/3600 / 
+							NULLIF(CASE lst.consecutive_failures
+								WHEN 0 THEN 2.0/60     -- 2 minutes
+								WHEN 1 THEN 5.0/60     -- 5 minutes  
+								ELSE 15.0/60           -- 15 minutes
+							END, 0), 
+							1.0  -- Default to ready if calculation fails
+						)
 					ELSE COALESCE(
 						EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/3600 / 
 						NULLIF(CASE lst.box_id
@@ -1025,7 +1041,7 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 		tx = *transactionPtr
 	}
 
-	// Proper Leitner system logic with temporary skip on incorrect answers
+	// Proper Leitner system logic with progressive skip penalties for Box 1 failures
 	query := `UPDATE leitner_system_tracking 
 	SET 
 		updated_at = now(), 
@@ -1034,9 +1050,19 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 			WHEN $1 AND box_id = 7 THEN 7           -- Stay at max box
 			ELSE 1                                   -- Reset to box 1 on failure
 		END,
+		consecutive_failures = CASE 
+			WHEN $1 THEN 0                           -- Reset failure count on correct answer
+			ELSE consecutive_failures + 1            -- Increment failure count on incorrect answer
+		END,
 		temporarily_skipped_until = CASE 
-			WHEN NOT $1 THEN NOW() + INTERVAL '10 minutes'  -- Skip for 10 minutes on incorrect answer
-			ELSE NULL                                        -- Clear skip on correct answer
+			WHEN NOT $1 THEN 
+				-- Progressive skip penalties for Box 1 based on consecutive failures
+				CASE 
+					WHEN consecutive_failures = 0 THEN NOW() + INTERVAL '2 minutes'   -- First failure: 2 minutes
+					WHEN consecutive_failures = 1 THEN NOW() + INTERVAL '5 minutes'   -- Second failure: 5 minutes
+					ELSE NOW() + INTERVAL '15 minutes'                                -- Third+ failure: 15 minutes
+				END
+			ELSE NULL                                -- Clear skip on correct answer
 		END
 	WHERE id = $2
 	RETURNING box_id`
@@ -1055,10 +1081,11 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 // This is the core of the spaced repetition algorithm that:
 // - Moves words to higher boxes on correct answers (increasing review intervals)
 // - Resets words to box 1 on incorrect answers (immediate review)
-// - Temporarily skips incorrectly answered words for 10 minutes to prevent repetition
+// - Implements progressive skip penalties for Box 1 failures (2min → 5min → 15min)
+// - Tracks consecutive failures to provide appropriate escalation
 //
 // The Leitner box progression determines when words are reviewed again:
-// Box 1: immediate, Box 2: 1 hour, Box 3: 1 day, Box 4: 3 days, Box 5: 1 week, Box 6: 2 weeks, Box 7: 1 month
+// Box 1: progressive penalties (2min/5min/15min), Box 2: 6 hours, Box 3: 1 day, Box 4: 3 days, Box 5: 1 week, Box 6: 2 weeks, Box 7: 1 month
 //
 // Parameters:
 // - quizResult: Contains the quiz response details (correct/incorrect, timing, etc.)

@@ -559,7 +559,7 @@ The system uses **7 boxes** with increasing review intervals:
 
 | Box | Review Interval | Purpose |
 |-----|----------------|---------|
-| **Box 1** | Immediate (always available) | New words, failed reviews |
+| **Box 1** | Progressive penalties (2min → 5min → 15min) | New words, failed reviews |
 | **Box 2** | 6 hours | Recent learning |
 | **Box 3** | 1 day (24 hours) | Short-term retention |
 | **Box 4** | 3 days (72 hours) | Medium-term retention |
@@ -571,7 +571,7 @@ The system uses **7 boxes** with increasing review intervals:
 - **Correct Answer**: Word moves to the next box (up to Box 7)
 - **Incorrect Answer**: Word resets to Box 1 regardless of current box
 - **Box 7**: Words stay in Box 7 when answered correctly (mastered state)
-- **Temporary Skip**: Incorrect answers trigger 10-minute skip to prevent immediate repetition
+- **Progressive Skip Penalties**: Box 1 failures use escalating delays (2min → 5min → 15min) based on consecutive failures
 
 ### Deterministic Selection Algorithm
 

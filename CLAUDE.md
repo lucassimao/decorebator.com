@@ -627,7 +627,7 @@ The application provides comprehensive multi-language support:
 The system uses a deterministic priority-based algorithm for word selection, ensuring consistent and predictable learning experiences.
 
 **Box Review Intervals:**
-- Box 1: Immediate (new/failed words)
+- Box 1: Progressive penalties (2min → 5min → 15min for consecutive failures)
 - Box 2: 6 hours
 - Box 3: 1 day  
 - Box 4: 3 days
@@ -646,6 +646,14 @@ The system uses a deterministic priority-based algorithm for word selection, ens
 - Temporary skip for reported errors (auto-resumed after regeneration)
 - Progressive quiz difficulty matching box level
 - Consistent user experience across sessions
+
+**Progressive Skip Penalty System:**
+Box 1 uses progressive penalties instead of fixed delays to maintain the "immediate" review concept while providing appropriate escalation for difficult words:
+- **1st failure**: 2 minutes (still feels immediate for quick retry)
+- **2nd failure**: 5 minutes (gentle escalation, signals attention needed)
+- **3rd+ failure**: 15 minutes (meaningful penalty for persistently difficult words)
+
+This resolves the contradiction between Box 1 being "immediate" and having fixed 10-minute delays, ensuring truly new or recently mastered words can be retried quickly while challenging words receive appropriate penalties.
 
 ## Memories
 - read README.md for more additional context on decorebator project

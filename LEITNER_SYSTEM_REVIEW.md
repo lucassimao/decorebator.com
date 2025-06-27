@@ -72,7 +72,7 @@ Correct Sequence: Immediate → 6 hours → 1 day → 3 days → 1 week → 2 we
 
 ### **High Priority Issues**
 - [ ] **Box 3→4 Gap Analysis** (1 day → 3 days) - Missing 2-day interval?
-- [ ] **10-Minute Skip Mechanism** - Too long? Conflicts with "immediate" Box 1?
+- [x] **10-Minute Skip Mechanism** - Too long? Conflicts with "immediate" Box 1? (**RESOLVED**)
 - [ ] **Word Selection Algorithm** - Performance optimization, edge case handling
 - [ ] **Quiz Type Generation Strategies** - Individual review of all 8 types
 - [ ] **Content Quality Assurance** - Fair distribution algorithms, error handling
@@ -85,7 +85,7 @@ Correct Sequence: Immediate → 6 hours → 1 day → 3 days → 1 week → 2 we
 
 ### **Research-Based Optimizations**
 - [ ] **Confidence-Based Progression** - Use response time for box advancement?
-- [ ] **Progressive Skip Penalties** - Escalating timeouts for repeated failures?
+- [x] **Progressive Skip Penalties** - Escalating timeouts for repeated failures? (**IMPLEMENTED**)
 - [ ] **Word-Level Grouping** - Prevent multi-definition bombardment?
 
 ---
@@ -125,6 +125,36 @@ Correct Sequence: Immediate → 6 hours → 1 day → 3 days → 1 week → 2 we
 | 7 | 2,807 | 114 | 4.06% | Excellent mastery |
 
 **Key Insight**: Dramatic improvement from Box 3→4 suggests current intervals may be working, but Box 2 fix should improve overall flow.
+
+### **🚨 Issue #3: Progressive Skip Penalty System (RESOLVED)**
+**Status**: ✅ **RESOLVED**  
+**Impact**: High - Improved user experience for Box 1 failures  
+**Root Cause**: Fixed 10-minute skip delay contradicted "immediate" Box 1 concept
+
+**Evidence Found**:
+- **Production Data**: 88.46% of Box 1 words had skip history, contradicting "immediate" nature
+- **UX Contradiction**: New words penalized same as persistently difficult words
+- **User Experience**: Fixed delay prevented quick retry for genuine mistakes
+
+**Solution Implemented**:
+- ✅ **Database Schema**: Added `consecutive_failures` column with migration 000054
+- ✅ **Progressive Penalties**: 2min → 5min → 15min escalation system
+- ✅ **Algorithm Updates**: Modified `updateLeitnerSystemTracking` and word selection query
+- ✅ **Documentation**: Updated 4 documentation files with progressive penalty details
+
+**Progressive Penalty Structure**:
+```
+1st failure: 2 minutes  (maintains "immediate" feeling)
+2nd failure: 5 minutes  (gentle escalation)
+3rd+ failure: 15 minutes (meaningful penalty for difficult words)
+```
+
+**Files Modified** (8 total):
+```
+Database: api/cmd/migrate/migrations/000054_add_consecutive_failures_tracking.{up,down}.sql
+API:      api/internal/service/leitner_system_strategy.go
+Docs:     CLAUDE.md, docs/DETERMINISTIC_LEITNER_IMPLEMENTATION.md, LEITNER_SYSTEM_REVIEW.md
+```
 
 ---
 
@@ -216,11 +246,13 @@ web/messages/ (Documentation accuracy)
 - ✅ **Box 2 Interval**: 1h → 6h (cognitive science aligned)
 - ✅ **Cross-Platform Consistency**: 25+ files synchronized
 - ✅ **Documentation Accuracy**: All interval references corrected
+- ✅ **Progressive Skip Penalties**: 2min → 5min → 15min escalation system
 
 ### **Expected Improvements**
 - 📉 **Lower Box 2 Failure Rate**: Expected drop from 16.44% to ~8-10%
 - ⏰ **Better User Experience**: Reduced word repetition frequency
 - 🧠 **Improved Learning**: Memory consolidation respected
+- 🎯 **Enhanced Box 1 Experience**: Quick retry for new words, appropriate penalties for difficult ones
 
 ---
 

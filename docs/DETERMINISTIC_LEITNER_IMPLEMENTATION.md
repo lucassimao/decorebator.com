@@ -21,13 +21,43 @@ Instead of probability calculations and random selection, definitions are select
 
 | Box | Target Interval | Description |
 |-----|----------------|-------------|
-| 1 | Immediate | Always 100% progress (highest priority) |
+| 1 | Progressive penalties | 2min → 5min → 15min for consecutive failures |
 | 2 | 6 hours | Quick review cycle |
 | 3 | 1 day (24h) | Daily review |
 | 4 | 3 days (72h) | Every few days |
 | 5 | 1 week (168h) | Weekly review |
 | 6 | 2 weeks (336h) | Bi-weekly review |
 | 7 | 1 month (720h) | Monthly review |
+
+## Progressive Skip Penalty System
+
+### Rationale
+
+Box 1 traditionally had a contradiction: it was described as "immediate" review but used a fixed 10-minute skip delay for failures. This created a poor user experience where genuinely new words or recently mastered words were penalized with the same delay as persistently difficult words.
+
+### Progressive Penalty Structure
+
+The system now implements escalating penalties based on consecutive failure count:
+
+| Failure Count | Skip Delay | Rationale |
+|---------------|------------|-----------|
+| 1st failure | 2 minutes | Still feels "immediate" - allows quick retry |
+| 2nd failure | 5 minutes | Gentle escalation - signals word needs attention |
+| 3rd+ failure | 15 minutes | Meaningful penalty - encourages focused study |
+
+### Benefits
+
+1. **Maintains "Immediate" Concept**: First-time failures only have a 2-minute delay
+2. **Appropriate Escalation**: Persistently difficult words get meaningful penalties
+3. **Better User Experience**: Users can quickly retry new or recently learned words
+4. **Cognitive Alignment**: Matches natural learning patterns
+
+### Database Schema
+
+The system tracks consecutive failures using the `consecutive_failures` column in `leitner_system_tracking`:
+- Incremented on each failure
+- Reset to 0 on correct answers
+- Used to calculate appropriate skip delays
 
 ## Implementation Details
 
@@ -86,6 +116,16 @@ ORDER BY
 - Definition C: Box 5, reviewed 200 hours ago (119% progress) → **Priority 1**
 
 **Result**: Between A and C (both Priority 1), A selected (NULL timestamp = oldest)
+
+### Example 4: Progressive Penalty Scenario
+
+**Box 1 definitions with different failure counts:**
+- Definition A: Box 1, 0 failures, failed 1 minute ago → **Ready in 1 minute** (2min penalty)
+- Definition B: Box 1, 1 failure, failed 3 minutes ago → **Ready in 2 minutes** (5min penalty) 
+- Definition C: Box 1, 3 failures, failed 10 minutes ago → **Ready in 5 minutes** (15min penalty)
+- Definition D: Box 2, reviewed 7 hours ago → **Ready now** (overdue)
+
+**Result**: Definition D selected (overdue takes priority), then A, then B, then C
 
 ## Benefits Over Probabilistic Approach
 
