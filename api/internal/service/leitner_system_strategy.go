@@ -102,20 +102,25 @@ type ExampleUsage struct {
 	LastUsedAt  time.Time `db:"last_used_at"`
 }
 
-// getNextDefinition selects the next definition for quiz generation using deterministic priority-based selection.
+// getNextDefinition selects the next definition for quiz generation using pure priority-based selection.
 //
-// This function implements a deterministic version of the Leitner spaced repetition system that guarantees
-// definition selection while respecting spaced repetition intervals.
+// This function implements a clean, deterministic Leitner spaced repetition system that strictly follows
+// spaced repetition science without artificial randomness or complex calculations.
 //
-// ALGORITHM:
-// Definitions are selected based on their progress toward their target review interval:
-// - Priority 1: Overdue definitions (100%+ of interval elapsed)
-// - Priority 2: Due soon definitions (80-100% of interval)
-// - Priority 3: Available definitions (50-80% of interval)
-// - Priority 4: All other definitions (sorted by progress %)
+// PURE PRIORITY ALGORITHM:
+// Definitions are selected using a simple 3-tier ordering system:
+// 1. PRIMARY: selection_weight DESC (higher urgency = higher priority)
+// 2. SECONDARY: oldest reviewed first (new words with NULL updated_at = highest priority)
+// 3. TERTIARY: definition ID ASC (deterministic tiebreaker)
+//
+// WEIGHT CALCULATION (pure priority buckets):
+// - Overdue (100%+ interval): weight = 1000 (highest priority)
+// - Due soon (80-100%): weight = 800 (high priority)
+// - Available (50-80%): weight = 500 (medium priority)
+// - Not ready (<50%): weight = progress_ratio × 100 (proportional priority)
 //
 // BOX-SPECIFIC INTERVALS:
-// - Box 1: Immediate (always available)
+// - Box 1: Immediate (always available, new words get NULL updated_at)
 // - Box 2: 6 hours
 // - Box 3: 1 day (24 hours)
 // - Box 4: 3 days (72 hours)
@@ -123,18 +128,13 @@ type ExampleUsage struct {
 // - Box 6: 2 weeks (336 hours)
 // - Box 7: 1 month (720 hours)
 //
-// SELECTION LOGIC:
-// 1. Calculate progress ratio for each definition (time_elapsed / target_interval)
-// 2. Assign priority bucket based on progress ratio
-// 3. Sort by priority bucket, then by oldest reviewed
-// 4. Select first definition (deterministic, no randomness)
-//
 // BENEFITS:
-// - 100% deterministic (same data = same result)
-// - Guaranteed selection (no "no words selected" errors)
-// - Respects Leitner intervals precisely
-// - Simple and efficient (no complex probability calculations)
-// - Easy to debug and test
+// - 100% deterministic and predictable behavior
+// - Respects spaced repetition science exactly (no artificial randomness)
+// - Clean priority buckets with simple tiebreaking
+// - Fast performance with minimal complex calculations
+// - Easy to debug, test, and maintain
+// - Transparent system that users can understand and trust
 //
 // Parameters:
 // - userID: The user requesting a quiz
@@ -154,8 +154,11 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				di.url as image_url, di.description as image_description, 
 				wd.word_id AS word_id,
 				lst.updated_at,
-				-- Calculate hours since last review
-				COALESCE(EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/3600, 0) as hours_since_review,
+				-- Calculate hours since last review (NULL = never reviewed = maximum hours)
+				CASE 
+					WHEN lst.updated_at IS NULL THEN 999999  -- New words get maximum hours
+					ELSE EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600
+				END as hours_since_review,
 				-- Get target interval hours based on box
 				CASE lst.box_id
 					WHEN 1 THEN 0     -- Always available
@@ -169,18 +172,8 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				-- Calculate progress ratio (how close to target interval)
 				CASE 
 					WHEN lst.box_id = 1 THEN 1.0  -- Box 1 always 100% ready
-					ELSE COALESCE(
-						EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/3600 / 
-						NULLIF(CASE lst.box_id
-							WHEN 2 THEN 6
-							WHEN 3 THEN 24
-							WHEN 4 THEN 72
-							WHEN 5 THEN 168
-							WHEN 6 THEN 336
-							WHEN 7 THEN 720
-						END, 0), 
-						0
-					)
+					WHEN lst.updated_at IS NULL THEN 1.0  -- New words always ready
+					ELSE hours_since_review / NULLIF(target_hours, 0)
 				END as progress_ratio
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
@@ -200,21 +193,13 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				id, token, part_of_speech, language, is_verb_type, meaning, examples, inflections, 
 				lst_id, box_id, sounds, phonetic_notations, 
 				COALESCE(image_url,'') as image_url, word_id, COALESCE(image_description,'') as image_description,
-				hours_since_review, progress_ratio,
-				-- Calculate weighted selection score to reduce dominance
+				hours_since_review, progress_ratio, updated_at,
+				-- Pure priority based on progress ratio - no complex calculations
 				CASE 
-					-- Overdue definitions get high weight (but not exclusive)
-					WHEN progress_ratio >= 1.0 THEN 
-						100 + (progress_ratio * 50) + hours_since_review
-					-- Due soon get medium-high weight
-					WHEN progress_ratio >= 0.8 THEN 
-						80 + (progress_ratio * 20) + hours_since_review
-					-- Available get medium weight
-					WHEN progress_ratio >= 0.5 THEN 
-						60 + (progress_ratio * 15) + hours_since_review
-					-- Not quite ready get low weight (but still possible)
-					ELSE 
-						20 + (progress_ratio * 10) + hours_since_review
+					WHEN progress_ratio >= 1.0 THEN 1000    -- Overdue (highest priority)
+					WHEN progress_ratio >= 0.8 THEN 800     -- Due soon
+					WHEN progress_ratio >= 0.5 THEN 500     -- Available
+					ELSE FLOOR(progress_ratio * 100)        -- Early (proportional priority)
 				END as selection_weight
 			FROM definition_priorities
 		),
@@ -222,14 +207,16 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 			SELECT 
 				id, token, part_of_speech, language, is_verb_type, meaning, examples, inflections, 
 				lst_id, box_id, sounds, phonetic_notations, 
-				image_url, word_id, image_description, hours_since_review, progress_ratio
+				image_url, word_id, image_description, hours_since_review, progress_ratio, updated_at
 			FROM weighted_definitions
-			-- Use deterministic but varied selection based on current time and definition ID
-			-- This creates pseudo-random selection weighted by importance
+			-- Pure priority-based selection: respects spaced repetition science exactly
+			-- No artificial randomness - selection is 100% predictable and deterministic
 			ORDER BY 
-				-- Primary sort: Use a deterministic hash to create variety while respecting weights
-				(selection_weight * (1 + SIN(id * 12345 + EXTRACT(EPOCH FROM NOW())::INTEGER % 86400))) DESC,
-				-- Fallback tiebreaker for absolute determinism in edge cases
+				-- Primary sort: Highest weight wins (respects spaced repetition intervals)
+				selection_weight DESC,
+				-- Secondary sort: Among equal weights, prioritize oldest reviewed (new words = NULL = oldest)
+				COALESCE(updated_at, '1970-01-01') ASC,
+				-- Final tiebreaker: Lowest definition ID wins (deterministic)
 				id ASC
 			LIMIT 1
 		)
@@ -257,7 +244,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 		LEFT JOIN definition_example_audio dea ON dea.definition_id = sd.id
 		GROUP BY sd.id, sd.token, sd.part_of_speech, sd.language, sd.is_verb_type, sd.meaning, sd.examples, sd.inflections, 
 				 sd.lst_id, sd.box_id, sd.sounds, sd.phonetic_notations, 
-				 sd.image_url, sd.word_id, sd.image_description, sd.hours_since_review, sd.progress_ratio;
+				 sd.image_url, sd.word_id, sd.image_description, sd.hours_since_review, sd.progress_ratio, sd.updated_at;
 	`
 
 	db, err := common.GetDBConnection()
@@ -328,8 +315,8 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 		definition.ExampleAudioFiles = []model.DefinitionExampleAudio{}
 	}
 
-	// Log weighted selection for monitoring
-	common.Logger.Info("weighted_selection",
+	// Log pure priority selection for monitoring
+	common.Logger.Info("pure_priority_selection",
 		"userID", userID,
 		"wordlistID", wordlistID,
 		"definitionID", definition.ID,

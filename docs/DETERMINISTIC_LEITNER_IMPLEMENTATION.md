@@ -34,26 +34,29 @@ Instead of probability calculations and random selection, definitions are select
 ### Key Algorithm
 
 1. **Calculate Progress Ratio**: `hours_elapsed / target_interval`
-2. **Assign Priority**: Based on progress ratio thresholds
-3. **Sort Deterministically**:
-   - By priority bucket (1, 2, 3, 4)
-   - By oldest reviewed timestamp (NULL first)
-   - By definition ID (final tiebreaker)
-4. **Select First**: Always returns the top definition
+2. **Assign Pure Priority Weight**: Based on simple progress ratio thresholds
+3. **Sort by 3-Tier System**:
+   - **Primary**: Highest weight wins (1000 > 800 > 500 > proportional)
+   - **Secondary**: Oldest reviewed first (NULL timestamps = highest priority)
+   - **Tertiary**: Definition ID ascending (deterministic final tiebreaker)
+4. **Select First**: Always returns the top definition deterministically
 
 ### SQL Query Structure
 
 ```sql
--- Calculate progress ratio for each definition
-progress_ratio = hours_since_review / target_hours
+-- Pure priority weight calculation
+selection_weight = CASE 
+    WHEN progress_ratio >= 1.0 THEN 1000                -- Overdue (highest priority)
+    WHEN progress_ratio >= 0.8 THEN 800                 -- Due soon
+    WHEN progress_ratio >= 0.5 THEN 500                 -- Available
+    ELSE FLOOR(progress_ratio * 100)                    -- Early (proportional)
+END
 
--- Order by priority buckets
+-- Clean 3-tier ordering (no complex calculations)
 ORDER BY 
-    CASE WHEN progress_ratio >= 1.0 THEN 0 ELSE 1 END,  -- Overdue
-    CASE WHEN progress_ratio >= 0.8 THEN 0 ELSE 1 END,  -- Due soon
-    CASE WHEN progress_ratio >= 0.5 THEN 0 ELSE 1 END,  -- Available
-    COALESCE(updated_at, '1970-01-01') ASC,             -- Oldest first
-    id ASC                                               -- Deterministic
+    selection_weight DESC,                              -- Primary: Highest weight wins
+    COALESCE(updated_at, '1970-01-01') ASC,            -- Secondary: Oldest first
+    id ASC                                             -- Tertiary: Deterministic
 ```
 
 ## Examples
@@ -61,41 +64,42 @@ ORDER BY
 ### Example 1: Mixed Box Scenario
 
 **User has definitions in multiple boxes:**
-- Definition A: Box 2, reviewed 2 hours ago (200% progress) → **Priority 1**
-- Definition B: Box 4, reviewed 60 hours ago (83% progress) → **Priority 2**
-- Definition C: Box 7, reviewed 360 hours ago (50% progress) → **Priority 3**
-- Definition D: Box 7, reviewed 100 hours ago (14% progress) → **Priority 4**
+- Definition A: Box 2, reviewed 2 hours ago (200% progress) → **Weight = 1000** (overdue)
+- Definition B: Box 4, reviewed 60 hours ago (83% progress) → **Weight = 800** (due soon)
+- Definition C: Box 7, reviewed 360 hours ago (50% progress) → **Weight = 500** (available)
+- Definition D: Box 7, reviewed 100 hours ago (14% progress) → **Weight = 14** (proportional)
 
-**Result**: Definition A selected (overdue has highest priority)
+**Result**: Definition A selected (highest weight = 1000)
 
 ### Example 2: All Box 7 Scenario
 
 **All definitions in Box 7:**
-- Definition A: Reviewed 600 hours ago (83% progress) → **Priority 2**
-- Definition B: Reviewed 400 hours ago (56% progress) → **Priority 3**
-- Definition C: Reviewed 200 hours ago (28% progress) → **Priority 4**
-- Definition D: Reviewed 50 hours ago (7% progress) → **Priority 4**
+- Definition A: Reviewed 600 hours ago (83% progress) → **Weight = 800** (due soon)
+- Definition B: Reviewed 400 hours ago (56% progress) → **Weight = 500** (available)
+- Definition C: Reviewed 200 hours ago (28% progress) → **Weight = 28** (proportional)
+- Definition D: Reviewed 50 hours ago (7% progress) → **Weight = 7** (proportional)
 
-**Result**: Definition A selected (highest progress ratio)
+**Result**: Definition A selected (highest weight = 800)
 
 ### Example 3: New Words Scenario
 
 **Mix of new and existing:**
-- Definition A: Box 1, NULL timestamp (100% progress) → **Priority 1**
-- Definition B: Box 3, reviewed 12 hours ago (50% progress) → **Priority 3**
-- Definition C: Box 5, reviewed 200 hours ago (119% progress) → **Priority 1**
+- Definition A: Box 1, NULL timestamp (100% progress) → **Weight = 1000** (new word)
+- Definition B: Box 3, reviewed 12 hours ago (50% progress) → **Weight = 500** (available)
+- Definition C: Box 5, reviewed 200 hours ago (119% progress) → **Weight = 1000** (overdue)
 
-**Result**: Between A and C (both Priority 1), A selected (NULL timestamp = oldest)
+**Result**: Between A and C (both weight = 1000), A selected (NULL timestamp = oldest in tiebreaker)
 
-## Benefits Over Probabilistic Approach
+## Benefits of Pure Priority Approach
 
 1. **100% Deterministic**: Same data always produces same result
-2. **No Randomness**: Eliminates intermittent "no words selected" errors
+2. **No Artificial Randomness**: Respects spaced repetition science exactly
 3. **Guaranteed Selection**: Always returns a definition if any exist
-4. **Simpler Logic**: No complex probability calculations
-5. **Easier Debugging**: Clear priority buckets and ordering
-6. **Better Performance**: No RANDOM() calls or complex math
-7. **Predictable Behavior**: Users see consistent progression
+4. **Clean Priority Buckets**: Simple weight thresholds (1000, 800, 500, proportional)
+5. **Fast Performance**: Minimal calculations, no complex math or trigonometry
+6. **Easy Debugging**: Clear weight values and 3-tier tiebreaking
+7. **Transparent Logic**: Users can understand and trust the system behavior
+8. **Maintainable Code**: Simple algorithm that's easy to modify and test
 
 ## Edge Case Handling
 

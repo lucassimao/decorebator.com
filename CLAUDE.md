@@ -588,7 +588,7 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - Dual subscription system: Existing Stripe subscriptions remain unchanged; new subscriptions route to appropriate provider
 - RevenueCat integration documented in `REVENUECAT_INTEGRATION.md`
 - Recent architecture improvements documented in:
-  - `docs/DETERMINISTIC_LEITNER_IMPLEMENTATION.md` - Deterministic priority-based Leitner algorithm
+  - `docs/DETERMINISTIC_LEITNER_IMPLEMENTATION.md` - Pure Priority Leitner algorithm with clean 3-tier tiebreaking
   - `docs/TESTING_BEST_PRACTICES.md` - Detailed testing guidelines and patterns
   - `docs/SUBSCRIPTION_SYSTEM.md` - Complete subscription system documentation
   - `docs/WORKER_ABUSE_PREVENTION.md` - Background job abuse prevention strategies

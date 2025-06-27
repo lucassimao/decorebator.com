@@ -66,6 +66,44 @@ Docs:    README.md, CLAUDE.md, docs/DETERMINISTIC_LEITNER_IMPLEMENTATION.md, web
 Correct Sequence: Immediate → 6 hours → 1 day → 3 days → 1 week → 2 weeks → 1 month
 ```
 
+### **🎯 Issue #3: Pure Priority Word Selection (COMPLETED)**
+**Status**: ✅ **RESOLVED**  
+**Impact**: High - Eliminated complexity and improved system transparency  
+**Root Cause**: Sine wave variation added unnecessary complexity without scientific benefit
+
+**Problems Found**:
+- Complex trigonometric calculations (`SIN(id * 12345 + time_factor)`) for pseudo-randomness
+- Time-dependent behavior made testing and debugging difficult
+- Artificial randomness potentially undermined spaced repetition science
+- Over-engineered weight calculations with nested formulas
+
+**Solution Implemented (January 2025)**:
+- ✅ **Pure Priority Buckets**: Simple weight thresholds (1000, 800, 500, proportional)
+- ✅ **Clean 3-Tier Tiebreaking**: Weight → Oldest reviewed → Definition ID
+- ✅ **Eliminated Sine Wave**: Completely removed complex time-based calculations
+- ✅ **100% Deterministic**: Same data always produces same result
+- ✅ **Performance Optimized**: Minimal calculations, no trigonometry
+- ✅ **Easy to Debug**: Clear priority logic and transparent behavior
+
+**Technical Changes**:
+```sql
+-- OLD (removed): Complex sine wave variation
+(selection_weight * (1 + SIN(id * 12345 + time_factor))) DESC
+
+-- NEW: Clean pure priority ordering
+ORDER BY 
+    selection_weight DESC,                        -- Science-based priority first
+    COALESCE(updated_at, '1970-01-01') ASC,      -- New words first, then oldest
+    id ASC                                       -- Deterministic tiebreaker
+```
+
+**Files Modified**:
+```
+Code:    api/internal/service/leitner_system_strategy.go
+Docs:    README.md, docs/DETERMINISTIC_LEITNER_IMPLEMENTATION.md
+Branch:  feat/pure-priority-word-selection
+```
+
 ---
 
 ## 📋 **PENDING ANALYSIS ITEMS**
@@ -73,7 +111,7 @@ Correct Sequence: Immediate → 6 hours → 1 day → 3 days → 1 week → 2 we
 ### **High Priority Issues**
 - [ ] **Box 3→4 Gap Analysis** (1 day → 3 days) - Missing 2-day interval?
 - [ ] **10-Minute Skip Mechanism** - Too long? Conflicts with "immediate" Box 1?
-- [ ] **Word Selection Algorithm** - Performance optimization, edge case handling
+- ✅ **Word Selection Algorithm** - Performance optimization, edge case handling (COMPLETED - Pure Priority)
 - [ ] **Quiz Type Generation Strategies** - Individual review of all 8 types
 - [ ] **Content Quality Assurance** - Fair distribution algorithms, error handling
 
@@ -85,7 +123,7 @@ Correct Sequence: Immediate → 6 hours → 1 day → 3 days → 1 week → 2 we
 
 ### **Research-Based Optimizations**
 - [ ] **Confidence-Based Progression** - Use response time for box advancement?
-- [ ] **Progressive Skip Penalties** - Escalating timeouts for repeated failures?
+- ✅ **Progressive Skip Penalties** - Escalating timeouts for repeated failures? (IMPLEMENTED)
 - [ ] **Word-Level Grouping** - Prevent multi-definition bombardment?
 
 ---
@@ -216,11 +254,17 @@ web/messages/ (Documentation accuracy)
 - ✅ **Box 2 Interval**: 1h → 6h (cognitive science aligned)
 - ✅ **Cross-Platform Consistency**: 25+ files synchronized
 - ✅ **Documentation Accuracy**: All interval references corrected
+- ✅ **Pure Priority Word Selection**: Eliminated sine wave complexity, implemented clean 3-tier tiebreaking
+- ✅ **Algorithm Simplification**: Removed complex trigonometric calculations, improved performance and debuggability
 
 ### **Expected Improvements**
 - 📉 **Lower Box 2 Failure Rate**: Expected drop from 16.44% to ~8-10%
 - ⏰ **Better User Experience**: Reduced word repetition frequency
 - 🧠 **Improved Learning**: Memory consolidation respected
+- 🎯 **100% Predictable Word Selection**: Same conditions always produce same results
+- ⚡ **Faster Quiz Generation**: Eliminated complex trigonometric calculations
+- 🔍 **Easier Debugging**: Clear priority weights and transparent tiebreaking logic
+- 🔬 **Pure Spaced Repetition Science**: No artificial randomness undermining learning algorithms
 
 ---
 
