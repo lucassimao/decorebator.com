@@ -173,7 +173,10 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				CASE 
 					WHEN lst.box_id = 1 THEN 1.0  -- Box 1 always 100% ready
 					WHEN lst.updated_at IS NULL THEN 1.0  -- New words always ready
-					ELSE hours_since_review / NULLIF(target_hours, 0)
+					ELSE (CASE 
+						WHEN lst.updated_at IS NULL THEN 999999  
+						ELSE EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600
+					END) / NULLIF(target_hours, 0)
 				END as progress_ratio
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
