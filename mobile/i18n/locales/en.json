@@ -577,7 +577,7 @@
         "subtitle": "Words distributed across Leitner boxes",
         "explanation": "The Leitner system uses 7 boxes with increasing review intervals. Words move up when answered correctly and reset to Box 1 when incorrect. Higher boxes indicate better retention.",
         "box1": "New (Now)",
-        "box2": "Learning (1h)",
+        "box2": "Learning (6h)",
         "box3": "Familiar (1d)",
         "box4": "Known (3d)",
         "box5": "Retained (1w)",

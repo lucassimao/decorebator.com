@@ -568,7 +568,7 @@
         "subtitle": "Mots répartis dans les boîtes Leitner",
         "explanation": "Le système Leitner utilise 7 boîtes avec des intervalles de révision croissants. Les mots montent quand ils sont répondus correctement et retournent à la Boîte 1 en cas d'erreur. Les boîtes supérieures indiquent une meilleure rétention.",
         "box1": "Nouveaux (Maintenant)",
-        "box2": "En apprentissage (1h)",
+        "box2": "En apprentissage (6h)",
         "box3": "Familiers (1j)",
         "box4": "Connus (3j)",
         "box5": "Retenus (1s)",

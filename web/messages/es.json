@@ -244,7 +244,7 @@
       },
       "2": {
         "question": "¿Qué es el sistema avanzado Leitner de repetición espaciada?",
-        "answer": "Decorebator utiliza un sistema de repetición espaciada de 7 cajas científicamente optimizado con intervalos: Caja 1 (inmediato), Caja 2 (1 hora), Caja 3 (6 horas), Caja 4 (1 día), Caja 5 (3 días), Caja 6 (7 días) y Caja 7 (1 mes). Las palabras progresan a través de las cajas según tu rendimiento, con progresión inteligente de tipos de quiz para un aprendizaje óptimo."
+        "answer": "Decorebator utiliza un sistema de repetición espaciada de 7 cajas científicamente optimizado con intervalos: Caja 1 (inmediato), Caja 2 (6 horas), Caja 3 (1 día), Caja 4 (3 días), Caja 5 (1 semana), Caja 6 (2 semanas) y Caja 7 (1 mes). Las palabras progresan a través de las cajas según tu rendimiento, con progresión inteligente de tipos de quiz para un aprendizaje óptimo."
       },
       "3": {
         "question": "¿Cuáles son los planes de suscripción y precios?",
@@ -678,7 +678,7 @@
         "purpose": "Propósito",
         "boxes": [
           {"box": "Caja 1", "interval": "Inmediato", "purpose": "Palabras nuevas, revisiones fallidas"},
-          {"box": "Caja 2", "interval": "1 hora", "purpose": "Aprendizaje reciente"},
+          {"box": "Caja 2", "interval": "6 horas", "purpose": "Aprendizaje reciente"},
           {"box": "Caja 3", "interval": "1 día", "purpose": "Retención a corto plazo"},
           {"box": "Caja 4", "interval": "3 días", "purpose": "Retención a mediano plazo"},
           {"box": "Caja 5", "interval": "1 semana", "purpose": "Retención a largo plazo"},

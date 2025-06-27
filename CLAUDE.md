@@ -628,11 +628,11 @@ The system uses a deterministic priority-based algorithm for word selection, ens
 
 **Box Review Intervals:**
 - Box 1: Immediate (new/failed words)
-- Box 2: 1 hour
-- Box 3: 6 hours  
-- Box 4: 1 day
-- Box 5: 3 days
-- Box 6: 7 days
+- Box 2: 6 hours
+- Box 3: 1 day  
+- Box 4: 3 days
+- Box 5: 1 week
+- Box 6: 2 weeks
 - Box 7: 1 month
 
 **Selection Algorithm:**

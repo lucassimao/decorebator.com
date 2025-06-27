@@ -116,7 +116,7 @@ type ExampleUsage struct {
 //
 // BOX-SPECIFIC INTERVALS:
 // - Box 1: Immediate (always available)
-// - Box 2: 1 hour
+// - Box 2: 6 hours
 // - Box 3: 1 day (24 hours)
 // - Box 4: 3 days (72 hours)
 // - Box 5: 1 week (168 hours)
@@ -159,7 +159,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				-- Get target interval hours based on box
 				CASE lst.box_id
 					WHEN 1 THEN 0     -- Always available
-					WHEN 2 THEN 1     -- 1 hour
+					WHEN 2 THEN 6     -- 6 hours
 					WHEN 3 THEN 24    -- 1 day
 					WHEN 4 THEN 72    -- 3 days
 					WHEN 5 THEN 168   -- 1 week
@@ -172,7 +172,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 					ELSE COALESCE(
 						EXTRACT(EPOCH FROM (NOW() - COALESCE(lst.updated_at, NOW())))/3600 / 
 						NULLIF(CASE lst.box_id
-							WHEN 2 THEN 1
+							WHEN 2 THEN 6
 							WHEN 3 THEN 24
 							WHEN 4 THEN 72
 							WHEN 5 THEN 168

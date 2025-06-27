@@ -216,7 +216,7 @@
       },
       "2": {
         "question": "O que é o sistema avançado de repetição espaçada Leitner?",
-        "answer": "O Decorebator usa um sistema de repetição espaçada Leitner de 7 caixas cientificamente otimizado com intervalos: Caixa 1 (imediato), Caixa 2 (1 hora), Caixa 3 (6 horas), Caixa 4 (1 dia), Caixa 5 (3 dias), Caixa 6 (7 dias), e Caixa 7 (1 mês). As palavras progridem através das caixas baseadas em seu desempenho, com progressão inteligente de tipos de quiz para aprendizado ideal."
+        "answer": "O Decorebator usa um sistema de repetição espaçada Leitner de 7 caixas cientificamente otimizado com intervalos: Caixa 1 (imediato), Caixa 2 (6 horas), Caixa 3 (1 dia), Caixa 4 (3 dias), Caixa 5 (1 semana), Caixa 6 (2 semanas), e Caixa 7 (1 mês). As palavras progridem através das caixas baseadas em seu desempenho, com progressão inteligente de tipos de quiz para aprendizado ideal."
       },
       "3": {
         "question": "Quais são os planos de assinatura e preços?",
@@ -517,7 +517,7 @@
         "purpose": "Propósito",
         "boxes": [
           {"box": "Caixa 1", "interval": "Imediato", "purpose": "Palavras novas, revisões falhadas"},
-          {"box": "Caixa 2", "interval": "1 hora", "purpose": "Aprendizado recente"},
+          {"box": "Caixa 2", "interval": "6 horas", "purpose": "Aprendizado recente"},
           {"box": "Caixa 3", "interval": "1 dia", "purpose": "Retenção de curto prazo"},
           {"box": "Caixa 4", "interval": "3 dias", "purpose": "Retenção de médio prazo"},
           {"box": "Caixa 5", "interval": "1 semana", "purpose": "Retenção de longo prazo"},
@@ -758,7 +758,7 @@
         "description": "Palavras progridem através de 7 caixas baseadas em seu desempenho, com intervalos de revisão crescentes:",
         "boxes": [
           { "box": "Caixa 1", "interval": "Imediato", "purpose": "Palavras novas, revisões falhadas" },
-          { "box": "Caixa 2", "interval": "1 hora", "purpose": "Aprendizado recente" },
+          { "box": "Caixa 2", "interval": "6 horas", "purpose": "Aprendizado recente" },
           { "box": "Caixa 3", "interval": "1 dia", "purpose": "Retenção de curto prazo" },
           { "box": "Caixa 4", "interval": "3 dias", "purpose": "Retenção de médio prazo" },
           { "box": "Caixa 5", "interval": "1 semana", "purpose": "Retenção de longo prazo" },
@@ -1560,7 +1560,7 @@
         "purpose": "Propósito",
         "boxes": [
           {"box": "Caixa 1", "interval": "Imediato", "purpose": "Palavras novas, revisões falhadas"},
-          {"box": "Caixa 2", "interval": "1 hora", "purpose": "Aprendizado recente"},
+          {"box": "Caixa 2", "interval": "6 horas", "purpose": "Aprendizado recente"},
           {"box": "Caixa 3", "interval": "1 dia", "purpose": "Retenção de curto prazo"},
           {"box": "Caixa 4", "interval": "3 dias", "purpose": "Retenção de médio prazo"},
           {"box": "Caixa 5", "interval": "1 semana", "purpose": "Retenção de longo prazo"},

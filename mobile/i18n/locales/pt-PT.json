@@ -567,7 +567,7 @@
         "subtitle": "Palavras distribuídas nas caixas Leitner",
         "explanation": "O sistema Leitner usa 7 caixas com intervalos de revisão crescentes. As palavras sobem quando respondidas corretamente e voltam para a Caixa 1 quando incorretas. Caixas superiores indicam melhor retenção.",
         "box1": "Novas (Agora)",
-        "box2": "A aprender (1h)",
+        "box2": "A aprender (6h)",
         "box3": "Familiares (1d)",
         "box4": "Conhecidas (3d)",
         "box5": "Retidas (1s)",

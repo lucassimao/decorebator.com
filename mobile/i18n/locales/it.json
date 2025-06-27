@@ -568,7 +568,7 @@
         "subtitle": "Parole distribuite nelle scatole Leitner",
         "explanation": "Il sistema Leitner utilizza 7 scatole con intervalli di revisione crescenti. Le parole salgono quando risposte correttamente e tornano alla Scatola 1 se errate. Le scatole superiori indicano una migliore ritenzione.",
         "box1": "Nuove (Ora)",
-        "box2": "In apprendimento (1h)",
+        "box2": "In apprendimento (6h)",
         "box3": "Familiari (1g)",
         "box4": "Conosciute (3g)",
         "box5": "Ritenute (1s)",

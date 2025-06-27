@@ -24,7 +24,7 @@
       "enabled": true,
       "algorithm": "Leitner System",
       "boxes": 7,
-      "intervals": ["immediate", "1 hour", "6 hours", "1 day", "3 days", "7 days", "1 month"],
+      "intervals": ["immediate", "6 hours", "1 day", "3 days", "1 week", "2 weeks", "1 month"],
       "type": "Deterministic"
     },
     "quiz_modes": {
