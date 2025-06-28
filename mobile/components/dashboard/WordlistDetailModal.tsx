@@ -1,7 +1,11 @@
 import * as wordlistsApi from "@/api/wordlists";
 import * as offlineWordsApi from "@/api/offlineWords";
 import { Wordlist, getProcessingStatus } from "@/api/wordlists";
-import { reportError, ErrorType, ErrorReportRateLimitError } from "@/api/errorReporting";
+import {
+  reportError,
+  ErrorType,
+  ErrorReportRateLimitError,
+} from "@/api/errorReporting";
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
 import { useOffline } from "@/hooks/useOffline";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -163,7 +167,10 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       reset();
       setShowAddForm(false);
     },
-    onError: console.error,
+    onError: (error) => {
+      console.error("Failed to add word:", error);
+      // The error will be displayed in the UI using getUserFriendlyErrorMessage
+    },
   });
 
   const deleteWordMutation = useMutation({
@@ -252,53 +259,89 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   // Helper function to determine if an error is retryable
   const isRetryableError = (error: string | undefined): boolean => {
     if (!error) return false;
-    
-    // Non-retryable errors (content issues)
+
+    const errorLower = error.toLowerCase();
+
+    // Non-retryable errors (content issues and validation errors)
     const nonRetryablePatterns = [
-      "No definitions found",
+      "no definitions found",
       "no definition found",
-      "Word not found",
-      "content not appropriate",
+      "word not found",
       "validation failed",
-      "Definition validation failed",
+      "definition validation failed",
+      // Content moderation patterns (same as getUserFriendlyErrorMessage)
+      "not appropriate for educational use",
+      "content not appropriate",
+      "hate speech",
+      "threatening language",
+      "harassment",
+      "threatening behavior",
+      "violent",
+      "graphic material",
+      "self-harm",
+      "flagged as inappropriate",
     ];
-    
-    return !nonRetryablePatterns.some(pattern => 
-      error.toLowerCase().includes(pattern.toLowerCase())
+
+    return !nonRetryablePatterns.some((pattern) =>
+      errorLower.includes(pattern),
     );
   };
 
   // Helper function to get user-friendly error message
   const getUserFriendlyErrorMessage = (error: string | undefined): string => {
     if (!error) return t("wordDetail.processingError");
-    
+
+    const errorLower = error.toLowerCase();
+
     // Check for specific non-retryable errors
-    if (error.toLowerCase().includes("no definitions found") || 
-        error.toLowerCase().includes("no definition found")) {
+    if (
+      errorLower.includes("no definitions found") ||
+      errorLower.includes("no definition found")
+    ) {
       return t("wordDetail.noDefinitionsFound");
     }
-    
-    if (error.toLowerCase().includes("content not appropriate")) {
+
+    // Check for any content moderation violation
+    const moderationPatterns = [
+      "not appropriate for educational use", // Sexual content
+      "content not appropriate", // Alternative sexual content format
+      "hate speech", // Hate speech
+      "threatening language", // Hate speech variant
+      "harassment", // Harassment
+      "threatening behavior", // Harassment variant
+      "violent", // Violence
+      "graphic material", // Violence variant
+      "self-harm", // Self-harm
+      "flagged as inappropriate", // Generic fallback
+    ];
+
+    const isModerationError = moderationPatterns.some((pattern) =>
+      errorLower.includes(pattern),
+    );
+
+    if (isModerationError) {
       return t("wordDetail.contentNotAppropriate");
     }
-    
-    if (error.toLowerCase().includes("validation failed")) {
+
+    if (errorLower.includes("validation failed")) {
       return t("wordDetail.validationFailed");
     }
-    
+
     // For technical errors, show a generic message
     return t("wordDetail.technicalError");
   };
 
   const handleRetryWord = async (word: wordlistsApi.Word) => {
-    const processingInfo = processingStatus?.words.find(w => w.id === word.id);
+    const processingInfo = processingStatus?.words.find(
+      (w) => w.id === word.id,
+    );
     const isRetryable = isRetryableError(processingInfo?.processingError);
-    
+
     if (!isRetryable) {
       Alert.alert(
         t("wordDetail.cannotRetry"),
         t("wordDetail.cannotRetryMessage"),
-        [{ text: t("common.ok"), style: "default" }]
+        [{ text: t("common.ok"), style: "default" }],
       );
       return;
     }
@@ -328,29 +371,27 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                 queryKey: ["processingStatus", wordlist.id],
               });
 
-              Alert.alert(
-                t("success.title"),
-                t("wordDetail.retryStarted"),
-                [{ text: t("common.ok"), style: "default" }]
-              );
+              Alert.alert(t("success.title"), t("wordDetail.retryStarted"), [
+                { text: t("common.ok"), style: "default" },
+              ]);
             } catch (error) {
               console.error("Retry failed:", error);
-              
+
               if (error instanceof ErrorReportRateLimitError) {
                 const retryAfter = error.retryAfter || 60;
                 Alert.alert(
                   t("rateLimit.title"),
-                  error.windowType === "cooldown" 
-                    ? t("rateLimit.cooldownMessage", { minutes: Math.ceil(retryAfter / 60) })
+                  error.windowType === "cooldown"
+                    ? t("rateLimit.cooldownMessage", {
+                        minutes: Math.ceil(retryAfter / 60),
+                      })
                     : t("rateLimit.limitReachedMessage"),
-                  [{ text: t("common.ok"), style: "default" }]
-                );
-              } else {
-                Alert.alert(
-                  t("error.title"),
-                  t("wordDetail.retryFailed"),
                   [{ text: t("common.ok"), style: "default" }],
                 );
+              } else {
+                Alert.alert(t("error.title"), t("wordDetail.retryFailed"), [
+                  { text: t("common.ok"), style: "default" },
+                ]);
               }
             }
           },
@@ -802,7 +843,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
                       color={theme.colors.error}
                     />
                     <Text style={styles.errorMessage}>
-                      {t("wordDetail.addWordError")}
+                      {getUserFriendlyErrorMessage(
+                        addWordMutation.error?.message,
+                      )}
                     </Text>
                   </View>
                 )}
