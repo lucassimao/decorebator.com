@@ -384,7 +384,7 @@ func (repository *DefinitionRepository) GetDefinitionByID(definitionID int64) (*
 
 func (repository *DefinitionRepository) CreateExampleAudio(definitionID int64, exampleText, audioURL, inflectionType string) error {
 	// Generate hash for the example text
-	exampleHash := fmt.Sprintf("%x", sha256.Sum256([]byte(exampleText)))[:32]
+	exampleHash := fmt.Sprintf("%x", sha256.Sum256([]byte(exampleText)))
 
 	query := `INSERT INTO definition_example_audio (definition_id, example_text, example_hash, audio_url, inflection_type) 
 			  VALUES ($1, $2, $3, $4, NULLIF($5, ''))`
