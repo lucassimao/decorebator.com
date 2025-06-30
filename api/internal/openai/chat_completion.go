@@ -254,7 +254,7 @@ func buildLanguageSpecificPrompt(token string, languageCode string, pronunciatio
 			" • MULTIPLE MEANINGS RULE: When a word has multiple distinct meanings for the same part of speech, create separate objects in the results array. Each object must have: the same partOfSpeech, but a different and specific meaning. Never combine multiple meanings into one definition. "+
 			" • Examples of multiple meanings requiring separation: 'bank' (financial vs. river edge), 'bark' (tree covering vs. dog sound), 'match' (competition vs. fire starter), 'light' (illumination vs. not heavy). "+
 			" • Each meaning field must be concise and represent exactly ONE semantic concept. If you find yourself using 'or', 'also means', or listing multiple interpretations, split them into separate objects. "+
-			" • \"examples\" must be an array of strings. Each string must include the original token wrapped in square brackets. If the partOfSpeech is \"verb\" or equivalent, \"examples\" should be an empty array. "+
+			" • \"examples\" must be an array of strings. Each string must include the original token wrapped in square brackets. If the partOfSpeech is \"verb\" or equivalent, \"examples\" should be an empty array. For all other parts of speech, \"examples\" must contain exactly 7 different example sentences. "+
 			" • \"inflections\" must be an array. If partOfSpeech is \"verb\" or equivalent, you must include one item for each valid verb tense (%s). Otherwise, \"inflections\" must be an empty array. "+
 			" • Each inflection object must have exactly these required keys: \"inflection\" (string), \"tense\" (one of: %s), and \"examples\" (an array of exactly 7 strings). "+
 			" • Each of the 7 example strings inside \"inflection.examples\" must contain that inflected form wrapped in square brackets. "+
@@ -356,9 +356,8 @@ func GetDefinition(token string, languageCode string, pronunciationSystem model.
 	// Generate language-specific schema
 	schema, err := buildDefinitionSchema(languageCode)
 	if err != nil {
-		logger.Error("failed to build language-specific schema", "error", err)
-		// fallback to static schema
-		schema = DEFINITION_RESPONSE_SCHEMA
+		logger.Error("failed to build language-specific schema - unsupported language", "error", err, "languageCode", languageCode, "token", token)
+		return nil, fmt.Errorf("unsupported language code: %s", languageCode)
 	}
 
 	var chatResponse *ChatCompletionResponse
@@ -509,7 +508,7 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 							"examples": map[string]any{
 								"type": "array",
 								"description": fmt.Sprintf(
-									"Example sentences in %s showing usage of the word. "+
+									"Exactly 7 example sentences in %s showing usage of the word. "+
 										"MUST be filled for all parts of speech EXCEPT verbs or equivalent (like phrasal verbs), "+
 										"which must have an empty array here and provide examples exclusively under the 'inflections' property.",
 									config.Name,
@@ -565,83 +564,3 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 	return schema, nil
 }
 
-var DEFINITION_RESPONSE_SCHEMA = map[string]any{
-	"name":   "DefinitionResponse",
-	"strict": true,
-	"schema": map[string]any{
-		"additionalProperties": false,
-		"type":                 "object",
-		"required":             []string{"results", "pronunciation"},
-		"properties": map[string]any{
-			"results": map[string]any{
-				"type":        "array",
-				"description": "Array containing definitions of the word. Create separate objects for each distinct meaning, even if they share the same part of speech. Each object represents exactly ONE semantic concept. If the word cannot be found, this array should be empty.",
-				"items": map[string]any{
-					"type":                 "object",
-					"additionalProperties": false,
-					"required": []any{
-						"partOfSpeech",
-						"meaning",
-						"examples",
-						"inflections",
-					},
-					"properties": map[string]any{
-						"partOfSpeech": map[string]any{
-							"type": "string",
-							"enum": []string{
-								"noun", "pronoun", "verb", "phrasal verb", "adjective",
-								"adverb", "preposition", "conjunction", "interjection",
-							},
-							"description": "The grammatical category of the word usage.",
-						},
-						"meaning": map[string]string{
-							"type":        "string",
-							"description": "A clear and concise definition representing exactly ONE semantic concept. Never combine multiple meanings.",
-						},
-						"examples": map[string]any{
-							"type":        "array",
-							"description": "A list of example sentences showing usage of the word. Should be an empty array if partOfSpeech is NOT verb or phrasal verb.",
-							"items": map[string]string{
-								"type":        "string",
-								"description": "Each sentence must include the word wrapped in square brackets. Example: 'He [runs] every morning.'",
-							},
-						},
-						"inflections": map[string]any{
-							"type":        "array",
-							"description": "List of verb inflections. Return an empty array if partOfSpeech is NOT a verb or phrasal verb.",
-							"items": map[string]any{
-								"type":                 "object",
-								"additionalProperties": false,
-								"description":          "Details for a single verb form, including the inflected verb and usage examples.",
-								"required":             []any{"inflection", "tense", "examples"},
-								"properties": map[string]any{
-									"inflection": map[string]any{
-										"type":        "string",
-										"description": "The verb form for the specified tense.",
-									},
-									"tense": map[string]any{
-										"type":        "string",
-										"enum":        []string{"present", "past", "past participle"},
-										"description": "The grammatical tense of the verb inflection.",
-									},
-									"examples": map[string]any{
-										"type":        "array",
-										"description": "Exactly 3 different usage examples of the verb in this tense.",
-										"items": map[string]any{
-											"type":        "string",
-											"description": "Example sentence using the inflection. Must contain the word wrapped in square brackets.",
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"pronunciation": map[string]any{
-				"type":        "string",
-				"description": "IPA (International Phonetic Alphabet) notation for the pronunciation of the word.",
-			},
-		},
-	},
-}
