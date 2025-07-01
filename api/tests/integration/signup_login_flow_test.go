@@ -290,7 +290,7 @@ func TestSignupLoginFlow(t *testing.T) {
 			},
 			{
 				name:          "signup with DE country code",
-				country:       "DE", 
+				country:       "DE",
 				expectedValue: func() *string { s := "DE"; return &s }(),
 			},
 			{
@@ -355,7 +355,7 @@ func TestSignupLoginFlow(t *testing.T) {
 		// Test signup without country field in request
 		testUser := map[string]interface{}{
 			"email":     "backward-compat@example.com",
-			"password":  "securepassword123", 
+			"password":  "securepassword123",
 			"firstName": "John",
 			"lastName":  "Doe",
 			// No country field at all
@@ -405,7 +405,7 @@ func TestSignupLoginFlow(t *testing.T) {
 				status: http.StatusBadRequest,
 			},
 			{
-				name: "missing lastName", 
+				name: "missing lastName",
 				payload: map[string]interface{}{
 					"email":     "missing-lastname@example.com",
 					"password":  "password123",
