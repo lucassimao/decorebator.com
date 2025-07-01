@@ -39,7 +39,7 @@ func TestUserRegistration(t *testing.T) {
 				"firstName": "Jane",
 				"lastName":  "Smith",
 			},
-			expectedStatus: http.StatusInternalServerError, // API currently returns 500, should be 409
+			expectedStatus: http.StatusBadRequest, // API returns 400 for business rule violations
 			shouldHaveUser: false,
 		},
 		{
