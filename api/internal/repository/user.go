@@ -21,7 +21,16 @@ type UserRepository struct {
 	Db *pgxpool.Pool
 }
 
+// Save creates a new user in the database
+// country parameter can be nil, which will insert NULL into the database
 func (repository *UserRepository) Save(firstName, lastName, password, email string, country *string) (*User, error) {
+	// Validate required parameters
+	if firstName == "" || lastName == "" || password == "" || email == "" {
+		return nil, errors.New("firstName, lastName, password, and email are required")
+	}
+
+	// Note: country parameter is optional and can be nil
+	// PostgreSQL will store NULL for nil pointer values
 	query := `
 		INSERT INTO users (first_name, last_name, password_hash, email, country)
 		VALUES ($1, $2, $3, $4, $5)

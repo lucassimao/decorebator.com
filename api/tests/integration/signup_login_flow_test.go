@@ -387,4 +387,55 @@ func TestSignupLoginFlow(t *testing.T) {
 
 		t.Log("✓ Backward compatibility maintained - signup works without country field")
 	})
+
+	t.Run("signup validation errors", func(t *testing.T) {
+		validationCases := []struct {
+			name    string
+			payload map[string]interface{}
+			status  int
+		}{
+			{
+				name: "missing firstName",
+				payload: map[string]interface{}{
+					"email":    "missing-firstname@example.com",
+					"password": "password123",
+					"lastName": "Doe",
+					"country":  "US",
+				},
+				status: http.StatusBadRequest,
+			},
+			{
+				name: "missing lastName", 
+				payload: map[string]interface{}{
+					"email":     "missing-lastname@example.com",
+					"password":  "password123",
+					"firstName": "John",
+					"country":   "US",
+				},
+				status: http.StatusBadRequest,
+			},
+			{
+				name: "empty firstName",
+				payload: map[string]interface{}{
+					"email":     "empty-firstname@example.com",
+					"password":  "password123",
+					"firstName": "",
+					"lastName":  "Doe",
+					"country":   "US",
+				},
+				status: http.StatusBadRequest,
+			},
+		}
+
+		for _, tc := range validationCases {
+			t.Run(tc.name, func(t *testing.T) {
+				server.Expect.POST("/users").
+					WithJSON(tc.payload).
+					Expect().
+					Status(tc.status)
+
+				t.Logf("✓ Validation correctly rejected %s", tc.name)
+			})
+		}
+	})
 }
