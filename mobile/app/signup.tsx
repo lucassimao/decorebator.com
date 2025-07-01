@@ -10,6 +10,7 @@ import * as React from "react";
 import { Controller, FieldError, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
+import { getDetectedCountry } from "@/utils/countryDetection";
 import {
   Animated,
   Dimensions,
@@ -52,6 +53,7 @@ type ErrorMessageProps = {
 export default function SignUpScreen() {
   const [secureTextEntry, setSecureTextEntry] = React.useState(true);
   const [signUpError, setSignUpError] = React.useState<Error | null>(null);
+  const [detectedCountry, setDetectedCountry] = React.useState<string>("");
   const snackbar = useSnackbar();
   const { t } = useTranslation();
   const posthog = usePostHog();
@@ -122,6 +124,18 @@ export default function SignUpScreen() {
     };
   }, [imageHeight, maxViewportHeight]);
 
+  // Detect user's country on component mount
+  React.useEffect(() => {
+    try {
+      const country = getDetectedCountry();
+      setDetectedCountry(country);
+      console.log("Detected country:", country);
+    } catch (error) {
+      console.warn("Failed to detect country:", error);
+      setDetectedCountry("US"); // Fallback to US
+    }
+  }, []);
+
   const { mutate: signup } = useMutation<void, Error, usersApi.UserSignup>({
     mutationFn: (userData) => usersApi.signup(userData),
     onError: (error) => {
@@ -151,9 +165,13 @@ export default function SignUpScreen() {
   });
 
   const onSubmit = (data: any) => {
-    // Exclude agreeToTerms from API submission
+    // Exclude agreeToTerms from API submission and add detected country
     const { agreeToTerms, ...submitData } = data;
-    signup(submitData);
+    const signupData = {
+      ...submitData,
+      country: detectedCountry || "US", // Include detected country or fallback to US
+    };
+    signup(signupData);
   };
   const toggleSecureTextEntry = () => setSecureTextEntry(!secureTextEntry);
 

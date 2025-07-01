@@ -2,7 +2,9 @@ package integration
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -78,11 +80,12 @@ func TestSignupLoginFlow(t *testing.T) {
 		ctx := context.Background()
 		var dbUserID int64
 		var dbEmail, dbFirstName, dbLastName, dbPasswordHash string
+		var dbCountry *string
 		var dbCreatedAt time.Time
 
 		err := server.DB.QueryRow(ctx,
-			"SELECT id, email, first_name, last_name, password_hash, created_at FROM users WHERE email = $1",
-			testUser["email"]).Scan(&dbUserID, &dbEmail, &dbFirstName, &dbLastName, &dbPasswordHash, &dbCreatedAt)
+			"SELECT id, email, first_name, last_name, password_hash, country, created_at FROM users WHERE email = $1",
+			testUser["email"]).Scan(&dbUserID, &dbEmail, &dbFirstName, &dbLastName, &dbPasswordHash, &dbCountry, &dbCreatedAt)
 
 		require.NoError(t, err, "User should exist in database")
 
@@ -94,6 +97,7 @@ func TestSignupLoginFlow(t *testing.T) {
 		assert.NotEqual(t, testUser["password"], dbPasswordHash, "Password should be hashed, not stored as plain text")
 		assert.Contains(t, dbPasswordHash, "$2a$", "Password should be bcrypt hashed")
 		assert.WithinDuration(t, time.Now(), dbCreatedAt, 5*time.Second, "Created timestamp should be recent")
+		assert.Nil(t, dbCountry, "Country should be nil when not provided")
 
 		t.Logf("✓ User data verified in database")
 
@@ -271,5 +275,116 @@ func TestSignupLoginFlow(t *testing.T) {
 				t.Logf("✓ Login correctly rejected for %s", tc.name)
 			})
 		}
+	})
+
+	t.Run("signup with country code", func(t *testing.T) {
+		testCases := []struct {
+			name          string
+			country       string
+			expectedValue *string
+		}{
+			{
+				name:          "signup with US country code",
+				country:       "US",
+				expectedValue: func() *string { s := "US"; return &s }(),
+			},
+			{
+				name:          "signup with DE country code",
+				country:       "DE", 
+				expectedValue: func() *string { s := "DE"; return &s }(),
+			},
+			{
+				name:          "signup with JP country code",
+				country:       "JP",
+				expectedValue: func() *string { s := "JP"; return &s }(),
+			},
+			{
+				name:          "signup with empty country",
+				country:       "",
+				expectedValue: nil,
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				testUser := map[string]interface{}{
+					"email":     fmt.Sprintf("country-test-%s@example.com", strings.ToLower(tc.country)),
+					"password":  "securepassword123",
+					"firstName": "John",
+					"lastName":  "Doe",
+					"country":   tc.country,
+				}
+
+				// Step 1: Sign up user with country
+				signupResponse := server.Expect.POST("/users").
+					WithJSON(testUser).
+					Expect().
+					Status(http.StatusCreated)
+
+				// Verify JWT token received
+				authToken := signupResponse.Header("Authorization").NotEmpty().Raw()
+				require.NotEmpty(t, authToken, "Authorization token should be present")
+
+				// Step 2: Verify country is stored correctly in database
+				ctx := context.Background()
+				var dbUserID int64
+				var dbEmail, dbFirstName, dbLastName, dbPasswordHash string
+				var dbCountry *string
+				var dbCreatedAt time.Time
+
+				err := server.DB.QueryRow(ctx,
+					"SELECT id, email, first_name, last_name, password_hash, country, created_at FROM users WHERE email = $1",
+					testUser["email"]).Scan(&dbUserID, &dbEmail, &dbFirstName, &dbLastName, &dbPasswordHash, &dbCountry, &dbCreatedAt)
+
+				require.NoError(t, err, "User should exist in database")
+
+				// Verify country matches expected value
+				if tc.expectedValue == nil {
+					assert.Nil(t, dbCountry, "Country should be nil")
+				} else {
+					require.NotNil(t, dbCountry, "Country should not be nil")
+					assert.Equal(t, *tc.expectedValue, *dbCountry, "Country should match")
+				}
+
+				t.Logf("✓ Country correctly stored for %s", tc.name)
+			})
+		}
+	})
+
+	t.Run("signup backward compatibility", func(t *testing.T) {
+		// Test signup without country field in request
+		testUser := map[string]interface{}{
+			"email":     "backward-compat@example.com",
+			"password":  "securepassword123", 
+			"firstName": "John",
+			"lastName":  "Doe",
+			// No country field at all
+		}
+
+		// Step 1: Sign up user without country field
+		signupResponse := server.Expect.POST("/users").
+			WithJSON(testUser).
+			Expect().
+			Status(http.StatusCreated)
+
+		// Verify JWT token received
+		authToken := signupResponse.Header("Authorization").NotEmpty().Raw()
+		require.NotEmpty(t, authToken, "Authorization token should be present")
+
+		// Step 2: Verify country is nil in database
+		ctx := context.Background()
+		var dbUserID int64
+		var dbEmail, dbFirstName, dbLastName, dbPasswordHash string
+		var dbCountry *string
+		var dbCreatedAt time.Time
+
+		err := server.DB.QueryRow(ctx,
+			"SELECT id, email, first_name, last_name, password_hash, country, created_at FROM users WHERE email = $1",
+			testUser["email"]).Scan(&dbUserID, &dbEmail, &dbFirstName, &dbLastName, &dbPasswordHash, &dbCountry, &dbCreatedAt)
+
+		require.NoError(t, err, "User should exist in database")
+		assert.Nil(t, dbCountry, "Country should be nil when not provided in request")
+
+		t.Log("✓ Backward compatibility maintained - signup works without country field")
 	})
 }

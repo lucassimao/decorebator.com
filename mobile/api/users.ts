@@ -22,6 +22,7 @@ export type UserSignup = {
   lastName: string;
   email: string;
   password: string;
+  country?: string; // Optional ISO 3166-1 alpha-2 country code
 };
 
 export type UserSignin = {

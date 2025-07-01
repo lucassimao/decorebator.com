@@ -13,6 +13,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import i18n, { supportedLanguages } from "@/i18n";
 import { useTheme } from "@/contexts/ThemeContext";
+import { COUNTRIES, searchCountries, getCountryDisplayName } from "@/utils/countries";
 import {
   ActivityIndicator,
   Alert,
@@ -31,21 +32,6 @@ import {
 } from "react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-// Country list (partial)
-const COUNTRIES = [
-  { code: "US", name: "United States", flag: "🇺🇸" },
-  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
-  { code: "CA", name: "Canada", flag: "🇨🇦" },
-  { code: "AU", name: "Australia", flag: "🇦🇺" },
-  { code: "DE", name: "Germany", flag: "🇩🇪" },
-  { code: "FR", name: "France", flag: "🇫🇷" },
-  { code: "ES", name: "Spain", flag: "🇪🇸" },
-  { code: "IT", name: "Italy", flag: "🇮🇹" },
-  { code: "BR", name: "Brazil", flag: "🇧🇷" },
-  { code: "JP", name: "Japan", flag: "🇯🇵" },
-  // Add more countries as needed
-];
 
 async function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -99,6 +85,7 @@ const ProfileSettingsScreen: React.FC = () => {
   const styles = createStyles(theme);
 
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
+  const [countrySearchTerm, setCountrySearchTerm] = useState("");
 
   // Fetch user profile
   const { data: profile, isLoading } = useQuery({
@@ -271,8 +258,7 @@ const ProfileSettingsScreen: React.FC = () => {
   };
 
   const getCountryName = (code: string) => {
-    const country = COUNTRIES.find((c) => c.code === code);
-    return country ? `${country.flag} ${country.name}` : code;
+    return getCountryDisplayName(code);
   };
 
   const formatDate = (dateString: string) => {
@@ -740,14 +726,22 @@ const ProfileSettingsScreen: React.FC = () => {
         <View style={styles.modalOverlay}>
           <TouchableOpacity
             style={styles.modalBackdrop}
-            onPress={() => setShowCountryPicker(false)}
+            onPress={() => {
+              setShowCountryPicker(false);
+              setCountrySearchTerm(""); // Reset search when closing
+            }}
           />
           <View style={styles.countryPickerModal}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
                 {t("profile.selectCountry")}
               </Text>
-              <TouchableOpacity onPress={() => setShowCountryPicker(false)}>
+              <TouchableOpacity 
+                onPress={() => {
+                  setShowCountryPicker(false);
+                  setCountrySearchTerm(""); // Reset search when closing
+                }}
+              >
                 <Ionicons
                   name="close"
                   size={24}
@@ -755,14 +749,46 @@ const ProfileSettingsScreen: React.FC = () => {
                 />
               </TouchableOpacity>
             </View>
+            
+            {/* Search Input */}
+            <View style={styles.searchContainer}>
+              <Ionicons
+                name="search"
+                size={20}
+                color={theme.colors.text.secondary}
+                style={styles.searchIcon}
+              />
+              <TextInput
+                style={styles.searchInput}
+                placeholder={t("profile.searchCountries", { defaultValue: "Search countries..." })}
+                placeholderTextColor={theme.colors.text.placeholder}
+                value={countrySearchTerm}
+                onChangeText={setCountrySearchTerm}
+                autoCapitalize="none"
+              />
+              {countrySearchTerm.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => setCountrySearchTerm("")}
+                  style={styles.clearSearchButton}
+                >
+                  <Ionicons
+                    name="close-circle"
+                    size={20}
+                    color={theme.colors.text.secondary}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+            
             <ScrollView style={styles.countryList}>
-              {COUNTRIES.map((country) => (
+              {searchCountries(countrySearchTerm).map((country) => (
                 <TouchableOpacity
                   key={country.code}
                   style={styles.countryItem}
                   onPress={() => {
                     setValue("country", country.code, { shouldDirty: true });
                     setShowCountryPicker(false);
+                    setCountrySearchTerm(""); // Reset search when selecting
                   }}
                 >
                   <Text style={styles.countryFlag}>{country.flag}</Text>
@@ -1020,6 +1046,30 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       padding: 20,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.ui.divider,
+    },
+    searchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.ui.inputBackground,
+      marginHorizontal: 20,
+      marginVertical: 12,
+      borderRadius: theme.borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      paddingHorizontal: 12,
+    },
+    searchIcon: {
+      marginRight: 8,
+    },
+    searchInput: {
+      flex: 1,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: theme.colors.text.primary,
+    },
+    clearSearchButton: {
+      padding: 4,
+      marginLeft: 8,
     },
     modalTitle: {
       fontSize: 18,

@@ -21,10 +21,10 @@ type UserRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *UserRepository) Save(firstName, lastName, password, email string) (*User, error) {
+func (repository *UserRepository) Save(firstName, lastName, password, email string, country *string) (*User, error) {
 	query := `
-		INSERT INTO users (first_name, last_name, password_hash, email)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO users (first_name, last_name, password_hash, email, country)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, updated_at, profile_picture_url, country, date_of_birth, preferred_language,
 			subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at`
 
@@ -32,7 +32,7 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 	var createdAt pgtype.Timestamp
 	var updatedAt pgtype.Timestamp
 	var profilePictureURL *string
-	var country *string
+	var userCountry *string
 	var dateOfBirth *time.Time
 	var preferredLanguage *string
 	var subscriptionPlan model.SubscriptionPlan
@@ -46,8 +46,8 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 		return nil, err
 	}
 
-	err = repository.Db.QueryRow(context.Background(), query, firstName, lastName, passwordHash, email).Scan(
-		&userID, &createdAt, &updatedAt, &profilePictureURL, &country, &dateOfBirth, &preferredLanguage,
+	err = repository.Db.QueryRow(context.Background(), query, firstName, lastName, passwordHash, email, country).Scan(
+		&userID, &createdAt, &updatedAt, &profilePictureURL, &userCountry, &dateOfBirth, &preferredLanguage,
 		&subscriptionPlan, &subscriptionStatus, &stripeCustomerID, &subscriptionEndsAt)
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -61,7 +61,7 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 
 	return &User{
 		ID: userID, FirstName: firstName, LastName: lastName, PasswordHash: passwordHash, Email: email,
-		ProfilePictureURL: profilePictureURL, Country: country, DateOfBirth: dateOfBirth, PreferredLanguage: preferredLanguage,
+		ProfilePictureURL: profilePictureURL, Country: userCountry, DateOfBirth: dateOfBirth, PreferredLanguage: preferredLanguage,
 		SubscriptionPlan: subscriptionPlan, SubscriptionStatus: subscriptionStatus,
 		StripeCustomerID: stripeCustomerID, SubscriptionEndsAt: subscriptionEndsAt,
 		CreatedAt: createdAt, UpdatedAt: updatedAt,

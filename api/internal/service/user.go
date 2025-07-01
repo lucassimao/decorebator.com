@@ -67,8 +67,8 @@ func init() {
 	wordlistRepository = &repo.WordlistRepository{Db: db}
 }
 
-func SaveUser(firstName, lastName, password, email string) (*User, error) {
-	user, err := userRepository.Save(firstName, lastName, password, email)
+func SaveUser(firstName, lastName, password, email string, country *string) (*User, error) {
+	user, err := userRepository.Save(firstName, lastName, password, email, country)
 	if err != nil {
 		common.Logger.Error("failed to save new user", "error", err)
 		switch err.(type) {
