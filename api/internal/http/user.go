@@ -104,7 +104,12 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	user, err := service.SaveUser(input.FirstName, input.LastName, input.Password, input.Email, country)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		switch err.(type) {
+		case common.BusinessError:
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	} else {
 		jwtToken, err := service.LoginUser(input.Email, input.Password)

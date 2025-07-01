@@ -22,12 +22,8 @@ type UserRepository struct {
 
 // Save creates a new user in the database
 // country parameter can be nil, which will insert NULL into the database
+// Note: Validation should be performed at the service layer before calling this function
 func (repository *UserRepository) Save(firstName, lastName, password, email string, country *string) (*User, error) {
-	// Validate required parameters
-	if firstName == "" || lastName == "" || password == "" || email == "" {
-		return nil, errors.New("firstName, lastName, password, and email are required")
-	}
-
 	// Note: country parameter is optional and can be nil
 	// PostgreSQL will store NULL for nil pointer values
 	query := `
