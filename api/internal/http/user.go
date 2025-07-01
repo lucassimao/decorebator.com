@@ -22,6 +22,7 @@ type SignupInput struct {
 	LastName  string `json:"lastName" binding:"required"`
 	Email     string `json:"email" binding:"required,email"`
 	Password  string `json:"password" binding:"required,min=5"`
+	Country   string `json:"country"` // Optional ISO 3166-1 alpha-2 country code
 }
 
 type LoginInput struct {
@@ -94,10 +95,21 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		return
 	}
 
-	user, err := service.SaveUser(input.FirstName, input.LastName, input.Password, input.Email)
+	// Prepare country parameter (convert empty string to nil)
+	var country *string
+	if input.Country != "" {
+		country = &input.Country
+	}
+
+	user, err := service.SaveUser(input.FirstName, input.LastName, input.Password, input.Email, country)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		switch err.(type) {
+		case common.BusinessError:
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	} else {
 		jwtToken, err := service.LoginUser(input.Email, input.Password)

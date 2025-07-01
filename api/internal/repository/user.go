@@ -10,7 +10,6 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"github.com/jackc/pgx"
-	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -21,34 +20,42 @@ type UserRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *UserRepository) Save(firstName, lastName, password, email string) (*User, error) {
+// Save creates a new user in the database
+// country parameter can be nil, which will insert NULL into the database
+// Note: Validation should be performed at the service layer before calling this function
+func (repository *UserRepository) Save(firstName, lastName, password, email string, country *string) (*User, error) {
+	// Note: country parameter is optional and can be nil
+	// PostgreSQL will store NULL for nil pointer values
 	query := `
-		INSERT INTO users (first_name, last_name, password_hash, email)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO users (first_name, last_name, password_hash, email, country)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, updated_at, profile_picture_url, country, date_of_birth, preferred_language,
 			subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at`
 
-	var userID int64
-	var createdAt pgtype.Timestamp
-	var updatedAt pgtype.Timestamp
-	var profilePictureURL *string
-	var country *string
-	var dateOfBirth *time.Time
-	var preferredLanguage *string
-	var subscriptionPlan model.SubscriptionPlan
-	var subscriptionStatus *model.SubscriptionStatus
-	var stripeCustomerID *string
-	var subscriptionEndsAt *time.Time
+	// Create User struct to populate directly from database
+	user := &User{
+		FirstName: firstName,
+		LastName:  lastName,
+		Email:     email,
+	}
 
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	passwordHash := string(bytes)
 	if err != nil {
 		return nil, err
 	}
+	user.PasswordHash = string(bytes)
 
-	err = repository.Db.QueryRow(context.Background(), query, firstName, lastName, passwordHash, email).Scan(
-		&userID, &createdAt, &updatedAt, &profilePictureURL, &country, &dateOfBirth, &preferredLanguage,
-		&subscriptionPlan, &subscriptionStatus, &stripeCustomerID, &subscriptionEndsAt)
+	// Handle country pointer: dereference if non-nil, otherwise use nil for NULL
+	var countryParam interface{}
+	if country != nil {
+		countryParam = *country
+	} else {
+		countryParam = nil
+	}
+
+	err = repository.Db.QueryRow(context.Background(), query, firstName, lastName, user.PasswordHash, email, countryParam).Scan(
+		&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
+		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if ok := errors.As(err, &pgErr); ok {
@@ -59,13 +66,7 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 		return nil, err
 	}
 
-	return &User{
-		ID: userID, FirstName: firstName, LastName: lastName, PasswordHash: passwordHash, Email: email,
-		ProfilePictureURL: profilePictureURL, Country: country, DateOfBirth: dateOfBirth, PreferredLanguage: preferredLanguage,
-		SubscriptionPlan: subscriptionPlan, SubscriptionStatus: subscriptionStatus,
-		StripeCustomerID: stripeCustomerID, SubscriptionEndsAt: subscriptionEndsAt,
-		CreatedAt: createdAt, UpdatedAt: updatedAt,
-	}, nil
+	return user, nil
 }
 
 type FindUserArgs struct {

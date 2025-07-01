@@ -67,8 +67,13 @@ func init() {
 	wordlistRepository = &repo.WordlistRepository{Db: db}
 }
 
-func SaveUser(firstName, lastName, password, email string) (*User, error) {
-	user, err := userRepository.Save(firstName, lastName, password, email)
+func SaveUser(firstName, lastName, password, email string, country *string) (*User, error) {
+	// Validate required parameters
+	if firstName == "" || lastName == "" || password == "" || email == "" {
+		return nil, common.BusinessError{Message: "firstName, lastName, password, and email are required"}
+	}
+
+	user, err := userRepository.Save(firstName, lastName, password, email, country)
 	if err != nil {
 		common.Logger.Error("failed to save new user", "error", err)
 		switch err.(type) {
