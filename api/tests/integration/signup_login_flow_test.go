@@ -169,7 +169,7 @@ func TestSignupLoginFlow(t *testing.T) {
 		response := server.Expect.POST("/users").
 			WithJSON(secondUser).
 			Expect().
-			Status(http.StatusInternalServerError) // API returns 500 for duplicate email
+			Status(http.StatusBadRequest) // API returns 400 for duplicate email (business rule violation)
 
 		errorJSON := response.JSON().Object()
 		errorJSON.ContainsKey("error")
