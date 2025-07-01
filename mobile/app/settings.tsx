@@ -25,7 +25,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  // Switch, // Removed unused import
 } from "react-native";
 
 type PlanRecurrence = "annual" | "monthly";
