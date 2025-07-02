@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { WordlistStats } from "@/api/analytics";
+import { useResponsive } from "@/hooks/useResponsive";
 
 interface StatsGridProps {
   stats?: WordlistStats;
@@ -11,7 +12,8 @@ interface StatsGridProps {
 export const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet, type: deviceType } = useResponsive();
+  const styles = createStyles(theme, isTablet, deviceType);
 
   return (
     <View style={styles.statsGrid}>
@@ -56,46 +58,47 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => {
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+) =>
   StyleSheet.create({
     statsGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      paddingHorizontal: 12,
-      paddingVertical: 10,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.sm,
       justifyContent: "space-between",
+      gap: theme.spacing.xs,
     },
     statCard: {
       backgroundColor: theme.colors.background.surface,
-      width: "48%",
-      marginBottom: 12,
-      borderRadius: 16,
-      padding: 16,
-      shadowColor: theme.colors.text.primary,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 3.84,
-      elevation: 5,
+      width: isTablet && deviceType === "tablet-10" ? "23%" : "48%", // 4 columns on 10" tablets
+      marginBottom: theme.spacing.sm,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.md,
+      ...theme.shadows.md,
       alignItems: "center",
+      minHeight: isTablet ? 120 : 100,
     },
     statCardHighlight: {
       backgroundColor:
         theme.mode === "light" ? "#FFDCC3" : theme.colors.background.elevated,
     },
     statIconContainer: {
-      marginBottom: 8,
+      marginBottom: theme.spacing.xs,
     },
     statIcon: {
-      fontSize: 24,
+      fontSize: isTablet ? 32 : 24,
     },
     statValue: {
-      fontSize: 32,
-      fontWeight: "bold",
+      fontSize: isTablet
+        ? theme.typography.sizes.display
+        : theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.bold,
       color: theme.colors.text.primary,
-      marginBottom: 4,
+      marginBottom: theme.spacing.xs,
     },
     statValueHighlight: {
       color: theme.colors.primary,
@@ -104,8 +107,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.colors.success,
     },
     statLabel: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
       textAlign: "center",
+      lineHeight: theme.typography.lineHeights.caption,
     },
   });

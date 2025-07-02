@@ -9,7 +9,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
-  Dimensions,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -29,8 +28,7 @@ import { FlashcardHeader } from "@/components/flashcard/FlashcardHeader";
 import { FlashcardLoadingState } from "@/components/flashcard/FlashcardLoadingState";
 import { FlashcardNavigation } from "@/components/flashcard/FlashcardNavigation";
 import { FlashcardProgressBar } from "@/components/flashcard/FlashcardProgressBar";
-
-const { width: screenWidth } = Dimensions.get("window");
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 // Color palette
 const colors = {
@@ -72,8 +70,9 @@ const FlashcardPractice: React.FC = () => {
   const player = useAudioPlayer();
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { theme } = useTheme();
-  // const commonStyles = createCommonStyles(theme); // Remove if not defined
-  const styles = createStyles(theme);
+  const { contentWidth } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(theme, contentWidth, spacing);
 
   // Fetch words with definitions only to avoid broken flashcards
   const {
@@ -270,7 +269,7 @@ const FlashcardPractice: React.FC = () => {
     // Slide animation
     Animated.sequence([
       Animated.timing(slideAnimation, {
-        toValue: direction === "next" ? -screenWidth : screenWidth,
+        toValue: direction === "next" ? -contentWidth : contentWidth,
         duration: 200,
         useNativeDriver: true,
       }),
@@ -441,7 +440,11 @@ const FlashcardPractice: React.FC = () => {
 
 export default FlashcardPractice;
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  contentWidth: number,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -451,14 +454,16 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      paddingHorizontal: 40,
+      paddingHorizontal: spacing.xl,
+      maxWidth: contentWidth,
+      alignSelf: "center",
     },
     errorTitle: {
       fontSize: 20,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginTop: 16,
-      marginBottom: 8,
+      marginTop: spacing.md,
+      marginBottom: spacing.sm,
       textAlign: "center",
     },
     errorMessage: {
@@ -466,12 +471,12 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.colors.text.secondary,
       textAlign: "center",
       lineHeight: 22,
-      marginBottom: 24,
+      marginBottom: spacing.lg,
     },
     backButton: {
       backgroundColor: theme.colors.primary,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm + 4,
       borderRadius: 25,
     },
     backButtonText: {

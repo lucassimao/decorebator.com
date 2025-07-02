@@ -7,12 +7,14 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive } from "@/hooks/useResponsive";
 
 export const Header = () => {
   const { t } = useTranslation();
   const posthog = usePostHog();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet, type: deviceType } = useResponsive();
+  const styles = createStyles(theme, isTablet, deviceType);
 
   // Fetch user profile
   const { data: user, isLoading } = useQuery({
@@ -109,20 +111,24 @@ export const Header = () => {
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+) =>
   StyleSheet.create({
     header: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingTop: 10,
-      paddingBottom: 20,
-      paddingHorizontal: 20,
+      paddingTop: theme.spacing.sm,
+      paddingBottom: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
     },
     settingsButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: theme.touchTargets.comfortable,
+      height: theme.touchTargets.comfortable,
+      borderRadius: theme.touchTargets.comfortable / 2,
       backgroundColor: theme.colors.background.surface,
       justifyContent: "center",
       alignItems: "center",
@@ -133,9 +139,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       shadowOpacity: theme.mode === "light" ? 0.08 : 0.2,
     },
     profileButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: theme.touchTargets.comfortable,
+      height: theme.touchTargets.comfortable,
+      borderRadius: theme.touchTargets.comfortable / 2,
       overflow: "hidden",
       backgroundColor: theme.colors.background.surface,
       borderWidth: 1,
@@ -151,7 +157,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     profileImage: {
       width: "100%",
       height: "100%",
-      borderRadius: 22,
+      borderRadius: theme.touchTargets.comfortable / 2,
     },
     avatarPlaceholder: {
       width: "100%",
@@ -159,32 +165,36 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       backgroundColor: theme.colors.primary,
       justifyContent: "center",
       alignItems: "center",
-      borderRadius: 22,
+      borderRadius: theme.touchTargets.comfortable / 2,
     },
     avatarText: {
-      fontSize: 18,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.inverse,
     },
     greetingContainer: {
-      marginBottom: 20,
-      paddingHorizontal: 20,
+      marginBottom: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
     },
     greeting: {
-      fontSize: 28,
-      fontWeight: "600",
+      fontSize: isTablet
+        ? theme.typography.sizes.display
+        : theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.primary,
-      marginBottom: 4,
+      marginBottom: theme.spacing.xs,
     },
     userName: {
-      fontSize: 28,
-      fontWeight: "600",
+      fontSize: isTablet
+        ? theme.typography.sizes.display
+        : theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.primary,
-      marginBottom: 8,
+      marginBottom: theme.spacing.xs,
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
-      marginTop: 4,
+      marginTop: theme.spacing.xs,
     },
   });

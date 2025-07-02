@@ -4,6 +4,7 @@ import { LoadingWithTimeout } from "../LoadingWithTimeout";
 import { MaterialIcons } from "@expo/vector-icons";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 interface FlashcardLoadingStateProps {
   isLoading: boolean;
@@ -34,7 +35,9 @@ export const FlashcardLoadingState: React.FC<FlashcardLoadingStateProps> = ({
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(theme, isTablet, spacing);
 
   // Check if this is a "no words with definitions" error
   const isProcessingError =
@@ -100,58 +103,64 @@ export const FlashcardLoadingState: React.FC<FlashcardLoadingStateProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
   StyleSheet.create({
     processingContainer: {
-      minHeight: 300,
+      minHeight: isTablet ? 400 : 300,
       justifyContent: "center",
       alignItems: "center",
-      paddingHorizontal: 20,
+      paddingHorizontal: spacing.lg,
     },
     processingTitle: {
-      fontSize: 20,
+      fontSize: isTablet ? 24 : 20,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginTop: 16,
-      marginBottom: 8,
+      marginTop: spacing.md,
+      marginBottom: spacing.xs,
       textAlign: "center",
     },
     processingMessage: {
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       color: theme.colors.text.secondary,
       textAlign: "center",
-      lineHeight: 22,
-      marginBottom: 24,
+      lineHeight: isTablet ? 26 : 22,
+      marginBottom: spacing.xl,
     },
     actionButtons: {
       flexDirection: "row",
-      gap: 12,
+      gap: spacing.sm,
     },
     retryButton: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      borderRadius: 25,
-      gap: 8,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: theme.borderRadius.lg,
+      gap: spacing.xs,
+      minHeight: isTablet ? 48 : 44,
     },
     retryButtonText: {
-      color: "#FFFFFF",
-      fontSize: 16,
+      color: theme.colors.text.inverse,
+      fontSize: isTablet ? 18 : 16,
       fontWeight: "600",
     },
     goBackButton: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      borderRadius: 25,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: theme.borderRadius.lg,
       borderWidth: 1,
-      borderColor: theme.colors.border.light,
-      gap: 8,
+      borderColor: theme.colors.ui.border,
+      gap: spacing.xs,
+      minHeight: isTablet ? 48 : 44,
     },
     goBackButtonText: {
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       fontWeight: "600",
     },
   });

@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { Quiz } from "../../api/wordlists";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive } from "@/hooks/useResponsive";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -37,6 +38,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const { isTablet, type: deviceType, contentWidth } = useResponsive();
   const player = useAudioPlayer();
   const { playing: isPlaying, didJustFinish } = useAudioPlayerStatus(player);
   const [imageLoading, setImageLoading] = useState(false);
@@ -580,7 +582,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
     }
   };
 
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, isTablet, deviceType, contentWidth);
 
   return (
     <View style={styles.container}>
@@ -596,78 +598,91 @@ export const QuizContent: React.FC<QuizContentProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+  contentWidth: number,
+) =>
   StyleSheet.create({
     container: {
       flex: 1,
     },
     quizTitle: {
-      fontSize: 20,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.primary,
       textAlign: "center",
-      marginBottom: 24,
+      marginBottom: theme.spacing.lg,
     },
     questionContainer: {
       alignItems: "center",
-      marginBottom: 32,
+      marginBottom: theme.spacing.section,
+      maxWidth: isTablet ? contentWidth * 0.8 : "100%",
+      alignSelf: "center",
     },
     wordText: {
-      fontSize: 32,
-      fontWeight: "700",
+      fontSize: theme.typography.sizes.display,
+      fontWeight: theme.typography.weights.bold,
       color: theme.colors.primary,
-      marginBottom: 8,
+      marginBottom: theme.spacing.xs,
     },
     posText: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
       fontStyle: "italic",
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     pronunciationText: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
       fontStyle: "italic",
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       textAlign: "center",
     },
     sentenceText: {
-      fontSize: 18,
+      fontSize: theme.typography.sizes.bodyLarge,
       color: theme.colors.text.primary,
-      lineHeight: 28,
+      lineHeight: theme.typography.lineHeights.bodyLarge,
       textAlign: "center",
     },
     meaningText: {
-      fontSize: 18,
+      fontSize: theme.typography.sizes.bodyLarge,
       color: theme.colors.text.primary,
-      lineHeight: 26,
+      lineHeight: theme.typography.lineHeights.bodyLarge,
       textAlign: "center",
     },
     questionImage: {
-      width: SCREEN_WIDTH - 80,
-      height: 200,
-      borderRadius: 12,
-      marginBottom: 16,
+      width: isTablet ? Math.min(contentWidth * 0.8, 400) : SCREEN_WIDTH - 80,
+      height: isTablet ? 250 : 200,
+      borderRadius: theme.borderRadius.md,
+      marginBottom: theme.spacing.md,
     },
     imageDescription: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
       fontStyle: "italic",
     },
     audioButton: {
-      marginTop: 16,
+      marginTop: theme.spacing.md,
+      minHeight: theme.touchTargets.comfortable,
+      minWidth: theme.touchTargets.comfortable,
+      justifyContent: "center",
+      alignItems: "center",
     },
     largeAudioButton: {
       alignItems: "center",
-      gap: 12,
+      gap: theme.spacing.md,
+      minHeight: theme.touchTargets.large,
+      justifyContent: "center",
     },
     audioText: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
     },
     imageContainer: {
-      width: SCREEN_WIDTH - 80,
-      height: 200,
+      width: isTablet ? Math.min(contentWidth * 0.8, 400) : SCREEN_WIDTH - 80,
+      height: isTablet ? 250 : 200,
       position: "relative",
       alignItems: "center",
       justifyContent: "center",
@@ -679,86 +694,92 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       right: 0,
       bottom: 0,
       backgroundColor: theme.colors.background.surface,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       justifyContent: "center",
       alignItems: "center",
       zIndex: 1,
     },
     imageLoadingText: {
-      marginTop: 12,
-      fontSize: 14,
+      marginTop: theme.spacing.sm,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
     },
     hiddenImage: {
       opacity: 0,
     },
     imageErrorContainer: {
-      width: SCREEN_WIDTH - 80,
-      height: 200,
+      width: isTablet ? Math.min(contentWidth * 0.8, 400) : SCREEN_WIDTH - 80,
+      height: isTablet ? 250 : 200,
       backgroundColor: theme.colors.background.surface,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       justifyContent: "center",
       alignItems: "center",
-      padding: 20,
+      padding: theme.spacing.md,
     },
     imageErrorText: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
-      marginTop: 12,
-      marginBottom: 20,
+      marginTop: theme.spacing.sm,
+      marginBottom: theme.spacing.md,
       textAlign: "center",
     },
     imageErrorActions: {
       flexDirection: "row",
-      gap: 12,
+      gap: theme.spacing.sm,
     },
     retryButton: {
       flexDirection: "row",
       backgroundColor: theme.colors.primary,
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      borderRadius: 8,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.sm,
       alignItems: "center",
-      gap: 8,
+      gap: theme.spacing.xs,
+      minHeight: theme.touchTargets.comfortable,
     },
     retryButtonText: {
       color: theme.colors.text.inverse,
-      fontSize: 14,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.caption,
+      fontWeight: theme.typography.weights.semibold,
     },
     skipImageButton: {
       backgroundColor: "transparent",
       borderWidth: 2,
       borderColor: theme.colors.ui.border,
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      borderRadius: 8,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.sm,
+      minHeight: theme.touchTargets.comfortable,
+      justifyContent: "center",
     },
     skipImageButtonText: {
       color: theme.colors.text.secondary,
-      fontSize: 14,
-      fontWeight: "500",
+      fontSize: theme.typography.sizes.caption,
+      fontWeight: theme.typography.weights.medium,
     },
     retryCountText: {
-      fontSize: 12,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.ui.disabled,
-      marginTop: 12,
+      marginTop: theme.spacing.sm,
     },
     writeInputContainer: {
-      marginTop: 24,
+      marginTop: theme.spacing.lg,
       width: "100%",
+      maxWidth: isTablet ? 400 : "100%",
+      alignSelf: "center",
     },
     writeInput: {
       backgroundColor: theme.colors.ui.inputBackground,
       borderWidth: 2,
       borderColor: theme.colors.ui.border,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      fontSize: 18,
+      borderRadius: theme.borderRadius.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
+      fontSize: theme.typography.sizes.bodyLarge,
       color: theme.colors.text.primary,
       textAlign: "center",
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
+      minHeight: theme.touchTargets.comfortable,
     },
     correctInput: {
       borderColor: theme.colors.success,
@@ -771,13 +792,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
         theme.mode === "light" ? "#FFEBEE" : theme.colors.background.elevated,
     },
     buttonContainer: {
-      gap: 12,
+      gap: theme.spacing.sm,
     },
     submitAnswerButton: {
       backgroundColor: theme.colors.primary,
-      borderRadius: 12,
-      paddingVertical: 14,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: theme.spacing.md,
       alignItems: "center",
+      minHeight: theme.touchTargets.comfortable,
     },
     submitButtonDisabled: {
       backgroundColor: theme.colors.ui.disabled,
@@ -785,37 +807,38 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     submitAnswerText: {
       color: theme.colors.text.inverse,
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.semibold,
     },
     skipButton: {
       backgroundColor: "transparent",
       borderWidth: 2,
       borderColor: theme.colors.ui.border,
-      borderRadius: 12,
-      paddingVertical: 14,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: theme.spacing.md,
       alignItems: "center",
+      minHeight: theme.touchTargets.comfortable,
     },
     skipButtonText: {
       color: theme.colors.text.secondary,
-      fontSize: 16,
-      fontWeight: "500",
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.medium,
     },
     answerFeedback: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      marginTop: 16,
-      gap: 8,
+      marginTop: theme.spacing.md,
+      gap: theme.spacing.xs,
     },
     correctFeedback: {
       color: theme.colors.success,
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.semibold,
     },
     incorrectFeedback: {
       color: theme.colors.error,
-      fontSize: 16,
+      fontSize: theme.typography.sizes.body,
       textAlign: "center",
     },
   });

@@ -7,6 +7,20 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColorScheme } from "react-native";
+import {
+  getResponsiveSpacing,
+  getResponsiveTypography,
+  getResponsiveLayout,
+  getResponsiveTouchTargets,
+  getResponsiveBorderRadius,
+  getResponsiveShadows,
+  ResponsiveSpacing,
+  ResponsiveTypography,
+  ResponsiveLayout,
+  ResponsiveTouchTargets,
+} from "@/theme/responsive";
+import { getDeviceType, DeviceType } from "@/utils/deviceDetection";
+import { Dimensions } from "react-native";
 
 // Theme type definitions
 export interface Theme {
@@ -69,14 +83,11 @@ export interface Theme {
       backdropLight: string; // Light backdrop
     };
   };
-  spacing: {
-    xs: number;
-    sm: number;
-    md: number;
-    lg: number;
-    xl: number;
-    xxl: number;
-  };
+  // Responsive design tokens
+  spacing: ResponsiveSpacing;
+  typography: ResponsiveTypography;
+  layout: ResponsiveLayout;
+  touchTargets: ResponsiveTouchTargets;
   borderRadius: {
     sm: number;
     md: number;
@@ -109,180 +120,133 @@ export interface Theme {
   };
 }
 
-// Light theme definition
-const lightTheme: Theme = {
-  mode: "light",
-  colors: {
-    background: {
-      default: "#FDF6E3", // Warm beige from web for main background
-      surface: "#FFFFFF", // White for cards
-      elevated: "#F8F9FA", // Very light gray for elevation
-      subtle: "#F5F6F8", // Subtle gray for sections
-      secondary: "#F0F0F0", // Secondary background
-    },
-    // Keep existing vibrant brand colors
-    primary: "#FF7B54",
-    success: "#4CAF50",
-    error: "#FF6B6B",
-    premium: "#FFD700",
-    border: {
-      light: "#E0E0E0",
-      medium: "#D0D0D0",
-      dark: "#B0B0B0",
-    },
-    text: {
-      primary: "#2D3436",
-      secondary: "#636E72",
-      placeholder: "#B2BEC3",
-      inverse: "#FFFFFF",
-      disabled: "#DFE6E9",
-      tertiary: "#B2BEC3",
-    },
-    ui: {
-      card: "#FFFFFF",
-      border: "#E0E0E0",
-      divider: "#F0F0F0",
-      disabled: "#DFE6E9",
-      inputBackground: "#FFFFFF",
-    },
-    semantic: {
-      info: "#2196F3",
-      warning: "#FF6B3D",
-      special: "#9C27B0",
-    },
-    state: {
-      correctBackground: "#E8F5E9",
-      incorrectBackground: "#FFEBEE",
-      infoBackground: "#F0F9FF",
-      successDark: "#2E7D32",
-      errorDark: "#C62828",
-    },
-    overlay: {
-      backdrop: "rgba(0, 0, 0, 0.4)",
-      backdropHeavy: "rgba(0, 0, 0, 0.5)",
-      backdropLight: "rgba(0, 0, 0, 0.3)",
-    },
+// Base color definitions (same for all devices)
+const lightColors = {
+  background: {
+    default: "#FDF6E3", // Warm beige from web for main background
+    surface: "#FFFFFF", // White for cards
+    elevated: "#F8F9FA", // Very light gray for elevation
+    subtle: "#F5F6F8", // Subtle gray for sections
+    secondary: "#F0F0F0", // Secondary background
   },
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-    xxl: 48,
+  // Keep existing vibrant brand colors
+  primary: "#FF7B54",
+  success: "#4CAF50",
+  error: "#FF6B6B",
+  premium: "#FFD700",
+  border: {
+    light: "#E0E0E0",
+    medium: "#D0D0D0",
+    dark: "#B0B0B0",
   },
-  borderRadius: {
-    sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 24,
-    full: 9999,
+  text: {
+    primary: "#2D3436",
+    secondary: "#636E72",
+    placeholder: "#B2BEC3",
+    inverse: "#FFFFFF",
+    disabled: "#DFE6E9",
+    tertiary: "#B2BEC3",
   },
-  shadows: {
-    sm: {
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 3,
-      elevation: 2,
-    },
-    md: {
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
-      elevation: 4,
-    },
-    lg: {
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.12,
-      shadowRadius: 16,
-      elevation: 8,
-    },
+  ui: {
+    card: "#FFFFFF",
+    border: "#E0E0E0",
+    divider: "#F0F0F0",
+    disabled: "#DFE6E9",
+    inputBackground: "#FFFFFF",
+  },
+  semantic: {
+    info: "#2196F3",
+    warning: "#FF6B3D",
+    special: "#9C27B0",
+  },
+  state: {
+    correctBackground: "#E8F5E9",
+    incorrectBackground: "#FFEBEE",
+    infoBackground: "#F0F9FF",
+    successDark: "#2E7D32",
+    errorDark: "#C62828",
+  },
+  overlay: {
+    backdrop: "rgba(0, 0, 0, 0.4)",
+    backdropHeavy: "rgba(0, 0, 0, 0.5)",
+    backdropLight: "rgba(0, 0, 0, 0.3)",
   },
 };
 
-// Dark theme definition
-const darkTheme: Theme = {
-  mode: "dark",
-  colors: {
-    background: {
-      default: "#0F0F0F", // Rich black
-      surface: "#1C1C1E", // Dark surface
-      elevated: "#2C2C2E", // Elevated dark surface
-      subtle: "#242426", // Subtle variation
-      secondary: "#2C2C2E", // Secondary background
-    },
-    // Keep vibrant colors - they pop on dark backgrounds
-    primary: "#FF7B54",
-    success: "#4CAF50",
-    error: "#FF6B6B",
-    premium: "#FFD700",
-    border: {
-      light: "#38383A",
-      medium: "#48484A",
-      dark: "#58585A",
-    },
-    text: {
-      primary: "#FFFFFF",
-      secondary: "#A0A0A0",
-      placeholder: "#606060",
-      inverse: "#000000",
-      disabled: "#48484A",
-      tertiary: "#606060",
-    },
-    ui: {
-      card: "#1C1C1E",
-      border: "#38383A",
-      divider: "#2C2C2E",
-      disabled: "#48484A",
-      inputBackground: "#2C2C2E",
-    },
-    semantic: {
-      info: "#2196F3",
-      warning: "#FF6B3D",
-      special: "#9C27B0",
-    },
-    state: {
-      correctBackground: "rgba(76, 175, 80, 0.15)",
-      incorrectBackground: "rgba(255, 107, 107, 0.15)",
-      infoBackground: "rgba(33, 150, 243, 0.15)",
-      successDark: "#4CAF50",
-      errorDark: "#FF6B6B",
-    },
-    overlay: {
-      backdrop: "rgba(0, 0, 0, 0.7)",
-      backdropHeavy: "rgba(0, 0, 0, 0.8)",
-      backdropLight: "rgba(0, 0, 0, 0.5)",
-    },
+const darkColors = {
+  background: {
+    default: "#0F0F0F", // Rich black
+    surface: "#1C1C1E", // Dark surface
+    elevated: "#2C2C2E", // Elevated dark surface
+    subtle: "#242426", // Subtle variation
+    secondary: "#2C2C2E", // Secondary background
   },
-  spacing: lightTheme.spacing,
-  borderRadius: lightTheme.borderRadius,
-  shadows: {
-    sm: {
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 3,
-      elevation: 2,
-    },
-    md: {
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.4,
-      shadowRadius: 8,
-      elevation: 4,
-    },
-    lg: {
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.5,
-      shadowRadius: 16,
-      elevation: 8,
-    },
+  // Keep vibrant colors - they pop on dark backgrounds
+  primary: "#FF7B54",
+  success: "#4CAF50",
+  error: "#FF6B6B",
+  premium: "#FFD700",
+  border: {
+    light: "#38383A",
+    medium: "#48484A",
+    dark: "#58585A",
+  },
+  text: {
+    primary: "#FFFFFF",
+    secondary: "#A0A0A0",
+    placeholder: "#606060",
+    inverse: "#000000",
+    disabled: "#48484A",
+    tertiary: "#606060",
+  },
+  ui: {
+    card: "#1C1C1E",
+    border: "#38383A",
+    divider: "#2C2C2E",
+    disabled: "#48484A",
+    inputBackground: "#2C2C2E",
+  },
+  semantic: {
+    info: "#2196F3",
+    warning: "#FF6B3D",
+    special: "#9C27B0",
+  },
+  state: {
+    correctBackground: "rgba(76, 175, 80, 0.15)",
+    incorrectBackground: "rgba(255, 107, 107, 0.15)",
+    infoBackground: "rgba(33, 150, 243, 0.15)",
+    successDark: "#4CAF50",
+    errorDark: "#FF6B6B",
+  },
+  overlay: {
+    backdrop: "rgba(0, 0, 0, 0.7)",
+    backdropHeavy: "rgba(0, 0, 0, 0.8)",
+    backdropLight: "rgba(0, 0, 0, 0.5)",
   },
 };
+
+// Helper function to create responsive theme
+function createResponsiveTheme(
+  mode: "light" | "dark",
+  deviceType: DeviceType,
+): Theme {
+  const colors = mode === "light" ? lightColors : darkColors;
+
+  return {
+    mode,
+    colors,
+    spacing: getResponsiveSpacing(deviceType),
+    typography: getResponsiveTypography(deviceType),
+    layout: getResponsiveLayout(deviceType),
+    touchTargets: getResponsiveTouchTargets(deviceType),
+    borderRadius: getResponsiveBorderRadius(deviceType),
+    shadows: getResponsiveShadows(deviceType),
+  };
+}
+
+// Default themes for fallback (using phone settings)
+const lightTheme: Theme = createResponsiveTheme("light", "phone");
+// const darkTheme: Theme = createResponsiveTheme("dark", "phone");
 
 // Theme context
 interface ThemeContextType {
@@ -305,6 +269,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({
     "system",
   );
   const [theme, setTheme] = useState<Theme>(lightTheme);
+  const [deviceType, setDeviceType] = useState<DeviceType>(getDeviceType());
 
   // Load saved theme preference
   useEffect(() => {
@@ -321,18 +286,29 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({
     loadThemePreference();
   }, []);
 
-  // Update theme based on mode
+  // Track device type changes
   useEffect(() => {
-    let selectedTheme: Theme;
+    const subscription = Dimensions.addEventListener("change", () => {
+      setDeviceType(getDeviceType());
+    });
+
+    return () => subscription?.remove();
+  }, []);
+
+  // Update theme based on mode and device type
+  useEffect(() => {
+    let mode: "light" | "dark";
 
     if (themeMode === "system") {
-      selectedTheme = systemColorScheme === "dark" ? darkTheme : lightTheme;
+      mode = systemColorScheme === "dark" ? "dark" : "light";
     } else {
-      selectedTheme = themeMode === "dark" ? darkTheme : lightTheme;
+      mode = themeMode;
     }
 
-    setTheme(selectedTheme);
-  }, [themeMode, systemColorScheme]);
+    // Create responsive theme based on current device type
+    const responsiveTheme = createResponsiveTheme(mode, deviceType);
+    setTheme(responsiveTheme);
+  }, [themeMode, systemColorScheme, deviceType]);
 
   const toggleTheme = () => {
     const newMode = theme.mode === "light" ? "dark" : "light";

@@ -23,6 +23,8 @@ import {
 } from "react-native";
 import { ContentGuidelinesModal } from "./ContentGuidelinesModal";
 import * as Sentry from "@sentry/react-native";
+import { useResponsive } from "@/hooks/useResponsive";
+import { createCommonStyles } from "@/styles/common";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -60,10 +62,12 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const { isTablet, type: deviceType } = useResponsive();
+  const commonStyles = createCommonStyles(theme);
   const [showContentGuidelines, setShowContentGuidelines] = useState(false);
   const [guidelinesExpanded, setGuidelinesExpanded] = useState(false);
   const guidelinesHeight = useRef(new Animated.Value(0)).current;
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, isTablet, deviceType);
 
   // Handle modal close with animation
   const handleClose = () => {
@@ -265,6 +269,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
       <Animated.View
         style={[
           styles.modalContent,
+          isTablet && commonStyles.modalContent,
           {
             transform: [{ translateY: slideAnim }],
           },
@@ -654,7 +659,11 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+) =>
   StyleSheet.create({
     backdrop: {
       position: "absolute",
@@ -662,15 +671,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor:
-        theme.mode === "light" ? "rgba(0, 0, 0, 0.4)" : "rgba(0, 0, 0, 0.6)",
+      backgroundColor: theme.colors.overlay.backdrop,
     },
     modalContent: {
       backgroundColor: theme.colors.background.surface,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      height: SCREEN_HEIGHT * 0.9,
-      maxHeight: SCREEN_HEIGHT * 0.9,
+      borderTopLeftRadius: theme.borderRadius.xl,
+      borderTopRightRadius: theme.borderRadius.xl,
+      height: isTablet ? "auto" : SCREEN_HEIGHT * 0.9,
+      maxHeight: isTablet ? "90%" : SCREEN_HEIGHT * 0.9,
       shadowColor: theme.colors.text.primary,
       shadowOffset: { width: 0, height: -4 },
       shadowOpacity: 0.1,
@@ -682,89 +690,90 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       right: 0,
     },
     header: {
-      paddingTop: 12,
-      paddingBottom: 20,
-      paddingHorizontal: 20,
+      paddingTop: theme.spacing.sm,
+      paddingBottom: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.ui.border,
     },
     handle: {
-      width: 40,
-      height: 4,
+      width: isTablet ? 50 : 40,
+      height: isTablet ? 5 : 4,
       backgroundColor: theme.colors.ui.disabled,
-      borderRadius: 2,
+      borderRadius: theme.borderRadius.xs,
       alignSelf: "center",
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     title: {
-      fontSize: 24,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.primary,
       textAlign: "center",
     },
     closeButton: {
       position: "absolute",
-      right: 20,
-      top: 32,
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      right: theme.spacing.md,
+      top: theme.spacing.lg,
+      width: theme.touchTargets.minimum,
+      height: theme.touchTargets.minimum,
+      borderRadius: theme.touchTargets.minimum / 2,
       backgroundColor: theme.colors.background.surface,
       justifyContent: "center",
       alignItems: "center",
     },
     form: {
-      padding: 20,
+      padding: theme.spacing.md,
     },
     guidelinesNotice: {
       backgroundColor:
         theme.mode === "light" ? "#FFF9F0" : theme.colors.background.secondary,
       borderWidth: 1,
       borderColor: theme.mode === "light" ? "#FFE6CC" : theme.colors.ui.border,
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 24,
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.md,
+      marginBottom: theme.spacing.lg,
     },
     guidelinesHeader: {
       flexDirection: "row",
       alignItems: "center",
     },
     guidelinesTitle: {
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.primary,
-      marginLeft: 8,
+      marginLeft: theme.spacing.xs,
       flex: 1,
     },
     expandIcon: {
-      marginLeft: 8,
+      marginLeft: theme.spacing.xs,
     },
     guidelinesText: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
-      lineHeight: 20,
-      marginTop: 12,
-      marginBottom: 12,
+      lineHeight: theme.typography.lineHeights.caption,
+      marginTop: theme.spacing.sm,
+      marginBottom: theme.spacing.sm,
     },
     guidelinesLink: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingVertical: 8,
+      paddingVertical: theme.spacing.xs,
+      minHeight: theme.touchTargets.minimum,
     },
     guidelinesLinkText: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.primary,
-      fontWeight: "500",
+      fontWeight: theme.typography.weights.medium,
     },
     inputGroup: {
-      marginBottom: 24,
+      marginBottom: theme.spacing.lg,
     },
     label: {
-      fontSize: 16,
-      fontWeight: "500",
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.medium,
       color: theme.colors.text.primary,
-      marginBottom: 8,
+      marginBottom: theme.spacing.xs,
     },
     required: {
       color: theme.colors.primary,
@@ -772,39 +781,41 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     input: {
       borderWidth: 1,
       borderColor: theme.colors.ui.border,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      fontSize: 16,
+      borderRadius: theme.borderRadius.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.primary,
       backgroundColor: theme.colors.ui.inputBackground,
+      minHeight: theme.touchTargets.comfortable,
     },
     inputError: {
       borderColor: theme.colors.error,
     },
     textArea: {
-      height: 80,
+      height: isTablet ? 100 : 80,
       textAlignVertical: "top",
-      paddingTop: 14,
+      paddingTop: theme.spacing.md,
     },
     errorText: {
       color: theme.colors.error,
-      fontSize: 14,
-      marginTop: 6,
+      fontSize: theme.typography.sizes.caption,
+      marginTop: theme.spacing.xs,
     },
     languageScroll: {
-      marginTop: 8,
+      marginTop: theme.spacing.xs,
     },
     languageItem: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderRadius: 12,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.md,
       borderWidth: 1,
       borderColor: theme.colors.ui.border,
-      marginRight: 10,
+      marginRight: theme.spacing.sm,
       backgroundColor: theme.colors.background.default,
+      minHeight: theme.touchTargets.comfortable,
     },
     languageItemSelected: {
       borderColor: theme.colors.primary,
@@ -812,44 +823,45 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
         theme.mode === "light" ? "#FFF5F0" : theme.colors.background.secondary,
     },
     languageFlag: {
-      fontSize: 24,
-      marginRight: 8,
+      fontSize: isTablet ? 28 : 24,
+      marginRight: theme.spacing.xs,
     },
     languageName: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
     },
     languageNameSelected: {
       color: theme.colors.primary,
-      fontWeight: "500",
+      fontWeight: theme.typography.weights.medium,
     },
     submitError: {
-      marginTop: -8,
-      marginBottom: 16,
+      marginTop: -theme.spacing.xs,
+      marginBottom: theme.spacing.md,
     },
     actions: {
       flexDirection: "row",
-      paddingHorizontal: 20,
-      paddingTop: 16,
-      paddingBottom: 32,
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.xl,
       borderTopWidth: 1,
       borderTopColor: theme.colors.ui.border,
-      gap: 12,
+      gap: theme.spacing.sm,
     },
     button: {
       flex: 1,
-      paddingVertical: 16,
-      borderRadius: 12,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
+      minHeight: theme.touchTargets.comfortable,
     },
     cancelButton: {
       backgroundColor: theme.colors.background.surface,
     },
     cancelButtonText: {
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.secondary,
     },
     createButton: {
@@ -861,34 +873,35 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       elevation: 5,
     },
     createButtonText: {
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.inverse,
     },
     buttonIcon: {
-      marginLeft: 6,
+      marginLeft: theme.spacing.xs,
     },
     buttonDisabled: {
       opacity: 0.7,
     },
     helpText: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
-      marginBottom: 12,
+      marginBottom: theme.spacing.sm,
       fontStyle: "italic",
     },
     loadingContainer: {
-      paddingVertical: 20,
+      paddingVertical: theme.spacing.md,
       alignItems: "center",
     },
     pronunciationItem: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderRadius: 12,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.md,
       borderWidth: 1,
       borderColor: theme.colors.ui.border,
-      marginRight: 10,
+      marginRight: theme.spacing.sm,
       backgroundColor: theme.colors.background.default,
+      minHeight: theme.touchTargets.comfortable,
     },
     pronunciationItemSelected: {
       borderColor: theme.colors.primary,
@@ -896,19 +909,19 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
         theme.mode === "light" ? "#FFF5F0" : theme.colors.background.secondary,
     },
     pronunciationName: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
     },
     pronunciationNameSelected: {
       color: theme.colors.primary,
-      fontWeight: "500",
+      fontWeight: theme.typography.weights.medium,
     },
     errorContainer: {
-      paddingVertical: 16,
-      paddingHorizontal: 12,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
       backgroundColor:
         theme.mode === "light" ? "#FFF5F5" : theme.colors.background.secondary,
-      borderRadius: 8,
+      borderRadius: theme.borderRadius.sm,
       borderWidth: 1,
       borderColor: theme.mode === "light" ? "#FFE6E6" : theme.colors.ui.border,
     },

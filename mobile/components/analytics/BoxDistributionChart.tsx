@@ -3,11 +3,10 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { BarChart } from "react-native-chart-kit";
 import { getChartConfig } from "./theme";
-
-const screenWidth = Dimensions.get("window").width;
+import { useResponsive } from "@/hooks/useResponsive";
 
 interface BoxDistributionChartProps {
   boxDistribution?: BoxDistributionResponse;
@@ -18,7 +17,8 @@ export const BoxDistributionChart: React.FC<BoxDistributionChartProps> = ({
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet, type: deviceType, contentWidth } = useResponsive();
+  const styles = createStyles(theme, isTablet, deviceType);
   const chartConfig = getChartConfig(theme);
 
   const boxColorGradient = [
@@ -63,13 +63,14 @@ export const BoxDistributionChart: React.FC<BoxDistributionChartProps> = ({
                 },
               ],
             }}
-            width={screenWidth - 40}
-            height={220}
+            width={contentWidth}
+            height={isTablet ? 300 : 220}
             yAxisLabel=""
             yAxisSuffix=""
             chartConfig={{
               ...chartConfig,
               barPercentage: 0.8,
+              strokeWidth: isTablet ? 3 : 2,
               // color: () => boxColorGradient[6]
             }}
             style={styles.chart}
@@ -113,7 +114,7 @@ export const BoxDistributionChart: React.FC<BoxDistributionChartProps> = ({
           <View style={styles.explanationContainer}>
             <MaterialIcons
               name="info-outline"
-              size={20}
+              size={isTablet ? 24 : 20}
               color={theme.colors.text.secondary}
             />
             <Text style={styles.explanationText}>
@@ -132,59 +133,55 @@ export const BoxDistributionChart: React.FC<BoxDistributionChartProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+) =>
   StyleSheet.create({
     chartCard: {
       backgroundColor: theme.colors.background.surface,
-      marginHorizontal: 16,
-      marginVertical: 8,
-      borderRadius: 16,
-      padding: 20,
-      shadowColor: theme.colors.text.primary,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 3.84,
-      elevation: 5,
+      marginVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.lg,
+      ...theme.shadows.sm,
     },
     chartTitle: {
-      fontSize: 20,
+      fontSize: theme.typography.sizes.title,
       fontWeight: "bold",
       color: theme.colors.text.primary,
-      marginBottom: 4,
+      marginBottom: theme.spacing.xs,
     },
     chartSubtitle: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     chart: {
-      marginVertical: 8,
-      borderRadius: 16,
-      marginLeft: -20,
+      marginVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.lg,
+      marginLeft: -theme.spacing.lg,
     },
     emptyChartContainer: {
-      height: 200,
+      height: isTablet ? 300 : 200,
       justifyContent: "center",
       alignItems: "center",
       backgroundColor: theme.colors.background.secondary,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
     },
     emptyChartText: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.bodyLarge,
       color: theme.colors.text.tertiary,
     },
     boxLegendContainer: {
-      marginTop: 16,
+      marginTop: theme.spacing.md,
     },
     boxLegendItem: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingVertical: 8,
-      paddingHorizontal: 8,
+      paddingVertical: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.sm,
     },
     boxLegendLeft: {
       flexDirection: "row",
@@ -192,36 +189,36 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
     },
     boxLegendDot: {
-      width: 12,
-      height: 12,
-      borderRadius: 6,
-      marginRight: 8,
+      width: isTablet ? 16 : 12,
+      height: isTablet ? 16 : 12,
+      borderRadius: isTablet ? 8 : 6,
+      marginRight: theme.spacing.sm,
     },
     boxLegendText: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.primary,
       flex: 1,
     },
     boxLegendCount: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.body,
       fontWeight: "600",
       color: theme.colors.text.secondary,
-      marginLeft: 8,
+      marginLeft: theme.spacing.sm,
     },
     explanationContainer: {
       flexDirection: "row",
       alignItems: "flex-start",
-      marginTop: 16,
-      paddingHorizontal: 8,
-      paddingVertical: 12,
+      marginTop: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.md,
       backgroundColor: theme.colors.background.secondary,
-      borderRadius: 8,
+      borderRadius: theme.borderRadius.sm,
     },
     explanationText: {
-      fontSize: 13,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
-      lineHeight: 18,
+      lineHeight: theme.typography.lineHeights.caption,
       flex: 1,
-      marginLeft: 8,
+      marginLeft: theme.spacing.sm,
     },
   });

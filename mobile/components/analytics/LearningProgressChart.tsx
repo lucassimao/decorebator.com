@@ -1,12 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { useTranslation } from "react-i18next";
 import { getChartColors, getChartConfig } from "./theme";
 import { LearningProgress } from "@/api/analytics";
 import { useTheme } from "@/contexts/ThemeContext";
-
-const screenWidth = Dimensions.get("window").width;
+import { useResponsive } from "@/hooks/useResponsive";
 
 interface LearningProgressChartProps {
   learningProgress?: LearningProgress[];
@@ -17,9 +16,10 @@ export const LearningProgressChart: React.FC<LearningProgressChartProps> = ({
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const { isTablet, type: deviceType, contentWidth } = useResponsive();
   const chartConfig = getChartConfig(theme);
   const chartColors = getChartColors(theme);
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, isTablet, deviceType);
 
   const lineChartData = {
     labels:
@@ -51,12 +51,12 @@ export const LearningProgressChart: React.FC<LearningProgressChartProps> = ({
       {lineChartData.labels.length > 0 ? (
         <LineChart
           data={lineChartData}
-          width={screenWidth - 40}
-          height={220}
+          width={contentWidth - 40}
+          height={isTablet ? 280 : 220}
           chartConfig={{
             ...chartConfig,
             propsForDots: {
-              r: "6",
+              r: isTablet ? "8" : "6",
               strokeWidth: "2",
               stroke: theme.colors.primary,
               fill: theme.colors.background.default,
@@ -76,48 +76,45 @@ export const LearningProgressChart: React.FC<LearningProgressChartProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+) =>
   StyleSheet.create({
     chartCard: {
       backgroundColor: theme.colors.background.surface,
-      marginHorizontal: 16,
-      marginVertical: 8,
-      borderRadius: 16,
-      padding: 20,
-      shadowColor: "#000",
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 3.84,
-      elevation: 5,
+      marginHorizontal: 0, // Remove for responsive container
+      marginVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.md,
+      ...theme.shadows.md,
     },
     chartTitle: {
-      fontSize: 20,
-      fontWeight: "bold",
+      fontSize: theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.bold,
       color: theme.colors.text.primary,
-      marginBottom: 4,
+      marginBottom: theme.spacing.xs,
     },
     chartSubtitle: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     chart: {
-      marginVertical: 8,
-      borderRadius: 16,
-      marginLeft: -20,
+      marginVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.lg,
+      marginLeft: -theme.spacing.md,
     },
     emptyChartContainer: {
-      height: 200,
+      height: isTablet ? 280 : 220,
       justifyContent: "center",
       alignItems: "center",
       backgroundColor: theme.colors.background.default,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
     },
     emptyChartText: {
-      fontSize: 16,
-      color: theme.colors.text.placeholder,
+      fontSize: theme.typography.sizes.body,
+      color: theme.colors.text.disabled,
     },
   });

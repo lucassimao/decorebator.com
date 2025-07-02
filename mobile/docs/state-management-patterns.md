@@ -281,6 +281,108 @@ class PreferencesManager {
 }
 ```
 
+## Responsive State Management
+
+### Device-Aware State Patterns
+
+```typescript
+// Responsive state management for adaptive layouts
+export function useResponsiveState() {
+  const { type: deviceType, isTablet, gridColumns } = useResponsive();
+  const [layoutState, setLayoutState] = useState({
+    orientation: 'portrait',
+    contentWidth: '100%',
+    modalType: 'fullscreen'
+  });
+  
+  useEffect(() => {
+    // Update layout state based on device type
+    const updateLayoutState = () => {
+      setLayoutState({
+        orientation: deviceType === 'tablet-10' ? 'landscape' : 'portrait',
+        contentWidth: isTablet ? 'constrained' : 'full',
+        modalType: isTablet ? 'centered' : 'fullscreen'
+      });
+    };
+    
+    updateLayoutState();
+  }, [deviceType, isTablet]);
+  
+  return { layoutState, deviceType, gridColumns };
+}
+
+// Theme state with responsive scaling
+export function useResponsiveTheme() {
+  const { theme } = useTheme();
+  const { type: deviceType } = useResponsive();
+  
+  return useMemo(() => {
+    // Theme automatically scales based on device type
+    return {
+      ...theme,
+      spacing: theme.spacing, // Auto-scaled by device multiplier
+      typography: theme.typography, // Auto-scaled typography
+      layout: theme.layout, // Device-specific layout constraints
+      touchTargets: theme.touchTargets, // Platform-appropriate sizes
+    };
+  }, [theme, deviceType]);
+}
+```
+
+### Responsive Cache Management
+
+```typescript
+// Device-aware cache strategies
+export function useResponsiveCaching(wordlistId: number) {
+  const { type: deviceType } = useResponsive();
+  const { isPremium } = useUserInfo();
+  
+  // Tablet users get longer cache times due to larger memory capacity
+  const cacheConfig = useMemo(() => {
+    const baseStaleTime = isPremium ? 10 * 1000 : 15 * 60 * 1000;
+    const deviceMultiplier = deviceType === 'phone' ? 1 : 1.5;
+    
+    return {
+      staleTime: baseStaleTime * deviceMultiplier,
+      gcTime: isPremium ? 2 * 60 * 1000 : 60 * 60 * 1000,
+      maxCacheSize: deviceType === 'phone' ? 50 : 100, // More cache on tablets
+    };
+  }, [deviceType, isPremium]);
+  
+  return useQuery({
+    queryKey: ["analytics", wordlistId, deviceType],
+    queryFn: () => api.getAnalytics(wordlistId),
+    ...cacheConfig,
+  });
+}
+```
+
+### Layout State Synchronization
+
+```typescript
+// Coordinate layout state across components
+export function useLayoutStateSync() {
+  const { type: deviceType, isTablet } = useResponsive();
+  const [globalLayoutState, setGlobalLayoutState] = useState({
+    sidebarVisible: false,
+    splitView: false,
+    gridDensity: 'comfortable'
+  });
+  
+  useEffect(() => {
+    // Update global layout based on device capabilities
+    setGlobalLayoutState(prev => ({
+      ...prev,
+      splitView: deviceType === 'tablet-10',
+      gridDensity: isTablet ? 'comfortable' : 'compact',
+      sidebarVisible: deviceType === 'tablet-10',
+    }));
+  }, [deviceType, isTablet]);
+  
+  return { globalLayoutState, setGlobalLayoutState };
+}
+```
+
 ## Advanced State Patterns
 
 ### 1. Optimistic Updates

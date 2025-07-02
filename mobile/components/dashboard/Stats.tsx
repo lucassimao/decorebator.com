@@ -11,6 +11,7 @@ import {
 } from "react-native";
 
 import { useWordlistProgress } from "@/hooks/useWordlistProgress";
+import { useResponsive } from "@/hooks/useResponsive";
 
 // Animated Counter Component
 interface AnimatedCounterProps {
@@ -61,7 +62,8 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet, type: deviceType } = useResponsive();
+  const styles = createStyles(theme, isTablet, deviceType);
 
   // Use shared wordlist progress hook to avoid duplicate API calls
   const {
@@ -287,14 +289,18 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
 
 export default DashboardStats;
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+) =>
   StyleSheet.create({
     statsContainer: {
       borderRadius: theme.borderRadius.xl,
       paddingVertical: theme.spacing.lg,
       paddingHorizontal: theme.spacing.lg,
-      marginHorizontal: 20,
-      marginBottom: 24,
+      marginHorizontal: 0, // Remove for responsive container
+      marginBottom: theme.spacing.lg,
       backgroundColor:
         theme.mode === "light"
           ? theme.colors.background.surface
@@ -314,8 +320,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       elevation: theme.mode === "light" ? 8 : 12,
     },
     loadingContainer: {
-      marginHorizontal: 20,
-      marginBottom: 24,
+      marginHorizontal: 0, // Remove for responsive container
+      marginBottom: theme.spacing.lg,
     },
     skeletonContainer: {
       flexDirection: "row",
@@ -338,23 +344,23 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
     },
     skeletonCircle: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: isTablet ? 48 : 40,
+      height: isTablet ? 48 : 40,
+      borderRadius: isTablet ? 24 : 20,
       backgroundColor: theme.colors.ui.divider,
-      marginBottom: 8,
+      marginBottom: theme.spacing.xs,
     },
     skeletonText: {
-      width: 60,
-      height: 12,
-      borderRadius: 6,
+      width: isTablet ? 80 : 60,
+      height: theme.spacing.sm,
+      borderRadius: theme.borderRadius.xs,
       backgroundColor: theme.colors.ui.divider,
-      marginBottom: 8,
+      marginBottom: theme.spacing.xs,
     },
     skeletonNumber: {
-      width: 40,
-      height: 24,
-      borderRadius: 12,
+      width: isTablet ? 50 : 40,
+      height: isTablet ? 30 : 24,
+      borderRadius: theme.borderRadius.sm,
       backgroundColor: theme.colors.ui.divider,
     },
     errorContainer: {
@@ -363,70 +369,70 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       justifyContent: "center",
       backgroundColor: theme.colors.background.surface,
       borderRadius: theme.borderRadius.xl,
-      paddingVertical: 30,
-      marginHorizontal: 20,
-      marginBottom: 24,
+      paddingVertical: theme.spacing.xl,
+      marginHorizontal: 0, // Remove for responsive container
+      marginBottom: theme.spacing.lg,
       borderWidth: 1,
       borderColor: theme.colors.state.incorrectBackground,
       ...theme.shadows.md,
     },
     errorText: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
-      marginTop: 8,
+      marginTop: theme.spacing.xs,
     },
     retryText: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.primary,
-      marginTop: 4,
-      fontWeight: "500",
+      marginTop: theme.spacing.xs,
+      fontWeight: theme.typography.weights.medium,
     },
     progressOverview: {
-      marginBottom: 5,
+      marginBottom: theme.spacing.xs,
     },
     progressLabel: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
-      marginBottom: 8,
-      fontWeight: "500",
+      marginBottom: theme.spacing.xs,
+      fontWeight: theme.typography.weights.medium,
     },
     progressBarContainer: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      gap: theme.spacing.sm,
     },
     progressBarBackground: {
       flex: 1,
-      height: 8,
+      height: isTablet ? 10 : 8,
       backgroundColor: theme.colors.ui.divider,
-      borderRadius: 4,
+      borderRadius: theme.borderRadius.xs,
       overflow: "hidden",
     },
     progressBarFill: {
       height: "100%",
       backgroundColor: theme.colors.success,
-      borderRadius: 4,
+      borderRadius: theme.borderRadius.xs,
     },
     progressPercentage: {
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.success,
-      minWidth: 45,
+      minWidth: isTablet ? 55 : 45,
     },
     motivationalText: {
-      fontSize: 13,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
       fontStyle: "italic",
     },
     statsGrid: {
       flexDirection: "row",
       alignItems: "stretch",
-      minHeight: 120,
+      minHeight: isTablet ? 140 : 120,
     },
     statItem: {
       alignItems: "center",
       flex: 1,
-      paddingVertical: 8,
+      paddingVertical: theme.spacing.xs,
       justifyContent: "space-between",
     },
     statItemFirst: {
@@ -437,15 +443,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     statDivider: {
       width: 1,
-      height: 60,
+      height: isTablet ? 80 : 60,
       backgroundColor: theme.colors.ui.divider,
-      marginHorizontal: 16,
-      borderRadius: 0.5,
+      marginHorizontal: theme.spacing.md,
+      borderRadius: theme.borderRadius.xs,
     },
     iconContainer: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+      width: isTablet ? 56 : 48,
+      height: isTablet ? 56 : 48,
+      borderRadius: isTablet ? 28 : 24,
       backgroundColor:
         theme.mode === "light"
           ? "rgba(253, 246, 227, 0.4)" // Web beige background
@@ -457,26 +463,28 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
           : theme.colors.ui.border,
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 12,
+      marginBottom: theme.spacing.sm,
       ...theme.shadows.sm,
     },
     labelContainer: {
-      minHeight: 32,
+      minHeight: isTablet ? 40 : 32,
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 4,
-      paddingHorizontal: 4,
+      marginBottom: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.xs,
     },
     statLabel: {
-      fontSize: 13,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
-      fontWeight: "500",
+      fontWeight: theme.typography.weights.medium,
       textAlign: "center",
-      lineHeight: 16,
+      lineHeight: theme.typography.lineHeights.caption,
     },
     statValue: {
-      fontSize: 28,
-      fontWeight: "700",
+      fontSize: isTablet
+        ? theme.typography.sizes.display
+        : theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.bold,
       color: theme.colors.text.primary,
     },
     streakContainer: {
@@ -485,8 +493,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       justifyContent: "center",
     },
     streakText: {
-      fontSize: 14,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.caption,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.semantic.warning,
     },
   });

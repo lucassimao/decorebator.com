@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
 import { WordMasteryStats } from "@/api/analytics";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive } from "@/hooks/useResponsive";
 
 interface TopWordsSectionProps {
   wordMastery?: WordMasteryStats[];
@@ -13,7 +14,8 @@ export const TopWordsSection: React.FC<TopWordsSectionProps> = ({
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet, type: deviceType } = useResponsive();
+  const styles = createStyles(theme, isTablet, deviceType);
 
   return (
     <View style={styles.chartCard}>
@@ -71,53 +73,49 @@ export const TopWordsSection: React.FC<TopWordsSectionProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+) =>
   StyleSheet.create({
     chartCard: {
       backgroundColor: theme.colors.background.surface,
-      marginHorizontal: 16,
-      marginVertical: 8,
-      borderRadius: 16,
-      padding: 20,
-      shadowColor: "#000",
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 3.84,
-      elevation: 5,
+      marginVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.lg,
+      ...theme.shadows.sm,
     },
     chartTitle: {
-      fontSize: 20,
+      fontSize: theme.typography.sizes.title,
       fontWeight: "bold",
       color: theme.colors.text.primary,
-      marginBottom: 4,
+      marginBottom: theme.spacing.xs,
     },
     chartSubtitle: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     emptyChartContainer: {
-      height: 200,
+      height: isTablet ? 280 : 200,
       justifyContent: "center",
       alignItems: "center",
       backgroundColor: theme.colors.background.default,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
     },
     emptyChartText: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.bodyLarge,
       color: theme.colors.text.placeholder,
     },
     wordsList: {
-      marginTop: 8,
+      marginTop: theme.spacing.sm,
     },
     wordItem: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingVertical: 12,
+      paddingVertical: theme.spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.ui.border,
     },
@@ -127,19 +125,19 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
     },
     wordRankCircle: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      width: isTablet ? 40 : 32,
+      height: isTablet ? 40 : 32,
+      borderRadius: isTablet ? 20 : 16,
       backgroundColor: theme.colors.background.subtle,
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 12,
+      marginRight: theme.spacing.md,
     },
     wordRankGold: {
       backgroundColor: "#FFD700",
     },
     wordRank: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.bodyLarge,
       fontWeight: "bold",
       color: theme.colors.text.primary,
     },
@@ -147,34 +145,34 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.mode === "dark" ? theme.colors.text.primary : "#FFFFFF",
     },
     wordName: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.bodyLarge,
       color: theme.colors.text.primary,
       flex: 1,
     },
     wordStats: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      gap: theme.spacing.sm,
     },
     masteryBadge: {
       backgroundColor: theme.colors.success,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
+      paddingHorizontal: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.md,
     },
     wordMastery: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.body,
       fontWeight: "bold",
       color: "#FFFFFF",
     },
     boxBadge: {
       backgroundColor: theme.colors.background.subtle,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
+      paddingHorizontal: theme.spacing.sm + 2,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.md,
     },
     wordBox: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
     },
   });

@@ -9,7 +9,6 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
-  Dimensions,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -23,8 +22,7 @@ import {
 } from "react-native";
 import { authLightTheme } from "@/theme/authTheme";
 import type { Theme } from "@/contexts/ThemeContext";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 interface PasswordResetFormData {
   email: string;
@@ -36,7 +34,21 @@ const ForgotPasswordScreen: React.FC = () => {
   const { t } = useTranslation();
   // Always use light theme for auth screens
   const theme = authLightTheme;
-  const styles = createStyles(theme);
+  const {
+    isTablet,
+    contentWidth,
+    width: screenWidth,
+    height: screenHeight,
+  } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(
+    theme,
+    isTablet,
+    contentWidth,
+    spacing,
+    screenWidth,
+    screenHeight,
+  );
 
   const {
     control,
@@ -89,10 +101,15 @@ const ForgotPasswordScreen: React.FC = () => {
         resizeMode="cover"
       >
         <SafeAreaView style={styles.container}>
-          <View style={styles.successContainer}>
+          <View
+            style={[
+              styles.successContainer,
+              isTablet && styles.tabletSuccessContainer,
+            ]}
+          >
             <LinearGradient
               colors={["rgba(255, 255, 255, 0.95)", "rgba(255, 255, 255, 0.9)"]}
-              style={styles.successCard}
+              style={[styles.successCard, isTablet && styles.tabletSuccessCard]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
@@ -208,13 +225,18 @@ const ForgotPasswordScreen: React.FC = () => {
             </View>
 
             {/* Form Container */}
-            <View style={styles.formContainer}>
+            <View
+              style={[
+                styles.formContainer,
+                isTablet && styles.tabletFormContainer,
+              ]}
+            >
               <LinearGradient
                 colors={[
                   "rgba(255, 255, 255, 0.95)",
                   "rgba(255, 255, 255, 0.9)",
                 ]}
-                style={styles.formCard}
+                style={[styles.formCard, isTablet && styles.tabletFormCard]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
@@ -337,12 +359,19 @@ const ForgotPasswordScreen: React.FC = () => {
 };
 export default ForgotPasswordScreen;
 
-const createStyles = (theme: Theme) =>
+const createStyles = (
+  theme: Theme,
+  isTablet: boolean,
+  contentWidth: number,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+  screenWidth: number,
+  screenHeight: number,
+) =>
   StyleSheet.create({
     backgroundImage: {
       flex: 1,
-      width: SCREEN_WIDTH,
-      height: SCREEN_HEIGHT,
+      width: screenWidth,
+      height: screenHeight,
     },
     container: {
       flex: 1,
@@ -352,12 +381,15 @@ const createStyles = (theme: Theme) =>
     },
     scrollContent: {
       flexGrow: 1,
-      paddingBottom: 20,
+      paddingBottom: spacing.lg,
+      alignItems: isTablet ? "center" : "stretch",
     },
     header: {
-      paddingHorizontal: 20,
-      paddingTop: 20,
-      paddingBottom: 20,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.lg,
+      width: isTablet ? contentWidth : "100%",
+      maxWidth: isTablet ? 480 : undefined,
     },
     backButton: {
       width: 40,
@@ -374,7 +406,9 @@ const createStyles = (theme: Theme) =>
     },
     iconContainer: {
       alignItems: "center",
-      marginVertical: 30,
+      marginVertical: spacing.xl,
+      width: isTablet ? contentWidth : "100%",
+      maxWidth: isTablet ? 480 : undefined,
     },
     iconBackground: {
       width: 120,
@@ -385,39 +419,49 @@ const createStyles = (theme: Theme) =>
       alignItems: "center",
     },
     formContainer: {
-      paddingHorizontal: 20,
+      paddingHorizontal: spacing.lg,
       flex: 1,
+      width: isTablet ? contentWidth : "100%",
+      maxWidth: isTablet ? 480 : undefined,
+    },
+    tabletFormContainer: {
+      alignItems: "center",
     },
     formCard: {
       borderRadius: theme.borderRadius.xl,
-      padding: theme.spacing.lg,
+      padding: spacing.lg,
+      width: "100%",
       ...theme.shadows.md,
     },
+    tabletFormCard: {
+      padding: spacing.xl,
+      maxWidth: 480,
+    },
     title: {
-      fontSize: 24,
+      fontSize: isTablet ? 28 : 24,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: 12,
+      marginBottom: spacing.sm,
       textAlign: "center",
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       color: theme.colors.text.secondary,
-      marginBottom: 32,
+      marginBottom: spacing.xl,
       textAlign: "center",
-      lineHeight: 24,
+      lineHeight: isTablet ? 28 : 24,
     },
     inputGroup: {
-      marginBottom: 24,
+      marginBottom: spacing.lg,
     },
     inputLabelRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 8,
-      gap: 6,
+      marginBottom: spacing.sm,
+      gap: spacing.xs,
     },
     inputLabel: {
-      fontSize: 14,
+      fontSize: isTablet ? 16 : 14,
       fontWeight: "500",
       color: theme.colors.text.primary,
     },
@@ -425,38 +469,37 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.colors.ui.inputBackground,
       borderWidth: 1,
       borderColor: theme.colors.ui.border,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      fontSize: 16,
+      borderRadius: theme.borderRadius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      fontSize: isTablet ? 18 : 16,
       color: theme.colors.text.primary,
+      minHeight: isTablet ? 52 : 48,
     },
     inputError: {
       borderColor: theme.colors.error,
     },
     errorText: {
       color: theme.colors.error,
-      fontSize: 12,
-      marginTop: 4,
+      fontSize: isTablet ? 14 : 12,
+      marginTop: spacing.xs,
     },
     submitButton: {
       backgroundColor: theme.colors.primary,
-      borderRadius: 12,
-      paddingVertical: 16,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: spacing.md,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 8,
-      marginBottom: 20,
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+      minHeight: isTablet ? 56 : 48,
+      ...theme.shadows.md,
       shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.2,
-      shadowRadius: 8,
-      elevation: 5,
     },
     submitButtonText: {
       color: theme.colors.text.inverse,
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       fontWeight: "600",
     },
     buttonDisabled: {
@@ -465,23 +508,25 @@ const createStyles = (theme: Theme) =>
     infoContainer: {
       flexDirection: "row",
       backgroundColor: theme.colors.state.infoBackground,
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 24,
-      gap: 8,
+      borderRadius: theme.borderRadius.md,
+      padding: spacing.md,
+      marginBottom: spacing.xl,
+      gap: spacing.sm,
     },
     infoText: {
       flex: 1,
-      fontSize: 14,
+      fontSize: isTablet ? 16 : 14,
       color: theme.colors.text.secondary,
-      lineHeight: 20,
+      lineHeight: isTablet ? 24 : 20,
     },
     textButton: {
       alignItems: "center",
-      paddingVertical: 8,
+      paddingVertical: spacing.sm,
+      minHeight: isTablet ? 48 : 44,
+      justifyContent: "center",
     },
     textButtonText: {
-      fontSize: 14,
+      fontSize: isTablet ? 16 : 14,
       color: theme.colors.text.secondary,
     },
     linkText: {
@@ -489,85 +534,96 @@ const createStyles = (theme: Theme) =>
       fontWeight: "600",
     },
     bottomSpacer: {
-      height: 40,
+      height: isTablet ? spacing.xxl : spacing.xl,
     },
     // Success state styles
     successContainer: {
       flex: 1,
       justifyContent: "center",
-      paddingHorizontal: 20,
+      paddingHorizontal: spacing.lg,
+      alignItems: isTablet ? "center" : "stretch",
+    },
+    tabletSuccessContainer: {
+      paddingHorizontal: spacing.xl,
     },
     successCard: {
-      borderRadius: 24,
-      padding: 32,
+      borderRadius: theme.borderRadius.xl,
+      padding: spacing.xl,
       alignItems: "center",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      elevation: 5,
+      width: isTablet ? Math.min(contentWidth * 0.7, 600) : "100%",
+      ...theme.shadows.lg,
+    },
+    tabletSuccessCard: {
+      padding: spacing.xxl,
+      maxWidth: 600,
     },
     successIconContainer: {
-      marginBottom: 24,
+      marginBottom: spacing.xl,
     },
     successTitle: {
-      fontSize: 24,
+      fontSize: isTablet ? 28 : 24,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: 12,
+      marginBottom: spacing.sm,
+      textAlign: "center",
     },
     successMessage: {
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       color: theme.colors.text.secondary,
-      marginBottom: 8,
+      marginBottom: spacing.xs,
       textAlign: "center",
+      lineHeight: isTablet ? 26 : 24,
     },
     emailText: {
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: 24,
+      marginBottom: spacing.xl,
+      textAlign: "center",
     },
     instructionText: {
-      fontSize: 14,
+      fontSize: isTablet ? 16 : 14,
       color: theme.colors.text.secondary,
       textAlign: "center",
-      marginBottom: 24,
-      lineHeight: 20,
+      marginBottom: spacing.xl,
+      lineHeight: isTablet ? 24 : 20,
     },
     resendButton: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 12,
-      paddingHorizontal: 24,
-      borderRadius: 12,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
+      borderRadius: theme.borderRadius.md,
       borderWidth: 1,
       borderColor: theme.colors.primary,
       backgroundColor: "transparent",
-      gap: 8,
-      marginBottom: 20,
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+      minHeight: isTablet ? 48 : 44,
     },
     resendButtonText: {
       color: theme.colors.primary,
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       fontWeight: "500",
     },
     divider: {
       height: 1,
       backgroundColor: theme.colors.ui.border,
-      marginVertical: 20,
+      marginVertical: spacing.lg,
       width: "100%",
     },
     backToLoginButton: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 8,
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+      minHeight: isTablet ? 48 : 44,
     },
     backToLoginText: {
       color: theme.colors.text.primary,
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       fontWeight: "500",
     },
   });

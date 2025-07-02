@@ -3,6 +3,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useLocalSearchParams } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
 import { createCommonStyles } from "@/styles/common";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 import {
   ActivityIndicator,
   ScrollView,
@@ -37,8 +38,10 @@ const AnalyticsDashboard = () => {
   } = useAnalytics(wordlistId);
   const navigation = useNavigation();
   const { theme } = useTheme();
+  const { isTablet, contentWidth } = useResponsive();
+  const spacing = useResponsiveSpacing();
   const commonStyles = createCommonStyles(theme);
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, isTablet, contentWidth, spacing);
 
   if (isPending) {
     return (
@@ -55,28 +58,38 @@ const AnalyticsDashboard = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isTablet && styles.tabletScrollContent,
+        ]}
       >
-        <StatsGrid stats={stats} />
+        <View
+          style={[
+            styles.contentContainer,
+            isTablet && styles.tabletContentContainer,
+          ]}
+        >
+          <StatsGrid stats={stats} />
 
-        <WordMasteryChart wordMastery={wordMastery} />
+          <WordMasteryChart wordMastery={wordMastery} />
 
-        <LearningProgressChart learningProgress={learningProgress} />
+          <LearningProgressChart learningProgress={learningProgress} />
 
-        <PracticeTimeChart practiceTime={practiceTime} />
+          <PracticeTimeChart practiceTime={practiceTime} />
 
-        <QuizPerformanceChart quizPerformance={quizPerformance} />
+          <QuizPerformanceChart quizPerformance={quizPerformance} />
 
-        <TopWordsSection wordMastery={wordMastery} />
+          <TopWordsSection wordMastery={wordMastery} />
 
-        <BoxDistributionChart boxDistribution={boxDistribution} />
+          <BoxDistributionChart boxDistribution={boxDistribution} />
 
-        <HistoricalBoxDistributionChart
-          historicalBoxDistribution={historicalBoxDistribution}
-        />
+          <HistoricalBoxDistributionChart
+            historicalBoxDistribution={historicalBoxDistribution}
+          />
 
-        {/* Bottom spacing */}
-        <View style={{ height: 20 }} />
+          {/* Bottom spacing */}
+          <View style={{ height: spacing.lg }} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -84,7 +97,12 @@ const AnalyticsDashboard = () => {
 
 export default AnalyticsDashboard;
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  contentWidth: number,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -100,6 +118,18 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
     },
     scrollContent: {
-      paddingBottom: 20,
+      paddingBottom: spacing.lg,
+    },
+    tabletScrollContent: {
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+    },
+    contentContainer: {
+      width: "100%",
+    },
+    tabletContentContainer: {
+      width: contentWidth,
+      maxWidth: 800,
+      alignSelf: "center",
     },
   });

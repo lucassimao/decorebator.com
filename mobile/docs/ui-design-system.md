@@ -52,45 +52,45 @@ export const Colors = {
 
 ## Typography Scale
 
-### Font Hierarchy
+### Responsive Font Hierarchy
+
+The typography system now automatically scales based on device type for optimal readability:
 
 ```typescript
+// Base typography (Phone - 1x scaling)
 const Typography = {
   display: {
-    size: 48,
+    size: 40,      // Tablet 7": 44px, Tablet 10": 50px
     weight: "bold",
     usage: "Word display on flashcards"
   },
-  heading: {
-    size: 32,
+  headline: {
+    size: 32,      // Tablet 7": 35px, Tablet 10": 40px
     weight: "700",
     usage: "Quiz questions, main headings"
   },
   title: {
-    size: 20,
+    size: 24,      // Tablet 7": 26px, Tablet 10": 30px
     weight: "600", 
     usage: "Section headers, card titles"
   },
   body: {
-    size: 18,
+    size: 16,      // Tablet 7": 18px, Tablet 10": 20px
     weight: "400",
     usage: "Primary content, definitions"
   },
   caption: {
-    size: 16,
+    size: 12,      // Tablet 7": 13px, Tablet 10": 15px
     weight: "500",
     usage: "Labels, metadata"
-  },
-  small: {
-    size: 14,
-    weight: "400",
-    usage: "Hints, secondary info"
-  },
-  micro: {
-    size: 12,
-    weight: "500",
-    usage: "Badges, tiny labels"
   }
+};
+
+// Responsive multipliers applied automatically
+const ResponsiveMultipliers = {
+  phone: 1.0,     // Base scaling
+  tablet7: 1.1,   // 10% larger for 7" tablets
+  tablet10: 1.25  // 25% larger for 10" tablets
 };
 ```
 
@@ -103,28 +103,59 @@ const Typography = {
 
 ## Layout System
 
-### 8px Base Grid
+### Responsive Spacing Grid
 
-All spacing follows an 8px base grid for visual consistency:
+All spacing follows a responsive 8px base grid that scales with device type:
 
 ```typescript
+// Base spacing (Phone - 1x scaling)
 const Spacing = {
-  xs: 4,    // Micro spacing
-  sm: 8,    // Base unit
-  md: 16,   // Standard spacing
-  lg: 24,   // Section spacing
-  xl: 32,   // Large gaps
-  xxl: 40,  // Screen margins
+  xs: 4,     // Tablet 7": 5px, Tablet 10": 6px
+  sm: 8,     // Tablet 7": 10px, Tablet 10": 11px  
+  md: 16,    // Tablet 7": 19px, Tablet 10": 22px
+  lg: 24,    // Tablet 7": 29px, Tablet 10": 34px
+  xl: 32,    // Tablet 7": 38px, Tablet 10": 45px
+  xxl: 40,   // Tablet 7": 48px, Tablet 10": 56px
+};
+
+// Responsive multipliers
+const SpacingMultipliers = {
+  phone: 1.0,     // Base spacing
+  tablet7: 1.2,   // 20% larger for 7" tablets
+  tablet10: 1.4   // 40% larger for 10" tablets
 };
 ```
 
-### Layout Principles
+### Responsive Layout Principles
 
-1. **Card-Based Design**: Primary content in elevated cards
-2. **Consistent Spacing**: 8px increments throughout
-3. **Touch-Friendly**: 44px minimum touch targets
-4. **Visual Hierarchy**: Clear content organization
-5. **Responsive**: Adapts to different screen sizes
+1. **Card-Based Design**: Primary content in elevated cards with adaptive sizing
+2. **Responsive Grids**: 1/2/3 column layouts based on device type
+3. **Touch-Friendly**: Platform-appropriate touch targets (44pt iOS, 48dp Android)
+4. **Content Constraints**: Maximum content widths for optimal readability
+5. **Side-by-Side Layouts**: Efficient use of tablet screen real estate
+6. **Visual Hierarchy**: Clear content organization that scales appropriately
+
+### Device-Specific Layout Adaptations
+
+```typescript
+const LayoutAdaptations = {
+  phone: {
+    gridColumns: 1,
+    maxContentWidth: "100%",
+    touchTargets: { minimum: 44, comfortable: 48 }
+  },
+  tablet7: {
+    gridColumns: 2,
+    maxContentWidth: 680,
+    touchTargets: { minimum: 48, comfortable: 56 }
+  },
+  tablet10: {
+    gridColumns: 3,
+    maxContentWidth: 800,
+    touchTargets: { minimum: 52, comfortable: 60 }
+  }
+};
+```
 
 ## Shadow System
 
@@ -317,23 +348,83 @@ Animated.timing(flipAnimation, {
 - **Focus Indicators**: Clear focus states for navigation
 - **Icon + Text**: Icons paired with descriptive text
 
-## Responsive Design
+## Responsive Design System
 
-### Screen Size Adaptation
+### Device Classification and Breakpoints
 
 ```typescript
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+// Device detection based on smaller screen dimension
+export const DeviceBreakpoints = {
+  phone: { min: 0, max: 767 },       // < 768px
+  tablet7: { min: 768, max: 1023 },  // 768-1023px  
+  tablet10: { min: 1024, max: 9999 } // ≥ 1024px
+};
 
-// Responsive card sizing
-const cardWidth = SCREEN_WIDTH - 40; // 20px margin each side
-const imageHeight = Math.min(200, SCREEN_HEIGHT * 0.25);
+// Responsive hooks integration
+const { isTablet, type, gridColumns, contentWidth } = useResponsive();
 ```
 
-### Orientation Support
+### Multi-Screen Layout Strategy
 
-- **Portrait Primary**: Optimized for portrait usage
-- **Landscape Support**: Graceful degradation in landscape
-- **Tablet Support**: Enhanced layouts for larger screens
+**Phone Layouts (< 768px)**:
+- Single column content organization
+- Full-width utilization 
+- Vertical stacking for all components
+- Standard touch targets (44pt minimum)
+
+**Tablet 7" Layouts (768-1023px)**:
+- 2-column grid systems for content cards
+- Enhanced content areas with larger spacing
+- Centered content with max-width constraints (680px)
+- Larger touch targets (48pt minimum)
+
+**Tablet 10" Layouts (≥ 1024px)**:
+- 3-column grid systems for optimal content density
+- Side-by-side layouts (content left, options right)
+- Maximum content width constraints (800px)
+- Largest touch targets (52pt minimum)
+
+### Implementation Examples
+
+```typescript
+// Adaptive grid layouts
+<FlatList
+  numColumns={isTablet ? gridColumns : 1}
+  columnWrapperStyle={isTablet ? styles.gridRow : undefined}
+  data={items}
+  renderItem={({ item }) => (
+    <View style={isTablet ? commonStyles.gridItem : undefined}>
+      <ItemComponent item={item} />
+    </View>
+  )}
+/>
+
+// Side-by-side tablet layouts
+<View style={
+  isTablet && deviceType === "tablet-10" 
+    ? styles.tabletLayout 
+    : styles.phoneLayout
+}>
+  <View style={styles.contentSection}>
+    <ContentComponent />
+  </View>
+  <View style={styles.optionsSection}>
+    <OptionsComponent />
+  </View>
+</View>
+
+// Responsive containers with content constraints
+<View style={commonStyles.responsiveContainer}>
+  {/* Content automatically centers and constrains width */}
+</View>
+```
+
+### Cross-Platform Orientation Support
+
+- **Portrait Primary**: All layouts optimized for portrait usage
+- **Landscape Compatibility**: Maintains device classification in landscape
+- **Dynamic Adaptation**: Real-time layout updates on orientation change
+- **Content Preservation**: Maintains optimal readability across orientations
 
 ## Performance Considerations
 

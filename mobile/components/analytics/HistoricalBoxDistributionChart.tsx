@@ -3,11 +3,10 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { StackedBarChart } from "react-native-chart-kit";
 import { getChartConfig } from "./theme";
-
-const screenWidth = Dimensions.get("window").width;
+import { useResponsive } from "@/hooks/useResponsive";
 
 interface HistoricalBoxDistributionChartProps {
   historicalBoxDistribution?: HistoricalBoxDistributionResponse;
@@ -18,8 +17,9 @@ export const HistoricalBoxDistributionChart: React.FC<
 > = ({ historicalBoxDistribution }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const { isTablet, type: deviceType, contentWidth } = useResponsive();
   const chartConfig = getChartConfig(theme);
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, isTablet, deviceType);
 
   const boxColors = {
     box1: "#FF6B6B", // Red - New/Difficult
@@ -146,15 +146,16 @@ export const HistoricalBoxDistributionChart: React.FC<
         <>
           <StackedBarChart
             data={chartData}
-            width={screenWidth - 72}
-            height={260}
+            width={contentWidth - theme.spacing.lg}
+            height={isTablet ? 360 : 260}
             chartConfig={{
               ...chartConfig,
               color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
               barPercentage: 0.7,
+              strokeWidth: isTablet ? 3 : 2,
               decimalPlaces: 0,
               propsForLabels: {
-                fontSize: 12,
+                fontSize: isTablet ? 14 : 12,
               },
               formatYLabel: (value: string) =>
                 `${Math.round(parseFloat(value))}`,
@@ -213,7 +214,7 @@ export const HistoricalBoxDistributionChart: React.FC<
           <View style={styles.explanationContainer}>
             <MaterialIcons
               name="info-outline"
-              size={20}
+              size={isTablet ? 24 : 20}
               color={theme.colors.text.secondary}
             />
             <Text style={styles.explanationText}>
@@ -234,59 +235,55 @@ export const HistoricalBoxDistributionChart: React.FC<
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+) =>
   StyleSheet.create({
     chartCard: {
       backgroundColor: theme.colors.background.surface,
-      marginHorizontal: 16,
-      marginVertical: 8,
-      borderRadius: 16,
-      padding: 20,
-      shadowColor: "#000",
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 3.84,
-      elevation: 5,
+      marginVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.lg,
+      ...theme.shadows.sm,
     },
     chartTitle: {
-      fontSize: 20,
+      fontSize: theme.typography.sizes.title,
       fontWeight: "bold",
       color: theme.colors.text.primary,
-      marginBottom: 4,
+      marginBottom: theme.spacing.xs,
     },
     chartSubtitle: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     chart: {
-      marginVertical: 8,
-      borderRadius: 16,
+      marginVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.lg,
     },
     emptyChartContainer: {
-      height: 200,
+      height: isTablet ? 360 : 200,
       justifyContent: "center",
       alignItems: "center",
       backgroundColor: theme.colors.background.default,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
     },
     emptyChartText: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.bodyLarge,
       color: theme.colors.text.placeholder,
     },
     legendContainer: {
-      marginTop: 16,
-      marginBottom: 8,
-      paddingHorizontal: 8,
+      marginTop: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.sm,
     },
     legendTitle: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.bodyLarge,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: 12,
+      marginBottom: theme.spacing.md,
     },
     boxLegendWrapper: {
       flexDirection: "column",
@@ -295,7 +292,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingVertical: 6,
+      paddingVertical: theme.spacing.xs,
     },
     boxLegendLeft: {
       flexDirection: "row",
@@ -303,61 +300,61 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
     },
     boxLegendDot: {
-      width: 12,
-      height: 12,
-      borderRadius: 6,
-      marginRight: 8,
+      width: isTablet ? 16 : 12,
+      height: isTablet ? 16 : 12,
+      borderRadius: isTablet ? 8 : 6,
+      marginRight: theme.spacing.sm,
     },
     boxLegendText: {
-      fontSize: 13,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.primary,
       flex: 1,
     },
     boxLegendPercentage: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.body,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      minWidth: 45,
+      minWidth: isTablet ? 60 : 45,
       textAlign: "right",
     },
     divider: {
       height: 1,
       backgroundColor: theme.colors.ui.border,
-      marginHorizontal: 8,
-      marginVertical: 12,
+      marginHorizontal: theme.spacing.sm,
+      marginVertical: theme.spacing.md,
     },
     progressSummaryContainer: {
-      paddingHorizontal: 8,
+      paddingHorizontal: theme.spacing.sm,
     },
     progressSummaryRow: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingVertical: 8,
+      paddingVertical: theme.spacing.sm,
     },
     progressSummaryLabel: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
     },
     progressSummaryValue: {
-      fontSize: 18,
+      fontSize: theme.typography.sizes.bodyLarge,
       fontWeight: "bold",
       color: "#4CAF50", // Box 7 green color
     },
     explanationContainer: {
       flexDirection: "row",
       alignItems: "flex-start",
-      marginTop: 16,
-      paddingHorizontal: 8,
-      paddingVertical: 12,
+      marginTop: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.md,
       backgroundColor: theme.colors.background.subtle,
-      borderRadius: 8,
+      borderRadius: theme.borderRadius.sm,
     },
     explanationText: {
-      fontSize: 13,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
-      lineHeight: 18,
+      lineHeight: theme.typography.lineHeights.caption,
       flex: 1,
-      marginLeft: 8,
+      marginLeft: theme.spacing.sm,
     },
   });

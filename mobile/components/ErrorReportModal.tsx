@@ -11,6 +11,10 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { ErrorType } from "@/api/errorReporting";
 import { useTheme } from "@/contexts/ThemeContext";
+import {
+  useResponsive,
+  useResponsiveSpacing,
+} from "@/hooks/useResponsive";
 
 interface ErrorReportModalProps {
   visible: boolean;
@@ -33,7 +37,9 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet, contentWidth } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(theme, isTablet, contentWidth, spacing);
 
   const isUnrelatedImageOptionAvailable =
     !errorTypes || errorTypes.includes(ErrorType.UnrelatedImage);
@@ -54,7 +60,9 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.reportModal}>
+        <View
+          style={[styles.reportModal, isTablet && styles.tabletReportModal]}
+        >
           <Text style={styles.reportModalTitle}>
             {t(`${context}.reportIssue`)}
           </Text>
@@ -64,7 +72,12 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
             </Text>
           )}
 
-          <View style={styles.reportOptions}>
+          <View
+            style={[
+              styles.reportOptions,
+              isTablet && styles.tabletReportOptions,
+            ]}
+          >
             {isUnrelatedImageOptionAvailable && (
               <TouchableOpacity
                 style={styles.reportOption}
@@ -172,47 +185,63 @@ export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  contentWidth: number,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
   StyleSheet.create({
     modalOverlay: {
       flex: 1,
       backgroundColor: "rgba(0, 0, 0, 0.5)",
       justifyContent: "center",
       alignItems: "center",
-      padding: 20,
+      padding: spacing.lg,
     },
     reportModal: {
       backgroundColor: theme.colors.background.surface,
-      borderRadius: 16,
-      padding: 24,
+      borderRadius: theme.borderRadius.lg,
+      padding: spacing.lg,
       width: "100%",
-      maxWidth: 400,
+      maxWidth: isTablet ? Math.min(contentWidth * 0.7, 600) : 400,
       position: "relative",
+      ...theme.shadows.lg,
+    },
+    tabletReportModal: {
+      padding: spacing.xl,
     },
     reportModalTitle: {
       fontSize: 20,
       fontWeight: "600",
       color: theme.colors.text.primary,
       textAlign: "center",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     },
     reportModalSubtitle: {
       fontSize: 16,
       color: theme.colors.text.secondary,
       textAlign: "center",
-      marginBottom: 24,
+      marginBottom: spacing.lg,
     },
     reportOptions: {
-      gap: 12,
-      marginBottom: 24,
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    tabletReportOptions: {
+      flexDirection: isTablet ? "row" : "column",
+      flexWrap: isTablet ? "wrap" : "nowrap",
+      gap: isTablet ? spacing.md : spacing.sm,
     },
     reportOption: {
       flexDirection: "row",
       alignItems: "center",
-      padding: 16,
+      padding: spacing.md,
       backgroundColor: theme.colors.background.default,
-      borderRadius: 12,
-      gap: 12,
+      borderRadius: theme.borderRadius.md,
+      gap: spacing.sm,
+      flex: isTablet ? 1 : undefined,
+      minWidth: isTablet ? "45%" : undefined,
     },
     reportOptionText: {
       fontSize: 16,
@@ -224,9 +253,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       justifyContent: "center",
     },
     reportCancelButton: {
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 8,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: theme.borderRadius.sm,
     },
     reportCancelText: {
       fontSize: 16,
@@ -245,6 +274,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
           : "rgba(0, 0, 0, 0.8)",
       justifyContent: "center",
       alignItems: "center",
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
     },
   });

@@ -20,6 +20,8 @@ import { useTranslation } from "react-i18next";
 import { useUserInfo } from "@/hooks/users";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive } from "@/hooks/useResponsive";
+import { createCommonStyles } from "@/styles/common";
 
 type WordlistItemProps = {
   item: Wordlist;
@@ -44,7 +46,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const { isPremium } = useUserInfo();
   const language = LANGUAGES.find((l) => item.languageCode === l.code)!;
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet, type: deviceType } = useResponsive();
+  const commonStyles = createCommonStyles(theme);
+  const styles = createStyles(theme, isTablet, deviceType);
 
   // Use progress from props
   const progressPercentage = progress?.progressPercent ?? 0;
@@ -299,7 +303,12 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         <TouchableWithoutFeedback onPress={() => setShowMenu(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <View style={styles.menuContainer}>
+              <View
+                style={[
+                  styles.menuContainer,
+                  isTablet && commonStyles.modalContent,
+                ]}
+              >
                 <Text
                   style={styles.menuTitle}
                   accessibilityRole="header"
@@ -429,7 +438,12 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         <TouchableWithoutFeedback onPress={() => setShowPremiumModal(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <View style={styles.premiumModalContainer}>
+              <View
+                style={[
+                  styles.premiumModalContainer,
+                  isTablet && commonStyles.modalContent,
+                ]}
+              >
                 <LinearGradient
                   colors={[theme.colors.premium, theme.colors.semantic.warning]}
                   style={styles.premiumGradient}
@@ -501,7 +515,11 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
 export default WordlistItem;
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+) =>
   StyleSheet.create({
     wordlistCard: {
       backgroundColor:
@@ -510,8 +528,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
           : theme.colors.background.elevated,
       borderRadius: theme.borderRadius.lg,
       padding: theme.spacing.md,
-      marginHorizontal: 20,
-      marginBottom: 12,
+      marginHorizontal: 0, // Remove horizontal margin for responsive container
+      marginBottom: theme.spacing.sm,
       borderWidth: 1,
       borderColor:
         theme.mode === "light"
@@ -525,35 +543,37 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
           : theme.colors.text.primary,
       shadowOpacity: theme.mode === "light" ? 0.15 : 0.1,
       elevation: theme.mode === "light" ? 6 : 10,
+      minHeight: isTablet ? theme.touchTargets.large * 3 : "auto", // Ensure adequate height for tablets
     },
     cardHeader: {
       flexDirection: "row",
       alignItems: "flex-start",
-      marginBottom: 12,
+      marginBottom: theme.spacing.sm,
     },
     languageFlag: {
-      fontSize: 32,
-      marginRight: 12,
+      fontSize: isTablet ? 40 : 32,
+      marginRight: theme.spacing.sm,
     },
     cardTitleContainer: {
       flex: 1,
     },
     wordlistTitle: {
-      fontSize: 18,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.primary,
-      marginBottom: 4,
+      marginBottom: theme.spacing.xs,
+      lineHeight: theme.typography.lineHeights.title,
     },
     wordlistDescription: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
-      lineHeight: 20,
+      lineHeight: theme.typography.lineHeights.caption,
     },
     actionButtonsRow: {
       flexDirection: "row",
-      marginTop: 12,
-      gap: 8,
-      paddingTop: 8,
+      marginTop: theme.spacing.sm,
+      gap: theme.spacing.xs,
+      paddingTop: theme.spacing.xs,
       borderTopWidth: 1,
       borderTopColor: theme.colors.ui.divider,
     },
@@ -561,170 +581,173 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
       flexDirection: "column",
       alignItems: "center",
-      paddingVertical: 12,
-      paddingHorizontal: 8,
+      paddingVertical: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.xs,
       borderRadius: theme.borderRadius.sm,
       backgroundColor:
         theme.mode === "light"
           ? "rgba(253, 246, 227, 0.2)" // Very subtle web beige tint
           : theme.colors.background.subtle,
-      gap: 4,
+      gap: theme.spacing.xs,
+      minHeight: theme.touchTargets.comfortable,
+      justifyContent: "center",
     },
     actionButtonText: {
-      fontSize: 12,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
-      fontWeight: "500",
+      fontWeight: theme.typography.weights.medium,
       textAlign: "center",
     },
     cardStats: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 16,
-      marginBottom: 12,
+      gap: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
     },
     cardStat: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 4,
+      gap: theme.spacing.xs,
     },
     cardStatText: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
     },
     languageName: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.primary,
-      fontWeight: "500",
+      fontWeight: theme.typography.weights.medium,
     },
     progressBar: {
-      height: 4,
+      height: isTablet ? 6 : 4,
       backgroundColor: theme.colors.ui.divider,
-      borderRadius: 2,
+      borderRadius: theme.borderRadius.xs,
       overflow: "hidden",
     },
     progressFill: {
       height: "100%",
       backgroundColor: theme.colors.success,
-      borderRadius: 2,
+      borderRadius: theme.borderRadius.xs,
     },
     modalOverlay: {
       flex: 1,
       backgroundColor: theme.colors.overlay.backdrop,
       justifyContent: "center",
       alignItems: "center",
-      padding: 20,
+      padding: theme.spacing.modal,
     },
     menuContainer: {
       backgroundColor: theme.colors.background.surface,
       borderRadius: theme.borderRadius.lg,
-      padding: 8,
+      padding: theme.spacing.xs,
       width: "100%",
-      maxWidth: 320,
+      maxWidth: isTablet ? 400 : 320,
       ...theme.shadows.lg,
     },
     menuTitle: {
-      fontSize: 18,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.primary,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      marginBottom: 4,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      marginBottom: theme.spacing.xs,
     },
     menuItem: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      borderRadius: 8,
-      gap: 12,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.sm,
+      gap: theme.spacing.sm,
+      minHeight: theme.touchTargets.comfortable,
     },
     menuItemText: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.primary,
       flex: 1,
     },
     menuDivider: {
       height: 1,
       backgroundColor: theme.colors.ui.divider,
-      marginVertical: 8,
-      marginHorizontal: 16,
+      marginVertical: theme.spacing.xs,
+      marginHorizontal: theme.spacing.md,
     },
     deleteMenuItem: {
-      marginTop: 4,
+      marginTop: theme.spacing.xs,
     },
     deleteMenuItemText: {
       color: theme.colors.error,
     },
     // Premium Modal Styles
     premiumModalContainer: {
-      backgroundColor: "#FFFFFF",
-      borderRadius: 20,
-      margin: 20,
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: theme.borderRadius.xl,
+      margin: theme.spacing.md,
       overflow: "hidden",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      elevation: 8,
+      maxWidth: isTablet ? 500 : "100%",
+      alignSelf: "center",
+      ...theme.shadows.lg,
     },
     premiumGradient: {
       padding: 2,
     },
     premiumContent: {
-      backgroundColor: "#FFFFFF",
-      borderRadius: 18,
-      padding: 24,
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.lg,
       alignItems: "center",
     },
     premiumIconContainer: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
+      width: isTablet ? 80 : 60,
+      height: isTablet ? 80 : 60,
+      borderRadius: isTablet ? 40 : 30,
       backgroundColor: theme.colors.premium,
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     premiumTitle: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: "#2D3436",
-      marginBottom: 8,
+      fontSize: theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.primary,
+      marginBottom: theme.spacing.xs,
       textAlign: "center",
     },
     premiumSubtitle: {
-      fontSize: 14,
-      color: "#636E72",
+      fontSize: theme.typography.sizes.body,
+      color: theme.colors.text.secondary,
       textAlign: "center",
-      marginBottom: 24,
-      lineHeight: 20,
+      marginBottom: theme.spacing.lg,
+      lineHeight: theme.typography.lineHeights.body,
     },
     premiumButtons: {
       width: "100%",
-      gap: 12,
+      gap: theme.spacing.sm,
     },
     upgradeButton: {
-      backgroundColor: "#FFD700",
-      borderRadius: 12,
-      paddingVertical: 14,
-      paddingHorizontal: 24,
+      backgroundColor: theme.colors.premium,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.lg,
       alignItems: "center",
+      minHeight: theme.touchTargets.comfortable,
     },
     upgradeButtonText: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: "#2D3436",
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.semibold,
+      color: theme.colors.text.inverse,
     },
     cancelButton: {
       backgroundColor: "transparent",
-      borderRadius: 12,
-      paddingVertical: 14,
-      paddingHorizontal: 24,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.lg,
       alignItems: "center",
+      minHeight: theme.touchTargets.comfortable,
     },
     cancelButtonText: {
-      fontSize: 16,
-      fontWeight: "500",
-      color: "#636E72",
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.medium,
+      color: theme.colors.text.secondary,
     },
   });

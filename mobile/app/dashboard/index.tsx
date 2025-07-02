@@ -10,6 +10,7 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
 import { useWordlistProgress } from "@/hooks/useWordlistProgress";
+import { useResponsive } from "@/hooks/useResponsive";
 import { createCommonStyles } from "@/styles/common";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
@@ -38,6 +39,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const router = useRouter();
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const { isTablet, gridColumns } = useResponsive();
   const commonStyles = createCommonStyles(theme);
   const styles = createStyles(theme);
 
@@ -92,12 +94,14 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const onUpgradePress = () => router.push(`/settings`);
 
   const renderWordlistItem = ({ item }: { item: Wordlist }) => (
-    <Wordlistitem
-      item={item}
-      progress={progressMap.get(item.id)}
-      onPressed={() => setSelectedWordlist(item)}
-      onUpgradePress={onUpgradePress}
-    />
+    <View style={isTablet ? styles.gridItem : undefined}>
+      <Wordlistitem
+        item={item}
+        progress={progressMap.get(item.id)}
+        onPressed={() => setSelectedWordlist(item)}
+        onUpgradePress={onUpgradePress}
+      />
+    </View>
   );
   const hideWordlistDetailModal = () => setSelectedWordlist(null);
 
@@ -145,49 +149,57 @@ const Dashboard: React.FC<DashboardProps> = () => {
     <>
       <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
         <OfflineIndicator />
-        <FlatList
-          data={isLoading ? [] : wordlists}
-          renderItem={renderWordlistItem}
-          keyExtractor={(item) => String(item.id)}
-          ListHeaderComponent={renderHeader}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              colors={[theme.colors.primary]}
-              tintColor={theme.colors.primary}
-            />
-          }
-          ListEmptyComponent={
-            isLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={theme.colors.primary} />
-                <Text style={styles.loadingText}>{t("common.loading")}</Text>
-              </View>
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  {t("dashboard.wordlists.noWordlistsYet")}
-                </Text>
-                <TouchableOpacity
-                  style={styles.ctaButton}
-                  onPress={() => setShowCreateModal(true)}
-                >
-                  <Text style={styles.ctaButtonText}>
-                    {t("dashboard.wordlists.createFirstWordlist")}
-                  </Text>
-                  <Ionicons
-                    name="add-circle"
-                    size={24}
-                    color={theme.colors.text.inverse}
+        <View style={commonStyles.responsiveContainer}>
+          <FlatList
+            data={isLoading ? [] : wordlists}
+            renderItem={renderWordlistItem}
+            keyExtractor={(item) => String(item.id)}
+            ListHeaderComponent={renderHeader}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            numColumns={isTablet ? gridColumns : 1}
+            key={`${gridColumns}-${isTablet}`}
+            columnWrapperStyle={isTablet ? styles.gridRow : undefined}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={[theme.colors.primary]}
+                tintColor={theme.colors.primary}
+              />
+            }
+            ListEmptyComponent={
+              isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator
+                    size="large"
+                    color={theme.colors.primary}
                   />
-                </TouchableOpacity>
-              </View>
-            )
-          }
-        />
+                  <Text style={styles.loadingText}>{t("common.loading")}</Text>
+                </View>
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>
+                    {t("dashboard.wordlists.noWordlistsYet")}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.ctaButton}
+                    onPress={() => setShowCreateModal(true)}
+                  >
+                    <Text style={styles.ctaButtonText}>
+                      {t("dashboard.wordlists.createFirstWordlist")}
+                    </Text>
+                    <Ionicons
+                      name="add-circle"
+                      size={24}
+                      color={theme.colors.text.inverse}
+                    />
+                  </TouchableOpacity>
+                </View>
+              )
+            }
+          />
+        </View>
       </SafeAreaView>
 
       {/* Create Wordlist Modal */}
@@ -216,18 +228,29 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
       backgroundColor: theme.colors.background.default,
     },
+    gridRow: {
+      justifyContent: "space-between",
+      paddingHorizontal: 0,
+    },
+    gridItem: {
+      flex: 1,
+      minWidth: theme.layout.cardMinWidth,
+      maxWidth: `${Math.floor(100 / theme.layout.gridColumns)}%`,
+    },
     loadingContainer: {
-      paddingVertical: 60,
+      paddingVertical: theme.spacing.section,
       justifyContent: "center",
       alignItems: "center",
     },
     loadingText: {
-      marginTop: 12,
-      fontSize: 16,
+      marginTop: theme.spacing.sm,
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.regular,
       color: theme.colors.text.secondary,
+      lineHeight: theme.typography.lineHeights.body,
     },
     listContent: {
-      paddingBottom: 30,
+      paddingBottom: theme.spacing.section,
     },
     header: {
       flexDirection: "row",
@@ -287,27 +310,35 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingHorizontal: 20,
-      marginBottom: 16,
+      paddingHorizontal: 0, // Let responsiveContainer handle this
+      marginBottom: theme.spacing.md,
     },
     sectionTitle: {
-      fontSize: 20,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.primary,
+      lineHeight: theme.typography.lineHeights.title,
     },
     addButton: {
-      padding: 4,
+      padding: theme.spacing.xs,
+      minHeight: theme.touchTargets.comfortable,
+      minWidth: theme.touchTargets.comfortable,
+      justifyContent: "center",
+      alignItems: "center",
     },
 
     emptyContainer: {
-      paddingHorizontal: 20,
-      paddingTop: 40,
+      paddingHorizontal: 0, // Let responsiveContainer handle this
+      paddingTop: theme.spacing.section,
       alignItems: "center",
     },
     emptyText: {
-      fontSize: 18,
+      fontSize: theme.typography.sizes.bodyLarge,
+      fontWeight: theme.typography.weights.regular,
       color: theme.colors.text.secondary,
-      marginBottom: 20,
+      lineHeight: theme.typography.lineHeights.bodyLarge,
+      marginBottom: theme.spacing.lg,
+      textAlign: "center",
     },
     ctaButton: {
       backgroundColor: theme.colors.primary,
@@ -317,13 +348,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
-      gap: 8,
+      gap: theme.spacing.sm,
+      minHeight: theme.touchTargets.comfortable,
       ...theme.shadows.md,
       shadowColor: theme.colors.primary,
     },
     ctaButtonText: {
       color: theme.colors.text.inverse,
-      fontSize: 18,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.bodyLarge,
+      fontWeight: theme.typography.weights.semibold,
+      lineHeight: theme.typography.lineHeights.bodyLarge,
     },
   });

@@ -13,7 +13,6 @@ import i18n from "@/i18n";
 import { getDetectedCountry } from "@/utils/countryDetection";
 import {
   Animated,
-  Dimensions,
   Image,
   Keyboard,
   Platform,
@@ -29,6 +28,7 @@ import {
 import z from "zod";
 import { authLightTheme } from "@/theme/authTheme";
 import type { Theme } from "@/contexts/ThemeContext";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 const schema = z
   .object({
@@ -41,8 +41,6 @@ const schema = z
     }),
   })
   .required();
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 type ErrorMessageProps = {
   error?: FieldError | null;
@@ -59,7 +57,14 @@ export default function SignUpScreen() {
   const posthog = usePostHog();
   // Always use light theme for auth screens
   const theme = authLightTheme;
-  const styles = createStyles(theme);
+  const {
+    isTablet,
+    contentWidth,
+    width: screenWidth,
+    height: screenHeight,
+  } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(theme, isTablet, contentWidth, spacing);
 
   const ErrorMessage = ({ error, style, errorStyle }: ErrorMessageProps) => {
     if (!error) return null;
@@ -76,11 +81,11 @@ export default function SignUpScreen() {
   // Assuming image native resolution is 1024x1536
   const imageAspectRatio = 1024 / 1536;
 
-  // Calculate full width height respecting aspect ratio
+  // Calculate responsive image height
   const scaledImageHeight = screenWidth / imageAspectRatio;
 
-  // Viewport constraint (max visible area)
-  const maxViewportHeight = screenHeight * 0.7;
+  // Viewport constraint (responsive based on device type)
+  const maxViewportHeight = isTablet ? screenHeight * 0.5 : screenHeight * 0.7;
 
   const [, setKeyboardVisible] = React.useState(false);
   const imageHeight = React.useRef(
@@ -99,7 +104,7 @@ export default function SignUpScreen() {
       () => {
         setKeyboardVisible(true);
         Animated.timing(imageHeight, {
-          toValue: maxViewportHeight * 0.5, // Shrink image when keyboard shows
+          toValue: isTablet ? maxViewportHeight * 0.7 : maxViewportHeight * 0.5, // Less shrink on tablets
           duration: 250,
           useNativeDriver: false,
         }).start();
@@ -122,7 +127,7 @@ export default function SignUpScreen() {
       keyboardWillShow.remove();
       keyboardWillHide.remove();
     };
-  }, [imageHeight, maxViewportHeight]);
+  }, [imageHeight, maxViewportHeight, isTablet]);
 
   // Detect user's country on component mount
   React.useEffect(() => {
@@ -188,9 +193,19 @@ export default function SignUpScreen() {
           resizeMode="contain"
         />
       </Animated.View>
-      <View style={{ flex: 1, marginTop: -(screenHeight * 0.29) }}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.formCard}>
+      <View
+        style={[
+          styles.contentContainer,
+          { marginTop: -(screenHeight * (isTablet ? 0.2 : 0.29)) },
+        ]}
+      >
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            isTablet && styles.tabletContent,
+          ]}
+        >
+          <View style={[styles.formCard, isTablet && styles.tabletFormCard]}>
             <Text style={styles.title}>{t("auth.signup.title")}</Text>
 
             <Controller
@@ -456,7 +471,12 @@ export default function SignUpScreen() {
   );
 }
 
-const createStyles = (theme: Theme) =>
+const createStyles = (
+  theme: Theme,
+  isTablet: boolean,
+  contentWidth: number,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -469,34 +489,43 @@ const createStyles = (theme: Theme) =>
     illustration: {
       width: "100%",
     },
+    contentContainer: {
+      flex: 1,
+    },
     content: {
-      // paddingHorizontal: 24,
-      // paddingBottom: 24,
-
-      paddingHorizontal: 24,
-      paddingBottom: 100, // Increase this to ensure space at bottom
+      paddingHorizontal: spacing.lg,
+      paddingBottom: isTablet ? spacing.xxl * 2 : 100,
+      alignItems: isTablet ? "center" : "stretch",
+    },
+    tabletContent: {
+      paddingHorizontal: spacing.xl,
     },
     formCard: {
       backgroundColor: theme.colors.background.surface,
       borderRadius: theme.borderRadius.xl,
-      padding: theme.spacing.lg,
+      padding: spacing.lg,
+      width: isTablet ? Math.min(contentWidth * 0.8, 480) : "100%",
+      alignSelf: isTablet ? "center" : "stretch",
       ...theme.shadows.md,
+    },
+    tabletFormCard: {
+      padding: spacing.xl,
     },
     title: {
       fontSize: 26,
       fontWeight: "700",
       color: theme.colors.text.primary,
       textAlign: "center",
-      marginBottom: theme.spacing.lg,
+      marginBottom: spacing.lg,
     },
     inputGroup: {
-      marginBottom: 10,
+      marginBottom: spacing.sm,
     },
     inputLabelRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 8,
-      gap: 6,
+      marginBottom: spacing.sm,
+      gap: spacing.xs,
     },
     inputLabel: {
       fontSize: 14,
@@ -508,8 +537,8 @@ const createStyles = (theme: Theme) =>
       borderWidth: 1,
       borderColor: theme.colors.ui.border,
       borderRadius: theme.borderRadius.md,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: 14,
+      paddingHorizontal: spacing.md,
+      paddingVertical: isTablet ? spacing.md : 14,
       fontSize: 16,
       color: theme.colors.text.primary,
     },
@@ -531,31 +560,31 @@ const createStyles = (theme: Theme) =>
     },
     row: {
       flexDirection: "row",
-      gap: 8,
+      gap: spacing.sm,
     },
     inputHalf: {
       flex: 1,
     },
     errorRow: {
       flexDirection: "row",
-      marginTop: -6,
-      marginBottom: 6,
+      marginTop: -spacing.xs,
+      marginBottom: spacing.xs,
     },
     errorColumn: {
       flex: 1,
-      paddingHorizontal: 4,
+      paddingHorizontal: spacing.xs,
     },
     errorMessage: {
       fontSize: 12,
       color: theme.colors.error,
-      marginTop: 4,
+      marginTop: spacing.xs,
     },
     button: {
       backgroundColor: theme.colors.primary,
       borderRadius: theme.borderRadius.md,
-      paddingVertical: theme.spacing.md,
+      paddingVertical: spacing.md,
       alignItems: "center",
-      marginTop: theme.spacing.sm,
+      marginTop: spacing.sm,
       ...theme.shadows.md,
       shadowColor: theme.colors.primary,
     },
@@ -566,7 +595,7 @@ const createStyles = (theme: Theme) =>
     },
     footer: {
       textAlign: "center",
-      marginTop: theme.spacing.md,
+      marginTop: spacing.md,
       color: theme.colors.text.secondary,
       fontSize: 14,
     },
@@ -588,8 +617,8 @@ const createStyles = (theme: Theme) =>
       minHeight: 16, // Height matching the ErrorMessage height
     },
     termsContainer: {
-      marginTop: 16,
-      marginBottom: 8,
+      marginTop: spacing.md,
+      marginBottom: spacing.sm,
     },
     checkboxContainer: {
       flexDirection: "row",
@@ -601,7 +630,7 @@ const createStyles = (theme: Theme) =>
       borderWidth: 2,
       borderColor: theme.colors.ui.border,
       borderRadius: 4,
-      marginRight: theme.spacing.sm,
+      marginRight: spacing.sm,
       alignItems: "center",
       justifyContent: "center",
       marginTop: 2,

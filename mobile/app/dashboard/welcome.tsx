@@ -5,7 +5,6 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Dimensions,
   Image,
   ImageBackground,
   SafeAreaView,
@@ -15,12 +14,23 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-const { width, height } = Dimensions.get("window");
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const EmptyDashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const { isTablet, contentWidth, width, height } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(
+    theme,
+    isTablet,
+    contentWidth,
+    spacing,
+    width,
+    height,
+  );
 
   const handleCreateSuccess = () => {
     setShowCreateModal(false);
@@ -68,8 +78,8 @@ const EmptyDashboard = () => {
               </Text>
               <Ionicons
                 name="add-circle"
-                size={24}
-                color="#FFFFFF"
+                size={isTablet ? 28 : 24}
+                color={theme.colors.text.inverse}
                 style={styles.ctaIcon}
               />
             </TouchableOpacity>
@@ -86,134 +96,142 @@ const EmptyDashboard = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: width,
-    height: height,
-  },
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    minHeight: height - 100, // Account for safe area
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 10,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-  },
-  settingsButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  profileButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    backgroundColor: "#FFFFFF",
-  },
-  profileImage: {
-    width: "100%",
-    height: "100%",
-  },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 10,
-    marginBottom: 0, // Remove bottom margin to connect with illustration
-    // Subtle shadow for depth
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  statItem: {
-    alignItems: "center",
-    flex: 1,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: "#636E72",
-    marginBottom: 8,
-  },
-  statValue: {
-    fontSize: 36,
-    fontWeight: "700",
-    color: "#2D3436",
-  },
-  illustrationContainer: {
-    // width: width,
-    // marginLeft: -20, // Negative margin to achieve full width
-    // marginTop: -10, // Slight overlap with stats for smooth transition
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  illustrationImage: {
-    width: width,
-    height: width * 0.7, // Adjust ratio based on your illustration
-    maxHeight: 300,
-  },
-  bottomContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-    alignItems: "center",
-  },
-  noWordlistsText: {
-    fontSize: 20,
-    fontWeight: "500",
-    color: "#2D3436",
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  ctaButton: {
-    backgroundColor: "#FF7B54",
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-    width: "100%",
-  },
-  ctaButtonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "600",
-    marginRight: 8,
-  },
-  ctaIcon: {
-    marginLeft: 4,
-  },
-});
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  contentWidth: number,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+  width: number,
+  height: number,
+) =>
+  StyleSheet.create({
+    backgroundImage: {
+      flex: 1,
+      width: width,
+      height: height,
+    },
+    container: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      minHeight: height - 100, // Account for safe area
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingTop: 10,
+      paddingBottom: 20,
+      paddingHorizontal: 20,
+    },
+    settingsButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: "rgba(255, 255, 255, 0.9)",
+      justifyContent: "center",
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    profileButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      overflow: "hidden",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+      backgroundColor: "#FFFFFF",
+    },
+    profileImage: {
+      width: "100%",
+      height: "100%",
+    },
+    statsContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      backgroundColor: "rgba(255, 255, 255, 0.7)",
+      borderRadius: 16,
+      paddingVertical: 20,
+      paddingHorizontal: 10,
+      marginBottom: 0, // Remove bottom margin to connect with illustration
+      // Subtle shadow for depth
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    statItem: {
+      alignItems: "center",
+      flex: 1,
+    },
+    statLabel: {
+      fontSize: 14,
+      color: "#636E72",
+      marginBottom: 8,
+    },
+    statValue: {
+      fontSize: 36,
+      fontWeight: "700",
+      color: "#2D3436",
+    },
+    illustrationContainer: {
+      // width: width,
+      // marginLeft: -20, // Negative margin to achieve full width
+      // marginTop: -10, // Slight overlap with stats for smooth transition
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    illustrationImage: {
+      width: width,
+      height: width * 0.7, // Adjust ratio based on your illustration
+      maxHeight: 300,
+    },
+    bottomContent: {
+      paddingHorizontal: 20,
+      paddingBottom: 30,
+      alignItems: "center",
+    },
+    noWordlistsText: {
+      fontSize: 20,
+      fontWeight: "500",
+      color: "#2D3436",
+      textAlign: "center",
+      marginBottom: 30,
+    },
+    ctaButton: {
+      backgroundColor: "#FF7B54",
+      borderRadius: 12,
+      paddingVertical: 16,
+      paddingHorizontal: 24,
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      shadowColor: "#FF7B54",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 5,
+      width: "100%",
+    },
+    ctaButtonText: {
+      color: theme.colors.text.inverse,
+      fontSize: isTablet ? 20 : 18,
+      fontWeight: "600",
+      marginRight: spacing.xs,
+    },
+    ctaIcon: {
+      marginLeft: spacing.xs,
+    },
+  });
 
 export default EmptyDashboard;

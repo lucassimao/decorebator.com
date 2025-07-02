@@ -17,7 +17,8 @@ The Decorebator mobile application is a React Native/Expo app that provides voca
 - **Audio**: Expo Audio for pronunciation playback
 - **Internationalization**: react-i18next with 8 supported languages
 - **Analytics**: PostHog for user behavior tracking
-- **Styling**: StyleSheet with centralized color system
+- **Styling**: StyleSheet with responsive design system
+- **Responsive Design**: Device-aware layouts for phones, 7" tablets, and 10" tablets
 
 ### Project Structure
 
@@ -39,7 +40,12 @@ mobile/
 ├── hooks/              # Custom React hooks
 ├── i18n/               # Internationalization
 ├── theme/              # Design system
-└── utils/              # Utility functions
+│   ├── responsive.ts  # Responsive design tokens
+│   └── [other themes] # Color and theme files
+├── utils/              # Utility functions
+│   ├── deviceDetection.ts # Device type classification
+│   └── [other utils]     # Other utility functions
+└── docs/               # Architecture documentation
 ```
 
 ## Core Features & Components
@@ -58,11 +64,12 @@ mobile/
 
 ### 2. Dashboard & Wordlist Management
 
-**Design**: Card-based interface with stats overview
+**Design**: Responsive card-based interface with adaptive layouts
 - Real-time learning progress visualization
 - Wordlist creation with language selection
 - Subscription upgrade prompts for free users
 - Empty state illustrations and onboarding
+- **Tablet Support**: Multi-column grids (2-column for 7", 3-column for 10")
 
 **Components**:
 - `components/dashboard/Header.tsx` - Navigation and user profile
@@ -72,11 +79,12 @@ mobile/
 
 ### 3. Quiz System
 
-**Architecture**: Dynamic quiz type rotation with deterministic selection
+**Architecture**: Dynamic quiz type rotation with responsive layouts
 - Time-based quiz type rotation (5-minute intervals)
 - Multiple quiz modes: meaning recognition, word completion, audio comprehension, visual association
 - Progressive difficulty through Leitner system integration
 - Real-time performance tracking and analytics
+- **Tablet Support**: Side-by-side layouts for 10" tablets (content left, options right)
 
 **Quiz Types**:
 - `GUESS_MEANING` - Multiple choice meaning selection
@@ -243,6 +251,20 @@ mobile/
 
 ## Design System
 
+### Responsive Design Architecture
+
+The app now features a comprehensive responsive design system that adapts to different device types:
+
+- **Phone**: < 768px width (single column layouts, 1x scaling)
+- **Tablet 7"**: 768-1023px width (2-column layouts, 1.2x scaling)  
+- **Tablet 10"**: ≥ 1024px width (3-column + side-by-side layouts, 1.4x scaling)
+
+**Key Components**:
+- `utils/deviceDetection.ts` - Device classification and utilities
+- `hooks/useResponsive.ts` - Reactive responsive hooks and breakpoints
+- `theme/responsive.ts` - Responsive design tokens and layout patterns
+- `styles/common.ts` - Responsive containers and grid systems
+
 ### Color Palette
 
 ```typescript
@@ -263,23 +285,39 @@ const colors = {
 };
 ```
 
-### Typography Scale
+### Responsive Typography Scale
 
-- **Display**: 48px, bold (word display)
-- **Heading**: 32px, bold (quiz questions)
-- **Title**: 20px, semibold (section headers)
-- **Body**: 18px, regular (content)
-- **Caption**: 16px, medium (labels)
-- **Small**: 14px, regular (hints)
-- **Micro**: 12px, medium (badges)
+Typography scales automatically based on device type:
 
-### Layout Principles
+**Phone (1x)**:
+- **Display**: 40px, bold (word display)
+- **Headline**: 32px, bold (quiz questions)
+- **Title**: 24px, semibold (section headers)
+- **Body**: 16px, regular (content)
+- **Caption**: 12px, medium (labels)
 
-1. **Card-Based Design**: Primary content in elevated cards with rounded corners
-2. **Gradient Backgrounds**: Warm gradient backgrounds for visual depth
-3. **Consistent Spacing**: 8px base grid with 16px, 24px, 32px increments
-4. **Touch-Friendly**: 44px minimum touch targets
-5. **Visual Hierarchy**: Clear content hierarchy with typography and color
+**Tablet 7" (1.1x)**:
+- **Display**: 44px, bold
+- **Headline**: 35px, bold
+- **Title**: 26px, semibold
+- **Body**: 18px, regular
+- **Caption**: 13px, medium
+
+**Tablet 10" (1.25x)**:
+- **Display**: 50px, bold
+- **Headline**: 40px, bold
+- **Title**: 30px, semibold
+- **Body**: 20px, regular
+- **Caption**: 15px, medium
+
+### Responsive Layout Principles
+
+1. **Adaptive Grids**: 1/2/3 column layouts based on device type
+2. **Content Constraints**: Max content widths (680px for 7", 800px for 10")
+3. **Touch Targets**: Platform-appropriate minimum sizes (44pt iOS, 48dp Android)
+4. **Spacing Scale**: Proportional spacing that scales with device size
+5. **Side-by-Side Layouts**: Optimal use of tablet screen real estate
+6. **Visual Hierarchy**: Responsive typography maintaining clear hierarchy
 
 ## State Management Patterns
 

@@ -1,12 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { BarChart } from "react-native-chart-kit";
 import { useTranslation } from "react-i18next";
 import { getChartColors, getChartConfig } from "./theme";
 import { PracticeTimeResponse } from "@/api/analytics";
 import { useTheme } from "@/contexts/ThemeContext";
-
-const screenWidth = Dimensions.get("window").width;
+import { useResponsive } from "@/hooks/useResponsive";
 
 interface PracticeTimeChartProps {
   practiceTime?: PracticeTimeResponse;
@@ -17,9 +16,10 @@ export const PracticeTimeChart: React.FC<PracticeTimeChartProps> = ({
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const { isTablet, type: deviceType, contentWidth } = useResponsive();
   const chartConfig = getChartConfig(theme);
   const chartColors = getChartColors(theme);
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, isTablet, deviceType);
 
   const formatDateLabel = (dateString: string): string => {
     try {
@@ -152,14 +152,15 @@ export const PracticeTimeChart: React.FC<PracticeTimeChartProps> = ({
       {chartData.labels.length > 0 ? (
         <BarChart
           data={chartData}
-          width={screenWidth - 40}
-          height={200}
+          width={contentWidth}
+          height={isTablet ? 280 : 200}
           yAxisLabel=""
           yAxisSuffix=""
           chartConfig={{
             ...chartConfig,
             color: (opacity = 1) => chartColors.secondary(opacity),
             barPercentage: 0.7,
+            strokeWidth: isTablet ? 3 : 2,
             decimalPlaces: 1,
             formatTopBarValue: (value: number) => formatMinutes(value),
             formatYLabel: (value: string) => formatMinutes(parseFloat(value)),
@@ -181,70 +182,66 @@ export const PracticeTimeChart: React.FC<PracticeTimeChartProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+) =>
   StyleSheet.create({
     chartCard: {
       backgroundColor: theme.colors.background.surface,
-      marginHorizontal: 16,
-      marginVertical: 8,
-      borderRadius: 16,
-      padding: 20,
-      shadowColor: "#000",
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 3.84,
-      elevation: 5,
+      marginVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.lg,
+      ...theme.shadows.sm,
     },
     chartTitle: {
-      fontSize: 20,
+      fontSize: theme.typography.sizes.title,
       fontWeight: "bold",
       color: theme.colors.text.primary,
-      marginBottom: 4,
+      marginBottom: theme.spacing.xs,
     },
     chartSubtitle: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.secondary,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     statsContainer: {
       flexDirection: "row",
       justifyContent: "space-around",
-      marginBottom: 16,
-      paddingVertical: 12,
+      marginBottom: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
       backgroundColor: theme.colors.background.subtle,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
     },
     statItem: {
       alignItems: "center",
     },
     statValue: {
-      fontSize: 18,
+      fontSize: theme.typography.sizes.bodyLarge,
       fontWeight: "bold",
       color: theme.colors.primary,
-      marginBottom: 4,
+      marginBottom: theme.spacing.xs,
     },
     statLabel: {
-      fontSize: 12,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
       textAlign: "center",
     },
     chart: {
-      marginVertical: 8,
-      borderRadius: 16,
-      marginLeft: -20,
+      marginVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.lg,
+      marginLeft: -theme.spacing.lg,
     },
     emptyChartContainer: {
-      height: 200,
+      height: isTablet ? 280 : 200,
       justifyContent: "center",
       alignItems: "center",
       backgroundColor: theme.colors.background.default,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
     },
     emptyChartText: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.bodyLarge,
       color: theme.colors.text.placeholder,
     },
   });

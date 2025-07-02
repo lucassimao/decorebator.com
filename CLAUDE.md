@@ -48,6 +48,7 @@ cd mobile && npm run lint              # Mobile app linting
 # Quality Assurance workflow
 cd api && make qa                      # Full QA suite (lint + security + tests)
 cd api && make qa-fast                 # Fast QA checks (no integration tests)
+cd api && make qa-ci                   # CI-style output with structured reporting
 
 # Single Test Execution
 # API - Run specific test
@@ -172,13 +173,14 @@ npm run lint
 ```
 
 #### Modern Stack & Features
-- **Next.js 15** with Turbopack for fast development
-- **Tailwind CSS 4** for styling
+- **Next.js 15** with App Router and Turbopack for fast development
+- **React 19** with latest features and performance improvements
+- **Tailwind CSS 4** for modern styling capabilities
 - **TypeScript 5** with strict configuration
-- **next-intl 4** for internationalization
+- **next-intl 4** for comprehensive internationalization
 - **7 Language Support**: EN, DE, ES, FR, IT, JA, PT
 - **Dynamic Routing**: `/[locale]/...` pattern with middleware for locale detection
-- **SEO Optimized**: Sitemap generation, structured data
+- **SEO Optimized**: Automatic sitemap generation, structured data
 - **Performance**: Turbopack dev server, optimized builds
 
 ## Architecture Overview
@@ -232,6 +234,7 @@ Workers run as a separate process and include retry logic, rate limiting, and er
 - Offline support for premium users with local storage
 - Error reporting modal for AI-generated content issues
 - Interactive flashcard system with flip animations
+- Comprehensive tablet support with responsive design system
 
 #### Detailed Component Organization
 
@@ -245,6 +248,8 @@ Workers run as a separate process and include retry logic, rate limiting, and er
 
 **Offline Components**: `OfflineManager`, `OfflineIndicator`, `OfflinePreloader` for premium offline support
 
+**Responsive Design Components**: Tablet-optimized layouts with device-specific breakpoints and adaptive content
+
 #### Performance & UX Patterns
 - **Loading State Architecture**: 10-second timeout detection with retry mechanisms
 - **Error Handling**: Network errors, timeout errors, offline errors with graceful degradation
@@ -255,6 +260,40 @@ Workers run as a separate process and include retry logic, rate limiting, and er
 - **Server State**: React Query with intelligent caching and background updates
 - **Local State**: React hooks with custom hook extraction for shared logic
 - **Persistence**: Secure storage for tokens, AsyncStorage for preferences/offline data
+
+### Responsive Design System for Tablet Support
+
+#### Device Classification & Breakpoints
+- **Phone**: < 768px width (single column layouts)
+- **Tablet 7"**: 768px - 1023px width (dual column layouts)  
+- **Tablet 10"**: ≥ 1024px width (triple column + side-by-side layouts)
+
+#### Key Features
+- Automatic device type detection with orientation support
+- Responsive typography scaling (1x/1.1x/1.25x based on device)
+- Adaptive spacing system (1x/1.2x/1.4x multipliers)
+- Grid layouts that adapt to device capabilities
+- Touch target optimization for each device class
+- Content width constraints for optimal readability
+
+#### Core Implementation
+```typescript
+// Primary responsive hook
+const { isTablet, type, gridColumns, contentWidth } = useResponsive();
+
+// Device-specific values
+const fontSize = useResponsiveValue({
+  phone: 16,
+  tablet7: 18,
+  tablet10: 20
+});
+```
+
+#### Architecture Files
+- `mobile/hooks/useResponsive.ts` - Reactive responsive hooks
+- `mobile/theme/responsive.ts` - Design tokens and layout patterns
+- `mobile/utils/deviceDetection.ts` - Device classification logic
+- `mobile/contexts/ThemeContext.tsx` - Enhanced with responsive theming
 
 ### Database Schema
 
@@ -526,6 +565,18 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - PostgreSQL-based rate limiting without Redis dependency
 - Clear error messages with retry times
 - Status endpoint to check remaining quota
+
+## Marketing & App Store Materials
+
+### Google Play Store Screenshots
+The project includes comprehensive documentation for creating tutorial-flow screenshots:
+
+- **8-Screenshot Tutorial**: Complete user journey from welcome to mastery
+- **DALL-E Integration**: AI-generated mockups with magenta placeholders
+- **Technical Specs**: 1024×1536 pixels, 2:3 aspect ratio
+- **Automation**: CLI tools for replacing placeholders with real screenshots
+
+**Documentation**: `docs/GOOGLE_PLAY_STORE_SCREENSHOTS.md`
 
 ## Known Architecture Issues & Modernization Plans
 

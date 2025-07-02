@@ -13,6 +13,7 @@ import { useRevenueCat } from "@/hooks/useRevenueCat";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { PurchasesPackage } from "react-native-purchases";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 interface RevenueCatPaywallProps {
   onClose: () => void;
@@ -25,7 +26,9 @@ export default function RevenueCatPaywall({
 }: RevenueCatPaywallProps) {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet, contentWidth } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(theme, isTablet, contentWidth, spacing);
 
   const {
     isInitialized,
@@ -134,94 +137,112 @@ export default function RevenueCatPaywall({
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Features */}
-        <View style={styles.featuresSection}>
-          <Text style={styles.sectionTitle}>
-            {t("settings.subscription.features.title")}
-          </Text>
-          {[
-            t("settings.subscription.features.unlimitedWordlists"),
-            t("settings.subscription.features.aiEnrichment"),
-            t("settings.subscription.features.allQuizModes"),
-            t("settings.subscription.features.progressTracking"),
-            t("settings.subscription.features.prioritySupport"),
-          ].map((feature, index) => (
-            <View key={index} style={styles.featureItem}>
-              <MaterialIcons
-                name="check-circle"
-                size={20}
-                color={theme.colors.success}
-              />
-              <Text style={styles.featureText}>{feature}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Packages */}
-        <View style={styles.packagesSection}>
-          {currentOffering.availablePackages.map((pkg) => {
-            const isMonthly = pkg.packageType === "MONTHLY";
-            const isAnnual = pkg.packageType === "ANNUAL";
-            const isPopular = isAnnual; // Mark annual as popular
-
-            return (
-              <TouchableOpacity
-                key={pkg.identifier}
-                style={[styles.packageCard, isPopular && styles.popularPackage]}
-                onPress={() => handlePurchase(pkg)}
-                disabled={isPurchasing}
-              >
-                {isPopular && (
-                  <View style={styles.popularBadge}>
-                    <Text style={styles.popularBadgeText}>
-                      {t("settings.subscription.mostPopular")}
-                    </Text>
-                  </View>
-                )}
-
-                <Text style={styles.packageTitle}>
-                  {isMonthly
-                    ? t("settings.subscription.monthly")
-                    : t("settings.subscription.yearly")}
-                </Text>
-
-                <Text style={styles.packagePrice}>
-                  {pkg.product.priceString}
-                </Text>
-
-                {isAnnual && (
-                  <Text style={styles.savingsText}>
-                    {t("settings.subscription.savePercent", { percent: 17 })}
-                  </Text>
-                )}
-
-                <Text style={styles.packageDescription}>
-                  {isMonthly
-                    ? t("settings.subscription.billedMonthly")
-                    : t("settings.subscription.billedYearly")}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Restore button */}
-        <TouchableOpacity
-          style={styles.restoreButton}
-          onPress={handleRestore}
-          disabled={isRestoring}
+        <View
+          style={[
+            styles.contentContainer,
+            isTablet && styles.tabletContentContainer,
+          ]}
         >
-          {isRestoring ? (
-            <ActivityIndicator size="small" color={theme.colors.primary} />
-          ) : (
-            <Text style={styles.restoreButtonText}>
-              {t("settings.subscription.restorePurchases")}
+          {/* Features */}
+          <View style={styles.featuresSection}>
+            <Text style={styles.sectionTitle}>
+              {t("settings.subscription.features.title")}
             </Text>
-          )}
-        </TouchableOpacity>
+            {[
+              t("settings.subscription.features.unlimitedWordlists"),
+              t("settings.subscription.features.aiEnrichment"),
+              t("settings.subscription.features.allQuizModes"),
+              t("settings.subscription.features.progressTracking"),
+              t("settings.subscription.features.prioritySupport"),
+            ].map((feature, index) => (
+              <View key={index} style={styles.featureItem}>
+                <MaterialIcons
+                  name="check-circle"
+                  size={20}
+                  color={theme.colors.success}
+                />
+                <Text style={styles.featureText}>{feature}</Text>
+              </View>
+            ))}
+          </View>
 
-        {/* Terms */}
-        <Text style={styles.termsText}>{t("settings.subscription.terms")}</Text>
+          {/* Packages */}
+          <View
+            style={[
+              styles.packagesSection,
+              isTablet && styles.tabletPackagesSection,
+            ]}
+          >
+            {currentOffering.availablePackages.map((pkg) => {
+              const isMonthly = pkg.packageType === "MONTHLY";
+              const isAnnual = pkg.packageType === "ANNUAL";
+              const isPopular = isAnnual; // Mark annual as popular
+
+              return (
+                <TouchableOpacity
+                  key={pkg.identifier}
+                  style={[
+                    styles.packageCard,
+                    isPopular && styles.popularPackage,
+                    isTablet && styles.tabletPackageCard,
+                  ]}
+                  onPress={() => handlePurchase(pkg)}
+                  disabled={isPurchasing}
+                >
+                  {isPopular && (
+                    <View style={styles.popularBadge}>
+                      <Text style={styles.popularBadgeText}>
+                        {t("settings.subscription.mostPopular")}
+                      </Text>
+                    </View>
+                  )}
+
+                  <Text style={styles.packageTitle}>
+                    {isMonthly
+                      ? t("settings.subscription.monthly")
+                      : t("settings.subscription.yearly")}
+                  </Text>
+
+                  <Text style={styles.packagePrice}>
+                    {pkg.product.priceString}
+                  </Text>
+
+                  {isAnnual && (
+                    <Text style={styles.savingsText}>
+                      {t("settings.subscription.savePercent", { percent: 17 })}
+                    </Text>
+                  )}
+
+                  <Text style={styles.packageDescription}>
+                    {isMonthly
+                      ? t("settings.subscription.billedMonthly")
+                      : t("settings.subscription.billedYearly")}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Restore button */}
+          <TouchableOpacity
+            style={styles.restoreButton}
+            onPress={handleRestore}
+            disabled={isRestoring}
+          >
+            {isRestoring ? (
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+            ) : (
+              <Text style={styles.restoreButtonText}>
+                {t("settings.subscription.restorePurchases")}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Terms */}
+          <Text style={styles.termsText}>
+            {t("settings.subscription.terms")}
+          </Text>
+        </View>
       </ScrollView>
 
       {isPurchasing && (
@@ -236,7 +257,12 @@ export default function RevenueCatPaywall({
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  contentWidth: number,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -249,7 +275,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
       backgroundColor: theme.colors.background.default,
     },
     loadingText: {
-      marginTop: 16,
+      marginTop: spacing.md,
       fontSize: 16,
       color: theme.colors.text.secondary,
     },
@@ -257,7 +283,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      padding: 20,
+      padding: spacing.lg,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.ui.border,
     },
@@ -268,42 +294,59 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
       flex: 1,
     },
     closeButton: {
-      padding: 8,
+      padding: spacing.sm,
     },
     content: {
       flex: 1,
     },
+    contentContainer: {
+      width: "100%",
+    },
+    tabletContentContainer: {
+      maxWidth: Math.min(contentWidth * 0.8, 600),
+      alignSelf: "center",
+      paddingHorizontal: spacing.lg,
+    },
     featuresSection: {
-      padding: 20,
+      padding: spacing.lg,
     },
     sectionTitle: {
       fontSize: 18,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: 16,
+      marginBottom: spacing.md,
     },
     featureItem: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 12,
+      marginBottom: spacing.sm,
     },
     featureText: {
       fontSize: 16,
       color: theme.colors.text.secondary,
-      marginLeft: 12,
+      marginLeft: spacing.sm,
       flex: 1,
     },
     packagesSection: {
-      padding: 20,
+      padding: spacing.lg,
       paddingTop: 0,
+    },
+    tabletPackagesSection: {
+      flexDirection: isTablet ? "row" : "column",
+      gap: isTablet ? spacing.md : 0,
     },
     packageCard: {
       backgroundColor: theme.colors.background.surface,
-      borderRadius: 16,
-      padding: 20,
-      marginBottom: 16,
+      borderRadius: theme.borderRadius.lg,
+      padding: spacing.lg,
+      marginBottom: isTablet ? 0 : spacing.md,
       borderWidth: 2,
       borderColor: theme.colors.ui.border,
+      flex: isTablet ? 1 : undefined,
+      ...theme.shadows.md,
+    },
+    tabletPackageCard: {
+      marginBottom: 0,
     },
     popularPackage: {
       borderColor: theme.colors.primary,
@@ -312,11 +355,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
     popularBadge: {
       position: "absolute",
       top: -12,
-      right: 20,
+      right: spacing.lg,
       backgroundColor: theme.colors.primary,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 12,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: theme.borderRadius.sm,
     },
     popularBadgeText: {
       fontSize: 12,
@@ -327,19 +370,19 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
       fontSize: 20,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     },
     packagePrice: {
       fontSize: 32,
       fontWeight: "700",
       color: theme.colors.primary,
-      marginBottom: 4,
+      marginBottom: spacing.xs,
     },
     savingsText: {
       fontSize: 14,
       color: theme.colors.success,
       fontWeight: "600",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     },
     packageDescription: {
       fontSize: 14,
@@ -347,9 +390,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
     },
     restoreButton: {
       alignItems: "center",
-      padding: 16,
-      marginHorizontal: 20,
-      marginBottom: 16,
+      padding: spacing.md,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.md,
     },
     restoreButtonText: {
       fontSize: 16,
@@ -360,21 +403,21 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
       fontSize: 12,
       color: theme.colors.text.tertiary,
       textAlign: "center",
-      paddingHorizontal: 20,
-      paddingBottom: 20,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.lg,
       lineHeight: 18,
     },
     errorContainer: {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      padding: 40,
+      padding: spacing.xl,
     },
     errorText: {
       fontSize: 16,
       color: theme.colors.text.secondary,
       textAlign: "center",
-      marginTop: 16,
+      marginTop: spacing.md,
     },
     purchasingOverlay: {
       ...StyleSheet.absoluteFillObject,
@@ -383,7 +426,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
       alignItems: "center",
     },
     purchasingText: {
-      marginTop: 16,
+      marginTop: spacing.md,
       fontSize: 16,
       color: "#FFFFFF",
     },

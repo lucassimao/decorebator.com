@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Switch } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 interface FlashcardHeaderProps {
   wordlistName: string;
@@ -27,7 +28,9 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(theme, isTablet, spacing);
 
   return (
     <View>
@@ -132,18 +135,22 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
   StyleSheet.create({
     header: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
     },
     backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: isTablet ? 48 : 40,
+      height: isTablet ? 48 : 40,
+      borderRadius: isTablet ? 24 : 20,
       backgroundColor: theme.colors.background.surface,
       justifyContent: "center",
       alignItems: "center",
@@ -154,19 +161,19 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       alignItems: "center",
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: isTablet ? 22 : 18,
       fontWeight: "600",
       color: theme.colors.text.primary,
     },
     headerSubtitle: {
-      fontSize: 14,
+      fontSize: isTablet ? 16 : 14,
       color: theme.colors.text.secondary,
       marginTop: 2,
     },
     reportButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: isTablet ? 48 : 40,
+      height: isTablet ? 48 : 40,
+      borderRadius: isTablet ? 24 : 20,
       backgroundColor: theme.colors.background.surface,
       justifyContent: "center",
       alignItems: "center",
@@ -176,8 +183,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       backgroundColor: "transparent",
     },
     savePositionTextContainer: {
@@ -185,10 +192,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       alignItems: "center",
     },
     savePositionText: {
-      fontSize: 15,
+      fontSize: isTablet ? 18 : 15,
       color: theme.colors.text.primary,
       fontWeight: "600",
-      marginLeft: 8,
+      marginLeft: spacing.xs,
       textShadowColor: "rgba(255, 255, 255, 0.8)",
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 2,

@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive } from "@/hooks/useResponsive";
 
 interface Quiz {
   id: number;
@@ -31,7 +32,8 @@ export const QuizOptions: React.FC<QuizOptionsProps> = ({
   onAnswerSelect,
 }) => {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet, type: deviceType } = useResponsive();
+  const styles = createStyles(theme, isTablet, deviceType);
   const getOptionStyle = (index: number) => {
     if (!showResult) return styles.optionButton;
 
@@ -149,10 +151,16 @@ export const QuizOptions: React.FC<QuizOptionsProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+) =>
   StyleSheet.create({
     optionsContainer: {
-      gap: 12,
+      gap: theme.spacing.sm,
+      maxWidth: isTablet && deviceType === "tablet-10" ? 400 : "100%",
+      alignSelf: isTablet && deviceType === "tablet-10" ? "stretch" : "center",
     },
     optionButton: {
       flexDirection: "row",
@@ -161,9 +169,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       backgroundColor: theme.colors.background.surface,
       borderWidth: 2,
       borderColor: theme.colors.ui.border,
-      borderRadius: 12,
-      paddingVertical: 16,
-      paddingHorizontal: 20,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.lg,
+      minHeight: theme.touchTargets.comfortable,
     },
     correctOption: {
       borderColor: theme.colors.success,
@@ -179,19 +188,20 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       opacity: 0.6,
     },
     optionText: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.primary,
       flex: 1,
+      lineHeight: theme.typography.lineHeights.body,
     },
     correctOptionText: {
-      color: "#2E7D32",
-      fontWeight: "600",
+      color: theme.colors.success,
+      fontWeight: theme.typography.weights.semibold,
     },
     incorrectOptionText: {
-      color: "#C62828",
-      fontWeight: "600",
+      color: theme.colors.error,
+      fontWeight: theme.typography.weights.semibold,
     },
     disabledOptionText: {
-      color: "#636E72",
+      color: theme.colors.text.secondary,
     },
   });

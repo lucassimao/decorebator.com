@@ -16,6 +16,11 @@ import { createCommonStyles } from "@/styles/common";
 import { usePaymentProvider } from "@/hooks/useRevenueCat";
 import RevenueCatPaywall from "@/components/RevenueCatPaywall";
 import {
+  useResponsive,
+  useResponsiveSpacing,
+  useResponsiveGrid,
+} from "@/hooks/useResponsive";
+import {
   ActivityIndicator,
   Alert,
   Modal,
@@ -82,6 +87,9 @@ const SettingsScreen: React.FC = () => {
   const { t } = useTranslation();
   const previousSubscriptionRef = useRef<string | null>(null);
   const { theme, themeMode, setThemeMode } = useTheme();
+  const { isTablet, contentWidth } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const { columns: gridColumns } = useResponsiveGrid();
   const commonStyles = createCommonStyles(theme);
 
   // Get payment provider
@@ -253,335 +261,363 @@ const SettingsScreen: React.FC = () => {
 
   const isPremium = subscription?.plan !== "free";
 
-  const styles = createStyles(theme);
+  const styles = createStyles(
+    theme,
+    isTablet,
+    contentWidth,
+    spacing,
+    gridColumns,
+  );
 
   return (
     <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isTablet && styles.tabletScrollContent,
+        ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons
-              name="arrow-back"
-              size={24}
-              color={theme.colors.text.primary}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t("settings.title")}</Text>
-          <View style={{ width: 40 }} />
-        </View>
+        <View
+          style={[
+            styles.contentContainer,
+            isTablet && styles.tabletContentContainer,
+          ]}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={24}
+                color={theme.colors.text.primary}
+              />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{t("settings.title")}</Text>
+            <View style={{ width: 40 }} />
+          </View>
 
-        {/* Current Subscription */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t("settings.subscription.currentPlan")}
-          </Text>
+          {/* Current Subscription */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {t("settings.subscription.currentPlan")}
+            </Text>
 
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={theme.colors.primary} />
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+              </View>
+            ) : (
+              <View style={styles.subscriptionCard}>
+                <View style={styles.subscriptionHeader}>
+                  <View style={styles.planBadge}>
+                    <MaterialIcons
+                      name={isPremium ? "workspace-premium" : "lock-outline"}
+                      size={24}
+                      color={
+                        isPremium
+                          ? theme.colors.premium
+                          : theme.colors.text.secondary
+                      }
+                    />
+                  </View>
+                  <View style={styles.subscriptionInfo}>
+                    <Text style={styles.planName}>
+                      {subscription?.plan === "free"
+                        ? t("settings.subscription.freePlan")
+                        : subscription?.plan === "monthly"
+                          ? t("settings.subscription.monthlyPremium")
+                          : t("settings.subscription.yearlyPremium")}
+                    </Text>
+                    <Text style={styles.planStatus}>
+                      {subscription?.status === "active"
+                        ? t("settings.subscription.statusActive")
+                        : subscription?.status === "cancelled"
+                          ? t("settings.subscription.statusCanceling")
+                          : subscription?.status}
+                    </Text>
+                  </View>
+                </View>
+
+                {isPremium && subscription?.currentPeriodEnd && (
+                  <View style={styles.subscriptionDetails}>
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>
+                        {subscription.cancelAtPeriodEnd
+                          ? t("settings.subscription.expiresOn")
+                          : t("settings.subscription.renewsOn")}
+                      </Text>
+                      <Text style={styles.detailValue}>
+                        {formatDate(subscription.currentPeriodEnd)}
+                      </Text>
+                    </View>
+
+                    {!subscription.cancelAtPeriodEnd && (
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={handleCancelSubscription}
+                        disabled={cancelMutation.isPending}
+                      >
+                        {cancelMutation.isPending ? (
+                          <ActivityIndicator
+                            size="small"
+                            color={theme.colors.error}
+                          />
+                        ) : (
+                          <>
+                            <MaterialIcons
+                              name="cancel"
+                              size={20}
+                              color={theme.colors.error}
+                            />
+                            <Text style={styles.cancelButtonText}>
+                              {t("settings.subscription.cancelSubscription")}
+                            </Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+
+                {!isPremium && (
+                  <View style={styles.freeplanLimits}>
+                    <Text style={styles.limitText}>
+                      <MaterialIcons
+                        name="info-outline"
+                        size={16}
+                        color={theme.colors.text.secondary}
+                      />{" "}
+                      {t("settings.subscription.freePlanLimit")}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+
+          {/* Upgrade Section */}
+          {!isPremium && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t("upgrade.title")}</Text>
+              <Text style={styles.sectionSubtitle}>
+                {t("upgrade.subtitle")}
+              </Text>
+
+              {/* Premium Features */}
+              <View style={styles.featuresCard}>
+                <Text style={styles.featuresTitle}>
+                  {t("settings.subscription.premiumFeatures")}
+                </Text>
+                {PRICING_PLANS[0].features.map((feature, index) => (
+                  <View key={index} style={styles.featureRow}>
+                    <MaterialIcons
+                      name="check-circle"
+                      size={20}
+                      color={theme.colors.success}
+                    />
+                    <Text style={styles.featureText}>{feature}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Pricing Plans - Only show for Stripe */}
+              {providerInfo?.provider === "stripe" && (
+                <View
+                  style={[
+                    styles.pricingContainer,
+                    isTablet && styles.tabletPricingContainer,
+                  ]}
+                >
+                  {PRICING_PLANS.map((plan) => (
+                    <TouchableOpacity
+                      key={plan.id}
+                      style={[
+                        styles.pricingCard,
+                        isTablet && styles.tabletPricingCard,
+                        selectedPlan === plan.id && styles.pricingCardSelected,
+                        plan.popular && styles.pricingCardPopular,
+                      ]}
+                      onPress={() => setSelectedPlan(plan.id)}
+                      activeOpacity={0.8}
+                    >
+                      {plan.popular && (
+                        <View style={styles.popularBadge}>
+                          <Text style={styles.popularText}>
+                            {t("settings.subscription.bestValue")}
+                          </Text>
+                        </View>
+                      )}
+
+                      <Text style={styles.planInterval}>{plan.name}</Text>
+                      <View style={styles.priceRow}>
+                        <Text style={styles.priceSymbol}>$</Text>
+                        <Text style={styles.priceAmount}>{plan.price}</Text>
+                        <Text style={styles.priceInterval}>
+                          /{plan.interval}
+                        </Text>
+                      </View>
+
+                      {plan.savings && (
+                        <View style={styles.savingsBadge}>
+                          <Text style={styles.savingsText}>{plan.savings}</Text>
+                        </View>
+                      )}
+
+                      <View
+                        style={[
+                          styles.radioButton,
+                          selectedPlan === plan.id &&
+                            styles.radioButtonSelected,
+                        ]}
+                      >
+                        {selectedPlan === plan.id && (
+                          <View style={styles.radioButtonInner} />
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {/* Subscribe Button */}
+              <TouchableOpacity
+                style={[
+                  styles.subscribeButton,
+                  !selectedPlan &&
+                    providerInfo?.provider === "stripe" &&
+                    styles.subscribeButtonDisabled,
+                ]}
+                onPress={() => {
+                  if (providerInfo?.provider === "revenuecat") {
+                    // Show RevenueCat paywall
+                    setShowRevenueCatPaywall(true);
+                  } else {
+                    // Use Stripe checkout
+                    selectedPlan && checkoutMutation.mutateAsync(selectedPlan);
+                  }
+                }}
+                disabled={
+                  providerInfo?.provider === "stripe" &&
+                  (!selectedPlan || checkoutMutation.isPending)
+                }
+                activeOpacity={0.8}
+              >
+                {checkoutMutation.isPending ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.text.inverse}
+                  />
+                ) : (
+                  <>
+                    <Text style={styles.subscribeButtonText}>
+                      {providerInfo?.provider === "revenuecat"
+                        ? t("settings.subscription.viewPlans")
+                        : selectedPlan
+                          ? t("settings.subscription.continueToPayment")
+                          : t("settings.subscription.selectPlan")}
+                    </Text>
+                    <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
-          ) : (
-            <View style={styles.subscriptionCard}>
-              <View style={styles.subscriptionHeader}>
-                <View style={styles.planBadge}>
+          )}
+
+          {/* Other Settings */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {t("settings.otherSettings")}
+            </Text>
+
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={profileSettings}
+            >
+              <MaterialIcons
+                name="person-outline"
+                size={24}
+                color={theme.colors.text.secondary}
+              />
+              <Text style={styles.settingText}>
+                {t("settings.account.title")}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.text.secondary}
+              />
+            </TouchableOpacity>
+
+            {/* Theme Toggle */}
+            <View style={styles.settingItem}>
+              <MaterialIcons
+                name={theme.mode === "dark" ? "dark-mode" : "light-mode"}
+                size={24}
+                color={theme.colors.text.secondary}
+              />
+              <Text style={styles.settingText}>
+                {t("settings.theme", { defaultValue: "Theme" })}
+              </Text>
+              <View style={styles.themeToggleContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.themeOption,
+                    themeMode === "light" && styles.themeOptionActive,
+                  ]}
+                  onPress={() => setThemeMode("light")}
+                >
                   <MaterialIcons
-                    name={isPremium ? "workspace-premium" : "lock-outline"}
-                    size={24}
+                    name="light-mode"
+                    size={16}
                     color={
-                      isPremium
-                        ? theme.colors.premium
+                      themeMode === "light"
+                        ? theme.colors.primary
                         : theme.colors.text.secondary
                     }
                   />
-                </View>
-                <View style={styles.subscriptionInfo}>
-                  <Text style={styles.planName}>
-                    {subscription?.plan === "free"
-                      ? t("settings.subscription.freePlan")
-                      : subscription?.plan === "monthly"
-                        ? t("settings.subscription.monthlyPremium")
-                        : t("settings.subscription.yearlyPremium")}
-                  </Text>
-                  <Text style={styles.planStatus}>
-                    {subscription?.status === "active"
-                      ? t("settings.subscription.statusActive")
-                      : subscription?.status === "cancelled"
-                        ? t("settings.subscription.statusCanceling")
-                        : subscription?.status}
-                  </Text>
-                </View>
-              </View>
-
-              {isPremium && subscription?.currentPeriodEnd && (
-                <View style={styles.subscriptionDetails}>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>
-                      {subscription.cancelAtPeriodEnd
-                        ? t("settings.subscription.expiresOn")
-                        : t("settings.subscription.renewsOn")}
-                    </Text>
-                    <Text style={styles.detailValue}>
-                      {formatDate(subscription.currentPeriodEnd)}
-                    </Text>
-                  </View>
-
-                  {!subscription.cancelAtPeriodEnd && (
-                    <TouchableOpacity
-                      style={styles.cancelButton}
-                      onPress={handleCancelSubscription}
-                      disabled={cancelMutation.isPending}
-                    >
-                      {cancelMutation.isPending ? (
-                        <ActivityIndicator
-                          size="small"
-                          color={theme.colors.error}
-                        />
-                      ) : (
-                        <>
-                          <MaterialIcons
-                            name="cancel"
-                            size={20}
-                            color={theme.colors.error}
-                          />
-                          <Text style={styles.cancelButtonText}>
-                            {t("settings.subscription.cancelSubscription")}
-                          </Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-                  )}
-                </View>
-              )}
-
-              {!isPremium && (
-                <View style={styles.freeplanLimits}>
-                  <Text style={styles.limitText}>
-                    <MaterialIcons
-                      name="info-outline"
-                      size={16}
-                      color={theme.colors.text.secondary}
-                    />{" "}
-                    {t("settings.subscription.freePlanLimit")}
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-        </View>
-
-        {/* Upgrade Section */}
-        {!isPremium && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("upgrade.title")}</Text>
-            <Text style={styles.sectionSubtitle}>{t("upgrade.subtitle")}</Text>
-
-            {/* Premium Features */}
-            <View style={styles.featuresCard}>
-              <Text style={styles.featuresTitle}>
-                {t("settings.subscription.premiumFeatures")}
-              </Text>
-              {PRICING_PLANS[0].features.map((feature, index) => (
-                <View key={index} style={styles.featureRow}>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.themeOption,
+                    themeMode === "system" && styles.themeOptionActive,
+                  ]}
+                  onPress={() => setThemeMode("system")}
+                >
                   <MaterialIcons
-                    name="check-circle"
-                    size={20}
-                    color={theme.colors.success}
+                    name="phone-iphone"
+                    size={16}
+                    color={
+                      themeMode === "system"
+                        ? theme.colors.primary
+                        : theme.colors.text.secondary
+                    }
                   />
-                  <Text style={styles.featureText}>{feature}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Pricing Plans - Only show for Stripe */}
-            {providerInfo?.provider === "stripe" && (
-              <View style={styles.pricingContainer}>
-                {PRICING_PLANS.map((plan) => (
-                  <TouchableOpacity
-                    key={plan.id}
-                    style={[
-                      styles.pricingCard,
-                      selectedPlan === plan.id && styles.pricingCardSelected,
-                      plan.popular && styles.pricingCardPopular,
-                    ]}
-                    onPress={() => setSelectedPlan(plan.id)}
-                    activeOpacity={0.8}
-                  >
-                    {plan.popular && (
-                      <View style={styles.popularBadge}>
-                        <Text style={styles.popularText}>
-                          {t("settings.subscription.bestValue")}
-                        </Text>
-                      </View>
-                    )}
-
-                    <Text style={styles.planInterval}>{plan.name}</Text>
-                    <View style={styles.priceRow}>
-                      <Text style={styles.priceSymbol}>$</Text>
-                      <Text style={styles.priceAmount}>{plan.price}</Text>
-                      <Text style={styles.priceInterval}>/{plan.interval}</Text>
-                    </View>
-
-                    {plan.savings && (
-                      <View style={styles.savingsBadge}>
-                        <Text style={styles.savingsText}>{plan.savings}</Text>
-                      </View>
-                    )}
-
-                    <View
-                      style={[
-                        styles.radioButton,
-                        selectedPlan === plan.id && styles.radioButtonSelected,
-                      ]}
-                    >
-                      {selectedPlan === plan.id && (
-                        <View style={styles.radioButtonInner} />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.themeOption,
+                    themeMode === "dark" && styles.themeOptionActive,
+                  ]}
+                  onPress={() => setThemeMode("dark")}
+                >
+                  <MaterialIcons
+                    name="dark-mode"
+                    size={16}
+                    color={
+                      themeMode === "dark"
+                        ? theme.colors.primary
+                        : theme.colors.text.secondary
+                    }
+                  />
+                </TouchableOpacity>
               </View>
-            )}
-
-            {/* Subscribe Button */}
-            <TouchableOpacity
-              style={[
-                styles.subscribeButton,
-                !selectedPlan &&
-                  providerInfo?.provider === "stripe" &&
-                  styles.subscribeButtonDisabled,
-              ]}
-              onPress={() => {
-                if (providerInfo?.provider === "revenuecat") {
-                  // Show RevenueCat paywall
-                  setShowRevenueCatPaywall(true);
-                } else {
-                  // Use Stripe checkout
-                  selectedPlan && checkoutMutation.mutateAsync(selectedPlan);
-                }
-              }}
-              disabled={
-                providerInfo?.provider === "stripe" &&
-                (!selectedPlan || checkoutMutation.isPending)
-              }
-              activeOpacity={0.8}
-            >
-              {checkoutMutation.isPending ? (
-                <ActivityIndicator
-                  size="small"
-                  color={theme.colors.text.inverse}
-                />
-              ) : (
-                <>
-                  <Text style={styles.subscribeButtonText}>
-                    {providerInfo?.provider === "revenuecat"
-                      ? t("settings.subscription.viewPlans")
-                      : selectedPlan
-                        ? t("settings.subscription.continueToPayment")
-                        : t("settings.subscription.selectPlan")}
-                  </Text>
-                  <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Other Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("settings.otherSettings")}</Text>
-
-          <TouchableOpacity
-            style={styles.settingItem}
-            onPress={profileSettings}
-          >
-            <MaterialIcons
-              name="person-outline"
-              size={24}
-              color={theme.colors.text.secondary}
-            />
-            <Text style={styles.settingText}>
-              {t("settings.account.title")}
-            </Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={theme.colors.text.secondary}
-            />
-          </TouchableOpacity>
-
-          {/* Theme Toggle */}
-          <View style={styles.settingItem}>
-            <MaterialIcons
-              name={theme.mode === "dark" ? "dark-mode" : "light-mode"}
-              size={24}
-              color={theme.colors.text.secondary}
-            />
-            <Text style={styles.settingText}>
-              {t("settings.theme", { defaultValue: "Theme" })}
-            </Text>
-            <View style={styles.themeToggleContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.themeOption,
-                  themeMode === "light" && styles.themeOptionActive,
-                ]}
-                onPress={() => setThemeMode("light")}
-              >
-                <MaterialIcons
-                  name="light-mode"
-                  size={16}
-                  color={
-                    themeMode === "light"
-                      ? theme.colors.primary
-                      : theme.colors.text.secondary
-                  }
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.themeOption,
-                  themeMode === "system" && styles.themeOptionActive,
-                ]}
-                onPress={() => setThemeMode("system")}
-              >
-                <MaterialIcons
-                  name="phone-iphone"
-                  size={16}
-                  color={
-                    themeMode === "system"
-                      ? theme.colors.primary
-                      : theme.colors.text.secondary
-                  }
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.themeOption,
-                  themeMode === "dark" && styles.themeOptionActive,
-                ]}
-                onPress={() => setThemeMode("dark")}
-              >
-                <MaterialIcons
-                  name="dark-mode"
-                  size={16}
-                  color={
-                    themeMode === "dark"
-                      ? theme.colors.primary
-                      : theme.colors.text.secondary
-                  }
-                />
-              </TouchableOpacity>
             </View>
-          </View>
 
-          {/* <TouchableOpacity style={styles.settingItem}>
+            {/* <TouchableOpacity style={styles.settingItem}>
               <MaterialIcons
                 name="notifications-none"
                 size={24}
@@ -591,89 +627,94 @@ const SettingsScreen: React.FC = () => {
               <Ionicons name="chevron-forward" size={20} color="#636E72" />
             </TouchableOpacity> */}
 
-          <TouchableOpacity style={styles.settingItem} onPress={support}>
-            <MaterialIcons
-              name="help-outline"
-              size={24}
-              color={theme.colors.text.secondary}
-            />
-            <Text style={styles.settingText}>
-              {t("settings.helpAndSupport")}
-            </Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={theme.colors.text.secondary}
-            />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity style={styles.settingItem} onPress={support}>
+              <MaterialIcons
+                name="help-outline"
+                size={24}
+                color={theme.colors.text.secondary}
+              />
+              <Text style={styles.settingText}>
+                {t("settings.helpAndSupport")}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.text.secondary}
+              />
+            </TouchableOpacity>
+          </View>
 
-        {/* Legal & Privacy Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t("settings.legalAndPrivacy")}
-          </Text>
-
-          <TouchableOpacity
-            style={styles.settingItem}
-            onPress={async () => {
-              await WebBrowser.openBrowserAsync(
-                `https://decorebator.com/${i18n.language}/privacy`,
-              );
-            }}
-          >
-            <MaterialIcons
-              name="privacy-tip"
-              size={24}
-              color={theme.colors.text.secondary}
-            />
-            <Text style={styles.settingText}>
-              {t("settings.privacyPolicy")}
+          {/* Legal & Privacy Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {t("settings.legalAndPrivacy")}
             </Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={theme.colors.text.secondary}
-            />
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.settingItem}
-            onPress={async () => {
-              await WebBrowser.openBrowserAsync(
-                `https://decorebator.com/${i18n.language}/terms`,
-              );
-            }}
-          >
-            <MaterialIcons
-              name="gavel"
-              size={24}
-              color={theme.colors.text.secondary}
-            />
-            <Text style={styles.settingText}>
-              {t("settings.termsOfService")}
-            </Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={theme.colors.text.secondary}
-            />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={async () => {
+                await WebBrowser.openBrowserAsync(
+                  `https://decorebator.com/${i18n.language}/privacy`,
+                );
+              }}
+            >
+              <MaterialIcons
+                name="privacy-tip"
+                size={24}
+                color={theme.colors.text.secondary}
+              />
+              <Text style={styles.settingText}>
+                {t("settings.privacyPolicy")}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.text.secondary}
+              />
+            </TouchableOpacity>
 
-        {/* Sign Out */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.settingItem} onPress={signOut}>
-            <MaterialIcons name="logout" size={24} color={theme.colors.error} />
-            <Text style={[styles.settingText, { color: theme.colors.error }]}>
-              {t("settings.account.logOut")}
-            </Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={theme.colors.error}
-            />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={async () => {
+                await WebBrowser.openBrowserAsync(
+                  `https://decorebator.com/${i18n.language}/terms`,
+                );
+              }}
+            >
+              <MaterialIcons
+                name="gavel"
+                size={24}
+                color={theme.colors.text.secondary}
+              />
+              <Text style={styles.settingText}>
+                {t("settings.termsOfService")}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.text.secondary}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Sign Out */}
+          <View style={styles.section}>
+            <TouchableOpacity style={styles.settingItem} onPress={signOut}>
+              <MaterialIcons
+                name="logout"
+                size={24}
+                color={theme.colors.error}
+              />
+              <Text style={[styles.settingText, { color: theme.colors.error }]}>
+                {t("settings.account.logOut")}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.error}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
@@ -702,21 +743,39 @@ const SettingsScreen: React.FC = () => {
 
 export default SettingsScreen;
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  contentWidth: number,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+  gridColumns: number,
+) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.colors.background.default,
     },
     scrollContent: {
-      paddingBottom: 30,
+      paddingBottom: spacing.xl,
+    },
+    tabletScrollContent: {
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+    },
+    contentContainer: {
+      width: "100%",
+    },
+    tabletContentContainer: {
+      width: contentWidth,
+      maxWidth: 800,
+      alignSelf: "center",
     },
     header: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
     },
     backButton: {
       width: 40,
@@ -733,30 +792,30 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.colors.text.primary,
     },
     section: {
-      marginBottom: 24,
+      marginBottom: spacing.lg,
     },
     sectionTitle: {
       fontSize: 18,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: 8,
-      paddingHorizontal: 20,
+      marginBottom: spacing.sm,
+      paddingHorizontal: spacing.lg,
     },
     sectionSubtitle: {
       fontSize: 14,
       color: theme.colors.text.secondary,
-      marginBottom: 16,
-      paddingHorizontal: 20,
+      marginBottom: spacing.md,
+      paddingHorizontal: spacing.lg,
     },
     loadingContainer: {
-      padding: 40,
+      padding: spacing.xl,
       alignItems: "center",
     },
     subscriptionCard: {
       backgroundColor: theme.colors.background.surface,
-      marginHorizontal: 20,
+      marginHorizontal: spacing.lg,
       borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.lg,
+      padding: spacing.lg,
       ...theme.shadows.md,
     },
     subscriptionHeader: {
@@ -835,10 +894,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     featuresCard: {
       backgroundColor: theme.colors.background.surface,
-      marginHorizontal: 20,
+      marginHorizontal: spacing.lg,
       borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.lg,
-      marginBottom: 20,
+      padding: spacing.lg,
+      marginBottom: spacing.lg,
       ...theme.shadows.sm,
     },
     featuresTitle: {
@@ -860,19 +919,27 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     pricingContainer: {
       flexDirection: "row",
-      paddingHorizontal: 20,
-      gap: 12,
-      marginBottom: 20,
+      paddingHorizontal: spacing.lg,
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    tabletPricingContainer: {
+      justifyContent: "center",
+      gap: spacing.md,
     },
     pricingCard: {
       flex: 1,
       backgroundColor: theme.colors.background.surface,
       borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.md,
+      padding: spacing.md,
       borderWidth: 2,
       borderColor: "transparent",
       position: "relative",
       ...theme.shadows.sm,
+    },
+    tabletPricingCard: {
+      maxWidth: 200,
+      minWidth: 180,
     },
     pricingCardSelected: {
       borderColor: theme.colors.primary,
@@ -958,10 +1025,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.colors.primary,
-      marginHorizontal: 20,
-      paddingVertical: theme.spacing.md,
+      marginHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
       borderRadius: theme.borderRadius.md,
-      gap: 8,
+      gap: spacing.sm,
       ...theme.shadows.md,
       shadowColor: theme.colors.primary,
     },
@@ -978,11 +1045,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.colors.background.surface,
-      marginHorizontal: 20,
-      padding: theme.spacing.md,
+      marginHorizontal: spacing.lg,
+      padding: spacing.md,
       borderRadius: theme.borderRadius.md,
-      marginBottom: 8,
-      gap: 12,
+      marginBottom: spacing.sm,
+      gap: spacing.sm,
       ...theme.shadows.sm,
     },
     settingText: {
@@ -992,7 +1059,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     themeToggleContainer: {
       flexDirection: "row",
-      gap: 8,
+      gap: spacing.sm,
     },
     themeOption: {
       width: 32,

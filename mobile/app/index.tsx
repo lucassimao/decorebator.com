@@ -2,7 +2,6 @@ import { useUserInfo } from "@/hooks/users";
 import React, { useEffect } from "react";
 import {
   ActivityIndicator,
-  Dimensions,
   ImageBackground,
   SafeAreaView,
   StyleSheet,
@@ -13,10 +12,15 @@ import * as wordlistsApi from "@/api/wordlists";
 import { useRouter } from "expo-router";
 import { Redirect } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import { useResponsive } from "@/hooks/useResponsive";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Index() {
   const { userInfo, error, loading } = useUserInfo();
   const router = useRouter();
+  const { theme } = useTheme();
+  const { width, height } = useResponsive();
+  const styles = createStyles(theme, width, height);
 
   // Prefetch wordlists when user is authenticated
   useQuery({
@@ -44,7 +48,7 @@ export default function Index() {
       >
         <SafeAreaView style={styles.container}>
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF7B54" />
+            <ActivityIndicator size="large" color={theme.colors.primary} />
           </View>
         </SafeAreaView>
       </ImageBackground>
@@ -61,20 +65,23 @@ export default function Index() {
   return <Redirect href="/signin" />;
 }
 
-const { width, height } = Dimensions.get("window");
-
-const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: width,
-    height: height,
-  },
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  width: number,
+  height: number,
+) =>
+  StyleSheet.create({
+    backgroundImage: {
+      flex: 1,
+      width: width,
+      height: height,
+    },
+    container: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+  });

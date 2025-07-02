@@ -19,7 +19,6 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  Dimensions,
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
@@ -37,8 +36,7 @@ import {
 import { LANGUAGES } from "./CreateWordlistModal";
 import { useUserInfo } from "@/hooks/users";
 import { useTheme } from "@/contexts/ThemeContext";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 interface WordlistDetailModalProps {
   visible: boolean;
@@ -51,12 +49,21 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   onClose,
   wordlist,
 }) => {
-  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const { height: screenHeight } = useResponsive();
+  const slideAnim = useRef(new Animated.Value(screenHeight)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const queryClient = useQueryClient();
   const [showAddForm, setShowAddForm] = useState(false);
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet, contentWidth } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(
+    theme,
+    isTablet,
+    contentWidth,
+    spacing,
+    screenHeight,
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [filterLearned, setFilterLearned] = useState<
     "all" | "learned" | "unlearned"
@@ -71,7 +78,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   const handleClose = () => {
     Animated.parallel([
       Animated.timing(slideAnim, {
-        toValue: SCREEN_HEIGHT,
+        toValue: screenHeight,
         duration: 300,
         useNativeDriver: true,
       }),
@@ -213,7 +220,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     } else {
       Animated.parallel([
         Animated.timing(slideAnim, {
-          toValue: SCREEN_HEIGHT,
+          toValue: screenHeight,
           duration: 300,
           useNativeDriver: true,
         }),
@@ -892,11 +899,18 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  contentWidth: number,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+  screenHeight: number,
+) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      justifyContent: "flex-end",
+      justifyContent: isTablet ? "center" : "flex-end",
+      alignItems: isTablet ? "center" : "stretch",
     },
     backdrop: {
       position: "absolute",
@@ -909,22 +923,29 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     modalContent: {
       backgroundColor: theme.colors.background.surface,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      height: SCREEN_HEIGHT * 0.95, // Changed from height to maxHeight
+      borderTopLeftRadius: isTablet ? theme.borderRadius.lg : 24,
+      borderTopRightRadius: isTablet ? theme.borderRadius.lg : 24,
+      borderBottomLeftRadius: isTablet ? theme.borderRadius.lg : 0,
+      borderBottomRightRadius: isTablet ? theme.borderRadius.lg : 0,
+      height: isTablet
+        ? Math.min(screenHeight * 0.8, 700)
+        : screenHeight * 0.95,
+      width: isTablet ? Math.min(contentWidth * 0.9, 800) : "100%",
+      maxWidth: isTablet ? 800 : undefined,
       shadowColor: theme.colors.text.primary,
       shadowOffset: { width: 0, height: -4 },
       shadowOpacity: 0.1,
       shadowRadius: 12,
       elevation: 8,
+      ...theme.shadows.lg,
     },
     header: {
-      paddingTop: 12,
-      paddingBottom: 16,
-      paddingHorizontal: 20,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.md,
+      paddingHorizontal: spacing.lg,
       backgroundColor: theme.colors.background.surface,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
+      borderTopLeftRadius: isTablet ? theme.borderRadius.lg : 24,
+      borderTopRightRadius: isTablet ? theme.borderRadius.lg : 24,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.border.light,
     },
@@ -934,7 +955,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       backgroundColor: theme.colors.text.tertiary,
       borderRadius: 2,
       alignSelf: "center",
-      marginBottom: 16,
+      marginBottom: spacing.md,
+      display: isTablet ? "none" : "flex", // Hide handle on tablets since they're centered modals
     },
     titleRow: {
       flexDirection: "row",
@@ -942,7 +964,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     languageFlag: {
       fontSize: 32,
-      marginRight: 12,
+      marginRight: spacing.sm,
     },
     titleContainer: {
       flex: 1,

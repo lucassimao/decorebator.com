@@ -1,12 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { ProgressChart } from "react-native-chart-kit";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getChartColors, getChartConfig } from "./theme";
 import { WordMasteryStats } from "@/api/analytics";
-
-const screenWidth = Dimensions.get("window").width;
+import { useResponsive } from "@/hooks/useResponsive";
 
 interface WordMasteryChartProps {
   wordMastery?: WordMasteryStats[];
@@ -17,7 +16,8 @@ export const WordMasteryChart: React.FC<WordMasteryChartProps> = ({
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet, type: deviceType, contentWidth } = useResponsive();
+  const styles = createStyles(theme, isTablet, deviceType);
   const chartColors = getChartColors(theme);
   const chartConfig = getChartConfig(theme);
 
@@ -38,10 +38,10 @@ export const WordMasteryChart: React.FC<WordMasteryChartProps> = ({
         <>
           <ProgressChart
             data={progressChartData}
-            width={screenWidth - 40}
-            height={200}
-            strokeWidth={16}
-            radius={28}
+            width={contentWidth - 40}
+            height={isTablet ? 250 : 200}
+            strokeWidth={isTablet ? 20 : 16}
+            radius={isTablet ? 35 : 28}
             chartConfig={{
               ...chartConfig,
               color: (opacity = 1, index = 0) => {
@@ -85,76 +85,75 @@ export const WordMasteryChart: React.FC<WordMasteryChartProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  deviceType: string,
+) =>
   StyleSheet.create({
     chartCard: {
       backgroundColor: theme.colors.background.surface,
-      marginHorizontal: 16,
-      marginVertical: 8,
-      borderRadius: 16,
-      padding: 20,
-      shadowColor: theme.colors.text.primary,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 3.84,
-      elevation: 5,
+      marginHorizontal: 0, // Remove for responsive container
+      marginVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.md,
+      ...theme.shadows.md,
     },
     chartTitle: {
-      fontSize: 20,
-      fontWeight: "bold",
+      fontSize: theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.bold,
       color: theme.colors.text.primary,
-      marginBottom: 4,
+      marginBottom: theme.spacing.xs,
     },
     chartSubtitle: {
-      fontSize: 14,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     chart: {
-      marginVertical: 8,
-      borderRadius: 16,
-      marginLeft: -20,
+      marginVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.lg,
+      marginLeft: -theme.spacing.md,
     },
     emptyChartContainer: {
-      height: 200,
+      height: isTablet ? 250 : 200,
       justifyContent: "center",
       alignItems: "center",
       backgroundColor: theme.colors.background.default,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
     },
     emptyChartText: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.body,
       color: theme.colors.text.disabled,
     },
     legendContainer: {
       flexDirection: "row",
       flexWrap: "wrap",
-      marginTop: 16,
-      paddingHorizontal: 8,
+      marginTop: theme.spacing.md,
+      paddingHorizontal: theme.spacing.xs,
+      gap: theme.spacing.xs,
     },
     legendItem: {
       flexDirection: "row",
       alignItems: "center",
-      marginRight: 16,
-      marginBottom: 8,
+      marginRight: theme.spacing.md,
+      marginBottom: theme.spacing.xs,
+      minHeight: theme.touchTargets.minimum,
     },
     legendDot: {
-      width: 12,
-      height: 12,
-      borderRadius: 6,
-      marginRight: 6,
+      width: isTablet ? 16 : 12,
+      height: isTablet ? 16 : 12,
+      borderRadius: isTablet ? 8 : 6,
+      marginRight: theme.spacing.xs,
     },
     legendText: {
-      fontSize: 12,
+      fontSize: theme.typography.sizes.caption,
       color: theme.colors.text.secondary,
-      marginRight: 4,
+      marginRight: theme.spacing.xs,
     },
     legendValue: {
-      fontSize: 12,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.caption,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.primary,
     },
   });

@@ -12,6 +12,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useErrorReporting } from "@/hooks/useErrorReporting";
 import { useInvalidateAnalytics } from "@/hooks/useInvalidateAnalytics";
 import { useOffline } from "@/hooks/useOffline";
+import { useResponsive } from "@/hooks/useResponsive";
 import { createCommonStyles } from "@/styles/common";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -28,6 +29,7 @@ const QuizScreen: React.FC = () => {
   const { isOnline, isOfflineAvailable } = useOffline();
   const { invalidateAllAnalytics } = useInvalidateAnalytics();
   const { theme } = useTheme();
+  const { isTablet, type: deviceType } = useResponsive();
   const commonStyles = createCommonStyles(theme);
   const styles = createStyles(theme);
 
@@ -277,63 +279,87 @@ const QuizScreen: React.FC = () => {
     <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
       <OfflineIndicator />
 
-      <QuizHeader
-        wordlistName={String(wordlistName)}
-        correctCount={correctCount}
-        quizCount={quizCount}
-        isOnline={isOnline}
-        onBackPress={() => navigation.goBack()}
-        onReportPress={openReportModal}
-      />
+      <View style={commonStyles.responsiveContainer}>
+        <QuizHeader
+          wordlistName={String(wordlistName)}
+          correctCount={correctCount}
+          quizCount={quizCount}
+          isOnline={isOnline}
+          onBackPress={() => navigation.goBack()}
+          onReportPress={openReportModal}
+        />
 
-      <QuizProgressBar correctCount={correctCount} quizCount={quizCount} />
+        <QuizProgressBar correctCount={correctCount} quizCount={quizCount} />
 
-      <QuizModeToggle fastMode={fastMode} onToggle={onPressFastModeToggle} />
+        <QuizModeToggle fastMode={fastMode} onToggle={onPressFastModeToggle} />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.quizCard}>
-          {isLoadingNext || isFetching || !quiz ? (
-            <QuizLoadingState
-              isLoading={isLoadingNext || isFetching}
-              hasTimeout={loadingTimeout}
-              error={error}
-              onRetry={handleRetryQuiz}
-              onGoBack={handleGoBack}
-            />
-          ) : (
-            <>
-              {quiz && (
-                <QuizContent
-                  quiz={quiz}
-                  userInput={userInput}
-                  setUserInput={setUserInput}
-                  isSubmitted={isSubmitted}
-                  onSubmitAnswer={handleWriteAnswer}
-                  onSkipQuestion={handleSkipQuestion}
-                />
-              )}
-
-              <QuizOptions
-                quiz={quiz!}
-                selectedAnswer={selectedAnswer}
-                showResult={showResult}
-                onAnswerSelect={handleAnswerSelect}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.quizCard}>
+            {isLoadingNext || isFetching || !quiz ? (
+              <QuizLoadingState
+                isLoading={isLoadingNext || isFetching}
+                hasTimeout={loadingTimeout}
+                error={error}
+                onRetry={handleRetryQuiz}
+                onGoBack={handleGoBack}
               />
+            ) : (
+              <View
+                style={
+                  isTablet && deviceType === "tablet-10"
+                    ? styles.tabletLayout
+                    : styles.phoneLayout
+                }
+              >
+                {quiz && (
+                  <View
+                    style={
+                      isTablet && deviceType === "tablet-10"
+                        ? styles.contentSection
+                        : undefined
+                    }
+                  >
+                    <QuizContent
+                      quiz={quiz}
+                      userInput={userInput}
+                      setUserInput={setUserInput}
+                      isSubmitted={isSubmitted}
+                      onSubmitAnswer={handleWriteAnswer}
+                      onSkipQuestion={handleSkipQuestion}
+                    />
+                  </View>
+                )}
 
-              <QuizNextButton
-                showResult={showResult}
-                fastMode={fastMode}
-                quizType={quiz?.type || ""}
-                isSubmitted={isSubmitted}
-                onNextQuiz={handleNextQuiz}
-              />
-            </>
-          )}
-        </View>
-      </ScrollView>
+                <View
+                  style={
+                    isTablet && deviceType === "tablet-10"
+                      ? styles.optionsSection
+                      : undefined
+                  }
+                >
+                  <QuizOptions
+                    quiz={quiz!}
+                    selectedAnswer={selectedAnswer}
+                    showResult={showResult}
+                    onAnswerSelect={handleAnswerSelect}
+                  />
+
+                  <QuizNextButton
+                    showResult={showResult}
+                    fastMode={fastMode}
+                    quizType={quiz?.type || ""}
+                    isSubmitted={isSubmitted}
+                    onNextQuiz={handleNextQuiz}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      </View>
 
       <ErrorReportModal
         visible={showReportModal}
@@ -361,8 +387,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       backgroundColor: theme.colors.background.default,
     },
     scrollContent: {
-      paddingHorizontal: 20,
-      paddingBottom: 20,
+      paddingBottom: theme.spacing.lg,
     },
     quizCard: {
       backgroundColor:
@@ -379,23 +404,45 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       ...theme.shadows.md,
       elevation: theme.mode === "light" ? 6 : 10,
     },
+    // Responsive layouts
+    phoneLayout: {
+      flexDirection: "column",
+      gap: theme.spacing.md,
+    },
+    tabletLayout: {
+      flexDirection: "row",
+      gap: theme.spacing.xl,
+      alignItems: "flex-start",
+    },
+    contentSection: {
+      flex: 1,
+      minWidth: 0, // Allow content to shrink
+    },
+    optionsSection: {
+      flex: 1,
+      maxWidth: 400, // Limit options section width
+      minWidth: 300,
+    },
     errorContainer: {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      paddingHorizontal: 40,
+      paddingHorizontal: theme.spacing.xl,
     },
     errorTitle: {
-      fontSize: 20,
-      fontWeight: "600",
+      fontSize: theme.typography.sizes.title,
+      fontWeight: theme.typography.weights.semibold,
       color: theme.colors.text.primary,
-      marginTop: 16,
-      marginBottom: 8,
+      lineHeight: theme.typography.lineHeights.title,
+      marginTop: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
+      textAlign: "center",
     },
     errorMessage: {
-      fontSize: 16,
+      fontSize: theme.typography.sizes.body,
+      fontWeight: theme.typography.weights.regular,
       color: theme.colors.text.secondary,
+      lineHeight: theme.typography.lineHeights.body,
       textAlign: "center",
-      lineHeight: 22,
     },
   });

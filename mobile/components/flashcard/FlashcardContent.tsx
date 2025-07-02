@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { Definition, Word } from "../../api/wordlists";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 interface FlashcardContentProps {
   currentWord: Word;
@@ -42,7 +43,9 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet, contentWidth } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(theme, isTablet, contentWidth, spacing);
   const player = useAudioPlayer();
   const { playing: isPlaying, didJustFinish } = useAudioPlayerStatus(player);
   const flipAnimation = useRef(new Animated.Value(0)).current;
@@ -318,15 +321,22 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  contentWidth: number,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
   StyleSheet.create({
     cardContainer: {
       flex: 1,
-      paddingHorizontal: 20,
+      paddingHorizontal: spacing.lg,
       justifyContent: "center",
+      alignItems: isTablet ? "center" : "stretch",
     },
     cardTouchable: {
-      height: 400,
+      height: isTablet ? Math.min(500, contentWidth * 0.6) : 400,
+      width: isTablet ? Math.min(contentWidth * 0.8, 600) : "100%",
       position: "relative",
     },
     card: {
@@ -334,13 +344,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       width: "100%",
       height: "100%",
       backgroundColor: theme.colors.background.surface,
-      borderRadius: 20,
-      padding: 24,
-      shadowColor: theme.colors.text.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      elevation: 5,
+      borderRadius: theme.borderRadius.xl,
+      padding: isTablet ? spacing.xxl : spacing.xl,
+      ...theme.shadows.lg,
       backfaceVisibility: "hidden",
     },
     cardFront: {
@@ -358,32 +364,32 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       alignItems: "center",
     },
     wordText: {
-      fontSize: 48,
+      fontSize: isTablet ? 64 : 48,
       fontWeight: "bold",
       color: theme.colors.text.primary,
       textAlign: "center",
-      marginBottom: 20,
+      marginBottom: spacing.lg,
     },
     audioButton: {
-      marginTop: 16,
+      marginTop: spacing.md,
     },
     flipHint: {
-      fontSize: 14,
+      fontSize: isTablet ? 16 : 14,
       color: theme.colors.ui.disabled,
       fontStyle: "italic",
       textAlign: "center",
     },
     cardTouchArea: {
       flex: 1,
-      marginBottom: 40,
+      marginBottom: isTablet ? spacing.xxl : spacing.xl,
     },
     flipHintTouchable: {
       position: "absolute",
-      bottom: 10,
+      bottom: spacing.sm,
       left: 0,
       right: 0,
-      paddingVertical: 10,
-      paddingHorizontal: 20,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
       alignItems: "center",
     },
     definitionsScroll: {
@@ -391,127 +397,129 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     definitionsScrollContent: {
       flexGrow: 1,
-      paddingBottom: 20,
+      paddingBottom: spacing.lg,
     },
     definitionBlock: {
-      marginBottom: 20,
+      marginBottom: spacing.lg,
     },
     definitionDivider: {
       height: 1,
       backgroundColor: theme.colors.ui.divider,
-      marginBottom: 16,
+      marginBottom: spacing.md,
     },
     partOfSpeechBadge: {
       backgroundColor:
         theme.mode === "light" ? "#FFF5F0" : theme.colors.background.secondary,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 12,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: theme.borderRadius.sm,
       alignSelf: "flex-start",
-      marginBottom: 8,
+      marginBottom: spacing.xs,
     },
     partOfSpeechText: {
-      fontSize: 12,
+      fontSize: isTablet ? 14 : 12,
       color: theme.colors.primary,
       fontWeight: "600",
     },
     meaningText: {
-      fontSize: 20,
+      fontSize: isTablet ? 24 : 20,
       color: theme.colors.text.primary,
-      lineHeight: 28,
-      marginBottom: 8,
+      lineHeight: isTablet ? 32 : 28,
+      marginBottom: spacing.xs,
     },
     phoneticText: {
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       color: theme.colors.text.secondary,
       fontStyle: "italic",
-      marginBottom: 12,
+      marginBottom: spacing.sm,
     },
     examplesContainer: {
-      marginTop: 12,
+      marginTop: spacing.sm,
     },
     examplesTitle: {
-      fontSize: 14,
+      fontSize: isTablet ? 16 : 14,
       fontWeight: "600",
       color: theme.colors.text.secondary,
-      marginBottom: 8,
+      marginBottom: spacing.xs,
     },
     exampleText: {
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       color: theme.colors.text.primary,
-      lineHeight: 24,
-      marginBottom: 6,
-      paddingLeft: 8,
+      lineHeight: isTablet ? 26 : 24,
+      marginBottom: spacing.xs,
+      paddingLeft: spacing.xs,
     },
     inflectionExampleContainer: {
       flexDirection: "row",
       alignItems: "flex-start",
-      marginBottom: 6,
-      paddingLeft: 8,
+      marginBottom: spacing.xs,
+      paddingLeft: spacing.xs,
     },
     tenseLabel: {
-      fontSize: 12,
+      fontSize: isTablet ? 14 : 12,
       color: theme.colors.text.secondary,
       fontStyle: "italic",
-      marginLeft: 8,
+      marginLeft: spacing.xs,
       marginTop: 2,
     },
     loadingDefinitionsContainer: {
-      minHeight: 200,
+      minHeight: isTablet ? 250 : 200,
       justifyContent: "center",
       alignItems: "center",
-      paddingVertical: 40,
+      paddingVertical: isTablet ? spacing.xxl : spacing.xl,
     },
     loadingDefinitionsText: {
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       color: theme.colors.text.secondary,
-      marginTop: 16,
+      marginTop: spacing.md,
       textAlign: "center",
     },
     noDefinitionsContainer: {
-      minHeight: 200,
+      minHeight: isTablet ? 250 : 200,
       justifyContent: "center",
       alignItems: "center",
-      paddingVertical: 40,
+      paddingVertical: isTablet ? spacing.xxl : spacing.xl,
     },
     noDefinitionsText: {
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       color: theme.colors.text.secondary,
       textAlign: "center",
       fontStyle: "italic",
     },
     errorDefinitionsContainer: {
-      minHeight: 200,
+      minHeight: isTablet ? 250 : 200,
       justifyContent: "center",
       alignItems: "center",
-      paddingVertical: 40,
+      paddingVertical: isTablet ? spacing.xxl : spacing.xl,
     },
     errorDefinitionsText: {
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       color: theme.colors.error,
       textAlign: "center",
-      marginTop: 16,
-      marginBottom: 20,
+      marginTop: spacing.md,
+      marginBottom: spacing.lg,
     },
     retryButton: {
       backgroundColor: theme.colors.primary,
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      borderRadius: 20,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: theme.borderRadius.lg,
+      minHeight: isTablet ? 48 : 40,
+      justifyContent: "center",
     },
     retryButtonText: {
       color: theme.colors.text.inverse,
-      fontSize: 14,
+      fontSize: isTablet ? 16 : 14,
       fontWeight: "600",
     },
     flipPromptContainer: {
-      minHeight: 200,
+      minHeight: isTablet ? 250 : 200,
       justifyContent: "center",
       alignItems: "center",
-      paddingVertical: 40,
+      paddingVertical: isTablet ? spacing.xxl : spacing.xl,
     },
     flipPromptText: {
-      fontSize: 18,
+      fontSize: isTablet ? 22 : 18,
       color: theme.colors.ui.disabled,
       textAlign: "center",
       fontStyle: "italic",

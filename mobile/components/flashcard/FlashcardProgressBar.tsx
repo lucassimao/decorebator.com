@@ -1,6 +1,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 interface FlashcardProgressBarProps {
   currentIndex: number;
@@ -12,7 +13,9 @@ export const FlashcardProgressBar: React.FC<FlashcardProgressBarProps> = ({
   totalWords,
 }) => {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(theme, isTablet, spacing);
   const progressPercentage = ((currentIndex + 1) / totalWords) * 100;
 
   return (
@@ -26,21 +29,25 @@ export const FlashcardProgressBar: React.FC<FlashcardProgressBarProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
   StyleSheet.create({
     progressContainer: {
-      paddingHorizontal: 20,
-      paddingBottom: 20,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.lg,
     },
     progressBar: {
-      height: 6,
+      height: isTablet ? 8 : 6,
       backgroundColor: theme.colors.ui.border,
-      borderRadius: 3,
+      borderRadius: isTablet ? 4 : 3,
       overflow: "hidden",
     },
     progressFill: {
       height: "100%",
       backgroundColor: theme.colors.success,
-      borderRadius: 3,
+      borderRadius: isTablet ? 4 : 3,
     },
   });
