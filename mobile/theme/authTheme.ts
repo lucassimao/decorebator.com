@@ -67,6 +67,10 @@ export const authLightTheme: Theme = {
     lg: 24,
     xl: 32,
     xxl: 48,
+    section: 32,
+    card: 24,
+    container: 16,
+    modal: 24,
   },
   borderRadius: {
     sm: 8,

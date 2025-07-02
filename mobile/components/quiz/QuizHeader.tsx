@@ -2,6 +2,7 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 interface QuizHeaderProps {
   wordlistName: string;
@@ -21,7 +22,9 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
   onReportPress,
 }) => {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(theme, isTablet, spacing);
   return (
     <View style={styles.header}>
       <TouchableOpacity
@@ -33,7 +36,7 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
       >
         <Ionicons
           name="arrow-back"
-          size={24}
+          size={isTablet ? 28 : 24}
           color={theme.colors.text.primary}
         />
       </TouchableOpacity>
@@ -72,7 +75,7 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
       >
         <MaterialIcons
           name="flag"
-          size={24}
+          size={isTablet ? 28 : 24}
           color={
             isOnline ? theme.colors.text.secondary : theme.colors.ui.disabled
           }
@@ -82,19 +85,23 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
   StyleSheet.create({
     header: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
     },
     backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: isTablet ? 48 : 40,
+      height: isTablet ? 48 : 40,
+      borderRadius: isTablet ? 24 : 20,
       backgroundColor: theme.colors.background.surface,
       justifyContent: "center",
       alignItems: "center",
@@ -103,22 +110,22 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     headerCenter: {
       flex: 1,
       alignItems: "center",
-      marginHorizontal: 16,
+      marginHorizontal: spacing.md,
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: isTablet ? 22 : 18,
       fontWeight: "600",
       color: theme.colors.text.primary,
     },
     headerSubtitle: {
-      fontSize: 14,
+      fontSize: isTablet ? 16 : 14,
       color: theme.colors.text.secondary,
       marginTop: 2,
     },
     settingsButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: isTablet ? 48 : 40,
+      height: isTablet ? 48 : 40,
+      borderRadius: isTablet ? 24 : 20,
       backgroundColor: theme.colors.background.surface,
       justifyContent: "center",
       alignItems: "center",

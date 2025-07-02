@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 export type SnackBarProps = {
   message: string;
@@ -30,7 +31,9 @@ export default function SnackBar({
   const timeoutRef = useRef<number>(0);
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(theme, isTablet, spacing);
 
   const hide = useCallback(() => {
     Animated.parallel([
@@ -114,45 +117,49 @@ export default function SnackBar({
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
   StyleSheet.create({
     container: {
       position: "absolute",
       bottom: 0,
       left: 0,
       right: 0,
-      paddingHorizontal: 16,
-      paddingBottom: Platform.OS === "ios" ? 30 : 16,
+      paddingHorizontal: spacing.md,
+      paddingBottom: Platform.OS === "ios" ? (isTablet ? 40 : 30) : spacing.md,
       zIndex: 9999,
     },
     snackbar: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingVertical: 14,
-      paddingHorizontal: 16,
-      borderRadius: 8,
+      paddingVertical: isTablet ? spacing.md : spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: theme.borderRadius.md,
       shadowColor: theme.colors.text.primary,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 4,
       elevation: 6,
-      minHeight: 48,
+      minHeight: isTablet ? 56 : 48,
     },
     message: {
       flex: 1,
       color: theme.colors.text.inverse,
-      fontSize: 14,
-      lineHeight: 20,
-      marginRight: 16,
+      fontSize: isTablet ? 16 : 14,
+      lineHeight: isTablet ? 24 : 20,
+      marginRight: spacing.md,
     },
     actionButton: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingHorizontal: spacing.xs,
+      paddingVertical: spacing.xs,
     },
     actionText: {
       color: theme.colors.text.inverse,
-      fontSize: 14,
+      fontSize: isTablet ? 16 : 14,
       fontWeight: "600",
       letterSpacing: 0.5,
     },

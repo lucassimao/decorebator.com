@@ -9,6 +9,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 interface ErrorStateProps {
   type: "offline" | "noData" | "general";
@@ -42,6 +43,9 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   },
 }) => {
   const { t } = useTranslation();
+  const { isTablet } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(isTablet, spacing);
 
   const getIconName = () => {
     switch (type) {
@@ -78,7 +82,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
         <View style={styles.errorContainer}>
           <MaterialIcons
             name={getIconName() as any}
-            size={64}
+            size={isTablet ? 80 : 64}
             color={getIconColor()}
           />
           <Text style={[styles.errorText, { color: colors.textMedium }]}>
@@ -103,38 +107,44 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 18,
-    marginTop: 16,
-    marginBottom: 32,
-    textAlign: "center",
-  },
-  errorSubText: {
-    fontSize: 14,
-    marginBottom: 32,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  backButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
-  },
-  backButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
+const createStyles = (
+  isTablet: boolean,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    safeArea: {
+      flex: 1,
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: spacing.lg,
+    },
+    errorText: {
+      fontSize: isTablet ? 22 : 18,
+      marginTop: spacing.md,
+      marginBottom: spacing.xl,
+      textAlign: "center",
+    },
+    errorSubText: {
+      fontSize: isTablet ? 16 : 14,
+      marginBottom: spacing.xl,
+      textAlign: "center",
+      lineHeight: isTablet ? 24 : 20,
+    },
+    backButton: {
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.md,
+      borderRadius: 25,
+      minHeight: isTablet ? 48 : 44,
+      justifyContent: "center",
+    },
+    backButtonText: {
+      fontSize: isTablet ? 18 : 16,
+      fontWeight: "600",
+    },
+  });

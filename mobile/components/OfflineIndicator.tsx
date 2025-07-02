@@ -4,13 +4,16 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useOffline } from "@/hooks/useOffline";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 export const OfflineIndicator: React.FC = () => {
   const { t } = useTranslation();
   const { isOnline, isOfflineAvailable } = useOffline();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
-  const slideAnim = useRef(new Animated.Value(-60)).current;
+  const { isTablet } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(theme, isTablet, spacing);
+  const slideAnim = useRef(new Animated.Value(isTablet ? -80 : -60)).current;
 
   useEffect(() => {
     if (!isOnline) {
@@ -23,12 +26,12 @@ export const OfflineIndicator: React.FC = () => {
     } else {
       // Slide out
       Animated.timing(slideAnim, {
-        toValue: -60,
+        toValue: isTablet ? -80 : -60,
         duration: 300,
         useNativeDriver: true,
       }).start();
     }
-  }, [isOnline, slideAnim]);
+  }, [isOnline, slideAnim, isTablet]);
 
   if (isOnline) return null;
 
@@ -46,7 +49,7 @@ export const OfflineIndicator: React.FC = () => {
     >
       <MaterialIcons
         name={isOfflineAvailable ? "offline-bolt" : "wifi-off"}
-        size={20}
+        size={isTablet ? 24 : 20}
         color={theme.colors.text.inverse}
       />
       <Text style={styles.text}>
@@ -58,7 +61,11 @@ export const OfflineIndicator: React.FC = () => {
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
   StyleSheet.create({
     container: {
       position: "absolute",
@@ -68,14 +75,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 8,
-      paddingHorizontal: 16,
+      paddingVertical: isTablet ? spacing.sm : spacing.xs,
+      paddingHorizontal: spacing.md,
       zIndex: 1000,
     },
     text: {
       color: theme.colors.text.inverse,
-      fontSize: 14,
+      fontSize: isTablet ? 16 : 14,
       fontWeight: "500",
-      marginLeft: 8,
+      marginLeft: spacing.xs,
     },
   });

@@ -11,10 +11,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { ErrorType } from "@/api/errorReporting";
 import { useTheme } from "@/contexts/ThemeContext";
-import {
-  useResponsive,
-  useResponsiveSpacing,
-} from "@/hooks/useResponsive";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 interface ErrorReportModalProps {
   visible: boolean;

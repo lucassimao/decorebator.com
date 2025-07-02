@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useResponsive, useResponsiveSpacing } from "@/hooks/useResponsive";
 
 interface QuizModeToggleProps {
   fastMode: boolean;
@@ -14,7 +15,9 @@ export const QuizModeToggle: React.FC<QuizModeToggleProps> = ({
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { isTablet } = useResponsive();
+  const spacing = useResponsiveSpacing();
+  const styles = createStyles(theme, isTablet, spacing);
 
   return (
     <View style={styles.modeContainer}>
@@ -34,24 +37,28 @@ export const QuizModeToggle: React.FC<QuizModeToggleProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  isTablet: boolean,
+  spacing: ReturnType<typeof useResponsiveSpacing>,
+) =>
   StyleSheet.create({
     modeContainer: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 16,
-      gap: 12,
+      marginBottom: spacing.md,
+      gap: spacing.sm,
     },
     modeText: {
-      fontSize: 16,
+      fontSize: isTablet ? 18 : 16,
       color: theme.colors.text.primary,
       fontWeight: "500",
     },
     modeToggle: {
-      width: 50,
-      height: 30,
-      borderRadius: 15,
+      width: isTablet ? 60 : 50,
+      height: isTablet ? 36 : 30,
+      borderRadius: isTablet ? 18 : 15,
       backgroundColor: theme.colors.ui.border,
       padding: 3,
     },
@@ -59,12 +66,12 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       backgroundColor: theme.colors.primary,
     },
     modeToggleCircle: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
+      width: isTablet ? 30 : 24,
+      height: isTablet ? 30 : 24,
+      borderRadius: isTablet ? 15 : 12,
       backgroundColor: theme.colors.text.inverse,
     },
     modeToggleCircleActive: {
-      transform: [{ translateX: 20 }],
+      transform: [{ translateX: isTablet ? 24 : 20 }],
     },
   });
