@@ -199,7 +199,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
           setShowCreateModal(false);
           Alert.alert(
             t("common.success"),
-            t("createWordlist.successMessage", { name: wordlist.name })
+            t("createWordlist.successMessage", { name: wordlist.name }),
           );
         }}
       />

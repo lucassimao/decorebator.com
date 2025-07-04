@@ -8,7 +8,6 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   Dimensions,
   Keyboard,
@@ -200,7 +199,6 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
     }
   }, [pronunciationData, setValue, watch]);
 
-
   // Wizard navigation functions
   const nextStep = () => {
     if (currentStep < totalSteps) {
@@ -220,16 +218,13 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
     }
   };
 
-  const goToStep = (step: number) => {
-    if (step >= 1 && step <= totalSteps) {
-      setCurrentStep(step);
-    }
-  };
-
-  const handleLanguageSelection = (languageCode: string, onChange: (value: string) => void) => {
+  const handleLanguageSelection = (
+    languageCode: string,
+    onChange: (value: string) => void,
+  ) => {
     // Set the language via react-hook-form
     onChange(languageCode);
-    
+
     // Auto-advance after a delay to allow for visual feedback
     setTimeout(() => {
       nextStep(); // Always go to next step, the step content will handle what to show
@@ -292,8 +287,14 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
       }).start();
     };
 
-    const showListener = Keyboard.addListener("keyboardWillShow", keyboardWillShow);
-    const hideListener = Keyboard.addListener("keyboardWillHide", keyboardWillHide);
+    const showListener = Keyboard.addListener(
+      "keyboardWillShow",
+      keyboardWillShow,
+    );
+    const hideListener = Keyboard.addListener(
+      "keyboardWillHide",
+      keyboardWillHide,
+    );
 
     return () => {
       showListener.remove();
@@ -596,7 +597,6 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
     );
   };
 
-
   if (!visible) return null;
 
   return (
@@ -625,7 +625,9 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
             transform: [
               { translateY: slideAnim },
               // Only apply keyboard offset on iOS, Android handles this automatically
-              ...(Platform.OS === "ios" ? [{ translateY: keyboardOffsetAnim }] : []),
+              ...(Platform.OS === "ios"
+                ? [{ translateY: keyboardOffsetAnim }]
+                : []),
             ],
           },
         ]}

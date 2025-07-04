@@ -8,20 +8,19 @@ import * as ImagePicker from "expo-image-picker";
 import * as MailComposer from "expo-mail-composer";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import i18n, { supportedLanguages } from "@/i18n";
 import { useTheme } from "@/contexts/ThemeContext";
-import {
-  searchCountries,
-  getCountryDisplayName,
-} from "@/utils/countries";
+import { searchCountries, getCountryDisplayName } from "@/utils/countries";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Dimensions,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -90,6 +89,9 @@ const ProfileSettingsScreen: React.FC = () => {
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [countrySearchTerm, setCountrySearchTerm] = useState("");
 
+  // Keyboard offset animation for iOS
+  const keyboardOffsetAnim = useRef(new Animated.Value(0)).current;
+
   // Fetch user profile
   const { data: profile, isLoading } = useQuery({
     queryKey: ["userProfile"],
@@ -125,6 +127,42 @@ const ProfileSettingsScreen: React.FC = () => {
       });
     }
   }, [profile, reset]);
+
+  // Keyboard event listeners for iOS only (Android handles this automatically)
+  useEffect(() => {
+    if (!showCountryPicker || Platform.OS !== "ios") return;
+
+    const keyboardWillShow = (event: any) => {
+      const keyboardHeight = event.endCoordinates.height;
+      Animated.timing(keyboardOffsetAnim, {
+        toValue: -keyboardHeight,
+        duration: event.duration || 250,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const keyboardWillHide = (event: any) => {
+      Animated.timing(keyboardOffsetAnim, {
+        toValue: 0,
+        duration: event.duration || 250,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const keyboardWillShowListener = Keyboard.addListener(
+      "keyboardWillShow",
+      keyboardWillShow,
+    );
+    const keyboardWillHideListener = Keyboard.addListener(
+      "keyboardWillHide",
+      keyboardWillHide,
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, [showCountryPicker, keyboardOffsetAnim]);
 
   // Update profile mutation
   const updateMutation = useMutation({
@@ -734,7 +772,14 @@ const ProfileSettingsScreen: React.FC = () => {
               setCountrySearchTerm(""); // Reset search when closing
             }}
           />
-          <View style={styles.countryPickerModal}>
+          <Animated.View
+            style={[
+              styles.countryPickerModal,
+              Platform.OS === "ios" && {
+                transform: [{ translateY: keyboardOffsetAnim }],
+              },
+            ]}
+          >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
                 {t("profile.selectCountry")}
@@ -801,7 +846,7 @@ const ProfileSettingsScreen: React.FC = () => {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          </View>
+          </Animated.View>
         </View>
       )}
 
