@@ -443,7 +443,8 @@
     "technicalError": "技術的なエラーが発生しました。後でもう一度お試しください",
     "cannotRetry": "再試行できません",
     "cannotRetryMessage": "このエラーは再試行できません。この単語を削除することのみ可能です。",
-    "retryStarted": "処理が再開されました。しばらくお待ちください。"
+    "retryStarted": "処理が再開されました。しばらくお待ちください。",
+    "wordTooLong": "長すぎます（最大15文字）"
   },
   "createWordlist": {
     "title": "新しいリストを作成",

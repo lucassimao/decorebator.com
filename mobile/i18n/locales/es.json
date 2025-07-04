@@ -443,7 +443,8 @@
     "technicalError": "Ocurrió un error técnico. Por favor, inténtalo más tarde",
     "cannotRetry": "No se puede reintentar",
     "cannotRetryMessage": "Este error no se puede reintentar. Solo puedes eliminar esta palabra.",
-    "retryStarted": "El procesamiento se ha reiniciado. Por favor, espera un momento."
+    "retryStarted": "El procesamiento se ha reiniciado. Por favor, espera un momento.",
+    "wordTooLong": "Muy largo (máx 15)"
   },
   "createWordlist": {
     "title": "Crear Nueva Lista",

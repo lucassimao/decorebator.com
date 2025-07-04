@@ -443,7 +443,8 @@
     "technicalError": "Une erreur technique s'est produite. Veuillez réessayer plus tard",
     "cannotRetry": "Impossible de réessayer",
     "cannotRetryMessage": "Cette erreur ne peut pas être retentée. Vous pouvez seulement supprimer ce mot.",
-    "retryStarted": "Le traitement a été redémarré. Veuillez patienter un moment."
+    "retryStarted": "Le traitement a été redémarré. Veuillez patienter un moment.",
+    "wordTooLong": "Trop long (max 15)"
   },
   "createWordlist": {
     "title": "Créer une nouvelle liste",

@@ -452,7 +452,8 @@
     "technicalError": "Ein technischer Fehler ist aufgetreten. Bitte versuchen Sie es später erneut",
     "cannotRetry": "Wiederholen nicht möglich",
     "cannotRetryMessage": "Dieser Fehler kann nicht wiederholt werden. Sie können dieses Wort nur löschen.",
-    "retryStarted": "Die Verarbeitung wurde neu gestartet. Bitte warten Sie einen Moment."
+    "retryStarted": "Die Verarbeitung wurde neu gestartet. Bitte warten Sie einen Moment.",
+    "wordTooLong": "Zu lang (max 15)"
   },
   "createWordlist": {
     "title": "Neue Wortliste erstellen",

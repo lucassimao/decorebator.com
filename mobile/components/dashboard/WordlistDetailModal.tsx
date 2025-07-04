@@ -327,6 +327,11 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       return t("wordDetail.validationFailed");
     }
 
+    // Check for character limit error
+    if (errorLower.includes("words must be limited to 15 chars")) {
+      return t("wordDetail.wordTooLong");
+    }
+
     // For technical errors, show a generic message
     return t("wordDetail.technicalError");
   };

@@ -453,7 +453,8 @@
     "technicalError": "A technical error occurred. Please try again later",
     "cannotRetry": "Cannot Retry",
     "cannotRetryMessage": "This error cannot be retried. You can only delete this word.",
-    "retryStarted": "Processing has been restarted. Please wait a moment."
+    "retryStarted": "Processing has been restarted. Please wait a moment.",
+    "wordTooLong": "Too long (max 15)"
   },
   "createWordlist": {
     "title": "Create New Wordlist",
