@@ -54,6 +54,7 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 	river.AddWorker(riverWorkers, &NoOpWorker{})
 	apiClient := NewRevenueCatAPIClient()
 	river.AddWorker(riverWorkers, NewRevenueCatWebhookWorker(NewRevenueCatService(db, apiClient)))
+	river.AddWorker(riverWorkers, NewStripeWebhookWorker(NewSubscriptionService(db)))
 
 	// Create periodic jobs for renewal reminders
 	periodicJobs := []*river.PeriodicJob{
@@ -86,6 +87,7 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 			SUBSCRIPTION_REMINDER_QUEUE: {MaxWorkers: 10},
 			EXAMPLE_AUDIO_QUEUE:         {MaxWorkers: 20},
 			"revenuecat-webhook":        {MaxWorkers: 5},
+			"stripe-webhook":            {MaxWorkers: 5},
 		},
 		Workers:      riverWorkers,
 		Logger:       common.Logger,

@@ -116,7 +116,8 @@ CREATE TABLE subscriptions (
 CREATE TABLE subscription_events (
     id BIGSERIAL PRIMARY KEY,
     subscription_id BIGINT REFERENCES subscriptions(id),
-    stripe_event_id TEXT UNIQUE,
+    external_event_id TEXT UNIQUE,  -- Provider-agnostic event ID (Stripe/RevenueCat)
+    provider subscription_provider NOT NULL,  -- 'stripe' or 'revenuecat'
     event_type TEXT NOT NULL,
     event_data JSONB,
     processed_at TIMESTAMPTZ DEFAULT NOW()
@@ -289,10 +290,11 @@ For users who reinstall the app or switch devices:
 - Handles device switching and app reinstallation seamlessly
 
 **Webhook Processing Reliability:**
-- All webhooks processed asynchronously via River background jobs
-- Immediate 200 OK response prevents provider retries
-- Failed webhook jobs can be retried manually
-- Comprehensive audit trail in `revenuecat_events` and `subscription_events` tables
+- **All webhooks (Stripe + RevenueCat) processed asynchronously** via River background jobs
+- **Immediate 200 OK response** prevents provider retries and webhook timeouts
+- **Provider-agnostic event tracking** in unified `subscription_events` table
+- Failed webhook jobs can be retried manually via River queue management
+- Comprehensive audit trail with provider identification
 
 ## API Endpoints
 
@@ -479,20 +481,61 @@ useEffect(() => {
 
 ## Webhook Processing
 
-### Stripe Webhook Handler
+### Stripe Webhook Processing (Asynchronous)
+
+Stripe webhooks are now processed asynchronously using River workers to ensure reliability and prevent webhook timeouts.
+
+#### HTTP Handler
 ```go
-func (s *SubscriptionService) HandleStripeWebhook(ctx context.Context, payload []byte, signature string) error {
-    // 1. Verify webhook signature
-    event, err := webhook.ConstructEvent(payload, signature, s.webhookSecret)
-    
-    // 2. Process based on event type
+// internal/http/subscription.go
+func HandleStripeWebhook(subService *SubscriptionService, riverClient *river.Client[pgx.Tx]) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        // 1. Verify webhook signature and construct event
+        event, err := webhook.ConstructEvent(payload, signature, webhookSecret)
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Webhook signature verification failed"})
+            return
+        }
+
+        // 2. Enqueue the event for async processing
+        _, err = riverClient.Insert(c.Request.Context(), service.StripeWebhookArgs{
+            EventID:   event.ID,
+            EventType: string(event.Type),
+            EventData: event.Data.Raw,
+        }, &river.InsertOpts{Queue: "stripe-webhook"})
+
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process webhook"})
+            return
+        }
+
+        // 3. Return 200 immediately to prevent retries
+        c.JSON(http.StatusOK, gin.H{"status": "success"})
+    }
+}
+```
+
+#### Background Worker
+```go
+// internal/service/stripe_webhook_worker.go
+func (w *StripeWebhookWorker) Work(ctx context.Context, job *river.Job[StripeWebhookArgs]) error {
+    // Reconstruct Stripe event from job args
+    event := stripe.Event{
+        ID:   job.Args.EventID,
+        Type: stripe.EventType(job.Args.EventType),
+        Data: &stripe.EventData{Raw: job.Args.EventData},
+    }
+
+    // Process based on event type with full error handling
     switch event.Type {
     case "customer.subscription.created":
-        return s.handleSubscriptionCreated(ctx, event)
+        return w.subscriptionService.handleSubscriptionCreated(ctx, event)
     case "customer.subscription.updated":
-        return s.handleSubscriptionUpdated(ctx, event)
+        return w.subscriptionService.handleSubscriptionUpdated(ctx, event)
     case "customer.subscription.deleted":
-        return s.handleSubscriptionDeleted(ctx, event)
+        return w.subscriptionService.handleSubscriptionDeleted(ctx, event)
+    case "invoice.payment_failed":
+        return w.subscriptionService.handleInvoicePaymentFailed(ctx, event)
     }
 }
 ```
@@ -562,17 +605,31 @@ func (w *RevenueCatWebhookWorker) Work(ctx context.Context, job *river.Job[Reven
 ```
 
 **Worker Queue Configuration:**
-- Queue: `revenuecat_webhooks`
-- Max Workers: 10 concurrent workers
-- Retry Policy: Exponential backoff with maximum 5 retries
-- Job Timeout: 30 seconds
+- **Stripe Queue**: `stripe-webhook` (5 max workers)
+- **RevenueCat Queue**: `revenuecat-webhook` (5 max workers)
+- **Retry Policy**: Exponential backoff with maximum 5 retries
+- **Job Timeout**: 30 seconds
+- **Duplicate Prevention**: Both workers check for already-processed events
 
-**Supported RevenueCat Event Types:**
+**Supported Event Types:**
+
+**Stripe Events:**
+- `customer.subscription.created` → Creates new subscription record
+- `customer.subscription.updated` → Updates subscription period and status
+- `customer.subscription.deleted` → Marks subscription as canceled
+- `invoice.payment_failed` → Sets status to `past_due` and sends email notifications
+
+**RevenueCat Events:**
 - `INITIAL_PURCHASE` → Creates new subscription record
 - `RENEWAL` → Updates subscription period and status
 - `CANCELLATION` → Sets `cancel_at_period_end = true`
 - `EXPIRATION` → Marks subscription as canceled
 - `BILLING_ISSUE` → Sets status to `past_due`
+
+**Unified Event Tracking:**
+- All webhook events (both Stripe and RevenueCat) are stored in the `subscription_events` table
+- Provider field distinguishes between event sources
+- Complete audit trail for debugging and compliance
 
 ## Testing
 
@@ -605,10 +662,13 @@ func TestRevenueCatIntegration(t *testing.T) {
 - [ ] Android user can purchase via RevenueCat
 - [ ] US iOS user can purchase via Stripe
 - [ ] Non-US iOS user can purchase via RevenueCat
-- [ ] Webhooks update subscription status
+- [ ] **Stripe webhooks process asynchronously** and update subscription status
+- [ ] **RevenueCat webhooks process asynchronously** and update subscription status
+- [ ] **Both webhook types create unified subscription events** for audit trail
 - [ ] Purchase restoration works correctly
 - [ ] Subscription cancellation works
 - [ ] Premium features unlock after purchase
+- [ ] **Webhook failures are properly retried** via River queue system
 
 ## Configuration
 

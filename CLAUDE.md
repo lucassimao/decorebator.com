@@ -44,10 +44,12 @@ cd mobile && npm run lint              # Mobile app linting
 ./scripts/run-tests.sh coverage        # Check coverage thresholds
 ./scripts/run-tests.sh security        # Security scans (govulncheck)
 ./scripts/run-tests.sh clean           # Clean test environment
+./scripts/run-tests.sh versions        # Tool version verification
 
 # Quality Assurance workflow
 cd api && make qa                      # Full QA suite (lint + security + tests)
 cd api && make qa-fast                 # Fast QA checks (no integration tests)
+cd api && make qa-ci                   # CI-style with JUnit XML output
 
 # Single Test Execution
 # API - Run specific test
@@ -212,7 +214,8 @@ River-based PostgreSQL queue system with dedicated worker types:
 - `definition_fetcher` - Fetches word definitions from external sources (max 50 workers)
 - `subscription_reminder` - Sends renewal reminder emails (max 10 workers)
 - `example_audio_generator` - Generates audio for example sentences with fair usage distribution (max 20 workers)
-- `revenuecat_worker` - Processes RevenueCat webhook events and subscription syncing
+- `revenuecat_worker` - Processes RevenueCat webhook events and subscription syncing (max 5 workers)
+- `stripe_webhook_worker` - Processes Stripe webhook events asynchronously (max 5 workers)
 
 **Note**: River tables were removed in migration 000052. The system now uses PostgreSQL-native queuing for better transaction safety and simplified architecture.
 
@@ -330,8 +333,16 @@ All development tools match GitHub Actions for consistency:
 - Go: 1.23.10
 - PostgreSQL: 15
 - Redis: 7-alpine
-- gotestsum: latest
+- gotestsum: latest (structured test output)
 - golangci-lint: v1.62.2
+- govulncheck: latest (security scanning)
+
+**Version Verification:**
+```bash
+make check-versions                    # Compare installed vs expected versions
+make setup                            # Install all tools with correct versions
+./scripts/run-tests.sh versions      # Detailed version report
+```
 
 ## Subscription System
 
@@ -344,7 +355,8 @@ The platform uses an intelligent dual-provider system:
 - Dual payment provider support (Stripe + RevenueCat)
 - Monthly ($6.99) and Annual ($69.9) plans
 - Free plan with limits (1 wordlist, 10 words max)
-- Webhook processing for real-time updates from both providers
+- **Asynchronous webhook processing** via River workers for both providers
+- **Unified subscription event tracking** across all payment providers
 - Automatic email notifications for subscription events
 - Purchase restoration for RevenueCat subscriptions
 
@@ -491,6 +503,13 @@ SELECT ... WHERE user_id = 137 AND wordlist_id = 100;
 - **Multiple Formats**: Both XML (JUnit) and JSON output for comprehensive analysis
 - **Gotestsum Integration**: Uses `pkgname-and-test-fails` format for enhanced failure visibility
 
+#### 5-Job Parallel CI/CD Pipeline
+- **unit-tests**: gotestsum with JUnit XML + JSON output, specific failure details
+- **integration-tests**: Full service stack (PostgreSQL, Redis, MinIO)
+- **lint-checks**: golangci-lint on changed files (PR only)
+- **build-verification**: Multi-binary builds + dependency verification
+- **security-scan**: gosec SARIF + govulncheck + go vet
+
 ## External Services
 
 - **PostgreSQL 15+** - Primary database with materialized views and pgx/v5 driver
@@ -537,6 +556,7 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - **Analytics Caching**: Implemented Redis-based caching layer (`analytics_cached.go`) with automatic invalidation
 - **Database Indexes**: Added performance indexes for analytics queries (migration 000044)
 - **SQL Injection Fixes**: Resolved SQL injection vulnerabilities in analytics queries
+- **Asynchronous Webhook Processing**: Stripe webhooks now use River workers for improved reliability
 
 ### Analytics System Improvements (January 2025)
 
@@ -646,6 +666,36 @@ The system uses a deterministic priority-based algorithm for word selection, ens
 - Temporary skip for reported errors (auto-resumed after regeneration)
 - Progressive quiz difficulty matching box level
 - Consistent user experience across sessions
+
+## Documentation Architecture
+
+**Specialized Documentation by Domain:**
+```bash
+docs/                                   # Architecture & best practices
+├── DEPENDENCY_INJECTION_MODERNIZATION_PLAN.md  # Critical refactoring roadmap
+├── TESTING_BEST_PRACTICES.md         # Comprehensive testing guide
+├── DETERMINISTIC_LEITNER_IMPLEMENTATION.md     # Core algorithm specs
+├── SUBSCRIPTION_SYSTEM.md            # Payment system architecture
+└── WORKER_ABUSE_PREVENTION.md       # Background job security
+
+api/docs/                              # API-specific documentation
+├── ANALYTICS_TESTING_IMPLEMENTATION.md # Analytics test patterns
+└── *.http files                      # API endpoint examples
+
+mobile/docs/                           # Mobile app documentation
+├── mobile-app-architecture.md        # App structure & patterns
+├── state-management-patterns.md      # Data flow & caching
+└── offline-feature.md               # Offline functionality
+
+web/docs/                             # Web frontend documentation
+├── WEB_APP_ARCHITECTURE.md          # Next.js 15 architecture
+└── WEB_APP_IMPROVEMENT_PLAN.md      # Enhancement roadmap
+```
+
+**Documentation Standards:**
+- All major features documented in `/docs/` before implementation
+- API changes require updating `.http` files for examples
+- Architecture decisions documented with rationale and migration plans
 
 ## Memories
 - read README.md for more additional context on decorebator project

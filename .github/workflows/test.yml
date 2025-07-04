@@ -306,6 +306,8 @@ jobs:
           STRIPE_WEBHOOK_SECRET=test-stripe-webhook-secret
           STRIPE_SUCCESS_URL=http://localhost:8080/subscription/success
           STRIPE_CANCEL_URL=http://localhost:8080/subscription/cancel
+          STRIPE_PRICE_ID_MONTHLY=price_monthly_test
+          STRIPE_PRICE_ID_ANNUAL=price_annual_test
           SENDGRID_API_KEY=test-sendgrid-key-mock
           RESET_PASSWORD_PRIVATE_KEY=test-reset-password-key-32-chars
           

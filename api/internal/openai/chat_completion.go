@@ -563,4 +563,3 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 
 	return schema, nil
 }
-
