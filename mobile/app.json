@@ -66,9 +66,7 @@
       }
     },
     "owner": "lsimaocosta",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/882f0434-5dcf-448c-92ac-47e70c9a8d84"
     }

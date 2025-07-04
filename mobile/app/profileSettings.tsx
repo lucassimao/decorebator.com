@@ -13,7 +13,10 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import i18n, { supportedLanguages } from "@/i18n";
 import { useTheme } from "@/contexts/ThemeContext";
-import { COUNTRIES, searchCountries, getCountryDisplayName } from "@/utils/countries";
+import {
+  searchCountries,
+  getCountryDisplayName,
+} from "@/utils/countries";
 import {
   ActivityIndicator,
   Alert,
@@ -736,7 +739,7 @@ const ProfileSettingsScreen: React.FC = () => {
               <Text style={styles.modalTitle}>
                 {t("profile.selectCountry")}
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => {
                   setShowCountryPicker(false);
                   setCountrySearchTerm(""); // Reset search when closing
@@ -749,7 +752,7 @@ const ProfileSettingsScreen: React.FC = () => {
                 />
               </TouchableOpacity>
             </View>
-            
+
             {/* Search Input */}
             <View style={styles.searchContainer}>
               <Ionicons
@@ -760,7 +763,9 @@ const ProfileSettingsScreen: React.FC = () => {
               />
               <TextInput
                 style={styles.searchInput}
-                placeholder={t("profile.searchCountries", { defaultValue: "Search countries..." })}
+                placeholder={t("profile.searchCountries", {
+                  defaultValue: "Search countries...",
+                })}
                 placeholderTextColor={theme.colors.text.placeholder}
                 value={countrySearchTerm}
                 onChangeText={setCountrySearchTerm}
@@ -779,7 +784,7 @@ const ProfileSettingsScreen: React.FC = () => {
                 </TouchableOpacity>
               )}
             </View>
-            
+
             <ScrollView style={styles.countryList}>
               {searchCountries(countrySearchTerm).map((country) => (
                 <TouchableOpacity

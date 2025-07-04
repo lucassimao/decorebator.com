@@ -94,7 +94,11 @@ export const COUNTRIES: Country[] = [
   { code: "GP", name: "Guadeloupe", flag: "🇬🇵" },
   { code: "GQ", name: "Equatorial Guinea", flag: "🇬🇶" },
   { code: "GR", name: "Greece", flag: "🇬🇷" },
-  { code: "GS", name: "South Georgia and the South Sandwich Islands", flag: "🇬🇸" },
+  {
+    code: "GS",
+    name: "South Georgia and the South Sandwich Islands",
+    flag: "🇬🇸",
+  },
   { code: "GT", name: "Guatemala", flag: "🇬🇹" },
   { code: "GU", name: "Guam", flag: "🇬🇺" },
   { code: "GW", name: "Guinea-Bissau", flag: "🇬🇼" },
@@ -282,11 +286,11 @@ export function getCountryDisplayName(code: string): string {
  */
 export function searchCountries(searchTerm: string): Country[] {
   if (!searchTerm) return COUNTRIES;
-  
+
   const lowerSearchTerm = searchTerm.toLowerCase();
   return COUNTRIES.filter(
     (country) =>
       country.name.toLowerCase().includes(lowerSearchTerm) ||
-      country.code.toLowerCase().includes(lowerSearchTerm)
+      country.code.toLowerCase().includes(lowerSearchTerm),
   );
 }

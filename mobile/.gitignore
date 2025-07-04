@@ -16,6 +16,9 @@ web-build/
 *.key
 *.mobileprovision
 
+# Android (handled by EAS Cloud Build)
+android/
+
 # Metro
 .metro-health-check*
 

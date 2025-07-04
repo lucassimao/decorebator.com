@@ -449,6 +449,19 @@
   "createWordlist": {
     "title": "Crear Nueva Lista",
     "successMessage": "Tu lista \"{{name}}\" ha sido creada.",
+    "step1": {
+      "title": "¿Cómo se llama tu lista?"
+    },
+    "step2": {
+      "title": "¿Añadir una descripción?",
+      "optional": "Opcional"
+    },
+    "step3": {
+      "title": "¿Qué idioma estás aprendiendo?"
+    },
+    "step4": {
+      "title": "Elegir sistema de pronunciación"
+    },
     "nameLabel": "Nombre de la Lista",
     "nameRequired": "El nombre de la lista es obligatorio",
     "nameMinLength": "El nombre debe tener al menos 3 caracteres",
