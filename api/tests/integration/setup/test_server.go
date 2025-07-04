@@ -282,3 +282,92 @@ func (ts *TestServer) ProcessRevenueCatWebhookJob(t *testing.T, rcService servic
 	t.Logf("Successfully processed RevenueCat webhook job %d", jobID)
 	return nil
 }
+
+// ProcessStripeWebhookJob processes a Stripe webhook job manually in tests
+func (ts *TestServer) ProcessStripeWebhookJob(t *testing.T, subscriptionService *service.SubscriptionService) error {
+	return ts.ProcessStripeWebhookJobWithEventID(t, subscriptionService, "")
+}
+
+// ProcessStripeWebhookJobWithEventID processes a specific Stripe webhook job manually in tests
+func (ts *TestServer) ProcessStripeWebhookJobWithEventID(t *testing.T, subscriptionService *service.SubscriptionService, eventID string) error {
+	ctx := context.Background()
+
+	// Create the worker
+	worker := service.NewStripeWebhookWorker(subscriptionService)
+
+	// Find the next available job (optionally filtered by event ID)
+	var jobID int64
+	var args []byte
+	var queue string
+	var err error
+
+	if eventID != "" {
+		// Find specific job by event ID
+		err = ts.DB.QueryRow(ctx, `
+			SELECT id, args, queue FROM river_job 
+			WHERE state = 'available' 
+			AND kind = $1
+			AND args->>'event_id' = $2
+			ORDER BY id ASC
+			LIMIT 1
+		`, "stripe-webhook", eventID).Scan(&jobID, &args, &queue)
+	} else {
+		// Find any available job
+		err = ts.DB.QueryRow(ctx, `
+			SELECT id, args, queue FROM river_job 
+			WHERE state = 'available' 
+			AND kind = $1
+			ORDER BY id ASC
+			LIMIT 1
+		`, "stripe-webhook").Scan(&jobID, &args, &queue)
+	}
+
+	if err != nil {
+		t.Logf("No Stripe webhook job found: %v", err)
+		return err
+	}
+
+	t.Logf("Found Stripe webhook job %d in queue %s", jobID, queue)
+
+	// Decode the args
+	var jobArgs service.StripeWebhookArgs
+	unmarshalErr := json.Unmarshal(args, &jobArgs)
+	if unmarshalErr != nil {
+		return fmt.Errorf("failed to unmarshal job args: %w", unmarshalErr)
+	}
+
+	// Process the job directly using the worker's Work method
+	job := &river.Job[service.StripeWebhookArgs]{
+		Args: jobArgs,
+	}
+
+	// Call the worker's Work method directly
+	workErr := worker.Work(ctx, job)
+
+	// Always update job status regardless of success/failure
+	var jobState string
+	if workErr != nil {
+		jobState = "discarded" // River uses "discarded" for failed jobs
+		t.Logf("Stripe webhook job %d failed: %v", jobID, workErr)
+	} else {
+		jobState = "completed"
+		t.Logf("Successfully processed Stripe webhook job %d", jobID)
+	}
+
+	// Update the job status
+	_, updateErr := ts.DB.Exec(ctx, `
+		UPDATE river_job 
+		SET state = $2, finalized_at = NOW() 
+		WHERE id = $1
+	`, jobID, jobState)
+	if updateErr != nil {
+		t.Logf("Failed to update job status: %v", updateErr)
+		if workErr != nil {
+			return fmt.Errorf("worker failed: %w (also failed to update job status: %v)", workErr, updateErr)
+		}
+		return fmt.Errorf("failed to update job status: %w", updateErr)
+	}
+
+	// Return the original work error if there was one
+	return workErr
+}

@@ -150,14 +150,15 @@ type Subscription struct {
 	UpdatedAt                time.Time            `json:"updatedAt"`
 }
 
-// SubscriptionEvent represents a Stripe webhook event
+// SubscriptionEvent represents a webhook event from any payment provider
 type SubscriptionEvent struct {
-	ID             int64     `json:"id"`
-	SubscriptionID int64     `json:"subscriptionId"`
-	StripeEventID  string    `json:"stripeEventId"`
-	EventType      string    `json:"eventType"`
-	EventData      string    `json:"eventData"` // JSON string
-	ProcessedAt    time.Time `json:"processedAt"`
+	ID              int64                `json:"id"`
+	SubscriptionID  int64                `json:"subscriptionId"`
+	ExternalEventID string               `json:"externalEventId"` // Provider-specific event ID
+	Provider        SubscriptionProvider `json:"provider"`        // stripe, revenuecat, etc.
+	EventType       string               `json:"eventType"`
+	EventData       string               `json:"eventData"` // JSON string
+	ProcessedAt     time.Time            `json:"processedAt"`
 }
 
 // Pricing configuration

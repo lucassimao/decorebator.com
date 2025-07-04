@@ -7,6 +7,7 @@ import (
 
 	"decorebator.com/internal/model"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -18,8 +19,52 @@ func NewSubscriptionRepository(db *pgxpool.Pool) *SubscriptionRepository {
 	return &SubscriptionRepository{db: db}
 }
 
-// CreateSubscription creates a new subscription record
-func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscription *model.Subscription) (int64, error) {
+// CreateSubscription creates a new subscription record and optionally records an event in a transaction
+func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscription *model.Subscription, event *model.SubscriptionEvent) (int64, error) {
+	if event == nil {
+		// Simple case: no event to record, just create subscription
+		return r.createSubscriptionWithExecutor(ctx, r.db, subscription)
+	}
+
+	// Complex case: create subscription and event in transaction
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				err = fmt.Errorf("failed to rollback transaction: %v (original error: %w)", rollbackErr, err)
+			}
+		} else {
+			if commitErr := tx.Commit(ctx); commitErr != nil {
+				err = fmt.Errorf("failed to commit transaction: %w", commitErr)
+			}
+		}
+	}()
+
+	// Create subscription in transaction
+	subID, err := r.createSubscriptionWithExecutor(ctx, tx, subscription)
+	if err != nil {
+		return 0, err
+	}
+
+	// Set the subscription ID for the event
+	event.SubscriptionID = subID
+
+	// Create event in same transaction
+	err = r.createSubscriptionEvent(ctx, tx, event)
+	if err != nil {
+		return 0, err
+	}
+
+	return subID, nil
+}
+
+// createSubscriptionWithExecutor creates a subscription using the provided executor (can be db pool or transaction)
+func (r *SubscriptionRepository) createSubscriptionWithExecutor(ctx context.Context, executor interface {
+	QueryRow(context.Context, string, ...interface{}) pgx.Row
+}, subscription *model.Subscription) (int64, error) {
 	query := `
 		INSERT INTO subscriptions (
 			user_id, provider, stripe_subscription_id, stripe_customer_id,
@@ -31,7 +76,7 @@ func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscri
 		RETURNING id, created_at, updated_at
 	`
 
-	err := r.db.QueryRow(
+	err := executor.QueryRow(
 		ctx, query,
 		subscription.UserID,
 		subscription.Provider,
@@ -148,19 +193,20 @@ func (r *SubscriptionRepository) GetActiveSubscriptionForUser(ctx context.Contex
 	return subscription, nil
 }
 
-// CreateSubscriptionEvent records a Stripe webhook event
-func (r *SubscriptionRepository) CreateSubscriptionEvent(ctx context.Context, event *model.SubscriptionEvent) error {
+// createSubscriptionEvent records a subscription event within a transaction (private helper)
+func (r *SubscriptionRepository) createSubscriptionEvent(ctx context.Context, tx pgx.Tx, event *model.SubscriptionEvent) error {
 	query := `
 		INSERT INTO subscription_events (
-			subscription_id, stripe_event_id, event_type, event_data
-		) VALUES ($1, $2, $3, $4)
+			subscription_id, external_event_id, provider, event_type, event_data
+		) VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, processed_at
 	`
 
-	err := r.db.QueryRow(
+	err := tx.QueryRow(
 		ctx, query,
 		event.SubscriptionID,
-		event.StripeEventID,
+		event.ExternalEventID,
+		event.Provider,
 		event.EventType,
 		event.EventData,
 	).Scan(&event.ID, &event.ProcessedAt)
@@ -168,12 +214,12 @@ func (r *SubscriptionRepository) CreateSubscriptionEvent(ctx context.Context, ev
 	return err
 }
 
-// HasProcessedEvent checks if a Stripe event has already been processed
-func (r *SubscriptionRepository) HasProcessedEvent(ctx context.Context, stripeEventID string) (bool, error) {
-	query := `SELECT EXISTS(SELECT 1 FROM subscription_events WHERE stripe_event_id = $1)`
+// HasProcessedEvent checks if an event has already been processed
+func (r *SubscriptionRepository) HasProcessedEvent(ctx context.Context, externalEventID string) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM subscription_events WHERE external_event_id = $1)`
 
 	var exists bool
-	err := r.db.QueryRow(ctx, query, stripeEventID).Scan(&exists)
+	err := r.db.QueryRow(ctx, query, externalEventID).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
@@ -377,18 +423,64 @@ func (r *SubscriptionRepository) HasSentRenewalReminder(ctx context.Context, sub
 func (r *SubscriptionRepository) MarkRenewalReminderSent(ctx context.Context, subscriptionID int64) error {
 	query := `
 		INSERT INTO subscription_events (
-			subscription_id, stripe_event_id, event_type, event_data
-		) VALUES ($1, $2, 'renewal_reminder_sent', '{}')
+			subscription_id, external_event_id, provider, event_type, event_data
+		) VALUES ($1, $2, $3, 'renewal_reminder_sent', '{}')
 	`
 
 	// Generate a unique event ID for this internal event
 	eventID := fmt.Sprintf("reminder_%d_%d", subscriptionID, time.Now().Unix())
-	_, err := r.db.Exec(ctx, query, subscriptionID, eventID)
+	_, err := r.db.Exec(ctx, query, subscriptionID, eventID, "stripe")
 	return err
 }
 
-// UpdateSubscription updates an existing subscription
-func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscription *model.Subscription) error {
+// UpdateSubscription updates an existing subscription and optionally records an event in a transaction
+func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscription *model.Subscription, event *model.SubscriptionEvent) error {
+	if event == nil {
+		// Simple case: no event to record, just update subscription
+		return r.updateSubscriptionWithExecutor(ctx, r.db, subscription)
+	}
+
+	// Complex case: update subscription and event in transaction
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				err = fmt.Errorf("failed to rollback transaction: %v (original error: %w)", rollbackErr, err)
+			}
+		} else {
+			if commitErr := tx.Commit(ctx); commitErr != nil {
+				err = fmt.Errorf("failed to commit transaction: %w", commitErr)
+			}
+		}
+	}()
+
+	// Update subscription in transaction
+	err = r.updateSubscriptionWithExecutor(ctx, tx, subscription)
+	if err != nil {
+		return err
+	}
+
+	// Set the subscription ID for the event (should already be set, but ensure it's correct)
+	event.SubscriptionID = subscription.ID
+
+	// Create event in same transaction
+	err = r.createSubscriptionEvent(ctx, tx, event)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type Executor interface {
+	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
+}
+
+// updateSubscriptionWithExecutor updates a subscription using the provided executor (can be db pool or transaction)
+func (r *SubscriptionRepository) updateSubscriptionWithExecutor(ctx context.Context, executor Executor, subscription *model.Subscription) error {
 	query := `
 		UPDATE subscriptions SET
 			provider = $2,
@@ -410,7 +502,7 @@ func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscri
 		WHERE id = $1
 	`
 
-	_, err := r.db.Exec(
+	_, err := executor.Exec(
 		ctx, query,
 		subscription.ID,
 		subscription.Provider,

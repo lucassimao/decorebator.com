@@ -204,7 +204,7 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 			Currency:                 "USD",
 		}
 
-		subID, err := subRepo.CreateSubscription(ctx, subscription)
+		subID, err := subRepo.CreateSubscription(ctx, subscription, nil)
 		assert.NoError(t, err)
 		assert.Greater(t, subID, int64(0))
 

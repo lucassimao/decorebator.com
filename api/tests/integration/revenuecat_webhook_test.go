@@ -195,7 +195,7 @@ func TestRevenueCatSubscriptionCreation(t *testing.T) {
 			Currency:                 "USD",
 		}
 
-		subID, err := subRepo.CreateSubscription(ctx, subscription)
+		subID, err := subRepo.CreateSubscription(ctx, subscription, nil)
 		assert.NoError(t, err)
 		assert.Greater(t, subID, int64(0))
 
@@ -245,7 +245,7 @@ func TestRevenueCatSubscriptionCreation(t *testing.T) {
 			Currency:                 "USD",
 		}
 
-		_, err = subRepo.CreateSubscription(ctx, subscription)
+		_, err = subRepo.CreateSubscription(ctx, subscription, nil)
 		require.NoError(t, err)
 
 		// Update subscription with new period
@@ -257,7 +257,7 @@ func TestRevenueCatSubscriptionCreation(t *testing.T) {
 		existing.CurrentPeriodEnd = time.Now().Add(30 * 24 * time.Hour)
 		existing.Status = model.StatusActive
 
-		err = subRepo.UpdateSubscription(ctx, existing)
+		err = subRepo.UpdateSubscription(ctx, existing, nil)
 		assert.NoError(t, err)
 
 		// Verify update

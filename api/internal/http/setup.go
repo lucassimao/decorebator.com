@@ -133,7 +133,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 		router.POST("/password/send-reset-email", UserRoutes.SendResetPasswordEmail)
 
 		// Stripe webhook endpoint
-		router.POST("/webhook/stripe", HandleStripeWebhook(subService))
+		router.POST("/webhook/stripe", HandleStripeWebhook(subService, config.riverClient))
 
 		// RevenueCat webhook endpoint
 		router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(config.riverClient))

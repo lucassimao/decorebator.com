@@ -107,6 +107,7 @@ Integration tests are located in the `tests/integration/` directory and test com
 - **API Endpoints**: Full HTTP request/response cycles with real database
 - **Database Operations**: CRUD operations, migrations, data integrity
 - **External Services**: Mocked integrations with OpenAI, Stripe, SendGrid
+- **Webhook Processing**: Asynchronous webhook handling via River workers (Stripe + RevenueCat)
 - **Performance**: Response times, concurrent operations, resource usage
 
 **Important**: Integration tests now use the actual API routes instead of mock routes, ensuring tests match production behavior exactly.

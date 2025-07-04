@@ -145,36 +145,18 @@ func (s *SubscriptionService) HandleWebhook(ctx context.Context, payload []byte,
 
 	// Handle different event types
 	switch event.Type {
-	case "checkout.session.completed":
-		return s.handleCheckoutSessionCompleted(event)
 	case "customer.subscription.created":
 		return s.handleSubscriptionCreated(ctx, event)
 	case "customer.subscription.updated":
 		return s.handleSubscriptionUpdated(ctx, event)
 	case "customer.subscription.deleted":
 		return s.handleSubscriptionDeleted(ctx, event)
-	case "invoice.payment_succeeded":
-		return s.handleInvoicePaymentSucceeded(ctx, event)
 	case "invoice.payment_failed":
 		return s.handleInvoicePaymentFailed(ctx, event)
 	default:
 		// Log unhandled event types
 		common.Logger.Warn("Unhandled webhook event type", "event_type", event.Type)
 	}
-
-	return nil
-}
-
-// handleCheckoutSessionCompleted handles successful checkout completion
-func (s *SubscriptionService) handleCheckoutSessionCompleted(event stripe.Event) error {
-	var checkoutSession stripe.CheckoutSession
-	if err := json.Unmarshal(event.Data.Raw, &checkoutSession); err != nil {
-		return fmt.Errorf("failed to unmarshal checkout session: %w", err)
-	}
-
-	// Session completed successfully - subscription will be created via subscription.created event
-	// Just log for now
-	common.Logger.Info("Checkout session completed", "session_id", checkoutSession.ID)
 
 	return nil
 }
@@ -200,8 +182,6 @@ func (s *SubscriptionService) handleSubscriptionCreated(ctx context.Context, eve
 	// Determine plan from price ID
 	plan := s.getPlanFromPriceID(stripeSubscription.Items.Data[0].Price.ID)
 
-	fmt.Println(stripeSubscription.Items.Data[0])
-
 	// Create subscription record
 	sub := &model.Subscription{
 		UserID:               userID,
@@ -222,28 +202,25 @@ func (s *SubscriptionService) handleSubscriptionCreated(ctx context.Context, eve
 		sub.TrialEnd = &trialEnd
 	}
 
-	// Save subscription
-	subID, err := s.subRepo.CreateSubscription(ctx, sub)
-	if err != nil {
-		return fmt.Errorf("failed to create subscription: %w", err)
-	}
-	sub.ID = subID
-
-	// Record event
+	// Prepare event data
 	eventData, err := json.Marshal(stripeSubscription)
 	if err != nil {
-		common.Logger.Error("Failed to marshal subscription data", "error", err, "subscription_id", sub.ID)
-		// Continue without failing - subscription is created
+		common.Logger.Error("Failed to marshal subscription data", "error", err)
+		return err
 	} else {
-		if eventErr := s.subRepo.CreateSubscriptionEvent(ctx, &model.SubscriptionEvent{
-			SubscriptionID: sub.ID,
-			StripeEventID:  event.ID,
-			EventType:      string(event.Type),
-			EventData:      string(eventData),
-		}); eventErr != nil {
-			// Log error but don't fail - subscription is already created
-			common.Logger.Error("Failed to record subscription event", "error", eventErr, "subscription_id", sub.ID)
+		// Create subscription with event in transaction
+		subscriptionEvent := &model.SubscriptionEvent{
+			ExternalEventID: event.ID,
+			Provider:        model.ProviderStripe,
+			EventType:       string(event.Type),
+			EventData:       string(eventData),
 		}
+
+		subID, err := s.subRepo.CreateSubscription(ctx, sub, subscriptionEvent)
+		if err != nil {
+			return fmt.Errorf("failed to create subscription with event: %w", err)
+		}
+		sub.ID = subID
 	}
 
 	// Get user details for email
@@ -301,22 +278,23 @@ func (s *SubscriptionService) handleSubscriptionUpdated(ctx context.Context, eve
 		sub.CanceledAt = &cancelledAt
 	}
 
-	if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
-		return fmt.Errorf("failed to update subscription: %w", err)
+	// Prepare event data
+	eventData, err := json.Marshal(stripeSubscription)
+	if err != nil {
+		return fmt.Errorf("failed to marshal subscription data: %w", err)
 	}
 
-	// Record event
-	eventData, marshalErr := json.Marshal(stripeSubscription)
-	if marshalErr != nil {
-		return fmt.Errorf("failed to marshal subscription data: %w", marshalErr)
+	// Update subscription with event in transaction
+	subscriptionEvent := &model.SubscriptionEvent{
+		SubscriptionID:  sub.ID,
+		ExternalEventID: event.ID,
+		Provider:        model.ProviderStripe,
+		EventType:       string(event.Type),
+		EventData:       string(eventData),
 	}
-	if err := s.subRepo.CreateSubscriptionEvent(ctx, &model.SubscriptionEvent{
-		SubscriptionID: sub.ID,
-		StripeEventID:  event.ID,
-		EventType:      string(event.Type),
-		EventData:      string(eventData),
-	}); err != nil {
-		return fmt.Errorf("failed to record subscription event: %w", err)
+
+	if err := s.subRepo.UpdateSubscription(ctx, sub, subscriptionEvent); err != nil {
+		return fmt.Errorf("failed to update subscription with event: %w", err)
 	}
 
 	return nil
@@ -345,22 +323,23 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 		sub.CanceledAt = &cancelledAt
 	}
 
-	if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
-		return fmt.Errorf("failed to update subscription: %w", err)
+	// Prepare event data
+	eventData, err := json.Marshal(stripeSubscription)
+	if err != nil {
+		return fmt.Errorf("failed to marshal subscription data: %w", err)
 	}
 
-	// Record event
-	eventData, marshalErr := json.Marshal(stripeSubscription)
-	if marshalErr != nil {
-		return fmt.Errorf("failed to marshal subscription data: %w", marshalErr)
+	// Update subscription with event in transaction
+	subscriptionEvent := &model.SubscriptionEvent{
+		SubscriptionID:  sub.ID,
+		ExternalEventID: event.ID,
+		Provider:        model.ProviderStripe,
+		EventType:       string(event.Type),
+		EventData:       string(eventData),
 	}
-	if err := s.subRepo.CreateSubscriptionEvent(ctx, &model.SubscriptionEvent{
-		SubscriptionID: sub.ID,
-		StripeEventID:  event.ID,
-		EventType:      string(event.Type),
-		EventData:      string(eventData),
-	}); err != nil {
-		return fmt.Errorf("failed to record subscription event: %w", err)
+
+	if err := s.subRepo.UpdateSubscription(ctx, sub, subscriptionEvent); err != nil {
+		return fmt.Errorf("failed to update subscription with event: %w", err)
 	}
 
 	// Get user details for email
@@ -385,66 +364,6 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 			"user_id", sub.UserID,
 			"email", user.Email)
 	}
-
-	return nil
-}
-
-// handleInvoicePaymentSucceeded handles successful payments
-func (s *SubscriptionService) handleInvoicePaymentSucceeded(ctx context.Context, event stripe.Event) error {
-	var stripeInvoice stripe.Invoice
-	if err := json.Unmarshal(event.Data.Raw, &stripeInvoice); err != nil {
-		return fmt.Errorf("failed to unmarshal invoice: %w", err)
-	}
-
-	// Skip if this is the first payment (subscription creation)
-	if stripeInvoice.BillingReason == stripe.InvoiceBillingReasonSubscriptionCreate {
-		return nil
-	}
-
-	// Get subscription ID from invoice line items
-	if stripeInvoice.Lines == nil || len(stripeInvoice.Lines.Data) == 0 {
-		return fmt.Errorf("invoice has no line items")
-	}
-
-	// Get subscription from first line item
-	lineItem := stripeInvoice.Lines.Data[0]
-	if lineItem.Subscription == nil {
-		return fmt.Errorf("invoice line item has no subscription")
-	}
-
-	subscriptionID := lineItem.Subscription.ID
-
-	// Get the existing subscription from our database
-	existingSubscription, err := s.subRepo.GetSubscriptionByStripeID(ctx, subscriptionID)
-	if err != nil {
-		return fmt.Errorf("failed to get subscription: %w", err)
-	}
-	if existingSubscription == nil {
-		return fmt.Errorf("subscription not found for stripe ID: %s", subscriptionID)
-	}
-
-	// Update subscription to ensure it's active after successful payment
-	existingSubscription.Status = model.StatusActive
-
-	// Update the billing period if provided
-	if stripeInvoice.PeriodEnd > 0 {
-		existingSubscription.CurrentPeriodEnd = time.Unix(stripeInvoice.PeriodEnd, 0)
-	}
-	if stripeInvoice.PeriodStart > 0 {
-		existingSubscription.CurrentPeriodStart = time.Unix(stripeInvoice.PeriodStart, 0)
-	}
-
-	// Save the updated subscription
-	if err := s.subRepo.UpdateSubscription(ctx, existingSubscription); err != nil {
-		return fmt.Errorf("failed to update subscription: %w", err)
-	}
-
-	// Log successful payment
-	common.Logger.Info("Invoice payment succeeded",
-		"invoice_id", stripeInvoice.ID,
-		"subscription_id", subscriptionID,
-		"user_id", existingSubscription.UserID,
-		"amount", stripeInvoice.AmountPaid)
 
 	return nil
 }
@@ -490,7 +409,7 @@ func (s *SubscriptionService) handleInvoicePaymentFailed(ctx context.Context, ev
 	existingSubscription.Status = model.StatusPastDue
 
 	// Save the updated subscription
-	if err := s.subRepo.UpdateSubscription(ctx, existingSubscription); err != nil {
+	if err := s.subRepo.UpdateSubscription(ctx, existingSubscription, nil); err != nil {
 		return fmt.Errorf("failed to update subscription: %w", err)
 	}
 
@@ -638,7 +557,7 @@ func (s *SubscriptionService) CancelSubscription(ctx context.Context, userID int
 		now := time.Now()
 		sub.CanceledAt = &now
 
-		if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
+		if err := s.subRepo.UpdateSubscription(ctx, sub, nil); err != nil {
 			return fmt.Errorf("failed to update subscription: %w", err)
 		}
 
@@ -682,4 +601,9 @@ func (s *SubscriptionService) CheckSubscriptionLimits(ctx context.Context, userI
 // CountWordsInWordlist counts the number of words in a wordlist
 func (s *SubscriptionService) CountWordsInWordlist(ctx context.Context, wordlistID int64) (int, error) {
 	return s.subRepo.CountWordsInWordlist(ctx, wordlistID)
+}
+
+// GetWebhookSecret returns the webhook secret for external use
+func (s *SubscriptionService) GetWebhookSecret() string {
+	return s.webhookSecret
 }

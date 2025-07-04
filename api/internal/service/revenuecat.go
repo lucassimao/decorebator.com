@@ -95,7 +95,7 @@ func (s *revenueCatService) getCustomerInfo(ctx context.Context, appUserID strin
 }
 
 // createOrUpdateSubscriptionFromRevenueCat creates or updates a subscription based on RevenueCat data
-func (s *revenueCatService) createOrUpdateSubscriptionFromRevenueCat(ctx context.Context, userID int64, customerInfo *CustomerInfo, platform model.PlatformType) error {
+func (s *revenueCatService) createOrUpdateSubscriptionFromRevenueCat(ctx context.Context, userID int64, customerInfo *CustomerInfo, platform model.PlatformType, event *model.RevenueCatEvent) error {
 	// Check if user has premium entitlement
 	entitlement, hasPremium := customerInfo.Subscriber.Entitlements[EntitlementPremium]
 	if !hasPremium {
@@ -132,6 +132,22 @@ func (s *revenueCatService) createOrUpdateSubscriptionFromRevenueCat(ctx context
 		return fmt.Errorf("failed to get existing subscription: %w", err)
 	}
 
+	// Create subscription event if event data is provided
+	var subscriptionEvent *model.SubscriptionEvent
+	if event != nil {
+		eventData, err := json.Marshal(event)
+		if err != nil {
+			return fmt.Errorf("failed to marshal event data: %w", err)
+		}
+
+		subscriptionEvent = &model.SubscriptionEvent{
+			ExternalEventID: event.ID,
+			Provider:        model.ProviderRevenueCat,
+			EventType:       event.Type,
+			EventData:       string(eventData),
+		}
+	}
+
 	if existing != nil && existing.Provider == model.ProviderRevenueCat {
 		// Update existing RevenueCat subscription
 		existing.Plan = plan
@@ -140,7 +156,12 @@ func (s *revenueCatService) createOrUpdateSubscriptionFromRevenueCat(ctx context
 		existing.Platform = &platform
 		existing.AppStoreProductID = &entitlement.ProductIdentifier
 
-		if err := s.subRepo.UpdateSubscription(ctx, existing); err != nil {
+		// Set subscription ID for event if it exists
+		if subscriptionEvent != nil {
+			subscriptionEvent.SubscriptionID = existing.ID
+		}
+
+		if err := s.subRepo.UpdateSubscription(ctx, existing, subscriptionEvent); err != nil {
 			return fmt.Errorf("failed to update subscription: %w", err)
 		}
 	} else {
@@ -159,7 +180,7 @@ func (s *revenueCatService) createOrUpdateSubscriptionFromRevenueCat(ctx context
 			Currency:                 "USD",
 		}
 
-		if _, err := s.subRepo.CreateSubscription(ctx, sub); err != nil {
+		if _, err := s.subRepo.CreateSubscription(ctx, sub, subscriptionEvent); err != nil {
 			return fmt.Errorf("failed to create subscription: %w", err)
 		}
 	}
@@ -251,8 +272,8 @@ func (s *revenueCatService) RestorePurchases(ctx context.Context, userID int64, 
 		return fmt.Errorf("failed to get customer info: %w", err)
 	}
 
-	// Update subscription based on customer info
-	if err := s.createOrUpdateSubscriptionFromRevenueCat(ctx, userID, customerInfo, platform); err != nil {
+	// Update subscription based on customer info (no event for manual restore)
+	if err := s.createOrUpdateSubscriptionFromRevenueCat(ctx, userID, customerInfo, platform, nil); err != nil {
 		return fmt.Errorf("failed to update subscription: %w", err)
 	}
 
@@ -267,7 +288,7 @@ func (s *revenueCatService) ProcessRevenueCatEvent(ctx context.Context, event mo
 	case EventCancellation, EventExpiration:
 		return s.processCancellationEvent(ctx, event, userID)
 	case EventBillingIssue:
-		return s.processBillingIssueEvent(ctx, userID)
+		return s.processBillingIssueEvent(ctx, event, userID)
 	default:
 		common.Logger.Info("Unhandled RevenueCat event type", "type", event.Type)
 		return nil
@@ -284,7 +305,7 @@ func (s *revenueCatService) processSubscriptionEvent(ctx context.Context, event 
 		return fmt.Errorf("failed to get customer info: %w", err)
 	}
 
-	if err := s.createOrUpdateSubscriptionFromRevenueCat(ctx, userID, customerInfo, platform); err != nil {
+	if err := s.createOrUpdateSubscriptionFromRevenueCat(ctx, userID, customerInfo, platform, &event); err != nil {
 		return fmt.Errorf("failed to update subscription: %w", err)
 	}
 
@@ -307,7 +328,21 @@ func (s *revenueCatService) processCancellationEvent(ctx context.Context, event 
 			sub.CancelAtPeriodEnd = true
 		}
 
-		if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
+		// Create subscription event
+		eventData, err := json.Marshal(event)
+		if err != nil {
+			return fmt.Errorf("failed to marshal event data: %w", err)
+		}
+
+		subscriptionEvent := &model.SubscriptionEvent{
+			SubscriptionID:  sub.ID,
+			ExternalEventID: event.ID,
+			Provider:        model.ProviderRevenueCat,
+			EventType:       event.Type,
+			EventData:       string(eventData),
+		}
+
+		if err := s.subRepo.UpdateSubscription(ctx, sub, subscriptionEvent); err != nil {
 			return fmt.Errorf("failed to update subscription: %w", err)
 		}
 	}
@@ -316,7 +351,7 @@ func (s *revenueCatService) processCancellationEvent(ctx context.Context, event 
 }
 
 // processBillingIssueEvent handles billing issue events
-func (s *revenueCatService) processBillingIssueEvent(ctx context.Context, userID int64) error {
+func (s *revenueCatService) processBillingIssueEvent(ctx context.Context, event model.RevenueCatEvent, userID int64) error {
 	sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("failed to get subscription: %w", err)
@@ -324,7 +359,22 @@ func (s *revenueCatService) processBillingIssueEvent(ctx context.Context, userID
 
 	if sub != nil && sub.Provider == model.ProviderRevenueCat {
 		sub.Status = model.StatusPastDue
-		if err := s.subRepo.UpdateSubscription(ctx, sub); err != nil {
+
+		// Create subscription event
+		eventData, err := json.Marshal(event)
+		if err != nil {
+			return fmt.Errorf("failed to marshal event data: %w", err)
+		}
+
+		subscriptionEvent := &model.SubscriptionEvent{
+			SubscriptionID:  sub.ID,
+			ExternalEventID: event.ID,
+			Provider:        model.ProviderRevenueCat,
+			EventType:       event.Type,
+			EventData:       string(eventData),
+		}
+
+		if err := s.subRepo.UpdateSubscription(ctx, sub, subscriptionEvent); err != nil {
 			return fmt.Errorf("failed to update subscription: %w", err)
 		}
 	}
