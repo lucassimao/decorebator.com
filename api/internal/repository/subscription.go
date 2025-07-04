@@ -19,14 +19,9 @@ func NewSubscriptionRepository(db *pgxpool.Pool) *SubscriptionRepository {
 	return &SubscriptionRepository{db: db}
 }
 
-// CreateSubscription creates a new subscription record and optionally records an event in a transaction
-func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscription *model.Subscription, event *model.SubscriptionEvent) (int64, error) {
-	if event == nil {
-		// Simple case: no event to record, just create subscription
-		return r.createSubscriptionWithExecutor(ctx, r.db, subscription)
-	}
-
-	// Complex case: create subscription and event in transaction
+// CreateSubscription creates a new subscription record and records an event in a transaction
+func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscription *model.Subscription, event model.SubscriptionEvent) (int64, error) {
+	// Create subscription and event in transaction
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("failed to begin transaction: %w", err)
@@ -53,7 +48,7 @@ func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscri
 	event.SubscriptionID = subID
 
 	// Create event in same transaction
-	err = r.createSubscriptionEvent(ctx, tx, event)
+	err = r.createSubscriptionEvent(ctx, tx, &event)
 	if err != nil {
 		return 0, err
 	}
@@ -433,14 +428,9 @@ func (r *SubscriptionRepository) MarkRenewalReminderSent(ctx context.Context, su
 	return err
 }
 
-// UpdateSubscription updates an existing subscription and optionally records an event in a transaction
-func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscription *model.Subscription, event *model.SubscriptionEvent) error {
-	if event == nil {
-		// Simple case: no event to record, just update subscription
-		return r.updateSubscriptionWithExecutor(ctx, r.db, subscription)
-	}
-
-	// Complex case: update subscription and event in transaction
+// UpdateSubscription updates an existing subscription and records an event in a transaction
+func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscription *model.Subscription, event model.SubscriptionEvent) error {
+	// Update subscription and event in transaction
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -467,7 +457,7 @@ func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscri
 	event.SubscriptionID = subscription.ID
 
 	// Create event in same transaction
-	err = r.createSubscriptionEvent(ctx, tx, event)
+	err = r.createSubscriptionEvent(ctx, tx, &event)
 	if err != nil {
 		return err
 	}

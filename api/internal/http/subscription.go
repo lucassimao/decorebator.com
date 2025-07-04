@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
@@ -13,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
-	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/webhook"
 )
 
@@ -89,23 +87,11 @@ func HandleStripeWebhook(subService *service.SubscriptionService, riverClient *r
 		}
 
 		// Verify webhook signature and construct event
-		var event stripe.Event
 		webhookSecret := subService.GetWebhookSecret()
-
-		// In test mode with test webhook secret, bypass signature verification
-		if webhookSecret == "test-stripe-webhook-secret" && signature == "test_signature" {
-			// Parse the event directly without signature verification
-			if unmarshalErr := json.Unmarshal(payload, &event); unmarshalErr != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse webhook event"})
-				return
-			}
-		} else {
-			// Verify webhook signature
-			event, err = webhook.ConstructEvent(payload, signature, webhookSecret)
-			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Webhook signature verification failed"})
-				return
-			}
+		event, err := webhook.ConstructEvent(payload, signature, webhookSecret)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Webhook signature verification failed"})
+			return
 		}
 
 		// Enqueue the event for async processing

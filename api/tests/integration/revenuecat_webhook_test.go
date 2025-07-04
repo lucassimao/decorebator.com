@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -195,7 +196,14 @@ func TestRevenueCatSubscriptionCreation(t *testing.T) {
 			Currency:                 "USD",
 		}
 
-		subID, err := subRepo.CreateSubscription(ctx, subscription, nil)
+		// Create test setup event
+		testEvent := model.SubscriptionEvent{
+			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			Provider:        model.ProviderRevenueCat,
+			EventType:       "test_setup",
+			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
+		}
+		subID, err := subRepo.CreateSubscription(ctx, subscription, testEvent)
 		assert.NoError(t, err)
 		assert.Greater(t, subID, int64(0))
 
@@ -245,7 +253,14 @@ func TestRevenueCatSubscriptionCreation(t *testing.T) {
 			Currency:                 "USD",
 		}
 
-		_, err = subRepo.CreateSubscription(ctx, subscription, nil)
+		// Create test setup event
+		testEvent := model.SubscriptionEvent{
+			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			Provider:        model.ProviderRevenueCat,
+			EventType:       "test_setup",
+			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
+		}
+		_, err = subRepo.CreateSubscription(ctx, subscription, testEvent)
 		require.NoError(t, err)
 
 		// Update subscription with new period
@@ -257,7 +272,15 @@ func TestRevenueCatSubscriptionCreation(t *testing.T) {
 		existing.CurrentPeriodEnd = time.Now().Add(30 * 24 * time.Hour)
 		existing.Status = model.StatusActive
 
-		err = subRepo.UpdateSubscription(ctx, existing, nil)
+		// Create test update event
+		updateEvent := model.SubscriptionEvent{
+			SubscriptionID:  existing.ID,
+			ExternalEventID: fmt.Sprintf("test_update_%d", time.Now().Unix()),
+			Provider:        model.ProviderRevenueCat,
+			EventType:       "test_update",
+			EventData:       `{"type": "test_update", "source": "integration_test"}`,
+		}
+		err = subRepo.UpdateSubscription(ctx, existing, updateEvent)
 		assert.NoError(t, err)
 
 		// Verify update

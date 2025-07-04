@@ -85,13 +85,13 @@ func TestCustomerSubscriptionCreatedWebhook(t *testing.T) {
 			},
 		}
 
-		// Send webhook
-		body, err := json.Marshal(event)
+		// Send webhook with proper signature
+		body, signature, err := setup.CreateSignedStripeEvent(event)
 		require.NoError(t, err)
 
 		req, err := http.NewRequest("POST", ts.BaseURL+"/webhook/stripe", bytes.NewBuffer(body))
 		require.NoError(t, err)
-		req.Header.Set("Stripe-Signature", "test_signature")
+		req.Header.Set("Stripe-Signature", signature)
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := http.DefaultClient.Do(req)
@@ -187,13 +187,13 @@ func TestCustomerSubscriptionCreatedWebhook(t *testing.T) {
 			},
 		}
 
-		// Send webhook and process
-		body, err := json.Marshal(event)
+		// Send webhook and process with proper signature
+		body, signature, err := setup.CreateSignedStripeEvent(event)
 		require.NoError(t, err)
 
 		req, err := http.NewRequest("POST", ts.BaseURL+"/webhook/stripe", bytes.NewBuffer(body))
 		require.NoError(t, err)
-		req.Header.Set("Stripe-Signature", "test_signature")
+		req.Header.Set("Stripe-Signature", signature)
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := http.DefaultClient.Do(req)
@@ -259,7 +259,14 @@ func TestCustomerSubscriptionUpdatedWebhook(t *testing.T) {
 			AmountCents:          699,
 			Currency:             "USD",
 		}
-		_, err = subRepo.CreateSubscription(ctx, sub, nil)
+		// Create test setup event
+		testEvent := model.SubscriptionEvent{
+			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			Provider:        model.ProviderStripe,
+			EventType:       "test_setup",
+			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
+		}
+		_, err = subRepo.CreateSubscription(ctx, sub, testEvent)
 		require.NoError(t, err)
 
 		// Create updated subscription object (status changed to past_due)
@@ -295,13 +302,13 @@ func TestCustomerSubscriptionUpdatedWebhook(t *testing.T) {
 			},
 		}
 
-		// Send webhook
-		body, err := json.Marshal(event)
+		// Send webhook with proper signature
+		body, signature, err := setup.CreateSignedStripeEvent(event)
 		require.NoError(t, err)
 
 		req, err := http.NewRequest("POST", ts.BaseURL+"/webhook/stripe", bytes.NewBuffer(body))
 		require.NoError(t, err)
-		req.Header.Set("Stripe-Signature", "test_signature")
+		req.Header.Set("Stripe-Signature", signature)
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := http.DefaultClient.Do(req)
@@ -354,7 +361,14 @@ func TestCustomerSubscriptionUpdatedWebhook(t *testing.T) {
 			AmountCents:          699,
 			Currency:             "USD",
 		}
-		_, err = subRepo.CreateSubscription(ctx, sub, nil)
+		// Create test setup event
+		testEvent := model.SubscriptionEvent{
+			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			Provider:        model.ProviderStripe,
+			EventType:       "test_setup",
+			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
+		}
+		_, err = subRepo.CreateSubscription(ctx, sub, testEvent)
 		require.NoError(t, err)
 
 		// Create updated subscription (cancel at period end = true)
@@ -390,13 +404,13 @@ func TestCustomerSubscriptionUpdatedWebhook(t *testing.T) {
 			},
 		}
 
-		// Send webhook and process
-		body, err := json.Marshal(event)
+		// Send webhook and process with proper signature
+		body, signature, err := setup.CreateSignedStripeEvent(event)
 		require.NoError(t, err)
 
 		req, err := http.NewRequest("POST", ts.BaseURL+"/webhook/stripe", bytes.NewBuffer(body))
 		require.NoError(t, err)
-		req.Header.Set("Stripe-Signature", "test_signature")
+		req.Header.Set("Stripe-Signature", signature)
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := http.DefaultClient.Do(req)
@@ -458,7 +472,14 @@ func TestCustomerSubscriptionDeletedWebhook(t *testing.T) {
 			AmountCents:          699,
 			Currency:             "USD",
 		}
-		_, err = subRepo.CreateSubscription(ctx, sub, nil)
+		// Create test setup event
+		testEvent := model.SubscriptionEvent{
+			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			Provider:        model.ProviderStripe,
+			EventType:       "test_setup",
+			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
+		}
+		_, err = subRepo.CreateSubscription(ctx, sub, testEvent)
 		require.NoError(t, err)
 
 		// Create deleted subscription object
@@ -483,13 +504,13 @@ func TestCustomerSubscriptionDeletedWebhook(t *testing.T) {
 			},
 		}
 
-		// Send webhook
-		body, err := json.Marshal(event)
+		// Send webhook with proper signature
+		body, signature, err := setup.CreateSignedStripeEvent(event)
 		require.NoError(t, err)
 
 		req, err := http.NewRequest("POST", ts.BaseURL+"/webhook/stripe", bytes.NewBuffer(body))
 		require.NoError(t, err)
-		req.Header.Set("Stripe-Signature", "test_signature")
+		req.Header.Set("Stripe-Signature", signature)
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := http.DefaultClient.Do(req)
@@ -552,7 +573,14 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 			AmountCents:          699,
 			Currency:             "USD",
 		}
-		_, err = subRepo.CreateSubscription(ctx, sub, nil)
+		// Create test setup event
+		testEvent := model.SubscriptionEvent{
+			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			Provider:        model.ProviderStripe,
+			EventType:       "test_setup",
+			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
+		}
+		_, err = subRepo.CreateSubscription(ctx, sub, testEvent)
 		require.NoError(t, err)
 
 		// Update user's stripe customer ID for email testing
@@ -592,13 +620,13 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 			},
 		}
 
-		// Send webhook
-		body, err := json.Marshal(event)
+		// Send webhook with proper signature
+		body, signature, err := setup.CreateSignedStripeEvent(event)
 		require.NoError(t, err)
 
 		req, err := http.NewRequest("POST", ts.BaseURL+"/webhook/stripe", bytes.NewBuffer(body))
 		require.NoError(t, err)
-		req.Header.Set("Stripe-Signature", "test_signature")
+		req.Header.Set("Stripe-Signature", signature)
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := http.DefaultClient.Do(req)
@@ -654,13 +682,13 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 			},
 		}
 
-		// Send webhook
-		body, err := json.Marshal(event)
+		// Send webhook with proper signature
+		body, signature, err := setup.CreateSignedStripeEvent(event)
 		require.NoError(t, err)
 
 		req, err := http.NewRequest("POST", ts.BaseURL+"/webhook/stripe", bytes.NewBuffer(body))
 		require.NoError(t, err)
-		req.Header.Set("Stripe-Signature", "test_signature")
+		req.Header.Set("Stripe-Signature", signature)
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := http.DefaultClient.Do(req)
@@ -700,13 +728,13 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 			},
 		}
 
-		// Send webhook
-		body, err := json.Marshal(event)
+		// Send webhook with proper signature
+		body, signature, err := setup.CreateSignedStripeEvent(event)
 		require.NoError(t, err)
 
 		req, err := http.NewRequest("POST", ts.BaseURL+"/webhook/stripe", bytes.NewBuffer(body))
 		require.NoError(t, err)
-		req.Header.Set("Stripe-Signature", "test_signature")
+		req.Header.Set("Stripe-Signature", signature)
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := http.DefaultClient.Do(req)

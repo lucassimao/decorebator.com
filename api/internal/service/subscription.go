@@ -216,7 +216,7 @@ func (s *SubscriptionService) handleSubscriptionCreated(ctx context.Context, eve
 			EventData:       string(eventData),
 		}
 
-		subID, createErr := s.subRepo.CreateSubscription(ctx, sub, subscriptionEvent)
+		subID, createErr := s.subRepo.CreateSubscription(ctx, sub, *subscriptionEvent)
 		if createErr != nil {
 			return fmt.Errorf("failed to create subscription with event: %w", createErr)
 		}
@@ -293,7 +293,7 @@ func (s *SubscriptionService) handleSubscriptionUpdated(ctx context.Context, eve
 		EventData:       string(eventData),
 	}
 
-	if updateErr := s.subRepo.UpdateSubscription(ctx, sub, subscriptionEvent); updateErr != nil {
+	if updateErr := s.subRepo.UpdateSubscription(ctx, sub, *subscriptionEvent); updateErr != nil {
 		return fmt.Errorf("failed to update subscription with event: %w", updateErr)
 	}
 
@@ -338,7 +338,7 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 		EventData:       string(eventData),
 	}
 
-	if updateErr := s.subRepo.UpdateSubscription(ctx, sub, subscriptionEvent); updateErr != nil {
+	if updateErr := s.subRepo.UpdateSubscription(ctx, sub, *subscriptionEvent); updateErr != nil {
 		return fmt.Errorf("failed to update subscription with event: %w", updateErr)
 	}
 
@@ -408,8 +408,23 @@ func (s *SubscriptionService) handleInvoicePaymentFailed(ctx context.Context, ev
 	// Update subscription status to past_due
 	existingSubscription.Status = model.StatusPastDue
 
+	// Prepare event data
+	eventData, err := json.Marshal(stripeInvoice)
+	if err != nil {
+		return fmt.Errorf("failed to marshal invoice data: %w", err)
+	}
+
+	// Create event for payment failure
+	subscriptionEvent := model.SubscriptionEvent{
+		SubscriptionID:  existingSubscription.ID,
+		ExternalEventID: event.ID,
+		Provider:        model.ProviderStripe,
+		EventType:       string(event.Type),
+		EventData:       string(eventData),
+	}
+
 	// Save the updated subscription
-	if err := s.subRepo.UpdateSubscription(ctx, existingSubscription, nil); err != nil {
+	if err := s.subRepo.UpdateSubscription(ctx, existingSubscription, subscriptionEvent); err != nil {
 		return fmt.Errorf("failed to update subscription: %w", err)
 	}
 
@@ -557,7 +572,16 @@ func (s *SubscriptionService) CancelSubscription(ctx context.Context, userID int
 		now := time.Now()
 		sub.CanceledAt = &now
 
-		if err := s.subRepo.UpdateSubscription(ctx, sub, nil); err != nil {
+		// Create event for manual cancellation attempt
+		subscriptionEvent := model.SubscriptionEvent{
+			SubscriptionID:  sub.ID,
+			ExternalEventID: fmt.Sprintf("manual_cancel_attempt_%d_%d", sub.ID, now.Unix()),
+			Provider:        model.ProviderRevenueCat,
+			EventType:       "manual_cancel_attempt",
+			EventData:       `{"type": "manual_cancel_attempt", "note": "RevenueCat subscriptions must be canceled through app stores"}`,
+		}
+
+		if err := s.subRepo.UpdateSubscription(ctx, sub, subscriptionEvent); err != nil {
 			return fmt.Errorf("failed to update subscription: %w", err)
 		}
 

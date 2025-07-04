@@ -204,7 +204,14 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 			Currency:                 "USD",
 		}
 
-		subID, err := subRepo.CreateSubscription(ctx, subscription, nil)
+		// Create test setup event
+		testEvent := model.SubscriptionEvent{
+			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			Provider:        model.ProviderRevenueCat,
+			EventType:       "test_setup",
+			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
+		}
+		subID, err := subRepo.CreateSubscription(ctx, subscription, testEvent)
 		assert.NoError(t, err)
 		assert.Greater(t, subID, int64(0))
 
