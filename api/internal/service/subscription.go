@@ -216,9 +216,9 @@ func (s *SubscriptionService) handleSubscriptionCreated(ctx context.Context, eve
 			EventData:       string(eventData),
 		}
 
-		subID, err := s.subRepo.CreateSubscription(ctx, sub, subscriptionEvent)
-		if err != nil {
-			return fmt.Errorf("failed to create subscription with event: %w", err)
+		subID, createErr := s.subRepo.CreateSubscription(ctx, sub, subscriptionEvent)
+		if createErr != nil {
+			return fmt.Errorf("failed to create subscription with event: %w", createErr)
 		}
 		sub.ID = subID
 	}
@@ -293,8 +293,8 @@ func (s *SubscriptionService) handleSubscriptionUpdated(ctx context.Context, eve
 		EventData:       string(eventData),
 	}
 
-	if err := s.subRepo.UpdateSubscription(ctx, sub, subscriptionEvent); err != nil {
-		return fmt.Errorf("failed to update subscription with event: %w", err)
+	if updateErr := s.subRepo.UpdateSubscription(ctx, sub, subscriptionEvent); updateErr != nil {
+		return fmt.Errorf("failed to update subscription with event: %w", updateErr)
 	}
 
 	return nil
@@ -338,8 +338,8 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 		EventData:       string(eventData),
 	}
 
-	if err := s.subRepo.UpdateSubscription(ctx, sub, subscriptionEvent); err != nil {
-		return fmt.Errorf("failed to update subscription with event: %w", err)
+	if updateErr := s.subRepo.UpdateSubscription(ctx, sub, subscriptionEvent); updateErr != nil {
+		return fmt.Errorf("failed to update subscription with event: %w", updateErr)
 	}
 
 	// Get user details for email

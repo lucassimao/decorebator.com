@@ -95,7 +95,7 @@ func HandleStripeWebhook(subService *service.SubscriptionService, riverClient *r
 		// In test mode with test webhook secret, bypass signature verification
 		if webhookSecret == "test-stripe-webhook-secret" && signature == "test_signature" {
 			// Parse the event directly without signature verification
-			if err := json.Unmarshal(payload, &event); err != nil {
+			if unmarshalErr := json.Unmarshal(payload, &event); unmarshalErr != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse webhook event"})
 				return
 			}
