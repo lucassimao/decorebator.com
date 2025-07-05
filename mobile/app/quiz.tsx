@@ -77,7 +77,7 @@ const QuizScreen: React.FC = () => {
     closeReportModal,
   } = useErrorReporting({
     wordId: quiz?.wordId || 0,
-    definitionId: quiz?.definitionId || 0,
+    definitionId: quiz?.definitionId || null,
     isOnline,
     context: "quiz",
     onSuccess: () => {

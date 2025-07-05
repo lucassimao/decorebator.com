@@ -207,7 +207,7 @@ const FlashcardPractice: React.FC = () => {
     closeReportModal,
   } = useErrorReporting({
     wordId: currentWord?.id || 0,
-    definitionId: definitions[0]?.id || 0,
+    definitionId: definitions[0]?.id || null,
     isOnline,
     context: "flashcards",
   });

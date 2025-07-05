@@ -41,6 +41,7 @@ class OfflineManager {
   private networkListeners: ((isOnline: boolean) => void)[] = [];
 
   constructor() {
+    this.initializeNetworkStatus();
     this.initializeNetworkListener();
     this.ensureAssetDirectory();
   }
@@ -56,12 +57,50 @@ class OfflineManager {
     }
   }
 
+  private async initializeNetworkStatus() {
+    try {
+      const state = await NetInfo.fetch();
+      this.isOnline = this.determineOnlineStatus(state);
+    } catch (error) {
+      console.warn("Failed to fetch initial network state:", error);
+      // Keep default value of true
+    }
+  }
+
+  private determineOnlineStatus(state: any): boolean {
+    // Check if we have a clear connection
+    if (state.isConnected === true) {
+      return true;
+    }
+
+    // If isConnected is false, we're definitely offline
+    if (state.isConnected === false) {
+      return false;
+    }
+
+    // If isConnected is null, check isInternetReachable as backup
+    if (state.isInternetReachable === true) {
+      return true;
+    }
+
+    if (state.isInternetReachable === false) {
+      return false;
+    }
+
+    // If both are null/undefined, assume online to avoid false negatives
+    // This prevents blocking error reporting when network state is unknown
+    return true;
+  }
+
   private initializeNetworkListener() {
     NetInfo.addEventListener((state) => {
       const wasOnline = this.isOnline;
-      this.isOnline = state.isConnected ?? false;
+      this.isOnline = this.determineOnlineStatus(state);
 
       if (wasOnline !== this.isOnline) {
+        console.log(
+          `Network status changed: ${wasOnline ? "online" : "offline"} → ${this.isOnline ? "online" : "offline"}`,
+        );
         this.networkListeners.forEach((listener) => listener(this.isOnline));
       }
     });

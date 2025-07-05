@@ -310,7 +310,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
     switch (step) {
       case 1:
         const name = watch("name");
-        return name && name.length >= 3;
+        return !!name && name.length >= 3;
       case 2:
         const language = watch("languageCode");
         return !!language;

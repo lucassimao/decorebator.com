@@ -62,7 +62,40 @@ export const useErrorReporting = ({
 
         Alert.alert(t("common.error"), message);
       } else {
-        Alert.alert(t("common.error"), t("offline.featureUnavailable"));
+        // Check if it's actually a network/connectivity error
+        const errorMessage = error?.message || "";
+        const isNetworkError =
+          errorMessage.includes("timeout") ||
+          errorMessage.includes("fetch") ||
+          errorMessage.includes("network") ||
+          errorMessage.includes("offline") ||
+          !isOnline;
+
+        if (isNetworkError) {
+          Alert.alert(t("common.error"), t("offline.featureUnavailable"));
+        } else {
+          // For debugging: log the full error to console
+          console.warn("Error reporting failed:", {
+            message: errorMessage,
+            error: error,
+            wordId,
+            definitionId,
+          });
+
+          // Show the actual error message for API/server errors
+          let displayMessage = errorMessage || t("errors.general");
+
+          // Handle common validation errors more specifically
+          if (errorMessage.includes("validation failed")) {
+            displayMessage =
+              "Unable to report error for this word. Please try again.";
+          } else if (errorMessage.includes("Please try again later")) {
+            displayMessage =
+              "Error reporting is temporarily unavailable. Please try again in a few minutes.";
+          }
+
+          Alert.alert(t("common.error"), displayMessage);
+        }
       }
     },
   });
