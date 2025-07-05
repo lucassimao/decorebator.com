@@ -88,7 +88,7 @@ function RootLayoutNav() {
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen
-                    name="practice"
+                    name="flashcard"
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen
