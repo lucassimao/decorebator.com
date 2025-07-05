@@ -162,12 +162,6 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
 
           <Text style={styles.meaningText}>{definition.meaning}</Text>
 
-          {currentWord?.pronunciation && (
-            <Text style={styles.phoneticText}>
-              /{currentWord?.pronunciation}/
-            </Text>
-          )}
-
           {(() => {
             const isVerb = definition.isVerbType || false;
             const hasInflections =
@@ -261,6 +255,11 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
         >
           <View style={styles.cardContent}>
             <Text style={styles.wordText}>{currentWord?.name}</Text>
+            {currentWord?.pronunciation && (
+              <Text style={styles.phoneticTextFront}>
+                /{currentWord?.pronunciation}/
+              </Text>
+            )}
             {currentWord?.audioURL && (
               <TouchableOpacity style={styles.audioButton} onPress={playAudio}>
                 <Ionicons
@@ -426,6 +425,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.colors.text.secondary,
       fontStyle: "italic",
       marginBottom: 12,
+    },
+    phoneticTextFront: {
+      fontSize: 18,
+      color: theme.colors.text.secondary,
+      fontStyle: "italic",
+      marginTop: 8,
+      marginBottom: 16,
+      textAlign: "center",
     },
     examplesContainer: {
       marginTop: 12,

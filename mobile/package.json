@@ -10,8 +10,11 @@
     "test": "jest --watchAll",
     "prepare": "husky",
     "expo:update": "expo install --fix",
+    "android-emulator":"$ANDROID_SDK_ROOT/emulator/emulator -avd expo-emulator",
     "lint": "eslint .",
     "lint-fix": "eslint --fix .",
+    "typecheck": "npx tsc --noEmit",
+    "typecheck:watch": "npx tsc --noEmit --watch",
     "update:local": "eas update --clear-cache",
     "update:prod": "eas update --environment production --clear-cache --branch master"
   },

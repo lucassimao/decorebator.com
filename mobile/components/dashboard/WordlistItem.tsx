@@ -119,7 +119,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
       return;
     }
 
-    router.push(`/practice?wordlistId=${item.id}&wordlistName=${item.name}`);
+    router.push(`/flashcard?wordlistId=${item.id}&wordlistName=${item.name}`);
   };
 
   const handleAnalytics = () => {
@@ -241,7 +241,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             style={styles.actionButtonLarge}
             onPress={handlePractice}
             accessibilityRole="button"
-            accessibilityLabel={t("wordlistItem.practice")}
+            accessibilityLabel={t("wordlistItem.flashcards")}
             accessibilityHint="Practice with flashcards"
           >
             <MaterialIcons
@@ -250,7 +250,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
               color={theme.colors.semantic.info}
             />
             <Text style={styles.actionButtonText}>
-              {t("wordlistItem.practice")}
+              {t("wordlistItem.flashcards")}
             </Text>
           </TouchableOpacity>
 
