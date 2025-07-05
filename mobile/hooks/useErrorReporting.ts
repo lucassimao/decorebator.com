@@ -7,7 +7,7 @@ import { ErrorType, ErrorReportRateLimitError } from "@/api/errorReporting";
 
 interface UseErrorReportingProps {
   wordId: number;
-  definitionId: number;
+  definitionId: number | null;
   isOnline: boolean;
   context: "quiz" | "flashcards";
   onSuccess?: () => void;

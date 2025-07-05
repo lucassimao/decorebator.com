@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import NetInfo from "@react-native-community/netinfo";
+import NetInfo, { NetInfoState } from "@react-native-community/netinfo";
 import * as FileSystem from "expo-file-system";
 import { Quiz, Word, Definition } from "@/api/wordlists";
 import { Platform } from "react-native";
@@ -10,6 +10,15 @@ const WORDS_CACHE_KEY = `${CACHE_PREFIX}words_`;
 const DEFINITIONS_CACHE_KEY = `${CACHE_PREFIX}definitions_`;
 const ASSET_CACHE_DIR = `${FileSystem.documentDirectory}decorebator_assets/`;
 const CACHE_EXPIRY_HOURS = 72; // 3 days
+
+// Network detection constants
+const CONNECTIVITY_TEST_ENDPOINTS = [
+  "https://1.1.1.1/cdn-cgi/trace", // Cloudflare
+  "https://8.8.8.8", // Google DNS
+  "https://clients3.google.com/generate_204", // Google connectivity check
+];
+const CONNECTIVITY_TIMEOUT = 5000; // 5 seconds
+const CONNECTIVITY_CACHE_DURATION = 30000; // 30 seconds
 
 interface CachedQuiz {
   quiz: Quiz;
@@ -35,15 +44,79 @@ interface CachedDefinitions {
   wordId: number;
 }
 
+interface ConnectivityTestResult {
+  isConnected: boolean;
+  responseTime: number;
+  timestamp: number;
+  endpoint: string;
+}
+
+interface NetworkState {
+  isOnline: boolean;
+  connectionQuality: "fast" | "slow" | "unknown";
+  lastConnectivityTest: ConnectivityTestResult | null;
+  consecutiveFailures: number;
+}
+
+interface CircuitBreakerState {
+  isOpen: boolean;
+  failureCount: number;
+  lastFailureTime: number;
+  nextAttemptTime: number;
+}
+
+interface RetryConfig {
+  maxAttempts: number;
+  baseDelayMs: number;
+  maxDelayMs: number;
+  backoffMultiplier: number;
+}
+
 class OfflineManager {
-  private isOnline: boolean = true;
+  private networkState: NetworkState = {
+    isOnline: true,
+    connectionQuality: "unknown",
+    lastConnectivityTest: null,
+    consecutiveFailures: 0,
+  };
   private isPremium: boolean = false;
   private networkListeners: ((isOnline: boolean) => void)[] = [];
+  private connectivityTestCache: Map<string, ConnectivityTestResult> =
+    new Map();
+  private netInfoUnsubscribe: (() => void) | null = null;
+  private connectivityTestTimer: ReturnType<typeof setInterval> | null = null;
+  private circuitBreaker: CircuitBreakerState = {
+    isOpen: false,
+    failureCount: 0,
+    lastFailureTime: 0,
+    nextAttemptTime: 0,
+  };
+  private retryConfig: RetryConfig = {
+    maxAttempts: 3,
+    baseDelayMs: 1000,
+    maxDelayMs: 30000,
+    backoffMultiplier: 2,
+  };
 
   constructor() {
+    this.configureNetInfo();
     this.initializeNetworkStatus();
     this.initializeNetworkListener();
     this.ensureAssetDirectory();
+  }
+
+  private configureNetInfo() {
+    // Configure NetInfo with optimized settings for better reliability
+    NetInfo.configure({
+      reachabilityUrl: "https://clients3.google.com/generate_204",
+      reachabilityTest: async (response) => response.status === 204,
+      reachabilityLongTimeout: 60 * 1000, // 60s
+      reachabilityShortTimeout: 5 * 1000, // 5s
+      reachabilityRequestTimeout: 15 * 1000, // 15s
+      reachabilityShouldRun: () => true,
+      shouldFetchWiFiSSID: false, // Avoid memory leaks
+      useNativeReachability: false, // Use custom implementation
+    });
   }
 
   private async ensureAssetDirectory() {
@@ -60,16 +133,29 @@ class OfflineManager {
   private async initializeNetworkStatus() {
     try {
       const state = await NetInfo.fetch();
-      this.isOnline = this.determineOnlineStatus(state);
+      const basicOnlineStatus = this.determineBasicOnlineStatus(state);
+
+      if (basicOnlineStatus) {
+        // If basic check indicates online, perform real connectivity test
+        const connectivityResult = await this.performConnectivityTest();
+        this.updateNetworkState(
+          connectivityResult.isConnected,
+          connectivityResult.responseTime,
+        );
+      } else {
+        // If basic check indicates offline, trust it
+        this.updateNetworkState(false, -1);
+      }
     } catch (error) {
       console.warn("Failed to fetch initial network state:", error);
-      // Keep default value of true
+      // Keep default value of true to avoid blocking user
+      this.updateNetworkState(true, -1);
     }
   }
 
-  private determineOnlineStatus(state: any): boolean {
+  private determineBasicOnlineStatus(state: NetInfoState): boolean {
     // Check if we have a clear connection
-    if (state.isConnected === true) {
+    if (state.isConnected === true && state.isInternetReachable === true) {
       return true;
     }
 
@@ -78,32 +164,303 @@ class OfflineManager {
       return false;
     }
 
-    // If isConnected is null, check isInternetReachable as backup
-    if (state.isInternetReachable === true) {
-      return true;
-    }
-
+    // If isInternetReachable is false, we're offline
     if (state.isInternetReachable === false) {
       return false;
     }
 
-    // If both are null/undefined, assume online to avoid false negatives
-    // This prevents blocking error reporting when network state is unknown
+    // If we have basic connectivity but internet reachability is unknown, test it
+    if (state.isConnected === true && state.isInternetReachable == null) {
+      return true; // Will be verified by connectivity test
+    }
+
+    // If both are null/undefined, assume online but verify with connectivity test
     return true;
   }
 
-  private initializeNetworkListener() {
-    NetInfo.addEventListener((state) => {
-      const wasOnline = this.isOnline;
-      this.isOnline = this.determineOnlineStatus(state);
+  private async performConnectivityTest(): Promise<ConnectivityTestResult> {
+    // Check circuit breaker
+    if (this.isCircuitBreakerOpen()) {
+      return {
+        isConnected: false,
+        responseTime: -1,
+        timestamp: Date.now(),
+        endpoint: "circuit_breaker_open",
+      };
+    }
 
-      if (wasOnline !== this.isOnline) {
-        console.log(
-          `Network status changed: ${wasOnline ? "online" : "offline"} → ${this.isOnline ? "online" : "offline"}`,
-        );
-        this.networkListeners.forEach((listener) => listener(this.isOnline));
+    const testStartTime = Date.now();
+
+    // Check cache first
+    const cachedResult = this.getCachedConnectivityResult();
+    if (
+      cachedResult &&
+      Date.now() - cachedResult.timestamp < CONNECTIVITY_CACHE_DURATION
+    ) {
+      return cachedResult;
+    }
+
+    // Try each endpoint with enhanced retry logic
+    for (let attempt = 0; attempt < this.retryConfig.maxAttempts; attempt++) {
+      for (const endpoint of CONNECTIVITY_TEST_ENDPOINTS) {
+        try {
+          const result = await this.executeWithRetry(
+            () => this.testEndpointConnectivity(endpoint),
+            attempt,
+          );
+
+          if (result.isConnected) {
+            // Reset circuit breaker on success
+            this.resetCircuitBreaker();
+            // Cache successful result
+            this.connectivityTestCache.set("last_successful", result);
+            return result;
+          }
+        } catch (error) {
+          console.warn(`Connectivity test failed for ${endpoint}:`, error);
+          this.recordCircuitBreakerFailure();
+        }
+      }
+
+      // Enhanced exponential backoff between attempts
+      if (attempt < this.retryConfig.maxAttempts - 1) {
+        const delay = this.calculateBackoffDelay(attempt);
+        await this.delay(delay);
+      }
+    }
+
+    // All tests failed - record failure and open circuit breaker if needed
+    this.recordCircuitBreakerFailure();
+    const result: ConnectivityTestResult = {
+      isConnected: false,
+      responseTime: Date.now() - testStartTime,
+      timestamp: Date.now(),
+      endpoint: "all_failed",
+    };
+
+    this.connectivityTestCache.set("last_failed", result);
+    return result;
+  }
+
+  private async testEndpointConnectivity(
+    endpoint: string,
+  ): Promise<ConnectivityTestResult> {
+    const startTime = Date.now();
+
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error(`Connectivity test timeout for ${endpoint}`));
+      }, CONNECTIVITY_TIMEOUT);
+
+      fetch(endpoint, {
+        method: "HEAD",
+        cache: "no-cache",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+        },
+      })
+        .then((response) => {
+          clearTimeout(timeoutId);
+          const responseTime = Date.now() - startTime;
+
+          resolve({
+            isConnected: response.ok || response.status === 204,
+            responseTime,
+            timestamp: Date.now(),
+            endpoint,
+          });
+        })
+        .catch((error) => {
+          clearTimeout(timeoutId);
+          reject(error);
+        });
+    });
+  }
+
+  private getCachedConnectivityResult(): ConnectivityTestResult | null {
+    const cached = this.connectivityTestCache.get("last_successful");
+    return cached || null;
+  }
+
+  private updateNetworkState(isOnline: boolean, responseTime: number) {
+    const wasOnline = this.networkState.isOnline;
+
+    this.networkState.isOnline = isOnline;
+    this.networkState.connectionQuality =
+      this.determineConnectionQuality(responseTime);
+
+    if (isOnline) {
+      this.networkState.consecutiveFailures = 0;
+    } else {
+      this.networkState.consecutiveFailures++;
+    }
+
+    // Notify listeners if status changed
+    if (wasOnline !== isOnline) {
+      console.log(
+        `Network status changed: ${wasOnline ? "online" : "offline"} → ${isOnline ? "online" : "offline"} (quality: ${this.networkState.connectionQuality}, response: ${responseTime}ms)`,
+      );
+      this.networkListeners.forEach((listener) => listener(isOnline));
+    }
+  }
+
+  private determineConnectionQuality(
+    responseTime: number,
+  ): "fast" | "slow" | "unknown" {
+    if (responseTime < 0) return "unknown";
+    if (responseTime < 1000) return "fast"; // Under 1 second
+    if (responseTime < 3000) return "slow"; // 1-3 seconds
+    return "slow"; // Over 3 seconds
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  // Promise.allSettled polyfill for React Native compatibility
+  private async promiseAllSettledPolyfill<T>(
+    promises: Promise<T>[],
+  ): Promise<{ status: "fulfilled" | "rejected"; value?: T; reason?: any }[]> {
+    const results = await Promise.all(
+      promises.map(async (promise) => {
+        try {
+          const value = await promise;
+          return { status: "fulfilled" as const, value };
+        } catch (reason) {
+          return { status: "rejected" as const, reason };
+        }
+      }),
+    );
+    return results;
+  }
+
+  private async executeWithRetry<T>(
+    operation: () => Promise<T>,
+    attemptIndex: number,
+  ): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      if (attemptIndex < this.retryConfig.maxAttempts - 1) {
+        const delay = this.calculateBackoffDelay(attemptIndex);
+        await this.delay(delay);
+        return this.executeWithRetry(operation, attemptIndex + 1);
+      }
+      throw error;
+    }
+  }
+
+  private calculateBackoffDelay(attemptIndex: number): number {
+    const exponentialDelay =
+      this.retryConfig.baseDelayMs *
+      Math.pow(this.retryConfig.backoffMultiplier, attemptIndex);
+
+    // Add jitter to prevent thundering herd
+    const jitter = Math.random() * 0.1 * exponentialDelay;
+
+    return Math.min(exponentialDelay + jitter, this.retryConfig.maxDelayMs);
+  }
+
+  private isCircuitBreakerOpen(): boolean {
+    if (!this.circuitBreaker.isOpen) {
+      return false;
+    }
+
+    // Check if we can attempt a half-open state
+    const now = Date.now();
+    if (now >= this.circuitBreaker.nextAttemptTime) {
+      this.circuitBreaker.isOpen = false;
+      console.log("Circuit breaker transitioning to half-open state");
+      return false;
+    }
+
+    return true;
+  }
+
+  private recordCircuitBreakerFailure(): void {
+    this.circuitBreaker.failureCount++;
+    this.circuitBreaker.lastFailureTime = Date.now();
+
+    // Open circuit breaker after threshold failures
+    const failureThreshold = 5;
+    if (this.circuitBreaker.failureCount >= failureThreshold) {
+      this.circuitBreaker.isOpen = true;
+      // Exponential backoff for next attempt (starts at 1 minute, caps at 10 minutes)
+      const backoffMinutes = Math.min(
+        Math.pow(
+          2,
+          Math.floor(this.circuitBreaker.failureCount / failureThreshold),
+        ),
+        10,
+      );
+      this.circuitBreaker.nextAttemptTime =
+        Date.now() + backoffMinutes * 60 * 1000;
+
+      console.log(
+        `Circuit breaker opened. Next attempt in ${backoffMinutes} minutes.`,
+      );
+    }
+  }
+
+  private resetCircuitBreaker(): void {
+    if (this.circuitBreaker.failureCount > 0 || this.circuitBreaker.isOpen) {
+      console.log("Circuit breaker reset - connectivity restored");
+    }
+
+    this.circuitBreaker.isOpen = false;
+    this.circuitBreaker.failureCount = 0;
+    this.circuitBreaker.lastFailureTime = 0;
+    this.circuitBreaker.nextAttemptTime = 0;
+  }
+
+  private initializeNetworkListener() {
+    this.netInfoUnsubscribe = NetInfo.addEventListener(async (state) => {
+      const basicOnlineStatus = this.determineBasicOnlineStatus(state);
+
+      if (basicOnlineStatus) {
+        // If basic check indicates online, perform real connectivity test
+        try {
+          const connectivityResult = await this.performConnectivityTest();
+          this.updateNetworkState(
+            connectivityResult.isConnected,
+            connectivityResult.responseTime,
+          );
+        } catch (error) {
+          console.warn("Connectivity test failed in network listener:", error);
+          // Fall back to basic status if connectivity test fails
+          this.updateNetworkState(basicOnlineStatus, -1);
+        }
+      } else {
+        // If basic check indicates offline, trust it immediately
+        this.updateNetworkState(false, -1);
       }
     });
+
+    // Start periodic connectivity verification for enhanced reliability
+    this.startPeriodicConnectivityCheck();
+  }
+
+  private startPeriodicConnectivityCheck() {
+    // Clear existing timer
+    if (this.connectivityTestTimer) {
+      clearInterval(this.connectivityTestTimer);
+    }
+
+    // Run connectivity test every 30 seconds when online
+    this.connectivityTestTimer = setInterval(async () => {
+      if (this.networkState.isOnline) {
+        try {
+          const result = await this.performConnectivityTest();
+          if (!result.isConnected && this.networkState.isOnline) {
+            // Connection lost, update state
+            this.updateNetworkState(false, result.responseTime);
+          }
+        } catch (error) {
+          console.warn("Periodic connectivity check failed:", error);
+        }
+      }
+    }, 30000); // 30 seconds
   }
 
   public subscribeToNetworkChanges(listener: (isOnline: boolean) => void) {
@@ -120,33 +477,56 @@ class OfflineManager {
   }
 
   public isOfflineAvailable(): boolean {
-    return this.isPremium && !this.isOnline;
+    return this.isPremium && !this.networkState.isOnline;
   }
 
   public getNetworkStatus(): boolean {
-    return this.isOnline;
+    return this.networkState.isOnline;
   }
 
-  // Quiz caching methods
+  public getNetworkState(): NetworkState {
+    return { ...this.networkState };
+  }
+
+  public getConnectionQuality(): "fast" | "slow" | "unknown" {
+    return this.networkState.connectionQuality;
+  }
+
+  public async forceConnectivityTest(): Promise<boolean> {
+    try {
+      const result = await this.performConnectivityTest();
+      this.updateNetworkState(result.isConnected, result.responseTime);
+      return result.isConnected;
+    } catch (error) {
+      console.warn("Force connectivity test failed:", error);
+      return false;
+    }
+  }
+
+  // Quiz caching methods with atomic operations
   public async cacheQuiz(wordlistId: number, quiz: Quiz): Promise<void> {
     if (!this.isPremium) return;
 
-    const cacheKey = `${QUIZ_CACHE_KEY}${wordlistId}-${quiz.id}`;
-    const cachedData: CachedQuiz = {
-      quiz,
-      timestamp: Date.now(),
-      wordlistId,
-    };
+    await this.withErrorRecovery(async () => {
+      const cacheKey = `${QUIZ_CACHE_KEY}${wordlistId}-${quiz.id}`;
+      const cachedData: CachedQuiz = {
+        quiz,
+        timestamp: Date.now(),
+        wordlistId,
+      };
 
-    try {
-      // Cache the quiz data
-      await AsyncStorage.setItem(cacheKey, JSON.stringify(cachedData));
+      // Atomic operation with rollback capability
+      await this.atomicCacheOperation(async () => {
+        // Cache the quiz data
+        await AsyncStorage.setItem(cacheKey, JSON.stringify(cachedData));
 
-      // Cache associated assets
-      await this.cacheQuizAssets(quiz);
-    } catch (error) {
-      console.error("Error caching quiz:", error);
-    }
+        // Cache associated assets
+        await this.cacheQuizAssets(quiz);
+      }, [
+        // Rollback: remove quiz data if asset caching fails
+        async () => AsyncStorage.removeItem(cacheKey),
+      ]);
+    }, "Quiz caching");
   }
 
   private async cacheQuizAssets(quiz: Quiz): Promise<void> {
@@ -162,7 +542,7 @@ class OfflineManager {
       assetPromises.push(this.cacheAsset(quiz.audioURL, "audio"));
     }
 
-    await Promise.allSettled(assetPromises);
+    await this.promiseAllSettledPolyfill(assetPromises);
   }
 
   private async cacheAsset(
@@ -214,7 +594,7 @@ class OfflineManager {
   }
 
   public async getCachedQuiz(wordlistId: number): Promise<Quiz | null> {
-    if (!this.isPremium || this.isOnline) return null;
+    if (!this.isPremium || this.networkState.isOnline) return null;
 
     try {
       // Get all keys from AsyncStorage
@@ -414,28 +794,28 @@ class OfflineManager {
     return Date.now() - timestamp > expiryTime;
   }
 
-  // Words caching methods
+  // Words caching methods with atomic operations
   public async cacheWords(wordlistId: number, words: Word[]): Promise<void> {
     if (!this.isPremium) return;
 
-    const cacheKey = `${WORDS_CACHE_KEY}${wordlistId}`;
-    const cachedData: CachedWords = {
-      words,
-      timestamp: Date.now(),
-      wordlistId,
-    };
+    await this.withErrorRecovery(async () => {
+      const cacheKey = `${WORDS_CACHE_KEY}${wordlistId}`;
+      const cachedData: CachedWords = {
+        words,
+        timestamp: Date.now(),
+        wordlistId,
+      };
 
-    try {
-      await AsyncStorage.setItem(cacheKey, JSON.stringify(cachedData));
-    } catch (error) {
-      console.error("Error caching words:", error);
-    }
+      await this.atomicCacheOperation(async () => {
+        await AsyncStorage.setItem(cacheKey, JSON.stringify(cachedData));
+      });
+    }, "Words caching");
   }
 
   public async getCachedWords(wordlistId: number): Promise<Word[] | null> {
     if (!this.isPremium) return null;
 
-    try {
+    return this.withErrorRecovery(async () => {
       const cacheKey = `${WORDS_CACHE_KEY}${wordlistId}`;
       const cachedDataStr = await AsyncStorage.getItem(cacheKey);
 
@@ -450,13 +830,10 @@ class OfflineManager {
       }
 
       return cachedData.words;
-    } catch (error) {
-      console.error("Error retrieving cached words:", error);
-      return null;
-    }
+    }, "Cached words retrieval").catch(() => null);
   }
 
-  // Definitions caching methods
+  // Definitions caching methods with atomic operations
   public async cacheDefinitions(
     wordlistId: number,
     wordId: number,
@@ -464,22 +841,25 @@ class OfflineManager {
   ): Promise<void> {
     if (!this.isPremium) return;
 
-    const cacheKey = `${DEFINITIONS_CACHE_KEY}${wordlistId}-${wordId}`;
-    const cachedData: CachedDefinitions = {
-      definitions,
-      timestamp: Date.now(),
-      wordlistId,
-      wordId,
-    };
+    await this.withErrorRecovery(async () => {
+      const cacheKey = `${DEFINITIONS_CACHE_KEY}${wordlistId}-${wordId}`;
+      const cachedData: CachedDefinitions = {
+        definitions,
+        timestamp: Date.now(),
+        wordlistId,
+        wordId,
+      };
 
-    try {
-      await AsyncStorage.setItem(cacheKey, JSON.stringify(cachedData));
+      await this.atomicCacheOperation(async () => {
+        await AsyncStorage.setItem(cacheKey, JSON.stringify(cachedData));
 
-      // Cache any images referenced in definitions
-      await this.cacheDefinitionAssets(definitions);
-    } catch (error) {
-      console.error("Error caching definitions:", error);
-    }
+        // Cache any images referenced in definitions
+        await this.cacheDefinitionAssets(definitions);
+      }, [
+        // Rollback: remove definitions if asset caching fails
+        async () => AsyncStorage.removeItem(cacheKey),
+      ]);
+    }, "Definitions caching");
   }
 
   private async cacheDefinitionAssets(
@@ -498,7 +878,7 @@ class OfflineManager {
       }
     }
 
-    await Promise.allSettled(assetPromises);
+    await this.promiseAllSettledPolyfill(assetPromises);
   }
 
   public async getCachedDefinitions(
@@ -507,7 +887,7 @@ class OfflineManager {
   ): Promise<Definition[] | null> {
     if (!this.isPremium) return null;
 
-    try {
+    return this.withErrorRecovery(async () => {
       const cacheKey = `${DEFINITIONS_CACHE_KEY}${wordlistId}-${wordId}`;
       const cachedDataStr = await AsyncStorage.getItem(cacheKey);
 
@@ -527,10 +907,7 @@ class OfflineManager {
       );
 
       return validatedDefinitions;
-    } catch (error) {
-      console.error("Error retrieving cached definitions:", error);
-      return null;
-    }
+    }, "Cached definitions retrieval").catch(() => null);
   }
 
   private async validateDefinitionAssets(
@@ -738,6 +1115,110 @@ class OfflineManager {
     } catch (error) {
       console.error("Error getting cache size:", error);
       return 0;
+    }
+  }
+
+  public destroy(): void {
+    // Clean up network listener
+    if (this.netInfoUnsubscribe) {
+      this.netInfoUnsubscribe();
+      this.netInfoUnsubscribe = null;
+    }
+
+    // Clean up periodic connectivity timer
+    if (this.connectivityTestTimer) {
+      clearInterval(this.connectivityTestTimer);
+      this.connectivityTestTimer = null;
+    }
+
+    // Clear caches
+    this.connectivityTestCache.clear();
+    this.networkListeners = [];
+
+    console.log("OfflineManager destroyed and cleaned up");
+  }
+
+  // Method to get connectivity statistics for debugging
+  public getConnectivityStats(): {
+    consecutiveFailures: number;
+    lastTest: ConnectivityTestResult | null;
+    cacheSize: number;
+    circuitBreakerState: CircuitBreakerState;
+  } {
+    return {
+      consecutiveFailures: this.networkState.consecutiveFailures,
+      lastTest: this.networkState.lastConnectivityTest,
+      cacheSize: this.connectivityTestCache.size,
+      circuitBreakerState: { ...this.circuitBreaker },
+    };
+  }
+
+  // Atomic cache operations to prevent corruption
+  private async atomicCacheOperation<T>(
+    operation: () => Promise<T>,
+    rollbackOperations: (() => Promise<void>)[] = [],
+  ): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      // Execute rollback operations in reverse order
+      for (let i = rollbackOperations.length - 1; i >= 0; i--) {
+        try {
+          await rollbackOperations[i]();
+        } catch (rollbackError) {
+          console.error("Rollback operation failed:", rollbackError);
+        }
+      }
+      throw error;
+    }
+  }
+
+  // Enhanced error recovery with automatic retry
+  private async withErrorRecovery<T>(
+    operation: () => Promise<T>,
+    context: string,
+  ): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      console.warn(`${context} failed, attempting recovery:`, error);
+
+      // Attempt to clean up corrupted cache entries
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes("JSON") || errorMessage.includes("parse")) {
+        console.log("Detected cache corruption, cleaning up...");
+        await this.cleanupCorruptedCache();
+      }
+
+      // Retry once after cleanup
+      try {
+        return await operation();
+      } catch (retryError) {
+        console.error(`${context} failed after recovery attempt:`, retryError);
+        throw retryError;
+      }
+    }
+  }
+
+  private async cleanupCorruptedCache(): Promise<void> {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const cacheKeys = keys.filter((key) => key.startsWith(CACHE_PREFIX));
+
+      for (const key of cacheKeys) {
+        try {
+          const data = await AsyncStorage.getItem(key);
+          if (data) {
+            JSON.parse(data); // Test if it's valid JSON
+          }
+        } catch {
+          console.log(`Removing corrupted cache entry: ${key}`);
+          await AsyncStorage.removeItem(key);
+        }
+      }
+    } catch (error) {
+      console.error("Error during cache cleanup:", error);
     }
   }
 }
