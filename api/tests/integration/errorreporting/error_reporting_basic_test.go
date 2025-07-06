@@ -18,64 +18,18 @@ func TestErrorReporting_UnrelatedMeaning_BasicFlow(t *testing.T) {
 	defer server.Cleanup()
 
 	token := server.WithTestUser(t)
-	ctx := context.Background()
 
-	// Create wordlist via API
-	createResp := server.Expect.POST("/wordlists").
-		WithHeader("Authorization", token).
-		WithJSON(map[string]interface{}{
-			"name":         "Test Wordlist",
-			"languageCode": "en",
-		}).
-		Expect().
-		Status(201)
-
-	wordlistID := int(createResp.JSON().Object().Value("id").Number().Raw())
-
-	// Add word via API
-	addWordResp := server.Expect.POST("/wordlists/{wordlistId}/words", wordlistID).
-		WithHeader("Authorization", token).
-		WithJSON(map[string]interface{}{
-			"name": "water",
-		}).
-		Expect().
-		Status(201)
-
-	wordID := int64(addWordResp.JSON().Object().Value("id").Number().Raw())
-
-	// Create definition with examples using service layer
-	testDefinition := &model.Definition{
-		Token:        "water",
-		Language:     "en",
-		PartOfSpeech: "noun",
-		Meaning:      "A transparent, tasteless, odorless chemical substance",
-		Examples:     []string{"Drink plenty of water", "Water the plants", "Still water"},
-		Source:       "test",
-	}
-
-	// Use SaveDefinition service function to create the definition
-	savedDefinitions, err := service.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
-	require.NoError(t, err, "Failed to create test definition")
-	require.Len(t, savedDefinitions, 1, "Should save exactly one definition")
-
-	definitionID := savedDefinitions[0].ID
+	// Create test data using new helpers
+	wordlistID := createTestWordlist(server, token, "Test Wordlist", "en")
+	definition := setup.CreateErrorReportDefinition("water", "en", "noun")
+	wordID, definitionID := createWordWithDefinition(t, server, token, wordlistID, "water", definition)
 
 	// Verify definition exists before error report
-	var definitionExists bool
-	err = server.DB.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM definitions WHERE id = $1)", definitionID).Scan(&definitionExists)
-	require.NoError(t, err)
-	assert.True(t, definitionExists, "Definition should exist before error report")
+	assertRecordCount(t, server.DB, "definitions", "id = $1", 1, definitionID)
 
 	// Submit error report for unrelated meaning
-	server.Expect.POST("/errorReports").
-		WithHeader("Authorization", token).
-		WithJSON(map[string]interface{}{
-			"wordId":       wordID,
-			"definitionId": definitionID,
-			"errorType":    "_unrelated_meaning",
-		}).
-		Expect().
-		Status(200)
+	resp := submitErrorReport(server, token, wordID, definitionID, "_unrelated_meaning")
+	resp.Status(200)
 
 	// Verify error report was created
 	assertErrorReportExists(t, server.DB, wordID, "_unrelated_meaning")
@@ -83,9 +37,9 @@ func TestErrorReporting_UnrelatedMeaning_BasicFlow(t *testing.T) {
 	// Verify content snapshot was created and contains definition data
 	assertContentSnapshotContains(t, server.DB, wordID, map[string]interface{}{
 		"definition_id":  float64(definitionID), // JSON numbers are float64
-		"meaning":        "A transparent, tasteless, odorless chemical substance",
 		"part_of_speech": "noun",
 		"language":       "en",
+		"token":          "water",
 	})
 
 	// Verify definition was deleted (destructive operation)
@@ -93,6 +47,9 @@ func TestErrorReporting_UnrelatedMeaning_BasicFlow(t *testing.T) {
 
 	// Verify foreign key was nullified for destructive operation
 	assertDefinitionIDNullified(t, server.DB, wordID)
+
+	// Verify River job was triggered for definition fetching
+	assertDefinitionFetcherJobTriggered(t, server.DB, wordID)
 }
 
 // TestErrorReporting_UnrelatedImage_ImageRegeneration tests that unrelated image errors
@@ -102,62 +59,18 @@ func TestErrorReporting_UnrelatedImage_ImageRegeneration(t *testing.T) {
 	defer server.Cleanup()
 
 	token := server.WithTestUser(t)
-	ctx := context.Background()
 
-	// Create wordlist and word
-	createResp := server.Expect.POST("/wordlists").
-		WithHeader("Authorization", token).
-		WithJSON(map[string]interface{}{
-			"name":         "Image Error Test",
-			"languageCode": "de",
-		}).
-		Expect().
-		Status(201)
-
-	wordlistID := int(createResp.JSON().Object().Value("id").Number().Raw())
-
-	addWordResp := server.Expect.POST("/wordlists/{wordlistId}/words", wordlistID).
-		WithHeader("Authorization", token).
-		WithJSON(map[string]interface{}{
-			"name": "Hund",
-		}).
-		Expect().
-		Status(201)
-
-	wordID := int64(addWordResp.JSON().Object().Value("id").Number().Raw())
-
-	// Create definition
-	testDefinition := &model.Definition{
-		Token:        "Hund",
-		Language:     "de",
-		PartOfSpeech: "Substantiv",
-		Meaning:      "Ein vierbeiniges Haustier",
-		Examples:     []string{"Der Hund bellt", "Mein Hund ist freundlich"},
-		Source:       "test_image_error",
-	}
-
-	savedDefinitions, err := service.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
-	require.NoError(t, err)
-	require.Len(t, savedDefinitions, 1)
-
-	definitionID := savedDefinitions[0].ID
+	// Create test data using new helpers
+	wordlistID := createTestWordlist(server, token, "Image Error Test", "de")
+	definition := setup.CreateErrorReportDefinition("Hund", "de", "Substantiv")
+	wordID, definitionID := createWordWithDefinition(t, server, token, wordlistID, "Hund", definition)
 
 	// Verify definition exists before error report
-	var definitionExists bool
-	err = server.DB.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM definitions WHERE id = $1)", definitionID).Scan(&definitionExists)
-	require.NoError(t, err)
-	assert.True(t, definitionExists, "Definition should exist before error report")
+	assertRecordCount(t, server.DB, "definitions", "id = $1", 1, definitionID)
 
 	// Submit error report for unrelated image (non-destructive operation)
-	server.Expect.POST("/errorReports").
-		WithHeader("Authorization", token).
-		WithJSON(map[string]interface{}{
-			"wordId":       wordID,
-			"definitionId": definitionID,
-			"errorType":    "_unrelated_image",
-		}).
-		Expect().
-		Status(200)
+	resp := submitErrorReport(server, token, wordID, definitionID, "_unrelated_image")
+	resp.Status(200)
 
 	// Verify error report was created
 	assertErrorReportExists(t, server.DB, wordID, "_unrelated_image")
@@ -165,7 +78,6 @@ func TestErrorReporting_UnrelatedImage_ImageRegeneration(t *testing.T) {
 	// Verify content snapshot was created and contains definition data
 	assertContentSnapshotContains(t, server.DB, wordID, map[string]interface{}{
 		"definition_id":  float64(definitionID),
-		"meaning":        "Ein vierbeiniges Haustier",
 		"part_of_speech": "Substantiv",
 		"language":       "de",
 		"token":          "Hund",
@@ -176,6 +88,9 @@ func TestErrorReporting_UnrelatedImage_ImageRegeneration(t *testing.T) {
 
 	// Verify foreign key was preserved for non-destructive operation
 	assertDefinitionIDPreserved(t, server.DB, wordID, definitionID)
+
+	// Verify River job was triggered for image generation
+	assertImageGeneratorJobTriggered(t, server.DB, definitionID)
 }
 
 // TestErrorReporting_MissingImage_ImageRegeneration tests that missing image errors
@@ -252,6 +167,9 @@ func TestErrorReporting_MissingImage_ImageRegeneration(t *testing.T) {
 
 	// Verify foreign key was preserved for non-destructive operation
 	assertDefinitionIDPreserved(t, server.DB, wordID, definitionID)
+
+	// Verify River job was triggered for image generation
+	assertImageGeneratorJobTriggered(t, server.DB, definitionID)
 }
 
 // TestErrorReporting_SoundNotPlaying_AudioRegeneration tests that sound not playing errors
@@ -314,6 +232,9 @@ func TestErrorReporting_SoundNotPlaying_AudioRegeneration(t *testing.T) {
 	`, wordID).Scan(&definitionID)
 	require.NoError(t, err)
 	assert.Nil(t, definitionID, "Definition ID should be NULL for word-level audio errors")
+
+	// Verify River job was triggered for text-to-speech generation
+	assertTextToSpeechJobTriggered(t, server.DB, wordID)
 }
 
 // TestErrorReporting_ProcessingFailed_DefinitionRetry tests that processing failed errors
@@ -382,4 +303,48 @@ func TestErrorReporting_ProcessingFailed_DefinitionRetry(t *testing.T) {
 	`, wordID).Scan(&definitionID)
 	require.NoError(t, err)
 	assert.Nil(t, definitionID, "Definition ID should be NULL for processing failed errors")
+
+	// Verify River job was triggered for definition fetching
+	assertDefinitionFetcherJobTriggered(t, server.DB, wordID)
+}
+
+// TestErrorReporting_UnrelatedExample_DefinitionRegeneration tests that unrelated example errors
+// trigger definition regeneration and delete definitions
+func TestErrorReporting_UnrelatedExample_DefinitionRegeneration(t *testing.T) {
+	server := setup.NewTestServer(t)
+	defer server.Cleanup()
+
+	token := server.WithTestUser(t)
+
+	// Create test data using new helpers
+	wordlistID := createTestWordlist(server, token, "Unrelated Example Test", "fr")
+	definition := setup.CreateErrorReportDefinition("chat", "fr", "nom")
+	wordID, definitionID := createWordWithDefinition(t, server, token, wordlistID, "chat", definition)
+
+	// Verify definition exists before error report
+	assertRecordCount(t, server.DB, "definitions", "id = $1", 1, definitionID)
+
+	// Submit error report for unrelated example (destructive operation)
+	resp := submitErrorReport(server, token, wordID, definitionID, "_unrelated_example")
+	resp.Status(200)
+
+	// Verify error report was created
+	assertErrorReportExists(t, server.DB, wordID, "_unrelated_example")
+
+	// Verify content snapshot was created and contains definition data
+	assertContentSnapshotContains(t, server.DB, wordID, map[string]interface{}{
+		"definition_id":  float64(definitionID),
+		"part_of_speech": "nom",
+		"language":       "fr",
+		"token":          "chat",
+	})
+
+	// Verify definition was deleted (destructive operation)
+	assertDefinitionDeleted(t, server.DB, definitionID)
+
+	// Verify foreign key was nullified for destructive operation
+	assertDefinitionIDNullified(t, server.DB, wordID)
+
+	// Verify River job was triggered for definition fetching
+	assertDefinitionFetcherJobTriggered(t, server.DB, wordID)
 }

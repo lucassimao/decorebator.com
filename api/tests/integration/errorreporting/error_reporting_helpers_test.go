@@ -5,6 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"decorebator.com/internal/model"
+	"decorebator.com/internal/service"
+	"decorebator.com/tests/integration/setup"
+	"github.com/gavv/httpexpect/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -114,4 +118,110 @@ func assertWordSnapshotStructure(t *testing.T, db *pgxpool.Pool, wordID int64, e
 	// Verify it's a valid RFC3339 timestamp
 	_, err = time.Parse(time.RFC3339, capturedAt.(string))
 	assert.NoError(t, err, "captured_at should be valid RFC3339 timestamp")
+}
+
+// Setup Helpers - Reduce code duplication across test files
+
+// createTestWordlist creates a wordlist via API and returns the wordlist ID
+func createTestWordlist(server *setup.TestServer, token, name, languageCode string) int {
+	createResp := server.Expect.POST("/wordlists").
+		WithHeader("Authorization", token).
+		WithJSON(map[string]interface{}{
+			"name":         name,
+			"languageCode": languageCode,
+		}).
+		Expect().
+		Status(201)
+
+	return int(createResp.JSON().Object().Value("id").Number().Raw())
+}
+
+// createTestWord creates a word via API and returns the word ID
+func createTestWord(server *setup.TestServer, token string, wordlistID int, wordName string) int64 {
+	addWordResp := server.Expect.POST("/wordlists/{wordlistId}/words", wordlistID).
+		WithHeader("Authorization", token).
+		WithJSON(map[string]interface{}{
+			"name": wordName,
+		}).
+		Expect().
+		Status(201)
+
+	return int64(addWordResp.JSON().Object().Value("id").Number().Raw())
+}
+
+// createTestDefinition creates a definition using the service layer and returns the definition ID
+func createTestDefinition(t *testing.T, wordID int64, definition *model.Definition) int64 {
+	savedDefinitions, err := service.SaveDefinition(wordID, []*model.Definition{definition}, nil)
+	require.NoError(t, err, "Failed to create test definition")
+	require.Len(t, savedDefinitions, 1, "Should save exactly one definition")
+
+	return savedDefinitions[0].ID
+}
+
+// submitErrorReport submits an error report via API and returns the response
+func submitErrorReport(server *setup.TestServer, token string, wordID, definitionID int64, errorType string) *httpexpect.Response {
+	payload := setup.CreateErrorReportPayload(wordID, definitionID, errorType, nil)
+	return server.Expect.POST("/errorReports").
+		WithHeader("Authorization", token).
+		WithJSON(payload).
+		Expect()
+}
+
+// createWordWithDefinition creates both word and definition in one call and returns both IDs
+func createWordWithDefinition(t *testing.T, server *setup.TestServer, token string, wordlistID int, wordName string, definition *model.Definition) (int64, int64) {
+	wordID := createTestWord(server, token, wordlistID, wordName)
+	definitionID := createTestDefinition(t, wordID, definition)
+	return wordID, definitionID
+}
+
+// River Job Verification Helpers - Fix Current Broken Tests
+
+// assertRiverJobTriggered verifies that a River job was triggered for the expected worker type
+func assertRiverJobTriggered(t *testing.T, db *pgxpool.Pool, jobKind, queue string, resourceID int64, resourceField string) {
+	ctx := context.Background()
+	var jobCount int
+
+	query := `
+		SELECT COUNT(*) FROM river_job 
+		WHERE kind = $1 
+		AND queue = $2
+		AND (args->>$3)::bigint = $4
+	`
+
+	err := db.QueryRow(ctx, query, jobKind, queue, resourceField, resourceID).Scan(&jobCount)
+	require.NoError(t, err, "Failed to query River jobs")
+
+	assert.GreaterOrEqual(t, jobCount, 1, "River job should be triggered for %s", jobKind)
+}
+
+// assertImageGeneratorJobTriggered verifies that an ImageGenerator job was triggered for a definition
+func assertImageGeneratorJobTriggered(t *testing.T, db *pgxpool.Pool, definitionID int64) {
+	assertRiverJobTriggered(t, db, "ImageGenerator", "image_generator", definitionID, "definitionId")
+}
+
+// assertDefinitionFetcherJobTriggered verifies that a DefinitionFetcher job was triggered for a word
+func assertDefinitionFetcherJobTriggered(t *testing.T, db *pgxpool.Pool, wordID int64) {
+	assertRiverJobTriggered(t, db, "DefinitionFetcher", "definition_fetcher", wordID, "wordId")
+}
+
+// assertTextToSpeechJobTriggered verifies that a TextToSpeech job was triggered for a word
+func assertTextToSpeechJobTriggered(t *testing.T, db *pgxpool.Pool, wordID int64) {
+	assertRiverJobTriggered(t, db, "TextToSpeech", "text_to_speech", wordID, "wordId")
+}
+
+// Database State Validation Helpers
+
+// assertRecordCount verifies the expected number of records in a table matching a condition
+func assertRecordCount(t *testing.T, db *pgxpool.Pool, table, condition string, expectedCount int, params ...interface{}) {
+	ctx := context.Background()
+	var count int
+
+	query := "SELECT COUNT(*) FROM " + table
+	if condition != "" {
+		query += " WHERE " + condition
+	}
+
+	err := db.QueryRow(ctx, query, params...).Scan(&count)
+	require.NoError(t, err, "Failed to count records in %s", table)
+	assert.Equal(t, expectedCount, count, "Record count mismatch in table %s", table)
 }
