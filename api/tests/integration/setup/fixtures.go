@@ -240,3 +240,127 @@ func CreateTestWordSet(wordlistID, userID int64) []*model.Word {
 		},
 	}
 }
+
+// Error Reporting Specific Fixtures
+
+// CreateErrorReportDefinition creates a definition optimized for error reporting tests
+func CreateErrorReportDefinition(token, language, partOfSpeech string) *model.Definition {
+	// Use Unix timestamp for variety in content
+	now := time.Now().Unix()
+	var seed uint64
+	if now >= 0 {
+		seed = uint64(now)
+	} else {
+		seed = uint64(-now)
+	}
+	fake := gofakeit.New(seed)
+
+	// Create language-specific content
+	var meaning string
+	var examples []string
+
+	switch language {
+	case "en":
+		meaning = fake.Sentence(8)
+		examples = []string{
+			fmt.Sprintf("Example with [%s] in context", token),
+			fmt.Sprintf("Another [%s] usage example", token),
+		}
+	case "es":
+		meaning = "Una definición en español para pruebas"
+		examples = []string{
+			fmt.Sprintf("Ejemplo con [%s] en contexto", token),
+			fmt.Sprintf("Otro ejemplo de [%s] en uso", token),
+		}
+	case "de":
+		meaning = "Eine deutsche Definition für Tests"
+		examples = []string{
+			fmt.Sprintf("Beispiel mit [%s] im Kontext", token),
+			fmt.Sprintf("Ein weiteres [%s] Verwendungsbeispiel", token),
+		}
+	case "fr":
+		meaning = "Une définition française pour les tests"
+		examples = []string{
+			fmt.Sprintf("Example avec [%s] en contexte", token),
+			fmt.Sprintf("Un autre example d'utilisation de [%s]", token),
+		}
+	case "it":
+		meaning = "Una definizione italiana per i test"
+		examples = []string{
+			fmt.Sprintf("Esempio con [%s] nel contesto", token),
+			fmt.Sprintf("Un altro esempio di utilizzo di [%s]", token),
+		}
+	case "pt":
+		meaning = "Uma definição portuguesa para testes"
+		examples = []string{
+			fmt.Sprintf("Exemplo com [%s] no contexto", token),
+			fmt.Sprintf("Outro exemplo de uso de [%s]", token),
+		}
+	case "ja":
+		meaning = "テスト用の日本語定義"
+		examples = []string{
+			fmt.Sprintf("[%s]を使った例文", token),
+			fmt.Sprintf("[%s]の別の使用例", token),
+		}
+	default:
+		meaning = fake.Sentence(8)
+		examples = []string{
+			fmt.Sprintf("Example with [%s] in context", token),
+			fmt.Sprintf("Another [%s] usage example", token),
+		}
+	}
+
+	return &model.Definition{
+		Token:        token,
+		Language:     language,
+		PartOfSpeech: partOfSpeech,
+		Meaning:      meaning,
+		Examples:     examples,
+		Source:       model.ChatGPT,
+	}
+}
+
+// CreateMultiLanguageDefinitions creates definitions for common error testing scenarios
+func CreateMultiLanguageDefinitions() map[string]*model.Definition {
+	return map[string]*model.Definition{
+		"en_noun": CreateErrorReportDefinition("water", "en", "noun"),
+		"en_verb": CreateErrorReportDefinition("run", "en", "verb"),
+		"es_noun": CreateErrorReportDefinition("agua", "es", "sustantivo"),
+		"de_noun": CreateErrorReportDefinition("Hund", "de", "Substantiv"),
+		"fr_noun": CreateErrorReportDefinition("chat", "fr", "nom"),
+		"it_noun": CreateErrorReportDefinition("gatto", "it", "sostantivo"),
+		"pt_noun": CreateErrorReportDefinition("casa", "pt", "substantivo"),
+		"ja_noun": CreateErrorReportDefinition("猫", "ja", "名詞"),
+	}
+}
+
+// CreateErrorReportPayload creates standardized error report JSON payload
+func CreateErrorReportPayload(wordID, definitionID int64, errorType string, quizDetails map[string]interface{}) map[string]interface{} {
+	payload := map[string]interface{}{
+		"wordId":    wordID,
+		"errorType": errorType,
+	}
+
+	// Add definitionId only if it's not zero (some error types don't require it)
+	if definitionID != 0 {
+		payload["definitionId"] = definitionID
+	}
+
+	// Add quiz details if provided
+	if quizDetails != nil {
+		payload["quizDetails"] = quizDetails
+	}
+
+	return payload
+}
+
+// CreateQuizDetails creates standardized quiz context for error reports
+func CreateQuizDetails(quizType, value, context string, options []string, answerIndex int) map[string]interface{} {
+	return map[string]interface{}{
+		"quizType":    quizType,
+		"value":       value,
+		"options":     options,
+		"answerIndex": answerIndex,
+		"context":     context,
+	}
+}

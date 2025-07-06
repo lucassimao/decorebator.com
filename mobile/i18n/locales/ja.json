@@ -443,11 +443,25 @@
     "technicalError": "技術的なエラーが発生しました。後でもう一度お試しください",
     "cannotRetry": "再試行できません",
     "cannotRetryMessage": "このエラーは再試行できません。この単語を削除することのみ可能です。",
-    "retryStarted": "処理が再開されました。しばらくお待ちください。"
+    "retryStarted": "処理が再開されました。しばらくお待ちください。",
+    "wordTooLong": "長すぎます（最大15文字）"
   },
   "createWordlist": {
     "title": "新しいリストを作成",
     "successMessage": "「{{name}}」リストが作成されました。",
+    "step1": {
+      "title": "リストの名前は何ですか？"
+    },
+    "step2": {
+      "title": "説明を追加しますか？",
+      "optional": "任意"
+    },
+    "step3": {
+      "title": "どの言語を学習していますか？"
+    },
+    "step4": {
+      "title": "発音システムを選択"
+    },
     "nameLabel": "リスト名",
     "nameRequired": "リスト名は必須です",
     "nameMinLength": "名前は3文字以上必要です",
@@ -530,7 +544,7 @@
     "practiceFlashcards": "フラッシュカードで練習",
     "viewAnalytics": "分析を表示",
     "analytics": "分析",
-    "practice": "練習",
+    "flashcards": "フラッシュカード",
     "quiz": "クイズ"
   },
   "analytics": {

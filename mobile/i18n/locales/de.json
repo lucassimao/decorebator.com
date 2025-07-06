@@ -452,11 +452,25 @@
     "technicalError": "Ein technischer Fehler ist aufgetreten. Bitte versuchen Sie es später erneut",
     "cannotRetry": "Wiederholen nicht möglich",
     "cannotRetryMessage": "Dieser Fehler kann nicht wiederholt werden. Sie können dieses Wort nur löschen.",
-    "retryStarted": "Die Verarbeitung wurde neu gestartet. Bitte warten Sie einen Moment."
+    "retryStarted": "Die Verarbeitung wurde neu gestartet. Bitte warten Sie einen Moment.",
+    "wordTooLong": "Zu lang (max 15)"
   },
   "createWordlist": {
     "title": "Neue Wortliste erstellen",
     "successMessage": "Ihre Wortliste \"{{name}}\" wurde erstellt.",
+    "step1": {
+      "title": "Wie heißt Ihre Wortliste?"
+    },
+    "step2": {
+      "title": "Beschreibung hinzufügen?",
+      "optional": "Optional"
+    },
+    "step3": {
+      "title": "Welche Sprache lernen Sie?"
+    },
+    "step4": {
+      "title": "Aussprachesystem wählen"
+    },
     "nameLabel": "Name der Wortliste",
     "nameRequired": "Name der Wortliste ist erforderlich",
     "nameMinLength": "Name muss mindestens 3 Zeichen lang sein",
@@ -539,7 +553,7 @@
     "practiceFlashcards": "Mit Lernkarten üben",
     "viewAnalytics": "Analysen anzeigen",
     "analytics": "Analysen",
-    "practice": "Üben",
+    "flashcards": "Lernkarten",
     "quiz": "Quiz"
   },
    "analytics": {

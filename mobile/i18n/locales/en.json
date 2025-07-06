@@ -453,11 +453,25 @@
     "technicalError": "A technical error occurred. Please try again later",
     "cannotRetry": "Cannot Retry",
     "cannotRetryMessage": "This error cannot be retried. You can only delete this word.",
-    "retryStarted": "Processing has been restarted. Please wait a moment."
+    "retryStarted": "Processing has been restarted. Please wait a moment.",
+    "wordTooLong": "Too long (max 15)"
   },
   "createWordlist": {
     "title": "Create New Wordlist",
     "successMessage": "Your wordlist \"{{name}}\" has been created.",
+    "step1": {
+      "title": "What's your wordlist called?"
+    },
+    "step2": {
+      "title": "Add a description?",
+      "optional": "Optional"
+    },
+    "step3": {
+      "title": "Which language are you learning?"
+    },
+    "step4": {
+      "title": "Choose pronunciation system"
+    },
     "nameLabel": "Wordlist Name",
     "nameRequired": "Wordlist name is required",
     "nameMinLength": "Name must be at least 3 characters",
@@ -540,7 +554,7 @@
     "practiceFlashcards": "Practice with Flashcards",
     "viewAnalytics": "View Analytics",
     "analytics": "Analytics",
-    "practice": "Practice",
+    "flashcards": "Flashcards",
     "quiz": "Quiz"
   },
   "analytics": {

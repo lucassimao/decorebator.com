@@ -8,6 +8,11 @@
     "scheme": "decorebator",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -66,9 +71,7 @@
       }
     },
     "owner": "lsimaocosta",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": {"policy":"appVersion"},
     "updates": {
       "url": "https://u.expo.dev/882f0434-5dcf-448c-92ac-47e70c9a8d84"
     }

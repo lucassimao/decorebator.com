@@ -9,10 +9,19 @@ export enum ErrorType {
   ProcessingFailed = "_processing_failed",
 }
 
+export interface QuizDetails {
+  quizType: string;
+  value: string;
+  options: string[];
+  answerIndex: number;
+  context: "quiz" | "flashcard";
+}
+
 export interface ErrorReportRequest {
   wordId: number;
   definitionId: number | null;
   errorType: ErrorType;
+  quizDetails?: QuizDetails;
 }
 
 export interface RateLimitError {

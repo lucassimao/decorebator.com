@@ -182,7 +182,16 @@ run_unit_tests() {
 
 # Run integration tests
 run_integration_tests() {
-    log "Running integration tests..."
+    local package_filter="$1"
+    local test_path="./tests/integration/..."
+    
+    if [ -n "$package_filter" ]; then
+        test_path="./tests/integration/$package_filter/..."
+        log "Running integration tests for package: $package_filter"
+    else
+        log "Running all integration tests..."
+    fi
+    
     cd "$PROJECT_ROOT"
     
     # Source test environment properly
@@ -195,17 +204,25 @@ run_integration_tests() {
     # Try to use gotestsum for better output, fall back to go test
     if ensure_gotestsum; then
         log "Using gotestsum for structured output"
-        gotestsum --format testname -- -v -race -count=1 -p=1 -coverpkg=./internal/... -coverprofile=integration.out -covermode=atomic ./tests/integration/... || test_exit_code=$?
+        gotestsum --format testname -- -v -race -count=1 -p=1 -coverpkg=./internal/... -coverprofile=integration.out -covermode=atomic $test_path || test_exit_code=$?
     else
         log "Using go test"
-        go test -v -race -count=1 -p=1 -coverpkg=./internal/... -coverprofile=integration.out -covermode=atomic ./tests/integration/... || test_exit_code=$?
+        go test -v -race -count=1 -p=1 -coverpkg=./internal/... -coverprofile=integration.out -covermode=atomic $test_path || test_exit_code=$?
     fi
     
     if [ $test_exit_code -eq 0 ]; then
-        success "Integration tests passed"
+        if [ -n "$package_filter" ]; then
+            success "Integration tests for $package_filter passed"
+        else
+            success "Integration tests passed"
+        fi
         go tool cover -func=integration.out
     else
-        error "Integration tests failed"
+        if [ -n "$package_filter" ]; then
+            error "Integration tests for $package_filter failed"
+        else
+            error "Integration tests failed"
+        fi
         return $test_exit_code
     fi
 }
@@ -353,7 +370,7 @@ show_help() {
     echo "Commands:"
     echo "  setup                    Set up test environment (Docker services, migrations)"
     echo "  unit                     Run unit tests only"
-    echo "  integration              Run integration tests only"
+    echo "  integration [package]    Run integration tests (optionally filter by package)"
     echo "  unit-test <TestName>     Run specific unit test by name"
     echo "  integration-test <TestName> Run specific integration test by name"
     echo "  all                      Run all tests (unit + integration)"
@@ -369,6 +386,8 @@ show_help() {
     echo "  $0 setup                           # First-time setup"
     echo "  $0 all                             # Run all tests"
     echo "  $0 unit                            # Quick unit test run"
+    echo "  $0 integration                     # All integration tests"
+    echo "  $0 integration error_reporting     # Only error_reporting package tests"
     echo "  $0 unit-test TestUserService       # Run specific unit test"
     echo "  $0 integration-test TestSignupLoginFlow  # Run specific integration test"
     echo "  $0 watch                           # Development mode"
@@ -443,7 +462,7 @@ main() {
             check_dependencies
             setup_env
             run_migrations
-            run_integration_tests || exit $?
+            run_integration_tests "$2" || exit $?
             ;;
         "unit-test")
             check_dependencies

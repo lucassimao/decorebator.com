@@ -259,14 +259,22 @@ func (r *ErrorReportRepository) UpdateDefinitionLastRegeneratedAt(ctx context.Co
 	return err
 }
 
-// UpsertErrorReport updates or inserts an error report
-func (r *ErrorReportRepository) UpsertErrorReport(ctx context.Context, tx pgx.Tx, userID int64, definitionID *int64, wordID int64, errorType string) error {
+// UpsertErrorReport updates or inserts an error report with content snapshot
+func (r *ErrorReportRepository) UpsertErrorReport(ctx context.Context, tx pgx.Tx, userID int64, definitionID *int64, wordID int64, errorType string, contentSnapshot map[string]any) error {
 	// Convert pointer to interface{} for SQL parameter
-	var defIDParam interface{}
+	var defIDParam any
 	if definitionID != nil {
 		defIDParam = *definitionID
 	} else {
 		defIDParam = nil
+	}
+
+	// Convert content snapshot to JSON
+	var snapshotJSON any
+	if contentSnapshot != nil {
+		snapshotJSON = contentSnapshot
+	} else {
+		snapshotJSON = nil
 	}
 
 	// First, try to update an existing row
@@ -275,13 +283,14 @@ func (r *ErrorReportRepository) UpsertErrorReport(ctx context.Context, tx pgx.Tx
 		SET
 			error_type = $4,
 			reported_at = NOW(),
-			status = 'pending'
+			status = 'pending',
+			content_snapshot = $5
 		WHERE
 			user_id = $1
 			AND definition_id IS NOT DISTINCT FROM $2
 			AND word_id = $3
 			AND status = 'pending'
-	`, userID, defIDParam, wordID, errorType)
+	`, userID, defIDParam, wordID, errorType, snapshotJSON)
 	if err != nil {
 		return err
 	}
@@ -290,10 +299,10 @@ func (r *ErrorReportRepository) UpsertErrorReport(ctx context.Context, tx pgx.Tx
 	if tag.RowsAffected() == 0 {
 		_, err = tx.Exec(ctx, `
 			INSERT INTO error_reports
-				(user_id, definition_id, word_id, error_type, reported_at, status)
+				(user_id, definition_id, word_id, error_type, reported_at, status, content_snapshot)
 			VALUES
-				($1, $2, $3, $4, NOW(), 'pending')
-		`, userID, defIDParam, wordID, errorType)
+				($1, $2, $3, $4, NOW(), 'pending', $5)
+		`, userID, defIDParam, wordID, errorType, snapshotJSON)
 		if err != nil {
 			return err
 		}

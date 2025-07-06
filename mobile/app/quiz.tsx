@@ -77,12 +77,21 @@ const QuizScreen: React.FC = () => {
     closeReportModal,
   } = useErrorReporting({
     wordId: quiz?.wordId || 0,
-    definitionId: quiz?.definitionId || 0,
+    definitionId: quiz?.definitionId || null,
     isOnline,
     context: "quiz",
     onSuccess: () => {
       handleNextQuiz();
     },
+    quizDetails: quiz
+      ? {
+          quizType: quiz.type,
+          value: quiz.value,
+          options: quiz.options,
+          answerIndex: quiz.answerIndex,
+          context: "quiz",
+        }
+      : undefined,
   });
 
   // const [currentQuizId, setCurrentQuizId] = useState<number | null>(null); // Removed unused state

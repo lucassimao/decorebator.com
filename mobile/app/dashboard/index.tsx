@@ -18,6 +18,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   RefreshControl,
   SafeAreaView,
@@ -194,7 +195,13 @@ const Dashboard: React.FC<DashboardProps> = () => {
       <CreateWordlistModal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSuccess={() => setShowCreateModal(false)}
+        onSuccess={(wordlist) => {
+          setShowCreateModal(false);
+          Alert.alert(
+            t("common.success"),
+            t("createWordlist.successMessage", { name: wordlist.name }),
+          );
+        }}
       />
 
       {selectedWordlist && (

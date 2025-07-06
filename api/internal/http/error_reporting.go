@@ -14,6 +14,7 @@ type ErrorReportRequest struct {
 	WordID       int64                   `json:"wordId"`
 	DefinitionID *int64                  `json:"definitionId"`
 	ErrorType    service.ErrorReportType `json:"errorType"`
+	QuizDetails  *service.QuizDetails    `json:"quizDetails,omitempty"`
 }
 
 func (h *ErrorReportRoutes) Create(c *gin.Context) {
@@ -26,7 +27,16 @@ func (h *ErrorReportRoutes) Create(c *gin.Context) {
 	}
 
 	userId := c.GetInt64("userID")
-	err := service.ReportError(c.Request.Context(), input.ErrorType, input.WordID, input.DefinitionID, userId)
+
+	// Call service with individual parameters
+	err := service.ReportError(
+		c.Request.Context(),
+		input.ErrorType,
+		input.WordID,
+		input.DefinitionID,
+		userId,
+		input.QuizDetails,
+	)
 
 	if err != nil {
 		// Handle cooldown errors specifically

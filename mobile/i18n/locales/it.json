@@ -443,11 +443,25 @@
     "technicalError": "Si è verificato un errore tecnico. Riprova più tardi",
     "cannotRetry": "Impossibile riprovare",
     "cannotRetryMessage": "Questo errore non può essere ritentato. Puoi solo eliminare questa parola.",
-    "retryStarted": "L'elaborazione è stata riavviata. Attendi un momento."
+    "retryStarted": "L'elaborazione è stata riavviata. Attendi un momento.",
+    "wordTooLong": "Troppo lungo (max 15)"
   },
   "createWordlist": {
     "title": "Crea Nuova Lista",
     "successMessage": "La tua lista \"{{name}}\" è stata creata.",
+    "step1": {
+      "title": "Come si chiama la tua lista?"
+    },
+    "step2": {
+      "title": "Aggiungere una descrizione?",
+      "optional": "Opzionale"
+    },
+    "step3": {
+      "title": "Quale lingua stai imparando?"
+    },
+    "step4": {
+      "title": "Scegli sistema di pronuncia"
+    },
     "nameLabel": "Nome della Lista",
     "nameRequired": "Il nome della lista è obbligatorio",
     "nameMinLength": "Il nome deve avere almeno 3 caratteri",
@@ -530,7 +544,7 @@
     "practiceFlashcards": "Pratica con le Flashcard",
     "viewAnalytics": "Visualizza Analisi",
     "analytics": "Analisi",
-    "practice": "Pratica",
+    "flashcards": "Carte",
     "quiz": "Quiz"
   },
     "analytics": {

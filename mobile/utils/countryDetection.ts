@@ -8,16 +8,16 @@ export function detectUserCountry(): string {
   try {
     // Get device locale information
     const locales = Localization.getLocales();
-    
+
     if (locales && locales.length > 0) {
       const primaryLocale = locales[0];
-      
+
       // Extract region code (country) from locale
       if (primaryLocale.regionCode) {
         return primaryLocale.regionCode.toUpperCase();
       }
     }
-    
+
     // Fallback to US if no region detected
     return "US";
   } catch (error) {
@@ -36,7 +36,7 @@ export function isValidCountryCode(countryCode: string): boolean {
   if (!countryCode || countryCode.length !== 2) {
     return false;
   }
-  
+
   // Basic validation - should be two uppercase letters
   return /^[A-Z]{2}$/.test(countryCode.toUpperCase());
 }
@@ -47,10 +47,10 @@ export function isValidCountryCode(countryCode: string): boolean {
  */
 export function getDetectedCountry(): string {
   const detected = detectUserCountry();
-  
+
   if (isValidCountryCode(detected)) {
     return detected;
   }
-  
+
   return "US";
 }
