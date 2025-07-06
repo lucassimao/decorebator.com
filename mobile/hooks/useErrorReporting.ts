@@ -3,7 +3,7 @@ import { Alert } from "react-native";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import * as errorReportingApi from "@/api/errorReporting";
-import { ErrorType, ErrorReportRateLimitError } from "@/api/errorReporting";
+import { ErrorType, ErrorReportRateLimitError, QuizDetails } from "@/api/errorReporting";
 
 interface UseErrorReportingProps {
   wordId: number;
@@ -11,6 +11,7 @@ interface UseErrorReportingProps {
   isOnline: boolean;
   context: "quiz" | "flashcards";
   onSuccess?: () => void;
+  quizDetails?: QuizDetails;
 }
 
 export const useErrorReporting = ({
@@ -19,6 +20,7 @@ export const useErrorReporting = ({
   isOnline,
   context,
   onSuccess,
+  quizDetails,
 }: UseErrorReportingProps) => {
   const { t } = useTranslation();
   const [showReportModal, setShowReportModal] = useState(false);
@@ -33,6 +35,7 @@ export const useErrorReporting = ({
         wordId,
         definitionId,
         errorType,
+        quizDetails,
       });
     },
     onSuccess: () => {
