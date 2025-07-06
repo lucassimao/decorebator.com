@@ -83,13 +83,15 @@ const QuizScreen: React.FC = () => {
     onSuccess: () => {
       handleNextQuiz();
     },
-    quizDetails: quiz ? {
-      quizType: quiz.type,
-      value: quiz.value,
-      options: quiz.options,
-      answerIndex: quiz.answerIndex,
-      context: "quiz",
-    } : undefined,
+    quizDetails: quiz
+      ? {
+          quizType: quiz.type,
+          value: quiz.value,
+          options: quiz.options,
+          answerIndex: quiz.answerIndex,
+          context: "quiz",
+        }
+      : undefined,
   });
 
   // const [currentQuizId, setCurrentQuizId] = useState<number | null>(null); // Removed unused state

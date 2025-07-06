@@ -210,13 +210,15 @@ const FlashcardPractice: React.FC = () => {
     definitionId: definitions[0]?.id || null,
     isOnline,
     context: "flashcards",
-    quizDetails: currentWord  ? {
-      quizType: "FLASHCARD_VIEW", // Custom type for flashcard context
-      value: currentWord.name,
-      options: [],
-      answerIndex: 0, // Always 0 for flashcards since there's no option
-      context: "flashcard",
-    } : undefined,
+    quizDetails: currentWord
+      ? {
+          quizType: "FLASHCARD_VIEW", // Custom type for flashcard context
+          value: currentWord.name,
+          options: [],
+          answerIndex: 0, // Always 0 for flashcards since there's no option
+          context: "flashcard",
+        }
+      : undefined,
   });
 
   // Reset player and definitions fetch state when word changes

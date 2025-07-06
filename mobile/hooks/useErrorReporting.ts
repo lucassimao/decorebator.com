@@ -3,7 +3,11 @@ import { Alert } from "react-native";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import * as errorReportingApi from "@/api/errorReporting";
-import { ErrorType, ErrorReportRateLimitError, QuizDetails } from "@/api/errorReporting";
+import {
+  ErrorType,
+  ErrorReportRateLimitError,
+  QuizDetails,
+} from "@/api/errorReporting";
 
 interface UseErrorReportingProps {
   wordId: number;
