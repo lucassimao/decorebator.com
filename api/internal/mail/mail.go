@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,6 +22,16 @@ import (
 // Package-level functions for backward compatibility
 // These are used by services that don't have access to MailService
 
+// shouldSendEmails checks if emails should be sent based on environment variables
+// Returns false if DISABLE_EMAILS=true or ENV is not production (for some email types)
+func shouldSendEmails() bool {
+	// Check DISABLE_EMAILS flag (used for load testing and development)
+	if disableEmails, err := strconv.ParseBool(os.Getenv("DISABLE_EMAILS")); err == nil && disableEmails {
+		return false
+	}
+	return true
+}
+
 // GetUserRepositoryForMail returns a user repository for mail operations
 // This is a temporary solution to maintain backward compatibility
 func GetUserRepositoryForMail() (*repository.UserRepository, error) {
@@ -34,6 +45,11 @@ func GetUserRepositoryForMail() (*repository.UserRepository, error) {
 // https://www.twilio.com/docs/sendgrid/api-reference/contacts/add-or-update-a-contact
 func AddContactToList(user *model.User) {
 	logger := common.Logger.With("func", "AddContactToList", "user", user.ID)
+
+	if !shouldSendEmails() {
+		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping")
+		return
+	}
 
 	if os.Getenv("ENV") != "production" {
 		logger.Debug("non-production environment. skipping")
@@ -73,6 +89,11 @@ func AddContactToList(user *model.User) {
 var resetPasswordEmailTemplate string
 
 func SendResetPasswordEmail(email string) error {
+	if !shouldSendEmails() {
+		common.Logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping reset password email", "email", email)
+		return nil
+	}
+
 	userRepo, err := GetUserRepositoryForMail()
 	if err != nil {
 		return fmt.Errorf("failed to get user repository: %w", err)
@@ -159,6 +180,11 @@ type SubscriptionEmailData struct {
 func SendSubscriptionActivatedEmail(user *model.User, data SubscriptionEmailData) error {
 	logger := common.Logger.With("func", "SendSubscriptionActivatedEmail", "user", user.ID)
 
+	if !shouldSendEmails() {
+		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping subscription activated email")
+		return nil
+	}
+
 	tmpl, err := template.New("email").Parse(subscriptionActivatedTemplate)
 	if err != nil {
 		logger.Error("failed to parse template", "error", err)
@@ -209,6 +235,11 @@ func SendSubscriptionActivatedEmail(user *model.User, data SubscriptionEmailData
 func SendSubscriptionRenewedEmail(user *model.User, data SubscriptionEmailData) error {
 	logger := common.Logger.With("func", "SendSubscriptionRenewedEmail", "user", user.ID)
 
+	if !shouldSendEmails() {
+		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping subscription renewed email")
+		return nil
+	}
+
 	tmpl, err := template.New("email").Parse(subscriptionRenewedTemplate)
 	if err != nil {
 		logger.Error("failed to parse template", "error", err)
@@ -257,6 +288,11 @@ func SendSubscriptionRenewedEmail(user *model.User, data SubscriptionEmailData) 
 
 func SendRenewalReminderEmail(user *model.User, data SubscriptionEmailData) error {
 	logger := common.Logger.With("func", "SendRenewalReminderEmail", "user", user.ID)
+
+	if !shouldSendEmails() {
+		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping renewal reminder email")
+		return nil
+	}
 
 	tmpl, err := template.New("email").Parse(subscriptionRenewalReminderTemplate)
 	if err != nil {
@@ -307,6 +343,11 @@ func SendRenewalReminderEmail(user *model.User, data SubscriptionEmailData) erro
 func SendSubscriptionCancelledEmail(user *model.User, data SubscriptionEmailData) error {
 	logger := common.Logger.With("func", "SendSubscriptionCancelledEmail", "user", user.ID)
 
+	if !shouldSendEmails() {
+		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping subscription canceled email")
+		return nil
+	}
+
 	tmpl, err := template.New("email").Parse(subscriptionCancelledTemplate)
 	if err != nil {
 		logger.Error("failed to parse template", "error", err)
@@ -354,6 +395,11 @@ func SendSubscriptionCancelledEmail(user *model.User, data SubscriptionEmailData
 
 func SendPaymentFailedEmail(user *model.User, data SubscriptionEmailData) error {
 	logger := common.Logger.With("func", "SendPaymentFailedEmail", "user", user.ID)
+
+	if !shouldSendEmails() {
+		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping payment failed email")
+		return nil
+	}
 
 	tmpl, err := template.New("email").Parse(paymentFailedTemplate)
 	if err != nil {
@@ -407,6 +453,11 @@ var welcomeEmailTemplate string
 
 func SendWelcomeEmail(email string) error {
 	logger := common.Logger.With("func", "SendWelcomeEmail", "email", email)
+
+	if !shouldSendEmails() {
+		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping welcome email")
+		return nil
+	}
 
 	if os.Getenv("ENV") != "production" {
 		logger.Debug("non-production environment. skipping")

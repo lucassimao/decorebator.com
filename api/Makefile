@@ -187,7 +187,10 @@ debug-workers: ## Starts a delve session for workers
 	@$(GODOTENV_PATH) -f .env dlv debug cmd/workers/main.go
 
 debug-api: ## Starts a delve session for api
-	@$(GODOTENV_PATH) -f .env dlv debug cmd/api/server.go	
+	@$(GODOTENV_PATH) -f .env dlv debug cmd/api/server.go
+
+load-test: ## Run load testing script with environment variables and pass-through arguments
+	$(GODOTENV_PATH) -f .env go run tests/load_test_runner.go $(ARGS)
 
 create-migration: ## Create a new database migration file with the provided file name
 	@read -p "Enter the migration file name: " FILE_NAME; \
