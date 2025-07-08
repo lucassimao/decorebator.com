@@ -20,16 +20,16 @@ The script simulates a complete user journey:
 ```bash
 # Run with default settings (1 user, 30 seconds, local environment)
 cd api
-go run tests/load_test_runner.go
+go run tests/load_test_runner.go -words=tests/words.txt
 
 # Test against local development server (explicit)
-go run tests/load_test_runner.go -env=local
+go run tests/load_test_runner.go -env=local -words=tests/words.txt
 
 # Test against production API  
-go run tests/load_test_runner.go -env=prod
+go run tests/load_test_runner.go -env=prod -words=tests/words.txt
 
 # Override with custom URL
-go run tests/load_test_runner.go -url=http://localhost:8080
+go run tests/load_test_runner.go -url=http://localhost:8080 -words=tests/words.txt
 ```
 
 ### Configuration Options

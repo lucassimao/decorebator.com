@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -25,6 +27,7 @@ type Config struct {
 	Users         int
 	Duration      time.Duration
 	ClientTimeout time.Duration
+	WordsFile     string
 }
 
 // Request metrics
@@ -68,74 +71,32 @@ type WordlistResponse struct {
 
 // Using existing Quiz type from model package
 
-// Predefined words for consistent testing
-var testWords = []string{
-	"stenciling",
-	"furled",
-	"klaxons",
-	"scuffed",
-	"suckling",
-	"quaint",
-	"counteract",
-	"pheasant",
-	"piled",
-	"gaunt",
-	"voiture",
-	"sod",
-	"sneers",
-	"panoply",
-	"affordances",
-	"parquet",
-	"pastureland",
-	"liver",
-	"slant",
-	"plump",
-	"barracks",
-	"mingle",
-	"gills",
-	"livre",
-	"mating",
-	"sighing",
-	"lurched",
-	"stern",
-	"surge",
-	"steeply",
-	"languidly",
-	"whopping",
-	"parade",
-	"louche",
-	"pockmarked",
-	"jutting",
-	"groggy",
-	"bargemen",
-	"stringing",
-	"sash",
-	"sunken",
-	"skiff",
-	"leaders",
-	"lance",
-	"yell",
-	"spring",
-	"frightfully",
-	"skinned",
-	"mass",
-	"simpering",
-	"harness",
-	"trotted",
-	"conceit",
-	"gentle",
-	"clattering",
-	"treachery",
-	"fin",
-	"sail",
-	"mushy",
-	"gaffed",
-	"stirring",
-	"cove",
-	"wickets",
-	"concourse",
-	"defray",
-	"merriment",
+// loadWordsFromFile reads words from a file (one word per line)
+func loadWordsFromFile(filePath string) ([]string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open words file: %w", err)
+	}
+	defer file.Close()
+
+	var words []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		word := strings.TrimSpace(scanner.Text())
+		if word != "" && !strings.HasPrefix(word, "#") { // Skip empty lines and comments
+			words = append(words, word)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading words file: %w", err)
+	}
+
+	if len(words) == 0 {
+		return nil, fmt.Errorf("no valid words found in file")
+	}
+
+	return words, nil
 }
 
 // Metrics collector
@@ -213,10 +174,10 @@ type EndpointStats struct {
 
 // Performance thresholds based on 2025 industry standards
 type PerformanceThresholds struct {
-	Excellent time.Duration // < 100ms - Perceived as instantaneous
-	Good      time.Duration // < 500ms - Good user experience  
+	Excellent  time.Duration // < 100ms - Perceived as instantaneous
+	Good       time.Duration // < 500ms - Good user experience
 	Acceptable time.Duration // < 1000ms - Acceptable for most apps
-	Poor      time.Duration // < 2000ms - May impact user experience
+	Poor       time.Duration // < 2000ms - May impact user experience
 	// > 2000ms is considered unacceptable
 }
 
@@ -309,13 +270,15 @@ type UserSimulator struct {
 	config    Config
 	userID    int
 	authToken string
+	testWords []string
 }
 
-func NewUserSimulator(client *MetricsHTTPClient, config Config, userID int) *UserSimulator {
+func NewUserSimulator(client *MetricsHTTPClient, config Config, userID int, testWords []string) *UserSimulator {
 	return &UserSimulator{
-		client: client,
-		config: config,
-		userID: userID,
+		client:    client,
+		config:    config,
+		userID:    userID,
+		testWords: testWords,
 	}
 }
 
@@ -340,15 +303,15 @@ func (us *UserSimulator) SimulateUserJourney() error {
 	userCreated = true // Mark user as created for cleanup
 
 	// Small delay to simulate real user behavior
-	time.Sleep(time.Duration(rand.Intn(300)+100) * time.Millisecond)
+	time.Sleep(time.Duration(rand.Intn(300)+100) * time.Millisecond) // #nosec G404 - weak random is fine for load testing delays
 
 	// 2. Login
-	if err := us.login(user); err != nil {
-		journeyErr = fmt.Errorf("login failed: %w", err)
+	if loginErr := us.login(user); loginErr != nil {
+		journeyErr = fmt.Errorf("login failed: %w", loginErr)
 		return journeyErr
 	}
 
-	time.Sleep(time.Duration(rand.Intn(200)+100) * time.Millisecond)
+	time.Sleep(time.Duration(rand.Intn(200)+100) * time.Millisecond) // #nosec G404 - weak random is fine for load testing delays
 
 	// 3. Create wordlist
 	wordlistID, err := us.createWordlist()
@@ -357,7 +320,7 @@ func (us *UserSimulator) SimulateUserJourney() error {
 		return journeyErr
 	}
 
-	time.Sleep(time.Duration(rand.Intn(200)+100) * time.Millisecond)
+	time.Sleep(time.Duration(rand.Intn(200)+100) * time.Millisecond) // #nosec G404 - weak random is fine for load testing delays
 
 	// 4. Add words to wordlist
 	if err := us.addWords(wordlistID); err != nil {
@@ -365,10 +328,10 @@ func (us *UserSimulator) SimulateUserJourney() error {
 		return journeyErr
 	}
 
-	time.Sleep(time.Duration(rand.Intn(300)+200) * time.Millisecond)
+	time.Sleep(time.Duration(rand.Intn(300)+200) * time.Millisecond) // #nosec G404
 
 	// 5. Quiz loop - simulate multiple quiz sessions
-	quizCount := rand.Intn(10) + 10 // 10-20 quizzes per user
+	quizCount := rand.Intn(10) + 10 // #nosec G404 - 10-20 quizzes per user
 	log.Printf("User %d: Starting quiz session (%d quizzes)", us.userID, quizCount)
 	for i := 0; i < quizCount; i++ {
 		if err := us.doQuiz(wordlistID); err != nil {
@@ -379,7 +342,7 @@ func (us *UserSimulator) SimulateUserJourney() error {
 		}
 
 		// Random delay between quizzes
-		time.Sleep(time.Duration(rand.Intn(500)+200) * time.Millisecond)
+		time.Sleep(time.Duration(rand.Intn(500)+200) * time.Millisecond) // #nosec G404
 	}
 
 	// Journey completed successfully
@@ -477,13 +440,13 @@ func (us *UserSimulator) createWordlist() (int, error) {
 
 func (us *UserSimulator) addWords(wordlistID int) error {
 	// Add 5-8 random words from our test set
-	wordCount := rand.Intn(4) + 5
+	wordCount := rand.Intn(4) + 5 // #nosec G404
 	selectedWords := make([]string, 0, wordCount)
 
 	// Shuffle words and select a subset
-	shuffled := make([]string, len(testWords))
-	copy(shuffled, testWords)
-	rand.Shuffle(len(shuffled), func(i, j int) {
+	shuffled := make([]string, len(us.testWords))
+	copy(shuffled, us.testWords)
+	rand.Shuffle(len(shuffled), func(i, j int) { // #nosec G404
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 	})
 
@@ -517,7 +480,7 @@ func (us *UserSimulator) addWords(wordlistID int) error {
 		}
 
 		// Small delay between word additions
-		time.Sleep(time.Duration(rand.Intn(100)+50) * time.Millisecond)
+		time.Sleep(time.Duration(rand.Intn(100)+50) * time.Millisecond) // #nosec G404
 	}
 
 	return nil
@@ -542,17 +505,17 @@ func (us *UserSimulator) doQuiz(wordlistID int) error {
 	}
 
 	var quizResp model.Quiz
-	if err := json.NewDecoder(resp.Body).Decode(&quizResp); err != nil {
-		return fmt.Errorf("failed to decode quiz response: %w", err)
+	if decodeErr := json.NewDecoder(resp.Body).Decode(&quizResp); decodeErr != nil {
+		return fmt.Errorf("failed to decode quiz response: %w", decodeErr)
 	}
 
 	// Simulate thinking time
-	time.Sleep(time.Duration(rand.Intn(2000)+1000) * time.Millisecond)
+	time.Sleep(time.Duration(rand.Intn(2000)+1000) * time.Millisecond) // #nosec G404
 
 	// 2. Save quiz result (simulate 80% success rate)
-	success := rand.Float32() < 0.8
-	responseTimeMs := rand.Intn(5000) + 1000 // 1-6 second response time
-	
+	success := rand.Float32() < 0.8          // #nosec G404
+	responseTimeMs := rand.Intn(5000) + 1000 // #nosec G404 - 1-6 second response time
+
 	saveReq := httpHandler.SaveInput{
 		WordlistID:              int64(wordlistID),
 		WordID:                  quizResp.WordID,
@@ -620,6 +583,7 @@ FLAGS:
     -users int           Number of concurrent users (default: 1)
     -duration string     Test duration (e.g., 30s, 2m, 1h) (default: 30s)
     -timeout duration    HTTP client timeout (default: 30s)
+    -words string        Path to text file containing words (one per line) (required)
     -help               Show this help message
 
 ENVIRONMENTS:
@@ -628,31 +592,38 @@ ENVIRONMENTS:
 
 EXAMPLES:
     # Basic test with 1 user for 30 seconds
-    make load-test ARGS="-env=local"
+    make load-test ARGS="-env=local -words=tests/words.txt"
 
     # Test with 5 concurrent users for 1 minute
-    make load-test ARGS="-users=5 -duration=1m -env=local"
+    make load-test ARGS="-users=5 -duration=1m -env=local -words=tests/words.txt"
 
     # Heavy load test with 20 users for 2 minutes
-    make load-test ARGS="-users=20 -duration=2m -env=local"
+    make load-test ARGS="-users=20 -duration=2m -env=local -words=tests/words.txt"
 
     # Test against production
-    make load-test ARGS="-users=10 -duration=30s -env=prod"
+    make load-test ARGS="-users=10 -duration=30s -env=prod -words=tests/words.txt"
 
     # Custom URL
-    make load-test ARGS="-url=http://localhost:8080 -users=5"
+    make load-test ARGS="-url=http://localhost:8080 -users=5 -words=tests/words.txt"
 
     # Quick smoke test
-    make load-test ARGS="-users=1 -duration=5s"
+    make load-test ARGS="-users=1 -duration=5s -words=tests/words.txt"
 
 WHAT IT TESTS:
     Complete user journey simulation:
     ✓ User Registration
     ✓ Authentication (JWT)
     ✓ Wordlist Creation
-    ✓ Adding Words (5-10 random words)
+    ✓ Adding Words (5-10 random words from file)
     ✓ Quiz Loop (10-20 quizzes per user)
     ✓ Cleanup (automatic user deletion)
+
+WORDS FILE FORMAT:
+    # Comments start with # and are ignored
+    word1
+    word2
+    word3
+    # Empty lines are also ignored
 
 PERFORMANCE STANDARDS:
     🟢 Excellent: ≤ 100ms (Perceived as instantaneous)
@@ -676,6 +647,7 @@ func main() {
 	flag.IntVar(&config.Users, "users", 1, "Number of concurrent users")
 	flag.StringVar(&durationStr, "duration", "30s", "Test duration (e.g., 30s, 2m)")
 	flag.DurationVar(&config.ClientTimeout, "timeout", 30*time.Second, "HTTP client timeout")
+	flag.StringVar(&config.WordsFile, "words", "", "Path to text file containing words (required)")
 	flag.BoolVar(&showHelp, "help", false, "Show help message")
 	flag.Parse()
 
@@ -683,6 +655,13 @@ func main() {
 	if showHelp || (len(os.Args) == 1) {
 		printHelp()
 		return
+	}
+
+	// Validate required flags
+	if config.WordsFile == "" {
+		fmt.Fprintf(os.Stderr, "Error: -words flag is required\n\n")
+		printHelp()
+		os.Exit(1)
 	}
 
 	// Set base URL based on environment if not explicitly provided
@@ -703,11 +682,18 @@ func main() {
 		log.Fatalf("Invalid duration format: %v", err)
 	}
 
+	// Load words from file
+	testWords, err := loadWordsFromFile(config.WordsFile)
+	if err != nil {
+		log.Fatalf("Failed to load words from file: %v", err)
+	}
+
 	fmt.Printf("=== Decorebator Load Test ===\n")
 	fmt.Printf("Base URL: %s\n", config.BaseURL)
 	fmt.Printf("Concurrent Users: %d\n", config.Users)
 	fmt.Printf("Duration: %s\n", config.Duration)
 	fmt.Printf("Client Timeout: %s\n", config.ClientTimeout)
+	fmt.Printf("Words File: %s (%d words loaded)\n", config.WordsFile, len(testWords))
 	fmt.Printf("\nStarting load test...\n\n")
 
 	// Initialize metrics collector
@@ -747,7 +733,7 @@ func main() {
 		go func(userID int) {
 			defer wg.Done()
 
-			simulator := NewUserSimulator(metricsClient, config, userID)
+			simulator := NewUserSimulator(metricsClient, config, userID, testWords)
 
 			// Keep running user journeys until done signal
 			journeyCount := 0
@@ -762,7 +748,7 @@ func main() {
 					journeyCount++
 
 					// Small delay before starting next journey
-					time.Sleep(time.Duration(rand.Intn(1000)+500) * time.Millisecond)
+					time.Sleep(time.Duration(rand.Intn(1000)+500) * time.Millisecond) // #nosec G404
 				}
 			}
 		}(i)
@@ -791,10 +777,10 @@ func main() {
 	overallWorst := time.Duration(0)
 	for _, stat := range stats {
 		successRate := float64(stat.Success) / float64(stat.Total) * 100
-		
+
 		avgRating, _ := getPerformanceRating(stat.AvgDuration)
 		p95Rating, _ := getPerformanceRating(stat.P95Duration)
-		
+
 		fmt.Printf("- %-30s %4d requests, %2d errors, avg: %6s %s, p95: %6s %s, success: %5.1f%%\n",
 			stat.Endpoint+":",
 			stat.Total,
