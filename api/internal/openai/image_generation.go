@@ -2,13 +2,11 @@ package openai
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"time"
 )
 
 type ImageGenerationResponse struct {
@@ -25,10 +23,7 @@ type ImageGenerationResponse struct {
 	} `json:"error"`
 }
 
-func GenerateImage(ctx context.Context, prompt string) (*ImageGenerationResponse, error) {
-	// Add timeout context to prevent hanging requests
-	timeoutCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
-	defer cancel()
+func GenerateImage(prompt string) (*ImageGenerationResponse, error) {
 	var requestBodyStruct = map[string]any{
 		"model":              "gpt-image-1",
 		"prompt":             prompt,
@@ -45,7 +40,7 @@ func GenerateImage(ctx context.Context, prompt string) (*ImageGenerationResponse
 		return nil, fmt.Errorf("error marshaling request data: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(timeoutCtx, "POST", "https://api.openai.com/v1/images/generations", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", "https://api.openai.com/v1/images/generations", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
@@ -57,13 +52,6 @@ func GenerateImage(ctx context.Context, prompt string) (*ImageGenerationResponse
 
 	resp, err := client.Do(req)
 	if err != nil {
-		// Handle context timeout and cancellation
-		if timeoutCtx.Err() == context.DeadlineExceeded {
-			return nil, fmt.Errorf("image generation request timed out after 15 seconds: %w", err)
-		}
-		if timeoutCtx.Err() == context.Canceled {
-			return nil, fmt.Errorf("image generation request was cancelled: %w", err)
-		}
 		return nil, fmt.Errorf("failed to request API endpoint: %w", err)
 	}
 	defer resp.Body.Close()

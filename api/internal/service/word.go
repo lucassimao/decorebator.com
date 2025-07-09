@@ -94,7 +94,7 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 	}
 
 	// Validate word content using moderation service
-	filterResult := ws.moderationService.Validate(ctx, trimmedName)
+	filterResult := ws.moderationService.Validate(trimmedName)
 	if !filterResult.IsAppropriate {
 		return nil, common.BusinessError{
 			Message: fmt.Sprintf("Word content not appropriate: %s", filterResult.Reason),
@@ -103,7 +103,7 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 
 	// Validate notes content if provided
 	if dto.Notes != "" {
-		notesResult := ws.moderationService.Validate(ctx, dto.Notes)
+		notesResult := ws.moderationService.Validate(dto.Notes)
 		if !notesResult.IsAppropriate {
 			return nil, common.BusinessError{
 				Message: fmt.Sprintf("Word notes not appropriate: %s", notesResult.Reason),

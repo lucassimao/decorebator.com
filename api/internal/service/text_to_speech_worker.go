@@ -63,7 +63,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 		return err
 	}
 
-	response, err := openai.GenerateAudio(ctx, word.Name, languageCode)
+	response, err := openai.GenerateAudio(word.Name, languageCode)
 	if err != nil {
 		logger.Error("failed to generate audio", "error", err)
 		return err

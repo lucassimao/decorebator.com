@@ -73,7 +73,7 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 	}
 
 	var userID int64 = c.GetInt64("userID")
-	saved, err := h.wordlistService.SaveWordlist(c.Request.Context(), &Wordlist{
+	saved, err := h.wordlistService.SaveWordlist(&Wordlist{
 		Name:                input.Name,
 		Description:         input.Description,
 		UserID:              userID,
@@ -161,7 +161,7 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 	}
 
 	var userID int64 = c.GetInt64("userID")
-	err := h.wordlistService.UpdateWordlist(c.Request.Context(), &Wordlist{ID: id, Name: input.Name, Description: input.Description, LanguageCode: input.LanguageCode, UserID: userID})
+	err := h.wordlistService.UpdateWordlist(&Wordlist{ID: id, Name: input.Name, Description: input.Description, LanguageCode: input.LanguageCode, UserID: userID})
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)

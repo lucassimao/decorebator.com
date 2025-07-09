@@ -47,7 +47,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 			LanguageCode:        "en",
 			PronunciationSystem: model.PronunciationSystemIPA,
 		}
-		savedWordlist, err := service.SaveWordlist(ctx, wordlist)
+		savedWordlist, err := service.SaveWordlist(wordlist)
 		require.NoError(t, err)
 		return savedWordlist.ID
 	}

@@ -106,7 +106,27 @@ CREATE INDEX CONCURRENTLY idx_words_wordlist_learned ON words (wordlist_id, lear
 
 **Implementation File**: `migrations/000058_add_wordlists_user_id_index.up.sql` - **COMPLETED**
 
-### 1.2 Request Timeout Context (Next Priority)
+### 1.2 bcrypt Cost Optimization
+
+#### Environment-Specific Configuration
+**Target Files**: 
+- `internal/repository/user.go:42`
+- `internal/repository/user.go:150`
+- `internal/repository/user.go:200`
+
+**Implementation**:
+```go
+// internal/common/crypto.go (new file)
+func GetBcryptCost() int {
+    if os.Getenv("ENV") == "production" {
+        return 12 // Higher security for production
+    }
+    return 8 // Faster for development/testing
+}
+
+// Update all bcrypt.GenerateFromPassword calls
+bytes, err := bcrypt.GenerateFromPassword([]byte(password), common.GetBcryptCost())
+```
 
 ### 1.3 Registration Flow Optimization
 
@@ -405,6 +425,7 @@ router.Use(middleware.GzipMiddleware())
 - [x] Fix user registration double-bcrypt flow (biggest impact) - **COMPLETED: ~50% performance improvement**
 - [x] Add explicit subscription_plan = 'free' to repository - **COMPLETED: Better code maintainability**
 - [x] Add essential database indexes (users.email, wordlists.user_id) - **COMPLETED: idx_wordlists_user_id_created_at added**
+- [ ] Implement environment-specific bcrypt costs
 - [ ] Add request timeout context for external API calls
 - [ ] Add JWT generation optimization
 - [ ] Integrate with existing load testing (`make load-test`)

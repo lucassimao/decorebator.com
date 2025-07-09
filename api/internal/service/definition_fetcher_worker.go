@@ -87,7 +87,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 
 	logger.Info("fetching definitions", "word", word.Name, "language", languageCode, "pronunciationSystem", pronunciationSystem)
 
-	definitionData, err := openai.GetDefinition(ctx, word.Name, languageCode, pronunciationSystem)
+	definitionData, err := openai.GetDefinition(word.Name, languageCode, pronunciationSystem)
 	if err != nil {
 		logger.Error("failed to fetch definitions using openai", "error", err)
 		errorMsg := fmt.Sprintf("Failed to fetch definitions: %v", err)

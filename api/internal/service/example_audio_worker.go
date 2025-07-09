@@ -85,7 +85,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 	// 5. Generate audio for selected examples
 	for _, exampleItem := range selectedExamples {
 		// Generate audio using OpenAI TTS with language-specific voice
-		response, err := openai.GenerateAudio(ctx, exampleItem.ExampleText, voice)
+		response, err := openai.GenerateAudio(exampleItem.ExampleText, voice)
 		if err != nil {
 			// Log error but continue with other examples
 			logger.Error("failed to generate audio for example", "example", exampleItem.ExampleText, "error", err)

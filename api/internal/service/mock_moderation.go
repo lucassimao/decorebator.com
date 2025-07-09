@@ -1,9 +1,6 @@
 package service
 
-import (
-	"context"
-	"strings"
-)
+import "strings"
 
 // MockModerationService is a test implementation that simulates OpenAI moderation responses
 type MockModerationService struct {
@@ -74,7 +71,7 @@ func NewMockModerationService() *MockModerationService {
 }
 
 // Validate checks if content is appropriate using predefined test rules
-func (m *MockModerationService) Validate(ctx context.Context, text string) ContentFilterResult {
+func (m *MockModerationService) Validate(text string) ContentFilterResult {
 	// Basic validation first
 	if text == "" {
 		return ContentFilterResult{
