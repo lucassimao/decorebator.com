@@ -2,12 +2,14 @@ package openai
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -289,7 +291,10 @@ func buildLanguageSpecificPrompt(token string, languageCode string, pronunciatio
 	return messages, nil
 }
 
-func chatCompletion(messages []map[string]string, schema map[string]any) (*ChatCompletionResponse, error) {
+func chatCompletion(ctx context.Context, messages []map[string]string, schema map[string]any) (*ChatCompletionResponse, error) {
+	// Add timeout context to prevent hanging requests
+	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 	var requestBodyStruct = map[string]any{
 		"model":           "gpt-4o",
 		"response_format": map[string]any{"type": "json_schema", "json_schema": schema},
@@ -301,7 +306,7 @@ func chatCompletion(messages []map[string]string, schema map[string]any) (*ChatC
 		return nil, fmt.Errorf("error marshaling request data: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(timeoutCtx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
@@ -313,6 +318,13 @@ func chatCompletion(messages []map[string]string, schema map[string]any) (*ChatC
 
 	resp, err := client.Do(req)
 	if err != nil {
+		// Handle context timeout and cancellation
+		if timeoutCtx.Err() == context.DeadlineExceeded {
+			return nil, fmt.Errorf("chat completion request timed out after 30 seconds: %w", err)
+		}
+		if timeoutCtx.Err() == context.Canceled {
+			return nil, fmt.Errorf("chat completion request was cancelled: %w", err)
+		}
 		return nil, fmt.Errorf("failed to request API endpoint: %w", err)
 	}
 	defer resp.Body.Close()
@@ -341,7 +353,7 @@ type DefinitionWithPronunciation struct {
 	Pronunciation string
 }
 
-func GetDefinition(token string, languageCode string, pronunciationSystem model.PronunciationSystem) (*DefinitionWithPronunciation, error) {
+func GetDefinition(ctx context.Context, token string, languageCode string, pronunciationSystem model.PronunciationSystem) (*DefinitionWithPronunciation, error) {
 	logger := common.Logger.With("token", token, "languageCode", languageCode, "pronunciationSystem", pronunciationSystem, "func", "GetDefinition", "package", "openai")
 
 	logger.Debug("defining token using chatgpt", "token", token, "language", languageCode, "pronunciationSystem", pronunciationSystem)
@@ -361,7 +373,7 @@ func GetDefinition(token string, languageCode string, pronunciationSystem model.
 	}
 
 	var chatResponse *ChatCompletionResponse
-	chatResponse, err = chatCompletion(messages, schema)
+	chatResponse, err = chatCompletion(ctx, messages, schema)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get definitions from ChatGPT: %w", err)
 	}

@@ -28,6 +28,7 @@ type Config struct {
 	Duration      time.Duration
 	ClientTimeout time.Duration
 	WordsFile     string
+	SkipCleanup   bool
 }
 
 // Request metrics
@@ -253,6 +254,11 @@ func (m *MetricsHTTPClient) Do(req *http.Request, endpoint string) (*http.Respon
 		}
 	}
 
+	// Log slow requests (>10 seconds) for debugging
+	if duration > 10*time.Second {
+		log.Printf("🐌 SLOW REQUEST: %s took %s (status: %d)", endpoint, duration.Round(time.Millisecond), statusCode)
+	}
+
 	m.collector.Add(RequestMetric{
 		Endpoint:     endpoint,
 		Duration:     duration,
@@ -288,10 +294,12 @@ func (us *UserSimulator) SimulateUserJourney() error {
 
 	// Ensure cleanup always happens if user was created, even if journey fails
 	defer func() {
-		if userCreated && us.authToken != "" {
+		if userCreated && us.authToken != "" && !us.config.SkipCleanup {
 			if err := us.deleteUser(); err != nil {
 				log.Printf("User %d cleanup failed: %v", us.userID, err)
 			}
+		} else if us.config.SkipCleanup {
+			log.Printf("User %d: Skipping cleanup (--skip-cleanup enabled)", us.userID)
 		}
 	}()
 
@@ -548,7 +556,7 @@ func (us *UserSimulator) doQuiz(wordlistID int) error {
 
 func (us *UserSimulator) deleteUser() error {
 	// Create request with context timeout to prevent hanging
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	log.Printf("User %d: Cleaning up user account", us.userID)
@@ -582,8 +590,9 @@ FLAGS:
     -url string          API base URL (overrides -env)
     -users int           Number of concurrent users (default: 1)
     -duration string     Test duration (e.g., 30s, 2m, 1h) (default: 30s)
-    -timeout duration    HTTP client timeout (default: 30s)
+    -timeout duration    HTTP client timeout (default: 2m)
     -words string        Path to text file containing words (one per line) (required)
+    -skip-cleanup        Skip user deletion (for debugging production issues)
     -help               Show this help message
 
 ENVIRONMENTS:
@@ -646,8 +655,9 @@ func main() {
 	flag.StringVar(&environment, "env", "local", "Environment: 'local' or 'prod'")
 	flag.IntVar(&config.Users, "users", 1, "Number of concurrent users")
 	flag.StringVar(&durationStr, "duration", "30s", "Test duration (e.g., 30s, 2m)")
-	flag.DurationVar(&config.ClientTimeout, "timeout", 30*time.Second, "HTTP client timeout")
+	flag.DurationVar(&config.ClientTimeout, "timeout", 120*time.Second, "HTTP client timeout")
 	flag.StringVar(&config.WordsFile, "words", "", "Path to text file containing words (required)")
+	flag.BoolVar(&config.SkipCleanup, "skip-cleanup", false, "Skip user deletion (for debugging production issues)")
 	flag.BoolVar(&showHelp, "help", false, "Show help message")
 	flag.Parse()
 

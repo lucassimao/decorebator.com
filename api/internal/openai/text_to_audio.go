@@ -2,11 +2,13 @@ package openai
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"time"
 )
 
 type GenerateAudioResponse struct {
@@ -56,7 +58,10 @@ func getInstructionsForLanguage(languageCode string, text string) string {
 	return fmt.Sprintf("Speak clearly and naturally. Text to pronounce: %s", text)
 }
 
-func GenerateAudio(text string, languageCode string) (*GenerateAudioResponse, error) {
+func GenerateAudio(ctx context.Context, text string, languageCode string) (*GenerateAudioResponse, error) {
+	// Add timeout context to prevent hanging requests
+	timeoutCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
 	voice := getVoiceForLanguage(languageCode)
 	instructions := getInstructionsForLanguage(languageCode, text)
 
@@ -72,7 +77,7 @@ func GenerateAudio(text string, languageCode string) (*GenerateAudioResponse, er
 		return nil, fmt.Errorf("error marshaling request data: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", "https://api.openai.com/v1/audio/speech", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(timeoutCtx, "POST", "https://api.openai.com/v1/audio/speech", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
@@ -84,6 +89,13 @@ func GenerateAudio(text string, languageCode string) (*GenerateAudioResponse, er
 
 	resp, err := client.Do(req)
 	if err != nil {
+		// Handle context timeout and cancellation
+		if timeoutCtx.Err() == context.DeadlineExceeded {
+			return nil, fmt.Errorf("text-to-speech request timed out after 20 seconds: %w", err)
+		}
+		if timeoutCtx.Err() == context.Canceled {
+			return nil, fmt.Errorf("text-to-speech request was cancelled: %w", err)
+		}
 		return nil, fmt.Errorf("failed to request API endpoint: %w", err)
 	}
 	defer resp.Body.Close()

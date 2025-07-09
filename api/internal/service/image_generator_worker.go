@@ -84,7 +84,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	}
 	logger.Debug(prompt)
 
-	data, err := generateWithOpenAI(prompt)
+	data, err := generateWithOpenAI(ctx, prompt)
 
 	if err != nil {
 		return err
@@ -157,10 +157,10 @@ func buildImagePrompt(sentence, token, meaning, languageCode string) (string, er
 	return fmt.Sprintf(template, sentence, token, meaning, token), nil
 }
 
-func generateWithOpenAI(prompt string) ([]byte, error) {
+func generateWithOpenAI(ctx context.Context, prompt string) ([]byte, error) {
 	var logger = common.Logger.With("func", "generateWithOpenAI")
 
-	response, err := openai.GenerateImage(prompt)
+	response, err := openai.GenerateImage(ctx, prompt)
 
 	if err != nil {
 		// [TODO] track potential causes here and decide if return nil or not

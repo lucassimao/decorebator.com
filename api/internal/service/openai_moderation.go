@@ -72,7 +72,7 @@ type ContentFilterResult struct {
 
 // ModerationService interface for content moderation
 type ModerationService interface {
-	Validate(text string) ContentFilterResult
+	Validate(ctx context.Context, text string) ContentFilterResult
 }
 
 // OpenAIModerationService handles content moderation using OpenAI's moderation API
@@ -105,7 +105,7 @@ func NewOpenAIModerationService() *OpenAIModerationService {
 }
 
 // Validate moderates content using OpenAI's moderation API
-func (s *OpenAIModerationService) Validate(text string) ContentFilterResult {
+func (s *OpenAIModerationService) Validate(ctx context.Context, text string) ContentFilterResult {
 	// Basic validation first (empty, too long, etc.)
 	if text == "" {
 		return ContentFilterResult{
@@ -134,10 +134,14 @@ func (s *OpenAIModerationService) Validate(text string) ContentFilterResult {
 	}
 
 	// Call OpenAI moderation API
-	result, err := s.moderateWithOpenAI(text)
+	result, err := s.moderateWithOpenAI(ctx, text)
 	if err != nil {
-		// Log error but don't block content creation
-		common.Logger.Error("OpenAI moderation API failed, allowing content", "error", err, "text", text)
+		// Log error but don't block content creation - especially important for timeouts
+		if ctx.Err() == context.DeadlineExceeded {
+			common.Logger.Warn("OpenAI moderation API timed out, allowing content creation", "error", err, "text", text)
+		} else {
+			common.Logger.Error("OpenAI moderation API failed, allowing content", "error", err, "text", text)
+		}
 		return ContentFilterResult{
 			IsAppropriate: true,
 			Reason:        "",
@@ -167,7 +171,10 @@ func (s *OpenAIModerationService) Validate(text string) ContentFilterResult {
 }
 
 // moderateWithOpenAI calls the OpenAI moderation API
-func (s *OpenAIModerationService) moderateWithOpenAI(text string) (*ModerationResult, error) {
+func (s *OpenAIModerationService) moderateWithOpenAI(ctx context.Context, text string) (*ModerationResult, error) {
+	// Add timeout context to prevent hanging requests - shorter timeout for moderation
+	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	reqBody := ModerationRequest{
 		Input: text,
 		Model: "omni-moderation-latest",
@@ -178,7 +185,7 @@ func (s *OpenAIModerationService) moderateWithOpenAI(text string) (*ModerationRe
 		return nil, fmt.Errorf("error marshaling request: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", s.apiURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(timeoutCtx, "POST", s.apiURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
@@ -188,6 +195,13 @@ func (s *OpenAIModerationService) moderateWithOpenAI(text string) (*ModerationRe
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
+		// Handle context timeout and cancellation
+		if timeoutCtx.Err() == context.DeadlineExceeded {
+			return nil, fmt.Errorf("moderation request timed out after 10 seconds: %w", err)
+		}
+		if timeoutCtx.Err() == context.Canceled {
+			return nil, fmt.Errorf("moderation request was cancelled: %w", err)
+		}
 		return nil, fmt.Errorf("error making request: %w", err)
 	}
 	defer resp.Body.Close()
