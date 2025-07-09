@@ -1,8 +1,10 @@
 package setup
 
 import (
+	"crypto/rand" // For secure random numbers
 	"fmt"
-	"math/rand" // nosec G404 - math/rand is acceptable for test fixtures, not cryptographic use
+	"math/big"
+	mathrand "math/rand" // nosec G404 - math/rand is acceptable for test fixtures, not cryptographic use
 	"time"
 
 	httphandlers "decorebator.com/internal/http"
@@ -11,6 +13,21 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// GenerateUniqueEventID creates a unique event ID for tests
+func GenerateUniqueEventID(prefix string) string {
+	// Use nanoseconds for higher precision
+	timestamp := time.Now().UnixNano()
+
+	// Add crypto random number for uniqueness
+	randomNum, err := rand.Int(rand.Reader, big.NewInt(999999))
+	if err != nil {
+		// Fallback to timestamp only if crypto fails
+		return fmt.Sprintf("%s_%d", prefix, timestamp)
+	}
+
+	return fmt.Sprintf("%s_%d_%d", prefix, timestamp, randomNum.Int64())
+}
 
 // GenerateTestUser generates a random test user using production model
 func GenerateTestUser() *model.User {
@@ -78,7 +95,7 @@ func GenerateTestWordlist(userID int64) *model.Wordlist {
 	fake := gofakeit.New(seed)
 
 	languages := []string{"en", "es", "fr", "de", "it", "pt", "ja"}
-	languageCode := languages[rand.Intn(len(languages))] //nolint:gosec // G404 - test fixtures only
+	languageCode := languages[mathrand.Intn(len(languages))] //nolint:gosec // G404 - test fixtures only
 
 	return &model.Wordlist{
 		Name:                fake.Sentence(3),
@@ -130,7 +147,7 @@ func GenerateTestDefinition() *model.Definition {
 		Token:        fake.Word(),
 		Language:     "en",
 		Meaning:      fake.Sentence(8),
-		PartOfSpeech: partsOfSpeech[rand.Intn(len(partsOfSpeech))], //nolint:gosec // G404 - test fixtures only
+		PartOfSpeech: partsOfSpeech[mathrand.Intn(len(partsOfSpeech))], //nolint:gosec // G404 - test fixtures only
 		Examples:     []string{fake.Sentence(6), fake.Sentence(7)},
 		Source:       model.ChatGPT,
 		// pgtype fields will be set by database operations

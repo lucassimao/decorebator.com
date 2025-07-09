@@ -297,7 +297,7 @@ jobs:
           
           # Test Configuration
           TEST_MODE=true
-          JWT_SECRET=test-jwt-secret-key-for-testing-only
+          JWT_KEY=test-jwt-secret-key-for-testing-only
           ENV=test
           
           # External API Keys (mock keys for testing)

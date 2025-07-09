@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -198,7 +197,7 @@ func TestRevenueCatSubscriptionCreation(t *testing.T) {
 
 		// Create test setup event
 		testEvent := model.SubscriptionEvent{
-			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			ExternalEventID: setup.GenerateUniqueEventID("test_setup"),
 			Provider:        model.ProviderRevenueCat,
 			EventType:       "test_setup",
 			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
@@ -255,7 +254,7 @@ func TestRevenueCatSubscriptionCreation(t *testing.T) {
 
 		// Create test setup event
 		testEvent := model.SubscriptionEvent{
-			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			ExternalEventID: setup.GenerateUniqueEventID("test_setup"),
 			Provider:        model.ProviderRevenueCat,
 			EventType:       "test_setup",
 			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
@@ -275,7 +274,7 @@ func TestRevenueCatSubscriptionCreation(t *testing.T) {
 		// Create test update event
 		updateEvent := model.SubscriptionEvent{
 			SubscriptionID:  existing.ID,
-			ExternalEventID: fmt.Sprintf("test_update_%d", time.Now().Unix()),
+			ExternalEventID: setup.GenerateUniqueEventID("test_update"),
 			Provider:        model.ProviderRevenueCat,
 			EventType:       "test_update",
 			EventData:       `{"type": "test_update", "source": "integration_test"}`,

@@ -206,7 +206,7 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 
 		// Create test setup event
 		testEvent := model.SubscriptionEvent{
-			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			ExternalEventID: setup.GenerateUniqueEventID("test_setup"),
 			Provider:        model.ProviderRevenueCat,
 			EventType:       "test_setup",
 			EventData:       `{"type": "test_setup", "source": "integration_test"}`,

@@ -78,7 +78,7 @@ func TestCustomerSubscriptionCreatedWebhook(t *testing.T) {
 		require.NoError(t, err)
 
 		event := stripe.Event{
-			ID:   fmt.Sprintf("evt_test_created_%d", time.Now().Unix()),
+			ID:   setup.GenerateUniqueEventID("evt_test_created"),
 			Type: "customer.subscription.created",
 			Data: &stripe.EventData{
 				Raw: eventData,
@@ -180,7 +180,7 @@ func TestCustomerSubscriptionCreatedWebhook(t *testing.T) {
 		require.NoError(t, err)
 
 		event := stripe.Event{
-			ID:   fmt.Sprintf("evt_test_annual_%d", time.Now().Unix()),
+			ID:   setup.GenerateUniqueEventID("evt_test_annual"),
 			Type: "customer.subscription.created",
 			Data: &stripe.EventData{
 				Raw: eventData,
@@ -261,7 +261,7 @@ func TestCustomerSubscriptionUpdatedWebhook(t *testing.T) {
 		}
 		// Create test setup event
 		testEvent := model.SubscriptionEvent{
-			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			ExternalEventID: setup.GenerateUniqueEventID("test_setup"),
 			Provider:        model.ProviderStripe,
 			EventType:       "test_setup",
 			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
@@ -295,7 +295,7 @@ func TestCustomerSubscriptionUpdatedWebhook(t *testing.T) {
 		require.NoError(t, err)
 
 		event := stripe.Event{
-			ID:   fmt.Sprintf("evt_test_updated_%d", time.Now().Unix()),
+			ID:   setup.GenerateUniqueEventID("evt_test_updated"),
 			Type: "customer.subscription.updated",
 			Data: &stripe.EventData{
 				Raw: eventData,
@@ -363,7 +363,7 @@ func TestCustomerSubscriptionUpdatedWebhook(t *testing.T) {
 		}
 		// Create test setup event
 		testEvent := model.SubscriptionEvent{
-			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			ExternalEventID: setup.GenerateUniqueEventID("test_setup"),
 			Provider:        model.ProviderStripe,
 			EventType:       "test_setup",
 			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
@@ -397,7 +397,7 @@ func TestCustomerSubscriptionUpdatedWebhook(t *testing.T) {
 		require.NoError(t, err)
 
 		event := stripe.Event{
-			ID:   fmt.Sprintf("evt_test_cancel_%d", time.Now().Unix()),
+			ID:   setup.GenerateUniqueEventID("evt_test_cancel"),
 			Type: "customer.subscription.updated",
 			Data: &stripe.EventData{
 				Raw: eventData,
@@ -474,7 +474,7 @@ func TestCustomerSubscriptionDeletedWebhook(t *testing.T) {
 		}
 		// Create test setup event
 		testEvent := model.SubscriptionEvent{
-			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			ExternalEventID: setup.GenerateUniqueEventID("test_setup"),
 			Provider:        model.ProviderStripe,
 			EventType:       "test_setup",
 			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
@@ -497,7 +497,7 @@ func TestCustomerSubscriptionDeletedWebhook(t *testing.T) {
 		require.NoError(t, err)
 
 		event := stripe.Event{
-			ID:   fmt.Sprintf("evt_test_deleted_%d", time.Now().Unix()),
+			ID:   setup.GenerateUniqueEventID("evt_test_deleted"),
 			Type: "customer.subscription.deleted",
 			Data: &stripe.EventData{
 				Raw: eventData,
@@ -575,7 +575,7 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 		}
 		// Create test setup event
 		testEvent := model.SubscriptionEvent{
-			ExternalEventID: fmt.Sprintf("test_setup_%d", time.Now().Unix()),
+			ExternalEventID: setup.GenerateUniqueEventID("test_setup"),
 			Provider:        model.ProviderStripe,
 			EventType:       "test_setup",
 			EventData:       `{"type": "test_setup", "source": "integration_test"}`,
@@ -613,7 +613,7 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 		require.NoError(t, err)
 
 		event := stripe.Event{
-			ID:   fmt.Sprintf("evt_payment_failed_%d", time.Now().Unix()),
+			ID:   setup.GenerateUniqueEventID("evt_payment_failed"),
 			Type: "invoice.payment_failed",
 			Data: &stripe.EventData{
 				Raw: eventData,
@@ -675,7 +675,7 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 		require.NoError(t, err)
 
 		event := stripe.Event{
-			ID:   fmt.Sprintf("evt_nonexistent_%d", time.Now().Unix()),
+			ID:   setup.GenerateUniqueEventID("evt_nonexistent"),
 			Type: "invoice.payment_failed",
 			Data: &stripe.EventData{
 				Raw: eventData,
@@ -719,7 +719,7 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 		eventData, err := json.Marshal(stripeInvoice)
 		require.NoError(t, err)
 
-		eventID := fmt.Sprintf("evt_no_sub_%d", time.Now().Unix())
+		eventID := setup.GenerateUniqueEventID("evt_no_sub")
 		event := stripe.Event{
 			ID:   eventID,
 			Type: "invoice.payment_failed",

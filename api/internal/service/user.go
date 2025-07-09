@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"decorebator.com/internal/common"
@@ -24,6 +25,14 @@ var wordlistRepository *repo.WordlistRepository
 
 const AUTH_TOKEN_DURATION = (24 * time.Hour) * 365 // 1 year
 
+// JWT configuration cached for performance
+var (
+	jwtKey     []byte
+	jwtEnv     string
+	jwtOnce    sync.Once
+	jwtInitErr error
+)
+
 // jwt.StandardClaims is an embedded type to provide expiry time, issued at time, etc.
 type Claims struct {
 	Email            string                 `json:"email"`
@@ -32,11 +41,27 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
+// initJWTConfig initializes JWT configuration once for performance
+func initJWTConfig() {
+	jwtKeyStr := os.Getenv("JWT_KEY")
+	if jwtKeyStr == "" {
+		jwtInitErr = errors.New("JWT_KEY environment variable is required")
+		return
+	}
+	jwtKey = []byte(jwtKeyStr)
+	jwtEnv = os.Getenv("ENV")
+}
+
 func GenerateJWT(user User) (string, error) {
+	// Initialize JWT configuration once
+	jwtOnce.Do(initJWTConfig)
+	if jwtInitErr != nil {
+		return "", jwtInitErr
+	}
 
 	claims := &Claims{
 		Email:            user.Email,
-		Environment:      os.Getenv("ENV"),
+		Environment:      jwtEnv, // Use cached environment value
 		SubscriptionPlan: user.SubscriptionPlan,
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "Decorebator",
@@ -47,8 +72,7 @@ func GenerateJWT(user User) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	var jwtKey = []byte(os.Getenv("JWT_KEY"))
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString(jwtKey) // Use cached JWT key
 
 	if err != nil {
 		return "", err
