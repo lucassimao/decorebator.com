@@ -89,26 +89,22 @@ func init() {
 
 **User Lookup Optimization**:
 ```sql
--- For email-based login queries
-CREATE INDEX CONCURRENTLY idx_users_email_lower ON users (LOWER(email));
-
--- For user ID lookups
-CREATE INDEX CONCURRENTLY idx_users_id_active ON users (id) WHERE deleted_at IS NULL;
-
--- For subscription queries
-CREATE INDEX CONCURRENTLY idx_users_subscription ON users (subscription_status, subscription_plan);
+-- ✅ ALREADY EXISTS: users_email_unique (email) - handles login queries efficiently
+-- ✅ ALREADY EXISTS: users_pkey (id) - handles user ID lookups efficiently
+-- ✅ ALREADY EXISTS: idx_users_subscription_plan - handles subscription queries
 ```
 
 **Wordlist Query Optimization**:
 ```sql
--- For user wordlist queries
-CREATE INDEX CONCURRENTLY idx_wordlists_user_id ON wordlists (user_id, created_at DESC);
+-- ✅ COMPLETED: idx_wordlists_user_id_created_at (user_id, created_at DESC)
+-- Created in migration 000058_add_wordlists_user_id_index
+-- Expected impact: Reduce wordlist operations from 1.2s to <200ms
 
--- For word count aggregations
+-- Future optimization (if needed):
 CREATE INDEX CONCURRENTLY idx_words_wordlist_learned ON words (wordlist_id, learned, user_id);
 ```
 
-**Implementation File**: `migrations/000xxx_add_performance_indexes.up.sql`
+**Implementation File**: `migrations/000058_add_wordlists_user_id_index.up.sql` - **COMPLETED**
 
 ### 1.2 bcrypt Cost Optimization
 
@@ -428,7 +424,7 @@ router.Use(middleware.GzipMiddleware())
 ### Phase 1: Critical Fixes (Week 1)
 - [x] Fix user registration double-bcrypt flow (biggest impact) - **COMPLETED: ~50% performance improvement**
 - [x] Add explicit subscription_plan = 'free' to repository - **COMPLETED: Better code maintainability**
-- [ ] Add essential database indexes (users.email, wordlists.user_id)
+- [x] Add essential database indexes (users.email, wordlists.user_id) - **COMPLETED: idx_wordlists_user_id_created_at added**
 - [ ] Implement environment-specific bcrypt costs
 - [ ] Add request timeout context for external API calls
 - [ ] Add JWT generation optimization
