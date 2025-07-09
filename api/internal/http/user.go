@@ -111,25 +111,25 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 		return
-	} else {
-		jwtToken, err := service.LoginUser(input.Email, input.Password)
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.Header("authorization", jwtToken)
-		writeAuthenticationCookie(c, jwtToken)
-		c.Status(http.StatusCreated)
-		go mail.AddContactToList(user)
-		go func() {
-			if err := mail.SendWelcomeEmail(input.Email); err != nil {
-				common.Logger.Error("failed to send welcome email", "email", input.Email, "error", err)
-			}
-		}()
-
 	}
+
+	// Generate JWT directly from user object - no re-authentication needed
+	jwtToken, err := service.GenerateJWT(*user)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Header("authorization", jwtToken)
+	writeAuthenticationCookie(c, jwtToken)
+	c.Status(http.StatusCreated)
+	go mail.AddContactToList(user)
+	go func() {
+		if err := mail.SendWelcomeEmail(input.Email); err != nil {
+			common.Logger.Error("failed to send welcome email", "email", input.Email, "error", err)
+		}
+	}()
 }
 
 func (h *UserRoutes) Login(c *gin.Context) {

@@ -27,8 +27,8 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 	// Note: country parameter is optional and can be nil
 	// PostgreSQL will store NULL for nil pointer values
 	query := `
-		INSERT INTO users (first_name, last_name, password_hash, email, country)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO users (first_name, last_name, password_hash, email, country, subscription_plan)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at, updated_at, profile_picture_url, country, date_of_birth, preferred_language,
 			subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at`
 
@@ -53,7 +53,7 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 		countryParam = nil
 	}
 
-	err = repository.Db.QueryRow(context.Background(), query, firstName, lastName, user.PasswordHash, email, countryParam).Scan(
+	err = repository.Db.QueryRow(context.Background(), query, firstName, lastName, user.PasswordHash, email, countryParam, model.PlanFree).Scan(
 		&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
 		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt)
 	if err != nil {
