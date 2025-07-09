@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"decorebator.com/internal/common"
@@ -136,8 +137,12 @@ func (s *OpenAIModerationService) Validate(text string) ContentFilterResult {
 	// Call OpenAI moderation API
 	result, err := s.moderateWithOpenAI(text)
 	if err != nil {
-		// Log error but don't block content creation
-		common.Logger.Error("OpenAI moderation API failed, allowing content", "error", err, "text", text)
+		// Enhanced logging to differentiate timeout vs other errors
+		if strings.Contains(err.Error(), "timed out after 10 seconds") {
+			common.Logger.Warn("OpenAI moderation API timed out, allowing content creation", "error", err, "text", text)
+		} else {
+			common.Logger.Error("OpenAI moderation API failed, allowing content creation", "error", err, "text", text)
+		}
 		return ContentFilterResult{
 			IsAppropriate: true,
 			Reason:        "",
@@ -178,7 +183,11 @@ func (s *OpenAIModerationService) moderateWithOpenAI(text string) (*ModerationRe
 		return nil, fmt.Errorf("error marshaling request: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", s.apiURL, bytes.NewBuffer(jsonData))
+	// Create context with 10-second timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "POST", s.apiURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
@@ -188,6 +197,10 @@ func (s *OpenAIModerationService) moderateWithOpenAI(text string) (*ModerationRe
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
+		// Check if error is due to timeout
+		if ctx.Err() == context.DeadlineExceeded {
+			return nil, fmt.Errorf("OpenAI moderation API request timed out after 10 seconds: %w", err)
+		}
 		return nil, fmt.Errorf("error making request: %w", err)
 	}
 	defer resp.Body.Close()

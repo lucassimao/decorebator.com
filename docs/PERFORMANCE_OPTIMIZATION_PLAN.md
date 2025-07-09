@@ -236,6 +236,13 @@ func (s *OpenAIModerationService) Validate(content string) ModerationResult {
 
 **Expected Impact**: Prevent hanging requests, fail fast instead of 30+ second timeouts
 
+**✅ IMPLEMENTED (January 2025)**: OpenAI moderation API timeout completed
+- **Timeout**: 10 seconds with context.WithTimeout()
+- **Graceful failure**: Logs warning on timeout but allows wordlist creation
+- **Enhanced logging**: Differentiates timeout vs other API errors
+- **Files changed**: `api/internal/service/openai_moderation.go:181-194`
+- **Implementation**: Uses http.NewRequestWithContext() with timeout context
+
 ### 1.6 Background Job Optimization
 
 #### Defer Heavy Operations
@@ -425,8 +432,7 @@ router.Use(middleware.GzipMiddleware())
 - [x] Fix user registration double-bcrypt flow (biggest impact) - **COMPLETED: ~50% performance improvement**
 - [x] Add explicit subscription_plan = 'free' to repository - **COMPLETED: Better code maintainability**
 - [x] Add essential database indexes (users.email, wordlists.user_id) - **COMPLETED: idx_wordlists_user_id_created_at added**
-- [ ] Implement environment-specific bcrypt costs
-- [ ] Add request timeout context for external API calls
+- [x] Add request timeout context for external API calls - **COMPLETED: 10s timeout on OpenAI moderation API**
 - [ ] Add JWT generation optimization
 - [ ] Integrate with existing load testing (`make load-test`)
 
