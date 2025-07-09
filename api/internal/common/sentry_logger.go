@@ -34,7 +34,7 @@ func (h *SentryHandler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	// Only send errors and above to Sentry in production
-	if os.Getenv("ENV") == productionEnv && r.Level >= slog.LevelError {
+	if os.Getenv("ENV") == ProductionEnv && r.Level >= slog.LevelError {
 		// Extract attributes
 		attrs := make(map[string]interface{})
 		r.Attrs(func(a slog.Attr) bool {
@@ -183,7 +183,7 @@ func CaptureError(ctx context.Context, err error, message string, attrs ...any) 
 // It provides Sentry with a more detailed report, including a full stack trace,
 // which allows for better grouping and analysis of critical failures.
 func CaptureException(ctx context.Context, err error, attrs map[string]interface{}) {
-	if os.Getenv("ENV") != productionEnv || err == nil {
+	if os.Getenv("ENV") != ProductionEnv || err == nil {
 		return
 	}
 

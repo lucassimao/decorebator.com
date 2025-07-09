@@ -60,7 +60,10 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 		var pgErr *pgconn.PgError
 		if ok := errors.As(err, &pgErr); ok {
 			if pgErr.Code == "23505" {
-				return nil, common.BusinessError{Message: "Email already exists."}
+				// Handle both old and new email constraint names for migration compatibility
+				if strings.Contains(pgErr.ConstraintName, "users_email_unique") {
+					return nil, common.BusinessError{Message: "Email already exists."}
+				}
 			}
 		}
 		return nil, err

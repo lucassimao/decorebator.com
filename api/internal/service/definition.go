@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"decorebator.com/internal/common"
@@ -18,7 +17,8 @@ func init() {
 	db, err := common.GetDBConnection()
 	if err != nil {
 		common.Logger.Error("failed to open db connection: ", "error", err)
-		os.Exit(1)
+		// Don't crash the application - let services handle the error gracefully
+		return
 	}
 	definitionRepository = &repo.DefinitionRepository{Db: db}
 }
