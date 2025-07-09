@@ -53,12 +53,7 @@ func NewLeitnerSystemStrategy(wordService *WordService) *LeitnerSystemStrategy {
 
 // Default strategy uses a default word service - this is for backward compatibility
 func DefaultLeitnerSystemStrategy() LeitnerSystemStrategy {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		common.Logger.Error("failed to get db connection for default strategy", "error", err)
-		// Return empty strategy - will fail at runtime but avoids panic during init
-		return LeitnerSystemStrategy{}
-	}
+	db := common.GetDBConnection()
 	wordService := NewWordService(db, NewOpenAIModerationService())
 	return LeitnerSystemStrategy{wordService: wordService}
 }
@@ -257,11 +252,7 @@ func getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
 				 sd.image_url, sd.word_id, sd.image_description, sd.hours_since_review, sd.progress_ratio, sd.updated_at;
 	`
 
-	db, err := common.GetDBConnection()
-	if err != nil {
-		common.Logger.Error("failed to open db connection", "error", err)
-		return nil, err
-	}
+	db := common.GetDBConnection()
 
 	rows, err := db.Query(context.Background(), query, userID, wordlistID)
 	if err != nil {
@@ -354,13 +345,10 @@ func checkHasUnlearnedWords(userID, wordlistID int64) (bool, error) {
 		)
 	`
 
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return false, err
-	}
+	db := common.GetDBConnection()
 
 	var exists bool
-	err = db.QueryRow(context.Background(), query, userID, wordlistID).Scan(&exists)
+	err := db.QueryRow(context.Background(), query, userID, wordlistID).Scan(&exists)
 	return exists, err
 }
 
@@ -380,10 +368,7 @@ func getWordlistBoxDistribution(userID, wordlistID int64) (map[int64]int, error)
 		ORDER BY lst.box_id
 	`
 
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return nil, err
-	}
+	db := common.GetDBConnection()
 
 	rows, err := db.Query(context.Background(), query, userID, wordlistID)
 	if err != nil {
@@ -745,10 +730,7 @@ func selectFairExample(definitionID int64, availableExamples []string) (string, 
 		return availableExamples[0], err
 	}
 
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return "", fmt.Errorf("failed to get database connection: %w", err)
-	}
+	db := common.GetDBConnection()
 
 	// Create a map of example hashes to examples and their usage info
 	type exampleInfo struct {
@@ -836,10 +818,7 @@ func hashExample(example string) string {
 
 // recordExampleUsage records when an example was used to prevent immediate repetition
 func recordExampleUsage(definitionID int64, example string) error {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return err
-	}
+	db := common.GetDBConnection()
 
 	hash := hashExample(example)
 	query := `
@@ -848,7 +827,7 @@ func recordExampleUsage(definitionID int64, example string) error {
 		ON CONFLICT (definition_id, example_hash)
 		DO UPDATE SET last_used_at = NOW()`
 
-	_, err = db.Exec(context.Background(), query, definitionID, hash)
+	_, err := db.Exec(context.Background(), query, definitionID, hash)
 	return err
 }
 
@@ -877,10 +856,7 @@ func selectFairExampleAudio(definitionID int64, audioFiles []model.DefinitionExa
 		return &audioFiles[0], err
 	}
 
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get database connection: %w", err)
-	}
+	db := common.GetDBConnection()
 
 	// Create a map of audio file IDs to audio files and their usage info
 	type audioFileInfo struct {
@@ -976,10 +952,7 @@ func selectFairExampleAudio(definitionID int64, audioFiles []model.DefinitionExa
 
 // recordExampleAudioUsage records when an example audio file was used to prevent immediate repetition
 func recordExampleAudioUsage(definitionID, audioFileID int64) error {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return err
-	}
+	db := common.GetDBConnection()
 
 	query := `
 		INSERT INTO example_audio_usage (definition_id, example_audio_id, last_used_at, usage_count)
@@ -987,7 +960,7 @@ func recordExampleAudioUsage(definitionID, audioFileID int64) error {
 		ON CONFLICT (definition_id, example_audio_id)
 		DO UPDATE SET last_used_at = NOW(), usage_count = example_audio_usage.usage_count + 1`
 
-	_, err = db.Exec(context.Background(), query, definitionID, audioFileID)
+	_, err := db.Exec(context.Background(), query, definitionID, audioFileID)
 	return err
 }
 
@@ -997,10 +970,7 @@ func (LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingId
 
 	if transactionPtr == nil {
 		var db *pgxpool.Pool
-		db, err = common.GetDBConnection()
-		if err != nil {
-			return err
-		}
+		db = common.GetDBConnection()
 
 		ctx := context.Background()
 		tx, err = db.Begin(ctx)
@@ -1071,10 +1041,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 
 	if transactionPtr == nil {
 		var db *pgxpool.Pool
-		db, err = common.GetDBConnection()
-		if err != nil {
-			return err
-		}
+		db = common.GetDBConnection()
 
 		tx, err = db.Begin(ctx)
 		if err != nil {
@@ -1230,10 +1197,7 @@ func (s LeitnerSystemStrategy) MarkErrorResolved(report ErrorReport) error {
 		return errors.New("definition or word missing")
 	}
 
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return err
-	}
+	db := common.GetDBConnection()
 
 	ctx := context.Background()
 	tx, err := db.Begin(ctx)
@@ -1328,10 +1292,7 @@ func selectBalancedQuizType(userID, wordlistID int64, availableTypes []model.Qui
 		return availableTypes[0], nil
 	}
 
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return "", err
-	}
+	db := common.GetDBConnection()
 
 	// Get recent quiz type usage for this user/wordlist (last 2 hours)
 	query := `

@@ -51,11 +51,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 	}
 
 	// 1. Fetch definition from database
-	db, err := common.GetDBConnection()
-	if err != nil {
-		logger.Error("failed to get database connection", "error", err)
-		return err
-	}
+	db := common.GetDBConnection()
 
 	definitionRepo := repository.NewDefinitionRepository(db)
 	definition, err := definitionRepo.GetDefinitionByID(job.Args.DefinitionID)

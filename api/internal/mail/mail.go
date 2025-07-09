@@ -35,10 +35,7 @@ func shouldSendEmails() bool {
 // GetUserRepositoryForMail returns a user repository for mail operations
 // This is a temporary solution to maintain backward compatibility
 func GetUserRepositoryForMail() (*repository.UserRepository, error) {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return nil, err
-	}
+	db := common.GetDBConnection()
 	return &repository.UserRepository{Db: db}, nil
 }
 

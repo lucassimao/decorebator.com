@@ -27,19 +27,13 @@ func RateLimitErrorReports() gin.HandlerFunc {
 		}
 
 		// Get database connection
-		db, err := common.GetDBConnection()
-		if err != nil {
-			common.Logger.Error("Failed to get database connection", "error", err)
-			// Don't block on database failures, allow the request
-			c.Next()
-			return
-		}
+		db := common.GetDBConnection()
 
 		// Create service
 		rateLimitService := service.NewErrorReportRateLimitService(db)
 
 		// Check rate limits
-		err = rateLimitService.CheckRateLimit(c.Request.Context(), user)
+		err := rateLimitService.CheckRateLimit(c.Request.Context(), user)
 		if err != nil {
 			if rateLimitErr, ok := err.(service.RateLimitError); ok {
 				c.JSON(http.StatusTooManyRequests, gin.H{

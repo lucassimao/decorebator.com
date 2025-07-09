@@ -14,12 +14,7 @@ import (
 var definitionRepository *repo.DefinitionRepository
 
 func init() {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		common.Logger.Error("failed to open db connection: ", "error", err)
-		// Don't crash the application - let services handle the error gracefully
-		return
-	}
+	db := common.GetDBConnection()
 	definitionRepository = &repo.DefinitionRepository{Db: db}
 }
 

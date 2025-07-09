@@ -66,10 +66,7 @@ func applyDefaults(config *Config) (*Config, error) {
 
 	// Set default database connection if not provided
 	if config.Database == nil {
-		db, err := common.GetDBConnection()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get database connection: %w", err)
-		}
+		db := common.GetDBConnection()
 		config.Database = db
 	}
 

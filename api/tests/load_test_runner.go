@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
+	"math"
 	"math/rand"
 	"net/http"
 	"os"
@@ -41,24 +43,24 @@ type RequestMetric struct {
 
 // User data for testing
 type User struct {
-	FirstName string `json:"FirstName"`
-	LastName  string `json:"LastName"`
-	Email     string `json:"Email"`
-	Password  string `json:"Password"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
 }
 
 type LoginRequest struct {
-	Email    string `json:"Email"`
-	Password string `json:"Password"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type WordlistRequest struct {
-	Name         string `json:"Name"`
-	LanguageCode string `json:"LanguageCode"`
+	Name         string `json:"name"`
+	LanguageCode string `json:"languageCode"`
 }
 
 type WordRequest struct {
-	Name string `json:"Name"`
+	Name string `json:"name"`
 }
 
 // Reusing existing types from the codebase
@@ -220,7 +222,16 @@ func calculatePercentile(durations []time.Duration, percentile float64) time.Dur
 		return 0
 	}
 
-	index := int(float64(len(durations)) * percentile)
+	// NIST nearest-rank method for percentile calculation
+	// Formula: index = ceil(percentile * n) - 1
+	// This ensures proper percentile calculation even for small datasets
+	n := float64(len(durations))
+	index := int(math.Ceil(percentile*n)) - 1
+
+	// Ensure index is within bounds
+	if index < 0 {
+		index = 0
+	}
 	if index >= len(durations) {
 		index = len(durations) - 1
 	}
@@ -271,14 +282,16 @@ type UserSimulator struct {
 	userID    int
 	authToken string
 	testWords []string
+	rng       *rand.Rand
 }
 
-func NewUserSimulator(client *MetricsHTTPClient, config Config, userID int, testWords []string) *UserSimulator {
+func NewUserSimulator(client *MetricsHTTPClient, config Config, userID int, testWords []string, rng *rand.Rand) *UserSimulator {
 	return &UserSimulator{
 		client:    client,
 		config:    config,
 		userID:    userID,
 		testWords: testWords,
+		rng:       rng,
 	}
 }
 
@@ -288,9 +301,15 @@ func (us *UserSimulator) SimulateUserJourney() error {
 
 	// Ensure cleanup always happens if user was created, even if journey fails
 	defer func() {
-		if userCreated && us.authToken != "" {
-			if err := us.deleteUser(); err != nil {
-				log.Printf("User %d cleanup failed: %v", us.userID, err)
+		if userCreated {
+			// Always attempt cleanup if user was created, even if authToken is empty
+			// This handles cases where login fails but user was successfully created
+			if us.authToken != "" {
+				if err := us.deleteUser(); err != nil {
+					log.Printf("User %d cleanup failed: %v", us.userID, err)
+				}
+			} else {
+				log.Printf("User %d: Cannot cleanup - no auth token (login may have failed)", us.userID)
 			}
 		}
 	}()
@@ -303,7 +322,7 @@ func (us *UserSimulator) SimulateUserJourney() error {
 	userCreated = true // Mark user as created for cleanup
 
 	// Small delay to simulate real user behavior
-	time.Sleep(time.Duration(rand.Intn(300)+100) * time.Millisecond) // #nosec G404 - weak random is fine for load testing delays
+	time.Sleep(time.Duration(us.rng.Intn(300)+100) * time.Millisecond) // #nosec G404 - weak random is fine for load testing delays
 
 	// 2. Login
 	if loginErr := us.login(user); loginErr != nil {
@@ -311,7 +330,7 @@ func (us *UserSimulator) SimulateUserJourney() error {
 		return journeyErr
 	}
 
-	time.Sleep(time.Duration(rand.Intn(200)+100) * time.Millisecond) // #nosec G404 - weak random is fine for load testing delays
+	time.Sleep(time.Duration(us.rng.Intn(200)+100) * time.Millisecond) // #nosec G404 - weak random is fine for load testing delays
 
 	// 3. Create wordlist
 	wordlistID, err := us.createWordlist()
@@ -320,30 +339,43 @@ func (us *UserSimulator) SimulateUserJourney() error {
 		return journeyErr
 	}
 
-	time.Sleep(time.Duration(rand.Intn(200)+100) * time.Millisecond) // #nosec G404 - weak random is fine for load testing delays
+	time.Sleep(time.Duration(us.rng.Intn(200)+100) * time.Millisecond) // #nosec G404 - weak random is fine for load testing delays
 
 	// 4. Add words to wordlist
+	wordsAdded := false
 	if err := us.addWords(wordlistID); err != nil {
-		journeyErr = fmt.Errorf("add words failed: %w", err)
-		return journeyErr
+		log.Printf("User %d: Failed to add words to wordlist %d: %v", us.userID, wordlistID, err)
+		// Continue with quiz flow even if word addition fails
+		// This allows us to test quiz endpoints even when word endpoints fail
+	} else {
+		wordsAdded = true
+		log.Printf("User %d: Successfully added words to wordlist %d", us.userID, wordlistID)
 	}
 
-	time.Sleep(time.Duration(rand.Intn(300)+200) * time.Millisecond) // #nosec G404
+	time.Sleep(time.Duration(us.rng.Intn(300)+200) * time.Millisecond) // #nosec G404
 
 	// 5. Quiz loop - simulate multiple quiz sessions
-	quizCount := rand.Intn(10) + 10 // #nosec G404 - 10-20 quizzes per user
-	log.Printf("User %d: Starting quiz session (%d quizzes)", us.userID, quizCount)
+	// Always attempt quizzes to test quiz endpoints, even if word addition failed
+	quizCount := us.rng.Intn(10) + 10 // #nosec G404 - 10-20 quizzes per user
+	log.Printf("User %d: Starting quiz session (%d quizzes) - words added: %v", us.userID, quizCount, wordsAdded)
+
+	successfulQuizzes := 0
 	for i := 0; i < quizCount; i++ {
 		if err := us.doQuiz(wordlistID); err != nil {
 			// Log quiz error but continue with other quizzes
 			log.Printf("User %d quiz %d failed: %v", us.userID, i+1, err)
-		} else if i%5 == 0 { // Log every 5th quiz to avoid spam
-			log.Printf("User %d: Completed quiz %d/%d", us.userID, i+1, quizCount)
+		} else {
+			successfulQuizzes++
+			if i%5 == 0 { // Log every 5th quiz to avoid spam
+				log.Printf("User %d: Completed quiz %d/%d", us.userID, i+1, quizCount)
+			}
 		}
 
 		// Random delay between quizzes
-		time.Sleep(time.Duration(rand.Intn(500)+200) * time.Millisecond) // #nosec G404
+		time.Sleep(time.Duration(us.rng.Intn(500)+200) * time.Millisecond) // #nosec G404
 	}
+
+	log.Printf("User %d: Quiz session completed - %d/%d successful", us.userID, successfulQuizzes, quizCount)
 
 	// Journey completed successfully
 	return nil
@@ -440,13 +472,13 @@ func (us *UserSimulator) createWordlist() (int, error) {
 
 func (us *UserSimulator) addWords(wordlistID int) error {
 	// Add 5-8 random words from our test set
-	wordCount := rand.Intn(4) + 5 // #nosec G404
+	wordCount := us.rng.Intn(4) + 5 // #nosec G404
 	selectedWords := make([]string, 0, wordCount)
 
 	// Shuffle words and select a subset
 	shuffled := make([]string, len(us.testWords))
 	copy(shuffled, us.testWords)
-	rand.Shuffle(len(shuffled), func(i, j int) { // #nosec G404
+	us.rng.Shuffle(len(shuffled), func(i, j int) { // #nosec G404
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 	})
 
@@ -480,7 +512,7 @@ func (us *UserSimulator) addWords(wordlistID int) error {
 		}
 
 		// Small delay between word additions
-		time.Sleep(time.Duration(rand.Intn(100)+50) * time.Millisecond) // #nosec G404
+		time.Sleep(time.Duration(us.rng.Intn(100)+50) * time.Millisecond) // #nosec G404
 	}
 
 	return nil
@@ -496,12 +528,14 @@ func (us *UserSimulator) doQuiz(wordlistID int) error {
 
 	resp, err := us.client.Do(req, "POST /wordlists/{id}/quizzes")
 	if err != nil {
-		return fmt.Errorf("generate quiz failed: %w", err)
+		return fmt.Errorf("generate quiz request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("generate quiz failed with status: %d", resp.StatusCode)
+		// Read response body for more details
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("generate quiz failed with status %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var quizResp model.Quiz
@@ -510,11 +544,11 @@ func (us *UserSimulator) doQuiz(wordlistID int) error {
 	}
 
 	// Simulate thinking time
-	time.Sleep(time.Duration(rand.Intn(2000)+1000) * time.Millisecond) // #nosec G404
+	time.Sleep(time.Duration(us.rng.Intn(2000)+1000) * time.Millisecond) // #nosec G404
 
 	// 2. Save quiz result (simulate 80% success rate)
-	success := rand.Float32() < 0.8          // #nosec G404
-	responseTimeMs := rand.Intn(5000) + 1000 // #nosec G404 - 1-6 second response time
+	success := us.rng.Float32() < 0.8          // #nosec G404
+	responseTimeMs := us.rng.Intn(5000) + 1000 // #nosec G404 - 1-6 second response time
 
 	saveReq := httpHandler.SaveInput{
 		WordlistID:              int64(wordlistID),
@@ -535,12 +569,14 @@ func (us *UserSimulator) doQuiz(wordlistID int) error {
 
 	resp, err = us.client.Do(req, "PATCH /wordlists/{id}/quizzes")
 	if err != nil {
-		return fmt.Errorf("save quiz failed: %w", err)
+		return fmt.Errorf("save quiz request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("save quiz failed with status: %d", resp.StatusCode)
+		// Read response body for more details
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("save quiz failed with status %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	return nil
@@ -636,6 +672,10 @@ PERFORMANCE STANDARDS:
 }
 
 func main() {
+	// Initialize random number generator with current time as seed
+	// Note: Go 1.20+ automatically seeds the global source, but explicit seeding provides consistent behavior
+	rng := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec G404 - weak random is fine for load testing
+
 	// Parse command line flags
 	var config Config
 	var durationStr string
@@ -733,7 +773,7 @@ func main() {
 		go func(userID int) {
 			defer wg.Done()
 
-			simulator := NewUserSimulator(metricsClient, config, userID, testWords)
+			simulator := NewUserSimulator(metricsClient, config, userID, testWords, rng)
 
 			// Keep running user journeys until done signal
 			journeyCount := 0
@@ -748,7 +788,7 @@ func main() {
 					journeyCount++
 
 					// Small delay before starting next journey
-					time.Sleep(time.Duration(rand.Intn(1000)+500) * time.Millisecond) // #nosec G404
+					time.Sleep(time.Duration(rng.Intn(1000)+500) * time.Millisecond) // #nosec G404
 				}
 			}
 		}(i)

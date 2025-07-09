@@ -82,13 +82,7 @@ func GenerateJWT(user User) (string, error) {
 }
 
 func init() {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		common.Logger.Error("failed to open db connection", "error", err)
-		// Don't crash the application - let services handle the error gracefully
-		// The repositories will be nil and functions will return errors appropriately
-		return
-	}
+	db := common.GetDBConnection()
 	userRepository = &repo.UserRepository{Db: db}
 	wordlistRepository = &repo.WordlistRepository{Db: db}
 }

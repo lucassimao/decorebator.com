@@ -11,10 +11,8 @@ import (
 )
 
 var (
-	db        *pgxpool.Pool
-	dbOnce    sync.Once
-	dbMutex   sync.Mutex
-	dbInitErr error
+	db     *pgxpool.Pool
+	dbOnce sync.Once
 )
 
 // configureConnectionPool optimizes connection pool settings for DigitalOcean App Platform
@@ -49,7 +47,7 @@ func configureConnectionPool(config *pgxpool.Config) {
 	}
 }
 
-func GetDBConnection() (*pgxpool.Pool, error) {
+func GetDBConnection() *pgxpool.Pool {
 	// Initialize the database connection pool once
 	dbOnce.Do(func() {
 		databaseURL := os.Getenv("DATABASE_URL")
@@ -62,8 +60,8 @@ func GetDBConnection() (*pgxpool.Pool, error) {
 			dbName := os.Getenv("POSTGRES_DB")
 
 			if user == "" || password == "" || host == "" || port == "" || dbName == "" {
-				dbInitErr = fmt.Errorf("database configuration missing. Set DATABASE_URL or individual POSTGRES_* variables")
-				return
+				Logger.Error("database configuration missing - application cannot start")
+				os.Exit(1)
 			}
 
 			databaseURL = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbName)
@@ -72,8 +70,8 @@ func GetDBConnection() (*pgxpool.Pool, error) {
 		// Parse connection string and optimize pool configuration
 		config, err := pgxpool.ParseConfig(databaseURL)
 		if err != nil {
-			dbInitErr = fmt.Errorf("unable to parse database URL: %w", err)
-			return
+			Logger.Error("unable to parse database URL - application cannot start", "error", err)
+			os.Exit(1)
 		}
 
 		// Apply environment-specific connection pool optimization
@@ -81,28 +79,22 @@ func GetDBConnection() (*pgxpool.Pool, error) {
 
 		db, err = pgxpool.NewWithConfig(context.Background(), config)
 		if err != nil {
-			dbInitErr = fmt.Errorf("unable to create connection pool: %w", err)
-			return
+			Logger.Error("unable to create connection pool - application cannot start", "error", err)
+			os.Exit(1)
+		}
+
+		// Ping the database to ensure the connection is still alive
+		if err := db.Ping(context.Background()); err != nil {
+			Logger.Error("database ping failed - application cannot continue", "error", err)
+			os.Exit(1)
 		}
 	})
 
-	// Return initialization error if it occurred
-	if dbInitErr != nil {
-		return nil, dbInitErr
-	}
-
-	// Ping the database to ensure the connection is still alive
-	if err := db.Ping(context.Background()); err != nil {
-		return nil, fmt.Errorf("database ping failed: %w", err)
-	}
-	return db, nil
+	return db
 }
 
 func CloseDBConnection() {
 	fmt.Fprintf(os.Stdout, "Closing db connection\n")
-
-	dbMutex.Lock()
-	defer dbMutex.Unlock()
 
 	if db != nil {
 		db.Close()

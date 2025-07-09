@@ -35,10 +35,7 @@ func NewDefinitionFetcherWorker(wordService *WordService) *DefinitionFetcherWork
 
 // getWordlistLanguage is a helper function for other workers that only need language code
 func getWordlistLanguage(wordID int64) (string, error) {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return "", err
-	}
+	db := common.GetDBConnection()
 	wordService := NewWordService(db, NewOpenAIModerationService())
 	languageCode, _, err := wordService.GetWordlistLanguageAndPronunciation(wordID)
 	return languageCode, err
@@ -128,13 +125,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	}
 
 	// Get database connection for transaction
-	db, err := common.GetDBConnection()
-	if err != nil {
-		if updateErr := w.wordService.UpdateProcessingStatus(wordID, "failed", "Failed to get database connection", nil); updateErr != nil {
-			logger.Error("failed to update processing status", "wordId", wordID, "error", updateErr)
-		}
-		return err
-	}
+	db := common.GetDBConnection()
 
 	tx, err := db.Begin(ctx)
 	if err != nil {

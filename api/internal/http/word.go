@@ -2,7 +2,6 @@ package http
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -57,7 +56,6 @@ func (h *WordRoutes) Create(ctx *gin.Context) {
 
 	var saved, err = h.wordService.SaveWord(ctx.Request.Context(), &Word{Name: input.Name, UserID: userID, WordlistID: wordlistID, Notes: input.Notes})
 	var logger = common.Logger.With("word", input.Name, "userID", userID, "endpoint", ctx.Request.URL.Path)
-	fmt.Println(err)
 	if err != nil {
 		switch err.(type) {
 		case common.BusinessError:

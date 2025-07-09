@@ -30,10 +30,7 @@ func NewWordlistService(db *pgxpool.Pool, moderationService ModerationService) *
 var defaultWordlistService *WordlistService
 
 func init() {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		common.Logger.Error("failed to open db connection", "error", err)
-	}
+	db := common.GetDBConnection()
 	defaultWordlistService = NewWordlistService(db, NewOpenAIModerationService())
 }
 

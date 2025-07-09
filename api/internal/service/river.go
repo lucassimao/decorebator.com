@@ -32,11 +32,7 @@ func (w *NoOpWorker) Work(ctx context.Context, job *river.Job[NoOpJobArgs]) erro
 }
 
 func GetRiverClient() (*river.Client[pgx.Tx], error) {
-	db, err := common.GetDBConnection()
-
-	if err != nil {
-		return nil, err
-	}
+	db := common.GetDBConnection()
 
 	// Create word service for workers
 	wordService := NewWordService(db, NewOpenAIModerationService())

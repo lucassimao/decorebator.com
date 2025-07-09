@@ -49,10 +49,7 @@ type AnalyticsConfig struct {
 
 // NewAnalyticsService creates an analytics service instance with the given configuration
 func NewAnalyticsService(cfg AnalyticsConfig) (AnalyticsServiceInterface, error) {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get database connection: %w", err)
-	}
+	db := common.GetDBConnection()
 
 	repo := repository.NewAnalyticsRepository(db)
 	baseService := &AnalyticsService{

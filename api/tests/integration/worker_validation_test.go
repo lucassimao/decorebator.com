@@ -13,11 +13,8 @@ import (
 )
 
 func TestValidateUserEligibilityForWorkers(t *testing.T) {
-	// Skip if no database connection available
-	db, err := common.GetDBConnection()
-	if err != nil {
-		t.Skip("Database connection not available")
-	}
+	// Get database connection (will exit if not available)
+	db := common.GetDBConnection()
 
 	ctx := context.Background()
 

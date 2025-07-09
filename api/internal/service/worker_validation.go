@@ -13,14 +13,11 @@ import (
 // - 1 wordlist only
 // - Maximum 10 words total
 func ValidateUserEligibilityForWorkers(userID int64) error {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return fmt.Errorf("failed to get database connection: %w", err)
-	}
+	db := common.GetDBConnection()
 
 	// Get user information including subscription plan
 	var subscriptionPlan model.SubscriptionPlan
-	err = db.QueryRow(context.Background(),
+	err := db.QueryRow(context.Background(),
 		"SELECT subscription_plan FROM users WHERE id = $1",
 		userID).Scan(&subscriptionPlan)
 

@@ -15,11 +15,7 @@ func GetErrorReportStats() gin.HandlerFunc {
 		// This endpoint should be protected by admin authentication
 		// For now, we'll implement basic stats retrieval
 
-		db, err := common.GetDBConnection()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection failed"})
-			return
-		}
+		db := common.GetDBConnection()
 
 		// Create service
 		rateLimitService := service.NewErrorReportRateLimitService(db)
@@ -51,11 +47,7 @@ func GetUserErrorReportStatus() gin.HandlerFunc {
 		}
 
 		// Get database connection
-		db, err := common.GetDBConnection()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection failed"})
-			return
-		}
+		db := common.GetDBConnection()
 
 		// Create service
 		rateLimitService := service.NewErrorReportRateLimitService(db)

@@ -50,10 +50,7 @@ type ErrorReportService struct {
 
 // NewErrorReportService creates a new error report service with all dependencies and request data
 func NewErrorReportService(ctx context.Context, errorType ErrorReportType, wordID int64, definitionID *int64, userID int64, quizDetails *QuizDetails) (*ErrorReportService, error) {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return nil, err
-	}
+	db := common.GetDBConnection()
 
 	return &ErrorReportService{
 		db:           db,
@@ -441,10 +438,7 @@ func ReportError(ctx context.Context, errorType ErrorReportType, wordID int64, d
 
 // DeleteUserErrorReports deletes all error reports for a specific user
 func DeleteUserErrorReports(userID int64) (int64, error) {
-	db, err := common.GetDBConnection()
-	if err != nil {
-		return 0, err
-	}
+	db := common.GetDBConnection()
 
 	repo := repository.NewErrorReportRepository(db)
 	return repo.DeleteUserErrorReports(context.Background(), userID)
