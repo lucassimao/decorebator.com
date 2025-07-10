@@ -66,7 +66,7 @@ const LoginScreen: React.FC = () => {
         email: variables.email,
         // username: variables.name,
       });
-      router.replace("/dashboard");
+      router.replace("/");
     },
     onError: (error: Error) => {
       if (error.message === usersApi.SIGN_IN_ERROR) {

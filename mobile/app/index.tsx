@@ -1,8 +1,9 @@
 import { useUserInfo } from "@/hooks/users";
 import { useTheme } from "@/contexts/ThemeContext";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Dimensions,
   ImageBackground,
   SafeAreaView,
@@ -29,6 +30,17 @@ export default function Index() {
   const [showDashboardSkeleton, setShowDashboardSkeleton] =
     React.useState(false);
 
+  // Animation for smooth transition from skeleton to dashboard
+  const skeletonOpacity = useRef(new Animated.Value(1)).current;
+
+  // Fetch wordlists when user is authenticated
+  const { isLoading: wordlistsLoading } = useQuery({
+    queryKey: ["wordlists"],
+    queryFn: () => wordlistsApi.getUserWordlists(),
+    enabled: !!userInfo && !error,
+    staleTime: 0,
+  });
+
   React.useEffect(() => {
     const checkSkeletonNeed = async () => {
       if (!loading && userInfo && !error) {
@@ -46,24 +58,26 @@ export default function Index() {
 
         // Show skeleton for existing users (they have data to load)
         setShowDashboardSkeleton(true);
-        const timer = setTimeout(() => {
-          setShowDashboardSkeleton(false);
-        }, 1500);
-
-        return () => clearTimeout(timer);
       }
     };
 
     checkSkeletonNeed();
   }, [loading, userInfo, error]);
 
-  // Prefetch wordlists when user is authenticated
-  useQuery({
-    queryKey: ["wordlists"],
-    queryFn: () => wordlistsApi.getUserWordlists(),
-    enabled: !!userInfo && !error,
-    staleTime: 0,
-  });
+  // Hide skeleton when wordlists finish loading with smooth fade
+  React.useEffect(() => {
+    if (showDashboardSkeleton && !wordlistsLoading) {
+      // Fade out skeleton smoothly
+      Animated.timing(skeletonOpacity, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start(() => {
+        // Hide skeleton after fade completes
+        setShowDashboardSkeleton(false);
+      });
+    }
+  }, [showDashboardSkeleton, wordlistsLoading, skeletonOpacity]);
 
   useEffect(() => {
     if (error) {
@@ -85,7 +99,7 @@ export default function Index() {
   // Show loading with skeleton UI only for authenticated users transitioning to dashboard
   if (showDashboardSkeleton) {
     return (
-      <>
+      <Animated.View style={{ flex: 1, opacity: skeletonOpacity }}>
         {theme.mode === "dark" ? (
           <SafeAreaView style={styles.containerDark}>
             <View style={styles.loadingContainer}>
@@ -108,7 +122,7 @@ export default function Index() {
             </SafeAreaView>
           </ImageBackground>
         )}
-      </>
+      </Animated.View>
     );
   }
 
