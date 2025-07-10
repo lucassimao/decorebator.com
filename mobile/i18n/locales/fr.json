@@ -382,10 +382,13 @@
     "tokenValidation": "Erreur de validation du token",
     "networkError": "Erreur réseau. Vérifiez votre connexion.",
     "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
-    "invalidEmail": "Adresse email invalide",
+    "invalidEmail": "Email invalide",
     "emailRequired": "Email obligatoire",
     "passwordRequired": "Mot de passe obligatoire",
-    "fieldRequired": "Ce champ est obligatoire"
+    "fieldRequired": "Obligatoire",
+    "emailExists": "Email déjà enregistré",
+    "shortPassword": "Trop court (min 5 cars)",
+    "signupFailed": "Inscription échouée. Réessayez."
   },
   "success": {
     "wordlistCreated": "Liste créée avec succès",

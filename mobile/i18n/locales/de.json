@@ -389,10 +389,13 @@
     "tokenValidation": "Token-Validierungsfehler",
     "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
     "serverError": "Serverfehler. Bitte versuchen Sie es später erneut.",
-    "invalidEmail": "Ungültige E-Mail-Adresse",
+    "invalidEmail": "Ungültige E-Mail",
     "emailRequired": "E-Mail ist erforderlich",
     "passwordRequired": "Passwort ist erforderlich",
-    "fieldRequired": "Dieses Feld ist erforderlich"
+    "fieldRequired": "Erforderlich",
+    "emailExists": "E-Mail bereits registriert",
+    "shortPassword": "Zu kurz (min 5 Zeichen)",
+    "signupFailed": "Registrierung fehlgeschlagen. Erneut versuchen."
   },
   "success": {
     "wordlistCreated": "Wortliste erfolgreich erstellt",

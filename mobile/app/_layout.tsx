@@ -112,12 +112,6 @@ function RootLayoutNav() {
                     }}
                   />
                   <Stack.Screen
-                    name="dashboard/welcome"
-                    options={{
-                      headerShown: false,
-                    }}
-                  />
-                  <Stack.Screen
                     name="settings"
                     options={{ headerShown: false }}
                   />

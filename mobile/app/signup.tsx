@@ -13,6 +13,8 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { getDetectedCountry } from "@/utils/countryDetection";
+import { mapErrorToI18n } from "@/utils/errorMapping";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   ImageBackground,
   Keyboard,
@@ -36,10 +38,7 @@ const schema = z
     firstName: z.string().min(2, "Required"),
     lastName: z.string().min(2, "Required"),
     email: z.string().email().min(2, "Required"),
-    password: z.string().min(2, "Required"),
-    agreeToTerms: z.boolean().refine((val) => val === true, {
-      message: "You must agree to the terms",
-    }),
+    password: z.string().min(5, "Required"),
   })
   .required();
 
@@ -72,6 +71,7 @@ export default function SignUpScreen() {
 
   React.useEffect(() => {
     if (signUpError) {
+      // Only show snackbar for non-email errors (email errors are shown inline)
       snackbar.show(signUpError.message, "error", 2000);
     }
   }, [signUpError, snackbar]);
@@ -119,41 +119,76 @@ export default function SignUpScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-
   const { mutate: signup } = useMutation<void, Error, usersApi.UserSignup>({
     mutationFn: (userData) => usersApi.signup(userData),
     onError: (error) => {
-      setSignUpError(error);
+      const mappedError = mapErrorToI18n(error.message);
+      
+      if (mappedError.isFieldError && mappedError.field) {
+        // Set error on specific field to display translated message below the input
+        setError(mappedError.field as keyof typeof schema._type, {
+          type: "manual",
+          message: t(mappedError.i18nKey),
+        });
+      } else {
+        // For other errors, use snackbar with translated message
+        setSignUpError(new Error(t(mappedError.i18nKey)));
+      }
     },
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       posthog.capture("user_signed_up", {
         email: variables.email,
       });
-      router.replace("/dashboard/welcome");
+
+      // Set flag that user just signed up for welcome flow
+      try {
+        await AsyncStorage.setItem("justSignedUp", "true");
+        if (__DEV__) {
+          console.log("Set justSignedUp flag to true");
+        }
+      } catch (error) {
+        console.warn("Failed to set signup flag:", error);
+      }
+
+      router.replace("/dashboard");
     },
   });
 
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
+    setError,
+    watch,
   } = useForm({
     resolver: zodResolver(schema),
+    mode: "onChange", // Validate on every change to enable real-time form state
     defaultValues: {
       firstName: "",
       lastName: "",
       email: __DEV__ ? process.env.EXPO_PUBLIC_TEST_USER_EMAIL || "" : "",
       password: __DEV__ ? process.env.EXPO_PUBLIC_TEST_USER_PASSWORD || "" : "",
-      agreeToTerms: false,
     },
   });
 
+  // Check if there are any validation errors
+  const hasValidationErrors = Object.keys(errors).length > 0;
+  
+  // Track if we've already dismissed the keyboard for this password field session
+  const [hasAutoDismissed, setHasAutoDismissed] = React.useState(false);
+  
+  // Reset auto-dismiss flag if validation errors appear
+  React.useEffect(() => {
+    if (hasValidationErrors) {
+      setHasAutoDismissed(false);
+    }
+  }, [hasValidationErrors]);
+
   const onSubmit = React.useCallback(
     (data: z.infer<typeof schema>) => {
-      // Exclude agreeToTerms from API submission and add detected country
-      const { agreeToTerms, ...submitData } = data;
+      // Add detected country to signup data
       const signupData = {
-        ...submitData,
+        ...data,
         country: detectedCountry || "US", // Include detected country or fallback to US
       };
       signup(signupData);
@@ -183,7 +218,7 @@ export default function SignUpScreen() {
       const tryManualScroll = () => {
         const scrollView = scrollViewRef.current;
         const input = inputRef.current;
-        
+
         if (!scrollView || !input) return;
 
         // Use measureInWindow instead of measureLayout to avoid native component ref issues
@@ -192,18 +227,18 @@ export default function SignUpScreen() {
           if (!keyboardVisible) {
             return; // Don't scroll at all when keyboard isn't visible
           }
-          
+
           // Conservative keyboard height estimation
           const keyboardHeight = 300;
           const inputBottom = y + height;
           const visibleScreenBottom = responsive.screenHeight - keyboardHeight;
-          
+
           // Only scroll if the input is actually being covered by the keyboard
           if (inputBottom > visibleScreenBottom) {
             // Minimal scroll - just enough to show the input above keyboard
             const targetY = visibleScreenBottom - height - 20; // 20px padding above keyboard
             const scrollAmount = Math.max(0, y - targetY);
-            
+
             scrollView.scrollTo({
               y: scrollAmount,
               animated: true,
@@ -339,6 +374,7 @@ export default function SignUpScreen() {
                             lastNameInputRef.current?.focus()
                           }
                         />
+                        <ErrorMessage error={errors.firstName} />
                       </View>
                     )}
                   />
@@ -378,22 +414,11 @@ export default function SignUpScreen() {
                             passwordInputRef.current?.focus()
                           }
                         />
+                        <ErrorMessage error={errors.lastName} />
                       </View>
                     )}
                   />
                 </View>
-
-                {/* Error messages row for names */}
-                {(errors.firstName || errors.lastName) && (
-                  <View style={styles.errorRow}>
-                    <View style={styles.errorColumn}>
-                      <ErrorMessage error={errors.firstName} />
-                    </View>
-                    <View style={styles.errorColumn}>
-                      <ErrorMessage error={errors.lastName} />
-                    </View>
-                  </View>
-                )}
 
                 {/* Password Input */}
                 <Controller
@@ -424,13 +449,20 @@ export default function SignUpScreen() {
                           placeholderTextColor={theme.colors.text.placeholder}
                           value={value}
                           onChangeText={onChange}
-                          onFocus={() => scrollToInput(passwordInputRef)}
+                          onFocus={() => {
+                            scrollToInput(passwordInputRef);
+                            // Dismiss keyboard if no validation errors exist and we haven't auto-dismissed yet
+                            if (!hasValidationErrors && !hasAutoDismissed) {
+                              setHasAutoDismissed(true);
+                              setTimeout(() => Keyboard.dismiss(), 300);
+                            }
+                          }}
                           onBlur={onBlur}
                           secureTextEntry={secureTextEntry}
                           autoComplete="password-new"
                           textContentType="newPassword"
                           returnKeyType="done"
-                          onSubmitEditing={handleSubmit(onSubmit)}
+                          onSubmitEditing={() => Keyboard.dismiss()}
                         />
                         <TouchableOpacity
                           style={styles.passwordToggle}
@@ -449,78 +481,45 @@ export default function SignUpScreen() {
                   )}
                 />
 
-                {/* Terms and Privacy Agreement */}
-                <Controller
-                  control={control}
-                  name="agreeToTerms"
-                  defaultValue={false}
-                  render={({ field: { onChange, value } }) => (
-                    <View style={styles.termsContainer}>
-                      <TouchableOpacity
-                        style={styles.checkboxContainer}
-                        onPress={() => onChange(!value)}
-                        activeOpacity={0.8}
-                        accessibilityRole="checkbox"
-                        accessibilityState={{ checked: value }}
-                        accessibilityLabel={t("auth.signup.agreeToTerms")}
-                        accessibilityHint={t("auth.signup.termsCheckboxHint")}
-                      >
-                        <View
-                          style={[
-                            styles.checkbox,
-                            value && styles.checkboxChecked,
-                          ]}
-                        >
-                          {value && (
-                            <Ionicons
-                              name="checkmark"
-                              size={16}
-                              color={theme.colors.text.inverse}
-                            />
-                          )}
-                        </View>
-                        <Text style={styles.termsText}>
-                          {t("auth.signup.termsText")}{" "}
-                          <Link
-                            href={`https://decorebator.com/${i18n.language}/terms`}
-                            style={styles.termsLink}
-                            onPress={async (e) => {
-                              e.preventDefault();
-                              await WebBrowser.openBrowserAsync(
-                                `https://decorebator.com/${i18n.language}/terms`,
-                              );
-                            }}
-                            accessibilityRole="link"
-                            accessibilityHint="Opens terms of service in web browser"
-                          >
-                            {t("auth.signup.termsOfService")}
-                          </Link>{" "}
-                          {t("common.and")}{" "}
-                          <Link
-                            href={`https://decorebator.com/${i18n.language}/privacy`}
-                            style={styles.termsLink}
-                            onPress={async (e) => {
-                              e.preventDefault();
-                              await WebBrowser.openBrowserAsync(
-                                `https://decorebator.com/${i18n.language}/privacy`,
-                              );
-                            }}
-                            accessibilityRole="link"
-                            accessibilityHint="Opens privacy policy in web browser"
-                          >
-                            {t("auth.signup.privacyPolicy")}
-                          </Link>
-                        </Text>
-                      </TouchableOpacity>
-                      {errors.agreeToTerms && (
-                        <Text style={styles.errorMessage}>
-                          {t("auth.signup.mustAgreeToTerms")}
-                        </Text>
-                      )}
-                    </View>
-                  )}
-                />
-
+                {/* Implicit Terms Acceptance */}
+                <View style={styles.termsContainer}>
+                  <Text style={styles.implicitTermsText}>
+                    {t(
+                      "auth.signup.implicitTerms",
+                      "By signing up, you agree to our"
+                    )}{" "}
+                    <Link
+                      href={`https://decorebator.com/${i18n.language}/terms`}
+                      style={styles.termsLink}
+                      onPress={async (e) => {
+                        e.preventDefault();
+                        await WebBrowser.openBrowserAsync(
+                          `https://decorebator.com/${i18n.language}/terms`,
+                        );
+                      }}
+                      accessibilityRole="link"
+                      accessibilityHint="Opens terms of service in web browser"
+                    >
+                      {t("auth.signup.termsOfService", "Terms of Service")}
+                    </Link>{" "}
+                    {t("common.and", "and")}{" "}
+                    <Link
+                      href={`https://decorebator.com/${i18n.language}/privacy`}
+                      style={styles.termsLink}
+                      onPress={async (e) => {
+                        e.preventDefault();
+                        await WebBrowser.openBrowserAsync(
+                          `https://decorebator.com/${i18n.language}/privacy`,
+                        );
+                      }}
+                      accessibilityRole="link"
+                      accessibilityHint="Opens privacy policy in web browser"
+                    >
+                      {t("auth.signup.privacyPolicy", "Privacy Policy")}
+                    </Link>
+                    .
+                  </Text>
+                </View>
               </View>
 
               {/* Bottom spacer for fixed footer */}
@@ -667,49 +666,22 @@ const createStyles = (
     },
     errorRow: {
       flexDirection: "row",
-      marginTop: -6,
-      marginBottom: 6,
+      marginTop: 0,
+      marginBottom: 0,
     },
     errorColumn: {
       flex: 1,
-      paddingHorizontal: 4,
-    },
-    errorMessage: {
-      fontSize: responsive.fontSizes.caption,
-      color: theme.colors.error,
-      marginTop: 4,
+      paddingHorizontal: 0,
     },
     termsContainer: {
       marginTop: responsive.spacing.elementSpacing,
       marginBottom: responsive.spacing.elementSpacing / 2,
     },
-    checkboxContainer: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-    },
-    checkbox: {
-      width: 20,
-      height: 20,
-      borderWidth: 2,
-      borderColor: theme.colors.ui.border,
-      borderRadius: 4,
-      marginRight: theme.spacing.sm,
-      alignItems: "center",
-      justifyContent: "center",
-      marginTop: 2,
-      // Ensure minimum touch target
-      minWidth: 24,
-      minHeight: 24,
-    },
-    checkboxChecked: {
-      backgroundColor: theme.colors.primary,
-      borderColor: theme.colors.primary,
-    },
-    termsText: {
-      flex: 1,
+    implicitTermsText: {
       fontSize: responsive.fontSizes.label,
       color: theme.colors.text.secondary,
       lineHeight: 20,
+      textAlign: "center",
     },
     termsLink: {
       color: theme.colors.primary,
