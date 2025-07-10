@@ -3,10 +3,59 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Animated,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+
+// Shimmer Element for Header Loading States
+interface HeaderShimmerElementProps {
+  style: any;
+  skeletonStyles: {
+    elementColor: string;
+    shimmerHighlight: string;
+  };
+  shimmerAnim: Animated.Value;
+}
+
+const HeaderShimmerElement: React.FC<HeaderShimmerElementProps> = ({
+  style,
+  skeletonStyles,
+  shimmerAnim,
+}) => {
+  const shimmerOpacity = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.4, 1.0],
+  });
+
+  const backgroundColor = shimmerAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [
+      skeletonStyles.elementColor,
+      skeletonStyles.shimmerHighlight,
+      skeletonStyles.elementColor,
+    ],
+  });
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          backgroundColor,
+          opacity: shimmerOpacity,
+        },
+      ]}
+    />
+  );
+};
 
 export const Header = () => {
   const { t } = useTranslation();
@@ -14,12 +63,38 @@ export const Header = () => {
   const { theme } = useTheme();
   const styles = createStyles(theme);
 
+  // Shimmer animation for loading state
+  const shimmerAnim = React.useRef(new Animated.Value(0)).current;
+
   // Fetch user profile
   const { data: user, isLoading } = useQuery({
     queryKey: ["userProfile"],
     queryFn: usersApi.getProfile,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // Shimmer animation loop
+  React.useEffect(() => {
+    if (isLoading) {
+      const shimmerLoop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(shimmerAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: false,
+          }),
+          Animated.timing(shimmerAnim, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: false,
+          }),
+        ]),
+      );
+      shimmerLoop.start();
+
+      return () => shimmerLoop.stop();
+    }
+  }, [shimmerAnim, isLoading]);
 
   useEffect(() => {
     if (!user) return;
@@ -56,8 +131,23 @@ export const Header = () => {
     return t("dashboard.greetings.evening");
   };
 
-  // TODO improve this
-  if (isLoading) return null;
+  // Get theme-aware skeleton styles
+  const getSkeletonStyles = () => {
+    const isDark = theme.mode === "dark";
+    return {
+      elementColor: isDark
+        ? "rgba(255, 255, 255, 0.08)"
+        : "rgba(0, 0, 0, 0.08)",
+      shimmerHighlight: isDark
+        ? "rgba(255, 255, 255, 0.15)"
+        : "rgba(0, 0, 0, 0.15)",
+    };
+  };
+
+  const skeletonStyles = getSkeletonStyles();
+
+  // Always render header to prevent layout shift
+  // if (isLoading) return null;
 
   const profilePicture = user?.profilePictureUrl;
 
@@ -82,7 +172,13 @@ export const Header = () => {
           activeOpacity={0.7}
         >
           <View style={styles.avatarContainer}>
-            {profilePicture ? (
+            {isLoading ? (
+              <HeaderShimmerElement
+                style={styles.avatarSkeleton}
+                skeletonStyles={skeletonStyles}
+                shimmerAnim={shimmerAnim}
+              />
+            ) : profilePicture ? (
               <Image
                 source={{ uri: profilePicture }}
                 style={styles.profileImage}
@@ -100,9 +196,17 @@ export const Header = () => {
       {/* Greeting */}
       <View style={styles.greetingContainer}>
         <Text style={styles.greeting}>{getGreeting()},</Text>
-        <Text style={styles.userName}>
-          {user?.firstName || t("common.user")}!
-        </Text>
+        {isLoading ? (
+          <HeaderShimmerElement
+            style={styles.userNameSkeleton}
+            skeletonStyles={skeletonStyles}
+            shimmerAnim={shimmerAnim}
+          />
+        ) : (
+          <Text style={styles.userName}>
+            {user?.firstName || t("common.user")}!
+          </Text>
+        )}
         <Text style={styles.subtitle}>{t("dashboard.header.subtitle")}</Text>
       </View>
     </>
@@ -186,5 +290,17 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontSize: 16,
       color: theme.colors.text.secondary,
       marginTop: 4,
+    },
+    // Skeleton loading styles
+    avatarSkeleton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+    },
+    userNameSkeleton: {
+      width: 120,
+      height: 28,
+      borderRadius: 14,
+      marginBottom: 8,
     },
   });

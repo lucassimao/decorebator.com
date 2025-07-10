@@ -195,10 +195,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
     }
   };
 
-  const renderHeader = () => (
+  const renderStatsAndSection = () => (
     <>
-      <Header />
-
       {/* Only show stats if user has wordlists */}
       {!hasNoWordlist && (
         <>
@@ -393,6 +391,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
       {theme.mode === "dark" ? (
         <SafeAreaView style={[commonStyles.safeArea, styles.containerDark]}>
           <OfflineIndicator />
+          <Header />
           <Animated.View
             style={[
               { flex: 1 },
@@ -407,7 +406,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
               data={isLoading ? [] : hasNoWordlist ? [] : wordlists}
               renderItem={renderWordlistItem}
               keyExtractor={(item) => String(item.id)}
-              ListHeaderComponent={renderHeader}
+              ListHeaderComponent={renderStatsAndSection}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
               refreshControl={
@@ -437,6 +436,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
         >
           <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
             <OfflineIndicator />
+            <Header />
             <Animated.View
               style={[
                 { flex: 1 },
@@ -451,7 +451,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 data={isLoading ? [] : hasNoWordlist ? [] : wordlists}
                 renderItem={renderWordlistItem}
                 keyExtractor={(item) => String(item.id)}
-                ListHeaderComponent={renderHeader}
+                ListHeaderComponent={renderStatsAndSection}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
