@@ -48,6 +48,7 @@
     },
     "signup": {
       "title": "新規登録",
+      "subtitle": "学習の旅を始めましょう",
       "email": "メールアドレス",
       "firstName": "名",
       "lastName": "姓",

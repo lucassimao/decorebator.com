@@ -48,6 +48,7 @@
     },
     "signup": {
       "title": "Registrieren",
+      "subtitle": "Beginnen Sie Ihre Lernreise",
       "email": "E-Mail",
       "firstName": "Vorname",
       "lastName": "Nachname",

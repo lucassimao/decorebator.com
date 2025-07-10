@@ -48,6 +48,7 @@
     },
     "signup": {
       "title": "S'inscrire",
+      "subtitle": "Commencez votre apprentissage",
       "email": "Email",
       "firstName": "Prénom",
       "lastName": "Nom",

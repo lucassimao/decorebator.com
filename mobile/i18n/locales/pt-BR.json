@@ -48,6 +48,7 @@
     },
     "signup": {
       "title": "Cadastrar",
+      "subtitle": "Comece sua jornada de aprendizado",
       "email": "E-mail",
       "firstName": "Nome",
       "lastName": "Sobrenome",
