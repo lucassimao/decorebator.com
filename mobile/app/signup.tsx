@@ -110,6 +110,15 @@ export default function SignUpScreen() {
     }
   }, []);
 
+  // Auto-focus email field on component mount for better UX
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      emailInputRef.current?.focus();
+    }, 300); // Small delay to ensure component is fully mounted
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const { mutate: signup } = useMutation<void, Error, usersApi.UserSignup>({
     mutationFn: (userData) => usersApi.signup(userData),
     onError: (error) => {
@@ -156,37 +165,68 @@ export default function SignUpScreen() {
     [],
   );
 
-  // Function to handle scrolling to input with robust timing
+  // Function to handle scrolling to input with improved reliability
   const scrollToInput = React.useCallback(
     (inputRef: React.RefObject<TextInput | null>) => {
       if (!inputRef.current || !scrollViewRef.current) return;
 
-      // Use requestAnimationFrame for better timing coordination with layout
-      const scrollToElement = () => {
-        inputRef.current?.measureInWindow((x, y, width, height) => {
-          const offset = Math.max(0, y - 150); // 150px padding from top
-          scrollViewRef.current?.scrollTo({
-            y: offset,
-            animated: true,
-          });
+      // Method 1: Try using KeyboardAvoidingView's automatic behavior
+      // (We'll rely on the KeyboardAvoidingView component to handle basic scrolling)
+      const tryBuiltInScroll = () => {
+        // For now, return false to always use our manual implementation
+        // In the future, we could implement platform-specific solutions here
+        return false;
+      };
+
+      // Method 2: Improved manual implementation with better coordinate handling
+      const tryManualScroll = () => {
+        const scrollView = scrollViewRef.current;
+        const input = inputRef.current;
+        
+        if (!scrollView || !input) return;
+
+        // Use measureInWindow instead of measureLayout to avoid native component ref issues
+        input.measureInWindow((x, y, width, height) => {
+          // Only scroll if keyboard is visible and input might be covered
+          if (!keyboardVisible) {
+            return; // Don't scroll at all when keyboard isn't visible
+          }
+          
+          // Conservative keyboard height estimation
+          const keyboardHeight = 300;
+          const inputBottom = y + height;
+          const visibleScreenBottom = responsive.screenHeight - keyboardHeight;
+          
+          // Only scroll if the input is actually being covered by the keyboard
+          if (inputBottom > visibleScreenBottom) {
+            // Minimal scroll - just enough to show the input above keyboard
+            const targetY = visibleScreenBottom - height - 20; // 20px padding above keyboard
+            const scrollAmount = Math.max(0, y - targetY);
+            
+            scrollView.scrollTo({
+              y: scrollAmount,
+              animated: true,
+            });
+          }
         });
       };
 
-      // First try immediate scroll, then fallback with short delay if needed
-      requestAnimationFrame(() => {
-        scrollToElement();
-        // Fallback for cases where keyboard animation hasn't completed
-        setTimeout(scrollToElement, 50);
-      });
+      // Small delay to allow layout to settle after focus
+      setTimeout(() => {
+        // Try built-in method first, fallback to manual if it fails
+        if (!tryBuiltInScroll()) {
+          tryManualScroll();
+        }
+      }, 100);
     },
-    [],
+    [keyboardVisible, responsive.screenHeight],
   );
 
   return (
     <ImageBackground
-      source={require("../assets/images/signup-bg.png")}
+      source={require("../assets/images/signup-bg3.png")}
       style={styles.backgroundImage}
-      imageStyle={{ opacity: responsive.imageConfig.opacity }}
+      imageStyle={styles.backgroundImageStyle}
       resizeMode="cover"
     >
       <SafeAreaView style={styles.safeArea}>
@@ -389,7 +429,7 @@ export default function SignUpScreen() {
                           autoComplete="password-new"
                           textContentType="newPassword"
                           returnKeyType="done"
-                          onSubmitEditing={() => Keyboard.dismiss()}
+                          onSubmitEditing={handleSubmit(onSubmit)}
                         />
                         <TouchableOpacity
                           style={styles.passwordToggle}
@@ -480,31 +520,35 @@ export default function SignUpScreen() {
                   )}
                 />
 
-                {/* Submit Button */}
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={handleSubmit(onSubmit)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.buttonText}>
-                    {t("auth.signup.signUpButton")}
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Footer Link */}
-                <Text style={styles.footer}>
-                  {t("auth.signup.alreadyHaveAccount")}{" "}
-                  <Link replace style={styles.link} href={"/signin"}>
-                    <Text style={styles.link}>{t("auth.signup.signIn")}</Text>
-                  </Link>
-                </Text>
               </View>
 
-              {/* Bottom spacer for keyboard */}
+              {/* Bottom spacer for fixed footer */}
               <View style={styles.bottomSpacer} />
             </ScrollView>
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
+
+        {/* Fixed Footer */}
+        <View style={styles.fixedFooter}>
+          {/* Submit Button */}
+          <TouchableOpacity
+            style={styles.buttonInFooter}
+            onPress={handleSubmit(onSubmit)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>
+              {t("auth.signup.signUpButton")}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Footer Link */}
+          <Text style={styles.footer}>
+            {t("auth.signup.alreadyHaveAccount")}{" "}
+            <Link replace style={styles.link} href={"/signin"}>
+              <Text style={styles.link}>{t("auth.signup.signIn")}</Text>
+            </Link>
+          </Text>
+        </View>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -518,11 +562,18 @@ const createStyles = (
   StyleSheet.create({
     backgroundImage: {
       flex: 1,
-      width: responsive.screenWidth,
-      height: responsive.screenHeight,
+      width: "100%",
+      height: "100%",
+      backgroundColor: "#FFF9F0", // Fallback warm background color
+    },
+    backgroundImageStyle: {
+      // Force full coverage regardless of aspect ratio
+      width: "100%",
+      height: "100%",
     },
     safeArea: {
       flex: 1,
+      backgroundColor: "transparent", // Let image show through
     },
     container: {
       flex: 1,
@@ -534,10 +585,10 @@ const createStyles = (
     topSpacer: {
       height: keyboardVisible
         ? responsive.spacing.vertical
-        : responsive.screenHeight * 0.1,
+        : responsive.screenHeight * 0.12, // Balanced spacing
     },
     bottomSpacer: {
-      height: responsive.spacing.vertical * 2,
+      height: responsive.spacing.vertical * 4, // Increased to account for fixed footer
     },
     formCard: {
       backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -675,6 +726,18 @@ const createStyles = (
       minHeight: responsive.spacing.buttonHeight,
       justifyContent: "center",
     },
+    buttonInFooter: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: theme.spacing.md,
+      alignItems: "center",
+      marginTop: 0, // No top margin in footer
+      marginBottom: responsive.spacing.elementSpacing / 2,
+      ...theme.shadows.md,
+      shadowColor: theme.colors.primary,
+      minHeight: responsive.spacing.buttonHeight,
+      justifyContent: "center",
+    },
     buttonText: {
       color: theme.colors.text.inverse,
       fontSize: responsive.fontSizes.button,
@@ -689,5 +752,18 @@ const createStyles = (
     link: {
       color: theme.colors.primary,
       fontWeight: "600",
+    },
+    fixedFooter: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: "rgba(255, 255, 255, 0.98)",
+      paddingHorizontal: responsive.spacing.horizontal,
+      paddingVertical: responsive.spacing.vertical,
+      paddingBottom: responsive.spacing.vertical + (keyboardVisible ? 0 : 20), // Extra padding for safe area
+      borderTopWidth: 1,
+      borderTopColor: "rgba(0, 0, 0, 0.05)",
+      ...theme.shadows.lg,
     },
   });

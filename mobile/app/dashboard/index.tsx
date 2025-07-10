@@ -20,6 +20,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  ImageBackground,
   RefreshControl,
   SafeAreaView,
   StyleSheet,
@@ -144,52 +145,108 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
   return (
     <>
-      <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
-        <OfflineIndicator />
-        <FlatList
-          data={isLoading ? [] : wordlists}
-          renderItem={renderWordlistItem}
-          keyExtractor={(item) => String(item.id)}
-          ListHeaderComponent={renderHeader}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              colors={[theme.colors.primary]}
-              tintColor={theme.colors.primary}
-            />
-          }
-          ListEmptyComponent={
-            isLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={theme.colors.primary} />
-                <Text style={styles.loadingText}>{t("common.loading")}</Text>
-              </View>
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  {t("dashboard.wordlists.noWordlistsYet")}
-                </Text>
-                <TouchableOpacity
-                  style={styles.ctaButton}
-                  onPress={() => setShowCreateModal(true)}
-                >
-                  <Text style={styles.ctaButtonText}>
-                    {t("dashboard.wordlists.createFirstWordlist")}
+      {theme.mode === "dark" ? (
+        <SafeAreaView style={[commonStyles.safeArea, styles.containerDark]}>
+          <OfflineIndicator />
+          <FlatList
+            data={isLoading ? [] : wordlists}
+            renderItem={renderWordlistItem}
+            keyExtractor={(item) => String(item.id)}
+            ListHeaderComponent={renderHeader}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={[theme.colors.primary]}
+                tintColor={theme.colors.primary}
+              />
+            }
+            ListEmptyComponent={
+              isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={theme.colors.primary} />
+                  <Text style={styles.loadingText}>{t("common.loading")}</Text>
+                </View>
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>
+                    {t("dashboard.wordlists.noWordlistsYet")}
                   </Text>
-                  <Ionicons
-                    name="add-circle"
-                    size={24}
-                    color={theme.colors.text.inverse}
-                  />
-                </TouchableOpacity>
-              </View>
-            )
-          }
-        />
-      </SafeAreaView>
+                  <TouchableOpacity
+                    style={styles.ctaButton}
+                    onPress={() => setShowCreateModal(true)}
+                  >
+                    <Text style={styles.ctaButtonText}>
+                      {t("dashboard.wordlists.createFirstWordlist")}
+                    </Text>
+                    <Ionicons
+                      name="add-circle"
+                      size={24}
+                      color={theme.colors.text.inverse}
+                    />
+                  </TouchableOpacity>
+                </View>
+              )
+            }
+          />
+        </SafeAreaView>
+      ) : (
+        <ImageBackground
+          source={require("../../assets/images/signup-bg3.png")}
+          style={styles.backgroundImage}
+          imageStyle={styles.backgroundImageStyle}
+          resizeMode="cover"
+        >
+          <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
+            <OfflineIndicator />
+            <FlatList
+              data={isLoading ? [] : wordlists}
+              renderItem={renderWordlistItem}
+              keyExtractor={(item) => String(item.id)}
+              ListHeaderComponent={renderHeader}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                  colors={[theme.colors.primary]}
+                  tintColor={theme.colors.primary}
+                />
+              }
+              ListEmptyComponent={
+                isLoading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
+                    <Text style={styles.loadingText}>{t("common.loading")}</Text>
+                  </View>
+                ) : (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>
+                      {t("dashboard.wordlists.noWordlistsYet")}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.ctaButton}
+                      onPress={() => setShowCreateModal(true)}
+                    >
+                      <Text style={styles.ctaButtonText}>
+                        {t("dashboard.wordlists.createFirstWordlist")}
+                      </Text>
+                      <Ionicons
+                        name="add-circle"
+                        size={24}
+                        color={theme.colors.text.inverse}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )
+              }
+            />
+          </SafeAreaView>
+        </ImageBackground>
+      )}
 
       {/* Create Wordlist Modal */}
       <CreateWordlistModal
@@ -219,9 +276,25 @@ export default Dashboard;
 
 const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
   StyleSheet.create({
+    backgroundImage: {
+      flex: 1,
+      width: "100%",
+      height: "100%",
+      backgroundColor: "#FFF9F0", // Fallback warm background color
+    },
+    backgroundImageStyle: {
+      opacity: 0.7, // Prominent yet readable background for dashboard
+      // Force full coverage regardless of aspect ratio
+      width: "100%",
+      height: "100%",
+    },
     container: {
       flex: 1,
-      backgroundColor: theme.colors.background.default,
+      backgroundColor: "transparent", // Let background image show through
+    },
+    containerDark: {
+      flex: 1,
+      backgroundColor: theme.colors.background.default, // Use theme default for dark mode
     },
     loadingContainer: {
       paddingVertical: 60,

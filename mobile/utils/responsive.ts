@@ -107,27 +107,44 @@ export const getKeyboardOffset = (width: number) => {
   }
 };
 
-// Responsive image dimensions for background - requires explicit width and height parameters
-export const getResponsiveImageDimensions = (width: number, height: number) => {
-  // Calculate maximum height for background image based on screen size
+// Responsive background configuration - requires explicit width and height parameters
+export const getResponsiveBackgroundConfig = (
+  width: number,
+  height: number,
+) => {
+  // Calculate configuration for background layers based on screen size
   const category = getScreenSizeCategory(width);
 
   switch (category) {
     case "small":
       return {
-        maxHeight: height * 0.35, // Use less height on small screens
-        opacity: 0.12, // Lighter opacity for better contrast
+        // Image at bottom
+        imageHeight: height * 0.3, // Smaller image on small screens
+        imageOpacity: 0.15,
+        imagePosition: "bottom",
+        // Gradient configuration
+        gradientHeight: height * 0.7, // More gradient space
+        gradientColors: ["#FFF9F0", "#FFE8D6", "rgba(255, 232, 214, 0.4)"],
+        gradientStops: [0, 0.6, 1],
       };
     case "medium":
       return {
-        maxHeight: height * 0.4,
-        opacity: 0.15,
+        imageHeight: height * 0.35,
+        imageOpacity: 0.18,
+        imagePosition: "bottom",
+        gradientHeight: height * 0.65,
+        gradientColors: ["#FFF9F0", "#FFE8D6", "rgba(255, 232, 214, 0.3)"],
+        gradientStops: [0, 0.5, 1],
       };
     case "large":
     default:
       return {
-        maxHeight: height * 0.45,
-        opacity: 0.18,
+        imageHeight: height * 0.4,
+        imageOpacity: 0.2,
+        imagePosition: "bottom",
+        gradientHeight: height * 0.6,
+        gradientColors: ["#FFF9F0", "#FFE8D6", "rgba(255, 232, 214, 0.2)"],
+        gradientStops: [0, 0.4, 1],
       };
   }
 };

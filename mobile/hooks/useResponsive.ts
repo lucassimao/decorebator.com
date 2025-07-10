@@ -4,7 +4,6 @@ import {
   getScreenSizeCategory,
   getResponsiveSpacing,
   getResponsiveFontSizes,
-  getResponsiveImageDimensions,
   getKeyboardBehavior,
   getKeyboardOffset,
 } from "@/utils/responsive";
@@ -20,7 +19,6 @@ export const useResponsive = () => {
     const category = getScreenSizeCategory(screenWidth);
     const spacing = getResponsiveSpacing(screenWidth);
     const fontSizes = getResponsiveFontSizes(screenWidth);
-    const imageConfig = getResponsiveImageDimensions(screenWidth, screenHeight);
     const keyboardBehavior = getKeyboardBehavior();
     const keyboardOffset = getKeyboardOffset(screenWidth);
 
@@ -30,7 +28,6 @@ export const useResponsive = () => {
       category,
       spacing,
       fontSizes,
-      imageConfig,
       keyboardBehavior,
       keyboardOffset,
     };
