@@ -88,6 +88,14 @@
     },
     "tagline": "言語を学び、世界をつなぐ"
   },
+  "welcome": {
+    "title": "Decorebatorへようこそ! 🎉",
+    "subtitle": "AI搭載の言語学習の旅がここから始まります",
+    "firstWordlistSuccess": "おめでとうございます! 🎉",
+    "firstWordlistMessage": "最初の単語リストが完成しました！単語を追加して学習を始めましょう。",
+    "addWordsNow": "単語を追加",
+    "addWordsLater": "後で"
+  },
   "dashboard": {
     "header": {
       "greeting": "こんにちは、{{name}}さん",

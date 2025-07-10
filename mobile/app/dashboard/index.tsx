@@ -2,6 +2,7 @@ import * as subscriptionsApi from "@/api/subscriptions";
 import * as wordlistsApi from "@/api/wordlists";
 import { Wordlist } from "@/api/wordlists";
 import { CreateWordlistModal } from "@/components/dashboard/CreateWordlistModal";
+import { CongratulationsModal } from "@/components/dashboard/CongratulationsModal";
 import { Header } from "@/components/dashboard/Header";
 import DashboardStats from "@/components/dashboard/Stats";
 import { WordlistDetailModal } from "@/components/dashboard/WordlistDetailModal";
@@ -42,6 +43,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
     React.useState<Wordlist | null>(null);
   const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [showCongratulationsModal, setShowCongratulationsModal] =
+    useState(false);
+  const [congratulationsWordlist, setCongratulationsWordlist] =
+    useState<Wordlist | null>(null);
   const upgradeDialog = useUpgradePromptDialog();
   const router = useRouter();
   const { t } = useTranslation();
@@ -489,19 +494,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
           // Special handling for first-time users
           if (isNewUser) {
             setIsNewUser(false);
-            Alert.alert(
-              t("welcome.firstWordlistSuccess", "Congratulations! 🎉"),
-              t(
-                "welcome.firstWordlistMessage",
-                "You've created your first wordlist! Now you can start adding words and begin learning.",
-              ),
-              [
-                {
-                  text: t("common.ok", "OK"),
-                  style: "default",
-                },
-              ],
-            );
+            setCongratulationsWordlist(wordlist);
+            setShowCongratulationsModal(true);
           } else {
             Alert.alert(
               t("common.success"),
@@ -518,6 +512,18 @@ const Dashboard: React.FC<DashboardProps> = () => {
           wordlist={selectedWordlist}
         />
       )}
+
+      {/* Congratulations Modal for First Wordlist */}
+      <CongratulationsModal
+        visible={showCongratulationsModal}
+        onClose={() => setShowCongratulationsModal(false)}
+        onAddWords={() => {
+          if (congratulationsWordlist) {
+            setSelectedWordlist(congratulationsWordlist);
+          }
+        }}
+        wordlist={congratulationsWordlist}
+      />
 
       {/* Welcome Overlay for First-Time Users */}
       {renderWelcomeOverlay()}

@@ -123,7 +123,7 @@ export default function SignUpScreen() {
     mutationFn: (userData) => usersApi.signup(userData),
     onError: (error) => {
       const mappedError = mapErrorToI18n(error.message);
-      
+
       if (mappedError.isFieldError && mappedError.field) {
         // Set error on specific field to display translated message below the input
         setError(mappedError.field as keyof typeof schema._type, {
@@ -157,9 +157,8 @@ export default function SignUpScreen() {
   const {
     control,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors },
     setError,
-    watch,
   } = useForm({
     resolver: zodResolver(schema),
     mode: "onChange", // Validate on every change to enable real-time form state
@@ -173,10 +172,10 @@ export default function SignUpScreen() {
 
   // Check if there are any validation errors
   const hasValidationErrors = Object.keys(errors).length > 0;
-  
+
   // Track if we've already dismissed the keyboard for this password field session
   const [hasAutoDismissed, setHasAutoDismissed] = React.useState(false);
-  
+
   // Reset auto-dismiss flag if validation errors appear
   React.useEffect(() => {
     if (hasValidationErrors) {
@@ -486,7 +485,7 @@ export default function SignUpScreen() {
                   <Text style={styles.implicitTermsText}>
                     {t(
                       "auth.signup.implicitTerms",
-                      "By signing up, you agree to our"
+                      "By signing up, you agree to our",
                     )}{" "}
                     <Link
                       href={`https://decorebator.com/${i18n.language}/terms`}

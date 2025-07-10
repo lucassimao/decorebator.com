@@ -88,6 +88,14 @@
     },
     "tagline": "Sprachen lernen, Welten verbinden"
   },
+  "welcome": {
+    "title": "Willkommen bei Decorebator! 🎉",
+    "subtitle": "Ihre KI-gestützte Sprachlernreise beginnt hier",
+    "firstWordlistSuccess": "Herzlichen Glückwunsch! 🎉",
+    "firstWordlistMessage": "Ihre erste Liste ist bereit! Beginnen Sie mit dem Hinzufügen von Wörtern.",
+    "addWordsNow": "Wörter Hinzufügen",
+    "addWordsLater": "Später"
+  },
   "dashboard": {
     "header": {
       "greeting": "Hallo, {{name}}",

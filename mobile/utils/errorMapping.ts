@@ -17,7 +17,7 @@ const errorMappings: ErrorMapping[] = [
     isFieldError: true,
     field: "email",
   },
-  
+
   // Validation errors for signup fields - exact matches from API
   {
     pattern: "The email field is required.",
@@ -71,10 +71,13 @@ export interface MappedError {
  */
 export function mapErrorToI18n(errorMessage: string): MappedError {
   const trimmedMessage = errorMessage.trim();
-  
+
   // Find matching error mapping using exact string matching
   for (const mapping of errorMappings) {
-    if (typeof mapping.pattern === "string" && trimmedMessage === mapping.pattern) {
+    if (
+      typeof mapping.pattern === "string" &&
+      trimmedMessage === mapping.pattern
+    ) {
       return {
         i18nKey: mapping.i18nKey,
         isFieldError: mapping.isFieldError || false,
@@ -83,7 +86,7 @@ export function mapErrorToI18n(errorMessage: string): MappedError {
       };
     }
   }
-  
+
   // Default fallback for non-signup errors
   return {
     i18nKey: "errors.general",
@@ -97,7 +100,10 @@ export function mapErrorToI18n(errorMessage: string): MappedError {
  * @param errorMessage The error message from the API
  * @returns Object with field name and whether it's a field error
  */
-export function getFieldError(errorMessage: string): { isFieldError: boolean; field?: string } {
+export function getFieldError(errorMessage: string): {
+  isFieldError: boolean;
+  field?: string;
+} {
   const mapped = mapErrorToI18n(errorMessage);
   return {
     isFieldError: mapped.isFieldError,

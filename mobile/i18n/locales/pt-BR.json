@@ -88,6 +88,14 @@
     },
     "tagline": "Aprenda idiomas, conecte mundos"
   },
+  "welcome": {
+    "title": "Bem-vindo ao Decorebator! 🎉",
+    "subtitle": "Sua jornada de aprendizado de idiomas com IA começa aqui",
+    "firstWordlistSuccess": "Parabéns! 🎉",
+    "firstWordlistMessage": "Sua primeira lista está pronta! Comece adicionando palavras.",
+    "addWordsNow": "Adicionar Palavras",
+    "addWordsLater": "Mais Tarde"
+  },
   "dashboard": {
     "header": {
       "greeting": "Olá, {{name}}",

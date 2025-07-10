@@ -13,7 +13,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = React.memo(
   ({ error, style }) => {
     const { theme } = useTheme();
     const responsive = useResponsive();
-    
+
     if (!error) return null;
 
     const defaultErrorStyle = {
@@ -23,7 +23,9 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = React.memo(
     };
 
     return (
-      <Text style={[defaultErrorStyle, style]}>{error?.message || "Invalid"}</Text>
+      <Text style={[defaultErrorStyle, style]}>
+        {error?.message || "Invalid"}
+      </Text>
     );
   },
 );
