@@ -61,7 +61,10 @@
       "privacyPolicy": "Política de Privacidad",
       "signUpButton": "Registrarse",
       "alreadyHaveAccount": "¿Ya tienes cuenta?",
-      "signIn": "Iniciar Sesión"
+      "signIn": "Iniciar Sesión",
+      "agreeToTerms": "Acepto los Términos de Servicio y Política de Privacidad",
+      "termsCheckboxHint": "Toca para alternar el acuerdo con los términos de servicio y política de privacidad",
+      "mustAgreeToTerms": "Debes aceptar los Términos de Servicio y Política de Privacidad para continuar"
     },
     "forgotPassword": {
       "title": "¿Olvidaste tu contraseña?",

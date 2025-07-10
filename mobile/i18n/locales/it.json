@@ -61,7 +61,10 @@
       "privacyPolicy": "Informativa sulla Privacy",
       "signUpButton": "Registrati",
       "alreadyHaveAccount": "Hai già un account?",
-      "signIn": "Accedi"
+      "signIn": "Accedi",
+      "agreeToTerms": "Accetto i Termini di Servizio e l'Informativa sulla Privacy",
+      "termsCheckboxHint": "Tocca per attivare l'accordo ai termini di servizio e alla politica sulla privacy",
+      "mustAgreeToTerms": "Devi accettare i Termini di Servizio e l'Informativa sulla Privacy per continuare"
     },
     "forgotPassword": {
       "title": "Password dimenticata?",

@@ -48,6 +48,7 @@
     },
     "signup": {
       "title": "Sign Up",
+      "subtitle": "Start your language learning journey",
       "email": "Email",
       "firstName": "First Name",
       "lastName": "Last Name",
@@ -63,6 +64,7 @@
       "alreadyHaveAccount": "Already have an account?",
       "signIn": "Sign In",
       "agreeToTerms": "I agree to the Terms of Service and Privacy Policy",
+      "termsCheckboxHint": "Tap to toggle agreement to terms and privacy policy",
       "mustAgreeToTerms": "You must agree to the Terms of Service and Privacy Policy to continue"
     },
     "forgotPassword": {

@@ -61,7 +61,10 @@
       "privacyPolicy": "プライバシーポリシー",
       "signUpButton": "登録",
       "alreadyHaveAccount": "すでにアカウントをお持ちの方",
-      "signIn": "ログイン"
+      "signIn": "ログイン",
+      "agreeToTerms": "利用規約とプライバシーポリシーに同意します",
+      "termsCheckboxHint": "利用規約とプライバシーポリシーへの同意を切り替えるにはタップしてください",
+      "mustAgreeToTerms": "続行するには利用規約とプライバシーポリシーに同意する必要があります"
     },
     "forgotPassword": {
       "title": "パスワードをお忘れですか？",

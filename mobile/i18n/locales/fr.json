@@ -61,7 +61,10 @@
       "privacyPolicy": "Politique de confidentialité",
       "signUpButton": "S'inscrire",
       "alreadyHaveAccount": "Déjà un compte ?",
-      "signIn": "Se connecter"
+      "signIn": "Se connecter",
+      "agreeToTerms": "J'accepte les Conditions d'utilisation et la Politique de confidentialité",
+      "termsCheckboxHint": "Appuyez pour basculer l'accord aux conditions d'utilisation et à la politique de confidentialité",
+      "mustAgreeToTerms": "Vous devez accepter les Conditions d'utilisation et la Politique de confidentialité pour continuer"
     },
     "forgotPassword": {
       "title": "Mot de passe oublié ?",

@@ -63,6 +63,7 @@
       "alreadyHaveAccount": "Haben Sie bereits ein Konto?",
       "signIn": "Anmelden",
       "agreeToTerms": "Ich stimme den Nutzungsbedingungen und der Datenschutzerklärung zu",
+      "termsCheckboxHint": "Tippen um die Zustimmung zu den Nutzungsbedingungen und Datenschutzrichtlinien umzuschalten",
       "mustAgreeToTerms": "Sie müssen den Nutzungsbedingungen und der Datenschutzerklärung zustimmen, um fortzufahren"
     },
     "forgotPassword": {

@@ -17,7 +17,8 @@ The Decorebator mobile application is a React Native/Expo app that provides voca
 - **Audio**: Expo Audio for pronunciation playback
 - **Internationalization**: react-i18next with 8 supported languages
 - **Analytics**: PostHog for user behavior tracking
-- **Styling**: StyleSheet with centralized color system
+- **Styling**: StyleSheet with centralized color system and responsive design utilities
+- **Responsive Design**: Breakpoint-based responsive utilities with performance optimization
 
 ### Project Structure
 
@@ -30,17 +31,82 @@ mobile/
 │   ├── analytics.tsx     # Analytics dashboard
 │   └── [auth screens]    # Sign in/up flows
 ├── components/           # Reusable UI components
+│   ├── common/         # Shared components (ErrorMessage, etc.)
 │   ├── dashboard/       # Dashboard-specific components
 │   ├── quiz/           # Quiz interface components
 │   ├── flashcard/      # Flashcard interface components
 │   ├── analytics/      # Analytics and data visualization
-│   └── [shared]        # Cross-feature components
+│   └── [feature-specific] # Feature-specific components
 ├── api/                # API layer and types
 ├── hooks/              # Custom React hooks
+│   ├── useResponsive.ts    # Centralized responsive design hook
+│   ├── useErrorReporting.ts # Error reporting system
+│   └── [feature hooks]     # Feature-specific hooks
 ├── i18n/               # Internationalization
 ├── theme/              # Design system
-└── utils/              # Utility functions
+├── utils/              # Utility functions
+│   ├── responsive.ts       # Responsive design utilities
+│   └── [other utils]       # Additional utility functions
 ```
+
+## Responsive Design Architecture
+
+### Breakpoint System
+
+The app implements a comprehensive responsive design system that adapts to different mobile screen sizes:
+
+```typescript
+export const BREAKPOINTS = {
+  SMALL: 359,  // <= 359px width (iPhone SE, small Android)
+  MEDIUM: 389, // 360-389px width (standard Android)
+  LARGE: 390,  // >= 390px width (modern iPhones, large Android)
+} as const;
+```
+
+### Responsive Design Patterns
+
+#### 1. Adaptive Spacing & Typography
+- **Dynamic Spacing**: Screen-size-aware padding, margins, and element spacing
+- **Typography Scaling**: Font sizes adapt to screen categories for optimal readability
+- **Touch Target Optimization**: Ensures minimum 44px touch targets across all screen sizes
+
+#### 2. useResponsive Hook
+Centralized responsive calculations to reduce redundant computation:
+
+```typescript
+export const useResponsive = () => {
+  const { width: screenWidth, height: screenHeight } = getScreenDimensions();
+  
+  return useMemo(() => ({
+    screenWidth, screenHeight, category, spacing, fontSizes, 
+    imageConfig, keyboardBehavior, keyboardOffset,
+  }), [screenWidth, screenHeight]);
+};
+```
+
+**Performance Benefits**:
+- Single computation per render cycle
+- Memoization prevents recalculation unless screen dimensions change
+- Centralized logic reduces duplicate responsive calculations
+
+#### 3. Responsive Image Treatment
+- **Adaptive Background Images**: Height and opacity adjust based on screen size
+- **Progressive Enhancement**: Subtle background illustrations on larger screens
+- **Performance Optimization**: Native KeyboardAvoidingView replaces complex animations
+
+### Enhanced Component Architecture
+
+#### Performance Optimizations (January 2025)
+1. **Component Extraction**: ErrorMessage component extracted for reusability
+2. **Memoization Strategy**: Styles and callbacks memoized to prevent unnecessary re-renders
+3. **Type Safety**: Proper TypeScript types throughout (SignupFormData = z.infer<typeof schema>)
+4. **Clean Import Management**: Unused imports removed, proper dependency management
+
+#### Accessibility Enhancements
+- **Screen Reader Support**: Proper accessibility roles and states
+- **Touch Target Optimization**: Minimum 44px touch targets with proper spacing
+- **Focus Management**: Enhanced keyboard navigation between form fields
+- **Visual Accessibility**: WCAG AA compliant color contrast
 
 ## Core Features & Components
 
@@ -142,6 +208,8 @@ mobile/
 - **Pronunciation UX**: Moved pronunciation from back to front of flashcard for better learning experience
 - **Translation Updates**: Updated "practice" to "flashcards" across all 8 supported languages
 - **Enhanced Accessibility**: Improved screen reader support and navigation hints
+- **Responsive Design**: Comprehensive responsive design implementation with breakpoint-based layouts
+- **Performance Optimization**: Component memoization and extracted reusable components
 
 ### 5. Analytics System
 
@@ -478,6 +546,11 @@ This architecture document is part of a comprehensive documentation suite:
 - `components/flashcard/` - Flashcard system components
 
 ### **Recent Updates & Fixes:**
+- **Responsive Design System (January 2025)**: Comprehensive responsive design implementation with breakpoint-based layouts
+- **Signup Screen Optimization**: Complete redesign with keyboard handling, performance improvements, and accessibility enhancements
+- **Component Architecture**: Extracted reusable components (ErrorMessage) and implemented performance optimizations
+- **useResponsive Hook**: Centralized responsive calculations to reduce redundant computation
+- **TypeScript Improvements**: Proper type safety throughout with SignupFormData types and strict TypeScript usage
 - **Flashcard Route Rename (January 2025)**: Renamed `/practice` to `/flashcard` for semantic clarity
 - **Pronunciation Display**: Moved pronunciation from back to front of flashcard for immediate visibility
 - **Bulletproof Offline Manager**: Enterprise-grade offline manager with 99.9% network detection accuracy
