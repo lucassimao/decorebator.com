@@ -1,5 +1,6 @@
 import { CreateWordlistModal } from "@/components/dashboard/CreateWordlistModal";
 import { Header } from "@/components/dashboard/Header";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -21,6 +22,7 @@ const { width, height } = Dimensions.get("window");
 const EmptyDashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { t } = useTranslation();
+  const { theme } = useTheme();
 
   const handleCreateSuccess = () => {
     setShowCreateModal(false);
@@ -29,60 +31,114 @@ const EmptyDashboard = () => {
   };
 
   return (
-    <ImageBackground
-      source={require("@/assets/images/dashboard-bg.png")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <SafeAreaView style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <Header />
+    <>
+      {theme.mode === "dark" ? (
+        <SafeAreaView style={styles.containerDark}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <Header />
 
-          {/* Illustration Image */}
-          <View style={styles.illustrationContainer}>
-            <Image
-              source={require("@/assets/images/empty-dashboard-bg.png")} // Your illustration with character, books, plants
-              style={styles.illustrationImage}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Bottom content */}
-          <View style={styles.bottomContent}>
-            {/* No wordlists message */}
-            <Text style={styles.noWordlistsText}>
-              {t("dashboard.wordlists.noWordlistsYet")}
-            </Text>
-
-            {/* CTA Button */}
-            <TouchableOpacity
-              style={styles.ctaButton}
-              onPress={() => setShowCreateModal(true)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.ctaButtonText}>
-                {t("dashboard.wordlists.createFirstWordlist")}
-              </Text>
-              <Ionicons
-                name="add-circle"
-                size={24}
-                color="#FFFFFF"
-                style={styles.ctaIcon}
+            {/* Illustration Image */}
+            <View style={styles.illustrationContainer}>
+              <Image
+                source={require("@/assets/images/empty-dashboard-bg.png")}
+                style={styles.illustrationImage}
+                resizeMode="contain"
               />
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+            </View>
 
-      <CreateWordlistModal
-        visible={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={handleCreateSuccess}
-      />
-    </ImageBackground>
+            {/* Bottom content */}
+            <View style={styles.bottomContent}>
+              {/* No wordlists message */}
+              <Text style={styles.noWordlistsTextDark}>
+                {t("dashboard.wordlists.noWordlistsYet")}
+              </Text>
+
+              {/* CTA Button */}
+              <TouchableOpacity
+                style={styles.ctaButton}
+                onPress={() => setShowCreateModal(true)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.ctaButtonText}>
+                  {t("dashboard.wordlists.createFirstWordlist")}
+                </Text>
+                <Ionicons
+                  name="add-circle"
+                  size={24}
+                  color="#FFFFFF"
+                  style={styles.ctaIcon}
+                />
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+
+          <CreateWordlistModal
+            visible={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            onSuccess={handleCreateSuccess}
+          />
+        </SafeAreaView>
+      ) : (
+        <ImageBackground
+          source={require("@/assets/images/signup-bg3.png")}
+          style={styles.backgroundImage}
+          imageStyle={styles.backgroundImageStyle}
+          resizeMode="cover"
+        >
+          <SafeAreaView style={styles.container}>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <Header />
+
+              {/* Illustration Image */}
+              <View style={styles.illustrationContainer}>
+                <Image
+                  source={require("@/assets/images/empty-dashboard-bg.png")}
+                  style={styles.illustrationImage}
+                  resizeMode="contain"
+                />
+              </View>
+
+              {/* Bottom content */}
+              <View style={styles.bottomContent}>
+                {/* No wordlists message */}
+                <Text style={styles.noWordlistsText}>
+                  {t("dashboard.wordlists.noWordlistsYet")}
+                </Text>
+
+                {/* CTA Button */}
+                <TouchableOpacity
+                  style={styles.ctaButton}
+                  onPress={() => setShowCreateModal(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.ctaButtonText}>
+                    {t("dashboard.wordlists.createFirstWordlist")}
+                  </Text>
+                  <Ionicons
+                    name="add-circle"
+                    size={24}
+                    color="#FFFFFF"
+                    style={styles.ctaIcon}
+                  />
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+
+            <CreateWordlistModal
+              visible={showCreateModal}
+              onClose={() => setShowCreateModal(false)}
+              onSuccess={handleCreateSuccess}
+            />
+          </SafeAreaView>
+        </ImageBackground>
+      )}
+    </>
   );
 };
 
@@ -91,9 +147,20 @@ const styles = StyleSheet.create({
     flex: 1,
     width: width,
     height: height,
+    backgroundColor: "#FFF9F0", // Fallback warm background color
+  },
+  backgroundImageStyle: {
+    opacity: 0.7, // Same opacity as dashboard
+    width: "100%",
+    height: "100%",
   },
   container: {
     flex: 1,
+    backgroundColor: "transparent", // Let background image show through
+  },
+  containerDark: {
+    flex: 1,
+    backgroundColor: "#0F0F0F", // Dark theme background
   },
   scrollContent: {
     flexGrow: 1,
@@ -187,6 +254,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "500",
     color: "#2D3436",
+    textAlign: "center",
+    marginBottom: 30,
+  },
+  noWordlistsTextDark: {
+    fontSize: 20,
+    fontWeight: "500",
+    color: "#FFFFFF",
     textAlign: "center",
     marginBottom: 30,
   },

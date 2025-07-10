@@ -1,4 +1,5 @@
 import { useUserInfo } from "@/hooks/users";
+import { useTheme } from "@/contexts/ThemeContext";
 import React, { useEffect } from "react";
 import {
   ActivityIndicator,
@@ -17,6 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 export default function Index() {
   const { userInfo, error, loading } = useUserInfo();
   const router = useRouter();
+  const { theme } = useTheme();
 
   // Prefetch wordlists when user is authenticated
   useQuery({
@@ -37,17 +39,28 @@ export default function Index() {
   // Show loading only during initial authentication check
   if (loading) {
     return (
-      <ImageBackground
-        source={require("@/assets/images/dashboard-bg.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.container}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF7B54" />
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
+      <>
+        {theme.mode === "dark" ? (
+          <SafeAreaView style={styles.containerDark}>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#FF7B54" />
+            </View>
+          </SafeAreaView>
+        ) : (
+          <ImageBackground
+            source={require("@/assets/images/signup-bg3.png")}
+            style={styles.backgroundImage}
+            imageStyle={styles.backgroundImageStyle}
+            resizeMode="cover"
+          >
+            <SafeAreaView style={styles.container}>
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#FF7B54" />
+              </View>
+            </SafeAreaView>
+          </ImageBackground>
+        )}
+      </>
     );
   }
 
@@ -68,9 +81,20 @@ const styles = StyleSheet.create({
     flex: 1,
     width: width,
     height: height,
+    backgroundColor: "#FFF9F0", // Fallback warm background color
+  },
+  backgroundImageStyle: {
+    opacity: 0.7, // Same opacity as dashboard
+    width: "100%",
+    height: "100%",
   },
   container: {
     flex: 1,
+    backgroundColor: "transparent", // Let background image show through
+  },
+  containerDark: {
+    flex: 1,
+    backgroundColor: "#0F0F0F", // Dark theme background
   },
   loadingContainer: {
     flex: 1,

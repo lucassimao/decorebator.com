@@ -119,6 +119,7 @@ export default function SignUpScreen() {
     return () => clearTimeout(timer);
   }, []);
 
+
   const { mutate: signup } = useMutation<void, Error, usersApi.UserSignup>({
     mutationFn: (userData) => usersApi.signup(userData),
     onError: (error) => {
