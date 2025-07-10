@@ -8,6 +8,7 @@ import DashboardStats from "@/components/dashboard/Stats";
 import { WordlistDetailModal } from "@/components/dashboard/WordlistDetailModal";
 import Wordlistitem from "@/components/dashboard/WordlistItem";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { WordlistItemSkeleton } from "@/components/ui/WordlistItemSkeleton";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
 import { useWordlistProgress } from "@/hooks/useWordlistProgress";
@@ -18,7 +19,6 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
@@ -173,6 +173,15 @@ const Dashboard: React.FC<DashboardProps> = () => {
     />
   );
   const hideWordlistDetailModal = () => setSelectedWordlist(null);
+
+  // Render skeleton items while loading
+  const renderSkeletonItems = () => (
+    <View>
+      {[1, 2, 3].map((item) => (
+        <WordlistItemSkeleton key={item} />
+      ))}
+    </View>
+  );
 
   const handleAddNewWordlist = () => {
     const wordlistCount = wordlists?.length || 0;
@@ -410,19 +419,11 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 />
               }
               ListEmptyComponent={
-                isLoading ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator
-                      size="large"
-                      color={theme.colors.primary}
-                    />
-                    <Text style={styles.loadingText}>
-                      {t("common.loading")}
-                    </Text>
-                  </View>
-                ) : hasNoWordlist ? (
-                  renderEmptyState()
-                ) : null
+                isLoading
+                  ? renderSkeletonItems()
+                  : hasNoWordlist
+                    ? renderEmptyState()
+                    : null
               }
             />
           </Animated.View>
@@ -462,19 +463,11 @@ const Dashboard: React.FC<DashboardProps> = () => {
                   />
                 }
                 ListEmptyComponent={
-                  isLoading ? (
-                    <View style={styles.loadingContainer}>
-                      <ActivityIndicator
-                        size="large"
-                        color={theme.colors.primary}
-                      />
-                      <Text style={styles.loadingText}>
-                        {t("common.loading")}
-                      </Text>
-                    </View>
-                  ) : hasNoWordlist ? (
-                    renderEmptyState()
-                  ) : null
+                  isLoading
+                    ? renderSkeletonItems()
+                    : hasNoWordlist
+                      ? renderEmptyState()
+                      : null
                 }
               />
             </Animated.View>
@@ -556,16 +549,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     containerDark: {
       flex: 1,
       backgroundColor: theme.colors.background.default, // Use theme default for dark mode
-    },
-    loadingContainer: {
-      paddingVertical: 60,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    loadingText: {
-      marginTop: 12,
-      fontSize: 16,
-      color: theme.colors.text.secondary,
     },
     listContent: {
       paddingBottom: 30,

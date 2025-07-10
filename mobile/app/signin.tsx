@@ -1,6 +1,7 @@
 import * as usersApi from "@/api/users";
+import { useUserInfo } from "@/hooks/users";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
@@ -38,6 +39,7 @@ const LoginScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { t } = useTranslation();
   const posthog = usePostHog();
+  const queryClient = useQueryClient();
   // Always use light theme for auth screens
   const theme = authLightTheme;
   const styles = createStyles(theme);
@@ -57,7 +59,7 @@ const LoginScreen: React.FC = () => {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: usersApi.signin,
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       posthog.capture("user_signed_in", {
         email: variables.email,
       });
@@ -66,6 +68,10 @@ const LoginScreen: React.FC = () => {
         email: variables.email,
         // username: variables.name,
       });
+
+      // Pre-cache user data by invalidating the query - this will trigger a fresh fetch
+      await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+
       router.replace("/");
     },
     onError: (error: Error) => {
