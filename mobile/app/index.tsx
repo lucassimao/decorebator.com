@@ -46,7 +46,7 @@ export default function Index() {
     };
 
     navigate();
-  }, [isLoading, isError, user, router, queryClient]);
+  }, [isLoading, isError, user, router, queryClient, error]);
 
   // Render nothing while the splash screen is visible
   return null;
