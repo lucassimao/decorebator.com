@@ -60,7 +60,7 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 				OriginalAppUserID:     revenueCatCustomerID,
 				EventTimestampMS:      time.Now().Unix() * 1000,
 				ProductID:             "com.decorebator.premium.monthly",
-				EntitlementIDs:        []string{"premium"},
+				EntitlementIDs:        []string{"Premium"},
 				Store:                 "APP_STORE",
 				Environment:           "PRODUCTION",
 				PurchasedAtMS:         time.Now().Unix() * 1000,
@@ -111,7 +111,7 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 					Subscriber: service.Subscriber{
 						OriginalAppUserID: appUserID,
 						Entitlements: map[string]service.Entitlement{
-							"premium": {
+							"Premium": {
 								ProductIdentifier: "com.decorebator.premium.monthly",
 								PurchaseDate:      time.Now().Format(time.RFC3339),
 								ExpiresDate:       &expiresDateStr,
