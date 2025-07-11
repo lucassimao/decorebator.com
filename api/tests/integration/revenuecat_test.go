@@ -59,8 +59,8 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 				AppUserID:             revenueCatCustomerID,
 				OriginalAppUserID:     revenueCatCustomerID,
 				EventTimestampMS:      time.Now().Unix() * 1000,
-				ProductID:             "com.decorebator.premium.monthly",
-				EntitlementIDs:        []string{"Premium"},
+				ProductID:             service.ProductMonthlyIOS,
+				EntitlementIDs:        []string{service.EntitlementPremium},
 				Store:                 "APP_STORE",
 				Environment:           "PRODUCTION",
 				PurchasedAtMS:         time.Now().Unix() * 1000,
@@ -111,14 +111,14 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 					Subscriber: service.Subscriber{
 						OriginalAppUserID: appUserID,
 						Entitlements: map[string]service.Entitlement{
-							"Premium": {
-								ProductIdentifier: "com.decorebator.premium.monthly",
+								service.EntitlementPremium: {
+								ProductIdentifier: service.ProductMonthlyIOS,
 								PurchaseDate:      time.Now().Format(time.RFC3339),
 								ExpiresDate:       &expiresDateStr,
 							},
 						},
 						Subscriptions: map[string]service.Subscription{
-							"com.decorebator.premium.monthly": {
+							service.ProductMonthlyIOS: {
 								ExpiresDate:          expiresDateStr,
 								OriginalPurchaseDate: time.Now().Format(time.RFC3339),
 								PurchaseDate:         time.Now().Format(time.RFC3339),
@@ -186,7 +186,7 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 		// Create subscription directly
 		subRepo := repository.NewSubscriptionRepository(ts.DB)
 		revenuecatSubID := "rc_sub_test_" + time.Now().Format("20060102150405")
-		productID := "com.decorebator.premium.monthly"
+		productID := service.ProductMonthlyIOS
 		platform := model.PlatformIOS
 
 		subscription := &model.Subscription{
