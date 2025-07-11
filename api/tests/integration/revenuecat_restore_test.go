@@ -55,7 +55,7 @@ func TestRestorePurchases(t *testing.T) {
 					Subscriber: service.Subscriber{
 						OriginalAppUserID: appUserID,
 						Entitlements: map[string]service.Entitlement{
-								service.EntitlementPremium: {
+							service.EntitlementPremium: {
 								ProductIdentifier: service.ProductMonthlyIOS,
 								PurchaseDate:      time.Now().Format(time.RFC3339),
 								ExpiresDate:       &expiresDateStr,
