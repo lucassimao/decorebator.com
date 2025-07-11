@@ -102,7 +102,7 @@ const LoginScreen: React.FC = () => {
       // Pre-cache user data by invalidating the query - this will trigger a fresh fetch
       await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
 
-      router.replace("/index" as any);
+      router.replace("/");
     },
     onError: (error: Error) => {
       if (error.message === usersApi.SIGN_IN_ERROR) {
@@ -192,87 +192,89 @@ const LoginScreen: React.FC = () => {
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           style={styles.container}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           keyboardVerticalOffset={0}
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <ScrollView
-              ref={scrollViewRef}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-            >
-              {/* Add some space at the top for the background to show */}
-              <View style={styles.topSpacer} />
-
-              {/* Header with Logo and Illustration */}
-              <LoginHeader
-                theme={theme}
-                responsive={responsive}
-                keyboardVisible={keyboardVisible}
-              />
-
-              {/* Login Form */}
-              <View
-                style={styles.formCard}
-                // Accessibility
-                accessible={true}
-                accessibilityLabel={t("auth.signin.loginForm")}
+            <View style={styles.innerContainer}>
+              <ScrollView
+                ref={scrollViewRef}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
               >
-                <Text style={styles.welcomeText}>
-                  {t("auth.signin.welcomeBack")}
-                </Text>
-                <Text style={styles.subtitleText}>
-                  {t("auth.signin.subtitle")}
-                </Text>
+                {/* Add some space at the top for the background to show */}
+                <View style={styles.topSpacer} />
 
-                {/* Email Input */}
-                <EmailInput
-                  control={control}
-                  errors={errors}
+                {/* Header with Logo and Illustration */}
+                <LoginHeader
                   theme={theme}
                   responsive={responsive}
-                  emailInputRef={emailInputRef}
-                  passwordInputRef={passwordInputRef}
-                  onFocus={() => scrollToInput(emailInputRef)}
-                  isPending={loginMutation.isPending}
+                  keyboardVisible={keyboardVisible}
                 />
 
-                {/* Password Input */}
-                <PasswordInput
-                  control={control}
-                  errors={errors}
-                  theme={theme}
-                  responsive={responsive}
-                  passwordInputRef={passwordInputRef}
-                  showPassword={showPassword}
-                  setShowPassword={setShowPassword}
-                  onFocus={() => scrollToInput(passwordInputRef)}
-                  isPending={loginMutation.isPending}
-                />
+                {/* Login Form */}
+                <View
+                  style={styles.formCard}
+                  // Accessibility
+                  accessible={true}
+                  accessibilityLabel={t("auth.signin.loginForm")}
+                >
+                  <Text style={styles.welcomeText}>
+                    {t("auth.signin.welcomeBack")}
+                  </Text>
+                  <Text style={styles.subtitleText}>
+                    {t("auth.signin.subtitle")}
+                  </Text>
 
-                {/* Forgot Password Link */}
-                <ForgotPasswordLink
-                  theme={theme}
-                  responsive={responsive}
-                  disabled={loginMutation.isPending}
-                />
-              </View>
+                  {/* Email Input */}
+                  <EmailInput
+                    control={control}
+                    errors={errors}
+                    theme={theme}
+                    responsive={responsive}
+                    emailInputRef={emailInputRef}
+                    passwordInputRef={passwordInputRef}
+                    onFocus={() => scrollToInput(emailInputRef)}
+                    isPending={loginMutation.isPending}
+                  />
 
-              {/* Bottom spacer for fixed footer */}
-              <View style={styles.bottomSpacer} />
-            </ScrollView>
+                  {/* Password Input */}
+                  <PasswordInput
+                    control={control}
+                    errors={errors}
+                    theme={theme}
+                    responsive={responsive}
+                    passwordInputRef={passwordInputRef}
+                    showPassword={showPassword}
+                    setShowPassword={setShowPassword}
+                    onFocus={() => scrollToInput(passwordInputRef)}
+                    isPending={loginMutation.isPending}
+                  />
+
+                  {/* Forgot Password Link */}
+                  <ForgotPasswordLink
+                    theme={theme}
+                    responsive={responsive}
+                    disabled={loginMutation.isPending}
+                  />
+                </View>
+
+                {/* Login Footer moved inside ScrollView for better keyboard handling */}
+                <View style={styles.footerContainer}>
+                  <LoginFooter
+                    theme={theme}
+                    responsive={responsive}
+                    keyboardVisible={keyboardVisible}
+                    keyboardHeight={keyboardHeight}
+                    isPending={loginMutation.isPending}
+                    onSubmit={handleSubmit(handleLogin)}
+                  />
+                </View>
+              </ScrollView>
+            </View>
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
-
-        {/* Login Footer with Forgot Password and Submit Button */}
-        <LoginFooter
-          theme={theme}
-          responsive={responsive}
-          keyboardVisible={keyboardVisible}
-          isPending={loginMutation.isPending}
-          onSubmit={handleSubmit(handleLogin)}
-        />
       </SafeAreaView>
     </ImageBackground>
   );
@@ -304,17 +306,26 @@ const createStyles = (
     container: {
       flex: 1,
     },
+    innerContainer: {
+      flex: 1,
+    },
     scrollContent: {
       flexGrow: 1,
       paddingHorizontal: responsive.spacing.horizontal,
+      paddingBottom: 50, // Ensure content is not cut off by safe area
     },
     topSpacer: {
       height: keyboardVisible
         ? responsive.spacing.vertical
         : responsive.screenHeight * 0.12, // Balanced spacing
     },
-    bottomSpacer: {
-      height: responsive.spacing.vertical * 4, // Increased to account for fixed footer
+    footerContainer: {
+      marginTop: responsive.spacing.elementSpacing * .5,
+      marginBottom: keyboardVisible
+        ? responsive.spacing.vertical * 2  // Less bottom margin when keyboard is visible
+        : responsive.spacing.vertical * 6, // Increased bottom margin when keyboard is hidden
+      paddingBottom: 40, // Extra padding to ensure sign-up link is visible
+      paddingHorizontal: 0, // Remove horizontal padding since LoginFooter is not a card anymore
     },
     formCard: {
       backgroundColor: "rgba(255, 255, 255, 0.95)",

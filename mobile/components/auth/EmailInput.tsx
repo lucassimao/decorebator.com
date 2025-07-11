@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { Controller, Control, FieldErrors } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -34,13 +34,6 @@ export const EmailInput: React.FC<EmailInputProps> = ({
   isPending,
 }) => {
   const { t } = useTranslation();
-
-  const handleEmailInputLayout = useCallback(() => {
-    // Focus the email input once it's rendered and available
-    if (emailInputRef.current) {
-      emailInputRef.current.focus();
-    }
-  }, [emailInputRef]);
 
   const styles = StyleSheet.create({
     inputGroup: {
@@ -104,7 +97,6 @@ export const EmailInput: React.FC<EmailInputProps> = ({
             onChangeText={onChange}
             onFocus={onFocus}
             onBlur={onBlur}
-            onLayout={handleEmailInputLayout}
             autoCapitalize="none"
             keyboardType="email-address"
             autoComplete="email"

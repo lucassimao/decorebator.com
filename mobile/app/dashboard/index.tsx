@@ -1,5 +1,4 @@
 import * as subscriptionsApi from "@/api/subscriptions";
-import * as wordlistsApi from "@/api/wordlists";
 import { Wordlist } from "@/api/wordlists";
 import { CreateWordlistModal } from "@/components/dashboard/CreateWordlistModal";
 import { CongratulationsModal } from "@/components/dashboard/CongratulationsModal";
@@ -12,6 +11,7 @@ import { WordlistItemSkeleton } from "@/components/ui/WordlistItemSkeleton";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
 import { useWordlistProgress } from "@/hooks/useWordlistProgress";
+import { useWordlists } from "@/hooks/useWordlists";
 import { createCommonStyles } from "@/styles/common";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
@@ -69,18 +69,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
     refetchOnWindowFocus: "always",
   });
 
-  // Fetch wordlists
-  const {
-    data: wordlists,
-    isLoading,
-    refetch,
-  } = useQuery<wordlistsApi.Wordlist[], Error>({
-    queryFn: () => wordlistsApi.getUserWordlists(),
-    queryKey: ["wordlists"],
-    // Ensure fresh data on mount
-    staleTime: 0,
-    refetchOnMount: "always",
-  });
+  // Fetch wordlists using the centralized hook
+  const { data: wordlists, isLoading, refetch } = useWordlists();
 
   // Fetch batch progress data
   const { data: progressData } = useWordlistProgress();
