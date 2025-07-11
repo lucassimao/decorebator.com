@@ -27,7 +27,8 @@
     "hide": "OCULTAR",
     "goBack": "Volver",
     "more": "Más",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "tryAgain": "Intenta de Nuevo"
   },
   "auth": {
     "signin": {
@@ -48,6 +49,7 @@
     },
     "signup": {
       "title": "Registrarse",
+      "subtitle": "Comienza tu viaje de aprendizaje",
       "email": "Correo electrónico",
       "firstName": "Nombre",
       "lastName": "Apellido",
@@ -61,7 +63,10 @@
       "privacyPolicy": "Política de Privacidad",
       "signUpButton": "Registrarse",
       "alreadyHaveAccount": "¿Ya tienes cuenta?",
-      "signIn": "Iniciar Sesión"
+      "signIn": "Iniciar Sesión",
+      "agreeToTerms": "Acepto los Términos de Servicio y Política de Privacidad",
+      "termsCheckboxHint": "Toca para alternar el acuerdo con los términos de servicio y política de privacidad",
+      "mustAgreeToTerms": "Debes aceptar los Términos de Servicio y Política de Privacidad para continuar"
     },
     "forgotPassword": {
       "title": "¿Olvidaste tu contraseña?",
@@ -84,6 +89,14 @@
       "emailInvalid": "Por favor, introduce una dirección de correo electrónico válida"
     },
     "tagline": "Aprende idiomas, conecta mundos"
+  },
+  "welcome": {
+    "title": "¡Bienvenido a Decorebator! 🎉",
+    "subtitle": "Tu viaje de aprendizaje de idiomas con IA comienza aquí",
+    "firstWordlistSuccess": "¡Felicitaciones! 🎉",
+    "firstWordlistMessage": "¡Tu primera lista está lista! Comienza agregando palabras.",
+    "addWordsNow": "Agregar Palabras",
+    "addWordsLater": "Más Tarde"
   },
   "dashboard": {
     "header": {
@@ -379,10 +392,13 @@
     "tokenValidation": "Error de validación de token",
     "networkError": "Error de red. Verifica tu conexión.",
     "serverError": "Error del servidor. Por favor, inténtalo más tarde.",
-    "invalidEmail": "Dirección de correo electrónico inválida",
+    "invalidEmail": "Email inválido",
     "emailRequired": "El correo electrónico es obligatorio",
     "passwordRequired": "La contraseña es obligatoria",
-    "fieldRequired": "Este campo es obligatorio"
+    "fieldRequired": "Obligatorio",
+    "emailExists": "Email ya registrado",
+    "shortPassword": "Muy corta (mín 5 chars)",
+    "signupFailed": "Registro falló. Inténtalo de nuevo."
   },
   "success": {
     "wordlistCreated": "Lista creada exitosamente",

@@ -27,7 +27,8 @@
     "hide": "AUSBLENDEN",
     "goBack": "Zurück",
     "more": "Mehr",
-    "retry": "Wiederholen"
+    "retry": "Wiederholen",
+    "tryAgain": "Erneut versuchen"
   },
   "auth": {
     "signin": {
@@ -48,6 +49,7 @@
     },
     "signup": {
       "title": "Registrieren",
+      "subtitle": "Beginnen Sie Ihre Lernreise",
       "email": "E-Mail",
       "firstName": "Vorname",
       "lastName": "Nachname",
@@ -63,6 +65,7 @@
       "alreadyHaveAccount": "Haben Sie bereits ein Konto?",
       "signIn": "Anmelden",
       "agreeToTerms": "Ich stimme den Nutzungsbedingungen und der Datenschutzerklärung zu",
+      "termsCheckboxHint": "Tippen um die Zustimmung zu den Nutzungsbedingungen und Datenschutzrichtlinien umzuschalten",
       "mustAgreeToTerms": "Sie müssen den Nutzungsbedingungen und der Datenschutzerklärung zustimmen, um fortzufahren"
     },
     "forgotPassword": {
@@ -86,6 +89,14 @@
       "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
     },
     "tagline": "Sprachen lernen, Welten verbinden"
+  },
+  "welcome": {
+    "title": "Willkommen bei Decorebator! 🎉",
+    "subtitle": "Ihre KI-gestützte Sprachlernreise beginnt hier",
+    "firstWordlistSuccess": "Herzlichen Glückwunsch! 🎉",
+    "firstWordlistMessage": "Ihre erste Liste ist bereit! Beginnen Sie mit dem Hinzufügen von Wörtern.",
+    "addWordsNow": "Wörter Hinzufügen",
+    "addWordsLater": "Später"
   },
   "dashboard": {
     "header": {
@@ -388,10 +399,13 @@
     "tokenValidation": "Token-Validierungsfehler",
     "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
     "serverError": "Serverfehler. Bitte versuchen Sie es später erneut.",
-    "invalidEmail": "Ungültige E-Mail-Adresse",
+    "invalidEmail": "Ungültige E-Mail",
     "emailRequired": "E-Mail ist erforderlich",
     "passwordRequired": "Passwort ist erforderlich",
-    "fieldRequired": "Dieses Feld ist erforderlich"
+    "fieldRequired": "Erforderlich",
+    "emailExists": "E-Mail bereits registriert",
+    "shortPassword": "Zu kurz (min 5 Zeichen)",
+    "signupFailed": "Registrierung fehlgeschlagen. Erneut versuchen."
   },
   "success": {
     "wordlistCreated": "Wortliste erfolgreich erstellt",

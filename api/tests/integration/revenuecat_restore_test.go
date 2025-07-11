@@ -55,14 +55,14 @@ func TestRestorePurchases(t *testing.T) {
 					Subscriber: service.Subscriber{
 						OriginalAppUserID: appUserID,
 						Entitlements: map[string]service.Entitlement{
-							"premium": {
-								ProductIdentifier: "com.decorebator.premium.monthly",
+							service.EntitlementPremium: {
+								ProductIdentifier: service.ProductMonthlyIOS,
 								PurchaseDate:      time.Now().Format(time.RFC3339),
 								ExpiresDate:       &expiresDateStr,
 							},
 						},
 						Subscriptions: map[string]service.Subscription{
-							"com.decorebator.premium.monthly": {
+							service.ProductMonthlyIOS: {
 								ExpiresDate:          expiresDateStr,
 								OriginalPurchaseDate: time.Now().Format(time.RFC3339),
 								PurchaseDate:         time.Now().Format(time.RFC3339),

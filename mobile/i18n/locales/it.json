@@ -27,7 +27,8 @@
     "hide": "NASCONDI",
     "goBack": "Indietro",
     "more": "Più",
-    "retry": "Riprova"
+    "retry": "Riprova",
+    "tryAgain": "Riprova"
   },
   "auth": {
     "signin": {
@@ -48,6 +49,7 @@
     },
     "signup": {
       "title": "Registrati",
+      "subtitle": "Inizia il tuo viaggio di apprendimento",
       "email": "Email",
       "firstName": "Nome",
       "lastName": "Cognome",
@@ -61,7 +63,10 @@
       "privacyPolicy": "Informativa sulla Privacy",
       "signUpButton": "Registrati",
       "alreadyHaveAccount": "Hai già un account?",
-      "signIn": "Accedi"
+      "signIn": "Accedi",
+      "agreeToTerms": "Accetto i Termini di Servizio e l'Informativa sulla Privacy",
+      "termsCheckboxHint": "Tocca per attivare l'accordo ai termini di servizio e alla politica sulla privacy",
+      "mustAgreeToTerms": "Devi accettare i Termini di Servizio e l'Informativa sulla Privacy per continuare"
     },
     "forgotPassword": {
       "title": "Password dimenticata?",
@@ -84,6 +89,14 @@
       "emailInvalid": "Inserisci un indirizzo email valido"
     },
     "tagline": "Impara le lingue, connetti i mondi"
+  },
+  "welcome": {
+    "title": "Benvenuto su Decorebator! 🎉",
+    "subtitle": "Il tuo viaggio nell'apprendimento delle lingue con IA inizia qui",
+    "firstWordlistSuccess": "Congratulazioni! 🎉",
+    "firstWordlistMessage": "La tua prima lista è pronta! Inizia ad aggiungere parole.",
+    "addWordsNow": "Aggiungi Parole",
+    "addWordsLater": "Più Tardi"
   },
   "dashboard": {
     "header": {
@@ -379,10 +392,13 @@
     "tokenValidation": "Errore di validazione token",
     "networkError": "Errore di rete. Controlla la tua connessione.",
     "serverError": "Errore del server. Riprova più tardi.",
-    "invalidEmail": "Indirizzo email non valido",
+    "invalidEmail": "Email non valida",
     "emailRequired": "Email obbligatoria",
     "passwordRequired": "Password obbligatoria",
-    "fieldRequired": "Questo campo è obbligatorio"
+    "fieldRequired": "Obbligatorio",
+    "emailExists": "Email già registrata",
+    "shortPassword": "Troppo corta (min 5 car)",
+    "signupFailed": "Registrazione fallita. Riprova."
   },
   "success": {
     "wordlistCreated": "Lista creata con successo",

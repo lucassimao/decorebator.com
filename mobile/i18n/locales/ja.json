@@ -27,7 +27,8 @@
     "hide": "非表示",
     "goBack": "戻る",
     "more": "もっと",
-    "retry": "再試行"
+    "retry": "再試行",
+    "tryAgain": "もう一度"
   },
   "auth": {
     "signin": {
@@ -48,6 +49,7 @@
     },
     "signup": {
       "title": "新規登録",
+      "subtitle": "学習の旅を始めましょう",
       "email": "メールアドレス",
       "firstName": "名",
       "lastName": "姓",
@@ -61,7 +63,10 @@
       "privacyPolicy": "プライバシーポリシー",
       "signUpButton": "登録",
       "alreadyHaveAccount": "すでにアカウントをお持ちの方",
-      "signIn": "ログイン"
+      "signIn": "ログイン",
+      "agreeToTerms": "利用規約とプライバシーポリシーに同意します",
+      "termsCheckboxHint": "利用規約とプライバシーポリシーへの同意を切り替えるにはタップしてください",
+      "mustAgreeToTerms": "続行するには利用規約とプライバシーポリシーに同意する必要があります"
     },
     "forgotPassword": {
       "title": "パスワードをお忘れですか？",
@@ -84,6 +89,14 @@
       "emailInvalid": "有効なメールアドレスを入力してください"
     },
     "tagline": "言語を学び、世界をつなぐ"
+  },
+  "welcome": {
+    "title": "Decorebatorへようこそ! 🎉",
+    "subtitle": "AI搭載の言語学習の旅がここから始まります",
+    "firstWordlistSuccess": "おめでとうございます! 🎉",
+    "firstWordlistMessage": "最初の単語リストが完成しました！単語を追加して学習を始めましょう。",
+    "addWordsNow": "単語を追加",
+    "addWordsLater": "後で"
   },
   "dashboard": {
     "header": {
@@ -379,10 +392,13 @@
     "tokenValidation": "トークン検証エラー",
     "networkError": "ネットワークエラー。接続を確認してください。",
     "serverError": "サーバーエラー。後でもう一度お試しください。",
-    "invalidEmail": "無効なメールアドレス",
+    "invalidEmail": "無効なメール",
     "emailRequired": "メールアドレスは必須です",
     "passwordRequired": "パスワードは必須です",
-    "fieldRequired": "この項目は必須です"
+    "fieldRequired": "必須",
+    "emailExists": "メール既に登録済み",
+    "shortPassword": "短すぎます（最小5文字）",
+    "signupFailed": "登録失敗。再試行してください。"
   },
   "success": {
     "wordlistCreated": "リストが正常に作成されました",

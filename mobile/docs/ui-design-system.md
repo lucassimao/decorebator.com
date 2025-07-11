@@ -319,21 +319,75 @@ Animated.timing(flipAnimation, {
 
 ## Responsive Design
 
+### Breakpoint System (Enhanced January 2025)
+
+The app now implements a comprehensive responsive design system:
+
+```typescript
+export const BREAKPOINTS = {
+  SMALL: 359,  // <= 359px width (iPhone SE, small Android)
+  MEDIUM: 389, // 360-389px width (standard Android) 
+  LARGE: 390,  // >= 390px width (modern iPhones, large Android)
+} as const;
+```
+
+### Adaptive Design Patterns
+
+#### 1. Responsive Utilities (`utils/responsive.ts`)
+- **Dynamic Spacing**: Screen-size-aware padding, margins, and element spacing
+- **Typography Scaling**: Font sizes adapt to screen categories
+- **Touch Target Optimization**: Ensures minimum 44px touch targets
+- **Keyboard Behavior**: Platform-specific keyboard avoidance strategies
+
+#### 2. useResponsive Hook (`hooks/useResponsive.ts`)
+Centralized responsive calculations with performance optimization:
+
+```typescript
+export const useResponsive = () => {
+  const { width: screenWidth, height: screenHeight } = getScreenDimensions();
+  
+  return useMemo(() => ({
+    screenWidth, screenHeight, category, spacing, fontSizes, 
+    imageConfig, keyboardBehavior, keyboardOffset,
+  }), [screenWidth, screenHeight]);
+};
+```
+
+**Performance Benefits**:
+- Single computation per render cycle
+- Memoization prevents unnecessary recalculations
+- Centralized logic reduces code duplication
+
+#### 3. Component-Level Responsiveness
+```typescript
+// Example: Responsive form styling
+const styles = React.useMemo(
+  () => createStyles(theme, responsive, keyboardVisible),
+  [theme, responsive, keyboardVisible]
+);
+```
+
 ### Screen Size Adaptation
 
 ```typescript
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
-// Responsive card sizing
-const cardWidth = SCREEN_WIDTH - 40; // 20px margin each side
-const imageHeight = Math.min(200, SCREEN_HEIGHT * 0.25);
+// Enhanced responsive sizing
+const getResponsiveSpacing = (width?: number) => {
+  const category = getScreenSizeCategory(width);
+  
+  switch (category) {
+    case "small": return { horizontal: 16, vertical: 12, buttonHeight: 48 };
+    case "medium": return { horizontal: 20, vertical: 16, buttonHeight: 52 };
+    case "large": return { horizontal: 24, vertical: 20, buttonHeight: 56 };
+  }
+};
 ```
 
 ### Orientation Support
 
-- **Portrait Primary**: Optimized for portrait usage
-- **Landscape Support**: Graceful degradation in landscape
-- **Tablet Support**: Enhanced layouts for larger screens
+- **Portrait Primary**: Optimized for portrait usage with responsive breakpoints
+- **Landscape Support**: Graceful degradation in landscape with adaptive layouts
+- **Tablet Support**: Enhanced layouts for larger screens with proper spacing
+- **Cross-Platform**: Consistent responsive behavior on iOS and Android
 
 ## Performance Considerations
 
@@ -364,6 +418,33 @@ useEffect(() => {
 - **Bounded Animations**: Prevent memory leaks
 - **Cleanup**: Proper disposal of animation values
 - **Debouncing**: Prevent rapid-fire interactions
+
+### Component Performance Optimizations (January 2025)
+
+#### 1. Memoization Strategy
+```typescript
+// Styles memoization
+const styles = React.useMemo(
+  () => createStyles(theme, responsive, keyboardVisible),
+  [theme, responsive, keyboardVisible]
+);
+
+// Callback memoization
+const onSubmit = React.useCallback((data: FormData) => {
+  // Form submission logic
+}, [dependencies]);
+```
+
+#### 2. Component Extraction
+- **ErrorMessage Component**: Extracted reusable component with React.memo
+- **Reduced Inline Components**: Eliminated inline component definitions
+- **Proper Props Handling**: Type-safe props with proper memoization
+
+#### 3. Performance Benefits
+- **Reduced Re-renders**: Memoized components prevent unnecessary re-renders
+- **Better Memory Usage**: Eliminated redundant calculations with useResponsive hook
+- **Improved Responsiveness**: Native KeyboardAvoidingView replaces complex animations
+- **Type Safety**: Proper TypeScript types prevent runtime errors
 
 ## Error State Design
 

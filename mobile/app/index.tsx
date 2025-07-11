@@ -1,80 +1,53 @@
 import { useUserInfo } from "@/hooks/users";
-import React, { useEffect } from "react";
-import {
-  ActivityIndicator,
-  Dimensions,
-  ImageBackground,
-  SafeAreaView,
-  StyleSheet,
-  View,
-} from "react-native";
-import * as usersApi from "@/api/users";
-import * as wordlistsApi from "@/api/wordlists";
-import { useRouter } from "expo-router";
-import { Redirect } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
+import { prefetchWordlists } from "@/hooks/useWordlists";
+import { SplashScreen, useRouter } from "expo-router";
+import { useEffect } from "react";
+import * as Sentry from "@sentry/react-native";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Index() {
-  const { userInfo, error, loading } = useUserInfo();
+  const { data: user, isLoading, isError, error } = useUserInfo();
   const router = useRouter();
-
-  // Prefetch wordlists when user is authenticated
-  useQuery({
-    queryKey: ["wordlists"],
-    queryFn: () => wordlistsApi.getUserWordlists(),
-    enabled: !!userInfo && !error,
-    staleTime: 0,
-  });
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (error) {
-      console.error(error);
-      usersApi.sigout();
-      router.replace("/signin");
+    // Still waiting for the user session, do nothing.
+    if (isLoading) {
+      return;
     }
-  }, [error, router]);
 
-  // Show loading only during initial authentication check
-  if (loading) {
-    return (
-      <ImageBackground
-        source={require("@/assets/images/dashboard-bg.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.container}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF7B54" />
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
-    );
-  }
+    // We have a result, prepare to navigate
+    const navigate = async () => {
+      try {
+        // Hide the splash screen just before navigation
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        // Splash screen might already be hidden, ignore
+        console.warn("Error hiding splash screen:", e);
+      }
 
-  // If user is authenticated, redirect to dashboard without showing loading
-  if (userInfo) {
-    return <Redirect href="/dashboard" />;
-  }
+      if (isError || !user) {
+        // User is not authenticated
+        if (isError && error) {
+          // Log authentication errors to Sentry for debugging
+          Sentry.captureException(error);
+        }
+        router.replace("/signin");
+      } else {
+        // User is authenticated
+        // Start prefetching wordlists in the background (non-blocking)
+        prefetchWordlists(queryClient).catch((err) => {
+          // Don't block navigation if prefetch fails
+          console.warn("Failed to prefetch wordlists:", err);
+        });
 
-  // If not authenticated, redirect to signin
-  usersApi.sigout();
-  return <Redirect href="/signin" />;
+        router.replace("/dashboard");
+      }
+    };
+
+    navigate();
+  }, [isLoading, isError, user, router, queryClient, error]);
+
+  // Render nothing while the splash screen is visible
+  return null;
 }
-
-const { width, height } = Dimensions.get("window");
-
-const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: width,
-    height: height,
-  },
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});

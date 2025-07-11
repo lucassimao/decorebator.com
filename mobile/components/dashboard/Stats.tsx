@@ -11,6 +11,7 @@ import {
 } from "react-native";
 
 import { useWordlistProgress } from "@/hooks/useWordlistProgress";
+import { StatsSkeleton } from "@/components/ui/StatsSkeleton";
 
 // Animated Counter Component
 interface AnimatedCounterProps {
@@ -57,8 +58,6 @@ type DashboardStatsProps = {};
 const PROGRESS_OVERVIEW_ENABLED = true;
 
 const DashboardStats: React.FC<DashboardStatsProps> = () => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
@@ -95,26 +94,6 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
       }
     : null;
 
-  // Animation on load
-  useEffect(() => {
-    if (!isLoading && progressSummary) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 8,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, progressSummary]);
-
   const getProgressPercentage = () => {
     if (!stats || stats.totalWords === 0) return 0;
     return Math.round((stats.wordsLearned / stats.totalWords) * 100);
@@ -131,19 +110,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
   };
 
   if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <View style={styles.skeletonContainer}>
-          {[1, 2, 3].map((index) => (
-            <View key={index} style={styles.skeletonItem}>
-              <View style={styles.skeletonCircle} />
-              <View style={styles.skeletonText} />
-              <View style={styles.skeletonNumber} />
-            </View>
-          ))}
-        </View>
-      </View>
-    );
+    return <StatsSkeleton />;
   }
 
   if (isError) {
@@ -163,125 +130,119 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
   }
 
   return (
-    <Animated.View
-      style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
-    >
-      <View style={styles.statsContainer}>
-        {/* Progress Overview */}
-        {PROGRESS_OVERVIEW_ENABLED && (
-          <View style={styles.progressOverview}>
-            <Text style={styles.progressLabel}>
-              {t("dashboard.stats.learningProgress")}
+    <View style={styles.statsContainer}>
+      {/* Progress Overview */}
+      {PROGRESS_OVERVIEW_ENABLED && (
+        <View style={styles.progressOverview}>
+          <Text style={styles.progressLabel}>
+            {t("dashboard.stats.learningProgress")}
+          </Text>
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBarBackground}>
+              <Animated.View
+                style={[
+                  styles.progressBarFill,
+                  {
+                    width: `${getProgressPercentage()}%`,
+                  },
+                ]}
+              />
+            </View>
+            <Text style={styles.progressPercentage}>
+              {getProgressPercentage()}%
             </Text>
-            <View style={styles.progressBarContainer}>
-              <View style={styles.progressBarBackground}>
-                <Animated.View
-                  style={[
-                    styles.progressBarFill,
-                    {
-                      width: `${getProgressPercentage()}%`,
-                    },
-                  ]}
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingTop: 6,
+            }}
+          >
+            <Text style={styles.motivationalText}>
+              {getMotivationalMessage()}
+            </Text>
+            {stats && stats.currentStreak > 0 ? (
+              <View style={styles.streakContainer}>
+                <MaterialIcons
+                  name="local-fire-department"
+                  size={20}
+                  color={theme.colors.semantic.warning}
                 />
+                <Text style={styles.streakText}>
+                  {t("dashboard.stats.dayStreak", {
+                    count: stats?.currentStreak || 0,
+                  })}
+                </Text>
               </View>
-              <Text style={styles.progressPercentage}>
-                {getProgressPercentage()}%
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingTop: 6,
-              }}
-            >
-              <Text style={styles.motivationalText}>
-                {getMotivationalMessage()}
-              </Text>
-              {stats && stats.currentStreak > 0 ? (
-                <View style={styles.streakContainer}>
-                  <MaterialIcons
-                    name="local-fire-department"
-                    size={20}
-                    color={theme.colors.semantic.warning}
-                  />
-                  <Text style={styles.streakText}>
-                    {t("dashboard.stats.dayStreak", {
-                      count: stats?.currentStreak || 0,
-                    })}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          </View>
-        )}
-
-        {/* Stats Grid */}
-        <View style={styles.statsGrid}>
-          <View style={[styles.statItem, styles.statItemFirst]}>
-            <View style={styles.iconContainer}>
-              <MaterialIcons
-                name="library-books"
-                size={24}
-                color={theme.colors.primary}
-              />
-            </View>
-            <View style={styles.labelContainer}>
-              <Text style={styles.statLabel}>
-                {t("dashboard.stats.totalWords")}
-              </Text>
-            </View>
-            <AnimatedCounter
-              value={stats?.totalWords || 0}
-              style={styles.statValue}
-              delay={0}
-            />
-          </View>
-
-          <View style={styles.statDivider} />
-
-          <View style={styles.statItem}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="list" size={24} color={theme.colors.success} />
-            </View>
-            <View style={styles.labelContainer}>
-              <Text style={styles.statLabel}>
-                {t("dashboard.stats.wordlists")}
-              </Text>
-            </View>
-            <AnimatedCounter
-              value={stats?.wordlists || 0}
-              style={styles.statValue}
-              delay={200}
-            />
-          </View>
-
-          <View style={styles.statDivider} />
-
-          <View style={[styles.statItem, styles.statItemLast]}>
-            <View style={styles.iconContainer}>
-              <MaterialIcons
-                name="school"
-                size={24}
-                color={theme.colors.semantic.info}
-              />
-            </View>
-            <View style={styles.labelContainer}>
-              <Text style={styles.statLabel}>
-                {t("dashboard.stats.learned")}
-              </Text>
-            </View>
-            <AnimatedCounter
-              value={stats?.wordsLearned || 0}
-              style={[styles.statValue, { color: theme.colors.success }]}
-              delay={400}
-            />
+            ) : null}
           </View>
         </View>
+      )}
+
+      {/* Stats Grid */}
+      <View style={styles.statsGrid}>
+        <View style={[styles.statItem, styles.statItemFirst]}>
+          <View style={styles.iconContainer}>
+            <MaterialIcons
+              name="library-books"
+              size={24}
+              color={theme.colors.primary}
+            />
+          </View>
+          <View style={styles.labelContainer}>
+            <Text style={styles.statLabel}>
+              {t("dashboard.stats.totalWords")}
+            </Text>
+          </View>
+          <AnimatedCounter
+            value={stats?.totalWords || 0}
+            style={styles.statValue}
+            delay={0}
+          />
+        </View>
+
+        <View style={styles.statDivider} />
+
+        <View style={styles.statItem}>
+          <View style={styles.iconContainer}>
+            <Ionicons name="list" size={24} color={theme.colors.success} />
+          </View>
+          <View style={styles.labelContainer}>
+            <Text style={styles.statLabel}>
+              {t("dashboard.stats.wordlists")}
+            </Text>
+          </View>
+          <AnimatedCounter
+            value={stats?.wordlists || 0}
+            style={styles.statValue}
+            delay={200}
+          />
+        </View>
+
+        <View style={styles.statDivider} />
+
+        <View style={[styles.statItem, styles.statItemLast]}>
+          <View style={styles.iconContainer}>
+            <MaterialIcons
+              name="school"
+              size={24}
+              color={theme.colors.semantic.info}
+            />
+          </View>
+          <View style={styles.labelContainer}>
+            <Text style={styles.statLabel}>{t("dashboard.stats.learned")}</Text>
+          </View>
+          <AnimatedCounter
+            value={stats?.wordsLearned || 0}
+            style={[styles.statValue, { color: theme.colors.success }]}
+            delay={400}
+          />
+        </View>
       </View>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -312,50 +273,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
           : theme.colors.text.primary,
       shadowOpacity: theme.mode === "light" ? 0.15 : 0.1,
       elevation: theme.mode === "light" ? 8 : 12,
-    },
-    loadingContainer: {
-      marginHorizontal: 20,
-      marginBottom: 24,
-    },
-    skeletonContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      backgroundColor: theme.colors.background.surface,
-      borderRadius: theme.borderRadius.xl,
-      paddingVertical: theme.spacing.lg,
-      paddingHorizontal: theme.spacing.lg,
-      borderWidth: 1,
-      borderColor: theme.colors.ui.border,
-      ...theme.shadows.md,
-      shadowColor:
-        theme.mode === "light"
-          ? theme.colors.primary
-          : theme.colors.text.primary,
-      shadowOpacity: theme.mode === "light" ? 0.15 : 0.1,
-    },
-    skeletonItem: {
-      alignItems: "center",
-      flex: 1,
-    },
-    skeletonCircle: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: theme.colors.ui.divider,
-      marginBottom: 8,
-    },
-    skeletonText: {
-      width: 60,
-      height: 12,
-      borderRadius: 6,
-      backgroundColor: theme.colors.ui.divider,
-      marginBottom: 8,
-    },
-    skeletonNumber: {
-      width: 40,
-      height: 24,
-      borderRadius: 12,
-      backgroundColor: theme.colors.ui.divider,
     },
     errorContainer: {
       flexDirection: "column",

@@ -26,6 +26,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type PlanRecurrence = "annual" | "monthly";
 
@@ -200,12 +201,52 @@ const SettingsScreen: React.FC = () => {
     },
   });
 
-  const signOut = () => {
-    usersApi.sigout();
-    queryClient.cancelQueries();
-    queryClient.clear();
-    queryClient.removeQueries();
-    router.replace("/signin");
+  const clearUserAsyncStorage = async () => {
+    try {
+      const allKeys = await AsyncStorage.getAllKeys();
+
+      // Find user-specific keys to remove (but preserve theme preference)
+      const userKeys = allKeys.filter(
+        (key) =>
+          key === "hasSeenDashboard" ||
+          key === "justSignedUp" ||
+          key.startsWith("flashcard_position_") ||
+          key.startsWith("flashcard_save_position_"),
+      );
+
+      if (userKeys.length > 0) {
+        await AsyncStorage.multiRemove(userKeys);
+        console.log(
+          `Cleared ${userKeys.length} user-specific AsyncStorage keys`,
+        );
+      }
+    } catch (error) {
+      console.error("Error clearing user AsyncStorage:", error);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      // Clear auth token and offline cache
+      await usersApi.sigout();
+
+      // Clear user-specific AsyncStorage data
+      await clearUserAsyncStorage();
+
+      // Aggressively clear ALL React Query cache
+      queryClient.clear();
+
+      // Force garbage collection of removed queries
+      queryClient.getQueryCache().clear();
+      queryClient.getMutationCache().clear();
+
+      // Navigate to signin
+      router.replace("/signin");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Force navigation even if cleanup fails
+      router.replace("/signin");
+    }
   };
 
   const support = async () => {

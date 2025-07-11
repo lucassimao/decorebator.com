@@ -1,6 +1,5 @@
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
 
 import { useI18n } from "@/hooks/useI18n";
 import { SnackbarProvider } from "@/hooks/useSnackbar";
@@ -52,20 +51,8 @@ export default Sentry.wrap(function RootLayout() {
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
-  useEffect(() => {
-    // Hide splash screen immediately after layout is ready
-    const hideSplash = async () => {
-      try {
-        await SplashScreen.hideAsync();
-      } catch (error) {
-        // Splash screen might already be hidden, ignore error
-        console.warn("Error hiding splash screen:", error);
-      }
-    };
-
-    // Hide splash screen as soon as possible
-    hideSplash();
-  }, []);
+  // Splash screen will be hidden by the gatekeeper (app/index.tsx)
+  // once authentication check is complete
 
   return (
     <I18nextProvider i18n={i18n}>
@@ -109,12 +96,6 @@ function RootLayoutNav() {
                     options={{
                       headerShown: false,
                       headerTitle: "Dashboard",
-                    }}
-                  />
-                  <Stack.Screen
-                    name="dashboard/welcome"
-                    options={{
-                      headerShown: false,
                     }}
                   />
                   <Stack.Screen

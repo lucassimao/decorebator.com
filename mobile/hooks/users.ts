@@ -8,6 +8,8 @@ export const useUserInfo = () => {
   const {
     data: user,
     isLoading,
+    isSuccess,
+    isError,
     error,
   } = useQuery({
     queryKey: ["userProfile"],
@@ -42,7 +44,11 @@ export const useUserInfo = () => {
 
   return {
     userInfo: user,
+    data: user, // Alias for consistency with useQuery pattern
     loading: isLoading,
+    isLoading,
+    isSuccess,
+    isError,
     error,
     isPremium,
     cacheConfig,

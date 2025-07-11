@@ -27,7 +27,8 @@
     "hide": "MASQUER",
     "goBack": "Retour",
     "more": "Plus",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "tryAgain": "Réessayer"
   },
   "auth": {
     "signin": {
@@ -48,6 +49,7 @@
     },
     "signup": {
       "title": "S'inscrire",
+      "subtitle": "Commencez votre apprentissage",
       "email": "Email",
       "firstName": "Prénom",
       "lastName": "Nom",
@@ -61,7 +63,10 @@
       "privacyPolicy": "Politique de confidentialité",
       "signUpButton": "S'inscrire",
       "alreadyHaveAccount": "Déjà un compte ?",
-      "signIn": "Se connecter"
+      "signIn": "Se connecter",
+      "agreeToTerms": "J'accepte les Conditions d'utilisation et la Politique de confidentialité",
+      "termsCheckboxHint": "Appuyez pour basculer l'accord aux conditions d'utilisation et à la politique de confidentialité",
+      "mustAgreeToTerms": "Vous devez accepter les Conditions d'utilisation et la Politique de confidentialité pour continuer"
     },
     "forgotPassword": {
       "title": "Mot de passe oublié ?",
@@ -84,6 +89,14 @@
       "emailInvalid": "Veuillez entrer une adresse e-mail valide"
     },
     "tagline": "Apprenez des langues, connectez des mondes"
+  },
+  "welcome": {
+    "title": "Bienvenue sur Decorebator ! 🎉",
+    "subtitle": "Votre parcours d'apprentissage des langues avec IA commence ici",
+    "firstWordlistSuccess": "Félicitations ! 🎉",
+    "firstWordlistMessage": "Votre première liste est prête ! Commencez à ajouter des mots.",
+    "addWordsNow": "Ajouter des Mots",
+    "addWordsLater": "Plus Tard"
   },
   "dashboard": {
     "header": {
@@ -379,10 +392,13 @@
     "tokenValidation": "Erreur de validation du token",
     "networkError": "Erreur réseau. Vérifiez votre connexion.",
     "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
-    "invalidEmail": "Adresse email invalide",
+    "invalidEmail": "Email invalide",
     "emailRequired": "Email obligatoire",
     "passwordRequired": "Mot de passe obligatoire",
-    "fieldRequired": "Ce champ est obligatoire"
+    "fieldRequired": "Obligatoire",
+    "emailExists": "Email déjà enregistré",
+    "shortPassword": "Trop court (min 5 cars)",
+    "signupFailed": "Inscription échouée. Réessayez."
   },
   "success": {
     "wordlistCreated": "Liste créée avec succès",

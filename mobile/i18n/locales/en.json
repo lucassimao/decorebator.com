@@ -27,7 +27,8 @@
     "hide": "HIDE",
     "goBack": "Go Back",
     "more": "More",
-    "retry": "Retry"
+    "retry": "Retry",
+    "tryAgain": "Try Again"
   },
   "auth": {
     "signin": {
@@ -48,6 +49,7 @@
     },
     "signup": {
       "title": "Sign Up",
+      "subtitle": "Start your language learning journey",
       "email": "Email",
       "firstName": "First Name",
       "lastName": "Last Name",
@@ -63,6 +65,7 @@
       "alreadyHaveAccount": "Already have an account?",
       "signIn": "Sign In",
       "agreeToTerms": "I agree to the Terms of Service and Privacy Policy",
+      "termsCheckboxHint": "Tap to toggle agreement to terms and privacy policy",
       "mustAgreeToTerms": "You must agree to the Terms of Service and Privacy Policy to continue"
     },
     "forgotPassword": {
@@ -86,6 +89,14 @@
       "emailInvalid": "Please enter a valid email address"
     },
     "tagline": "Learn languages, connect worlds"
+  },
+  "welcome": {
+    "title": "Welcome to Decorebator! 🎉",
+    "subtitle": "Your AI-powered language learning journey starts here",
+    "firstWordlistSuccess": "Congratulations! 🎉",
+    "firstWordlistMessage": "Your first wordlist is ready! Start adding words to begin learning.",
+    "addWordsNow": "Add Words",
+    "addWordsLater": "Later"
   },
   "dashboard": {
     "header": {
@@ -389,10 +400,13 @@
     "tokenValidation": "Token validation error",
     "networkError": "Network error. Please check your connection.",
     "serverError": "Server error. Please try again later.",
-    "invalidEmail": "Invalid email address",
+    "invalidEmail": "Invalid email",
     "emailRequired": "Email is required",
     "passwordRequired": "Password is required",
-    "fieldRequired": "This field is required"
+    "fieldRequired": "Required",
+    "emailExists": "Email already registered",
+    "shortPassword": "Too short (min 5 chars)",
+    "signupFailed": "Sign up failed. Please try again."
   },
   "success": {
     "wordlistCreated": "Wordlist created successfully",
