@@ -15,5 +15,7 @@ export default function Index() {
     }
   }, [error, router]);
 
+  console.log(error);
+
   return <Redirect href="/dashboard" />;
 }
