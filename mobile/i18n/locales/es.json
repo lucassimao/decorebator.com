@@ -27,7 +27,8 @@
     "hide": "OCULTAR",
     "goBack": "Volver",
     "more": "Más",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "tryAgain": "Intenta de Nuevo"
   },
   "auth": {
     "signin": {

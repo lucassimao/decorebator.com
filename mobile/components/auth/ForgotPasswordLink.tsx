@@ -3,20 +3,18 @@ import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { useResponsive } from "@/hooks/useResponsive";
-import type { Theme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface ForgotPasswordLinkProps {
-  theme: Theme;
-  responsive: ReturnType<typeof useResponsive>;
   disabled: boolean;
 }
 
 export const ForgotPasswordLink: React.FC<ForgotPasswordLinkProps> = ({
-  theme,
-  responsive,
   disabled,
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const responsive = useResponsive();
 
   const handleForgotPassword = () => {
     router.push("/forgotPassword");
@@ -25,7 +23,7 @@ export const ForgotPasswordLink: React.FC<ForgotPasswordLinkProps> = ({
   const styles = StyleSheet.create({
     forgotPassword: {
       alignSelf: "flex-end",
-      marginBottom: responsive.spacing.elementSpacing,
+      marginBottom: responsive.spacing.elementSpacing * 0.6, // Reduced spacing
       marginTop: -8,
     },
     forgotPasswordText: {

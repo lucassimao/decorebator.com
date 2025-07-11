@@ -27,7 +27,8 @@
     "hide": "非表示",
     "goBack": "戻る",
     "more": "もっと",
-    "retry": "再試行"
+    "retry": "再試行",
+    "tryAgain": "もう一度"
   },
   "auth": {
     "signin": {

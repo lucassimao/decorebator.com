@@ -27,15 +27,15 @@ const (
 
 // RevenueCat entitlement IDs (configured in RevenueCat dashboard)
 const (
-	EntitlementPremium = "premium"
+	EntitlementPremium = "Premium"
 )
 
-// RevenueCat product IDs (must match App Store/Google Play product IDs)
+// RevenueCat product IDs
 const (
 	ProductMonthlyIOS     = "com.decorebator.premium.monthly"
 	ProductAnnualIOS      = "com.decorebator.premium.annual"
-	ProductMonthlyAndroid = "premium_monthly"
-	ProductAnnualAndroid  = "premium_annual"
+	ProductMonthlyAndroid = "prode6374c2df7"
+	ProductAnnualAndroid  = "prodbdd5434ac7"
 )
 
 type revenueCatService struct {

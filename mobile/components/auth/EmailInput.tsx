@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
 import { useResponsive } from "@/hooks/useResponsive";
-import type { Theme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface LoginFormData {
   email: string;
@@ -15,8 +15,6 @@ interface LoginFormData {
 interface EmailInputProps {
   control: Control<LoginFormData>;
   errors: FieldErrors<LoginFormData>;
-  theme: Theme;
-  responsive: ReturnType<typeof useResponsive>;
   emailInputRef: React.RefObject<TextInput | null>;
   passwordInputRef: React.RefObject<TextInput | null>;
   onFocus: () => void;
@@ -26,23 +24,23 @@ interface EmailInputProps {
 export const EmailInput: React.FC<EmailInputProps> = ({
   control,
   errors,
-  theme,
-  responsive,
   emailInputRef,
   passwordInputRef,
   onFocus,
   isPending,
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const responsive = useResponsive();
 
   const styles = StyleSheet.create({
     inputGroup: {
-      marginBottom: responsive.spacing.elementSpacing,
+      marginBottom: responsive.spacing.elementSpacing * 0.8, // Reduced spacing
     },
     inputLabelRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 8,
+      marginBottom: 6, // Reduced from 8 to 6
       gap: 6,
     },
     inputLabel: {
@@ -101,6 +99,9 @@ export const EmailInput: React.FC<EmailInputProps> = ({
             keyboardType="email-address"
             autoComplete="email"
             textContentType="emailAddress"
+            autoCorrect={false}
+            spellCheck={false}
+            importantForAutofill="no"
             returnKeyType="next"
             onSubmitEditing={() => passwordInputRef.current?.focus()}
             editable={!isPending}

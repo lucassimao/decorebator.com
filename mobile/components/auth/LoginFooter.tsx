@@ -8,13 +8,10 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { useResponsive } from "@/hooks/useResponsive";
-import type { Theme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface LoginFooterProps {
-  theme: Theme;
-  responsive: ReturnType<typeof useResponsive>;
   keyboardVisible: boolean;
   keyboardHeight?: number;
   isPending: boolean;
@@ -22,21 +19,17 @@ interface LoginFooterProps {
 }
 
 export const LoginFooter: React.FC<LoginFooterProps> = ({
-  theme,
-  responsive,
   keyboardVisible,
   isPending,
   onSubmit,
 }) => {
   const { t } = useTranslation();
-
-  const handleSignUp = () => {
-    router.replace("/signup");
-  };
+  const { theme } = useTheme();
+  const responsive = useResponsive();
 
   const styles = StyleSheet.create({
     fixedFooter: {
-      paddingVertical: responsive.spacing.vertical,
+      paddingTop: responsive.spacing.vertical,
     },
     loginButton: {
       backgroundColor: theme.colors.primary,
@@ -59,24 +52,6 @@ export const LoginFooter: React.FC<LoginFooterProps> = ({
     },
     buttonDisabled: {
       opacity: 0.7,
-    },
-    signUpContainer: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      marginTop: responsive.spacing.elementSpacing * 0.1, // Even closer to sign-in button
-      paddingBottom: responsive.spacing.vertical,
-    },
-    signUpText: {
-      fontSize: responsive.fontSizes.body,
-      color: theme.colors.text.primary,
-      opacity: 0.7,
-    },
-    signUpLink: {
-      fontSize: responsive.fontSizes.body,
-      color: theme.colors.primary,
-      fontWeight: "600",
-      textDecorationLine: "underline",
     },
   });
 
@@ -117,22 +92,6 @@ export const LoginFooter: React.FC<LoginFooterProps> = ({
           </>
         )}
       </TouchableOpacity>
-
-      {/* Sign Up Link */}
-      <View style={styles.signUpContainer}>
-        <Text style={styles.signUpText}>{t("auth.signin.noAccount")} </Text>
-        <TouchableOpacity
-          onPress={handleSignUp}
-          disabled={isPending}
-          // Accessibility
-          accessible={true}
-          accessibilityLabel={t("auth.signin.signUp")}
-          accessibilityRole="button"
-          accessibilityHint={t("auth.signin.signUpHint")}
-        >
-          <Text style={styles.signUpLink}>{t("auth.signin.signUp")}</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };

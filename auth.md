@@ -1,20 +1,5 @@
 
-  ---
-  🔄 Flow 3: Unauthenticated User (App Launch Without Login)
 
-  Steps:
-  1. Ensure you're signed out
-  2. Close and reopen app
-  3. Observe initial loading behavior
-
-  Expected Behavior:
-  - Brief simple loading spinner (NOT skeleton screen)
-  - Direct redirect to signin screen
-  - No dashboard skeleton should appear
-
-  Report: Did you see skeleton before signin? What was the loading behavior?
-
-  ---
   🔄 Flow 4: New User Signup → Sign Out → Sign Back In
 
   Steps:

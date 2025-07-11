@@ -97,10 +97,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
           });
         }
 
-        // Show welcome if user has never seen dashboard OR just signed up
-        if (!hasSeenDashboard || isJustSignedUp) {
+        // Only show welcome if user literally just signed up
+        if (isJustSignedUp) {
           if (__DEV__) {
-            console.log("Showing welcome overlay for new user");
+            console.log("Showing welcome overlay for newly signed up user");
           }
           setIsNewUser(true);
           setShowWelcomeOverlay(true);
@@ -362,13 +362,16 @@ const Dashboard: React.FC<DashboardProps> = () => {
   }, [showWelcomeOverlay, welcomeOpacity]);
 
   // Fallback: Show welcome for empty wordlists if no welcome was shown yet
+  // Note: Don't set isNewUser flag here as this could be an existing user with no wordlists
   useEffect(() => {
     if (!isLoading && hasNoWordlist && !showWelcomeOverlay && !isNewUser) {
       const timer = setTimeout(() => {
         if (__DEV__) {
-          console.log("Fallback: Showing welcome for empty wordlist");
+          console.log(
+            "Fallback: Showing welcome for empty wordlist (not marking as new user)",
+          );
         }
-        setIsNewUser(true);
+        // Only show welcome overlay, don't mark as new user
         setShowWelcomeOverlay(true);
       }, 1000);
 

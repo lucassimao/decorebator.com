@@ -3,8 +3,6 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { LoginHeader } from "@/components/auth/LoginHeader";
 import { EmailInput } from "@/components/auth/EmailInput";
 import { PasswordInput } from "@/components/auth/PasswordInput";
-import { ForgotPasswordLink } from "@/components/auth/ForgotPasswordLink";
-import { LoginFooter } from "@/components/auth/LoginFooter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
@@ -12,6 +10,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
   Alert,
   ImageBackground,
   Keyboard,
@@ -23,9 +22,11 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { authLightTheme } from "@/theme/authTheme";
 import type { Theme } from "@/contexts/ThemeContext";
 import * as Sentry from "@sentry/react-native";
@@ -99,6 +100,9 @@ const LoginScreen: React.FC = () => {
         });
       }
 
+      // Clear all cache to prevent data leakage between users
+      queryClient.clear();
+
       // Pre-cache user data by invalidating the query - this will trigger a fresh fetch
       await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
 
@@ -118,6 +122,14 @@ const LoginScreen: React.FC = () => {
 
   const handleLogin = (data: LoginFormData) => {
     loginMutation.mutate(data);
+  };
+
+  const handleSignUp = () => {
+    router.replace("/signup");
+  };
+
+  const handleForgotPassword = () => {
+    router.push("/forgotPassword");
   };
 
   // Keyboard listeners with dynamic height detection
@@ -207,11 +219,7 @@ const LoginScreen: React.FC = () => {
                 <View style={styles.topSpacer} />
 
                 {/* Header with Logo and Illustration */}
-                <LoginHeader
-                  theme={theme}
-                  responsive={responsive}
-                  keyboardVisible={keyboardVisible}
-                />
+                <LoginHeader keyboardVisible={keyboardVisible} />
 
                 {/* Login Form */}
                 <View
@@ -231,8 +239,6 @@ const LoginScreen: React.FC = () => {
                   <EmailInput
                     control={control}
                     errors={errors}
-                    theme={theme}
-                    responsive={responsive}
                     emailInputRef={emailInputRef}
                     passwordInputRef={passwordInputRef}
                     onFocus={() => scrollToInput(emailInputRef)}
@@ -243,8 +249,6 @@ const LoginScreen: React.FC = () => {
                   <PasswordInput
                     control={control}
                     errors={errors}
-                    theme={theme}
-                    responsive={responsive}
                     passwordInputRef={passwordInputRef}
                     showPassword={showPassword}
                     setShowPassword={setShowPassword}
@@ -252,24 +256,76 @@ const LoginScreen: React.FC = () => {
                     isPending={loginMutation.isPending}
                   />
 
-                  {/* Forgot Password Link */}
-                  <ForgotPasswordLink
-                    theme={theme}
-                    responsive={responsive}
+                  {/* Sign In Button */}
+                  <TouchableOpacity
+                    style={[
+                      styles.loginButton,
+                      loginMutation.isPending && styles.buttonDisabled,
+                    ]}
+                    onPress={handleSubmit(handleLogin)}
                     disabled={loginMutation.isPending}
-                  />
-                </View>
+                    activeOpacity={0.8}
+                    // Accessibility
+                    accessible={true}
+                    accessibilityLabel={
+                      loginMutation.isPending
+                        ? t("auth.signin.signingIn")
+                        : t("auth.signin.signInButton")
+                    }
+                    accessibilityRole="button"
+                    accessibilityHint={t("auth.signin.signInHint")}
+                    accessibilityState={{ disabled: loginMutation.isPending }}
+                  >
+                    {loginMutation.isPending ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <>
+                        <Text style={styles.loginButtonText}>
+                          {t("auth.signin.signInButton")}
+                        </Text>
+                        <Ionicons
+                          name="arrow-forward"
+                          size={20}
+                          color={theme.colors.text.inverse}
+                        />
+                      </>
+                    )}
+                  </TouchableOpacity>
 
-                {/* Login Footer moved inside ScrollView for better keyboard handling */}
-                <View style={styles.footerContainer}>
-                  <LoginFooter
-                    theme={theme}
-                    responsive={responsive}
-                    keyboardVisible={keyboardVisible}
-                    keyboardHeight={keyboardHeight}
-                    isPending={loginMutation.isPending}
-                    onSubmit={handleSubmit(handleLogin)}
-                  />
+                  {/* Bottom Links Row */}
+                  <View style={styles.bottomLinksRow}>
+                    {/* Sign Up Link - Left */}
+                    <TouchableOpacity
+                      style={styles.bottomLinkLeft}
+                      onPress={handleSignUp}
+                      disabled={loginMutation.isPending}
+                      // Accessibility
+                      accessible={true}
+                      accessibilityLabel={t("auth.signin.signUp")}
+                      accessibilityRole="button"
+                      accessibilityHint={t("auth.signin.signUpHint")}
+                    >
+                      <Text style={styles.signUpLink}>
+                        {t("auth.signin.signUp")}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Forgot Password Link - Right */}
+                    <TouchableOpacity
+                      style={styles.bottomLinkRight}
+                      onPress={handleForgotPassword}
+                      disabled={loginMutation.isPending}
+                      // Accessibility
+                      accessible={true}
+                      accessibilityLabel={t("auth.signin.forgotPassword")}
+                      accessibilityRole="button"
+                      accessibilityHint={t("auth.signin.forgotPasswordHint")}
+                    >
+                      <Text style={styles.forgotPasswordText}>
+                        {t("auth.signin.forgotPassword")}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </ScrollView>
             </View>
@@ -319,22 +375,72 @@ const createStyles = (
         ? responsive.spacing.vertical
         : responsive.screenHeight * 0.12, // Balanced spacing
     },
-    footerContainer: {
-      marginTop: responsive.spacing.elementSpacing * .5,
-      marginBottom: keyboardVisible
-        ? responsive.spacing.vertical * 2  // Less bottom margin when keyboard is visible
-        : responsive.spacing.vertical * 6, // Increased bottom margin when keyboard is hidden
-      paddingBottom: 40, // Extra padding to ensure sign-up link is visible
-      paddingHorizontal: 0, // Remove horizontal padding since LoginFooter is not a card anymore
-    },
     formCard: {
       backgroundColor: "rgba(255, 255, 255, 0.95)",
       borderRadius: theme.borderRadius.xl,
-      padding: responsive.spacing.formPadding,
+      padding: responsive.spacing.formPadding + 8, // Increased padding for height
       ...theme.shadows.lg,
       // Add subtle border for definition
       borderWidth: 1,
       borderColor: "rgba(255, 255, 255, 0.3)",
+    },
+    // Sign In Button styles
+    loginButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: theme.spacing.md + 2,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      marginTop: responsive.spacing.elementSpacing * 0.8,
+      marginBottom: responsive.spacing.elementSpacing,
+      ...theme.shadows.lg,
+      shadowColor: theme.colors.primary,
+      minHeight: responsive.spacing.buttonHeight + 4,
+      elevation: 4,
+    },
+    loginButtonText: {
+      color: theme.colors.text.inverse,
+      fontSize: responsive.fontSizes.button,
+      fontWeight: "600",
+    },
+    buttonDisabled: {
+      opacity: 0.7,
+    },
+    // Bottom Links Row styles
+    bottomLinksRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: responsive.spacing.elementSpacing * 0.5,
+      paddingHorizontal: 4, // Small horizontal padding for better touch targets
+    },
+    bottomLinkLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+      maxWidth: "50%", // Prevent overflow into right side
+    },
+    bottomLinkRight: {
+      alignItems: "flex-end",
+      flex: 1,
+      maxWidth: "50%", // Prevent overflow into left side
+    },
+    signUpLink: {
+      fontSize: responsive.fontSizes.body,
+      color: theme.colors.primary,
+      fontWeight: "600",
+      textDecorationLine: "underline",
+      flexShrink: 1,
+    },
+    forgotPasswordText: {
+      color: theme.colors.text.secondary,
+      fontSize: responsive.fontSizes.label,
+      fontWeight: "400",
+      textAlign: "right",
+      flexShrink: 1,
+      opacity: 0.8,
     },
     welcomeText: {
       fontSize: responsive.fontSizes.title,

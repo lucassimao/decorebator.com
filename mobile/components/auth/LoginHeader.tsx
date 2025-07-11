@@ -2,20 +2,18 @@ import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useResponsive } from "@/hooks/useResponsive";
-import type { Theme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface LoginHeaderProps {
-  theme: Theme;
-  responsive: ReturnType<typeof useResponsive>;
   keyboardVisible: boolean;
 }
 
 export const LoginHeader: React.FC<LoginHeaderProps> = ({
-  theme,
-  responsive,
   keyboardVisible,
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const responsive = useResponsive();
 
   const styles = StyleSheet.create({
     headerSection: {

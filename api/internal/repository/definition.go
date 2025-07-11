@@ -124,7 +124,7 @@ func (repository *DefinitionRepository) GetRandomMeanings(definitionIDsToIgnore 
 		)
         SELECT meaning
         FROM candidates
-        ORDER BY length(meaning) ASC, RANDOM()
+        ORDER BY length(meaning) ASC, RANDOM() 
         LIMIT $2;
 	`
 

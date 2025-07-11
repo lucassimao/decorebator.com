@@ -27,7 +27,8 @@
     "hide": "NASCONDI",
     "goBack": "Indietro",
     "more": "Più",
-    "retry": "Riprova"
+    "retry": "Riprova",
+    "tryAgain": "Riprova"
   },
   "auth": {
     "signin": {
