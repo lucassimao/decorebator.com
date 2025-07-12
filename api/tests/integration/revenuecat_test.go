@@ -293,15 +293,13 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 		err = rcService.ProcessRevenueCatEvent(ctx, webhook.Event, userID)
 		require.NoError(t, err)
 
-		// Verify subscription status changed to past due
-		// Note: GetActiveSubscriptionForUser only returns 'active' status, so we query directly
-		var updatedSub model.Subscription
-		err = ts.DB.QueryRow(ctx,
-			"SELECT id, status, canceled_at FROM subscriptions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1",
-			userID).Scan(&updatedSub.ID, &updatedSub.Status, &updatedSub.CanceledAt)
+		// Verify subscription status changed to past due but is still accessible during grace period
+		updatedSub, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
 		require.NoError(t, err)
+		assert.NotNil(t, updatedSub, "Should find past_due subscription during grace period")
 		assert.Equal(t, model.StatusPastDue, updatedSub.Status)
 		assert.Nil(t, updatedSub.CanceledAt, "CanceledAt should not be set for billing errors")
+		assert.True(t, updatedSub.IsActive(), "Should be active during grace period")
 
 		// Verify subscription event was recorded
 		var eventCount int
@@ -406,5 +404,108 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 			canceledSub.ID).Scan(&eventCount)
 		require.NoError(t, err)
 		assert.Equal(t, 1, eventCount)
+	})
+
+	t.Run("GracePeriod_PastDueSubscription_AccessibleDuringGracePeriod", func(t *testing.T) {
+		// Create a test user
+		signupInput := setup.GenerateSignupInput()
+		ts.Expect.POST("/users").
+			WithJSON(signupInput).
+			Expect().
+			Status(201)
+
+		// Get user ID from database
+		ctx := context.Background()
+		var userID int64
+		err := ts.DB.QueryRow(ctx,
+			"SELECT id FROM users WHERE email = $1",
+			signupInput.Email).Scan(&userID)
+		require.NoError(t, err)
+
+		// Create a past_due subscription that should still be in grace period
+		subRepo := repository.NewSubscriptionRepository(ts.DB)
+		revenuecatSubID := fmt.Sprintf("%d", userID)
+		subscription := &model.Subscription{
+			UserID:                   userID,
+			Provider:                 model.ProviderRevenueCat,
+			RevenueCatSubscriptionID: &revenuecatSubID,
+			Plan:                     model.PlanMonthly,
+			Status:                   model.StatusPastDue,
+			CurrentPeriodStart:       time.Now().Add(-30 * 24 * time.Hour),
+			CurrentPeriodEnd:         time.Now().Add(-1 * time.Hour), // Expired 1 hour ago (within 3-day grace period)
+			AmountCents:              model.SubscriptionPrices[model.PlanMonthly].AmountCents,
+			Currency:                 "USD",
+		}
+
+		setupEvent := model.SubscriptionEvent{
+			ExternalEventID: setup.GenerateUniqueEventID("grace_period_test"),
+			Provider:        model.ProviderRevenueCat,
+			EventType:       "test_setup",
+			EventData:       `{"type": "grace_period_test"}`,
+		}
+		_, err = subRepo.CreateSubscription(ctx, subscription, setupEvent)
+		require.NoError(t, err)
+
+		// Verify subscription is accessible during grace period
+		activeSub, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
+		assert.NoError(t, err)
+		assert.NotNil(t, activeSub, "Should find subscription during grace period")
+		assert.Equal(t, model.StatusPastDue, activeSub.Status)
+		assert.True(t, activeSub.IsActive(), "Should be active during grace period")
+	})
+
+	t.Run("GracePeriod_ExpiredGracePeriod_NoAccess", func(t *testing.T) {
+		// Create a test user
+		signupInput := setup.GenerateSignupInput()
+		ts.Expect.POST("/users").
+			WithJSON(signupInput).
+			Expect().
+			Status(201)
+
+		// Get user ID from database
+		ctx := context.Background()
+		var userID int64
+		err := ts.DB.QueryRow(ctx,
+			"SELECT id FROM users WHERE email = $1",
+			signupInput.Email).Scan(&userID)
+		require.NoError(t, err)
+
+		// Create a past_due subscription that is beyond grace period
+		subRepo := repository.NewSubscriptionRepository(ts.DB)
+		revenuecatSubID := fmt.Sprintf("%d", userID)
+		subscription := &model.Subscription{
+			UserID:                   userID,
+			Provider:                 model.ProviderRevenueCat,
+			RevenueCatSubscriptionID: &revenuecatSubID,
+			Plan:                     model.PlanMonthly,
+			Status:                   model.StatusPastDue,
+			CurrentPeriodStart:       time.Now().Add(-35 * 24 * time.Hour),
+			CurrentPeriodEnd:         time.Now().Add(-4 * 24 * time.Hour), // Expired 4 days ago (beyond 3-day grace period)
+			AmountCents:              model.SubscriptionPrices[model.PlanMonthly].AmountCents,
+			Currency:                 "USD",
+		}
+
+		setupEvent := model.SubscriptionEvent{
+			ExternalEventID: setup.GenerateUniqueEventID("expired_grace_test"),
+			Provider:        model.ProviderRevenueCat,
+			EventType:       "test_setup",
+			EventData:       `{"type": "expired_grace_test"}`,
+		}
+		_, err = subRepo.CreateSubscription(ctx, subscription, setupEvent)
+		require.NoError(t, err)
+
+		// Verify subscription is NOT accessible beyond grace period
+		activeSub, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
+		assert.NoError(t, err)
+		assert.Nil(t, activeSub, "Should not find subscription beyond grace period")
+
+		// Verify IsActive returns false
+		var dbSub model.Subscription
+		err = ts.DB.QueryRow(ctx,
+			"SELECT id, status, current_period_end FROM subscriptions WHERE user_id = $1",
+			userID).Scan(&dbSub.ID, &dbSub.Status, &dbSub.CurrentPeriodEnd)
+		require.NoError(t, err)
+		dbSub.Status = model.StatusPastDue // Set the status we know it should have
+		assert.False(t, dbSub.IsActive(), "Should not be active beyond grace period")
 	})
 }

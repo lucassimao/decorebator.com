@@ -150,7 +150,10 @@ func (r *SubscriptionRepository) GetActiveSubscriptionForUser(ctx context.Contex
 			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
 		FROM subscriptions
-		WHERE user_id = $1 AND status = 'active'
+		WHERE user_id = $1 AND (
+			status = 'active' OR 
+			(status = 'past_due' AND current_period_end + INTERVAL '3 days' > NOW())
+		)
 		ORDER BY created_at DESC
 		LIMIT 1
 	`

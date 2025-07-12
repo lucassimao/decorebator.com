@@ -181,21 +181,24 @@ const (
 	FreeWordsPerList  = 10
 )
 
+// Grace period configuration
+const (
+	GracePeriodDays = 3 // Number of days to allow access after payment failure
+)
+
 // IsActive returns true if the subscription is in a valid state
+// Includes active subscriptions and past_due subscriptions within grace period
 func (s *Subscription) IsActive() bool {
-	return s.Status == StatusActive
-}
-
-// HasAccess checks if the user has access based on subscription
-func (s *Subscription) HasAccess() bool {
-	if !s.IsActive() {
-		return false
+	if s.Status == StatusActive {
+		return true
 	}
 
-	// Check if subscription has expired
-	if time.Now().After(s.CurrentPeriodEnd) {
-		return false
+	// Allow access during grace period for past_due subscriptions
+	if s.Status == StatusPastDue {
+		// Grace period starts from the subscription end date
+		gracePeriodEnd := s.CurrentPeriodEnd.Add(GracePeriodDays * 24 * time.Hour)
+		return time.Now().Before(gracePeriodEnd)
 	}
 
-	return true
+	return false
 }

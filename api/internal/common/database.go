@@ -47,7 +47,6 @@ func GetDBConnection() *pgxpool.Pool {
 		config.MinConns = 2
 		config.MaxConnLifetime = time.Hour
 		config.MaxConnIdleTime = 15 * time.Minute
-		config.HealthCheckPeriod = 0
 		config.ConnConfig.ConnectTimeout = 10 * time.Second
 
 		db, err = pgxpool.NewWithConfig(context.Background(), config)
