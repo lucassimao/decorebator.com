@@ -20,7 +20,6 @@ type User struct {
 	SubscriptionPlan     SubscriptionPlan    `json:"subscriptionPlan"`
 	SubscriptionStatus   *SubscriptionStatus `json:"subscriptionStatus,omitempty"`
 	StripeCustomerID     *string             `json:"stripeCustomerId,omitempty"`
-	RevenueCatCustomerID *string             `json:"revenuecatCustomerId,omitempty"`
 	Platform             *PlatformType       `json:"platform,omitempty"`
 	SubscriptionEndsAt   *time.Time          `json:"subscriptionEndsAt,omitempty"`
 	CreatedAt            pgtype.Timestamp    `json:"createdAt"`
@@ -59,10 +58,6 @@ func (u User) MarshalJSON() ([]byte, error) {
 
 	if u.StripeCustomerID != nil {
 		userMap["stripeCustomerId"] = *u.StripeCustomerID
-	}
-
-	if u.RevenueCatCustomerID != nil {
-		userMap["revenuecatCustomerId"] = *u.RevenueCatCustomerID
 	}
 
 	if u.Platform != nil {

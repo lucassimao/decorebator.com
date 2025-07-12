@@ -15,38 +15,6 @@ var (
 	dbOnce sync.Once
 )
 
-// configureConnectionPool optimizes connection pool settings for DigitalOcean App Platform
-func configureConnectionPool(config *pgxpool.Config) {
-	env := os.Getenv("ENV")
-
-	switch env {
-	case ProductionEnv:
-		// Optimized for DigitalOcean App Platform + managed PostgreSQL
-		config.MaxConns = 10
-		config.MinConns = 2
-		config.MaxConnLifetime = time.Hour
-		config.MaxConnIdleTime = 15 * time.Minute
-		config.HealthCheckPeriod = time.Minute
-		config.ConnConfig.ConnectTimeout = 10 * time.Second
-	case DevelopmentEnv:
-		// Development environment with moderate resource usage
-		config.MaxConns = 5
-		config.MinConns = 1
-		config.MaxConnLifetime = 30 * time.Minute
-		config.MaxConnIdleTime = 10 * time.Minute
-		config.HealthCheckPeriod = 30 * time.Second
-		config.ConnConfig.ConnectTimeout = 5 * time.Second
-	default: // testing
-		// Testing environment with minimal resource usage
-		config.MaxConns = 3
-		config.MinConns = 1
-		config.MaxConnLifetime = 10 * time.Minute
-		config.MaxConnIdleTime = 5 * time.Minute
-		config.HealthCheckPeriod = 10 * time.Second
-		config.ConnConfig.ConnectTimeout = 2 * time.Second
-	}
-}
-
 func GetDBConnection() *pgxpool.Pool {
 	// Initialize the database connection pool once
 	dbOnce.Do(func() {
@@ -74,8 +42,13 @@ func GetDBConnection() *pgxpool.Pool {
 			os.Exit(1)
 		}
 
-		// Apply environment-specific connection pool optimization
-		configureConnectionPool(config)
+		// Recommended configuration for pgxpool connecting to pgBouncer
+		config.MaxConns = 20
+		config.MinConns = 2
+		config.MaxConnLifetime = time.Hour
+		config.MaxConnIdleTime = 15 * time.Minute
+		config.HealthCheckPeriod = 0
+		config.ConnConfig.ConnectTimeout = 10 * time.Second
 
 		db, err = pgxpool.NewWithConfig(context.Background(), config)
 		if err != nil {
