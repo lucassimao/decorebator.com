@@ -294,9 +294,12 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify subscription status changed to past due
-		updatedSub, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
-		assert.NoError(t, err)
-		assert.NotNil(t, updatedSub)
+		// Note: GetActiveSubscriptionForUser only returns 'active' status, so we query directly
+		var updatedSub model.Subscription
+		err = ts.DB.QueryRow(ctx,
+			"SELECT id, status, canceled_at FROM subscriptions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1",
+			userID).Scan(&updatedSub.ID, &updatedSub.Status, &updatedSub.CanceledAt)
+		require.NoError(t, err)
 		assert.Equal(t, model.StatusPastDue, updatedSub.Status)
 		assert.Nil(t, updatedSub.CanceledAt, "CanceledAt should not be set for billing errors")
 

@@ -43,7 +43,6 @@ const (
 	StatusActive   SubscriptionStatus = "active"
 	StatusCanceled SubscriptionStatus = "cancelled"
 	StatusPastDue  SubscriptionStatus = "past_due"
-	StatusTrialing SubscriptionStatus = "trialing"
 	StatusUnpaid   SubscriptionStatus = "unpaid"
 )
 
@@ -184,7 +183,7 @@ const (
 
 // IsActive returns true if the subscription is in a valid state
 func (s *Subscription) IsActive() bool {
-	return s.Status == StatusActive || s.Status == StatusTrialing
+	return s.Status == StatusActive
 }
 
 // HasAccess checks if the user has access based on subscription
