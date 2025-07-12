@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -55,32 +56,28 @@ func (w *RevenueCatWebhookWorker) Work(ctx context.Context, job *river.Job[Reven
 		return nil
 	}
 
-	// Find user by RevenueCat customer ID
-	user, err := w.rcService.GetUserByRevenueCatCustomerID(ctx, webhook.Event.AppUserID)
+	// Parse app_user_id as user ID (app_user_id is stringified user ID)
+	userID, err := strconv.ParseInt(webhook.Event.AppUserID, 10, 64)
 	if err != nil {
-		logger.Error("failed to get user", "error", err)
-		return err
-	}
-	if user == nil {
-		logger.Warn("User not found for RevenueCat customer",
+		logger.Error("failed to parse app_user_id as user ID",
 			"app_user_id", webhook.Event.AppUserID,
-		)
+			"error", err)
 		// Store event without user ID for debugging
 		if err := w.rcService.StoreRevenueCatEvent(ctx, &webhook.Event, nil); err != nil {
 			logger.Error("failed to store event", "error", err)
 			return err
 		}
-		return nil
+		return err
 	}
 
 	// Process event based on type
-	if err := w.rcService.ProcessRevenueCatEvent(ctx, webhook.Event, user.ID); err != nil {
+	if err := w.rcService.ProcessRevenueCatEvent(ctx, webhook.Event, userID); err != nil {
 		logger.Error("failed to process event", "error", err)
 		return err
 	}
 
 	// Store the event
-	if err := w.rcService.StoreRevenueCatEvent(ctx, &webhook.Event, &user.ID); err != nil {
+	if err := w.rcService.StoreRevenueCatEvent(ctx, &webhook.Event, &userID); err != nil {
 		logger.Error("failed to store event", "error", err)
 		return err
 	}

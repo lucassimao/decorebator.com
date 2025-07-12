@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -93,12 +94,8 @@ func TestRevenueCatWebhookEndpoint(t *testing.T) {
 			signupInput.Email).Scan(&userID)
 		require.NoError(t, err)
 
-		// Set up RevenueCat customer ID
-		revenueCatCustomerID := "rc_test_user_" + time.Now().Format("20060102150405")
-		_, err = ts.DB.Exec(ctx,
-			"UPDATE users SET revenuecat_customer_id = $1 WHERE id = $2",
-			revenueCatCustomerID, userID)
-		require.NoError(t, err)
+		// RevenueCat app_user_id is just the stringified user ID
+		appUserID := fmt.Sprintf("%d", userID)
 
 		// Get webhook auth token
 		webhookAuthToken := os.Getenv("REVENUECAT_WEBHOOK_AUTHORIZATION")
@@ -110,8 +107,8 @@ func TestRevenueCatWebhookEndpoint(t *testing.T) {
 			Event: model.RevenueCatEvent{
 				Type:                  "INITIAL_PURCHASE",
 				ID:                    "test_event_" + time.Now().Format("20060102150405"),
-				AppUserID:             revenueCatCustomerID,
-				OriginalAppUserID:     revenueCatCustomerID,
+				AppUserID:             appUserID,
+				OriginalAppUserID:     appUserID,
 				EventTimestampMS:      time.Now().Unix() * 1000,
 				ProductID:             "com.decorebator.premium.monthly",
 				EntitlementIDs:        []string{"premium"},

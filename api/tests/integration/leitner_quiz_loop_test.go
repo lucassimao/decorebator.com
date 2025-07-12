@@ -144,7 +144,7 @@ func runQuizLoopTest(t *testing.T, server *setup.TestServer, token string, itera
 			Status(http.StatusNoContent)
 
 		// Small delay to simulate real usage
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 	}
 
 	// Verify results

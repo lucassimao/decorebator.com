@@ -43,12 +43,8 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 			signupInput.Email).Scan(&userID)
 		require.NoError(t, err)
 
-		// Set up RevenueCat customer ID
-		revenueCatCustomerID := fmt.Sprintf("rc_user_%d", userID)
-		_, err = ts.DB.Exec(ctx,
-			"UPDATE users SET revenuecat_customer_id = $1 WHERE id = $2",
-			revenueCatCustomerID, userID)
-		require.NoError(t, err)
+		// RevenueCat app_user_id is just the stringified user ID
+		appUserID := fmt.Sprintf("%d", userID)
 
 		// Create webhook payload
 		webhook := model.RevenueCatWebhook{
@@ -56,8 +52,8 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 			Event: model.RevenueCatEvent{
 				Type:                  "INITIAL_PURCHASE",
 				ID:                    "test_event_" + time.Now().Format("20060102150405"),
-				AppUserID:             revenueCatCustomerID,
-				OriginalAppUserID:     revenueCatCustomerID,
+				AppUserID:             appUserID,
+				OriginalAppUserID:     appUserID,
 				EventTimestampMS:      time.Now().Unix() * 1000,
 				ProductID:             service.ProductMonthlyIOS,
 				EntitlementIDs:        []string{service.EntitlementPremium},
@@ -162,7 +158,7 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 
 		// Verify mock API client was called
 		assert.Equal(t, 1, len(mockAPIClient.GetCustomerInfoCalls), "GetCustomerInfo should be called once")
-		assert.Equal(t, revenueCatCustomerID, mockAPIClient.GetCustomerInfoCalls[0].AppUserID, "GetCustomerInfo should be called with correct app user ID")
+		assert.Equal(t, appUserID, mockAPIClient.GetCustomerInfoCalls[0].AppUserID, "GetCustomerInfo should be called with correct app user ID")
 	})
 
 	t.Run("DirectSubscriptionCreation_Works", func(t *testing.T) {
@@ -222,5 +218,190 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 		assert.Equal(t, model.ProviderRevenueCat, createdSub.Provider)
 		assert.Equal(t, model.PlanMonthly, createdSub.Plan)
 		assert.Equal(t, model.StatusActive, createdSub.Status)
+	})
+
+	t.Run("ExpirationEvent_WithBillingError_SetsPastDueStatus", func(t *testing.T) {
+		// Create a test user
+		signupInput := setup.GenerateSignupInput()
+		ts.Expect.POST("/users").
+			WithJSON(signupInput).
+			Expect().
+			Status(201)
+
+		// Get user ID from database
+		ctx := context.Background()
+		var userID int64
+		err := ts.DB.QueryRow(ctx,
+			"SELECT id FROM users WHERE email = $1",
+			signupInput.Email).Scan(&userID)
+		require.NoError(t, err)
+
+		// Create an active subscription first
+		subRepo := repository.NewSubscriptionRepository(ts.DB)
+		subscription := &model.Subscription{
+			UserID:                   userID,
+			Provider:                 model.ProviderRevenueCat,
+			RevenueCatSubscriptionID: &[]string{fmt.Sprintf("%d", userID)}[0],
+			Plan:                     model.PlanMonthly,
+			Status:                   model.StatusActive,
+			CurrentPeriodStart:       time.Now().Add(-30 * 24 * time.Hour),
+			CurrentPeriodEnd:         time.Now().Add(-1 * time.Hour), // Expired
+			AmountCents:              model.SubscriptionPrices[model.PlanMonthly].AmountCents,
+			Currency:                 "USD",
+		}
+
+		setupEvent := model.SubscriptionEvent{
+			ExternalEventID: setup.GenerateUniqueEventID("setup_active_sub"),
+			Provider:        model.ProviderRevenueCat,
+			EventType:       "setup",
+			EventData:       `{"type": "setup"}`,
+		}
+		_, err = subRepo.CreateSubscription(ctx, subscription, setupEvent)
+		require.NoError(t, err)
+
+		// RevenueCat app_user_id is just the stringified user ID
+		appUserID := fmt.Sprintf("%d", userID)
+		expirationReason := "BILLING_ERROR"
+
+		// Create expiration webhook payload
+		webhook := model.RevenueCatWebhook{
+			APIVersion: "1.0",
+			Event: model.RevenueCatEvent{
+				Type:                  "EXPIRATION",
+				ID:                    "test_expiration_" + time.Now().Format("20060102150405"),
+				AppUserID:             appUserID,
+				OriginalAppUserID:     appUserID,
+				EventTimestampMS:      time.Now().Unix() * 1000,
+				ProductID:             service.ProductMonthlyAndroid,
+				EntitlementIDs:        []string{service.EntitlementPremium},
+				Store:                 "PLAY_STORE",
+				Environment:           "SANDBOX",
+				ExpirationReason:      &expirationReason,
+				PurchasedAtMS:         time.Now().Add(-30*24*time.Hour).Unix() * 1000,
+				ExpirationAtMS:        time.Now().Add(-1*time.Hour).Unix() * 1000,
+				PeriodType:            "NORMAL",
+				Price:                 0.0, // Billing error, no payment processed
+				Currency:              "USD",
+				TransactionID:         "test_transaction_" + time.Now().Format("20060102150405"),
+				OriginalTransactionID: "test_original_transaction_" + time.Now().Format("20060102150405"),
+				CountryCode:           "US",
+			},
+		}
+
+		// Process the expiration event directly through the service
+		rcService := service.NewRevenueCatService(ts.DB, nil)
+		err = rcService.ProcessRevenueCatEvent(ctx, webhook.Event, userID)
+		require.NoError(t, err)
+
+		// Verify subscription status changed to past due
+		updatedSub, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
+		assert.NoError(t, err)
+		assert.NotNil(t, updatedSub)
+		assert.Equal(t, model.StatusPastDue, updatedSub.Status)
+		assert.Nil(t, updatedSub.CanceledAt, "CanceledAt should not be set for billing errors")
+
+		// Verify subscription event was recorded
+		var eventCount int
+		err = ts.DB.QueryRow(ctx,
+			"SELECT COUNT(*) FROM subscription_events WHERE subscription_id = $1 AND event_type = 'EXPIRATION'",
+			updatedSub.ID).Scan(&eventCount)
+		require.NoError(t, err)
+		assert.Equal(t, 1, eventCount)
+	})
+
+	t.Run("ExpirationEvent_WithVoluntaryCancellation_SetsCanceledStatus", func(t *testing.T) {
+		// Create a test user
+		signupInput := setup.GenerateSignupInput()
+		ts.Expect.POST("/users").
+			WithJSON(signupInput).
+			Expect().
+			Status(201)
+
+		// Get user ID from database
+		ctx := context.Background()
+		var userID int64
+		err := ts.DB.QueryRow(ctx,
+			"SELECT id FROM users WHERE email = $1",
+			signupInput.Email).Scan(&userID)
+		require.NoError(t, err)
+
+		// Create an active subscription first
+		subRepo := repository.NewSubscriptionRepository(ts.DB)
+		subscription := &model.Subscription{
+			UserID:                   userID,
+			Provider:                 model.ProviderRevenueCat,
+			RevenueCatSubscriptionID: &[]string{fmt.Sprintf("%d", userID)}[0],
+			Plan:                     model.PlanMonthly,
+			Status:                   model.StatusActive,
+			CurrentPeriodStart:       time.Now().Add(-30 * 24 * time.Hour),
+			CurrentPeriodEnd:         time.Now().Add(-1 * time.Hour), // Expired
+			AmountCents:              model.SubscriptionPrices[model.PlanMonthly].AmountCents,
+			Currency:                 "USD",
+		}
+
+		setupEvent := model.SubscriptionEvent{
+			ExternalEventID: setup.GenerateUniqueEventID("setup_active_sub_2"),
+			Provider:        model.ProviderRevenueCat,
+			EventType:       "setup",
+			EventData:       `{"type": "setup"}`,
+		}
+		_, err = subRepo.CreateSubscription(ctx, subscription, setupEvent)
+		require.NoError(t, err)
+
+		// RevenueCat app_user_id is just the stringified user ID
+		appUserID := fmt.Sprintf("%d", userID)
+		expirationReason := "VOLUNTARY"
+
+		// Create expiration webhook payload
+		webhook := model.RevenueCatWebhook{
+			APIVersion: "1.0",
+			Event: model.RevenueCatEvent{
+				Type:                  "EXPIRATION",
+				ID:                    "test_expiration_voluntary_" + time.Now().Format("20060102150405"),
+				AppUserID:             appUserID,
+				OriginalAppUserID:     appUserID,
+				EventTimestampMS:      time.Now().Unix() * 1000,
+				ProductID:             service.ProductMonthlyAndroid,
+				EntitlementIDs:        []string{service.EntitlementPremium},
+				Store:                 "PLAY_STORE",
+				Environment:           "SANDBOX",
+				ExpirationReason:      &expirationReason,
+				PurchasedAtMS:         time.Now().Add(-30*24*time.Hour).Unix() * 1000,
+				ExpirationAtMS:        time.Now().Add(-1*time.Hour).Unix() * 1000,
+				PeriodType:            "NORMAL",
+				Price:                 6.99,
+				Currency:              "USD",
+				TransactionID:         "test_transaction_vol_" + time.Now().Format("20060102150405"),
+				OriginalTransactionID: "test_original_transaction_vol_" + time.Now().Format("20060102150405"),
+				CountryCode:           "US",
+			},
+		}
+
+		// Process the expiration event directly through the service
+		rcService := service.NewRevenueCatService(ts.DB, nil)
+		err = rcService.ProcessRevenueCatEvent(ctx, webhook.Event, userID)
+		require.NoError(t, err)
+
+		// Verify subscription status changed to canceled
+		updatedSub, err := subRepo.GetActiveSubscriptionForUser(ctx, userID)
+		assert.NoError(t, err)
+		assert.Nil(t, updatedSub, "Should not have active subscription after voluntary cancellation")
+
+		// Get all subscriptions for user to verify the canceled one
+		var canceledSub model.Subscription
+		err = ts.DB.QueryRow(ctx,
+			"SELECT id, status, canceled_at FROM subscriptions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1",
+			userID).Scan(&canceledSub.ID, &canceledSub.Status, &canceledSub.CanceledAt)
+		require.NoError(t, err)
+		assert.Equal(t, model.StatusCanceled, canceledSub.Status)
+		assert.NotNil(t, canceledSub.CanceledAt, "CanceledAt should be set for voluntary cancellation")
+
+		// Verify subscription event was recorded
+		var eventCount int
+		err = ts.DB.QueryRow(ctx,
+			"SELECT COUNT(*) FROM subscription_events WHERE subscription_id = $1 AND event_type = 'EXPIRATION'",
+			canceledSub.ID).Scan(&eventCount)
+		require.NoError(t, err)
+		assert.Equal(t, 1, eventCount)
 	})
 }

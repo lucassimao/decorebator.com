@@ -119,6 +119,7 @@ make debug-workers     # Debug workers with delve
 # Linting and code quality
 make lint              # Run golangci-lint on the codebase
 make lint-fix          # Run golangci-lint with automatic fixes
+make lint-changed      # Run golangci-lint on changed files only
 make lint-watch        # Run linting in watch mode
 
 # Other commands
@@ -126,6 +127,10 @@ make build             # Build API binary
 make clean             # Remove build artifacts
 make help              # Show all available commands
 make migrate-drop      # Drop all database tables (destructive)
+
+# Security scanning
+make security-scan     # Run govulncheck + gosec
+make security-scan-full # Comprehensive security scan with reports
 ```
 
 ### Mobile App (in `/mobile` directory)
@@ -218,6 +223,11 @@ River-based PostgreSQL queue system with dedicated worker types:
 - `stripe_webhook_worker` - Processes Stripe webhook events asynchronously (max 5 workers)
 
 **Note**: River tables were removed in migration 000052. The system now uses PostgreSQL-native queuing for better transaction safety and simplified architecture.
+
+**Recent Improvements**:
+- **Analytics Caching Layer**: Redis-based caching with intelligent invalidation for sub-second response times
+- **Batch Analytics Endpoint**: New `/analytics/progress-summary` reduces API calls from N×8 to 1 for mobile dashboard
+- **Asynchronous Webhook Processing**: Both Stripe and RevenueCat webhooks processed via River workers
 
 Workers run as a separate process and include retry logic, rate limiting, and error handling.
 

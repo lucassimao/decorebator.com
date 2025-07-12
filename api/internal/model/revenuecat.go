@@ -28,6 +28,7 @@ type RevenueCatEvent struct {
 	PriceInPurchasedCurrency float64  `json:"price_in_purchased_currency"`
 	TakehomePercentage       float64  `json:"takehome_percentage"`
 	Environment              string   `json:"environment"`
+	ExpirationReason         *string  `json:"expiration_reason,omitempty"`
 	TransferredFrom          []string `json:"transferred_from"`
 	TransferredTo            []string `json:"transferred_to"`
 	Store                    string   `json:"store"`

@@ -109,7 +109,7 @@ func TestRestorePurchases(t *testing.T) {
 			signupInput.Email).Scan(&userID)
 		require.NoError(t, err)
 
-		appUserID := fmt.Sprintf("rc_user_%d", userID)
+		appUserID := fmt.Sprintf("%d", userID)
 
 		// Make the restore request
 		body := map[string]interface{}{
@@ -129,14 +129,7 @@ func TestRestorePurchases(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-		// Verify user was linked
-		var linkedCustomerID *string
-		err = ts.DB.QueryRow(ctx,
-			"SELECT revenuecat_customer_id FROM users WHERE id = $1",
-			userID).Scan(&linkedCustomerID)
-		require.NoError(t, err)
-		assert.NotNil(t, linkedCustomerID)
-		assert.Equal(t, appUserID, *linkedCustomerID)
+		// Note: No longer storing revenuecat_customer_id - app_user_id is directly parsed as user ID
 
 		// Verify subscription was created
 		subRepo := repository.NewSubscriptionRepository(ts.DB)
@@ -196,7 +189,7 @@ func TestRestorePurchases(t *testing.T) {
 			signupInput.Email).Scan(&userID)
 		require.NoError(t, err)
 
-		appUserID := fmt.Sprintf("rc_user_%d", userID)
+		appUserID := fmt.Sprintf("%d", userID)
 		// Make the restore request
 		body := map[string]interface{}{
 			"appUserId": appUserID,
@@ -215,14 +208,7 @@ func TestRestorePurchases(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-		// Verify user was linked
-		var linkedCustomerID *string
-		err = ts.DB.QueryRow(ctx,
-			"SELECT revenuecat_customer_id FROM users WHERE id = $1",
-			userID).Scan(&linkedCustomerID)
-		require.NoError(t, err)
-		assert.NotNil(t, linkedCustomerID)
-		assert.Equal(t, appUserID, *linkedCustomerID)
+		// Note: No longer storing revenuecat_customer_id - app_user_id is directly parsed as user ID
 
 		// Verify no subscription was created
 		subRepo := repository.NewSubscriptionRepository(ts.DB)
@@ -273,7 +259,7 @@ func TestRestorePurchases(t *testing.T) {
 			signupInput.Email).Scan(&userID)
 		require.NoError(t, err)
 
-		appUserID := fmt.Sprintf("rc_user_%d", userID)
+		appUserID := fmt.Sprintf("%d", userID)
 
 		// Make the restore request
 		body := map[string]interface{}{
@@ -293,14 +279,7 @@ func TestRestorePurchases(t *testing.T) {
 
 		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 
-		// Verify user was still linked (happens before API call)
-		var linkedCustomerID *string
-		err = ts.DB.QueryRow(ctx,
-			"SELECT revenuecat_customer_id FROM users WHERE id = $1",
-			userID).Scan(&linkedCustomerID)
-		require.NoError(t, err)
-		assert.NotNil(t, linkedCustomerID)
-		assert.Equal(t, appUserID, *linkedCustomerID)
+		// Note: No longer storing revenuecat_customer_id - app_user_id is directly parsed as user ID
 
 		// Verify no subscription was created
 		subRepo := repository.NewSubscriptionRepository(ts.DB)

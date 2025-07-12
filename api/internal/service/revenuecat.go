@@ -265,25 +265,8 @@ func (s *revenueCatService) StoreRevenueCatEvent(ctx context.Context, event *mod
 	return err
 }
 
-// LinkUserToRevenueCat links a user to their RevenueCat customer ID
-func (s *revenueCatService) LinkUserToRevenueCat(ctx context.Context, userID int64, appUserID string) error {
-	query := `
-		UPDATE users 
-		SET revenuecat_customer_id = $1 
-		WHERE id = $2
-	`
-
-	_, err := s.db.Exec(ctx, query, appUserID, userID)
-	return err
-}
-
 // RestorePurchases checks RevenueCat for any active subscriptions and updates local state
 func (s *revenueCatService) RestorePurchases(ctx context.Context, userID int64, appUserID string, platform model.PlatformType) error {
-	// Link user to RevenueCat customer
-	if err := s.LinkUserToRevenueCat(ctx, userID, appUserID); err != nil {
-		return fmt.Errorf("failed to link user: %w", err)
-	}
-
 	// Fetch customer info
 	customerInfo, err := s.getCustomerInfo(ctx, appUserID)
 	if err != nil {
@@ -303,8 +286,10 @@ func (s *revenueCatService) ProcessRevenueCatEvent(ctx context.Context, event mo
 	switch event.Type {
 	case EventInitialPurchase, EventRenewal, EventUncancellation:
 		return s.processSubscriptionEvent(ctx, event, userID)
-	case EventCancellation, EventExpiration:
+	case EventCancellation:
 		return s.processCancellationEvent(ctx, event, userID)
+	case EventExpiration:
+		return s.processExpirationEvent(ctx, event, userID)
 	case EventBillingIssue:
 		return s.processBillingIssueEvent(ctx, event, userID)
 	default:
@@ -368,6 +353,61 @@ func (s *revenueCatService) processCancellationEvent(ctx context.Context, event 
 	return nil
 }
 
+// processExpirationEvent handles subscription expiration events
+func (s *revenueCatService) processExpirationEvent(ctx context.Context, event model.RevenueCatEvent, userID int64) error {
+	sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to get subscription: %w", err)
+	}
+
+	if sub != nil && sub.Provider == model.ProviderRevenueCat {
+		// Determine status based on expiration reason
+		var newStatus model.SubscriptionStatus
+		switch {
+		case event.ExpirationReason != nil && *event.ExpirationReason == "BILLING_ERROR":
+			// Billing error means payment failed - subscription goes into grace period
+			newStatus = model.StatusPastDue
+		case event.ExpirationReason != nil && *event.ExpirationReason == "VOLUNTARY":
+			// User voluntarily canceled
+			newStatus = model.StatusCanceled
+		default:
+			// Default to canceled for unknown expiration reasons
+			newStatus = model.StatusCanceled
+			common.Logger.Info("Unknown expiration reason",
+				"reason", event.ExpirationReason,
+				"event_id", event.ID)
+		}
+
+		sub.Status = newStatus
+		now := time.Now()
+
+		// Set appropriate timestamps based on expiration reason
+		if newStatus == model.StatusCanceled {
+			sub.CanceledAt = &now
+		}
+
+		// Create subscription event
+		eventData, err := json.Marshal(event)
+		if err != nil {
+			return fmt.Errorf("failed to marshal event data: %w", err)
+		}
+
+		subscriptionEvent := &model.SubscriptionEvent{
+			SubscriptionID:  sub.ID,
+			ExternalEventID: event.ID,
+			Provider:        model.ProviderRevenueCat,
+			EventType:       event.Type,
+			EventData:       string(eventData),
+		}
+
+		if err := s.subRepo.UpdateSubscription(ctx, sub, *subscriptionEvent); err != nil {
+			return fmt.Errorf("failed to update subscription: %w", err)
+		}
+	}
+
+	return nil
+}
+
 // processBillingIssueEvent handles billing issue events
 func (s *revenueCatService) processBillingIssueEvent(ctx context.Context, event model.RevenueCatEvent, userID int64) error {
 	sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
@@ -398,16 +438,4 @@ func (s *revenueCatService) processBillingIssueEvent(ctx context.Context, event 
 	}
 
 	return nil
-}
-
-// GetUserByRevenueCatCustomerID finds a user by their RevenueCat customer ID
-func (s *revenueCatService) GetUserByRevenueCatCustomerID(ctx context.Context, appUserID string) (*model.User, error) {
-	users, err := s.userRepo.Find(ctx, repository.FindUserArgs{RevenueCatCustomerID: &appUserID})
-	if err != nil {
-		return nil, err
-	}
-	if len(users) == 0 {
-		return nil, nil
-	}
-	return &users[0], nil
 }
