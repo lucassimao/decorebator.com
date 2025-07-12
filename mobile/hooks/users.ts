@@ -1,10 +1,13 @@
 import { getProfile } from "@/api/users";
 import offlineManager from "@/utils/offlineManager";
 import * as Sentry from "@sentry/react-native";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 
 export const useUserInfo = () => {
+  const queryClient = useQueryClient();
+  const previousPlanRef = useRef<string | null>(null);
+
   const {
     data: user,
     isLoading,
@@ -32,6 +35,47 @@ export const useUserInfo = () => {
 
   useEffect(() => {
     if (user) {
+      const currentPlan = user.subscriptionPlan;
+      const previousPlan = previousPlanRef.current;
+
+      // Check if subscription plan changed
+      if (previousPlan !== null && previousPlan !== currentPlan) {
+        const wasPremium =
+          previousPlan === "monthly" || previousPlan === "annual";
+        const isNowPremium =
+          currentPlan === "monthly" || currentPlan === "annual";
+
+        // If premium status changed, invalidate analytics caches
+        if (wasPremium !== isNowPremium) {
+          console.log(
+            `Subscription plan changed from ${previousPlan} to ${currentPlan}, invalidating caches`,
+          );
+
+          // Invalidate all analytics queries (they all include isPremium in their key)
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey;
+              return (
+                Array.isArray(key) && key.length >= 3 && key[0] === "analytics"
+                // All analytics queries will be invalidated since they depend on premium status
+              );
+            },
+          });
+
+          // Also invalidate wordlists cache as free users have limits
+          queryClient.invalidateQueries({
+            queryKey: ["wordlists"],
+          });
+
+          console.log(
+            "Invalidated analytics and wordlists caches for premium status change",
+          );
+        }
+      }
+
+      // Update the previous plan reference
+      previousPlanRef.current = currentPlan;
+
       offlineManager.setUserPremiumStatus(isPremium);
       // Set Sentry user context
       Sentry.setUser({
@@ -39,8 +83,11 @@ export const useUserInfo = () => {
         email: user.email,
         username: `${user.firstName} ${user.lastName}`,
       });
+    } else {
+      // Handle logout: reset previous plan tracking
+      previousPlanRef.current = null;
     }
-  }, [user, isPremium]);
+  }, [user, queryClient]);
 
   return {
     userInfo: user,

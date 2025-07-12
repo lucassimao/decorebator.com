@@ -9,6 +9,7 @@ require (
 	github.com/getsentry/sentry-go v0.33.0
 	github.com/getsentry/sentry-go/gin v0.33.0
 	github.com/gin-gonic/gin v1.9.1
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx v3.6.2+incompatible

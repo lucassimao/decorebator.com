@@ -219,3 +219,13 @@ func (repository *UserRepository) UpdateUserProfile(args UpdateUserProfileArgs) 
 
 	return &user, nil
 }
+
+// UpdateSubscriptionPlan updates a user's subscription plan
+func (repository *UserRepository) UpdateSubscriptionPlan(ctx context.Context, userID int64, plan model.SubscriptionPlan) error {
+	query := `UPDATE users SET subscription_plan = $1, updated_at = NOW() WHERE id = $2`
+	_, err := repository.Db.Exec(ctx, query, plan, userID)
+	if err != nil {
+		return fmt.Errorf("failed to update subscription plan: %w", err)
+	}
+	return nil
+}

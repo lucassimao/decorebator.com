@@ -142,19 +142,67 @@ func LoginUser(email, password string) (string, error) {
 
 }
 
-func GetProfile(userID int64) (*User, error) {
+func GetProfile(userID int64) (*User, bool, error) {
 	users, err := userRepository.Find(context.Background(), repository.FindUserArgs{
 		ID: &userID,
 	})
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	if len(users) == 0 {
-		return nil, errors.New("user not found")
+		return nil, false, errors.New("user not found")
 	}
 
-	return &users[0], nil
+	user := &users[0]
+	planChanged := false
+
+	// Check if user needs plan downgrade due to expired grace period
+	// (checkAndDowngradeExpiredSubscription now handles the premium check internally)
+	downgraded, err := checkAndDowngradeExpiredSubscription(userID, user)
+	if err != nil {
+		// Log error but don't fail the request - graceful degradation
+		common.Logger.Error("failed to check subscription grace period", "userId", userID, "error", err)
+	} else {
+		planChanged = downgraded
+	}
+
+	return user, planChanged, nil
+}
+
+func checkAndDowngradeExpiredSubscription(userID int64, user *User) (bool, error) {
+	// Only check for downgrade if user currently has a premium plan
+	if user.SubscriptionPlan == model.PlanFree {
+		return false, nil // Already free, no downgrade needed
+	}
+
+	// Get subscription repository
+	subRepo := repository.NewSubscriptionRepository(userRepository.Db)
+
+	// Check if user has active subscription (includes grace period)
+	activeSub, err := subRepo.GetActiveSubscriptionForUser(context.Background(), userID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get subscription: %w", err)
+	}
+
+	// If no active subscription found, user is beyond grace period
+	if activeSub == nil {
+		// Downgrade plan to free
+		if err := userRepository.UpdateSubscriptionPlan(context.Background(), userID, model.PlanFree); err != nil {
+			return false, fmt.Errorf("failed to downgrade subscription plan: %w", err)
+		}
+
+		// Update the user object to reflect the change
+		originalPlan := user.SubscriptionPlan
+		user.SubscriptionPlan = model.PlanFree
+
+		common.Logger.Info("downgraded user subscription plan due to expired grace period",
+			"userId", userID, "previousPlan", originalPlan, "newPlan", model.PlanFree)
+
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func Delete(userID int64) error {

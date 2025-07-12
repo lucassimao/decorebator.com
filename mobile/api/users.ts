@@ -202,6 +202,12 @@ export async function getProfile(): Promise<UserProfile> {
     throw new Error(message);
   }
 
+  // Check for JWT refresh (same pattern as login/signup)
+  const newAuthorization = response.headers.get("authorization");
+  if (newAuthorization) {
+    saveAuthorization(newAuthorization);
+  }
+
   return body;
 }
 

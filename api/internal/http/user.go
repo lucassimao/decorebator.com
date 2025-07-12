@@ -348,7 +348,7 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 		return
 	}
 
-	user, err := service.GetProfile(userID)
+	user, planChanged, err := service.GetProfile(userID)
 	if err != nil {
 		// If user not found (e.g., deleted), return 401 instead of 500
 		if err.Error() == "user not found" {
@@ -357,6 +357,17 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error."})
 		}
 		return
+	}
+
+	// If plan was downgraded, generate new JWT with updated plan
+	if planChanged {
+		newJWT, jwtErr := service.GenerateJWT(*user)
+		if jwtErr == nil {
+			c.Header("authorization", newJWT)
+		} else {
+			// Log error but don't fail the request
+			common.Logger.Error("failed to generate new JWT after plan downgrade", "userId", userID, "error", jwtErr)
+		}
 	}
 
 	// hide unnecessary data
