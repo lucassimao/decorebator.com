@@ -7,6 +7,7 @@ import (
 	mathrand "math/rand" // nosec G404 - math/rand is acceptable for test fixtures, not cryptographic use
 	"time"
 
+	"decorebator.com/internal/common"
 	httphandlers "decorebator.com/internal/http"
 	"decorebator.com/internal/model"
 	"github.com/brianvoe/gofakeit/v7"
@@ -42,7 +43,7 @@ func GenerateTestUser() *model.User {
 	fake := gofakeit.New(seed)
 
 	// Generate a realistic bcrypt hash for testing
-	passwordHash, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+	passwordHash, _ := bcrypt.GenerateFromPassword([]byte("password123"), common.GetBcryptCost())
 
 	// Add UUID to email to ensure uniqueness
 	uuid := uuid.New().String()[:8] // Use first 8 chars of UUID
@@ -163,7 +164,7 @@ func GenerateJWTToken(userID int64) string {
 
 // CreateTestUserSet creates a set of test users with different subscription levels
 func CreateTestUserSet() []*model.User {
-	passwordHash, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+	passwordHash, _ := bcrypt.GenerateFromPassword([]byte("password123"), common.GetBcryptCost())
 
 	return []*model.User{
 		{

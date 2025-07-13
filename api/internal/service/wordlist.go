@@ -27,14 +27,6 @@ func NewWordlistService(db *pgxpool.Pool, moderationService ModerationService) *
 }
 
 // Legacy global instance for backward compatibility during migration
-var defaultWordlistService *WordlistService
-
-func init() {
-	// Initialize default service for legacy function wrappers
-	db := common.GetDBConnection()
-	moderationService := NewOpenAIModerationService()
-	defaultWordlistService = NewWordlistService(db, moderationService)
-}
 
 // GetUserWordlistsWithWordStats returns wordlists with word statistics
 func (wls *WordlistService) GetUserWordlistsWithWordStats(userID int64) ([]*Wordlist, error) {
@@ -153,30 +145,13 @@ func (wls *WordlistService) UpdateWordlist(wordlist *Wordlist) error {
 	return nil
 }
 
-// Legacy function wrappers for backward compatibility during migration
-func GetUserWordlistsWithWordStats(userID int64) ([]*Wordlist, error) {
-	return defaultWordlistService.GetUserWordlistsWithWordStats(userID)
-}
-
-func SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
-	return defaultWordlistService.SaveWordlist(newWordlist)
-}
-
-func GetWordlistByID(id, userID int64) (*Wordlist, error) {
-	return defaultWordlistService.GetWordlistByID(id, userID)
-}
-
-func DeleteWordlist(id, userID int64) (int64, error) {
-	return defaultWordlistService.DeleteWordlist(id, userID)
-}
-
-func UpdateWordlist(wordlist *Wordlist) error {
-	return defaultWordlistService.UpdateWordlist(wordlist)
-}
-
-// Deprecated: Use GetWordlistByID instead
+// Legacy function for backward compatibility - TODO: Remove when analytics are refactored
 //
 //nolint:revive // keeping for backward compatibility
 func GetWordlistById(id, userID int64) (*Wordlist, error) {
-	return GetWordlistByID(id, userID)
+	// Use dependency injection internally instead of global variable
+	db := common.GetDBConnection()
+	moderationService := NewOpenAIModerationService()
+	wordlistService := NewWordlistService(db, moderationService)
+	return wordlistService.GetWordlistByID(id, userID)
 }

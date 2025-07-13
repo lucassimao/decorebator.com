@@ -93,7 +93,6 @@ func GenerateJWT(user User) (string, error) {
 	return tokenString, nil
 }
 
-
 func (s *UserService) SaveUser(firstName, lastName, password, email string, country *string) (*User, error) {
 	// Validate required parameters
 	if firstName == "" || lastName == "" || password == "" || email == "" {
@@ -123,23 +122,35 @@ func (s *UserService) UpdatePassword(userID int64, password string) error {
 }
 
 func (s *UserService) LoginUser(ctx context.Context, email, password string) (string, error) {
+	startTime := time.Now()
 	lowerCaseEmail := strings.ToLower(email)
 
 	args := repo.FindUserArgs{
 		Email: &lowerCaseEmail,
 	}
+
+	// Measure database query time
+	dbStart := time.Now()
 	results, err := s.userRepository.Find(ctx, args)
+	dbDuration := time.Since(dbStart)
+
 	if err != nil {
 		// Check if error is due to context timeout/cancellation
 		if errors.Is(err, context.DeadlineExceeded) {
-			common.Logger.Error("login request timed out", "email", lowerCaseEmail)
+			common.Logger.Error("login request timed out",
+				"email", lowerCaseEmail,
+				"db_query_ms", dbDuration.Milliseconds())
 			return "", err
 		}
 		if errors.Is(err, context.Canceled) {
-			common.Logger.Error("login request was canceled", "email", lowerCaseEmail)
+			common.Logger.Error("login request was canceled",
+				"email", lowerCaseEmail,
+				"db_query_ms", dbDuration.Milliseconds())
 			return "", err
 		}
-		common.Logger.Error("failed to login user", "error", err)
+		common.Logger.Error("failed to login user",
+			"error", err,
+			"db_query_ms", dbDuration.Milliseconds())
 		return "", errors.New("could not process your request. Try again later")
 	}
 
@@ -149,10 +160,30 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (st
 
 	user := results[0]
 
+	// Measure bcrypt comparison time
+	bcryptStart := time.Now()
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	bcryptDuration := time.Since(bcryptStart)
+
+	totalDuration := time.Since(startTime)
+
+	// Log performance metrics for successful login attempts
 	if err == nil {
+		common.Logger.Info("login performance metrics",
+			"email", lowerCaseEmail,
+			"db_query_ms", dbDuration.Milliseconds(),
+			"bcrypt_ms", bcryptDuration.Milliseconds(),
+			"total_ms", totalDuration.Milliseconds(),
+			"status", "success")
 		return GenerateJWT(user)
 	} else {
+		// Log performance even for failed password attempts
+		common.Logger.Info("login performance metrics",
+			"email", lowerCaseEmail,
+			"db_query_ms", dbDuration.Milliseconds(),
+			"bcrypt_ms", bcryptDuration.Milliseconds(),
+			"total_ms", totalDuration.Milliseconds(),
+			"status", "failed_password")
 		return "", errors.New("invalid combination of email and/or password")
 	}
 

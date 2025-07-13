@@ -218,7 +218,7 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 	_, err = tx.Exec(ctx, `
 		INSERT INTO users (id, first_name, last_name, email, password_hash, subscription_plan)
 		VALUES (5, 'lucas', 'Simao', 'lsimaocosta+bs1@gmail.com', 
-			'$2a$10$.TeyMV.FtW8wJUKFkIGJXe3E4dmAsnxwe83HhlRBdQms2QcIj3vN6', 'monthly')
+			'$2a$04$9ISNUxY0GO31nYuzMQ.hK.cInjBGTMl.zHqfSeVlUtObNmogFo4Je', 'monthly')
 		ON CONFLICT (id) DO UPDATE SET subscription_plan = EXCLUDED.subscription_plan
 	`) // password is "test123"
 	require.NoError(t, err)

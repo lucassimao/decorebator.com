@@ -22,6 +22,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 	moderationService := service.NewOpenAIModerationService()
 	wordService := service.NewWordService(db, moderationService)
 	userService := service.NewUserService(db)
+	wordlistService := service.NewWordlistService(db, moderationService)
 
 	// Helper to create test user using service layer
 	createTestUser := func(email string, plan model.SubscriptionPlan) int64 {
@@ -46,7 +47,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 			LanguageCode:        "en",
 			PronunciationSystem: model.PronunciationSystemIPA,
 		}
-		savedWordlist, err := service.SaveWordlist(wordlist)
+		savedWordlist, err := wordlistService.SaveWordlist(wordlist)
 		require.NoError(t, err)
 		return savedWordlist.ID
 	}

@@ -122,17 +122,15 @@ func CORSMiddleware() gin.HandlerFunc {
 
 func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Create timeout context
+		// Create timeout context and replace request context
 		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
 		defer cancel()
-
-		// Replace request context with timeout context
 		c.Request = c.Request.WithContext(ctx)
 
 		// Process request
 		c.Next()
 
-		// Check if request timed out after processing
+		// Check if request timed out during processing
 		if ctx.Err() == context.DeadlineExceeded {
 			// Only respond if no response was already written
 			if !c.Writer.Written() {

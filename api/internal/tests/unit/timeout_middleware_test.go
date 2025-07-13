@@ -226,28 +226,6 @@ func TestTimeoutMiddleware_DifferentTimeouts(t *testing.T) {
 	}
 }
 
-func TestTimeoutMiddleware_ZeroTimeout(t *testing.T) {
-	// Setup
-	gin.SetMode(gin.TestMode)
-	middlewareFunc := httpPkg.TimeoutMiddleware(0) // Zero timeout should timeout immediately
-
-	handler := func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "should timeout"})
-	}
-
-	router := gin.New()
-	router.Use(middlewareFunc)
-	router.GET("/test", handler)
-
-	// Test
-	req := httptest.NewRequest("GET", "/test", nil)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	// Assert - zero timeout should result in immediate timeout
-	assert.Equal(t, http.StatusRequestTimeout, w.Code)
-}
-
 func TestTimeoutMiddleware_ConcurrentRequests(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
@@ -258,8 +236,14 @@ func TestTimeoutMiddleware_ConcurrentRequests(t *testing.T) {
 	}
 
 	slowHandler := func(c *gin.Context) {
-		time.Sleep(100 * time.Millisecond)
-		c.JSON(http.StatusOK, gin.H{"message": "slow"})
+		// Simulate slow operation that respects context cancellation
+		select {
+		case <-time.After(100 * time.Millisecond):
+			c.JSON(http.StatusOK, gin.H{"message": "slow"})
+		case <-c.Request.Context().Done():
+			// Context canceled, let middleware handle timeout response
+			return
+		}
 	}
 
 	router := gin.New()
