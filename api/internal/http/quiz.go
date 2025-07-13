@@ -6,21 +6,24 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
-	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
-type QuizRoutes struct{}
+type QuizRoutes struct {
+	strategy common.SpacedRepetitionStrategy
+}
 
-// Using the LeitnerSystemAlgorithm as the default strategy. Should be replaced by a factory method based on user preferences.
-var strategy common.SpacedRepetitionStrategy = service.DefaultLeitnerSystemStrategy()
+// NewQuizRoutes creates a new QuizRoutes instance with dependency injection
+func NewQuizRoutes(strategy common.SpacedRepetitionStrategy) *QuizRoutes {
+	return &QuizRoutes{strategy: strategy}
+}
 
 func (h *QuizRoutes) Create(c *gin.Context) {
 
 	wordlistID, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 
-	challenge, err := strategy.CreateQuiz(wordlistID, userId)
+	challenge, err := h.strategy.CreateQuiz(wordlistID, userId)
 
 	if err != nil {
 		common.Logger.Error("failed to create quiz", "error", err, "wordlistID", wordlistID)
@@ -61,7 +64,7 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 		}
 	}
 
-	var err = strategy.SaveQuizResult(common.QuizResult{
+	var err = h.strategy.SaveQuizResult(common.QuizResult{
 		WordlistID:              input.WordlistID,
 		WordID:                  input.WordID,
 		DefinitionID:            input.DefinitionID,

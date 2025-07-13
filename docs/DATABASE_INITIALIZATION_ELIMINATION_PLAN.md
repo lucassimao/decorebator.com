@@ -46,13 +46,22 @@ This document outlines a comprehensive plan to eliminate all database initializa
 ## Phase 1: Critical Fixes 🔴
 **Priority**: CRITICAL - Must be completed first to enable unit testing
 
-### Step 1.1: Remove Global Strategy Variable
-- [ ] **File**: `internal/http/quiz.go`
-- [ ] **Action**: Remove `var strategy = service.DefaultLeitnerSystemStrategy()` (line 16)
-- [ ] **Replace with**: Dependency injection in `QuizRoutes` struct
-- [ ] **Create**: `NewQuizRoutes(strategy common.SpacedRepetitionStrategy)` constructor
-- [ ] **Update**: All references to use injected strategy
-- [ ] **Test**: Verify HTTP package imports without database connection
+### Step 1.1: Remove Global Strategy Variable ✅ COMPLETED
+- [x] **File**: `internal/http/quiz.go`
+- [x] **Action**: Remove `var strategy = service.DefaultLeitnerSystemStrategy()` (line 16)
+- [x] **Replace with**: Dependency injection in `QuizRoutes` struct
+- [x] **Create**: `NewQuizRoutes(strategy common.SpacedRepetitionStrategy)` constructor
+- [x] **Update**: All references to use injected strategy
+- [x] **Test**: Verify HTTP package imports without database connection
+
+**Implementation Details:**
+- Removed global variable triggering database connection at import time
+- Added `strategy` field to `QuizRoutes` struct
+- Created `NewQuizRoutes(strategy)` constructor function
+- Updated `h.strategy.CreateQuiz()` and `h.strategy.SaveQuizResult()` method calls
+- Modified `internal/http/setup.go` to use constructor injection
+- Fixed golangci-lint formatting issues
+- Updated Makefile `test-unit` target to run `./internal/tests/unit/...`
 
 ### Step 1.2: Eliminate Service init() Functions
 - [ ] **File**: `internal/service/wordlist.go`
@@ -207,14 +216,15 @@ curl http://localhost:8080/health  # if health endpoint exists
 ## Progress Tracking
 
 ### Overall Progress
-- [ ] **Phase 1**: Critical Fixes (0/3 steps completed)
+- [x] **Phase 1**: Critical Fixes (1/3 steps completed) ✅ Step 1.1 DONE
 - [ ] **Phase 2**: Service Layer DI (0/4 steps completed) 
 - [ ] **Phase 3**: Remove Remaining Calls (0/2 steps completed)
 - [ ] **Phase 4**: Safe Initialization (0/3 steps completed)
 
 ### Current Status
-**Status**: 🔴 Planning Phase
-**Next Action**: Begin Phase 1, Step 1.1 (Remove global strategy variable)
+**Status**: 🟡 Phase 1 In Progress
+**Completed**: Step 1.1 - Global strategy variable eliminated ✅
+**Next Action**: Begin Phase 1, Step 1.2 (Remove service init() functions)
 **Estimated Time**: 
 - Phase 1: 2-4 hours
 - Phase 2: 4-8 hours  
@@ -251,6 +261,6 @@ curl http://localhost:8080/health  # if health endpoint exists
 
 ---
 
-**Last Updated**: 2025-07-13
+**Last Updated**: 2025-07-13 (Step 1.1 Completed)
 **Document Owner**: Development Team
-**Status**: 🔴 Planning Phase
+**Status**: 🟡 Phase 1 In Progress - Step 1.1 ✅ COMPLETED

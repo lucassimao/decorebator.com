@@ -60,7 +60,7 @@ test: ## run containerized integration tests
 
 test-unit: ## Run unit tests
 	@echo "Running unit tests..."
-	go test -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+	go test -v -race -coverprofile=unit.out -covermode=atomic ./internal/tests/unit/...
 	go tool cover -func=unit.out
 
 test-integration: ## Run integration tests locally with proper cleanup

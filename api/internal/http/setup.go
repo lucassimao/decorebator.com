@@ -124,7 +124,11 @@ func SetupRoutes(config *Config) *gin.Engine {
 	var WorkerRoutes = NewWorkerRoutes(config.DefinitionService)
 	var WordlistRoutes = NewWordlistsRoutes(config.WordlistService, config.WordService)
 	var UserRoutes = NewUserRoutes(userService)
-	var quizRoutes = QuizRoutes{}
+
+	// Create Leitner strategy with proper dependency injection
+	strategy := service.NewLeitnerSystemStrategy(config.WordService, config.DefinitionService)
+	var quizRoutes = NewQuizRoutes(strategy)
+
 	var ErrorReportsRoutes = ErrorReportRoutes{}
 	var demoRoutes = DemoRoutes{}
 
