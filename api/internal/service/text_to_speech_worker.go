@@ -23,12 +23,14 @@ func (TextToSpeechArgs) Kind() string { return "TextToSpeech" }
 
 type TextToSpeechWorker struct {
 	river.WorkerDefaults[TextToSpeechArgs]
-	wordService *WordService
+	wordService       *WordService
+	definitionService *DefinitionService
 }
 
-func NewTextToSpeechWorker(wordService *WordService) *TextToSpeechWorker {
+func NewTextToSpeechWorker(wordService *WordService, definitionService *DefinitionService) *TextToSpeechWorker {
 	return &TextToSpeechWorker{
-		wordService: wordService,
+		wordService:       wordService,
+		definitionService: definitionService,
 	}
 }
 
@@ -102,7 +104,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 
 	// if this job was triggered by an error report, then mark the issue as solved
 	if job.Args.ErrorReport != nil {
-		strategy := NewLeitnerSystemStrategy(w.wordService)
+		strategy := NewLeitnerSystemStrategy(w.wordService, w.definitionService)
 		return strategy.MarkErrorResolved(*job.Args.ErrorReport)
 	}
 

@@ -276,6 +276,9 @@ func setupBoxDistributionTestData(t *testing.T, server *setup.TestServer, token 
 func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token string) *BoxDistributionTestData {
 	ctx := context.Background()
 
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
+
 	userID := getUserID(ctx, t, server.DB)
 
 	// Create wordlist via API with unique name
@@ -319,7 +322,7 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 			PartOfSpeechNormalized: "noun",
 		}
 
-		definitions, saveErr := service.SaveDefinition(wordID1, []*model.Definition{definition}, &tx)
+		definitions, saveErr := definitionService.SaveDefinition(wordID1, []*model.Definition{definition}, &tx)
 		require.NoError(t, saveErr)
 		require.Len(t, definitions, 1)
 
@@ -370,7 +373,7 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 			PartOfSpeechNormalized: "noun",
 		}
 
-		definitions, saveErr := service.SaveDefinition(wordID2, []*model.Definition{definition}, &tx)
+		definitions, saveErr := definitionService.SaveDefinition(wordID2, []*model.Definition{definition}, &tx)
 		require.NoError(t, saveErr)
 		require.Len(t, definitions, 1)
 

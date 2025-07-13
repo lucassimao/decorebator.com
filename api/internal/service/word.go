@@ -20,6 +20,7 @@ type Word = model.Word
 type WordService struct {
 	repository        *repo.WordRepository
 	moderationService ModerationService
+	definitionService *DefinitionService
 }
 
 // NewWordService creates a new word service with dependencies
@@ -27,6 +28,7 @@ func NewWordService(db *pgxpool.Pool, moderationService ModerationService) *Word
 	return &WordService{
 		repository:        &repo.WordRepository{Db: db},
 		moderationService: moderationService,
+		definitionService: NewDefinitionService(db),
 	}
 }
 
@@ -136,7 +138,7 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 	}
 
 	// check if there are definitions for this word already
-	definitions, _ := findDefinitionsByName(word.Name)
+	definitions, _ := ws.definitionService.findDefinitionsByName(word.Name)
 
 	if len(definitions) > 0 {
 		definitionIds := []int64{}
@@ -148,7 +150,7 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 			common.Logger.Error("failed to reuse definitions", "wordId", word.ID, "error", reuseErr)
 		}
 
-		quizStrategy := NewLeitnerSystemStrategy(ws)
+		quizStrategy := NewLeitnerSystemStrategy(ws, ws.definitionService)
 		if includeErr := quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
 			common.Logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)
 		}

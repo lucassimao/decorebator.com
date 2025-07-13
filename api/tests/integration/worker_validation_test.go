@@ -19,11 +19,13 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 	ctx := context.Background()
 
 	// Create services for testing
-	wordService := service.NewWordService(db, service.NewOpenAIModerationService())
+	moderationService := service.NewOpenAIModerationService()
+	wordService := service.NewWordService(db, moderationService)
+	userService := service.NewUserService(db)
 
 	// Helper to create test user using service layer
 	createTestUser := func(email string, plan model.SubscriptionPlan) int64 {
-		user, err := service.SaveUser("Test", "User", "password123", email, nil)
+		user, err := userService.SaveUser("Test", "User", "password123", email, nil)
 		require.NoError(t, err)
 
 		// Update subscription plan if not free
@@ -64,7 +66,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 	// Cleanup function using service layer
 	cleanup := func(userID int64) {
 		// Use service layer for cleanup - this will cascade delete wordlists and words
-		service.Delete(userID)
+		userService.Delete(userID)
 	}
 
 	t.Run("Premium users have no restrictions", func(t *testing.T) {

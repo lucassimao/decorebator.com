@@ -6,18 +6,23 @@ import (
 
 	"decorebator.com/internal/common"
 	rep "decorebator.com/internal/repository"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var definitionImageRepository *rep.DefinitionImageRepository
-
-func init() {
-	db := common.GetDBConnection()
-	definitionImageRepository = rep.NewDefinitionImageRepository(db)
+// DefinitionImageService handles definition image operations with dependency injection
+type DefinitionImageService struct {
+	definitionImageRepository *rep.DefinitionImageRepository
 }
 
-func SaveDefinitionImage(dto rep.CreateDefinitionImageDTO) (*rep.DefinitionImage, error) {
+// NewDefinitionImageService creates a new DefinitionImageService with injected dependencies
+func NewDefinitionImageService(db *pgxpool.Pool) *DefinitionImageService {
+	return &DefinitionImageService{
+		definitionImageRepository: rep.NewDefinitionImageRepository(db),
+	}
+}
 
-	definitionImage, err := definitionImageRepository.Save(dto)
+func (s *DefinitionImageService) SaveDefinitionImage(dto rep.CreateDefinitionImageDTO) (*rep.DefinitionImage, error) {
+	definitionImage, err := s.definitionImageRepository.Save(dto)
 	if err != nil {
 		msg := "failed to save definition image"
 		common.Logger.Error(msg, "error", err, "stacktrace", string(debug.Stack()))

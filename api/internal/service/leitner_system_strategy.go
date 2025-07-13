@@ -42,12 +42,14 @@ func cryptoRandInt(limit int) int {
 // - Incorrect answers reset words to box 1 (immediate review)
 // - Each box has different quiz types to progressively increase difficulty
 type LeitnerSystemStrategy struct {
-	wordService *WordService
+	wordService       *WordService
+	definitionService *DefinitionService
 }
 
-func NewLeitnerSystemStrategy(wordService *WordService) *LeitnerSystemStrategy {
+func NewLeitnerSystemStrategy(wordService *WordService, definitionService *DefinitionService) *LeitnerSystemStrategy {
 	return &LeitnerSystemStrategy{
-		wordService: wordService,
+		wordService:       wordService,
+		definitionService: definitionService,
 	}
 }
 
@@ -55,7 +57,11 @@ func NewLeitnerSystemStrategy(wordService *WordService) *LeitnerSystemStrategy {
 func DefaultLeitnerSystemStrategy() LeitnerSystemStrategy {
 	db := common.GetDBConnection()
 	wordService := NewWordService(db, NewOpenAIModerationService())
-	return LeitnerSystemStrategy{wordService: wordService}
+	definitionService := NewDefinitionService(db)
+	return LeitnerSystemStrategy{
+		wordService:       wordService,
+		definitionService: definitionService,
+	}
 }
 
 type Quiz = model.Quiz
@@ -455,7 +461,7 @@ func (s LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, erro
 	}
 
 	// Create quiz based on selected type
-	return createQuizForType(quizType, nextDefinition, word)
+	return createQuizForType(quizType, nextDefinition, word, s.definitionService)
 }
 
 func selectQuizType(def *NextDefinition, word *model.Word, userID, wordlistID int64) (model.QuizType, error) {
@@ -523,7 +529,72 @@ func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Wor
 	}
 }
 
-func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model.Word) (*Quiz, error) {
+// createCompleteSentenceQuiz handles the complex logic for CompleteSentence quiz type
+func createCompleteSentenceQuiz(def *NextDefinition, definitionService *DefinitionService) (string, string, []string, error) {
+	// For verbs and phrasal verbs, use inflection examples; for others, use regular examples
+	var availableExamples []string
+
+	if def.Definition.IsVerbType {
+		// Collect all examples from inflections
+		for _, inflection := range def.Definition.Inflections {
+			availableExamples = append(availableExamples, inflection.Examples...)
+		}
+	} else {
+		availableExamples = def.Definition.Examples
+	}
+
+	// Select example using fair distribution to avoid repetition
+	selectedExample, err := selectFairExample(def.Definition.ID, availableExamples)
+	if err != nil {
+		// Fallback to random selection if fair selection fails
+		common.Logger.Warn("fair example selection failed, using random", "definitionId", def.Definition.ID, "error", err)
+		//nolint:gosec // G404 - fallback random selection, not security-critical
+		i := mathrand.Intn(len(availableExamples))
+		selectedExample = availableExamples[i]
+	}
+
+	// Extract answer from brackets
+	quizAnswer := extractAnswerFromExample(selectedExample, def.Definition.Token)
+
+	// Get random options (database automatically excludes tokens from ignored definition IDs)
+	options, err := definitionService.GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	return selectedExample, quizAnswer, options, nil
+}
+
+// createWordFromExampleAudioQuiz handles the complex logic for WordFromExampleAudio quiz type
+// Returns (quizAnswer, options, audioURL, error) - no visual value needed for audio quizzes
+func createWordFromExampleAudioQuiz(def *NextDefinition, definitionService *DefinitionService) (string, []string, string, error) {
+	options, err := definitionService.GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+	if err != nil {
+		return "", nil, "", err
+	}
+
+	// Use the already-loaded example audio files for better performance and consistency
+	if len(def.Definition.ExampleAudioFiles) == 0 {
+		return "", nil, "", errors.New("no example audio files available for WordFromExampleAudio quiz")
+	}
+
+	// Select example audio using fair distribution to avoid repetition
+	selectedExampleAudio, err := selectFairExampleAudio(def.Definition.ID, def.Definition.ExampleAudioFiles)
+	if err != nil {
+		// Fallback to first available if fair selection fails
+		common.Logger.Warn("fair example audio selection failed, using first available",
+			"definitionId", def.Definition.ID, "error", err)
+		selectedExampleAudio = &def.Definition.ExampleAudioFiles[0]
+	}
+
+	// Extract answer from brackets in the example text
+	quizAnswer := extractAnswerFromExample(selectedExampleAudio.ExampleText, def.Definition.Token)
+	audioURL := selectedExampleAudio.AudioURL // Example audio URL
+
+	return quizAnswer, options, audioURL, nil
+}
+
+func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model.Word, definitionService *DefinitionService) (*Quiz, error) {
 	var options []string
 	var value string
 	var quizAnswer string
@@ -537,7 +608,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 	switch quizType {
 	case model.MeaningFromAudio:
 		quizAnswer = def.Definition.Meaning
-		options, err = GetRandomMeanings([]int{int(def.Definition.ID)}, 3)
+		options, err = definitionService.GetRandomMeanings([]int{int(def.Definition.ID)}, 3)
 		if err != nil {
 			return nil, err
 		}
@@ -545,7 +616,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 
 	case model.WordFromAudio:
 		quizAnswer = word.Name
-		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		options, err = definitionService.GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
 		}
@@ -557,41 +628,14 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 		// No options for write-in quiz
 
 	case model.CompleteSentence:
-		// For verbs and phrasal verbs, use inflection examples; for others, use regular examples
-		var availableExamples []string
-
-		if def.Definition.IsVerbType {
-			// Collect all examples from inflections
-			for _, inflection := range def.Definition.Inflections {
-				availableExamples = append(availableExamples, inflection.Examples...)
-			}
-		} else {
-			availableExamples = def.Definition.Examples
-		}
-
-		// Select example using fair distribution to avoid repetition
-		selectedExample, err := selectFairExample(def.Definition.ID, availableExamples)
-		if err != nil {
-			// Fallback to random selection if fair selection fails
-			common.Logger.Warn("fair example selection failed, using random", "definitionId", def.Definition.ID, "error", err)
-			//nolint:gosec // G404 - fallback random selection, not security-critical
-			i := mathrand.Intn(len(availableExamples))
-			selectedExample = availableExamples[i]
-		}
-		value = selectedExample
-
-		// Extract answer from brackets
-		quizAnswer = extractAnswerFromExample(value, def.Definition.Token)
-
-		// Get random options (database automatically excludes tokens from ignored definition IDs)
-		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		value, quizAnswer, options, err = createCompleteSentenceQuiz(def, definitionService)
 		if err != nil {
 			return nil, err
 		}
 
 	case model.WordFromImage:
 		quizAnswer = extractAnswerFromImageDescription(def.ImageDescription, def.Definition.Token)
-		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		options, err = definitionService.GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
 		}
@@ -599,7 +643,7 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 
 	case model.WordFromMeaning:
 		quizAnswer = def.Definition.Token
-		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		options, err = definitionService.GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
 		}
@@ -607,36 +651,18 @@ func createQuizForType(quizType model.QuizType, def *NextDefinition, word *model
 
 	case model.GuessMeaning:
 		quizAnswer = def.Definition.Meaning
-		options, err = GetRandomMeanings([]int{int(def.Definition.ID)}, 3)
+		options, err = definitionService.GetRandomMeanings([]int{int(def.Definition.ID)}, 3)
 		if err != nil {
 			return nil, err
 		}
 		value = def.Definition.Token
 
 	case model.WordFromExampleAudio:
-		options, err = GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		quizAnswer, options, audioURL, err = createWordFromExampleAudioQuiz(def, definitionService)
 		if err != nil {
 			return nil, err
 		}
-
-		// Use the already-loaded example audio files for better performance and consistency
-		if len(def.Definition.ExampleAudioFiles) == 0 {
-			return nil, errors.New("no example audio files available for WordFromExampleAudio quiz")
-		}
-
-		// Select example audio using fair distribution to avoid repetition
-		selectedExampleAudio, err := selectFairExampleAudio(def.Definition.ID, def.Definition.ExampleAudioFiles)
-		if err != nil {
-			// Fallback to first available if fair selection fails
-			common.Logger.Warn("fair example audio selection failed, using first available",
-				"definitionId", def.Definition.ID, "error", err)
-			selectedExampleAudio = &def.Definition.ExampleAudioFiles[0]
-		}
-
-		// Extract answer from brackets in the example text
-		quizAnswer = extractAnswerFromExample(selectedExampleAudio.ExampleText, def.Definition.Token)
-		value = ""                               // No visual value needed for audio quiz
-		audioURL = selectedExampleAudio.AudioURL // Example audio URL
+		value = "" // No visual value needed for audio quiz
 
 	default:
 		return nil, fmt.Errorf("unexpected quiz type: %v", quizType)

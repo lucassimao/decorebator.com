@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/repository"
@@ -17,12 +18,14 @@ import (
 
 // Config holds optional configuration for setting up routes
 type Config struct {
-	WordService       *service.WordService
-	WordlistService   *service.WordlistService
-	ModerationService service.ModerationService
-	Database          *pgxpool.Pool
-	riverClient       *river.Client[pgx.Tx]
-	RevenueCatService service.RevenueCatService
+	WordService            *service.WordService
+	WordlistService        *service.WordlistService
+	DefinitionService      *service.DefinitionService
+	DefinitionImageService *service.DefinitionImageService
+	ModerationService      service.ModerationService
+	Database               *pgxpool.Pool
+	riverClient            *river.Client[pgx.Tx]
+	RevenueCatService      service.RevenueCatService
 }
 
 func init() {
@@ -85,6 +88,16 @@ func applyDefaults(config *Config) (*Config, error) {
 		config.WordlistService = service.NewWordlistService(config.Database, config.ModerationService)
 	}
 
+	// Set default DefinitionService if not provided
+	if config.DefinitionService == nil {
+		config.DefinitionService = service.NewDefinitionService(config.Database)
+	}
+
+	// Set default DefinitionImageService if not provided
+	if config.DefinitionImageService == nil {
+		config.DefinitionImageService = service.NewDefinitionImageService(config.Database)
+	}
+
 	// Set default RevenueCat service if not provided
 	if config.RevenueCatService == nil {
 		apiClient := service.NewRevenueCatAPIClient()
@@ -106,10 +119,11 @@ func SetupRoutes(config *Config) *gin.Engine {
 	rcService := config.RevenueCatService
 
 	// Initialize route handlers with dependency injection
-	var WordRoutes = NewWordRoutes(config.WordService)
-	var WorkerRoutes = WorkerRoutes{}
+	userService := service.NewUserService(config.Database)
+	var WordRoutes = NewWordRoutes(config.WordService, config.DefinitionService)
+	var WorkerRoutes = NewWorkerRoutes(config.DefinitionService)
 	var WordlistRoutes = NewWordlistsRoutes(config.WordlistService, config.WordService)
-	var UserRoutes = UserRoutes{}
+	var UserRoutes = NewUserRoutes(userService)
 	var quizRoutes = QuizRoutes{}
 	var ErrorReportsRoutes = ErrorReportRoutes{}
 	var demoRoutes = DemoRoutes{}
@@ -118,6 +132,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 	// Sentry middlewares (includes sentrygin + context capture) - completely self-contained
 	router.Use(SentryMiddlewares()...)
 	router.Use(gin.Logger())
+	router.Use(TimeoutMiddleware(2 * time.Second))
 	router.Use(ErrorMiddleware())
 	router.Use(CORSMiddleware())
 

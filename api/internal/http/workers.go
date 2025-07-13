@@ -10,7 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type WorkerRoutes struct{}
+type WorkerRoutes struct {
+	definitionService *service.DefinitionService
+}
+
+func NewWorkerRoutes(definitionService *service.DefinitionService) *WorkerRoutes {
+	return &WorkerRoutes{
+		definitionService: definitionService,
+	}
+}
 
 func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 	definitionId, err := strconv.ParseInt(c.Param("definitionId"), 10, 64)
@@ -59,7 +67,7 @@ func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
 	}
 
 	// Admin context - pass nil userId to bypass validation
-	if deleteErr := service.DeleteWordDefinitions(wordId, nil); deleteErr != nil {
+	if deleteErr := h.definitionService.DeleteWordDefinitions(wordId, nil); deleteErr != nil {
 		common.Logger.Error("failed to delete word definitions", "wordId", wordId, "error", deleteErr)
 	}
 	jobID, err := service.TriggerFetchDefinitionWorker(wordId, nil, nil, nil)

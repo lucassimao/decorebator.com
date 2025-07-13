@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -9,6 +10,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -115,6 +117,35 @@ func CORSMiddleware() gin.HandlerFunc {
 		}
 
 		c.Next()
+	}
+}
+
+func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Create timeout context
+		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
+		defer cancel()
+
+		// Replace request context with timeout context
+		c.Request = c.Request.WithContext(ctx)
+
+		// Process request
+		c.Next()
+
+		// Check if request timed out after processing
+		if ctx.Err() == context.DeadlineExceeded {
+			// Only respond if no response was already written
+			if !c.Writer.Written() {
+				common.Logger.Error("request timed out",
+					"path", c.FullPath(),
+					"method", c.Request.Method,
+					"timeout", timeout)
+
+				c.AbortWithStatusJSON(http.StatusRequestTimeout, gin.H{
+					"error": "Request timeout - please try again",
+				})
+			}
+		}
 	}
 }
 

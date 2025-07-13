@@ -17,12 +17,15 @@ func TestErrorReporting_UnrelatedMeaning_BasicFlow(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
+
 	token := server.WithTestUser(t)
 
 	// Create test data using new helpers
 	wordlistID := createTestWordlist(server, token, "Test Wordlist", "en")
 	definition := setup.CreateErrorReportDefinition("water", "en", "noun")
-	wordID, definitionID := createWordWithDefinition(t, server, token, wordlistID, "water", definition)
+	wordID, definitionID := createWordWithDefinition(t, server, token, wordlistID, "water", definition, definitionService)
 
 	// Verify definition exists before error report
 	assertRecordCount(t, server.DB, "definitions", "id = $1", 1, definitionID)
@@ -58,12 +61,15 @@ func TestErrorReporting_UnrelatedImage_ImageRegeneration(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
+
 	token := server.WithTestUser(t)
 
 	// Create test data using new helpers
 	wordlistID := createTestWordlist(server, token, "Image Error Test", "de")
 	definition := setup.CreateErrorReportDefinition("Hund", "de", "Substantiv")
-	wordID, definitionID := createWordWithDefinition(t, server, token, wordlistID, "Hund", definition)
+	wordID, definitionID := createWordWithDefinition(t, server, token, wordlistID, "Hund", definition, definitionService)
 
 	// Verify definition exists before error report
 	assertRecordCount(t, server.DB, "definitions", "id = $1", 1, definitionID)
@@ -99,6 +105,9 @@ func TestErrorReporting_MissingImage_ImageRegeneration(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
+
 	token := server.WithTestUser(t)
 
 	// Create wordlist and word
@@ -133,7 +142,7 @@ func TestErrorReporting_MissingImage_ImageRegeneration(t *testing.T) {
 		Source:       "test_missing_image",
 	}
 
-	savedDefinitions, err := service.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	require.Len(t, savedDefinitions, 1)
 
@@ -314,12 +323,15 @@ func TestErrorReporting_UnrelatedExample_DefinitionRegeneration(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
+
 	token := server.WithTestUser(t)
 
 	// Create test data using new helpers
 	wordlistID := createTestWordlist(server, token, "Unrelated Example Test", "fr")
 	definition := setup.CreateErrorReportDefinition("chat", "fr", "nom")
-	wordID, definitionID := createWordWithDefinition(t, server, token, wordlistID, "chat", definition)
+	wordID, definitionID := createWordWithDefinition(t, server, token, wordlistID, "chat", definition, definitionService)
 
 	// Verify definition exists before error report
 	assertRecordCount(t, server.DB, "definitions", "id = $1", 1, definitionID)

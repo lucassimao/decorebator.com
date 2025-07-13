@@ -191,7 +191,7 @@ Users see their account as premium in these scenarios:
 #### RevenueCat (App Store/Google Play)
 - **Platform handles failures automatically**
 - `BILLING_ISSUE` webhook sets subscription to `past_due` status  
-- **Grace period managed by app stores** (typically 7-16 days)
+- **3-day grace period implemented in backend** for consistent experience
 - **User retains access during grace period**
 - App stores retry failed payments automatically
 - Users receive platform notifications about payment issues
@@ -199,9 +199,44 @@ Users see their account as premium in these scenarios:
 #### Stripe
 - Failed payment webhooks trigger **email notifications via SendGrid**
 - Customer portal allows users to update payment methods
-- Subscription remains active during retry period
+- **3-day grace period implemented in backend**
 - Multiple retry attempts over 23 days before cancellation
 - Email notifications at each stage of dunning sequence
+
+### Grace Period Implementation
+
+Both providers now benefit from a **unified 3-day grace period** implemented at the backend level:
+
+**Technical Implementation:**
+```go
+// Grace period logic in subscription.IsActive()
+func (s *Subscription) IsActive() bool {
+    if s.Status == StatusActive {
+        return true
+    }
+    
+    // Allow access during grace period for past_due subscriptions
+    if s.Status == StatusPastDue {
+        gracePeriodEnd := s.CurrentPeriodEnd.Add(GracePeriodDays * 24 * time.Hour)
+        return time.Now().Before(gracePeriodEnd)
+    }
+    
+    return false
+}
+```
+
+**Key Features:**
+- **Duration**: 3 days from subscription's `current_period_end` date
+- **Access**: Users maintain full premium features during grace period
+- **Automatic Downgrade**: Backend automatically downgrades expired grace period users to free plan
+- **JWT Refresh**: Tokens updated with new subscription status after grace period expires
+- **Mobile Cache**: Automatic cache invalidation ensures seamless UX during status changes
+
+**Benefits:**
+- **Consistent Experience**: Same grace period across all payment providers
+- **Revenue Protection**: Reduces immediate churn from temporary payment issues
+- **User Satisfaction**: Fair handling of billing problems
+- **Simple Implementation**: Mathematical calculation, no additional database fields required
 
 ### Subscription Renewal Process
 

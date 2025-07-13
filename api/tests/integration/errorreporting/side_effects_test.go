@@ -18,6 +18,9 @@ func TestErrorReporting_SideEffects_TimestampUpdates(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
+
 	token := server.WithTestUser(t)
 	ctx := context.Background()
 
@@ -56,7 +59,7 @@ func TestErrorReporting_SideEffects_TimestampUpdates(t *testing.T) {
 			Source:       "test_timestamp",
 		}
 
-		savedDefinitions, err := service.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+		savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
 		require.NoError(t, err)
 		require.Len(t, savedDefinitions, 1)
 
@@ -161,6 +164,9 @@ func TestErrorReporting_SideEffects_LeitnerSystemUpdate(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
+
 	token := server.WithTestUser(t)
 	ctx := context.Background()
 
@@ -196,7 +202,7 @@ func TestErrorReporting_SideEffects_LeitnerSystemUpdate(t *testing.T) {
 		Source:       "test_leitner",
 	}
 
-	savedDefinitions, err := service.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	require.Len(t, savedDefinitions, 1)
 
@@ -266,6 +272,9 @@ func TestErrorReporting_SideEffects_CooldownCreation(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
+
 	token := server.WithTestUser(t)
 	ctx := context.Background()
 
@@ -301,7 +310,7 @@ func TestErrorReporting_SideEffects_CooldownCreation(t *testing.T) {
 		Source:       "test_cooldown_side_effect",
 	}
 
-	savedDefinitions, err := service.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	require.Len(t, savedDefinitions, 1)
 
@@ -348,6 +357,9 @@ func TestErrorReporting_SideEffects_DatabaseConsistency(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
+
 	token := server.WithTestUser(t)
 	ctx := context.Background()
 
@@ -383,7 +395,7 @@ func TestErrorReporting_SideEffects_DatabaseConsistency(t *testing.T) {
 		Source:       "test_consistency",
 	}
 
-	savedDefinitions, err := service.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	require.Len(t, savedDefinitions, 1)
 

@@ -34,13 +34,16 @@ func (w *NoOpWorker) Work(ctx context.Context, job *river.Job[NoOpJobArgs]) erro
 func GetRiverClient() (*river.Client[pgx.Tx], error) {
 	db := common.GetDBConnection()
 
-	// Create word service for workers
-	wordService := NewWordService(db, NewOpenAIModerationService())
+	// Create services for workers
+	moderationService := NewOpenAIModerationService()
+	wordService := NewWordService(db, moderationService)
+	definitionService := NewDefinitionService(db)
+	definitionImageService := NewDefinitionImageService(db)
 
 	riverWorkers := river.NewWorkers()
-	river.AddWorker(riverWorkers, &ImageGeneratorWorker{})
-	river.AddWorker(riverWorkers, NewTextToSpeechWorker(wordService))
-	river.AddWorker(riverWorkers, NewDefinitionFetcherWorker(wordService))
+	river.AddWorker(riverWorkers, NewImageGeneratorWorker(definitionService, definitionImageService))
+	river.AddWorker(riverWorkers, NewTextToSpeechWorker(wordService, definitionService))
+	river.AddWorker(riverWorkers, NewDefinitionFetcherWorker(wordService, definitionService))
 	river.AddWorker(riverWorkers, &ExampleAudioWorker{})
 	river.AddWorker(riverWorkers, &SubscriptionReminderWorker{
 		db:       db,

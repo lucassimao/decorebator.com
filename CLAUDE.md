@@ -395,6 +395,36 @@ The platform uses an intelligent dual-provider system:
 5. Subscription status synced to database
 6. Premium features instantly available
 
+### Grace Period Implementation
+
+The platform implements a **3-day grace period** for subscription billing issues, providing users continued access while payment problems are resolved:
+
+**Grace Period Logic:**
+- **Trigger**: When subscription status changes to `past_due` due to billing errors
+- **Duration**: 3 days from the subscription's original `current_period_end` date
+- **Access**: Users maintain full premium features during grace period
+- **Implementation**: Mathematical calculation using `IsActive()` method in subscription model
+
+**Key Features:**
+```go
+// Grace period calculation in subscription.IsActive()
+if s.Status == StatusPastDue {
+    gracePeriodEnd := s.CurrentPeriodEnd.Add(GracePeriodDays * 24 * time.Hour)
+    return time.Now().Before(gracePeriodEnd)
+}
+```
+
+**Backend Behavior:**
+- `GetProfile()` checks for expired grace periods and automatically downgrades users to free plan
+- Grace period expiration triggers immediate subscription plan downgrade
+- JWT tokens are refreshed with updated subscription status
+- Mobile app receives cache invalidation for seamless UX updates
+
+**Mobile App Integration:**
+- Automatic cache invalidation when subscription status changes during grace period
+- Real-time subscription status updates via React Query
+- Proper handling of subscription downgrades with user notification
+
 ## Testing Strategy
 
 ### API Tests

@@ -25,6 +25,15 @@ func (ImageGeneratorArgs) Kind() string { return "ImageGenerator" }
 
 type ImageGeneratorWorker struct {
 	river.WorkerDefaults[ImageGeneratorArgs]
+	definitionService      *DefinitionService
+	definitionImageService *DefinitionImageService
+}
+
+func NewImageGeneratorWorker(definitionService *DefinitionService, definitionImageService *DefinitionImageService) *ImageGeneratorWorker {
+	return &ImageGeneratorWorker{
+		definitionService:      definitionService,
+		definitionImageService: definitionImageService,
+	}
 }
 
 func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGeneratorArgs]) error {
@@ -45,7 +54,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		}
 	}
 
-	definition, err := GetDefinitionById(job.Args.DefinitionId)
+	definition, err := w.definitionService.GetDefinitionByID(job.Args.DefinitionId)
 	if err != nil {
 		logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
 		return river.JobCancel(err)
@@ -100,7 +109,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	logger.Debug("image generated", "definitionId", definitionID, "url", url)
 
-	_, err = SaveDefinitionImage(model.CreateDefinitionImageDTO{
+	_, err = w.definitionImageService.SaveDefinitionImage(model.CreateDefinitionImageDTO{
 		Api:          model.OPENAI,
 		URL:          url,
 		Description:  longestExample,

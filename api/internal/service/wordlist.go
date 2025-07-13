@@ -30,8 +30,10 @@ func NewWordlistService(db *pgxpool.Pool, moderationService ModerationService) *
 var defaultWordlistService *WordlistService
 
 func init() {
+	// Initialize default service for legacy function wrappers
 	db := common.GetDBConnection()
-	defaultWordlistService = NewWordlistService(db, NewOpenAIModerationService())
+	moderationService := NewOpenAIModerationService()
+	defaultWordlistService = NewWordlistService(db, moderationService)
 }
 
 // GetUserWordlistsWithWordStats returns wordlists with word statistics

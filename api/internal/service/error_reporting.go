@@ -35,9 +35,10 @@ type QuizDetails struct {
 // ErrorReportService encapsulates all error reporting functionality with zero-parameter methods
 type ErrorReportService struct {
 	// Dependencies
-	db     *pgxpool.Pool
-	repo   *repository.ErrorReportRepository
-	logger *slog.Logger
+	db                *pgxpool.Pool
+	repo              *repository.ErrorReportRepository
+	definitionService *DefinitionService
+	logger            *slog.Logger
 
 	// Request data (embedded directly)
 	ctx          context.Context
@@ -53,15 +54,16 @@ func NewErrorReportService(ctx context.Context, errorType ErrorReportType, wordI
 	db := common.GetDBConnection()
 
 	return &ErrorReportService{
-		db:           db,
-		repo:         repository.NewErrorReportRepository(db),
-		logger:       common.Logger.With("errorType", errorType, "wordID", wordID, "definitionID", definitionID, "userID", userID),
-		ctx:          ctx,
-		errorType:    errorType,
-		wordID:       wordID,
-		definitionID: definitionID,
-		userID:       userID,
-		quizDetails:  quizDetails,
+		db:                db,
+		repo:              repository.NewErrorReportRepository(db),
+		definitionService: NewDefinitionService(db),
+		logger:            common.Logger.With("errorType", errorType, "wordID", wordID, "definitionID", definitionID, "userID", userID),
+		ctx:               ctx,
+		errorType:         errorType,
+		wordID:            wordID,
+		definitionID:      definitionID,
+		userID:            userID,
+		quizDetails:       quizDetails,
 	}, nil
 }
 
@@ -89,7 +91,7 @@ func (s *ErrorReportService) ProcessReport() error {
 
 // validateUserOwnsWord ensures the user has permission to report errors for this word
 func (s *ErrorReportService) validateUserOwnsWord() error {
-	isValid, err := didUserCreateWord(s.wordID, s.userID)
+	isValid, err := s.definitionService.didUserCreateWord(s.wordID, s.userID)
 	if err != nil || !isValid {
 		if err != nil {
 			s.logger.Error("validation failed", "error", err)
@@ -170,14 +172,14 @@ func (s *ErrorReportService) processErrorType(tx pgx.Tx) (ErrorReport, error) {
 		_, err = TriggerGenerateImageWorker(*s.definitionID, &s.userID, &report, &tx)
 
 	case UnrelatedExample, UnrelatedMeaning:
-		err = DeleteWordDefinitions(s.wordID, &tx)
+		err = s.definitionService.DeleteWordDefinitions(s.wordID, &tx)
 		if err == nil {
 			report = ErrorReport{WordId: &s.wordID, UserId: s.userID}
 			_, err = TriggerFetchDefinitionWorker(s.wordID, &s.userID, &report, &tx)
 		}
 
 	case ProcessingFailed:
-		err = DeleteWordDefinitions(s.wordID, &tx)
+		err = s.definitionService.DeleteWordDefinitions(s.wordID, &tx)
 		if err == nil {
 			report = ErrorReport{WordId: &s.wordID, UserId: s.userID}
 			_, err = TriggerFetchDefinitionWorker(s.wordID, &s.userID, &report, &tx)
@@ -368,7 +370,7 @@ func (s *ErrorReportService) buildContentSnapshot(tx pgx.Tx) (map[string]interfa
 // fetchCompleteDefinitionSnapshot fetches complete definition data for historical preservation
 func (s *ErrorReportService) fetchCompleteDefinitionSnapshot(definitionID int64) (map[string]interface{}, error) {
 	// Use definition service to fetch the definition
-	definition, err := GetDefinitionById(definitionID)
+	definition, err := s.definitionService.GetDefinitionByID(definitionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch definition: %w", err)
 	}

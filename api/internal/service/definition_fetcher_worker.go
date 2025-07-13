@@ -24,12 +24,14 @@ func (DefinitionFetcherArgs) Kind() string { return "DefinitionFetcher" }
 
 type DefinitionFetcherWorker struct {
 	river.WorkerDefaults[DefinitionFetcherArgs]
-	wordService *WordService
+	wordService       *WordService
+	definitionService *DefinitionService
 }
 
-func NewDefinitionFetcherWorker(wordService *WordService) *DefinitionFetcherWorker {
+func NewDefinitionFetcherWorker(wordService *WordService, definitionService *DefinitionService) *DefinitionFetcherWorker {
 	return &DefinitionFetcherWorker{
-		wordService: wordService,
+		wordService:       wordService,
+		definitionService: definitionService,
 	}
 }
 
@@ -146,7 +148,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 	}()
 
-	definitions, err := SaveDefinition(word.ID, definitionData.Definitions, &tx)
+	definitions, err := w.definitionService.SaveDefinition(word.ID, definitionData.Definitions, &tx)
 
 	if err != nil {
 		logger.Error("failed to save definitions", "error", err)
@@ -185,7 +187,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 			logger.Error("failed to queue example audio job", "definitionId", definition.ID, "wordId", word.ID, "error", err)
 		}
 	}
-	strategy := NewLeitnerSystemStrategy(w.wordService)
+	strategy := NewLeitnerSystemStrategy(w.wordService, w.definitionService)
 	if includeErr := strategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
 		logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)
 	}
