@@ -29,41 +29,42 @@ func getCacheTTL(subscriptionPlan model.SubscriptionPlan) time.Duration {
 	return 1 * time.Minute
 }
 
-// RegisterAnalyticsRoutes registers all analytics endpoints
-func RegisterAnalyticsRoutes(r *gin.RouterGroup) {
+// RegisterAnalyticsRoutes registers all analytics endpoints with dependency injection
+func RegisterAnalyticsRoutes(r *gin.RouterGroup, wordlistService *service.WordlistService) {
 	analytics := r.Group("/analytics")
 
-	analytics.GET("/wordlists/:id/stats", getWordlistStats)
-	analytics.GET("/wordlists/:id/word-mastery", getWordlistWordMastery)
-	analytics.GET("/wordlists/:id/learning-progress", getWordlistLearningProgress)
-	analytics.GET("/wordlists/:id/practice-time", getWordlistPracticeTime)
-	analytics.GET("/wordlists/:id/box-distribution-history", getWordlistBoxDistributionHistory)
-	analytics.GET("/wordlists/:id/current-box-distribution", getWordlistCurrentBoxDistribution)
-	analytics.GET("/wordlists/:id/quiz-type-performance", getWordlistQuizTypePerformance)
+	analytics.GET("/wordlists/:id/stats", getWordlistStats(wordlistService))
+	analytics.GET("/wordlists/:id/word-mastery", getWordlistWordMastery(wordlistService))
+	analytics.GET("/wordlists/:id/learning-progress", getWordlistLearningProgress(wordlistService))
+	analytics.GET("/wordlists/:id/practice-time", getWordlistPracticeTime(wordlistService))
+	analytics.GET("/wordlists/:id/box-distribution-history", getWordlistBoxDistributionHistory(wordlistService))
+	analytics.GET("/wordlists/:id/current-box-distribution", getWordlistCurrentBoxDistribution(wordlistService))
+	analytics.GET("/wordlists/:id/quiz-type-performance", getWordlistQuizTypePerformance(wordlistService))
 	analytics.GET("/progress-summary", getProgressSummary)
 }
 
 // getWordlistWordMastery returns word mastery statistics for a wordlist
-func getWordlistWordMastery(c *gin.Context) {
-	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
-		return
-	}
+func getWordlistWordMastery(wordlistService *service.WordlistService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+			return
+		}
 
-	userID := c.GetInt64("userID")
-	userObj, ok := getUserFromContext(c)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found in context"})
-		return
-	}
+		userID := c.GetInt64("userID")
+		userObj, ok := getUserFromContext(c)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found in context"})
+			return
+		}
 
-	// Verify wordlist ownership
-	wordlist, err := service.GetWordlistById(wordlistID, userID)
-	if err != nil || wordlist == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
-		return
-	}
+		// Verify wordlist ownership using injected service
+		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
+		if err != nil || wordlist == nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
+			return
+		}
 
 	analyticsService, err := service.NewAnalyticsService(service.AnalyticsConfig{
 		UserID:     userID,
@@ -91,34 +92,36 @@ func getWordlistWordMastery(c *gin.Context) {
 		"wordlist_id": wordlistID,
 		"stats":       stats,
 	})
+	}
 }
 
 // getWordlistLearningProgress returns daily learning progress
 //
 //nolint:dupl // Similar pattern to getWordlistPracticeTime but different parameters and response structure
-func getWordlistLearningProgress(c *gin.Context) {
-	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
-		return
-	}
-
-	// Get days parameter (default 30)
-	days := 30
-	if d := c.Query("days"); d != "" {
-		if parsed, err := strconv.Atoi(d); err == nil && parsed > 0 && parsed <= 365 {
-			days = parsed
+func getWordlistLearningProgress(wordlistService *service.WordlistService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+			return
 		}
-	}
 
-	userID := c.GetInt64("userID")
+		// Get days parameter (default 30)
+		days := 30
+		if d := c.Query("days"); d != "" {
+			if parsed, parseErr := strconv.Atoi(d); parseErr == nil && parsed > 0 && parsed <= 365 {
+				days = parsed
+			}
+		}
 
-	// Verify wordlist ownership
-	wordlist, err := service.GetWordlistById(wordlistID, userID)
-	if err != nil || wordlist == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
-		return
-	}
+		userID := c.GetInt64("userID")
+
+		// Verify wordlist ownership using injected service
+		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
+		if err != nil || wordlist == nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
+			return
+		}
 
 	userObj, ok := getUserFromContext(c)
 	if !ok {
@@ -153,10 +156,12 @@ func getWordlistLearningProgress(c *gin.Context) {
 		"days":        days,
 		"progress":    progress,
 	})
+	}
 }
 
 // getWordlistBoxDistributionHistory returns historical box distribution
-func getWordlistBoxDistributionHistory(c *gin.Context) {
+func getWordlistBoxDistributionHistory(wordlistService *service.WordlistService) gin.HandlerFunc {
+	return func(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -174,7 +179,8 @@ func getWordlistBoxDistributionHistory(c *gin.Context) {
 	userID := c.GetInt64("userID")
 
 	// Verify wordlist ownership
-	wordlist, err := service.GetWordlistById(wordlistID, userID)
+		// Verify wordlist ownership using injected service
+		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
 	if err != nil || wordlist == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 		return
@@ -213,10 +219,12 @@ func getWordlistBoxDistributionHistory(c *gin.Context) {
 		"days":         days,
 		"distribution": distribution,
 	})
+	}
 }
 
 // getWordlistQuizTypePerformance returns performance statistics by quiz type for a specific wordlist
-func getWordlistQuizTypePerformance(c *gin.Context) {
+func getWordlistQuizTypePerformance(wordlistService *service.WordlistService) gin.HandlerFunc {
+	return func(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -226,7 +234,8 @@ func getWordlistQuizTypePerformance(c *gin.Context) {
 	userID := c.GetInt64("userID")
 
 	// Verify wordlist ownership
-	wordlist, err := service.GetWordlistById(wordlistID, userID)
+		// Verify wordlist ownership using injected service
+		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
 	if err != nil || wordlist == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 		return
@@ -264,10 +273,12 @@ func getWordlistQuizTypePerformance(c *gin.Context) {
 		"wordlistId":      wordlistID,
 		"quizPerformance": performance,
 	})
+	}
 }
 
 // getWordlistCurrentBoxDistribution returns current distribution of words across Leitner boxes
-func getWordlistCurrentBoxDistribution(c *gin.Context) {
+func getWordlistCurrentBoxDistribution(wordlistService *service.WordlistService) gin.HandlerFunc {
+	return func(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -277,7 +288,8 @@ func getWordlistCurrentBoxDistribution(c *gin.Context) {
 	userID := c.GetInt64("userID")
 
 	// Verify wordlist ownership
-	wordlist, err := service.GetWordlistById(wordlistID, userID)
+		// Verify wordlist ownership using injected service
+		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
 	if err != nil || wordlist == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 		return
@@ -319,12 +331,14 @@ func getWordlistCurrentBoxDistribution(c *gin.Context) {
 		"distribution": distribution,
 		"totalWords":   distribution.TotalWords,
 	})
+	}
 }
 
 // getWordlistPracticeTime returns daily practice time statistics for a wordlist
 //
 //nolint:dupl // Similar pattern to getWordlistLearningProgress but different parameters and response structure
-func getWordlistPracticeTime(c *gin.Context) {
+func getWordlistPracticeTime(wordlistService *service.WordlistService) gin.HandlerFunc {
+	return func(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -342,7 +356,8 @@ func getWordlistPracticeTime(c *gin.Context) {
 	userID := c.GetInt64("userID")
 
 	// Verify wordlist ownership
-	wordlist, err := service.GetWordlistById(wordlistID, userID)
+		// Verify wordlist ownership using injected service
+		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
 	if err != nil || wordlist == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 		return
@@ -381,10 +396,12 @@ func getWordlistPracticeTime(c *gin.Context) {
 		"days":         days,
 		"practiceTime": practiceTime,
 	})
+	}
 }
 
 // getWordlistStats returns statistics for a specific wordlist
-func getWordlistStats(c *gin.Context) {
+func getWordlistStats(wordlistService *service.WordlistService) gin.HandlerFunc {
+	return func(c *gin.Context) {
 	wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -394,7 +411,8 @@ func getWordlistStats(c *gin.Context) {
 	userID := c.GetInt64("userID")
 
 	// Verify wordlist ownership
-	wordlist, err := service.GetWordlistById(wordlistID, userID)
+		// Verify wordlist ownership using injected service
+		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
 	if err != nil || wordlist == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 		return
@@ -436,6 +454,7 @@ func getWordlistStats(c *gin.Context) {
 		"wordlistId": wordlistID,
 		"stats":      stats,
 	})
+	}
 }
 
 // getProgressSummary returns progress summary for all user's wordlists

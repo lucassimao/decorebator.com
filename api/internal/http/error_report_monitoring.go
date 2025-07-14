@@ -3,21 +3,19 @@ package http
 import (
 	"net/http"
 
-	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // GetErrorReportStats returns error reporting statistics (admin only)
-func GetErrorReportStats() gin.HandlerFunc {
+func GetErrorReportStats(db *pgxpool.Pool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// This endpoint should be protected by admin authentication
 		// For now, we'll implement basic stats retrieval
 
-		db := common.GetDBConnection()
-
-		// Create service
+		// Create service with injected database
 		rateLimitService := service.NewErrorReportRateLimitService(db)
 
 		// Get stats for last 24 hours by default
@@ -32,7 +30,7 @@ func GetErrorReportStats() gin.HandlerFunc {
 }
 
 // GetUserErrorReportStatus returns the current rate limit status for a user
-func GetUserErrorReportStatus() gin.HandlerFunc {
+func GetUserErrorReportStatus(db *pgxpool.Pool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get user from context
 		userAny, exists := c.Get("user")
@@ -46,10 +44,7 @@ func GetUserErrorReportStatus() gin.HandlerFunc {
 			return
 		}
 
-		// Get database connection
-		db := common.GetDBConnection()
-
-		// Create service
+		// Create service with injected database
 		rateLimitService := service.NewErrorReportRateLimitService(db)
 
 		// Get rate limit status

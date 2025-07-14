@@ -145,13 +145,3 @@ func (wls *WordlistService) UpdateWordlist(wordlist *Wordlist) error {
 	return nil
 }
 
-// Legacy function for backward compatibility - TODO: Remove when analytics are refactored
-//
-//nolint:revive // keeping for backward compatibility
-func GetWordlistById(id, userID int64) (*Wordlist, error) {
-	// Use dependency injection internally instead of global variable
-	db := common.GetDBConnection()
-	moderationService := NewOpenAIModerationService()
-	wordlistService := NewWordlistService(db, moderationService)
-	return wordlistService.GetWordlistByID(id, userID)
-}

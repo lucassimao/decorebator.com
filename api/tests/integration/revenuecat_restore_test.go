@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"decorebator.com/internal/app"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/service"
@@ -76,11 +77,10 @@ func TestRestorePurchases(t *testing.T) {
 		}
 
 		// Create test server with a config function that creates the service with the mock API client
-		ts := setup.NewTestServer(t, func(db *pgxpool.Pool) *setup.TestConfig {
-			return &setup.TestConfig{
-				Database:          db,
-				RevenueCatService: service.NewRevenueCatService(db, mockAPIClient),
-			}
+		ts := setup.NewTestServer(t, func(builder *app.ContextBuilder) *app.ContextBuilder {
+			return builder.WithRevenueCatServiceFunc(func(db *pgxpool.Pool) service.RevenueCatService {
+				return service.NewRevenueCatService(db, mockAPIClient)
+			})
 		})
 		defer ts.Cleanup()
 
@@ -156,11 +156,10 @@ func TestRestorePurchases(t *testing.T) {
 		}
 
 		// Create test server with a config function that creates the service with the mock API client
-		ts := setup.NewTestServer(t, func(db *pgxpool.Pool) *setup.TestConfig {
-			return &setup.TestConfig{
-				Database:          db,
-				RevenueCatService: service.NewRevenueCatService(db, mockAPIClient),
-			}
+		ts := setup.NewTestServer(t, func(builder *app.ContextBuilder) *app.ContextBuilder {
+			return builder.WithRevenueCatServiceFunc(func(db *pgxpool.Pool) service.RevenueCatService {
+				return service.NewRevenueCatService(db, mockAPIClient)
+			})
 		})
 		defer ts.Cleanup()
 
@@ -226,11 +225,10 @@ func TestRestorePurchases(t *testing.T) {
 		}
 
 		// Create test server with a config function that creates the service with the mock API client
-		ts := setup.NewTestServer(t, func(db *pgxpool.Pool) *setup.TestConfig {
-			return &setup.TestConfig{
-				Database:          db,
-				RevenueCatService: service.NewRevenueCatService(db, mockAPIClient),
-			}
+		ts := setup.NewTestServer(t, func(builder *app.ContextBuilder) *app.ContextBuilder {
+			return builder.WithRevenueCatServiceFunc(func(db *pgxpool.Pool) service.RevenueCatService {
+				return service.NewRevenueCatService(db, mockAPIClient)
+			})
 		})
 		defer ts.Cleanup()
 
