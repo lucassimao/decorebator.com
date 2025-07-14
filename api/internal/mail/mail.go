@@ -13,18 +13,32 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 
 	_ "embed"
 )
 
-// Package-level functions for backward compatibility
-// These are used by services that don't have access to MailService
+// MailService handles email operations with dependency injection
+//
+//revive:disable:exported
+type MailService struct {
+	db       *pgxpool.Pool
+	userRepo *repository.UserRepository
+}
+
+// NewMailService creates a new mail service with injected dependencies
+func NewMailService(db *pgxpool.Pool) *MailService {
+	return &MailService{
+		db:       db,
+		userRepo: &repository.UserRepository{Db: db},
+	}
+}
 
 // shouldSendEmails checks if emails should be sent based on environment variables
 // Returns false if DISABLE_EMAILS=true or ENV is not production (for some email types)
-func shouldSendEmails() bool {
+func (m *MailService) shouldSendEmails() bool {
 	// Check DISABLE_EMAILS flag (used for load testing and development)
 	if disableEmails, err := strconv.ParseBool(os.Getenv("DISABLE_EMAILS")); err == nil && disableEmails {
 		return false
@@ -32,18 +46,12 @@ func shouldSendEmails() bool {
 	return true
 }
 
-// GetUserRepositoryForMail returns a user repository for mail operations
-// This is a temporary solution to maintain backward compatibility
-func GetUserRepositoryForMail() (*repository.UserRepository, error) {
-	db := common.GetDBConnection()
-	return &repository.UserRepository{Db: db}, nil
-}
-
+// AddContactToList adds a user to the SendGrid contact list
 // https://www.twilio.com/docs/sendgrid/api-reference/contacts/add-or-update-a-contact
-func AddContactToList(user *model.User) {
+func (m *MailService) AddContactToList(user *model.User) {
 	logger := common.Logger.With("func", "AddContactToList", "user", user.ID)
 
-	if !shouldSendEmails() {
+	if !m.shouldSendEmails() {
 		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping")
 		return
 	}
@@ -85,18 +93,14 @@ func AddContactToList(user *model.User) {
 //go:embed reset_password.html
 var resetPasswordEmailTemplate string
 
-func SendResetPasswordEmail(email string) error {
-	if !shouldSendEmails() {
+// SendResetPasswordEmail sends a password reset email to the specified address
+func (m *MailService) SendResetPasswordEmail(email string) error {
+	if !m.shouldSendEmails() {
 		common.Logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping reset password email", "email", email)
 		return nil
 	}
 
-	userRepo, err := GetUserRepositoryForMail()
-	if err != nil {
-		return fmt.Errorf("failed to get user repository: %w", err)
-	}
-
-	result, err := userRepo.Find(context.Background(), repository.FindUserArgs{Email: &email})
+	result, err := m.userRepo.Find(context.Background(), repository.FindUserArgs{Email: &email})
 
 	if err != nil || len(result) != 1 {
 		return fmt.Errorf("no user found")
@@ -174,10 +178,11 @@ type SubscriptionEmailData struct {
 	PaymentError     string
 }
 
-func SendSubscriptionActivatedEmail(user *model.User, data SubscriptionEmailData) error {
+// SendSubscriptionActivatedEmail sends a welcome email when subscription is activated
+func (m *MailService) SendSubscriptionActivatedEmail(user *model.User, data SubscriptionEmailData) error {
 	logger := common.Logger.With("func", "SendSubscriptionActivatedEmail", "user", user.ID)
 
-	if !shouldSendEmails() {
+	if !m.shouldSendEmails() {
 		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping subscription activated email")
 		return nil
 	}
@@ -229,10 +234,11 @@ func SendSubscriptionActivatedEmail(user *model.User, data SubscriptionEmailData
 	return nil
 }
 
-func SendSubscriptionRenewedEmail(user *model.User, data SubscriptionEmailData) error {
+// SendSubscriptionRenewedEmail sends a confirmation email when subscription is renewed
+func (m *MailService) SendSubscriptionRenewedEmail(user *model.User, data SubscriptionEmailData) error {
 	logger := common.Logger.With("func", "SendSubscriptionRenewedEmail", "user", user.ID)
 
-	if !shouldSendEmails() {
+	if !m.shouldSendEmails() {
 		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping subscription renewed email")
 		return nil
 	}
@@ -283,10 +289,11 @@ func SendSubscriptionRenewedEmail(user *model.User, data SubscriptionEmailData) 
 	return nil
 }
 
-func SendRenewalReminderEmail(user *model.User, data SubscriptionEmailData) error {
+// SendRenewalReminderEmail sends a reminder before subscription renewal
+func (m *MailService) SendRenewalReminderEmail(user *model.User, data SubscriptionEmailData) error {
 	logger := common.Logger.With("func", "SendRenewalReminderEmail", "user", user.ID)
 
-	if !shouldSendEmails() {
+	if !m.shouldSendEmails() {
 		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping renewal reminder email")
 		return nil
 	}
@@ -337,10 +344,11 @@ func SendRenewalReminderEmail(user *model.User, data SubscriptionEmailData) erro
 	return nil
 }
 
-func SendSubscriptionCancelledEmail(user *model.User, data SubscriptionEmailData) error {
+// SendSubscriptionCancelledEmail sends a confirmation email when subscription is canceled
+func (m *MailService) SendSubscriptionCancelledEmail(user *model.User, data SubscriptionEmailData) error {
 	logger := common.Logger.With("func", "SendSubscriptionCancelledEmail", "user", user.ID)
 
-	if !shouldSendEmails() {
+	if !m.shouldSendEmails() {
 		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping subscription canceled email")
 		return nil
 	}
@@ -390,10 +398,11 @@ func SendSubscriptionCancelledEmail(user *model.User, data SubscriptionEmailData
 	return nil
 }
 
-func SendPaymentFailedEmail(user *model.User, data SubscriptionEmailData) error {
+// SendPaymentFailedEmail sends a notification when payment fails
+func (m *MailService) SendPaymentFailedEmail(user *model.User, data SubscriptionEmailData) error {
 	logger := common.Logger.With("func", "SendPaymentFailedEmail", "user", user.ID)
 
-	if !shouldSendEmails() {
+	if !m.shouldSendEmails() {
 		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping payment failed email")
 		return nil
 	}
@@ -448,10 +457,11 @@ func SendPaymentFailedEmail(user *model.User, data SubscriptionEmailData) error 
 //go:embed welcome.html
 var welcomeEmailTemplate string
 
-func SendWelcomeEmail(email string) error {
+// SendWelcomeEmail sends a welcome email to new users
+func (m *MailService) SendWelcomeEmail(email string) error {
 	logger := common.Logger.With("func", "SendWelcomeEmail", "email", email)
 
-	if !shouldSendEmails() {
+	if !m.shouldSendEmails() {
 		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping welcome email")
 		return nil
 	}
@@ -461,12 +471,7 @@ func SendWelcomeEmail(email string) error {
 		return nil
 	}
 
-	userRepo, err := GetUserRepositoryForMail()
-	if err != nil {
-		return fmt.Errorf("failed to get user repository: %w", err)
-	}
-
-	result, err := userRepo.Find(context.Background(), repository.FindUserArgs{Email: &email})
+	result, err := m.userRepo.Find(context.Background(), repository.FindUserArgs{Email: &email})
 
 	if err != nil || len(result) != 1 {
 		return fmt.Errorf("no user found")

@@ -18,17 +18,21 @@ type Word = model.Word
 
 // WordService handles word-related operations with dependency injection
 type WordService struct {
-	repository        *repo.WordRepository
-	moderationService ModerationService
-	definitionService *DefinitionService
+	repository             *repo.WordRepository
+	moderationService      ModerationService
+	definitionService      *DefinitionService
+	jobService             JobService
+	leitnerTrackingService *LeitnerTrackingService
 }
 
 // NewWordService creates a new word service with dependencies
-func NewWordService(db *pgxpool.Pool, moderationService ModerationService) *WordService {
+func NewWordService(db *pgxpool.Pool, moderationService ModerationService, jobService JobService, leitnerTrackingService *LeitnerTrackingService) *WordService {
 	return &WordService{
-		repository:        &repo.WordRepository{Db: db},
-		moderationService: moderationService,
-		definitionService: NewDefinitionService(db),
+		repository:             &repo.WordRepository{Db: db},
+		moderationService:      moderationService,
+		definitionService:      NewDefinitionService(db),
+		jobService:             jobService,
+		leitnerTrackingService: leitnerTrackingService,
 	}
 }
 
@@ -150,24 +154,23 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 			common.Logger.Error("failed to reuse definitions", "wordId", word.ID, "error", reuseErr)
 		}
 
-		quizStrategy := NewLeitnerSystemStrategy(ws, ws.definitionService)
-		if includeErr := quizStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
-			common.Logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)
+		if includeErr := ws.leitnerTrackingService.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
+			common.Logger.Error("failed to include definitions in tracking system", "wordId", word.ID, "error", includeErr)
 		}
 
 		var latestAudioURL string
 		latestAudioURL, err = ws.repository.GetLatestAudioURL(trimmedName)
 
 		if err != nil {
-			_, _ = TriggerTextToSpeechWorker(word.ID, &word.UserID, nil, &tx)
+			_, _ = ws.jobService.TriggerTextToSpeechWorker(word.ID, &word.UserID, nil, &tx)
 			err = nil // fine if triggering the worker fails somehow
 		} else {
 			word.AudioURL = latestAudioURL
 			err = ws.UpdateWord(word, &tx)
 		}
 	} else {
-		_, _ = TriggerFetchDefinitionWorker(word.ID, &word.UserID, nil, &tx)
-		_, _ = TriggerTextToSpeechWorker(word.ID, &word.UserID, nil, &tx)
+		_, _ = ws.jobService.TriggerFetchDefinitionWorker(word.ID, &word.UserID, nil, &tx)
+		_, _ = ws.jobService.TriggerTextToSpeechWorker(word.ID, &word.UserID, nil, &tx)
 	}
 
 	if err != nil {

@@ -74,6 +74,10 @@ func (s *DefinitionService) GetDefinitionsByWordID(wordID, userID int64) ([]*mod
 	return s.definitionRepository.GetDefinitionsByWordID(wordID, userID)
 }
 
+func (s *DefinitionService) CreateExampleAudio(definitionID int64, exampleText, audioURL, inflectionType string) error {
+	return s.definitionRepository.CreateExampleAudio(definitionID, exampleText, audioURL, inflectionType)
+}
+
 // NormalizePartOfSpeech converts a language-specific part-of-speech to normalized English
 // This function uses the PartOfSpeechMappings from LANGUAGE_CONFIGS as the single source of truth
 func NormalizePartOfSpeech(partOfSpeech, languageCode string) string {

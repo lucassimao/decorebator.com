@@ -27,12 +27,14 @@ type ImageGeneratorWorker struct {
 	river.WorkerDefaults[ImageGeneratorArgs]
 	definitionService      *DefinitionService
 	definitionImageService *DefinitionImageService
+	userService            *UserService
 }
 
-func NewImageGeneratorWorker(definitionService *DefinitionService, definitionImageService *DefinitionImageService) *ImageGeneratorWorker {
+func NewImageGeneratorWorker(definitionService *DefinitionService, definitionImageService *DefinitionImageService, userService *UserService) *ImageGeneratorWorker {
 	return &ImageGeneratorWorker{
 		definitionService:      definitionService,
 		definitionImageService: definitionImageService,
+		userService:            userService,
 	}
 }
 
@@ -46,7 +48,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	// Validate user eligibility before processing (skip for admin/system jobs)
 	if userID != nil {
-		if err := ValidateUserEligibilityForWorkers(*userID); err != nil {
+		if err := w.userService.ValidateUserEligibilityForWorkers(*userID); err != nil {
 			logger.Warn("User not eligible for image generation",
 				"userId", *userID, "definitionId", definitionID, "error", err)
 			// Cancel job permanently - user needs to upgrade

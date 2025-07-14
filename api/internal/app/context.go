@@ -4,18 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
+	"decorebator.com/internal/common"
+	"decorebator.com/internal/mail"
 	"decorebator.com/internal/service"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
+	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 )
 
 // Context holds all application services and dependencies
 type Context struct {
 	// Core dependencies
-	Database    *pgxpool.Pool
-	RiverClient *river.Client[pgx.Tx]
+	Database   *pgxpool.Pool
+	JobService *service.JobServiceImpl
 
 	// Services
 	WordService            *service.WordService
@@ -26,8 +29,11 @@ type Context struct {
 	SubscriptionService    *service.SubscriptionService
 	RevenueCatService      service.RevenueCatService
 	ModerationService      service.ModerationService
+	LeitnerTrackingService *service.LeitnerTrackingService
 	LeitnerSystemStrategy  *service.LeitnerSystemStrategy
 	ErrorReportService     *service.ErrorReportService
+	AnalyticsService       service.AnalyticsServiceInterface
+	MailService            *mail.MailService
 
 	// Configuration
 	Environment string
@@ -58,13 +64,13 @@ func (b *ContextBuilder) WithDatabase(db *pgxpool.Pool) *ContextBuilder {
 	return b
 }
 
-// WithRiverClient sets the River client for background jobs
-func (b *ContextBuilder) WithRiverClient(client *river.Client[pgx.Tx]) *ContextBuilder {
-	if client == nil {
-		b.errors = append(b.errors, errors.New("river client cannot be nil"))
+// WithJobService sets the JobService for background job operations
+func (b *ContextBuilder) WithJobService(jobService *service.JobServiceImpl) *ContextBuilder {
+	if jobService == nil {
+		b.errors = append(b.errors, errors.New("job service cannot be nil"))
 		return b
 	}
-	b.context.RiverClient = client
+	b.context.JobService = jobService
 	return b
 }
 
@@ -140,6 +146,12 @@ func (b *ContextBuilder) WithErrorReportService(errorReportService *service.Erro
 	return b
 }
 
+// WithAnalyticsService sets a custom analytics service
+func (b *ContextBuilder) WithAnalyticsService(analyticsService service.AnalyticsServiceInterface) *ContextBuilder {
+	b.context.AnalyticsService = analyticsService
+	return b
+}
+
 // Build constructs the Context with all dependencies initialized
 func (b *ContextBuilder) Build() (*Context, error) {
 	// Check for builder errors first
@@ -162,13 +174,16 @@ func (b *ContextBuilder) Build() (*Context, error) {
 
 // initializeServices creates default service instances
 func (b *ContextBuilder) initializeServices() error {
-	// Initialize RiverClient if not provided
-	if b.context.RiverClient == nil {
-		riverClient, err := service.GetRiverClient()
+	// Initialize JobService if not provided
+	if b.context.JobService == nil {
+		// Create minimal River client for job insertion only
+		riverClient, err := river.NewClient(riverpgxv5.New(b.context.Database), &river.Config{
+			Logger: common.Logger,
+		})
 		if err != nil {
 			return fmt.Errorf("failed to create river client: %w", err)
 		}
-		b.context.RiverClient = riverClient
+		b.context.JobService = service.NewJobService(riverClient)
 	}
 
 	// Initialize ModerationService if not provided
@@ -177,23 +192,32 @@ func (b *ContextBuilder) initializeServices() error {
 	}
 
 	// Initialize core services if not provided
-	if b.context.UserService == nil {
-		b.context.UserService = service.NewUserService(b.context.Database)
-	}
 	if b.context.DefinitionService == nil {
 		b.context.DefinitionService = service.NewDefinitionService(b.context.Database)
 	}
 	if b.context.DefinitionImageService == nil {
 		b.context.DefinitionImageService = service.NewDefinitionImageService(b.context.Database)
 	}
+
+	// Initialize LeitnerTrackingService if not provided
+	if b.context.LeitnerTrackingService == nil {
+		b.context.LeitnerTrackingService = service.NewLeitnerTrackingService(b.context.Database)
+	}
+
 	if b.context.WordService == nil {
-		b.context.WordService = service.NewWordService(b.context.Database, b.context.ModerationService)
+		b.context.WordService = service.NewWordService(b.context.Database, b.context.ModerationService, b.context.JobService, b.context.LeitnerTrackingService)
 	}
 	if b.context.WordlistService == nil {
 		b.context.WordlistService = service.NewWordlistService(b.context.Database, b.context.ModerationService)
 	}
+
+	// Initialize MailService early since other services depend on it
+	if b.context.MailService == nil {
+		b.context.MailService = mail.NewMailService(b.context.Database)
+	}
+
 	if b.context.SubscriptionService == nil {
-		b.context.SubscriptionService = service.NewSubscriptionService(b.context.Database)
+		b.context.SubscriptionService = service.NewSubscriptionService(b.context.Database, b.context.MailService)
 	}
 
 	// Initialize RevenueCatService if not provided
@@ -206,11 +230,44 @@ func (b *ContextBuilder) initializeServices() error {
 		}
 	}
 
+	// Initialize AnalyticsService if not provided
+	if b.context.AnalyticsService == nil {
+		// Create a base analytics service without user/wordlist specifics for general use
+		analyticsService, err := service.NewAnalyticsService(b.context.Database, service.AnalyticsConfig{
+			UserID:     0, // Will be set by individual handlers
+			WordlistID: 0, // Will be set by individual handlers
+			UseCache:   true,
+			CacheTTL:   1 * time.Minute,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create analytics service: %w", err)
+		}
+		b.context.AnalyticsService = analyticsService
+	}
+
 	// Initialize LeitnerSystemStrategy if not provided
 	if b.context.LeitnerSystemStrategy == nil {
+		// Create analytics writer locally for LeitnerSystemStrategy (non-cached)
+		analyticsService, err := service.NewAnalyticsService(b.context.Database, service.AnalyticsConfig{
+			UserID:     0,     // Not used for stateless operations
+			WordlistID: 0,     // Not used for stateless operations
+			UseCache:   false, // No caching for write operations
+			CacheTTL:   0,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create analytics writer: %w", err)
+		}
+
+		// Cast to interface pointer
+		var analyticsWriter service.LeitnerAnalyticsWriter = analyticsService
+
+		// Create strategy with analytics writer as internal dependency
 		b.context.LeitnerSystemStrategy = service.NewLeitnerSystemStrategy(
+			b.context.Database,
 			b.context.WordService,
 			b.context.DefinitionService,
+			&analyticsWriter,
+			b.context.LeitnerTrackingService,
 		)
 	}
 
@@ -220,7 +277,13 @@ func (b *ContextBuilder) initializeServices() error {
 			b.context.Database,
 			b.context.DefinitionService,
 			b.context.LeitnerSystemStrategy,
+			b.context.JobService,
 		)
+	}
+
+	// Initialize UserService after ErrorReportService
+	if b.context.UserService == nil {
+		b.context.UserService = service.NewUserService(b.context.Database, b.context.ErrorReportService)
 	}
 
 	return nil
@@ -244,7 +307,7 @@ func (ctx *Context) GetDatabase() *pgxpool.Pool {
 	return ctx.Database
 }
 
-// GetRiverClient returns the River client
-func (ctx *Context) GetRiverClient() *river.Client[pgx.Tx] {
-	return ctx.RiverClient
+// GetJobService returns the JobService
+func (ctx *Context) GetJobService() service.JobService {
+	return ctx.JobService
 }

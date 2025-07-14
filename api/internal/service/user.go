@@ -25,13 +25,15 @@ type User = model.User
 type UserService struct {
 	userRepository     *repo.UserRepository
 	wordlistRepository *repo.WordlistRepository
+	errorReportService *ErrorReportService
 }
 
 // NewUserService creates a new UserService with injected dependencies
-func NewUserService(db *pgxpool.Pool) *UserService {
+func NewUserService(db *pgxpool.Pool, errorReportService *ErrorReportService) *UserService {
 	return &UserService{
 		userRepository:     &repo.UserRepository{Db: db},
 		wordlistRepository: &repo.WordlistRepository{Db: db},
+		errorReportService: errorReportService,
 	}
 }
 
@@ -253,7 +255,7 @@ func (s *UserService) checkAndDowngradeExpiredSubscription(userID int64, user *U
 }
 
 func (s *UserService) Delete(userID int64) error {
-	if _, deleteReportsErr := DeleteUserErrorReports(userID); deleteReportsErr != nil {
+	if _, deleteReportsErr := s.errorReportService.DeleteUserErrorReports(userID); deleteReportsErr != nil {
 		common.Logger.Error("failed to delete user error reports", "userId", userID, "error", deleteReportsErr)
 	}
 	if _, deleteWordlistsErr := s.wordlistRepository.DeleteAll(userID); deleteWordlistsErr != nil {
@@ -300,4 +302,62 @@ func (s *UserService) UpdateProfile(userID int64, firstName, lastName, country, 
 	}
 
 	return user, nil
+}
+
+// ValidateUserEligibilityForWorkers checks if a user (especially free tier) is eligible for worker processing
+// Free users are limited to:
+// - 1 wordlist only
+// - Maximum 10 words total
+func (s *UserService) ValidateUserEligibilityForWorkers(userID int64) error {
+	// Get user information including subscription plan
+	var subscriptionPlan model.SubscriptionPlan
+	err := s.userRepository.Db.QueryRow(context.Background(),
+		"SELECT subscription_plan FROM users WHERE id = $1",
+		userID).Scan(&subscriptionPlan)
+
+	if err != nil {
+		return fmt.Errorf("failed to get user subscription plan: %w", err)
+	}
+
+	// Premium users (monthly/annual) have no restrictions
+	if subscriptionPlan == model.PlanMonthly || subscriptionPlan == model.PlanAnnual {
+		return nil
+	}
+
+	// For free users, check wordlist and word count limits
+	var wordlistCount int
+	var totalWordCount int
+
+	// Count wordlists
+	err = s.userRepository.Db.QueryRow(context.Background(),
+		"SELECT COUNT(*) FROM wordlists WHERE user_id = $1",
+		userID).Scan(&wordlistCount)
+
+	if err != nil {
+		return fmt.Errorf("failed to count wordlists: %w", err)
+	}
+
+	// Count total words across all wordlists
+	err = s.userRepository.Db.QueryRow(context.Background(),
+		"SELECT COUNT(*) FROM words WHERE user_id = $1 AND learned = false",
+		userID).Scan(&totalWordCount)
+
+	if err != nil {
+		return fmt.Errorf("failed to count words: %w", err)
+	}
+
+	// Validate limits
+	if wordlistCount > model.FreeWordlistLimit {
+		return common.BusinessError{
+			Message: fmt.Sprintf("Free users are limited to %d wordlist. Please upgrade to add more content.", model.FreeWordlistLimit),
+		}
+	}
+
+	if totalWordCount > model.FreeWordsPerList {
+		return common.BusinessError{
+			Message: fmt.Sprintf("Free users are limited to %d words total. Please upgrade to add more words.", model.FreeWordsPerList),
+		}
+	}
+
+	return nil
 }

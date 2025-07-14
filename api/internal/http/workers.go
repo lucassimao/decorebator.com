@@ -1,7 +1,6 @@
 package http
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 
@@ -12,11 +11,13 @@ import (
 
 type WorkerRoutes struct {
 	definitionService *service.DefinitionService
+	jobService        service.JobService
 }
 
-func NewWorkerRoutes(definitionService *service.DefinitionService) *WorkerRoutes {
+func NewWorkerRoutes(definitionService *service.DefinitionService, jobService service.JobService) *WorkerRoutes {
 	return &WorkerRoutes{
 		definitionService: definitionService,
+		jobService:        jobService,
 	}
 }
 
@@ -28,8 +29,8 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 		return
 	}
 
-	// Admin context - pass nil userId to bypass validation
-	jobID, err := service.TriggerGenerateImageWorker(definitionId, nil, nil, nil)
+	// Admin context - trigger image generation
+	jobID, err := h.jobService.TriggerGenerateImageWorker(definitionId, nil, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "definitionId": definitionId})
@@ -47,8 +48,8 @@ func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
 		return
 	}
 
-	// Admin context - pass nil userId to bypass validation
-	jobID, err := service.TriggerTextToSpeechWorker(wordId, nil, nil, nil)
+	// Admin context - trigger text to speech
+	jobID, err := h.jobService.TriggerTextToSpeechWorker(wordId, nil, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordId})
@@ -66,11 +67,11 @@ func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
 		return
 	}
 
-	// Admin context - pass nil userId to bypass validation
+	// Admin context - delete existing definitions and trigger new generation
 	if deleteErr := h.definitionService.DeleteWordDefinitions(wordId, nil); deleteErr != nil {
 		common.Logger.Error("failed to delete word definitions", "wordId", wordId, "error", deleteErr)
 	}
-	jobID, err := service.TriggerFetchDefinitionWorker(wordId, nil, nil, nil)
+	jobID, err := h.jobService.TriggerFetchDefinitionWorker(wordId, nil, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordId})
@@ -88,13 +89,7 @@ func (h *WorkerRoutes) TriggerJob(c *gin.Context) {
 		return
 	}
 
-	riverClient, err := service.GetRiverClient()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "jobId": jobId})
-		return
-	}
-
-	_, err = riverClient.JobRetry(context.Background(), jobId)
+	err = h.jobService.RetryJob(jobId)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "jobId": jobId})

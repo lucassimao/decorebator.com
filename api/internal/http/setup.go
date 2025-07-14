@@ -1,7 +1,6 @@
 package http
 
 import (
-	"errors"
 	"os"
 	"time"
 
@@ -48,53 +47,6 @@ func init() {
 
 }
 
-// applyDefaults fills in missing configuration with default values
-func applyDefaults(config *Config) (*Config, error) {
-	// Start with empty config if nil
-	if config == nil {
-		config = &Config{}
-	}
-
-
-	// Database connection is required for HTTP setup
-	if config.Database == nil {
-		return nil, errors.New("database connection is required - cannot use GetDBConnection() fallback")
-	}
-
-	// Set default moderation service if not provided
-	if config.ModerationService == nil {
-		config.ModerationService = service.NewOpenAIModerationService()
-	}
-
-	// Set default word service if not provided
-	if config.WordService == nil {
-		config.WordService = service.NewWordService(config.Database, config.ModerationService)
-	}
-
-	// Set default wordlist service if not provided
-	if config.WordlistService == nil {
-		config.WordlistService = service.NewWordlistService(config.Database, config.ModerationService)
-	}
-
-	// Set default DefinitionService if not provided
-	if config.DefinitionService == nil {
-		config.DefinitionService = service.NewDefinitionService(config.Database)
-	}
-
-	// Set default DefinitionImageService if not provided
-	if config.DefinitionImageService == nil {
-		config.DefinitionImageService = service.NewDefinitionImageService(config.Database)
-	}
-
-	// Set default RevenueCat service if not provided
-	if config.RevenueCatService == nil {
-		apiClient := service.NewRevenueCatAPIClient()
-		config.RevenueCatService = service.NewRevenueCatService(config.Database, apiClient)
-	}
-
-	return config, nil
-}
-
 // SetupRoutes creates a Gin engine with routes using Context for dependency injection
 func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	if appCtx == nil {
@@ -106,9 +58,9 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 
 	// Initialize route handlers using services from AppContext
 	var WordRoutes = NewWordRoutes(appCtx.WordService, appCtx.DefinitionService)
-	var WorkerRoutes = NewWorkerRoutes(appCtx.DefinitionService)
+	var WorkerRoutes = NewWorkerRoutes(appCtx.DefinitionService, appCtx.JobService)
 	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService)
-	var UserRoutes = NewUserRoutes(appCtx.UserService)
+	var UserRoutes = NewUserRoutes(appCtx.UserService, appCtx.MailService)
 
 	// Use Leitner strategy from AppContext
 	var quizRoutes = NewQuizRoutes(appCtx.LeitnerSystemStrategy)
@@ -119,9 +71,9 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	// Sentry middlewares (includes sentrygin + context capture) - completely self-contained
 	router.Use(SentryMiddlewares()...)
 	router.Use(gin.Logger())
-	router.Use(TimeoutMiddleware(2 * time.Second))
 	router.Use(ErrorMiddleware())
 	router.Use(CORSMiddleware())
+	router.Use(TimeoutMiddleware(2 * time.Second))
 
 	// Routes without authentication
 	{
@@ -132,10 +84,10 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		router.POST("/password/send-reset-email", UserRoutes.SendResetPasswordEmail)
 
 		// Stripe webhook endpoint
-		router.POST("/webhook/stripe", HandleStripeWebhook(appCtx.SubscriptionService, appCtx.RiverClient))
+		router.POST("/webhook/stripe", HandleStripeWebhook(appCtx.SubscriptionService, appCtx.JobService))
 
 		// RevenueCat webhook endpoint
-		router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(appCtx.RiverClient))
+		router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(appCtx.JobService))
 
 		// Redirect to local expo scheme
 		router.GET("/subscription/checkout-redirect", CheckoutRedirect())
@@ -165,7 +117,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(appCtx.Database), ErrorReportsRoutes.Create)
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus(appCtx.Database))
 
-		RegisterAnalyticsRoutes(authenticatedRoutes, appCtx.WordlistService)
+		RegisterAnalyticsRoutes(authenticatedRoutes, appCtx.WordlistService, appCtx.Database)
 
 		// Subscription routes
 		authenticatedRoutes.POST("/subscription/checkout-session", CreateCheckoutSession(appCtx.SubscriptionService))

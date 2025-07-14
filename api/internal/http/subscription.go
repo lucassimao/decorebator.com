@@ -10,8 +10,6 @@ import (
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
-	"github.com/riverqueue/river"
 	"github.com/stripe/stripe-go/v82/webhook"
 )
 
@@ -70,7 +68,7 @@ func CreateCheckoutSession(subService *service.SubscriptionService) gin.HandlerF
 }
 
 // HandleStripeWebhook handles Stripe webhook events asynchronously
-func HandleStripeWebhook(subService *service.SubscriptionService, riverClient *river.Client[pgx.Tx]) gin.HandlerFunc {
+func HandleStripeWebhook(subService *service.SubscriptionService, jobService service.JobService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Read the request body
 		payload, err := io.ReadAll(c.Request.Body)
@@ -95,15 +93,7 @@ func HandleStripeWebhook(subService *service.SubscriptionService, riverClient *r
 		}
 
 		// Enqueue the event for async processing
-		args := service.StripeWebhookArgs{
-			EventID:   event.ID,
-			EventType: string(event.Type),
-			EventData: event.Data.Raw,
-		}
-
-		_, err = riverClient.Insert(c.Request.Context(), args, &river.InsertOpts{
-			Queue: "stripe-webhook",
-		})
+		_, err = jobService.TriggerStripeWebhookWorker(event.ID, string(event.Type), event.Data.Raw)
 		if err != nil {
 			common.Logger.Error("Failed to enqueue Stripe webhook", "error", err, "event_id", event.ID)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process webhook"})

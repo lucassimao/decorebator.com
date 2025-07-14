@@ -61,11 +61,15 @@ type UpdateProfilePictureInput struct {
 
 type UserRoutes struct {
 	userService *service.UserService
+	mailService *mail.MailService
 }
 
 // NewUserRoutes creates a new UserRoutes with injected dependencies
-func NewUserRoutes(userService *service.UserService) *UserRoutes {
-	return &UserRoutes{userService: userService}
+func NewUserRoutes(userService *service.UserService, mailService *mail.MailService) *UserRoutes {
+	return &UserRoutes{
+		userService: userService,
+		mailService: mailService,
+	}
 }
 
 func translateValidationErrors(errs validator.ValidationErrors) map[string]string {
@@ -131,9 +135,9 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	c.Header("authorization", jwtToken)
 	writeAuthenticationCookie(c, jwtToken)
 	c.Status(http.StatusCreated)
-	go mail.AddContactToList(user)
+	go h.mailService.AddContactToList(user)
 	go func() {
-		if err := mail.SendWelcomeEmail(input.Email); err != nil {
+		if err := h.mailService.SendWelcomeEmail(input.Email); err != nil {
 			common.Logger.Error("failed to send welcome email", "email", input.Email, "error", err)
 		}
 	}()
@@ -213,7 +217,7 @@ func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
 		return
 	}
 
-	err := mail.SendResetPasswordEmail(input.Email)
+	err := h.mailService.SendResetPasswordEmail(input.Email)
 	if err != nil {
 		common.Logger.Error("failed to send reset password email", "error", err)
 	}

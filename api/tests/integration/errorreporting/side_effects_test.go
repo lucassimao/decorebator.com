@@ -209,15 +209,13 @@ func TestErrorReporting_SideEffects_LeitnerSystemUpdate(t *testing.T) {
 	definitionID := savedDefinitions[0].ID
 
 	// Add definitions to Leitner system tracking (normally done by word creation flow)
-	// Create strategy with proper dependencies
-	moderationService := service.NewOpenAIModerationService()
-	wordService := service.NewWordService(server.DB, moderationService)
-	leitnerStrategy := service.NewLeitnerSystemStrategy(wordService, definitionService)
+	// Use services from AppContext
+	leitnerTrackingService := server.AppContext.LeitnerTrackingService
 	tx, txErr := server.DB.Begin(ctx)
 	require.NoError(t, txErr)
 	defer tx.Rollback(ctx)
 
-	err = leitnerStrategy.IncludeDefinitions(wordID, 1, []int64{definitionID}, tx) // userID = 1 from test setup
+	err = leitnerTrackingService.IncludeDefinitions(wordID, 1, []int64{definitionID}, tx) // userID = 1 from test setup
 	require.NoError(t, err)
 	err = tx.Commit(ctx)
 	require.NoError(t, err)

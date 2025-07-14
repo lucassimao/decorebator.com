@@ -23,14 +23,18 @@ func (TextToSpeechArgs) Kind() string { return "TextToSpeech" }
 
 type TextToSpeechWorker struct {
 	river.WorkerDefaults[TextToSpeechArgs]
-	wordService       *WordService
-	definitionService *DefinitionService
+	wordService           *WordService
+	definitionService     *DefinitionService
+	leitnerSystemStrategy *LeitnerSystemStrategy
+	userService           *UserService
 }
 
-func NewTextToSpeechWorker(wordService *WordService, definitionService *DefinitionService) *TextToSpeechWorker {
+func NewTextToSpeechWorker(wordService *WordService, definitionService *DefinitionService, leitnerSystemStrategy *LeitnerSystemStrategy, userService *UserService) *TextToSpeechWorker {
 	return &TextToSpeechWorker{
-		wordService:       wordService,
-		definitionService: definitionService,
+		wordService:           wordService,
+		definitionService:     definitionService,
+		leitnerSystemStrategy: leitnerSystemStrategy,
+		userService:           userService,
 	}
 }
 
@@ -39,7 +43,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 
 	// Validate user eligibility before processing (skip for admin/system jobs)
 	if job.Args.UserID != nil {
-		if err := ValidateUserEligibilityForWorkers(*job.Args.UserID); err != nil {
+		if err := w.userService.ValidateUserEligibilityForWorkers(*job.Args.UserID); err != nil {
 			logger.Warn("User not eligible for text-to-speech",
 				"userId", *job.Args.UserID, "wordId", job.Args.WordId, "error", err)
 			// Cancel job permanently - user needs to upgrade
@@ -59,7 +63,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 	}
 
 	// Get wordlist language for language-specific audio generation
-	languageCode, err := getWordlistLanguage(job.Args.WordId)
+	languageCode, _, err := w.wordService.GetWordlistLanguageAndPronunciation(job.Args.WordId)
 	if err != nil {
 		logger.Error("failed to get wordlist language", "error", err)
 		return err
@@ -104,8 +108,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 
 	// if this job was triggered by an error report, then mark the issue as solved
 	if job.Args.ErrorReport != nil {
-		strategy := NewLeitnerSystemStrategy(w.wordService, w.definitionService)
-		return strategy.MarkErrorResolved(*job.Args.ErrorReport)
+		return w.leitnerSystemStrategy.MarkErrorResolved(*job.Args.ErrorReport)
 	}
 
 	return nil

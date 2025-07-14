@@ -11,7 +11,6 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/openai"
-	"decorebator.com/internal/repository"
 	"github.com/riverqueue/river"
 )
 
@@ -30,6 +29,18 @@ func (ExampleAudioArgs) Kind() string { return "ExampleAudio" }
 
 type ExampleAudioWorker struct {
 	river.WorkerDefaults[ExampleAudioArgs]
+	definitionService *DefinitionService
+	wordService       *WordService
+	userService       *UserService
+}
+
+// NewExampleAudioWorker creates a new example audio worker with dependencies
+func NewExampleAudioWorker(definitionService *DefinitionService, wordService *WordService, userService *UserService) *ExampleAudioWorker {
+	return &ExampleAudioWorker{
+		definitionService: definitionService,
+		wordService:       wordService,
+		userService:       userService,
+	}
 }
 
 type ExampleAudioItem struct {
@@ -42,7 +53,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 
 	// Validate user eligibility before processing (skip for admin/system jobs)
 	if job.Args.UserID != nil {
-		if err := ValidateUserEligibilityForWorkers(*job.Args.UserID); err != nil {
+		if err := w.userService.ValidateUserEligibilityForWorkers(*job.Args.UserID); err != nil {
 			logger.Warn("User not eligible for example audio generation",
 				"userId", *job.Args.UserID, "wordId", job.Args.WordID, "error", err)
 			// Cancel job permanently - user needs to upgrade
@@ -51,10 +62,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 	}
 
 	// 1. Fetch definition from database
-	db := common.GetDBConnection()
-
-	definitionRepo := repository.NewDefinitionRepository(db)
-	definition, err := definitionRepo.GetDefinitionByID(job.Args.DefinitionID)
+	definition, err := w.definitionService.GetDefinitionByID(job.Args.DefinitionID)
 	if err != nil && errors.Is(err, common.NotFoundError{}) {
 		return river.JobCancel(errors.New("definition not found"))
 	}
@@ -64,7 +72,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 	}
 
 	// 2. Get wordlist language for proper TTS voice selection
-	wordlistLang, err := getWordlistLanguage(job.Args.WordID)
+	wordlistLang, _, err := w.wordService.GetWordlistLanguageAndPronunciation(job.Args.WordID)
 	if err != nil {
 		logger.Error("failed to get wordlist language", "error", err)
 		return err
@@ -111,7 +119,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 		}
 
 		// Create new record in definition_example_audio table
-		err = definitionRepo.CreateExampleAudio(
+		err = w.definitionService.CreateExampleAudio(
 			job.Args.DefinitionID,
 			exampleItem.ExampleText,
 			audioURL,

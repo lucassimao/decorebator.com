@@ -20,12 +20,13 @@ import (
 
 // TestServer represents a test server instance with all necessary dependencies
 type TestServer struct {
-	Server  *httptest.Server
-	DB      *pgxpool.Pool
-	Engine  *gin.Engine
-	Expect  *httpexpect.Expect
-	Cleanup func()
-	BaseURL string
+	Server     *httptest.Server
+	DB         *pgxpool.Pool
+	Engine     *gin.Engine
+	Expect     *httpexpect.Expect
+	Cleanup    func()
+	BaseURL    string
+	AppContext *app.Context
 }
 
 // AppContextConfigFunc is a function that receives an AppContext builder and configures it for testing
@@ -91,12 +92,13 @@ func NewTestServer(t *testing.T, configFunc ...AppContextConfigFunc) *TestServer
 	}
 
 	return &TestServer{
-		Server:  server,
-		DB:      db,
-		Engine:  engine,
-		Expect:  expect,
-		Cleanup: cleanup,
-		BaseURL: server.URL,
+		Server:     server,
+		DB:         db,
+		Engine:     engine,
+		Expect:     expect,
+		Cleanup:    cleanup,
+		BaseURL:    server.URL,
+		AppContext: appCtx,
 	}
 }
 
