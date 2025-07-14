@@ -110,11 +110,9 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService)
 	var UserRoutes = NewUserRoutes(appCtx.UserService)
 
-	// Create Leitner strategy with proper dependency injection
-	strategy := service.NewLeitnerSystemStrategy(appCtx.WordService, appCtx.DefinitionService)
-	var quizRoutes = NewQuizRoutes(strategy)
-
-	var ErrorReportsRoutes = ErrorReportRoutes{}
+	// Use Leitner strategy from AppContext
+	var quizRoutes = NewQuizRoutes(appCtx.LeitnerSystemStrategy)
+	var ErrorReportsRoutes = NewErrorReportRoutes(appCtx.ErrorReportService)
 	var demoRoutes = DemoRoutes{}
 
 	router := gin.New()

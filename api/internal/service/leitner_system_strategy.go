@@ -53,16 +53,6 @@ func NewLeitnerSystemStrategy(wordService *WordService, definitionService *Defin
 	}
 }
 
-// Default strategy uses a default word service - this is for backward compatibility
-func DefaultLeitnerSystemStrategy() LeitnerSystemStrategy {
-	db := common.GetDBConnection()
-	wordService := NewWordService(db, NewOpenAIModerationService())
-	definitionService := NewDefinitionService(db)
-	return LeitnerSystemStrategy{
-		wordService:       wordService,
-		definitionService: definitionService,
-	}
-}
 
 type Quiz = model.Quiz
 type QuizType = model.QuizType

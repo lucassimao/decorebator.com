@@ -119,12 +119,62 @@ This document outlines a comprehensive plan to eliminate all database initializa
 - Added proper lifecycle management with `Context.Close()` method
 - Ensured conditional service initialization (only create if not provided)
 
-### Step 2.2: Convert Service Constructors
+### Step 2.2: Convert Service Constructors ✅ IN PROGRESS
 - [ ] **Files**: All service files with `GetDBConnection()` calls
-- [ ] **Action**: Update all 24+ instances to use injected database
+- [ ] **Action**: Update all instances to use injected database
 - [ ] **Pattern**: `NewXXXService(db *pgxpool.Pool, deps...)` 
 - [ ] **Remove**: All `DefaultXXXService()` functions that call `GetDBConnection()`
 - [ ] **Test**: Verify all services use explicit dependencies
+
+**Remaining GetDBConnection() calls by priority:**
+1. **leitner_system_strategy.go**: 12 instances (starting with DefaultLeitnerSystemStrategy)
+2. **error_reporting.go**: 2 instances  
+3. **analytics.go**: 1 instance
+4. **definition_fetcher_worker.go**: 2 instances
+5. **example_audio_worker.go**: 1 instance
+6. **worker_validation.go**: 1 instance
+7. **river.go**: 1 instance
+8. **mail.go**: 1 instance
+
+**Current Focus**: Step 2.2.1 - Refactor LeitnerSystemStrategy service constructor
+
+#### Step 2.2.1: LeitnerSystemStrategy + ErrorReportService Refactoring ✅ COMPLETED
+- [x] **Action**: Remove `DefaultLeitnerSystemStrategy()` function from `leitner_system_strategy.go`
+- [x] **Update**: Add `LeitnerSystemStrategy` to `AppContext` struct and builder
+- [x] **Update**: Initialize `LeitnerSystemStrategy` in `AppContext.initializeServices()`
+- [x] **Update**: Use `AppContext.LeitnerSystemStrategy` in HTTP setup instead of creating new instance
+- [x] **Bonus**: Complete ErrorReportService dependency injection refactoring
+- [x] **Update**: Restructured ErrorReportService to separate dependencies from request data
+- [x] **Update**: Added ErrorReportService to AppContext with proper initialization
+- [x] **Update**: Simplified ErrorReportRoutes to only depend on ErrorReportService
+- [x] **Update**: Fix integration test to use proper service creation
+- [x] **Test**: Unit tests pass ✅, Linting passes ✅
+
+**Files Modified**:
+- `internal/service/leitner_system_strategy.go` - Removed `DefaultLeitnerSystemStrategy()` function
+- `internal/app/context.go` - Added LeitnerSystemStrategy AND ErrorReportService with proper initialization
+- `internal/http/setup.go` - Updated to use both services from AppContext
+- `internal/service/error_reporting.go` - Completely restructured to separate dependencies from request data
+- `internal/http/error_reporting.go` - Simplified to only depend on ErrorReportService
+- `tests/integration/errorreporting/side_effects_test.go` - Updated to create services properly
+
+**Result**: Eliminated multiple `GetDBConnection()` calls and converted both LeitnerSystemStrategy and ErrorReportService to proper dependency injection architecture
+
+**Architecture Benefits Achieved**:
+- Clean separation of concerns between services and HTTP handlers
+- Proper dependency injection managed by AppContext
+- Easier testing with mockable service dependencies
+- Reduced parameter passing complexity
+- Consistent architecture patterns across services
+
+#### Step 2.2.2: AnalyticsService Refactoring
+- [ ] **Action**: Remove `GetDBConnection()` call in `NewAnalyticsService()`
+- [ ] **Update**: Update constructor to accept database connection as parameter
+- [ ] **Update**: Enhance AnalyticsService management in AppContext if needed
+- [ ] **Update**: Update HTTP handlers to use AnalyticsService from AppContext
+- [ ] **Test**: Verify all tests pass and linting passes
+
+**Target**: `internal/service/analytics.go:52` - Single `GetDBConnection()` call in service constructor
 
 ### Step 2.3: Update HTTP Handlers
 - [ ] **Files**: `internal/http/*.go`
@@ -250,14 +300,14 @@ curl http://localhost:8080/health  # if health endpoint exists
 - [ ] **Phase 4**: Safe Initialization (0/3 steps completed)
 
 ### Current Status
-**Status**: 🟠 Phase 2 IN PROGRESS - AppContext Foundation Complete
+**Status**: 🟠 Phase 2 IN PROGRESS - Service Constructor Refactoring
 **Completed**: 
 - ✅ **Phase 1**: All critical fixes completed (global variables, init() functions, HTTP dependencies)
 - ✅ **Step 2.1**: Application Context system implemented with dependency injection
 
-**In Progress**: Phase 2.2 - Convert remaining service constructors to use dependency injection
+**In Progress**: Step 2.2.1 - Refactor LeitnerSystemStrategy service constructor
 
-**Next Action**: Convert service constructors to eliminate remaining `GetDBConnection()` calls
+**Next Action**: Remove DefaultLeitnerSystemStrategy() function and update all callers
 **Time Spent on Phase 1**: ~3 hours (within estimated range)
 **Remaining Estimated Time**: 
 - Phase 2: 4-8 hours  

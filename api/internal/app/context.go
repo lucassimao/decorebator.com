@@ -26,6 +26,8 @@ type Context struct {
 	SubscriptionService    *service.SubscriptionService
 	RevenueCatService      service.RevenueCatService
 	ModerationService      service.ModerationService
+	LeitnerSystemStrategy  *service.LeitnerSystemStrategy
+	ErrorReportService     *service.ErrorReportService
 
 	// Configuration
 	Environment string
@@ -126,6 +128,18 @@ func (b *ContextBuilder) WithRevenueCatServiceFunc(factory func(db *pgxpool.Pool
 	return b
 }
 
+// WithLeitnerSystemStrategy sets a custom Leitner system strategy
+func (b *ContextBuilder) WithLeitnerSystemStrategy(strategy *service.LeitnerSystemStrategy) *ContextBuilder {
+	b.context.LeitnerSystemStrategy = strategy
+	return b
+}
+
+// WithErrorReportService sets a custom error report service
+func (b *ContextBuilder) WithErrorReportService(errorReportService *service.ErrorReportService) *ContextBuilder {
+	b.context.ErrorReportService = errorReportService
+	return b
+}
+
 // Build constructs the Context with all dependencies initialized
 func (b *ContextBuilder) Build() (*Context, error) {
 	// Check for builder errors first
@@ -190,6 +204,23 @@ func (b *ContextBuilder) initializeServices() error {
 			apiClient := service.NewRevenueCatAPIClient()
 			b.context.RevenueCatService = service.NewRevenueCatService(b.context.Database, apiClient)
 		}
+	}
+
+	// Initialize LeitnerSystemStrategy if not provided
+	if b.context.LeitnerSystemStrategy == nil {
+		b.context.LeitnerSystemStrategy = service.NewLeitnerSystemStrategy(
+			b.context.WordService,
+			b.context.DefinitionService,
+		)
+	}
+
+	// Initialize ErrorReportService if not provided
+	if b.context.ErrorReportService == nil {
+		b.context.ErrorReportService = service.NewErrorReportService(
+			b.context.Database,
+			b.context.DefinitionService,
+			b.context.LeitnerSystemStrategy,
+		)
 	}
 
 	return nil
