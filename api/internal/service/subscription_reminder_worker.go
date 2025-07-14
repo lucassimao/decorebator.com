@@ -24,9 +24,10 @@ func (SubscriptionReminderArgs) Kind() string { return "subscription_reminder" }
 // SubscriptionReminderWorker sends renewal reminder emails
 type SubscriptionReminderWorker struct {
 	river.WorkerDefaults[SubscriptionReminderArgs]
-	db       *pgxpool.Pool
-	subRepo  *repository.SubscriptionRepository
-	userRepo *repository.UserRepository
+	db          *pgxpool.Pool
+	subRepo     *repository.SubscriptionRepository
+	userRepo    *repository.UserRepository
+	mailService *mail.MailService
 }
 
 // Work processes the subscription reminder job
@@ -73,7 +74,7 @@ func (w *SubscriptionReminderWorker) Work(ctx context.Context, job *river.Job[Su
 		SubscriptionID:  subscriptionID,
 	}
 
-	if err := mail.SendRenewalReminderEmail(user, emailData); err != nil {
+	if err := w.mailService.SendRenewalReminderEmail(user, emailData); err != nil {
 		return fmt.Errorf("failed to send renewal reminder: %w", err)
 	}
 
@@ -82,7 +83,7 @@ func (w *SubscriptionReminderWorker) Work(ctx context.Context, job *river.Job[Su
 }
 
 // ScheduleRenewalReminders schedules reminder emails for subscriptions renewing soon
-func ScheduleRenewalReminders(ctx context.Context, db *pgxpool.Pool) error {
+func ScheduleRenewalReminders(ctx context.Context, db *pgxpool.Pool, mailService *mail.MailService) error {
 	logger := common.Logger.With("func", "ScheduleRenewalReminders")
 	logger.Info("Running subscription renewal scheduler")
 
@@ -143,7 +144,7 @@ func ScheduleRenewalReminders(ctx context.Context, db *pgxpool.Pool) error {
 			SubscriptionID:  subscriptionID,
 		}
 
-		if err := mail.SendRenewalReminderEmail(user, emailData); err != nil {
+		if err := mailService.SendRenewalReminderEmail(user, emailData); err != nil {
 			logger.Error("Failed to send renewal reminder", "error", err, "subscription_id", sub.ID)
 			continue
 		}

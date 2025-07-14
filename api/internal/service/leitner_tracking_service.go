@@ -1,0 +1,170 @@
+package service
+
+import (
+	"context"
+	"errors"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+// LeitnerTrackingService manages the lifecycle and state of learning progress tracking records
+// in the leitner_system_tracking table. This service is responsible for:
+// - Creating tracking records for new definitions (IncludeDefinitions)
+// - Updating box progression and skip status after quizzes (UpdateQuizProgress)
+// - Managing temporary skips for error handling (ClearTemporarySkip, SetTemporarySkip)
+type LeitnerTrackingService struct {
+	db *pgxpool.Pool
+}
+
+// NewLeitnerTrackingService creates a new tracking service with database dependency
+func NewLeitnerTrackingService(db *pgxpool.Pool) *LeitnerTrackingService {
+	return &LeitnerTrackingService{
+		db: db,
+	}
+}
+
+// IncludeDefinitions initializes tracking records for new definitions in the Leitner system.
+// Each definition starts in box 1 (immediate review) and will progress through boxes based on quiz performance.
+//
+// Parameters:
+// - wordId: The ID of the word these definitions belong to
+// - userId: The ID of the user who will be quizzed on these definitions
+// - definitionIds: Array of definition IDs to include in the Leitner system
+// - tx: Database transaction to ensure atomicity
+//
+// Returns an error if any database operations fail.
+func (s *LeitnerTrackingService) IncludeDefinitions(wordID, userID int64, definitionIDs []int64, tx pgx.Tx) error {
+	for _, definitionID := range definitionIDs {
+		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id, word_id, updated_at)
+		VALUES ($1, $2, $3, $4, NOW())`
+
+		_, err := tx.Exec(context.Background(), query, userID, definitionID, 1, wordID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// UpdateQuizProgress updates the box progression and temporary skip status for a tracking record
+// based on quiz performance. This implements the core Leitner algorithm:
+// - Correct answers: Move to next box (max box 7) and clear temporary skip
+// - Incorrect answers: Reset to box 1 and set 10-minute temporary skip
+//
+// Parameters:
+// - trackingID: The ID of the leitner_system_tracking record to update
+// - isCorrect: Whether the quiz answer was correct
+// - tx: Database transaction (optional)
+//
+// Returns an error if database operations fail.
+func (s *LeitnerTrackingService) UpdateQuizProgress(trackingID int64, isCorrect bool, tx *pgx.Tx) error {
+	var execTx pgx.Tx
+	if tx != nil {
+		execTx = *tx
+	} else {
+		// Create transaction if none provided
+		newTx, err := s.db.Begin(context.Background())
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = newTx.Rollback(context.Background()) // Log rollback error but don't override the original error
+		}()
+		execTx = newTx
+	}
+
+	// Proper Leitner system logic with temporary skip on incorrect answers
+	query := `UPDATE leitner_system_tracking 
+	SET 
+		updated_at = now(), 
+		box_id = CASE 
+			WHEN $1 AND box_id < 7 THEN box_id + 1  -- Move to next box on success
+			WHEN $1 AND box_id = 7 THEN 7           -- Stay at max box
+			ELSE 1                                   -- Reset to box 1 on failure
+		END,
+		temporarily_skipped_until = CASE 
+			WHEN NOT $1 THEN NOW() + INTERVAL '10 minutes'  -- Skip for 10 minutes on incorrect answer
+			ELSE NULL                                        -- Clear skip on correct answer
+		END
+	WHERE id = $2`
+
+	_, err := execTx.Exec(context.Background(), query, isCorrect, trackingID)
+	if err != nil {
+		return err
+	}
+
+	// If we created the transaction, commit it
+	if tx == nil {
+		err = execTx.Commit(context.Background())
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ClearTemporarySkip removes the temporary skip status from tracking records.
+// This is called when errors are resolved (e.g., new definitions fetched, images generated).
+//
+// Parameters:
+// - report: ErrorReport containing either DefinitionId or WordId to identify records
+// - tx: Database transaction to ensure atomicity
+//
+// Returns an error if database operations fail.
+func (s *LeitnerTrackingService) ClearTemporarySkip(report ErrorReport, tx pgx.Tx) error {
+	baseQuery := `UPDATE leitner_system_tracking SET temporarily_skipped_until = NULL `
+	selection, queryArgs, err := buildQuerySelectionFromErrorReport(report)
+	if err != nil {
+		return err
+	}
+
+	query := baseQuery + selection
+	_, err = tx.Exec(context.Background(), query, queryArgs...)
+	return err
+}
+
+// SetTemporarySkip adds a temporary skip status to tracking records for error handling.
+// This prevents problematic definitions from appearing in quizzes for 1 hour.
+//
+// Parameters:
+// - report: ErrorReport containing either DefinitionId or WordId to identify records
+// - tx: Database transaction to ensure atomicity
+//
+// Returns an error if database operations fail.
+func (s *LeitnerTrackingService) SetTemporarySkip(report ErrorReport, tx pgx.Tx) error {
+	if report.DefinitionId == nil && report.WordId == nil {
+		return errors.New("definition or word missing")
+	}
+
+	baseQuery := `UPDATE leitner_system_tracking SET temporarily_skipped_until = NOW() + INTERVAL '1 hour' `
+	selection, queryArgs, err := buildQuerySelectionFromErrorReport(report)
+	if err != nil {
+		return err
+	}
+
+	query := baseQuery + selection
+	_, err = tx.Exec(context.Background(), query, queryArgs...)
+	return err
+}
+
+// buildQuerySelectionFromErrorReport is a helper function that builds WHERE clause
+// and query arguments for leitner_system_tracking operations based on ErrorReport.
+// This is extracted from the original LeitnerSystemStrategy implementation.
+func buildQuerySelectionFromErrorReport(report ErrorReport) (string, []interface{}, error) {
+	var selection string
+	var queryArgs []interface{}
+
+	if report.DefinitionId != nil {
+		selection = `WHERE definition_id = $1 AND user_id = $2`
+		queryArgs = []interface{}{*report.DefinitionId, report.UserId}
+	} else if report.WordId != nil {
+		selection = `WHERE word_id = $1 AND user_id = $2`
+		queryArgs = []interface{}{*report.WordId, report.UserId}
+	} else {
+		return "", nil, errors.New("either definition_id or word_id must be provided")
+	}
+
+	return selection, queryArgs, nil
+}

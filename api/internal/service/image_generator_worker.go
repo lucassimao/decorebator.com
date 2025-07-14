@@ -25,6 +25,17 @@ func (ImageGeneratorArgs) Kind() string { return "ImageGenerator" }
 
 type ImageGeneratorWorker struct {
 	river.WorkerDefaults[ImageGeneratorArgs]
+	definitionService      *DefinitionService
+	definitionImageService *DefinitionImageService
+	userService            *UserService
+}
+
+func NewImageGeneratorWorker(definitionService *DefinitionService, definitionImageService *DefinitionImageService, userService *UserService) *ImageGeneratorWorker {
+	return &ImageGeneratorWorker{
+		definitionService:      definitionService,
+		definitionImageService: definitionImageService,
+		userService:            userService,
+	}
 }
 
 func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGeneratorArgs]) error {
@@ -37,7 +48,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	// Validate user eligibility before processing (skip for admin/system jobs)
 	if userID != nil {
-		if err := ValidateUserEligibilityForWorkers(*userID); err != nil {
+		if err := w.userService.ValidateUserEligibilityForWorkers(*userID); err != nil {
 			logger.Warn("User not eligible for image generation",
 				"userId", *userID, "definitionId", definitionID, "error", err)
 			// Cancel job permanently - user needs to upgrade
@@ -45,7 +56,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		}
 	}
 
-	definition, err := GetDefinitionById(job.Args.DefinitionId)
+	definition, err := w.definitionService.GetDefinitionByID(job.Args.DefinitionId)
 	if err != nil {
 		logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
 		return river.JobCancel(err)
@@ -100,7 +111,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	logger.Debug("image generated", "definitionId", definitionID, "url", url)
 
-	_, err = SaveDefinitionImage(model.CreateDefinitionImageDTO{
+	_, err = w.definitionImageService.SaveDefinitionImage(model.CreateDefinitionImageDTO{
 		Api:          model.OPENAI,
 		URL:          url,
 		Description:  longestExample,

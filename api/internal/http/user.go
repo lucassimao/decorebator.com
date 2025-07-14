@@ -59,7 +59,18 @@ type UpdateProfilePictureInput struct {
 	Extension  string `json:"extension"`
 }
 
-type UserRoutes struct{}
+type UserRoutes struct {
+	userService *service.UserService
+	mailService *mail.MailService
+}
+
+// NewUserRoutes creates a new UserRoutes with injected dependencies
+func NewUserRoutes(userService *service.UserService, mailService *mail.MailService) *UserRoutes {
+	return &UserRoutes{
+		userService: userService,
+		mailService: mailService,
+	}
+}
 
 func translateValidationErrors(errs validator.ValidationErrors) map[string]string {
 	var errors = make(map[string]string)
@@ -101,7 +112,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		country = &input.Country
 	}
 
-	user, err := service.SaveUser(input.FirstName, input.LastName, input.Password, input.Email, country)
+	user, err := h.userService.SaveUser(input.FirstName, input.LastName, input.Password, input.Email, country)
 
 	if err != nil {
 		switch err.(type) {
@@ -124,9 +135,9 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	c.Header("authorization", jwtToken)
 	writeAuthenticationCookie(c, jwtToken)
 	c.Status(http.StatusCreated)
-	go mail.AddContactToList(user)
+	go h.mailService.AddContactToList(user)
 	go func() {
-		if err := mail.SendWelcomeEmail(input.Email); err != nil {
+		if err := h.mailService.SendWelcomeEmail(input.Email); err != nil {
 			common.Logger.Error("failed to send welcome email", "email", input.Email, "error", err)
 		}
 	}()
@@ -140,15 +151,15 @@ func (h *UserRoutes) Login(c *gin.Context) {
 		return
 	}
 
-	jwtToken, err := service.LoginUser(input.Email, input.Password)
-	if err == nil {
-		c.Header("authorization", jwtToken)
-		writeAuthenticationCookie(c, jwtToken)
-		c.Status(http.StatusOK)
-
-	} else {
-		c.Status(http.StatusBadRequest)
+	jwtToken, err := h.userService.LoginUser(c.Request.Context(), input.Email, input.Password)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password"})
+		return
 	}
+
+	c.Header("authorization", jwtToken)
+	writeAuthenticationCookie(c, jwtToken)
+	c.Status(http.StatusOK)
 }
 
 func (h *UserRoutes) Logout(c *gin.Context) {
@@ -180,7 +191,7 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	if err := service.UpdatePassword(payload.UserId, input.Password); err != nil {
+	if err := h.userService.UpdatePassword(payload.UserId, input.Password); err != nil {
 		common.Logger.Error("failed to update password", "userId", payload.UserId, "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
 		return
@@ -206,7 +217,7 @@ func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
 		return
 	}
 
-	err := mail.SendResetPasswordEmail(input.Email)
+	err := h.mailService.SendResetPasswordEmail(input.Email)
 	if err != nil {
 		common.Logger.Error("failed to send reset password email", "error", err)
 	}
@@ -274,7 +285,7 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 
 	var newPassword *string
 	if input.UpdatePasswordInput != nil {
-		_, err := service.LoginUser(user.Email, input.UpdatePasswordInput.CurrentPassword)
+		_, err := h.userService.LoginUser(c.Request.Context(), user.Email, input.UpdatePasswordInput.CurrentPassword)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Could not update password."})
 			return
@@ -316,7 +327,7 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 	}
 
 	// Update user profile
-	updatedUser, err := service.UpdateProfile(user.ID, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, newPassword, dateOfBirth)
+	updatedUser, err := h.userService.UpdateProfile(user.ID, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, newPassword, dateOfBirth)
 	if err != nil {
 		switch err.(type) {
 		case common.BusinessError:
@@ -348,7 +359,7 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 		return
 	}
 
-	user, planChanged, err := service.GetProfile(userID)
+	user, planChanged, err := h.userService.GetProfile(userID)
 	if err != nil {
 		// If user not found (e.g., deleted), return 401 instead of 500
 		if err.Error() == "user not found" {
@@ -392,7 +403,7 @@ func (h *UserRoutes) DeleteProfile(c *gin.Context) {
 		return
 	}
 
-	err := service.Delete(userID)
+	err := h.userService.Delete(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "User could not be deleted."})
 		return

@@ -10,7 +10,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/openai"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 )
 
@@ -24,27 +24,32 @@ func (DefinitionFetcherArgs) Kind() string { return "DefinitionFetcher" }
 
 type DefinitionFetcherWorker struct {
 	river.WorkerDefaults[DefinitionFetcherArgs]
-	wordService *WordService
+	db                     *pgxpool.Pool
+	wordService            *WordService
+	definitionService      *DefinitionService
+	jobService             JobService
+	leitnerSystemStrategy  *LeitnerSystemStrategy
+	leitnerTrackingService *LeitnerTrackingService
+	userService            *UserService
 }
 
-func NewDefinitionFetcherWorker(wordService *WordService) *DefinitionFetcherWorker {
+func NewDefinitionFetcherWorker(db *pgxpool.Pool, wordService *WordService, definitionService *DefinitionService, jobService JobService, leitnerSystemStrategy *LeitnerSystemStrategy, leitnerTrackingService *LeitnerTrackingService, userService *UserService) *DefinitionFetcherWorker {
 	return &DefinitionFetcherWorker{
-		wordService: wordService,
+		db:                     db,
+		wordService:            wordService,
+		definitionService:      definitionService,
+		jobService:             jobService,
+		leitnerSystemStrategy:  leitnerSystemStrategy,
+		leitnerTrackingService: leitnerTrackingService,
+		userService:            userService,
 	}
 }
 
-// getWordlistLanguage is a helper function for other workers that only need language code
-func getWordlistLanguage(wordID int64) (string, error) {
-	db := common.GetDBConnection()
-	wordService := NewWordService(db, NewOpenAIModerationService())
-	languageCode, _, err := wordService.GetWordlistLanguageAndPronunciation(wordID)
-	return languageCode, err
-}
 
 func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[DefinitionFetcherArgs]) error {
 	// Validate user eligibility before processing (skip if userId is nil - admin context)
 	if job.Args.UserID != nil {
-		if err := ValidateUserEligibilityForWorkers(*job.Args.UserID); err != nil {
+		if err := w.userService.ValidateUserEligibilityForWorkers(*job.Args.UserID); err != nil {
 			common.Logger.Warn("User not eligible for definition fetching",
 				"userId", *job.Args.UserID, "wordId", job.Args.WordId, "error", err)
 			// Cancel job permanently - user needs to upgrade
@@ -125,9 +130,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	}
 
 	// Get database connection for transaction
-	db := common.GetDBConnection()
-
-	tx, err := db.Begin(ctx)
+	tx, err := w.db.Begin(ctx)
 	if err != nil {
 		if err = w.wordService.UpdateProcessingStatus(wordID, "failed", "Failed to start database transaction", nil); err != nil {
 			logger.Error("failed to update processing status", "wordId", wordID, "error", err)
@@ -146,7 +149,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 	}()
 
-	definitions, err := SaveDefinition(word.ID, definitionData.Definitions, &tx)
+	definitions, err := w.definitionService.SaveDefinition(word.ID, definitionData.Definitions, &tx)
 
 	if err != nil {
 		logger.Error("failed to save definitions", "error", err)
@@ -173,26 +176,24 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	for _, definition := range definitions {
 		definitionIds = append(definitionIds, definition.ID)
 
-		_, err = TriggerGenerateImageWorker(definition.ID, job.Args.UserID, nil, &tx)
+		_, err = w.jobService.ScheduleImageJob(definition.ID, job.Args.UserID, nil, &tx)
 
 		if err != nil {
 			logger.Error("failed to trigger image generator", "definitionId", definition.ID, "error", err)
 		}
 
-		// Queue example audio generation job
-		err = QueueExampleAudioJob(definition.ID, word.ID, job.Args.UserID, &tx)
+		err = w.jobService.ScheduleExampleAudioJob(definition.ID, word.ID, job.Args.UserID, &tx)
 		if err != nil {
 			logger.Error("failed to queue example audio job", "definitionId", definition.ID, "wordId", word.ID, "error", err)
 		}
 	}
-	strategy := NewLeitnerSystemStrategy(w.wordService)
-	if includeErr := strategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
+	if includeErr := w.leitnerTrackingService.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
 		logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)
 	}
 
 	// if this job was triggered by an error report, then mark the issue as solved
 	if job.Args.ErrorReport != nil {
-		if err := strategy.MarkErrorResolved(*job.Args.ErrorReport); err != nil {
+		if err := w.leitnerSystemStrategy.MarkErrorResolved(*job.Args.ErrorReport); err != nil {
 			return err
 		}
 	}
@@ -300,28 +301,3 @@ func validateDefinitions(word string, definitions []*model.Definition) []string 
 	return validationErrors
 }
 
-// QueueExampleAudioJob queues a job to generate example audio for a definition
-func QueueExampleAudioJob(definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error {
-	client, err := GetRiverClient()
-	if err != nil {
-		return err
-	}
-
-	args := ExampleAudioArgs{
-		DefinitionID: definitionID,
-		WordID:       wordID,
-		UserID:       userID,
-	}
-
-	opts := &river.InsertOpts{
-		Queue: EXAMPLE_AUDIO_QUEUE,
-	}
-
-	if tx != nil {
-		_, err = client.InsertTx(context.Background(), *tx, args, opts)
-	} else {
-		_, err = client.Insert(context.Background(), args, opts)
-	}
-
-	return err
-}

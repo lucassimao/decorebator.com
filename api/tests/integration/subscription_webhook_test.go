@@ -109,7 +109,7 @@ func TestCustomerSubscriptionCreatedWebhook(t *testing.T) {
 		assert.Greater(t, jobCount, 0, "Should have enqueued at least one job")
 
 		// Process the job manually
-		subService := service.NewSubscriptionService(ts.DB)
+		subService := service.NewSubscriptionService(ts.DB, ts.AppContext.MailService)
 		err = ts.ProcessStripeWebhookJob(t, subService)
 		require.NoError(t, err)
 
@@ -203,7 +203,7 @@ func TestCustomerSubscriptionCreatedWebhook(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		// Process the job
-		subService := service.NewSubscriptionService(ts.DB)
+		subService := service.NewSubscriptionService(ts.DB, ts.AppContext.MailService)
 		err = ts.ProcessStripeWebhookJob(t, subService)
 		require.NoError(t, err)
 
@@ -318,7 +318,7 @@ func TestCustomerSubscriptionUpdatedWebhook(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		// Process the job
-		subService := service.NewSubscriptionService(ts.DB)
+		subService := service.NewSubscriptionService(ts.DB, ts.AppContext.MailService)
 		err = ts.ProcessStripeWebhookJob(t, subService)
 		require.NoError(t, err)
 
@@ -420,7 +420,7 @@ func TestCustomerSubscriptionUpdatedWebhook(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		// Process the job
-		subService := service.NewSubscriptionService(ts.DB)
+		subService := service.NewSubscriptionService(ts.DB, ts.AppContext.MailService)
 		err = ts.ProcessStripeWebhookJob(t, subService)
 		require.NoError(t, err)
 
@@ -520,7 +520,7 @@ func TestCustomerSubscriptionDeletedWebhook(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		// Process the job
-		subService := service.NewSubscriptionService(ts.DB)
+		subService := service.NewSubscriptionService(ts.DB, ts.AppContext.MailService)
 		err = ts.ProcessStripeWebhookJob(t, subService)
 		require.NoError(t, err)
 
@@ -644,7 +644,7 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 		assert.Greater(t, jobCount, 0, "Should have enqueued at least one job")
 
 		// Process the job
-		subService := service.NewSubscriptionService(ts.DB)
+		subService := service.NewSubscriptionService(ts.DB, ts.AppContext.MailService)
 		err = ts.ProcessStripeWebhookJob(t, subService)
 		require.NoError(t, err)
 
@@ -699,7 +699,7 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		// Process the job (should handle the error gracefully)
-		subService := service.NewSubscriptionService(ts.DB)
+		subService := service.NewSubscriptionService(ts.DB, ts.AppContext.MailService)
 		err = ts.ProcessStripeWebhookJob(t, subService)
 		// The job should fail but not crash the test
 		assert.Error(t, err, "Should error when subscription not found")
@@ -745,7 +745,7 @@ func TestInvoicePaymentFailedWebhook(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		// Process the specific job for this event (should handle gracefully)
-		subService := service.NewSubscriptionService(ts.DB)
+		subService := service.NewSubscriptionService(ts.DB, ts.AppContext.MailService)
 		err = ts.ProcessStripeWebhookJobWithEventID(t, subService, eventID)
 		require.NoError(t, err, "Should handle invoice without subscription gracefully")
 	})

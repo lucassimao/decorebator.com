@@ -25,13 +25,14 @@ type SubscriptionService struct {
 	db            *pgxpool.Pool
 	subRepo       *repository.SubscriptionRepository
 	userRepo      *repository.UserRepository
+	mailService   *mail.MailService
 	stripeKey     string
 	webhookSecret string
 	successURL    string
 	cancelURL     string
 }
 
-func NewSubscriptionService(db *pgxpool.Pool) *SubscriptionService {
+func NewSubscriptionService(db *pgxpool.Pool, mailService *mail.MailService) *SubscriptionService {
 	// Validate required environment variables
 	stripeKey := os.Getenv("STRIPE_API_KEY")
 	if stripeKey == "" {
@@ -60,6 +61,7 @@ func NewSubscriptionService(db *pgxpool.Pool) *SubscriptionService {
 		db:            db,
 		subRepo:       repository.NewSubscriptionRepository(db),
 		userRepo:      &repository.UserRepository{Db: db},
+		mailService:   mailService,
 		stripeKey:     stripeKey,
 		webhookSecret: webhookSecret,
 		successURL:    successURL,
@@ -241,7 +243,7 @@ func (s *SubscriptionService) handleSubscriptionCreated(ctx context.Context, eve
 		SubscriptionID:  stripeSubscription.ID,
 	}
 
-	if err := mail.SendSubscriptionActivatedEmail(user, emailData); err != nil {
+	if err := s.mailService.SendSubscriptionActivatedEmail(user, emailData); err != nil {
 		// Log error but don't fail the webhook
 		common.CaptureError(ctx, err, "Failed to send subscription activated email",
 			"user_id", userID,
@@ -358,7 +360,7 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 		SubscriptionID:   stripeSubscription.ID,
 	}
 
-	if err := mail.SendSubscriptionCancelledEmail(user, emailData); err != nil {
+	if err := s.mailService.SendSubscriptionCancelledEmail(user, emailData); err != nil {
 		// Log error but don't fail the webhook
 		common.CaptureError(ctx, err, "Failed to send subscription canceled email",
 			"user_id", sub.UserID,
@@ -475,7 +477,7 @@ func (s *SubscriptionService) sendPaymentFailedEmail(ctx context.Context, userID
 	}
 
 	// Send email using package-level mail function
-	return mail.SendPaymentFailedEmail(user, emailData)
+	return s.mailService.SendPaymentFailedEmail(user, emailData)
 }
 
 // getOrCreateStripeCustomer gets existing or creates new Stripe customer
@@ -630,4 +632,9 @@ func (s *SubscriptionService) CountWordsInWordlist(ctx context.Context, wordlist
 // GetWebhookSecret returns the webhook secret for external use
 func (s *SubscriptionService) GetWebhookSecret() string {
 	return s.webhookSecret
+}
+
+// GetActiveSubscriptionForUser returns the active subscription for a user (includes grace period)
+func (s *SubscriptionService) GetActiveSubscriptionForUser(ctx context.Context, userID int64) (*model.Subscription, error) {
+	return s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
 }

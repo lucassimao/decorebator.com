@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/mail"
 	"decorebator.com/internal/repository"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 )
@@ -31,26 +33,35 @@ func (w *NoOpWorker) Work(ctx context.Context, job *river.Job[NoOpJobArgs]) erro
 	return nil
 }
 
-func GetRiverClient() (*river.Client[pgx.Tx], error) {
-	db := common.GetDBConnection()
 
-	// Create word service for workers
-	wordService := NewWordService(db, NewOpenAIModerationService())
-
+// NewWorkerRiverClient creates a River client for worker processes using individual services
+// This eliminates circular dependencies by accepting services as parameters
+func NewWorkerRiverClient(
+	db *pgxpool.Pool,
+	definitionService *DefinitionService,
+	definitionImageService *DefinitionImageService,
+	wordService *WordService,
+	userService *UserService,
+	leitnerSystemStrategy *LeitnerSystemStrategy,
+	jobService JobService,
+	revenueCatService RevenueCatService,
+	subscriptionService *SubscriptionService,
+	mailService *mail.MailService,
+) (*river.Client[pgx.Tx], error) {
 	riverWorkers := river.NewWorkers()
-	river.AddWorker(riverWorkers, &ImageGeneratorWorker{})
-	river.AddWorker(riverWorkers, NewTextToSpeechWorker(wordService))
-	river.AddWorker(riverWorkers, NewDefinitionFetcherWorker(wordService))
-	river.AddWorker(riverWorkers, &ExampleAudioWorker{})
+	river.AddWorker(riverWorkers, NewImageGeneratorWorker(definitionService, definitionImageService, userService))
+	river.AddWorker(riverWorkers, NewTextToSpeechWorker(wordService, definitionService, leitnerSystemStrategy, userService))
+	river.AddWorker(riverWorkers, NewDefinitionFetcherWorker(db, wordService, definitionService, jobService, leitnerSystemStrategy, leitnerSystemStrategy.leitnerTrackingService, userService))
+	river.AddWorker(riverWorkers, NewExampleAudioWorker(definitionService, wordService, userService))
 	river.AddWorker(riverWorkers, &SubscriptionReminderWorker{
-		db:       db,
-		subRepo:  repository.NewSubscriptionRepository(db),
-		userRepo: &repository.UserRepository{Db: db},
+		db:          db,
+		subRepo:     repository.NewSubscriptionRepository(db),
+		userRepo:    &repository.UserRepository{Db: db},
+		mailService: mailService,
 	})
 	river.AddWorker(riverWorkers, &NoOpWorker{})
-	apiClient := NewRevenueCatAPIClient()
-	river.AddWorker(riverWorkers, NewRevenueCatWebhookWorker(NewRevenueCatService(db, apiClient)))
-	river.AddWorker(riverWorkers, NewStripeWebhookWorker(NewSubscriptionService(db)))
+	river.AddWorker(riverWorkers, NewRevenueCatWebhookWorker(revenueCatService))
+	river.AddWorker(riverWorkers, NewStripeWebhookWorker(subscriptionService))
 
 	// Create periodic jobs for renewal reminders
 	periodicJobs := []*river.PeriodicJob{
@@ -60,7 +71,7 @@ func GetRiverClient() (*river.Client[pgx.Tx], error) {
 				// Schedule renewal reminders by checking subscriptions
 				go func() {
 					ctx := context.Background()
-					if err := ScheduleRenewalReminders(ctx, db); err != nil {
+					if err := ScheduleRenewalReminders(ctx, db, mailService); err != nil {
 						common.Logger.Error("Failed to schedule renewal reminders", "error", err)
 					}
 				}()

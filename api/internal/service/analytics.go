@@ -10,6 +10,7 @@ import (
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -23,6 +24,12 @@ type AnalyticsService struct {
 	repo       *repository.AnalyticsRepository
 	userID     int64
 	wordlistID int64
+}
+
+// LeitnerAnalyticsWriter defines the focused interface for analytics operations needed by LeitnerSystemStrategy
+type LeitnerAnalyticsWriter interface {
+	TrackQuiz(ctx context.Context, result QuizResult, tx pgx.Tx) error
+	UpdateBoxDistribution(ctx context.Context, userID, wordlistID int64) error
 }
 
 // AnalyticsServiceInterface defines the methods that both regular and cached analytics services must implement
@@ -48,9 +55,7 @@ type AnalyticsConfig struct {
 }
 
 // NewAnalyticsService creates an analytics service instance with the given configuration
-func NewAnalyticsService(cfg AnalyticsConfig) (AnalyticsServiceInterface, error) {
-	db := common.GetDBConnection()
-
+func NewAnalyticsService(db *pgxpool.Pool, cfg AnalyticsConfig) (AnalyticsServiceInterface, error) {
 	repo := repository.NewAnalyticsRepository(db)
 	baseService := &AnalyticsService{
 		repo:       repo,

@@ -3,7 +3,11 @@ package common
 import (
 	"encoding/base64"
 	"errors"
+	"os"
+	"strconv"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // DecodeImageBase64 takes a Base64 string (with or without a `data:` URI prefix)
@@ -54,4 +58,28 @@ func DecodeImageBase64(b64 string) ([]byte, string, error) {
 	}
 
 	return nil, "", errors.New("invalid base64 data")
+}
+
+// GetBcryptCost returns the appropriate bcrypt cost factor based on the environment
+// and any environment variable override. This allows for fast tests (cost 4) while
+// maintaining production security (default cost 10).
+func GetBcryptCost() int {
+	// Check for explicit environment variable override first
+	if costStr := os.Getenv("BCRYPT_COST"); costStr != "" {
+		if cost, err := strconv.Atoi(costStr); err == nil {
+			// Validate cost is within bcrypt limits
+			if cost >= bcrypt.MinCost && cost <= bcrypt.MaxCost {
+				return cost
+			}
+		}
+	}
+
+	// Use MinCost for non-production environments (test, development)
+	env := os.Getenv("ENV")
+	if env == "test" || env == "development" {
+		return bcrypt.MinCost // Cost 4 - fastest for non-production
+	}
+
+	// Production default
+	return bcrypt.DefaultCost // Cost 10 - production security
 }

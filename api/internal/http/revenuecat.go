@@ -9,12 +9,10 @@ import (
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
-	"github.com/riverqueue/river"
 )
 
 // HandleRevenueCatWebhook handles RevenueCat webhook events
-func HandleRevenueCatWebhook(riverClient *river.Client[pgx.Tx]) gin.HandlerFunc {
+func HandleRevenueCatWebhook(jobService service.JobService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 1. Verify Authorization header
 		authHeader := c.GetHeader("Authorization")
@@ -38,11 +36,7 @@ func HandleRevenueCatWebhook(riverClient *river.Client[pgx.Tx]) gin.HandlerFunc 
 		}
 
 		// Enqueue a job to process the webhook
-		_, err = riverClient.Insert(c.Request.Context(), service.RevenueCatWebhookArgs{
-			Payload: payload,
-		}, &river.InsertOpts{
-			Queue: "revenuecat-webhook",
-		})
+		_, err = jobService.ScheduleRevenueCatWebhookJob("webhook", payload)
 
 		if err != nil {
 			common.Logger.Error("failed to enqueue revenuecat webhook job", "error", err)

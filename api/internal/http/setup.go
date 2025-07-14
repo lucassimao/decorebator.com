@@ -1,28 +1,27 @@
 package http
 
 import (
-	"fmt"
-	"log"
 	"os"
+	"time"
 
+	"decorebator.com/internal/app"
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/service"
 	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/riverqueue/river"
 )
 
-// Config holds optional configuration for setting up routes
+// Config holds optional configuration for setting up routes (deprecated - use AppContext instead)
 type Config struct {
-	WordService       *service.WordService
-	WordlistService   *service.WordlistService
-	ModerationService service.ModerationService
-	Database          *pgxpool.Pool
-	riverClient       *river.Client[pgx.Tx]
-	RevenueCatService service.RevenueCatService
+	WordService            *service.WordService
+	WordlistService        *service.WordlistService
+	DefinitionService      *service.DefinitionService
+	DefinitionImageService *service.DefinitionImageService
+	ModerationService      service.ModerationService
+	Database               *pgxpool.Pool
+	RevenueCatService      service.RevenueCatService
 }
 
 func init() {
@@ -48,70 +47,24 @@ func init() {
 
 }
 
-// applyDefaults fills in missing configuration with default values
-func applyDefaults(config *Config) (*Config, error) {
-	// Start with empty config if nil
-	if config == nil {
-		config = &Config{}
+// SetupRoutes creates a Gin engine with routes using Context for dependency injection
+func SetupRoutes(appCtx *app.Context) *gin.Engine {
+	if appCtx == nil {
+		panic("Context cannot be nil")
 	}
 
-	// Set riverClient if not provided
-	if config.riverClient == nil {
-		riverClient, err := service.GetRiverClient()
-		if err != nil {
-			log.Fatalf("failed to create river client: %s\n", err)
-		}
-		config.riverClient = riverClient
-	}
+	// Create repository instances
+	subRepo := repository.NewSubscriptionRepository(appCtx.Database)
 
-	// Set default database connection if not provided
-	if config.Database == nil {
-		db := common.GetDBConnection()
-		config.Database = db
-	}
+	// Initialize route handlers using services from AppContext
+	var WordRoutes = NewWordRoutes(appCtx.WordService, appCtx.DefinitionService)
+	var WorkerRoutes = NewWorkerRoutes(appCtx.DefinitionService, appCtx.JobService)
+	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService)
+	var UserRoutes = NewUserRoutes(appCtx.UserService, appCtx.MailService)
 
-	// Set default moderation service if not provided
-	if config.ModerationService == nil {
-		config.ModerationService = service.NewOpenAIModerationService()
-	}
-
-	// Set default word service if not provided
-	if config.WordService == nil {
-		config.WordService = service.NewWordService(config.Database, config.ModerationService)
-	}
-
-	// Set default wordlist service if not provided
-	if config.WordlistService == nil {
-		config.WordlistService = service.NewWordlistService(config.Database, config.ModerationService)
-	}
-
-	// Set default RevenueCat service if not provided
-	if config.RevenueCatService == nil {
-		apiClient := service.NewRevenueCatAPIClient()
-		config.RevenueCatService = service.NewRevenueCatService(config.Database, apiClient)
-	}
-
-	return config, nil
-}
-
-func SetupRoutes(config *Config) *gin.Engine {
-	// Apply defaults to configuration
-	config, err := applyDefaults(config)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to apply default configuration: %v", err))
-	}
-
-	subService := service.NewSubscriptionService(config.Database)
-	subRepo := repository.NewSubscriptionRepository(config.Database)
-	rcService := config.RevenueCatService
-
-	// Initialize route handlers with dependency injection
-	var WordRoutes = NewWordRoutes(config.WordService)
-	var WorkerRoutes = WorkerRoutes{}
-	var WordlistRoutes = NewWordlistsRoutes(config.WordlistService, config.WordService)
-	var UserRoutes = UserRoutes{}
-	var quizRoutes = QuizRoutes{}
-	var ErrorReportsRoutes = ErrorReportRoutes{}
+	// Use Leitner strategy from AppContext
+	var quizRoutes = NewQuizRoutes(appCtx.LeitnerSystemStrategy)
+	var ErrorReportsRoutes = NewErrorReportRoutes(appCtx.ErrorReportService)
 	var demoRoutes = DemoRoutes{}
 
 	router := gin.New()
@@ -120,6 +73,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(ErrorMiddleware())
 	router.Use(CORSMiddleware())
+	router.Use(TimeoutMiddleware(2 * time.Second))
 
 	// Routes without authentication
 	{
@@ -130,10 +84,10 @@ func SetupRoutes(config *Config) *gin.Engine {
 		router.POST("/password/send-reset-email", UserRoutes.SendResetPasswordEmail)
 
 		// Stripe webhook endpoint
-		router.POST("/webhook/stripe", HandleStripeWebhook(subService, config.riverClient))
+		router.POST("/webhook/stripe", HandleStripeWebhook(appCtx.SubscriptionService, appCtx.JobService))
 
 		// RevenueCat webhook endpoint
-		router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(config.riverClient))
+		router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(appCtx.JobService))
 
 		// Redirect to local expo scheme
 		router.GET("/subscription/checkout-redirect", CheckoutRedirect())
@@ -147,7 +101,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 	authenticatedRoutes.Use(Authenticate, SentryUserContextMiddleware())
 	{
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
-		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(subService, "create_wordlist"), WordlistRoutes.Create)
+		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(appCtx.SubscriptionService, "create_wordlist"), WordlistRoutes.Create)
 		authenticatedRoutes.GET("/wordlists/pronunciation-systems", WordlistRoutes.GetPronunciationSystems)
 		authenticatedRoutes.GET("/wordlists/:wordlistId", WordlistRoutes.GetById)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId", WordlistRoutes.Update)
@@ -157,21 +111,21 @@ func SetupRoutes(config *Config) *gin.Engine {
 		authenticatedRoutes.DELETE("/wordlists/:wordlistId/words/:wordId", WordRoutes.Delete)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId/words/:wordId", WordRoutes.Update)
 		authenticatedRoutes.GET("/wordlists/:wordlistId/words/:wordId/definitions", WordRoutes.GetDefinitions)
-		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(subService, "add_word"), WordRoutes.Create)
+		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(appCtx.SubscriptionService, "add_word"), WordRoutes.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizRoutes.Save)
-		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(), ErrorReportsRoutes.Create)
-		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus())
+		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(appCtx.Database), ErrorReportsRoutes.Create)
+		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus(appCtx.Database))
 
-		RegisterAnalyticsRoutes(authenticatedRoutes)
+		RegisterAnalyticsRoutes(authenticatedRoutes, appCtx.WordlistService, appCtx.Database)
 
 		// Subscription routes
-		authenticatedRoutes.POST("/subscription/checkout-session", CreateCheckoutSession(subService))
+		authenticatedRoutes.POST("/subscription/checkout-session", CreateCheckoutSession(appCtx.SubscriptionService))
 		authenticatedRoutes.GET("/subscription/status", GetSubscriptionStatus(subRepo))
-		authenticatedRoutes.POST("/subscription/cancel", CancelSubscription(subService))
+		authenticatedRoutes.POST("/subscription/cancel", CancelSubscription(appCtx.SubscriptionService))
 		authenticatedRoutes.GET("/subscription/history", GetSubscriptionHistory(subRepo))
 		// RevenueCat routes
-		authenticatedRoutes.POST("/subscription/revenuecat/restore", RestorePurchases(rcService))
+		authenticatedRoutes.POST("/subscription/revenuecat/restore", RestorePurchases(appCtx.RevenueCatService))
 
 		// User profile routes
 		authenticatedRoutes.GET("/users", UserRoutes.GetProfile)
@@ -193,7 +147,7 @@ func SetupRoutes(config *Config) *gin.Engine {
 	adminRoutes := router.Group("/static/admin")
 	adminRoutes.Use(AuthenticateStatic)
 	{
-		adminRoutes.GET("/errorReports/stats", GetErrorReportStats())
+		adminRoutes.GET("/errorReports/stats", GetErrorReportStats(appCtx.Database))
 	}
 
 	return router

@@ -8,7 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ErrorReportRoutes struct{}
+type ErrorReportRoutes struct {
+	errorReportService *service.ErrorReportService
+}
+
+func NewErrorReportRoutes(errorReportService *service.ErrorReportService) *ErrorReportRoutes {
+	return &ErrorReportRoutes{
+		errorReportService: errorReportService,
+	}
+}
 
 type ErrorReportRequest struct {
 	WordID       int64                   `json:"wordId"`
@@ -29,7 +37,7 @@ func (h *ErrorReportRoutes) Create(c *gin.Context) {
 	userId := c.GetInt64("userID")
 
 	// Call service with individual parameters
-	err := service.ReportError(
+	err := h.errorReportService.ReportError(
 		c.Request.Context(),
 		input.ErrorType,
 		input.WordID,

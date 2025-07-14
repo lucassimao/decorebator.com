@@ -17,14 +17,16 @@ type WordInput struct {
 }
 
 type WordRoutes struct {
-	wordService *service.WordService
+	wordService       *service.WordService
+	definitionService *service.DefinitionService
 }
 
 type Word = service.Word
 
-func NewWordRoutes(wordService *service.WordService) *WordRoutes {
+func NewWordRoutes(wordService *service.WordService, definitionService *service.DefinitionService) *WordRoutes {
 	return &WordRoutes{
-		wordService: wordService,
+		wordService:       wordService,
+		definitionService: definitionService,
 	}
 }
 
@@ -117,7 +119,7 @@ func (h *WordRoutes) GetDefinitions(c *gin.Context) {
 		return
 	}
 
-	definitions, err := service.GetDefinitionsByWordId(wordID, userID)
+	definitions, err := h.definitionService.GetDefinitionsByWordID(wordID, userID)
 	if err != nil {
 		common.Logger.Error("failed to get definitions", "error", err, "userID", userID, "wordId", wordID)
 		c.String(http.StatusInternalServerError, "Could not get word definitions")

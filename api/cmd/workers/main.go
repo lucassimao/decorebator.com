@@ -7,24 +7,51 @@ import (
 	"syscall"
 	"time"
 
+	"decorebator.com/internal/app"
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/service"
 )
 
 func main() {
+	// Initialize database connection
+	db := common.GetDBConnection()
+	defer common.CloseDBConnection()
 
-	riverClient, err := service.GetRiverClient()
+	// Create AppContext with all services
+	appContext, err := app.NewContext().
+		WithDatabase(db).
+		WithEnvironment(os.Getenv("ENV")).
+		Build()
 
 	if err != nil {
-		common.Logger.Error("failed to start river client")
+		common.Logger.Error("failed to create app context", "error", err)
+		panic(err)
+	}
+	defer appContext.Close()
+
+	// Create River client for workers using individual services
+	riverClient, err := service.NewWorkerRiverClient(
+		appContext.Database,
+		appContext.DefinitionService,
+		appContext.DefinitionImageService,
+		appContext.WordService,
+		appContext.UserService,
+		appContext.LeitnerSystemStrategy,
+		appContext.JobService,
+		appContext.RevenueCatService,
+		appContext.SubscriptionService,
+		appContext.MailService,
+	)
+
+	if err != nil {
+		common.Logger.Error("failed to create river client", "error", err)
 		panic(err)
 	}
 
 	if err := riverClient.Start(context.Background()); err != nil {
-		common.Logger.Error("failed to start river client")
+		common.Logger.Error("failed to start river client", "error", err)
 		panic(err)
 	}
-	defer common.CloseDBConnection()
 
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 5 seconds.

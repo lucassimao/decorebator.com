@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"decorebator.com/internal/app"
 	http_internal "decorebator.com/internal/http"
 	"decorebator.com/internal/service"
 	"github.com/gavv/httpexpect/v2"
@@ -19,22 +20,20 @@ import (
 
 // TestServer represents a test server instance with all necessary dependencies
 type TestServer struct {
-	Server  *httptest.Server
-	DB      *pgxpool.Pool
-	Engine  *gin.Engine
-	Expect  *httpexpect.Expect
-	Cleanup func()
-	BaseURL string
+	Server     *httptest.Server
+	DB         *pgxpool.Pool
+	Engine     *gin.Engine
+	Expect     *httpexpect.Expect
+	Cleanup    func()
+	BaseURL    string
+	AppContext *app.Context
 }
 
-// TestConfig holds configuration for test server (alias for HTTP config)
-type TestConfig = http_internal.Config
-
-// TestConfigFunc is a function that receives a database and returns a TestConfig
-type TestConfigFunc func(db *pgxpool.Pool) *TestConfig
+// AppContextConfigFunc is a function that receives an AppContext builder and configures it for testing
+type AppContextConfigFunc func(builder *app.ContextBuilder) *app.ContextBuilder
 
 // NewTestServer creates a new test server instance using the real API routes
-func NewTestServer(t *testing.T, configFunc ...TestConfigFunc) *TestServer {
+func NewTestServer(t *testing.T, configFunc ...AppContextConfigFunc) *TestServer {
 	// Set gin to test mode
 	gin.SetMode(gin.TestMode)
 
@@ -49,28 +48,30 @@ func NewTestServer(t *testing.T, configFunc ...TestConfigFunc) *TestServer {
 	err = CleanTestData(db)
 	require.NoError(t, err, "Failed to clean test data before starting")
 
-	// Configure services for testing
-	var testConfig *http_internal.Config
+	// Configure Context for testing
+	builder := app.NewContext().
+		WithDatabase(db).
+		WithEnvironment("test")
+
+	// Apply custom configuration if provided
 	switch len(configFunc) {
 	case 0:
 		// No config provided, use defaults
-		testConfig = &http_internal.Config{
-			Database: db,
-		}
 	case 1:
-		// Config function provided, call it with the database
-		testConfig = configFunc[0](db)
-		// Ensure database is set for test config
-		if testConfig.Database == nil {
-			testConfig.Database = db
-		}
+		// Config function provided, apply it
+		builder = configFunc[0](builder)
 	default:
 		// Multiple configs provided - this is an error
 		panic("NewTestServer accepts at most one config function")
 	}
 
+	appCtx, err := builder.Build()
+	if err != nil {
+		t.Fatalf("Failed to create test Context: %v", err)
+	}
+
 	// Use the real API routes from internal/http/setup.go with test configuration
-	engine := http_internal.SetupRoutes(testConfig)
+	engine := http_internal.SetupRoutes(appCtx)
 
 	// Create test server
 	server := httptest.NewServer(engine)
@@ -86,18 +87,18 @@ func NewTestServer(t *testing.T, configFunc ...TestConfigFunc) *TestServer {
 
 	cleanup := func() {
 		server.Close()
-		// Note: Database cleanup now happens at the START of each test via CleanTestData() in NewTestServer()
-		// Only close the database connection here
-		db.Close()
+		// Close AppContext (which will close the database connection)
+		appCtx.Close()
 	}
 
 	return &TestServer{
-		Server:  server,
-		DB:      db,
-		Engine:  engine,
-		Expect:  expect,
-		Cleanup: cleanup,
-		BaseURL: server.URL,
+		Server:     server,
+		DB:         db,
+		Engine:     engine,
+		Expect:     expect,
+		Cleanup:    cleanup,
+		BaseURL:    server.URL,
+		AppContext: appCtx,
 	}
 }
 

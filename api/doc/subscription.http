@@ -1,0 +1,186 @@
+@email="test@example.com"
+@password="password123"
+
+### Login
+# @name loginRequest
+POST http://localhost:3000/login
+content-type: application/json
+
+{
+  "Email": {{email}},
+  "Password": {{password}}
+}
+
+@authToken = {{loginRequest.response.headers.Authorization}}
+
+### Get Subscription Status
+GET http://localhost:3000/subscription
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### Create Stripe Checkout Session
+POST http://localhost:3000/subscription/checkout
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "plan": "monthly",
+  "redirectUri": "decorebator://settings"
+}
+
+### Create Annual Stripe Checkout Session
+POST http://localhost:3000/subscription/checkout
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "plan": "annual",
+  "redirectUri": "decorebator://settings"
+}
+
+### Cancel Subscription
+POST http://localhost:3000/subscription/cancel
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### RevenueCat Purchase Restoration
+POST http://localhost:3000/subscription/revenuecat/restore
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "appUserId": "123",
+  "platform": "ios"
+}
+
+### RevenueCat Purchase Restoration (Android)
+POST http://localhost:3000/subscription/revenuecat/restore
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "appUserId": "123", 
+  "platform": "android"
+}
+
+###
+# Grace Period Testing Examples
+###
+
+### Test User Profile with Grace Period Subscription
+# This endpoint will check for expired grace periods and automatically downgrade users
+GET http://localhost:3000/users
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+###
+# Webhook Testing (Internal use)
+###
+
+### Stripe Webhook (Test Event)
+POST http://localhost:3000/webhook/stripe
+Content-Type: application/json
+Stripe-Signature: test_signature
+
+{
+  "id": "evt_test_webhook",
+  "type": "customer.subscription.created",
+  "data": {
+    "object": {
+      "id": "sub_test",
+      "customer": "cus_test",
+      "status": "active",
+      "current_period_start": 1640995200,
+      "current_period_end": 1672531200,
+      "plan": {
+        "id": "price_monthly"
+      }
+    }
+  }
+}
+
+### Stripe Webhook - Payment Failed (Grace Period Test)
+POST http://localhost:3000/webhook/stripe
+Content-Type: application/json
+Stripe-Signature: test_signature
+
+{
+  "id": "evt_test_payment_failed",
+  "type": "invoice.payment_failed",
+  "data": {
+    "object": {
+      "subscription": "sub_test",
+      "customer": "cus_test",
+      "status": "past_due"
+    }
+  }
+}
+
+### RevenueCat Webhook (Test Event)  
+POST http://localhost:3000/webhook/revenuecat
+Content-Type: application/json
+Authorization: your_webhook_authorization_token
+
+{
+  "api_version": "1.0",
+  "event": {
+    "type": "INITIAL_PURCHASE",
+    "id": "test_event_123",
+    "app_user_id": "123",
+    "original_app_user_id": "123",
+    "event_timestamp_ms": 1640995200000,
+    "product_id": "com.decorebator.premium.monthly",
+    "entitlement_ids": ["premium"],
+    "store": "APP_STORE",
+    "environment": "PRODUCTION",
+    "purchased_at_ms": 1640995200000,
+    "expiration_at_ms": 1672531200000,
+    "period_type": "NORMAL",
+    "price": 6.99,
+    "currency": "USD",
+    "transaction_id": "test_transaction_123",
+    "original_transaction_id": "test_original_123",
+    "country_code": "US"
+  }
+}
+
+### RevenueCat Webhook - Billing Issue (Grace Period Test)
+POST http://localhost:3000/webhook/revenuecat
+Content-Type: application/json
+Authorization: your_webhook_authorization_token
+
+{
+  "api_version": "1.0",
+  "event": {
+    "type": "EXPIRATION",
+    "id": "test_expiration_billing_error",
+    "app_user_id": "123",
+    "original_app_user_id": "123",
+    "event_timestamp_ms": 1640995200000,
+    "product_id": "com.decorebator.premium.monthly",
+    "entitlement_ids": ["premium"],
+    "store": "APP_STORE",
+    "environment": "PRODUCTION",
+    "expiration_reason": "BILLING_ERROR",
+    "expiration_at_ms": 1640995200000,
+    "price": 0.0,
+    "currency": "USD",
+    "transaction_id": "test_transaction_123",
+    "original_transaction_id": "test_original_123",
+    "country_code": "US"
+  }
+}
+
+###
+# Grace Period Status Examples
+###
+
+# Expected responses during grace period:
+# - subscription.status = "past_due"
+# - subscription.IsActive() = true (if within 3 days)
+# - user.subscriptionPlan = "monthly" or "annual" (not downgraded yet)
+
+# Expected responses after grace period expires:
+# - subscription.status = "past_due" 
+# - subscription.IsActive() = false (beyond 3 days)
+# - user.subscriptionPlan = "free" (automatically downgraded)

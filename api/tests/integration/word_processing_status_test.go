@@ -4,9 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"decorebator.com/internal/service"
 	"decorebator.com/tests/integration/setup"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -164,7 +162,7 @@ func TestWordProcessingStatus_WorkerUpdates(t *testing.T) {
 	require.NoError(t, err)
 
 	// Simulate worker updating status to "processing"
-	err = updateWordProcessingStatus(server.DB, wordID, "processing", "")
+	err = updateWordProcessingStatus(server, wordID, "processing", "")
 	require.NoError(t, err)
 
 	// Verify status changed
@@ -183,7 +181,7 @@ func TestWordProcessingStatus_WorkerUpdates(t *testing.T) {
 	summary.Value("pending").Number().IsEqual(0)
 
 	// Simulate worker completing successfully
-	err = updateWordProcessingStatus(server.DB, wordID, "completed", "")
+	err = updateWordProcessingStatus(server, wordID, "completed", "")
 	require.NoError(t, err)
 
 	// Verify final status
@@ -239,7 +237,7 @@ func TestWordProcessingStatus_FailedProcessing(t *testing.T) {
 
 	// Simulate worker failing with error
 	errorMsg := "No definitions found for this word"
-	err = updateWordProcessingStatus(server.DB, wordID, "failed", errorMsg)
+	err = updateWordProcessingStatus(server, wordID, "failed", errorMsg)
 	require.NoError(t, err)
 
 	// Verify failed status
@@ -299,21 +297,21 @@ func TestWordProcessingStatus_MultipleWords(t *testing.T) {
 	err := server.DB.QueryRow(ctx, "SELECT id FROM words WHERE name = $1", "processing1").Scan(&processingID)
 	require.NoError(t, err)
 	require.NoError(t, err)
-	err = updateWordProcessingStatus(server.DB, processingID, "processing", "")
+	err = updateWordProcessingStatus(server, processingID, "processing", "")
 	require.NoError(t, err)
 
 	// Update "completed1" to completed
 	var completedID int64
 	err = server.DB.QueryRow(ctx, "SELECT id FROM words WHERE name = $1", "completed1").Scan(&completedID)
 	require.NoError(t, err)
-	err = updateWordProcessingStatus(server.DB, completedID, "completed", "")
+	err = updateWordProcessingStatus(server, completedID, "completed", "")
 	require.NoError(t, err)
 
 	// Update "failed1" to failed
 	var failedID int64
 	err = server.DB.QueryRow(ctx, "SELECT id FROM words WHERE name = $1", "failed1").Scan(&failedID)
 	require.NoError(t, err)
-	err = updateWordProcessingStatus(server.DB, failedID, "failed", "Test error")
+	err = updateWordProcessingStatus(server, failedID, "failed", "Test error")
 	require.NoError(t, err)
 
 	// Get processing status
@@ -454,7 +452,6 @@ func TestWordProcessingStatus_ErrorReporting(t *testing.T) {
 }
 
 // Helper function to update word processing status (simulates worker behavior)
-func updateWordProcessingStatus(db *pgxpool.Pool, wordID int64, status, errorMsg string) error {
-	wordService := service.NewWordService(db, &service.MockModerationService{})
-	return wordService.UpdateProcessingStatus(wordID, status, errorMsg, nil)
+func updateWordProcessingStatus(ts *setup.TestServer, wordID int64, status, errorMsg string) error {
+	return ts.AppContext.WordService.UpdateProcessingStatus(wordID, status, errorMsg, nil)
 }

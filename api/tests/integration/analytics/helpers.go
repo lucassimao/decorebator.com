@@ -17,6 +17,9 @@ import (
 // createBasicWordStructure creates a word, definition, and leitner tracking for testing
 // Now uses proper service layer calls instead of direct database inserts
 func createBasicWordStructure(t *testing.T, server *setup.TestServer, token string, wordlistID int64, wordName string) (int64, int64, int64) {
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
+
 	// Create word via API
 	wordResp := server.Expect.POST(fmt.Sprintf("/wordlists/%d/words", wordlistID)).
 		WithHeader("Authorization", token).
@@ -65,15 +68,15 @@ func createBasicWordStructure(t *testing.T, server *setup.TestServer, token stri
 		PartOfSpeechNormalized: "noun",
 	}
 
-	definitions, err := service.SaveDefinition(wordID, []*model.Definition{definition}, &tx)
+	definitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{definition}, &tx)
 	require.NoError(t, err)
 	require.Len(t, definitions, 1)
 
 	definitionID := definitions[0].ID
 
 	// Use IncludeDefinitions service call to add to Leitner system
-	strategy := service.LeitnerSystemStrategy{}
-	err = strategy.IncludeDefinitions(wordID, userID, []int64{definitionID}, tx)
+	leitnerTrackingService := service.NewLeitnerTrackingService(server.DB)
+	err = leitnerTrackingService.IncludeDefinitions(wordID, userID, []int64{definitionID}, tx)
 	require.NoError(t, err)
 
 	// Get the leitner tracking ID that was created

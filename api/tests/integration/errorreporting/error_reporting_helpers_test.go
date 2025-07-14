@@ -150,8 +150,8 @@ func createTestWord(server *setup.TestServer, token string, wordlistID int, word
 }
 
 // createTestDefinition creates a definition using the service layer and returns the definition ID
-func createTestDefinition(t *testing.T, wordID int64, definition *model.Definition) int64 {
-	savedDefinitions, err := service.SaveDefinition(wordID, []*model.Definition{definition}, nil)
+func createTestDefinition(t *testing.T, definitionService *service.DefinitionService, wordID int64, definition *model.Definition) int64 {
+	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{definition}, nil)
 	require.NoError(t, err, "Failed to create test definition")
 	require.Len(t, savedDefinitions, 1, "Should save exactly one definition")
 
@@ -168,9 +168,9 @@ func submitErrorReport(server *setup.TestServer, token string, wordID, definitio
 }
 
 // createWordWithDefinition creates both word and definition in one call and returns both IDs
-func createWordWithDefinition(t *testing.T, server *setup.TestServer, token string, wordlistID int, wordName string, definition *model.Definition) (int64, int64) {
+func createWordWithDefinition(t *testing.T, server *setup.TestServer, token string, wordlistID int, wordName string, definition *model.Definition, definitionService *service.DefinitionService) (int64, int64) {
 	wordID := createTestWord(server, token, wordlistID, wordName)
-	definitionID := createTestDefinition(t, wordID, definition)
+	definitionID := createTestDefinition(t, definitionService, wordID, definition)
 	return wordID, definitionID
 }
 

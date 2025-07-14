@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"decorebator.com/internal/app"
 	"decorebator.com/internal/common"
 	decorebator "decorebator.com/internal/http"
 	"github.com/gin-gonic/gin"
@@ -20,15 +21,24 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	// Initialize Context with all services
+	appCtx, err := app.NewContext().
+		WithDatabase(common.GetDBConnection()).
+		WithEnvironment(os.Getenv("ENV")).
+		Build()
+	if err != nil {
+		log.Fatalf("Failed to initialize application context: %v", err)
+	}
+	defer appCtx.Close()
+
 	var srv = &http.Server{
 		Addr:              ":" + os.Getenv("PORT"),
-		Handler:           decorebator.SetupRoutes(nil),
+		Handler:           decorebator.SetupRoutes(appCtx),
 		ReadHeaderTimeout: 10 * time.Second, // Fix G112: Prevent Slowloris attacks
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
-	defer common.CloseDBConnection()
 
 	// Run server in a goroutine so that it doesn't block
 	go func() {

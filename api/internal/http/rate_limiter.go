@@ -7,10 +7,11 @@ import (
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // RateLimitErrorReports middleware checks rate limits for error reporting
-func RateLimitErrorReports() gin.HandlerFunc {
+func RateLimitErrorReports(db *pgxpool.Pool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get user from context
 		userAny, exists := c.Get("user")
@@ -26,10 +27,7 @@ func RateLimitErrorReports() gin.HandlerFunc {
 			return
 		}
 
-		// Get database connection
-		db := common.GetDBConnection()
-
-		// Create service
+		// Create service with injected database
 		rateLimitService := service.NewErrorReportRateLimitService(db)
 
 		// Check rate limits

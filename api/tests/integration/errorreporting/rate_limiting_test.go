@@ -14,6 +14,9 @@ func TestErrorReporting_RateLimit_FreeUser(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
+
 	token := server.WithTestUser(t)
 
 	// Create wordlist
@@ -64,7 +67,7 @@ func TestErrorReporting_RateLimit_FreeUser(t *testing.T) {
 			Source:       "test_rate_limit",
 		}
 
-		savedDefinitions, err := service.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+		savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
 		require.NoError(t, err)
 		require.Len(t, savedDefinitions, 1)
 
@@ -101,6 +104,9 @@ func TestErrorReporting_RateLimit_FreeUser(t *testing.T) {
 func TestErrorReporting_RateLimit_PremiumUser(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
+
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
 
 	token := server.WithPremiumUser(t)
 
@@ -160,7 +166,7 @@ func TestErrorReporting_RateLimit_PremiumUser(t *testing.T) {
 			Source:       "test_premium_rate",
 		}
 
-		savedDefinitions, err := service.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+		savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
 		require.NoError(t, err)
 		require.Len(t, savedDefinitions, 1)
 
@@ -205,6 +211,9 @@ func TestErrorReporting_CooldownMechanism(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 
+	// Create services for definition operations
+	definitionService := service.NewDefinitionService(server.DB)
+
 	token := server.WithTestUser(t)
 
 	// Create wordlist and word
@@ -239,7 +248,7 @@ func TestErrorReporting_CooldownMechanism(t *testing.T) {
 		Source:       "test_cooldown",
 	}
 
-	savedDefinitions, err := service.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	require.Len(t, savedDefinitions, 1)
 

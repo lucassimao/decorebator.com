@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"testing"
 
+	"decorebator.com/internal/app"
 	"decorebator.com/internal/service"
 	"decorebator.com/tests/integration/setup"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,12 +15,9 @@ func createTestServerWithMockModeration(t *testing.T) *setup.TestServer {
 	// Create mock moderation service
 	mockModeration := service.NewMockModerationService()
 
-	// Create test server with a config function
-	return setup.NewTestServer(t, func(db *pgxpool.Pool) *setup.TestConfig {
-		return &setup.TestConfig{
-			Database:          db,
-			ModerationService: mockModeration,
-		}
+	// Create test server with AppContext configuration function
+	return setup.NewTestServer(t, func(builder *app.ContextBuilder) *app.ContextBuilder {
+		return builder.WithModerationService(mockModeration)
 	})
 }
 

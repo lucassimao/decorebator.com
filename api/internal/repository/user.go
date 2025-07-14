@@ -39,7 +39,7 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 		Email:     email,
 	}
 
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), common.GetBcryptCost())
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (repository *UserRepository) Find(ctx context.Context, args FindUserArgs) (
 func (repository *UserRepository) UpdatePassword(userId int64, newPassword string) error {
 	query := `UPDATE users SET password_hash = $1, updated_at=NOW() WHERE ID = $2`
 
-	bytes, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(newPassword), common.GetBcryptCost())
 	passwordHash := string(bytes)
 	if err != nil {
 		return err
@@ -193,7 +193,7 @@ func (repository *UserRepository) UpdateUserProfile(args UpdateUserProfileArgs) 
 
 	var passwordHash *string
 	if args.Password != nil {
-		bytes, err := bcrypt.GenerateFromPassword([]byte(*args.Password), bcrypt.DefaultCost)
+		bytes, err := bcrypt.GenerateFromPassword([]byte(*args.Password), common.GetBcryptCost())
 		if err != nil {
 			return nil, err
 		}
