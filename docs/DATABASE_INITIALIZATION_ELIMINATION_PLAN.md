@@ -63,33 +63,61 @@ This document outlines a comprehensive plan to eliminate all database initializa
 - Fixed golangci-lint formatting issues
 - Updated Makefile `test-unit` target to run `./internal/tests/unit/...`
 
-### Step 1.2: Eliminate Service init() Functions
-- [ ] **File**: `internal/service/wordlist.go`
-- [ ] **Action**: Remove `init()` function (lines 32-37)
-- [ ] **Replace with**: Lazy initialization or constructor injection
-- [ ] **Update**: All `DefaultWordlistService()` callers to use explicit injection
-- [ ] **Test**: Verify service package imports without database connection
+### Step 1.2: Eliminate Service init() Functions ✅ COMPLETED
+- [x] **File**: `internal/service/wordlist.go`
+- [x] **Action**: Remove `init()` function and legacy `GetWordlistById()` function
+- [x] **Replace with**: Dependency injection in analytics HTTP handlers
+- [x] **Update**: All analytics routes to use injected `WordlistService`
+- [x] **Test**: Verify service package imports without database connection
 
-### Step 1.3: Fix HTTP Setup Database Dependencies
-- [ ] **File**: `internal/http/setup.go`
-- [ ] **Action**: Remove `applyDefaults()` function database fallback (line 72)
-- [ ] **Replace with**: Required explicit configuration
-- [ ] **Update**: `SetupRoutes(config *Config)` to require all dependencies
-- [ ] **Test**: Verify HTTP setup only uses injected dependencies
+**Implementation Details:**
+- Converted all analytics HTTP handlers to use dependency injection pattern
+- Updated `RegisterAnalyticsRoutes()` to accept `WordlistService` parameter
+- Converted handler functions to return `gin.HandlerFunc` with injected dependencies
+- Removed legacy `GetWordlistById()` function that used `common.GetDBConnection()`
+- Updated `internal/http/setup.go` to pass `WordlistService` to analytics routes
+- Fixed variable shadowing lint issue in analytics handlers
 
-**Success Criteria**: Unit tests run without database connections
+### Step 1.3: Fix HTTP Setup Database Dependencies ✅ COMPLETED
+- [x] **File**: `internal/http/setup.go`
+- [x] **Action**: Remove `applyDefaults()` function database fallback (line 72)
+- [x] **Replace with**: Required explicit configuration and dependency injection
+- [x] **Update**: All HTTP handlers to use injected database connections
+- [x] **Test**: Verify HTTP setup only uses injected dependencies
+
+**Implementation Details:**
+- Removed database fallback in `applyDefaults()` function with explicit error
+- Converted `GetErrorReportStats()` to accept `*pgxpool.Pool` parameter
+- Converted `GetUserErrorReportStatus()` to accept `*pgxpool.Pool` parameter  
+- Converted `RateLimitErrorReports()` middleware to accept `*pgxpool.Pool` parameter
+- Updated all route registrations in `SetupRoutes()` to pass database connections
+- Verified no remaining `common.GetDBConnection()` calls in HTTP layer
+
+**Success Criteria**: ✅ **ACHIEVED** - Unit tests run without database connections
 
 ---
 
 ## Phase 2: Service Layer Dependency Injection 🟠
 **Priority**: HIGH - Core architecture improvements
 
-### Step 2.1: Create Application Context
-- [ ] **File**: `internal/app/context.go` (new)
-- [ ] **Action**: Create `AppContext` struct containing all services
-- [ ] **Include**: Database, all services, configuration
-- [ ] **Pattern**: Builder pattern `NewAppContext().WithDatabase(db).Build()`
-- [ ] **Test**: Verify clean service initialization
+### Step 2.1: Create Application Context ✅ COMPLETED
+- [x] **File**: `internal/app/context.go` (new)
+- [x] **Action**: Create `Context` struct containing all services
+- [x] **Include**: Database, RiverClient, all services, configuration
+- [x] **Pattern**: Builder pattern `NewContext().WithDatabase(db).Build()`
+- [x] **Test**: Verify clean service initialization
+
+**Implementation Details:**
+- Created centralized `Context` struct with all application dependencies
+- Implemented fluent builder pattern with `ContextBuilder`
+- Added builder methods for all services: `WithWordService()`, `WithModerationService()`, etc.
+- Added factory method support for test service injection (`WithRevenueCatServiceFunc()`)
+- Updated main application (`cmd/api/server.go`) to use new AppContext
+- Refactored HTTP setup (`internal/http/setup.go`) to accept AppContext parameter
+- Converted integration test setup to use `AppContextConfigFunc` pattern
+- Replaced deprecated `TestConfig` with clean AppContext dependency injection
+- Added proper lifecycle management with `Context.Close()` method
+- Ensured conditional service initialization (only create if not provided)
 
 ### Step 2.2: Convert Service Constructors
 - [ ] **Files**: All service files with `GetDBConnection()` calls
@@ -208,7 +236,7 @@ curl http://localhost:8080/health  # if health endpoint exists
 - **Phase 4** can be done independently after critical fixes
 
 ### Validation Checkpoints
-- [ ] **After Phase 1**: Unit tests run without database
+- [x] **After Phase 1**: Unit tests run without database ✅ **COMPLETED**
 - [ ] **After Phase 2**: All services use dependency injection  
 - [ ] **After Phase 3**: Zero global database connections
 - [ ] **After Phase 4**: All initialization is explicit and safe
@@ -216,20 +244,27 @@ curl http://localhost:8080/health  # if health endpoint exists
 ## Progress Tracking
 
 ### Overall Progress
-- [x] **Phase 1**: Critical Fixes (1/3 steps completed) ✅ Step 1.1 DONE
-- [ ] **Phase 2**: Service Layer DI (0/4 steps completed) 
+- [x] **Phase 1**: Critical Fixes ✅ **COMPLETED** (3/3 steps completed)
+- [ ] **Phase 2**: Service Layer DI (1/4 steps completed) 🟠 **Step 2.1 DONE** 
 - [ ] **Phase 3**: Remove Remaining Calls (0/2 steps completed)
 - [ ] **Phase 4**: Safe Initialization (0/3 steps completed)
 
 ### Current Status
-**Status**: 🟡 Phase 1 In Progress
-**Completed**: Step 1.1 - Global strategy variable eliminated ✅
-**Next Action**: Begin Phase 1, Step 1.2 (Remove service init() functions)
-**Estimated Time**: 
-- Phase 1: 2-4 hours
+**Status**: 🟠 Phase 2 IN PROGRESS - AppContext Foundation Complete
+**Completed**: 
+- ✅ **Phase 1**: All critical fixes completed (global variables, init() functions, HTTP dependencies)
+- ✅ **Step 2.1**: Application Context system implemented with dependency injection
+
+**In Progress**: Phase 2.2 - Convert remaining service constructors to use dependency injection
+
+**Next Action**: Convert service constructors to eliminate remaining `GetDBConnection()` calls
+**Time Spent on Phase 1**: ~3 hours (within estimated range)
+**Remaining Estimated Time**: 
 - Phase 2: 4-8 hours  
 - Phase 3: 2-4 hours
 - Phase 4: 1-2 hours
+
+**Key Achievement**: 🎉 Unit tests now run successfully without database connections!
 
 ### Risk Mitigation
 - **Backup**: Create feature branch before major changes
@@ -261,6 +296,29 @@ curl http://localhost:8080/health  # if health endpoint exists
 
 ---
 
-**Last Updated**: 2025-07-13 (Step 1.1 Completed)
+**Last Updated**: 2025-07-13 (Phase 1 COMPLETED)
 **Document Owner**: Development Team
-**Status**: 🟡 Phase 1 In Progress - Step 1.1 ✅ COMPLETED
+**Status**: 🟢 Phase 1 COMPLETED - All critical fixes implemented ✅
+
+## Phase 1 Completion Summary
+
+**🎯 Mission Accomplished**: The primary goal of Phase 1 has been achieved - unit tests now run successfully without requiring database connections.
+
+**What Was Fixed**:
+1. **Global Variable Elimination**: Removed database-triggering global strategy variable in HTTP layer
+2. **Service Init() Removal**: Eliminated legacy functions and converted analytics to dependency injection
+3. **HTTP Dependency Injection**: All HTTP handlers now use explicit database dependencies
+
+**Impact**:
+- ✅ Unit tests run without database setup
+- ✅ Faster test execution (no database overhead)
+- ✅ Better separation of concerns in HTTP and service layers
+- ✅ Foundation laid for further dependency injection improvements
+
+**Test Verification**: 
+```bash
+make test-unit  # ✅ PASSES - No database connection required
+make lint-changed  # ✅ PASSES - All code quality checks pass
+```
+
+**Next Steps**: Phase 2-4 are now unblocked and can be tackled incrementally as needed for broader architecture improvements.
