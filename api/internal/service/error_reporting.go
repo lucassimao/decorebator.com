@@ -35,23 +35,25 @@ type QuizDetails struct {
 // ErrorReportService encapsulates all error reporting functionality
 type ErrorReportService struct {
 	// Dependencies only
-	db                    *pgxpool.Pool
-	repo                  *repository.ErrorReportRepository
-	definitionService     *DefinitionService
-	leitnerSystemStrategy *LeitnerSystemStrategy
-	jobService            JobService
-	logger                *slog.Logger
+	db                     *pgxpool.Pool
+	repo                   *repository.ErrorReportRepository
+	definitionService      *DefinitionService
+	wordService            *WordService
+	leitnerTrackingService *LeitnerTrackingService
+	jobService             JobService
+	logger                 *slog.Logger
 }
 
 // NewErrorReportService creates a new error report service with dependencies
-func NewErrorReportService(db *pgxpool.Pool, definitionService *DefinitionService, leitnerSystemStrategy *LeitnerSystemStrategy, jobService JobService) *ErrorReportService {
+func NewErrorReportService(db *pgxpool.Pool, definitionService *DefinitionService, wordService *WordService, leitnerTrackingService *LeitnerTrackingService, jobService JobService) *ErrorReportService {
 	return &ErrorReportService{
-		db:                    db,
-		repo:                  repository.NewErrorReportRepository(db),
-		definitionService:     definitionService,
-		leitnerSystemStrategy: leitnerSystemStrategy,
-		jobService:            jobService,
-		logger:                common.Logger,
+		db:                     db,
+		repo:                   repository.NewErrorReportRepository(db),
+		definitionService:      definitionService,
+		wordService:            wordService,
+		leitnerTrackingService: leitnerTrackingService,
+		jobService:             jobService,
+		logger:                 common.Logger,
 	}
 }
 
@@ -176,27 +178,27 @@ func (ctx *errorReportContext) processErrorType(tx pgx.Tx) (ErrorReport, error) 
 	switch ctx.errorType {
 	case SoundNotPlaying:
 		report = ErrorReport{WordId: &ctx.wordID, UserId: ctx.userID}
-		_, err = ctx.service.jobService.TriggerTextToSpeechWorker(ctx.wordID, &ctx.userID, &report, &tx)
+		_, err = ctx.service.jobService.ScheduleAudioJob(ctx.wordID, &ctx.userID, &report, &tx)
 
 	case UnrelatedImage, MissingImage:
 		if ctx.definitionID == nil {
 			return report, fmt.Errorf("definition ID required for image-related errors")
 		}
 		report = ErrorReport{DefinitionId: ctx.definitionID, UserId: ctx.userID}
-		_, err = ctx.service.jobService.TriggerGenerateImageWorker(*ctx.definitionID, &ctx.userID, &report, &tx)
+		_, err = ctx.service.jobService.ScheduleImageJob(*ctx.definitionID, &ctx.userID, &report, &tx)
 
 	case UnrelatedExample, UnrelatedMeaning:
 		err = ctx.service.definitionService.DeleteWordDefinitions(ctx.wordID, &tx)
 		if err == nil {
 			report = ErrorReport{WordId: &ctx.wordID, UserId: ctx.userID}
-			_, err = ctx.service.jobService.TriggerFetchDefinitionWorker(ctx.wordID, &ctx.userID, &report, &tx)
+			_, err = ctx.service.jobService.ScheduleDefinitionJob(ctx.wordID, &ctx.userID, &report, &tx)
 		}
 
 	case ProcessingFailed:
 		err = ctx.service.definitionService.DeleteWordDefinitions(ctx.wordID, &tx)
 		if err == nil {
 			report = ErrorReport{WordId: &ctx.wordID, UserId: ctx.userID}
-			_, err = ctx.service.jobService.TriggerFetchDefinitionWorker(ctx.wordID, &ctx.userID, &report, &tx)
+			_, err = ctx.service.jobService.ScheduleDefinitionJob(ctx.wordID, &ctx.userID, &report, &tx)
 		}
 
 	default:
@@ -221,7 +223,7 @@ func (ctx *errorReportContext) completeReport(tx pgx.Tx, report ErrorReport) err
 	}
 
 	// Mark definition temporarily as unavailable
-	if err := ctx.service.leitnerSystemStrategy.ReportError(ctx.userID, report, tx, ctx.ctx); err != nil {
+	if err := ctx.service.leitnerTrackingService.SetTemporarySkip(report, tx); err != nil {
 		common.Logger.Error("failed to report error", "error", err)
 		return err
 	}
@@ -408,8 +410,7 @@ func (ctx *errorReportContext) fetchCompleteDefinitionSnapshot(definitionID int6
 
 // fetchWordSnapshot fetches word data for audio-related errors
 func (ctx *errorReportContext) fetchWordSnapshot(tx pgx.Tx) (map[string]interface{}, error) {
-	wordService := NewWordService(ctx.service.db, nil, nil, nil) // Pass db connection, nil for other services since we're just reading
-	word, err := wordService.GetWordByID(ctx.wordID)
+	word, err := ctx.service.wordService.GetWordByID(ctx.wordID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch word: %w", err)
 	}
@@ -439,12 +440,6 @@ func (ctx *errorReportContext) fetchWordSnapshot(tx pgx.Tx) (map[string]interfac
 	}
 
 	return snapshot, nil
-}
-
-// ReportError is the main public entry point for error reporting (backward compatibility)
-func ReportError(ctx context.Context, errorType ErrorReportType, wordID int64, definitionID *int64, userID int64, quizDetails *QuizDetails, db *pgxpool.Pool, definitionService *DefinitionService, leitnerSystemStrategy *LeitnerSystemStrategy, jobService JobService) error {
-	service := NewErrorReportService(db, definitionService, leitnerSystemStrategy, jobService)
-	return service.ReportError(ctx, errorType, wordID, definitionID, userID, quizDetails)
 }
 
 // DeleteUserErrorReports deletes all error reports for a specific user

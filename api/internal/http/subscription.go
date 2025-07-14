@@ -93,7 +93,7 @@ func HandleStripeWebhook(subService *service.SubscriptionService, jobService ser
 		}
 
 		// Enqueue the event for async processing
-		_, err = jobService.TriggerStripeWebhookWorker(event.ID, string(event.Type), event.Data.Raw)
+		_, err = jobService.ScheduleStripeWebhookJob(event.ID, string(event.Type), event.Data.Raw)
 		if err != nil {
 			common.Logger.Error("Failed to enqueue Stripe webhook", "error", err, "event_id", event.ID)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process webhook"})

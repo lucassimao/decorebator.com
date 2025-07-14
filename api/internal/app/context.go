@@ -18,7 +18,7 @@ import (
 type Context struct {
 	// Core dependencies
 	Database   *pgxpool.Pool
-	JobService *service.JobServiceImpl
+	JobService service.JobService
 
 	// Services
 	WordService            *service.WordService
@@ -65,7 +65,7 @@ func (b *ContextBuilder) WithDatabase(db *pgxpool.Pool) *ContextBuilder {
 }
 
 // WithJobService sets the JobService for background job operations
-func (b *ContextBuilder) WithJobService(jobService *service.JobServiceImpl) *ContextBuilder {
+func (b *ContextBuilder) WithJobService(jobService service.JobService) *ContextBuilder {
 	if jobService == nil {
 		b.errors = append(b.errors, errors.New("job service cannot be nil"))
 		return b
@@ -205,7 +205,7 @@ func (b *ContextBuilder) initializeServices() error {
 	}
 
 	if b.context.WordService == nil {
-		b.context.WordService = service.NewWordService(b.context.Database, b.context.ModerationService, b.context.JobService, b.context.LeitnerTrackingService)
+		b.context.WordService = service.NewWordService(b.context.Database, b.context.DefinitionService, b.context.ModerationService, b.context.JobService, b.context.LeitnerTrackingService)
 	}
 	if b.context.WordlistService == nil {
 		b.context.WordlistService = service.NewWordlistService(b.context.Database, b.context.ModerationService)
@@ -276,14 +276,15 @@ func (b *ContextBuilder) initializeServices() error {
 		b.context.ErrorReportService = service.NewErrorReportService(
 			b.context.Database,
 			b.context.DefinitionService,
-			b.context.LeitnerSystemStrategy,
+			b.context.WordService,
+			b.context.LeitnerTrackingService,
 			b.context.JobService,
 		)
 	}
 
 	// Initialize UserService after ErrorReportService
 	if b.context.UserService == nil {
-		b.context.UserService = service.NewUserService(b.context.Database, b.context.ErrorReportService)
+		b.context.UserService = service.NewUserService(b.context.Database, b.context.SubscriptionService, b.context.ErrorReportService)
 	}
 
 	return nil

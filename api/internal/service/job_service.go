@@ -12,12 +12,12 @@ import (
 
 // JobService provides abstraction for job insertion operations
 type JobService interface {
-	TriggerGenerateImageWorker(definitionID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
-	TriggerTextToSpeechWorker(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
-	TriggerFetchDefinitionWorker(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
-	QueueExampleAudioJob(definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
-	TriggerStripeWebhookWorker(eventID, eventType string, eventData []byte) (int64, error)
-	TriggerRevenueCatWebhookWorker(eventType string, eventData []byte) (int64, error)
+	ScheduleImageJob(definitionID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
+	ScheduleAudioJob(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
+	ScheduleDefinitionJob(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
+	ScheduleExampleAudioJob(definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
+	ScheduleStripeWebhookJob(eventID, eventType string, eventData []byte) (int64, error)
+	ScheduleRevenueCatWebhookJob(eventType string, eventData []byte) (int64, error)
 	RetryJob(jobID int64) error
 }
 
@@ -33,43 +33,43 @@ func NewJobService(riverClient *river.Client[pgx.Tx]) *JobServiceImpl {
 	}
 }
 
-func (js *JobServiceImpl) TriggerGenerateImageWorker(definitionID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
+func (js *JobServiceImpl) ScheduleImageJob(definitionID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: IMAGE_GENERATOR_QUEUE,
 	}
 
-	return js.triggerWorker(&opts, ImageGeneratorArgs{
+	return js.enqueueJob(&opts, ImageGeneratorArgs{
 		DefinitionId: definitionID,
 		UserID:       userID,
 		ErrorReport:  errorReport,
 	}, tx)
 }
 
-func (js *JobServiceImpl) TriggerTextToSpeechWorker(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
+func (js *JobServiceImpl) ScheduleAudioJob(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: TEXT_TO_SPEECH_QUEUE,
 	}
 
-	return js.triggerWorker(&opts, TextToSpeechArgs{
+	return js.enqueueJob(&opts, TextToSpeechArgs{
 		WordId:      wordID,
 		UserID:      userID,
 		ErrorReport: errorReport,
 	}, tx)
 }
 
-func (js *JobServiceImpl) TriggerFetchDefinitionWorker(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
+func (js *JobServiceImpl) ScheduleDefinitionJob(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: DEFINITION_FETCHER_QUEUE,
 	}
 
-	return js.triggerWorker(&opts, DefinitionFetcherArgs{
+	return js.enqueueJob(&opts, DefinitionFetcherArgs{
 		WordId:      wordID,
 		UserID:      userID,
 		ErrorReport: errorReport,
 	}, tx)
 }
 
-func (js *JobServiceImpl) QueueExampleAudioJob(definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error {
+func (js *JobServiceImpl) ScheduleExampleAudioJob(definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error {
 	args := ExampleAudioArgs{
 		DefinitionID: definitionID,
 		WordID:       wordID,
@@ -88,8 +88,8 @@ func (js *JobServiceImpl) QueueExampleAudioJob(definitionID int64, wordID int64,
 	return err
 }
 
-func (js *JobServiceImpl) triggerWorker(opts *river.InsertOpts, args river.JobArgs, tx *pgx.Tx) (int64, error) {
-	logger := common.Logger.With("func", "triggerWorker", "Kind", args.Kind())
+func (js *JobServiceImpl) enqueueJob(opts *river.InsertOpts, args river.JobArgs, tx *pgx.Tx) (int64, error) {
+	logger := common.Logger.With("func", "enqueueJob", "Kind", args.Kind())
 
 	var result *rivertype.JobInsertResult
 	var err error
@@ -108,7 +108,7 @@ func (js *JobServiceImpl) triggerWorker(opts *river.InsertOpts, args river.JobAr
 	return result.Job.ID, nil
 }
 
-func (js *JobServiceImpl) TriggerStripeWebhookWorker(eventID, eventType string, eventData []byte) (int64, error) {
+func (js *JobServiceImpl) ScheduleStripeWebhookJob(eventID, eventType string, eventData []byte) (int64, error) {
 	args := StripeWebhookArgs{
 		EventID:   eventID,
 		EventType: eventType,
@@ -117,17 +117,17 @@ func (js *JobServiceImpl) TriggerStripeWebhookWorker(eventID, eventType string, 
 	opts := &river.InsertOpts{
 		Queue: "stripe-webhook",
 	}
-	return js.triggerWorker(opts, args, nil)
+	return js.enqueueJob(opts, args, nil)
 }
 
-func (js *JobServiceImpl) TriggerRevenueCatWebhookWorker(_ string, eventData []byte) (int64, error) {
+func (js *JobServiceImpl) ScheduleRevenueCatWebhookJob(_ string, eventData []byte) (int64, error) {
 	args := RevenueCatWebhookArgs{
 		Payload: eventData,
 	}
 	opts := &river.InsertOpts{
 		Queue: "revenuecat-webhook",
 	}
-	return js.triggerWorker(opts, args, nil)
+	return js.enqueueJob(opts, args, nil)
 }
 
 func (js *JobServiceImpl) RetryJob(jobID int64) error {

@@ -30,7 +30,7 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 	}
 
 	// Admin context - trigger image generation
-	jobID, err := h.jobService.TriggerGenerateImageWorker(definitionId, nil, nil, nil)
+	jobID, err := h.jobService.ScheduleImageJob(definitionId, nil, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "definitionId": definitionId})
@@ -49,7 +49,7 @@ func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
 	}
 
 	// Admin context - trigger text to speech
-	jobID, err := h.jobService.TriggerTextToSpeechWorker(wordId, nil, nil, nil)
+	jobID, err := h.jobService.ScheduleAudioJob(wordId, nil, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordId})
@@ -71,7 +71,7 @@ func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
 	if deleteErr := h.definitionService.DeleteWordDefinitions(wordId, nil); deleteErr != nil {
 		common.Logger.Error("failed to delete word definitions", "wordId", wordId, "error", deleteErr)
 	}
-	jobID, err := h.jobService.TriggerFetchDefinitionWorker(wordId, nil, nil, nil)
+	jobID, err := h.jobService.ScheduleDefinitionJob(wordId, nil, nil, nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordId})

@@ -329,8 +329,8 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 		definitionID := definitions[0].ID
 
 		// Add to Leitner system using service call
-		strategy := service.LeitnerSystemStrategy{}
-		includeErr := strategy.IncludeDefinitions(wordID1, userID, []int64{definitionID}, tx)
+		leitnerTrackingService := service.NewLeitnerTrackingService(server.DB)
+		includeErr := leitnerTrackingService.IncludeDefinitions(wordID1, userID, []int64{definitionID}, tx)
 		require.NoError(t, includeErr)
 
 		// Update box level for this definition
@@ -380,8 +380,8 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 		definitionID := definitions[0].ID
 
 		// Add to Leitner system using service call
-		strategy := service.LeitnerSystemStrategy{}
-		includeErr := strategy.IncludeDefinitions(wordID2, userID, []int64{definitionID}, tx)
+		leitnerTrackingService := service.NewLeitnerTrackingService(server.DB)
+		includeErr := leitnerTrackingService.IncludeDefinitions(wordID2, userID, []int64{definitionID}, tx)
 		require.NoError(t, includeErr)
 
 		// Update box level for this definition

@@ -1140,21 +1140,6 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	return nil
 }
 
-// IncludeDefinitions adds new word definitions to the Leitner system for spaced repetition tracking.
-// This function is called when new definitions are fetched for a word (e.g., from ChatGPT).
-// Each definition starts in box 1 (immediate review) and will progress through the Leitner boxes
-// based on the user's quiz performance.
-//
-// Parameters:
-// - wordId: The ID of the word these definitions belong to
-// - userId: The ID of the user who will be quizzed on these definitions
-// - definitionIds: Array of definition IDs to include in the Leitner system
-// - tx: Database transaction to ensure atomicity
-//
-// Returns an error if any database operations fail.
-func (s LeitnerSystemStrategy) IncludeDefinitions(wordID, userID int64, definitionIDs []int64, tx pgx.Tx) error {
-	return s.leitnerTrackingService.IncludeDefinitions(wordID, userID, definitionIDs, tx)
-}
 
 // MarkErrorResolved removes the temporary skip status from definitions and marks error reports as resolved.
 // This function is called when:
@@ -1328,29 +1313,3 @@ func (s *LeitnerSystemStrategy) selectBalancedQuizType(userID, wordlistID int64,
 	return scores[selectedIndex].quizType, nil
 }
 
-// ReportError records a user-reported issue with quiz content and temporarily excludes it from quiz generation.
-// This function handles user feedback about problematic content such as:
-// - Images that don't match the word meaning
-// - Incorrect or confusing definitions
-// - Audio that doesn't play or is unclear
-// - Examples that are inappropriate or wrong
-//
-// The function:
-// 1. Records the error report in the database for tracking and analytics
-// 2. Temporarily skips the affected definition(s) by setting temporarily_skipped_until
-// 3. Ensures the problematic content won't appear in future quizzes until resolved
-//
-// Parameters:
-// - userID: The ID of the user reporting the error
-// - report: ErrorReport object containing error details and affected content IDs
-// - tx: Database transaction to ensure atomicity
-// - ctx: Context for the database operations
-//
-// Returns an error if the database operations fail.
-func (s LeitnerSystemStrategy) ReportError(userID int64, report ErrorReport, tx pgx.Tx, ctx context.Context) error {
-	if report.DefinitionId == nil && report.WordId == nil {
-		return errors.New("definition or word missing")
-	}
-
-	return s.leitnerTrackingService.SetTemporarySkip(report, tx)
-}

@@ -26,11 +26,11 @@ type WordService struct {
 }
 
 // NewWordService creates a new word service with dependencies
-func NewWordService(db *pgxpool.Pool, moderationService ModerationService, jobService JobService, leitnerTrackingService *LeitnerTrackingService) *WordService {
+func NewWordService(db *pgxpool.Pool, definitionService *DefinitionService, moderationService ModerationService, jobService JobService, leitnerTrackingService *LeitnerTrackingService) *WordService {
 	return &WordService{
 		repository:             &repo.WordRepository{Db: db},
 		moderationService:      moderationService,
-		definitionService:      NewDefinitionService(db),
+		definitionService:      definitionService,
 		jobService:             jobService,
 		leitnerTrackingService: leitnerTrackingService,
 	}
@@ -162,15 +162,15 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 		latestAudioURL, err = ws.repository.GetLatestAudioURL(trimmedName)
 
 		if err != nil {
-			_, _ = ws.jobService.TriggerTextToSpeechWorker(word.ID, &word.UserID, nil, &tx)
+			_, _ = ws.jobService.ScheduleAudioJob(word.ID, &word.UserID, nil, &tx)
 			err = nil // fine if triggering the worker fails somehow
 		} else {
 			word.AudioURL = latestAudioURL
 			err = ws.UpdateWord(word, &tx)
 		}
 	} else {
-		_, _ = ws.jobService.TriggerFetchDefinitionWorker(word.ID, &word.UserID, nil, &tx)
-		_, _ = ws.jobService.TriggerTextToSpeechWorker(word.ID, &word.UserID, nil, &tx)
+		_, _ = ws.jobService.ScheduleDefinitionJob(word.ID, &word.UserID, nil, &tx)
+		_, _ = ws.jobService.ScheduleAudioJob(word.ID, &word.UserID, nil, &tx)
 	}
 
 	if err != nil {

@@ -24,22 +24,24 @@ func (DefinitionFetcherArgs) Kind() string { return "DefinitionFetcher" }
 
 type DefinitionFetcherWorker struct {
 	river.WorkerDefaults[DefinitionFetcherArgs]
-	db                    *pgxpool.Pool
-	wordService           *WordService
-	definitionService     *DefinitionService
-	jobService            JobService
-	leitnerSystemStrategy *LeitnerSystemStrategy
-	userService           *UserService
+	db                     *pgxpool.Pool
+	wordService            *WordService
+	definitionService      *DefinitionService
+	jobService             JobService
+	leitnerSystemStrategy  *LeitnerSystemStrategy
+	leitnerTrackingService *LeitnerTrackingService
+	userService            *UserService
 }
 
-func NewDefinitionFetcherWorker(db *pgxpool.Pool, wordService *WordService, definitionService *DefinitionService, jobService JobService, leitnerSystemStrategy *LeitnerSystemStrategy, userService *UserService) *DefinitionFetcherWorker {
+func NewDefinitionFetcherWorker(db *pgxpool.Pool, wordService *WordService, definitionService *DefinitionService, jobService JobService, leitnerSystemStrategy *LeitnerSystemStrategy, leitnerTrackingService *LeitnerTrackingService, userService *UserService) *DefinitionFetcherWorker {
 	return &DefinitionFetcherWorker{
-		db:                    db,
-		wordService:           wordService,
-		definitionService:     definitionService,
-		jobService:            jobService,
-		leitnerSystemStrategy: leitnerSystemStrategy,
-		userService:           userService,
+		db:                     db,
+		wordService:            wordService,
+		definitionService:      definitionService,
+		jobService:             jobService,
+		leitnerSystemStrategy:  leitnerSystemStrategy,
+		leitnerTrackingService: leitnerTrackingService,
+		userService:            userService,
 	}
 }
 
@@ -174,18 +176,18 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	for _, definition := range definitions {
 		definitionIds = append(definitionIds, definition.ID)
 
-		_, err = w.jobService.TriggerGenerateImageWorker(definition.ID, job.Args.UserID, nil, &tx)
+		_, err = w.jobService.ScheduleImageJob(definition.ID, job.Args.UserID, nil, &tx)
 
 		if err != nil {
 			logger.Error("failed to trigger image generator", "definitionId", definition.ID, "error", err)
 		}
 
-		err = w.jobService.QueueExampleAudioJob(definition.ID, word.ID, job.Args.UserID, &tx)
+		err = w.jobService.ScheduleExampleAudioJob(definition.ID, word.ID, job.Args.UserID, &tx)
 		if err != nil {
 			logger.Error("failed to queue example audio job", "definitionId", definition.ID, "wordId", word.ID, "error", err)
 		}
 	}
-	if includeErr := w.leitnerSystemStrategy.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
+	if includeErr := w.leitnerTrackingService.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
 		logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)
 	}
 

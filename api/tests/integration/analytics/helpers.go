@@ -75,8 +75,8 @@ func createBasicWordStructure(t *testing.T, server *setup.TestServer, token stri
 	definitionID := definitions[0].ID
 
 	// Use IncludeDefinitions service call to add to Leitner system
-	strategy := service.LeitnerSystemStrategy{}
-	err = strategy.IncludeDefinitions(wordID, userID, []int64{definitionID}, tx)
+	leitnerTrackingService := service.NewLeitnerTrackingService(server.DB)
+	err = leitnerTrackingService.IncludeDefinitions(wordID, userID, []int64{definitionID}, tx)
 	require.NoError(t, err)
 
 	// Get the leitner tracking ID that was created

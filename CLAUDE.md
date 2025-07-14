@@ -199,8 +199,9 @@ The API follows a 3-tier layered architecture:
 3. **Repository Layer** (`internal/repository/`) - Database operations
 
 Key architectural decisions:
-- Singleton pattern for database connections using `sync.Once`
-- Manual dependency injection without frameworks (modernization planned)
+- **Modern Dependency Injection**: Complete AppContext-based dependency injection with constructor pattern
+- **Clean Service Architecture**: All services use explicit dependency injection, no internal construction
+- **Centralized Configuration**: AppContext builder pattern manages all service dependencies
 - JWT-based authentication with automatic session refresh
 - Background job processing using River queue system (PostgreSQL-backed, replaces Redis-based queues)
 - MinIO for S3-compatible object storage (images, audio)
@@ -268,6 +269,44 @@ Workers run as a separate process and include retry logic, rate limiting, and er
 - **Server State**: React Query with intelligent caching and background updates
 - **Local State**: React hooks with custom hook extraction for shared logic
 - **Persistence**: Secure storage for tokens, AsyncStorage for preferences/offline data
+
+### Dependency Injection Architecture
+
+The API uses a modern, centralized dependency injection system built around the **AppContext** pattern:
+
+#### **AppContext Builder Pattern**
+```go
+// Initialize all services with clean dependency injection
+appCtx, err := app.NewContext().
+    WithDatabase(db).
+    WithEnvironment("development").
+    Build()
+```
+
+#### **Service Dependencies**
+All services follow constructor-based dependency injection:
+- **No internal service construction** - All dependencies are explicitly injected
+- **Clean testing** - Every dependency can be mocked for unit tests
+- **Explicit dependency graph** - Constructor signatures show all requirements
+- **SOLID compliance** - Dependency Inversion Principle properly implemented
+
+#### **Key Service Relationships**
+```
+Database → JobService → Core Services → Composite Services
+- DefinitionService (db)
+- LeitnerTrackingService (db)
+- WordService (db, DefinitionService, ModerationService, JobService, LeitnerTrackingService)
+- ErrorReportService (db, DefinitionService, WordService, LeitnerTrackingService, JobService)
+- UserService (db, SubscriptionRepository, ErrorReportService)
+```
+
+#### **JobService Interface**
+Clean, consistent method naming for background job scheduling:
+- `ScheduleImageJob()` - Image generation via DALL-E
+- `ScheduleAudioJob()` - Text-to-speech processing
+- `ScheduleDefinitionJob()` - Definition fetching and processing
+- `ScheduleExampleAudioJob()` - Example sentence audio generation
+- `ScheduleStripeWebhookJob()` / `ScheduleRevenueCatWebhookJob()` - Webhook processing
 
 ### Database Schema
 
@@ -586,11 +625,13 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - Clear error messages with retry times
 - Status endpoint to check remaining quota
 
-## Known Architecture Issues & Modernization Plans
+## Architecture Modernization Completed ✅
 
-### Critical Issues Requiring Attention
-1. **Global State Anti-Patterns**: Service layer uses global variables with `init()` functions containing `os.Exit(1)` calls that break testing
-2. **Connection Pool Inefficiency**: Creating new service instances repeatedly instead of reusing connections
+### Resolved Critical Issues
+1. ✅ **Global State Anti-Patterns**: Eliminated all global variables and `init()` functions that broke testing
+2. ✅ **Connection Pool Inefficiency**: Implemented centralized AppContext with proper connection reuse
+3. ✅ **Dependency Injection**: Complete modernization with constructor-based injection throughout
+4. ✅ **Service Isolation**: All services now use explicit dependencies, enabling clean unit testing
 
 ### Recent Performance Improvements
 - **Analytics Caching**: Implemented Redis-based caching layer (`analytics_cached.go`) with automatic invalidation

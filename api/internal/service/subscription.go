@@ -633,3 +633,8 @@ func (s *SubscriptionService) CountWordsInWordlist(ctx context.Context, wordlist
 func (s *SubscriptionService) GetWebhookSecret() string {
 	return s.webhookSecret
 }
+
+// GetActiveSubscriptionForUser returns the active subscription for a user (includes grace period)
+func (s *SubscriptionService) GetActiveSubscriptionForUser(ctx context.Context, userID int64) (*model.Subscription, error) {
+	return s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
+}

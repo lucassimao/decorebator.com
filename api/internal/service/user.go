@@ -23,17 +23,19 @@ type User = model.User
 
 // UserService handles user-related operations with dependency injection
 type UserService struct {
-	userRepository     *repo.UserRepository
-	wordlistRepository *repo.WordlistRepository
-	errorReportService *ErrorReportService
+	userRepository      *repo.UserRepository
+	wordlistRepository  *repo.WordlistRepository
+	subscriptionService *SubscriptionService
+	errorReportService  *ErrorReportService
 }
 
 // NewUserService creates a new UserService with injected dependencies
-func NewUserService(db *pgxpool.Pool, errorReportService *ErrorReportService) *UserService {
+func NewUserService(db *pgxpool.Pool, subscriptionService *SubscriptionService, errorReportService *ErrorReportService) *UserService {
 	return &UserService{
-		userRepository:     &repo.UserRepository{Db: db},
-		wordlistRepository: &repo.WordlistRepository{Db: db},
-		errorReportService: errorReportService,
+		userRepository:      &repo.UserRepository{Db: db},
+		wordlistRepository:  &repo.WordlistRepository{Db: db},
+		subscriptionService: subscriptionService,
+		errorReportService:  errorReportService,
 	}
 }
 
@@ -225,11 +227,8 @@ func (s *UserService) checkAndDowngradeExpiredSubscription(userID int64, user *U
 		return false, nil // Already free, no downgrade needed
 	}
 
-	// Get subscription repository
-	subRepo := repository.NewSubscriptionRepository(s.userRepository.Db)
-
 	// Check if user has active subscription (includes grace period)
-	activeSub, err := subRepo.GetActiveSubscriptionForUser(context.Background(), userID)
+	activeSub, err := s.subscriptionService.GetActiveSubscriptionForUser(context.Background(), userID)
 	if err != nil {
 		return false, fmt.Errorf("failed to get subscription: %w", err)
 	}
