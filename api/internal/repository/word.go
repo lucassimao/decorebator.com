@@ -19,7 +19,7 @@ type WordRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *WordRepository) Save(name, notes string, userID, wordlistID int64, tx *pgx.Tx) (*Word, error) {
+func (repository *WordRepository) Save(ctx context.Context, name, notes string, userID, wordlistID int64, tx *pgx.Tx) (*Word, error) {
 	query := `
 		INSERT INTO words (name, wordlist_id, user_id, created_at, notes)
 		VALUES ($1, $2,$3, now(),$4)
@@ -37,9 +37,9 @@ func (repository *WordRepository) Save(name, notes string, userID, wordlistID in
 
 	var row pgx.Row
 	if tx != nil {
-		row = (*tx).QueryRow(context.Background(), query, args...)
+		row = (*tx).QueryRow(ctx, query, args...)
 	} else {
-		row = repository.Db.QueryRow(context.Background(), query, args...)
+		row = repository.Db.QueryRow(ctx, query, args...)
 	}
 
 	err := row.Scan(&wordID, &createdAt, &updatedAt, &processingStatus, &processingError, &processingStartedAt, &processingCompletedAt)
@@ -89,7 +89,7 @@ func (repository *WordRepository) ReuseDefinitions(wordID int64, definitionIDs [
 
 // GetWordsByWordlist returns words from wordlist with optional filtering
 // onlyWithDefinitions: if true, returns only words that have definitions with meanings
-func (repository *WordRepository) GetWordsByWordlist(wordlistID, userID int64, onlyWithDefinitions bool) ([]Word, error) {
+func (repository *WordRepository) GetWordsByWordlist(ctx context.Context, wordlistID, userID int64, onlyWithDefinitions bool) ([]Word, error) {
 	var query string
 
 	if onlyWithDefinitions {
@@ -111,7 +111,7 @@ func (repository *WordRepository) GetWordsByWordlist(wordlistID, userID int64, o
 				FROM words WHERE wordlist_id=$1 AND user_id=$2 ORDER BY id DESC`
 	}
 
-	rows, err := repository.Db.Query(context.Background(), query, wordlistID, userID)
+	rows, err := repository.Db.Query(ctx, query, wordlistID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -137,13 +137,13 @@ func (repository *WordRepository) GetWordsByWordlist(wordlistID, userID int64, o
 	return words, nil
 }
 
-func (repository *WordRepository) GetByID(wordID int64) (*Word, error) {
+func (repository *WordRepository) GetByID(ctx context.Context, wordID int64) (*Word, error) {
 	query := `SELECT id, name, created_at, updated_at, wordlist_id, user_id, 
 				COALESCE(audio_url,''), COALESCE(notes,''), COALESCE(pronunciation,''), learned,
 				processing_status, COALESCE(processing_error,''), 
 				processing_started_at, processing_completed_at
 			FROM words WHERE id=$1`
-	row := repository.Db.QueryRow(context.Background(), query, wordID)
+	row := repository.Db.QueryRow(ctx, query, wordID)
 	var w Word
 
 	err := row.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt, &w.WordlistID, &w.UserID,
@@ -160,9 +160,9 @@ func (repository *WordRepository) GetByID(wordID int64) (*Word, error) {
 	return &w, nil
 }
 
-func (repository *WordRepository) Delete(userID, wordID int64) (int64, error) {
+func (repository *WordRepository) Delete(ctx context.Context, userID, wordID int64) (int64, error) {
 	query := `DELETE FROM words WHERE user_id=$1 AND id=$2`
-	result, err := repository.Db.Exec(context.Background(), query, userID, wordID)
+	result, err := repository.Db.Exec(ctx, query, userID, wordID)
 	if err != nil {
 		return 0, err
 	}
@@ -170,7 +170,7 @@ func (repository *WordRepository) Delete(userID, wordID int64) (int64, error) {
 	return result.RowsAffected(), nil
 }
 
-func (repository *WordRepository) Update(word *Word, tx *pgx.Tx) (int64, error) {
+func (repository *WordRepository) Update(ctx context.Context, word *Word, tx *pgx.Tx) (int64, error) {
 	updates := map[string]interface{}{
 		"name":        word.Name,
 		"audio_url":   word.AudioURL,
@@ -204,9 +204,9 @@ func (repository *WordRepository) Update(word *Word, tx *pgx.Tx) (int64, error) 
 	var err error
 
 	if tx != nil {
-		result, err = (*tx).Exec(context.Background(), query, args...)
+		result, err = (*tx).Exec(ctx, query, args...)
 	} else {
-		result, err = repository.Db.Exec(context.Background(), query, args...)
+		result, err = repository.Db.Exec(ctx, query, args...)
 	}
 
 	if err != nil {

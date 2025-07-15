@@ -394,7 +394,7 @@ func (s *LeitnerSystemStrategy) getWordlistBoxDistribution(userID, wordlistID in
 //
 // Returns a Quiz object with the question, options, correct answer, and metadata.
 // Returns an error if no words are available for review or if database operations fail.
-func (s LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, error) {
+func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userID int64) (*Quiz, error) {
 	// Early check to avoid unnecessary queries
 	hasWords, err := s.checkHasUnlearnedWords(userID, wordlistID)
 	if err != nil {
@@ -428,7 +428,7 @@ func (s LeitnerSystemStrategy) CreateQuiz(wordlistID, userID int64) (*Quiz, erro
 		return nil, err
 	}
 
-	word, err := s.wordService.GetWordByID(nextDefinition.WordID)
+	word, err := s.wordService.GetWordByID(ctx, nextDefinition.WordID)
 	if err != nil {
 		return nil, err
 	}

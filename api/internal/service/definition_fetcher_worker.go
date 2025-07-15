@@ -59,7 +59,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	logger := common.Logger.With("worker", "DefinitionFetcher")
 	wordID := job.Args.WordId
 
-	word, err := w.wordService.GetWordByID(wordID)
+	word, err := w.wordService.GetWordByID(ctx, wordID)
 
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {

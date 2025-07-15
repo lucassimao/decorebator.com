@@ -203,7 +203,7 @@ func (h *WordlistsRoutes) GetProcessingStatus(c *gin.Context) {
 	}
 
 	// Get words from wordlist using word service
-	words, err := h.wordService.GetWordByWordlist(wordlist.ID, userID, false)
+	words, err := h.wordService.GetWordByWordlist(c.Request.Context(), wordlist.ID, userID, false)
 
 	if err != nil {
 		common.Logger.Error("failed to get words processing status", "wordlistId", wordlistID, "error", err)

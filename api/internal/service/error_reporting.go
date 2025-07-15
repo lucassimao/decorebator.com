@@ -410,7 +410,7 @@ func (ctx *errorReportContext) fetchCompleteDefinitionSnapshot(definitionID int6
 
 // fetchWordSnapshot fetches word data for audio-related errors
 func (ctx *errorReportContext) fetchWordSnapshot(tx pgx.Tx) (map[string]interface{}, error) {
-	word, err := ctx.service.wordService.GetWordByID(ctx.wordID)
+	word, err := ctx.service.wordService.GetWordByID(ctx.ctx, ctx.wordID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch word: %w", err)
 	}

@@ -37,7 +37,7 @@ func (h *WordRoutes) GetAll(c *gin.Context) {
 	// Parse optional query parameter for filtering words with definitions
 	onlyWithDefinitions := c.Query("onlyWithDefinitions") == "true"
 
-	words, err := h.wordService.GetWordByWordlist(wordlistID, userID, onlyWithDefinitions)
+	words, err := h.wordService.GetWordByWordlist(c.Request.Context(), wordlistID, userID, onlyWithDefinitions)
 	if err != nil {
 		common.Logger.Error("failed to get words", "error", err, "userID", userID, "wordlistID", wordlistID, "onlyWithDefinitions", onlyWithDefinitions)
 		c.String(http.StatusInternalServerError, "Could not get user words")
@@ -75,7 +75,7 @@ func (h *WordRoutes) Delete(c *gin.Context) {
 	userID := c.GetInt64("userID")
 	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
 
-	_, err := h.wordService.DeleteWord(id, userID)
+	_, err := h.wordService.DeleteWord(c.Request.Context(), id, userID)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.String(http.StatusNotFound, err.Error())
@@ -99,7 +99,7 @@ func (h *WordRoutes) Update(c *gin.Context) {
 		return
 	}
 
-	err := h.wordService.UpdateWord(&Word{ID: id, Name: input.Name, UserID: userID, Learned: input.Learned, WordlistID: wordlistID}, nil)
+	err := h.wordService.UpdateWord(c.Request.Context(), &Word{ID: id, Name: input.Name, UserID: userID, Learned: input.Learned, WordlistID: wordlistID}, nil)
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.String(http.StatusNotFound, err.Error())

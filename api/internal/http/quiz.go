@@ -23,7 +23,7 @@ func (h *QuizRoutes) Create(c *gin.Context) {
 	wordlistID, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 
-	challenge, err := h.strategy.CreateQuiz(wordlistID, userId)
+	challenge, err := h.strategy.CreateQuiz(c.Request.Context(), wordlistID, userId)
 
 	if err != nil {
 		common.Logger.Error("failed to create quiz", "error", err, "wordlistID", wordlistID)

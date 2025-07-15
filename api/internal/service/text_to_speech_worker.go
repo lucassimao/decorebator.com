@@ -51,7 +51,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 		}
 	}
 
-	word, err := w.wordService.GetWordByID(job.Args.WordId)
+	word, err := w.wordService.GetWordByID(ctx, job.Args.WordId)
 
 	if err != nil && errors.Is(err, common.NotFoundError{}) {
 		return river.JobCancel(errors.New("word not found"))
@@ -101,7 +101,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 
 	logger.Debug("audio generated", "wordId", word.ID, "url", word.AudioURL, "word", word.Name)
 
-	err = w.wordService.UpdateWord(word, nil)
+	err = w.wordService.UpdateWord(ctx, word, nil)
 	if err != nil {
 		return err
 	}

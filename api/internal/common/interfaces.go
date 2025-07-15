@@ -1,6 +1,8 @@
 package common
 
 import (
+	"context"
+
 	"decorebator.com/internal/model"
 	"github.com/jackc/pgx/v5"
 )
@@ -18,6 +20,6 @@ type QuizResult struct {
 }
 
 type SpacedRepetitionStrategy interface {
-	CreateQuiz(wordlistID, userID int64) (*model.Quiz, error)
+	CreateQuiz(ctx context.Context, wordlistID, userID int64) (*model.Quiz, error)
 	SaveQuizResult(result QuizResult, isPremium bool, tx *pgx.Tx) error
 }

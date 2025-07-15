@@ -37,12 +37,12 @@ func NewWordService(db *pgxpool.Pool, definitionService *DefinitionService, mode
 }
 
 // GetWordByWordlist returns words from wordlist with optional filtering
-func (ws *WordService) GetWordByWordlist(wordlistID, userID int64, onlyWithDefinitions bool) ([]Word, error) {
-	return ws.repository.GetWordsByWordlist(wordlistID, userID, onlyWithDefinitions)
+func (ws *WordService) GetWordByWordlist(ctx context.Context, wordlistID, userID int64, onlyWithDefinitions bool) ([]Word, error) {
+	return ws.repository.GetWordsByWordlist(ctx, wordlistID, userID, onlyWithDefinitions)
 }
 
-func (ws *WordService) GetWordByID(id int64) (*Word, error) {
-	return ws.repository.GetByID(id)
+func (ws *WordService) GetWordByID(ctx context.Context, id int64) (*Word, error) {
+	return ws.repository.GetByID(ctx, id)
 }
 
 // UpdateProcessingStatus updates the processing status and related fields for a word
@@ -136,7 +136,7 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 		}
 	}()
 
-	word, err := ws.repository.Save(trimmedName, dto.Notes, dto.UserID, dto.WordlistID, &tx)
+	word, err := ws.repository.Save(ctx, trimmedName, dto.Notes, dto.UserID, dto.WordlistID, &tx)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 			err = nil // fine if triggering the worker fails somehow
 		} else {
 			word.AudioURL = latestAudioURL
-			err = ws.UpdateWord(word, &tx)
+			err = ws.UpdateWord(ctx, word, &tx)
 		}
 	} else {
 		_, _ = ws.jobService.ScheduleDefinitionJob(word.ID, &word.UserID, nil, &tx)
@@ -180,8 +180,8 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 	return word, nil
 }
 
-func (ws *WordService) DeleteWord(id, userID int64) (int64, error) {
-	word, err := ws.GetWordByID(id)
+func (ws *WordService) DeleteWord(ctx context.Context, id, userID int64) (int64, error) {
+	word, err := ws.GetWordByID(ctx, id)
 	if err != nil {
 		return 0, err
 	}
@@ -190,7 +190,7 @@ func (ws *WordService) DeleteWord(id, userID int64) (int64, error) {
 		return 0, common.NotFoundError{ID: id, Entity: "Word"}
 	}
 
-	count, err := ws.repository.Delete(userID, id)
+	count, err := ws.repository.Delete(ctx, userID, id)
 	if err != nil {
 		common.Logger.Error("failed to delete word", "error", err)
 		return 0, errors.New("failed to delete word")
@@ -199,8 +199,8 @@ func (ws *WordService) DeleteWord(id, userID int64) (int64, error) {
 	return count, nil
 }
 
-func (ws *WordService) UpdateWord(word *Word, tx *pgx.Tx) error {
-	count, err := ws.repository.Update(word, tx)
+func (ws *WordService) UpdateWord(ctx context.Context, word *Word, tx *pgx.Tx) error {
+	count, err := ws.repository.Update(ctx, word, tx)
 	if err != nil {
 		return err
 	}
