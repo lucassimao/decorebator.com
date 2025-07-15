@@ -35,7 +35,7 @@ func NewWordlistsRoutes(wordlistService *service.WordlistService, wordService *s
 
 func (h *WordlistsRoutes) GetAll(c *gin.Context) {
 	var userID int64 = c.GetInt64("userID")
-	wordlists, err := h.wordlistService.GetUserWordlistsWithWordStats(userID)
+	wordlists, err := h.wordlistService.GetUserWordlistsWithWordStats(c.Request.Context(), userID)
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +73,7 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 	}
 
 	var userID int64 = c.GetInt64("userID")
-	saved, err := h.wordlistService.SaveWordlist(&Wordlist{
+	saved, err := h.wordlistService.SaveWordlist(c.Request.Context(), &Wordlist{
 		Name:                input.Name,
 		Description:         input.Description,
 		UserID:              userID,
@@ -122,7 +122,7 @@ func (h *WordlistsRoutes) GetById(c *gin.Context) {
 
 	var userID int64 = c.GetInt64("userID")
 
-	wordlist, err := h.wordlistService.GetWordlistByID(id, userID)
+	wordlist, err := h.wordlistService.GetWordlistByID(c.Request.Context(), id, userID)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
@@ -138,7 +138,7 @@ func (h *WordlistsRoutes) Delete(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	var userID int64 = c.GetInt64("userID")
 
-	_, err := h.wordlistService.DeleteWordlist(id, userID)
+	_, err := h.wordlistService.DeleteWordlist(c.Request.Context(), id, userID)
 	if err != nil {
 		if errors.Is(err, &common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
@@ -161,7 +161,7 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 	}
 
 	var userID int64 = c.GetInt64("userID")
-	err := h.wordlistService.UpdateWordlist(&Wordlist{ID: id, Name: input.Name, Description: input.Description, LanguageCode: input.LanguageCode, UserID: userID})
+	err := h.wordlistService.UpdateWordlist(c.Request.Context(), &Wordlist{ID: id, Name: input.Name, Description: input.Description, LanguageCode: input.LanguageCode, UserID: userID})
 	if err != nil {
 		if errors.Is(err, common.NotFoundError{}) {
 			c.Status(http.StatusNotFound)
@@ -190,7 +190,7 @@ func (h *WordlistsRoutes) GetProcessingStatus(c *gin.Context) {
 	userID := c.GetInt64("userID")
 
 	// First check if the wordlist belongs to the user
-	wordlist, err := h.wordlistService.GetWordlistByID(wordlistID, userID)
+	wordlist, err := h.wordlistService.GetWordlistByID(c.Request.Context(), wordlistID, userID)
 	if err != nil {
 		var notFoundErr common.NotFoundError
 		if errors.As(err, &notFoundErr) {

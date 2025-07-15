@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 
 	"decorebator.com/internal/model"
@@ -29,13 +30,13 @@ func NewWordlistService(db *pgxpool.Pool, moderationService ModerationService) *
 // Legacy global instance for backward compatibility during migration
 
 // GetUserWordlistsWithWordStats returns wordlists with word statistics
-func (wls *WordlistService) GetUserWordlistsWithWordStats(userID int64) ([]*Wordlist, error) {
+func (wls *WordlistService) GetUserWordlistsWithWordStats(ctx context.Context, userID int64) ([]*Wordlist, error) {
 	args := repo.FindWordlistArgs{
 		OwnerID:                  &userID,
 		ComputeWordsCount:        true,
 		ComputeWordsLearnedCount: true,
 	}
-	result, err := wls.repository.Find(args)
+	result, err := wls.repository.Find(ctx, args)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
 			"failed to get all wordlists: %w", err,
@@ -45,7 +46,7 @@ func (wls *WordlistService) GetUserWordlistsWithWordStats(userID int64) ([]*Word
 	return result, nil
 }
 
-func (wls *WordlistService) SaveWordlist(newWordlist *Wordlist) (*Wordlist, error) {
+func (wls *WordlistService) SaveWordlist(ctx context.Context, newWordlist *Wordlist) (*Wordlist, error) {
 	// Content filtering validation
 	nameResult := wls.moderationService.Validate(newWordlist.Name)
 	if !nameResult.IsAppropriate {
@@ -64,7 +65,7 @@ func (wls *WordlistService) SaveWordlist(newWordlist *Wordlist) (*Wordlist, erro
 		}
 	}
 
-	wordlist, err := wls.repository.Save(newWordlist.Name, newWordlist.Description, newWordlist.LanguageCode, newWordlist.UserID, newWordlist.PronunciationSystem)
+	wordlist, err := wls.repository.Save(ctx, newWordlist.Name, newWordlist.Description, newWordlist.LanguageCode, newWordlist.UserID, newWordlist.PronunciationSystem)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
 			"failed to save wordlist: %w", err,
@@ -75,12 +76,12 @@ func (wls *WordlistService) SaveWordlist(newWordlist *Wordlist) (*Wordlist, erro
 	return wordlist, nil
 }
 
-func (wls *WordlistService) GetWordlistByID(id, userID int64) (*Wordlist, error) {
+func (wls *WordlistService) GetWordlistByID(ctx context.Context, id, userID int64) (*Wordlist, error) {
 	args := repo.FindWordlistArgs{
 		ID:      &id,
 		OwnerID: &userID,
 	}
-	result, err := wls.repository.Find(args)
+	result, err := wls.repository.Find(ctx, args)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
 			"failed to get wordlist %d by id: %w", id, err,
@@ -96,8 +97,8 @@ func (wls *WordlistService) GetWordlistByID(id, userID int64) (*Wordlist, error)
 	return wordlist, nil
 }
 
-func (wls *WordlistService) DeleteWordlist(id, userID int64) (int64, error) {
-	count, err := wls.repository.Delete(id, userID)
+func (wls *WordlistService) DeleteWordlist(ctx context.Context, id, userID int64) (int64, error) {
+	count, err := wls.repository.Delete(ctx, id, userID)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
 			"failed to delete wordlist %d : %w", id, err,
@@ -112,7 +113,7 @@ func (wls *WordlistService) DeleteWordlist(id, userID int64) (int64, error) {
 	return count, nil
 }
 
-func (wls *WordlistService) UpdateWordlist(wordlist *Wordlist) error {
+func (wls *WordlistService) UpdateWordlist(ctx context.Context, wordlist *Wordlist) error {
 	// Content filtering validation for updates
 	nameResult := wls.moderationService.Validate(wordlist.Name)
 	if !nameResult.IsAppropriate {
@@ -131,7 +132,7 @@ func (wls *WordlistService) UpdateWordlist(wordlist *Wordlist) error {
 		}
 	}
 
-	count, err := wls.repository.Update(wordlist)
+	count, err := wls.repository.Update(ctx, wordlist)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
 			"failed to update wordlist %d : %w", wordlist.ID, err,

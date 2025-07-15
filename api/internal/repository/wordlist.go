@@ -18,7 +18,7 @@ type WordlistRepository struct {
 
 type Wordlist = model.Wordlist
 
-func (repository *WordlistRepository) Save(name, description, languageCode string, userID int64, pronunciationSystem model.PronunciationSystem) (*Wordlist, error) {
+func (repository *WordlistRepository) Save(ctx context.Context, name, description, languageCode string, userID int64, pronunciationSystem model.PronunciationSystem) (*Wordlist, error) {
 	query := `
 		INSERT INTO wordlists (name, description, user_id, language_code, pronunciation_system)
 		VALUES ($1, $2, $3, $4, $5)
@@ -29,7 +29,7 @@ func (repository *WordlistRepository) Save(name, description, languageCode strin
 	var updatedAt pgtype.Timestamptz
 
 	err := repository.Db.
-		QueryRow(context.Background(), query, name, description, userID, languageCode, pronunciationSystem).
+		QueryRow(ctx, query, name, description, userID, languageCode, pronunciationSystem).
 		Scan(&wordlistID, &createdAt, &updatedAt)
 
 	if err != nil {
@@ -55,7 +55,7 @@ type FindWordlistArgs struct {
 	ComputeWordsLearnedCount bool
 }
 
-func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, error) {
+func (repository *WordlistRepository) Find(ctx context.Context, args FindWordlistArgs) ([]*Wordlist, error) {
 	var (
 		builder         strings.Builder
 		queryArgs       []any
@@ -105,7 +105,7 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 	builder.WriteString(" ORDER BY wordlists.id DESC")
 
 	query := builder.String()
-	rows, err := repository.Db.Query(context.Background(), query, queryArgs...)
+	rows, err := repository.Db.Query(ctx, query, queryArgs...)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return []*Wordlist{}, nil
@@ -151,9 +151,9 @@ func (repository *WordlistRepository) Find(args FindWordlistArgs) ([]*Wordlist, 
 	return wordlists, nil
 }
 
-func (repository *WordlistRepository) Delete(wordlistID, userID int64) (int64, error) {
+func (repository *WordlistRepository) Delete(ctx context.Context, wordlistID, userID int64) (int64, error) {
 	query := `DELETE FROM wordlists WHERE user_id=$1 AND ID=$2`
-	result, err := repository.Db.Exec(context.Background(), query, userID, wordlistID)
+	result, err := repository.Db.Exec(ctx, query, userID, wordlistID)
 	if err != nil {
 		return 0, err
 	}
@@ -171,9 +171,9 @@ func (repository *WordlistRepository) DeleteAll(ctx context.Context, userID int6
 	return result.RowsAffected(), nil
 }
 
-func (repository *WordlistRepository) Update(wordlist *Wordlist) (int64, error) {
+func (repository *WordlistRepository) Update(ctx context.Context, wordlist *Wordlist) (int64, error) {
 	query := `UPDATE wordlists SET name=$1, description=$2,language_code=$3 updated_at=NOW() WHERE user_id=$4 AND ID=$5`
-	result, err := repository.Db.Exec(context.Background(), query, wordlist.Name, wordlist.Description, wordlist.LanguageCode, wordlist.UserID, wordlist.ID)
+	result, err := repository.Db.Exec(ctx, query, wordlist.Name, wordlist.Description, wordlist.LanguageCode, wordlist.UserID, wordlist.ID)
 
 	if err != nil {
 		return 0, err

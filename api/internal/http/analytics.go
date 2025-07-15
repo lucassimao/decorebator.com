@@ -61,7 +61,7 @@ func getWordlistWordMastery(wordlistService *service.WordlistService, db *pgxpoo
 		}
 
 		// Verify wordlist ownership using injected service
-		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
+		wordlist, err := wordlistService.GetWordlistByID(c.Request.Context(), wordlistID, userID)
 		if err != nil || wordlist == nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 			return
@@ -118,7 +118,7 @@ func getWordlistLearningProgress(wordlistService *service.WordlistService, db *p
 		userID := c.GetInt64("userID")
 
 		// Verify wordlist ownership using injected service
-		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
+		wordlist, err := wordlistService.GetWordlistByID(c.Request.Context(), wordlistID, userID)
 		if err != nil || wordlist == nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 			return
@@ -181,7 +181,7 @@ func getWordlistBoxDistributionHistory(wordlistService *service.WordlistService,
 
 		// Verify wordlist ownership
 		// Verify wordlist ownership using injected service
-		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
+		wordlist, err := wordlistService.GetWordlistByID(c.Request.Context(), wordlistID, userID)
 		if err != nil || wordlist == nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 			return
@@ -236,7 +236,7 @@ func getWordlistQuizTypePerformance(wordlistService *service.WordlistService, db
 
 		// Verify wordlist ownership
 		// Verify wordlist ownership using injected service
-		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
+		wordlist, err := wordlistService.GetWordlistByID(c.Request.Context(), wordlistID, userID)
 		if err != nil || wordlist == nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 			return
@@ -290,7 +290,7 @@ func getWordlistCurrentBoxDistribution(wordlistService *service.WordlistService,
 
 		// Verify wordlist ownership
 		// Verify wordlist ownership using injected service
-		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
+		wordlist, err := wordlistService.GetWordlistByID(c.Request.Context(), wordlistID, userID)
 		if err != nil || wordlist == nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 			return
@@ -358,7 +358,7 @@ func getWordlistPracticeTime(wordlistService *service.WordlistService, db *pgxpo
 
 		// Verify wordlist ownership
 		// Verify wordlist ownership using injected service
-		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
+		wordlist, err := wordlistService.GetWordlistByID(c.Request.Context(), wordlistID, userID)
 		if err != nil || wordlist == nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 			return
@@ -413,7 +413,7 @@ func getWordlistStats(wordlistService *service.WordlistService, db *pgxpool.Pool
 
 		// Verify wordlist ownership
 		// Verify wordlist ownership using injected service
-		wordlist, err := wordlistService.GetWordlistByID(wordlistID, userID)
+		wordlist, err := wordlistService.GetWordlistByID(c.Request.Context(), wordlistID, userID)
 		if err != nil || wordlist == nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 			return
