@@ -546,8 +546,8 @@ func (us *UserSimulator) doQuiz(wordlistID int) error {
 	// Simulate thinking time
 	time.Sleep(time.Duration(us.rng.Intn(2000)+1000) * time.Millisecond) // #nosec G404
 
-	// 2. Save quiz result (simulate 80% success rate)
-	success := us.rng.Float32() < 0.8          // #nosec G404
+	// 2. Save quiz result (simulate 99% success rate)
+	success := us.rng.Float32() < 0.99         // #nosec G404
 	responseTimeMs := us.rng.Intn(5000) + 1000 // #nosec G404 - 1-6 second response time
 
 	saveReq := httpHandler.SaveInput{
