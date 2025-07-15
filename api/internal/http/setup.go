@@ -2,7 +2,6 @@ package http
 
 import (
 	"os"
-	"time"
 
 	"decorebator.com/internal/app"
 	"decorebator.com/internal/common"
@@ -73,7 +72,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(ErrorMiddleware())
 	router.Use(CORSMiddleware())
-	router.Use(TimeoutMiddleware(2 * time.Second))
+	// router.Use(TimeoutMiddleware(2 * time.Second))
 
 	// Routes without authentication
 	{
