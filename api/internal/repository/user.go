@@ -23,7 +23,7 @@ type UserRepository struct {
 // Save creates a new user in the database
 // country parameter can be nil, which will insert NULL into the database
 // Note: Validation should be performed at the service layer before calling this function
-func (repository *UserRepository) Save(firstName, lastName, password, email string, country *string) (*User, error) {
+func (repository *UserRepository) Save(ctx context.Context, firstName, lastName, password, email string, country *string) (*User, error) {
 	// Note: country parameter is optional and can be nil
 	// PostgreSQL will store NULL for nil pointer values
 	query := `
@@ -53,7 +53,7 @@ func (repository *UserRepository) Save(firstName, lastName, password, email stri
 		countryParam = nil
 	}
 
-	err = repository.Db.QueryRow(context.Background(), query, firstName, lastName, user.PasswordHash, email, countryParam, model.PlanFree).Scan(
+	err = repository.Db.QueryRow(ctx, query, firstName, lastName, user.PasswordHash, email, countryParam, model.PlanFree).Scan(
 		&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
 		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt)
 	if err != nil {
@@ -157,9 +157,9 @@ func (repository *UserRepository) UpdatePassword(userId int64, newPassword strin
 	return nil
 }
 
-func (repository *UserRepository) Delete(userId int64) error {
+func (repository *UserRepository) Delete(ctx context.Context, userID int64) error {
 	query := `DELETE FROM users WHERE ID = $1`
-	_, err := repository.Db.Exec(context.Background(), query, userId)
+	_, err := repository.Db.Exec(ctx, query, userID)
 	return err
 }
 
@@ -174,7 +174,7 @@ type UpdateUserProfileArgs struct {
 	Password          *string
 }
 
-func (repository *UserRepository) UpdateUserProfile(args UpdateUserProfileArgs) (*User, error) {
+func (repository *UserRepository) UpdateUserProfile(ctx context.Context, args UpdateUserProfileArgs) (*User, error) {
 	// The COALESCE defaults to the existing value if the new value is NULL
 	query := `UPDATE users 
 		SET first_name = COALESCE($2,first_name),
@@ -202,7 +202,7 @@ func (repository *UserRepository) UpdateUserProfile(args UpdateUserProfileArgs) 
 	}
 
 	user := User{}
-	err := repository.Db.QueryRow(context.Background(), query,
+	err := repository.Db.QueryRow(ctx, query,
 		args.ID, args.FirstName, args.LastName, args.Country, args.DateOfBirth, args.PreferredLanguage,
 		args.ProfilePictureURL, passwordHash).Scan(
 		&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,

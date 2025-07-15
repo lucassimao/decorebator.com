@@ -97,13 +97,13 @@ func GenerateJWT(user User) (string, error) {
 	return tokenString, nil
 }
 
-func (s *UserService) SaveUser(firstName, lastName, password, email string, country *string) (*User, error) {
+func (s *UserService) SaveUser(ctx context.Context, firstName, lastName, password, email string, country *string) (*User, error) {
 	// Validate required parameters
 	if firstName == "" || lastName == "" || password == "" || email == "" {
 		return nil, common.BusinessError{Message: "firstName, lastName, password, and email are required"}
 	}
 
-	user, err := s.userRepository.Save(firstName, lastName, password, email, country)
+	user, err := s.userRepository.Save(ctx, firstName, lastName, password, email, country)
 	if err != nil {
 		common.Logger.Error("failed to save new user", "error", err)
 		switch err.(type) {
@@ -193,8 +193,8 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (st
 
 }
 
-func (s *UserService) GetProfile(userID int64) (*User, bool, error) {
-	users, err := s.userRepository.Find(context.Background(), repository.FindUserArgs{
+func (s *UserService) GetProfile(ctx context.Context, userID int64) (*User, bool, error) {
+	users, err := s.userRepository.Find(ctx, repository.FindUserArgs{
 		ID: &userID,
 	})
 	if err != nil {
@@ -210,7 +210,7 @@ func (s *UserService) GetProfile(userID int64) (*User, bool, error) {
 
 	// Check if user needs plan downgrade due to expired grace period
 	// (checkAndDowngradeExpiredSubscription now handles the premium check internally)
-	downgraded, err := s.checkAndDowngradeExpiredSubscription(userID, user)
+	downgraded, err := s.checkAndDowngradeExpiredSubscription(ctx, userID, user)
 	if err != nil {
 		// Log error but don't fail the request - graceful degradation
 		common.Logger.Error("failed to check subscription grace period", "userId", userID, "error", err)
@@ -221,14 +221,14 @@ func (s *UserService) GetProfile(userID int64) (*User, bool, error) {
 	return user, planChanged, nil
 }
 
-func (s *UserService) checkAndDowngradeExpiredSubscription(userID int64, user *User) (bool, error) {
+func (s *UserService) checkAndDowngradeExpiredSubscription(ctx context.Context, userID int64, user *User) (bool, error) {
 	// Only check for downgrade if user currently has a premium plan
 	if user.SubscriptionPlan == model.PlanFree {
 		return false, nil // Already free, no downgrade needed
 	}
 
 	// Check if user has active subscription (includes grace period)
-	activeSub, err := s.subscriptionService.GetActiveSubscriptionForUser(context.Background(), userID)
+	activeSub, err := s.subscriptionService.GetActiveSubscriptionForUser(ctx, userID)
 	if err != nil {
 		return false, fmt.Errorf("failed to get subscription: %w", err)
 	}
@@ -236,7 +236,7 @@ func (s *UserService) checkAndDowngradeExpiredSubscription(userID int64, user *U
 	// If no active subscription found, user is beyond grace period
 	if activeSub == nil {
 		// Downgrade plan to free
-		if err := s.userRepository.UpdateSubscriptionPlan(context.Background(), userID, model.PlanFree); err != nil {
+		if err := s.userRepository.UpdateSubscriptionPlan(ctx, userID, model.PlanFree); err != nil {
 			return false, fmt.Errorf("failed to downgrade subscription plan: %w", err)
 		}
 
@@ -253,18 +253,18 @@ func (s *UserService) checkAndDowngradeExpiredSubscription(userID int64, user *U
 	return false, nil
 }
 
-func (s *UserService) Delete(userID int64) error {
-	if _, deleteReportsErr := s.errorReportService.DeleteUserErrorReports(userID); deleteReportsErr != nil {
+func (s *UserService) Delete(ctx context.Context, userID int64) error {
+	if _, deleteReportsErr := s.errorReportService.DeleteUserErrorReports(ctx, userID); deleteReportsErr != nil {
 		common.Logger.Error("failed to delete user error reports", "userId", userID, "error", deleteReportsErr)
 	}
-	if _, deleteWordlistsErr := s.wordlistRepository.DeleteAll(userID); deleteWordlistsErr != nil {
+	if _, deleteWordlistsErr := s.wordlistRepository.DeleteAll(ctx, userID); deleteWordlistsErr != nil {
 		common.Logger.Error("failed to delete user wordlists", "userId", userID, "error", deleteWordlistsErr)
 	}
-	err := s.userRepository.Delete(userID)
+	err := s.userRepository.Delete(ctx, userID)
 	return err
 }
 
-func (s *UserService) UpdateProfile(userID int64, firstName, lastName, country, preferredLanguage, profilePictureURL, password *string, dateOfBirth *time.Time) (*User, error) {
+func (s *UserService) UpdateProfile(ctx context.Context, userID int64, firstName, lastName, country, preferredLanguage, profilePictureURL, password *string, dateOfBirth *time.Time) (*User, error) {
 	// Validate required fields
 	if firstName != nil && strings.TrimSpace(*firstName) == "" {
 		return nil, common.BusinessError{Message: "First name is required"}
@@ -289,7 +289,7 @@ func (s *UserService) UpdateProfile(userID int64, firstName, lastName, country, 
 		Password:          password,
 	}
 
-	user, err := s.userRepository.UpdateUserProfile(args)
+	user, err := s.userRepository.UpdateUserProfile(ctx, args)
 	if err != nil {
 		common.Logger.Error("failed to update user profile", "error", err, "userID", userID)
 		switch err.(type) {

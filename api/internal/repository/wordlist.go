@@ -161,9 +161,9 @@ func (repository *WordlistRepository) Delete(wordlistID, userID int64) (int64, e
 	return result.RowsAffected(), nil
 }
 
-func (repository *WordlistRepository) DeleteAll(userId int64) (int64, error) {
+func (repository *WordlistRepository) DeleteAll(ctx context.Context, userID int64) (int64, error) {
 	query := `DELETE FROM wordlists WHERE user_id=$1`
-	result, err := repository.Db.Exec(context.Background(), query, userId)
+	result, err := repository.Db.Exec(ctx, query, userID)
 	if err != nil {
 		return 0, err
 	}

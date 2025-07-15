@@ -25,7 +25,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 
 	// Helper to create test user using service layer
 	createTestUser := func(email string, plan model.SubscriptionPlan) int64 {
-		user, err := userService.SaveUser("Test", "User", "password123", email, nil)
+		user, err := userService.SaveUser(ctx, "Test", "User", "password123", email, nil)
 		require.NoError(t, err)
 
 		// Update subscription plan if not free
@@ -66,7 +66,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 	// Cleanup function using service layer
 	cleanup := func(userID int64) {
 		// Use service layer for cleanup - this will cascade delete wordlists and words
-		userService.Delete(userID)
+		userService.Delete(ctx, userID)
 	}
 
 	t.Run("Premium users have no restrictions", func(t *testing.T) {

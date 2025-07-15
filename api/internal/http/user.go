@@ -112,7 +112,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		country = &input.Country
 	}
 
-	user, err := h.userService.SaveUser(input.FirstName, input.LastName, input.Password, input.Email, country)
+	user, err := h.userService.SaveUser(c.Request.Context(), input.FirstName, input.LastName, input.Password, input.Email, country)
 
 	if err != nil {
 		switch err.(type) {
@@ -327,7 +327,7 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 	}
 
 	// Update user profile
-	updatedUser, err := h.userService.UpdateProfile(user.ID, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, newPassword, dateOfBirth)
+	updatedUser, err := h.userService.UpdateProfile(c.Request.Context(), user.ID, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, newPassword, dateOfBirth)
 	if err != nil {
 		switch err.(type) {
 		case common.BusinessError:
@@ -359,7 +359,7 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 		return
 	}
 
-	user, planChanged, err := h.userService.GetProfile(userID)
+	user, planChanged, err := h.userService.GetProfile(c.Request.Context(), userID)
 	if err != nil {
 		// If user not found (e.g., deleted), return 401 instead of 500
 		if err.Error() == "user not found" {
@@ -403,7 +403,7 @@ func (h *UserRoutes) DeleteProfile(c *gin.Context) {
 		return
 	}
 
-	err := h.userService.Delete(userID)
+	err := h.userService.Delete(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "User could not be deleted."})
 		return

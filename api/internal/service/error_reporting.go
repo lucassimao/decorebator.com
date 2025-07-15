@@ -443,8 +443,8 @@ func (ctx *errorReportContext) fetchWordSnapshot(tx pgx.Tx) (map[string]interfac
 }
 
 // DeleteUserErrorReports deletes all error reports for a specific user
-func (s *ErrorReportService) DeleteUserErrorReports(userID int64) (int64, error) {
-	return s.repo.DeleteUserErrorReports(context.Background(), userID)
+func (s *ErrorReportService) DeleteUserErrorReports(ctx context.Context, userID int64) (int64, error) {
+	return s.repo.DeleteUserErrorReports(ctx, userID)
 }
 
 // CooldownError represents an error when a cooldown is active

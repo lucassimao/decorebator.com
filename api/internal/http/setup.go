@@ -2,6 +2,7 @@ package http
 
 import (
 	"os"
+	"time"
 
 	"decorebator.com/internal/app"
 	"decorebator.com/internal/common"
@@ -72,7 +73,6 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(ErrorMiddleware())
 	router.Use(CORSMiddleware())
-	// router.Use(TimeoutMiddleware(2 * time.Second))
 
 	// Routes without authentication
 	{
@@ -98,6 +98,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	// Routes with authentication
 	authenticatedRoutes := router.Group("/")
 	authenticatedRoutes.Use(Authenticate, SentryUserContextMiddleware())
+	authenticatedRoutes.Use(TimeoutMiddleware(2 * time.Second))
 	{
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
 		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(appCtx.SubscriptionService, "create_wordlist"), WordlistRoutes.Create)
