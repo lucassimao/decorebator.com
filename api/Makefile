@@ -192,6 +192,12 @@ debug-api: ## Starts a delve session for api
 load-test: ## Run load testing script with environment variables and pass-through arguments
 	$(GODOTENV_PATH) -f .env go run tests/load_test_runner.go $(ARGS)
 
+db-benchmark: ## Run PostgreSQL connection benchmarking tool
+	@echo "${YELLOW}Running PostgreSQL connection benchmark...${RESET}"
+	@echo "${CYAN}Usage: make db-benchmark ARGS='-max=100 -pool'${RESET}"
+	@echo "${CYAN}Documentation: docs/DB_BENCHMARK.md${RESET}"
+	@$(GODOTENV_PATH) -f .env go run ./cmd/benchmark/db_connections.go $(ARGS)
+
 create-migration: ## Create a new database migration file with the provided file name
 	@read -p "Enter the migration file name: " FILE_NAME; \
 	if [ -z "$$FILE_NAME" ]; then \

@@ -27,6 +27,10 @@ cd mobile && npm test                  # Mobile Jest tests
 cd api && make migrate-up              # Apply new migrations
 cd api && make psql                    # Database console
 
+# Database benchmarking
+cd api && make db-benchmark             # Run PostgreSQL connection benchmarking
+cd api && make db-benchmark ARGS="-pool -max=100"  # Test with connection pooling
+
 # Code quality
 cd api && make lint                    # Run golangci-lint
 cd web && npm run lint                 # Web frontend linting
