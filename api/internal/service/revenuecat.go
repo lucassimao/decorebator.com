@@ -34,8 +34,8 @@ const (
 const (
 	ProductMonthlyIOS     = "com.decorebator.premium.monthly"
 	ProductAnnualIOS      = "com.decorebator.premium.annual"
-	ProductMonthlyAndroid = "p1m:p1m"
-	ProductAnnualAndroid  = "p2m:p2m"
+	ProductMonthlyAndroid = "p1m"
+	ProductAnnualAndroid  = "p2m"
 )
 
 type revenueCatService struct {
