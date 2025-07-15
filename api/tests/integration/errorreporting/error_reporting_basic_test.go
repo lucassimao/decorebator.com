@@ -142,7 +142,7 @@ func TestErrorReporting_MissingImage_ImageRegeneration(t *testing.T) {
 		Source:       "test_missing_image",
 	}
 
-	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(context.Background(), wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	require.Len(t, savedDefinitions, 1)
 

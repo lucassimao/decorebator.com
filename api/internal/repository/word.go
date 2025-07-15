@@ -61,7 +61,7 @@ func (repository *WordRepository) Save(ctx context.Context, name, notes string, 
 	}, nil
 }
 
-func (repository *WordRepository) ReuseDefinitions(wordID int64, definitionIDs []int64, tx pgx.Tx) error {
+func (repository *WordRepository) ReuseDefinitions(ctx context.Context, wordID int64, definitionIDs []int64, tx pgx.Tx) error {
 	var strBuilder strings.Builder
 
 	strBuilder.WriteString("INSERT INTO word_definitions (word_id, definition_id) VALUES ")
@@ -78,7 +78,7 @@ func (repository *WordRepository) ReuseDefinitions(wordID int64, definitionIDs [
 	strBuilder.WriteString(strings.Join(parameters, ","))
 	sql := strBuilder.String()
 
-	_, err := tx.Exec(context.Background(), sql, values...)
+	_, err := tx.Exec(ctx, sql, values...)
 
 	if err != nil {
 		return err
@@ -216,13 +216,13 @@ func (repository *WordRepository) Update(ctx context.Context, word *Word, tx *pg
 	return result.RowsAffected(), nil
 }
 
-func (repository *WordRepository) GetLatestAudioURL(word string) (string, error) {
+func (repository *WordRepository) GetLatestAudioURL(ctx context.Context, word string) (string, error) {
 	query := `SELECT audio_url
 			  FROM words 
 			  WHERE name=$1 AND audio_url is not null AND LENGTH(audio_url) > 0 order by id desc`
 
 	var audioURL string
-	err := repository.Db.QueryRow(context.Background(), query, word).Scan(&audioURL)
+	err := repository.Db.QueryRow(ctx, query, word).Scan(&audioURL)
 
 	if err != nil {
 		return "", err
@@ -231,7 +231,7 @@ func (repository *WordRepository) GetLatestAudioURL(word string) (string, error)
 }
 
 // UpdateFields updates specified fields for a word using a flexible map-based approach
-func (repository *WordRepository) UpdateFields(wordID int64, updates map[string]interface{}, tx *pgx.Tx) error {
+func (repository *WordRepository) UpdateFields(ctx context.Context, wordID int64, updates map[string]interface{}, tx *pgx.Tx) error {
 	if len(updates) == 0 {
 		return fmt.Errorf("no fields specified for update")
 	}
@@ -302,9 +302,9 @@ func (repository *WordRepository) UpdateFields(wordID int64, updates map[string]
 	// Execute the query
 	var err error
 	if tx != nil {
-		_, err = (*tx).Exec(context.Background(), query, args...)
+		_, err = (*tx).Exec(ctx, query, args...)
 	} else {
-		_, err = repository.Db.Exec(context.Background(), query, args...)
+		_, err = repository.Db.Exec(ctx, query, args...)
 	}
 
 	return err

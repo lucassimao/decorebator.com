@@ -36,7 +36,7 @@ func HandleRevenueCatWebhook(jobService service.JobService) gin.HandlerFunc {
 		}
 
 		// Enqueue a job to process the webhook
-		_, err = jobService.ScheduleRevenueCatWebhookJob("webhook", payload)
+		_, err = jobService.ScheduleRevenueCatWebhookJob(c.Request.Context(), "webhook", payload)
 
 		if err != nil {
 			common.Logger.Error("failed to enqueue revenuecat webhook job", "error", err)

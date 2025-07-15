@@ -107,7 +107,7 @@ type errorReportContext struct {
 
 // validateUserOwnsWord ensures the user has permission to report errors for this word
 func (ctx *errorReportContext) validateUserOwnsWord() error {
-	isValid, err := ctx.service.definitionService.didUserCreateWord(ctx.wordID, ctx.userID)
+	isValid, err := ctx.service.definitionService.didUserCreateWord(ctx.ctx, ctx.wordID, ctx.userID)
 	if err != nil || !isValid {
 		if err != nil {
 			ctx.logger.Error("validation failed", "error", err)
@@ -178,27 +178,27 @@ func (ctx *errorReportContext) processErrorType(tx pgx.Tx) (ErrorReport, error) 
 	switch ctx.errorType {
 	case SoundNotPlaying:
 		report = ErrorReport{WordId: &ctx.wordID, UserId: ctx.userID}
-		_, err = ctx.service.jobService.ScheduleAudioJob(ctx.wordID, &ctx.userID, &report, &tx)
+		_, err = ctx.service.jobService.ScheduleAudioJob(ctx.ctx, ctx.wordID, &ctx.userID, &report, &tx)
 
 	case UnrelatedImage, MissingImage:
 		if ctx.definitionID == nil {
 			return report, fmt.Errorf("definition ID required for image-related errors")
 		}
 		report = ErrorReport{DefinitionId: ctx.definitionID, UserId: ctx.userID}
-		_, err = ctx.service.jobService.ScheduleImageJob(*ctx.definitionID, &ctx.userID, &report, &tx)
+		_, err = ctx.service.jobService.ScheduleImageJob(ctx.ctx, *ctx.definitionID, &ctx.userID, &report, &tx)
 
 	case UnrelatedExample, UnrelatedMeaning:
-		err = ctx.service.definitionService.DeleteWordDefinitions(ctx.wordID, &tx)
+		err = ctx.service.definitionService.DeleteWordDefinitions(ctx.ctx, ctx.wordID, &tx)
 		if err == nil {
 			report = ErrorReport{WordId: &ctx.wordID, UserId: ctx.userID}
-			_, err = ctx.service.jobService.ScheduleDefinitionJob(ctx.wordID, &ctx.userID, &report, &tx)
+			_, err = ctx.service.jobService.ScheduleDefinitionJob(ctx.ctx, ctx.wordID, &ctx.userID, &report, &tx)
 		}
 
 	case ProcessingFailed:
-		err = ctx.service.definitionService.DeleteWordDefinitions(ctx.wordID, &tx)
+		err = ctx.service.definitionService.DeleteWordDefinitions(ctx.ctx, ctx.wordID, &tx)
 		if err == nil {
 			report = ErrorReport{WordId: &ctx.wordID, UserId: ctx.userID}
-			_, err = ctx.service.jobService.ScheduleDefinitionJob(ctx.wordID, &ctx.userID, &report, &tx)
+			_, err = ctx.service.jobService.ScheduleDefinitionJob(ctx.ctx, ctx.wordID, &ctx.userID, &report, &tx)
 		}
 
 	default:
@@ -223,7 +223,7 @@ func (ctx *errorReportContext) completeReport(tx pgx.Tx, report ErrorReport) err
 	}
 
 	// Mark definition temporarily as unavailable
-	if err := ctx.service.leitnerTrackingService.SetTemporarySkip(report, tx); err != nil {
+	if err := ctx.service.leitnerTrackingService.SetTemporarySkip(ctx.ctx, report, tx); err != nil {
 		common.Logger.Error("failed to report error", "error", err)
 		return err
 	}
@@ -385,7 +385,7 @@ func (ctx *errorReportContext) buildContentSnapshot(tx pgx.Tx) (map[string]inter
 // fetchCompleteDefinitionSnapshot fetches complete definition data for historical preservation
 func (ctx *errorReportContext) fetchCompleteDefinitionSnapshot(definitionID int64) (map[string]interface{}, error) {
 	// Use definition service to fetch the definition
-	definition, err := ctx.service.definitionService.GetDefinitionByID(definitionID)
+	definition, err := ctx.service.definitionService.GetDefinitionByID(ctx.ctx, definitionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch definition: %w", err)
 	}

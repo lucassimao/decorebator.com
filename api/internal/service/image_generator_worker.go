@@ -48,7 +48,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	// Validate user eligibility before processing (skip for admin/system jobs)
 	if userID != nil {
-		if err := w.userService.ValidateUserEligibilityForWorkers(*userID); err != nil {
+		if err := w.userService.ValidateUserEligibilityForWorkers(ctx, *userID); err != nil {
 			logger.Warn("User not eligible for image generation",
 				"userId", *userID, "definitionId", definitionID, "error", err)
 			// Cancel job permanently - user needs to upgrade
@@ -56,7 +56,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		}
 	}
 
-	definition, err := w.definitionService.GetDefinitionByID(job.Args.DefinitionId)
+	definition, err := w.definitionService.GetDefinitionByID(ctx, job.Args.DefinitionId)
 	if err != nil {
 		logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
 		return river.JobCancel(err)
@@ -101,7 +101,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		return err
 	}
 
-	url, err := common.Upload(data, "decorebator",
+	url, err := common.Upload(ctx, data, "decorebator",
 		fmt.Sprintf("images/definition-%d-%d.png", definitionID, time.Now().Unix()), "image/png")
 
 	if err != nil {
@@ -111,7 +111,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	logger.Debug("image generated", "definitionId", definitionID, "url", url)
 
-	_, err = w.definitionImageService.SaveDefinitionImage(model.CreateDefinitionImageDTO{
+	_, err = w.definitionImageService.SaveDefinitionImage(ctx, model.CreateDefinitionImageDTO{
 		Api:          model.OPENAI,
 		URL:          url,
 		Description:  longestExample,
@@ -128,7 +128,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	// if this job was triggered by an error report, then mark the issue as solved
 	if job.Args.ErrorReport != nil {
 		var strategy LeitnerSystemStrategy
-		return strategy.MarkErrorResolved(*job.Args.ErrorReport)
+		return strategy.MarkErrorResolved(ctx, *job.Args.ErrorReport)
 	}
 	return nil
 }

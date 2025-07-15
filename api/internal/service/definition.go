@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -23,13 +24,13 @@ func NewDefinitionService(db *pgxpool.Pool) *DefinitionService {
 	}
 }
 
-func (s *DefinitionService) SaveDefinition(tokenID int64, definitions []*model.Definition, tx *pgx.Tx) ([]*model.Definition, error) {
+func (s *DefinitionService) SaveDefinition(ctx context.Context, tokenID int64, definitions []*model.Definition, tx *pgx.Tx) ([]*model.Definition, error) {
 	// Set normalized part-of-speech for each definition before saving
 	for _, def := range definitions {
 		def.PartOfSpeechNormalized = NormalizePartOfSpeech(def.PartOfSpeech, def.Language)
 	}
 
-	definitions, err := s.definitionRepository.Save(tokenID, definitions, tx)
+	definitions, err := s.definitionRepository.Save(ctx, tokenID, definitions, tx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save definitions: %w", err)
 	}
@@ -37,32 +38,32 @@ func (s *DefinitionService) SaveDefinition(tokenID int64, definitions []*model.D
 	return definitions, nil
 }
 
-func (s *DefinitionService) GetRandomMeanings(definitionIDsToIgnore []int, size int) ([]string, error) {
-	return s.definitionRepository.GetRandomMeanings(definitionIDsToIgnore, size)
+func (s *DefinitionService) GetRandomMeanings(ctx context.Context, definitionIDsToIgnore []int, size int) ([]string, error) {
+	return s.definitionRepository.GetRandomMeanings(ctx, definitionIDsToIgnore, size)
 }
 
-func (s *DefinitionService) GetRandomTokens(definitionIDsToIgnore []int, partOfSpeech string, size int) ([]string, error) {
-	return s.definitionRepository.GetRandomTokens(definitionIDsToIgnore, partOfSpeech, size)
+func (s *DefinitionService) GetRandomTokens(ctx context.Context, definitionIDsToIgnore []int, partOfSpeech string, size int) ([]string, error) {
+	return s.definitionRepository.GetRandomTokens(ctx, definitionIDsToIgnore, partOfSpeech, size)
 }
 
-func (s *DefinitionService) GetDefinitionByID(id int64) (*model.Definition, error) {
-	results, err := s.definitionRepository.Find(repo.FindArgs{ID: &id})
+func (s *DefinitionService) GetDefinitionByID(ctx context.Context, id int64) (*model.Definition, error) {
+	results, err := s.definitionRepository.Find(ctx, repo.FindArgs{ID: &id})
 	if err != nil || len(results) == 0 {
 		return nil, nil
 	}
 	return results[0], nil
 }
 
-func (s *DefinitionService) findDefinitionsByName(name string) ([]*model.Definition, error) {
-	return s.definitionRepository.Find(repo.FindArgs{Name: &name})
+func (s *DefinitionService) findDefinitionsByName(ctx context.Context, name string) ([]*model.Definition, error) {
+	return s.definitionRepository.Find(ctx, repo.FindArgs{Name: &name})
 }
 
-func (s *DefinitionService) DeleteWordDefinitions(wordID int64, tx *pgx.Tx) error {
-	return s.definitionRepository.DeleteWordDefinitions(wordID, tx)
+func (s *DefinitionService) DeleteWordDefinitions(ctx context.Context, wordID int64, tx *pgx.Tx) error {
+	return s.definitionRepository.DeleteWordDefinitions(ctx, wordID, tx)
 }
 
-func (s *DefinitionService) didUserCreateWord(wordID, userID int64) (bool, error) {
-	res, err := s.definitionRepository.DidUserCreateWord(wordID, userID)
+func (s *DefinitionService) didUserCreateWord(ctx context.Context, wordID, userID int64) (bool, error) {
+	res, err := s.definitionRepository.DidUserCreateWord(ctx, wordID, userID)
 	if err != nil {
 		return false, fmt.Errorf("validation failed for tuple wordID, userID. %w", err)
 	}
@@ -70,12 +71,12 @@ func (s *DefinitionService) didUserCreateWord(wordID, userID int64) (bool, error
 	return res, nil
 }
 
-func (s *DefinitionService) GetDefinitionsByWordID(wordID, userID int64) ([]*model.Definition, error) {
-	return s.definitionRepository.GetDefinitionsByWordID(wordID, userID)
+func (s *DefinitionService) GetDefinitionsByWordID(ctx context.Context, wordID, userID int64) ([]*model.Definition, error) {
+	return s.definitionRepository.GetDefinitionsByWordID(ctx, wordID, userID)
 }
 
-func (s *DefinitionService) CreateExampleAudio(definitionID int64, exampleText, audioURL, inflectionType string) error {
-	return s.definitionRepository.CreateExampleAudio(definitionID, exampleText, audioURL, inflectionType)
+func (s *DefinitionService) CreateExampleAudio(ctx context.Context, definitionID int64, exampleText, audioURL, inflectionType string) error {
+	return s.definitionRepository.CreateExampleAudio(ctx, definitionID, exampleText, audioURL, inflectionType)
 }
 
 // NormalizePartOfSpeech converts a language-specific part-of-speech to normalized English

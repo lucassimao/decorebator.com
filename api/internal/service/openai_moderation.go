@@ -73,7 +73,7 @@ type ContentFilterResult struct {
 
 // ModerationService interface for content moderation
 type ModerationService interface {
-	Validate(text string) ContentFilterResult
+	Validate(ctx context.Context, text string) ContentFilterResult
 }
 
 // OpenAIModerationService handles content moderation using OpenAI's moderation API
@@ -106,7 +106,7 @@ func NewOpenAIModerationService() *OpenAIModerationService {
 }
 
 // Validate moderates content using OpenAI's moderation API
-func (s *OpenAIModerationService) Validate(text string) ContentFilterResult {
+func (s *OpenAIModerationService) Validate(ctx context.Context, text string) ContentFilterResult {
 	// Basic validation first (empty, too long, etc.)
 	if text == "" {
 		return ContentFilterResult{
@@ -135,7 +135,7 @@ func (s *OpenAIModerationService) Validate(text string) ContentFilterResult {
 	}
 
 	// Call OpenAI moderation API
-	result, err := s.moderateWithOpenAI(text)
+	result, err := s.moderateWithOpenAI(ctx, text)
 	if err != nil {
 		// Enhanced logging to differentiate timeout vs other errors
 		if strings.Contains(err.Error(), "timed out after 10 seconds") {
@@ -152,7 +152,7 @@ func (s *OpenAIModerationService) Validate(text string) ContentFilterResult {
 
 	if result.Flagged {
 		// Track rejection in Redis
-		s.trackRejection(result)
+		s.trackRejection(ctx, result)
 
 		// Determine the most relevant flagged category
 		reason := s.buildRejectionReason(result)
@@ -172,7 +172,7 @@ func (s *OpenAIModerationService) Validate(text string) ContentFilterResult {
 }
 
 // moderateWithOpenAI calls the OpenAI moderation API
-func (s *OpenAIModerationService) moderateWithOpenAI(text string) (*ModerationResult, error) {
+func (s *OpenAIModerationService) moderateWithOpenAI(ctx context.Context, text string) (*ModerationResult, error) {
 	reqBody := ModerationRequest{
 		Input: text,
 		Model: "omni-moderation-latest",
@@ -183,11 +183,11 @@ func (s *OpenAIModerationService) moderateWithOpenAI(text string) (*ModerationRe
 		return nil, fmt.Errorf("error marshaling request: %w", err)
 	}
 
-	// Create context with 10-second timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// Create context with 10-second timeout (or use parent context if it has shorter timeout)
+	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, "POST", s.apiURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(timeoutCtx, "POST", s.apiURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
@@ -245,7 +245,7 @@ func (s *OpenAIModerationService) buildRejectionReason(result *ModerationResult)
 }
 
 // trackRejection increments the daily rejection counter in Redis
-func (s *OpenAIModerationService) trackRejection(result *ModerationResult) {
+func (s *OpenAIModerationService) trackRejection(ctx context.Context, result *ModerationResult) {
 	// Get today's date for the Redis key
 	today := time.Now().Format("2006-01-02")
 	redisKey := fmt.Sprintf("content:rejections:%s", today)
@@ -261,7 +261,7 @@ func (s *OpenAIModerationService) trackRejection(result *ModerationResult) {
 	}
 
 	// Increment counter with expiration (keep for 30 days)
-	ctx := context.Background()
+	// Use provided context for Redis operations
 	pipe := redisClient.Pipeline()
 	pipe.Incr(ctx, redisKey)
 	pipe.Expire(ctx, redisKey, 30*24*time.Hour) // 30 days
@@ -280,14 +280,14 @@ func (s *OpenAIModerationService) trackRejection(result *ModerationResult) {
 }
 
 // GetDailyRejectionCount returns the number of rejections for a specific date
-func (s *OpenAIModerationService) GetDailyRejectionCount(date string) (int, error) {
+func (s *OpenAIModerationService) GetDailyRejectionCount(ctx context.Context, date string) (int, error) {
 	redisClient, err := common.GetRedisClient()
 	if err != nil {
 		return 0, fmt.Errorf("Redis client not available: %w", err)
 	}
 
 	redisKey := fmt.Sprintf("content:rejections:%s", date)
-	val, err := redisClient.Get(context.Background(), redisKey).Result()
+	val, err := redisClient.Get(ctx, redisKey).Result()
 	if err != nil {
 		if err.Error() == "redis: nil" {
 			return 0, nil // No rejections for this date

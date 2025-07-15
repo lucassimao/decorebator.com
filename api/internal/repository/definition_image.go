@@ -20,10 +20,7 @@ func NewDefinitionImageRepository(db *pgxpool.Pool) *DefinitionImageRepository {
 	return &DefinitionImageRepository{db}
 }
 
-func (repository *DefinitionImageRepository) Save(dto CreateDefinitionImageDTO) (*DefinitionImage, error) {
-	// maybe later receive via arg?
-	ctx := context.Background()
-
+func (repository *DefinitionImageRepository) Save(ctx context.Context, dto CreateDefinitionImageDTO) (*DefinitionImage, error) {
 	var def DefinitionImage
 
 	// Start a transaction

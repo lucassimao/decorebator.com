@@ -140,7 +140,7 @@ func (repository *UserRepository) Find(ctx context.Context, args FindUserArgs) (
 	return users, nil
 }
 
-func (repository *UserRepository) UpdatePassword(userId int64, newPassword string) error {
+func (repository *UserRepository) UpdatePassword(ctx context.Context, userID int64, newPassword string) error {
 	query := `UPDATE users SET password_hash = $1, updated_at=NOW() WHERE ID = $2`
 
 	bytes, err := bcrypt.GenerateFromPassword([]byte(newPassword), common.GetBcryptCost())
@@ -149,7 +149,7 @@ func (repository *UserRepository) UpdatePassword(userId int64, newPassword strin
 		return err
 	}
 
-	_, err = repository.Db.Exec(context.Background(), query, passwordHash, userId)
+	_, err = repository.Db.Exec(ctx, query, passwordHash, userID)
 	if err != nil {
 		return err
 	}

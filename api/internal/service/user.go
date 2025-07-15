@@ -116,8 +116,8 @@ func (s *UserService) SaveUser(ctx context.Context, firstName, lastName, passwor
 	return user, nil
 }
 
-func (s *UserService) UpdatePassword(userID int64, password string) error {
-	err := s.userRepository.UpdatePassword(userID, password)
+func (s *UserService) UpdatePassword(ctx context.Context, userID int64, password string) error {
+	err := s.userRepository.UpdatePassword(ctx, userID, password)
 	if err != nil {
 		common.Logger.Error("failed to save new user", "error", err)
 		return errors.New("could not update the password")
@@ -307,10 +307,10 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID int64, firstName
 // Free users are limited to:
 // - 1 wordlist only
 // - Maximum 10 words total
-func (s *UserService) ValidateUserEligibilityForWorkers(userID int64) error {
+func (s *UserService) ValidateUserEligibilityForWorkers(ctx context.Context, userID int64) error {
 	// Get user information including subscription plan
 	var subscriptionPlan model.SubscriptionPlan
-	err := s.userRepository.Db.QueryRow(context.Background(),
+	err := s.userRepository.Db.QueryRow(ctx,
 		"SELECT subscription_plan FROM users WHERE id = $1",
 		userID).Scan(&subscriptionPlan)
 
@@ -328,7 +328,7 @@ func (s *UserService) ValidateUserEligibilityForWorkers(userID int64) error {
 	var totalWordCount int
 
 	// Count wordlists
-	err = s.userRepository.Db.QueryRow(context.Background(),
+	err = s.userRepository.Db.QueryRow(ctx,
 		"SELECT COUNT(*) FROM wordlists WHERE user_id = $1",
 		userID).Scan(&wordlistCount)
 
@@ -337,7 +337,7 @@ func (s *UserService) ValidateUserEligibilityForWorkers(userID int64) error {
 	}
 
 	// Count total words across all wordlists
-	err = s.userRepository.Db.QueryRow(context.Background(),
+	err = s.userRepository.Db.QueryRow(ctx,
 		"SELECT COUNT(*) FROM words WHERE user_id = $1 AND learned = false",
 		userID).Scan(&totalWordCount)
 

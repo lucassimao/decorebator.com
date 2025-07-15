@@ -34,12 +34,12 @@ func NewLeitnerTrackingService(db *pgxpool.Pool) *LeitnerTrackingService {
 // - tx: Database transaction to ensure atomicity
 //
 // Returns an error if any database operations fail.
-func (s *LeitnerTrackingService) IncludeDefinitions(wordID, userID int64, definitionIDs []int64, tx pgx.Tx) error {
+func (s *LeitnerTrackingService) IncludeDefinitions(ctx context.Context, wordID, userID int64, definitionIDs []int64, tx pgx.Tx) error {
 	for _, definitionID := range definitionIDs {
 		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id, word_id, updated_at)
 		VALUES ($1, $2, $3, $4, NOW())`
 
-		_, err := tx.Exec(context.Background(), query, userID, definitionID, 1, wordID)
+		_, err := tx.Exec(ctx, query, userID, definitionID, 1, wordID)
 		if err != nil {
 			return err
 		}
@@ -58,18 +58,18 @@ func (s *LeitnerTrackingService) IncludeDefinitions(wordID, userID int64, defini
 // - tx: Database transaction (optional)
 //
 // Returns an error if database operations fail.
-func (s *LeitnerTrackingService) UpdateQuizProgress(trackingID int64, isCorrect bool, tx *pgx.Tx) error {
+func (s *LeitnerTrackingService) UpdateQuizProgress(ctx context.Context, trackingID int64, isCorrect bool, tx *pgx.Tx) error {
 	var execTx pgx.Tx
 	if tx != nil {
 		execTx = *tx
 	} else {
 		// Create transaction if none provided
-		newTx, err := s.db.Begin(context.Background())
+		newTx, err := s.db.Begin(ctx)
 		if err != nil {
 			return err
 		}
 		defer func() {
-			_ = newTx.Rollback(context.Background()) // Log rollback error but don't override the original error
+			_ = newTx.Rollback(ctx) // Log rollback error but don't override the original error
 		}()
 		execTx = newTx
 	}
@@ -89,14 +89,14 @@ func (s *LeitnerTrackingService) UpdateQuizProgress(trackingID int64, isCorrect 
 		END
 	WHERE id = $2`
 
-	_, err := execTx.Exec(context.Background(), query, isCorrect, trackingID)
+	_, err := execTx.Exec(ctx, query, isCorrect, trackingID)
 	if err != nil {
 		return err
 	}
 
 	// If we created the transaction, commit it
 	if tx == nil {
-		err = execTx.Commit(context.Background())
+		err = execTx.Commit(ctx)
 		if err != nil {
 			return err
 		}
@@ -113,7 +113,7 @@ func (s *LeitnerTrackingService) UpdateQuizProgress(trackingID int64, isCorrect 
 // - tx: Database transaction to ensure atomicity
 //
 // Returns an error if database operations fail.
-func (s *LeitnerTrackingService) ClearTemporarySkip(report ErrorReport, tx pgx.Tx) error {
+func (s *LeitnerTrackingService) ClearTemporarySkip(ctx context.Context, report ErrorReport, tx pgx.Tx) error {
 	baseQuery := `UPDATE leitner_system_tracking SET temporarily_skipped_until = NULL `
 	selection, queryArgs, err := buildQuerySelectionFromErrorReport(report)
 	if err != nil {
@@ -121,7 +121,7 @@ func (s *LeitnerTrackingService) ClearTemporarySkip(report ErrorReport, tx pgx.T
 	}
 
 	query := baseQuery + selection
-	_, err = tx.Exec(context.Background(), query, queryArgs...)
+	_, err = tx.Exec(ctx, query, queryArgs...)
 	return err
 }
 
@@ -133,7 +133,7 @@ func (s *LeitnerTrackingService) ClearTemporarySkip(report ErrorReport, tx pgx.T
 // - tx: Database transaction to ensure atomicity
 //
 // Returns an error if database operations fail.
-func (s *LeitnerTrackingService) SetTemporarySkip(report ErrorReport, tx pgx.Tx) error {
+func (s *LeitnerTrackingService) SetTemporarySkip(ctx context.Context, report ErrorReport, tx pgx.Tx) error {
 	if report.DefinitionId == nil && report.WordId == nil {
 		return errors.New("definition or word missing")
 	}
@@ -145,7 +145,7 @@ func (s *LeitnerTrackingService) SetTemporarySkip(report ErrorReport, tx pgx.Tx)
 	}
 
 	query := baseQuery + selection
-	_, err = tx.Exec(context.Background(), query, queryArgs...)
+	_, err = tx.Exec(ctx, query, queryArgs...)
 	return err
 }
 

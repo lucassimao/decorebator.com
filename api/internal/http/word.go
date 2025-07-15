@@ -119,7 +119,7 @@ func (h *WordRoutes) GetDefinitions(c *gin.Context) {
 		return
 	}
 
-	definitions, err := h.definitionService.GetDefinitionsByWordID(wordID, userID)
+	definitions, err := h.definitionService.GetDefinitionsByWordID(c.Request.Context(), wordID, userID)
 	if err != nil {
 		common.Logger.Error("failed to get definitions", "error", err, "userID", userID, "wordId", wordID)
 		c.String(http.StatusInternalServerError, "Could not get word definitions")

@@ -59,7 +59,7 @@ func TestErrorReporting_SideEffects_TimestampUpdates(t *testing.T) {
 			Source:       "test_timestamp",
 		}
 
-		savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+		savedDefinitions, err := definitionService.SaveDefinition(context.Background(), wordID, []*model.Definition{testDefinition}, nil)
 		require.NoError(t, err)
 		require.Len(t, savedDefinitions, 1)
 
@@ -202,7 +202,7 @@ func TestErrorReporting_SideEffects_LeitnerSystemUpdate(t *testing.T) {
 		Source:       "test_leitner",
 	}
 
-	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(context.Background(), wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	require.Len(t, savedDefinitions, 1)
 
@@ -215,7 +215,7 @@ func TestErrorReporting_SideEffects_LeitnerSystemUpdate(t *testing.T) {
 	require.NoError(t, txErr)
 	defer tx.Rollback(ctx)
 
-	err = leitnerTrackingService.IncludeDefinitions(wordID, 1, []int64{definitionID}, tx) // userID = 1 from test setup
+	err = leitnerTrackingService.IncludeDefinitions(ctx, wordID, 1, []int64{definitionID}, tx) // userID = 1 from test setup
 	require.NoError(t, err)
 	err = tx.Commit(ctx)
 	require.NoError(t, err)
@@ -311,7 +311,7 @@ func TestErrorReporting_SideEffects_CooldownCreation(t *testing.T) {
 		Source:       "test_cooldown_side_effect",
 	}
 
-	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(context.Background(), wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	require.Len(t, savedDefinitions, 1)
 
@@ -396,7 +396,7 @@ func TestErrorReporting_SideEffects_DatabaseConsistency(t *testing.T) {
 		Source:       "test_consistency",
 	}
 
-	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(context.Background(), wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	require.Len(t, savedDefinitions, 1)
 

@@ -1,6 +1,7 @@
 package errorreporting
 
 import (
+	"context"
 	"testing"
 
 	"decorebator.com/internal/model"
@@ -67,7 +68,7 @@ func TestErrorReporting_RateLimit_FreeUser(t *testing.T) {
 			Source:       "test_rate_limit",
 		}
 
-		savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+		savedDefinitions, err := definitionService.SaveDefinition(context.Background(), wordID, []*model.Definition{testDefinition}, nil)
 		require.NoError(t, err)
 		require.Len(t, savedDefinitions, 1)
 
@@ -166,7 +167,7 @@ func TestErrorReporting_RateLimit_PremiumUser(t *testing.T) {
 			Source:       "test_premium_rate",
 		}
 
-		savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+		savedDefinitions, err := definitionService.SaveDefinition(context.Background(), wordID, []*model.Definition{testDefinition}, nil)
 		require.NoError(t, err)
 		require.Len(t, savedDefinitions, 1)
 
@@ -248,7 +249,7 @@ func TestErrorReporting_CooldownMechanism(t *testing.T) {
 		Source:       "test_cooldown",
 	}
 
-	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(context.Background(), wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	require.Len(t, savedDefinitions, 1)
 

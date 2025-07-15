@@ -53,7 +53,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 
 	// Validate user eligibility before processing (skip for admin/system jobs)
 	if job.Args.UserID != nil {
-		if err := w.userService.ValidateUserEligibilityForWorkers(*job.Args.UserID); err != nil {
+		if err := w.userService.ValidateUserEligibilityForWorkers(ctx, *job.Args.UserID); err != nil {
 			logger.Warn("User not eligible for example audio generation",
 				"userId", *job.Args.UserID, "wordId", job.Args.WordID, "error", err)
 			// Cancel job permanently - user needs to upgrade
@@ -62,7 +62,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 	}
 
 	// 1. Fetch definition from database
-	definition, err := w.definitionService.GetDefinitionByID(job.Args.DefinitionID)
+	definition, err := w.definitionService.GetDefinitionByID(ctx, job.Args.DefinitionID)
 	if err != nil && errors.Is(err, common.NotFoundError{}) {
 		return river.JobCancel(errors.New("definition not found"))
 	}
@@ -72,7 +72,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 	}
 
 	// 2. Get wordlist language for proper TTS voice selection
-	wordlistLang, _, err := w.wordService.GetWordlistLanguageAndPronunciation(job.Args.WordID)
+	wordlistLang, _, err := w.wordService.GetWordlistLanguageAndPronunciation(ctx, job.Args.WordID)
 	if err != nil {
 		logger.Error("failed to get wordlist language", "error", err)
 		return err
@@ -112,7 +112,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 		}
 
 		// Upload audio to MinIO storage
-		audioURL, err := w.uploadAudio(response.Data, job.Args.DefinitionID, exampleItem.ExampleText)
+		audioURL, err := w.uploadAudio(ctx, response.Data, job.Args.DefinitionID, exampleItem.ExampleText)
 		if err != nil {
 			logger.Error("failed to upload audio for example", "example", exampleItem.ExampleText, "error", err)
 			continue
@@ -120,7 +120,7 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 
 		// Create new record in definition_example_audio table
 		err = w.definitionService.CreateExampleAudio(
-			job.Args.DefinitionID,
+			ctx, job.Args.DefinitionID,
 			exampleItem.ExampleText,
 			audioURL,
 			exampleItem.InflectionType,
@@ -180,12 +180,12 @@ func (w *ExampleAudioWorker) selectExamplesForAudio(definition *model.Definition
 	return selectedExamples
 }
 
-func (w *ExampleAudioWorker) uploadAudio(audioData []byte, definitionID int64, exampleText string) (string, error) {
+func (w *ExampleAudioWorker) uploadAudio(ctx context.Context, audioData []byte, definitionID int64, exampleText string) (string, error) {
 	// Generate hash for consistent naming
 	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(exampleText)))[:8]
 	filename := fmt.Sprintf("audio/example-%d-%s.mp3", definitionID, hash)
 
-	audioURL, err := common.Upload(audioData, "decorebator", filename, "audio/mpeg")
+	audioURL, err := common.Upload(ctx, audioData, "decorebator", filename, "audio/mpeg")
 	if err != nil {
 		return "", err
 	}

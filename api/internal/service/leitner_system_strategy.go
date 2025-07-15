@@ -139,7 +139,7 @@ type ExampleUsage struct {
 // Returns:
 // - NextDefinition with selected definition details and Leitner system metadata
 // - Error if no definitions exist in wordlist or database operations fail
-func (s *LeitnerSystemStrategy) getNextDefinition(userID, wordlistID int64) (*NextDefinition, error) {
+func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, wordlistID int64) (*NextDefinition, error) {
 	// Deterministic query that guarantees definition selection
 	query := `
 		WITH definition_priorities AS (
@@ -253,7 +253,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(userID, wordlistID int64) (*Ne
 				 sd.image_url, sd.word_id, sd.image_description, sd.hours_since_review, sd.progress_ratio, sd.updated_at;
 	`
 
-	rows, err := s.db.Query(context.Background(), query, userID, wordlistID)
+	rows, err := s.db.Query(ctx, query, userID, wordlistID)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +273,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(userID, wordlistID int64) (*Ne
 			WHERE lst.user_id = $1 AND w.wordlist_id = $2
 		`
 		var totalWords, unlearnedWords, withMeaning, notSkipped int
-		debugErr := s.db.QueryRow(context.Background(), debugQuery, userID, wordlistID).Scan(&totalWords, &unlearnedWords, &withMeaning, &notSkipped)
+		debugErr := s.db.QueryRow(ctx, debugQuery, userID, wordlistID).Scan(&totalWords, &unlearnedWords, &withMeaning, &notSkipped)
 		if debugErr == nil {
 			common.Logger.Error("no definitions selected - debug info",
 				"userID", userID,
@@ -330,7 +330,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(userID, wordlistID int64) (*Ne
 }
 
 // checkHasUnlearnedWords verifies if the user has any unlearned words in the wordlist
-func (s *LeitnerSystemStrategy) checkHasUnlearnedWords(userID, wordlistID int64) (bool, error) {
+func (s *LeitnerSystemStrategy) checkHasUnlearnedWords(ctx context.Context, userID, wordlistID int64) (bool, error) {
 	query := `
 		SELECT EXISTS(
 			SELECT 1 
@@ -345,12 +345,12 @@ func (s *LeitnerSystemStrategy) checkHasUnlearnedWords(userID, wordlistID int64)
 	`
 
 	var exists bool
-	err := s.db.QueryRow(context.Background(), query, userID, wordlistID).Scan(&exists)
+	err := s.db.QueryRow(ctx, query, userID, wordlistID).Scan(&exists)
 	return exists, err
 }
 
 // getWordlistBoxDistribution provides analytics on word distribution across boxes
-func (s *LeitnerSystemStrategy) getWordlistBoxDistribution(userID, wordlistID int64) (map[int64]int, error) {
+func (s *LeitnerSystemStrategy) getWordlistBoxDistribution(ctx context.Context, userID, wordlistID int64) (map[int64]int, error) {
 	query := `
 		SELECT 
 			lst.box_id,
@@ -365,7 +365,7 @@ func (s *LeitnerSystemStrategy) getWordlistBoxDistribution(userID, wordlistID in
 		ORDER BY lst.box_id
 	`
 
-	rows, err := s.db.Query(context.Background(), query, userID, wordlistID)
+	rows, err := s.db.Query(ctx, query, userID, wordlistID)
 	if err != nil {
 		return nil, err
 	}
@@ -396,7 +396,7 @@ func (s *LeitnerSystemStrategy) getWordlistBoxDistribution(userID, wordlistID in
 // Returns an error if no words are available for review or if database operations fail.
 func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userID int64) (*Quiz, error) {
 	// Early check to avoid unnecessary queries
-	hasWords, err := s.checkHasUnlearnedWords(userID, wordlistID)
+	hasWords, err := s.checkHasUnlearnedWords(ctx, userID, wordlistID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check wordlist status: %w", err)
 	}
@@ -405,7 +405,7 @@ func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userI
 	}
 
 	// Log box distribution for monitoring (but don't fail if it errors)
-	if distribution, distErr := s.getWordlistBoxDistribution(userID, wordlistID); distErr == nil {
+	if distribution, distErr := s.getWordlistBoxDistribution(ctx, userID, wordlistID); distErr == nil {
 		totalWords := 0
 		box7Count := 0
 		for boxID, count := range distribution {
@@ -423,7 +423,7 @@ func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userI
 		}
 	}
 
-	nextDefinition, err := s.getNextDefinition(userID, wordlistID)
+	nextDefinition, err := s.getNextDefinition(ctx, userID, wordlistID)
 	if err != nil {
 		return nil, err
 	}
@@ -434,7 +434,7 @@ func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userI
 	}
 
 	// Select appropriate quiz type based on box and available content
-	quizType := s.selectQuizType(nextDefinition, word, userID, wordlistID)
+	quizType := s.selectQuizType(ctx, nextDefinition, word, userID, wordlistID)
 
 	// Additional logging for debugging WordFromImage availability
 	if nextDefinition.BoxID == 3 || nextDefinition.BoxID == 7 {
@@ -447,10 +447,10 @@ func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userI
 	}
 
 	// Create quiz based on selected type
-	return s.createQuizForType(quizType, nextDefinition, word, s.definitionService)
+	return s.createQuizForType(ctx, quizType, nextDefinition, word, s.definitionService)
 }
 
-func (s *LeitnerSystemStrategy) selectQuizType(def *NextDefinition, word *model.Word, userID, wordlistID int64) model.QuizType {
+func (s *LeitnerSystemStrategy) selectQuizType(ctx context.Context, def *NextDefinition, word *model.Word, userID, wordlistID int64) model.QuizType {
 	possibleTypes := boxToQuizTypes[def.BoxID]
 
 	// Filter out quiz types that require unavailable content
@@ -468,7 +468,7 @@ func (s *LeitnerSystemStrategy) selectQuizType(def *NextDefinition, word *model.
 
 	// Global quiz type balancing: favor least recently used types
 	// This ensures better distribution across all quiz types
-	selectedType, err := s.selectBalancedQuizType(userID, wordlistID, availableTypes)
+	selectedType, err := s.selectBalancedQuizType(ctx, userID, wordlistID, availableTypes)
 	if err != nil {
 		// Fallback to time-based rotation if balancing fails
 		timeRotation := time.Now().Unix() / 300 // 300 seconds = 5 minutes
@@ -516,7 +516,7 @@ func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Wor
 }
 
 // createCompleteSentenceQuiz handles the complex logic for CompleteSentence quiz type
-func (s *LeitnerSystemStrategy) createCompleteSentenceQuiz(def *NextDefinition, definitionService *DefinitionService) (string, string, []string, error) {
+func (s *LeitnerSystemStrategy) createCompleteSentenceQuiz(ctx context.Context, def *NextDefinition, definitionService *DefinitionService) (string, string, []string, error) {
 	// For verbs and phrasal verbs, use inflection examples; for others, use regular examples
 	var availableExamples []string
 
@@ -530,7 +530,7 @@ func (s *LeitnerSystemStrategy) createCompleteSentenceQuiz(def *NextDefinition, 
 	}
 
 	// Select example using fair distribution to avoid repetition
-	selectedExample, err := s.selectFairExample(def.Definition.ID, availableExamples)
+	selectedExample, err := s.selectFairExample(ctx, def.Definition.ID, availableExamples)
 	if err != nil {
 		// Fallback to random selection if fair selection fails
 		common.Logger.Warn("fair example selection failed, using random", "definitionId", def.Definition.ID, "error", err)
@@ -543,7 +543,7 @@ func (s *LeitnerSystemStrategy) createCompleteSentenceQuiz(def *NextDefinition, 
 	quizAnswer := extractAnswerFromExample(selectedExample, def.Definition.Token)
 
 	// Get random options (database automatically excludes tokens from ignored definition IDs)
-	options, err := definitionService.GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+	options, err := definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -553,8 +553,8 @@ func (s *LeitnerSystemStrategy) createCompleteSentenceQuiz(def *NextDefinition, 
 
 // createWordFromExampleAudioQuiz handles the complex logic for WordFromExampleAudio quiz type
 // Returns (quizAnswer, options, audioURL, error) - no visual value needed for audio quizzes
-func (s *LeitnerSystemStrategy) createWordFromExampleAudioQuiz(def *NextDefinition, definitionService *DefinitionService) (string, []string, string, error) {
-	options, err := definitionService.GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+func (s *LeitnerSystemStrategy) createWordFromExampleAudioQuiz(ctx context.Context, def *NextDefinition, definitionService *DefinitionService) (string, []string, string, error) {
+	options, err := definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 	if err != nil {
 		return "", nil, "", err
 	}
@@ -565,7 +565,7 @@ func (s *LeitnerSystemStrategy) createWordFromExampleAudioQuiz(def *NextDefiniti
 	}
 
 	// Select example audio using fair distribution to avoid repetition
-	selectedExampleAudio, err := s.selectFairExampleAudio(def.Definition.ID, def.Definition.ExampleAudioFiles)
+	selectedExampleAudio, err := s.selectFairExampleAudio(ctx, def.Definition.ID, def.Definition.ExampleAudioFiles)
 	if err != nil {
 		// Fallback to first available if fair selection fails
 		common.Logger.Warn("fair example audio selection failed, using first available",
@@ -580,7 +580,7 @@ func (s *LeitnerSystemStrategy) createWordFromExampleAudioQuiz(def *NextDefiniti
 	return quizAnswer, options, audioURL, nil
 }
 
-func (s *LeitnerSystemStrategy) createQuizForType(quizType model.QuizType, def *NextDefinition, word *model.Word, definitionService *DefinitionService) (*Quiz, error) {
+func (s *LeitnerSystemStrategy) createQuizForType(ctx context.Context, quizType model.QuizType, def *NextDefinition, word *model.Word, definitionService *DefinitionService) (*Quiz, error) {
 	var options []string
 	var value string
 	var quizAnswer string
@@ -594,7 +594,7 @@ func (s *LeitnerSystemStrategy) createQuizForType(quizType model.QuizType, def *
 	switch quizType {
 	case model.MeaningFromAudio:
 		quizAnswer = def.Definition.Meaning
-		options, err = definitionService.GetRandomMeanings([]int{int(def.Definition.ID)}, 3)
+		options, err = definitionService.GetRandomMeanings(ctx, []int{int(def.Definition.ID)}, 3)
 		if err != nil {
 			return nil, err
 		}
@@ -602,7 +602,7 @@ func (s *LeitnerSystemStrategy) createQuizForType(quizType model.QuizType, def *
 
 	case model.WordFromAudio:
 		quizAnswer = word.Name
-		options, err = definitionService.GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
 		}
@@ -614,14 +614,14 @@ func (s *LeitnerSystemStrategy) createQuizForType(quizType model.QuizType, def *
 		// No options for write-in quiz
 
 	case model.CompleteSentence:
-		value, quizAnswer, options, err = s.createCompleteSentenceQuiz(def, definitionService)
+		value, quizAnswer, options, err = s.createCompleteSentenceQuiz(ctx, def, definitionService)
 		if err != nil {
 			return nil, err
 		}
 
 	case model.WordFromImage:
 		quizAnswer = extractAnswerFromImageDescription(def.ImageDescription, def.Definition.Token)
-		options, err = definitionService.GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
 		}
@@ -629,7 +629,7 @@ func (s *LeitnerSystemStrategy) createQuizForType(quizType model.QuizType, def *
 
 	case model.WordFromMeaning:
 		quizAnswer = def.Definition.Token
-		options, err = definitionService.GetRandomTokens([]int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
 		if err != nil {
 			return nil, err
 		}
@@ -637,14 +637,14 @@ func (s *LeitnerSystemStrategy) createQuizForType(quizType model.QuizType, def *
 
 	case model.GuessMeaning:
 		quizAnswer = def.Definition.Meaning
-		options, err = definitionService.GetRandomMeanings([]int{int(def.Definition.ID)}, 3)
+		options, err = definitionService.GetRandomMeanings(ctx, []int{int(def.Definition.ID)}, 3)
 		if err != nil {
 			return nil, err
 		}
 		value = def.Definition.Token
 
 	case model.WordFromExampleAudio:
-		quizAnswer, options, audioURL, err = s.createWordFromExampleAudioQuiz(def, definitionService)
+		quizAnswer, options, audioURL, err = s.createWordFromExampleAudioQuiz(ctx, def, definitionService)
 		if err != nil {
 			return nil, err
 		}
@@ -731,14 +731,14 @@ func extractAnswerFromImageDescription(description, defaultToken string) string 
 // - availableExamples: Slice of example sentences to choose from
 //
 // Returns the selected example string and any database error
-func (s *LeitnerSystemStrategy) selectFairExample(definitionID int64, availableExamples []string) (string, error) {
+func (s *LeitnerSystemStrategy) selectFairExample(ctx context.Context, definitionID int64, availableExamples []string) (string, error) {
 	if len(availableExamples) == 0 {
 		return "", errors.New("no examples available")
 	}
 
 	if len(availableExamples) == 1 {
 		// Only one example, record its usage and return it
-		err := s.recordExampleUsage(definitionID, availableExamples[0])
+		err := s.recordExampleUsage(ctx, definitionID, availableExamples[0])
 		return availableExamples[0], err
 	}
 
@@ -768,7 +768,7 @@ func (s *LeitnerSystemStrategy) selectFairExample(definitionID int64, availableE
 		WHERE definition_id = $1 AND example_hash = ANY($2)
 		AND last_used_at > NOW() - INTERVAL '24 hours'`
 
-	rows, err := s.db.Query(context.Background(), query, definitionID, hashes)
+	rows, err := s.db.Query(ctx, query, definitionID, hashes)
 	if err != nil {
 		return "", fmt.Errorf("failed to query example usage: %w", err)
 	}
@@ -811,7 +811,7 @@ func (s *LeitnerSystemStrategy) selectFairExample(definitionID int64, availableE
 	selectedExample := exampleInfos[0].example
 
 	// Record the usage
-	err = s.recordExampleUsage(definitionID, selectedExample)
+	err = s.recordExampleUsage(ctx, definitionID, selectedExample)
 	if err != nil {
 		common.Logger.Error("failed to record example usage", "definitionId", definitionID, "error", err)
 		// Don't fail the quiz generation if usage recording fails
@@ -827,7 +827,7 @@ func hashExample(example string) string {
 }
 
 // recordExampleUsage records when an example was used to prevent immediate repetition
-func (s *LeitnerSystemStrategy) recordExampleUsage(definitionID int64, example string) error {
+func (s *LeitnerSystemStrategy) recordExampleUsage(ctx context.Context, definitionID int64, example string) error {
 	hash := hashExample(example)
 	query := `
 		INSERT INTO example_usage (definition_id, example_hash, last_used_at)
@@ -835,7 +835,7 @@ func (s *LeitnerSystemStrategy) recordExampleUsage(definitionID int64, example s
 		ON CONFLICT (definition_id, example_hash)
 		DO UPDATE SET last_used_at = NOW()`
 
-	_, err := s.db.Exec(context.Background(), query, definitionID, hash)
+	_, err := s.db.Exec(ctx, query, definitionID, hash)
 	return err
 }
 
@@ -853,14 +853,14 @@ func (s *LeitnerSystemStrategy) recordExampleUsage(definitionID int64, example s
 // - audioFiles: Slice of available example audio files
 //
 // Returns the selected audio file and any database error
-func (s *LeitnerSystemStrategy) selectFairExampleAudio(definitionID int64, audioFiles []model.DefinitionExampleAudio) (*model.DefinitionExampleAudio, error) {
+func (s *LeitnerSystemStrategy) selectFairExampleAudio(ctx context.Context, definitionID int64, audioFiles []model.DefinitionExampleAudio) (*model.DefinitionExampleAudio, error) {
 	if len(audioFiles) == 0 {
 		return nil, errors.New("no audio files available")
 	}
 
 	if len(audioFiles) == 1 {
 		// Only one audio file, record its usage and return it
-		err := s.recordExampleAudioUsage(definitionID, audioFiles[0].ID)
+		err := s.recordExampleAudioUsage(ctx, definitionID, audioFiles[0].ID)
 		return &audioFiles[0], err
 	}
 
@@ -888,7 +888,7 @@ func (s *LeitnerSystemStrategy) selectFairExampleAudio(definitionID int64, audio
 		WHERE definition_id = $1 AND example_audio_id = ANY($2)
 		AND last_used_at > NOW() - INTERVAL '24 hours'`
 
-	rows, err := s.db.Query(context.Background(), query, definitionID, audioFileIDs)
+	rows, err := s.db.Query(ctx, query, definitionID, audioFileIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query audio file usage: %w", err)
 	}
@@ -944,7 +944,7 @@ func (s *LeitnerSystemStrategy) selectFairExampleAudio(definitionID int64, audio
 	selectedAudioFile := audioFileInfos[0].audioFile
 
 	// Record the usage
-	err = s.recordExampleAudioUsage(definitionID, selectedAudioFile.ID)
+	err = s.recordExampleAudioUsage(ctx, definitionID, selectedAudioFile.ID)
 	if err != nil {
 		common.Logger.Error("failed to record example audio usage",
 			"definitionId", definitionID,
@@ -957,23 +957,22 @@ func (s *LeitnerSystemStrategy) selectFairExampleAudio(definitionID int64, audio
 }
 
 // recordExampleAudioUsage records when an example audio file was used to prevent immediate repetition
-func (s *LeitnerSystemStrategy) recordExampleAudioUsage(definitionID, audioFileID int64) error {
+func (s *LeitnerSystemStrategy) recordExampleAudioUsage(ctx context.Context, definitionID, audioFileID int64) error {
 	query := `
 		INSERT INTO example_audio_usage (definition_id, example_audio_id, last_used_at, usage_count)
 		VALUES ($1, $2, NOW(), 1)
 		ON CONFLICT (definition_id, example_audio_id)
 		DO UPDATE SET last_used_at = NOW(), usage_count = example_audio_usage.usage_count + 1`
 
-	_, err := s.db.Exec(context.Background(), query, definitionID, audioFileID)
+	_, err := s.db.Exec(ctx, query, definitionID, audioFileID)
 	return err
 }
 
-func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackingID int64, success bool, transactionPtr *pgx.Tx) error {
+func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(ctx context.Context, leitnerSystemTrackingID int64, success bool, transactionPtr *pgx.Tx) error {
 	var tx pgx.Tx
 	var err error
 
 	if transactionPtr == nil {
-		ctx := context.Background()
 		tx, err = s.db.Begin(ctx)
 		if err != nil {
 			return err
@@ -1010,7 +1009,7 @@ func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackin
 	RETURNING box_id`
 
 	var boxId int64
-	row := tx.QueryRow(context.Background(), query, success, leitnerSystemTrackingID)
+	row := tx.QueryRow(ctx, query, success, leitnerSystemTrackingID)
 	err = row.Scan(&boxId)
 	if err != nil {
 		return err
@@ -1032,13 +1031,13 @@ func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(leitnerSystemTrackin
 // - quizResult: Contains the quiz response details (correct/incorrect, timing, etc.)
 // - transactionPtr: Optional database transaction (if nil, creates a new one)
 func (s LeitnerSystemStrategy) SaveQuizResult(
+	ctx context.Context,
 	quizResult QuizResult,
 	isPremium bool,
 	transactionPtr *pgx.Tx) error {
 
 	var tx pgx.Tx
 	var err error
-	ctx := context.Background()
 
 	if transactionPtr == nil {
 		tx, err = s.db.Begin(ctx)
@@ -1068,7 +1067,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	}
 
 	// Update the Leitner system tracking
-	err = s.updateLeitnerSystemTracking(quizResult.LeitnerSystemTrackingID, quizResult.IsCorrect, &tx)
+	err = s.updateLeitnerSystemTracking(ctx, quizResult.LeitnerSystemTrackingID, quizResult.IsCorrect, &tx)
 	if err != nil {
 		return err
 	}
@@ -1089,6 +1088,9 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 
 	// Update box distribution snapshot and invalidate cache (outside transaction)
 	go func() {
+		// Intentionally use context.Background() for detached background operations
+		// This ensures cache invalidation completes even if the HTTP request times out,
+		// maintaining data consistency for analytics
 		ctx := context.Background()
 
 		// First, update the box distribution snapshot
@@ -1154,12 +1156,11 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 // - report: ErrorReport containing either DefinitionId or WordId to resolve
 //
 // Returns an error if the database operations fail.
-func (s LeitnerSystemStrategy) MarkErrorResolved(report ErrorReport) error {
+func (s LeitnerSystemStrategy) MarkErrorResolved(ctx context.Context, report ErrorReport) error {
 	if report.DefinitionId == nil && report.WordId == nil {
 		return errors.New("definition or word missing")
 	}
 
-	ctx := context.Background()
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return err
@@ -1177,7 +1178,7 @@ func (s LeitnerSystemStrategy) MarkErrorResolved(report ErrorReport) error {
 	}()
 
 	// Clear temporary skip using tracking service
-	err = s.leitnerTrackingService.ClearTemporarySkip(report, tx)
+	err = s.leitnerTrackingService.ClearTemporarySkip(ctx, report, tx)
 	if err != nil {
 		return err
 	}
@@ -1210,7 +1211,7 @@ type ErrorReport struct {
 
 // selectBalancedQuizType selects a quiz type from available types, favoring those that have been used less recently.
 // This helps balance quiz type distribution across the session to provide better variety for users.
-func (s *LeitnerSystemStrategy) selectBalancedQuizType(userID, wordlistID int64, availableTypes []model.QuizType) (model.QuizType, error) {
+func (s *LeitnerSystemStrategy) selectBalancedQuizType(ctx context.Context, userID, wordlistID int64, availableTypes []model.QuizType) (model.QuizType, error) {
 	if len(availableTypes) == 1 {
 		return availableTypes[0], nil
 	}
@@ -1223,7 +1224,7 @@ func (s *LeitnerSystemStrategy) selectBalancedQuizType(userID, wordlistID int64,
 		AND created_at > NOW() - INTERVAL '2 hours'
 		GROUP BY quiz_type`
 
-	rows, err := s.db.Query(context.Background(), query, userID, wordlistID)
+	rows, err := s.db.Query(ctx, query, userID, wordlistID)
 	if err != nil {
 		return "", err
 	}

@@ -94,13 +94,13 @@ func (m *MailService) AddContactToList(user *model.User) {
 var resetPasswordEmailTemplate string
 
 // SendResetPasswordEmail sends a password reset email to the specified address
-func (m *MailService) SendResetPasswordEmail(email string) error {
+func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string) error {
 	if !m.shouldSendEmails() {
 		common.Logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping reset password email", "email", email)
 		return nil
 	}
 
-	result, err := m.userRepo.Find(context.Background(), repository.FindUserArgs{Email: &email})
+	result, err := m.userRepo.Find(ctx, repository.FindUserArgs{Email: &email})
 
 	if err != nil || len(result) != 1 {
 		return fmt.Errorf("no user found")
@@ -458,7 +458,7 @@ func (m *MailService) SendPaymentFailedEmail(user *model.User, data Subscription
 var welcomeEmailTemplate string
 
 // SendWelcomeEmail sends a welcome email to new users
-func (m *MailService) SendWelcomeEmail(email string) error {
+func (m *MailService) SendWelcomeEmail(ctx context.Context, email string) error {
 	logger := common.Logger.With("func", "SendWelcomeEmail", "email", email)
 
 	if !m.shouldSendEmails() {
@@ -471,7 +471,7 @@ func (m *MailService) SendWelcomeEmail(email string) error {
 		return nil
 	}
 
-	result, err := m.userRepo.Find(context.Background(), repository.FindUserArgs{Email: &email})
+	result, err := m.userRepo.Find(ctx, repository.FindUserArgs{Email: &email})
 
 	if err != nil || len(result) != 1 {
 		return fmt.Errorf("no user found")

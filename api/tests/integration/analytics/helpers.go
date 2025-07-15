@@ -68,7 +68,7 @@ func createBasicWordStructure(t *testing.T, server *setup.TestServer, token stri
 		PartOfSpeechNormalized: "noun",
 	}
 
-	definitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{definition}, &tx)
+	definitions, err := definitionService.SaveDefinition(context.Background(), wordID, []*model.Definition{definition}, &tx)
 	require.NoError(t, err)
 	require.Len(t, definitions, 1)
 
@@ -76,7 +76,7 @@ func createBasicWordStructure(t *testing.T, server *setup.TestServer, token stri
 
 	// Use IncludeDefinitions service call to add to Leitner system
 	leitnerTrackingService := service.NewLeitnerTrackingService(server.DB)
-	err = leitnerTrackingService.IncludeDefinitions(wordID, userID, []int64{definitionID}, tx)
+	err = leitnerTrackingService.IncludeDefinitions(ctx, wordID, userID, []int64{definitionID}, tx)
 	require.NoError(t, err)
 
 	// Get the leitner tracking ID that was created

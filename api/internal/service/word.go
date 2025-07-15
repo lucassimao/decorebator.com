@@ -46,18 +46,18 @@ func (ws *WordService) GetWordByID(ctx context.Context, id int64) (*Word, error)
 }
 
 // UpdateProcessingStatus updates the processing status and related fields for a word
-func (ws *WordService) UpdateProcessingStatus(wordID int64, status string, errorMsg string, tx *pgx.Tx) error {
+func (ws *WordService) UpdateProcessingStatus(ctx context.Context, wordID int64, status string, errorMsg string, tx *pgx.Tx) error {
 	updates := map[string]interface{}{
 		"processing_status": status,
 	}
 	if status == "failed" && errorMsg != "" {
 		updates["processing_error"] = errorMsg
 	}
-	return ws.repository.UpdateFields(wordID, updates, tx)
+	return ws.repository.UpdateFields(ctx, wordID, updates, tx)
 }
 
 // GetWordlistLanguageAndPronunciation retrieves the language code and pronunciation system for a wordlist from a word ID
-func (ws *WordService) GetWordlistLanguageAndPronunciation(wordID int64) (string, model.PronunciationSystem, error) {
+func (ws *WordService) GetWordlistLanguageAndPronunciation(ctx context.Context, wordID int64) (string, model.PronunciationSystem, error) {
 	query := `
 		SELECT w.language_code, w.pronunciation_system
 		FROM words wd 
@@ -66,7 +66,7 @@ func (ws *WordService) GetWordlistLanguageAndPronunciation(wordID int64) (string
 
 	var languageCode string
 	var pronunciationSystem model.PronunciationSystem
-	err := ws.repository.Db.QueryRow(context.Background(), query, wordID).Scan(&languageCode, &pronunciationSystem)
+	err := ws.repository.Db.QueryRow(ctx, query, wordID).Scan(&languageCode, &pronunciationSystem)
 	if err != nil {
 		return "", "", err
 	}
@@ -75,19 +75,19 @@ func (ws *WordService) GetWordlistLanguageAndPronunciation(wordID int64) (string
 }
 
 // UpdatePronunciation updates the pronunciation for a word
-func (ws *WordService) UpdatePronunciation(wordID int64, pronunciation string, tx *pgx.Tx) error {
+func (ws *WordService) UpdatePronunciation(ctx context.Context, wordID int64, pronunciation string, tx *pgx.Tx) error {
 	updates := map[string]interface{}{
 		"pronunciation": pronunciation,
 	}
-	return ws.repository.UpdateFields(wordID, updates, tx)
+	return ws.repository.UpdateFields(ctx, wordID, updates, tx)
 }
 
 // UpdateWordFields provides a flexible way to update specific word fields
-func (ws *WordService) UpdateWordFields(wordID int64, updates map[string]interface{}, tx *pgx.Tx) error {
+func (ws *WordService) UpdateWordFields(ctx context.Context, wordID int64, updates map[string]interface{}, tx *pgx.Tx) error {
 	if len(updates) == 0 {
 		return fmt.Errorf("no fields specified for update")
 	}
-	return ws.repository.UpdateFields(wordID, updates, tx)
+	return ws.repository.UpdateFields(ctx, wordID, updates, tx)
 }
 
 func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
@@ -100,7 +100,7 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 	}
 
 	// Validate word content using moderation service
-	filterResult := ws.moderationService.Validate(trimmedName)
+	filterResult := ws.moderationService.Validate(ctx, trimmedName)
 	if !filterResult.IsAppropriate {
 		return nil, common.BusinessError{
 			Message: fmt.Sprintf("Word content not appropriate: %s", filterResult.Reason),
@@ -109,7 +109,7 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 
 	// Validate notes content if provided
 	if dto.Notes != "" {
-		notesResult := ws.moderationService.Validate(dto.Notes)
+		notesResult := ws.moderationService.Validate(ctx, dto.Notes)
 		if !notesResult.IsAppropriate {
 			return nil, common.BusinessError{
 				Message: fmt.Sprintf("Word notes not appropriate: %s", notesResult.Reason),
@@ -142,7 +142,7 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 	}
 
 	// check if there are definitions for this word already
-	definitions, _ := ws.definitionService.findDefinitionsByName(word.Name)
+	definitions, _ := ws.definitionService.findDefinitionsByName(ctx, word.Name)
 
 	if len(definitions) > 0 {
 		definitionIds := []int64{}
@@ -150,27 +150,27 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 		for _, def := range definitions {
 			definitionIds = append(definitionIds, def.ID)
 		}
-		if reuseErr := ws.repository.ReuseDefinitions(word.ID, definitionIds, tx); reuseErr != nil {
+		if reuseErr := ws.repository.ReuseDefinitions(ctx, word.ID, definitionIds, tx); reuseErr != nil {
 			common.Logger.Error("failed to reuse definitions", "wordId", word.ID, "error", reuseErr)
 		}
 
-		if includeErr := ws.leitnerTrackingService.IncludeDefinitions(word.ID, word.UserID, definitionIds, tx); includeErr != nil {
+		if includeErr := ws.leitnerTrackingService.IncludeDefinitions(ctx, word.ID, word.UserID, definitionIds, tx); includeErr != nil {
 			common.Logger.Error("failed to include definitions in tracking system", "wordId", word.ID, "error", includeErr)
 		}
 
 		var latestAudioURL string
-		latestAudioURL, err = ws.repository.GetLatestAudioURL(trimmedName)
+		latestAudioURL, err = ws.repository.GetLatestAudioURL(ctx, trimmedName)
 
 		if err != nil {
-			_, _ = ws.jobService.ScheduleAudioJob(word.ID, &word.UserID, nil, &tx)
+			_, _ = ws.jobService.ScheduleAudioJob(ctx, word.ID, &word.UserID, nil, &tx)
 			err = nil // fine if triggering the worker fails somehow
 		} else {
 			word.AudioURL = latestAudioURL
 			err = ws.UpdateWord(ctx, word, &tx)
 		}
 	} else {
-		_, _ = ws.jobService.ScheduleDefinitionJob(word.ID, &word.UserID, nil, &tx)
-		_, _ = ws.jobService.ScheduleAudioJob(word.ID, &word.UserID, nil, &tx)
+		_, _ = ws.jobService.ScheduleDefinitionJob(ctx, word.ID, &word.UserID, nil, &tx)
+		_, _ = ws.jobService.ScheduleAudioJob(ctx, word.ID, &word.UserID, nil, &tx)
 	}
 
 	if err != nil {

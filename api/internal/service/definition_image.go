@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"runtime/debug"
 
@@ -21,8 +22,8 @@ func NewDefinitionImageService(db *pgxpool.Pool) *DefinitionImageService {
 	}
 }
 
-func (s *DefinitionImageService) SaveDefinitionImage(dto rep.CreateDefinitionImageDTO) (*rep.DefinitionImage, error) {
-	definitionImage, err := s.definitionImageRepository.Save(dto)
+func (s *DefinitionImageService) SaveDefinitionImage(ctx context.Context, dto rep.CreateDefinitionImageDTO) (*rep.DefinitionImage, error) {
+	definitionImage, err := s.definitionImageRepository.Save(ctx, dto)
 	if err != nil {
 		msg := "failed to save definition image"
 		common.Logger.Error(msg, "error", err, "stacktrace", string(debug.Stack()))

@@ -12,13 +12,13 @@ import (
 
 // JobService provides abstraction for job insertion operations
 type JobService interface {
-	ScheduleImageJob(definitionID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
-	ScheduleAudioJob(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
-	ScheduleDefinitionJob(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
-	ScheduleExampleAudioJob(definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
-	ScheduleStripeWebhookJob(eventID, eventType string, eventData []byte) (int64, error)
-	ScheduleRevenueCatWebhookJob(eventType string, eventData []byte) (int64, error)
-	RetryJob(jobID int64) error
+	ScheduleImageJob(ctx context.Context, definitionID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
+	ScheduleAudioJob(ctx context.Context, wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
+	ScheduleDefinitionJob(ctx context.Context, wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
+	ScheduleExampleAudioJob(ctx context.Context, definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
+	ScheduleStripeWebhookJob(ctx context.Context, eventID, eventType string, eventData []byte) (int64, error)
+	ScheduleRevenueCatWebhookJob(ctx context.Context, eventType string, eventData []byte) (int64, error)
+	RetryJob(ctx context.Context, jobID int64) error
 }
 
 // JobServiceImpl implements JobService using River client
@@ -33,43 +33,43 @@ func NewJobService(riverClient *river.Client[pgx.Tx]) *JobServiceImpl {
 	}
 }
 
-func (js *JobServiceImpl) ScheduleImageJob(definitionID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
+func (js *JobServiceImpl) ScheduleImageJob(ctx context.Context, definitionID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: IMAGE_GENERATOR_QUEUE,
 	}
 
-	return js.enqueueJob(&opts, ImageGeneratorArgs{
+	return js.enqueueJob(ctx, &opts, ImageGeneratorArgs{
 		DefinitionId: definitionID,
 		UserID:       userID,
 		ErrorReport:  errorReport,
 	}, tx)
 }
 
-func (js *JobServiceImpl) ScheduleAudioJob(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
+func (js *JobServiceImpl) ScheduleAudioJob(ctx context.Context, wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: TEXT_TO_SPEECH_QUEUE,
 	}
 
-	return js.enqueueJob(&opts, TextToSpeechArgs{
+	return js.enqueueJob(ctx, &opts, TextToSpeechArgs{
 		WordId:      wordID,
 		UserID:      userID,
 		ErrorReport: errorReport,
 	}, tx)
 }
 
-func (js *JobServiceImpl) ScheduleDefinitionJob(wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
+func (js *JobServiceImpl) ScheduleDefinitionJob(ctx context.Context, wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
 	opts := river.InsertOpts{
 		Queue: DEFINITION_FETCHER_QUEUE,
 	}
 
-	return js.enqueueJob(&opts, DefinitionFetcherArgs{
+	return js.enqueueJob(ctx, &opts, DefinitionFetcherArgs{
 		WordId:      wordID,
 		UserID:      userID,
 		ErrorReport: errorReport,
 	}, tx)
 }
 
-func (js *JobServiceImpl) ScheduleExampleAudioJob(definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error {
+func (js *JobServiceImpl) ScheduleExampleAudioJob(ctx context.Context, definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error {
 	args := ExampleAudioArgs{
 		DefinitionID: definitionID,
 		WordID:       wordID,
@@ -81,23 +81,23 @@ func (js *JobServiceImpl) ScheduleExampleAudioJob(definitionID int64, wordID int
 	}
 
 	if tx != nil {
-		_, err := js.riverClient.InsertTx(context.Background(), *tx, args, opts)
+		_, err := js.riverClient.InsertTx(ctx, *tx, args, opts)
 		return err
 	}
-	_, err := js.riverClient.Insert(context.Background(), args, opts)
+	_, err := js.riverClient.Insert(ctx, args, opts)
 	return err
 }
 
-func (js *JobServiceImpl) enqueueJob(opts *river.InsertOpts, args river.JobArgs, tx *pgx.Tx) (int64, error) {
+func (js *JobServiceImpl) enqueueJob(ctx context.Context, opts *river.InsertOpts, args river.JobArgs, tx *pgx.Tx) (int64, error) {
 	logger := common.Logger.With("func", "enqueueJob", "Kind", args.Kind())
 
 	var result *rivertype.JobInsertResult
 	var err error
 
 	if tx != nil {
-		result, err = js.riverClient.InsertTx(context.Background(), *tx, args, opts)
+		result, err = js.riverClient.InsertTx(ctx, *tx, args, opts)
 	} else {
-		result, err = js.riverClient.Insert(context.Background(), args, opts)
+		result, err = js.riverClient.Insert(ctx, args, opts)
 	}
 
 	if err != nil {
@@ -108,7 +108,7 @@ func (js *JobServiceImpl) enqueueJob(opts *river.InsertOpts, args river.JobArgs,
 	return result.Job.ID, nil
 }
 
-func (js *JobServiceImpl) ScheduleStripeWebhookJob(eventID, eventType string, eventData []byte) (int64, error) {
+func (js *JobServiceImpl) ScheduleStripeWebhookJob(ctx context.Context, eventID, eventType string, eventData []byte) (int64, error) {
 	args := StripeWebhookArgs{
 		EventID:   eventID,
 		EventType: eventType,
@@ -117,20 +117,20 @@ func (js *JobServiceImpl) ScheduleStripeWebhookJob(eventID, eventType string, ev
 	opts := &river.InsertOpts{
 		Queue: "stripe-webhook",
 	}
-	return js.enqueueJob(opts, args, nil)
+	return js.enqueueJob(ctx, opts, args, nil)
 }
 
-func (js *JobServiceImpl) ScheduleRevenueCatWebhookJob(_ string, eventData []byte) (int64, error) {
+func (js *JobServiceImpl) ScheduleRevenueCatWebhookJob(ctx context.Context, _ string, eventData []byte) (int64, error) {
 	args := RevenueCatWebhookArgs{
 		Payload: eventData,
 	}
 	opts := &river.InsertOpts{
 		Queue: "revenuecat-webhook",
 	}
-	return js.enqueueJob(opts, args, nil)
+	return js.enqueueJob(ctx, opts, args, nil)
 }
 
-func (js *JobServiceImpl) RetryJob(jobID int64) error {
-	_, err := js.riverClient.JobRetry(context.Background(), jobID)
+func (js *JobServiceImpl) RetryJob(ctx context.Context, jobID int64) error {
+	_, err := js.riverClient.JobRetry(ctx, jobID)
 	return err
 }

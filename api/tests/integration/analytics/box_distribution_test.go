@@ -322,7 +322,7 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 			PartOfSpeechNormalized: "noun",
 		}
 
-		definitions, saveErr := definitionService.SaveDefinition(wordID1, []*model.Definition{definition}, &tx)
+		definitions, saveErr := definitionService.SaveDefinition(context.Background(), wordID1, []*model.Definition{definition}, &tx)
 		require.NoError(t, saveErr)
 		require.Len(t, definitions, 1)
 
@@ -330,7 +330,7 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 
 		// Add to Leitner system using service call
 		leitnerTrackingService := service.NewLeitnerTrackingService(server.DB)
-		includeErr := leitnerTrackingService.IncludeDefinitions(wordID1, userID, []int64{definitionID}, tx)
+		includeErr := leitnerTrackingService.IncludeDefinitions(ctx, wordID1, userID, []int64{definitionID}, tx)
 		require.NoError(t, includeErr)
 
 		// Update box level for this definition
@@ -373,7 +373,7 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 			PartOfSpeechNormalized: "noun",
 		}
 
-		definitions, saveErr := definitionService.SaveDefinition(wordID2, []*model.Definition{definition}, &tx)
+		definitions, saveErr := definitionService.SaveDefinition(context.Background(), wordID2, []*model.Definition{definition}, &tx)
 		require.NoError(t, saveErr)
 		require.Len(t, definitions, 1)
 
@@ -381,7 +381,7 @@ func setupMaxBoxLogicTestData(t *testing.T, server *setup.TestServer, token stri
 
 		// Add to Leitner system using service call
 		leitnerTrackingService := service.NewLeitnerTrackingService(server.DB)
-		includeErr := leitnerTrackingService.IncludeDefinitions(wordID2, userID, []int64{definitionID}, tx)
+		includeErr := leitnerTrackingService.IncludeDefinitions(ctx, wordID2, userID, []int64{definitionID}, tx)
 		require.NoError(t, includeErr)
 
 		// Update box level for this definition

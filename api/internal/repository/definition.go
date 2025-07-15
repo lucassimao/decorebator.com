@@ -22,10 +22,9 @@ type DefinitionRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Definition, tx *pgx.Tx) ([]*Definition, error) {
+func (repository *DefinitionRepository) Save(ctx context.Context, tokenID int64, definitions []*Definition, tx *pgx.Tx) ([]*Definition, error) {
 	var managedTx pgx.Tx
 	var err error
-	ctx := context.Background()
 
 	// If no transaction provided, create and manage our own
 	if tx == nil {
@@ -70,7 +69,7 @@ func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Defin
 		meaning := strings.ToValidUTF8(def.Meaning, "")
 
 		// Execute the query within the transaction
-		err := managedTx.QueryRow(context.Background(), definitionsInsert, def.Token,
+		err := managedTx.QueryRow(ctx, definitionsInsert, def.Token,
 			def.Language, def.PartOfSpeech, def.PartOfSpeechNormalized, meaning, def.Examples, def.Inflections,
 			def.Source, def.SourceID, def.Sounds, def.PhoneticNotations).Scan(&def.ID, &createdAt, &updatedAt)
 
@@ -85,7 +84,7 @@ func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Defin
 		def.UpdatedAt = updatedAt
 		definitions[i] = def
 
-		_, err = managedTx.Exec(context.Background(), wordDefinitionsInsert, tokenID, def.ID)
+		_, err = managedTx.Exec(ctx, wordDefinitionsInsert, tokenID, def.ID)
 
 		if err != nil {
 			common.Logger.Error("failed to insert word_definition", "def.ID", def.ID, "tokenID", tokenID)
@@ -97,7 +96,7 @@ func (repository *DefinitionRepository) Save(tokenID int64, definitions []*Defin
 }
 
 // all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
-func (repository *DefinitionRepository) GetRandomMeanings(definitionIDsToIgnore []int, limit int) ([]string, error) {
+func (repository *DefinitionRepository) GetRandomMeanings(ctx context.Context, definitionIDsToIgnore []int, limit int) ([]string, error) {
 	// Handle empty array case
 	if len(definitionIDsToIgnore) == 0 {
 		return []string{}, nil
@@ -128,7 +127,7 @@ func (repository *DefinitionRepository) GetRandomMeanings(definitionIDsToIgnore 
         LIMIT $2;
 	`
 
-	rows, err := repository.Db.Query(context.Background(), query, definitionIDsToIgnore, limit)
+	rows, err := repository.Db.Query(ctx, query, definitionIDsToIgnore, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query random meanings for definitions %v: %w", definitionIDsToIgnore, err)
 	}
@@ -147,7 +146,7 @@ func (repository *DefinitionRepository) GetRandomMeanings(definitionIDsToIgnore 
 	return meanings, nil
 }
 
-func (repository *DefinitionRepository) GetRandomTokens(definitionIDsToIgnore []int, partOfSpeech string, limit int) ([]string, error) {
+func (repository *DefinitionRepository) GetRandomTokens(ctx context.Context, definitionIDsToIgnore []int, partOfSpeech string, limit int) ([]string, error) {
 	// selecting random() to avoid the error 'SELECT DISTINCT, ORDER BY expressions must appear in select list (SQLSTATE 42P10)'
 	query := `
 		WITH tokens AS (
@@ -165,7 +164,7 @@ func (repository *DefinitionRepository) GetRandomTokens(definitionIDsToIgnore []
 		)
 		SELECT token FROM tokens ;
 	`
-	rows, err := repository.Db.Query(context.Background(), query, partOfSpeech, definitionIDsToIgnore, limit)
+	rows, err := repository.Db.Query(ctx, query, partOfSpeech, definitionIDsToIgnore, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +182,7 @@ func (repository *DefinitionRepository) GetRandomTokens(definitionIDsToIgnore []
 	return tokens, nil
 }
 
-func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, error) {
+func (repository *DefinitionRepository) Find(ctx context.Context, args FindArgs) ([]*Definition, error) {
 	var builder strings.Builder
 
 	builder.WriteString(`SELECT id, token, language, part_of_speech, part_of_speech_normalized, is_verb_type, meaning, examples, inflections, source, 
@@ -212,7 +211,7 @@ func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, erro
 	}
 
 	query := builder.String()
-	rows, err := repository.Db.Query(context.Background(), query, queryArgs...)
+	rows, err := repository.Db.Query(ctx, query, queryArgs...)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -244,10 +243,9 @@ func (repository *DefinitionRepository) Find(args FindArgs) ([]*Definition, erro
 // Delete definitions and word_definitions only if they are associated to a single word.
 // If associated to more than one word, then just dele word_definitions entries.
 // If tx is nil, a new transaction is created and managed internally.
-func (repository *DefinitionRepository) DeleteWordDefinitions(wordID int64, tx *pgx.Tx) error {
+func (repository *DefinitionRepository) DeleteWordDefinitions(ctx context.Context, wordID int64, tx *pgx.Tx) error {
 	var managedTx pgx.Tx
 	var err error
-	ctx := context.Background()
 
 	// If no transaction provided, create and manage our own
 	if tx == nil {
@@ -302,9 +300,9 @@ func (repository *DefinitionRepository) DeleteWordDefinitions(wordID int64, tx *
 	return nil
 }
 
-func (repository *DefinitionRepository) DidUserCreateWord(wordID, userID int64) (bool, error) {
+func (repository *DefinitionRepository) DidUserCreateWord(ctx context.Context, wordID, userID int64) (bool, error) {
 	query := `SELECT count(*) FROM words w WHERE w.id=$1 and user_id=$2`
-	row := repository.Db.QueryRow(context.Background(), query, wordID, userID)
+	row := repository.Db.QueryRow(ctx, query, wordID, userID)
 	var count int
 	err := row.Scan(&count)
 
@@ -315,7 +313,7 @@ func (repository *DefinitionRepository) DidUserCreateWord(wordID, userID int64) 
 	return count == 1, nil
 }
 
-func (repository *DefinitionRepository) GetDefinitionsByWordID(wordID, userID int64) ([]*Definition, error) {
+func (repository *DefinitionRepository) GetDefinitionsByWordID(ctx context.Context, wordID, userID int64) ([]*Definition, error) {
 	query := `
 		SELECT d.id, d.token, d.language, d.part_of_speech, d.part_of_speech_normalized, d.is_verb_type, d.meaning, d.examples, d.inflections, 
 			   d.source, d.source_id, d.sounds, d.phonetic_notations, d.created_at, d.updated_at
@@ -325,7 +323,7 @@ func (repository *DefinitionRepository) GetDefinitionsByWordID(wordID, userID in
 		WHERE w.id = $1 AND w.user_id = $2
 		ORDER BY d.id ASC`
 
-	rows, err := repository.Db.Query(context.Background(), query, wordID, userID)
+	rows, err := repository.Db.Query(ctx, query, wordID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -359,7 +357,7 @@ func NewDefinitionRepository(db *pgxpool.Pool) *DefinitionRepository {
 	return &DefinitionRepository{Db: db}
 }
 
-func (repository *DefinitionRepository) GetDefinitionByID(definitionID int64) (*Definition, error) {
+func (repository *DefinitionRepository) GetDefinitionByID(ctx context.Context, definitionID int64) (*Definition, error) {
 	query := `
 		SELECT id, token, language, part_of_speech, part_of_speech_normalized, is_verb_type, meaning, examples, inflections, 
 			   source, source_id, sounds, phonetic_notations, created_at, updated_at
@@ -367,7 +365,7 @@ func (repository *DefinitionRepository) GetDefinitionByID(definitionID int64) (*
 		WHERE id = $1`
 
 	var def Definition
-	err := repository.Db.QueryRow(context.Background(), query, definitionID).Scan(
+	err := repository.Db.QueryRow(ctx, query, definitionID).Scan(
 		&def.ID, &def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning,
 		&def.Examples, &def.Inflections, &def.Source, &def.SourceID,
 		&def.Sounds, &def.PhoneticNotations, &def.CreatedAt, &def.UpdatedAt)
@@ -382,18 +380,18 @@ func (repository *DefinitionRepository) GetDefinitionByID(definitionID int64) (*
 	return &def, nil
 }
 
-func (repository *DefinitionRepository) CreateExampleAudio(definitionID int64, exampleText, audioURL, inflectionType string) error {
+func (repository *DefinitionRepository) CreateExampleAudio(ctx context.Context, definitionID int64, exampleText, audioURL, inflectionType string) error {
 	// Generate hash for the example text
 	exampleHash := fmt.Sprintf("%x", sha256.Sum256([]byte(exampleText)))
 
 	query := `INSERT INTO definition_example_audio (definition_id, example_text, example_hash, audio_url, inflection_type) 
 			  VALUES ($1, $2, $3, $4, NULLIF($5, ''))`
 
-	_, err := repository.Db.Exec(context.Background(), query, definitionID, exampleText, exampleHash, audioURL, inflectionType)
+	_, err := repository.Db.Exec(ctx, query, definitionID, exampleText, exampleHash, audioURL, inflectionType)
 	return err
 }
 
-func (repository *DefinitionRepository) GetLeastUsedExampleAudio(definitionID int64) (*model.DefinitionExampleAudio, error) {
+func (repository *DefinitionRepository) GetLeastUsedExampleAudio(ctx context.Context, definitionID int64) (*model.DefinitionExampleAudio, error) {
 	query := `
 		SELECT dea.id, dea.definition_id, dea.example_text, dea.audio_url, COALESCE(dea.inflection_type,''), dea.created_at
 		FROM definition_example_audio dea
@@ -403,7 +401,7 @@ func (repository *DefinitionRepository) GetLeastUsedExampleAudio(definitionID in
 		LIMIT 1`
 
 	var audio model.DefinitionExampleAudio
-	err := repository.Db.QueryRow(context.Background(), query, definitionID).Scan(
+	err := repository.Db.QueryRow(ctx, query, definitionID).Scan(
 		&audio.ID, &audio.DefinitionID, &audio.ExampleText, &audio.AudioURL,
 		&audio.InflectionType, &audio.CreatedAt)
 
@@ -421,7 +419,7 @@ func (repository *DefinitionRepository) GetLeastUsedExampleAudio(definitionID in
 		ON CONFLICT (definition_id, example_audio_id)
 		DO UPDATE SET last_used_at = NOW(), usage_count = example_audio_usage.usage_count + 1`
 
-	_, err = repository.Db.Exec(context.Background(), updateQuery, definitionID, audio.ID)
+	_, err = repository.Db.Exec(ctx, updateQuery, definitionID, audio.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -429,14 +427,14 @@ func (repository *DefinitionRepository) GetLeastUsedExampleAudio(definitionID in
 	return &audio, nil
 }
 
-func (repository *DefinitionRepository) GetExampleAudioByDefinitionID(definitionID int64) ([]model.DefinitionExampleAudio, error) {
+func (repository *DefinitionRepository) GetExampleAudioByDefinitionID(ctx context.Context, definitionID int64) ([]model.DefinitionExampleAudio, error) {
 	query := `
 		SELECT id, definition_id, example_text, audio_url, COALESCE(inflection_type,''), created_at
 		FROM definition_example_audio
 		WHERE definition_id = $1
 		ORDER BY created_at DESC`
 
-	rows, err := repository.Db.Query(context.Background(), query, definitionID)
+	rows, err := repository.Db.Query(ctx, query, definitionID)
 	if err != nil {
 		return nil, err
 	}

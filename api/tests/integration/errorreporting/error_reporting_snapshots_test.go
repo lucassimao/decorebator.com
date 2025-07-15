@@ -56,7 +56,7 @@ func TestErrorReporting_ContentSnapshot_VerifyStructure(t *testing.T) {
 		Source:       "test_comprehensive",
 	}
 
-	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(context.Background(), wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	require.Len(t, savedDefinitions, 1)
 
@@ -160,7 +160,7 @@ func TestErrorReporting_SnapshotComparison_DestructiveVsNonDestructive(t *testin
 		Source:       "test_destructive",
 	}
 
-	savedDefinitions1, err := definitionService.SaveDefinition(wordID1, []*model.Definition{testDefinition1}, nil)
+	savedDefinitions1, err := definitionService.SaveDefinition(context.Background(), wordID1, []*model.Definition{testDefinition1}, nil)
 	require.NoError(t, err)
 	definitionID1 := savedDefinitions1[0].ID
 
@@ -206,7 +206,7 @@ func TestErrorReporting_SnapshotComparison_DestructiveVsNonDestructive(t *testin
 		Source:       "test_nondestructive",
 	}
 
-	savedDefinitions2, err := definitionService.SaveDefinition(wordID2, []*model.Definition{testDefinition2}, nil)
+	savedDefinitions2, err := definitionService.SaveDefinition(context.Background(), wordID2, []*model.Definition{testDefinition2}, nil)
 	require.NoError(t, err)
 	definitionID2 := savedDefinitions2[0].ID
 
@@ -297,7 +297,7 @@ func TestErrorReporting_QuizContext_SnapshotIncludesQuizDetails(t *testing.T) {
 		Source:       "test_quiz_context",
 	}
 
-	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(context.Background(), wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	require.Len(t, savedDefinitions, 1)
 
@@ -406,7 +406,7 @@ func TestErrorReporting_FlashcardContext_SnapshotIncludesFlashcardDetails(t *tes
 		Source:       "test_flashcard_context",
 	}
 
-	savedDefinitions, err := definitionService.SaveDefinition(wordID, []*model.Definition{testDefinition}, nil)
+	savedDefinitions, err := definitionService.SaveDefinition(context.Background(), wordID, []*model.Definition{testDefinition}, nil)
 	require.NoError(t, err)
 	_ = savedDefinitions[0].ID // Definition ID not needed for audio errors
 

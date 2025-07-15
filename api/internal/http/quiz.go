@@ -64,7 +64,7 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 		}
 	}
 
-	var err = h.strategy.SaveQuizResult(common.QuizResult{
+	var err = h.strategy.SaveQuizResult(c.Request.Context(), common.QuizResult{
 		WordlistID:              input.WordlistID,
 		WordID:                  input.WordID,
 		DefinitionID:            input.DefinitionID,

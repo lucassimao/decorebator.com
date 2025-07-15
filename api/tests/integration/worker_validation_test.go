@@ -74,14 +74,14 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 		monthlyUserID := createTestUser("monthly@test.com", model.PlanMonthly)
 		defer cleanup(monthlyUserID)
 
-		err := userService.ValidateUserEligibilityForWorkers(monthlyUserID)
+		err := userService.ValidateUserEligibilityForWorkers(ctx, monthlyUserID)
 		assert.NoError(t, err, "Monthly plan users should have no restrictions")
 
 		// Test annual plan
 		annualUserID := createTestUser("annual@test.com", model.PlanAnnual)
 		defer cleanup(annualUserID)
 
-		err = userService.ValidateUserEligibilityForWorkers(annualUserID)
+		err = userService.ValidateUserEligibilityForWorkers(ctx, annualUserID)
 		assert.NoError(t, err, "Annual plan users should have no restrictions")
 	})
 
@@ -89,7 +89,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 		freeUserID := createTestUser("free-empty@test.com", model.PlanFree)
 		defer cleanup(freeUserID)
 
-		err := userService.ValidateUserEligibilityForWorkers(freeUserID)
+		err := userService.ValidateUserEligibilityForWorkers(ctx, freeUserID)
 		assert.NoError(t, err, "Free user with no content should pass validation")
 	})
 
@@ -104,7 +104,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 			createWord(freeUserID, wordlistID, fmt.Sprintf("word%d", i))
 		}
 
-		err := userService.ValidateUserEligibilityForWorkers(freeUserID)
+		err := userService.ValidateUserEligibilityForWorkers(ctx, freeUserID)
 		assert.NoError(t, err, "Free user with 1 wordlist and 10 words should pass")
 	})
 
@@ -115,7 +115,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 		createWordlist(freeUserID, "List 1")
 		createWordlist(freeUserID, "List 2")
 
-		err := userService.ValidateUserEligibilityForWorkers(freeUserID)
+		err := userService.ValidateUserEligibilityForWorkers(ctx, freeUserID)
 		assert.Error(t, err, "Free user with 2 wordlists should fail")
 		assert.Contains(t, err.Error(), "Free users are limited to 1 wordlist")
 	})
@@ -131,7 +131,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 			createWord(freeUserID, wordlistID, fmt.Sprintf("word%d", i))
 		}
 
-		err := userService.ValidateUserEligibilityForWorkers(freeUserID)
+		err := userService.ValidateUserEligibilityForWorkers(ctx, freeUserID)
 		assert.Error(t, err, "Free user with 11 words should fail")
 		assert.Contains(t, err.Error(), "Free users are limited to 10 words")
 	})
@@ -143,7 +143,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 		wordlistID := createWordlist(freeUserID, "Test List")
 		createWord(freeUserID, wordlistID, "testword")
 
-		err := userService.ValidateUserEligibilityForWorkers(freeUserID)
+		err := userService.ValidateUserEligibilityForWorkers(ctx, freeUserID)
 		assert.NoError(t, err, "Should validate user successfully")
 	})
 }

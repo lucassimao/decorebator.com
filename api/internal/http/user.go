@@ -137,7 +137,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	c.Status(http.StatusCreated)
 	go h.mailService.AddContactToList(user)
 	go func() {
-		if err := h.mailService.SendWelcomeEmail(input.Email); err != nil {
+		if err := h.mailService.SendWelcomeEmail(c.Request.Context(), input.Email); err != nil {
 			common.Logger.Error("failed to send welcome email", "email", input.Email, "error", err)
 		}
 	}()
@@ -191,7 +191,7 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	if err := h.userService.UpdatePassword(payload.UserId, input.Password); err != nil {
+	if err := h.userService.UpdatePassword(c.Request.Context(), payload.UserId, input.Password); err != nil {
 		common.Logger.Error("failed to update password", "userId", payload.UserId, "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
 		return
@@ -217,7 +217,7 @@ func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
 		return
 	}
 
-	err := h.mailService.SendResetPasswordEmail(input.Email)
+	err := h.mailService.SendResetPasswordEmail(c.Request.Context(), input.Email)
 	if err != nil {
 		common.Logger.Error("failed to send reset password email", "error", err)
 	}
@@ -307,7 +307,7 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 		}
 
 		objectName := fmt.Sprintf("users/%d-%d.%s", user.ID, time.Now().Unix(), cmd.Extension)
-		uploadResult, err := common.Upload(imgBytes, "decorebator", objectName, mimeType)
+		uploadResult, err := common.Upload(c.Request.Context(), imgBytes, "decorebator", objectName, mimeType)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload profile picture."})
 			return

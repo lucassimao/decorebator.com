@@ -10,8 +10,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-func MinIOPUT(data []byte, bucketName, objectName, contentType string) (string, error) {
-
+func MinIOPUT(ctx context.Context, data []byte, bucketName, objectName, contentType string) (string, error) {
 	var endpoint string
 	var useSecure bool
 
@@ -42,7 +41,7 @@ func MinIOPUT(data []byte, bucketName, objectName, contentType string) (string, 
 	dataReader := bytes.NewReader(data)
 
 	// Upload the file to MinIO
-	_, err = minioClient.PutObject(context.Background(), bucketName, objectName, dataReader, int64(len(data)), minio.PutObjectOptions{
+	_, err = minioClient.PutObject(ctx, bucketName, objectName, dataReader, int64(len(data)), minio.PutObjectOptions{
 		ContentType:  contentType,
 		UserMetadata: map[string]string{"x-amz-acl": "public-read"},
 	})

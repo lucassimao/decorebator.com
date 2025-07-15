@@ -1,5 +1,7 @@
 package common
 
-func Upload(data []byte, bucketName, objectName, contentType string) (string, error) {
-	return MinIOPUT(data, bucketName, objectName, contentType)
+import "context"
+
+func Upload(ctx context.Context, data []byte, bucketName, objectName, contentType string) (string, error) {
+	return MinIOPUT(ctx, data, bucketName, objectName, contentType)
 }

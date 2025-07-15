@@ -453,5 +453,5 @@ func TestWordProcessingStatus_ErrorReporting(t *testing.T) {
 
 // Helper function to update word processing status (simulates worker behavior)
 func updateWordProcessingStatus(ts *setup.TestServer, wordID int64, status, errorMsg string) error {
-	return ts.AppContext.WordService.UpdateProcessingStatus(wordID, status, errorMsg, nil)
+	return ts.AppContext.WordService.UpdateProcessingStatus(context.Background(), wordID, status, errorMsg, nil)
 }
