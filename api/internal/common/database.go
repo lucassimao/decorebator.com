@@ -43,8 +43,8 @@ func GetDBConnection() *pgxpool.Pool {
 		}
 
 		// Recommended configuration for pgxpool connecting to pgBouncer
-		config.MaxConns = 20
-		config.MinConns = 2
+		config.MaxConns = 1000
+		config.MinConns = 10
 		config.MaxConnLifetime = time.Hour
 		config.MaxConnIdleTime = 15 * time.Minute
 		config.ConnConfig.ConnectTimeout = 10 * time.Second
