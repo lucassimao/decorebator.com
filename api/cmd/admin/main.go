@@ -20,7 +20,7 @@ var (
 	env     = flag.String("env", "local", "Environment: local or prod")
 	token   = flag.String("token", "", "Static authentication token (overrides env vars)")
 	baseURL = flag.String("url", "", "Base URL (overrides default URLs)")
-	timeout = flag.Int("timeout", 30, "Request timeout in seconds")
+	timeout = flag.Int("timeout", 30, "Request timeout in seconds (profile downloads use minimum 60s)")
 	output  = flag.String("output", "", "Output file for profile downloads")
 )
 
@@ -201,6 +201,17 @@ func makeRequest(client *http.Client, url, authToken string, isDownload bool) {
 }
 
 func downloadProfile(client *http.Client, url, authToken, filename string) {
+	// Create a new client with longer timeout for profile downloads
+	// Profile downloads (especially CPU profiling) can take 30+ seconds
+	profileTimeout := time.Duration(*timeout) * time.Second
+	if profileTimeout < 60*time.Second {
+		profileTimeout = 60 * time.Second
+	}
+	
+	profileClient := &http.Client{
+		Timeout: profileTimeout,
+	}
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating request: %v\n", err)
@@ -210,8 +221,9 @@ func downloadProfile(client *http.Client, url, authToken, filename string) {
 	req.Header.Set("Authorization", authToken)
 
 	fmt.Printf("Downloading profile from: %s\n", url)
+	fmt.Printf("Using timeout: %v (profile downloads may take 30+ seconds)\n", profileTimeout)
 
-	resp, err := client.Do(req)
+	resp, err := profileClient.Do(req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error making request: %v\n", err)
 		return

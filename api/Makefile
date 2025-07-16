@@ -396,8 +396,6 @@ git-hooks-remove: ## Remove git hooks
 	@rm -f .git/hooks/pre-commit .git/hooks/pre-push
 	@echo "${GREEN}Git hooks removed${RESET}"
 
-## Admin Tools
-
 admin: ## Admin tool commands (usage: make admin CMD=health, make admin CMD=pprof-cpu ENV=prod TOKEN=xxx)
 	@if [ -z "$(CMD)" ]; then \
 		echo "${YELLOW}Building admin CLI tool...${RESET}"; \
