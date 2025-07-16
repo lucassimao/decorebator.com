@@ -148,6 +148,14 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	adminRoutes.Use(AuthenticateStatic)
 	{
 		adminRoutes.GET("/errorReports/stats", GetErrorReportStats(appCtx.Database))
+
+		// System monitoring endpoints
+		adminRoutes.GET("/health", HealthCheckHandler(appCtx))
+		adminRoutes.GET("/metrics", MetricsHandler(appCtx))
+		adminRoutes.GET("/info", SystemInfoHandler())
+
+		// pprof endpoints for performance profiling
+		adminRoutes.GET("/debug/pprof/*profile", PprofHandler())
 	}
 
 	return router

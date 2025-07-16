@@ -10,6 +10,7 @@ import (
 	"decorebator.com/internal/mail"
 	"decorebator.com/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 )
@@ -17,8 +18,9 @@ import (
 // Context holds all application services and dependencies
 type Context struct {
 	// Core dependencies
-	Database   *pgxpool.Pool
-	JobService service.JobService
+	Database    *pgxpool.Pool
+	RedisClient *redis.Client
+	JobService  service.JobService
 
 	// Services
 	WordService            *service.WordService
@@ -61,6 +63,16 @@ func (b *ContextBuilder) WithDatabase(db *pgxpool.Pool) *ContextBuilder {
 		return b
 	}
 	b.context.Database = db
+	return b
+}
+
+// WithRedisClient sets the Redis client
+func (b *ContextBuilder) WithRedisClient(client *redis.Client) *ContextBuilder {
+	if client == nil {
+		b.errors = append(b.errors, errors.New("Redis client cannot be nil"))
+		return b
+	}
+	b.context.RedisClient = client
 	return b
 }
 
@@ -162,6 +174,18 @@ func (b *ContextBuilder) Build() (*Context, error) {
 	// Validate required dependencies
 	if b.context.Database == nil {
 		return nil, errors.New("database connection is required")
+	}
+
+	// Initialize Redis client if not provided
+	if b.context.RedisClient == nil {
+		redisClient, err := common.GetRedisClient()
+		if err != nil {
+			common.Logger.Warn("Failed to initialize Redis client", "error", err)
+			// Redis is optional, continue without it
+			b.context.RedisClient = nil
+		} else {
+			b.context.RedisClient = redisClient
+		}
 	}
 
 	// Initialize default services if not provided
@@ -298,6 +322,15 @@ func (ctx *Context) Close() {
 	if ctx.Database != nil {
 		ctx.Database.Close()
 		log.Println("Database connection closed")
+	}
+
+	// Close Redis connection
+	if ctx.RedisClient != nil {
+		if err := ctx.RedisClient.Close(); err != nil {
+			log.Printf("Error closing Redis connection: %v", err)
+		} else {
+			log.Println("Redis connection closed")
+		}
 	}
 
 	log.Println("Context shutdown complete")
