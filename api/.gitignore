@@ -11,3 +11,4 @@ integration.out
 coverage-unit.html
 coverage-integration.html
 gosec-results.json
+api

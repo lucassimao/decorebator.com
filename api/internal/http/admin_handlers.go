@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"decorebator.com/internal/app"
@@ -26,6 +27,8 @@ func PprofHandler() gin.HandlerFunc {
 
 		// Extract the profile type from the URL
 		profileType := c.Param("profile")
+		// Remove leading slash if present (wildcard routes include the slash)
+		profileType = strings.TrimPrefix(profileType, "/")
 
 		// Handle different pprof endpoints
 		switch profileType {
@@ -70,7 +73,7 @@ func PprofHandler() gin.HandlerFunc {
 			c.Header("Content-Type", "text/plain")
 			pprof.Symbol(c.Writer, c.Request)
 
-		case "":
+		case "", "/":
 			// Index page
 			c.Header("Content-Type", "text/html")
 			pprof.Index(c.Writer, c.Request)

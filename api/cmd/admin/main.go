@@ -169,7 +169,7 @@ func makeRequest(client *http.Client, url, authToken string, isDownload bool) {
 		return
 	}
 
-	req.Header.Set("Authorization", "Bearer "+authToken)
+	req.Header.Set("Authorization", authToken)
 	if !isDownload {
 		req.Header.Set("Content-Type", "application/json")
 	}
@@ -207,7 +207,7 @@ func downloadProfile(client *http.Client, url, authToken, filename string) {
 		return
 	}
 
-	req.Header.Set("Authorization", "Bearer "+authToken)
+	req.Header.Set("Authorization", authToken)
 
 	fmt.Printf("Downloading profile from: %s\n", url)
 
