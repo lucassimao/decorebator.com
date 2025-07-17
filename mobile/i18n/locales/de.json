@@ -28,7 +28,8 @@
     "goBack": "Zurück",
     "more": "Mehr",
     "retry": "Wiederholen",
-    "tryAgain": "Erneut versuchen"
+    "tryAgain": "Erneut versuchen",
+    "info": "Info"
   },
   "auth": {
     "signin": {
@@ -282,10 +283,15 @@
       "loadError": "Fehler beim Laden der Abonnement-Optionen",
       "purchaseSuccess": "Kauf erfolgreich abgeschlossen!",
       "purchaseError": "Kauf fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "purchaseSuccessButNoEntitlements": "Kauf abgeschlossen aber Premium-Zugang nicht aktiviert. Kontaktieren Sie den Support falls Problem weiterhin besteht.",
       "restoreSuccess": "Käufe erfolgreich wiederhergestellt!",
       "restoreError": "Fehler beim Wiederherstellen der Käufe. Bitte versuchen Sie es erneut.",
+      "restoreNoEntitlements": "Keine aktiven Premium-Abonnements zum Wiederherstellen gefunden.",
       "restorePurchases": "Käufe wiederherstellen",
-      "terms": "Durch Fortfahren stimmen Sie unseren Nutzungsbedingungen und Datenschutzrichtlinien zu. Abonnements verlängern sich automatisch, es sei denn, sie werden gekündigt."
+      "terms": "Durch Fortfahren stimmen Sie unseren Nutzungsbedingungen und Datenschutzrichtlinien zu. Abonnements verlängern sich automatisch, es sei denn, sie werden gekündigt.",
+      "storeProblem": "Store-Problem. Bitte später versuchen.",
+      "purchaseNotAllowed": "Käufe auf diesem Gerät nicht erlaubt.",
+      "paymentPending": "Zahlung ausstehend. Zugang nach Bestätigung."
     },
     "account": {
       "title": "Konto",

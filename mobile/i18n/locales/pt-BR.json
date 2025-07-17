@@ -28,7 +28,8 @@
     "goBack": "Voltar",
     "more": "Mais",
     "retry": "Tentar novamente",
-    "tryAgain": "Tente Novamente"
+    "tryAgain": "Tente Novamente",
+    "info": "Info"
   },
   "auth": {
     "signin": {
@@ -282,10 +283,15 @@
       "loadError": "Falha ao carregar opções de assinatura",
       "purchaseSuccess": "Compra concluída com sucesso!",
       "purchaseError": "Compra falhou. Por favor, tente novamente.",
+      "purchaseSuccessButNoEntitlements": "Compra concluída mas acesso premium não ativado. Entre em contato com o suporte se problema persistir.",
       "restoreSuccess": "Compras restauradas com sucesso!",
       "restoreError": "Falha ao restaurar compras. Por favor, tente novamente.",
+      "restoreNoEntitlements": "Nenhuma assinatura premium ativa encontrada para restaurar.",
       "restorePurchases": "Restaurar Compras",
-      "terms": "Ao continuar, você concorda com nossos Termos de Serviço e Política de Privacidade. As assinaturas se renovam automaticamente, a menos que sejam canceladas."
+      "terms": "Ao continuar, você concorda com nossos Termos de Serviço e Política de Privacidade. As assinaturas se renovam automaticamente, a menos que sejam canceladas.",
+      "storeProblem": "Problema na loja. Tente novamente mais tarde.",
+      "purchaseNotAllowed": "Compras não permitidas neste dispositivo.",
+      "paymentPending": "Pagamento pendente. Acesso após confirmação."
     },
     "account": {
       "title": "Conta",

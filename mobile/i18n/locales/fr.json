@@ -28,7 +28,8 @@
     "goBack": "Retour",
     "more": "Plus",
     "retry": "Réessayer",
-    "tryAgain": "Réessayer"
+    "tryAgain": "Réessayer",
+    "info": "Info"
   },
   "auth": {
     "signin": {
@@ -282,10 +283,15 @@
       "loadError": "Impossible de charger les options d'abonnement",
       "purchaseSuccess": "Achat réalisé avec succès !",
       "purchaseError": "Échec de l'achat. Veuillez réessayer.",
+      "purchaseSuccessButNoEntitlements": "Achat terminé mais accès premium non activé. Contactez le support si problème persiste.",
       "restoreSuccess": "Achats restaurés avec succès !",
       "restoreError": "Impossible de restaurer les achats. Veuillez réessayer.",
+      "restoreNoEntitlements": "Aucun abonnement premium actif trouvé à restaurer.",
       "restorePurchases": "Restaurer les Achats",
-      "terms": "En continuant, vous acceptez nos Conditions d'Utilisation et notre Politique de Confidentialité. Les abonnements se renouvellent automatiquement sauf annulation."
+      "terms": "En continuant, vous acceptez nos Conditions d'Utilisation et notre Politique de Confidentialité. Les abonnements se renouvellent automatiquement sauf annulation.",
+      "storeProblem": "Problème avec le store. Veuillez réessayer.",
+      "purchaseNotAllowed": "Achats non autorisés sur cet appareil.",
+      "paymentPending": "Paiement en attente. Accès après confirmation."
     },
     "account": {
       "title": "Compte",

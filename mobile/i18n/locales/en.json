@@ -28,7 +28,8 @@
     "goBack": "Go Back",
     "more": "More",
     "retry": "Retry",
-    "tryAgain": "Try Again"
+    "tryAgain": "Try Again",
+    "info": "Info"
   },
   "auth": {
     "signin": {
@@ -282,11 +283,16 @@
       "loadError": "Failed to load subscription options",
       "purchaseSuccess": "Purchase completed successfully!",
       "purchaseError": "Purchase failed. Please try again.",
+      "purchaseSuccessButNoEntitlements": "Purchase completed but premium access not activated. Contact support if issue persists.",
       "restoreSuccess": "Purchases restored successfully!",
       "restoreError": "Failed to restore purchases. Please try again.",
+      "restoreNoEntitlements": "No active premium subscriptions found to restore.",
       "restorePurchases": "Restore Purchases",
       "terms": "By continuing, you agree to our Terms of Service and Privacy Policy. Subscriptions auto-renew unless cancelled.",
-      "viewPlans": "View Plans"
+      "viewPlans": "View Plans",
+      "storeProblem": "There was a problem with the store. Please try again later.",
+      "purchaseNotAllowed": "Purchases are not allowed on this device.",
+      "paymentPending": "Payment is pending. You'll receive access once payment is confirmed."
     },
     "account": {
       "title": "Account",

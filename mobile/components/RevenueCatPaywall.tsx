@@ -12,7 +12,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRevenueCat } from "@/hooks/useRevenueCat";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
-import { PurchasesPackage } from "react-native-purchases";
+import { PurchasesPackage, PURCHASES_ERROR_CODE } from "react-native-purchases";
 
 interface RevenueCatPaywallProps {
   onClose: () => void;
@@ -51,14 +51,59 @@ export default function RevenueCatPaywall({
 
   const handlePurchase = async (pkg: PurchasesPackage) => {
     try {
-      await purchasePackage(pkg);
-      Alert.alert(
-        t("common.success"),
-        t("settings.subscription.purchaseSuccess"),
-      );
-      onSuccess();
+      // Purchase the package and get the updated CustomerInfo
+      const customerInfo = await purchasePackage(pkg);
+
+      // Check if user now has active premium entitlements from the fresh CustomerInfo
+      const premiumEntitlement =
+        customerInfo?.entitlements?.active?.["premium"];
+
+      if (premiumEntitlement) {
+        // Only call onSuccess if RevenueCat confirms premium entitlements are active
+        onSuccess();
+      } else {
+        // Purchase succeeded but no premium entitlements - show error
+        Alert.alert(
+          t("common.error"),
+          t("settings.subscription.purchaseSuccessButNoEntitlements", {
+            defaultValue:
+              "Purchase completed but premium access not activated. Please contact support if the issue persists.",
+          }),
+        );
+      }
     } catch (error: any) {
-      if (error.message !== "Purchase cancelled") {
+      // Handle RevenueCat specific errors
+      if (error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+        // User cancelled the purchase - don't show error
+        return;
+      }
+
+      if (error.code === PURCHASES_ERROR_CODE.STORE_PROBLEM_ERROR) {
+        Alert.alert(
+          t("common.error"),
+          t("settings.subscription.storeProblem", {
+            defaultValue:
+              "There was a problem with the store. Please try again later.",
+          }),
+        );
+      } else if (
+        error.code === PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR
+      ) {
+        Alert.alert(
+          t("common.error"),
+          t("settings.subscription.purchaseNotAllowed", {
+            defaultValue: "Purchases are not allowed on this device.",
+          }),
+        );
+      } else if (error.code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
+        Alert.alert(
+          t("common.info"),
+          t("settings.subscription.paymentPending", {
+            defaultValue:
+              "Payment is pending. You'll receive access once payment is confirmed.",
+          }),
+        );
+      } else {
         Alert.alert(
           t("common.error"),
           error.message || t("settings.subscription.purchaseError"),
@@ -69,17 +114,49 @@ export default function RevenueCatPaywall({
 
   const handleRestore = async () => {
     try {
-      await restorePurchases();
-      Alert.alert(
-        t("common.success"),
-        t("settings.subscription.restoreSuccess"),
-      );
-      onSuccess();
+      // Restore purchases and get the updated CustomerInfo
+      const customerInfo = await restorePurchases();
+
+      // Check if user now has active premium entitlements from the fresh CustomerInfo
+      const premiumEntitlement =
+        customerInfo?.entitlements?.active?.["premium"];
+
+      if (premiumEntitlement) {
+        // Only call onSuccess if RevenueCat confirms premium entitlements are active
+        onSuccess();
+      } else {
+        // Restore succeeded but no premium entitlements found
+        Alert.alert(
+          t("common.error"),
+          t("settings.subscription.restoreNoEntitlements", {
+            defaultValue: "No active premium subscriptions found to restore.",
+          }),
+        );
+      }
     } catch (error: any) {
-      Alert.alert(
-        t("common.error"),
-        error.message || t("settings.subscription.restoreError"),
-      );
+      // Handle RevenueCat specific errors for restore
+      if (error.code === PURCHASES_ERROR_CODE.STORE_PROBLEM_ERROR) {
+        Alert.alert(
+          t("common.error"),
+          t("settings.subscription.storeProblem", {
+            defaultValue:
+              "There was a problem with the store. Please try again later.",
+          }),
+        );
+      } else if (error.code === PURCHASES_ERROR_CODE.NETWORK_ERROR) {
+        Alert.alert(
+          t("common.error"),
+          t("settings.subscription.networkError", {
+            defaultValue:
+              "Network error. Please check your connection and try again.",
+          }),
+        );
+      } else {
+        Alert.alert(
+          t("common.error"),
+          error.message || t("settings.subscription.restoreError"),
+        );
+      }
     }
   };
 

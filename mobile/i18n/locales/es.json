@@ -28,7 +28,8 @@
     "goBack": "Volver",
     "more": "Más",
     "retry": "Reintentar",
-    "tryAgain": "Intenta de Nuevo"
+    "tryAgain": "Intenta de Nuevo",
+    "info": "Información"
   },
   "auth": {
     "signin": {
@@ -282,10 +283,15 @@
       "loadError": "Error al cargar las opciones de suscripción",
       "purchaseSuccess": "¡Compra completada con éxito!",
       "purchaseError": "Error en la compra. Por favor, inténtalo de nuevo.",
+      "purchaseSuccessButNoEntitlements": "Compra completada pero acceso premium no activado. Contacta soporte si persiste.",
       "restoreSuccess": "¡Compras restauradas con éxito!",
       "restoreError": "Error al restaurar las compras. Por favor, inténtalo de nuevo.",
+      "restoreNoEntitlements": "No se encontraron suscripciones premium activas para restaurar.",
       "restorePurchases": "Restaurar Compras",
-      "terms": "Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad. Las suscripciones se renuevan automáticamente a menos que se cancelen."
+      "terms": "Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad. Las suscripciones se renuevan automáticamente a menos que se cancelen.",
+      "storeProblem": "Hubo un problema con la tienda. Por favor, inténtalo de nuevo más tarde.",
+      "purchaseNotAllowed": "Las compras no están permitidas en este dispositivo.",
+      "paymentPending": "El pago está pendiente. Recibirás acceso una vez que se confirme el pago."
     },
     "account": {
       "title": "Cuenta",

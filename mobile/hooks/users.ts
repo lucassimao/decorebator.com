@@ -87,7 +87,7 @@ export const useUserInfo = () => {
       // Handle logout: reset previous plan tracking
       previousPlanRef.current = null;
     }
-  }, [user, queryClient]);
+  }, [user, queryClient, isPremium]);
 
   return {
     userInfo: user,

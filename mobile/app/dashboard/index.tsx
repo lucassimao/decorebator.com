@@ -6,6 +6,7 @@ import { Header } from "@/components/dashboard/Header";
 import DashboardStats from "@/components/dashboard/Stats";
 import { WordlistDetailModal } from "@/components/dashboard/WordlistDetailModal";
 import Wordlistitem from "@/components/dashboard/WordlistItem";
+import { WelcomeOverlay } from "@/components/dashboard/WelcomeOverlay";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { WordlistItemSkeleton } from "@/components/ui/WordlistItemSkeleton";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -57,7 +58,6 @@ const Dashboard: React.FC<DashboardProps> = () => {
   // Animation refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
-  const welcomeOpacity = useRef(new Animated.Value(0)).current;
 
   // Fetch subscription
   const { data: subscription } = useQuery({
@@ -267,100 +267,6 @@ const Dashboard: React.FC<DashboardProps> = () => {
     </Animated.View>
   );
 
-  // Welcome overlay for first-time users
-  const renderWelcomeOverlay = () => {
-    if (!showWelcomeOverlay) return null;
-
-    return (
-      <View style={styles.welcomeOverlay}>
-        <Animated.View
-          style={[styles.welcomeModal, { opacity: welcomeOpacity }]}
-        >
-          <View style={styles.welcomeHeader}>
-            <Text style={styles.welcomeTitle}>
-              {t("welcome.title", "Welcome to Decorebator! 🎉")}
-            </Text>
-            <Text style={styles.welcomeSubtitle}>
-              {t(
-                "welcome.subtitle",
-                "Your AI-powered language learning journey starts here",
-              )}
-            </Text>
-          </View>
-
-          <View style={styles.welcomeFeatures}>
-            <View style={styles.welcomeFeature}>
-              <View style={styles.welcomeFeatureIcon}>
-                <Ionicons name="book" size={24} color={theme.colors.primary} />
-              </View>
-              <Text style={styles.welcomeFeatureText}>
-                {t("welcome.feature1", "Create custom wordlists")}
-              </Text>
-            </View>
-
-            <View style={styles.welcomeFeature}>
-              <View style={styles.welcomeFeatureIcon}>
-                <Ionicons name="bulb" size={24} color={theme.colors.primary} />
-              </View>
-              <Text style={styles.welcomeFeatureText}>
-                {t("welcome.feature2", "AI-powered definitions & images")}
-              </Text>
-            </View>
-
-            <View style={styles.welcomeFeature}>
-              <View style={styles.welcomeFeatureIcon}>
-                <Ionicons
-                  name="repeat"
-                  size={24}
-                  color={theme.colors.primary}
-                />
-              </View>
-              <Text style={styles.welcomeFeatureText}>
-                {t("welcome.feature3", "Smart spaced repetition")}
-              </Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={styles.welcomeButton}
-            onPress={() => {
-              setShowWelcomeOverlay(false);
-              setShowCreateModal(true);
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.welcomeButtonText}>
-              {t("welcome.getStarted", "Create Your First Wordlist")}
-            </Text>
-            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.welcomeSkip}
-            onPress={() => setShowWelcomeOverlay(false)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.welcomeSkipText}>
-              {t("welcome.skip", "Skip for now")}
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
-    );
-  };
-
-  // Animate welcome overlay when shown
-  useEffect(() => {
-    if (showWelcomeOverlay) {
-      welcomeOpacity.setValue(0);
-      Animated.timing(welcomeOpacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [showWelcomeOverlay, welcomeOpacity]);
-
   // Fallback: Show welcome for empty wordlists if no welcome was shown yet
   // Note: Don't set isNewUser flag here as this could be an existing user with no wordlists
   useEffect(() => {
@@ -512,7 +418,14 @@ const Dashboard: React.FC<DashboardProps> = () => {
       />
 
       {/* Welcome Overlay for First-Time Users */}
-      {renderWelcomeOverlay()}
+      <WelcomeOverlay
+        visible={showWelcomeOverlay}
+        onGetStarted={() => {
+          setShowWelcomeOverlay(false);
+          setShowCreateModal(true);
+        }}
+        onSkip={() => setShowWelcomeOverlay(false)}
+      />
     </>
   );
 };
@@ -681,100 +594,5 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: "#FFFFFF",
       textAlign: "center",
       marginBottom: 30,
-    },
-    // Welcome overlay styles
-    welcomeOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "rgba(0, 0, 0, 0.6)",
-      justifyContent: "center",
-      alignItems: "center",
-      zIndex: 1000,
-    },
-    welcomeModal: {
-      backgroundColor: theme.colors.background.surface,
-      borderRadius: 20,
-      padding: 24,
-      marginHorizontal: 20,
-      maxWidth: 400,
-      width: "100%",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 12,
-      elevation: 8,
-    },
-    welcomeHeader: {
-      alignItems: "center",
-      marginBottom: 24,
-    },
-    welcomeTitle: {
-      fontSize: 24,
-      fontWeight: "700",
-      color: theme.colors.text.primary,
-      textAlign: "center",
-      marginBottom: 8,
-    },
-    welcomeSubtitle: {
-      fontSize: 16,
-      color: theme.colors.text.secondary,
-      textAlign: "center",
-      lineHeight: 22,
-    },
-    welcomeFeatures: {
-      marginBottom: 24,
-    },
-    welcomeFeature: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 16,
-    },
-    welcomeFeatureIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: `${theme.colors.primary}15`,
-      justifyContent: "center",
-      alignItems: "center",
-      marginRight: 16,
-    },
-    welcomeFeatureText: {
-      flex: 1,
-      fontSize: 16,
-      color: theme.colors.text.primary,
-      fontWeight: "500",
-    },
-    welcomeButton: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: 12,
-      paddingVertical: 16,
-      paddingHorizontal: 24,
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      marginBottom: 12,
-      shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 5,
-    },
-    welcomeButtonText: {
-      color: "#FFFFFF",
-      fontSize: 18,
-      fontWeight: "600",
-      marginRight: 8,
-    },
-    welcomeSkip: {
-      paddingVertical: 12,
-      alignItems: "center",
-    },
-    welcomeSkipText: {
-      color: theme.colors.text.secondary,
-      fontSize: 16,
-      fontWeight: "500",
     },
   });

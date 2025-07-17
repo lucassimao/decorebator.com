@@ -155,8 +155,8 @@ export function useRevenueCat() {
 
   return {
     ...state,
-    purchasePackage: purchasePackage.mutate,
-    restorePurchases: restorePurchasesMutation.mutate,
+    purchasePackage: purchasePackage.mutateAsync,
+    restorePurchases: restorePurchasesMutation.mutateAsync,
     isPurchasing: purchasePackage.isPending,
     isRestoring: restorePurchasesMutation.isPending,
     hasActiveSubscription,

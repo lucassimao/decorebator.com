@@ -28,7 +28,8 @@
     "goBack": "Indietro",
     "more": "Più",
     "retry": "Riprova",
-    "tryAgain": "Riprova"
+    "tryAgain": "Riprova",
+    "info": "Info"
   },
   "auth": {
     "signin": {
@@ -282,10 +283,15 @@
       "loadError": "Impossibile caricare le opzioni di abbonamento",
       "purchaseSuccess": "Acquisto completato con successo!",
       "purchaseError": "Acquisto fallito. Per favore riprova.",
+      "purchaseSuccessButNoEntitlements": "Acquisto completato ma accesso premium non attivato. Contatta il supporto se problema persiste.",
       "restoreSuccess": "Acquisti ripristinati con successo!",
       "restoreError": "Impossibile ripristinare gli acquisti. Per favore riprova.",
+      "restoreNoEntitlements": "Nessun abbonamento premium attivo trovato da ripristinare.",
       "restorePurchases": "Ripristina Acquisti",
-      "terms": "Continuando, accetti i nostri Termini di Servizio e l'Informativa sulla Privacy. Gli abbonamenti si rinnovano automaticamente a meno che non vengano cancellati."
+      "terms": "Continuando, accetti i nostri Termini di Servizio e l'Informativa sulla Privacy. Gli abbonamenti si rinnovano automaticamente a meno che non vengano cancellati.",
+      "storeProblem": "Problema con lo store. Riprova più tardi.",
+      "purchaseNotAllowed": "Acquisti non consentiti su questo dispositivo.",
+      "paymentPending": "Pagamento in sospeso. Accesso dopo conferma."
     },
     "account": {
       "title": "Account",
