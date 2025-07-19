@@ -51,8 +51,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const upgradeDialog = useUpgradePromptDialog();
   const router = useRouter();
   const { t } = useTranslation();
-  const { theme } = useTheme();
-  const commonStyles = createCommonStyles(theme);
+  const { theme, responsive } = useTheme();
+  const commonStyles = createCommonStyles(theme, responsive);
   const styles = createStyles(theme);
 
   // Animation refs

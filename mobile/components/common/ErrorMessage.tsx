@@ -2,7 +2,6 @@ import React from "react";
 import { Text, StyleProp, TextStyle } from "react-native";
 import { FieldError } from "react-hook-form";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useResponsive } from "@/hooks/useResponsive";
 
 interface ErrorMessageProps {
   error?: FieldError | null;
@@ -11,15 +10,14 @@ interface ErrorMessageProps {
 
 export const ErrorMessage: React.FC<ErrorMessageProps> = React.memo(
   ({ error, style }) => {
-    const { theme } = useTheme();
-    const responsive = useResponsive();
+    const { theme, responsive } = useTheme();
 
     if (!error) return null;
 
     const defaultErrorStyle = {
-      fontSize: responsive.fontSizes.caption,
+      fontSize: responsive.fontSizes.micro,
       color: theme.colors.error,
-      marginTop: 4,
+      marginTop: responsive.spacing.elementSpacing / 2, // Material Design 8px standard
     };
 
     return (

@@ -12,11 +12,15 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRevenueCat } from "@/hooks/useRevenueCat";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
-import { PurchasesPackage, PURCHASES_ERROR_CODE } from "react-native-purchases";
+import {
+  PurchasesPackage,
+  PURCHASES_ERROR_CODE,
+  PACKAGE_TYPE,
+} from "react-native-purchases";
 
 interface RevenueCatPaywallProps {
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (packageType: PACKAGE_TYPE) => void;
 }
 
 export default function RevenueCatPaywall({
@@ -56,11 +60,11 @@ export default function RevenueCatPaywall({
 
       // Check if user now has active premium entitlements from the fresh CustomerInfo
       const premiumEntitlement =
-        customerInfo?.entitlements?.active?.["premium"];
+        customerInfo?.entitlements?.active?.["Premium"];
 
       if (premiumEntitlement) {
-        // Only call onSuccess if RevenueCat confirms premium entitlements are active
-        onSuccess();
+        // Pass package type to settings screen for optimistic update
+        onSuccess(pkg.packageType);
       } else {
         // Purchase succeeded but no premium entitlements - show error
         Alert.alert(
@@ -119,11 +123,12 @@ export default function RevenueCatPaywall({
 
       // Check if user now has active premium entitlements from the fresh CustomerInfo
       const premiumEntitlement =
-        customerInfo?.entitlements?.active?.["premium"];
+        customerInfo?.entitlements?.active?.["Premium"];
 
       if (premiumEntitlement) {
-        // Only call onSuccess if RevenueCat confirms premium entitlements are active
-        onSuccess();
+        // For restore, we don't know the exact package type, use UNKNOWN
+        // Backend webhook will sync the correct plan type
+        onSuccess(PACKAGE_TYPE.UNKNOWN);
       } else {
         // Restore succeeded but no premium entitlements found
         Alert.alert(

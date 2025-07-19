@@ -31,6 +31,21 @@
     "tryAgain": "Tente Novamente",
     "info": "Info"
   },
+  "update": {
+    "checkForUpdates": "Verificar atualizações",
+    "updateAvailable": "Atualização disponível",
+    "checking": "A verificar...",
+    "updating": "A atualizar...",
+    "new": "NOVO",
+    "confirmTitle": "Aplicar atualização",
+    "confirmMessage": "A aplicação será reiniciada. Dados não guardados serão perdidos.",
+    "updateNow": "Atualizar agora",
+    "updateFailed": "Falha na atualização. Tente novamente.",
+    "noUpdatesTitle": "Sem atualizações",
+    "noUpdatesMessage": "Tem a versão mais recente.",
+    "updateAvailableHint": "Toque para aplicar a atualização",
+    "checkUpdatesHint": "Toque para verificar atualizações"
+  },
   "auth": {
     "signin": {
       "title": "Iniciar Sessão",

@@ -31,6 +31,21 @@
     "tryAgain": "Réessayer",
     "info": "Info"
   },
+  "update": {
+    "checkForUpdates": "Vérifier les mises à jour",
+    "updateAvailable": "Mise à jour disponible",
+    "checking": "Vérification...",
+    "updating": "Mise à jour...",
+    "new": "NOUVEAU",
+    "confirmTitle": "Appliquer la mise à jour",
+    "confirmMessage": "L'app va redémarrer. Les données non sauvées seront perdues.",
+    "updateNow": "Mettre à jour",
+    "updateFailed": "Échec de la mise à jour. Réessayez.",
+    "noUpdatesTitle": "Aucune mise à jour",
+    "noUpdatesMessage": "Vous avez la dernière version.",
+    "updateAvailableHint": "Touchez pour appliquer la mise à jour",
+    "checkUpdatesHint": "Touchez pour vérifier les mises à jour"
+  },
   "auth": {
     "signin": {
       "title": "Connexion",

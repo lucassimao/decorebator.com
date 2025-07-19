@@ -36,8 +36,8 @@ const AnalyticsDashboard = () => {
     isPending,
   } = useAnalytics(wordlistId);
   const navigation = useNavigation();
-  const { theme } = useTheme();
-  const commonStyles = createCommonStyles(theme);
+  const { theme, responsive } = useTheme();
+  const commonStyles = createCommonStyles(theme, responsive);
   const styles = createStyles(theme);
 
   if (isPending) {

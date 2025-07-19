@@ -8,7 +8,6 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
-import { useResponsive } from "@/hooks/useResponsive";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface LoginFooterProps {
@@ -24,8 +23,7 @@ export const LoginFooter: React.FC<LoginFooterProps> = ({
   onSubmit,
 }) => {
   const { t } = useTranslation();
-  const { theme } = useTheme();
-  const responsive = useResponsive();
+  const { theme, responsive } = useTheme();
 
   const styles = StyleSheet.create({
     fixedFooter: {
@@ -47,7 +45,7 @@ export const LoginFooter: React.FC<LoginFooterProps> = ({
     },
     loginButtonText: {
       color: theme.colors.text.inverse,
-      fontSize: responsive.fontSizes.button,
+      fontSize: responsive.fontSizes.headline,
       fontWeight: "600",
     },
     buttonDisabled: {

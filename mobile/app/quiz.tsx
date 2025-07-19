@@ -27,8 +27,8 @@ const QuizScreen: React.FC = () => {
   const { t } = useTranslation();
   const { isOnline, isOfflineAvailable } = useOffline();
   const { invalidateAllAnalytics } = useInvalidateAnalytics();
-  const { theme } = useTheme();
-  const commonStyles = createCommonStyles(theme);
+  const { theme, responsive } = useTheme();
+  const commonStyles = createCommonStyles(theme, responsive);
   const styles = createStyles(theme);
 
   // State

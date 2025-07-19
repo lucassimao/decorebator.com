@@ -1,6 +1,5 @@
 import * as usersApi from "@/api/users";
 import { useSnackbar } from "@/hooks/useSnackbar";
-import { useResponsive } from "@/hooks/useResponsive";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +31,8 @@ import {
 import z from "zod";
 import { authLightTheme } from "@/theme/authTheme";
 import type { Theme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import type { ResponsiveValues } from "@/contexts/ThemeContext";
 
 const schema = z
   .object({
@@ -54,8 +55,8 @@ export default function SignUpScreen() {
   // Always use light theme for auth screens
   const theme = authLightTheme;
 
-  // Get responsive values using the optimized hook
-  const responsive = useResponsive();
+  // Get responsive values from the unified theme context
+  const { responsive } = useTheme();
 
   // Memoize styles to prevent recreation on every render
   const styles = React.useMemo(
@@ -111,13 +112,13 @@ export default function SignUpScreen() {
   }, []);
 
   // Auto-focus email field on component mount for better UX
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      emailInputRef.current?.focus();
-    }, 300); // Small delay to ensure component is fully mounted
+  // React.useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     emailInputRef.current?.focus();
+  //   }, 300); // Small delay to ensure component is fully mounted
 
-    return () => clearTimeout(timer);
-  }, []);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   const { mutate: signup } = useMutation<void, Error, usersApi.UserSignup>({
     mutationFn: (userData) => usersApi.signup(userData),
@@ -169,19 +170,6 @@ export default function SignUpScreen() {
       password: __DEV__ ? process.env.EXPO_PUBLIC_TEST_USER_PASSWORD || "" : "",
     },
   });
-
-  // Check if there are any validation errors
-  const hasValidationErrors = Object.keys(errors).length > 0;
-
-  // Track if we've already dismissed the keyboard for this password field session
-  const [hasAutoDismissed, setHasAutoDismissed] = React.useState(false);
-
-  // Reset auto-dismiss flag if validation errors appear
-  React.useEffect(() => {
-    if (hasValidationErrors) {
-      setHasAutoDismissed(false);
-    }
-  }, [hasValidationErrors]);
 
   const onSubmit = React.useCallback(
     (data: z.infer<typeof schema>) => {
@@ -320,7 +308,7 @@ export default function SignUpScreen() {
                         placeholderTextColor={theme.colors.text.placeholder}
                         value={value}
                         onChangeText={onChange}
-                        onFocus={() => scrollToInput(emailInputRef)}
+                        // onFocus={() => scrollToInput(emailInputRef)}
                         onBlur={onBlur}
                         autoCapitalize="none"
                         keyboardType="email-address"
@@ -448,14 +436,7 @@ export default function SignUpScreen() {
                           placeholderTextColor={theme.colors.text.placeholder}
                           value={value}
                           onChangeText={onChange}
-                          onFocus={() => {
-                            scrollToInput(passwordInputRef);
-                            // Dismiss keyboard if no validation errors exist and we haven't auto-dismissed yet
-                            if (!hasValidationErrors && !hasAutoDismissed) {
-                              setHasAutoDismissed(true);
-                              setTimeout(() => Keyboard.dismiss(), 300);
-                            }
-                          }}
+                          onFocus={() => scrollToInput(passwordInputRef)}
                           onBlur={onBlur}
                           secureTextEntry={secureTextEntry}
                           autoComplete="password-new"
@@ -555,7 +536,7 @@ export default function SignUpScreen() {
 
 const createStyles = (
   theme: Theme,
-  responsive: ReturnType<typeof useResponsive>,
+  responsive: ResponsiveValues,
   keyboardVisible: boolean,
 ) =>
   StyleSheet.create({
@@ -712,7 +693,7 @@ const createStyles = (
     },
     buttonText: {
       color: theme.colors.text.inverse,
-      fontSize: responsive.fontSizes.button,
+      fontSize: responsive.fontSizes.headline,
       fontWeight: "600",
     },
     footer: {
@@ -724,6 +705,9 @@ const createStyles = (
     link: {
       color: theme.colors.primary,
       fontWeight: "600",
+      fontSize: responsive.isSmallPhone
+        ? responsive.fontSizes.body
+        : responsive.fontSizes.label,
     },
     fixedFooter: {
       position: "absolute",

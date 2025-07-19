@@ -311,6 +311,21 @@
       "darkMode": "Dark Mode",
       "soundEffects": "Sound Effects"
     },
+    "update": {
+      "checkForUpdates": "Check for Updates",
+      "updateAvailable": "Update Available",
+      "checking": "Checking...",
+      "updating": "Updating...",
+      "new": "NEW",
+      "confirmTitle": "Apply Update",
+      "confirmMessage": "The app will restart to apply the update. Any unsaved progress will be lost.",
+      "updateNow": "Update Now",
+      "updateFailed": "Failed to apply update. Please try again later.",
+      "noUpdatesTitle": "No Updates",
+      "noUpdatesMessage": "You have the latest version of the app.",
+      "updateAvailableHint": "Tap to apply the available update",
+      "checkUpdatesHint": "Tap to check for app updates"
+    },
     "about": {
       "title": "About",
       "version": "Version",

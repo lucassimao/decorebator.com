@@ -22,8 +22,8 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
   onSkip,
 }) => {
   const { t } = useTranslation();
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { theme, responsive } = useTheme();
+  const styles = createStyles(theme, responsive);
   const welcomeOpacity = useRef(new Animated.Value(0)).current;
 
   // Animate welcome overlay when shown
@@ -109,7 +109,10 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
   );
 };
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  responsive: ReturnType<typeof useTheme>["responsive"],
+) =>
   StyleSheet.create({
     welcomeOverlay: {
       position: "absolute",
@@ -124,85 +127,82 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     welcomeModal: {
       backgroundColor: theme.colors.background.surface,
-      borderRadius: 20,
-      padding: 24,
-      marginHorizontal: 20,
-      maxWidth: 400,
+      borderRadius: theme.borderRadius.xl,
+      padding: responsive.spacing.formPadding,
+      marginHorizontal: responsive.spacing.horizontal,
+      maxWidth: responsive.getValueForSize(340, 380, 420, 460),
       width: "100%",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 12,
-      elevation: 8,
+      ...theme.shadows.lg,
     },
     welcomeHeader: {
       alignItems: "center",
-      marginBottom: 24,
+      marginBottom: responsive.spacing.formPadding,
     },
     welcomeTitle: {
-      fontSize: 24,
+      fontSize: responsive.fontSizes.title,
       fontWeight: "700",
       color: theme.colors.text.primary,
       textAlign: "center",
-      marginBottom: 8,
+      marginBottom: responsive.spacing.elementSpacing,
+      lineHeight: responsive.fontSizes.title * responsive.fontSizes.lineHeight,
     },
     welcomeSubtitle: {
-      fontSize: 16,
+      fontSize: responsive.fontSizes.body,
       color: theme.colors.text.secondary,
       textAlign: "center",
-      lineHeight: 22,
+      lineHeight: responsive.fontSizes.body * responsive.fontSizes.lineHeight,
     },
     welcomeFeatures: {
-      marginBottom: 24,
+      marginBottom: responsive.spacing.formPadding,
     },
     welcomeFeature: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: responsive.spacing.horizontal,
     },
     welcomeFeatureIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: responsive.getValueForSize(36, 40, 44, 48),
+      height: responsive.getValueForSize(36, 40, 44, 48),
+      borderRadius: responsive.getValueForSize(18, 20, 22, 24),
       backgroundColor: `${theme.colors.primary}15`,
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 16,
+      marginRight: responsive.spacing.horizontal,
     },
     welcomeFeatureText: {
       flex: 1,
-      fontSize: 16,
+      fontSize: responsive.fontSizes.body,
       color: theme.colors.text.primary,
       fontWeight: "500",
+      lineHeight: responsive.fontSizes.body * responsive.fontSizes.lineHeight,
     },
     welcomeButton: {
       backgroundColor: theme.colors.primary,
-      borderRadius: 12,
-      paddingVertical: 16,
-      paddingHorizontal: 24,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: responsive.spacing.horizontal,
+      paddingHorizontal: responsive.spacing.formPadding,
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 12,
+      marginBottom: responsive.spacing.elementSpacing,
+      minHeight: responsive.spacing.minTouchTarget,
+      ...theme.shadows.md,
       shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 5,
     },
     welcomeButtonText: {
-      color: "#FFFFFF",
-      fontSize: 18,
+      color: theme.colors.text.inverse,
+      fontSize: responsive.fontSizes.headline,
       fontWeight: "600",
-      marginRight: 8,
+      marginRight: responsive.spacing.elementSpacing,
     },
     welcomeSkip: {
-      paddingVertical: 12,
+      paddingVertical: responsive.spacing.elementSpacing,
       alignItems: "center",
+      minHeight: responsive.spacing.minTouchTarget,
     },
     welcomeSkipText: {
       color: theme.colors.text.secondary,
-      fontSize: 16,
+      fontSize: responsive.fontSizes.body,
       fontWeight: "500",
     },
   });

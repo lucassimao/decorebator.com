@@ -31,6 +31,21 @@
     "tryAgain": "もう一度",
     "info": "情報"
   },
+  "update": {
+    "checkForUpdates": "アップデート確認",
+    "updateAvailable": "アップデート可能",
+    "checking": "確認中...",
+    "updating": "更新中...",
+    "new": "新着",
+    "confirmTitle": "アップデート適用",
+    "confirmMessage": "アプリが再起動します。未保存のデータは失われます。",
+    "updateNow": "今すぐ更新",
+    "updateFailed": "更新に失敗しました。もう一度お試しください。",
+    "noUpdatesTitle": "アップデートなし",
+    "noUpdatesMessage": "最新バージョンです。",
+    "updateAvailableHint": "タップしてアップデートを適用",
+    "checkUpdatesHint": "タップしてアップデートを確認"
+  },
   "auth": {
     "signin": {
       "title": "ログイン",

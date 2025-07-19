@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
-import { useResponsive } from "@/hooks/useResponsive";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface LoginHeaderProps {
@@ -12,8 +11,7 @@ export const LoginHeader: React.FC<LoginHeaderProps> = ({
   keyboardVisible,
 }) => {
   const { t } = useTranslation();
-  const { theme } = useTheme();
-  const responsive = useResponsive();
+  const { theme, responsive } = useTheme();
 
   const styles = StyleSheet.create({
     headerSection: {
@@ -28,7 +26,7 @@ export const LoginHeader: React.FC<LoginHeaderProps> = ({
       marginBottom: responsive.spacing.elementSpacing / 2,
     },
     tagline: {
-      fontSize: responsive.fontSizes.body,
+      fontSize: responsive.fontSizes.headline,
       color: theme.colors.text.secondary,
       textAlign: "center",
     },
@@ -56,13 +54,16 @@ export const LoginHeader: React.FC<LoginHeaderProps> = ({
         <Text style={styles.tagline}>{t("auth.tagline")}</Text>
       </View>
 
-      <View style={styles.illustrationContainer}>
-        <Image
-          source={require("@/assets/images/login-fg.png")}
-          style={styles.illustration}
-          resizeMode="contain"
-        />
-      </View>
+      {/* Hide foreground image on small devices to save space */}
+      {!responsive.isSmallPhone && (
+        <View style={styles.illustrationContainer}>
+          <Image
+            source={require("@/assets/images/login-fg.png")}
+            style={styles.illustration}
+            resizeMode="contain"
+          />
+        </View>
+      )}
     </>
   );
 };

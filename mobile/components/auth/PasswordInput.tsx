@@ -11,7 +11,6 @@ import { Controller, Control, FieldErrors } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
-import { useResponsive } from "@/hooks/useResponsive";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface LoginFormData {
@@ -22,35 +21,30 @@ interface LoginFormData {
 interface PasswordInputProps {
   control: Control<LoginFormData>;
   errors: FieldErrors<LoginFormData>;
-  passwordInputRef: React.RefObject<TextInput | null>;
   showPassword: boolean;
   setShowPassword: (show: boolean) => void;
-  onFocus: () => void;
   isPending: boolean;
 }
 
 export const PasswordInput: React.FC<PasswordInputProps> = ({
   control,
   errors,
-  passwordInputRef,
   showPassword,
   setShowPassword,
-  onFocus,
   isPending,
 }) => {
   const { t } = useTranslation();
-  const { theme } = useTheme();
-  const responsive = useResponsive();
+  const { theme, responsive } = useTheme();
 
   const styles = StyleSheet.create({
     inputGroup: {
-      marginBottom: responsive.spacing.elementSpacing * 0.8, // Reduced spacing
+      marginBottom: responsive.spacing.elementSpacing,
     },
     inputLabelRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 6, // Reduced from 8 to 6
-      gap: 6,
+      marginBottom: responsive.spacing.elementSpacing / 2, // Material Design 8px standard
+      gap: responsive.spacing.elementSpacing / 2,
     },
     inputLabel: {
       fontSize: responsive.fontSizes.label,
@@ -62,11 +56,11 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
       borderWidth: 1,
       borderColor: theme.colors.ui.border,
       borderRadius: theme.borderRadius.md,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: 14,
+      paddingHorizontal: responsive.spacing.horizontal,
+      paddingVertical: responsive.spacing.vertical,
       fontSize: responsive.fontSizes.body,
       color: theme.colors.text.primary,
-      minHeight: 48,
+      minHeight: responsive.spacing.minTouchTarget,
     },
     inputError: {
       borderColor: theme.colors.error,
@@ -76,13 +70,17 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
       position: "relative",
     },
     passwordInput: {
-      paddingRight: 48,
+      paddingRight: responsive.spacing.minTouchTarget,
     },
     passwordToggle: {
       position: "absolute",
-      right: 16,
+      right: responsive.spacing.horizontal,
       top: "50%",
-      transform: [{ translateY: -10 }],
+      transform: [{ translateY: -responsive.spacing.elementSpacing / 1.6 }],
+      minHeight: responsive.spacing.minTouchTarget / 2,
+      minWidth: responsive.spacing.minTouchTarget / 2,
+      justifyContent: "center",
+      alignItems: "center",
     },
   });
 
@@ -105,7 +103,6 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           }}
           render={({ field: { onChange, onBlur, value } }) => (
             <TextInput
-              ref={passwordInputRef}
               style={[
                 styles.input,
                 styles.passwordInput,
@@ -115,7 +112,6 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
               placeholderTextColor={theme.colors.text.placeholder}
               value={value}
               onChangeText={onChange}
-              onFocus={onFocus}
               onBlur={onBlur}
               secureTextEntry={!showPassword}
               autoComplete="password"

@@ -31,6 +31,21 @@
     "tryAgain": "Erneut versuchen",
     "info": "Info"
   },
+  "update": {
+    "checkForUpdates": "Updates prüfen",
+    "updateAvailable": "Update verfügbar",
+    "checking": "Prüfe...",
+    "updating": "Aktualisiere...",
+    "new": "NEU",
+    "confirmTitle": "Update installieren",
+    "confirmMessage": "Die App wird neu gestartet. Ungespeicherte Daten gehen verloren.",
+    "updateNow": "Jetzt updaten",
+    "updateFailed": "Update fehlgeschlagen. Bitte erneut versuchen.",
+    "noUpdatesTitle": "Keine Updates",
+    "noUpdatesMessage": "Sie haben die neueste Version.",
+    "updateAvailableHint": "Tippen um Update zu installieren",
+    "checkUpdatesHint": "Tippen um nach Updates zu suchen"
+  },
   "auth": {
     "signin": {
       "title": "Anmelden",

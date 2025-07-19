@@ -1,23 +1,19 @@
-import { Dimensions, Platform } from "react-native";
+import { Platform } from "react-native";
 
-// Screen size breakpoints based on common mobile dimensions
-export const BREAKPOINTS = {
-  SMALL: 359, // <= 359px width (small phones, iPhone SE)
-  MEDIUM: 389, // 360-389px width (standard Android)
-  LARGE: 390, // >= 390px width (modern iPhones, large Android)
-} as const;
-
-// Get current screen dimensions
-export const getScreenDimensions = () => {
-  const { width, height } = Dimensions.get("window");
-  return { width, height };
-};
+// Screen size breakpoints based on logical pixels
+export enum BREAKPOINTS {
+  SMALL = 375, // <= 375px logical width (iPhone SE, smaller Android devices)
+  MEDIUM = 430, // 376-430px logical width (iPhone 12/13/14, standard Android, iPhone Plus)
+  LARGE = 480, // 431-480px logical width (larger Android devices, phablets)
+  XLARGE = 999, // >= 481px logical width (tablets, very large devices)
+}
 
 // Determine screen size category - requires explicit width parameter
 export const getScreenSizeCategory = (width: number) => {
   if (width <= BREAKPOINTS.SMALL) return "small";
   if (width <= BREAKPOINTS.MEDIUM) return "medium";
-  return "large";
+  if (width <= BREAKPOINTS.LARGE) return "large";
+  return "xlarge";
 };
 
 // Responsive spacing based on screen size - requires explicit width parameter
@@ -27,63 +23,91 @@ export const getResponsiveSpacing = (width: number) => {
   switch (category) {
     case "small":
       return {
-        horizontal: 16,
+        horizontal: 12, // Reduced back to 12px to give form more space
         vertical: 12,
-        formPadding: 16,
-        elementSpacing: 8,
-        buttonHeight: 48,
+        formPadding: 12, // Keep form internal padding reasonable
+        elementSpacing: 12, // Increased from 8dp to 12dp for better touch interaction
+        buttonHeight: 44, // Minimum accessibility standard
+        minTouchTarget: 44,
       };
     case "medium":
       return {
-        horizontal: 20,
+        horizontal: 24, // Increased for better proportions
         vertical: 16,
         formPadding: 20,
-        elementSpacing: 12,
-        buttonHeight: 52,
+        elementSpacing: 16, // Increased from 12dp to 16dp for better form field separation
+        buttonHeight: 48,
+        minTouchTarget: 48,
       };
     case "large":
-    default:
       return {
-        horizontal: 24,
+        horizontal: 32, // Increased for better proportions on larger screens
         vertical: 20,
         formPadding: 24,
         elementSpacing: 16,
+        buttonHeight: 52,
+        minTouchTarget: 52,
+      };
+    case "xlarge":
+    default:
+      return {
+        horizontal: 40, // Increased for better proportions on largest screens
+        vertical: 24,
+        formPadding: 28,
+        elementSpacing: 20,
         buttonHeight: 56,
+        minTouchTarget: 56,
       };
   }
 };
 
+// Base typography scale (Material Design 3 foundation)
+const BASE_TYPOGRAPHY_SCALE = {
+  display: 34, // Major headings
+  title: 20, // Card titles, headers
+  headline: 16, // Subheadings, list items
+  body: 14, // Default text
+  label: 12, // Labels, captions
+  micro: 10, // Very small text
+} as const;
+
+// Screen size multipliers for typography
+const TYPOGRAPHY_MULTIPLIERS = {
+  small: 1.0, // 375px and below (iPhone SE, smaller Android)
+  medium: 1.1, // 376-430px (iPhone 12/13/14, standard Android, iPhone Plus)
+  large: 1.2, // 431-480px (larger Android devices, phablets)
+  xlarge: 1.3, // 481px+ (tablets, very large devices)
+} as const;
+
+// Get typography multiplier for screen width
+const getTypographyMultiplier = (width: number): number => {
+  const category = getScreenSizeCategory(width);
+  return TYPOGRAPHY_MULTIPLIERS[category];
+};
+
+// Get scaled font size for specific typography level
+export const getScaledFontSize = (
+  fontName: keyof typeof BASE_TYPOGRAPHY_SCALE,
+  width: number,
+): number => {
+  const baseSize = BASE_TYPOGRAPHY_SCALE[fontName];
+  const multiplier = getTypographyMultiplier(width);
+  return Math.round(baseSize * multiplier);
+};
+
 // Responsive font sizes - requires explicit width parameter
 export const getResponsiveFontSizes = (width: number) => {
-  const category = getScreenSizeCategory(width);
+  const multiplier = getTypographyMultiplier(width);
 
-  switch (category) {
-    case "small":
-      return {
-        title: 24,
-        body: 16,
-        label: 14,
-        caption: 12,
-        button: 16,
-      };
-    case "medium":
-      return {
-        title: 26,
-        body: 16,
-        label: 14,
-        caption: 12,
-        button: 16,
-      };
-    case "large":
-    default:
-      return {
-        title: 28,
-        body: 17,
-        label: 15,
-        caption: 13,
-        button: 17,
-      };
-  }
+  return {
+    display: Math.round(BASE_TYPOGRAPHY_SCALE.display * multiplier),
+    title: Math.round(BASE_TYPOGRAPHY_SCALE.title * multiplier),
+    headline: Math.round(BASE_TYPOGRAPHY_SCALE.headline * multiplier),
+    body: Math.round(BASE_TYPOGRAPHY_SCALE.body * multiplier),
+    label: Math.round(BASE_TYPOGRAPHY_SCALE.label * multiplier),
+    micro: Math.round(BASE_TYPOGRAPHY_SCALE.micro * multiplier),
+    lineHeight: 1.4 + (multiplier - 1.0) * 0.2, // Scale line height slightly
+  };
 };
 
 // Get keyboard avoiding behavior based on platform
@@ -102,69 +126,54 @@ export const getKeyboardOffset = (width: number) => {
     case "medium":
       return Platform.OS === "ios" ? 10 : 0;
     case "large":
+      return Platform.OS === "ios" ? 5 : 0;
+    case "xlarge":
     default:
       return 0;
   }
 };
 
-// Responsive background configuration - requires explicit width and height parameters
-export const getResponsiveBackgroundConfig = (
-  width: number,
-  height: number,
-) => {
-  // Calculate configuration for background layers based on screen size
-  const category = getScreenSizeCategory(width);
-
-  switch (category) {
-    case "small":
-      return {
-        // Image at bottom
-        imageHeight: height * 0.3, // Smaller image on small screens
-        imageOpacity: 0.15,
-        imagePosition: "bottom",
-        // Gradient configuration
-        gradientHeight: height * 0.7, // More gradient space
-        gradientColors: ["#FFF9F0", "#FFE8D6", "rgba(255, 232, 214, 0.4)"],
-        gradientStops: [0, 0.6, 1],
-      };
-    case "medium":
-      return {
-        imageHeight: height * 0.35,
-        imageOpacity: 0.18,
-        imagePosition: "bottom",
-        gradientHeight: height * 0.65,
-        gradientColors: ["#FFF9F0", "#FFE8D6", "rgba(255, 232, 214, 0.3)"],
-        gradientStops: [0, 0.5, 1],
-      };
-    case "large":
-    default:
-      return {
-        imageHeight: height * 0.4,
-        imageOpacity: 0.2,
-        imagePosition: "bottom",
-        gradientHeight: height * 0.6,
-        gradientColors: ["#FFF9F0", "#FFE8D6", "rgba(255, 232, 214, 0.2)"],
-        gradientStops: [0, 0.4, 1],
-      };
-  }
-};
-
-// Helper to create responsive styles
-export const createResponsiveStyle = <T extends Record<string, any>>(
-  smallStyle: T,
-  mediumStyle: T,
-  largeStyle: T,
+// Helper to get responsive value based on screen size
+export const getResponsiveValue = <T>(
+  smallValue: T,
+  mediumValue: T,
+  largeValue: T,
+  xlargeValue: T,
   width: number,
 ): T => {
   const category = getScreenSizeCategory(width);
 
   switch (category) {
     case "small":
-      return smallStyle;
+      return smallValue;
     case "medium":
-      return mediumStyle;
+      return mediumValue;
     case "large":
+      return largeValue;
+    case "xlarge":
     default:
-      return largeStyle;
+      return xlargeValue;
   }
 };
+
+// Type definitions for responsive values
+export type ScreenSizeCategory = "small" | "medium" | "large" | "xlarge";
+
+export interface ResponsiveSpacing {
+  horizontal: number;
+  vertical: number;
+  formPadding: number;
+  elementSpacing: number;
+  buttonHeight: number;
+  minTouchTarget: number;
+}
+
+export interface ResponsiveFontSizes {
+  display: number;
+  title: number;
+  headline: number;
+  body: number;
+  label: number;
+  micro: number;
+  lineHeight: number;
+}

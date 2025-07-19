@@ -15,6 +15,8 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { createCommonStyles } from "@/styles/common";
 import { usePaymentProvider } from "@/hooks/useRevenueCat";
 import RevenueCatPaywall from "@/components/RevenueCatPaywall";
+import { PACKAGE_TYPE } from "react-native-purchases";
+import { UpdateButton } from "@/components/settings/UpdateButton";
 import {
   ActivityIndicator,
   Alert,
@@ -82,8 +84,8 @@ const SettingsScreen: React.FC = () => {
   const [showRevenueCatPaywall, setShowRevenueCatPaywall] = useState(false);
   const { t } = useTranslation();
   const previousSubscriptionRef = useRef<string | null>(null);
-  const { theme, themeMode, setThemeMode } = useTheme();
-  const commonStyles = createCommonStyles(theme);
+  const { theme, themeMode, setThemeMode, responsive } = useTheme();
+  const commonStyles = createCommonStyles(theme, responsive);
 
   // Get payment provider
   const { data: providerInfo } = usePaymentProvider();
@@ -99,12 +101,8 @@ const SettingsScreen: React.FC = () => {
     queryKey: ["subscription"],
     queryFn: subscriptionsApi.getSubscriptionStatus,
 
-    // ---- make everything immediately stale & un-cached ----
-    staleTime: 0, // data is stale as soon as it arrives
-
-    // ---- always refetch on mount or when window regains focus ----
-    refetchOnMount: "always",
-    refetchOnWindowFocus: "always",
+    // ---- Allow optimistic data to persist for 5 minutes ----
+    staleTime: 5 * 60 * 1000, // 5 minutes - prevents immediate overwrite of optimistic data
   });
 
   // Detect subscription changes when returning to the screen (e.g., after Stripe checkout)
@@ -294,7 +292,7 @@ const SettingsScreen: React.FC = () => {
 
   const isPremium = subscription?.plan !== "free";
 
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, responsive);
 
   return (
     <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
@@ -557,6 +555,9 @@ const SettingsScreen: React.FC = () => {
             />
           </TouchableOpacity>
 
+          {/* App Updates */}
+          <UpdateButton />
+
           {/* Theme Toggle */}
           <View style={styles.settingItem}>
             <MaterialIcons
@@ -727,9 +728,47 @@ const SettingsScreen: React.FC = () => {
       >
         <RevenueCatPaywall
           onClose={() => setShowRevenueCatPaywall(false)}
-          onSuccess={() => {
+          onSuccess={(packageType) => {
+            // Set optimistic subscription data immediately
+            const plan =
+              packageType === PACKAGE_TYPE.MONTHLY
+                ? "monthly"
+                : packageType === PACKAGE_TYPE.ANNUAL
+                  ? "annual"
+                  : "monthly";
+
+            // Calculate realistic currentPeriodEnd dates
+            const now = new Date();
+            let currentPeriodEnd: string;
+
+            if (packageType === PACKAGE_TYPE.MONTHLY) {
+              // Monthly: 30 days from now
+              const monthlyEnd = new Date(
+                now.getTime() + 30 * 24 * 60 * 60 * 1000,
+              );
+              currentPeriodEnd = monthlyEnd.toISOString();
+            } else if (packageType === PACKAGE_TYPE.ANNUAL) {
+              // Yearly: 1 year from now
+              const yearlyEnd = new Date(now);
+              yearlyEnd.setFullYear(now.getFullYear() + 1);
+              currentPeriodEnd = yearlyEnd.toISOString();
+            } else {
+              // Unknown package type, default to monthly
+              const defaultEnd = new Date(
+                now.getTime() + 30 * 24 * 60 * 60 * 1000,
+              );
+              currentPeriodEnd = defaultEnd.toISOString();
+            }
+
+            queryClient.setQueryData(["subscription"], {
+              plan,
+              status: "active",
+              currentPeriodEnd,
+              cancelAtPeriodEnd: false,
+              trialEnd: null,
+            });
+
             setShowRevenueCatPaywall(false);
-            refetchSubscription();
             Alert.alert(
               t("common.success"),
               t("settings.subscription.activatedSuccess"),
@@ -743,7 +782,10 @@ const SettingsScreen: React.FC = () => {
 
 export default SettingsScreen;
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  responsive: ReturnType<typeof useTheme>["responsive"],
+) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -756,38 +798,38 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
+      paddingHorizontal: responsive.spacing.horizontal,
+      paddingVertical: responsive.spacing.vertical,
     },
     backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: responsive.spacing.minTouchTarget,
+      height: responsive.spacing.minTouchTarget,
+      borderRadius: responsive.spacing.minTouchTarget / 2,
       backgroundColor: theme.colors.background.elevated,
       justifyContent: "center",
       alignItems: "center",
       ...theme.shadows.sm,
     },
     headerTitle: {
-      fontSize: 20,
+      fontSize: responsive.fontSizes.title,
       fontWeight: "600",
       color: theme.colors.text.primary,
     },
     section: {
-      marginBottom: 24,
+      marginBottom: responsive.spacing.formPadding,
     },
     sectionTitle: {
-      fontSize: 18,
+      fontSize: responsive.fontSizes.headline,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: 8,
-      paddingHorizontal: 20,
+      marginBottom: responsive.spacing.elementSpacing,
+      paddingHorizontal: responsive.spacing.horizontal,
     },
     sectionSubtitle: {
-      fontSize: 14,
+      fontSize: responsive.fontSizes.label,
       color: theme.colors.text.secondary,
-      marginBottom: 16,
-      paddingHorizontal: 20,
+      marginBottom: responsive.spacing.horizontal,
+      paddingHorizontal: responsive.spacing.horizontal,
     },
     loadingContainer: {
       padding: 40,
@@ -795,9 +837,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     subscriptionCard: {
       backgroundColor: theme.colors.background.surface,
-      marginHorizontal: 20,
+      marginHorizontal: responsive.spacing.horizontal,
       borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.lg,
+      padding: responsive.spacing.formPadding,
       ...theme.shadows.md,
     },
     subscriptionHeader: {
@@ -819,13 +861,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
     },
     planName: {
-      fontSize: 18,
+      fontSize: responsive.fontSizes.headline,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: 4,
+      marginBottom: responsive.spacing.elementSpacing / 2,
     },
     planStatus: {
-      fontSize: 14,
+      fontSize: responsive.fontSizes.label,
       color: theme.colors.success,
       textTransform: "capitalize",
     },
@@ -999,10 +1041,12 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.colors.primary,
-      marginHorizontal: 20,
-      paddingVertical: theme.spacing.md,
+      marginHorizontal: responsive.spacing.horizontal,
+      paddingVertical: responsive.spacing.vertical,
+      paddingHorizontal: responsive.spacing.horizontal,
       borderRadius: theme.borderRadius.md,
-      gap: 8,
+      gap: responsive.spacing.elementSpacing,
+      minHeight: responsive.spacing.minTouchTarget,
       ...theme.shadows.md,
       shadowColor: theme.colors.primary,
     },
@@ -1011,7 +1055,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       shadowOpacity: 0,
     },
     subscribeButtonText: {
-      fontSize: 16,
+      fontSize: responsive.fontSizes.headline,
       fontWeight: "600",
       color: theme.colors.text.inverse,
     },
@@ -1019,16 +1063,17 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.colors.background.surface,
-      marginHorizontal: 20,
-      padding: theme.spacing.md,
+      marginHorizontal: responsive.spacing.horizontal,
+      padding: responsive.spacing.formPadding,
       borderRadius: theme.borderRadius.md,
-      marginBottom: 8,
-      gap: 12,
+      marginBottom: responsive.spacing.elementSpacing,
+      gap: responsive.spacing.elementSpacing,
+      minHeight: responsive.spacing.minTouchTarget,
       ...theme.shadows.sm,
     },
     settingText: {
       flex: 1,
-      fontSize: 16,
+      fontSize: responsive.fontSizes.body,
       color: theme.colors.text.primary,
     },
     themeToggleContainer: {
@@ -1036,8 +1081,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       gap: 8,
     },
     themeOption: {
-      width: 32,
-      height: 32,
+      width: responsive.spacing.minTouchTarget * 0.75,
+      height: responsive.spacing.minTouchTarget * 0.75,
       borderRadius: theme.borderRadius.sm,
       backgroundColor: theme.colors.background.elevated,
       justifyContent: "center",

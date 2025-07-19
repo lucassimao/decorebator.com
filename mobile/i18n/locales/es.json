@@ -31,6 +31,21 @@
     "tryAgain": "Intenta de Nuevo",
     "info": "Información"
   },
+  "update": {
+    "checkForUpdates": "Buscar actualizaciones",
+    "updateAvailable": "Actualización disponible",
+    "checking": "Verificando...",
+    "updating": "Actualizando...",
+    "new": "NUEVO",
+    "confirmTitle": "Aplicar actualización",
+    "confirmMessage": "La app se reiniciará. Se perderán los datos no guardados.",
+    "updateNow": "Actualizar ahora",
+    "updateFailed": "Error al actualizar. Inténtalo de nuevo.",
+    "noUpdatesTitle": "Sin actualizaciones",
+    "noUpdatesMessage": "Tienes la última versión.",
+    "updateAvailableHint": "Toca para aplicar la actualización",
+    "checkUpdatesHint": "Toca para buscar actualizaciones"
+  },
   "auth": {
     "signin": {
       "title": "Iniciar Sesión",

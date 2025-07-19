@@ -1,12 +1,11 @@
 import * as usersApi from "@/api/users";
-import { useResponsive } from "@/hooks/useResponsive";
 import { LoginHeader } from "@/components/auth/LoginHeader";
 import { EmailInput } from "@/components/auth/EmailInput";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
@@ -21,7 +20,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
@@ -29,6 +27,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { authLightTheme } from "@/theme/authTheme";
 import type { Theme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import type { ResponsiveValues } from "@/contexts/ThemeContext";
 import * as Sentry from "@sentry/react-native";
 import { decode } from "@/api/jwt";
 
@@ -48,19 +48,14 @@ const LoginScreen: React.FC = () => {
   // Always use light theme for auth screens
   const theme = authLightTheme;
 
-  // Get responsive values using the optimized hook
-  const responsive = useResponsive();
+  // Get responsive values from the unified theme context
+  const { responsive } = useTheme();
 
   // Memoize styles to prevent recreation on every render
   const styles = React.useMemo(
-    () => createStyles(theme, responsive, keyboardVisible),
-    [theme, responsive, keyboardVisible],
+    () => createStyles(theme, responsive, keyboardVisible, keyboardHeight),
+    [theme, responsive, keyboardVisible, keyboardHeight],
   );
-
-  // Refs for form inputs
-  const scrollViewRef = useRef<ScrollView>(null);
-  const emailInputRef = useRef<TextInput>(null);
-  const passwordInputRef = useRef<TextInput>(null);
 
   const {
     control,
@@ -156,47 +151,9 @@ const LoginScreen: React.FC = () => {
     };
   }, []);
 
-  // Function to handle scrolling to input with dynamic keyboard height
-  const scrollToInput = useCallback(
-    (inputRef: React.RefObject<TextInput | null>) => {
-      if (!inputRef.current || !scrollViewRef.current) return;
-
-      // Improved manual implementation with dynamic keyboard height
-      const scrollView = scrollViewRef.current;
-      const input = inputRef.current;
-
-      if (!scrollView || !input) return;
-
-      // Use measureInWindow to get input position
-      input.measureInWindow((x, y, width, height) => {
-        // Only scroll if keyboard is visible and input might be covered
-        if (!keyboardVisible || keyboardHeight === 0) {
-          return; // Don't scroll when keyboard isn't visible or height unknown
-        }
-
-        // Use actual keyboard height from event
-        const inputBottom = y + height;
-        const visibleScreenBottom = responsive.screenHeight - keyboardHeight;
-
-        // Only scroll if the input is actually being covered by the keyboard
-        if (inputBottom > visibleScreenBottom) {
-          // Minimal scroll - just enough to show the input above keyboard
-          const targetY = visibleScreenBottom - height - 20; // 20px padding above keyboard
-          const scrollAmount = Math.max(0, y - targetY);
-
-          scrollView.scrollTo({
-            y: scrollAmount,
-            animated: true,
-          });
-        }
-      });
-    },
-    [keyboardVisible, keyboardHeight, responsive.screenHeight],
-  );
-
   return (
     <ImageBackground
-      source={require("@/assets/images/login-bg.png")} // Background illustration
+      source={require("@/assets/images/signup-bg3.png")} // Background illustration
       style={styles.backgroundImage}
       imageStyle={styles.backgroundImageStyle}
       resizeMode="cover"
@@ -210,7 +167,6 @@ const LoginScreen: React.FC = () => {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.innerContainer}>
               <ScrollView
-                ref={scrollViewRef}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
@@ -239,9 +195,6 @@ const LoginScreen: React.FC = () => {
                   <EmailInput
                     control={control}
                     errors={errors}
-                    emailInputRef={emailInputRef}
-                    passwordInputRef={passwordInputRef}
-                    onFocus={() => scrollToInput(emailInputRef)}
                     isPending={loginMutation.isPending}
                   />
 
@@ -249,10 +202,8 @@ const LoginScreen: React.FC = () => {
                   <PasswordInput
                     control={control}
                     errors={errors}
-                    passwordInputRef={passwordInputRef}
                     showPassword={showPassword}
                     setShowPassword={setShowPassword}
-                    onFocus={() => scrollToInput(passwordInputRef)}
                     isPending={loginMutation.isPending}
                   />
 
@@ -340,8 +291,9 @@ export default LoginScreen;
 
 const createStyles = (
   theme: Theme,
-  responsive: ReturnType<typeof useResponsive>,
+  responsive: ResponsiveValues,
   keyboardVisible: boolean,
+  keyboardHeight: number,
 ) =>
   StyleSheet.create({
     backgroundImage: {
@@ -372,8 +324,12 @@ const createStyles = (
     },
     topSpacer: {
       height: keyboardVisible
-        ? responsive.spacing.vertical
-        : responsive.screenHeight * 0.12, // Balanced spacing
+        ? responsive.isMediumPhone
+          ? (responsive.screenHeight - keyboardHeight) * 0.08 // Medium: 8% = more scroll up
+          : responsive.isLargePhone || responsive.isExtraLargePhone
+            ? (responsive.screenHeight - keyboardHeight) * 0.12 // Large+: keep 15%
+            : responsive.spacing.vertical // Small: original behavior
+        : responsive.screenHeight * 0.12, // No keyboard: balanced spacing
     },
     formCard: {
       backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -402,7 +358,7 @@ const createStyles = (
     },
     loginButtonText: {
       color: theme.colors.text.inverse,
-      fontSize: responsive.fontSizes.button,
+      fontSize: responsive.fontSizes.headline,
       fontWeight: "600",
     },
     buttonDisabled: {
@@ -428,15 +384,14 @@ const createStyles = (
       maxWidth: "50%", // Prevent overflow into left side
     },
     signUpLink: {
-      fontSize: responsive.fontSizes.body,
+      fontSize: responsive.fontSizes.body + 5,
       color: theme.colors.primary,
       fontWeight: "600",
-      textDecorationLine: "underline",
       flexShrink: 1,
     },
     forgotPasswordText: {
       color: theme.colors.text.secondary,
-      fontSize: responsive.fontSizes.label,
+      fontSize: responsive.fontSizes.body,
       fontWeight: "400",
       textAlign: "right",
       flexShrink: 1,

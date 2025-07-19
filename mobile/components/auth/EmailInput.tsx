@@ -4,7 +4,6 @@ import { Controller, Control, FieldErrors } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
-import { useResponsive } from "@/hooks/useResponsive";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface LoginFormData {
@@ -15,33 +14,26 @@ interface LoginFormData {
 interface EmailInputProps {
   control: Control<LoginFormData>;
   errors: FieldErrors<LoginFormData>;
-  emailInputRef: React.RefObject<TextInput | null>;
-  passwordInputRef: React.RefObject<TextInput | null>;
-  onFocus: () => void;
   isPending: boolean;
 }
 
 export const EmailInput: React.FC<EmailInputProps> = ({
   control,
   errors,
-  emailInputRef,
-  passwordInputRef,
-  onFocus,
   isPending,
 }) => {
   const { t } = useTranslation();
-  const { theme } = useTheme();
-  const responsive = useResponsive();
+  const { theme, responsive } = useTheme();
 
   const styles = StyleSheet.create({
     inputGroup: {
-      marginBottom: responsive.spacing.elementSpacing * 0.8, // Reduced spacing
+      marginBottom: responsive.spacing.elementSpacing,
     },
     inputLabelRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 6, // Reduced from 8 to 6
-      gap: 6,
+      marginBottom: responsive.spacing.elementSpacing / 2, // Material Design 8px standard
+      gap: responsive.spacing.elementSpacing / 2,
     },
     inputLabel: {
       fontSize: responsive.fontSizes.label,
@@ -53,11 +45,11 @@ export const EmailInput: React.FC<EmailInputProps> = ({
       borderWidth: 1,
       borderColor: theme.colors.ui.border,
       borderRadius: theme.borderRadius.md,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: 14,
+      paddingHorizontal: responsive.spacing.horizontal,
+      paddingVertical: responsive.spacing.vertical,
       fontSize: responsive.fontSizes.body,
       color: theme.colors.text.primary,
-      minHeight: 48,
+      minHeight: responsive.spacing.minTouchTarget,
     },
     inputError: {
       borderColor: theme.colors.error,
@@ -87,13 +79,11 @@ export const EmailInput: React.FC<EmailInputProps> = ({
         }}
         render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
-            ref={emailInputRef}
             style={[styles.input, errors.email && styles.inputError]}
             placeholder={t("auth.signin.emailPlaceholder")}
             placeholderTextColor={theme.colors.text.placeholder}
             value={value}
             onChangeText={onChange}
-            onFocus={onFocus}
             onBlur={onBlur}
             autoCapitalize="none"
             keyboardType="email-address"
@@ -103,7 +93,6 @@ export const EmailInput: React.FC<EmailInputProps> = ({
             spellCheck={false}
             importantForAutofill="no"
             returnKeyType="next"
-            onSubmitEditing={() => passwordInputRef.current?.focus()}
             editable={!isPending}
             // Accessibility
             accessible={true}

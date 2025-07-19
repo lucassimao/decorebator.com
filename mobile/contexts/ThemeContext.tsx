@@ -4,9 +4,19 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  useMemo,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useColorScheme } from "react-native";
+import { useColorScheme, useWindowDimensions } from "react-native";
+import {
+  getResponsiveFontSizes,
+  getResponsiveSpacing,
+  getScreenSizeCategory,
+  getKeyboardBehavior,
+  getKeyboardOffset,
+  getScaledFontSize,
+  getResponsiveValue,
+} from "@/utils/responsive";
 
 // Theme type definitions
 export interface Theme {
@@ -285,8 +295,47 @@ const darkTheme: Theme = {
 };
 
 // Theme context
+export interface ResponsiveValues {
+  spacing: {
+    horizontal: number;
+    vertical: number;
+    formPadding: number;
+    elementSpacing: number;
+    buttonHeight: number;
+    minTouchTarget: number;
+  };
+  fontSizes: {
+    display: number;
+    title: number;
+    headline: number;
+    body: number;
+    label: number;
+    micro: number;
+    lineHeight: number;
+  };
+  screenWidth: number;
+  screenHeight: number;
+  category: "small" | "medium" | "large" | "xlarge";
+  keyboardBehavior: "height" | "position" | "padding";
+  keyboardOffset: number;
+  isSmallPhone: boolean;
+  isMediumPhone: boolean;
+  isLargePhone: boolean;
+  isExtraLargePhone: boolean;
+  getValueForSize: <T>(
+    smallValue: T,
+    mediumValue: T,
+    largeValue: T,
+    xlargeValue: T,
+  ) => T;
+  getScaledFont: (
+    fontName: "display" | "title" | "headline" | "body" | "label" | "micro",
+  ) => number;
+}
+
 interface ThemeContextType {
   theme: Theme;
+  responsive: ResponsiveValues;
   toggleTheme: () => void;
   setThemeMode: (mode: "light" | "dark" | "system") => void;
   themeMode: "light" | "dark" | "system";
@@ -301,6 +350,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const systemColorScheme = useColorScheme();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const [themeMode, setThemeModeState] = useState<"light" | "dark" | "system">(
     "system",
   );
@@ -348,9 +398,63 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  // Calculate responsive values - memoized for performance
+  const responsive: ResponsiveValues = useMemo(() => {
+    const category = getScreenSizeCategory(screenWidth);
+    const spacing = getResponsiveSpacing(screenWidth);
+    const fontSizes = getResponsiveFontSizes(screenWidth);
+    const keyboardBehavior = getKeyboardBehavior();
+    const keyboardOffset = getKeyboardOffset(screenWidth);
+
+    // Device type detection
+    const isSmallPhone = category === "small";
+    const isMediumPhone = category === "medium";
+    const isLargePhone = category === "large";
+    const isExtraLargePhone = category === "xlarge";
+
+    // Helper function to get responsive value based on current screen size
+    function getValueForSize<T>(
+      smallValue: T,
+      mediumValue: T,
+      largeValue: T,
+      xlargeValue: T,
+    ): T {
+      return getResponsiveValue(
+        smallValue,
+        mediumValue,
+        largeValue,
+        xlargeValue,
+        screenWidth,
+      );
+    }
+
+    // Helper function to get scaled font size for specific typography level
+    function getScaledFont(
+      fontName: "display" | "title" | "headline" | "body" | "label" | "micro",
+    ): number {
+      return getScaledFontSize(fontName, screenWidth);
+    }
+
+    return {
+      screenWidth,
+      screenHeight,
+      category,
+      spacing,
+      fontSizes,
+      keyboardBehavior,
+      keyboardOffset,
+      getValueForSize,
+      getScaledFont,
+      isSmallPhone,
+      isMediumPhone,
+      isLargePhone,
+      isExtraLargePhone,
+    };
+  }, [screenWidth, screenHeight]);
+
   return (
     <ThemeContext.Provider
-      value={{ theme, toggleTheme, setThemeMode, themeMode }}
+      value={{ theme, responsive, toggleTheme, setThemeMode, themeMode }}
     >
       {children}
     </ThemeContext.Provider>
