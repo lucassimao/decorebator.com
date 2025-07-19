@@ -4,7 +4,7 @@ import { Controller, Control, FieldErrors } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme, Theme } from "@/contexts/ThemeContext";
 
 interface LoginFormData {
   email: string;
@@ -15,15 +15,20 @@ interface EmailInputProps {
   control: Control<LoginFormData>;
   errors: FieldErrors<LoginFormData>;
   isPending: boolean;
+  theme?: Theme; // Optional theme prop for auth screens
 }
 
 export const EmailInput: React.FC<EmailInputProps> = ({
   control,
   errors,
   isPending,
+  theme: propTheme,
 }) => {
   const { t } = useTranslation();
-  const { theme, responsive } = useTheme();
+  const { theme: contextTheme, responsive } = useTheme();
+
+  // Use passed theme prop if available, otherwise use context theme
+  const theme = propTheme || contextTheme;
 
   const styles = StyleSheet.create({
     inputGroup: {

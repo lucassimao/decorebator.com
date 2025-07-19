@@ -11,7 +11,7 @@ import { Controller, Control, FieldErrors } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme, Theme } from "@/contexts/ThemeContext";
 
 interface LoginFormData {
   email: string;
@@ -24,6 +24,7 @@ interface PasswordInputProps {
   showPassword: boolean;
   setShowPassword: (show: boolean) => void;
   isPending: boolean;
+  theme?: Theme; // Optional theme prop for auth screens
 }
 
 export const PasswordInput: React.FC<PasswordInputProps> = ({
@@ -32,9 +33,13 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
   showPassword,
   setShowPassword,
   isPending,
+  theme: propTheme,
 }) => {
   const { t } = useTranslation();
-  const { theme, responsive } = useTheme();
+  const { theme: contextTheme, responsive } = useTheme();
+
+  // Use passed theme prop if available, otherwise use context theme
+  const theme = propTheme || contextTheme;
 
   const styles = StyleSheet.create({
     inputGroup: {

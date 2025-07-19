@@ -1,17 +1,22 @@
 import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme, Theme } from "@/contexts/ThemeContext";
 
 interface LoginHeaderProps {
   keyboardVisible: boolean;
+  theme?: Theme; // Optional theme prop for auth screens
 }
 
 export const LoginHeader: React.FC<LoginHeaderProps> = ({
   keyboardVisible,
+  theme: propTheme,
 }) => {
   const { t } = useTranslation();
-  const { theme, responsive } = useTheme();
+  const { theme: contextTheme, responsive } = useTheme();
+
+  // Use passed theme prop if available, otherwise use context theme
+  const theme = propTheme || contextTheme;
 
   const styles = StyleSheet.create({
     headerSection: {

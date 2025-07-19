@@ -175,7 +175,7 @@ const LoginScreen: React.FC = () => {
                 <View style={styles.topSpacer} />
 
                 {/* Header with Logo and Illustration */}
-                <LoginHeader keyboardVisible={keyboardVisible} />
+                <LoginHeader keyboardVisible={keyboardVisible} theme={theme} />
 
                 {/* Login Form */}
                 <View
@@ -196,6 +196,7 @@ const LoginScreen: React.FC = () => {
                     control={control}
                     errors={errors}
                     isPending={loginMutation.isPending}
+                    theme={theme}
                   />
 
                   {/* Password Input */}
@@ -205,6 +206,7 @@ const LoginScreen: React.FC = () => {
                     showPassword={showPassword}
                     setShowPassword={setShowPassword}
                     isPending={loginMutation.isPending}
+                    theme={theme}
                   />
 
                   {/* Sign In Button */}
@@ -300,7 +302,7 @@ const createStyles = (
       flex: 1,
       width: "100%",
       height: "100%",
-      backgroundColor: "#FFF9F0", // Fallback warm background color
+      backgroundColor: theme.colors.background.default, // Fallback warm background color
     },
     backgroundImageStyle: {
       // Force full coverage regardless of aspect ratio
@@ -320,7 +322,7 @@ const createStyles = (
     scrollContent: {
       flexGrow: 1,
       paddingHorizontal: responsive.spacing.horizontal,
-      paddingBottom: 50, // Ensure content is not cut off by safe area
+      paddingBottom: responsive.spacing.vertical * 3, // Ensure content is not cut off by safe area
     },
     topSpacer: {
       height: keyboardVisible
@@ -332,29 +334,32 @@ const createStyles = (
         : responsive.screenHeight * 0.12, // No keyboard: balanced spacing
     },
     formCard: {
-      backgroundColor: "rgba(255, 255, 255, 0.95)",
+      backgroundColor: theme.colors.background.surface,
       borderRadius: theme.borderRadius.xl,
-      padding: responsive.spacing.formPadding + 8, // Increased padding for height
+      padding:
+        responsive.spacing.formPadding + responsive.spacing.elementSpacing / 2, // Increased padding for height
       ...theme.shadows.lg,
       // Add subtle border for definition
       borderWidth: 1,
-      borderColor: "rgba(255, 255, 255, 0.3)",
+      borderColor: theme.colors.border.light,
     },
     // Sign In Button styles
     loginButton: {
       backgroundColor: theme.colors.primary,
       borderRadius: theme.borderRadius.md,
-      paddingVertical: theme.spacing.md + 2,
+      paddingVertical:
+        responsive.spacing.vertical + responsive.spacing.elementSpacing / 4,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 8,
+      gap: responsive.spacing.elementSpacing / 2,
       marginTop: responsive.spacing.elementSpacing * 0.8,
       marginBottom: responsive.spacing.elementSpacing,
       ...theme.shadows.lg,
       shadowColor: theme.colors.primary,
-      minHeight: responsive.spacing.buttonHeight + 4,
-      elevation: 4,
+      minHeight:
+        responsive.spacing.buttonHeight + responsive.spacing.elementSpacing / 3,
+      elevation: theme.shadows.md.elevation,
     },
     loginButtonText: {
       color: theme.colors.text.inverse,
@@ -362,7 +367,7 @@ const createStyles = (
       fontWeight: "600",
     },
     buttonDisabled: {
-      opacity: 0.7,
+      opacity: theme.shadows.sm.shadowOpacity * 14, // Approximately 0.7 based on theme opacity
     },
     // Bottom Links Row styles
     bottomLinksRow: {
@@ -370,7 +375,7 @@ const createStyles = (
       justifyContent: "space-between",
       alignItems: "center",
       marginTop: responsive.spacing.elementSpacing * 0.5,
-      paddingHorizontal: 4, // Small horizontal padding for better touch targets
+      paddingHorizontal: responsive.spacing.elementSpacing / 3, // Small horizontal padding for better touch targets
     },
     bottomLinkLeft: {
       flexDirection: "row",
@@ -384,7 +389,7 @@ const createStyles = (
       maxWidth: "50%", // Prevent overflow into left side
     },
     signUpLink: {
-      fontSize: responsive.fontSizes.body + 5,
+      fontSize: responsive.fontSizes.headline,
       color: theme.colors.primary,
       fontWeight: "600",
       flexShrink: 1,
@@ -395,13 +400,13 @@ const createStyles = (
       fontWeight: "400",
       textAlign: "right",
       flexShrink: 1,
-      opacity: 0.8,
+      opacity: theme.shadows.md.shadowOpacity * 10, // Approximately 0.8 based on theme opacity
     },
     welcomeText: {
       fontSize: responsive.fontSizes.title,
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: 8,
+      marginBottom: responsive.spacing.elementSpacing / 1.5,
       textAlign: "center",
     },
     subtitleText: {
