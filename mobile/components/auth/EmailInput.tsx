@@ -16,6 +16,7 @@ interface EmailInputProps {
   errors: FieldErrors<LoginFormData>;
   isPending: boolean;
   theme?: Theme; // Optional theme prop for auth screens
+  onSubmitEditing?: () => void; // Callback for next button
 }
 
 export const EmailInput: React.FC<EmailInputProps> = ({
@@ -23,6 +24,7 @@ export const EmailInput: React.FC<EmailInputProps> = ({
   errors,
   isPending,
   theme: propTheme,
+  onSubmitEditing,
 }) => {
   const { t } = useTranslation();
   const { theme: contextTheme, responsive } = useTheme();
@@ -98,6 +100,7 @@ export const EmailInput: React.FC<EmailInputProps> = ({
             spellCheck={false}
             importantForAutofill="no"
             returnKeyType="next"
+            onSubmitEditing={onSubmitEditing}
             editable={!isPending}
             // Accessibility
             accessible={true}

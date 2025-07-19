@@ -1,4 +1,4 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import {
   View,
   Text,
@@ -25,16 +25,18 @@ interface PasswordInputProps {
   setShowPassword: (show: boolean) => void;
   isPending: boolean;
   theme?: Theme; // Optional theme prop for auth screens
+  onSubmitEditing?: () => void; // Callback for form submission
 }
 
-export const PasswordInput: React.FC<PasswordInputProps> = ({
+export const PasswordInput = forwardRef<TextInput, PasswordInputProps>(({
   control,
   errors,
   showPassword,
   setShowPassword,
   isPending,
   theme: propTheme,
-}) => {
+  onSubmitEditing,
+}, ref) => {
   const { t } = useTranslation();
   const { theme: contextTheme, responsive } = useTheme();
 
@@ -108,6 +110,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           }}
           render={({ field: { onChange, onBlur, value } }) => (
             <TextInput
+              ref={ref}
               style={[
                 styles.input,
                 styles.passwordInput,
@@ -126,7 +129,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
               importantForAutofill="no"
               passwordRules=""
               returnKeyType="done"
-              onSubmitEditing={() => Keyboard.dismiss()}
+              onSubmitEditing={onSubmitEditing}
               editable={!isPending}
               // Accessibility
               accessible={true}
@@ -159,4 +162,6 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
       <ErrorMessage error={errors.password} />
     </View>
   );
-};
+});
+
+PasswordInput.displayName = 'PasswordInput';

@@ -5,7 +5,7 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
@@ -20,6 +20,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
@@ -44,6 +45,9 @@ const LoginScreen: React.FC = () => {
   const { t } = useTranslation();
   const posthog = usePostHog();
   const queryClient = useQueryClient();
+  
+  // Refs for input focus management
+  const passwordInputRef = useRef<TextInput>(null);
 
   // Always use light theme for auth screens
   const theme = authLightTheme;
@@ -127,6 +131,11 @@ const LoginScreen: React.FC = () => {
     router.push("/forgotPassword");
   };
 
+  // Focus handlers for input navigation
+  const focusPasswordInput = () => {
+    passwordInputRef.current?.focus();
+  };
+
   // Keyboard listeners with dynamic height detection
   useEffect(() => {
     const keyboardWillShow = Keyboard.addListener(
@@ -197,16 +206,19 @@ const LoginScreen: React.FC = () => {
                     errors={errors}
                     isPending={loginMutation.isPending}
                     theme={theme}
+                    onSubmitEditing={focusPasswordInput}
                   />
 
                   {/* Password Input */}
                   <PasswordInput
+                    ref={passwordInputRef}
                     control={control}
                     errors={errors}
                     showPassword={showPassword}
                     setShowPassword={setShowPassword}
                     isPending={loginMutation.isPending}
                     theme={theme}
+                    onSubmitEditing={handleSubmit(handleLogin)}
                   />
 
                   {/* Sign In Button */}
