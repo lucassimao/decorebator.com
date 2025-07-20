@@ -145,31 +145,6 @@ func GetSubscriptionStatus(subRepo *repository.SubscriptionRepository) gin.Handl
 	}
 }
 
-// CancelSubscription cancels the user's subscription
-func CancelSubscription(subService *service.SubscriptionService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Get user from context
-		userAny, exists := c.Get("user")
-		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
-			return
-		}
-		user, ok := userAny.(*model.User)
-		if !ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
-			return
-		}
-
-		// Cancel subscription
-		if err := subService.CancelSubscription(c.Request.Context(), user.ID); err != nil {
-			common.Logger.Error("Failed to cancel subscription", "error", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{"message": "Subscription will be cancelled at the end of the billing period"})
-	}
-}
 
 // GetSubscriptionHistory returns the user's subscription history
 func GetSubscriptionHistory(subRepo *repository.SubscriptionRepository) gin.HandlerFunc {

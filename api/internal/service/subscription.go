@@ -17,7 +17,6 @@ import (
 	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/checkout/session"
 	"github.com/stripe/stripe-go/v82/customer"
-	"github.com/stripe/stripe-go/v82/subscription"
 	"github.com/stripe/stripe-go/v82/webhook"
 )
 
@@ -540,61 +539,6 @@ func (s *SubscriptionService) getPlanFromPriceID(priceID string) model.Subscript
 	}
 }
 
-// CancelSubscription cancels a user's subscription
-func (s *SubscriptionService) CancelSubscription(ctx context.Context, userID int64) error {
-	// Get active subscription
-	sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
-	if err != nil {
-		return fmt.Errorf("failed to get active subscription: %w", err)
-	}
-	if sub == nil {
-		return fmt.Errorf("no active subscription found")
-	}
-
-	// Handle cancellation based on provider
-	switch sub.Provider {
-	case model.ProviderStripe:
-		// Cancel at period end in Stripe
-		params := &stripe.SubscriptionParams{
-			CancelAtPeriodEnd: stripe.Bool(true),
-		}
-
-		if sub.StripeSubscriptionID == nil {
-			return fmt.Errorf("stripe subscription ID is nil")
-		}
-		_, err = subscription.Update(*sub.StripeSubscriptionID, params)
-		if err != nil {
-			return fmt.Errorf("failed to cancel stripe subscription: %w", err)
-		}
-
-	case model.ProviderRevenueCat:
-		// RevenueCat cancellations are handled through the App Store/Google Play
-		// We just mark it locally and wait for webhook
-		sub.CancelAtPeriodEnd = true
-		now := time.Now()
-		sub.CanceledAt = &now
-
-		// Create event for manual cancellation attempt
-		subscriptionEvent := model.SubscriptionEvent{
-			SubscriptionID:  sub.ID,
-			ExternalEventID: fmt.Sprintf("manual_cancel_attempt_%d_%d", sub.ID, now.Unix()),
-			Provider:        model.ProviderRevenueCat,
-			EventType:       "manual_cancel_attempt",
-			EventData:       `{"type": "manual_cancel_attempt", "note": "RevenueCat subscriptions must be canceled through app stores"}`,
-		}
-
-		if err := s.subRepo.UpdateSubscription(ctx, sub, subscriptionEvent); err != nil {
-			return fmt.Errorf("failed to update subscription: %w", err)
-		}
-
-		return fmt.Errorf("RevenueCat subscriptions must be canceled through the App Store or Google Play Store")
-
-	default:
-		return fmt.Errorf("unknown provider: %s", sub.Provider)
-	}
-
-	return nil
-}
 
 // CheckSubscriptionLimits checks if user can perform action based on subscription
 func (s *SubscriptionService) CheckSubscriptionLimits(ctx context.Context, userID int64, action string) error {

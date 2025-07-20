@@ -122,7 +122,6 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		// Subscription routes
 		authenticatedRoutes.POST("/subscription/checkout-session", CreateCheckoutSession(appCtx.SubscriptionService))
 		authenticatedRoutes.GET("/subscription/status", GetSubscriptionStatus(subRepo))
-		authenticatedRoutes.POST("/subscription/cancel", CancelSubscription(appCtx.SubscriptionService))
 		authenticatedRoutes.GET("/subscription/history", GetSubscriptionHistory(subRepo))
 		// RevenueCat routes
 		authenticatedRoutes.POST("/subscription/revenuecat/restore", RestorePurchases(appCtx.RevenueCatService))

@@ -251,46 +251,46 @@ func getSystemInfo() gin.H {
 func getRuntimeMetrics() gin.H {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
-	
+
 	// Get GC stats
 	var gcStats debug.GCStats
 	debug.ReadGCStats(&gcStats)
-	
+
 	// Calculate GC pause percentiles
 	pausePercentiles := calculateGCPausePercentiles(gcStats.Pause)
-	
+
 	// Get goroutine stack analysis
 	goroutineBreakdown := analyzeGoroutineStates()
-	
+
 	return gin.H{
 		"memory_detailed": gin.H{
-			"heap_in_use":        formatBytes(memStats.HeapInuse),
-			"heap_idle":          formatBytes(memStats.HeapIdle),
-			"heap_released":      formatBytes(memStats.HeapReleased),
-			"heap_sys":           formatBytes(memStats.HeapSys),
-			"next_gc":            formatBytes(memStats.NextGC),
-			"last_gc":            time.Unix(0, int64(memStats.LastGC)).Format(time.RFC3339),
-			"gc_cpu_fraction":    memStats.GCCPUFraction,
-			"num_forced_gc":      memStats.NumForcedGC,
-			"mallocs":            memStats.Mallocs,
-			"frees":              memStats.Frees,
-			"heap_objects":       memStats.HeapObjects,
+			"heap_in_use":     formatBytes(memStats.HeapInuse),
+			"heap_idle":       formatBytes(memStats.HeapIdle),
+			"heap_released":   formatBytes(memStats.HeapReleased),
+			"heap_sys":        formatBytes(memStats.HeapSys),
+			"next_gc":         formatBytes(memStats.NextGC),
+			"last_gc":         formatLastGCTime(memStats.LastGC),
+			"gc_cpu_fraction": memStats.GCCPUFraction,
+			"num_forced_gc":   memStats.NumForcedGC,
+			"mallocs":         memStats.Mallocs,
+			"frees":           memStats.Frees,
+			"heap_objects":    memStats.HeapObjects,
 		},
 		"gc_detailed": gin.H{
-			"num_gc":             gcStats.NumGC,
-			"pause_total":        gcStats.PauseTotal.String(),
-			"pause_50th":         pausePercentiles["50th"],
-			"pause_95th":         pausePercentiles["95th"],
-			"pause_99th":         pausePercentiles["99th"],
-			"pause_max":          pausePercentiles["max"],
-			"gc_cpu_fraction":    memStats.GCCPUFraction,
-			"last_gc_time":       time.Unix(0, int64(memStats.LastGC)).Format(time.RFC3339),
+			"num_gc":          gcStats.NumGC,
+			"pause_total":     gcStats.PauseTotal.String(),
+			"pause_50th":      pausePercentiles["50th"],
+			"pause_95th":      pausePercentiles["95th"],
+			"pause_99th":      pausePercentiles["99th"],
+			"pause_max":       pausePercentiles["max"],
+			"gc_cpu_fraction": memStats.GCCPUFraction,
+			"last_gc_time":    formatLastGCTime(memStats.LastGC),
 		},
 		"goroutine_analysis": goroutineBreakdown,
 		"runtime_info": gin.H{
-			"go_version":    runtime.Version(),
-			"go_maxprocs":   runtime.GOMAXPROCS(0),
-			"num_cgo_call":  runtime.NumCgoCall(),
+			"go_version":   runtime.Version(),
+			"go_maxprocs":  runtime.GOMAXPROCS(0),
+			"num_cgo_call": runtime.NumCgoCall(),
 		},
 	}
 }
@@ -300,12 +300,12 @@ func calculateGCPausePercentiles(pauses []time.Duration) gin.H {
 	if len(pauses) == 0 {
 		return gin.H{
 			"50th": "0s",
-			"95th": "0s", 
+			"95th": "0s",
 			"99th": "0s",
 			"max":  "0s",
 		}
 	}
-	
+
 	// Filter out zero values and sort
 	var validPauses []time.Duration
 	for _, pause := range pauses {
@@ -313,20 +313,20 @@ func calculateGCPausePercentiles(pauses []time.Duration) gin.H {
 			validPauses = append(validPauses, pause)
 		}
 	}
-	
+
 	if len(validPauses) == 0 {
 		return gin.H{
 			"50th": "0s",
-			"95th": "0s", 
+			"95th": "0s",
 			"99th": "0s",
 			"max":  "0s",
 		}
 	}
-	
+
 	sort.Slice(validPauses, func(i, j int) bool {
 		return validPauses[i] < validPauses[j]
 	})
-	
+
 	n := len(validPauses)
 	return gin.H{
 		"50th": validPauses[n*50/100].String(),
@@ -342,17 +342,17 @@ func analyzeGoroutineStates() gin.H {
 	buf := make([]byte, 1024*1024) // 1MB buffer
 	n := runtime.Stack(buf, true)
 	stackTrace := string(buf[:n])
-	
+
 	// Count goroutines by state
 	blocked := strings.Count(stackTrace, "goroutine") - strings.Count(stackTrace, "[running]")
 	running := strings.Count(stackTrace, "[running]")
-	
+
 	// More detailed analysis
 	networkBlocked := strings.Count(stackTrace, "net.")
 	chanBlocked := strings.Count(stackTrace, "chan receive") + strings.Count(stackTrace, "chan send")
 	ioBlocked := strings.Count(stackTrace, "internal/poll.") + strings.Count(stackTrace, "syscall.")
 	sqlBlocked := strings.Count(stackTrace, "database/sql") + strings.Count(stackTrace, "github.com/jackc/pgx")
-	
+
 	return gin.H{
 		"total_goroutines": runtime.NumGoroutine(),
 		"running":          running,
@@ -370,12 +370,12 @@ func summarizeTopStacks(stackTrace string) []gin.H {
 	// Split by goroutine entries
 	goroutines := strings.Split(stackTrace, "goroutine ")
 	stackCounts := make(map[string]int)
-	
+
 	for _, goroutine := range goroutines {
 		if len(goroutine) < 10 {
 			continue
 		}
-		
+
 		// Extract the first meaningful line of the stack
 		lines := strings.Split(goroutine, "\n")
 		for _, line := range lines {
@@ -390,23 +390,23 @@ func summarizeTopStacks(stackTrace string) []gin.H {
 			}
 		}
 	}
-	
+
 	// Convert to sorted slice
 	type stackCount struct {
 		Function string `json:"function"`
 		Count    int    `json:"count"`
 	}
-	
+
 	var stacks []stackCount
 	for function, count := range stackCounts {
 		stacks = append(stacks, stackCount{Function: function, Count: count})
 	}
-	
+
 	// Sort by count, descending
 	sort.Slice(stacks, func(i, j int) bool {
 		return stacks[i].Count > stacks[j].Count
 	})
-	
+
 	// Return top 5
 	var result []gin.H
 	for i, stack := range stacks {
@@ -418,7 +418,7 @@ func summarizeTopStacks(stackTrace string) []gin.H {
 			"count":    stack.Count,
 		})
 	}
-	
+
 	return result
 }
 
@@ -448,4 +448,16 @@ func formatGCPause(pauseNs [256]uint64, numGC uint32) string {
 		return "overflow"
 	}
 	return time.Duration(int64(pauseValue)).String()
+}
+
+// formatLastGCTime safely formats LastGC time to avoid integer overflow
+func formatLastGCTime(lastGC uint64) string {
+	if lastGC == 0 {
+		return "never"
+	}
+	// Safe conversion: uint64 to int64
+	if lastGC > 9223372036854775807 { // math.MaxInt64
+		return "overflow"
+	}
+	return time.Unix(0, int64(lastGC)).Format(time.RFC3339)
 }
