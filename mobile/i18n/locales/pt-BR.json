@@ -306,7 +306,15 @@
       "terms": "Ao continuar, você concorda com nossos Termos de Serviço e Política de Privacidade. As assinaturas se renovam automaticamente, a menos que sejam canceladas.",
       "storeProblem": "Problema na loja. Tente novamente mais tarde.",
       "purchaseNotAllowed": "Compras não permitidas neste dispositivo.",
-      "paymentPending": "Pagamento pendente. Acesso após confirmação."
+      "paymentPending": "Pagamento pendente. Acesso após confirmação.",
+      "manageSubscription": "Gerenciar",
+      "manageSubscriptionMessage": "Abra as configurações nativas para gerenciar sua assinatura.",
+      "openManagement": "Abrir",
+      "managementOpened": "Gerenciamento Aberto",
+      "managementInstructions": "As configurações de gerenciamento de assinatura foram abertas. Você pode cancelar ou alterar sua assinatura lá.",
+      "managementError": "Não foi possível abrir o gerenciamento de assinatura. Tente novamente mais tarde.",
+      "managementErrorIOS": "Não foi possível abrir a App Store. Vá para Configurações > iTunes e App Store para gerenciar.",
+      "managementErrorAndroid": "Não foi possível abrir a Play Store. Abra a Play Store manualmente e vá para Assinaturas."
     },
     "account": {
       "title": "Conta",

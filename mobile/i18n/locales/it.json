@@ -306,7 +306,15 @@
       "terms": "Continuando, accetti i nostri Termini di Servizio e l'Informativa sulla Privacy. Gli abbonamenti si rinnovano automaticamente a meno che non vengano cancellati.",
       "storeProblem": "Problema con lo store. Riprova più tardi.",
       "purchaseNotAllowed": "Acquisti non consentiti su questo dispositivo.",
-      "paymentPending": "Pagamento in sospeso. Accesso dopo conferma."
+      "paymentPending": "Pagamento in sospeso. Accesso dopo conferma.",
+      "manageSubscription": "Gestisci",
+      "manageSubscriptionMessage": "Apri le impostazioni native per gestire il tuo abbonamento.",
+      "openManagement": "Apri",
+      "managementOpened": "Gestione Aperta",
+      "managementInstructions": "Le impostazioni di gestione abbonamento sono state aperte. Puoi annullare o modificare il tuo abbonamento lì.",
+      "managementError": "Impossibile aprire la gestione abbonamento. Riprova più tardi.",
+      "managementErrorIOS": "Impossibile aprire App Store. Vai a Impostazioni > iTunes e App Store per gestire.",
+      "managementErrorAndroid": "Impossibile aprire Play Store. Apri Play Store manualmente e vai a Abbonamenti."
     },
     "account": {
       "title": "Account",

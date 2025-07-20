@@ -1,5 +1,6 @@
 import { getAuthorization } from "./users";
 import { DEFAULT_ERROR } from "./constants";
+import { Platform, Linking } from "react-native";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -67,23 +68,68 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
   return response.json();
 }
 
-export async function cancelSubscription(): Promise<void> {
-  const endpoint = `${API_URL}/subscription/cancel`;
-  const authorization = getAuthorization();
+export async function openNativeSubscriptionManagement(): Promise<void> {
+  // Universal subscription management using platform-specific URL deeplinks
+  // Works across ALL iOS versions (not just 13.4+) and Android devices
 
-  if (!authorization) {
-    throw new Error("Authentication required");
+  if (Platform.OS === "web") {
+    // For web, we could redirect to Stripe customer portal or show instructions
+    throw new Error("Subscription management not available on web");
   }
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      Authorization: authorization,
-    },
-  });
+  if (Platform.OS === "ios") {
+    // iOS: Try multiple URLs in order of preference for maximum compatibility
+    const iosUrls = [
+      "itms-apps://apps.apple.com/account/subscriptions", // Modern iOS (10.3+)
+      "itms://buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/manageSubscriptions", // Legacy iOS
+      "https://apps.apple.com/account/subscriptions", // Web fallback
+    ];
 
-  if (!response.ok) {
-    const body = await response.json();
-    throw new Error(body?.error || DEFAULT_ERROR);
+    for (const url of iosUrls) {
+      try {
+        const canOpen = await Linking.canOpenURL(url);
+        if (canOpen) {
+          await Linking.openURL(url);
+          return;
+        }
+      } catch (error) {
+        // Continue to next URL if this one fails
+        console.warn(`Failed to open iOS subscription URL: ${url}`, error);
+      }
+    }
+
+    // If all URLs fail, throw error
+    throw new Error(
+      "Could not open subscription management on this iOS device",
+    );
   }
+
+  if (Platform.OS === "android") {
+    // Android: Open Google Play Store subscription management
+    const androidUrls = [
+      "https://play.google.com/store/account/subscriptions", // Primary
+      "market://details?id=com.yourapp.package", // Fallback (would need actual package name)
+    ];
+
+    for (const url of androidUrls) {
+      try {
+        const canOpen = await Linking.canOpenURL(url);
+        if (canOpen) {
+          await Linking.openURL(url);
+          return;
+        }
+      } catch (error) {
+        console.warn(`Failed to open Android subscription URL: ${url}`, error);
+      }
+    }
+
+    // If all URLs fail, throw error
+    throw new Error(
+      "Could not open subscription management on this Android device",
+    );
+  }
+
+  throw new Error(
+    `Subscription management not supported on platform: ${Platform.OS}`,
+  );
 }

@@ -1,5 +1,6 @@
 import * as subscriptionsApi from "@/api/subscriptions";
 import * as usersApi from "@/api/users";
+import { Platform } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -188,20 +189,27 @@ const SettingsScreen: React.FC = () => {
     },
   });
 
-  // Cancel subscription mutation
-  const cancelMutation = useMutation({
-    mutationFn: subscriptionsApi.cancelSubscription,
-    onSuccess: () => {
-      refetchSubscription();
+  // Open native subscription management (no API call needed)
+  const openNativeManagement = async () => {
+    try {
+      await subscriptionsApi.openNativeSubscriptionManagement();
+      // Show info message about what happens next
       Alert.alert(
-        t("common.success"),
-        t("settings.subscription.cancelSuccess"),
+        t("settings.subscription.managementOpened"),
+        t("settings.subscription.managementInstructions"),
       );
-    },
-    onError: () => {
-      Alert.alert(t("common.error"), t("settings.subscription.cancelError"));
-    },
-  });
+    } catch {
+      // Use platform-specific error messages for better user guidance
+      const errorMessage =
+        Platform.OS === "ios"
+          ? t("settings.subscription.managementErrorIOS")
+          : Platform.OS === "android"
+            ? t("settings.subscription.managementErrorAndroid")
+            : t("settings.subscription.managementError");
+
+      Alert.alert(t("common.error"), errorMessage);
+    }
+  };
 
   const clearUserAsyncStorage = async () => {
     try {
@@ -269,14 +277,14 @@ const SettingsScreen: React.FC = () => {
 
   const handleCancelSubscription = () => {
     Alert.alert(
-      t("settings.subscription.cancelSubscription"),
-      t("settings.subscription.cancelConfirmMessage"),
+      t("settings.subscription.manageSubscription"),
+      t("settings.subscription.manageSubscriptionMessage"),
       [
-        { text: t("settings.subscription.keepSubscription"), style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: t("settings.subscription.cancelSubscription"),
-          style: "destructive",
-          onPress: () => cancelMutation.mutate(),
+          text: t("settings.subscription.openManagement"),
+          style: "default",
+          onPress: openNativeManagement,
         },
       ],
     );
@@ -387,25 +395,15 @@ const SettingsScreen: React.FC = () => {
                     <TouchableOpacity
                       style={styles.cancelButton}
                       onPress={handleCancelSubscription}
-                      disabled={cancelMutation.isPending}
                     >
-                      {cancelMutation.isPending ? (
-                        <ActivityIndicator
-                          size="small"
-                          color={theme.colors.error}
-                        />
-                      ) : (
-                        <>
-                          <MaterialIcons
-                            name="cancel"
-                            size={20}
-                            color={theme.colors.error}
-                          />
-                          <Text style={styles.cancelButtonText}>
-                            {t("settings.subscription.cancelSubscription")}
-                          </Text>
-                        </>
-                      )}
+                      <MaterialIcons
+                        name="settings"
+                        size={20}
+                        color={theme.colors.primary}
+                      />
+                      <Text style={styles.manageButtonText}>
+                        {t("settings.subscription.manageSubscription")}
+                      </Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -874,8 +872,15 @@ const createStyles = (
       justifyContent: "center",
       paddingVertical: 12,
       borderRadius: theme.borderRadius.sm,
-      backgroundColor: theme.colors.state.incorrectBackground,
+      backgroundColor: theme.colors.background.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
       gap: 8,
+    },
+    manageButtonText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.colors.primary,
     },
     cancelButtonText: {
       fontSize: 14,

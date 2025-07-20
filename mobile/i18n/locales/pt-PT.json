@@ -306,7 +306,15 @@
       "terms": "Ao continuar, concorda com os nossos Termos de Serviço e Política de Privacidade. As subscrições renovam-se automaticamente, a menos que sejam canceladas.",
       "storeProblem": "Problema na loja. Tente novamente mais tarde.",
       "purchaseNotAllowed": "Compras não permitidas neste dispositivo.",
-      "paymentPending": "Pagamento pendente. Acesso após confirmação."
+      "paymentPending": "Pagamento pendente. Acesso após confirmação.",
+      "manageSubscription": "Gerir",
+      "manageSubscriptionMessage": "Abra as definições nativas para gerir a sua subscrição.",
+      "openManagement": "Abrir",
+      "managementOpened": "Gestão Aberta",
+      "managementInstructions": "As definições de gestão de subscrição foram abertas. Pode cancelar ou alterar a sua subscrição lá.",
+      "managementError": "Não foi possível abrir a gestão de subscrição. Tente novamente mais tarde.",
+      "managementErrorIOS": "Não foi possível abrir a App Store. Vá para Definições > iTunes e App Store para gerir.",
+      "managementErrorAndroid": "Não foi possível abrir a Play Store. Abra a Play Store manualmente e vá para Subscrições."
     },
     "account": {
       "title": "Conta",

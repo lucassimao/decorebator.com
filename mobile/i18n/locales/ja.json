@@ -306,7 +306,15 @@
       "terms": "継続することで、サービス利用規約とプライバシーポリシーに同意したことになります。サブスクリプションはキャンセルされない限り自動更新されます。",
       "storeProblem": "ストアに問題があります。後で再試行してください。",
       "purchaseNotAllowed": "このデバイスでは購入が許可されていません。",
-      "paymentPending": "支払いは保留中です。確認後にアクセスできます。"
+      "paymentPending": "支払いは保留中です。確認後にアクセスできます。",
+      "manageSubscription": "管理",
+      "manageSubscriptionMessage": "ネイティブ設定を開いてサブスクリプションを管理します。",
+      "openManagement": "開く",
+      "managementOpened": "管理画面を開きました",
+      "managementInstructions": "サブスクリプション管理設定が開かれました。そこでキャンセルや変更ができます。",
+      "managementError": "サブスクリプション管理を開けませんでした。後で再試行してください。",
+      "managementErrorIOS": "App Storeを開けませんでした。設定 > iTunes & App Store で管理してください。",
+      "managementErrorAndroid": "Play Storeを開けませんでした。Play Storeを手動で開き、サブスクリプションに移動してください。"
     },
     "account": {
       "title": "アカウント",

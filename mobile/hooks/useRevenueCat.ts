@@ -192,7 +192,10 @@ export function useRevenueCat() {
         await restorePurchases(user.id.toString());
         console.log("✅ Backend sync successful");
       } catch (backendError) {
-        console.warn("⚠️ Backend sync failed (but RevenueCat restoration succeeded):", backendError);
+        console.warn(
+          "⚠️ Backend sync failed (but RevenueCat restoration succeeded):",
+          backendError,
+        );
         // Don't throw - we want the RevenueCat restoration to succeed
         // Backend sync can be retried later or handled separately
       }
