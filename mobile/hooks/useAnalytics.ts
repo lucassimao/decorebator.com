@@ -17,7 +17,7 @@ import {
   PracticeTimeResponse,
 } from "@/api/analytics";
 import { useQuery } from "@tanstack/react-query";
-import { useUserInfo } from "@/hooks/users";
+import { useUserSession } from "@/hooks/useUserSession";
 
 type UseAnalyticsResult = {
   stats?: WordlistStats;
@@ -57,7 +57,7 @@ type UseAnalyticsResult = {
 };
 
 export function useAnalytics(wordlistId: number): UseAnalyticsResult {
-  const { isPremium, cacheConfig } = useUserInfo();
+  const { isPremium, cacheConfig } = useUserSession();
 
   // Common query options for analytics using centralized cache configuration
   const commonQueryOptions = {

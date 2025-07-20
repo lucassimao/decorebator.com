@@ -1,18 +1,14 @@
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import * as userApi from "@/api/users";
 import i18n from "@/i18n";
+import { useUserSession } from "@/hooks/useUserSession";
 
 export function useI18n() {
-  // Fetch user profile to get preferredLanguage
-  const { data: profile } = useQuery({
-    queryKey: ["userProfile"],
-    queryFn: userApi.getProfile,
-    retry: false, // Don't retry if user is not authenticated
-  });
+  // Get user data from centralized session
+  const { user } = useUserSession();
 
   useEffect(() => {
-    if (profile?.preferredLanguage) {
+    if (user?.preferredLanguage) {
       // Map backend language codes to i18n language codes if needed
       const languageMap: Record<string, string> = {
         en: "en",
@@ -26,13 +22,13 @@ export function useI18n() {
       };
 
       const i18nLanguage =
-        languageMap[profile.preferredLanguage] || profile.preferredLanguage;
+        languageMap[user.preferredLanguage] || user.preferredLanguage;
 
       if (i18n.language !== i18nLanguage) {
         i18n.changeLanguage(i18nLanguage);
       }
     }
-  }, [profile?.preferredLanguage]);
+  }, [user?.preferredLanguage]);
 
   const changeLanguage = async (language: string) => {
     // Update i18n immediately for responsive UI

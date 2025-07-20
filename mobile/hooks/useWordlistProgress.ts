@@ -1,11 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { getProgressSummary, ProgressSummaryResponse } from "@/api/analytics";
-import { useUserInfo } from "@/hooks/users";
+import { useUserSession } from "@/hooks/useUserSession";
 
 export function useWordlistProgress() {
-  const { userInfo, cacheConfig } = useUserInfo();
-
-  const userId = userInfo?.id;
+  const { userId, cacheConfig } = useUserSession();
 
   return useQuery<ProgressSummaryResponse>({
     queryKey: ["analytics", "progress-summary", userId],

@@ -8,7 +8,7 @@ import Purchases, {
   PurchasesOffering,
   PurchasesPackage,
 } from "react-native-purchases";
-import { useUserInfo } from "./users";
+import { useUserSession } from "./useUserSession";
 
 const REVENUECAT_API_KEY_IOS =
   process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS || "";
@@ -70,12 +70,12 @@ const setOptimisticSubscriptionData = (
     );
     queryClient.setQueryData(["subscription"], optimisticSubscriptionData);
 
-    // ALSO update user profile optimistically for useUserInfo() hook
+    // ALSO update user profile optimistically for useUserSession() hook
     const currentUserData = queryClient.getQueryData(["userProfile"]);
     if (currentUserData) {
       const optimisticUserData = {
         ...currentUserData,
-        subscriptionPlan: plan, // "monthly" or "annual" - this makes useUserInfo().isPremium return true
+        subscriptionPlan: plan, // "monthly" or "annual" - this makes useUserSession().isPremium return true
       };
 
       console.log(
@@ -97,7 +97,7 @@ export function useRevenueCat() {
   });
 
   const queryClient = useQueryClient();
-  const { userInfo: user } = useUserInfo();
+  const { user } = useUserSession();
 
   // Initialize RevenueCat SDK
   useEffect(() => {
@@ -183,11 +183,19 @@ export function useRevenueCat() {
         throw new Error("RevenueCat not initialized");
       }
 
-      // First restore in RevenueCat
+      // First restore in RevenueCat (this is the critical part)
       const customerInfo = await Purchases.restorePurchases();
+      console.log("✅ RevenueCat restoration successful");
 
-      // Then sync with backend
-      await restorePurchases(user.id.toString());
+      // Try to sync with backend, but don't fail if this step fails
+      try {
+        await restorePurchases(user.id.toString());
+        console.log("✅ Backend sync successful");
+      } catch (backendError) {
+        console.warn("⚠️ Backend sync failed (but RevenueCat restoration succeeded):", backendError);
+        // Don't throw - we want the RevenueCat restoration to succeed
+        // Backend sync can be retried later or handled separately
+      }
 
       return customerInfo;
     },
@@ -203,9 +211,9 @@ export function useRevenueCat() {
   const hasActiveSubscription = () => {
     if (!state.customerInfo) return false;
 
-    // Check for "premium" entitlement
+    // Check for "Premium" entitlement (matches RevenueCat dashboard config)
     const premiumEntitlement =
-      state.customerInfo.entitlements.active["premium"];
+      state.customerInfo.entitlements.active["Premium"];
     return !!premiumEntitlement;
   };
 
@@ -230,7 +238,7 @@ export function useRevenueCat() {
 
 // Hook to determine which payment provider to use
 export function usePaymentProvider() {
-  const { userInfo: user } = useUserInfo();
+  const { user } = useUserSession();
 
   // Determine provider based on platform and user location
   const getProvider = (): {

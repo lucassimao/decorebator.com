@@ -162,6 +162,7 @@ func CancelSubscription(subService *service.SubscriptionService) gin.HandlerFunc
 
 		// Cancel subscription
 		if err := subService.CancelSubscription(c.Request.Context(), user.ID); err != nil {
+			common.Logger.Error("Failed to cancel subscription", "error", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}

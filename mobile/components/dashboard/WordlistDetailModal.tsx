@@ -35,7 +35,7 @@ import {
   View,
 } from "react-native";
 import { LANGUAGES } from "./CreateWordlistModal";
-import { useUserInfo } from "@/hooks/users";
+import { useUserSession } from "@/hooks/useUserSession";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -65,7 +65,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   const updatePromptDialog = useUpgradePromptDialog();
   const { isOnline } = useOffline();
   const { t } = useTranslation();
-  const { isPremium } = useUserInfo();
+  const { isPremium } = useUserSession();
 
   // Handle modal close with animation
   const handleClose = () => {

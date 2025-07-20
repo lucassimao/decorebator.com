@@ -1,4 +1,4 @@
-import { useUserInfo } from "@/hooks/users";
+import { useUserSession } from "@/hooks/useUserSession";
 import { prefetchWordlists } from "@/hooks/useWordlists";
 import { SplashScreen, useRouter } from "expo-router";
 import { useEffect } from "react";
@@ -6,7 +6,8 @@ import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function Index() {
-  const { data: user, isLoading, isError, error } = useUserInfo();
+  const { user, isLoading, error } = useUserSession();
+  const isError = !!error;
   const router = useRouter();
   const queryClient = useQueryClient();
 

@@ -17,7 +17,7 @@ import { LANGUAGES } from "./CreateWordlistModal";
 import * as wordlistsApi from "@/api/wordlists";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { useUserInfo } from "@/hooks/users";
+import { useUserSession } from "@/hooks/useUserSession";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -41,7 +41,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
-  const { isPremium } = useUserInfo();
+  const { isPremium } = useUserSession();
   const language = LANGUAGES.find((l) => item.languageCode === l.code)!;
   const { theme } = useTheme();
   const styles = createStyles(theme);

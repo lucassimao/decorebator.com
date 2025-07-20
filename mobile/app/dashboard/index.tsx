@@ -1,5 +1,5 @@
-import * as subscriptionsApi from "@/api/subscriptions";
 import { Wordlist } from "@/api/wordlists";
+import { useUserSession } from "@/hooks/useUserSession";
 import { CreateWordlistModal } from "@/components/dashboard/CreateWordlistModal";
 import { CongratulationsModal } from "@/components/dashboard/CongratulationsModal";
 import { Header } from "@/components/dashboard/Header";
@@ -15,7 +15,6 @@ import { useWordlistProgress } from "@/hooks/useWordlistProgress";
 import { useWordlists } from "@/hooks/useWordlists";
 import { createCommonStyles } from "@/styles/common";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -59,15 +58,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
 
-  // Fetch subscription
-  const { data: subscription } = useQuery({
-    queryKey: ["subscription"],
-    queryFn: subscriptionsApi.getSubscriptionStatus,
-    staleTime: 0, // data is stale as soon as it arrives
-    // ---- always refetch on mount or when window regains focus ----
-    refetchOnMount: "always",
-    refetchOnWindowFocus: "always",
-  });
+  // Get premium status from centralized session
+  const { isPremium } = useUserSession();
 
   // Fetch wordlists using the centralized hook
   const { data: wordlists, isLoading, refetch } = useWordlists();
@@ -175,7 +167,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
   const handleAddNewWordlist = () => {
     const wordlistCount = wordlists?.length || 0;
-    const isFreePlan = !subscription || subscription.plan === "free";
+    const isFreePlan = !isPremium;
 
     // Check if user has reached free plan limit
     if (isFreePlan && wordlistCount >= 1) {

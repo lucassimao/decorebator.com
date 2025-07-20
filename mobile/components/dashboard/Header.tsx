@@ -1,6 +1,5 @@
-import * as usersApi from "@/api/users";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
+import { useUserSession } from "@/hooks/useUserSession";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
 import {
@@ -66,12 +65,8 @@ export const Header = () => {
   // Shimmer animation for loading state
   const shimmerAnim = React.useRef(new Animated.Value(0)).current;
 
-  // Fetch user profile
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["userProfile"],
-    queryFn: usersApi.getProfile,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  // Get user data from centralized session
+  const { user, isLoading } = useUserSession();
 
   // Shimmer animation loop
   React.useEffect(() => {

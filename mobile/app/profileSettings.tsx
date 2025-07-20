@@ -1,9 +1,10 @@
 import * as userApi from "@/api/users";
 import { ChangePasswordModal } from "@/components/profileSettings/ChangePasswordModal";
+import { useUserSession } from "@/hooks/useUserSession";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import * as MailComposer from "expo-mail-composer";
 import { router } from "expo-router";
@@ -92,11 +93,8 @@ const ProfileSettingsScreen: React.FC = () => {
   // Keyboard offset animation for iOS
   const keyboardOffsetAnim = useRef(new Animated.Value(0)).current;
 
-  // Fetch user profile
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ["userProfile"],
-    queryFn: userApi.getProfile,
-  });
+  // Get user data from centralized session
+  const { user: profile, isLoading } = useUserSession();
 
   // Form setup
   const {
