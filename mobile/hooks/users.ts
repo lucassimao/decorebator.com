@@ -17,6 +17,7 @@ export const useUserInfo = () => {
   } = useQuery({
     queryKey: ["userProfile"],
     queryFn: getProfile,
+    staleTime: 5 * 60 * 1000, // 5 minutes - matches subscription query to allow optimistic data to persist
   });
 
   // derive isPremium whenever `user` changes

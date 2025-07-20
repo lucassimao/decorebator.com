@@ -45,7 +45,7 @@ const LoginScreen: React.FC = () => {
   const { t } = useTranslation();
   const posthog = usePostHog();
   const queryClient = useQueryClient();
-  
+
   // Refs for input focus management
   const passwordInputRef = useRef<TextInput>(null);
 
@@ -334,7 +334,9 @@ const createStyles = (
     scrollContent: {
       flexGrow: 1,
       paddingHorizontal: responsive.spacing.horizontal,
-      paddingBottom: responsive.spacing.vertical * 3, // Ensure content is not cut off by safe area
+      paddingBottom: responsive.isMediumPhone
+        ? responsive.spacing.vertical * 4 // More padding for medium devices
+        : responsive.spacing.vertical * 3, // Keep current for others
     },
     topSpacer: {
       height: keyboardVisible
@@ -343,7 +345,9 @@ const createStyles = (
           : responsive.isLargePhone || responsive.isExtraLargePhone
             ? (responsive.screenHeight - keyboardHeight) * 0.12 // Large+: keep 15%
             : responsive.spacing.vertical // Small: original behavior
-        : responsive.screenHeight * 0.12, // No keyboard: balanced spacing
+        : responsive.isMediumPhone
+          ? responsive.screenHeight * 0.08 // 8% for medium devices (saves ~33dp)
+          : responsive.screenHeight * 0.12, // Keep 12% for others
     },
     formCard: {
       backgroundColor: theme.colors.background.surface,

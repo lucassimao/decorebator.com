@@ -36,7 +36,9 @@ export const LoginHeader: React.FC<LoginHeaderProps> = ({
       textAlign: "center",
     },
     illustrationContainer: {
-      height: responsive.screenHeight * 0.15,
+      height: responsive.isMediumPhone
+        ? responsive.screenHeight * 0.1 // 10% for medium devices (saves ~42dp)
+        : responsive.screenHeight * 0.15, // Keep 15% for other sizes
       justifyContent: "center",
       alignItems: "center",
       marginBottom: responsive.spacing.elementSpacing,

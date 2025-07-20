@@ -23,6 +23,70 @@ export interface RevenueCatState {
   error: Error | null;
 }
 
+// Helper function to set optimistic subscription data from CustomerInfo
+const setOptimisticSubscriptionData = (
+  customerInfo: CustomerInfo,
+  queryClient: ReturnType<typeof useQueryClient>,
+) => {
+  const premiumEntitlement = customerInfo?.entitlements?.active?.["Premium"];
+
+  if (premiumEntitlement) {
+    // Extract package type from entitlement productIdentifier
+    // RevenueCat product IDs typically contain monthly/annual indicators
+    const productId = premiumEntitlement.productIdentifier.toLowerCase();
+    const isAnnual =
+      productId.includes("annual") ||
+      productId.includes("yearly") ||
+      productId.includes("year");
+    const plan = isAnnual ? "annual" : "monthly";
+
+    // Calculate realistic currentPeriodEnd dates
+    const now = new Date();
+    let currentPeriodEnd: string;
+
+    if (isAnnual) {
+      // Annual: 1 year from now
+      const yearlyEnd = new Date(now);
+      yearlyEnd.setFullYear(now.getFullYear() + 1);
+      currentPeriodEnd = yearlyEnd.toISOString();
+    } else {
+      // Monthly: 30 days from now
+      const monthlyEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      currentPeriodEnd = monthlyEnd.toISOString();
+    }
+
+    // Set optimistic subscription data
+    const optimisticSubscriptionData = {
+      plan,
+      status: "active" as const,
+      currentPeriodEnd,
+      cancelAtPeriodEnd: false,
+      trialEnd: null,
+    };
+
+    console.log(
+      "🎯 useRevenueCat setting optimistic subscription data:",
+      optimisticSubscriptionData,
+    );
+    queryClient.setQueryData(["subscription"], optimisticSubscriptionData);
+
+    // ALSO update user profile optimistically for useUserInfo() hook
+    const currentUserData = queryClient.getQueryData(["userProfile"]);
+    if (currentUserData) {
+      const optimisticUserData = {
+        ...currentUserData,
+        subscriptionPlan: plan, // "monthly" or "annual" - this makes useUserInfo().isPremium return true
+      };
+
+      console.log(
+        "🎯 useRevenueCat setting optimistic user profile data:",
+        optimisticUserData,
+      );
+      queryClient.setQueryData(["userProfile"], optimisticUserData);
+    }
+  }
+};
+
 export function useRevenueCat() {
   const [state, setState] = useState<RevenueCatState>({
     isInitialized: false,
@@ -106,9 +170,9 @@ export function useRevenueCat() {
     },
     onSuccess: (customerInfo) => {
       setState((prev) => ({ ...prev, customerInfo }));
-      // Invalidate user query to refresh subscription status
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+
+      // Set optimistic subscription data immediately
+      setOptimisticSubscriptionData(customerInfo, queryClient);
     },
   });
 
@@ -129,9 +193,9 @@ export function useRevenueCat() {
     },
     onSuccess: (customerInfo) => {
       setState((prev) => ({ ...prev, customerInfo }));
-      // Invalidate user query to refresh subscription status
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+
+      // Set optimistic subscription data immediately
+      setOptimisticSubscriptionData(customerInfo, queryClient);
     },
   });
 

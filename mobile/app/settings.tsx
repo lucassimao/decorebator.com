@@ -15,7 +15,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { createCommonStyles } from "@/styles/common";
 import { usePaymentProvider } from "@/hooks/useRevenueCat";
 import RevenueCatPaywall from "@/components/RevenueCatPaywall";
-import { PACKAGE_TYPE } from "react-native-purchases";
 import { UpdateButton } from "@/components/settings/UpdateButton";
 import {
   ActivityIndicator,
@@ -99,7 +98,12 @@ const SettingsScreen: React.FC = () => {
     refetch: refetchSubscription,
   } = useQuery({
     queryKey: ["subscription"],
-    queryFn: subscriptionsApi.getSubscriptionStatus,
+    queryFn: async () => {
+      console.log("🌐 Fetching subscription from API...");
+      const data = await subscriptionsApi.getSubscriptionStatus();
+      console.log("📡 API returned subscription data:", data);
+      return data;
+    },
 
     // ---- Allow optimistic data to persist for 5 minutes ----
     staleTime: 5 * 60 * 1000, // 5 minutes - prevents immediate overwrite of optimistic data
@@ -291,6 +295,14 @@ const SettingsScreen: React.FC = () => {
   };
 
   const isPremium = subscription?.plan !== "free";
+
+  // Debug subscription data changes
+  React.useEffect(() => {
+    console.log("🔍 Subscription data changed:", subscription);
+    console.log("📈 isPremium:", isPremium);
+    console.log("📊 Plan:", subscription?.plan);
+    console.log("📊 Status:", subscription?.status);
+  }, [subscription, isPremium]);
 
   const styles = createStyles(theme, responsive);
 
@@ -729,44 +741,10 @@ const SettingsScreen: React.FC = () => {
         <RevenueCatPaywall
           onClose={() => setShowRevenueCatPaywall(false)}
           onSuccess={(packageType) => {
-            // Set optimistic subscription data immediately
-            const plan =
-              packageType === PACKAGE_TYPE.MONTHLY
-                ? "monthly"
-                : packageType === PACKAGE_TYPE.ANNUAL
-                  ? "annual"
-                  : "monthly";
-
-            // Calculate realistic currentPeriodEnd dates
-            const now = new Date();
-            let currentPeriodEnd: string;
-
-            if (packageType === PACKAGE_TYPE.MONTHLY) {
-              // Monthly: 30 days from now
-              const monthlyEnd = new Date(
-                now.getTime() + 30 * 24 * 60 * 60 * 1000,
-              );
-              currentPeriodEnd = monthlyEnd.toISOString();
-            } else if (packageType === PACKAGE_TYPE.ANNUAL) {
-              // Yearly: 1 year from now
-              const yearlyEnd = new Date(now);
-              yearlyEnd.setFullYear(now.getFullYear() + 1);
-              currentPeriodEnd = yearlyEnd.toISOString();
-            } else {
-              // Unknown package type, default to monthly
-              const defaultEnd = new Date(
-                now.getTime() + 30 * 24 * 60 * 60 * 1000,
-              );
-              currentPeriodEnd = defaultEnd.toISOString();
-            }
-
-            queryClient.setQueryData(["subscription"], {
-              plan,
-              status: "active",
-              currentPeriodEnd,
-              cancelAtPeriodEnd: false,
-              trialEnd: null,
-            });
+            console.log(
+              "🎯 RevenueCat paywall onSuccess triggered for package:",
+              packageType,
+            );
 
             setShowRevenueCatPaywall(false);
             Alert.alert(
