@@ -126,15 +126,32 @@ export async function getWordlist(wordlistId: number): Promise<Wordlist> {
 }
 
 export async function addWordlist(dto: CreateWordlistDTO): Promise<Wordlist> {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + `/wordlists`;
-  return await callAPI<Wordlist>("POST", endpoint, JSON.stringify(dto));
+  let endpoint = process.env.EXPO_PUBLIC_API_URL + `/wordlists`;
+
+  // Add optimistic flag as query parameter if present
+  if (dto.hasOptimisticSubscription) {
+    endpoint += `?hasOptimisticSubscription=true`;
+  }
+
+  // Remove flag from body since it's now in query params
+  const { hasOptimisticSubscription, ...bodyData } = dto;
+
+  return await callAPI<Wordlist>("POST", endpoint, JSON.stringify(bodyData));
 }
 
 export async function addWord(dto: CreateWordDTO): Promise<void> {
-  const endpoint =
+  let endpoint =
     process.env.EXPO_PUBLIC_API_URL + `/wordlists/${dto.wordlistId}/words`;
 
-  await callAPI("POST", endpoint, JSON.stringify(dto));
+  // Add optimistic flag as query parameter if present
+  if (dto.hasOptimisticSubscription) {
+    endpoint += `?hasOptimisticSubscription=true`;
+  }
+
+  // Remove flag from body since it's now in query params
+  const { hasOptimisticSubscription, ...bodyData } = dto;
+
+  await callAPI("POST", endpoint, JSON.stringify(bodyData));
 }
 
 export async function deleteWord(

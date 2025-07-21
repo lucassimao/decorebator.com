@@ -188,20 +188,8 @@ func CheckSubscriptionLimits(subService *service.SubscriptionService, revenueCat
 			return
 		}
 
-		// Parse request body once to check for both optimistic flag and wordlist ID
-		var hasOptimisticSubscription bool
-		var wordlistIDFromBody string
-		var body map[string]interface{}
-		if err := c.ShouldBindJSON(&body); err == nil {
-			// Check for optimistic subscription flag
-			if flag, ok := body["hasOptimisticSubscription"].(bool); ok {
-				hasOptimisticSubscription = flag
-			}
-			// Check for wordlist ID in body (for add_word operations)
-			if wlID, ok := body["wordlistId"].(float64); ok {
-				wordlistIDFromBody = strconv.FormatFloat(wlID, 'f', 0, 64)
-			}
-		}
+		// Check for optimistic subscription flag in query parameters
+		hasOptimisticSubscription := c.Query("hasOptimisticSubscription") == "true"
 
 		// If optimistic flag is present, verify subscription with RevenueCat
 		if hasOptimisticSubscription && user.SubscriptionPlan == model.PlanFree {
@@ -221,13 +209,10 @@ func CheckSubscriptionLimits(subService *service.SubscriptionService, revenueCat
 
 		// For word operations, we might need wordlist ID
 		if action == "add_word" {
-			// Get wordlist ID from path, query, or body (already parsed above)
+			// Get wordlist ID from path or query
 			wordlistIDStr := c.Param("wordlistId")
 			if wordlistIDStr == "" {
 				wordlistIDStr = c.Query("wordlistId")
-			}
-			if wordlistIDStr == "" {
-				wordlistIDStr = wordlistIDFromBody
 			}
 
 			// If we have wordlist ID, check word count
