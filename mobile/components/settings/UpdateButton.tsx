@@ -105,11 +105,8 @@ export const UpdateButton: React.FC = () => {
 
   // Get runtime version info
   const getRuntimeVersion = () => {
-    return (
-      Constants.expoConfig?.runtimeVersion ||
-      Constants.expoConfig?.version ||
-      "Unknown"
-    );
+    // With policy: "appVersion", runtime version equals app version
+    return Constants.expoConfig?.version || "Development";
   };
 
   const styles = {
@@ -141,7 +138,7 @@ export const UpdateButton: React.FC = () => {
       fontWeight: updateAvailable ? ("600" as const) : ("400" as const),
     },
     versionText: {
-      fontSize: responsive.fontSizes.small,
+      fontSize: responsive.fontSizes.micro,
       color: theme.colors.text.secondary,
       marginLeft: responsive.getValueForSize(28, 30, 32, 32), // Align with main text (icon width + gap)
     },

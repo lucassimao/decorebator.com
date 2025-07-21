@@ -64,6 +64,7 @@ jest.mock("expo-constants", () => ({
       version: "1.0.0",
       runtimeVersion: "1.0.0",
     },
+    appOwnership: "expo",
   },
 }));
 
