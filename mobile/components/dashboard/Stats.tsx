@@ -59,8 +59,8 @@ const PROGRESS_OVERVIEW_ENABLED = true;
 
 const DashboardStats: React.FC<DashboardStatsProps> = () => {
   const { t } = useTranslation();
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { theme, responsive } = useTheme();
+  const styles = createStyles(theme, responsive);
 
   // Use shared wordlist progress hook to avoid duplicate API calls
   const {
@@ -134,9 +134,25 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
       {/* Progress Overview */}
       {PROGRESS_OVERVIEW_ENABLED && (
         <View style={styles.progressOverview}>
-          <Text style={styles.progressLabel}>
-            {t("dashboard.stats.learningProgress")}
-          </Text>
+          <View style={styles.progressHeader}>
+            <Text style={styles.progressLabel}>
+              {t("dashboard.stats.learningProgress")}
+            </Text>
+            {stats && stats.currentStreak > 0 ? (
+              <View style={styles.streakContainer}>
+                <MaterialIcons
+                  name="local-fire-department"
+                  size={18}
+                  color={theme.colors.semantic.warning}
+                />
+                <Text style={styles.streakText}>
+                  {t("dashboard.stats.dayStreak", {
+                    count: stats?.currentStreak || 0,
+                  })}
+                </Text>
+              </View>
+            ) : null}
+          </View>
           <View style={styles.progressBarContainer}>
             <View style={styles.progressBarBackground}>
               <Animated.View
@@ -153,31 +169,10 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
             </Text>
           </View>
 
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingTop: 6,
-            }}
-          >
+          <View style={styles.progressBottom}>
             <Text style={styles.motivationalText}>
               {getMotivationalMessage()}
             </Text>
-            {stats && stats.currentStreak > 0 ? (
-              <View style={styles.streakContainer}>
-                <MaterialIcons
-                  name="local-fire-department"
-                  size={20}
-                  color={theme.colors.semantic.warning}
-                />
-                <Text style={styles.streakText}>
-                  {t("dashboard.stats.dayStreak", {
-                    count: stats?.currentStreak || 0,
-                  })}
-                </Text>
-              </View>
-            ) : null}
           </View>
         </View>
       )}
@@ -248,7 +243,10 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
 
 export default DashboardStats;
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  responsive: ReturnType<typeof useTheme>["responsive"],
+) =>
   StyleSheet.create({
     statsContainer: {
       borderRadius: theme.borderRadius.xl,
@@ -301,11 +299,17 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     progressOverview: {
       marginBottom: 5,
     },
+    progressHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 8,
+    },
     progressLabel: {
       fontSize: 14,
       color: theme.colors.text.secondary,
-      marginBottom: 8,
       fontWeight: "500",
+      flex: 1,
     },
     progressBarContainer: {
       flexDirection: "row",
@@ -329,6 +333,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontWeight: "600",
       color: theme.colors.success,
       minWidth: 45,
+    },
+    progressBottom: {
+      paddingTop: 6,
     },
     motivationalText: {
       fontSize: 13,
@@ -399,10 +406,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     streakContainer: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
+      gap: 4,
     },
     streakText: {
-      fontSize: 14,
+      fontSize: responsive.getValueForSize(12, 12, 13, 14),
       fontWeight: "600",
       color: theme.colors.semantic.warning,
     },
