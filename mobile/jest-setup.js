@@ -58,6 +58,15 @@ jest.mock("expo-application", () => ({
   applicationId: "com.test.app",
 }));
 
+jest.mock("expo-constants", () => ({
+  default: {
+    expoConfig: {
+      version: "1.0.0",
+      runtimeVersion: "1.0.0",
+    },
+  },
+}));
+
 jest.mock("react-native-purchases", () => ({
   PurchasesPackage: {},
   PURCHASES_ERROR_CODE: {},
