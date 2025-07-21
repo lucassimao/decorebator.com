@@ -62,6 +62,7 @@ const setOptimisticSubscriptionData = (
       currentPeriodEnd,
       cancelAtPeriodEnd: false,
       trialEnd: null,
+      hasOptimisticSubscription: true,
     };
 
     console.log(

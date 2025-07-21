@@ -10,6 +10,7 @@ export type SubscriptionStatus = {
   currentPeriodEnd?: string;
   cancelAtPeriodEnd?: boolean;
   trialEnd?: string;
+  hasOptimisticSubscription?: boolean;
 };
 
 export type CheckoutSessionResponse = {

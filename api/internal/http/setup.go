@@ -7,22 +7,9 @@ import (
 	"decorebator.com/internal/app"
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/repository"
-	"decorebator.com/internal/service"
 	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-// Config holds optional configuration for setting up routes (deprecated - use AppContext instead)
-type Config struct {
-	WordService            *service.WordService
-	WordlistService        *service.WordlistService
-	DefinitionService      *service.DefinitionService
-	DefinitionImageService *service.DefinitionImageService
-	ModerationService      service.ModerationService
-	Database               *pgxpool.Pool
-	RevenueCatService      service.RevenueCatService
-}
 
 func init() {
 	sentryDsn, exists := os.LookupEnv("SENTRY_DSN")
@@ -101,7 +88,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	authenticatedRoutes.Use(TimeoutMiddleware(2 * time.Second))
 	{
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
-		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(appCtx.SubscriptionService, "create_wordlist"), WordlistRoutes.Create)
+		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(appCtx.SubscriptionService, appCtx.RevenueCatService, "create_wordlist"), WordlistRoutes.Create)
 		authenticatedRoutes.GET("/wordlists/pronunciation-systems", WordlistRoutes.GetPronunciationSystems)
 		authenticatedRoutes.GET("/wordlists/:wordlistId", WordlistRoutes.GetById)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId", WordlistRoutes.Update)
@@ -111,7 +98,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.DELETE("/wordlists/:wordlistId/words/:wordId", WordRoutes.Delete)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId/words/:wordId", WordRoutes.Update)
 		authenticatedRoutes.GET("/wordlists/:wordlistId/words/:wordId/definitions", WordRoutes.GetDefinitions)
-		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(appCtx.SubscriptionService, "add_word"), WordRoutes.Create)
+		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(appCtx.SubscriptionService, appCtx.RevenueCatService, "add_word"), WordRoutes.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizRoutes.Save)
 		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(appCtx.Database), ErrorReportsRoutes.Create)

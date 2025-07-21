@@ -18,6 +18,7 @@ interface UserSessionData {
   isPremium: boolean;
   subscriptionPlan: "free" | "monthly" | "annual";
   subscription: SubscriptionStatus | null | undefined;
+  hasOptimisticSubscription: boolean;
 
   // Cache configuration for analytics
   cacheConfig: {
@@ -60,6 +61,8 @@ export function useUserSession(): UserSessionData {
   const country = user?.country || null;
   const subscriptionPlan = user?.subscriptionPlan || "free";
   const isPremium = subscriptionPlan !== "free";
+  const hasOptimisticSubscription =
+    subscription?.hasOptimisticSubscription ?? false;
   const isLoading = userLoading || subscriptionLoading;
   const error = userError || subscriptionError;
 
@@ -96,6 +99,7 @@ export function useUserSession(): UserSessionData {
     isPremium,
     subscriptionPlan,
     subscription,
+    hasOptimisticSubscription,
 
     // Cache configuration for analytics
     cacheConfig,

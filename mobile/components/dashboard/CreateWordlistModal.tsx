@@ -1,6 +1,7 @@
 import * as wordlistsApi from "@/api/wordlists";
 import { CreateWordlistDTO } from "@/api/wordlists";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useUserSession } from "@/hooks/useUserSession";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
@@ -62,6 +63,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const { hasOptimisticSubscription } = useUserSession();
   const [showContentGuidelines, setShowContentGuidelines] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
@@ -302,8 +304,13 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
     };
   }, [visible, keyboardOffsetAnim]);
 
-  const handleFormSubmit = (data: CreateWordlistDTO) =>
-    mutation.mutateAsync(data);
+  const handleFormSubmit = (data: CreateWordlistDTO) => {
+    const payload = {
+      ...data,
+      hasOptimisticSubscription,
+    };
+    return mutation.mutateAsync(payload);
+  };
 
   // Step validation functions
   const canProceedFromStep = (step: number): boolean => {

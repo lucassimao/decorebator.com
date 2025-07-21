@@ -84,12 +84,15 @@ export type Quiz = {
   wordId: number;
 };
 
-export type CreateWordDTO = Pick<Word, "wordlistId" | "name" | "notes">;
+export type CreateWordDTO = Pick<Word, "wordlistId" | "name" | "notes"> & {
+  hasOptimisticSubscription?: boolean;
+};
 export type CreateWordlistDTO = Pick<
   Wordlist,
   "description" | "name" | "languageCode"
 > & {
   pronunciationSystem?: PronunciationSystem;
+  hasOptimisticSubscription?: boolean;
 };
 
 export async function getUserWordlists() {

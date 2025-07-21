@@ -65,7 +65,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   const updatePromptDialog = useUpgradePromptDialog();
   const { isOnline } = useOffline();
   const { t } = useTranslation();
-  const { isPremium } = useUserSession();
+  const { isPremium, hasOptimisticSubscription } = useUserSession();
 
   // Handle modal close with animation
   const handleClose = () => {
@@ -407,7 +407,11 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
 
   const handleAddWord = (data: wordlistsApi.CreateWordDTO) => {
     Keyboard.dismiss();
-    addWordMutation.mutate(data);
+    const payload = {
+      ...data,
+      hasOptimisticSubscription,
+    };
+    addWordMutation.mutate(payload);
   };
 
   const onPressAddWord = () => {

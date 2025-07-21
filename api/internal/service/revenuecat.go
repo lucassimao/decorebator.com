@@ -96,7 +96,7 @@ func (s *revenueCatService) getCustomerInfo(ctx context.Context, appUserID strin
 
 // createOrUpdateSubscriptionFromRevenueCat creates or updates a subscription based on RevenueCat data
 func (s *revenueCatService) createOrUpdateSubscriptionFromRevenueCat(ctx context.Context, userID int64, customerInfo *CustomerInfo, platform model.PlatformType, event *model.RevenueCatEvent) error {
-	// Check if user has premium entitlement
+	// Check if user has premium entitlement using the same logic as HasPremiumSubscription
 	entitlement, hasPremium := customerInfo.Subscriber.Entitlements[EntitlementPremium]
 	if !hasPremium {
 		// No active subscription
@@ -438,4 +438,20 @@ func (s *revenueCatService) processBillingIssueEvent(ctx context.Context, event 
 	}
 
 	return nil
+}
+
+// HasPremiumSubscription checks if a user has an active premium subscription via RevenueCat.
+// This method checks the "Premium" entitlement which RevenueCat automatically manages
+// based on subscription status, cancellations, and expirations.
+func (s *revenueCatService) HasPremiumSubscription(ctx context.Context, appUserID string) (bool, error) {
+	customerInfo, err := s.apiClient.GetCustomerInfo(ctx, appUserID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get customer info: %w", err)
+	}
+
+	// Check if the Premium entitlement exists in active entitlements
+	// RevenueCat automatically handles subscription cancellations, expirations, etc.
+	// and only includes truly active entitlements in this map
+	_, isActive := customerInfo.Subscriber.Entitlements[EntitlementPremium]
+	return isActive, nil
 }

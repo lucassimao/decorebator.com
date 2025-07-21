@@ -173,7 +173,7 @@ func GetSubscriptionHistory(subRepo *repository.SubscriptionRepository) gin.Hand
 }
 
 // CheckSubscriptionLimits middleware checks if user has permission based on subscription
-func CheckSubscriptionLimits(subService *service.SubscriptionService, action string) gin.HandlerFunc {
+func CheckSubscriptionLimits(subService *service.SubscriptionService, revenueCatService service.RevenueCatService, action string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get user from context
 		userAny, exists := c.Get("user")
@@ -188,21 +188,46 @@ func CheckSubscriptionLimits(subService *service.SubscriptionService, action str
 			return
 		}
 
+		// Parse request body once to check for both optimistic flag and wordlist ID
+		var hasOptimisticSubscription bool
+		var wordlistIDFromBody string
+		var body map[string]interface{}
+		if err := c.ShouldBindJSON(&body); err == nil {
+			// Check for optimistic subscription flag
+			if flag, ok := body["hasOptimisticSubscription"].(bool); ok {
+				hasOptimisticSubscription = flag
+			}
+			// Check for wordlist ID in body (for add_word operations)
+			if wlID, ok := body["wordlistId"].(float64); ok {
+				wordlistIDFromBody = strconv.FormatFloat(wlID, 'f', 0, 64)
+			}
+		}
+
+		// If optimistic flag is present, verify subscription with RevenueCat
+		if hasOptimisticSubscription && user.SubscriptionPlan == model.PlanFree {
+			// Verify with RevenueCat to check if user actually has premium subscription
+			hasPremium, err := revenueCatService.HasPremiumSubscription(c.Request.Context(), strconv.FormatInt(user.ID, 10))
+			if err != nil {
+				common.Logger.Error("Failed to verify subscription with RevenueCat", "error", err, "user_id", user.ID)
+				// Continue with local subscription check - don't fail on RevenueCat API errors
+			} else if hasPremium {
+				// User has premium subscription in RevenueCat but not locally - allow the operation
+				// The webhook will eventually sync the subscription status
+				common.Logger.Info("Allowing operation for user with RevenueCat premium subscription", "user_id", user.ID)
+				c.Next()
+				return
+			}
+		}
+
 		// For word operations, we might need wordlist ID
 		if action == "add_word" {
-			// Get wordlist ID from path or query
+			// Get wordlist ID from path, query, or body (already parsed above)
 			wordlistIDStr := c.Param("wordlistId")
 			if wordlistIDStr == "" {
 				wordlistIDStr = c.Query("wordlistId")
 			}
 			if wordlistIDStr == "" {
-				// Try to get from request body
-				var body map[string]interface{}
-				if err := c.ShouldBindJSON(&body); err == nil {
-					if wlID, ok := body["wordlistId"].(float64); ok {
-						wordlistIDStr = strconv.FormatFloat(wlID, 'f', 0, 64)
-					}
-				}
+				wordlistIDStr = wordlistIDFromBody
 			}
 
 			// If we have wordlist ID, check word count

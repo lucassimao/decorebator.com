@@ -18,4 +18,5 @@ type RevenueCatService interface {
 	ProcessRevenueCatEvent(ctx context.Context, event model.RevenueCatEvent, userID int64) error
 	CheckEventExists(ctx context.Context, eventID string) (bool, error)
 	StoreRevenueCatEvent(ctx context.Context, event *model.RevenueCatEvent, userID *int64) error
+	HasPremiumSubscription(ctx context.Context, appUserID string) (bool, error)
 }
