@@ -2,7 +2,7 @@ import React from "react";
 import { render } from "@testing-library/react-native";
 import SettingsScreen from "../settings";
 import { useQuery } from "@tanstack/react-query";
-import { createSubscriptionData } from "./helpers/settings-helpers";
+import { createSubscriptionData } from "./utils/test-helpers";
 
 // Mock API modules that depend on expo-secure-store
 jest.mock("@/api/subscriptions", () => ({

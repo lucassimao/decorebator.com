@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   createSubscriptionData,
   SUBSCRIPTION_SCENARIOS,
-} from "./helpers/settings-helpers";
+} from "./utils/test-helpers";
 
 // Mock API modules that depend on expo-secure-store
 jest.mock("@/api/subscriptions", () => ({

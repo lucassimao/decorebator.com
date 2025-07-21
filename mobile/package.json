@@ -24,6 +24,10 @@
     "setupFilesAfterEnv": [
       "<rootDir>/jest-setup.js"
     ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/__tests__/utils/"
+    ],
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|react-native-purchases|date-fns|date-fns-tz)"
     ]
