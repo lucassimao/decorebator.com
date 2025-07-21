@@ -3,6 +3,7 @@ package http
 import (
 	"io"
 	"net/http"
+	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -119,8 +120,8 @@ func GetSubscriptionStatus(subRepo *repository.SubscriptionRepository) gin.Handl
 			return
 		}
 
-		// Get active subscription
-		subscription, err := subRepo.GetActiveSubscriptionForUser(c.Request.Context(), user.ID)
+		// Get latest subscription for UI display (includes canceled subscriptions with remaining time)
+		subscription, err := subRepo.GetSubscriptionForUser(c.Request.Context(), user.ID, false)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get subscription"})
 			return
@@ -138,6 +139,22 @@ func GetSubscriptionStatus(subRepo *repository.SubscriptionRepository) gin.Handl
 			response["trialEnd"] = subscription.TrialEnd
 			response["plan"] = subscription.Plan
 			response["status"] = subscription.Status
+			// Add computed fields to help frontend determine subscription state
+			response["isActive"] = subscription.IsActive()
+
+			// Check if subscription is canceled but still has valid time remaining
+			response["isCancelledButActive"] = subscription.Status == model.StatusCanceled &&
+				subscription.CurrentPeriodEnd.After(time.Now())
+
+			// Check if subscription is in grace period (past_due but still active)
+			response["isInGracePeriod"] = subscription.Status == model.StatusPastDue &&
+				subscription.IsActive()
+
+			// Calculate days remaining for canceled subscriptions
+			if subscription.Status == model.StatusCanceled && subscription.CurrentPeriodEnd.After(time.Now()) {
+				daysRemaining := int(time.Until(subscription.CurrentPeriodEnd).Hours() / 24)
+				response["daysRemaining"] = daysRemaining
+			}
 		}
 
 		c.JSON(http.StatusOK, response)

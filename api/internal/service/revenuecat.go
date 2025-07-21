@@ -172,11 +172,31 @@ func (s *revenueCatService) createOrUpdateSubscriptionFromRevenueCat(ctx context
 			return fmt.Errorf("failed to update subscription: %w", err)
 		}
 	} else {
+		// Find the subscription ID from customerInfo
+		var subscriptionID string
+		if event != nil && event.OriginalTransactionID != "" {
+			// Use transaction ID from event (most reliable)
+			subscriptionID = event.OriginalTransactionID
+		} else {
+			// Fallback: find subscription in customerInfo that matches the product
+			for subID, subscription := range customerInfo.Subscriber.Subscriptions {
+				// Check if this subscription matches the entitlement product
+				if subscription.Store != "" { // Active subscription should have a store
+					subscriptionID = subID
+					break
+				}
+			}
+			// If still not found, generate a fallback ID
+			if subscriptionID == "" {
+				subscriptionID = fmt.Sprintf("restore_%s_%d", entitlement.ProductIdentifier, time.Now().Unix())
+			}
+		}
+
 		// Create new subscription
 		sub := &model.Subscription{
 			UserID:                   userID,
 			Provider:                 model.ProviderRevenueCat,
-			RevenueCatSubscriptionID: &customerInfo.Subscriber.OriginalAppUserID,
+			RevenueCatSubscriptionID: &subscriptionID,
 			AppStoreProductID:        &entitlement.ProductIdentifier,
 			Platform:                 &platform,
 			Plan:                     plan,

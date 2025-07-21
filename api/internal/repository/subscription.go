@@ -141,19 +141,27 @@ func (r *SubscriptionRepository) GetSubscriptionByStripeID(ctx context.Context, 
 	return subscription, nil
 }
 
-// GetActiveSubscriptionForUser retrieves the active subscription for a user
-func (r *SubscriptionRepository) GetActiveSubscriptionForUser(ctx context.Context, userID int64) (*model.Subscription, error) {
+// GetSubscriptionForUser retrieves a subscription for a user with flexible filtering
+func (r *SubscriptionRepository) GetSubscriptionForUser(ctx context.Context, userID int64, activeOnly bool) (*model.Subscription, error) {
+	var whereClause string
+	if activeOnly {
+		// Only return truly active subscriptions (for business logic like limit checks)
+		whereClause = `WHERE user_id = $1 AND (
+			status = 'active' OR 
+			(status = 'past_due' AND current_period_end + INTERVAL '3 days' > NOW())
+		)`
+	} else {
+		// Return latest subscription regardless of status (for UI display)
+		whereClause = `WHERE user_id = $1`
+	}
+
 	query := `
 		SELECT id, user_id, provider, stripe_subscription_id, stripe_customer_id,
 			   revenuecat_subscription_id, app_store_product_id, platform,
 			   plan, status, current_period_start, current_period_end,
 			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
-		FROM subscriptions
-		WHERE user_id = $1 AND (
-			status = 'active' OR 
-			(status = 'past_due' AND current_period_end + INTERVAL '3 days' > NOW())
-		)
+		FROM subscriptions ` + whereClause + `
 		ORDER BY created_at DESC
 		LIMIT 1
 	`
@@ -189,6 +197,11 @@ func (r *SubscriptionRepository) GetActiveSubscriptionForUser(ctx context.Contex
 	}
 
 	return subscription, nil
+}
+
+// GetActiveSubscriptionForUser retrieves the active subscription for a user (backwards compatibility)
+func (r *SubscriptionRepository) GetActiveSubscriptionForUser(ctx context.Context, userID int64) (*model.Subscription, error) {
+	return r.GetSubscriptionForUser(ctx, userID, true)
 }
 
 // createSubscriptionEvent records a subscription event within a transaction (private helper)
