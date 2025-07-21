@@ -1,5 +1,6 @@
 import { restorePurchases } from "@/api/revenuecat";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createOptimisticSubscriptionData } from "@/utils/optimisticSubscription";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import Purchases, {
@@ -40,30 +41,8 @@ const setOptimisticSubscriptionData = (
       productId.includes("year");
     const plan = isAnnual ? "annual" : "monthly";
 
-    // Calculate realistic currentPeriodEnd dates
-    const now = new Date();
-    let currentPeriodEnd: string;
-
-    if (isAnnual) {
-      // Annual: 1 year from now
-      const yearlyEnd = new Date(now);
-      yearlyEnd.setFullYear(now.getFullYear() + 1);
-      currentPeriodEnd = yearlyEnd.toISOString();
-    } else {
-      // Monthly: 30 days from now
-      const monthlyEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-      currentPeriodEnd = monthlyEnd.toISOString();
-    }
-
-    // Set optimistic subscription data
-    const optimisticSubscriptionData = {
-      plan,
-      status: "active" as const,
-      currentPeriodEnd,
-      cancelAtPeriodEnd: false,
-      trialEnd: null,
-      hasOptimisticSubscription: true,
-    };
+    // Create optimistic subscription data using shared utility
+    const optimisticSubscriptionData = createOptimisticSubscriptionData(plan);
 
     console.log(
       "🎯 useRevenueCat setting optimistic subscription data:",

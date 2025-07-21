@@ -1,4 +1,5 @@
 import { SubscriptionStatus } from "@/api/subscriptions";
+import { createOptimisticSubscriptionData } from "@/utils/optimisticSubscription";
 
 /**
  * Helper function to create subscription data for testing
@@ -105,4 +106,9 @@ export const SUBSCRIPTION_SCENARIOS = {
     status: "past_due",
     daysRemaining: 0,
   }),
+
+  // Optimistic subscription scenarios (right after subscription completion)
+  // Uses the exact same function as useRevenueCat to ensure test accuracy
+  OPTIMISTIC_MONTHLY: createOptimisticSubscriptionData("monthly"),
+  OPTIMISTIC_ANNUAL: createOptimisticSubscriptionData("annual"),
 } as const;

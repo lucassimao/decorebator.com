@@ -285,13 +285,14 @@ const SettingsScreen: React.FC = () => {
   // This now handles proper timezone conversion from UTC to user's local timezone
 
   // More sophisticated logic to determine if user has premium access
-  // Handle null/undefined subscription gracefully
+  // Handle null/undefined subscription gracefully and include optimistic subscriptions
   const isPremium =
-    subscription &&
-    (subscription.plan === "monthly" || subscription.plan === "annual") && // Only known premium plans
-    (subscription.isActive ||
-      subscription.isCancelledButActive ||
-      subscription.isInGracePeriod);
+    (subscription &&
+      (subscription.plan === "monthly" || subscription.plan === "annual") && // Only known premium plans
+      (subscription.isActive ||
+        subscription.isCancelledButActive ||
+        subscription.isInGracePeriod)) ||
+    subscription?.hasOptimisticSubscription; // Treat optimistic subscriptions as premium
 
   // Helper functions for safe data access
   const getPlanDisplayName = () => {
