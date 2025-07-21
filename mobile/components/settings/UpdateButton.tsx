@@ -10,7 +10,6 @@ import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useUpdates } from "@/hooks/useUpdates";
-import Constants from "expo-constants";
 
 export const UpdateButton: React.FC = () => {
   const { t } = useTranslation();
@@ -103,12 +102,6 @@ export const UpdateButton: React.FC = () => {
     );
   };
 
-  // Get runtime version info
-  const getRuntimeVersion = () => {
-    // With policy: "appVersion", runtime version equals app version
-    return Constants.expoConfig?.version || "Development";
-  };
-
   const styles = {
     updateItem: {
       flexDirection: "row" as const,
@@ -123,10 +116,6 @@ export const UpdateButton: React.FC = () => {
     },
     updateContent: {
       flex: 1,
-      flexDirection: "column" as const,
-      gap: responsive.spacing.elementSpacing / 2,
-    },
-    updateMainRow: {
       flexDirection: "row" as const,
       alignItems: "center" as const,
       gap: responsive.spacing.elementSpacing,
@@ -136,11 +125,6 @@ export const UpdateButton: React.FC = () => {
       fontSize: responsive.fontSizes.body,
       color: updateAvailable ? theme.colors.success : theme.colors.text.primary,
       fontWeight: updateAvailable ? ("600" as const) : ("400" as const),
-    },
-    versionText: {
-      fontSize: responsive.fontSizes.micro,
-      color: theme.colors.text.secondary,
-      marginLeft: responsive.getValueForSize(28, 30, 32, 32), // Align with main text (icon width + gap)
     },
     updateStatus: {
       flexDirection: "row" as const,
@@ -171,19 +155,13 @@ export const UpdateButton: React.FC = () => {
       }
     >
       <View style={styles.updateContent}>
-        <View style={styles.updateMainRow}>
-          {isUpdating || isChecking ? (
-            <ActivityIndicator size="small" color={theme.colors.primary} />
-          ) : (
-            getStatusIcon()
-          )}
+        {isUpdating || isChecking ? (
+          <ActivityIndicator size="small" color={theme.colors.primary} />
+        ) : (
+          getStatusIcon()
+        )}
 
-          <Text style={styles.updateText}>{getStatusText()}</Text>
-        </View>
-
-        <Text style={styles.versionText}>
-          Runtime Version: {getRuntimeVersion()}
-        </Text>
+        <Text style={styles.updateText}>{getStatusText()}</Text>
       </View>
 
       <View style={styles.updateStatus}>

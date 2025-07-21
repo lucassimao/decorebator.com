@@ -30,6 +30,7 @@ import {
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 
 type PlanRecurrence = "annual" | "monthly";
 
@@ -825,6 +826,13 @@ const SettingsScreen: React.FC = () => {
             />
           </TouchableOpacity>
         </View>
+
+        {/* Version Info */}
+        <View style={styles.versionSection}>
+          <Text style={styles.versionText}>
+            Runtime Version: {Constants.expoConfig?.version || "Development"}
+          </Text>
+        </View>
       </ScrollView>
 
       {/* RevenueCat Paywall Modal */}
@@ -1171,5 +1179,16 @@ const createStyles = (
     themeOptionActive: {
       backgroundColor: theme.colors.background.subtle,
       borderColor: theme.colors.primary,
+    },
+    versionSection: {
+      marginTop: responsive.spacing.formPadding,
+      paddingHorizontal: responsive.spacing.horizontal,
+      paddingBottom: responsive.spacing.elementSpacing,
+      alignItems: "center",
+    },
+    versionText: {
+      fontSize: responsive.fontSizes.small,
+      color: theme.colors.text.secondary,
+      opacity: 0.7,
     },
   });
