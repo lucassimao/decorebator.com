@@ -240,11 +240,7 @@ func (b *ContextBuilder) initializeServices() error {
 		b.context.MailService = mail.NewMailService(b.context.Database)
 	}
 
-	if b.context.SubscriptionService == nil {
-		b.context.SubscriptionService = service.NewSubscriptionService(b.context.Database, b.context.MailService)
-	}
-
-	// Initialize RevenueCatService if not provided
+	// Initialize RevenueCatService before SubscriptionService since SubscriptionService depends on it
 	if b.context.RevenueCatService == nil {
 		if b.revenueCatServiceFactory != nil {
 			b.context.RevenueCatService = b.revenueCatServiceFactory(b.context.Database)
@@ -252,6 +248,10 @@ func (b *ContextBuilder) initializeServices() error {
 			apiClient := service.NewRevenueCatAPIClient()
 			b.context.RevenueCatService = service.NewRevenueCatService(b.context.Database, apiClient)
 		}
+	}
+
+	if b.context.SubscriptionService == nil {
+		b.context.SubscriptionService = service.NewSubscriptionService(b.context.Database, b.context.MailService, b.context.RevenueCatService)
 	}
 
 	// Initialize AnalyticsService if not provided

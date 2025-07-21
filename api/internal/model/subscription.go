@@ -186,6 +186,14 @@ const (
 	GracePeriodDays = 3 // Number of days to allow access after payment failure
 )
 
+// UserAction represents actions that require subscription limit checking
+type UserAction int
+
+const (
+	UserActionCreateWordlist UserAction = iota
+	UserActionAddWord
+)
+
 // IsActive returns true if the subscription is in a valid state
 // Includes active subscriptions and past_due subscriptions within grace period
 func (s *Subscription) IsActive() bool {

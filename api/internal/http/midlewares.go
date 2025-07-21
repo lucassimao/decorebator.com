@@ -225,3 +225,55 @@ func ErrorMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// CheckSubscriptionLimits middleware checks if user has permission based on subscription
+func CheckSubscriptionLimits(subService *service.SubscriptionService, action model.UserAction) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Get user from context
+		userAny, exists := c.Get("user")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
+			c.Abort()
+			return
+		}
+		user, ok := userAny.(*model.User)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
+			return
+		}
+
+		// Prepare options for subscription check
+		options := &service.SubscriptionCheckOptions{
+			HasOptimisticSubscription: c.Query("hasOptimisticSubscription") == "true",
+		}
+
+		// Get wordlist ID for add word operations
+		if action == model.UserActionAddWord {
+			wordlistIDStr := c.Param("wordlistId")
+			if wordlistIDStr == "" {
+				wordlistIDStr = c.Query("wordlistId")
+			}
+			if wordlistIDStr != "" {
+				wordlistID, err := strconv.ParseInt(wordlistIDStr, 10, 64)
+				if err != nil {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+					c.Abort()
+					return
+				}
+				options.WordlistID = &wordlistID
+			}
+		}
+
+		// Use the service to check subscription limits (includes RevenueCat verification)
+		if err := subService.CheckSubscriptionLimits(c.Request.Context(), user.ID, action, options); err != nil {
+			c.JSON(http.StatusPaymentRequired, gin.H{
+				"error": err.Error(),
+				"code":  "SUBSCRIPTION_LIMIT_REACHED",
+			})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}

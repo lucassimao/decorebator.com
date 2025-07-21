@@ -3,7 +3,6 @@ package http
 import (
 	"io"
 	"net/http"
-	"strconv"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -172,93 +171,6 @@ func GetSubscriptionHistory(subRepo *repository.SubscriptionRepository) gin.Hand
 	}
 }
 
-// CheckSubscriptionLimits middleware checks if user has permission based on subscription
-func CheckSubscriptionLimits(subService *service.SubscriptionService, revenueCatService service.RevenueCatService, action string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Get user from context
-		userAny, exists := c.Get("user")
-		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in context"})
-			c.Abort()
-			return
-		}
-		user, ok := userAny.(*model.User)
-		if !ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
-			return
-		}
-
-		// Check for optimistic subscription flag in query parameters
-		hasOptimisticSubscription := c.Query("hasOptimisticSubscription") == "true"
-
-		// If optimistic flag is present, verify subscription with RevenueCat
-		if hasOptimisticSubscription && user.SubscriptionPlan == model.PlanFree {
-			// Verify with RevenueCat to check if user actually has premium subscription
-			hasPremium, err := revenueCatService.HasPremiumSubscription(c.Request.Context(), strconv.FormatInt(user.ID, 10))
-			if err != nil {
-				common.Logger.Error("Failed to verify subscription with RevenueCat", "error", err, "user_id", user.ID)
-				// Continue with local subscription check - don't fail on RevenueCat API errors
-			} else if hasPremium {
-				// User has premium subscription in RevenueCat but not locally - allow the operation
-				// The webhook will eventually sync the subscription status
-				common.Logger.Info("Allowing operation for user with RevenueCat premium subscription", "user_id", user.ID)
-				c.Next()
-				return
-			}
-		}
-
-		// For word operations, we might need wordlist ID
-		if action == "add_word" {
-			// Get wordlist ID from path or query
-			wordlistIDStr := c.Param("wordlistId")
-			if wordlistIDStr == "" {
-				wordlistIDStr = c.Query("wordlistId")
-			}
-
-			// If we have wordlist ID, check word count
-			if wordlistIDStr != "" {
-				wordlistID, err := strconv.ParseInt(wordlistIDStr, 10, 64)
-				if err != nil {
-					c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
-					c.Abort()
-					return
-				}
-
-				// Only check for free users
-				if user.SubscriptionPlan == model.PlanFree {
-					wordCount, err := subService.CountWordsInWordlist(c.Request.Context(), wordlistID)
-					if err != nil {
-						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check word count"})
-						c.Abort()
-						return
-					}
-
-					if wordCount >= model.FreeWordsPerList {
-						c.JSON(http.StatusPaymentRequired, gin.H{
-							"error": "Free plan limit reached: maximum 10 words per wordlist",
-							"code":  "SUBSCRIPTION_LIMIT_REACHED",
-							"limit": model.FreeWordsPerList,
-						})
-						c.Abort()
-						return
-					}
-				}
-			}
-		} else {
-			// Check other subscription limits
-			if err := subService.CheckSubscriptionLimits(c.Request.Context(), user.ID, action); err != nil {
-				c.JSON(http.StatusPaymentRequired, gin.H{
-					"error": err.Error(),
-					"code":  "SUBSCRIPTION_LIMIT_REACHED",
-				})
-				c.Abort()
-				return
-			}
-		}
-
-		c.Next()
-	}
-}
 
 func CheckoutRedirect() gin.HandlerFunc {
 	return func(c *gin.Context) {

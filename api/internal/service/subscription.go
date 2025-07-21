@@ -21,17 +21,18 @@ import (
 )
 
 type SubscriptionService struct {
-	db            *pgxpool.Pool
-	subRepo       *repository.SubscriptionRepository
-	userRepo      *repository.UserRepository
-	mailService   *mail.MailService
-	stripeKey     string
-	webhookSecret string
-	successURL    string
-	cancelURL     string
+	db                *pgxpool.Pool
+	subRepo           *repository.SubscriptionRepository
+	userRepo          *repository.UserRepository
+	mailService       *mail.MailService
+	revenueCatService RevenueCatService
+	stripeKey         string
+	webhookSecret     string
+	successURL        string
+	cancelURL         string
 }
 
-func NewSubscriptionService(db *pgxpool.Pool, mailService *mail.MailService) *SubscriptionService {
+func NewSubscriptionService(db *pgxpool.Pool, mailService *mail.MailService, revenueCatService RevenueCatService) *SubscriptionService {
 	// Validate required environment variables
 	stripeKey := os.Getenv("STRIPE_API_KEY")
 	if stripeKey == "" {
@@ -57,14 +58,15 @@ func NewSubscriptionService(db *pgxpool.Pool, mailService *mail.MailService) *Su
 	stripe.Key = stripeKey
 
 	return &SubscriptionService{
-		db:            db,
-		subRepo:       repository.NewSubscriptionRepository(db),
-		userRepo:      &repository.UserRepository{Db: db},
-		mailService:   mailService,
-		stripeKey:     stripeKey,
-		webhookSecret: webhookSecret,
-		successURL:    successURL,
-		cancelURL:     cancelURL,
+		db:                db,
+		subRepo:           repository.NewSubscriptionRepository(db),
+		userRepo:          &repository.UserRepository{Db: db},
+		mailService:       mailService,
+		revenueCatService: revenueCatService,
+		stripeKey:         stripeKey,
+		webhookSecret:     webhookSecret,
+		successURL:        successURL,
+		cancelURL:         cancelURL,
 	}
 }
 
@@ -540,18 +542,37 @@ func (s *SubscriptionService) getPlanFromPriceID(priceID string) model.Subscript
 }
 
 
+// SubscriptionCheckOptions contains options for subscription limit checking
+type SubscriptionCheckOptions struct {
+	WordlistID                *int64
+	HasOptimisticSubscription bool
+}
+
 // CheckSubscriptionLimits checks if user can perform action based on subscription
-func (s *SubscriptionService) CheckSubscriptionLimits(ctx context.Context, userID int64, action string) error {
+func (s *SubscriptionService) CheckSubscriptionLimits(ctx context.Context, userID int64, action model.UserAction, options *SubscriptionCheckOptions) error {
 	// Get user's active subscription
 	sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("failed to get subscription: %w", err)
 	}
 
+	// If optimistic flag is present and user appears to be on free plan, verify with RevenueCat
+	if options != nil && options.HasOptimisticSubscription && (sub == nil || sub.Plan == model.PlanFree) {
+		hasPremium, err := s.revenueCatService.HasPremiumSubscription(ctx, strconv.FormatInt(userID, 10))
+		if err != nil {
+			common.Logger.Error("Failed to verify subscription with RevenueCat", "error", err, "user_id", userID)
+			// Continue with local subscription check - don't fail on RevenueCat API errors
+		} else if hasPremium {
+			// User has premium subscription in RevenueCat but not locally - allow the operation
+			common.Logger.Info("Allowing operation for user with RevenueCat premium subscription", "user_id", userID)
+			return nil // Allow the operation
+		}
+	}
+
 	// If no subscription or free plan, check limits
 	if sub == nil || sub.Plan == model.PlanFree {
 		switch action {
-		case "create_wordlist":
+		case model.UserActionCreateWordlist:
 			count, err := s.subRepo.CountUserWordlists(ctx, userID)
 			if err != nil {
 				return err
@@ -559,9 +580,17 @@ func (s *SubscriptionService) CheckSubscriptionLimits(ctx context.Context, userI
 			if count >= model.FreeWordlistLimit {
 				return fmt.Errorf("free plan limit reached: maximum %d wordlist allowed", model.FreeWordlistLimit)
 			}
-		case "add_word":
-			// This would need wordlist ID to check word count
-			// Implement as needed
+		case model.UserActionAddWord:
+			// Check word count if wordlist ID is provided
+			if options != nil && options.WordlistID != nil {
+				wordCount, err := s.subRepo.CountWordsInWordlist(ctx, *options.WordlistID)
+				if err != nil {
+					return err
+				}
+				if wordCount >= model.FreeWordsPerList {
+					return fmt.Errorf("free plan limit reached: maximum %d words per wordlist", model.FreeWordsPerList)
+				}
+			}
 		}
 	}
 
