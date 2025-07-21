@@ -43,8 +43,8 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const { t } = useTranslation();
   const { isPremium } = useUserSession();
   const language = LANGUAGES.find((l) => item.languageCode === l.code)!;
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { theme, responsive } = useTheme();
+  const styles = createStyles(theme, responsive);
 
   // Use progress from props
   const progressPercentage = progress?.progressPercent ?? 0;
@@ -159,20 +159,13 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           <View style={styles.cardTitleContainer}>
             <Text
               style={styles.wordlistTitle}
+              numberOfLines={responsive.getValueForSize(1, 2, 2, 2)}
+              ellipsizeMode="tail"
               accessibilityRole="header"
               accessibilityLabel={item.name}
             >
               {item.name}
             </Text>
-            {item.description && (
-              <Text
-                style={styles.wordlistDescription}
-                numberOfLines={2}
-                accessibilityRole="text"
-              >
-                {item.description}
-              </Text>
-            )}
           </View>
         </View>
 
@@ -180,7 +173,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           <View style={styles.cardStat}>
             <MaterialIcons
               name="library-books"
-              size={16}
+              size={responsive.getValueForSize(14, 16, 18, 20)}
               color={theme.colors.text.secondary}
             />
             <Text style={styles.cardStatText}>
@@ -196,7 +189,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             <View style={styles.cardStat}>
               <MaterialIcons
                 name="school"
-                size={16}
+                size={responsive.getValueForSize(14, 16, 18, 20)}
                 color={theme.colors.text.secondary}
               />
               <Text style={styles.cardStatText}>
@@ -229,10 +222,10 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           >
             <MaterialIcons
               name="bar-chart"
-              size={20}
+              size={responsive.getValueForSize(18, 20, 22, 24)}
               color={theme.colors.premium}
             />
-            <Text style={styles.actionButtonText}>
+            <Text style={styles.actionButtonText} numberOfLines={1}>
               {t("wordlistItem.analytics")}
             </Text>
           </TouchableOpacity>
@@ -246,10 +239,10 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           >
             <MaterialIcons
               name="style"
-              size={20}
+              size={responsive.getValueForSize(18, 20, 22, 24)}
               color={theme.colors.semantic.info}
             />
-            <Text style={styles.actionButtonText}>
+            <Text style={styles.actionButtonText} numberOfLines={1}>
               {t("wordlistItem.flashcards")}
             </Text>
           </TouchableOpacity>
@@ -263,10 +256,10 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           >
             <MaterialIcons
               name="play-circle-filled"
-              size={20}
+              size={responsive.getValueForSize(18, 20, 22, 24)}
               color={theme.colors.success}
             />
-            <Text style={styles.actionButtonText}>
+            <Text style={styles.actionButtonText} numberOfLines={1}>
               {t("wordlistItem.quiz")}
             </Text>
           </TouchableOpacity>
@@ -280,10 +273,12 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           >
             <MaterialIcons
               name="more-horiz"
-              size={20}
+              size={responsive.getValueForSize(18, 20, 22, 24)}
               color={theme.colors.text.secondary}
             />
-            <Text style={styles.actionButtonText}>{t("common.more")}</Text>
+            <Text style={styles.actionButtonText} numberOfLines={1}>
+              {t("common.more")}
+            </Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -302,6 +297,8 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
               <View style={styles.menuContainer}>
                 <Text
                   style={styles.menuTitle}
+                  numberOfLines={responsive.getValueForSize(2, 2, 3, 3)}
+                  ellipsizeMode="tail"
                   accessibilityRole="header"
                   accessibilityLabel={item.name}
                 >
@@ -320,7 +317,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                 >
                   <MaterialIcons
                     name="analytics"
-                    size={24}
+                    size={responsive.getValueForSize(20, 24, 26, 28)}
                     color={theme.colors.premium}
                   />
                   <Text style={styles.menuItemText}>
@@ -337,7 +334,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                 >
                   <MaterialIcons
                     name="style"
-                    size={24}
+                    size={responsive.getValueForSize(20, 24, 26, 28)}
                     color={theme.colors.semantic.info}
                   />
                   <Text style={styles.menuItemText}>
@@ -354,7 +351,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                 >
                   <MaterialIcons
                     name="quiz"
-                    size={24}
+                    size={responsive.getValueForSize(20, 24, 26, 28)}
                     color={theme.colors.success}
                   />
                   <Text style={styles.menuItemText}>
@@ -371,7 +368,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                 >
                   <MaterialIcons
                     name="edit"
-                    size={24}
+                    size={responsive.getValueForSize(20, 24, 26, 28)}
                     color={theme.colors.primary}
                   />
                   <Text style={styles.menuItemText}>
@@ -402,7 +399,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   ) : (
                     <Ionicons
                       name="trash-outline"
-                      size={24}
+                      size={responsive.getValueForSize(20, 24, 26, 28)}
                       color={theme.colors.error}
                     />
                   )}
@@ -440,7 +437,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                     <View style={styles.premiumIconContainer}>
                       <MaterialIcons
                         name="analytics"
-                        size={32}
+                        size={responsive.getValueForSize(28, 32, 36, 40)}
                         color={theme.colors.text.inverse}
                       />
                     </View>
@@ -501,7 +498,10 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
 export default WordlistItem;
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  responsive: ReturnType<typeof useTheme>["responsive"],
+) =>
   StyleSheet.create({
     wordlistCard: {
       backgroundColor:
@@ -509,9 +509,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
           ? theme.colors.background.surface
           : theme.colors.background.elevated,
       borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.md,
-      marginHorizontal: 20,
-      marginBottom: 12,
+      padding: responsive.spacing.formPadding,
+      marginHorizontal: responsive.spacing.horizontal,
+      marginBottom: responsive.spacing.vertical,
       borderWidth: 1,
       borderColor:
         theme.mode === "light"
@@ -528,32 +528,28 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     cardHeader: {
       flexDirection: "row",
-      alignItems: "flex-start",
-      marginBottom: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: responsive.spacing.elementSpacing,
     },
     languageFlag: {
-      fontSize: 32,
-      marginRight: 12,
+      fontSize: responsive.getValueForSize(28, 32, 36, 40),
+      marginRight: responsive.spacing.elementSpacing,
     },
     cardTitleContainer: {
       flex: 1,
     },
     wordlistTitle: {
-      fontSize: 18,
+      fontSize: responsive.getScaledFont("headline"),
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: 4,
-    },
-    wordlistDescription: {
-      fontSize: 14,
-      color: theme.colors.text.secondary,
-      lineHeight: 20,
+      marginBottom: responsive.spacing.xs,
     },
     actionButtonsRow: {
       flexDirection: "row",
-      marginTop: 12,
-      gap: 8,
-      paddingTop: 8,
+      marginTop: responsive.spacing.elementSpacing,
+      gap: responsive.spacing.elementSpacing,
+      paddingTop: responsive.spacing.sm,
       borderTopWidth: 1,
       borderTopColor: theme.colors.ui.divider,
     },
@@ -561,17 +557,19 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
       flexDirection: "column",
       alignItems: "center",
-      paddingVertical: 12,
-      paddingHorizontal: 8,
+      justifyContent: "center",
+      paddingVertical: responsive.getValueForSize(8, 10, 12, 14),
+      paddingHorizontal: responsive.getValueForSize(4, 6, 8, 10),
       borderRadius: theme.borderRadius.sm,
       backgroundColor:
         theme.mode === "light"
           ? "rgba(253, 246, 227, 0.2)" // Very subtle web beige tint
           : theme.colors.background.subtle,
-      gap: 4,
+      gap: responsive.spacing.xs,
+      minHeight: responsive.getValueForSize(60, 64, 68, 72),
     },
     actionButtonText: {
-      fontSize: 12,
+      fontSize: responsive.getValueForSize(10, 12, 13, 14),
       color: theme.colors.text.secondary,
       fontWeight: "500",
       textAlign: "center",
@@ -579,20 +577,23 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     cardStats: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 16,
-      marginBottom: 12,
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: responsive.getValueForSize(12, 16, 20, 24),
+      marginBottom: responsive.spacing.elementSpacing,
+      paddingHorizontal: responsive.spacing.xs,
     },
     cardStat: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 4,
+      gap: responsive.getValueForSize(6, 8, 10, 12),
     },
     cardStatText: {
-      fontSize: 14,
+      fontSize: responsive.getScaledFont("label"),
       color: theme.colors.text.secondary,
     },
     languageName: {
-      fontSize: 14,
+      fontSize: responsive.getScaledFont("label"),
       color: theme.colors.primary,
       fontWeight: "500",
     },
@@ -612,45 +613,46 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       backgroundColor: theme.colors.overlay.backdrop,
       justifyContent: "center",
       alignItems: "center",
-      padding: 20,
+      padding: responsive.spacing.horizontal,
     },
     menuContainer: {
       backgroundColor: theme.colors.background.surface,
       borderRadius: theme.borderRadius.lg,
-      padding: 8,
+      padding: responsive.spacing.sm,
       width: "100%",
-      maxWidth: 320,
+      maxWidth: responsive.getValueForSize(280, 320, 360, 400),
       ...theme.shadows.lg,
     },
     menuTitle: {
-      fontSize: 18,
+      fontSize: responsive.getScaledFont("headline"),
       fontWeight: "600",
       color: theme.colors.text.primary,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      marginBottom: 4,
+      paddingHorizontal: responsive.spacing.md,
+      paddingVertical: responsive.spacing.elementSpacing,
+      marginBottom: responsive.spacing.xs,
     },
     menuItem: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      borderRadius: 8,
-      gap: 12,
+      paddingHorizontal: responsive.spacing.md,
+      paddingVertical: responsive.spacing.elementSpacing,
+      borderRadius: theme.borderRadius.sm,
+      gap: responsive.spacing.elementSpacing,
+      minHeight: responsive.spacing.minTouchTarget,
     },
     menuItemText: {
-      fontSize: 16,
+      fontSize: responsive.getScaledFont("body"),
       color: theme.colors.text.primary,
       flex: 1,
     },
     menuDivider: {
       height: 1,
       backgroundColor: theme.colors.ui.divider,
-      marginVertical: 8,
-      marginHorizontal: 16,
+      marginVertical: responsive.spacing.sm,
+      marginHorizontal: responsive.spacing.md,
     },
     deleteMenuItem: {
-      marginTop: 4,
+      marginTop: responsive.spacing.xs,
     },
     deleteMenuItemText: {
       color: theme.colors.error,
@@ -658,8 +660,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     // Premium Modal Styles
     premiumModalContainer: {
       backgroundColor: "#FFFFFF",
-      borderRadius: 20,
-      margin: 20,
+      borderRadius: theme.borderRadius.xl,
+      margin: responsive.spacing.horizontal,
       overflow: "hidden",
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 4 },
@@ -672,58 +674,60 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     premiumContent: {
       backgroundColor: "#FFFFFF",
-      borderRadius: 18,
-      padding: 24,
+      borderRadius: theme.borderRadius.lg,
+      padding: responsive.spacing.xl,
       alignItems: "center",
     },
     premiumIconContainer: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
+      width: responsive.getValueForSize(56, 60, 64, 68),
+      height: responsive.getValueForSize(56, 60, 64, 68),
+      borderRadius: responsive.getValueForSize(28, 30, 32, 34),
       backgroundColor: theme.colors.premium,
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: responsive.spacing.md,
     },
     premiumTitle: {
-      fontSize: 18,
+      fontSize: responsive.getScaledFont("headline"),
       fontWeight: "600",
       color: "#2D3436",
-      marginBottom: 8,
+      marginBottom: responsive.spacing.sm,
       textAlign: "center",
     },
     premiumSubtitle: {
-      fontSize: 14,
+      fontSize: responsive.getScaledFont("body"),
       color: "#636E72",
       textAlign: "center",
-      marginBottom: 24,
-      lineHeight: 20,
+      marginBottom: responsive.spacing.xl,
+      lineHeight: responsive.fontSizes.lineHeight,
     },
     premiumButtons: {
       width: "100%",
-      gap: 12,
+      gap: responsive.spacing.elementSpacing,
     },
     upgradeButton: {
       backgroundColor: "#FFD700",
-      borderRadius: 12,
-      paddingVertical: 14,
-      paddingHorizontal: 24,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: responsive.spacing.elementSpacing,
+      paddingHorizontal: responsive.spacing.xl,
       alignItems: "center",
+      minHeight: responsive.spacing.buttonHeight,
     },
     upgradeButtonText: {
-      fontSize: 16,
+      fontSize: responsive.getScaledFont("body"),
       fontWeight: "600",
       color: "#2D3436",
     },
     cancelButton: {
       backgroundColor: "transparent",
-      borderRadius: 12,
-      paddingVertical: 14,
-      paddingHorizontal: 24,
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: responsive.spacing.elementSpacing,
+      paddingHorizontal: responsive.spacing.xl,
       alignItems: "center",
+      minHeight: responsive.spacing.buttonHeight,
     },
     cancelButtonText: {
-      fontSize: 16,
+      fontSize: responsive.getScaledFont("body"),
       fontWeight: "500",
       color: "#636E72",
     },
