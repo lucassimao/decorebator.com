@@ -17,6 +17,7 @@ import { createCommonStyles } from "@/styles/common";
 import { usePaymentProvider } from "@/hooks/useRevenueCat";
 import RevenueCatPaywall from "@/components/RevenueCatPaywall";
 import { UpdateButton } from "@/components/settings/UpdateButton";
+import { formatDate } from "@/utils/dateUtils";
 import {
   ActivityIndicator,
   Alert,
@@ -100,9 +101,7 @@ const SettingsScreen: React.FC = () => {
   } = useQuery({
     queryKey: ["subscription"],
     queryFn: async () => {
-      console.log("🌐 Fetching subscription from API...");
       const data = await subscriptionsApi.getSubscriptionStatus();
-      console.log("📡 API returned subscription data:", data);
       return data;
     },
 
@@ -155,12 +154,9 @@ const SettingsScreen: React.FC = () => {
         data.redirectUri,
       );
 
-      console.log("Stripe checkout result:", result);
-
       // Handle all possible result types for better Android compatibility
       if (result.type === "success") {
         // Direct success - refresh subscription and show success message
-        console.log("Checkout completed successfully");
         await refetchSubscription();
         Alert.alert(
           t("common.success"),
@@ -168,10 +164,8 @@ const SettingsScreen: React.FC = () => {
         );
       } else if (result.type === "cancel") {
         // User cancelled checkout - no action needed
-        console.log("Checkout cancelled by user");
       } else if (result.type === "dismiss") {
         // Browser was dismissed - could be user closing or redirect completion
-        // This is common on Android when Stripe redirects back to the app
         console.log("Browser dismissed, checking subscription status");
 
         // Wait a moment for any background processing, then refresh
@@ -180,7 +174,6 @@ const SettingsScreen: React.FC = () => {
 
           // Check if subscription changed from free to premium
           // Note: We'll let the subscription query refetch handle the UI update
-          console.log("Subscription status checked after browser dismiss");
         }, 1000);
       }
     },
@@ -226,9 +219,7 @@ const SettingsScreen: React.FC = () => {
 
       if (userKeys.length > 0) {
         await AsyncStorage.multiRemove(userKeys);
-        console.log(
-          `Cleared ${userKeys.length} user-specific AsyncStorage keys`,
-        );
+        console.log();
       }
     } catch (error) {
       console.error("Error clearing user AsyncStorage:", error);
@@ -290,27 +281,56 @@ const SettingsScreen: React.FC = () => {
     );
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(
-      i18n.language.startsWith("en") ? "en-US" : i18n.language,
-      {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      },
-    );
+  // Note: formatDate function has been replaced with formatDate from utils/dateUtils.ts
+  // This now handles proper timezone conversion from UTC to user's local timezone
+
+  // More sophisticated logic to determine if user has premium access
+  // Handle null/undefined subscription gracefully
+  const isPremium =
+    subscription &&
+    (subscription.plan === "monthly" || subscription.plan === "annual") && // Only known premium plans
+    (subscription.isActive ||
+      subscription.isCancelledButActive ||
+      subscription.isInGracePeriod);
+
+  // Helper functions for safe data access
+  const getPlanDisplayName = () => {
+    if (!subscription) return t("settings.subscription.freePlan");
+
+    switch (subscription.plan) {
+      case "free":
+        return t("settings.subscription.freePlan");
+      case "monthly":
+        return t("settings.subscription.monthlyPremium");
+      case "annual":
+        return t("settings.subscription.yearlyPremium");
+      default:
+        // Handle unknown plan types gracefully
+        return t("settings.subscription.freePlan");
+    }
   };
 
-  const isPremium = subscription?.plan !== "free";
+  const getStatusDisplayName = () => {
+    if (!subscription) return t("settings.subscription.statusActive");
+
+    if (subscription.isInGracePeriod) {
+      return t("settings.subscription.statusGracePeriod");
+    }
+    if (subscription.isCancelledButActive) {
+      return t("settings.subscription.statusCancelledActive");
+    }
+    if (subscription.status === "active") {
+      return t("settings.subscription.statusActive");
+    }
+    if (subscription.status === "cancelled") {
+      return t("settings.subscription.statusExpired");
+    }
+    // Return raw status for unknown values, with fallback
+    return subscription.status || t("settings.subscription.statusActive");
+  };
 
   // Debug subscription data changes
-  React.useEffect(() => {
-    console.log("🔍 Subscription data changed:", subscription);
-    console.log("📈 isPremium:", isPremium);
-    console.log("📊 Plan:", subscription?.plan);
-    console.log("📊 Status:", subscription?.status);
-  }, [subscription, isPremium]);
+  React.useEffect(() => {}, [subscription, isPremium]);
 
   const styles = createStyles(theme, responsive);
 
@@ -346,7 +366,7 @@ const SettingsScreen: React.FC = () => {
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color={theme.colors.primary} />
             </View>
-          ) : (
+          ) : subscription ? (
             <View style={styles.subscriptionCard}>
               <View style={styles.subscriptionHeader}>
                 <View style={styles.planBadge}>
@@ -361,53 +381,98 @@ const SettingsScreen: React.FC = () => {
                   />
                 </View>
                 <View style={styles.subscriptionInfo}>
-                  <Text style={styles.planName}>
-                    {subscription?.plan === "free"
-                      ? t("settings.subscription.freePlan")
-                      : subscription?.plan === "monthly"
-                        ? t("settings.subscription.monthlyPremium")
-                        : t("settings.subscription.yearlyPremium")}
-                  </Text>
+                  <Text style={styles.planName}>{getPlanDisplayName()}</Text>
                   <Text style={styles.planStatus}>
-                    {subscription?.status === "active"
-                      ? t("settings.subscription.statusActive")
-                      : subscription?.status === "cancelled"
-                        ? t("settings.subscription.statusCanceling")
-                        : subscription?.status}
+                    {getStatusDisplayName()}
                   </Text>
                 </View>
               </View>
 
-              {isPremium && subscription?.currentPeriodEnd && (
-                <View style={styles.subscriptionDetails}>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>
-                      {subscription.cancelAtPeriodEnd
-                        ? t("settings.subscription.expiresOn")
-                        : t("settings.subscription.renewsOn")}
-                    </Text>
-                    <Text style={styles.detailValue}>
-                      {formatDate(subscription.currentPeriodEnd)}
-                    </Text>
-                  </View>
-
-                  {!subscription.cancelAtPeriodEnd && (
-                    <TouchableOpacity
-                      style={styles.cancelButton}
-                      onPress={handleCancelSubscription}
-                    >
-                      <MaterialIcons
-                        name="settings"
-                        size={20}
-                        color={theme.colors.primary}
-                      />
-                      <Text style={styles.manageButtonText}>
-                        {t("settings.subscription.manageSubscription")}
+              {subscription?.currentPeriodEnd &&
+                (subscription?.isActive ||
+                  subscription?.isCancelledButActive ||
+                  subscription?.isInGracePeriod) && (
+                  <View style={styles.subscriptionDetails}>
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>
+                        {subscription.isInGracePeriod
+                          ? t("settings.subscription.gracePeriodEndsOn")
+                          : subscription.cancelAtPeriodEnd ||
+                              subscription.isCancelledButActive
+                            ? t("settings.subscription.expiresOn")
+                            : t("settings.subscription.renewsOn")}
                       </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              )}
+                      <Text style={styles.detailValue}>
+                        {formatDate(subscription.currentPeriodEnd)}
+                      </Text>
+                    </View>
+
+                    {/* Show remaining days for cancelled subscriptions */}
+                    {subscription &&
+                      subscription.isCancelledButActive &&
+                      typeof subscription.daysRemaining === "number" && (
+                        <View style={styles.detailRow}>
+                          <Text style={styles.detailLabel}>
+                            {t("settings.subscription.daysRemaining")}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.detailValue,
+                              { color: theme.colors.semantic.warning },
+                            ]}
+                          >
+                            {t("settings.subscription.daysCount", {
+                              count: subscription.daysRemaining,
+                            })}
+                          </Text>
+                        </View>
+                      )}
+
+                    {/* Grace period warning */}
+                    {subscription && subscription.isInGracePeriod && (
+                      <View
+                        style={[
+                          styles.detailRow,
+                          {
+                            backgroundColor:
+                              theme.colors.semantic.warning + "20",
+                            padding: 12,
+                            borderRadius: 8,
+                            marginTop: 8,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.detailLabel,
+                            { color: theme.colors.semantic.warning },
+                          ]}
+                        >
+                          ⚠️ {t("settings.subscription.gracePeriodWarning")}
+                        </Text>
+                      </View>
+                    )}
+
+                    {subscription &&
+                      !subscription.cancelAtPeriodEnd &&
+                      !subscription.isCancelledButActive &&
+                      subscription.isActive && (
+                        <TouchableOpacity
+                          style={styles.cancelButton}
+                          onPress={handleCancelSubscription}
+                        >
+                          <MaterialIcons
+                            name="settings"
+                            size={20}
+                            color={theme.colors.primary}
+                          />
+                          <Text style={styles.manageButtonText}>
+                            {t("settings.subscription.manageSubscription")}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                  </View>
+                )}
 
               {!isPremium && (
                 <View style={styles.freeplanLimits}>
@@ -422,11 +487,43 @@ const SettingsScreen: React.FC = () => {
                 </View>
               )}
             </View>
+          ) : (
+            // Fallback when subscription data is null/undefined
+            <View style={styles.subscriptionCard}>
+              <View style={styles.subscriptionHeader}>
+                <View style={styles.planBadge}>
+                  <MaterialIcons
+                    name="lock-outline"
+                    size={24}
+                    color={theme.colors.text.secondary}
+                  />
+                </View>
+                <View style={styles.subscriptionInfo}>
+                  <Text style={styles.planName}>
+                    {t("settings.subscription.freePlan")}
+                  </Text>
+                  <Text style={styles.planStatus}>
+                    {t("settings.subscription.statusActive")}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.freeplanLimits}>
+                <Text style={styles.limitText}>
+                  <MaterialIcons
+                    name="info-outline"
+                    size={16}
+                    color={theme.colors.text.secondary}
+                  />{" "}
+                  {t("settings.subscription.freePlanLimit")}
+                </Text>
+              </View>
+            </View>
           )}
         </View>
 
         {/* Upgrade Section */}
-        {!isPremium && (
+        {!isPremium && !isLoading && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t("upgrade.title")}</Text>
             <Text style={styles.sectionSubtitle}>{t("upgrade.subtitle")}</Text>
@@ -739,10 +836,7 @@ const SettingsScreen: React.FC = () => {
         <RevenueCatPaywall
           onClose={() => setShowRevenueCatPaywall(false)}
           onSuccess={(packageType) => {
-            console.log(
-              "🎯 RevenueCat paywall onSuccess triggered for package:",
-              packageType,
-            );
+            console.log(packageType);
 
             setShowRevenueCatPaywall(false);
             Alert.alert(

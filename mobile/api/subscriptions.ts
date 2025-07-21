@@ -11,6 +11,12 @@ export type SubscriptionStatus = {
   cancelAtPeriodEnd?: boolean;
   trialEnd?: string;
   hasOptimisticSubscription?: boolean;
+
+  // New computed fields from backend
+  isActive?: boolean;
+  isCancelledButActive?: boolean;
+  isInGracePeriod?: boolean;
+  daysRemaining?: number;
 };
 
 export type CheckoutSessionResponse = {

@@ -1,0 +1,55 @@
+import { formatInTimeZone } from "date-fns-tz";
+import { getCalendars } from "expo-localization";
+import i18n from "@/i18n";
+
+/**
+ * Get the device's current timezone
+ * @returns IANA timezone identifier (e.g., 'America/New_York') or 'UTC' as fallback
+ */
+export const getDeviceTimezone = (): string => {
+  try {
+    const calendars = getCalendars();
+    return calendars[0]?.timeZone || "UTC";
+  } catch (error) {
+    console.warn("Failed to get device timezone, falling back to UTC:", error);
+    return "UTC";
+  }
+};
+
+/**
+ * Format a UTC date string with proper timezone conversion
+ * @param utcDateString - ISO 8601 date string in UTC (from API)
+ * @returns Formatted date string in the user's local timezone and locale
+ */
+export const formatDate = (utcDateString: string): string => {
+  try {
+    const userTimezone = getDeviceTimezone();
+
+    // Convert UTC date to user's timezone and format using their locale
+    return formatInTimeZone(
+      new Date(utcDateString),
+      userTimezone,
+      "PPP", // Long localized date format: "January 1st, 2025"
+    );
+  } catch (error) {
+    console.warn(
+      "Failed to format subscription date with timezone, using fallback:",
+      error,
+    );
+
+    // Fallback to current implementation if date-fns-tz fails
+    try {
+      const date = new Date(utcDateString);
+      const locale = i18n.language.startsWith("en") ? "en-US" : i18n.language;
+
+      return date.toLocaleDateString(locale, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (fallbackError) {
+      console.error("Even fallback date formatting failed:", fallbackError);
+      return utcDateString; // Return original string as last resort
+    }
+  }
+};
