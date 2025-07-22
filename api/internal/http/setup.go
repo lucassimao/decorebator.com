@@ -8,6 +8,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
+	ddgin "github.com/DataDog/dd-trace-go/contrib/gin-gonic/gin/v2"
 	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 )
@@ -56,6 +57,13 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	var demoRoutes = DemoRoutes{}
 
 	router := gin.New()
+
+	// Datadog middleware (production only)
+	if appCtx.DatadogService != nil && appCtx.DatadogService.IsEnabled() {
+		router.Use(ddgin.Middleware("decorebator-api"))
+		router.Use(DatadogEnrichmentMiddleware()) // Add custom trace enrichment
+	}
+
 	// Sentry middlewares (includes sentrygin + context capture) - completely self-contained
 	router.Use(SentryMiddlewares()...)
 	router.Use(gin.Logger())

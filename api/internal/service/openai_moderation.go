@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"decorebator.com/internal/common"
+	ddhttp "github.com/DataDog/dd-trace-go/contrib/net/http/v2"
 )
 
 // ModerationCategory represents OpenAI moderation categories
@@ -95,13 +96,19 @@ func NewOpenAIModerationService() *OpenAIModerationService {
 		apiURL = "https://api.openai.com/v1/moderations"
 	}
 
+	// Create HTTP client with Datadog instrumentation if enabled
+	httpClient := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+	if os.Getenv("DD_ENABLED") == common.DDEnabledValue {
+		httpClient = ddhttp.WrapClient(httpClient, ddhttp.WithService("decorebator-api"))
+	}
+
 	return &OpenAIModerationService{
-		apiKey: apiKey,
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
-		enabled: isProduction && apiKey != "",
-		apiURL:  apiURL,
+		apiKey:     apiKey,
+		httpClient: httpClient,
+		enabled:    isProduction && apiKey != "",
+		apiURL:     apiURL,
 	}
 }
 

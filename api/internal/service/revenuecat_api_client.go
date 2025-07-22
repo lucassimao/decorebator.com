@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"decorebator.com/internal/common"
+	ddhttp "github.com/DataDog/dd-trace-go/contrib/net/http/v2"
 )
 
 // revenueCatAPIClient is the default implementation of RevenueCatAPIClient.
@@ -27,11 +30,17 @@ func NewRevenueCatAPIClient() RevenueCatAPIClient {
 		panic("REVENUECAT_API_KEY environment variable is empty")
 	}
 
+	// Create HTTP client with Datadog instrumentation if enabled
+	httpClient := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+	if os.Getenv("DD_ENABLED") == common.DDEnabledValue {
+		httpClient = ddhttp.WrapClient(httpClient, ddhttp.WithService("decorebator-api"))
+	}
+
 	return &revenueCatAPIClient{
-		apiKey: apiKey,
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
+		apiKey:     apiKey,
+		httpClient: httpClient,
 	}
 }
 
