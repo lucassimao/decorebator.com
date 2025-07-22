@@ -1,5 +1,6 @@
 FROM gcr.io/datadoghq/agent:7
 
+# Core Datadog configuration (matching docker run command)
 ENV DD_SITE="us5.datadoghq.com"
 ENV DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
 ENV DD_ENV=prod
@@ -7,14 +8,6 @@ ENV DD_APM_ENABLED=true
 ENV DD_APM_NON_LOCAL_TRAFFIC=true
 ENV DD_APM_RECEIVER_SOCKET=/var/run/datadog/apm.socket
 ENV DD_DOGSTATSD_SOCKET=/var/run/datadog/dsd.socket
-
-# Instrumentation configuration
-ENV DD_APM_INSTRUMENTATION_LIBRARIES=java:1,python:3,js:5,php:1,dotnet:3
-ENV DD_APM_INSTRUMENTATION_ENABLED=docker
-ENV DD_NO_AGENT_INSTALL=true
-
-# Install Datadog agent using the installation script
-RUN bash -c "$(curl -L https://install.datadoghq.com/scripts/install_script_agent7.sh)"
 
 # Create socket directory
 RUN mkdir -p /var/run/datadog && chmod 755 /var/run/datadog
