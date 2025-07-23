@@ -1,4 +1,4 @@
-FROM gcr.io/datadoghq/agent:7
+FROM datadog/agent:7
 
 # Core Datadog configuration (matching docker run command)
 ENV DD_SITE="us5.datadoghq.com"
