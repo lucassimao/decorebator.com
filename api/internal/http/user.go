@@ -18,11 +18,12 @@ import (
 )
 
 type SignupInput struct {
-	FirstName string `json:"firstName" binding:"required"`
-	LastName  string `json:"lastName" binding:"required"`
-	Email     string `json:"email" binding:"required,email"`
-	Password  string `json:"password" binding:"required,min=5"`
-	Country   string `json:"country"` // Optional ISO 3166-1 alpha-2 country code
+	FirstName         string `json:"firstName" binding:"required"`
+	LastName          string `json:"lastName" binding:"required"`
+	Email             string `json:"email" binding:"required,email"`
+	Password          string `json:"password" binding:"required,min=5"`
+	Country           string `json:"country"`           // Optional ISO 3166-1 alpha-2 country code
+	PreferredLanguage string `json:"preferredLanguage"` // Optional language code
 }
 
 type LoginInput struct {
@@ -112,7 +113,13 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		country = &input.Country
 	}
 
-	user, err := h.userService.SaveUser(c.Request.Context(), input.FirstName, input.LastName, input.Password, input.Email, country)
+	// Prepare preferredLanguage parameter (convert empty string to nil)
+	var preferredLanguage *string
+	if input.PreferredLanguage != "" {
+		preferredLanguage = &input.PreferredLanguage
+	}
+
+	user, err := h.userService.SaveUser(c.Request.Context(), input.FirstName, input.LastName, input.Password, input.Email, country, preferredLanguage)
 
 	if err != nil {
 		switch err.(type) {

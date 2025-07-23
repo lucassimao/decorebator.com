@@ -23,12 +23,12 @@ type UserRepository struct {
 // Save creates a new user in the database
 // country parameter can be nil, which will insert NULL into the database
 // Note: Validation should be performed at the service layer before calling this function
-func (repository *UserRepository) Save(ctx context.Context, firstName, lastName, password, email string, country *string) (*User, error) {
-	// Note: country parameter is optional and can be nil
+func (repository *UserRepository) Save(ctx context.Context, firstName, lastName, password, email string, country *string, preferredLanguage *string) (*User, error) {
+	// Note: country and preferredLanguage parameters are optional and can be nil
 	// PostgreSQL will store NULL for nil pointer values
 	query := `
-		INSERT INTO users (first_name, last_name, password_hash, email, country, subscription_plan)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO users (first_name, last_name, password_hash, email, country, preferred_language, subscription_plan)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, created_at, updated_at, profile_picture_url, country, date_of_birth, preferred_language,
 			subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at`
 
@@ -53,7 +53,15 @@ func (repository *UserRepository) Save(ctx context.Context, firstName, lastName,
 		countryParam = nil
 	}
 
-	err = repository.Db.QueryRow(ctx, query, firstName, lastName, user.PasswordHash, email, countryParam, model.PlanFree).Scan(
+	// Handle preferredLanguage pointer: dereference if non-nil, otherwise use nil for NULL
+	var preferredLanguageParam interface{}
+	if preferredLanguage != nil {
+		preferredLanguageParam = *preferredLanguage
+	} else {
+		preferredLanguageParam = nil
+	}
+
+	err = repository.Db.QueryRow(ctx, query, firstName, lastName, user.PasswordHash, email, countryParam, preferredLanguageParam, model.PlanFree).Scan(
 		&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
 		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt)
 	if err != nil {

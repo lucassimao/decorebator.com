@@ -97,13 +97,13 @@ func GenerateJWT(user User) (string, error) {
 	return tokenString, nil
 }
 
-func (s *UserService) SaveUser(ctx context.Context, firstName, lastName, password, email string, country *string) (*User, error) {
+func (s *UserService) SaveUser(ctx context.Context, firstName, lastName, password, email string, country *string, preferredLanguage *string) (*User, error) {
 	// Validate required parameters
 	if firstName == "" || lastName == "" || password == "" || email == "" {
 		return nil, common.BusinessError{Message: "firstName, lastName, password, and email are required"}
 	}
 
-	user, err := s.userRepository.Save(ctx, firstName, lastName, password, email, country)
+	user, err := s.userRepository.Save(ctx, firstName, lastName, password, email, country, preferredLanguage)
 	if err != nil {
 		common.Logger.Error("failed to save new user", "error", err)
 		switch err.(type) {

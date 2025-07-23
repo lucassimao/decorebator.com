@@ -25,7 +25,7 @@ func TestValidateUserEligibilityForWorkers(t *testing.T) {
 
 	// Helper to create test user using service layer
 	createTestUser := func(email string, plan model.SubscriptionPlan) int64 {
-		user, err := userService.SaveUser(ctx, "Test", "User", "password123", email, nil)
+		user, err := userService.SaveUser(ctx, "Test", "User", "password123", email, nil, nil)
 		require.NoError(t, err)
 
 		// Update subscription plan if not free

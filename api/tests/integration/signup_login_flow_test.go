@@ -439,3 +439,95 @@ func TestSignupLoginFlow(t *testing.T) {
 		}
 	})
 }
+
+// TestSignupWithLanguageParameter tests user registration with preferred language
+func TestSignupWithLanguageParameter(t *testing.T) {
+	server := setup.NewTestServer(t)
+
+	testCases := []struct {
+		name              string
+		preferredLanguage string
+		expectedLanguage  *string
+	}{
+		{
+			name:              "signup with English language",
+			preferredLanguage: "en",
+			expectedLanguage:  strPtr("en"),
+		},
+		{
+			name:              "signup with German language",
+			preferredLanguage: "de",
+			expectedLanguage:  strPtr("de"),
+		},
+		{
+			name:              "signup with Portuguese Brazil language",
+			preferredLanguage: "pt_BR",
+			expectedLanguage:  strPtr("pt_BR"),
+		},
+		{
+			name:              "signup without language parameter",
+			preferredLanguage: "",
+			expectedLanguage:  nil, // Should be NULL in database
+		},
+	}
+
+	for i, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create unique test user for each case
+			testUser := map[string]interface{}{
+				"email":     fmt.Sprintf("langtest%d@example.com", i),
+				"password":  "securepassword123",
+				"firstName": "Language",
+				"lastName":  "Tester",
+				"country":   "US",
+			}
+
+			// Add preferred language only if not empty
+			if tc.preferredLanguage != "" {
+				testUser["preferredLanguage"] = tc.preferredLanguage
+			}
+
+			// Step 1: Sign up user with language parameter
+			t.Logf("Step 1: Creating user with preferredLanguage=%s", tc.preferredLanguage)
+			signupResponse := server.Expect.POST("/users").
+				WithJSON(testUser).
+				Expect().
+				Status(http.StatusCreated)
+
+			// Verify signup response contains JWT token
+			authToken := signupResponse.Header("Authorization").NotEmpty().Raw()
+			require.NotEmpty(t, authToken, "Authorization token should be present")
+
+			t.Log("✓ User successfully created with language parameter")
+
+			// Step 2: Verify language is stored correctly using GetProfile endpoint
+			profileResp := server.Expect.GET("/users").
+				WithHeader("Authorization", authToken).
+				Expect().
+				Status(http.StatusOK)
+
+			// Parse the profile response
+			profileData := profileResp.JSON().Object()
+
+			// Verify user data matches
+			profileData.Value("id").Number().Gt(0)
+			profileData.Value("email").String().IsEqual(testUser["email"].(string))
+			profileData.Value("firstName").String().IsEqual(testUser["firstName"].(string))
+			profileData.Value("lastName").String().IsEqual(testUser["lastName"].(string))
+
+			// Verify preferred language matches expected value
+			if tc.expectedLanguage == nil {
+				profileData.NotContainsKey("preferredLanguage")
+			} else {
+				profileData.Value("preferredLanguage").String().IsEqual(*tc.expectedLanguage)
+			}
+
+			t.Logf("✓ Language data verified via GetProfile API: %s", tc.preferredLanguage)
+		})
+	}
+}
+
+// Helper function to create string pointer
+func strPtr(s string) *string {
+	return &s
+}
