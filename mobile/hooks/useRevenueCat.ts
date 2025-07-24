@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import Purchases, {
   CustomerInfo,
-  PURCHASES_ERROR_CODE,
   PurchasesOffering,
   PurchasesPackage,
 } from "react-native-purchases";
@@ -33,16 +32,19 @@ const setOptimisticSubscriptionData = (
 
   if (premiumEntitlement) {
     // Extract package type from entitlement productIdentifier
-    // RevenueCat product IDs typically contain monthly/annual indicators
-    const productId = premiumEntitlement.productIdentifier.toLowerCase();
-    const isAnnual =
-      productId.includes("annual") ||
-      productId.includes("yearly") ||
-      productId.includes("year");
+    // Our RevenueCat product IDs: p1m (monthly), p2m (annual)
+    const productId = premiumEntitlement.productIdentifier;
+    const isAnnual = productId === "p2m";
     const plan = isAnnual ? "annual" : "monthly";
 
-    // Create optimistic subscription data using shared utility
-    const optimisticSubscriptionData = createOptimisticSubscriptionData(plan);
+    // Extract the actual expiry date from RevenueCat
+    const expirationDate = premiumEntitlement.expirationDate;
+
+    // Create optimistic subscription data using actual expiry date
+    const optimisticSubscriptionData = createOptimisticSubscriptionData(
+      plan,
+      expirationDate,
+    );
 
     console.log(
       "🎯 useRevenueCat setting optimistic subscription data:",
@@ -142,7 +144,7 @@ export function useRevenueCat() {
           await Purchases.purchasePackage(purchasePackage);
         return customerInfo;
       } catch (error: any) {
-        if (error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+        if (error.userCancelled || error.code === "1") {
           throw new Error("Purchase cancelled");
         }
         throw error;

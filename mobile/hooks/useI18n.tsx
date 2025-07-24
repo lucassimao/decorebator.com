@@ -3,6 +3,18 @@ import * as userApi from "@/api/users";
 import i18n from "@/i18n";
 import { useUserSession } from "@/hooks/useUserSession";
 
+// Map i18n language codes to backend language codes
+export const backendLanguageMap: Record<string, string> = {
+  en: "en",
+  "pt-BR": "pt_BR",
+  "pt-PT": "pt_PT",
+  de: "de",
+  it: "it",
+  fr: "fr",
+  es: "es",
+  ja: "ja",
+};
+
 export function useI18n() {
   // Get user data from centralized session
   const { user } = useUserSession();
@@ -33,18 +45,6 @@ export function useI18n() {
   const changeLanguage = async (language: string) => {
     // Update i18n immediately for responsive UI
     await i18n.changeLanguage(language);
-
-    // Map i18n language codes to backend language codes
-    const backendLanguageMap: Record<string, string> = {
-      en: "en",
-      "pt-BR": "pt_BR",
-      "pt-PT": "pt_PT",
-      de: "de",
-      it: "it",
-      fr: "fr",
-      es: "es",
-      ja: "ja",
-    };
 
     const backendLanguage = backendLanguageMap[language] || language;
 

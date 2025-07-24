@@ -543,13 +543,13 @@ const createStyles = (
       fontSize: responsive.getScaledFont("headline"),
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: responsive.spacing.xs,
+      marginBottom: responsive.spacing.elementSpacing / 4,
     },
     actionButtonsRow: {
       flexDirection: "row",
       marginTop: responsive.spacing.elementSpacing,
       gap: responsive.spacing.elementSpacing,
-      paddingTop: responsive.spacing.sm,
+      paddingTop: responsive.spacing.elementSpacing / 2,
       borderTopWidth: 1,
       borderTopColor: theme.colors.ui.divider,
     },
@@ -565,7 +565,7 @@ const createStyles = (
         theme.mode === "light"
           ? "rgba(253, 246, 227, 0.2)" // Very subtle web beige tint
           : theme.colors.background.subtle,
-      gap: responsive.spacing.xs,
+      gap: responsive.spacing.elementSpacing / 4,
       minHeight: responsive.getValueForSize(60, 64, 68, 72),
     },
     actionButtonText: {
@@ -581,7 +581,7 @@ const createStyles = (
       alignItems: "center",
       gap: responsive.getValueForSize(12, 16, 20, 24),
       marginBottom: responsive.spacing.elementSpacing,
-      paddingHorizontal: responsive.spacing.xs,
+      paddingHorizontal: responsive.spacing.elementSpacing / 4,
     },
     cardStat: {
       flexDirection: "row",
@@ -618,7 +618,7 @@ const createStyles = (
     menuContainer: {
       backgroundColor: theme.colors.background.surface,
       borderRadius: theme.borderRadius.lg,
-      padding: responsive.spacing.sm,
+      padding: responsive.spacing.elementSpacing / 2,
       width: "100%",
       maxWidth: responsive.getValueForSize(280, 320, 360, 400),
       ...theme.shadows.lg,
@@ -627,14 +627,14 @@ const createStyles = (
       fontSize: responsive.getScaledFont("headline"),
       fontWeight: "600",
       color: theme.colors.text.primary,
-      paddingHorizontal: responsive.spacing.md,
+      paddingHorizontal: responsive.spacing.horizontal,
       paddingVertical: responsive.spacing.elementSpacing,
-      marginBottom: responsive.spacing.xs,
+      marginBottom: responsive.spacing.elementSpacing / 4,
     },
     menuItem: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: responsive.spacing.md,
+      paddingHorizontal: responsive.spacing.horizontal,
       paddingVertical: responsive.spacing.elementSpacing,
       borderRadius: theme.borderRadius.sm,
       gap: responsive.spacing.elementSpacing,
@@ -648,11 +648,11 @@ const createStyles = (
     menuDivider: {
       height: 1,
       backgroundColor: theme.colors.ui.divider,
-      marginVertical: responsive.spacing.sm,
-      marginHorizontal: responsive.spacing.md,
+      marginVertical: responsive.spacing.elementSpacing / 2,
+      marginHorizontal: responsive.spacing.horizontal,
     },
     deleteMenuItem: {
-      marginTop: responsive.spacing.xs,
+      marginTop: responsive.spacing.elementSpacing / 4,
     },
     deleteMenuItemText: {
       color: theme.colors.error,
@@ -675,7 +675,7 @@ const createStyles = (
     premiumContent: {
       backgroundColor: "#FFFFFF",
       borderRadius: theme.borderRadius.lg,
-      padding: responsive.spacing.xl,
+      padding: responsive.spacing.formPadding,
       alignItems: "center",
     },
     premiumIconContainer: {
@@ -685,20 +685,20 @@ const createStyles = (
       backgroundColor: theme.colors.premium,
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: responsive.spacing.md,
+      marginBottom: responsive.spacing.elementSpacing,
     },
     premiumTitle: {
       fontSize: responsive.getScaledFont("headline"),
       fontWeight: "600",
       color: "#2D3436",
-      marginBottom: responsive.spacing.sm,
+      marginBottom: responsive.spacing.elementSpacing / 2,
       textAlign: "center",
     },
     premiumSubtitle: {
       fontSize: responsive.getScaledFont("body"),
       color: "#636E72",
       textAlign: "center",
-      marginBottom: responsive.spacing.xl,
+      marginBottom: responsive.spacing.elementSpacing * 2,
       lineHeight: responsive.fontSizes.lineHeight,
     },
     premiumButtons: {
@@ -709,7 +709,7 @@ const createStyles = (
       backgroundColor: "#FFD700",
       borderRadius: theme.borderRadius.md,
       paddingVertical: responsive.spacing.elementSpacing,
-      paddingHorizontal: responsive.spacing.xl,
+      paddingHorizontal: responsive.spacing.horizontal,
       alignItems: "center",
       minHeight: responsive.spacing.buttonHeight,
     },
@@ -722,7 +722,7 @@ const createStyles = (
       backgroundColor: "transparent",
       borderRadius: theme.borderRadius.md,
       paddingVertical: responsive.spacing.elementSpacing,
-      paddingHorizontal: responsive.spacing.xl,
+      paddingHorizontal: responsive.spacing.horizontal,
       alignItems: "center",
       minHeight: responsive.spacing.buttonHeight,
     },

@@ -46,13 +46,13 @@ describe("SettingsScreen - Timezone", () => {
         refetch: jest.fn(),
       });
 
-      const { getByText } = render(<SettingsScreen />);
+      const { getByTestId } = render(<SettingsScreen />);
 
       // Verify formatDate was called with the UTC date
       expect(mockFormatDate).toHaveBeenCalledWith("2025-01-15T23:59:59Z");
 
       // Should show the formatted date (mocked to return "Formatted: ...")
-      expect(getByText("Formatted: 2025-01-15T23:59:59Z")).toBeTruthy();
+      expect(getByTestId("subscription-date")).toBeTruthy();
     });
 
     it("should handle subscription dates for cancelled but active subscriptions", () => {
@@ -74,10 +74,10 @@ describe("SettingsScreen - Timezone", () => {
         refetch: jest.fn(),
       });
 
-      const { getByText } = render(<SettingsScreen />);
+      const { getByTestId } = render(<SettingsScreen />);
 
       // Should show "expires on" label for cancelled subscriptions
-      expect(getByText("settings.subscription.expiresOn")).toBeTruthy();
+      expect(getByTestId("expires-on-label")).toBeTruthy();
 
       // Should format the expiration date
       expect(mockFormatDate).toHaveBeenCalledWith("2025-03-20T12:30:00Z");
@@ -102,12 +102,10 @@ describe("SettingsScreen - Timezone", () => {
         refetch: jest.fn(),
       });
 
-      const { getByText } = render(<SettingsScreen />);
+      const { getByTestId } = render(<SettingsScreen />);
 
       // Should show grace period warning (includes emoji prefix)
-      expect(
-        getByText("⚠️ settings.subscription.gracePeriodWarning"),
-      ).toBeTruthy();
+      expect(getByTestId("grace-period-warning")).toBeTruthy();
 
       // Should format the grace period end date
       expect(mockFormatDate).toHaveBeenCalledWith("2025-02-01T08:15:30Z");

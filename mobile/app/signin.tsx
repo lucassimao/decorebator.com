@@ -30,9 +30,8 @@ import { authLightTheme } from "@/theme/authTheme";
 import type { Theme } from "@/contexts/ThemeContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { ResponsiveValues } from "@/contexts/ThemeContext";
-import * as Sentry from "@sentry/react-native";
 import { decode } from "@/api/jwt";
-
+import * as Sentry from "@sentry/react-native";
 interface LoginFormData {
   email: string;
   password: string;
@@ -193,7 +192,7 @@ const LoginScreen: React.FC = () => {
                   accessible={true}
                   accessibilityLabel={t("auth.signin.loginForm")}
                 >
-                  <Text style={styles.welcomeText}>
+                  <Text testID="welcome-text" style={styles.welcomeText}>
                     {t("auth.signin.welcomeBack")}
                   </Text>
                   <Text style={styles.subtitleText}>
@@ -223,6 +222,7 @@ const LoginScreen: React.FC = () => {
 
                   {/* Sign In Button */}
                   <TouchableOpacity
+                    testID="signin-button"
                     style={[
                       styles.loginButton,
                       loginMutation.isPending && styles.buttonDisabled,
@@ -261,6 +261,7 @@ const LoginScreen: React.FC = () => {
                   <View style={styles.bottomLinksRow}>
                     {/* Sign Up Link - Left */}
                     <TouchableOpacity
+                      testID="signup-link"
                       style={styles.bottomLinkLeft}
                       onPress={handleSignUp}
                       disabled={loginMutation.isPending}
@@ -277,6 +278,7 @@ const LoginScreen: React.FC = () => {
 
                     {/* Forgot Password Link - Right */}
                     <TouchableOpacity
+                      testID="forgot-password-link"
                       style={styles.bottomLinkRight}
                       onPress={handleForgotPassword}
                       disabled={loginMutation.isPending}

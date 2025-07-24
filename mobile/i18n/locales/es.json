@@ -61,7 +61,12 @@
       "signUp": "Regístrate",
       "invalidCredentials": "Correo electrónico o contraseña inválidos",
       "signInError": "Credenciales inválidas. ¿Estás usando el correo y contraseña correctos?",
-      "somethingWentWrong": "Algo salió mal. Por favor, inténtalo de nuevo."
+      "somethingWentWrong": "Algo salió mal. Por favor, inténtalo de nuevo.",
+      "loginForm": "Formulario de inicio de sesión",
+      "signingIn": "Iniciando sesión...",
+      "signInHint": "Toca para iniciar sesión en tu cuenta",
+      "signUpHint": "Toca para crear una nueva cuenta",
+      "forgotPasswordHint": "Toca para restablecer tu contraseña"
     },
     "signup": {
       "title": "Registrarse",
@@ -82,7 +87,8 @@
       "signIn": "Iniciar Sesión",
       "agreeToTerms": "Acepto los Términos de Servicio y Política de Privacidad",
       "termsCheckboxHint": "Toca para alternar el acuerdo con los términos de servicio y política de privacidad",
-      "mustAgreeToTerms": "Debes aceptar los Términos de Servicio y Política de Privacidad para continuar"
+      "mustAgreeToTerms": "Debes aceptar los Términos de Servicio y Política de Privacidad para continuar",
+      "fullNameError": "Por favor, ingresa tu nombre completo"
     },
     "forgotPassword": {
       "title": "¿Olvidaste tu contraseña?",
@@ -102,7 +108,8 @@
       "errorTitle": "Error",
       "errorMessage": "No se pudo enviar el correo de restablecimiento. Por favor, inténtalo de nuevo más tarde.",
       "emailRequired": "El correo electrónico es obligatorio",
-      "emailInvalid": "Por favor, introduce una dirección de correo electrónico válida"
+      "emailInvalid": "Por favor, introduce una dirección de correo electrónico válida",
+      "backHint": "Volver a iniciar sesión"
     },
     "tagline": "Aprende idiomas, conecta mundos"
   },
@@ -300,7 +307,6 @@
         "prioritySupport": "Soporte prioritario"
       },
       "upgradeButton": "Suscribirse a Premium",
-      "manageSubscription": "Gestionar Suscripción",
       "cancelSubscription": "Cancelar Suscripción",
       "reactivateSubscription": "Reactivar Suscripción",
       "billingCycle": "Ciclo de Facturación",
@@ -320,8 +326,11 @@
       "restorePurchases": "Restaurar Compras",
       "terms": "Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad. Las suscripciones se renuevan automáticamente a menos que se cancelen.",
       "storeProblem": "Hubo un problema con la tienda. Por favor, inténtalo de nuevo más tarde.",
-      "purchaseNotAllowed": "Las compras no están permitidas en este dispositivo.",
-      "paymentPending": "El pago está pendiente. Recibirás acceso una vez que se confirme el pago."
+      "paymentNotAllowed": "El pago falló. Por favor, intenta con un método de pago diferente.",
+      "paymentPending": "El pago está pendiente. Recibirás acceso una vez que se confirme el pago.",
+      "paymentMethodInvalid": "El método de pago no es válido. Por favor, verifica tu información de pago e inténtalo de nuevo.",
+      "receiptValidationFailed": "Falló la validación del recibo. Por favor, inténtalo de nuevo o contacta al soporte.",
+      "paymentSystemError": "Error de configuración del sistema de pago. Por favor, inténtalo de nuevo más tarde."
     },
     "account": {
       "title": "Cuenta",
@@ -437,13 +446,7 @@
     "signupFailed": "Registro falló. Inténtalo de nuevo."
   },
   "success": {
-    "wordlistCreated": "Lista creada exitosamente",
-    "wordlistUpdated": "Lista actualizada exitosamente",
-    "wordlistDeleted": "Lista eliminada exitosamente",
-    "wordAdded": "Palabra añadida exitosamente",
-    "wordRemoved": "Palabra eliminada exitosamente",
-    "profileUpdated": "Perfil actualizado exitosamente",
-    "passwordChanged": "Contraseña cambiada exitosamente"
+    "title": "Éxito"
   },
   "offline": {
     "indicator": "Modo Sin Conexión",
@@ -599,11 +602,11 @@
     "flashcards": "Tarjetas",
     "quiz": "Quiz"
   },
-    "analytics": {
+  "analytics": {
     "header": {
       "title": "Análisis de Aprendizaje",
       "subtitle": "Sigue tu progreso y dominio",
-"updateNote":"Estadísticas actualizadas cada hora"
+      "updateNote": "Estadísticas actualizadas cada hora"
     },
     "stats": {
       "wordsToday": "Palabras Hoy",
@@ -708,9 +711,6 @@
     "title": "Límite de Velocidad",
     "cooldownMessage": "Ya has reportado este error recientemente. Por favor espera {{minutes}} minutos antes de intentarlo de nuevo.",
     "limitReachedMessage": "Has alcanzado el número máximo de reportes de errores. Por favor, inténtalo más tarde."
-  },
-  "success": {
-    "title": "Éxito"
   },
   "error": {
     "title": "Error"

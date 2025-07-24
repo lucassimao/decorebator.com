@@ -12,11 +12,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRevenueCat } from "@/hooks/useRevenueCat";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
-import {
-  PurchasesPackage,
-  PURCHASES_ERROR_CODE,
-  PACKAGE_TYPE,
-} from "react-native-purchases";
+import { PurchasesPackage, PACKAGE_TYPE } from "react-native-purchases";
 
 interface RevenueCatPaywallProps {
   onClose: () => void;
@@ -77,41 +73,77 @@ export default function RevenueCatPaywall({
       }
     } catch (error: any) {
       // Handle RevenueCat specific errors
-      if (error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+      console.log("RevenueCat purchase error:", JSON.stringify(error));
+
+      // Check if user cancelled the purchase
+      if (error.userCancelled || error.code === "1") {
         // User cancelled the purchase - don't show error
         return;
       }
 
-      if (error.code === PURCHASES_ERROR_CODE.STORE_PROBLEM_ERROR) {
-        Alert.alert(
-          t("common.error"),
-          t("settings.subscription.storeProblem", {
-            defaultValue:
-              "There was a problem with the store. Please try again later.",
-          }),
-        );
-      } else if (
-        error.code === PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR
-      ) {
-        Alert.alert(
-          t("common.error"),
-          t("settings.subscription.purchaseNotAllowed", {
-            defaultValue: "Purchases are not allowed on this device.",
-          }),
-        );
-      } else if (error.code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
-        Alert.alert(
-          t("common.info"),
-          t("settings.subscription.paymentPending", {
-            defaultValue:
-              "Payment is pending. You'll receive access once payment is confirmed.",
-          }),
-        );
-      } else {
-        Alert.alert(
-          t("common.error"),
-          error.message || t("settings.subscription.purchaseError"),
-        );
+      // Handle specific error codes (RevenueCat uses string codes)
+      switch (error.code) {
+        case "2": // Store problem error
+          Alert.alert(
+            t("common.error"),
+            t("settings.subscription.storeProblem", {
+              defaultValue:
+                "There was a problem with the store. Please try again later.",
+            }),
+          );
+          break;
+        case "3": // Purchase not allowed error
+          Alert.alert(
+            t("common.error"),
+            t("settings.subscription.paymentNotAllowed", {
+              defaultValue:
+                "Payment failed. Please try a different payment method.",
+            }),
+          );
+          break;
+        case "4": // Payment pending error
+          Alert.alert(
+            t("common.info"),
+            t("settings.subscription.paymentPending", {
+              defaultValue:
+                "Payment is pending. You'll receive access once payment is confirmed.",
+            }),
+          );
+          break;
+        case "5": // Invalid credentials error
+          Alert.alert(
+            t("common.error"),
+            t("settings.subscription.paymentMethodInvalid", {
+              defaultValue:
+                "Payment method is invalid. Please check your payment information and try again.",
+            }),
+          );
+          break;
+        case "6": // Receipt already in use error
+          Alert.alert(
+            t("common.error"),
+            t("settings.subscription.receiptValidationFailed", {
+              defaultValue:
+                "Receipt validation failed. Please try again or contact support.",
+            }),
+          );
+          break;
+        case "22": // Configuration error
+        case "23": // Configuration error (iOS specific)
+          Alert.alert(
+            t("common.error"),
+            t("settings.subscription.paymentSystemError", {
+              defaultValue:
+                "Payment system configuration error. Please try again later.",
+            }),
+          );
+          break;
+        default:
+          Alert.alert(
+            t("common.error"),
+            error.message || t("settings.subscription.purchaseError"),
+          );
+          break;
       }
     }
   };
@@ -140,27 +172,33 @@ export default function RevenueCatPaywall({
       }
     } catch (error: any) {
       // Handle RevenueCat specific errors for restore
-      if (error.code === PURCHASES_ERROR_CODE.STORE_PROBLEM_ERROR) {
-        Alert.alert(
-          t("common.error"),
-          t("settings.subscription.storeProblem", {
-            defaultValue:
-              "There was a problem with the store. Please try again later.",
-          }),
-        );
-      } else if (error.code === PURCHASES_ERROR_CODE.NETWORK_ERROR) {
-        Alert.alert(
-          t("common.error"),
-          t("settings.subscription.networkError", {
-            defaultValue:
-              "Network error. Please check your connection and try again.",
-          }),
-        );
-      } else {
-        Alert.alert(
-          t("common.error"),
-          error.message || t("settings.subscription.restoreError"),
-        );
+      console.log("RevenueCat restore error:", JSON.stringify(error));
+
+      switch (error.code) {
+        case "2": // Store problem error
+          Alert.alert(
+            t("common.error"),
+            t("settings.subscription.storeProblem", {
+              defaultValue:
+                "There was a problem with the store. Please try again later.",
+            }),
+          );
+          break;
+        case "7": // Network error
+          Alert.alert(
+            t("common.error"),
+            t("settings.subscription.networkError", {
+              defaultValue:
+                "Network error. Please check your connection and try again.",
+            }),
+          );
+          break;
+        default:
+          Alert.alert(
+            t("common.error"),
+            error.message || t("settings.subscription.restoreError"),
+          );
+          break;
       }
     }
   };

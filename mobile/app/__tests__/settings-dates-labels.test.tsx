@@ -45,16 +45,14 @@ describe("SettingsScreen - Dates and Labels", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText, queryByText } = render(<SettingsScreen />);
+        const { getByTestId, queryByTestId } = render(<SettingsScreen />);
 
         // Should show renewsOn label
-        expect(getByText("settings.subscription.renewsOn")).toBeTruthy();
+        expect(getByTestId("renews-on-label")).toBeTruthy();
 
-        // Should NOT show other date labels
-        expect(queryByText("settings.subscription.expiresOn")).toBeNull();
-        expect(
-          queryByText("settings.subscription.gracePeriodEndsOn"),
-        ).toBeNull();
+        // Should NOT show other date labels (they use different testIDs)
+        expect(queryByTestId("expires-on-label")).toBeNull();
+        expect(queryByTestId("grace-period-ends-on")).toBeNull();
       });
 
       it("should show 'expiresOn' label for subscriptions set to cancel at period end", () => {
@@ -72,16 +70,14 @@ describe("SettingsScreen - Dates and Labels", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText, queryByText } = render(<SettingsScreen />);
+        const { getByTestId, queryByTestId } = render(<SettingsScreen />);
 
         // Should show expiresOn label
-        expect(getByText("settings.subscription.expiresOn")).toBeTruthy();
+        expect(getByTestId("expires-on-label")).toBeTruthy();
 
         // Should NOT show other date labels
-        expect(queryByText("settings.subscription.renewsOn")).toBeNull();
-        expect(
-          queryByText("settings.subscription.gracePeriodEndsOn"),
-        ).toBeNull();
+        expect(queryByTestId("renews-on-label")).toBeNull();
+        expect(queryByTestId("grace-period-ends-on")).toBeNull();
       });
 
       it("should show 'expiresOn' label for cancelled but still active subscriptions", () => {
@@ -100,16 +96,14 @@ describe("SettingsScreen - Dates and Labels", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText, queryByText } = render(<SettingsScreen />);
+        const { getByTestId, queryByTestId } = render(<SettingsScreen />);
 
         // Should show expiresOn label
-        expect(getByText("settings.subscription.expiresOn")).toBeTruthy();
+        expect(getByTestId("expires-on-label")).toBeTruthy();
 
         // Should NOT show other date labels
-        expect(queryByText("settings.subscription.renewsOn")).toBeNull();
-        expect(
-          queryByText("settings.subscription.gracePeriodEndsOn"),
-        ).toBeNull();
+        expect(queryByTestId("renews-on-label")).toBeNull();
+        expect(queryByTestId("grace-period-ends-on")).toBeNull();
       });
 
       it("should show 'gracePeriodEndsOn' label for subscriptions in grace period", () => {
@@ -127,16 +121,14 @@ describe("SettingsScreen - Dates and Labels", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText, queryByText } = render(<SettingsScreen />);
+        const { getByTestId, queryByTestId } = render(<SettingsScreen />);
 
         // Should show gracePeriodEndsOn label
-        expect(
-          getByText("settings.subscription.gracePeriodEndsOn"),
-        ).toBeTruthy();
+        expect(getByTestId("grace-period-ends-on")).toBeTruthy();
 
         // Should NOT show other date labels
-        expect(queryByText("settings.subscription.renewsOn")).toBeNull();
-        expect(queryByText("settings.subscription.expiresOn")).toBeNull();
+        expect(queryByTestId("renews-on-label")).toBeNull();
+        expect(queryByTestId("expires-on-label")).toBeNull();
       });
 
       it("should prioritize grace period label over cancelled/expiry labels", () => {
@@ -154,14 +146,12 @@ describe("SettingsScreen - Dates and Labels", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText, queryByText } = render(<SettingsScreen />);
+        const { getByTestId, queryByTestId } = render(<SettingsScreen />);
 
         // Grace period should take precedence
-        expect(
-          getByText("settings.subscription.gracePeriodEndsOn"),
-        ).toBeTruthy();
-        expect(queryByText("settings.subscription.expiresOn")).toBeNull();
-        expect(queryByText("settings.subscription.renewsOn")).toBeNull();
+        expect(getByTestId("grace-period-ends-on")).toBeTruthy();
+        expect(queryByTestId("expires-on-label")).toBeNull();
+        expect(queryByTestId("renews-on-label")).toBeNull();
       });
     });
 
@@ -187,12 +177,12 @@ describe("SettingsScreen - Dates and Labels", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
+        const { getByTestId } = render(<SettingsScreen />);
 
         // Should show renewsOn label with correctly formatted date
-        expect(getByText("settings.subscription.renewsOn")).toBeTruthy();
+        expect(getByTestId("renews-on-label")).toBeTruthy();
         expect(mockFormatDate).toHaveBeenCalledWith(testDate);
-        expect(getByText(`Formatted: ${testDate}`)).toBeTruthy();
+        expect(getByTestId("subscription-date")).toBeTruthy();
       });
 
       it("should display correct date with expiresOn label for cancelled subscriptions", () => {
@@ -216,12 +206,12 @@ describe("SettingsScreen - Dates and Labels", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
+        const { getByTestId } = render(<SettingsScreen />);
 
         // Should show expiresOn label with correctly formatted date
-        expect(getByText("settings.subscription.expiresOn")).toBeTruthy();
+        expect(getByTestId("expires-on-label")).toBeTruthy();
         expect(mockFormatDate).toHaveBeenCalledWith(testDate);
-        expect(getByText(`Formatted: ${testDate}`)).toBeTruthy();
+        expect(getByTestId("subscription-date")).toBeTruthy();
       });
 
       it("should display correct date with gracePeriodEndsOn label for grace period subscriptions", () => {
@@ -244,14 +234,12 @@ describe("SettingsScreen - Dates and Labels", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
+        const { getByTestId } = render(<SettingsScreen />);
 
         // Should show gracePeriodEndsOn label with correctly formatted date
-        expect(
-          getByText("settings.subscription.gracePeriodEndsOn"),
-        ).toBeTruthy();
+        expect(getByTestId("grace-period-ends-on")).toBeTruthy();
         expect(mockFormatDate).toHaveBeenCalledWith(testDate);
-        expect(getByText(`Formatted: ${testDate}`)).toBeTruthy();
+        expect(getByTestId("subscription-date")).toBeTruthy();
       });
     });
 
@@ -271,15 +259,13 @@ describe("SettingsScreen - Dates and Labels", () => {
           refetch: jest.fn(),
         });
 
-        const { queryByText } = render(<SettingsScreen />);
+        const { queryByTestId } = render(<SettingsScreen />);
 
         // Should not show any date-related labels for free users
         // because they don't have currentPeriodEnd in the backend
-        expect(queryByText("settings.subscription.renewsOn")).toBeNull();
-        expect(queryByText("settings.subscription.expiresOn")).toBeNull();
-        expect(
-          queryByText("settings.subscription.gracePeriodEndsOn"),
-        ).toBeNull();
+        expect(queryByTestId("renews-on-label")).toBeNull();
+        expect(queryByTestId("expires-on-label")).toBeNull();
+        expect(queryByTestId("grace-period-ends-on")).toBeNull();
       });
 
       it("should not show date labels for expired subscriptions without remaining access", () => {
@@ -296,14 +282,12 @@ describe("SettingsScreen - Dates and Labels", () => {
           refetch: jest.fn(),
         });
 
-        const { queryByText } = render(<SettingsScreen />);
+        const { queryByTestId } = render(<SettingsScreen />);
 
         // Should not show any date labels for fully expired subscriptions
-        expect(queryByText("settings.subscription.renewsOn")).toBeNull();
-        expect(queryByText("settings.subscription.expiresOn")).toBeNull();
-        expect(
-          queryByText("settings.subscription.gracePeriodEndsOn"),
-        ).toBeNull();
+        expect(queryByTestId("renews-on-label")).toBeNull();
+        expect(queryByTestId("expires-on-label")).toBeNull();
+        expect(queryByTestId("grace-period-ends-on")).toBeNull();
       });
 
       it("should not show date labels when currentPeriodEnd is missing", () => {
@@ -318,14 +302,12 @@ describe("SettingsScreen - Dates and Labels", () => {
           refetch: jest.fn(),
         });
 
-        const { queryByText } = render(<SettingsScreen />);
+        const { queryByTestId } = render(<SettingsScreen />);
 
         // Should not show any date labels when date is missing
-        expect(queryByText("settings.subscription.renewsOn")).toBeNull();
-        expect(queryByText("settings.subscription.expiresOn")).toBeNull();
-        expect(
-          queryByText("settings.subscription.gracePeriodEndsOn"),
-        ).toBeNull();
+        expect(queryByTestId("renews-on-label")).toBeNull();
+        expect(queryByTestId("expires-on-label")).toBeNull();
+        expect(queryByTestId("grace-period-ends-on")).toBeNull();
       });
 
       it("should show date labels only when subscription meets all display criteria", () => {
@@ -343,11 +325,11 @@ describe("SettingsScreen - Dates and Labels", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
+        const { getByTestId } = render(<SettingsScreen />);
 
         // Should meet all criteria: has currentPeriodEnd AND (isActive OR isCancelledButActive OR isInGracePeriod)
-        expect(getByText("settings.subscription.renewsOn")).toBeTruthy();
-        expect(getByText("Formatted: 2025-11-30T20:00:00Z")).toBeTruthy();
+        expect(getByTestId("renews-on-label")).toBeTruthy();
+        expect(getByTestId("subscription-date")).toBeTruthy();
       });
     });
   });

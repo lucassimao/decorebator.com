@@ -40,10 +40,10 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
-        expect(getByText("upgrade.title")).toBeTruthy();
-        expect(getByText("upgrade.subtitle")).toBeTruthy();
-        expect(getByText("settings.subscription.premiumFeatures")).toBeTruthy();
+        const { getByTestId } = render(<SettingsScreen />);
+        expect(getByTestId("upgrade-title")).toBeTruthy();
+        expect(getByTestId("upgrade-subtitle")).toBeTruthy();
+        expect(getByTestId("premium-features-title")).toBeTruthy();
       });
 
       it("should hide upgrade section for active premium users", () => {
@@ -53,10 +53,10 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { queryByText } = render(<SettingsScreen />);
-        expect(queryByText("upgrade.title")).toBeNull();
-        expect(queryByText("upgrade.subtitle")).toBeNull();
-        expect(queryByText("settings.subscription.premiumFeatures")).toBeNull();
+        const { queryByTestId } = render(<SettingsScreen />);
+        expect(queryByTestId("upgrade-title")).toBeNull();
+        expect(queryByTestId("upgrade-subtitle")).toBeNull();
+        expect(queryByTestId("premium-features-title")).toBeNull();
       });
 
       it("should hide upgrade section for cancelled but still active users", () => {
@@ -66,8 +66,8 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { queryByText } = render(<SettingsScreen />);
-        expect(queryByText("upgrade.title")).toBeNull();
+        const { queryByTestId } = render(<SettingsScreen />);
+        expect(queryByTestId("upgrade-title")).toBeNull();
       });
 
       it("should hide upgrade section for users in grace period", () => {
@@ -82,8 +82,8 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { queryByText } = render(<SettingsScreen />);
-        expect(queryByText("upgrade.title")).toBeNull();
+        const { queryByTestId } = render(<SettingsScreen />);
+        expect(queryByTestId("upgrade-title")).toBeNull();
       });
 
       it("should show upgrade section for expired premium users", () => {
@@ -93,8 +93,8 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
-        expect(getByText("upgrade.title")).toBeTruthy();
+        const { getByTestId } = render(<SettingsScreen />);
+        expect(getByTestId("upgrade-title")).toBeTruthy();
       });
     });
 
@@ -106,8 +106,8 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
-        expect(getByText("settings.subscription.freePlanLimit")).toBeTruthy();
+        const { getByTestId } = render(<SettingsScreen />);
+        expect(getByTestId("free-plan-limit")).toBeTruthy();
       });
 
       it("should hide free plan limitations for premium users", () => {
@@ -117,8 +117,8 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { queryByText } = render(<SettingsScreen />);
-        expect(queryByText("settings.subscription.freePlanLimit")).toBeNull();
+        const { queryByTestId } = render(<SettingsScreen />);
+        expect(queryByTestId("free-plan-limit")).toBeNull();
       });
     });
 
@@ -137,10 +137,8 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
-        expect(
-          getByText("settings.subscription.manageSubscription"),
-        ).toBeTruthy();
+        const { getByTestId } = render(<SettingsScreen />);
+        expect(getByTestId("manage-subscription-button")).toBeTruthy();
       });
 
       it("should hide manage subscription button for cancelled subscriptions", () => {
@@ -156,10 +154,8 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { queryByText } = render(<SettingsScreen />);
-        expect(
-          queryByText("settings.subscription.manageSubscription"),
-        ).toBeNull();
+        const { queryByTestId } = render(<SettingsScreen />);
+        expect(queryByTestId("manage-subscription-button")).toBeNull();
       });
 
       it("should hide manage subscription button for subscriptions set to cancel at period end", () => {
@@ -176,10 +172,8 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { queryByText } = render(<SettingsScreen />);
-        expect(
-          queryByText("settings.subscription.manageSubscription"),
-        ).toBeNull();
+        const { queryByTestId } = render(<SettingsScreen />);
+        expect(queryByTestId("manage-subscription-button")).toBeNull();
       });
 
       it("should show manage subscription button for users in grace period", () => {
@@ -197,11 +191,9 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
+        const { getByTestId } = render(<SettingsScreen />);
         // Users in grace period should still be able to manage their subscription to fix payment issues
-        expect(
-          getByText("settings.subscription.manageSubscription"),
-        ).toBeTruthy();
+        expect(getByTestId("manage-subscription-button")).toBeTruthy();
       });
     });
 
@@ -218,9 +210,9 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
-        expect(getByText("settings.subscription.renewsOn")).toBeTruthy();
-        expect(getByText("Formatted: 2025-12-31T23:59:59Z")).toBeTruthy();
+        const { getByTestId } = render(<SettingsScreen />);
+        expect(getByTestId("renews-on-label")).toBeTruthy();
+        expect(getByTestId("subscription-date")).toBeTruthy();
       });
 
       it("should show subscription details for cancelled but active subscriptions", () => {
@@ -236,9 +228,9 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
-        expect(getByText("settings.subscription.expiresOn")).toBeTruthy();
-        expect(getByText("Formatted: 2025-06-15T12:00:00Z")).toBeTruthy();
+        const { getByTestId } = render(<SettingsScreen />);
+        expect(getByTestId("expires-on-label")).toBeTruthy();
+        expect(getByTestId("subscription-date")).toBeTruthy();
       });
 
       it("should show subscription details for grace period subscriptions", () => {
@@ -254,11 +246,9 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
-        expect(
-          getByText("settings.subscription.gracePeriodEndsOn"),
-        ).toBeTruthy();
-        expect(getByText("Formatted: 2025-03-01T10:30:00Z")).toBeTruthy();
+        const { getByTestId } = render(<SettingsScreen />);
+        expect(getByTestId("grace-period-ends-on")).toBeTruthy();
+        expect(getByTestId("subscription-date")).toBeTruthy();
       });
 
       it("should hide subscription details for expired subscriptions", () => {
@@ -274,10 +264,10 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { queryByText } = render(<SettingsScreen />);
-        expect(queryByText("settings.subscription.renewsOn")).toBeNull();
-        expect(queryByText("settings.subscription.expiresOn")).toBeNull();
-        expect(queryByText("Formatted: 2024-12-31T23:59:59Z")).toBeNull();
+        const { queryByTestId } = render(<SettingsScreen />);
+        expect(queryByTestId("renews-on-label")).toBeNull();
+        expect(queryByTestId("expires-on-label")).toBeNull();
+        expect(queryByTestId("subscription-date")).toBeNull();
       });
 
       it("should hide subscription details when no currentPeriodEnd date is available", () => {
@@ -292,8 +282,8 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { queryByText } = render(<SettingsScreen />);
-        expect(queryByText("settings.subscription.renewsOn")).toBeNull();
+        const { queryByTestId } = render(<SettingsScreen />);
+        expect(queryByTestId("renews-on-label")).toBeNull();
       });
     });
 
@@ -305,9 +295,9 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
+        const { getByTestId } = render(<SettingsScreen />);
         // Premium users should see the premium plan text, indicating premium icon is shown
-        expect(getByText("settings.subscription.monthlyPremium")).toBeTruthy();
+        expect(getByTestId("monthly-premium-name")).toBeTruthy();
       });
 
       it("should show lock icon for free users", () => {
@@ -317,9 +307,9 @@ describe("SettingsScreen - UI Rendering", () => {
           refetch: jest.fn(),
         });
 
-        const { getByText } = render(<SettingsScreen />);
+        const { getByTestId } = render(<SettingsScreen />);
         // Free users should see the free plan text, indicating lock icon is shown
-        expect(getByText("settings.subscription.freePlan")).toBeTruthy();
+        expect(getByTestId("free-plan-name")).toBeTruthy();
       });
     });
   });

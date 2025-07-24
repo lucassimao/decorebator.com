@@ -30,8 +30,8 @@ describe("SettingsScreen - Basic Rendering", () => {
 
   describe("Basic Rendering", () => {
     it("renders without crashing", () => {
-      const { getByText } = render(<SettingsScreen />);
-      expect(getByText("settings.title")).toBeTruthy();
+      const { getByTestId } = render(<SettingsScreen />);
+      expect(getByTestId("settings-title")).toBeTruthy();
     });
 
     it("shows loading state when subscription is loading", () => {
@@ -41,9 +41,9 @@ describe("SettingsScreen - Basic Rendering", () => {
         refetch: jest.fn(),
       });
 
-      const { getByText } = render(<SettingsScreen />);
+      const { getByTestId } = render(<SettingsScreen />);
       // Should show current plan section header
-      expect(getByText("settings.subscription.currentPlan")).toBeTruthy();
+      expect(getByTestId("current-plan-section")).toBeTruthy();
     });
   });
 });

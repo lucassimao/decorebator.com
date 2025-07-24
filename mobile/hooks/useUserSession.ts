@@ -4,9 +4,9 @@ import {
   type SubscriptionStatus,
 } from "@/api/subscriptions";
 import offlineManager from "@/utils/offlineManager";
-import * as Sentry from "@sentry/react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
+import * as Sentry from "@sentry/react-native";
 
 interface UserSessionData {
   // User essentials

@@ -61,7 +61,12 @@
       "signUp": "S'inscrire",
       "invalidCredentials": "Email ou mot de passe invalide",
       "signInError": "Identifiants invalides. Utilisez-vous le bon email et mot de passe ?",
-      "somethingWentWrong": "Une erreur s'est produite. Veuillez réessayer."
+      "somethingWentWrong": "Une erreur s'est produite. Veuillez réessayer.",
+      "loginForm": "Formulaire de connexion",
+      "signingIn": "Connexion en cours...",
+      "signInHint": "Appuyez pour vous connecter à votre compte",
+      "signUpHint": "Appuyez pour créer un nouveau compte",
+      "forgotPasswordHint": "Appuyez pour réinitialiser votre mot de passe"
     },
     "signup": {
       "title": "S'inscrire",
@@ -82,7 +87,8 @@
       "signIn": "Se connecter",
       "agreeToTerms": "J'accepte les Conditions d'utilisation et la Politique de confidentialité",
       "termsCheckboxHint": "Appuyez pour basculer l'accord aux conditions d'utilisation et à la politique de confidentialité",
-      "mustAgreeToTerms": "Vous devez accepter les Conditions d'utilisation et la Politique de confidentialité pour continuer"
+      "mustAgreeToTerms": "Vous devez accepter les Conditions d'utilisation et la Politique de confidentialité pour continuer",
+      "fullNameError": "Veuillez entrer votre nom complet"
     },
     "forgotPassword": {
       "title": "Mot de passe oublié ?",
@@ -102,7 +108,8 @@
       "errorTitle": "Erreur",
       "errorMessage": "Impossible d'envoyer l'e-mail de réinitialisation. Veuillez réessayer plus tard.",
       "emailRequired": "L'e-mail est obligatoire",
-      "emailInvalid": "Veuillez entrer une adresse e-mail valide"
+      "emailInvalid": "Veuillez entrer une adresse e-mail valide",
+      "backHint": "Retour à la connexion"
     },
     "tagline": "Apprenez des langues, connectez des mondes"
   },
@@ -300,7 +307,6 @@
         "prioritySupport": "Support prioritaire"
       },
       "upgradeButton": "S'abonner à Premium",
-      "manageSubscription": "Gérer l'Abonnement",
       "cancelSubscription": "Annuler l'Abonnement",
       "reactivateSubscription": "Réactiver l'Abonnement",
       "billingCycle": "Cycle de Facturation",
@@ -320,8 +326,11 @@
       "restorePurchases": "Restaurer les Achats",
       "terms": "En continuant, vous acceptez nos Conditions d'Utilisation et notre Politique de Confidentialité. Les abonnements se renouvellent automatiquement sauf annulation.",
       "storeProblem": "Problème avec le store. Veuillez réessayer.",
-      "purchaseNotAllowed": "Achats non autorisés sur cet appareil.",
-      "paymentPending": "Paiement en attente. Accès après confirmation."
+      "paymentNotAllowed": "Le paiement a échoué. Veuillez essayer une autre méthode de paiement.",
+      "paymentPending": "Paiement en attente. Accès après confirmation.",
+      "paymentMethodInvalid": "Méthode de paiement invalide. Veuillez vérifier vos informations de paiement et réessayer.",
+      "receiptValidationFailed": "Échec de la validation du reçu. Veuillez réessayer ou contacter le support.",
+      "paymentSystemError": "Erreur de configuration du système de paiement. Veuillez réessayer plus tard."
     },
     "account": {
       "title": "Compte",
@@ -437,13 +446,7 @@
     "signupFailed": "Inscription échouée. Réessayez."
   },
   "success": {
-    "wordlistCreated": "Liste créée avec succès",
-    "wordlistUpdated": "Liste mise à jour avec succès",
-    "wordlistDeleted": "Liste supprimée avec succès",
-    "wordAdded": "Mot ajouté avec succès",
-    "wordRemoved": "Mot supprimé avec succès",
-    "profileUpdated": "Profil mis à jour avec succès",
-    "passwordChanged": "Mot de passe changé avec succès"
+    "title": "Succès"
   },
   "offline": {
     "indicator": "Mode Hors Ligne",
@@ -599,12 +602,11 @@
     "flashcards": "Cartes",
     "quiz": "Quiz"
   },
-    "analytics": {
+  "analytics": {
     "header": {
       "title": "Analyse d'Apprentissage",
       "subtitle": "Suivez vos progrès et votre maîtrise",
-"updateNote":"Statistiques mises à jour toutes les heures"
-
+      "updateNote": "Statistiques mises à jour toutes les heures"
     },
     "stats": {
       "wordsToday": "Mots Aujourd'hui",
@@ -709,9 +711,6 @@
     "title": "Limite de taux",
     "cooldownMessage": "Vous avez déjà signalé cette erreur récemment. Veuillez attendre {{minutes}} minutes avant de réessayer.",
     "limitReachedMessage": "Vous avez atteint le nombre maximum de rapports d'erreur. Veuillez réessayer plus tard."
-  },
-  "success": {
-    "title": "Succès"
   },
   "error": {
     "title": "Erreur"

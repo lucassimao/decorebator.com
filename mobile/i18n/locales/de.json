@@ -61,16 +61,23 @@
       "signUp": "Registrieren",
       "invalidCredentials": "Ungültige E-Mail oder Passwort",
       "signInError": "Ungültige Anmeldedaten. Verwenden Sie die richtige E-Mail und das richtige Passwort?",
-      "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+      "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+      "loginForm": "Anmeldeformular",
+      "signingIn": "Anmeldung läuft...",
+      "signInHint": "Tippen Sie, um sich bei Ihrem Konto anzumelden",
+      "signUpHint": "Tippen Sie, um ein neues Konto zu erstellen",
+      "forgotPasswordHint": "Tippen Sie, um Ihr Passwort zurückzusetzen"
     },
     "signup": {
       "title": "Registrieren",
       "subtitle": "Beginnen Sie Ihre Lernreise",
       "email": "E-Mail",
+      "fullName": "Vollständiger Name",
       "firstName": "Vorname",
       "lastName": "Nachname",
       "password": "Passwort",
       "emailPlaceholder": "Geben Sie Ihre E-Mail ein",
+      "fullNamePlaceholder": "Geben Sie Ihren vollständigen Namen ein",
       "firstNamePlaceholder": "Geben Sie Ihren Vornamen ein",
       "lastNamePlaceholder": "Geben Sie Ihren Nachnamen ein",
       "passwordPlaceholder": "Wählen Sie ein Passwort",
@@ -82,7 +89,9 @@
       "signIn": "Anmelden",
       "agreeToTerms": "Ich stimme den Nutzungsbedingungen und der Datenschutzerklärung zu",
       "termsCheckboxHint": "Tippen um die Zustimmung zu den Nutzungsbedingungen und Datenschutzrichtlinien umzuschalten",
-      "mustAgreeToTerms": "Sie müssen den Nutzungsbedingungen und der Datenschutzerklärung zustimmen, um fortzufahren"
+      "backHint": "Zurück zum vorherigen Schritt",
+      "mustAgreeToTerms": "Sie müssen den Nutzungsbedingungen und der Datenschutzerklärung zustimmen, um fortzufahren",
+      "fullNameError": "Bitte geben Sie Ihren vollständigen Namen ein"
     },
     "forgotPassword": {
       "title": "Passwort vergessen?",
@@ -102,7 +111,8 @@
       "errorTitle": "Fehler",
       "errorMessage": "Zurücksetzungs-E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.",
       "emailRequired": "E-Mail ist erforderlich",
-      "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
+      "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+      "backHint": "Zurück zur Anmeldung"
     },
     "tagline": "Sprachen lernen, Welten verbinden"
   },
@@ -320,8 +330,11 @@
       "restorePurchases": "Käufe wiederherstellen",
       "terms": "Durch Fortfahren stimmen Sie unseren Nutzungsbedingungen und Datenschutzrichtlinien zu. Abonnements verlängern sich automatisch, es sei denn, sie werden gekündigt.",
       "storeProblem": "Store-Problem. Bitte später versuchen.",
-      "purchaseNotAllowed": "Käufe auf diesem Gerät nicht erlaubt.",
-      "paymentPending": "Zahlung ausstehend. Zugang nach Bestätigung."
+      "paymentNotAllowed": "Zahlung fehlgeschlagen. Bitte versuchen Sie eine andere Zahlungsmethode.",
+      "paymentPending": "Zahlung ausstehend. Zugang nach Bestätigung.",
+      "paymentMethodInvalid": "Zahlungsmethode ungültig. Bitte überprüfen Sie Ihre Zahlungsinformationen und versuchen Sie es erneut.",
+      "receiptValidationFailed": "Beleg-Validierung fehlgeschlagen. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.",
+      "paymentSystemError": "Zahlungssystem-Konfigurationsfehler. Bitte versuchen Sie es später erneut."
     },
     "account": {
       "title": "Konto",

@@ -113,6 +113,7 @@ export const PasswordInput = forwardRef<TextInput, PasswordInputProps>(
             }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
+                testID="password-input"
                 ref={ref}
                 style={[
                   styles.input,
@@ -142,6 +143,7 @@ export const PasswordInput = forwardRef<TextInput, PasswordInputProps>(
             )}
           />
           <TouchableOpacity
+            testID="password-toggle"
             style={styles.passwordToggle}
             onPress={() => setShowPassword(!showPassword)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}

@@ -61,7 +61,12 @@
       "signUp": "新規登録",
       "invalidCredentials": "メールアドレスまたはパスワードが無効です",
       "signInError": "認証情報が無効です。正しいメールアドレスとパスワードを使用していますか？",
-      "somethingWentWrong": "エラーが発生しました。もう一度お試しください。"
+      "somethingWentWrong": "エラーが発生しました。もう一度お試しください。",
+      "loginForm": "ログインフォーム",
+      "signingIn": "サインイン中...",
+      "signInHint": "タップしてアカウントにサインイン",
+      "signUpHint": "タップして新しいアカウントを作成",
+      "forgotPasswordHint": "タップしてパスワードをリセット"
     },
     "signup": {
       "title": "新規登録",
@@ -82,7 +87,8 @@
       "signIn": "ログイン",
       "agreeToTerms": "利用規約とプライバシーポリシーに同意します",
       "termsCheckboxHint": "利用規約とプライバシーポリシーへの同意を切り替えるにはタップしてください",
-      "mustAgreeToTerms": "続行するには利用規約とプライバシーポリシーに同意する必要があります"
+      "mustAgreeToTerms": "続行するには利用規約とプライバシーポリシーに同意する必要があります",
+      "fullNameError": "フルネームを入力してください"
     },
     "forgotPassword": {
       "title": "パスワードをお忘れですか？",
@@ -102,7 +108,8 @@
       "errorTitle": "エラー",
       "errorMessage": "リセットメールを送信できませんでした。後でもう一度お試しください。",
       "emailRequired": "メールアドレスは必須です",
-      "emailInvalid": "有効なメールアドレスを入力してください"
+      "emailInvalid": "有効なメールアドレスを入力してください",
+      "backHint": "サインインに戻る"
     },
     "tagline": "言語を学び、世界をつなぐ"
   },
@@ -126,7 +133,7 @@
       "afternoon": "こんにちは",
       "evening": "こんばんは"
     },
-        "stats": {
+    "stats": {
       "failedToLoad": "統計の読み込みに失敗しました",
       "tapToRetry": "タップして再試行",
       "learningProgress": "学習進捗",
@@ -292,7 +299,7 @@
         "prioritySupport": "優先サポート"
       },
       "upgradeButton": "プレミアムにアップグレード",
-      "manageSubscription": "サブスクリプション管理",
+      "manageSubscription": "管理",
       "cancelSubscription": "サブスクリプションをキャンセル",
       "reactivateSubscription": "サブスクリプションを再開",
       "billingCycle": "請求サイクル",
@@ -312,9 +319,11 @@
       "restorePurchases": "購入を復元",
       "terms": "継続することで、サービス利用規約とプライバシーポリシーに同意したことになります。サブスクリプションはキャンセルされない限り自動更新されます。",
       "storeProblem": "ストアに問題があります。後で再試行してください。",
-      "purchaseNotAllowed": "このデバイスでは購入が許可されていません。",
+      "paymentNotAllowed": "支払いに失敗しました。別の支払い方法をお試しください。",
       "paymentPending": "支払いは保留中です。確認後にアクセスできます。",
-      "manageSubscription": "管理",
+      "paymentMethodInvalid": "支払い方法が無効です。支払い情報を確認して再度お試しください。",
+      "receiptValidationFailed": "レシート検証に失敗しました。再度お試しいただくか、サポートにお問い合わせください。",
+      "paymentSystemError": "支払いシステム設定エラー。後でもう一度お試しください。",
       "manageSubscriptionMessage": "ネイティブ設定を開いてサブスクリプションを管理します。",
       "openManagement": "開く",
       "managementOpened": "管理画面を開きました",
@@ -437,13 +446,7 @@
     "signupFailed": "登録失敗。再試行してください。"
   },
   "success": {
-    "wordlistCreated": "リストが正常に作成されました",
-    "wordlistUpdated": "リストが正常に更新されました",
-    "wordlistDeleted": "リストが正常に削除されました",
-    "wordAdded": "単語が正常に追加されました",
-    "wordRemoved": "単語が正常に削除されました",
-    "profileUpdated": "プロフィールが正常に更新されました",
-    "passwordChanged": "パスワードが正常に変更されました"
+    "title": "成功"
   },
   "offline": {
     "indicator": "オフラインモード",
@@ -603,7 +606,7 @@
     "header": {
       "title": "学習分析",
       "subtitle": "進捗と習熟度を追跡",
-      "updateNote":"統計は毎時更新されます"
+      "updateNote": "統計は毎時更新されます"
     },
     "stats": {
       "wordsToday": "今日の単語",
@@ -708,9 +711,6 @@
     "title": "レート制限",
     "cooldownMessage": "このエラーを最近すでに報告しています。{{minutes}}分待ってから再度お試しください。",
     "limitReachedMessage": "エラー報告の最大回数に達しました。後でもう一度お試しください。"
-  },
-  "success": {
-    "title": "成功"
   },
   "error": {
     "title": "エラー"

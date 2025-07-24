@@ -46,16 +46,23 @@
       "signUp": "Sign Up",
       "invalidCredentials": "Invalid email or password",
       "signInError": "Invalid credentials. Are you using the correct email and password?",
-      "somethingWentWrong": "Something went wrong. Please try again."
+      "somethingWentWrong": "Something went wrong. Please try again.",
+      "loginForm": "Login form",
+      "signingIn": "Signing in...",
+      "signInHint": "Tap to sign in to your account",
+      "signUpHint": "Tap to create a new account",
+      "forgotPasswordHint": "Tap to reset your password"
     },
     "signup": {
       "title": "Sign Up",
       "subtitle": "Start your language learning journey",
       "email": "Email",
+      "fullName": "Full Name",
       "firstName": "First Name",
       "lastName": "Last Name",
       "password": "Password",
       "emailPlaceholder": "Enter your email",
+      "fullNamePlaceholder": "Enter your full name",
       "firstNamePlaceholder": "Enter first name",
       "lastNamePlaceholder": "Enter last name",
       "passwordPlaceholder": "Choose a password",
@@ -67,7 +74,9 @@
       "signIn": "Sign In",
       "agreeToTerms": "I agree to the Terms of Service and Privacy Policy",
       "termsCheckboxHint": "Tap to toggle agreement to terms and privacy policy",
-      "mustAgreeToTerms": "You must agree to the Terms of Service and Privacy Policy to continue"
+      "backHint": "Go back to previous step",
+      "mustAgreeToTerms": "You must agree to the Terms of Service and Privacy Policy to continue",
+      "fullNameError": "Please enter your full name"
     },
     "forgotPassword": {
       "title": "Forgot your password?",
@@ -87,7 +96,8 @@
       "errorTitle": "Error",
       "errorMessage": "Unable to send reset email. Please try again later.",
       "emailRequired": "Email is required",
-      "emailInvalid": "Please enter a valid email address"
+      "emailInvalid": "Please enter a valid email address",
+      "backHint": "Return to sign in"
     },
     "tagline": "Learn languages, connect worlds"
   },
@@ -306,8 +316,11 @@
       "terms": "By continuing, you agree to our Terms of Service and Privacy Policy. Subscriptions auto-renew unless cancelled.",
       "viewPlans": "View Plans",
       "storeProblem": "There was a problem with the store. Please try again later.",
-      "purchaseNotAllowed": "Purchases are not allowed on this device.",
-      "paymentPending": "Payment is pending. You'll receive access once payment is confirmed."
+      "paymentNotAllowed": "Payment failed. Please try a different payment method.",
+      "paymentPending": "Payment is pending. You'll receive access once payment is confirmed.",
+      "paymentMethodInvalid": "Payment method is invalid. Please check your payment information and try again.",
+      "receiptValidationFailed": "Receipt validation failed. Please try again or contact support.",
+      "paymentSystemError": "Payment system configuration error. Please try again later."
     },
     "account": {
       "title": "Account",

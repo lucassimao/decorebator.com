@@ -1,6 +1,9 @@
 // jest-setup.js
 import "@testing-library/jest-native/extend-expect";
 
+// Import and configure i18n for tests
+import i18n from "@/i18n";
+
 // Mock all Expo modules that cause issues
 jest.mock("expo-secure-store", () => ({
   getItemAsync: jest.fn(),
@@ -95,36 +98,25 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   clear: jest.fn(),
 }));
 
-// Mock i18n
-jest.mock("@/i18n", () => ({
-  language: "en",
-}));
-
-// Mock react-i18next
-jest.mock("react-i18next", () => ({
-  useTranslation: () => ({
-    t: (key, params) => {
-      // Simple translation mock - return the key with params interpolated
-      if (params && key.includes("{{count}}")) {
-        return key.replace("{{count}}", params.count);
-      }
-      return key;
-    },
-  }),
-}));
+// Configure i18n for tests
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
+  i18n.options.lng = "en";
+  i18n.options.fallbackLng = "en";
+});
 
 // Mock React Navigation
 jest.mock("@react-navigation/native", () => ({
-  useNavigation: () => ({
+  useNavigation: jest.fn(() => ({
     goBack: jest.fn(),
     navigate: jest.fn(),
     replace: jest.fn(),
     push: jest.fn(),
-  }),
+  })),
   useFocusEffect: jest.fn(),
-  useRoute: () => ({
+  useRoute: jest.fn(() => ({
     params: {},
-  }),
+  })),
 }));
 
 // Mock React Query
@@ -151,7 +143,18 @@ jest.mock("react-native", () => ({
   ScrollView: "ScrollView",
   View: "View",
   Text: "Text",
+  TextInput: "TextInput",
   TouchableOpacity: "TouchableOpacity",
+  TouchableWithoutFeedback: "TouchableWithoutFeedback",
+  KeyboardAvoidingView: "KeyboardAvoidingView",
+  Image: "Image",
+  ImageBackground: "ImageBackground",
+  Keyboard: {
+    dismiss: jest.fn(),
+    addListener: jest.fn(() => ({
+      remove: jest.fn(),
+    })),
+  },
   StyleSheet: {
     create: (styles) => styles,
     flatten: (styles) => styles,
@@ -160,6 +163,46 @@ jest.mock("react-native", () => ({
   Modal: "Modal",
   Dimensions: {
     get: () => ({ width: 375, height: 667 }),
+  },
+  Animated: {
+    View: "Animated.View",
+    Text: "Animated.Text",
+    Value: class AnimatedValue {
+      constructor(value) {
+        this._value = value;
+      }
+      setValue(value) {
+        this._value = value;
+      }
+    },
+    timing: (value, config) => ({
+      start: (callback) => {
+        value.setValue(config.toValue);
+        if (callback) callback({ finished: true });
+      },
+      stop: jest.fn(),
+    }),
+    spring: (value, config) => ({
+      start: (callback) => {
+        value.setValue(config.toValue);
+        if (callback) callback({ finished: true });
+      },
+      stop: jest.fn(),
+    }),
+    sequence: (animations) => ({
+      start: (callback) => {
+        animations.forEach((anim) => anim.start());
+        if (callback) callback({ finished: true });
+      },
+      stop: jest.fn(),
+    }),
+    parallel: (animations) => ({
+      start: (callback) => {
+        animations.forEach((anim) => anim.start());
+        if (callback) callback({ finished: true });
+      },
+      stop: jest.fn(),
+    }),
   },
 }));
 
@@ -180,7 +223,7 @@ jest.mock("@/contexts/ThemeContext", () => {
   const { authLightTheme } = jest.requireActual("@/theme/authTheme");
 
   return {
-    useTheme: () => ({
+    useTheme: jest.fn(() => ({
       theme: authLightTheme,
       themeMode: "light",
       setThemeMode: jest.fn(),
@@ -196,7 +239,7 @@ jest.mock("@/contexts/ThemeContext", () => {
         getValueForSize: (small, medium, large, xlarge) => medium, // Default to medium for tests
         getScaledFont: (fontName) => 16, // Default font size for tests
       },
-    }),
+    })),
   };
 });
 
@@ -224,3 +267,68 @@ console.warn = (...args) => {
   }
   originalWarn(...args);
 };
+
+// Mock react-native-safe-area-context
+jest.mock("react-native-safe-area-context", () =>
+  require("__mocks__/react-native-safe-area-context"),
+);
+
+// Mock expo-linear-gradient
+jest.mock("expo-linear-gradient", () => ({
+  LinearGradient: ({ children }) => children,
+}));
+
+// Mock Sentry
+jest.mock("@sentry/react-native", () => ({
+  init: jest.fn(),
+  captureException: jest.fn(),
+  captureMessage: jest.fn(),
+  addBreadcrumb: jest.fn(),
+  setContext: jest.fn(),
+  setUser: jest.fn(),
+}));
+
+// Mock API modules
+jest.mock("@/api/users", () => ({
+  login: jest.fn(),
+  signup: jest.fn(),
+  setAuth: jest.fn(),
+  requestResetEmailPassword: jest.fn(),
+}));
+
+// Mock utility functions
+jest.mock("@/utils/countryDetection", () => ({
+  getDetectedCountry: jest.fn(() => "US"),
+}));
+
+// Mock hooks
+jest.mock("@/hooks/useSnackbar", () => ({
+  useSnackbar: () => ({
+    show: jest.fn(),
+  }),
+}));
+
+// Mock expo-web-browser
+jest.mock("expo-web-browser", () => ({
+  openBrowserAsync: jest.fn(),
+}));
+
+// Mock expo-router
+jest.mock("expo-router", () => ({
+  router: {
+    replace: jest.fn(),
+    push: jest.fn(),
+  },
+  Link: ({ children }) => children,
+}));
+
+// Mock posthog
+jest.mock("posthog-react-native", () => ({
+  usePostHog: () => ({
+    capture: jest.fn(),
+  }),
+}));
+
+// Duplicate navigation mock removed (already defined above)
+
+// Remove duplicate React Native mock - it's already defined above

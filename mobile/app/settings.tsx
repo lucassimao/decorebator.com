@@ -354,13 +354,15 @@ const SettingsScreen: React.FC = () => {
               color={theme.colors.text.primary}
             />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t("settings.title")}</Text>
+          <Text testID="settings-title" style={styles.headerTitle}>
+            {t("settings.title")}
+          </Text>
           <View style={{ width: 40 }} />
         </View>
 
         {/* Current Subscription */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
+          <Text testID="current-plan-section" style={styles.sectionTitle}>
             {t("settings.subscription.currentPlan")}
           </Text>
 
@@ -383,8 +385,19 @@ const SettingsScreen: React.FC = () => {
                   />
                 </View>
                 <View style={styles.subscriptionInfo}>
-                  <Text style={styles.planName}>{getPlanDisplayName()}</Text>
-                  <Text style={styles.planStatus}>
+                  <Text
+                    testID={
+                      subscription?.plan === "monthly"
+                        ? "monthly-premium-name"
+                        : subscription?.plan === "annual"
+                          ? "yearly-premium-name"
+                          : "free-plan-name"
+                    }
+                    style={styles.planName}
+                  >
+                    {getPlanDisplayName()}
+                  </Text>
+                  <Text testID="plan-status" style={styles.planStatus}>
                     {getStatusDisplayName()}
                   </Text>
                 </View>
@@ -396,7 +409,17 @@ const SettingsScreen: React.FC = () => {
                   subscription?.isInGracePeriod) && (
                   <View style={styles.subscriptionDetails}>
                     <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>
+                      <Text
+                        testID={
+                          subscription.isInGracePeriod
+                            ? "grace-period-ends-on"
+                            : subscription.cancelAtPeriodEnd ||
+                                subscription.isCancelledButActive
+                              ? "expires-on-label"
+                              : "renews-on-label"
+                        }
+                        style={styles.detailLabel}
+                      >
                         {subscription.isInGracePeriod
                           ? t("settings.subscription.gracePeriodEndsOn")
                           : subscription.cancelAtPeriodEnd ||
@@ -404,7 +427,10 @@ const SettingsScreen: React.FC = () => {
                             ? t("settings.subscription.expiresOn")
                             : t("settings.subscription.renewsOn")}
                       </Text>
-                      <Text style={styles.detailValue}>
+                      <Text
+                        testID="subscription-date"
+                        style={styles.detailValue}
+                      >
                         {formatDate(subscription.currentPeriodEnd)}
                       </Text>
                     </View>
@@ -414,10 +440,14 @@ const SettingsScreen: React.FC = () => {
                       subscription.isCancelledButActive &&
                       typeof subscription.daysRemaining === "number" && (
                         <View style={styles.detailRow}>
-                          <Text style={styles.detailLabel}>
+                          <Text
+                            testID="days-remaining-label"
+                            style={styles.detailLabel}
+                          >
                             {t("settings.subscription.daysRemaining")}
                           </Text>
                           <Text
+                            testID="days-remaining-count"
                             style={[
                               styles.detailValue,
                               { color: theme.colors.semantic.warning },
@@ -445,6 +475,7 @@ const SettingsScreen: React.FC = () => {
                         ]}
                       >
                         <Text
+                          testID="grace-period-warning"
                           style={[
                             styles.detailLabel,
                             { color: theme.colors.semantic.warning },
@@ -460,6 +491,7 @@ const SettingsScreen: React.FC = () => {
                       !subscription.isCancelledButActive &&
                       subscription.isActive && (
                         <TouchableOpacity
+                          testID="manage-subscription-button"
                           style={styles.cancelButton}
                           onPress={handleCancelSubscription}
                         >
@@ -478,7 +510,7 @@ const SettingsScreen: React.FC = () => {
 
               {!isPremium && (
                 <View style={styles.freeplanLimits}>
-                  <Text style={styles.limitText}>
+                  <Text testID="free-plan-limit" style={styles.limitText}>
                     <MaterialIcons
                       name="info-outline"
                       size={16}
@@ -501,17 +533,17 @@ const SettingsScreen: React.FC = () => {
                   />
                 </View>
                 <View style={styles.subscriptionInfo}>
-                  <Text style={styles.planName}>
+                  <Text testID="free-plan-name" style={styles.planName}>
                     {t("settings.subscription.freePlan")}
                   </Text>
-                  <Text style={styles.planStatus}>
+                  <Text testID="plan-status" style={styles.planStatus}>
                     {t("settings.subscription.statusActive")}
                   </Text>
                 </View>
               </View>
 
               <View style={styles.freeplanLimits}>
-                <Text style={styles.limitText}>
+                <Text testID="free-plan-limit" style={styles.limitText}>
                   <MaterialIcons
                     name="info-outline"
                     size={16}
@@ -526,13 +558,20 @@ const SettingsScreen: React.FC = () => {
 
         {/* Upgrade Section */}
         {!isPremium && !isLoading && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("upgrade.title")}</Text>
-            <Text style={styles.sectionSubtitle}>{t("upgrade.subtitle")}</Text>
+          <View testID="upgrade-section" style={styles.section}>
+            <Text testID="upgrade-title" style={styles.sectionTitle}>
+              {t("upgrade.title")}
+            </Text>
+            <Text testID="upgrade-subtitle" style={styles.sectionSubtitle}>
+              {t("upgrade.subtitle")}
+            </Text>
 
             {/* Premium Features */}
             <View style={styles.featuresCard}>
-              <Text style={styles.featuresTitle}>
+              <Text
+                testID="premium-features-title"
+                style={styles.featuresTitle}
+              >
                 {t("settings.subscription.premiumFeatures")}
               </Text>
               {PRICING_PLANS[0].features.map((feature, index) => (
@@ -1187,7 +1226,7 @@ const createStyles = (
       alignItems: "center",
     },
     versionText: {
-      fontSize: responsive.fontSizes.small,
+      fontSize: responsive.fontSizes.label,
       color: theme.colors.text.secondary,
       opacity: 0.7,
     },

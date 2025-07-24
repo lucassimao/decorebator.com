@@ -17,25 +17,24 @@
 #### 1.1 User Registration
 | Test Case | Steps | Expected Outcome | Status |
 |-----------|-------|------------------|--------|
-| **TC001** - Valid Registration | 1. Open app<br>2. Tap "Sign Up"<br>3. Enter valid email, names, password<br>4. Accept terms<br>5. Tap "Register" | ✅ Account created<br>✅ Welcome screen shown<br>✅ User logged in automatically | ⬜ |
-| **TC002** - Invalid Email Format | 1. Enter invalid email format<br>2. Try to register | ❌ Email validation error shown<br>❌ Registration blocked | ⬜ |
-| **TC003** - Password Too Short | 1. Enter password < 5 characters<br>2. Try to register | ❌ Password validation error<br>❌ Registration blocked | ⬜ |
-| **TC004** - Terms Not Accepted | 1. Fill form without accepting terms<br>2. Try to register | ❌ Terms acceptance required error<br>❌ Registration blocked | ⬜ |
-| **TC005** - Duplicate Email | 1. Register with existing email<br>2. Try to register | ❌ "Email already registered" error<br>❌ Registration blocked | ⬜ |
+| **TC001** - Valid Registration | 1. Open app<br>2. Tap "Sign Up"<br>3. Enter valid email, names, password<br>4. Accept terms<br>5. Tap "Register" | ✅ Account created<br>✅ Welcome screen shown<br>✅ User logged in automatically | ✅ |
+| **TC002** - Invalid Email Format | 1. Enter invalid email format<br>2. Try to register | ❌ Email validation error shown<br>❌ Registration blocked | ✅ |
+| **TC003** - Password Too Short | 1. Enter password < 5 characters<br>2. Try to register | ❌ Password validation error<br>❌ Registration blocked | ✅ |
+| **TC004** - Duplicate Email | 1. Register with existing email<br>2. Try to register | ❌ "Email already registered" error<br>❌ Registration blocked | ✅ |
 
 #### 1.2 User Login
 | Test Case | Steps | Expected Outcome | Status |
 |-----------|-------|------------------|--------|
-| **TC006** - Valid Login | 1. Enter valid credentials<br>2. Tap "Sign In" | ✅ Successfully logged in<br>✅ Dashboard shown | ⬜ |
-| **TC007** - Invalid Credentials | 1. Enter wrong email/password<br>2. Tap "Sign In" | ❌ "Invalid credentials" error<br>❌ Login blocked | ⬜ |
-| **TC008** - Empty Fields | 1. Leave fields empty<br>2. Try to login | ❌ Field validation errors<br>❌ Login blocked | ⬜ |
-| **TC009** - Forgot Password | 1. Tap "Forgot Password"<br>2. Enter email<br>3. Tap "Send Reset" | ✅ Reset email sent message<br>✅ User can return to login | ⬜ |
+| **TC006** - Valid Login | 1. Enter valid credentials<br>2. Tap "Sign In" | ✅ Successfully logged in<br>✅ Dashboard shown | ✅ |
+| **TC007** - Invalid Credentials | 1. Enter wrong email/password<br>2. Tap "Sign In" | ❌ "Invalid credentials" error<br>❌ Login blocked | ✅ |
+| **TC008** - Empty Fields | 1. Leave fields empty<br>2. Try to login | ❌ Field validation errors<br>❌ Login blocked | ✅ |
+| **TC009** - Forgot Password | 1. Tap "Forgot Password"<br>2. Enter email<br>3. Tap "Send Reset" | ✅ Reset email sent message<br>✅ User can return to login | ✅ |
 
 #### 1.3 Session Management
 | Test Case | Steps | Expected Outcome | Status |
 |-----------|-------|------------------|--------|
-| **TC010** - Auto Login | 1. Login successfully<br>2. Close app<br>3. Reopen app | ✅ User remains logged in<br>✅ Dashboard shown directly | ⬜ |
-| **TC011** - Logout | 1. Go to Settings<br>2. Tap "Log Out"<br>3. Confirm logout | ✅ User logged out<br>✅ Login screen shown<br>✅ Data cleared | ⬜ |
+| **TC010** - Auto Login | 1. Login successfully<br>2. Close app<br>3. Reopen app | ✅ User remains logged in<br>✅ Dashboard shown directly | ✅ |
+| **TC011** - Logout | 1. Go to Settings<br>2. Tap "Log Out"<br>3. Confirm logout | ✅ User logged out<br>✅ Login screen shown<br>✅ Data cleared | ✅ |
 
 ---
 
@@ -44,23 +43,23 @@
 #### 2.1 Free Plan Limitations
 | Test Case | Steps | Expected Outcome | Status |
 |-----------|-------|------------------|--------|
-| **TC012** - Free Plan Limits | 1. Create wordlist as free user<br>2. Try to add 11+ words | ❌ Limit reached message<br>❌ Upgrade prompt shown | ⬜ |
-| **TC013** - Multiple Wordlists (Free) | 1. Create 1 wordlist<br>2. Try to create second wordlist | ❌ "Free plan limit" error<br>❌ Upgrade prompt shown | ⬜ |
+| **TC012** - Free Plan Limits | 1. Create wordlist as free user<br>2. Try to add 11+ words | ❌ Limit reached message<br>❌ Upgrade prompt shown | ✅ |
+| **TC013** - Multiple Wordlists (Free) | 1. Create 1 wordlist<br>2. Try to create second wordlist | ❌ "Free plan limit" error<br>❌ Upgrade prompt shown | ✅ |
 
 #### 2.2 RevenueCat Integration (Android)
 | Test Case | Steps | Expected Outcome | Status |
 |-----------|-------|------------------|--------|
-| **TC014** - View Premium Plans | 1. Tap upgrade/premium<br>2. View RevenueCat paywall | ✅ Plans displayed correctly<br>✅ Prices from Play Store shown | ⬜ |
-| **TC015** - Purchase Monthly Plan | 1. Select monthly plan<br>2. Complete purchase flow<br>3. Return to app | ✅ Purchase successful<br>✅ Premium access granted<br>✅ UI updated | ⬜ |
-| **TC016** - Purchase Annual Plan | 1. Select annual plan<br>2. Complete purchase flow<br>3. Return to app | ✅ Purchase successful<br>✅ Premium access granted<br>✅ UI updated | ⬜ |
-| **TC017** - Purchase Cancellation | 1. Start purchase flow<br>2. Cancel during payment | ✅ Returns to app<br>✅ No premium access<br>✅ No errors | ⬜ |
-| **TC018** - Restore Purchases | 1. Go to Settings<br>2. Tap "Restore Purchases" | ✅ Previous purchases restored<br>✅ Premium access if applicable | ⬜ |
+| **TC014** - View Premium Plans | 1. Tap upgrade/premium<br>2. View RevenueCat paywall | ✅ Plans displayed correctly<br>✅ Prices from Play Store shown | ✅ |
+| **TC015** - Purchase Monthly Plan | 1. Select monthly plan<br>2. Complete purchase flow<br>3. Return to app | ✅ Purchase successful<br>✅ Premium access granted<br>✅ UI updated | ✅ |
+| **TC016** - Purchase Annual Plan | 1. Select annual plan<br>2. Complete purchase flow<br>3. Return to app | ✅ Purchase successful<br>✅ Premium access granted<br>✅ UI updated | ✅ |
+| **TC017** - Purchase Cancellation | 1. Start purchase flow<br>2. Cancel during payment | ✅ Returns to app<br>✅ No premium access<br>✅ No errors | ✅ |
+| **TC018** - Restore Purchases | 1. Go to Settings<br>2. Tap "Restore Purchases" | ✅ Previous purchases restored<br>✅ Premium access if applicable | ✅ |
 
 #### 2.3 Native Subscription Management (NEW FEATURE)
 | Test Case | Steps | Expected Outcome | Status |
 |-----------|-------|------------------|--------|
-| **TC019** - Manage Subscription (Android) | 1. Go to Settings<br>2. Tap "Manage Subscription"<br>3. Tap "Open Management" | ✅ Play Store subscriptions opened<br>✅ Success message shown | ⬜ |
-| **TC020** - Subscription Management Error | 1. Simulate no Play Store access<br>2. Try to manage subscription | ❌ Android-specific error message<br>❌ Manual instructions provided | ⬜ |
+| **TC019** - Manage Subscription (Android) | 1. Go to Settings<br>2. Tap "Manage Subscription"<br>3. Tap "Open Management" | ✅ Play Store subscriptions opened<br>✅ Success message shown | ✅ |
+| **TC020** - Subscription Management Error | 1. Simulate no Play Store access<br>2. Try to manage subscription | ❌ Android-specific error message<br>❌ Manual instructions provided | ✅ |
 
 ---
 
@@ -69,9 +68,9 @@
 #### 3.1 Wordlist Creation
 | Test Case | Steps | Expected Outcome | Status |
 |-----------|-------|------------------|--------|
-| **TC021** - Create Wordlist | 1. Tap "Add New Wordlist"<br>2. Enter name, select language<br>3. Create wordlist | ✅ Wordlist created successfully<br>✅ Appears in dashboard | ⬜ |
-| **TC022** - Invalid Wordlist Name | 1. Enter empty name<br>2. Try to create | ❌ Name validation error<br>❌ Creation blocked | ⬜ |
-| **TC023** - Language Selection | 1. Test all supported languages<br>2. Create wordlists | ✅ All 7 languages work<br>✅ Correct language saved | ⬜ |
+| **TC021** - Create Wordlist | 1. Tap "Add New Wordlist"<br>2. Enter name, select language<br>3. Create wordlist | ✅ Wordlist created successfully<br>✅ Appears in dashboard | ✅ |
+| **TC022** - Invalid Wordlist Name | 1. Enter empty name<br>2. Try to create | ❌ Name validation error<br>❌ Creation blocked | ✅ |
+| **TC023** - Language Selection | 1. Test all supported languages<br>2. Create wordlists | ✅ All 7 languages work<br>✅ Correct language saved | ✅ |
 
 #### 3.2 Word Addition
 | Test Case | Steps | Expected Outcome | Status |

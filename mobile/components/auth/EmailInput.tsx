@@ -86,6 +86,7 @@ export const EmailInput: React.FC<EmailInputProps> = ({
         }}
         render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
+            testID="email-input"
             style={[styles.input, errors.email && styles.inputError]}
             placeholder={t("auth.signin.emailPlaceholder")}
             placeholderTextColor={theme.colors.text.placeholder}

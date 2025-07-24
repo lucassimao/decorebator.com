@@ -59,6 +59,7 @@ export const SUBSCRIPTION_SCENARIOS = {
     plan: "free",
     isActive: true,
     status: "active",
+    currentPeriodEnd: undefined, // Free users don't have subscription periods
   }),
 
   ACTIVE_MONTHLY: createSubscriptionData({
@@ -87,6 +88,7 @@ export const SUBSCRIPTION_SCENARIOS = {
     isCancelledButActive: false,
     status: "cancelled",
     daysRemaining: 0,
+    currentPeriodEnd: undefined, // Expired subscriptions don't show period end
   }),
 
   GRACE_PERIOD: createSubscriptionData({
