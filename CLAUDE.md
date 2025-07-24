@@ -35,6 +35,7 @@ cd api && make db-benchmark ARGS="-pool -max=100"  # Test with connection poolin
 cd api && make lint                    # Run golangci-lint
 cd web && npm run lint                 # Web frontend linting
 cd mobile && npm run lint              # Mobile app linting
+cd mobile && npm run typecheck         # TypeScript type checking
 ```
 
 ### Advanced Test Script Commands
@@ -73,6 +74,10 @@ npm test -- components/quiz/QuizContent.test.tsx
 
 # Mobile - Run tests with coverage
 cd mobile && jest --coverage
+
+# Mobile - TypeScript checking
+cd mobile && npm run typecheck         # Run once
+cd mobile && npm run typecheck:watch   # Watch mode
 ```
 
 ## Common Development Commands
@@ -150,8 +155,11 @@ npm run web
 
 # Code quality
 npm run lint
-npm run test          # Run Jest tests in watch mode
-npm run prepare       # Setup Husky git hooks
+npm run lint-fix       # Automatic ESLint fixes
+npm run typecheck      # TypeScript type checking
+npm run typecheck:watch # TypeScript checking in watch mode
+npm run test           # Run Jest tests in watch mode
+npm run prepare        # Setup Husky git hooks
 
 # Update Expo dependencies
 npm run expo:update
@@ -251,7 +259,42 @@ Workers run as a separate process and include retry logic, rate limiting, and er
 - Error reporting modal for AI-generated content issues
 - Interactive flashcard system with flip animations
 
+#### Mobile App Code Quality Standards
+
+**TypeScript Configuration**:
+- Strict TypeScript enabled with comprehensive type checking
+- Use `npm run typecheck` before committing mobile changes
+- Fix all TypeScript errors - the build should have zero type issues
+- Common patterns: Proper typing for React components, hooks, and API interfaces
+
+**Testing Patterns**:
+- Jest with Expo preset for unit testing
+- React Native Testing Library for component testing
+- Mock all external dependencies (NetInfo, AsyncStorage, RevenueCat, etc.)
+- Tests located alongside components in `__tests__/` directories
+- Use descriptive test names: `describe("Component") { it("should do something when condition", () => {}) }`
+
+**Component Architecture**:
+- **Responsive Design System**: Uses `useTheme()` hook with responsive utility functions
+- **Form Components**: Progressive vs Traditional signup forms based on screen size
+- **Modular Analytics**: 9 separate analytics components for dashboard modularity
+- **Error Handling**: Centralized error reporting modal component
+- **Theme Support**: Light/dark theme support with responsive spacing system
+
+**Key Files & Patterns**:
+- `contexts/ThemeContext.tsx`: Responsive design system with spacing utilities
+- `components/auth/`: Progressive and traditional auth forms with proper TypeScript types
+- `hooks/useI18n.tsx`: Language detection and backend synchronization
+- `utils/optimisticSubscription.ts`: RevenueCat subscription state management
+- Test mocking in `__mocks__/` and individual test files
+
 #### Detailed Component Organization
+
+**Authentication Components** (Enhanced):
+- `ProgressiveSignupForm` - Multi-step signup for small devices
+- `TraditionalSignupForm` - Single-step signup for larger screens
+- `EmailInput`, `PasswordInput` - Reusable form inputs with validation
+- Language detection integration with backend user profile synchronization
 
 **Analytics Components** (7 modular components):
 - `AnalyticsHeader`, `StatsGrid`, `WordMasteryChart`, `LearningProgressChart`
@@ -315,7 +358,7 @@ Clean, consistent method naming for background job scheduling:
 ### Database Schema
 
 Key tables with recent enhancements:
-- `users` - User accounts, authentication, subscription status, and profile data
+- `users` - User accounts, authentication, subscription status, and profile data with `preferred_language` field
 - `subscriptions` - Subscription history and details with Stripe integration
 - `subscription_events` - Stripe webhook event audit trail & email notification tracking
 - `wordlists` - User's vocabulary lists with language field and word counts
@@ -438,6 +481,13 @@ The platform uses an intelligent dual-provider system:
 5. Subscription status synced to database
 6. Premium features instantly available
 
+### RevenueCat Error Handling
+**IMPORTANT**: RevenueCat error handling uses string error codes, not enum constants:
+- Error codes are strings: "1" (user cancelled), "2" (store problem), "3" (purchase not allowed), etc.
+- Check `error.userCancelled` property for user cancellation
+- Provide specific error messages instead of generic "Purchases are not allowed on this device"
+- All error messages are translated in 8 supported languages
+
 ### Grace Period Implementation
 
 The platform implements a **3-day grace period** for subscription billing issues, providing users continued access while payment problems are resolved:
@@ -525,6 +575,29 @@ make coverage-html
 - To run tests without watch mode: `jest` (directly)
 - Test files located in component directories alongside source files
 
+### Mobile Testing Requirements
+**CRITICAL**: All mobile changes must pass TypeScript checking before committing:
+```bash
+cd mobile && npm run typecheck
+```
+
+**Common Testing Patterns**:
+- Mock all native modules (`NetInfo`, `AsyncStorage`, `RevenueCat`, etc.)
+- Use `__mocks__/` directory for global mocks
+- Mock components that require native functionality
+- Test authentication flows include `preferredLanguage` parameter
+- Mock responsive theme utilities in tests
+
+**Required Mocks for Mobile Tests**:
+```javascript
+// Essential mocks that should be in every test file touching these modules
+jest.mock("@react-native-community/netinfo")
+jest.mock("@react-native-async-storage/async-storage")
+jest.mock("posthog-react-native")
+jest.mock("react-native-purchases")
+jest.mock("@/contexts/ThemeContext")
+```
+
 ### Database Query Testing (CRITICAL REQUIREMENT)
 
 **ALL database query changes MUST be tested directly in PostgreSQL before committing code.**
@@ -601,6 +674,7 @@ SELECT ... WHERE user_id = 137 AND wordlist_id = 100;
 - **SendGrid** - Email delivery for subscription notifications
 - **OpenAI API** - Image generation (DALL-E), text-to-speech (TTS), and AI content generation (GPT)
 - **Stripe** - Payment processing and subscription management with webhook integration
+- **RevenueCat** - Native app store subscription management (Android, non-US iOS)
 - **Sentry** - Error monitoring and logging
 
 ## Development Workflow
@@ -613,6 +687,7 @@ SELECT ... WHERE user_id = 137 AND wordlist_id = 100;
 6. For subscription testing, configure Stripe webhook endpoint and test keys
 7. Use `make watch` for API development with auto-reload
 8. Run `make test` before committing to ensure tests pass
+9. **CRITICAL**: Run `npm run typecheck` in mobile directory before committing mobile changes
 
 ## Error Reporting System
 
@@ -628,6 +703,33 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - PostgreSQL-based rate limiting without Redis dependency
 - Clear error messages with retry times
 - Status endpoint to check remaining quota
+
+## Multi-Language Support & Internationalization
+
+### Mobile App Internationalization
+- **8 supported languages**: English, German, Spanish, French, Italian, Japanese, Portuguese (Brazil), Portuguese (Portugal)
+- **Real-time language switching** without app restart
+- **User Language Detection**: Mobile app detects UI language and sends it during signup to backend
+- **Backend Synchronization**: User's `preferred_language` stored in database matches detected UI language
+- **Language Mapping**: `useI18n.tsx` provides `backendLanguageMap` for converting i18n codes to backend format
+- **Cultural localization** including currency symbols and date formats
+
+### AI Content Generation
+- **7 languages for AI-powered content**: English, Spanish, French, German, Italian, Portuguese, Japanese
+- **Native language processing** with language-specific grammar rules and verb systems
+- **Culturally-aware image generation** prompts in target language
+- **Language-optimized voice selection** for text-to-speech (alloy, nova, shimmer, echo, fable, onyx)
+- **Dynamic part-of-speech validation** per language
+- **Automatic language detection** and content adaptation
+- **Multi-modal AI features**: definitions, images, audio, and example sentences
+
+### Language Implementation Details
+**Signup Flow Language Detection**:
+- Mobile app detects current UI language using `i18n.language`
+- Converts to backend format using `backendLanguageMap` in `hooks/useI18n.tsx`
+- Sends `preferredLanguage` parameter during user registration
+- Backend stores in `users.preferred_language` field
+- Prevents language mismatch between UI and user profile
 
 ## Architecture Modernization Completed ✅
 
@@ -697,25 +799,6 @@ To prevent abuse and control API costs, error reporting implements comprehensive
   - `docs/TESTING_BEST_PRACTICES.md` - Detailed testing guidelines and patterns
   - `docs/SUBSCRIPTION_SYSTEM.md` - Complete subscription system documentation
   - `docs/WORKER_ABUSE_PREVENTION.md` - Background job abuse prevention strategies
-
-## Multi-Language Support
-
-The application provides comprehensive multi-language support:
-
-### Mobile App Internationalization
-- 8 supported languages: English, German, Spanish, French, Italian, Japanese, Portuguese (Brazil), Portuguese (Portugal)
-- Real-time language switching without app restart
-- All UI elements, error messages, and features fully translated
-- Cultural localization including currency symbols and date formats
-
-### AI Content Generation
-- 7 languages for AI-powered content: English, Spanish, French, German, Italian, Portuguese, Japanese
-- Native language processing with language-specific grammar rules and verb systems
-- Culturally-aware image generation prompts in target language
-- Language-optimized voice selection for text-to-speech (alloy, nova, shimmer, echo, fable, onyx)
-- Dynamic part-of-speech validation per language
-- Automatic language detection and content adaptation
-- Multi-modal AI features: definitions, images, audio, and example sentences
 
 ## Core Features
 

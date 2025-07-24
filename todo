@@ -1,62 +1,18 @@
-### iOS App Store Release Checklist
-
-- [ ] Apple ID with 2FA enabled  
-- [ ] Join Apple Developer Program ($99/year)  
-- [ ] Use Xcode/EAS to build signed `.ipa` or `.app`  
-- [x] Ensure app conforms to [App Store Review Guidelines]   
-- [x] Prepare metadata in App Store Connect:  
-  - App Name, Subtitle, Keywords, Categories  
-  - Description, Support URL, Marketing URL, Copyright  
-  - Privacy Policy URL and App Privacy details   
-  - Age Rating, Content Rights, Demo/test account credentials  
-- [ ] Create screenshots and optional preview video (various device sizes)   
-- [ ] Use TestFlight for beta testing with sandbox users   
-- [ ] Archive and upload build via Xcode or EAS Submit  
-- [ ] Attach build to version in App Store Connect  
-- [ ] Provide App Review notes (especially for special features/external links)   
-- [ ] Submit for review  
-- [ ] Choose release type (Manual/Automatic/Scheduled)  
-- [ ] After approval: Release in App Store Connect  
-- [ ] Post-launch: Monitor analytics, crash logs, and reviews
-
-### Android Google Play Release Checklist
-
-- [ ] Google Play Developer account created ($25 one-time fee)   
-- [ ] Ensure app adheres to Play Program Policies & DDA   
-- [ ] Build a release-ready Android App Bundle (`.aab`), minSdk version, no debug flags   
-- [ ] Sign the AAB correctly  
-- [ ] Prepare Play Console store listing:  
-  - Title (≤50 chars), Short Description (≤80), Full Description (≤4,000)   
-  - App icon (512×512), Feature Graphic (1024×500), Screenshots *(min 2)*   
-  - Optional promo video (YouTube, first 30 s play)   
-  - Privacy Policy URL and contact info   
-  - Content rating questionnaire, pricing & distribution regions (incl. Brazil/EU)   
-- [ ] Create in-app products or subscriptions (link Merchant Account)   
-- [ ] Use testing tracks:  
-  - Internal (team)  
-  - Closed beta (limited testers)  
-  - Open beta (public)   
-- [ ] Upload AAB and release notes under **Release > Production** (or beta)   
-- [ ] Review release summary and artifacts  
-- [ ] Submit for review (takes 2–7 days)   
-- [ ] Post-launch: monitor downloads, crashes (Play Console & Firebase), reviews, revenue   
 
 
-# V2
+[ ] New quiz: complete sentece from audio
+[ ] New quiz: drag-and-drop, word building
+[ ] New quiz: create a small text using 5 words from an wordlist and read to the user. Ask the user to write the missing words.
 [ ] Support invite friend to unlock premium features - 1 subscribed friend grants 1 week for the enviter
-[ ] Security plan OWASP
-[ ] What would take to scale our backend to millons of request per min?
-[ ] Otimizar chat completion prompt - could it be cheaper?
-[ ] Otimize quiz creation - could it be quicker?
-[ ] New quiz: phrasal verbs based on the verb
+[ ] downgrade boxes for when taking time to train
+[ ] Push notification system (reminders, streaks, review alerts).
+[ ] Conversational quiz: given AI all words and meanings, then use voice to talk about any topic
 [ ] Show effect after finishing flash cards like papel picado
-[ ] Idea: downgrade boxes for when taking time to train
-[ ] Update completion prompt: each definition must have a single meaning
-[ ] Im the flash card we need a way to list all words and jump straight to selected one
-[ ] Configurar Dashboard do river
-[ ] Add words in bulk (talvez pra outra categoria de usuario - mais caro)
-[ ] Convert wordlist to another language
-[ ] Migrate local PostgreSQL container from 15 to 17
+[ ] Allow to select specific quiz types
+[ ] User Feedback
+
+
+[ ] Crossword
 [ ] Gamification
     XP points & leveling for completing activities.
     XP points based on mastery improvements
@@ -64,45 +20,23 @@
     Streak system (daily learning).
     Badges/Achievements (e.g., "100 words learned").
     Leaderboards for competitive learners
-
-[ ] User Feedback Loop
-        In-app feedback feature ("I don’t agree with this definition", “This quiz was confusing”).
-        Satisfaction ratings after quiz rounds
-
 [ ] Community / Social Features
         Wordlist sharing (with friends, study groups).
         Comment section or notes on wordlists or quizzes.
         Challenges (e.g., weekly vocab battle).
-[ ] Push notification system (reminders, streaks, review alerts).
-[ ] Progress tracking dashboard (XP, mastered words, streaks, review due).
-[ ] New quiz
-    complete sentece from audio
-    drag-and-drop, word building
-    Voice practice (repeat the word aloud and get AI feedback).
-[ ] Support promotion codes in the settings page 
-[ ] Properly handle session expiration
-[ ] Remove the trigger in subscription table and drop user.subscription_* fields. Move logic to the service layer
-[ ] Progress overview and currentStreak in the DashboardStats component
-[ ] how to rollback db migrations?
-[ ] improve quiz algorithm
-[ ] Crossword
-[ ] Sponsored quiz - pay for words and add sponsored examples and sentences and images
-[ ] Notifications https://github.com/nikoksr/notify
-    - new user
-    - new subscription
-    - new error report
-[ ] New quiz: Ask chatgpt to create a small text using 5 or more words in a wordlist. 
-    Present the text hiding the words and ask the user to write the missing words.
-[ ] Allow to select specific quiz types
-[ ] quiz from all wordlists
-[ ] display word status: pending, error, no meaning found, etc
-[ ] leverage prompt caching  https://openai.com/index/api-prompt-caching/
-[ ] Spike: Investigate if GPT's Fine-tuning feature can improve examples and meanings
-    https://openai.com/index/gpt-4o-fine-tuning/
-
 [ ] support different voices when generating audio from text
-[ ] clicking on a word should open a modal defining the clicked word
+[ ] Im the flash card we need a way to list all words and jump straight to selected one
+[ ] Add words in bulk (talvez pra outra categoria de usuario - mais caro)
+
+
+[ ] Sponsored quiz - pay for words and add sponsored examples and sentences and images
+[ ] Configurar Dashboard do river
+[ ] Security plan OWASP
+[ ] Migrate local PostgreSQL container from 15 to 17
+[ ] What would take to scale our backend to millons of request per min?
+[ ] Remove the trigger in subscription table and drop user.subscription_* fields. Move logic to the service layer
+[ ] how to rollback db migrations?
+[ ] leverage prompt caching  https://openai.com/index/api-prompt-caching/
 [ ] configurar honnef.co/go/tools/cmd/staticcheck
-[ ] configurar go vet as a pre-commit hook
-[ ] customize quiz algorithm based on user settings ( api/internal/quizzes/handlers.go )
+
 

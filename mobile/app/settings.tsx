@@ -16,7 +16,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { createCommonStyles } from "@/styles/common";
 import { usePaymentProvider } from "@/hooks/useRevenueCat";
 import RevenueCatPaywall from "@/components/RevenueCatPaywall";
-import { UpdateButton } from "@/components/settings/UpdateButton";
 import { formatDate } from "@/utils/dateUtils";
 import {
   ActivityIndicator,
@@ -702,9 +701,6 @@ const SettingsScreen: React.FC = () => {
               color={theme.colors.text.secondary}
             />
           </TouchableOpacity>
-
-          {/* App Updates */}
-          <UpdateButton />
 
           {/* Theme Toggle */}
           <View style={styles.settingItem}>
