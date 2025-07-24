@@ -99,6 +99,7 @@ func NewWorkerRiverClient(
 		Workers:      riverWorkers,
 		Logger:       common.Logger,
 		PeriodicJobs: periodicJobs,
+		ErrorHandler: NewRiverErrorHandler(),
 	})
 	if err != nil {
 		return nil, err
