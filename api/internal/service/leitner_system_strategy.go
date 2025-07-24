@@ -968,7 +968,72 @@ func (s *LeitnerSystemStrategy) recordExampleAudioUsage(ctx context.Context, def
 	return err
 }
 
-func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(ctx context.Context, leitnerSystemTrackingID int64, success bool, transactionPtr *pgx.Tx) error {
+// clearEarliestSkipsIfNeeded prevents all definitions from being blocked by clearing
+// the 3 definitions that are closest to becoming available again.
+// This ensures that quiz generation never fails due to all definitions being temporarily skipped.
+func (s *LeitnerSystemStrategy) clearEarliestSkipsIfNeeded(ctx context.Context, userID, wordlistID, currentLeitnerTrackingID int64, tx pgx.Tx) (int, error) {
+	// First, check if applying the skip to current definition would block all definitions
+	availableCountQuery := `
+		SELECT COUNT(*) as available_count 
+		FROM leitner_system_tracking lst 
+		JOIN word_definitions wd ON lst.definition_id = wd.definition_id
+		JOIN words w ON wd.word_id = w.id 
+		WHERE lst.user_id = $1 AND w.wordlist_id = $2 
+		AND w.learned = FALSE 
+		AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())
+		AND lst.id != $3  -- Exclude current one being updated
+	`
+
+	var availableCount int
+	err := tx.QueryRow(ctx, availableCountQuery, userID, wordlistID, currentLeitnerTrackingID).Scan(&availableCount)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count available definitions: %w", err)
+	}
+
+	// If we still have available definitions, no need to clear any skips
+	if availableCount > 0 {
+		return 0, nil
+	}
+
+	// All definitions would be blocked - clear the 3 earliest skipped definitions
+	clearSkipsQuery := `
+		UPDATE leitner_system_tracking 
+		SET temporarily_skipped_until = NULL 
+		WHERE id IN (
+			SELECT lst.id 
+			FROM leitner_system_tracking lst 
+			JOIN word_definitions wd ON lst.definition_id = wd.definition_id
+			JOIN words w ON wd.word_id = w.id 
+			WHERE lst.user_id = $1 AND w.wordlist_id = $2 
+			AND w.learned = FALSE 
+			AND lst.temporarily_skipped_until IS NOT NULL
+			AND lst.id != $3  -- Don't clear the current one being updated
+			ORDER BY lst.temporarily_skipped_until ASC  -- Clear earliest to expire first
+			LIMIT 3
+		)
+	`
+
+	result, err := tx.Exec(ctx, clearSkipsQuery, userID, wordlistID, currentLeitnerTrackingID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to clear earliest skips: %w", err)
+	}
+
+	clearedCount := int(result.RowsAffected())
+
+	// Log the automatic skip clearing for monitoring
+	if clearedCount > 0 {
+		common.Logger.Info("cleared_earliest_skips_to_prevent_blocking",
+			"userID", userID,
+			"wordlistID", wordlistID,
+			"currentLeitnerTrackingID", currentLeitnerTrackingID,
+			"clearedCount", clearedCount,
+			"reason", "all_definitions_would_be_blocked")
+	}
+
+	return clearedCount, nil
+}
+
+func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(ctx context.Context, quizResult QuizResult, transactionPtr *pgx.Tx) error {
 	var tx pgx.Tx
 	var err error
 
@@ -992,6 +1057,21 @@ func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(ctx context.Context,
 		tx = *transactionPtr
 	}
 
+	// If answer is incorrect, check if we need to clear some skips to prevent blocking all definitions
+	if !quizResult.IsCorrect {
+		clearedCount, clearErr := s.clearEarliestSkipsIfNeeded(ctx, quizResult.UserID, quizResult.WordlistID, quizResult.LeitnerSystemTrackingID, tx)
+		if clearErr != nil {
+			return fmt.Errorf("failed to clear earliest skips: %w", clearErr)
+		}
+		if clearedCount > 0 {
+			common.Logger.Info("preventive_skip_clearing_completed",
+				"userID", quizResult.UserID,
+				"wordlistID", quizResult.WordlistID,
+				"leitnerSystemTrackingID", quizResult.LeitnerSystemTrackingID,
+				"clearedDefinitionsCount", clearedCount)
+		}
+	}
+
 	// Proper Leitner system logic with temporary skip on incorrect answers
 	query := `UPDATE leitner_system_tracking 
 	SET 
@@ -1009,7 +1089,7 @@ func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(ctx context.Context,
 	RETURNING box_id`
 
 	var boxId int64
-	row := tx.QueryRow(ctx, query, success, leitnerSystemTrackingID)
+	row := tx.QueryRow(ctx, query, quizResult.IsCorrect, quizResult.LeitnerSystemTrackingID)
 	err = row.Scan(&boxId)
 	if err != nil {
 		return err
@@ -1067,7 +1147,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	}
 
 	// Update the Leitner system tracking
-	err = s.updateLeitnerSystemTracking(ctx, quizResult.LeitnerSystemTrackingID, quizResult.IsCorrect, &tx)
+	err = s.updateLeitnerSystemTracking(ctx, quizResult, &tx)
 	if err != nil {
 		return err
 	}
@@ -1141,7 +1221,6 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 
 	return nil
 }
-
 
 // MarkErrorResolved removes the temporary skip status from definitions and marks error reports as resolved.
 // This function is called when:
@@ -1313,4 +1392,3 @@ func (s *LeitnerSystemStrategy) selectBalancedQuizType(ctx context.Context, user
 
 	return scores[selectedIndex].quizType, nil
 }
-
