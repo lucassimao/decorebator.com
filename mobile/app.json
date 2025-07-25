@@ -2,7 +2,7 @@
   "expo": {
     "name": "decorebator",
     "slug": "decorebator",
-    "version": "1.0.1",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "decorebator",
@@ -19,6 +19,9 @@
     "ios": {
       "config": {
         "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "UIBackgroundModes": ["background-processing", "background-fetch", "remote-notification"]
       }
     },
     "android": {
@@ -29,8 +32,10 @@
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.WAKE_LOCK",
+        "android.permission.VIBRATE"
       ],
       "package": "com.lsimaocosta.decorebator"
     },
@@ -44,6 +49,15 @@
       "expo-audio",
       "expo-secure-store",
       "expo-mail-composer",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#FF7B54",
+          "androidMode": "default",
+          "androidCollapsedTitle": "#{unread_notifications} new notifications"
+        }
+      ],
       [
         "expo-image-picker",
         {

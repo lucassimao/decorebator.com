@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import * as Notifications from "expo-notifications";
 
 import { useI18n } from "@/hooks/useI18n";
 import { SnackbarProvider } from "@/hooks/useSnackbar";
@@ -13,6 +14,16 @@ import * as Sentry from "@sentry/react-native";
 
 // Prevent auto-hide so we can control when to hide it
 SplashScreen.preventAutoHideAsync();
+
+// Configure notification handler for future use
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 Sentry.init({
   dsn: "https://1905051f98d938186e63c776dec05a68@o4509430877257728.ingest.us.sentry.io/4509553206099968",
