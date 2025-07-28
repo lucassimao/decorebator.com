@@ -865,8 +865,26 @@ web/docs/                             # Web frontend documentation
 - API changes require updating `.http` files for examples
 - Architecture decisions documented with rationale and migration plans
 
-## Memories
-- read README.md for more additional context on decorebator project
-- read all files inside the docs folder for comprehensive documentation and  patterns
+## Important Development Notes
+
+### Code References
+When referencing specific functions or pieces of code, include the pattern `file_path:line_number` to allow easy navigation to the source code location.
+
+**Example**: Clients are marked as failed in the `connectToServer` function in `src/services/process.ts:712`.
+
+### Critical Development Requirements
+- **NEVER commit changes unless explicitly asked** - Only commit when the user specifically requests it
+- **ALWAYS run `npm run typecheck` in mobile directory** before committing mobile changes
+- **Database query changes MUST be tested directly in PostgreSQL** before committing code
+- **ALL mobile changes must pass TypeScript checking** before committing: `cd mobile && npm run typecheck`
+- **Run `make test` before committing** to ensure API tests pass
+- **Use `make qa` for comprehensive quality assurance** before major releases
+
+### Memory Guidelines
+- Read README.md for additional context on the Decorebator project
+- Read all files inside the docs folder for comprehensive documentation and patterns
 - Update README.md right after introducing major features or refactorings
-- use api/Makefile and api/scripts/run-tests.sh as the source for the main automations and commands in this monorepo
+- Use api/Makefile and api/scripts/run-tests.sh as the source for main automations and commands in this monorepo
+- Follow the testing patterns documented in `docs/TESTING_BEST_PRACTICES.md`
+- Refer to `docs/SUBSCRIPTION_SYSTEM.md` for payment system details
+- Check `docs/DETERMINISTIC_LEITNER_IMPLEMENTATION.md` for learning algorithm specifications

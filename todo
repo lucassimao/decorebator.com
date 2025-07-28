@@ -1,15 +1,45 @@
 
+Launch strategy
+    - Update site
+    - Update app store images
+    - update my website
+
+    - Product Hunt
+    - Tiktok how decorebator works series
+    - Instagram how decorebator works series
+    - YouTube shorts how decorebator works
+    - Share behind-the-scenes content of AI creating definitions, images, audio
+
+    - Post educational content on social networks
+    - ASO (App Store Optimization)
+        Primary: "AI vocabulary," "spaced repetition," "smart flashcards"
+        Language-specific: "German vocabulary app," "Spanish learning AI"
+        Feature-based: "vocabulary with images," "pronunciation practice"
+        Educational: "memory techniques," "scientific learning"
+
+    - Content calendar (Monday/Wednesday/Friday posts)
+    - Reach out to first batch of language YouTubers
+
+
+[ ] Premium Upgrade Trigger Tests
+    - 10-word limit hit: "Ready to learn more? Unlock unlimited words!"
+    - After first quiz: "Love the experience? Get unlimited wordlists!"
+    - 3+ days active: "You're building a great habit! Unlock premium features"
+
 
 [ ] New quiz: complete sentece from audio
 [ ] New quiz: drag-and-drop, word building
 [ ] New quiz: create a small text using 5 words from an wordlist and read to the user. Ask the user to write the missing words.
 [ ] Support invite friend to unlock premium features - 1 subscribed friend grants 1 week for the enviter
 [ ] downgrade boxes for when taking time to train
-[ ] Push notification system (reminders, streaks, review alerts).
 [ ] Conversational quiz: given AI all words and meanings, then use voice to talk about any topic
 [ ] Show effect after finishing flash cards like papel picado
 [ ] Allow to select specific quiz types
 [ ] User Feedback
+[ ] Push notification system (reminders, streaks, review alerts).
+
+
+
 
 
 [ ] Crossword

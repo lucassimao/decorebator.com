@@ -150,11 +150,8 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 				di.url as image_url, di.description as image_description, 
 				wd.word_id AS word_id,
 				lst.updated_at,
-				-- Calculate hours since last review (NULL = never reviewed = maximum hours)
-				CASE 
-					WHEN lst.updated_at IS NULL THEN 999999  -- New words get maximum hours
-					ELSE EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600
-				END as hours_since_review,
+				-- Calculate hours since last review
+				EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 as hours_since_review,
 				-- Get target interval hours based on box
 				CASE lst.box_id
 					WHEN 1 THEN 0     -- Always available
@@ -168,11 +165,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 				-- Calculate progress ratio (how close to target interval)
 				CASE 
 					WHEN lst.box_id = 1 THEN 1.0  -- Box 1 always 100% ready
-					WHEN lst.updated_at IS NULL THEN 1.0  -- New words always ready
-					ELSE (CASE 
-						WHEN lst.updated_at IS NULL THEN 999999  
-						ELSE EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600
-					END) / NULLIF(CASE lst.box_id
+					ELSE (EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600) / NULLIF(CASE lst.box_id
 						WHEN 2 THEN 6
 						WHEN 3 THEN 24
 						WHEN 4 THEN 72
@@ -220,8 +213,8 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 			ORDER BY 
 				-- Primary sort: Highest weight wins (respects spaced repetition intervals)
 				selection_weight DESC,
-				-- Secondary sort: Among equal weights, prioritize oldest reviewed (new words = NULL = oldest)
-				COALESCE(updated_at, '1970-01-01') ASC,
+				-- Secondary sort: Among equal weights, prioritize oldest reviewed
+				updated_at ASC,
 				-- Final tiebreaker: Lowest definition ID wins (deterministic)
 				id ASC
 			LIMIT 1
