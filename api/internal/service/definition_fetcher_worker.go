@@ -232,6 +232,10 @@ func validateDefinitions(word string, definitions []*model.Definition) []string 
 		// Check part of speech specific requirements
 		normalizedPos := NormalizePartOfSpeech(def.PartOfSpeech, def.Language)
 		if normalizedPos == "verb" || normalizedPos == "phrasal verb" {
+			// CRITICAL: Verbs and phrasal verbs MUST have empty main examples array
+			if len(def.Examples) > 0 {
+				validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb/phrasal verb must have empty examples array but has %d examples", i+1, len(def.Examples)))
+			}
 			if len(def.Inflections) == 0 {
 				validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb missing inflections", i+1))
 			} else {
