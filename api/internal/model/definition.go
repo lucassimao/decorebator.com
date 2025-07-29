@@ -66,3 +66,53 @@ type Definition struct {
 	CreatedAt pgtype.Timestamp `json:"createdAt"`
 	UpdatedAt pgtype.Timestamp `json:"updatedAt"`
 }
+
+// GetAllExamples returns all available examples for this definition,
+// using the appropriate source based on part of speech.
+// For verbs: returns examples from inflections
+// For non-verbs: returns main examples
+func (d *Definition) GetAllExamples() []string {
+	var allExamples []string
+
+	if d.IsVerbType {
+		// For verbs: collect from inflections
+		for _, inflection := range d.Inflections {
+			allExamples = append(allExamples, inflection.Examples...)
+		}
+	} else {
+		// For non-verbs: use main examples
+		allExamples = append(allExamples, d.Examples...)
+	}
+
+	return allExamples
+}
+
+// GetLongestExample returns the longest example sentence for this definition,
+// using the appropriate source based on part of speech.
+func (d *Definition) GetLongestExample() string {
+	allExamples := d.GetAllExamples()
+
+	longestExample := ""
+	for _, example := range allExamples {
+		if len(example) > len(longestExample) {
+			longestExample = example
+		}
+	}
+
+	return longestExample
+}
+
+// HasExamples returns true if this definition has any examples available,
+// checking the appropriate source based on part of speech.
+func (d *Definition) HasExamples() bool {
+	if d.IsVerbType {
+		for _, inflection := range d.Inflections {
+			if len(inflection.Examples) > 0 {
+				return true
+			}
+		}
+		return false
+	}
+
+	return len(d.Examples) > 0
+}

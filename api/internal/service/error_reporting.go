@@ -401,7 +401,7 @@ func (ctx *errorReportContext) fetchCompleteDefinitionSnapshot(definitionID int6
 		"source":         definition.Source,
 		"language":       definition.Language,
 		"token":          definition.Token,
-		"examples":       definition.Examples,
+		"examples":       definition.GetAllExamples(),
 		"captured_at":    time.Now().Format(time.RFC3339),
 	}
 

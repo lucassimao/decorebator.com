@@ -140,6 +140,12 @@ make migrate-drop      # Drop all database tables (destructive)
 # Security scanning
 make security-scan     # Run govulncheck + gosec
 make security-scan-full # Comprehensive security scan with reports
+
+# Additional commands
+make admin             # Admin tool commands (usage: make admin CMD=health)
+make load-test         # Run load testing script with environment variables
+make git-hooks-install # Install git hooks for automated linting
+make git-hooks-remove  # Remove git hooks
 ```
 
 ### Mobile App (in `/mobile` directory)
@@ -152,6 +158,7 @@ npm start
 npm run android
 npm run ios
 npm run web
+npm run android-emulator  # Start Android emulator
 
 # Code quality
 npm run lint
@@ -375,7 +382,6 @@ Key tables with recent enhancements:
 - `definition_example_audio` - Audio files for example sentences
 - `example_audio_usage` - Tracks audio generation for fair usage distribution
 - `example_usage` - Ensures variety in quiz example selection
-- `river_job` - Background job queue (deprecated - tables removed in migration 000052)
 - `revenuecat_events` - RevenueCat webhook event audit trail
 - Materialized views refreshed hourly:
   - `mv_word_mastery_current` - Current word mastery state
@@ -426,7 +432,7 @@ docker volume create api_minio-data
 
 ### Tool Version Alignment
 All development tools match GitHub Actions for consistency:
-- Go: 1.23.10
+- Go: 1.23
 - PostgreSQL: 15
 - Redis: 7-alpine
 - gotestsum: latest (structured test output)
@@ -628,16 +634,6 @@ EXPLAIN (FORMAT TEXT) SELECT ...;
 SELECT ... WHERE user_id = 137 AND wordlist_id = 100;
 ```
 
-#### Recent Database Query Fixes (January 2025)
-- **Type Mismatch Errors**: Fixed `(sd.practice_date - INTERVAL '1 day')::date` casting in recursive CTEs
-- **Recursive CTE Syntax**: Corrected `WITH RECURSIVE` placement in multi-CTE queries
-- **Comprehensive Testing**: All 15 analytics repository queries verified working correctly
-
-#### Files Requiring Special Attention
-- `internal/repository/analytics/` - Complex analytical queries with CTEs and recursive logic
-- Any repository files with raw SQL strings - Syntax must be PostgreSQL-compatible
-- Migration files - Must be tested on exact target PostgreSQL version
-
 **NEVER commit database query changes without direct PostgreSQL testing verification.**
 
 ## CI/CD Pipeline
@@ -731,60 +727,6 @@ To prevent abuse and control API costs, error reporting implements comprehensive
 - Backend stores in `users.preferred_language` field
 - Prevents language mismatch between UI and user profile
 
-## Architecture Modernization Completed ✅
-
-### Resolved Critical Issues
-1. ✅ **Global State Anti-Patterns**: Eliminated all global variables and `init()` functions that broke testing
-2. ✅ **Connection Pool Inefficiency**: Implemented centralized AppContext with proper connection reuse
-3. ✅ **Dependency Injection**: Complete modernization with constructor-based injection throughout
-4. ✅ **Service Isolation**: All services now use explicit dependencies, enabling clean unit testing
-
-### Recent Performance Improvements
-- **Analytics Caching**: Implemented Redis-based caching layer (`analytics_cached.go`) with automatic invalidation
-- **Database Indexes**: Added performance indexes for analytics queries (migration 000044)
-- **SQL Injection Fixes**: Resolved SQL injection vulnerabilities in analytics queries
-- **Asynchronous Webhook Processing**: Stripe webhooks now use River workers for improved reliability
-
-### Analytics System Improvements (January 2025)
-
-**Batch Analytics Endpoint**: 
-- New `/analytics/progress-summary` endpoint reduces API calls from N×8 to 1
-- Single request returns all analytics data for dashboard
-- Optimized for mobile app performance
-
-### Analytics Data Quality Fixes (January 2025)
-- **Fixed Critical Streak Calculation Bug**: Corrected broken gap-and-islands logic in `GetWordlistCurrentStreak` and `GetAllWordlistsProgress`
-  - **Issue**: `ROW_NUMBER() OVER (ORDER BY date DESC)` caused consecutive dates to have different group identifiers
-  - **Solution**: Implemented recursive CTE approach that accurately counts backwards from most recent practice
-  - **Files**: `learning_progress.go:176-212`, `batch_progress.go:73-112`
-- **Corrected Box Distribution Logic**: Fixed inconsistent word progress tracking across analytics
-  - **Issue**: Used `MIN(box_id)` showing worst performance instead of best progress per word
-  - **Solution**: Changed to `MAX(box_id)` for consistency with word mastery analytics showing highest achievement
-  - **Files**: `box_distribution.go:45-64`, `box_distribution.go:109-130`
-- **Enhanced Response Time Filtering**: Added consistent outlier detection across all analytics functions
-  - **Practice Time**: Filters to 200ms-30s range excluding accidental clicks and timeouts
-  - **Quiz Performance**: Added NULL handling with COALESCE protection and realistic range filtering
-  - **Files**: `dashboard_stats.go:48-72`, `quiz_performance.go:72-81`, `quiz_performance.go:127-150`
-- **Fixed Word Count Inconsistencies**: Corrected mastery statistics to count all words in wordlists
-  - **Issue**: Only counted words with existing mastery data, not total wordlist size
-  - **Solution**: Use LEFT JOIN from words table to include all active learning words
-  - **Files**: `word_mastery.go:152-162`
-- **Database Schema Cleanup**: Removed unused `study_time_seconds` column that was never maintained
-  - **Migration**: `000046_remove_unused_study_time_seconds.up.sql`
-  - **Code Cleanup**: Updated models and queries to remove dead code references
-  - **Files**: `learning_progress.go:88`, `analytics_types.go:73-81`
-- **Added Consistent Learned Words Filtering**: All analytics now exclude completed words (`w.learned = FALSE`)
-  - **Impact**: Analytics focus on active learning progress, consistent across all functions
-
-### Planned Modernization (Priority Order)
-1. **Week 1-2**: Remove `init()` functions, create repository interfaces
-2. **Week 3-4**: Convert services to constructor-based DI
-3. **Week 5-6**: Implement dependency container, refactor HTTP layer
-
-**Files requiring immediate attention:**
-- `internal/service/word.go`, `internal/service/user.go` - Remove global repositories
-- `internal/common/database.go` - Remove `os.Exit(1)` calls
-
 ## Important Notes
 
 - Authentication uses JWT tokens stored securely on mobile devices
@@ -844,10 +786,10 @@ docs/                                   # Architecture & best practices
 ├── TESTING_BEST_PRACTICES.md         # Comprehensive testing guide
 ├── DETERMINISTIC_LEITNER_IMPLEMENTATION.md     # Core algorithm specs
 ├── SUBSCRIPTION_SYSTEM.md            # Payment system architecture
+├── ANALYTICS_TESTING_IMPLEMENTATION.md # Analytics test patterns
 └── WORKER_ABUSE_PREVENTION.md       # Background job security
 
 api/docs/                              # API-specific documentation
-├── ANALYTICS_TESTING_IMPLEMENTATION.md # Analytics test patterns
 └── *.http files                      # API endpoint examples
 
 mobile/docs/                           # Mobile app documentation

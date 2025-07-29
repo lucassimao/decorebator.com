@@ -68,12 +68,10 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		return river.JobCancel(fmt.Errorf("no definition language for definition %d", definitionID))
 	}
 
-	var longestExample string
-	// using the longest example as the image description
-	for _, item := range definition.Examples {
-		if len(item) > len(longestExample) {
-			longestExample = item
-		}
+	// Using the longest example as the image description
+	longestExample := definition.GetLongestExample()
+	if longestExample == "" {
+		return river.JobCancel(fmt.Errorf("no examples available for image generation, definition ID: %d", definitionID))
 	}
 
 	// Regular expression to find text within square brackets

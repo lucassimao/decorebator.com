@@ -407,12 +407,6 @@ func GetDefinition(token string, languageCode string, pronunciationSystem model.
 		result.Token = token
 		result.Source = model.ChatGPT
 
-		// copying over inflection examples if no main examples
-		if len(result.Examples) == 0 {
-			for _, inflection := range result.Inflections {
-				result.Examples = append(result.Examples, inflection.Examples...)
-			}
-		}
 	}
 
 	logger.Debug("definitions returned.", "count", len(openAIDefinition.Results))

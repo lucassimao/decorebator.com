@@ -486,17 +486,8 @@ func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Wor
 	case model.WordFromImage:
 		return def.ImageUrl != ""
 	case model.CompleteSentence:
-		// For verbs and phrasal verbs, check inflections; for others, check examples
-		if def.Definition.IsVerbType {
-			// Check if inflections have examples
-			for _, inflection := range def.Definition.Inflections {
-				if len(inflection.Examples) > 0 {
-					return true
-				}
-			}
-			return false
-		}
-		return len(def.Definition.Examples) > 0
+		// Use centralized method to check if definition has examples
+		return def.Definition.HasExamples()
 	case model.WordFromAudio, model.MeaningFromAudio:
 		return word.AudioURL != ""
 	case model.WordFromExampleAudio:
@@ -510,17 +501,8 @@ func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Wor
 
 // createCompleteSentenceQuiz handles the complex logic for CompleteSentence quiz type
 func (s *LeitnerSystemStrategy) createCompleteSentenceQuiz(ctx context.Context, def *NextDefinition, definitionService *DefinitionService) (string, string, []string, error) {
-	// For verbs and phrasal verbs, use inflection examples; for others, use regular examples
-	var availableExamples []string
-
-	if def.Definition.IsVerbType {
-		// Collect all examples from inflections
-		for _, inflection := range def.Definition.Inflections {
-			availableExamples = append(availableExamples, inflection.Examples...)
-		}
-	} else {
-		availableExamples = def.Definition.Examples
-	}
+	// Use centralized method to get all appropriate examples based on part of speech
+	availableExamples := def.Definition.GetAllExamples()
 
 	// Select example using fair distribution to avoid repetition
 	selectedExample, err := s.selectFairExample(ctx, def.Definition.ID, availableExamples)

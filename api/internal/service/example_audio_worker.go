@@ -141,15 +141,8 @@ func (w *ExampleAudioWorker) selectExamplesForAudio(definition *model.Definition
 
 	// Smart selection based on part of speech
 	if definition.IsVerbType {
-		// For verbs: Only select the longest example from main examples
-		if longestExample := findLongestExample(definition.Examples); longestExample != "" {
-			selectedExamples = append(selectedExamples, ExampleAudioItem{
-				ExampleText:    longestExample,
-				InflectionType: "", // Main example
-			})
-		}
-
-		// For verbs: Only select the longest example from each inflection
+		// For verbs: Skip main examples (should be empty per schema, or duplicates from fallback logic)
+		// Only select the longest example from each inflection for cost optimization
 		for _, inflection := range definition.Inflections {
 			if longestExample := findLongestExample(inflection.Examples); longestExample != "" {
 				selectedExamples = append(selectedExamples, ExampleAudioItem{
@@ -159,21 +152,11 @@ func (w *ExampleAudioWorker) selectExamplesForAudio(definition *model.Definition
 			}
 		}
 	} else {
-		// For non-verbs: Select all examples
 		for _, example := range definition.Examples {
 			selectedExamples = append(selectedExamples, ExampleAudioItem{
 				ExampleText:    example,
 				InflectionType: "",
 			})
-		}
-
-		for _, inflection := range definition.Inflections {
-			for _, example := range inflection.Examples {
-				selectedExamples = append(selectedExamples, ExampleAudioItem{
-					ExampleText:    example,
-					InflectionType: inflection.Tense,
-				})
-			}
 		}
 	}
 
