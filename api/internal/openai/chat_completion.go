@@ -258,7 +258,8 @@ func buildLanguageSpecificPrompt(token string, languageCode string, pronunciatio
 			" • \"examples\" must be an array of strings. Each string must include the original token wrapped in square brackets. If the partOfSpeech is \"verb\" or equivalent, \"examples\" should be an empty array. For all other parts of speech, \"examples\" must contain exactly 7 different example sentences. "+
 			" • \"inflections\" must be an array. If partOfSpeech is \"verb\" or equivalent, you must include one item for each valid verb tense (%s). Otherwise, \"inflections\" must be an empty array. "+
 			" • Each inflection object must have exactly these required keys: \"inflection\" (string), \"tense\" (one of: %s), and \"examples\" (an array of exactly 7 strings). "+
-			" • Each of the 7 example strings inside \"inflection.examples\" must contain that inflected form wrapped in square brackets. "+
+			" • CRITICAL FOR INFLECTIONS: Each of the 7 example strings must be UNIQUE per inflection and use the correct verb conjugation for that specific tense. Never reuse the same sentence across different inflections. "+
+			" • Each example must contain the properly conjugated verb form wrapped in square brackets. For present tense use present forms, for past tense use past forms, etc. "+
 			" • You may include multiple \"results\" items if the word can function in multiple parts of speech OR has multiple meanings for the same part of speech. "+
 			" • If the token is not found (or the user provided an invalid word), respond with: { \"results\": [], \"pronunciation\": \"\" } "+
 			" • Under no circumstances should you output any text other than valid JSON that matches the schema exactly. "+
@@ -540,10 +541,10 @@ func buildDefinitionSchema(languageCode string) (map[string]any, error) {
 										},
 										"examples": map[string]any{
 											"type":        "array",
-											"description": fmt.Sprintf("Exactly 7 different usage examples of the verb in this tense in %s.", config.Name),
+											"description": fmt.Sprintf("Exactly 7 UNIQUE usage examples of the verb in this specific tense in %s. Each example must use the correct verb conjugation for this inflection and be completely different from examples in other inflections. Ensure proper grammar and tense consistency.", config.Name),
 											"items": map[string]any{
 												"type":        "string",
-												"description": fmt.Sprintf("Example sentence using the full inflection in %s, wrapped entirely in square brackets. For phrasal verbs, wrap the full phrase. E.g., '[skims off]' not '[skims] off'.", config.Name),
+												"description": fmt.Sprintf("Example sentence using the correct verb conjugation for this tense in %s, wrapped entirely in square brackets. For phrasal verbs, wrap the full phrase. E.g., '[skims off]' not '[skims] off'. Ensure the verb form matches the inflection tense.", config.Name),
 											},
 										},
 									},

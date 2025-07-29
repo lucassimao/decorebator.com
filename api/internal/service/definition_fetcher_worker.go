@@ -45,7 +45,6 @@ func NewDefinitionFetcherWorker(db *pgxpool.Pool, wordService *WordService, defi
 	}
 }
 
-
 func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[DefinitionFetcherArgs]) error {
 	// Validate user eligibility before processing (skip if userId is nil - admin context)
 	if job.Args.UserID != nil {
@@ -268,6 +267,20 @@ func validateDefinitions(word string, definitions []*model.Definition) []string 
 					}
 				}
 
+				// Check for duplicate examples across inflections
+				allExamples := make(map[string][]string) // example -> list of tenses that have it
+				for _, inflection := range def.Inflections {
+					for _, example := range inflection.Examples {
+						allExamples[example] = append(allExamples[example], inflection.Tense)
+					}
+				}
+
+				for example, tenses := range allExamples {
+					if len(tenses) > 1 {
+						validationErrors = append(validationErrors, fmt.Sprintf("definition %d: duplicate example across inflections '%s' found in tenses: %v", i+1, example, tenses))
+					}
+				}
+
 				if !hasPresent {
 					validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb missing present tense inflection", i+1))
 				}
@@ -300,4 +313,3 @@ func validateDefinitions(word string, definitions []*model.Definition) []string 
 
 	return validationErrors
 }
-
