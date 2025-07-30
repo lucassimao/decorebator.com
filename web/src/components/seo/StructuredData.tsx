@@ -81,7 +81,7 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
         "inLanguage": ["en", "es", "fr", "de", "it", "pt", "ja"],
         "installUrl": {
           "iOS": "https://apps.apple.com/app/decorebator",
-          "Android": "https://play.google.com/store/apps/details?id=com.decorebator"
+          "Android": "https://play.google.com/store/apps/details?id=com.lsimaocosta.decorebator"
         }
       };
     }

@@ -12,7 +12,7 @@ export const appStoreConfig = {
   // Set these to actual store URLs when apps are approved
   // null values will trigger the pending modal (if showPendingModal is true)
   appStoreUrl: null as string | null,
-  playStoreUrl: null as string | null,
+  playStoreUrl: 'https://play.google.com/store/apps/details?id=com.lsimaocosta.decorebator',
   
   // Future app store URLs (for reference)
   // appStoreUrl: 'https://apps.apple.com/app/decorebator/id123456789',
