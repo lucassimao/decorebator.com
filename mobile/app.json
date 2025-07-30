@@ -17,11 +17,17 @@
       "**/*"
     ],
     "ios": {
+      "bundleIdentifier": "com.lsimaocosta.decorebator",
+      "supportsTablet": true,
       "config": {
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "UIBackgroundModes": ["background-processing", "background-fetch", "remote-notification"]
+        "UIBackgroundModes": ["remote-notification"],
+        "NSMicrophoneUsageDescription": "This app uses audio features for pronunciation practice and voice input.",
+        "NSPhotoLibraryUsageDescription": "This app accesses your photos to let you set your profile picture.",
+        "CFBundleDisplayName": "Decorebator",
+        "LSApplicationCategoryType": "public.app-category.education"
       }
     },
     "android": {

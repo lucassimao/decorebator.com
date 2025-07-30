@@ -32,8 +32,8 @@ const (
 
 // RevenueCat product IDs
 const (
-	ProductMonthlyIOS     = "com.decorebator.premium.monthly"
-	ProductAnnualIOS      = "com.decorebator.premium.annual"
+	ProductMonthlyIOS     = "decorebator_monthly_premium1"
+	ProductAnnualIOS      = "decorebator_annual_premium"
 	ProductMonthlyAndroid = "p1m"
 	ProductAnnualAndroid  = "p2m"
 )
