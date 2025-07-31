@@ -344,7 +344,9 @@ export default function RevenueCatPaywall({
               style={styles.inlineLinkContainer}
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
             >
-              <Text style={styles.linkText}>{t("termsOfService")}</Text>
+              <Text style={styles.linkText}>
+                {t("settings.termsOfService")}
+              </Text>
             </TouchableOpacity>{" "}
             {t("settings.subscription.termsMiddle")}{" "}
             <TouchableOpacity
@@ -352,7 +354,7 @@ export default function RevenueCatPaywall({
               style={styles.inlineLinkContainer}
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
             >
-              <Text style={styles.linkText}>{t("privacyPolicy")}</Text>
+              <Text style={styles.linkText}>{t("settings.privacyPolicy")}</Text>
             </TouchableOpacity>
             . {t("settings.subscription.termsSuffix")}
           </Text>
@@ -510,13 +512,14 @@ const createStyles = (
       lineHeight: responsive.fontSizes.label * 1.4,
     },
     inlineLinkContainer: {
-      minHeight: responsive.spacing.minTouchTarget,
-      justifyContent: "center",
+      paddingVertical: 4,
+      paddingHorizontal: 2,
     },
     linkText: {
       color: theme.colors.primary,
       fontWeight: "600",
       fontSize: responsive.fontSizes.label,
+      lineHeight: responsive.fontSizes.label * 1.4,
       textDecorationLine: "underline",
     },
     restoreButton: {
