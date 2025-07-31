@@ -14,7 +14,6 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { PurchasesPackage, PACKAGE_TYPE } from "react-native-purchases";
 import * as WebBrowser from "expo-web-browser";
-import i18n from "@/i18n";
 
 interface RevenueCatPaywallProps {
   onClose: () => void;
@@ -44,13 +43,11 @@ export default function RevenueCatPaywall({
 
   // Link handlers for Terms of Service and Privacy Policy
   const openTerms = () => {
-    const language = i18n.language || "en";
-    WebBrowser.openBrowserAsync(`https://decorebator.com/${language}/terms`);
+    WebBrowser.openBrowserAsync("https://decorebator.com/en/terms");
   };
 
   const openPrivacy = () => {
-    const language = i18n.language || "en";
-    WebBrowser.openBrowserAsync(`https://decorebator.com/${language}/privacy`);
+    WebBrowser.openBrowserAsync("https://decorebator.com/en/privacy");
   };
 
   useEffect(() => {
