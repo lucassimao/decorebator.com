@@ -337,26 +337,32 @@ export default function RevenueCatPaywall({
 
         {/* Terms */}
         <View style={styles.termsContainer}>
-          <Text style={styles.termsText}>
-            {t("settings.subscription.termsPrefix")}{" "}
+          <View style={styles.termsRow}>
+            <Text style={styles.termsText}>
+              {t("settings.subscription.termsPrefix")}{" "}
+            </Text>
             <TouchableOpacity
               onPress={openTerms}
-              style={styles.inlineLinkContainer}
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
             >
               <Text style={styles.linkText}>
                 {t("settings.termsOfService")}
               </Text>
-            </TouchableOpacity>{" "}
-            {t("settings.subscription.termsMiddle")}{" "}
+            </TouchableOpacity>
+            <Text style={styles.termsText}>
+              {" "}
+              {t("settings.subscription.termsMiddle")}{" "}
+            </Text>
             <TouchableOpacity
               onPress={openPrivacy}
-              style={styles.inlineLinkContainer}
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
             >
               <Text style={styles.linkText}>{t("settings.privacyPolicy")}</Text>
             </TouchableOpacity>
-            . {t("settings.subscription.termsSuffix")}
+            <Text style={styles.termsText}>. </Text>
+          </View>
+          <Text style={styles.termsText}>
+            {t("settings.subscription.termsSuffix")}
           </Text>
         </View>
 
@@ -501,25 +507,28 @@ const createStyles = (
       color: theme.colors.text.secondary,
     },
     termsContainer: {
-      marginTop: responsive.spacing.elementSpacing,
+      marginTop: responsive.spacing.vertical / 2,
       marginBottom: responsive.spacing.elementSpacing,
       paddingHorizontal: responsive.spacing.horizontal / 2,
+      alignItems: "center",
+    },
+    termsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      alignItems: "baseline",
     },
     termsText: {
-      fontSize: responsive.fontSizes.label,
+      fontSize: responsive.fontSizes.body,
       color: theme.colors.text.secondary,
       textAlign: "center",
-      lineHeight: responsive.fontSizes.label * 1.4,
-    },
-    inlineLinkContainer: {
-      paddingVertical: 4,
-      paddingHorizontal: 2,
+      lineHeight: responsive.fontSizes.body * 1.4,
     },
     linkText: {
       color: theme.colors.primary,
       fontWeight: "600",
-      fontSize: responsive.fontSizes.label,
-      lineHeight: responsive.fontSizes.label * 1.4,
+      fontSize: responsive.fontSizes.body,
+      lineHeight: responsive.fontSizes.body * 1.4,
       textDecorationLine: "underline",
     },
     restoreButton: {
@@ -529,7 +538,7 @@ const createStyles = (
       marginBottom: 16,
     },
     restoreButtonText: {
-      fontSize: responsive.fontSizes.label,
+      fontSize: responsive.fontSizes.body,
       color: theme.colors.primary,
       fontWeight: "600",
     },
