@@ -13,6 +13,8 @@ import { useRevenueCat } from "@/hooks/useRevenueCat";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { PurchasesPackage, PACKAGE_TYPE } from "react-native-purchases";
+import * as WebBrowser from "expo-web-browser";
+import i18n from "@/i18n";
 
 interface RevenueCatPaywallProps {
   onClose: () => void;
@@ -24,8 +26,8 @@ export default function RevenueCatPaywall({
   onSuccess,
 }: RevenueCatPaywallProps) {
   const { t } = useTranslation();
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
+  const { theme, responsive } = useTheme();
+  const styles = createStyles(theme, responsive);
 
   const {
     isInitialized,
@@ -39,6 +41,17 @@ export default function RevenueCatPaywall({
   } = useRevenueCat();
 
   const currentOffering = getCurrentOffering();
+
+  // Link handlers for Terms of Service and Privacy Policy
+  const openTerms = () => {
+    const language = i18n.language || "en";
+    WebBrowser.openBrowserAsync(`https://decorebator.com/${language}/terms`);
+  };
+
+  const openPrivacy = () => {
+    const language = i18n.language || "en";
+    WebBrowser.openBrowserAsync(`https://decorebator.com/${language}/privacy`);
+  };
 
   useEffect(() => {
     if (error) {
@@ -341,7 +354,27 @@ export default function RevenueCatPaywall({
         </TouchableOpacity>
 
         {/* Terms */}
-        <Text style={styles.termsText}>{t("settings.subscription.terms")}</Text>
+        <View style={styles.termsContainer}>
+          <Text style={styles.termsText}>
+            {t("settings.subscription.termsPrefix")}{" "}
+            <TouchableOpacity
+              onPress={openTerms}
+              style={styles.inlineLinkContainer}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
+              <Text style={styles.linkText}>{t("termsOfService")}</Text>
+            </TouchableOpacity>{" "}
+            {t("settings.subscription.termsMiddle")}{" "}
+            <TouchableOpacity
+              onPress={openPrivacy}
+              style={styles.inlineLinkContainer}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
+              <Text style={styles.linkText}>{t("privacyPolicy")}</Text>
+            </TouchableOpacity>
+            . {t("settings.subscription.termsSuffix")}
+          </Text>
+        </View>
       </ScrollView>
 
       {isPurchasing && (
@@ -356,7 +389,10 @@ export default function RevenueCatPaywall({
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
+const createStyles = (
+  theme: ReturnType<typeof useTheme>["theme"],
+  responsive: ReturnType<typeof useTheme>["responsive"],
+) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -476,13 +512,26 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) => {
       color: theme.colors.primary,
       fontWeight: "600",
     },
+    termsContainer: {
+      marginTop: responsive.spacing.elementSpacing,
+      paddingHorizontal: responsive.spacing.horizontal / 2,
+      paddingBottom: responsive.spacing.vertical,
+    },
     termsText: {
-      fontSize: 12,
-      color: theme.colors.text.tertiary,
+      fontSize: responsive.fontSizes.micro,
+      color: theme.colors.text.secondary,
       textAlign: "center",
-      paddingHorizontal: 20,
-      paddingBottom: 20,
-      lineHeight: 18,
+      lineHeight: responsive.fontSizes.micro * 1.4,
+    },
+    inlineLinkContainer: {
+      minHeight: responsive.spacing.minTouchTarget,
+      justifyContent: "center",
+    },
+    linkText: {
+      color: theme.colors.primary,
+      fontWeight: "600",
+      fontSize: responsive.fontSizes.micro,
+      textDecorationLine: "underline",
     },
     errorContainer: {
       flex: 1,
