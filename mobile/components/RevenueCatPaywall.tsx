@@ -335,21 +335,6 @@ export default function RevenueCatPaywall({
           })}
         </View>
 
-        {/* Restore button */}
-        <TouchableOpacity
-          style={styles.restoreButton}
-          onPress={handleRestore}
-          disabled={isRestoring}
-        >
-          {isRestoring ? (
-            <ActivityIndicator size="small" color={theme.colors.primary} />
-          ) : (
-            <Text style={styles.restoreButtonText}>
-              {t("settings.subscription.restorePurchases")}
-            </Text>
-          )}
-        </TouchableOpacity>
-
         {/* Terms */}
         <View style={styles.termsContainer}>
           <Text style={styles.termsText}>
@@ -372,6 +357,21 @@ export default function RevenueCatPaywall({
             . {t("settings.subscription.termsSuffix")}
           </Text>
         </View>
+
+        {/* Restore button */}
+        <TouchableOpacity
+          style={styles.restoreButton}
+          onPress={handleRestore}
+          disabled={isRestoring}
+        >
+          {isRestoring ? (
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+          ) : (
+            <Text style={styles.restoreButtonText}>
+              {t("settings.subscription.restorePurchases")}
+            </Text>
+          )}
+        </TouchableOpacity>
       </ScrollView>
 
       {isPurchasing && (
@@ -498,27 +498,16 @@ const createStyles = (
       fontSize: 14,
       color: theme.colors.text.secondary,
     },
-    restoreButton: {
-      alignItems: "center",
-      padding: 16,
-      marginHorizontal: 20,
-      marginBottom: 16,
-    },
-    restoreButtonText: {
-      fontSize: 16,
-      color: theme.colors.primary,
-      fontWeight: "600",
-    },
     termsContainer: {
       marginTop: responsive.spacing.elementSpacing,
+      marginBottom: responsive.spacing.elementSpacing,
       paddingHorizontal: responsive.spacing.horizontal / 2,
-      paddingBottom: responsive.spacing.vertical,
     },
     termsText: {
-      fontSize: responsive.fontSizes.micro,
+      fontSize: responsive.fontSizes.label,
       color: theme.colors.text.secondary,
       textAlign: "center",
-      lineHeight: responsive.fontSizes.micro * 1.4,
+      lineHeight: responsive.fontSizes.label * 1.4,
     },
     inlineLinkContainer: {
       minHeight: responsive.spacing.minTouchTarget,
@@ -527,8 +516,19 @@ const createStyles = (
     linkText: {
       color: theme.colors.primary,
       fontWeight: "600",
-      fontSize: responsive.fontSizes.micro,
+      fontSize: responsive.fontSizes.label,
       textDecorationLine: "underline",
+    },
+    restoreButton: {
+      alignItems: "center",
+      padding: 16,
+      marginHorizontal: 20,
+      marginBottom: 16,
+    },
+    restoreButtonText: {
+      fontSize: responsive.fontSizes.label,
+      color: theme.colors.primary,
+      fontWeight: "600",
     },
     errorContainer: {
       flex: 1,
