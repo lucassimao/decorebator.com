@@ -145,7 +145,9 @@ export function useRevenueCat() {
         return customerInfo;
       } catch (error: any) {
         if (error.userCancelled || error.code === "1") {
-          throw new Error("Purchase cancelled");
+          // User cancelled - don't throw an error, just return null
+          console.log("User cancelled purchase");
+          return null;
         }
         throw error;
       }

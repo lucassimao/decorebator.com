@@ -1,19 +1,21 @@
+import { useTheme } from "@/contexts/ThemeContext";
+import { useRevenueCat } from "@/hooks/useRevenueCat";
+import { MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import * as WebBrowser from "expo-web-browser";
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   ActivityIndicator,
   Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Image,
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
-import { useRevenueCat } from "@/hooks/useRevenueCat";
-import { useTranslation } from "react-i18next";
-import { useTheme } from "@/contexts/ThemeContext";
-import { PurchasesPackage, PACKAGE_TYPE } from "react-native-purchases";
-import * as WebBrowser from "expo-web-browser";
+import { PACKAGE_TYPE, PurchasesPackage } from "react-native-purchases";
 
 interface RevenueCatPaywallProps {
   onClose: () => void;
@@ -64,6 +66,11 @@ export default function RevenueCatPaywall({
       // Purchase the package and get the updated CustomerInfo
       const customerInfo = await purchasePackage(pkg);
 
+      // If customerInfo is null, user cancelled - just return
+      if (!customerInfo) {
+        return;
+      }
+
       // Check if user now has active premium entitlements from the fresh CustomerInfo
       const premiumEntitlement =
         customerInfo?.entitlements?.active?.["Premium"];
@@ -87,7 +94,8 @@ export default function RevenueCatPaywall({
 
       // Check if user cancelled the purchase
       if (error.userCancelled || error.code === "1") {
-        // User cancelled the purchase - don't show error
+        // User cancelled the purchase - just log it, don't show error
+        console.log("User cancelled purchase");
         return;
       }
 
@@ -250,90 +258,124 @@ export default function RevenueCatPaywall({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>
-          {t("settings.subscription.upgradeToPremium")}
-        </Text>
-        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-          <MaterialIcons
-            name="close"
-            size={24}
-            color={theme.colors.text.primary}
-          />
-        </TouchableOpacity>
-      </View>
+      <LinearGradient
+        colors={
+          theme.mode === "light"
+            ? ["#1A237E", "#3949AB", "#64B5F6"]
+            : ["#0D47A1", "#1565C0", "#42A5F5"]
+        }
+        style={styles.headerGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        locations={[0, 0.5, 1]}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <MaterialIcons
+              name="close"
+              size={24}
+              color={theme.colors.text.inverse}
+            />
+          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <View style={styles.premiumIconWrapper}>
+              <Image
+                source={require("@/assets/images/icon.png")}
+                style={styles.decorebatorIcon}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.title}>
+              {t("settings.subscription.upgradeToPremium")}
+            </Text>
+            <Text style={styles.subtitle}>{t("upgrade.subtitle")}</Text>
+          </View>
+        </View>
+      </LinearGradient>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Features */}
-        <View style={styles.featuresSection}>
-          <Text style={styles.sectionTitle}>
-            {t("settings.subscription.features.title")}
-          </Text>
-          {[
-            t("settings.subscription.features.unlimitedWordlists"),
-            t("settings.subscription.features.aiEnrichment"),
-            t("settings.subscription.features.allQuizModes"),
-            t("settings.subscription.features.progressTracking"),
-            t("settings.subscription.features.prioritySupport"),
-          ].map((feature, index) => (
-            <View key={index} style={styles.featureItem}>
-              <MaterialIcons
-                name="check-circle"
-                size={20}
-                color={theme.colors.success}
-              />
-              <Text style={styles.featureText}>{feature}</Text>
-            </View>
-          ))}
-        </View>
-
         {/* Packages */}
         <View style={styles.packagesSection}>
-          {currentOffering.availablePackages.map((pkg) => {
-            const isMonthly = pkg.packageType === "MONTHLY";
-            const isAnnual = pkg.packageType === "ANNUAL";
-            const isPopular = isAnnual; // Mark annual as popular
+          <View style={styles.packagesGrid}>
+            {currentOffering.availablePackages.map((pkg) => {
+              const isMonthly = pkg.packageType === "MONTHLY";
+              const isAnnual = pkg.packageType === "ANNUAL";
+              const isPopular = isAnnual; // Mark annual as popular
 
-            return (
-              <TouchableOpacity
-                key={pkg.identifier}
-                style={[styles.packageCard, isPopular && styles.popularPackage]}
-                onPress={() => handlePurchase(pkg)}
-                disabled={isPurchasing}
-              >
-                {isPopular && (
-                  <View style={styles.popularBadge}>
-                    <Text style={styles.popularBadgeText}>
-                      {t("settings.subscription.mostPopular")}
+              return (
+                <TouchableOpacity
+                  key={pkg.identifier}
+                  style={[
+                    styles.packageCard,
+                    isPopular && styles.popularPackage,
+                  ]}
+                  onPress={() => handlePurchase(pkg)}
+                  disabled={isPurchasing}
+                  activeOpacity={0.8}
+                >
+                  {isPopular && (
+                    <LinearGradient
+                      colors={[
+                        theme.colors.primary,
+                        theme.mode === "light" ? "#FF9A76" : "#FF8A65",
+                      ]}
+                      style={styles.popularGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                    >
+                      <Text style={styles.popularBadgeText}>
+                        {t("settings.subscription.bestValue")}
+                      </Text>
+                    </LinearGradient>
+                  )}
+
+                  <View style={styles.packageContent}>
+                    <Text style={styles.packageTitle}>
+                      {isMonthly
+                        ? t("settings.subscription.monthly")
+                        : t("settings.subscription.yearly")}
+                    </Text>
+
+                    <View style={styles.priceContainer}>
+                      <Text style={styles.packagePrice}>
+                        {pkg.product.priceString}
+                      </Text>
+                      <Text style={styles.packagePeriod}>
+                        {isMonthly
+                          ? `/${t("settings.subscription.perMonth").replace("per ", "")}`
+                          : `/${t("settings.subscription.perYear").replace("per ", "")}`}
+                      </Text>
+                    </View>
+
+                    {isAnnual && (
+                      <View style={styles.savingsContainer}>
+                        <MaterialIcons
+                          name="local-offer"
+                          size={16}
+                          color={theme.colors.success}
+                        />
+                        <Text style={styles.savingsText}>
+                          {t("settings.subscription.savePercent", {
+                            percent: 17,
+                          })}
+                        </Text>
+                      </View>
+                    )}
+
+                    <Text style={styles.packageDescription}>
+                      {isMonthly
+                        ? t("settings.subscription.billedMonthly")
+                        : t("settings.subscription.billedYearly")}
                     </Text>
                   </View>
-                )}
-
-                <Text style={styles.packageTitle}>
-                  {isMonthly
-                    ? t("settings.subscription.monthly")
-                    : t("settings.subscription.yearly")}
-                </Text>
-
-                <Text style={styles.packagePrice}>
-                  {pkg.product.priceString}
-                </Text>
-
-                {isAnnual && (
-                  <Text style={styles.savingsText}>
-                    {t("settings.subscription.savePercent", { percent: 17 })}
-                  </Text>
-                )}
-
-                <Text style={styles.packageDescription}>
-                  {isMonthly
-                    ? t("settings.subscription.billedMonthly")
-                    : t("settings.subscription.billedYearly")}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
+
+        {/* Divider */}
+        <View style={styles.sectionDivider} />
 
         {/* Terms */}
         <View style={styles.termsContainer}>
@@ -364,6 +406,38 @@ export default function RevenueCatPaywall({
           <Text style={styles.termsText}>
             {t("settings.subscription.termsSuffix")}
           </Text>
+        </View>
+
+        {/* Premium Features List */}
+        <View style={styles.featuresContainer}>
+          <View style={styles.featuresList}>
+            {[
+              t("settings.subscription.features.unlimitedWordlists"),
+              t("settings.subscription.features.aiEnrichment"),
+              t("settings.subscription.features.allQuizModes"),
+              t("settings.subscription.features.progressTracking"),
+              t("settings.subscription.features.prioritySupport"),
+            ].map((feature, index) => (
+              <View key={index} style={styles.featureItem}>
+                <LinearGradient
+                  colors={[
+                    theme.colors.primary,
+                    theme.mode === "light" ? "#FF9A76" : "#FF8A65",
+                  ]}
+                  style={styles.checkmarkContainer}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <MaterialIcons
+                    name="check"
+                    size={responsive.getValueForSize(10, 12, 14, 16)}
+                    color={theme.colors.text.inverse}
+                  />
+                </LinearGradient>
+                <Text style={styles.featureText}>{feature}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         {/* Restore button */}
@@ -414,102 +488,272 @@ const createStyles = (
       fontSize: 16,
       color: theme.colors.text.secondary,
     },
+    headerGradient: {
+      paddingTop:
+        responsive.spacing.vertical +
+        responsive.getValueForSize(10, 12, 16, 20),
+      paddingBottom: responsive.spacing.vertical,
+    },
     header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
       alignItems: "center",
-      padding: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.ui.border,
+    },
+    headerContent: {
+      alignItems: "center",
+      marginTop: responsive.spacing.elementSpacing / 2,
+      paddingHorizontal: responsive.spacing.horizontal,
+    },
+    premiumIconWrapper: {
+      width: responsive.getValueForSize(60, 68, 76, 84),
+      height: responsive.getValueForSize(60, 68, 76, 84),
+      borderRadius: responsive.getValueForSize(30, 34, 38, 42),
+      backgroundColor: "rgba(255, 255, 255, 0.95)",
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: responsive.spacing.elementSpacing / 3,
+      overflow: "hidden",
+      ...theme.shadows.sm,
+    },
+    decorebatorIcon: {
+      width: responsive.getValueForSize(40, 48, 54, 60),
+      height: responsive.getValueForSize(40, 48, 54, 60),
+      maxWidth: "100%",
+      maxHeight: "100%",
     },
     title: {
-      fontSize: 24,
+      fontSize: responsive.getValueForSize(
+        responsive.fontSizes.headline,
+        responsive.fontSizes.title,
+        responsive.fontSizes.title,
+        responsive.fontSizes.title,
+      ),
       fontWeight: "700",
-      color: theme.colors.text.primary,
-      flex: 1,
+      color: theme.colors.text.inverse,
+      marginTop: responsive.getValueForSize(8, 10, 12, 14),
+      textAlign: "center",
+    },
+    subtitle: {
+      fontSize: responsive.getValueForSize(
+        responsive.fontSizes.label,
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+      ),
+      color: theme.colors.text.inverse,
+      marginTop: responsive.getValueForSize(4, 6, 8, 10),
+      opacity: 0.95,
+      textAlign: "center",
+      paddingHorizontal: responsive.spacing.horizontal,
+      lineHeight: responsive.fontSizes.body * 1.3,
     },
     closeButton: {
-      padding: 8,
+      position: "absolute",
+      top: responsive.getValueForSize(8, 10, 12, 14),
+      right: responsive.spacing.horizontal,
+      padding: responsive.getValueForSize(6, 8, 10, 12),
+      zIndex: 10,
+      backgroundColor: "rgba(255, 255, 255, 0.15)",
+      borderRadius: theme.borderRadius.full,
     },
     content: {
       flex: 1,
     },
-    featuresSection: {
-      padding: 20,
+    featuresContainer: {
+      marginTop: responsive.getValueForSize(12, 16, 20, 24),
+      marginBottom: responsive.getValueForSize(12, 16, 20, 24),
+      marginHorizontal: responsive.spacing.horizontal,
+      backgroundColor:
+        theme.mode === "light"
+          ? `${theme.colors.primary}05`
+          : theme.colors.background.surface,
+      borderRadius: theme.borderRadius.lg,
+      padding: responsive.getValueForSize(12, 16, 20, 24),
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light"
+          ? `${theme.colors.primary}10`
+          : theme.colors.ui.border,
     },
-    sectionTitle: {
-      fontSize: 18,
+    featuresTitle: {
+      fontSize: responsive.getValueForSize(
+        responsive.fontSizes.label,
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+      ),
       fontWeight: "600",
-      color: theme.colors.text.primary,
-      marginBottom: 16,
+      color: theme.colors.text.secondary,
+      marginBottom: responsive.getValueForSize(8, 10, 12, 14),
+      textAlign: "center",
+    },
+    featuresList: {
+      gap: responsive.getValueForSize(6, 8, 10, 12),
     },
     featureItem: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 12,
+      gap: responsive.getValueForSize(10, 12, 14, 16),
+    },
+    checkmarkContainer: {
+      width: responsive.getValueForSize(20, 22, 24, 26),
+      height: responsive.getValueForSize(20, 22, 24, 26),
+      borderRadius: theme.borderRadius.full,
+      justifyContent: "center",
+      alignItems: "center",
+      ...theme.shadows.sm,
     },
     featureText: {
-      fontSize: 16,
-      color: theme.colors.text.secondary,
-      marginLeft: 12,
+      fontSize: responsive.getValueForSize(
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+        responsive.fontSizes.headline,
+        responsive.fontSizes.headline,
+      ),
+      color: theme.colors.text.primary,
+      fontWeight: "400",
       flex: 1,
     },
+    sectionDivider: {
+      height: 1,
+      backgroundColor:
+        theme.mode === "light"
+          ? theme.colors.ui.divider
+          : theme.colors.border.light,
+      marginHorizontal: responsive.spacing.horizontal * 2,
+      marginVertical: responsive.getValueForSize(8, 10, 12, 14),
+      opacity: 0.5,
+    },
     packagesSection: {
-      padding: 20,
-      paddingTop: 0,
+      paddingHorizontal: responsive.spacing.horizontal,
+      paddingTop: responsive.spacing.vertical / 2,
+      paddingBottom: responsive.spacing.vertical / 3,
+    },
+    packagesGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
+      gap: responsive.getValueForSize(8, 10, 12, 14),
     },
     packageCard: {
-      backgroundColor: theme.colors.background.surface,
-      borderRadius: 16,
-      padding: 20,
-      marginBottom: 16,
+      backgroundColor:
+        theme.mode === "light"
+          ? theme.colors.background.surface
+          : theme.colors.background.elevated,
+      borderRadius: theme.borderRadius.xl,
+      padding: responsive.getValueForSize(14, 16, 18, 20),
       borderWidth: 2,
-      borderColor: theme.colors.ui.border,
+      borderColor:
+        theme.mode === "light"
+          ? theme.colors.border.light
+          : theme.colors.ui.border,
+      ...theme.shadows.md,
+      overflow: "hidden",
+      transform: [{ scale: 1 }],
+      width: `${48}%`,
+      minHeight: responsive.getValueForSize(140, 160, 180, 200),
+      justifyContent: "space-between",
     },
     popularPackage: {
       borderColor: theme.colors.primary,
-      position: "relative",
+      borderWidth: 3,
+      ...theme.shadows.lg,
+      shadowColor: theme.colors.primary,
+      shadowOpacity: 0.2,
+      elevation: 12,
     },
-    popularBadge: {
+    popularGradient: {
       position: "absolute",
-      top: -12,
-      right: 20,
-      backgroundColor: theme.colors.primary,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 12,
+      top: 0,
+      left: 0,
+      right: 0,
+      paddingVertical: responsive.getValueForSize(3, 4, 6, 8),
+      alignItems: "center",
+      borderTopLeftRadius: theme.borderRadius.lg - 2,
+      borderTopRightRadius: theme.borderRadius.lg - 2,
     },
     popularBadgeText: {
-      fontSize: 12,
-      fontWeight: "600",
+      fontSize: responsive.getValueForSize(
+        responsive.fontSizes.micro,
+        responsive.fontSizes.micro,
+        responsive.fontSizes.label,
+        responsive.fontSizes.label,
+      ),
+      fontWeight: "700",
       color: theme.colors.text.inverse,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    packageContent: {
+      marginTop: responsive.getValueForSize(16, 20, 24, 28),
     },
     packageTitle: {
-      fontSize: 20,
+      fontSize: responsive.getValueForSize(
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+        responsive.fontSizes.headline,
+        responsive.fontSizes.headline,
+      ),
       fontWeight: "600",
       color: theme.colors.text.primary,
-      marginBottom: 8,
+      marginBottom: responsive.getValueForSize(8, 10, 12, 14),
+    },
+    priceContainer: {
+      flexDirection: "row",
+      alignItems: "baseline",
+      marginBottom: responsive.spacing.elementSpacing / 2,
     },
     packagePrice: {
-      fontSize: 32,
+      fontSize: responsive.getValueForSize(
+        responsive.fontSizes.headline,
+        responsive.fontSizes.title,
+        responsive.fontSizes.title,
+        responsive.fontSizes.display,
+      ),
       fontWeight: "700",
       color: theme.colors.primary,
-      marginBottom: 4,
+    },
+    packagePeriod: {
+      fontSize: responsive.fontSizes.body,
+      color: theme.colors.text.secondary,
+    },
+    savingsContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor:
+        theme.mode === "light"
+          ? `${theme.colors.success}15`
+          : `${theme.colors.success}20`,
+      paddingHorizontal: responsive.getValueForSize(8, 10, 12, 14),
+      paddingVertical: responsive.getValueForSize(3, 4, 5, 6),
+      borderRadius: theme.borderRadius.md,
+      alignSelf: "flex-start",
+      marginBottom: responsive.getValueForSize(6, 8, 10, 12),
+      borderWidth: 1,
+      borderColor: `${theme.colors.success}30`,
     },
     savingsText: {
-      fontSize: 14,
+      fontSize: responsive.getValueForSize(
+        responsive.fontSizes.micro,
+        responsive.fontSizes.label,
+        responsive.fontSizes.label,
+        responsive.fontSizes.label,
+      ),
       color: theme.colors.success,
       fontWeight: "600",
-      marginBottom: 8,
+      marginLeft: 4,
     },
     packageDescription: {
-      fontSize: 14,
+      fontSize: responsive.getValueForSize(
+        responsive.fontSizes.micro,
+        responsive.fontSizes.label,
+        responsive.fontSizes.label,
+        responsive.fontSizes.label,
+      ),
       color: theme.colors.text.secondary,
     },
     termsContainer: {
-      marginTop: responsive.spacing.vertical / 2,
-      marginBottom: responsive.spacing.elementSpacing,
-      paddingHorizontal: responsive.spacing.horizontal / 2,
+      marginTop: responsive.spacing.vertical / 3,
+      marginBottom: responsive.getValueForSize(8, 10, 12, 14),
+      paddingHorizontal: responsive.spacing.horizontal * 1.5,
       alignItems: "center",
     },
     termsRow: {
@@ -519,28 +763,46 @@ const createStyles = (
       alignItems: "baseline",
     },
     termsText: {
-      fontSize: responsive.fontSizes.body,
+      fontSize: responsive.getValueForSize(
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+      ),
       color: theme.colors.text.secondary,
       textAlign: "center",
       lineHeight: responsive.fontSizes.body * 1.4,
     },
     linkText: {
       color: theme.colors.primary,
-      fontWeight: "600",
-      fontSize: responsive.fontSizes.body,
+      fontWeight: "500",
+      fontSize: responsive.getValueForSize(
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+      ),
       lineHeight: responsive.fontSizes.body * 1.4,
       textDecorationLine: "underline",
     },
     restoreButton: {
       alignItems: "center",
-      padding: 16,
-      marginHorizontal: 20,
-      marginBottom: 16,
+      paddingVertical: responsive.getValueForSize(8, 10, 12, 14),
+      paddingHorizontal: responsive.spacing.horizontal,
+      marginHorizontal: responsive.spacing.horizontal * 2,
+      marginBottom: responsive.spacing.vertical,
     },
     restoreButtonText: {
-      fontSize: responsive.fontSizes.body,
-      color: theme.colors.primary,
-      fontWeight: "600",
+      fontSize: responsive.getValueForSize(
+        responsive.fontSizes.label,
+        responsive.fontSizes.label,
+        responsive.fontSizes.body,
+        responsive.fontSizes.body,
+      ),
+      color: theme.colors.text.secondary,
+      fontWeight: "500",
+      textDecorationLine: "underline",
+      textDecorationColor: theme.colors.text.secondary,
     },
     errorContainer: {
       flex: 1,
