@@ -446,6 +446,7 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                 <SmartDownloadButton 
                   className="bg-gray-100 text-[#2D3436] px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300 flex items-center justify-center space-x-2"
                   size="medium"
+                  onClick={onClose}
                 >
                   <i className="fas fa-download text-sm"></i>
                   <span>Download App</span>
@@ -551,7 +552,7 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                       type="text"
                       value={userInput}
                       onChange={(e) => setUserInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && !showFeedback && handleWriteAnswer()}
+                      onKeyDown={(e) => e.key === 'Enter' && !showFeedback && handleWriteAnswer()}
                       placeholder="Type your answer here..."
                       disabled={showFeedback}
                       className="w-full p-4 border-2 border-gray-200 rounded-xl text-lg focus:border-[#FF7B54] focus:outline-none transition-colors duration-200 disabled:bg-gray-50"
