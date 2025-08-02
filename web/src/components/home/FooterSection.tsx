@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { FacebookIcon, TwitterIcon, InstagramIcon, LinkedInIcon } from './icons';
+import { FacebookIcon, TwitterIcon, InstagramIcon } from './icons';
 import Link from 'next/link';
 
 const FooterSection: React.FC = () => {
@@ -38,7 +38,6 @@ const FooterSection: React.FC = () => {
             <a href="#" className="hover:text-slate-100" aria-label={t('social.facebook')}><FacebookIcon className="h-6 w-6" /></a>
             <a href="#" className="hover:text-slate-100" aria-label={t('social.twitter')}><TwitterIcon className="h-6 w-6" /></a>
             <a href="#" className="hover:text-slate-100" aria-label={t('social.instagram')}><InstagramIcon className="h-6 w-6" /></a>
-            <a href="#" className="hover:text-slate-100" aria-label={t('social.linkedin')}><LinkedInIcon className="h-6 w-6" /></a>
           </div>
         </div>
       </div>
