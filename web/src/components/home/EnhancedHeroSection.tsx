@@ -107,7 +107,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
             <p className="text-lg sm:text-xl text-[#636E72] leading-relaxed -mt-2 sm:-mt-3">
               {t('subtitle')}
             </p>
-
+          {/*
             <div className="flex flex-col sm:flex-row gap-4">
               <button 
                 onClick={() => setIsQuizModalOpen(true)}
@@ -117,6 +117,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
                 <span>{t('startLearningFree')}</span>
                 <i className="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
               </button>
+              
               <button 
                 onClick={() => setIsVideoModalOpen(true)}
                 className="group bg-white/80 backdrop-blur px-8 py-4 rounded-full font-semibold text-lg border-2 border-gray-200 hover:border-[#FF7B54] transition-all duration-300 flex items-center justify-center"
@@ -125,6 +126,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
                 {t('watchDemo')}
               </button>
             </div>
+              */}
 
             {/* App Store Buttons */}
             <div className="flex flex-wrap gap-4 pt-4">

@@ -9,7 +9,7 @@ import { statsConfig } from '@/config/statsConfig';
 const CTASection: React.FC = () => {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const t = useTranslations('cta');
-  const tCommon = useTranslations('common');
+  // const tCommon = useTranslations('common');
 
   return (
     <section id="download" className="py-20 bg-gradient-to-r from-[#FF7B54] to-orange-600 relative overflow-hidden">
@@ -29,7 +29,7 @@ const CTASection: React.FC = () => {
             : t('subtitle')
           }
         </p>
-        
+         {/*
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
           <button 
             onClick={() => setIsVideoModalOpen(true)}
@@ -39,7 +39,7 @@ const CTASection: React.FC = () => {
             <span>{tCommon('watchDemo')}</span>
           </button>
         </div>
-        
+         */}
         {/* App Store Buttons */}
         <div className="flex flex-wrap gap-4 justify-center">
           <AppStoreButton store="apple" />

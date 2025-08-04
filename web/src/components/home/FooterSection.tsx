@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { FacebookIcon, TwitterIcon, InstagramIcon } from './icons';
+// import { FacebookIcon, TwitterIcon, InstagramIcon } from './icons';
 import Link from 'next/link';
 
 const FooterSection: React.FC = () => {
@@ -35,10 +35,12 @@ const FooterSection: React.FC = () => {
         <div className="border-t border-slate-700 pt-8 flex flex-col sm:flex-row justify-between items-center">
           <p className="text-sm">{t('copyright', { year: new Date().getFullYear() })}</p>
           <div className="flex space-x-4 mt-4 sm:mt-0">
+             {/*
             <a href="#" className="hover:text-slate-100" aria-label={t('social.facebook')}><FacebookIcon className="h-6 w-6" /></a>
             <a href="#" className="hover:text-slate-100" aria-label={t('social.twitter')}><TwitterIcon className="h-6 w-6" /></a>
             <a href="#" className="hover:text-slate-100" aria-label={t('social.instagram')}><InstagramIcon className="h-6 w-6" /></a>
-          </div>
+              */}
+            </div>
         </div>
       </div>
     </footer>
