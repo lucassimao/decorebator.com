@@ -1,13 +1,16 @@
-import React from 'react';
+import React from 'react'
 
 const BackgroundElements: React.FC = () => {
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute top-20 left-10 w-64 h-64 bg-orange-300 rounded-full opacity-20 blur-3xl float-animation"></div>
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-yellow-300 rounded-full opacity-20 blur-3xl float-animation" style={{animationDelay: '3s'}}></div>
-      <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-amber-300 rounded-full opacity-10 blur-3xl pulse-glow"></div>
+    <div className="pointer-events-none fixed inset-0 overflow-hidden">
+      <div className="float-animation absolute top-20 left-10 h-64 w-64 rounded-full bg-orange-300 opacity-20 blur-3xl"></div>
+      <div
+        className="float-animation absolute right-10 bottom-20 h-96 w-96 rounded-full bg-yellow-300 opacity-20 blur-3xl"
+        style={{ animationDelay: '3s' }}
+      ></div>
+      <div className="pulse-glow absolute top-1/2 left-1/2 h-80 w-80 rounded-full bg-amber-300 opacity-10 blur-3xl"></div>
     </div>
-  );
-};
+  )
+}
 
-export default BackgroundElements;
+export default BackgroundElements

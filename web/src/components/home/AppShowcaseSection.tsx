@@ -1,73 +1,93 @@
-import React from 'react';
-import Image from 'next/image';
-import { getTranslations } from 'next-intl/server';
+import React from 'react'
+import Image from 'next/image'
+import { getTranslations } from 'next-intl/server'
 
 const AppShowcaseSection: React.FC = async () => {
-  const t = await getTranslations('appShowcase');
+  const t = await getTranslations('appShowcase')
 
   return (
-    <section className="py-20 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold mb-4">
+    <section className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-16 text-center">
+          <h2 className="mb-4 text-4xl font-bold lg:text-5xl">
             <span>{t('title.part1')}</span>
-            <span className="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">{t('title.part2')}</span>
+            <span className="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">
+              {t('title.part2')}
+            </span>
           </h2>
-          <p className="text-xl text-[#636E72] max-w-3xl mx-auto">
-            {t('subtitle')}
-          </p>
+          <p className="mx-auto max-w-3xl text-xl text-[#636E72]">{t('subtitle')}</p>
         </div>
 
         {/* Interactive Demo */}
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid items-center gap-12 lg:grid-cols-2">
           {/* Feature Tabs */}
           <div className="space-y-6">
-            <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-orange-100 transform hover:scale-105 transition-transform duration-300 cursor-pointer">
+            <div className="transform cursor-pointer rounded-2xl border border-orange-100 bg-white/80 p-6 shadow-lg backdrop-blur transition-transform duration-300 hover:scale-105">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#FF7B54] to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF7B54] to-orange-600">
                   <i className="fas fa-chart-line text-white"></i>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-2">{t('features.progressTracking.title')}</h3>
-                  <p className="text-[#636E72] mb-3">{t('features.progressTracking.description')}</p>
+                  <h3 className="mb-2 text-xl font-bold">{t('features.progressTracking.title')}</h3>
+                  <p className="mb-3 text-[#636E72]">
+                    {t('features.progressTracking.description')}
+                  </p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">{t('features.progressTracking.tags.wordMastery')}</span>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">{t('features.progressTracking.tags.boxDistribution')}</span>
-                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">{t('features.progressTracking.tags.dailyStreaks')}</span>
+                    <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-700">
+                      {t('features.progressTracking.tags.wordMastery')}
+                    </span>
+                    <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
+                      {t('features.progressTracking.tags.boxDistribution')}
+                    </span>
+                    <span className="rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-700">
+                      {t('features.progressTracking.tags.dailyStreaks')}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-green-100 transform hover:scale-105 transition-transform duration-300 cursor-pointer">
+            <div className="transform cursor-pointer rounded-2xl border border-green-100 bg-white/80 p-6 shadow-lg backdrop-blur transition-transform duration-300 hover:scale-105">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#4CAF50] to-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#4CAF50] to-green-600">
                   <i className="fas fa-robot text-white"></i>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-2">{t('features.aiContent.title')}</h3>
-                  <p className="text-[#636E72] mb-3">{t('features.aiContent.description')}</p>
+                  <h3 className="mb-2 text-xl font-bold">{t('features.aiContent.title')}</h3>
+                  <p className="mb-3 text-[#636E72]">{t('features.aiContent.description')}</p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">{t('features.aiContent.tags.nativeDefinitions')}</span>
-                    <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">{t('features.aiContent.tags.culturalImages')}</span>
-                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">{t('features.aiContent.tags.optimizedAudio')}</span>
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+                      {t('features.aiContent.tags.nativeDefinitions')}
+                    </span>
+                    <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700">
+                      {t('features.aiContent.tags.culturalImages')}
+                    </span>
+                    <span className="rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-700">
+                      {t('features.aiContent.tags.optimizedAudio')}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100 transform hover:scale-105 transition-transform duration-300 cursor-pointer">
+            <div className="transform cursor-pointer rounded-2xl border border-purple-100 bg-white/80 p-6 shadow-lg backdrop-blur transition-transform duration-300 hover:scale-105">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#9C27B0] to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#9C27B0] to-purple-600">
                   <i className="fas fa-box text-white"></i>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-2">{t('features.leitnerSystem.title')}</h3>
-                  <p className="text-[#636E72] mb-3">{t('features.leitnerSystem.description')}</p>
+                  <h3 className="mb-2 text-xl font-bold">{t('features.leitnerSystem.title')}</h3>
+                  <p className="mb-3 text-[#636E72]">{t('features.leitnerSystem.description')}</p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">{t('features.leitnerSystem.tags.newWords')}</span>
-                    <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">{t('features.leitnerSystem.tags.learning')}</span>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">{t('features.leitnerSystem.tags.mastered')}</span>
+                    <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-700">
+                      {t('features.leitnerSystem.tags.newWords')}
+                    </span>
+                    <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700">
+                      {t('features.leitnerSystem.tags.learning')}
+                    </span>
+                    <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
+                      {t('features.leitnerSystem.tags.mastered')}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -78,10 +98,10 @@ const AppShowcaseSection: React.FC = async () => {
           <div className="relative flex justify-center">
             <div className="relative">
               {/* Phone Frame with Video */}
-              <div className="w-80 bg-gray-900 rounded-[3rem] p-3 shadow-2xl transform hover:scale-105 transition-transform duration-500">
-                <div className="w-full bg-white rounded-[2.5rem] overflow-hidden">
+              <div className="w-80 transform rounded-[3rem] bg-gray-900 p-3 shadow-2xl transition-transform duration-500 hover:scale-105">
+                <div className="w-full overflow-hidden rounded-[2.5rem] bg-white">
                   <video
-                    className="w-full h-auto object-contain rounded-[2rem]"
+                    className="h-auto w-full rounded-[2rem] object-contain"
                     autoPlay
                     loop
                     muted
@@ -97,17 +117,17 @@ const AppShowcaseSection: React.FC = async () => {
                       alt={t('demo.videoAlt')}
                       width={320}
                       height={678}
-                      className="w-full h-auto object-contain rounded-[2rem]"
+                      className="h-auto w-full rounded-[2rem] object-contain"
                       unoptimized
                     />
                   </video>
                 </div>
               </div>
-              
+
               {/* Floating UI Elements */}
-              <div className="absolute -top-8 -right-8 bg-white rounded-2xl p-4 shadow-xl transform rotate-12 hover:rotate-0 transition-transform duration-300">
+              <div className="absolute -top-8 -right-8 rotate-12 transform rounded-2xl bg-white p-4 shadow-xl transition-transform duration-300 hover:rotate-0">
                 <div className="flex items-center space-x-2">
-                  <div className="w-10 h-10 bg-[#FFD700] rounded-full flex items-center justify-center">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FFD700]">
                     <i className="fas fa-video text-white"></i>
                   </div>
                   <div>
@@ -121,7 +141,7 @@ const AppShowcaseSection: React.FC = async () => {
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default AppShowcaseSection;
+export default AppShowcaseSection

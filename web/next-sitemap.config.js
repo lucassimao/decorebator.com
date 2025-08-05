@@ -7,7 +7,7 @@ module.exports = {
   changefreq: 'daily',
   priority: 0.7,
   sitemapSize: 5000,
-  
+
   // Multi-language support
   alternateRefs: [
     {
@@ -15,7 +15,7 @@ module.exports = {
       hreflang: 'en',
     },
     {
-      href: 'https://decorebator.com/es', 
+      href: 'https://decorebator.com/es',
       hreflang: 'es',
     },
     {
@@ -43,21 +43,21 @@ module.exports = {
   // Custom transformation for better SEO
   transform: async (config, path) => {
     // Custom priority based on path importance
-    let priority = 0.7;
-    let changefreq = 'weekly';
+    let priority = 0.7
+    let changefreq = 'weekly'
 
     if (path === '/') {
-      priority = 1.0;
-      changefreq = 'daily';
+      priority = 1.0
+      changefreq = 'daily'
     } else if (path.includes('/en') || path.includes('/es') || path.includes('/fr')) {
-      priority = 0.9;
-      changefreq = 'daily';
+      priority = 0.9
+      changefreq = 'daily'
     } else if (path.includes('/terms') || path.includes('/privacy')) {
-      priority = 0.3;
-      changefreq = 'monthly';
+      priority = 0.3
+      changefreq = 'monthly'
     } else if (path.includes('/help')) {
-      priority = 0.6;
-      changefreq = 'weekly';
+      priority = 0.6
+      changefreq = 'weekly'
     }
 
     return {
@@ -66,7 +66,7 @@ module.exports = {
       priority,
       lastmod: new Date().toISOString(),
       alternateRefs: config.alternateRefs ?? [],
-    };
+    }
   },
 
   robotsTxtOptions: {
@@ -76,8 +76,6 @@ module.exports = {
         allow: '/',
       },
     ],
-    additionalSitemaps: [
-      'https://decorebator.com/sitemap.xml',
-    ],
+    additionalSitemaps: ['https://decorebator.com/sitemap.xml'],
   },
-};
+}

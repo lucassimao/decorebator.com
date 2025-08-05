@@ -304,11 +304,7 @@
         "period": "/ano",
         "description": "Melhor valor para estudantes comprometidos",
         "savings": "Economize $13.98 por ano",
-        "features": [
-          "Tudo do mensal",
-          "Economize $13.98 por ano",
-          "Acesso antecipado a recursos"
-        ],
+        "features": ["Tudo do mensal", "Economize $13.98 por ano", "Acesso antecipado a recursos"],
         "cta": "Começar anual"
       }
     }
@@ -482,7 +478,7 @@
         "title": "8 modos de quiz",
         "modes": [
           "Adivinhar significado",
-          "Palavra do significado", 
+          "Palavra do significado",
           "Associação de imagem",
           "Compreensão auditiva",
           "Completar frase",
@@ -516,13 +512,17 @@
         "interval": "Intervalo de revisão",
         "purpose": "Propósito",
         "boxes": [
-          {"box": "Caixa 1", "interval": "Imediato", "purpose": "Palavras novas, revisões falhadas"},
-          {"box": "Caixa 2", "interval": "6 horas", "purpose": "Aprendizado recente"},
-          {"box": "Caixa 3", "interval": "1 dia", "purpose": "Retenção de curto prazo"},
-          {"box": "Caixa 4", "interval": "3 dias", "purpose": "Retenção de médio prazo"},
-          {"box": "Caixa 5", "interval": "1 semana", "purpose": "Retenção de longo prazo"},
-          {"box": "Caixa 6", "interval": "2 semanas", "purpose": "Retenção estendida"},
-          {"box": "Caixa 7", "interval": "1 mês", "purpose": "Palavras dominadas"}
+          {
+            "box": "Caixa 1",
+            "interval": "Imediato",
+            "purpose": "Palavras novas, revisões falhadas"
+          },
+          { "box": "Caixa 2", "interval": "6 horas", "purpose": "Aprendizado recente" },
+          { "box": "Caixa 3", "interval": "1 dia", "purpose": "Retenção de curto prazo" },
+          { "box": "Caixa 4", "interval": "3 dias", "purpose": "Retenção de médio prazo" },
+          { "box": "Caixa 5", "interval": "1 semana", "purpose": "Retenção de longo prazo" },
+          { "box": "Caixa 6", "interval": "2 semanas", "purpose": "Retenção estendida" },
+          { "box": "Caixa 7", "interval": "1 mês", "purpose": "Palavras dominadas" }
         ]
       },
       "progressionRules": {
@@ -700,7 +700,7 @@
         "title": "Benefícios do aprendizado com IA",
         "items": [
           "Definições abrangentes instantâneas para qualquer palavra",
-          "Exemplos contextuais em seu idioma de destino", 
+          "Exemplos contextuais em seu idioma de destino",
           "Imagens geradas por IA para associação visual de memória",
           "Pronúncia de áudio de qualidade nativa",
           "Insights de gramática e uso",
@@ -757,7 +757,11 @@
         "title": "Sistema Leitner de 7 caixas",
         "description": "Palavras progridem através de 7 caixas baseadas em seu desempenho, com intervalos de revisão crescentes:",
         "boxes": [
-          { "box": "Caixa 1", "interval": "Imediato", "purpose": "Palavras novas, revisões falhadas" },
+          {
+            "box": "Caixa 1",
+            "interval": "Imediato",
+            "purpose": "Palavras novas, revisões falhadas"
+          },
           { "box": "Caixa 2", "interval": "6 horas", "purpose": "Aprendizado recente" },
           { "box": "Caixa 3", "interval": "1 dia", "purpose": "Retenção de curto prazo" },
           { "box": "Caixa 4", "interval": "3 dias", "purpose": "Retenção de médio prazo" },
@@ -1397,11 +1401,7 @@
         "period": "/ano",
         "description": "Melhor valor para estudantes comprometidos",
         "savings": "Economize $13.98 por ano",
-        "features": [
-          "Tudo do Mensal",
-          "Economize $13.98 por ano",
-          "Acesso Antecipado a Recursos"
-        ],
+        "features": ["Tudo do Mensal", "Economize $13.98 por ano", "Acesso Antecipado a Recursos"],
         "cta": "Começar Anual"
       }
     }
@@ -1422,7 +1422,12 @@
       "successRate": "Taxa de sucesso",
       "words": "Palavras",
       "weekDays": ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
-      "quizTypes": ["Adivinhar significado", "Palavra do significado", "Associação de imagem", "Compreensão auditiva"],
+      "quizTypes": [
+        "Adivinhar significado",
+        "Palavra do significado",
+        "Associação de imagem",
+        "Compreensão auditiva"
+      ],
       "boxLabels": ["Caixa 1", "Caixa 2", "Caixa 3", "Caixa 4", "Caixa 5", "Caixa 6", "Caixa 7"],
       "box1": "Caixa 1",
       "box2": "Caixa 2",
@@ -1474,7 +1479,7 @@
     },
     "social": {
       "facebook": "Decorebator no Facebook",
-      "twitter": "Decorebator no Twitter", 
+      "twitter": "Decorebator no Twitter",
       "instagram": "Decorebator no Instagram",
       "linkedin": "Decorebator no LinkedIn"
     }
@@ -1525,7 +1530,7 @@
         "title": "8 Modos de Quiz",
         "modes": [
           "Adivinhar Significado",
-          "Palavra do Significado", 
+          "Palavra do Significado",
           "Associação de Imagens",
           "Compreensão de Áudio",
           "Completar Frase",
@@ -1559,13 +1564,17 @@
         "interval": "Intervalo de Revisão",
         "purpose": "Propósito",
         "boxes": [
-          {"box": "Caixa 1", "interval": "Imediato", "purpose": "Palavras novas, revisões falhadas"},
-          {"box": "Caixa 2", "interval": "6 horas", "purpose": "Aprendizado recente"},
-          {"box": "Caixa 3", "interval": "1 dia", "purpose": "Retenção de curto prazo"},
-          {"box": "Caixa 4", "interval": "3 dias", "purpose": "Retenção de médio prazo"},
-          {"box": "Caixa 5", "interval": "1 semana", "purpose": "Retenção de longo prazo"},
-          {"box": "Caixa 6", "interval": "2 semanas", "purpose": "Retenção estendida"},
-          {"box": "Caixa 7", "interval": "1 mês", "purpose": "Palavras dominadas"}
+          {
+            "box": "Caixa 1",
+            "interval": "Imediato",
+            "purpose": "Palavras novas, revisões falhadas"
+          },
+          { "box": "Caixa 2", "interval": "6 horas", "purpose": "Aprendizado recente" },
+          { "box": "Caixa 3", "interval": "1 dia", "purpose": "Retenção de curto prazo" },
+          { "box": "Caixa 4", "interval": "3 dias", "purpose": "Retenção de médio prazo" },
+          { "box": "Caixa 5", "interval": "1 semana", "purpose": "Retenção de longo prazo" },
+          { "box": "Caixa 6", "interval": "2 semanas", "purpose": "Retenção estendida" },
+          { "box": "Caixa 7", "interval": "1 mês", "purpose": "Palavras dominadas" }
         ]
       },
       "progressionRules": {
@@ -1625,13 +1634,25 @@
       "supportedLanguages": "Idiomas Suportados (7)",
       "aiFeatures": "Funcionalidades de IA por Idioma",
       "languages": [
-        {"flag": "🇺🇸", "name": "Inglês", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"},
-        {"flag": "🇪🇸", "name": "Espanhol", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"},
-        {"flag": "🇫🇷", "name": "Francês", "bgClass": "bg-gradient-to-r from-blue-50 to-white"},
-        {"flag": "🇩🇪", "name": "Alemão", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50"},
-        {"flag": "🇮🇹", "name": "Italiano", "bgClass": "bg-gradient-to-r from-green-50 to-red-50"},
-        {"flag": "🇵🇹", "name": "Português", "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"},
-        {"flag": "🇯🇵", "name": "Japonês", "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"}
+        { "flag": "🇺🇸", "name": "Inglês", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50" },
+        {
+          "flag": "🇪🇸",
+          "name": "Espanhol",
+          "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"
+        },
+        { "flag": "🇫🇷", "name": "Francês", "bgClass": "bg-gradient-to-r from-blue-50 to-white" },
+        { "flag": "🇩🇪", "name": "Alemão", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50" },
+        { "flag": "🇮🇹", "name": "Italiano", "bgClass": "bg-gradient-to-r from-green-50 to-red-50" },
+        {
+          "flag": "🇵🇹",
+          "name": "Português",
+          "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"
+        },
+        {
+          "flag": "🇯🇵",
+          "name": "Japonês",
+          "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"
+        }
       ],
       "features": [
         "Gramática Nativa: Regras e estruturas específicas do idioma",

@@ -183,12 +183,7 @@
       "price": "$0",
       "period": "/月",
       "description": "語彙学習を始めるのに最適",
-      "features": [
-        "1つの単語リスト",
-        "最大10単語",
-        "基本的なクイズモード",
-        "限定的な分析"
-      ],
+      "features": ["1つの単語リスト", "最大10単語", "基本的なクイズモード", "限定的な分析"],
       "cta": "無料で始める",
       "popular": false
     },
@@ -304,12 +299,7 @@
         "price": "$0",
         "period": "",
         "description": "語彙学習を試すのに最適",
-        "features": [
-          "1つの単語リスト",
-          "最大10語",
-          "基本クイズモード",
-          "限定分析"
-        ],
+        "features": ["1つの単語リスト", "最大10語", "基本クイズモード", "限定分析"],
         "cta": "無料で始める"
       },
       "monthly": {
@@ -335,11 +325,7 @@
         "period": "/年",
         "description": "真剣な学習者にとって最高の価値",
         "savings": "年間$13.98節約",
-        "features": [
-          "月額の全て",
-          "年間$13.98節約",
-          "機能への早期アクセス"
-        ],
+        "features": ["月額の全て", "年間$13.98節約", "機能への早期アクセス"],
         "cta": "年額を始める"
       }
     }
@@ -624,12 +610,7 @@
         "price": "$0",
         "period": "",
         "description": "語彙学習をお試しに最適",
-        "features": [
-          "1つの単語リスト",
-          "最大10語",
-          "基本クイズモード",
-          "限定分析"
-        ],
+        "features": ["1つの単語リスト", "最大10語", "基本クイズモード", "限定分析"],
         "cta": "無料で始める"
       },
       "monthly": {
@@ -655,11 +636,7 @@
         "period": "/年",
         "description": "コミットした学習者に最高の価値",
         "savings": "年間$13.98節約",
-        "features": [
-          "月額の全て",
-          "年間$13.98節約",
-          "機能への早期アクセス"
-        ],
+        "features": ["月額の全て", "年間$13.98節約", "機能への早期アクセス"],
         "cta": "年額を始める"
       }
     }
@@ -681,7 +658,15 @@
       "words": "単語",
       "weekDays": ["月", "火", "水", "木", "金", "土", "日"],
       "quizTypes": ["意味推測", "定義から単語", "画像連想", "聴解"],
-      "boxLabels": ["ボックス1", "ボックス2", "ボックス3", "ボックス4", "ボックス5", "ボックス6", "ボックス7"],
+      "boxLabels": [
+        "ボックス1",
+        "ボックス2",
+        "ボックス3",
+        "ボックス4",
+        "ボックス5",
+        "ボックス6",
+        "ボックス7"
+      ],
       "box1": "ボックス1",
       "box2": "ボックス2",
       "box3": "ボックス3",
@@ -785,7 +770,7 @@
         "title": "8つのクイズモード",
         "modes": [
           "意味を推測",
-          "意味から単語", 
+          "意味から単語",
           "画像連想",
           "音声理解",
           "文章完成",
@@ -819,13 +804,13 @@
         "interval": "復習間隔",
         "purpose": "目的",
         "boxes": [
-          {"box": "ボックス1", "interval": "即座", "purpose": "新しい単語、失敗した復習"},
-          {"box": "ボックス2", "interval": "6時間", "purpose": "最近の学習"},
-          {"box": "ボックス3", "interval": "1日", "purpose": "短期記憶定着"},
-          {"box": "ボックス4", "interval": "3日", "purpose": "中期記憶定着"},
-          {"box": "ボックス5", "interval": "1週間", "purpose": "長期記憶定着"},
-          {"box": "ボックス6", "interval": "2週間", "purpose": "拡張記憶定着"},
-          {"box": "ボックス7", "interval": "1ヶ月", "purpose": "習得済み単語"}
+          { "box": "ボックス1", "interval": "即座", "purpose": "新しい単語、失敗した復習" },
+          { "box": "ボックス2", "interval": "6時間", "purpose": "最近の学習" },
+          { "box": "ボックス3", "interval": "1日", "purpose": "短期記憶定着" },
+          { "box": "ボックス4", "interval": "3日", "purpose": "中期記憶定着" },
+          { "box": "ボックス5", "interval": "1週間", "purpose": "長期記憶定着" },
+          { "box": "ボックス6", "interval": "2週間", "purpose": "拡張記憶定着" },
+          { "box": "ボックス7", "interval": "1ヶ月", "purpose": "習得済み単語" }
         ]
       },
       "progressionRules": {
@@ -885,13 +870,29 @@
       "supportedLanguages": "サポート言語（7言語）",
       "aiFeatures": "言語別AI機能",
       "languages": [
-        {"flag": "🇺🇸", "name": "英語", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"},
-        {"flag": "🇪🇸", "name": "スペイン語", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"},
-        {"flag": "🇫🇷", "name": "フランス語", "bgClass": "bg-gradient-to-r from-blue-50 to-white"},
-        {"flag": "🇩🇪", "name": "ドイツ語", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50"},
-        {"flag": "🇮🇹", "name": "イタリア語", "bgClass": "bg-gradient-to-r from-green-50 to-red-50"},
-        {"flag": "🇵🇹", "name": "ポルトガル語", "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"},
-        {"flag": "🇯🇵", "name": "日本語", "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"}
+        { "flag": "🇺🇸", "name": "英語", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50" },
+        {
+          "flag": "🇪🇸",
+          "name": "スペイン語",
+          "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"
+        },
+        { "flag": "🇫🇷", "name": "フランス語", "bgClass": "bg-gradient-to-r from-blue-50 to-white" },
+        { "flag": "🇩🇪", "name": "ドイツ語", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50" },
+        {
+          "flag": "🇮🇹",
+          "name": "イタリア語",
+          "bgClass": "bg-gradient-to-r from-green-50 to-red-50"
+        },
+        {
+          "flag": "🇵🇹",
+          "name": "ポルトガル語",
+          "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"
+        },
+        {
+          "flag": "🇯🇵",
+          "name": "日本語",
+          "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"
+        }
       ],
       "features": [
         "ネイティブ文法：言語固有のルールと構造",

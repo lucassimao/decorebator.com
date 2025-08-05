@@ -1,7 +1,7 @@
-import type { NextConfig } from "next";
-import createNextIntlPlugin from 'next-intl/plugin';
+import type { NextConfig } from 'next'
+import createNextIntlPlugin from 'next-intl/plugin'
 
-const withNextIntl = createNextIntlPlugin();
+const withNextIntl = createNextIntlPlugin()
 
 const nextConfig: NextConfig = {
   images: {
@@ -72,7 +72,7 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-    ];
+    ]
   },
   async redirects() {
     return [
@@ -81,10 +81,10 @@ const nextConfig: NextConfig = {
         destination: '/en',
         permanent: true,
       },
-    ];
+    ]
   },
   poweredByHeader: false,
   compress: true,
-};
+}
 
-export default withNextIntl(nextConfig);
+export default withNextIntl(nextConfig)

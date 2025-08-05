@@ -1,27 +1,23 @@
-'use client';
+'use client'
 
-import React from 'react';
-import PageLayout from '../../../components/layout/PageLayout';
-import { PolicySection } from '../../../components/policy/PolicySection';
+import React from 'react'
+import PageLayout from '../../../components/layout/PageLayout'
+import { PolicySection } from '../../../components/policy/PolicySection'
 
 export default function TermsOfService() {
   return (
     <PageLayout>
       <div className="pt-24 pb-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-[#2D3436] mb-4">
-              Terms of Service
-            </h1>
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h1 className="mb-4 text-4xl font-bold text-[#2D3436] md:text-5xl">Terms of Service</h1>
             <p className="text-xl text-[#636E72]">
               Please read these terms carefully before using Decorebator
             </p>
-            <p className="text-sm text-[#636E72] mt-4">
-              Last updated: June 2025
-            </p>
+            <p className="mt-4 text-sm text-[#636E72]">Last updated: June 2025</p>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12">
+          <div className="rounded-2xl bg-white p-8 shadow-lg md:p-12">
             <PolicySection
               title="1. Acceptance of Terms"
               content={`
@@ -472,27 +468,35 @@ export default function TermsOfService() {
               `}
             />
 
-            <div className="mt-12 p-6 bg-orange-50 rounded-lg border border-orange-200">
+            <div className="mt-12 rounded-lg border border-orange-200 bg-orange-50 p-6">
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
-                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-6 w-6 text-orange-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-orange-900 mb-2">
-                    Acknowledgment
-                  </h3>
+                  <h3 className="mb-2 text-lg font-semibold text-orange-900">Acknowledgment</h3>
                   <p className="text-orange-800">
-                    By using Decorebator, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy.
+                    By using Decorebator, you acknowledge that you have read, understood, and agree
+                    to be bound by these Terms of Service and our Privacy Policy.
                   </p>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
     </PageLayout>
-  );
+  )
 }

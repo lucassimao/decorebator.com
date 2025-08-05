@@ -1,70 +1,80 @@
-import React from 'react';
-import { useTranslations } from 'next-intl';
-import Link from 'next/link';
-import FooterSection from '../home/FooterSection';
-import SmartDownloadButton from '../common/SmartDownloadButton';
+import React from 'react'
+import { useTranslations } from 'next-intl'
+import Link from 'next/link'
+import FooterSection from '../home/FooterSection'
+import SmartDownloadButton from '../common/SmartDownloadButton'
 
 interface FeaturePageLayoutProps {
-  featureKey: string;
-  children?: React.ReactNode;
+  featureKey: string
+  children?: React.ReactNode
 }
 
 const FeaturePageLayout: React.FC<FeaturePageLayoutProps> = ({ featureKey, children }) => {
-  const t = useTranslations(`featurePages.${featureKey}`);
+  const t = useTranslations(`featurePages.${featureKey}`)
 
   return (
-    <div className="min-h-screen bg-[#FDF6E3] relative overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden bg-[#FDF6E3]">
       {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-orange-300 rounded-full opacity-3 blur-3xl float-animation"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-yellow-300 rounded-full opacity-3 blur-3xl float-animation" style={{animationDelay: '3s'}}></div>
-        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-purple-300 rounded-full opacity-2 blur-2xl float-animation" style={{animationDelay: '6s'}}></div>
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="float-animation absolute top-20 left-10 h-32 w-32 rounded-full bg-orange-300 opacity-3 blur-3xl"></div>
+        <div
+          className="float-animation absolute right-10 bottom-20 h-40 w-40 rounded-full bg-yellow-300 opacity-3 blur-3xl"
+          style={{ animationDelay: '3s' }}
+        ></div>
+        <div
+          className="float-animation absolute top-1/2 left-1/3 h-24 w-24 rounded-full bg-purple-300 opacity-2 blur-2xl"
+          style={{ animationDelay: '6s' }}
+        ></div>
       </div>
 
       {/* Hero Section */}
-      <section className="relative pt-24 pb-20 px-4 sm:px-6 lg:px-8 z-10">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative z-10 px-4 pt-24 pb-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
           {/* Breadcrumb */}
           <nav className="mb-8" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-2 text-sm">
               <li>
-                <Link href="/" className="text-[#636E72] hover:text-[#FF7B54] transition-colors duration-300">
+                <Link
+                  href="/"
+                  className="text-[#636E72] transition-colors duration-300 hover:text-[#FF7B54]"
+                >
                   {t('common.home')}
                 </Link>
               </li>
               <li className="text-[#636E72]">/</li>
               <li>
-                <Link href="/#features" className="text-[#636E72] hover:text-[#FF7B54] transition-colors duration-300">
+                <Link
+                  href="/#features"
+                  className="text-[#636E72] transition-colors duration-300 hover:text-[#FF7B54]"
+                >
                   {t('common.features')}
                 </Link>
               </li>
               <li className="text-[#636E72]">/</li>
-              <li className="text-[#2D3436] font-medium">
-                {t('title')}
-              </li>
+              <li className="font-medium text-[#2D3436]">{t('title')}</li>
             </ol>
           </nav>
 
-          <div className="text-center slide-in-up">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#2D3436] mb-6">
+          <div className="slide-in-up text-center">
+            <h1 className="mb-6 text-4xl font-bold text-[#2D3436] md:text-5xl lg:text-6xl">
               {t('hero.title')}
             </h1>
-            <p className="text-xl md:text-2xl text-[#636E72] max-w-4xl mx-auto mb-8 leading-relaxed">
+            <p className="mx-auto mb-8 max-w-4xl text-xl leading-relaxed text-[#636E72] md:text-2xl">
               {t('hero.subtitle')}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <SmartDownloadButton 
-                className="group bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+            <div className="flex flex-col justify-center gap-4 sm:flex-row">
+              <SmartDownloadButton
+                className="group flex transform items-center justify-center rounded-full bg-gradient-to-r from-[#FF7B54] to-orange-600 px-8 py-4 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                 size="large"
               >
                 <span>{t('common.downloadApp')}</span>
-                <i className="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
+                <i className="fas fa-arrow-right ml-2 transition-transform group-hover:translate-x-2"></i>
               </SmartDownloadButton>
               <Link
                 href="/#features"
-                className="group bg-white/80 backdrop-blur px-8 py-4 rounded-full font-semibold text-lg border-2 border-gray-200 hover:border-[#FF7B54] transition-all duration-300 flex items-center justify-center text-[#2D3436]"
+                className="group flex items-center justify-center rounded-full border-2 border-gray-200 bg-white/80 px-8 py-4 text-lg font-semibold text-[#2D3436] backdrop-blur transition-all duration-300 hover:border-[#FF7B54]"
               >
-                <i className="fas fa-grid-3x3 mr-2 text-[#FF7B54] group-hover:scale-110 transition-transform"></i>
+                <i className="fas fa-grid-3x3 mr-2 text-[#FF7B54] transition-transform group-hover:scale-110"></i>
                 {t('common.viewAllFeatures')}
               </Link>
             </div>
@@ -73,32 +83,28 @@ const FeaturePageLayout: React.FC<FeaturePageLayoutProps> = ({ featureKey, child
       </section>
 
       {/* Custom content passed as children */}
-      <div className="relative z-10">
-        {children}
-      </div>
+      <div className="relative z-10">{children}</div>
 
       {/* CTA Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-[#FF7B54] to-orange-600 z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+      <section className="relative z-10 bg-gradient-to-r from-[#FF7B54] to-orange-600 px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="mb-6 text-3xl font-bold text-white md:text-4xl">
             {t('common.readyToExperience')}
           </h2>
-          <p className="text-xl text-orange-100 mb-8">
-            {t('common.joinThousands')}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <SmartDownloadButton 
-              className="group bg-white text-[#FF7B54] px-8 py-4 rounded-full font-semibold text-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+          <p className="mb-8 text-xl text-orange-100">{t('common.joinThousands')}</p>
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+            <SmartDownloadButton
+              className="group flex transform items-center justify-center rounded-full bg-white px-8 py-4 text-lg font-semibold text-[#FF7B54] transition-all duration-300 hover:scale-105 hover:shadow-lg"
               size="large"
             >
               <span>{t('common.downloadApp')}</span>
-              <i className="fas fa-rocket ml-2 group-hover:translate-x-1 transition-transform"></i>
+              <i className="fas fa-rocket ml-2 transition-transform group-hover:translate-x-1"></i>
             </SmartDownloadButton>
             <Link
               href="/#pricing"
-              className="group border-2 border-white text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-white hover:text-[#FF7B54] transition-all duration-300 flex items-center justify-center"
+              className="group flex items-center justify-center rounded-full border-2 border-white px-8 py-4 text-lg font-semibold text-white transition-all duration-300 hover:bg-white hover:text-[#FF7B54]"
             >
-              <i className="fas fa-tag mr-2 group-hover:scale-110 transition-transform"></i>
+              <i className="fas fa-tag mr-2 transition-transform group-hover:scale-110"></i>
               {t('common.viewPricing')}
             </Link>
           </div>
@@ -108,7 +114,7 @@ const FeaturePageLayout: React.FC<FeaturePageLayoutProps> = ({ featureKey, child
       {/* Footer */}
       <FooterSection />
     </div>
-  );
-};
+  )
+}
 
-export default FeaturePageLayout;
+export default FeaturePageLayout

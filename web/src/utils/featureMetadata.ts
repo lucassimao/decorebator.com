@@ -1,11 +1,11 @@
-import { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
 
 export interface FeatureMetadataConfig {
-  featureKey: string;
-  locale: string;
-  keywords: string;
-  ogImage?: string;
+  featureKey: string
+  locale: string
+  keywords: string
+  ogImage?: string
 }
 
 // Map kebab-case URLs to camelCase JSON keys
@@ -15,22 +15,22 @@ const featureKeyMap: Record<string, string> = {
   'quiz-modes': 'quizModes',
   'visual-learning': 'visualLearning',
   'audio-learning': 'audioLearning',
-  'analytics': 'analytics',
+  analytics: 'analytics',
   'multi-language': 'multiLanguage',
-  'flashcards': 'flashcards',
+  flashcards: 'flashcards',
   'error-reporting': 'errorReporting',
-  'offline-support': 'offlineSupport'
-};
+  'offline-support': 'offlineSupport',
+}
 
 export async function generateFeatureMetadata({
   featureKey,
   locale,
   keywords,
-  ogImage = 'https://decorebator.com/og-features.jpg'
+  ogImage = 'https://decorebator.com/og-features.jpg',
 }: FeatureMetadataConfig): Promise<Metadata> {
-  const translationKey = featureKeyMap[featureKey] || featureKey;
-  const t = await getTranslations({ locale, namespace: `featurePages.${translationKey}` });
-  
+  const translationKey = featureKeyMap[featureKey] || featureKey
+  const t = await getTranslations({ locale, namespace: `featurePages.${translationKey}` })
+
   return {
     title: `${t('title')} | Decorebator`,
     description: t('description'),
@@ -42,13 +42,13 @@ export async function generateFeatureMetadata({
     alternates: {
       canonical: `https://decorebator.com/${locale}/features/${featureKey}`,
       languages: {
-        'en': `https://decorebator.com/en/features/${featureKey}`,
-        'es': `https://decorebator.com/es/features/${featureKey}`,
-        'fr': `https://decorebator.com/fr/features/${featureKey}`,
-        'de': `https://decorebator.com/de/features/${featureKey}`,
-        'it': `https://decorebator.com/it/features/${featureKey}`,
-        'pt': `https://decorebator.com/pt/features/${featureKey}`,
-        'ja': `https://decorebator.com/ja/features/${featureKey}`,
+        en: `https://decorebator.com/en/features/${featureKey}`,
+        es: `https://decorebator.com/es/features/${featureKey}`,
+        fr: `https://decorebator.com/fr/features/${featureKey}`,
+        de: `https://decorebator.com/de/features/${featureKey}`,
+        it: `https://decorebator.com/it/features/${featureKey}`,
+        pt: `https://decorebator.com/pt/features/${featureKey}`,
+        ja: `https://decorebator.com/ja/features/${featureKey}`,
       },
     },
     openGraph: {
@@ -73,7 +73,7 @@ export async function generateFeatureMetadata({
       description: t('description'),
       images: [ogImage],
     },
-  };
+  }
 }
 
 export function generateFeatureStructuredData(
@@ -82,37 +82,38 @@ export function generateFeatureStructuredData(
   t: any
 ) {
   return {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": t('title'),
-    "description": t('description'),
-    "url": `https://decorebator.com/features/${featureKey}`,
-    "isPartOf": {
-      "@type": "WebSite",
-      "name": "Decorebator",
-      "url": "https://decorebator.com"
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: t('title'),
+    description: t('description'),
+    url: `https://decorebator.com/features/${featureKey}`,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'Decorebator',
+      url: 'https://decorebator.com',
     },
-    "about": {
-      "@type": "SoftwareApplication",
-      "name": "Decorebator",
-      "applicationCategory": "EducationalApplication",
-      "operatingSystem": "Web, iOS, Android",
-      "description": "AI-powered vocabulary learning platform with spaced repetition and 8 quiz modes",
-      "featureList": [
-        "AI Content Generation",
-        "Spaced Repetition Learning",
-        "8 Interactive Quiz Modes",
-        "Visual Learning with AI Images",
-        "Multi-Language Audio",
-        "Advanced Analytics",
-        "Offline Support",
-        "Error Reporting System"
-      ]
+    about: {
+      '@type': 'SoftwareApplication',
+      name: 'Decorebator',
+      applicationCategory: 'EducationalApplication',
+      operatingSystem: 'Web, iOS, Android',
+      description:
+        'AI-powered vocabulary learning platform with spaced repetition and 8 quiz modes',
+      featureList: [
+        'AI Content Generation',
+        'Spaced Repetition Learning',
+        '8 Interactive Quiz Modes',
+        'Visual Learning with AI Images',
+        'Multi-Language Audio',
+        'Advanced Analytics',
+        'Offline Support',
+        'Error Reporting System',
+      ],
     },
-    "mainEntity": {
-      "@type": "SoftwareFeature",
-      "name": t('title'),
-      "description": t('description'),
-    }
-  };
+    mainEntity: {
+      '@type': 'SoftwareFeature',
+      name: t('title'),
+      description: t('description'),
+    },
+  }
 }

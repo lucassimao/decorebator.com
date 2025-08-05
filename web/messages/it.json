@@ -677,8 +677,21 @@
       "successRate": "Tasso di Successo",
       "words": "Parole",
       "weekDays": ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
-      "quizTypes": ["Indovina Significato", "Parola dal Significato", "Associazione Immagine", "Comprensione Audio"],
-      "boxLabels": ["Scatola 1", "Scatola 2", "Scatola 3", "Scatola 4", "Scatola 5", "Scatola 6", "Scatola 7"],
+      "quizTypes": [
+        "Indovina Significato",
+        "Parola dal Significato",
+        "Associazione Immagine",
+        "Comprensione Audio"
+      ],
+      "boxLabels": [
+        "Scatola 1",
+        "Scatola 2",
+        "Scatola 3",
+        "Scatola 4",
+        "Scatola 5",
+        "Scatola 6",
+        "Scatola 7"
+      ],
       "box1": "Scatola 1",
       "box2": "Scatola 2",
       "box3": "Scatola 3",
@@ -731,7 +744,7 @@
     },
     "social": {
       "facebook": "Decorebator su Facebook",
-      "twitter": "Decorebator su Twitter", 
+      "twitter": "Decorebator su Twitter",
       "instagram": "Decorebator su Instagram",
       "linkedin": "Decorebator su LinkedIn"
     }
@@ -752,8 +765,21 @@
       "successRate": "Tasso di Successo",
       "words": "Parole",
       "weekDays": ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
-      "quizTypes": ["Indovina Significato", "Parola dal Significato", "Associazione Immagine", "Comprensione Audio"],
-      "boxLabels": ["Scatola 1", "Scatola 2", "Scatola 3", "Scatola 4", "Scatola 5", "Scatola 6", "Scatola 7"],
+      "quizTypes": [
+        "Indovina Significato",
+        "Parola dal Significato",
+        "Associazione Immagine",
+        "Comprensione Audio"
+      ],
+      "boxLabels": [
+        "Scatola 1",
+        "Scatola 2",
+        "Scatola 3",
+        "Scatola 4",
+        "Scatola 5",
+        "Scatola 6",
+        "Scatola 7"
+      ],
       "box1": "Scatola 1",
       "box2": "Scatola 2",
       "box3": "Scatola 3",
@@ -821,7 +847,7 @@
         "title": "8 Modalità Quiz",
         "modes": [
           "Indovina il Significato",
-          "Parola dal Significato", 
+          "Parola dal Significato",
           "Associazione di Immagini",
           "Comprensione Audio",
           "Completa la Frase",
@@ -855,13 +881,21 @@
         "interval": "Intervallo di Ripasso",
         "purpose": "Scopo",
         "boxes": [
-          {"box": "Scatola 1", "interval": "Immediato", "purpose": "Parole nuove, ripassi falliti"},
-          {"box": "Scatola 2", "interval": "6 ore", "purpose": "Apprendimento recente"},
-          {"box": "Scatola 3", "interval": "1 giorno", "purpose": "Ritenzione a breve termine"},
-          {"box": "Scatola 4", "interval": "3 giorni", "purpose": "Ritenzione a medio termine"},
-          {"box": "Scatola 5", "interval": "1 settimana", "purpose": "Ritenzione a lungo termine"},
-          {"box": "Scatola 6", "interval": "2 settimane", "purpose": "Ritenzione estesa"},
-          {"box": "Scatola 7", "interval": "1 mese", "purpose": "Parole padroneggiate"}
+          {
+            "box": "Scatola 1",
+            "interval": "Immediato",
+            "purpose": "Parole nuove, ripassi falliti"
+          },
+          { "box": "Scatola 2", "interval": "6 ore", "purpose": "Apprendimento recente" },
+          { "box": "Scatola 3", "interval": "1 giorno", "purpose": "Ritenzione a breve termine" },
+          { "box": "Scatola 4", "interval": "3 giorni", "purpose": "Ritenzione a medio termine" },
+          {
+            "box": "Scatola 5",
+            "interval": "1 settimana",
+            "purpose": "Ritenzione a lungo termine"
+          },
+          { "box": "Scatola 6", "interval": "2 settimane", "purpose": "Ritenzione estesa" },
+          { "box": "Scatola 7", "interval": "1 mese", "purpose": "Parole padroneggiate" }
         ]
       },
       "progressionRules": {
@@ -921,13 +955,25 @@
       "supportedLanguages": "Lingue Supportate (7)",
       "aiFeatures": "Funzionalità IA per Lingua",
       "languages": [
-        {"flag": "🇺🇸", "name": "Inglese", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"},
-        {"flag": "🇪🇸", "name": "Spagnolo", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"},
-        {"flag": "🇫🇷", "name": "Francese", "bgClass": "bg-gradient-to-r from-blue-50 to-white"},
-        {"flag": "🇩🇪", "name": "Tedesco", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50"},
-        {"flag": "🇮🇹", "name": "Italiano", "bgClass": "bg-gradient-to-r from-green-50 to-red-50"},
-        {"flag": "🇵🇹", "name": "Portoghese", "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"},
-        {"flag": "🇯🇵", "name": "Giapponese", "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"}
+        { "flag": "🇺🇸", "name": "Inglese", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50" },
+        {
+          "flag": "🇪🇸",
+          "name": "Spagnolo",
+          "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"
+        },
+        { "flag": "🇫🇷", "name": "Francese", "bgClass": "bg-gradient-to-r from-blue-50 to-white" },
+        { "flag": "🇩🇪", "name": "Tedesco", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50" },
+        { "flag": "🇮🇹", "name": "Italiano", "bgClass": "bg-gradient-to-r from-green-50 to-red-50" },
+        {
+          "flag": "🇵🇹",
+          "name": "Portoghese",
+          "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"
+        },
+        {
+          "flag": "🇯🇵",
+          "name": "Giapponese",
+          "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"
+        }
       ],
       "features": [
         "Grammatica Nativa: Regole e strutture specifiche della lingua",

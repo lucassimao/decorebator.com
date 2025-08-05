@@ -1,0 +1,31 @@
+# Dependencies
+node_modules
+package-lock.json
+
+# Build outputs
+.next
+out
+dist
+build
+
+# Environment files
+.env*
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+
+# Next.js
+.next
+.cache
+
+# Testing
+coverage
+
+# Misc
+*.log
+public/sitemap*.xml
+public/robots.txt

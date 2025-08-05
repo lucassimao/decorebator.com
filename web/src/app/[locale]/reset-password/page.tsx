@@ -1,96 +1,87 @@
-"use client";
+'use client'
 
-import React, { useState, FormEvent, Suspense } from "react";
-import {
-  LockClosedIcon,
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-} from "@heroicons/react/24/solid";
-import { useSearchParams } from "next/navigation";
+import React, { useState, FormEvent, Suspense } from 'react'
+import { LockClosedIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid'
+import { useSearchParams } from 'next/navigation'
 
 // Separate component that uses useSearchParams
 const ResetPasswordFormContent: React.FC = () => {
-  const [newPassword, setNewPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const searchParams = useSearchParams();
+  const [newPassword, setNewPassword] = useState<string>('')
+  const [confirmPassword, setConfirmPassword] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const searchParams = useSearchParams()
 
-  const token = searchParams.get("token");
+  const token = searchParams.get('token')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError(null);
-    setSuccessMessage(null);
+    event.preventDefault()
+    setError(null)
+    setSuccessMessage(null)
 
     if (!newPassword || !confirmPassword) {
-      setError("Please fill in both password fields.");
-      return;
+      setError('Please fill in both password fields.')
+      return
     }
 
     if (newPassword.length < 4) {
-      setError("Password must be at least 4 characters long.");
-      return;
+      setError('Password must be at least 4 characters long.')
+      return
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
+      setError('Passwords do not match.')
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE;
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE
       const res = await fetch(`${apiBase}/password/reset`, {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           token,
           password: newPassword,
         }),
-      });
+      })
 
       if (!res.ok) {
         // handle errors, e.g. 4xx or 5xx responses
-        const err = await res.json();
-        throw new Error(err.message);
+        const err = await res.json()
+        throw new Error(err.message)
       }
 
-      setSuccessMessage("Password has been reset successfully!");
-      setNewPassword("");
-      setConfirmPassword("");
+      setSuccessMessage('Password has been reset successfully!')
+      setNewPassword('')
+      setConfirmPassword('')
     } catch (apiError) {
       // Handle API errors (e.g., token expired, server error)
-      setError("Failed to reset password. Please try again.");
-      console.error("API Error:", apiError);
+      setError('Failed to reset password. Please try again.')
+      console.error('API Error:', apiError)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-4">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">
+      <div className="w-full max-w-md space-y-6 rounded-xl bg-white p-8 shadow-2xl">
         <div className="flex flex-col items-center">
-          <LockClosedIcon className="w-16 h-16 text-blue-600 mb-4" />
-          <h2 className="text-3xl font-bold text-center text-gray-800">
-            Reset Your Password
-          </h2>
-          <p className="text-sm text-gray-600 mt-2 text-center">
+          <LockClosedIcon className="mb-4 h-16 w-16 text-blue-600" />
+          <h2 className="text-center text-3xl font-bold text-gray-800">Reset Your Password</h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
             Enter your new password below. Make sure it&apos;s strong and memorable.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label
-              htmlFor="newPassword"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="newPassword" className="mb-1 block text-sm font-medium text-gray-700">
               New Password
             </label>
             <input
@@ -101,7 +92,7 @@ const ResetPasswordFormContent: React.FC = () => {
               required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+              className="block w-full appearance-none rounded-lg border border-gray-300 px-4 py-3 placeholder-gray-900 shadow-sm transition duration-150 ease-in-out focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm"
               placeholder="Enter new password"
             />
           </div>
@@ -109,7 +100,7 @@ const ResetPasswordFormContent: React.FC = () => {
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="mb-1 block text-sm font-medium text-gray-700"
             >
               Confirm New Password
             </label>
@@ -121,27 +112,27 @@ const ResetPasswordFormContent: React.FC = () => {
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+              className="block w-full appearance-none rounded-lg border border-gray-300 px-4 py-3 placeholder-gray-400 shadow-sm transition duration-150 ease-in-out focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm"
               placeholder="Confirm new password"
             />
           </div>
 
           {error && (
             <div
-              className="flex items-center p-3 text-sm text-red-700 bg-red-100 border border-red-300 rounded-lg"
+              className="flex items-center rounded-lg border border-red-300 bg-red-100 p-3 text-sm text-red-700"
               role="alert"
             >
-              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              <ExclamationCircleIcon className="mr-2 h-5 w-5 flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {successMessage && (
             <div
-              className="flex items-center p-3 text-sm text-green-700 bg-green-100 border border-green-300 rounded-lg"
+              className="flex items-center rounded-lg border border-green-300 bg-green-100 p-3 text-sm text-green-700"
               role="alert"
             >
-              <CheckCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              <CheckCircleIcon className="mr-2 h-5 w-5 flex-shrink-0" />
               <span>{successMessage}</span>
             </div>
           )}
@@ -150,18 +141,16 @@ const ResetPasswordFormContent: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white 
-                          ${
-                            isLoading
-                              ? "bg-blue-400 cursor-not-allowed"
-                              : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          }
-                          transition duration-150 ease-in-out`}
+              className={`flex w-full justify-center rounded-lg border border-transparent px-4 py-3 text-sm font-medium text-white shadow-sm ${
+                isLoading
+                  ? 'cursor-not-allowed bg-blue-400'
+                  : 'bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
+              } transition duration-150 ease-in-out`}
             >
               {isLoading ? (
                 <>
                   <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    className="mr-3 -ml-1 h-5 w-5 animate-spin text-white"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -183,7 +172,7 @@ const ResetPasswordFormContent: React.FC = () => {
                   Processing...
                 </>
               ) : (
-                "Reset Password"
+                'Reset Password'
               )}
             </button>
           </div>
@@ -196,28 +185,28 @@ const ResetPasswordFormContent: React.FC = () => {
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Loading fallback component
 const ResetPasswordFormSkeleton: React.FC = () => {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-4">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">
+      <div className="w-full max-w-md space-y-6 rounded-xl bg-white p-8 shadow-2xl">
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse mb-4" />
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2" />
-          <div className="h-4 w-64 bg-gray-200 rounded animate-pulse" />
+          <div className="mb-4 h-16 w-16 animate-pulse rounded-full bg-gray-200" />
+          <div className="mb-2 h-8 w-48 animate-pulse rounded bg-gray-200" />
+          <div className="h-4 w-64 animate-pulse rounded bg-gray-200" />
         </div>
         <div className="space-y-4">
-          <div className="h-10 bg-gray-200 rounded animate-pulse" />
-          <div className="h-10 bg-gray-200 rounded animate-pulse" />
-          <div className="h-10 bg-gray-200 rounded animate-pulse" />
+          <div className="h-10 animate-pulse rounded bg-gray-200" />
+          <div className="h-10 animate-pulse rounded bg-gray-200" />
+          <div className="h-10 animate-pulse rounded bg-gray-200" />
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Main component with Suspense boundary
 const ResetPasswordForm: React.FC = () => {
@@ -225,7 +214,7 @@ const ResetPasswordForm: React.FC = () => {
     <Suspense fallback={<ResetPasswordFormSkeleton />}>
       <ResetPasswordFormContent />
     </Suspense>
-  );
-};
+  )
+}
 
-export default ResetPasswordForm;
+export default ResetPasswordForm

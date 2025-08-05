@@ -1,75 +1,78 @@
-'use client';
+'use client'
 
-import React, { useEffect } from 'react';
-import SmartDownloadButton from './SmartDownloadButton';
+import React, { useEffect } from 'react'
+import SmartDownloadButton from './SmartDownloadButton'
 
 interface VideoModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  videoId?: string; // YouTube video ID
-  title?: string;
+  isOpen: boolean
+  onClose: () => void
+  videoId?: string // YouTube video ID
+  title?: string
 }
 
-const VideoModal: React.FC<VideoModalProps> = ({ 
-  isOpen, 
-  onClose, 
+const VideoModal: React.FC<VideoModalProps> = ({
+  isOpen,
+  onClose,
   videoId = 'dQw4w9WgXcQ', // Default demo video ID
-  title = 'Decorebator Demo'
+  title = 'Decorebator Demo',
 }) => {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        onClose()
       }
-    };
+    }
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', handleEscape)
       // Prevent body scroll when modal is open
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden'
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = 'unset'
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen, onClose]);
+      document.removeEventListener('keydown', handleEscape)
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen, onClose])
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300"
         onClick={onClose}
       />
-      
+
       {/* Modal Content */}
-      <div className="relative w-full max-w-4xl mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300 scale-100">
+      <div className="relative mx-4 w-full max-w-4xl scale-100 transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all duration-300">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between border-b border-gray-200 p-6">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#FF7B54] to-orange-600 rounded-lg flex items-center justify-center">
-              <i className="fas fa-play text-white text-sm"></i>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF7B54] to-orange-600">
+              <i className="fas fa-play text-sm text-white"></i>
             </div>
             <h3 className="text-xl font-bold text-[#2D3436]">{title}</h3>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors duration-200"
+            className="flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 hover:bg-gray-100"
             aria-label="Close modal"
           >
-            <i className="fas fa-times text-[#636E72] text-lg"></i>
+            <i className="fas fa-times text-lg text-[#636E72]"></i>
           </button>
         </div>
 
         {/* Video Container */}
-        <div className="relative w-full bg-black" style={{ paddingBottom: '56.25%' /* 16:9 aspect ratio */ }}>
+        <div
+          className="relative w-full bg-black"
+          style={{ paddingBottom: '56.25%' /* 16:9 aspect ratio */ }}
+        >
           <iframe
-            className="absolute top-0 left-0 w-full h-full"
+            className="absolute top-0 left-0 h-full w-full"
             src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
             title={title}
             frameBorder="0"
@@ -79,30 +82,29 @@ const VideoModal: React.FC<VideoModalProps> = ({
         </div>
 
         {/* Demo Description */}
-        <div className="p-6 bg-gradient-to-r from-orange-50 to-amber-50">
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-6">
           <div className="text-center">
-            <h4 className="text-lg font-bold text-[#2D3436] mb-2">
-              See Decorebator in Action
-            </h4>
-            <p className="text-[#636E72] mb-4">
-              Watch how AI-powered vocabulary learning works with spaced repetition, interactive quizzes, and comprehensive analytics.
+            <h4 className="mb-2 text-lg font-bold text-[#2D3436]">See Decorebator in Action</h4>
+            <p className="mb-4 text-[#636E72]">
+              Watch how AI-powered vocabulary learning works with spaced repetition, interactive
+              quizzes, and comprehensive analytics.
             </p>
-            
+
             {/* Feature Highlights */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="flex items-center justify-center space-x-2 bg-white/60 rounded-lg p-3">
+            <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
+              <div className="flex items-center justify-center space-x-2 rounded-lg bg-white/60 p-3">
                 <i className="fas fa-brain text-[#FF7B54]"></i>
                 <span>AI Content</span>
               </div>
-              <div className="flex items-center justify-center space-x-2 bg-white/60 rounded-lg p-3">
+              <div className="flex items-center justify-center space-x-2 rounded-lg bg-white/60 p-3">
                 <i className="fas fa-clock text-[#4CAF50]"></i>
                 <span>Spaced Repetition</span>
               </div>
-              <div className="flex items-center justify-center space-x-2 bg-white/60 rounded-lg p-3">
+              <div className="flex items-center justify-center space-x-2 rounded-lg bg-white/60 p-3">
                 <i className="fas fa-gamepad text-[#9C27B0]"></i>
                 <span>7 Quiz Modes</span>
               </div>
-              <div className="flex items-center justify-center space-x-2 bg-white/60 rounded-lg p-3">
+              <div className="flex items-center justify-center space-x-2 rounded-lg bg-white/60 p-3">
                 <i className="fas fa-chart-line text-[#14B8A6]"></i>
                 <span>Analytics</span>
               </div>
@@ -110,10 +112,7 @@ const VideoModal: React.FC<VideoModalProps> = ({
 
             {/* CTA */}
             <div className="mt-6">
-              <SmartDownloadButton 
-                onClick={onClose}
-                size="medium"
-              >
+              <SmartDownloadButton onClick={onClose} size="medium">
                 <span>Download App</span>
                 <i className="fas fa-arrow-right"></i>
               </SmartDownloadButton>
@@ -122,7 +121,7 @@ const VideoModal: React.FC<VideoModalProps> = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default VideoModal;
+export default VideoModal

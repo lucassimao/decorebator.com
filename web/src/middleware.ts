@@ -1,7 +1,7 @@
-import createMiddleware from 'next-intl/middleware';
-import {routing} from '../i18n';
+import createMiddleware from 'next-intl/middleware'
+import { routing } from '../i18n'
 
-export default createMiddleware(routing);
+export default createMiddleware(routing)
 
 export const config = {
   // Match only internationalized pathnames
@@ -15,6 +15,6 @@ export const config = {
 
     // Enable redirects that add missing locales
     // (e.g. `/pathnames` -> `/en/pathnames`)
-    '/((?!_next|_vercel|.*\\..*).*)'
-  ]
-};
+    '/((?!_next|_vercel|.*\\..*).*)',
+  ],
+}

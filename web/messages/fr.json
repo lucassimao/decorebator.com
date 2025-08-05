@@ -593,7 +593,12 @@
         "successRate": "Taux de Réussite",
         "words": "Mots",
         "weekDays": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
-        "quizTypes": ["Deviner le Sens", "Mot du Sens", "Association d'Image", "Compréhension Auditive"],
+        "quizTypes": [
+          "Deviner le Sens",
+          "Mot du Sens",
+          "Association d'Image",
+          "Compréhension Auditive"
+        ],
         "boxLabels": ["Boîte 1", "Boîte 2", "Boîte 3", "Boîte 4", "Boîte 5", "Boîte 6", "Boîte 7"],
         "box1": "Boîte 1",
         "box2": "Boîte 2",
@@ -701,7 +706,12 @@
       "successRate": "Taux de Réussite",
       "words": "Mots",
       "weekDays": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
-      "quizTypes": ["Deviner le Sens", "Mot du Sens", "Association d'Image", "Compréhension Auditive"],
+      "quizTypes": [
+        "Deviner le Sens",
+        "Mot du Sens",
+        "Association d'Image",
+        "Compréhension Auditive"
+      ],
       "boxLabels": ["Boîte 1", "Boîte 2", "Boîte 3", "Boîte 4", "Boîte 5", "Boîte 6", "Boîte 7"],
       "box1": "Boîte 1",
       "box2": "Boîte 2",
@@ -770,7 +780,7 @@
         "title": "8 Modes de Quiz",
         "modes": [
           "Deviner le Sens",
-          "Mot depuis le Sens", 
+          "Mot depuis le Sens",
           "Association d'Images",
           "Compréhension Audio",
           "Compléter la Phrase",
@@ -804,13 +814,17 @@
         "interval": "Intervalle de Révision",
         "purpose": "Objectif",
         "boxes": [
-          {"box": "Boîte 1", "interval": "Immédiat", "purpose": "Nouveaux mots, révisions échouées"},
-          {"box": "Boîte 2", "interval": "6 heures", "purpose": "Apprentissage récent"},
-          {"box": "Boîte 3", "interval": "1 jour", "purpose": "Rétention à court terme"},
-          {"box": "Boîte 4", "interval": "3 jours", "purpose": "Rétention à moyen terme"},
-          {"box": "Boîte 5", "interval": "1 semaine", "purpose": "Rétention à long terme"},
-          {"box": "Boîte 6", "interval": "2 semaines", "purpose": "Rétention étendue"},
-          {"box": "Boîte 7", "interval": "1 mois", "purpose": "Mots maîtrisés"}
+          {
+            "box": "Boîte 1",
+            "interval": "Immédiat",
+            "purpose": "Nouveaux mots, révisions échouées"
+          },
+          { "box": "Boîte 2", "interval": "6 heures", "purpose": "Apprentissage récent" },
+          { "box": "Boîte 3", "interval": "1 jour", "purpose": "Rétention à court terme" },
+          { "box": "Boîte 4", "interval": "3 jours", "purpose": "Rétention à moyen terme" },
+          { "box": "Boîte 5", "interval": "1 semaine", "purpose": "Rétention à long terme" },
+          { "box": "Boîte 6", "interval": "2 semaines", "purpose": "Rétention étendue" },
+          { "box": "Boîte 7", "interval": "1 mois", "purpose": "Mots maîtrisés" }
         ]
       },
       "progressionRules": {
@@ -870,13 +884,25 @@
       "supportedLanguages": "Langues Supportées (7)",
       "aiFeatures": "Fonctionnalités IA par Langue",
       "languages": [
-        {"flag": "🇺🇸", "name": "Anglais", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"},
-        {"flag": "🇪🇸", "name": "Espagnol", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"},
-        {"flag": "🇫🇷", "name": "Français", "bgClass": "bg-gradient-to-r from-blue-50 to-white"},
-        {"flag": "🇩🇪", "name": "Allemand", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50"},
-        {"flag": "🇮🇹", "name": "Italien", "bgClass": "bg-gradient-to-r from-green-50 to-red-50"},
-        {"flag": "🇵🇹", "name": "Portugais", "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"},
-        {"flag": "🇯🇵", "name": "Japonais", "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"}
+        { "flag": "🇺🇸", "name": "Anglais", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50" },
+        {
+          "flag": "🇪🇸",
+          "name": "Espagnol",
+          "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"
+        },
+        { "flag": "🇫🇷", "name": "Français", "bgClass": "bg-gradient-to-r from-blue-50 to-white" },
+        { "flag": "🇩🇪", "name": "Allemand", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50" },
+        { "flag": "🇮🇹", "name": "Italien", "bgClass": "bg-gradient-to-r from-green-50 to-red-50" },
+        {
+          "flag": "🇵🇹",
+          "name": "Portugais",
+          "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"
+        },
+        {
+          "flag": "🇯🇵",
+          "name": "Japonais",
+          "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"
+        }
       ],
       "features": [
         "Grammaire Native : Règles et structures spécifiques à la langue",

@@ -1,4 +1,4 @@
-import {defineRouting} from 'next-intl/routing';
+import { defineRouting } from 'next-intl/routing'
 
 export const routing = defineRouting({
   // A list of all locales that are supported
@@ -6,7 +6,7 @@ export const routing = defineRouting({
 
   // Used when no locale matches
   defaultLocale: 'en',
-  
+
   // Ensure locale prefix is always shown
   localePrefix: 'always',
 
@@ -17,8 +17,8 @@ export const routing = defineRouting({
     '/help': '/help',
     '/privacy': '/privacy',
     '/terms': '/terms',
-    '/reset-password': '/reset-password'
-  }
-});
+    '/reset-password': '/reset-password',
+  },
+})
 
-export type Locale = (typeof routing.locales)[number];
+export type Locale = (typeof routing.locales)[number]

@@ -1,25 +1,27 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import { Analytics } from "@vercel/analytics/next"
+import type { Metadata } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import './globals.css'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/next'
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 export const metadata: Metadata = {
-  title: "Decorebator - AI-Powered Vocabulary Learning",
-  description: "Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.",
-  keywords: "vocabulary learning, language learning, AI learning, spaced repetition, flashcards, quiz app, language app, multilingual, educational app",
-  authors: [{ name: "Decorebator Team" }],
-  creator: "Decorebator Team",
-  publisher: "Decorebator",
+  title: 'Decorebator - AI-Powered Vocabulary Learning',
+  description:
+    'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
+  keywords:
+    'vocabulary learning, language learning, AI learning, spaced repetition, flashcards, quiz app, language app, multilingual, educational app',
+  authors: [{ name: 'Decorebator Team' }],
+  creator: 'Decorebator Team',
+  publisher: 'Decorebator',
   robots: {
     index: true,
     follow: true,
@@ -37,7 +39,8 @@ export const metadata: Metadata = {
     url: 'https://decorebator.com',
     siteName: 'Decorebator',
     title: 'Decorebator - AI-Powered Vocabulary Learning',
-    description: 'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
+    description:
+      'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
     images: [
       {
         url: 'https://decorebator.com/social-share-image.jpg',
@@ -52,7 +55,8 @@ export const metadata: Metadata = {
     site: '@decorebator',
     creator: '@decorebator',
     title: 'Decorebator - AI-Powered Vocabulary Learning',
-    description: 'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes.',
+    description:
+      'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes.',
     images: ['https://decorebator.com/social-share-image.jpg'],
   },
   icons: {
@@ -69,13 +73,13 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://decorebator.com',
     languages: {
-      'en': 'https://decorebator.com/en',
-      'es': 'https://decorebator.com/es',
-      'fr': 'https://decorebator.com/fr',
-      'de': 'https://decorebator.com/de',
-      'it': 'https://decorebator.com/it',
-      'pt': 'https://decorebator.com/pt',
-      'ja': 'https://decorebator.com/ja',
+      en: 'https://decorebator.com/en',
+      es: 'https://decorebator.com/es',
+      fr: 'https://decorebator.com/fr',
+      de: 'https://decorebator.com/de',
+      it: 'https://decorebator.com/it',
+      pt: 'https://decorebator.com/pt',
+      ja: 'https://decorebator.com/ja',
     },
   },
   verification: {
@@ -83,19 +87,15 @@ export const metadata: Metadata = {
     yandex: process.env.YANDEX_SITE_VERIFICATION,
     yahoo: process.env.YAHOO_SITE_VERIFICATION,
   },
-};
+}
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html>
       <head>
-        <link 
-          rel="stylesheet" 
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -103,9 +103,9 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
-        <Analytics/>
-                <SpeedInsights />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
-  );
+  )
 }

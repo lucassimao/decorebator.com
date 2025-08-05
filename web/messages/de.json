@@ -142,11 +142,7 @@
     "step2": {
       "title": "Nehmen Sie an ansprechenden Quiz teil",
       "description": "Üben Sie mit 8 verschiedenen Quiz-Modi, die sich an Ihren Lernfortschritt anpassen.",
-      "features": [
-        "Bedeutung ↔ Wort-Zuordnung",
-        "Bild- & Audioerkennung",
-        "Satzvervollständigung"
-      ]
+      "features": ["Bedeutung ↔ Wort-Zuordnung", "Bild- & Audioerkennung", "Satzvervollständigung"]
     },
     "step3": {
       "title": "Meistern durch Wiederholung",
@@ -479,7 +475,7 @@
         "title": "8 Quiz-Modi",
         "modes": [
           "Bedeutung erraten",
-          "Wort aus Bedeutung", 
+          "Wort aus Bedeutung",
           "Bildassoziation",
           "Audio-Verständnis",
           "Satz vervollständigen",
@@ -513,13 +509,17 @@
         "interval": "Wiederholungsintervall",
         "purpose": "Zweck",
         "boxes": [
-          {"box": "Box 1", "interval": "Sofort", "purpose": "Neue Wörter, fehlgeschlagene Wiederholungen"},
-          {"box": "Box 2", "interval": "6 Stunden", "purpose": "Kürzliches Lernen"},
-          {"box": "Box 3", "interval": "1 Tag", "purpose": "Kurzfristige Behaltensfähigkeit"},
-          {"box": "Box 4", "interval": "3 Tage", "purpose": "Mittelfristige Behaltensfähigkeit"},
-          {"box": "Box 5", "interval": "1 Woche", "purpose": "Langfristige Behaltensfähigkeit"},
-          {"box": "Box 6", "interval": "2 Wochen", "purpose": "Erweiterte Behaltensfähigkeit"},
-          {"box": "Box 7", "interval": "1 Monat", "purpose": "Beherrschte Wörter"}
+          {
+            "box": "Box 1",
+            "interval": "Sofort",
+            "purpose": "Neue Wörter, fehlgeschlagene Wiederholungen"
+          },
+          { "box": "Box 2", "interval": "6 Stunden", "purpose": "Kürzliches Lernen" },
+          { "box": "Box 3", "interval": "1 Tag", "purpose": "Kurzfristige Behaltensfähigkeit" },
+          { "box": "Box 4", "interval": "3 Tage", "purpose": "Mittelfristige Behaltensfähigkeit" },
+          { "box": "Box 5", "interval": "1 Woche", "purpose": "Langfristige Behaltensfähigkeit" },
+          { "box": "Box 6", "interval": "2 Wochen", "purpose": "Erweiterte Behaltensfähigkeit" },
+          { "box": "Box 7", "interval": "1 Monat", "purpose": "Beherrschte Wörter" }
         ]
       },
       "progressionRules": {
@@ -579,13 +579,37 @@
       "supportedLanguages": "Unterstützte Sprachen (7)",
       "aiFeatures": "KI-Funktionen pro Sprache",
       "languages": [
-        {"flag": "🇺🇸", "name": "Englisch", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"},
-        {"flag": "🇪🇸", "name": "Spanisch", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"},
-        {"flag": "🇫🇷", "name": "Französisch", "bgClass": "bg-gradient-to-r from-blue-50 to-white"},
-        {"flag": "🇩🇪", "name": "Deutsch", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50"},
-        {"flag": "🇮🇹", "name": "Italienisch", "bgClass": "bg-gradient-to-r from-green-50 to-red-50"},
-        {"flag": "🇵🇹", "name": "Portugiesisch", "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"},
-        {"flag": "🇯🇵", "name": "Japanisch", "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"}
+        {
+          "flag": "🇺🇸",
+          "name": "Englisch",
+          "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"
+        },
+        {
+          "flag": "🇪🇸",
+          "name": "Spanisch",
+          "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"
+        },
+        {
+          "flag": "🇫🇷",
+          "name": "Französisch",
+          "bgClass": "bg-gradient-to-r from-blue-50 to-white"
+        },
+        { "flag": "🇩🇪", "name": "Deutsch", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50" },
+        {
+          "flag": "🇮🇹",
+          "name": "Italienisch",
+          "bgClass": "bg-gradient-to-r from-green-50 to-red-50"
+        },
+        {
+          "flag": "🇵🇹",
+          "name": "Portugiesisch",
+          "bgClass": "bg-gradient-to-r from-green-50 to-yellow-50"
+        },
+        {
+          "flag": "🇯🇵",
+          "name": "Japanisch",
+          "bgClass": "bg-gradient-to-r from-red-50 to-white col-span-2"
+        }
       ],
       "features": [
         "Native Grammatik: Sprachspezifische Regeln und Strukturen",

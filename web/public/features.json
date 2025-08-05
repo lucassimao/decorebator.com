@@ -31,7 +31,7 @@
       "total_modes": 8,
       "types": [
         "Guess Meaning",
-        "Word from Meaning", 
+        "Word from Meaning",
         "Image Association",
         "Audio Comprehension",
         "Sentence Completion",
@@ -53,13 +53,13 @@
   "languages": {
     "supported_count": 7,
     "list": [
-      {"code": "en", "name": "English", "native_ai": true},
-      {"code": "es", "name": "Spanish", "native_ai": true},
-      {"code": "fr", "name": "French", "native_ai": true},
-      {"code": "de", "name": "German", "native_ai": true},
-      {"code": "it", "name": "Italian", "native_ai": true},
-      {"code": "pt", "name": "Portuguese", "native_ai": true},
-      {"code": "ja", "name": "Japanese", "native_ai": true}
+      { "code": "en", "name": "English", "native_ai": true },
+      { "code": "es", "name": "Spanish", "native_ai": true },
+      { "code": "fr", "name": "French", "native_ai": true },
+      { "code": "de", "name": "German", "native_ai": true },
+      { "code": "it", "name": "Italian", "native_ai": true },
+      { "code": "pt", "name": "Portuguese", "native_ai": true },
+      { "code": "ja", "name": "Japanese", "native_ai": true }
     ],
     "ui_languages": 7,
     "content_languages": 7
@@ -86,10 +86,10 @@
         "priority_support": true
       },
       "annual": {
-        "price": 69.90,
+        "price": 69.9,
         "billing_cycle": "yearly",
         "savings": 13.98,
-        "wordlists": "unlimited", 
+        "wordlists": "unlimited",
         "words_per_list": "unlimited",
         "quiz_modes": "all_8",
         "offline_support": true,

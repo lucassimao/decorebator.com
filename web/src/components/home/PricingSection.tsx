@@ -1,10 +1,10 @@
-import React from 'react';
-import { CheckCircleIcon } from './icons';
-import { getTranslations } from 'next-intl/server';
+import React from 'react'
+import { CheckCircleIcon } from './icons'
+import { getTranslations } from 'next-intl/server'
 
 const PricingSection: React.FC = async () => {
-  const t = await getTranslations('pricing');
-  const tCommon = await getTranslations('common');
+  const t = await getTranslations('pricing')
+  const tCommon = await getTranslations('common')
 
   const plans = [
     {
@@ -41,50 +41,50 @@ const PricingSection: React.FC = async () => {
       href: '#download',
       description: t('plans.annual.description'),
     },
-  ];
+  ]
 
   return (
-    <section id="pricing" className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold mb-4">
+    <section id="pricing" className="bg-white py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-16 text-center">
+          <h2 className="mb-4 text-4xl font-bold lg:text-5xl">
             <span>{t('title.part1')}</span>
-            <span className="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">{t('title.part2')}</span>
+            <span className="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">
+              {t('title.part2')}
+            </span>
           </h2>
-          <p className="text-xl text-[#636E72] max-w-3xl mx-auto">
-            {t('subtitle')}
-          </p>
+          <p className="mx-auto max-w-3xl text-xl text-[#636E72]">{t('subtitle')}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-3">
           {plans.map((plan, index) => (
-            <div 
-              key={plan.name} 
-              className={`relative bg-white rounded-3xl shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-500 border-2 ${
-                plan.bestValue ? 'border-[#FF7B54] scale-105' : 'border-gray-100'
+            <div
+              key={plan.name}
+              className={`relative transform rounded-3xl border-2 bg-white shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl ${
+                plan.bestValue ? 'scale-105 border-[#FF7B54]' : 'border-gray-100'
               } overflow-hidden`}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               {plan.bestValue && (
-                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white text-center py-2 text-sm font-semibold">
+                <div className="absolute top-0 right-0 left-0 bg-gradient-to-r from-[#FF7B54] to-orange-600 py-2 text-center text-sm font-semibold text-white">
                   {plan.badge || t('plans.monthly.badge')}
                 </div>
               )}
-              
+
               <div className={`p-8 ${plan.bestValue ? 'pt-16' : 'pt-8'}`}>
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-[#2D3436] mb-2">{plan.name}</h3>
-                  <p className="text-[#636E72] text-sm mb-4">{plan.description}</p>
+                <div className="mb-8 text-center">
+                  <h3 className="mb-2 text-2xl font-bold text-[#2D3436]">{plan.name}</h3>
+                  <p className="mb-4 text-sm text-[#636E72]">{plan.description}</p>
                   <div className="mb-6">
                     <span className="text-4xl font-bold text-[#2D3436]">{plan.price}</span>
-                    <span className="text-[#636E72] ml-1">/{plan.frequency}</span>
+                    <span className="ml-1 text-[#636E72]">/{plan.frequency}</span>
                   </div>
                 </div>
 
-                <ul className="space-y-4 mb-8">
+                <ul className="mb-8 space-y-4">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-center">
-                      <CheckCircleIcon className="h-5 w-5 text-[#4CAF50] mr-3 flex-shrink-0" />
+                      <CheckCircleIcon className="mr-3 h-5 w-5 flex-shrink-0 text-[#4CAF50]" />
                       <span className="text-[#636E72]">{feature}</span>
                     </li>
                   ))}
@@ -92,12 +92,12 @@ const PricingSection: React.FC = async () => {
 
                 <a
                   href={plan.href}
-                  className={`block w-full py-4 px-6 rounded-xl font-semibold text-center transition-all duration-300 ${
+                  className={`block w-full rounded-xl px-6 py-4 text-center font-semibold transition-all duration-300 ${
                     plan.bestValue
-                      ? 'bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white hover:shadow-2xl transform hover:scale-105'
+                      ? 'transform bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white hover:scale-105 hover:shadow-2xl'
                       : plan.name === 'Free'
-                      ? 'bg-[#4CAF50] text-white hover:bg-green-600 hover:shadow-lg'
-                      : 'border-2 border-[#FF7B54] text-[#FF7B54] hover:bg-[#FF7B54] hover:text-white'
+                        ? 'bg-[#4CAF50] text-white hover:bg-green-600 hover:shadow-lg'
+                        : 'border-2 border-[#FF7B54] text-[#FF7B54] hover:bg-[#FF7B54] hover:text-white'
                   }`}
                 >
                   {plan.cta}
@@ -108,11 +108,9 @@ const PricingSection: React.FC = async () => {
         </div>
 
         <div className="mt-16 text-center">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8 max-w-4xl mx-auto">
-            <h3 className="text-xl font-bold text-[#2D3436] mb-4">
-              {t('allPlansInclude')}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm text-[#636E72]">
+          <div className="mx-auto max-w-4xl rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-8">
+            <h3 className="mb-4 text-xl font-bold text-[#2D3436]">{t('allPlansInclude')}</h3>
+            <div className="grid grid-cols-1 gap-6 text-sm text-[#636E72] md:grid-cols-2 lg:grid-cols-4">
               <div className="flex items-center space-x-2">
                 <i className="fas fa-brain text-[#FF7B54]"></i>
                 <span>{t('features.aiContent')}</span>
@@ -131,14 +129,12 @@ const PricingSection: React.FC = async () => {
               </div>
             </div>
           </div>
-          
-          <p className="text-[#636E72] mt-6">
-            {t('footer')}
-          </p>
+
+          <p className="mt-6 text-[#636E72]">{t('footer')}</p>
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default PricingSection;
+export default PricingSection

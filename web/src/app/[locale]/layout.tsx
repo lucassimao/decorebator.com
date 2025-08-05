@@ -1,37 +1,37 @@
-import { AppStoreModalProvider } from '@/components/common/AppStoreModalProvider';
-import ScrollToTopButton from '@/components/common/ScrollToTopButton';
-import StructuredData from '@/components/seo/StructuredData';
-import type { Metadata } from "next";
-import { hasLocale, NextIntlClientProvider } from 'next-intl';
-import { notFound } from 'next/navigation';
-import { routing } from '../../../i18n';
+import { AppStoreModalProvider } from '@/components/common/AppStoreModalProvider'
+import ScrollToTopButton from '@/components/common/ScrollToTopButton'
+import StructuredData from '@/components/seo/StructuredData'
+import type { Metadata } from 'next'
+import { hasLocale, NextIntlClientProvider } from 'next-intl'
+import { notFound } from 'next/navigation'
+import { routing } from '../../../i18n'
 
 export async function generateMetadata({
-  params
+  params,
 }: {
-  params: Promise<{locale: string}>;
+  params: Promise<{ locale: string }>
 }): Promise<Metadata> {
-  const {locale} = await params;
+  const { locale } = await params
 
   const localeDescriptions: Record<string, string> = {
-    en: "Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.",
-    es: "Domina cualquier idioma con aprendizaje de vocabulario con IA, repetición espaciada y 8 modos de quiz atractivos. Únete a estudiantes de todo el mundo que dominan nuevos idiomas eficazmente.",
+    en: 'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
+    es: 'Domina cualquier idioma con aprendizaje de vocabulario con IA, repetición espaciada y 8 modos de quiz atractivos. Únete a estudiantes de todo el mundo que dominan nuevos idiomas eficazmente.',
     fr: "Maîtrisez n'importe quelle langue avec l'apprentissage de vocabulaire alimenté par l'IA, la répétition espacée et 8 modes de quiz engageants. Rejoignez des apprenants du monde entier qui maîtrisent efficacement de nouvelles langues.",
-    de: "Meistern Sie jede Sprache mit KI-gestütztem Vokabellernen, Wiederholung mit Abstand und 8 fesselnden Quiz-Modi. Schließen Sie sich Lernenden aus aller Welt an, die effektiv neue Sprachen meistern.",
+    de: 'Meistern Sie jede Sprache mit KI-gestütztem Vokabellernen, Wiederholung mit Abstand und 8 fesselnden Quiz-Modi. Schließen Sie sich Lernenden aus aller Welt an, die effektiv neue Sprachen meistern.',
     it: "Padroneggia qualsiasi lingua con l'apprendimento del vocabolario alimentato dall'IA, la ripetizione distanziata e 8 modalità quiz coinvolgenti. Unisciti a studenti di tutto il mondo che padroneggiano efficacemente nuove lingue.",
-    pt: "Domine qualquer idioma com aprendizado de vocabulário com IA, repetição espaçada e 8 modos de quiz envolventes. Junte-se a estudantes de todo o mundo dominando novos idiomas de forma eficaz.",
-    ja: "AI搭載語彙学習、科学的に証明された間隔反復、8つの魅力的なクイズモードで任意の言語をマスターしましょう。世界中の学習者と一緒に効果的に新しい言語を習得しましょう。"
-  };
+    pt: 'Domine qualquer idioma com aprendizado de vocabulário com IA, repetição espaçada e 8 modos de quiz envolventes. Junte-se a estudantes de todo o mundo dominando novos idiomas de forma eficaz.',
+    ja: 'AI搭載語彙学習、科学的に証明された間隔反復、8つの魅力的なクイズモードで任意の言語をマスターしましょう。世界中の学習者と一緒に効果的に新しい言語を習得しましょう。',
+  }
 
   const localeNames: Record<string, string> = {
-    en: "English",
-    es: "Español", 
-    fr: "Français",
-    de: "Deutsch",
-    it: "Italiano",
-    pt: "Português",
-    ja: "日本語"
-  };
+    en: 'English',
+    es: 'Español',
+    fr: 'Français',
+    de: 'Deutsch',
+    it: 'Italiano',
+    pt: 'Português',
+    ja: '日本語',
+  }
 
   return {
     title: `Decorebator - AI-Powered Vocabulary Learning${locale !== 'en' ? ` | ${localeNames[locale]}` : ''}`,
@@ -56,7 +56,7 @@ export async function generateMetadata({
       'memory retention',
       'language acquisition',
       'study app',
-      'educational app'
+      'educational app',
     ],
     authors: [{ name: 'Decorebator Team' }],
     category: 'Education',
@@ -88,47 +88,47 @@ export async function generateMetadata({
     alternates: {
       canonical: `https://decorebator.com/${locale}`,
       languages: {
-        'en': 'https://decorebator.com/en',
-        'es': 'https://decorebator.com/es',
-        'fr': 'https://decorebator.com/fr',
-        'de': 'https://decorebator.com/de',
-        'it': 'https://decorebator.com/it',
-        'pt': 'https://decorebator.com/pt',
-        'ja': 'https://decorebator.com/ja',
+        en: 'https://decorebator.com/en',
+        es: 'https://decorebator.com/es',
+        fr: 'https://decorebator.com/fr',
+        de: 'https://decorebator.com/de',
+        it: 'https://decorebator.com/it',
+        pt: 'https://decorebator.com/pt',
+        ja: 'https://decorebator.com/ja',
       },
     },
     other: {
       'application-category': 'EducationalApplication',
-      'topic': 'language-learning,vocabulary,education,ai,spaced-repetition',
+      topic: 'language-learning,vocabulary,education,ai,spaced-repetition',
       'content-type': 'educational-platform',
       'platform-type': 'mobile-app',
       'learning-methodology': 'spaced-repetition,active-recall,multi-modal',
       'ai-features': 'content-generation,image-generation,audio-generation',
       'supported-languages': 'english,spanish,french,german,italian,portuguese,japanese',
-      'accessibility': 'screen-reader-compatible,keyboard-navigation',
+      accessibility: 'screen-reader-compatible,keyboard-navigation',
       'pricing-model': 'freemium',
     },
-  };
+  }
 }
 
 export function generateStaticParams() {
-  return routing.locales.map((locale) => ({locale}));
+  return routing.locales.map((locale) => ({ locale }))
 }
 
 export default async function LocaleLayout({
   children,
-  params
+  params,
 }: {
-  children: React.ReactNode;
-  params: Promise<{locale: string}>;
+  children: React.ReactNode
+  params: Promise<{ locale: string }>
 }) {
-  const {locale} = await params;
-  
+  const { locale } = await params
+
   // Ensure that the incoming `locale` is valid
   if (!hasLocale(routing.locales, locale)) {
-    notFound();
+    notFound()
   }
- 
+
   return (
     <html lang={locale}>
       <body>
@@ -141,5 +141,5 @@ export default async function LocaleLayout({
         </NextIntlClientProvider>
       </body>
     </html>
-  );
+  )
 }

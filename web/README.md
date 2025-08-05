@@ -5,6 +5,7 @@ The Decorebator web application is a Next.js 15 marketing site and future learni
 ## 🌟 Current Features
 
 ### Marketing Site
+
 - **Landing Page**: Professional marketing site with hero section, features, pricing, and testimonials
 - **Feature Showcase**: 10 dedicated pages showcasing core platform features
 - **Internationalization**: Full i18n support for 7 languages (English, Spanish, French, German, Italian, Portuguese, Japanese)
@@ -12,6 +13,7 @@ The Decorebator web application is a Next.js 15 marketing site and future learni
 - **SEO Optimized**: Meta tags, structured data, and semantic HTML for search engines
 
 ### Technical Stack
+
 - **Framework**: Next.js 15.3.2 with App Router
 - **Styling**: Tailwind CSS v4 with custom animations
 - **Charts**: Chart.js 4 with react-chartjs-2 for interactive analytics demos
@@ -23,23 +25,27 @@ The Decorebator web application is a Next.js 15 marketing site and future learni
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm, yarn, pnpm, or bun
 
 ### Development Setup
 
 1. **Install dependencies**:
+
 ```bash
 npm install
 ```
 
 2. **Set up environment variables**:
+
 ```bash
 # Create .env.local file
 NEXT_PUBLIC_API_BASE="http://localhost:8080"
 ```
 
 3. **Run the development server**:
+
 ```bash
 npm run dev
 # or
@@ -51,7 +57,7 @@ bun dev
 ```
 
 4. **Open your browser**:
-Navigate to [http://localhost:3000](http://localhost:3000)
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
 ### Available Scripts
 
@@ -65,6 +71,7 @@ npm run lint     # Run ESLint
 ## 🏗️ Architecture
 
 ### Project Structure
+
 ```
 web/
 ├── src/
@@ -92,6 +99,7 @@ web/
 ### Key Components
 
 #### Landing Page Sections
+
 - **EnhancedHeroSection**: Hero with animated background and rotating text
 - **FeaturesSection**: Main features grid with hover effects
 - **PricingSection**: Subscription plans and pricing
@@ -100,6 +108,7 @@ web/
 - **HowItWorksSection**: Learning process explanation
 
 #### Layout Components
+
 - **Header**: Fixed navigation with scroll effects and mobile menu
 - **PageLayout**: Consistent wrapper with background elements
 - **BackgroundElements**: Animated floating decorations
@@ -107,20 +116,23 @@ web/
 ## 🌍 Internationalization
 
 ### Supported Languages
+
 - **English** (en) - Default
 - **Spanish** (es)
-- **French** (fr) 
+- **French** (fr)
 - **German** (de)
 - **Italian** (it)
 - **Portuguese** (pt)
 - **Japanese** (ja)
 
 ### Route Structure
+
 - **Localized**: `/[locale]/path` (e.g., `/es/features/ai-content`)
 - **Auto-detection**: Automatic locale detection and redirection
 - **Fallback**: English as default for unsupported locales
 
 ### Message Organization
+
 ```json
 {
   "common": { "navigation", "buttons", "actions" },
@@ -136,17 +148,20 @@ web/
 ## 🎨 Design System
 
 ### Color Palette
+
 - **Primary**: #FF7B54 (Orange)
 - **Secondary**: #FFD700 (Gold)
 - **Background**: #FDF6E3 (Cream)
 - **Text**: #2D3436 (Dark Gray)
 
 ### Typography
+
 - **Font Family**: Geist Sans/Mono
 - **Responsive Scaling**: Mobile-first with lg: breakpoint scaling
 - **Hierarchy**: Clear heading structure with gradient effects
 
 ### Animations
+
 - **Float Effects**: 6-second cycle for background elements
 - **Hover States**: Scale and translate effects
 - **Page Transitions**: Slide-in animations for reveals
@@ -155,6 +170,7 @@ web/
 ## 📊 Current Status
 
 ### ✅ Implemented
+
 - Complete marketing site with professional design
 - Multi-language support with automatic detection
 - Responsive design optimized for all devices
@@ -163,11 +179,13 @@ web/
 - Legal pages (Privacy Policy, Terms of Service)
 
 ### ⚠️ Placeholder Implementation
+
 - User registration forms (UI only, no backend integration)
 - Contact forms (no email sending capability)
 - Password reset (partial implementation)
 
 ### ❌ Missing (Future Implementation)
+
 - User authentication and session management
 - API integration with backend services
 - User dashboard and account management
@@ -180,24 +198,28 @@ web/
 ## 🔄 Future Development
 
 ### Phase 1: Authentication & API Integration
+
 - Implement JWT-based authentication
 - Connect to existing Go backend API
 - Set up React Query for state management
 - Add protected routes and user sessions
 
 ### Phase 2: Core Learning Features
+
 - User dashboard with wordlist overview
 - Vocabulary management interface
 - Basic quiz functionality
 - Progress tracking and analytics
 
 ### Phase 3: Advanced Features
+
 - Complete quiz system with all modes
 - Subscription and billing integration
 - Advanced analytics and insights
 - Offline capability preparation
 
 ### Phase 4: Premium Features
+
 - Real-time collaboration features
 - Advanced learning analytics
 - Social features and sharing
@@ -212,12 +234,14 @@ web/
 ## 🚀 Deployment
 
 ### Production Build
+
 ```bash
 npm run build
 npm start
 ```
 
 ### Environment Configuration
+
 ```bash
 # Required environment variables
 NEXT_PUBLIC_API_BASE=""              # API backend URL
@@ -227,6 +251,7 @@ NEXT_PUBLIC_SENTRY_DSN=""            # Error monitoring
 ```
 
 ### Deployment Platforms
+
 - **Vercel**: Optimized deployment (recommended)
 - **Netlify**: Static site deployment
 - **Custom**: Node.js hosting with PM2

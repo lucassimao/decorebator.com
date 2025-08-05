@@ -1,35 +1,38 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { useTranslations } from 'next-intl';
-import VideoModal from '../common/VideoModal';
-import AppStoreButton from '../common/AppStoreButton';
-import { statsConfig } from '@/config/statsConfig';
+import React, { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import VideoModal from '../common/VideoModal'
+import AppStoreButton from '../common/AppStoreButton'
+import { statsConfig } from '@/config/statsConfig'
 
 const CTASection: React.FC = () => {
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
-  const t = useTranslations('cta');
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
+  const t = useTranslations('cta')
   // const tCommon = useTranslations('common');
 
   return (
-    <section id="download" className="py-20 bg-gradient-to-r from-[#FF7B54] to-orange-600 relative overflow-hidden">
+    <section
+      id="download"
+      className="relative overflow-hidden bg-gradient-to-r from-[#FF7B54] to-orange-600 py-20"
+    >
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl float-animation"></div>
-        <div className="absolute -bottom-10 -right-10 w-60 h-60 bg-white/10 rounded-full blur-2xl float-animation" style={{animationDelay: '3s'}}></div>
+        <div className="float-animation absolute -top-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
+        <div
+          className="float-animation absolute -right-10 -bottom-10 h-60 w-60 rounded-full bg-white/10 blur-2xl"
+          style={{ animationDelay: '3s' }}
+        ></div>
       </div>
-      
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-          {t('title')}
-        </h2>
-        <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-          {statsConfig.locations.ctaSection.showUserCount 
+
+      <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+        <h2 className="mb-6 text-4xl font-bold text-white lg:text-5xl">{t('title')}</h2>
+        <p className="mx-auto mb-8 max-w-2xl text-xl text-white/90">
+          {statsConfig.locations.ctaSection.showUserCount
             ? t('subtitleWithCount', { count: statsConfig.values.userCount })
-            : t('subtitle')
-          }
+            : t('subtitle')}
         </p>
-         {/*
+        {/*
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
           <button 
             onClick={() => setIsVideoModalOpen(true)}
@@ -41,7 +44,7 @@ const CTASection: React.FC = () => {
         </div>
          */}
         {/* App Store Buttons */}
-        <div className="flex flex-wrap gap-4 justify-center">
+        <div className="flex flex-wrap justify-center gap-4">
           <AppStoreButton store="apple" />
           <AppStoreButton store="google" />
         </div>
@@ -55,7 +58,7 @@ const CTASection: React.FC = () => {
         title="Decorebator Demo - AI-Powered Vocabulary Learning"
       />
     </section>
-  );
-};
+  )
+}
 
-export default CTASection;
+export default CTASection

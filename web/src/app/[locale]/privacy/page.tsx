@@ -1,27 +1,21 @@
-'use client';
+'use client'
 
-import React from 'react';
-import PageLayout from '../../../components/layout/PageLayout';
-import { PolicySection } from '../../../components/policy/PolicySection';
+import React from 'react'
+import PageLayout from '../../../components/layout/PageLayout'
+import { PolicySection } from '../../../components/policy/PolicySection'
 
 export default function PrivacyPolicy() {
   return (
     <PageLayout>
       <div className="pt-24 pb-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-[#2D3436] mb-4">
-              Privacy Policy
-            </h1>
-            <p className="text-xl text-[#636E72]">
-              Your privacy is important to us
-            </p>
-            <p className="text-sm text-[#636E72] mt-4">
-              Last updated: January 2025
-            </p>
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h1 className="mb-4 text-4xl font-bold text-[#2D3436] md:text-5xl">Privacy Policy</h1>
+            <p className="text-xl text-[#636E72]">Your privacy is important to us</p>
+            <p className="mt-4 text-sm text-[#636E72]">Last updated: January 2025</p>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12">
+          <div className="rounded-2xl bg-white p-8 shadow-lg md:p-12">
             <PolicySection
               title="Introduction"
               content={`
@@ -330,21 +324,33 @@ export default function PrivacyPolicy() {
               `}
             />
 
-            <div className="mt-12 p-6 bg-orange-50 rounded-lg border border-orange-200">
+            <div className="mt-12 rounded-lg border border-orange-200 bg-orange-50 p-6">
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
-                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-6 w-6 text-orange-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-orange-900 mb-2">
+                  <h3 className="mb-2 text-lg font-semibold text-orange-900">
                     Your Privacy Matters
                   </h3>
                   <p className="text-orange-800">
-                    We take your privacy seriously and are committed to protecting your personal information. If you have any questions or concerns about our privacy practices, please don&apos;t hesitate to contact us.
+                    We take your privacy seriously and are committed to protecting your personal
+                    information. If you have any questions or concerns about our privacy practices,
+                    please don&apos;t hesitate to contact us.
                   </p>
-                  <p className="text-orange-800 mt-3">
+                  <p className="mt-3 text-orange-800">
                     Effective Date: June 1, 2025 | Version: 1.0 | Next Review: July 2026
                   </p>
                 </div>
@@ -354,5 +360,5 @@ export default function PrivacyPolicy() {
         </div>
       </div>
     </PageLayout>
-  );
+  )
 }

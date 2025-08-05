@@ -1,11 +1,11 @@
-@import "tailwindcss";
-@import "../styles/animations.css";
+@import 'tailwindcss';
+@import '../styles/animations.css';
 
 :root {
-  --background: #FDF6E3;
-  --foreground: #2D3436;
-  --primary-orange: #FF7B54;
-  --secondary-gray: #636E72;
+  --background: #fdf6e3;
+  --foreground: #2d3436;
+  --primary-orange: #ff7b54;
+  --secondary-gray: #636e72;
 }
 
 @theme inline {
