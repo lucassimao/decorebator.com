@@ -137,7 +137,11 @@ func (h *SentryHandler) Handle(ctx context.Context, r slog.Record) error {
 		// Send to Sentry asynchronously to avoid blocking
 		// The Sentry SDK handles buffering and retries internally
 		go func() {
-			hub := sentry.CurrentHub().Clone()
+			// Prefer the hub enriched in ctx (e.g., by worker middleware)
+			hub := sentry.GetHubFromContext(ctx)
+			if hub == nil {
+				hub = sentry.CurrentHub().Clone()
+			}
 			hub.CaptureEvent(event)
 		}()
 	}
