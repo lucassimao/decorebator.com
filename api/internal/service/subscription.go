@@ -541,7 +541,6 @@ func (s *SubscriptionService) getPlanFromPriceID(priceID string) model.Subscript
 	}
 }
 
-
 // SubscriptionCheckOptions contains options for subscription limit checking
 type SubscriptionCheckOptions struct {
 	WordlistID                *int64

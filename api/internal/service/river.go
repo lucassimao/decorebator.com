@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+	"github.com/riverqueue/river/rivertype"
 )
 
 const IMAGE_GENERATOR_QUEUE = "image_generator"
@@ -32,7 +33,6 @@ type NoOpWorker struct {
 func (w *NoOpWorker) Work(ctx context.Context, job *river.Job[NoOpJobArgs]) error {
 	return nil
 }
-
 
 // NewWorkerRiverClient creates a River client for worker processes using individual services
 // This eliminates circular dependencies by accepting services as parameters
@@ -100,6 +100,9 @@ func NewWorkerRiverClient(
 		Logger:       common.Logger,
 		PeriodicJobs: periodicJobs,
 		ErrorHandler: NewRiverErrorHandler(),
+		Middleware: []rivertype.Middleware{
+			common.NewWorkerContextMiddleware(),
+		},
 	})
 	if err != nil {
 		return nil, err

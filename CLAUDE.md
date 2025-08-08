@@ -174,6 +174,17 @@ npm run expo:update
 # EAS Updates (over-the-air updates)
 npm run update:local   # Update local development build
 npm run update:prod    # Update production build
+
+# EAS Build commands
+npm run build:ios      # iOS production build
+npm run build:android  # Android production build
+npm run build:all      # Build for all platforms
+npm run build:preview  # Preview build for testing
+
+# EAS Submit commands
+npm run submit:ios     # Submit to App Store
+npm run submit:android # Submit to Play Store
+npm run submit:all     # Submit to all stores
 ```
 
 ### Web Frontend (in `/web` directory)
@@ -242,14 +253,21 @@ River-based PostgreSQL queue system with dedicated worker types:
 - `revenuecat_worker` - Processes RevenueCat webhook events and subscription syncing (max 5 workers)
 - `stripe_webhook_worker` - Processes Stripe webhook events asynchronously (max 5 workers)
 
+**Advanced Worker Architecture**:
+- **Worker Context Middleware** (`internal/common/worker_middleware.go`) - Automatic context enrichment for all workers
+- **Sentry Integration** - Rich error reporting with job metadata, runtime stats, and performance tracking
+- **Execution Duration Tracking** - Automatic timing and performance monitoring for all background jobs
+- **Worker Metadata** - Job ID, attempt number, worker type, and execution context automatically captured
+
 **Note**: River tables were removed in migration 000052. The system now uses PostgreSQL-native queuing for better transaction safety and simplified architecture.
 
 **Recent Improvements**:
+- **Enhanced Monitoring**: Worker context middleware provides automatic Sentry enrichment with job metadata
 - **Analytics Caching Layer**: Redis-based caching with intelligent invalidation for sub-second response times
 - **Batch Analytics Endpoint**: New `/analytics/progress-summary` reduces API calls from N×8 to 1 for mobile dashboard
 - **Asynchronous Webhook Processing**: Both Stripe and RevenueCat webhooks processed via River workers
 
-Workers run as a separate process and include retry logic, rate limiting, and error handling.
+Workers run as a separate process and include retry logic, rate limiting, error handling, and comprehensive monitoring.
 
 ### Mobile App Architecture
 
@@ -303,7 +321,7 @@ Workers run as a separate process and include retry logic, rate limiting, and er
 - `EmailInput`, `PasswordInput` - Reusable form inputs with validation
 - Language detection integration with backend user profile synchronization
 
-**Analytics Components** (7 modular components):
+**Analytics Components** (9 modular components):
 - `AnalyticsHeader`, `StatsGrid`, `WordMasteryChart`, `LearningProgressChart`
 - `QuizPerformanceChart`, `BoxDistributionChart`, `HistoricalBoxDistributionChart`, `TopWordsSection`
 
@@ -806,6 +824,20 @@ web/docs/                             # Web frontend documentation
 - All major features documented in `/docs/` before implementation
 - API changes require updating `.http` files for examples
 - Architecture decisions documented with rationale and migration plans
+
+## Current Development Status
+
+**Recent Architecture Enhancements** (Uncommitted):
+- **Enhanced Sentry Integration**: New centralized Sentry initialization (`internal/common/sentry_init.go`)
+- **Worker Context Middleware**: Automatic context enrichment for all River workers with performance tracking
+- **Advanced Error Monitoring**: Workers now automatically report job metadata, runtime stats, and execution duration to Sentry
+- **Service Integration Updates**: API setup and River service updated to support new worker middleware architecture
+
+**Files Modified** (Check `git status` for current state):
+- `api/cmd/workers/main.go` - Worker initialization updates
+- `api/internal/http/setup.go` - HTTP setup with Sentry integration
+- `api/internal/service/river.go` - River service enhancements
+- New files: `sentry_init.go`, `worker_context.go`, `worker_middleware.go`
 
 ## Important Development Notes
 

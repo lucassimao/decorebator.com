@@ -1,7 +1,6 @@
 package http
 
 import (
-	"os"
 	"time"
 
 	"decorebator.com/internal/app"
@@ -9,31 +8,14 @@ import (
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
 	ddgin "github.com/DataDog/dd-trace-go/contrib/gin-gonic/gin/v2"
-	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 )
 
 func init() {
-	sentryDsn, exists := os.LookupEnv("SENTRY_DSN")
-	if os.Getenv("ENV") == productionEnv && !exists {
-		panic("SENTRY_DSN not found")
+	// Initialize Sentry using the common initialization function
+	if err := common.InitSentry(); err != nil {
+		common.Logger.Error("Failed to initialize Sentry in http package", "error", err)
 	}
-
-	if err := sentry.Init(sentry.ClientOptions{
-		Dsn:            sentryDsn,
-		Debug:          false, // Set to false in production to reduce overhead
-		SendDefaultPII: true,
-		// Performance optimizations
-		SampleRate:       1.0, // Capture 100% of errors
-		TracesSampleRate: 0.1, // Only capture 10% of performance traces
-		// Buffering settings
-		MaxBreadcrumbs: 50,
-		// The SDK handles async sending internally
-		AttachStacktrace: true,
-	}); err != nil {
-		common.Logger.Error("Sentry initialization failed", "error", err)
-	}
-
 }
 
 // SetupRoutes creates a Gin engine with routes using Context for dependency injection
@@ -50,6 +32,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	var WorkerRoutes = NewWorkerRoutes(appCtx.DefinitionService, appCtx.JobService)
 	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService)
 	var UserRoutes = NewUserRoutes(appCtx.UserService, appCtx.MailService)
+	var PublicQuizRoutes = NewPublicQuizRoutes(repository.NewPublicQuizRepository(appCtx.Database), appCtx.WordlistService)
 
 	// Use Leitner strategy from AppContext
 	var quizRoutes = NewQuizRoutes(appCtx.LeitnerSystemStrategy)
@@ -89,6 +72,9 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 
 		// Demo quiz endpoint for web landing page (static auth)
 		router.GET("/quiz/demo", AuthenticateStatic, demoRoutes.GetDemoQuizzes)
+
+		// Public quiz (unauthenticated)
+		router.GET("/public-quizzes/:slug", PublicQuizRoutes.GetBySlug)
 	}
 
 	// Routes with authentication
@@ -110,6 +96,8 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionAddWord), WordRoutes.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizRoutes.Save)
+		// Publish wordlist as public quiz (returns slug)
+		authenticatedRoutes.POST("/wordlists/:wordlistId/publish", PublicQuizRoutes.Publish)
 		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(appCtx.Database), ErrorReportsRoutes.Create)
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus(appCtx.Database))
 

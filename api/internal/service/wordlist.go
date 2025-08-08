@@ -145,4 +145,3 @@ func (wls *WordlistService) UpdateWordlist(ctx context.Context, wordlist *Wordli
 	}
 	return nil
 }
-

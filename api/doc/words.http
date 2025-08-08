@@ -1,9 +1,9 @@
-@email="lsimaocosta+bs1@gmail.com"
-@password= "123456789"
+@email="lsimaocosta@gmail.com"
+@password= "12345"
 
 
 ### Creating user
-POST https://api.decorebator.com/users
+POST http://localhost:3000/users
 content-type: application/json
 
 {
@@ -15,7 +15,7 @@ content-type: application/json
 
 ### Login
 # @name loginRequest
-POST https://api.decorebator.com/login
+POST http://localhost:3000/login
 content-type: application/json
 
 {
@@ -26,12 +26,12 @@ content-type: application/json
 @authToken = {{loginRequest.response.headers.Authorization}}
 
 ### Get wordlists
-GET https://api.decorebator.com/wordlists
+GET http://localhost:3000/wordlists
 authorization: {{authToken}}
 
 
 ### Next quiz 
-POST https://api.decorebator.com/wordlists/7/quizzes
+POST http://localhost:3000/wordlists/7/quizzes
 authorization: {{authToken}}
 
 
@@ -39,7 +39,7 @@ authorization: {{authToken}}
 
 ### Creating wordlist
 # @name wordlistRequest
-POST https://api.decorebator.com/wordlists
+POST http://localhost:3000/wordlists
 authorization: {{authToken}}
 
 {
@@ -50,7 +50,7 @@ authorization: {{authToken}}
 @wordlistId = {{wordlistRequest.response.body.id}} 
 
 ### Creating word
-POST https://api.decorebator.com/wordlists/{{wordlistId}}/words
+POST http://localhost:3000/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
@@ -67,7 +67,7 @@ authorization: {{authToken}}
 }
 
 ### Saving quiz result
-PATCH https://api.decorebator.com/wordlists/{{wordlistId}}/quizzes
+PATCH http://localhost:3000/wordlists/{{wordlistId}}/quizzes
 authorization: {{authToken}}
 
 {
