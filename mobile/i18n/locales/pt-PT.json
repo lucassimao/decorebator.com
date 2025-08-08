@@ -603,7 +603,25 @@
     "viewAnalytics": "Ver Análises",
     "analytics": "Análises",
     "flashcards": "Cartões",
-    "quiz": "Quiz"
+    "quiz": "Quiz",
+    "publishPublicQuiz": "Publicar quiz público",
+    "publishTitle": "Publicar quiz público",
+    "quizTitle": "Título do quiz",
+    "quizTitlePlaceholder": "Introduza um título",
+    "quizDescription": "Descrição (opcional)",
+    "quizDescriptionPlaceholder": "Breve descrição",
+    "difficulty": "Dificuldade",
+    "diff": { "easy": "Fácil", "medium": "Médio", "hard": "Difícil" },
+    "timeLimit": "Tempo limite (minutos)",
+    "publish": "Publicar",
+    "publishSuccessTitle": "Publicado",
+    "publishSuccess": "Publicado com sucesso!",
+    "publishReadyToShare": "O seu quiz está pronto para ser partilhado!",
+    "publishError": "Não foi possível publicar esta lista como um quiz público.",
+    "titleRequired": "Título é obrigatório",
+    "timeLimitInvalid": "O tempo deve estar entre 1 e 15 minutos.",
+    "copyUrl": "Copiar link",
+    "urlLabel": "Link"
   },
   "analytics": {
     "header": {

@@ -9,7 +9,7 @@ import (
 )
 
 // Helper to create a wordlist and return its ID
-func createWordlist(t *testing.T, ts *setup.TestServer, token string, name string, languageCode string) int64 {
+func createWordlist(t *testing.T, ts *setup.TestServer, token string, name string) int64 {
 	t.Helper()
 
 	wl := ts.Expect.POST("/wordlists").
@@ -17,7 +17,7 @@ func createWordlist(t *testing.T, ts *setup.TestServer, token string, name strin
 		WithJSON(map[string]any{
 			"name":         name,
 			"description":  "",
-			"languageCode": languageCode,
+			"languageCode": "en",
 		}).
 		Expect().
 		Status(http.StatusCreated).
@@ -49,7 +49,7 @@ func TestPublicQuiz_PublishAndFetch_Succeeds(t *testing.T) {
 	token := ts.WithTestUser(t)
 
 	// Create a wordlist for this user
-	wordlistID := createWordlist(t, ts, token, "My WL", "en")
+	wordlistID := createWordlist(t, ts, token, "My WL")
 
 	// Publish it as a public quiz
 	pub := ts.Expect.POST(fmt.Sprintf("/wordlists/%d/publish", wordlistID)).
@@ -77,12 +77,78 @@ func TestPublicQuiz_PublishAndFetch_Succeeds(t *testing.T) {
 	got.Value("timeLimitMinutes").Number().IsEqual(10)
 }
 
+func TestPublicQuiz_Publish_Twice_ReuseSlugAndReactivate(t *testing.T) {
+	ts := setup.NewTestServer(t)
+	defer ts.Cleanup()
+
+	token := ts.WithTestUser(t)
+	wordlistID := createWordlist(t, ts, token, "Twice WL")
+
+	// First publish
+	first := ts.Expect.POST(fmt.Sprintf("/wordlists/%d/publish", wordlistID)).
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"title":            "First Title",
+			"difficulty":       "easy",
+			"timeLimitMinutes": 5,
+		}).
+		Expect().
+		Status(http.StatusCreated).
+		JSON().Object()
+
+	slug := first.Value("slug").String().NotEmpty().Raw()
+
+	// Unpublish
+	ts.Expect.DELETE(fmt.Sprintf("/wordlists/%d/publish", wordlistID)).
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusNoContent)
+
+	// Re-publish with different settings → should reuse same slug and reactivate
+	second := ts.Expect.POST(fmt.Sprintf("/wordlists/%d/publish", wordlistID)).
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"title":            "Second Title",
+			"difficulty":       "hard",
+			"timeLimitMinutes": 10,
+		}).
+		Expect().
+		Status(http.StatusCreated).
+		JSON().Object()
+
+	second.Value("slug").String().IsEqual(slug)
+
+	// Fetch and assert new metadata present
+	got := ts.Expect.GET(fmt.Sprintf("/public-quizzes/%s", slug)).
+		Expect().
+		Status(http.StatusOK).
+		JSON().Object()
+
+	got.Value("title").String().IsEqual("Second Title")
+	got.Value("difficulty").String().IsEqual("hard")
+	got.Value("timeLimitMinutes").Number().IsEqual(10)
+}
+
+func TestPublicQuiz_Unpublish_IdempotentWhenNone(t *testing.T) {
+	ts := setup.NewTestServer(t)
+	defer ts.Cleanup()
+
+	token := ts.WithTestUser(t)
+	wordlistID := createWordlist(t, ts, token, "Empty WL")
+
+	// Unpublish when nothing exists → 204
+	ts.Expect.DELETE(fmt.Sprintf("/wordlists/%d/publish", wordlistID)).
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusNoContent)
+}
+
 func TestPublicQuiz_Publish_ValidationErrors(t *testing.T) {
 	ts := setup.NewTestServer(t)
 	defer ts.Cleanup()
 
 	token := ts.WithTestUser(t)
-	wordlistID := createWordlist(t, ts, token, "Bad WL", "en")
+	wordlistID := createWordlist(t, ts, token, "Bad WL")
 
 	// Missing title
 	ts.Expect.POST(fmt.Sprintf("/wordlists/%d/publish", wordlistID)).
@@ -123,7 +189,7 @@ func TestPublicQuiz_Publish_OtherUsersWordlist_Should404(t *testing.T) {
 
 	// User A creates a wordlist
 	tokenA := ts.WithTestUser(t)
-	wordlistID := createWordlist(t, ts, tokenA, "Owner WL", "en")
+	wordlistID := createWordlist(t, ts, tokenA, "Owner WL")
 
 	// User B attempts to publish user A's wordlist
 	tokenB := ts.WithTestUser(t)

@@ -34,69 +34,22 @@ func (r *PublicQuizRepository) CreatePublicQuiz(ctx context.Context, quiz *model
 	).Scan(&quiz.ID, &quiz.PublishedAt, &quiz.CreatedAt, &quiz.UpdatedAt)
 }
 
-// GetPublicQuizBySlug retrieves a public quiz by its slug
-func (r *PublicQuizRepository) GetPublicQuizBySlug(ctx context.Context, slug string) (*model.PublicQuiz, error) {
+// ReactivateAndUpdatePublicQuiz reactivates an existing quiz and updates basic fields, keeping slug immutable
+func (r *PublicQuizRepository) ReactivateAndUpdatePublicQuiz(ctx context.Context, id int64, title, description string, difficulty model.QuizDifficulty, timeLimit int) error {
 	query := `
-		SELECT 
-            pq.id, pq.slug, pq.wordlist_id, pq.creator_id, pq.title, pq.description,
-            pq.difficulty, pq.time_limit_minutes, pq.preview_image_url,
-			pq.play_count, pq.share_count, pq.average_score, pq.is_active,
-			pq.published_at, pq.created_at, pq.updated_at,
-			u.first_name || ' ' || u.last_name as creator_name
-		FROM public_quizzes pq
-		JOIN users u ON pq.creator_id = u.id
-		WHERE pq.slug = $1 AND pq.is_active = true
-	`
-
-	quiz := &model.PublicQuiz{}
-	err := r.db.QueryRow(ctx, query, slug).Scan(
-		&quiz.ID, &quiz.Slug, &quiz.WordlistID, &quiz.CreatorID, &quiz.Title, &quiz.Description,
-		&quiz.Difficulty, &quiz.TimeLimitMinutes, &quiz.PreviewImageURL,
-		&quiz.PlayCount, &quiz.ShareCount, &quiz.AverageScore, &quiz.IsActive,
-		&quiz.PublishedAt, &quiz.CreatedAt, &quiz.UpdatedAt, &quiz.CreatorName,
-	)
-
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return quiz, nil
+        UPDATE public_quizzes
+        SET title = $1,
+            description = $2,
+            difficulty = $3,
+            time_limit_minutes = $4,
+            is_active = true,
+            updated_at = NOW()
+        WHERE id = $5`
+	_, err := r.db.Exec(ctx, query, title, description, difficulty, timeLimit, id)
+	return err
 }
 
-// GetPublicQuizByID retrieves a public quiz by its ID
-func (r *PublicQuizRepository) GetPublicQuizByID(ctx context.Context, id int64) (*model.PublicQuiz, error) {
-	query := `
-		SELECT 
-            pq.id, pq.slug, pq.wordlist_id, pq.creator_id, pq.title, pq.description,
-            pq.difficulty, pq.time_limit_minutes, pq.preview_image_url,
-			pq.play_count, pq.share_count, pq.average_score, pq.is_active,
-			pq.published_at, pq.created_at, pq.updated_at,
-			u.first_name || ' ' || u.last_name as creator_name
-		FROM public_quizzes pq
-		JOIN users u ON pq.creator_id = u.id
-		WHERE pq.id = $1
-	`
-
-	quiz := &model.PublicQuiz{}
-	err := r.db.QueryRow(ctx, query, id).Scan(
-		&quiz.ID, &quiz.Slug, &quiz.WordlistID, &quiz.CreatorID, &quiz.Title, &quiz.Description,
-		&quiz.Difficulty, &quiz.TimeLimitMinutes, &quiz.PreviewImageURL,
-		&quiz.PlayCount, &quiz.ShareCount, &quiz.AverageScore, &quiz.IsActive,
-		&quiz.PublishedAt, &quiz.CreatedAt, &quiz.UpdatedAt, &quiz.CreatorName,
-	)
-
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return quiz, nil
-}
+// Lookups should use Find with filters instead of bespoke methods
 
 // GetUserPublicQuizzes retrieves all public quizzes created by a user
 // GetUserPublicQuizzes omitted for MVP
@@ -113,6 +66,92 @@ func (r *PublicQuizRepository) DeactivatePublicQuiz(ctx context.Context, id int6
 	`
 	_, err := r.db.Exec(ctx, query, id)
 	return err
+}
+
+// Find pattern to retrieve public quizzes with flexible filters
+type FindPublicQuizArgs struct {
+	ID         *int64
+	Slug       *string
+	WordlistID *int64
+	CreatorID  *int64
+	OnlyActive *bool
+	Limit      *int
+}
+
+func (r *PublicQuizRepository) Find(ctx context.Context, args FindPublicQuizArgs) ([]*model.PublicQuiz, error) {
+	var builder strings.Builder
+	var where []string
+	var queryArgs []any
+	idx := 0
+
+	builder.WriteString(`SELECT pq.id, pq.slug, pq.wordlist_id, pq.creator_id, pq.title, pq.description,
+        pq.difficulty, pq.time_limit_minutes, pq.preview_image_url, pq.play_count, pq.share_count,
+        pq.average_score, pq.is_active, pq.published_at, pq.created_at, pq.updated_at,
+        (u.first_name || ' ' || u.last_name) AS creator_name
+        FROM public_quizzes pq
+        LEFT JOIN users u ON pq.creator_id = u.id`)
+
+	if args.ID != nil {
+		idx++
+		where = append(where, fmt.Sprintf("pq.id = $%d", idx))
+		queryArgs = append(queryArgs, *args.ID)
+	}
+	if args.Slug != nil {
+		idx++
+		where = append(where, fmt.Sprintf("pq.slug = $%d", idx))
+		queryArgs = append(queryArgs, *args.Slug)
+	}
+	if args.WordlistID != nil {
+		idx++
+		where = append(where, fmt.Sprintf("pq.wordlist_id = $%d", idx))
+		queryArgs = append(queryArgs, *args.WordlistID)
+	}
+	if args.CreatorID != nil {
+		idx++
+		where = append(where, fmt.Sprintf("pq.creator_id = $%d", idx))
+		queryArgs = append(queryArgs, *args.CreatorID)
+	}
+	if args.OnlyActive != nil {
+		idx++
+		where = append(where, fmt.Sprintf("pq.is_active = $%d", idx))
+		queryArgs = append(queryArgs, *args.OnlyActive)
+	}
+	if len(where) > 0 {
+		builder.WriteString(" WHERE ")
+		builder.WriteString(strings.Join(where, " AND "))
+	}
+	builder.WriteString(" ORDER BY pq.id DESC")
+	if args.Limit != nil && *args.Limit > 0 {
+		builder.WriteString(fmt.Sprintf(" LIMIT %d", *args.Limit))
+	}
+
+	query := builder.String()
+	rows, err := r.db.Query(ctx, query, queryArgs...)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return []*model.PublicQuiz{}, nil
+		}
+		return nil, err
+	}
+	defer rows.Close()
+
+	var quizzes []*model.PublicQuiz
+	for rows.Next() {
+		q := &model.PublicQuiz{}
+		if err := rows.Scan(
+			&q.ID, &q.Slug, &q.WordlistID, &q.CreatorID, &q.Title, &q.Description,
+			&q.Difficulty, &q.TimeLimitMinutes, &q.PreviewImageURL, &q.PlayCount, &q.ShareCount,
+			&q.AverageScore, &q.IsActive, &q.PublishedAt, &q.CreatedAt, &q.UpdatedAt,
+			&q.CreatorName,
+		); err != nil {
+			return nil, err
+		}
+		quizzes = append(quizzes, q)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return quizzes, nil
 }
 
 // CreateQuizAttempt creates a new quiz attempt

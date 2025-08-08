@@ -620,7 +620,25 @@
     "viewAnalytics": "Analysen anzeigen",
     "analytics": "Analysen",
     "flashcards": "Lernkarten",
-    "quiz": "Quiz"
+    "quiz": "Quiz",
+    "publishPublicQuiz": "Öffentliches Quiz veröffentlichen",
+    "publishTitle": "Öffentliches Quiz veröffentlichen",
+    "quizTitle": "Quiz-Titel",
+    "quizTitlePlaceholder": "Titel eingeben",
+    "quizDescription": "Beschreibung (optional)",
+    "quizDescriptionPlaceholder": "Kurze Beschreibung",
+    "difficulty": "Schwierigkeit",
+    "diff": { "easy": "Leicht", "medium": "Mittel", "hard": "Schwer" },
+    "timeLimit": "Zeitlimit (Minuten)",
+    "publish": "Veröffentlichen",
+    "publishSuccessTitle": "Veröffentlicht",
+    "publishSuccess": "Erfolgreich veröffentlicht!",
+    "publishReadyToShare": "Ihr Quiz ist bereit zum Teilen!",
+    "publishError": "Diese Wortliste konnte nicht als öffentliches Quiz veröffentlicht werden.",
+    "titleRequired": "Titel ist erforderlich",
+    "timeLimitInvalid": "Das Zeitlimit muss zwischen 1 und 15 Minuten liegen.",
+    "copyUrl": "Link kopieren",
+    "urlLabel": "Link"
   },
    "analytics": {
     "header": {

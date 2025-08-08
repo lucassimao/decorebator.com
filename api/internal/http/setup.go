@@ -96,8 +96,9 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionAddWord), WordRoutes.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizRoutes.Save)
-		// Publish wordlist as public quiz (returns slug)
+		// Publish/unpublish wordlist as public quiz (MVP)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/publish", PublicQuizRoutes.Publish)
+		authenticatedRoutes.DELETE("/wordlists/:wordlistId/publish", PublicQuizRoutes.Unpublish)
 		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(appCtx.Database), ErrorReportsRoutes.Create)
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus(appCtx.Database))
 
