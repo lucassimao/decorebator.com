@@ -89,7 +89,7 @@ const FALLBACK_QUIZ_DATA: Quiz[] = [
 
 export async function fetchDemoQuizzes(): Promise<Quiz[]> {
   try {
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3000'
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
     const STATIC_AUTH = process.env.STATIC_AUTHENTICATION || '12345'
 
     console.log('Fetching demo quizzes from:', `${API_BASE}/quiz/demo`)
