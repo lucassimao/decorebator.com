@@ -109,27 +109,27 @@ func AuthenticateStatic(c *gin.Context) {
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-        // Allow only a single, valid origin per request. Multiple values are invalid per CORS spec
-        // and may be coalesced by proxies (e.g., Cloudflare) into a comma-separated list, causing failures.
-        allowedOrigins := map[string]struct{}{
-            "https://decorebator.com":     {},
-            "https://www.decorebator.com": {},
-        }
+		// Allow only a single, valid origin per request. Multiple values are invalid per CORS spec
+		// and may be coalesced by proxies (e.g., Cloudflare) into a comma-separated list, causing failures.
+		allowedOrigins := map[string]struct{}{
+			"https://decorebator.com":     {},
+			"https://www.decorebator.com": {},
+		}
 
-        origin := c.Request.Header.Get("Origin")
-        if os.Getenv("ENV") == productionEnv {
-            if origin != "" {
-                if _, ok := allowedOrigins[origin]; ok {
-                    c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
-                    c.Writer.Header().Set("Vary", "Origin")
-                }
-            }
-        } else {
-            if origin != "" {
-                c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
-                c.Writer.Header().Set("Vary", "Origin")
-            }
-        }
+		origin := c.Request.Header.Get("Origin")
+		if os.Getenv("ENV") == productionEnv {
+			if origin != "" {
+				if _, ok := allowedOrigins[origin]; ok {
+					c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+					c.Writer.Header().Set("Vary", "Origin")
+				}
+			}
+		} else {
+			if origin != "" {
+				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+				c.Writer.Header().Set("Vary", "Origin")
+			}
+		}
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Type, Content-Length, Authorization, Cookie")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Cookie")
