@@ -35,7 +35,16 @@ export type LeaderboardEntry = {
 function getApiBaseUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim()
   if (envUrl && envUrl.startsWith('http')) return envUrl
-  // Default to Go API local port
+  // If running in browser on the production domain, use production API
+  if (typeof window !== 'undefined') {
+    try {
+      const host = window.location.host
+      if (host.endsWith('decorebator.com')) return 'https://api.decorebator.com'
+    } catch {}
+  }
+  // If rendering on server in production, default to production API
+  if (process.env.NODE_ENV === 'production') return 'https://api.decorebator.com'
+  // Default to Go API local port in development
   return 'http://localhost:3000'
 }
 

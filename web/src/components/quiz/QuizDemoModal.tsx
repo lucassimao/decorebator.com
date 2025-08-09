@@ -597,7 +597,27 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                     className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF7B54] to-orange-600 px-6 py-3 font-semibold text-white transition-all duration-300 hover:shadow-lg w-full"
                   />
 
-                {(submittedLocked || submitOk === true) ? null : (
+                {(submittedLocked || submitOk === true) ? (
+                <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-left">
+                  <p className="mb-3 text-sm font-semibold text-green-800">Thanks! Your score was submitted.</p>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => {
+                        try {
+                          // Close modal if possible
+                          onClose?.()
+                          // Scroll to leaderboard on page
+                          const el = document.getElementById('leaderboard')
+                          el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        } catch {}
+                      }}
+                      className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-green-700 border border-green-300 hover:bg-green-100"
+                    >
+                      View leaderboard
+                    </button>
+                  </div>
+                </div>
+                ) : (
                 <div className="rounded-2xl border border-gray-200 p-4 text-left">
                   <p className="mb-3 text-sm font-semibold text-[#2D3436]">Want to appear on the leaderboard?</p>
                   {submitOk === false ? (

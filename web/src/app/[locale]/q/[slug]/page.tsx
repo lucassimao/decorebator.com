@@ -122,7 +122,7 @@ export default async function PublicQuizPage({ params }: Props) {
           </div>
           {/* Leaderboard (Top 10) */}
           {leaderboard.length > 0 && (
-            <div className="mt-6">
+            <div id="leaderboard" className="mt-6">
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#636E72]">🏆 Top Players</h3>
               <ol className="rounded-xl border border-gray-100 bg-white">
                 {leaderboard.slice(0, 10).map((row, idx) => {
