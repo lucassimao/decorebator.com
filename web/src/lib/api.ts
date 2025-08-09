@@ -153,8 +153,8 @@ export async function listActivePublicQuizzes(limit = 5000, staticToken?: string
   })
   if (!res.ok) throw new Error(`Failed to list public quizzes: ${res.status}`)
   const data = await res.json()
-  const list = Array.isArray(data?.quizzes) ? data.quizzes : []
-  return list.map((q: any) => ({ slug: String(q.slug), title: String(q.title || '') }))
+  const list = Array.isArray(data?.quizzes) ? (data.quizzes as Array<Record<string, unknown>>) : []
+  return list.map((q) => ({ slug: String(q.slug ?? ''), title: String((q.title as string | undefined) ?? '') }))
 }
 
 
