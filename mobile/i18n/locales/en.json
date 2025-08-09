@@ -140,6 +140,11 @@
       "premium": {
         "title": "Unlock Detailed Analytics",
         "subtitle": "Track progress, mastery levels & more"
+      },
+      "feature": {
+        "historicalTrends": "Historical trends",
+        "accuracyInsights": "Accuracy insights",
+        "boxDistribution": "Box distribution"
       }
     },
     "wordlists": {
@@ -295,7 +300,7 @@
         "prioritySupport": "Priority support"
       },
       "upgradeButton": "Upgrade to Premium",
-      "manageSubscription": "Manage Subscription",
+      "manageSubscriptionSettings": "Manage Subscription",
       "cancelSubscription": "Cancel Subscription",
       "reactivateSubscription": "Reactivate Subscription",
       "billingCycle": "Billing Cycle",
@@ -621,7 +626,45 @@
     "viewAnalytics": "View Analytics",
     "analytics": "Analytics",
     "flashcards": "Flashcards",
-    "quiz": "Quiz"
+    "quiz": "Quiz",
+    "publishPublicQuiz": "Publish public quiz",
+    "editPublicQuiz": "Edit public quiz",
+    "publishTitle": "Publish public quiz",
+    "quizTitle": "Quiz title",
+    "quizTitlePlaceholder": "Enter a title",
+    "quizDescription": "Description (optional)",
+    "quizDescriptionPlaceholder": "Short description",
+    "difficulty": "Difficulty",
+    "diff": { "easy": "Easy", "medium": "Medium", "hard": "Hard" },
+    "timeLimit": "Time limit (minutes)",
+    "publish": "Publish",
+    "public": "Public",
+    "publicBadge": "Public",
+    "viewOnWeb": "View on web",
+    "unpublishPublicQuiz": "Unpublish public quiz",
+    "publishSuccessTitle": "Published",
+    "publishSuccess": "Published successfully!",
+    "publishReadyToShare": "Your quiz is ready to be shared!",
+    "publishError": "Could not publish this wordlist as a public quiz.",
+    "titleRequired": "Title is required",
+    "timeLimitInvalid": "Time limit must be between 1 and 15 minutes.",
+    "copySlug": "Copy slug",
+    "slugLabel": "Slug",
+    "copyUrl": "Copy link",
+    "copyPublicLink": "Copy public link",
+    "shareLink": "Share link",
+    "shareCta": "I just published a vocab quiz—can you beat it?",
+      "urlLabel": "Link",
+      "premiumUpsell": {
+        "title": "Unlock Premium",
+        "subtitle": "Get access to advanced features",
+        "finePrint": "Cancel anytime. Existing data remains safe."
+      },
+      "feature": {
+        "publishQuizzes": "Publish public quizzes",
+        "shareLinks": "Share links & leaderboards",
+        "betterBranding": "Better visuals & branding"
+      }
   },
   "analytics": {
     "header": {

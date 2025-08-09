@@ -9,7 +9,6 @@ import AnalyticsSection from '../../components/home/AnalyticsSection'
 import PricingSection from '../../components/home/PricingSection'
 import FAQSection from '../../components/home/FAQSection'
 import CTASection from '../../components/home/CTASection'
-import { fetchDemoQuizzes } from '../../lib/quiz-data'
 
 interface HomePageProps {
   params: Promise<{
@@ -23,8 +22,7 @@ const HomePage: React.FC<HomePageProps> = async ({ params }) => {
   // Set the locale for the request - this is crucial for server-side rendering
   setRequestLocale(locale)
 
-  // Fetch quiz data at build time
-  const demoQuizzes = await fetchDemoQuizzes()
+  // Demo quizzes removed
 
   return (
     <PageLayout>
@@ -37,7 +35,7 @@ const HomePage: React.FC<HomePageProps> = async ({ params }) => {
         ></div>
       </div>
 
-      <EnhancedHeroSection demoQuizzes={demoQuizzes} />
+      <EnhancedHeroSection />
       <NewFeaturesSection />
       <AppShowcaseSection />
       <HowItWorksSection />

@@ -152,6 +152,11 @@
       "premium": {
         "title": "Desbloqueie Análises Detalhadas",
         "subtitle": "Acompanhe progresso, níveis de domínio e mais"
+      },
+      "feature": {
+        "historicalTrends": "Tendências históricas",
+        "accuracyInsights": "Informações de precisão",
+        "boxDistribution": "Distribuição por caixas"
       }
     },
     "wordlists": {
@@ -603,7 +608,35 @@
     "viewAnalytics": "Ver Análises",
     "analytics": "Análises",
     "flashcards": "Cartões",
-    "quiz": "Quiz"
+    "quiz": "Quiz",
+    "publishPublicQuiz": "Publicar quiz público",
+    "publishTitle": "Publicar quiz público",
+    "quizTitle": "Título do quiz",
+    "quizTitlePlaceholder": "Introduza um título",
+    "quizDescription": "Descrição (opcional)",
+    "quizDescriptionPlaceholder": "Breve descrição",
+    "difficulty": "Dificuldade",
+    "diff": { "easy": "Fácil", "medium": "Médio", "hard": "Difícil" },
+    "timeLimit": "Tempo limite (minutos)",
+    "publish": "Publicar",
+    "publishSuccessTitle": "Publicado",
+    "publishSuccess": "Publicado com sucesso!",
+    "publishReadyToShare": "O seu quiz está pronto para ser partilhado!",
+    "publishError": "Não foi possível publicar esta lista como um quiz público.",
+    "titleRequired": "Título é obrigatório",
+    "timeLimitInvalid": "O tempo deve estar entre 1 e 15 minutos.",
+    "copyUrl": "Copiar link",
+    "urlLabel": "Link",
+    "premiumUpsell": {
+      "title": "Desbloquear Premium",
+      "subtitle": "Aceda a funcionalidades avançadas",
+      "finePrint": "Cancele quando quiser. Os seus dados permanecem seguros."
+    },
+    "feature": {
+      "publishQuizzes": "Publicar questionários públicos",
+      "shareLinks": "Partilhar ligações e classificações",
+      "betterBranding": "Melhores visuais e imagem de marca"
+    }
   },
   "analytics": {
     "header": {

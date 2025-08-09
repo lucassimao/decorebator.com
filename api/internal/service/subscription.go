@@ -541,7 +541,6 @@ func (s *SubscriptionService) getPlanFromPriceID(priceID string) model.Subscript
 	}
 }
 
-
 // SubscriptionCheckOptions contains options for subscription limit checking
 type SubscriptionCheckOptions struct {
 	WordlistID                *int64
@@ -591,6 +590,8 @@ func (s *SubscriptionService) CheckSubscriptionLimits(ctx context.Context, userI
 					return fmt.Errorf("free plan limit reached: maximum %d words per wordlist", model.FreeWordsPerList)
 				}
 			}
+		case model.UserActionPublishPublicQuiz:
+			return fmt.Errorf("premium required to publish public quizzes")
 		}
 	}
 

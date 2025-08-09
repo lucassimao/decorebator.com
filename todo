@@ -3,48 +3,26 @@ Launch strategy
     ok Update site
     ok subscribe to apple
     ok configure apple store 
-    - update my website
-    - Update app store images
+    ok update my website
+    ok Update google app store
     - create demo site for video
-
-    - Product Hunt
-    - Tiktok how decorebator works series
-    - Instagram how decorebator works series
-    - YouTube shorts how decorebator works
-    - Share behind-the-scenes content of AI creating definitions, images, audio
+    - Social networks: behind-the-scenes content of AI creating definitions, images, audio
+        - facebook
+        - Instagram
+        - Tiktok how decorebator works series
+        - YouTube shorts
 
     - Post educational content on social networks
-    - ASO (App Store Optimization)
-        Primary: "AI vocabulary," "spaced repetition," "smart flashcards"
-        Language-specific: "German vocabulary app," "Spanish learning AI"
-        Feature-based: "vocabulary with images," "pronunciation practice"
-        Educational: "memory techniques," "scientific learning"
-
     - Content calendar (Monday/Wednesday/Friday posts)
     - Reach out to first batch of language YouTubers
 
 
-[ ] Premium Upgrade Trigger Tests
-    - 10-word limit hit: "Ready to learn more? Unlock unlimited words!"
-    - After first quiz: "Love the experience? Get unlimited wordlists!"
-    - 3+ days active: "You're building a great habit! Unlock premium features"
+- Fix welcome screen
 
+V3
 
-[ ] New quiz: complete sentece from audio
-[ ] New quiz: drag-and-drop, word building
-[ ] New quiz: create a small text using 5 words from an wordlist and read to the user. Ask the user to write the missing words.
-[ ] Support invite friend to unlock premium features - 1 subscribed friend grants 1 week for the enviter
-[ ] downgrade boxes for when taking time to train
-[ ] Conversational quiz: given AI all words and meanings, then use voice to talk about any topic
-[ ] Show effect after finishing flash cards like papel picado
 [ ] Allow to select specific quiz types
-[ ] User Feedback
-[ ] Push notification system (reminders, streaks, review alerts).
-
-
-
-
-
+[ ] Show effect after finishing flash cards like papel picado
 [ ] Crossword
 [ ] Gamification
     XP points & leveling for completing activities.
@@ -53,20 +31,15 @@ Launch strategy
     Streak system (daily learning).
     Badges/Achievements (e.g., "100 words learned").
     Leaderboards for competitive learners
-[ ] Community / Social Features
-        Wordlist sharing (with friends, study groups).
-        Comment section or notes on wordlists or quizzes.
-        Challenges (e.g., weekly vocab battle).
-[ ] support different voices when generating audio from text
 [ ] Im the flash card we need a way to list all words and jump straight to selected one
 [ ] Add words in bulk (talvez pra outra categoria de usuario - mais caro)
 
+V4 
 
 [ ] Sponsored quiz - pay for words and add sponsored examples and sentences and images
 [ ] Configurar Dashboard do river
 [ ] Security plan OWASP
 [ ] Migrate local PostgreSQL container from 15 to 17
-[ ] What would take to scale our backend to millons of request per min?
 [ ] Remove the trigger in subscription table and drop user.subscription_* fields. Move logic to the service layer
 [ ] how to rollback db migrations?
 [ ] leverage prompt caching  https://openai.com/index/api-prompt-caching/

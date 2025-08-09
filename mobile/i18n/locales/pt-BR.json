@@ -152,6 +152,11 @@
       "premium": {
         "title": "Desbloqueie Análises Detalhadas",
         "subtitle": "Acompanhe progresso, níveis de domínio e mais"
+      },
+      "feature": {
+        "historicalTrends": "Tendências históricas",
+        "accuracyInsights": "Insights de precisão",
+        "boxDistribution": "Distribuição por caixas"
       }
     },
     "wordlists": {
@@ -604,7 +609,45 @@
     "viewAnalytics": "Ver Análises",
     "analytics": "Análises",
     "flashcards": "Cartões",
-    "quiz": "Quiz"
+    "quiz": "Quiz",
+    "publishPublicQuiz": "Publicar quiz público",
+    "editPublicQuiz": "Editar quiz público",
+    "publishTitle": "Publicar quiz público",
+    "quizTitle": "Título do quiz",
+    "quizTitlePlaceholder": "Digite um título",
+    "quizDescription": "Descrição (opcional)",
+    "quizDescriptionPlaceholder": "Breve descrição",
+    "difficulty": "Dificuldade",
+    "diff": { "easy": "Fácil", "medium": "Médio", "hard": "Difícil" },
+    "timeLimit": "Tempo limite (minutos)",
+    "publish": "Publicar",
+    "public": "Público",
+    "publicBadge": "Público",
+    "viewOnWeb": "Ver na web",
+    "unpublishPublicQuiz": "Despublicar quiz público",
+    "publishSuccessTitle": "Publicado",
+    "publishSuccess": "Publicado com sucesso!",
+    "publishReadyToShare": "Seu quiz está pronto para ser compartilhado!",
+    "publishError": "Não foi possível publicar esta lista como quiz público.",
+    "titleRequired": "Título é obrigatório",
+    "timeLimitInvalid": "O tempo deve estar entre 1 e 15 minutos.",
+    "copySlug": "Copiar slug",
+    "slugLabel": "Slug",
+    "copyUrl": "Copiar link",
+    "copyPublicLink": "Copiar link público",
+    "shareLink": "Compartilhar link",
+    "shareCta": "Acabei de publicar um quiz de vocabulário — consegue me superar?",
+    "urlLabel": "Link",
+    "premiumUpsell": {
+      "title": "Desbloquear Premium",
+      "subtitle": "Acesse recursos avançados",
+      "finePrint": "Cancele quando quiser. Seus dados permanecem seguros."
+    },
+    "feature": {
+      "publishQuizzes": "Publicar quizzes públicos",
+      "shareLinks": "Compartilhar links e rankings",
+      "betterBranding": "Melhores visuais e branding"
+    }
   },
   "analytics": {
     "header": {

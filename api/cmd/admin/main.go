@@ -207,7 +207,7 @@ func downloadProfile(client *http.Client, url, authToken, filename string) {
 	if profileTimeout < 60*time.Second {
 		profileTimeout = 60 * time.Second
 	}
-	
+
 	profileClient := &http.Client{
 		Timeout: profileTimeout,
 	}

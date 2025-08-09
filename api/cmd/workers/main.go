@@ -10,9 +10,21 @@ import (
 	"decorebator.com/internal/app"
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/service"
+	"github.com/getsentry/sentry-go"
 )
 
 func main() {
+	// Initialize Sentry first, before any logging
+	if err := common.InitSentry(); err != nil {
+		common.Logger.Error("Failed to initialize Sentry for workers", "error", err)
+	}
+	defer func() {
+		// Flush any pending Sentry events before shutdown
+		if sentry.CurrentHub().Client() != nil {
+			sentry.Flush(2 * time.Second)
+		}
+	}()
+
 	// Initialize database connection
 	db := common.GetDBConnection()
 	defer common.CloseDBConnection()
@@ -63,19 +75,20 @@ func main() {
 	<-quit
 	common.Logger.Debug("Starting backgroundjob shutdown")
 
-	if os.Getenv("ENV") == "production" {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
+	// Gracefully stop River client with timeout
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
 
-		// catching ctx.Done(). timeout of 5 seconds.
-		select {
-		case <-ctx.Done():
-			common.Logger.Debug("timeout of 5 seconds.")
-		}
-	} else {
-		if err := riverClient.Stop(context.Background()); err != nil {
-			common.Logger.Error("failed to stop river client", "error", err)
-			panic(err)
+	if err := riverClient.Stop(shutdownCtx); err != nil {
+		common.Logger.Error("failed to stop river client", "error", err)
+		// Don't panic here - we still want to flush Sentry events
+	}
+
+	// Flush any remaining Sentry events before exit
+	if sentry.CurrentHub().Client() != nil {
+		common.Logger.Debug("Flushing Sentry events")
+		if !sentry.Flush(5 * time.Second) {
+			common.Logger.Warn("Some Sentry events may not have been sent")
 		}
 	}
 

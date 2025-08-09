@@ -18,6 +18,7 @@ export type Wordlist = {
   pronunciationSystem: PronunciationSystem;
   wordsCount: number;
   wordsLearnedCount: number;
+  publicQuizSlug?: string;
 };
 
 export type Word = {
@@ -82,6 +83,20 @@ export type Quiz = {
   imageDescription: string;
   definitionId: number;
   wordId: number;
+};
+
+// Public Quiz (MVP)
+export type PublicQuizDifficulty = "easy" | "medium" | "hard";
+
+export type PublishPublicQuizDTO = {
+  title: string;
+  description?: string;
+  difficulty: PublicQuizDifficulty;
+  timeLimitMinutes: number; // 1-15
+};
+
+export type PublishPublicQuizResponse = {
+  slug: string;
 };
 
 export type CreateWordDTO = Pick<Word, "wordlistId" | "name" | "notes"> & {
@@ -254,4 +269,25 @@ export async function getProcessingStatus(
 
   const body = await callAPI<ProcessingStatusResponse>("GET", endpoint);
   return body;
+}
+
+// Publish current wordlist as a public quiz (MVP)
+export async function publishPublicQuiz(
+  wordlistId: number,
+  settings: PublishPublicQuizDTO,
+): Promise<PublishPublicQuizResponse> {
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/publish`;
+  return await callAPI<PublishPublicQuizResponse>(
+    "POST",
+    endpoint,
+    JSON.stringify(settings),
+  );
+}
+
+// Unpublish current public quiz for this wordlist (MVP)
+export async function unpublishPublicQuiz(wordlistId: number): Promise<void> {
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/publish`;
+  await callAPI<void>("DELETE", endpoint);
 }

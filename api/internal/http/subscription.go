@@ -161,7 +161,6 @@ func GetSubscriptionStatus(subRepo *repository.SubscriptionRepository) gin.Handl
 	}
 }
 
-
 // GetSubscriptionHistory returns the user's subscription history
 func GetSubscriptionHistory(subRepo *repository.SubscriptionRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -187,7 +186,6 @@ func GetSubscriptionHistory(subRepo *repository.SubscriptionRepository) gin.Hand
 		c.JSON(http.StatusOK, gin.H{"subscriptions": subscriptions})
 	}
 }
-
 
 func CheckoutRedirect() gin.HandlerFunc {
 	return func(c *gin.Context) {

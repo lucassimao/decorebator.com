@@ -4,19 +4,16 @@ import React, { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import Image from 'next/image'
 import VideoModal from '../common/VideoModal'
-import QuizDemoModal from '../quiz/QuizDemoModal'
-import { Quiz } from '@/lib/quiz-data'
+// Quiz demo modal removed
 import AppStoreButton from '../common/AppStoreButton'
 import { statsConfig } from '@/config/statsConfig'
 
-interface EnhancedHeroSectionProps {
-  demoQuizzes: Quiz[]
-}
+type EnhancedHeroSectionProps = Record<string, never>
 
-const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }) => {
+const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = () => {
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
-  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false)
+  // const [isQuizModalOpen, setIsQuizModalOpen] = useState(false)
   const t = useTranslations('hero')
   const locale = useLocale()
 
@@ -224,12 +221,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ demoQuizzes }
         title={t('videoTitle')}
       />
 
-      {/* Quiz Demo Modal */}
-      <QuizDemoModal
-        isOpen={isQuizModalOpen}
-        onClose={() => setIsQuizModalOpen(false)}
-        demoQuizzes={demoQuizzes}
-      />
+      {/* Quiz Demo Modal removed */}
     </section>
   )
 }

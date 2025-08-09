@@ -11,14 +11,18 @@ import {
   ActivityIndicator,
   Modal,
   TouchableWithoutFeedback,
+  Linking,
+  Share,
 } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LANGUAGES } from "./CreateWordlistModal";
 import * as wordlistsApi from "@/api/wordlists";
+import PublishPublicQuizModal from "./PublishPublicQuizModal";
+import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useUserSession } from "@/hooks/useUserSession";
-import { LinearGradient } from "expo-linear-gradient";
+import PremiumUpsellModal from "@/components/common/PremiumUpsellModal";
 import { useTheme } from "@/contexts/ThemeContext";
 
 type WordlistItemProps = {
@@ -39,6 +43,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const queryClient = useQueryClient();
   const [showMenu, setShowMenu] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
   const { isPremium } = useUserSession();
@@ -138,6 +143,52 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     onPressed?.();
   };
 
+  const openPublishModal = () => {
+    setShowMenu(false);
+    if (!isPremium) {
+      setShowPremiumModal(true);
+      return;
+    }
+    setShowPublishModal(true);
+  };
+
+  const getPublicUrl = (slug: string) => {
+    const appDomain = process.env.EXPO_PUBLIC_APP_DOMAIN?.trim();
+    const baseUrl =
+      appDomain && appDomain.startsWith("http")
+        ? appDomain
+        : "http://localhost:4000";
+    return `${baseUrl}/q/${slug}`;
+  };
+
+  const copyPublicLink = async (slug: string) => {
+    const fullUrl = getPublicUrl(slug);
+    const copyLabel = t("wordlistItem.copyUrl", "Copy link");
+    const okLabel = t("common.ok");
+    Alert.alert(
+      t("wordlistItem.publishSuccessTitle", "Published"),
+      t("wordlistItem.publishReadyToShare", "Your quiz is ready to be shared!"),
+      [
+        { text: okLabel, style: "default" },
+        {
+          text: copyLabel,
+          onPress: () => Clipboard.setStringAsync(fullUrl),
+        },
+      ],
+    );
+  };
+
+  const handlePublishSuccess = async (slug: string) => {
+    await copyPublicLink(slug);
+    // refresh lists to pull in publicQuizSlug
+    queryClient.invalidateQueries({ queryKey: ["wordlists"] });
+  };
+
+  const handleViewOnWeb = (slug: string) => {
+    const url = getPublicUrl(slug);
+    Linking.openURL(url).catch((e) => console.warn("Failed to open URL", e));
+  };
+
   return (
     <>
       <TouchableOpacity
@@ -166,7 +217,34 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             >
               {item.name}
             </Text>
+            {item.publicQuizSlug ? (
+              <View
+                style={styles.publicBadge}
+                accessibilityLabel={t("wordlistItem.publicBadge", "Public")}
+              >
+                <MaterialIcons
+                  name="public"
+                  size={responsive.getValueForSize(12, 14, 14, 16)}
+                  color={theme.colors.text.inverse}
+                />
+                <Text style={styles.publicBadgeText}>
+                  {t("wordlistItem.publicBadge", "Public")}
+                </Text>
+              </View>
+            ) : null}
           </View>
+          <TouchableOpacity
+            style={styles.headerMoreButton}
+            onPress={() => setShowMenu(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.more")}
+          >
+            <MaterialIcons
+              name="more-vert"
+              size={responsive.getValueForSize(18, 20, 22, 24)}
+              color={theme.colors.text.secondary}
+            />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.cardStats}>
@@ -266,18 +344,44 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
           <TouchableOpacity
             style={styles.actionButtonLarge}
-            onPress={() => setShowMenu(true)}
+            onPress={async () => {
+              if (item.publicQuizSlug) {
+                const url = getPublicUrl(item.publicQuizSlug!);
+                const cta = t(
+                  "wordlistItem.shareCta",
+                  "I just published a vocab quiz—can you beat it?",
+                );
+                const message = `${cta} ${url}`;
+                try {
+                  await Share.share({ message, title: item.name });
+                } catch {
+                  // no-op
+                }
+              } else {
+                openPublishModal();
+              }
+            }}
             accessibilityRole="button"
-            accessibilityLabel={t("common.more")}
-            accessibilityHint="Show more options for this wordlist"
+            accessibilityLabel={
+              item.publicQuizSlug
+                ? t("wordlistItem.share", "Share")
+                : t("wordlistItem.publishPublicQuiz", "Publish public quiz")
+            }
+            accessibilityHint={
+              item.publicQuizSlug
+                ? "Share this public quiz link"
+                : "Publish this wordlist as a public quiz"
+            }
           >
             <MaterialIcons
-              name="more-horiz"
+              name={item.publicQuizSlug ? "share" : "upload"}
               size={responsive.getValueForSize(18, 20, 22, 24)}
-              color={theme.colors.text.secondary}
+              color={theme.colors.primary}
             />
             <Text style={styles.actionButtonText} numberOfLines={1}>
-              {t("common.more")}
+              {item.publicQuizSlug
+                ? t("wordlistItem.share", "Share")
+                : t("wordlistItem.publish", "Publish")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -324,6 +428,114 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                     {t("wordlistItem.viewAnalytics")}
                   </Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={openPublishModal}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    item.publicQuizSlug
+                      ? t("wordlistItem.editPublicQuiz", "Edit public quiz")
+                      : t(
+                          "wordlistItem.publishPublicQuiz",
+                          "Publish public quiz",
+                        )
+                  }
+                  accessibilityHint={
+                    item.publicQuizSlug
+                      ? "Update the public quiz settings"
+                      : "Publish this wordlist as a shareable quiz"
+                  }
+                >
+                  <MaterialIcons
+                    name="public"
+                    size={responsive.getValueForSize(20, 24, 26, 28)}
+                    color={theme.colors.primary}
+                  />
+                  <Text style={styles.menuItemText}>
+                    {item.publicQuizSlug
+                      ? t("wordlistItem.editPublicQuiz", "Edit public quiz")
+                      : t(
+                          "wordlistItem.publishPublicQuiz",
+                          "Publish public quiz",
+                        )}
+                  </Text>
+                </TouchableOpacity>
+
+                {item.publicQuizSlug ? (
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => copyPublicLink(item.publicQuizSlug!)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(
+                      "wordlistItem.copyPublicLink",
+                      "Copy public link",
+                    )}
+                    accessibilityHint="Copy the shareable link for this public quiz"
+                  >
+                    <MaterialIcons
+                      name="link"
+                      size={responsive.getValueForSize(20, 24, 26, 28)}
+                      color={theme.colors.success}
+                    />
+                    <Text style={styles.menuItemText}>
+                      {t("wordlistItem.copyPublicLink", "Copy public link")}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+
+                {item.publicQuizSlug ? (
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={async () => {
+                      await wordlistsApi.unpublishPublicQuiz(item.id);
+                      queryClient.invalidateQueries({
+                        queryKey: ["wordlists"],
+                      });
+                      setShowMenu(false);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(
+                      "wordlistItem.unpublishPublicQuiz",
+                      "Unpublish public quiz",
+                    )}
+                    accessibilityHint="Disable public access to this quiz"
+                  >
+                    <MaterialIcons
+                      name="visibility-off"
+                      size={responsive.getValueForSize(20, 24, 26, 28)}
+                      color={theme.colors.error}
+                    />
+                    <Text style={styles.menuItemText}>
+                      {t(
+                        "wordlistItem.unpublishPublicQuiz",
+                        "Unpublish public quiz",
+                      )}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+
+                {item.publicQuizSlug ? (
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => handleViewOnWeb(item.publicQuizSlug!)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(
+                      "wordlistItem.viewOnWeb",
+                      "View on web",
+                    )}
+                    accessibilityHint="Open this public quiz in the browser"
+                  >
+                    <MaterialIcons
+                      name="open-in-new"
+                      size={responsive.getValueForSize(20, 24, 26, 28)}
+                      color={theme.colors.primary}
+                    />
+                    <Text style={styles.menuItemText}>
+                      {t("wordlistItem.viewOnWeb", "View on web")}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
 
                 <TouchableOpacity
                   style={styles.menuItem}
@@ -415,83 +627,20 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         </TouchableWithoutFeedback>
       </Modal>
 
-      {/* Premium Analytics Upsell Modal */}
-      <Modal
+      <PublishPublicQuizModal
+        visible={showPublishModal}
+        wordlistId={item.id}
+        defaultTitle={item.name}
+        onClose={() => setShowPublishModal(false)}
+        onSuccess={handlePublishSuccess}
+      />
+
+      <PremiumUpsellModal
         visible={showPremiumModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowPremiumModal(false)}
-        accessibilityViewIsModal={true}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowPremiumModal(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback>
-              <View style={styles.premiumModalContainer}>
-                <LinearGradient
-                  colors={[theme.colors.premium, theme.colors.semantic.warning]}
-                  style={styles.premiumGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  <View style={styles.premiumContent}>
-                    <View style={styles.premiumIconContainer}>
-                      <MaterialIcons
-                        name="analytics"
-                        size={responsive.getValueForSize(28, 32, 36, 40)}
-                        color={theme.colors.text.inverse}
-                      />
-                    </View>
-                    <Text
-                      style={styles.premiumTitle}
-                      accessibilityRole="header"
-                      accessibilityLabel={item.name}
-                    >
-                      {t("dashboard.stats.premium.title")}
-                    </Text>
-                    <Text
-                      style={styles.premiumSubtitle}
-                      accessibilityRole="text"
-                    >
-                      {t("dashboard.stats.premium.subtitle")}
-                    </Text>
-
-                    <View style={styles.premiumButtons}>
-                      <TouchableOpacity
-                        style={styles.upgradeButton}
-                        onPress={() => {
-                          setShowPremiumModal(false);
-                          onUpgradePress?.();
-                        }}
-                        accessibilityRole="button"
-                        accessibilityLabel={t(
-                          "settings.subscription.upgradeButton",
-                        )}
-                        accessibilityHint="Upgrade to premium to access analytics features"
-                      >
-                        <Text style={styles.upgradeButtonText}>
-                          {t("settings.subscription.upgradeButton")}
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.cancelButton}
-                        onPress={() => setShowPremiumModal(false)}
-                        accessibilityRole="button"
-                        accessibilityLabel={t("upgradePrompt.maybeLater")}
-                        accessibilityHint="Close this upgrade prompt"
-                      >
-                        <Text style={styles.cancelButtonText}>
-                          {t("upgradePrompt.maybeLater")}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </LinearGradient>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+        onClose={() => setShowPremiumModal(false)}
+        context="analytics"
+        onUpgradePress={onUpgradePress}
+      />
     </>
   );
 };
@@ -529,7 +678,7 @@ const createStyles = (
     cardHeader: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
+      justifyContent: "space-between",
       marginBottom: responsive.spacing.elementSpacing,
     },
     languageFlag: {
@@ -545,10 +694,29 @@ const createStyles = (
       color: theme.colors.text.primary,
       marginBottom: responsive.spacing.elementSpacing / 4,
     },
+    publicBadge: {
+      flexDirection: "row",
+      alignSelf: "flex-start",
+      alignItems: "center",
+      gap: 6,
+      backgroundColor: theme.colors.primary,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: theme.borderRadius.sm,
+    },
+    publicBadgeText: {
+      color: theme.colors.text.inverse,
+      fontSize: responsive.getScaledFont("label"),
+      fontWeight: "600",
+    },
+    headerMoreButton: {
+      padding: 4,
+      borderRadius: theme.borderRadius.sm,
+    },
     actionButtonsRow: {
       flexDirection: "row",
       marginTop: responsive.spacing.elementSpacing,
-      gap: responsive.spacing.elementSpacing,
+      gap: responsive.spacing.elementSpacing / 2,
       paddingTop: responsive.spacing.elementSpacing / 2,
       borderTopWidth: 1,
       borderTopColor: theme.colors.ui.divider,
@@ -567,6 +735,7 @@ const createStyles = (
           : theme.colors.background.subtle,
       gap: responsive.spacing.elementSpacing / 4,
       minHeight: responsive.getValueForSize(60, 64, 68, 72),
+      position: "relative",
     },
     actionButtonText: {
       fontSize: responsive.getValueForSize(10, 12, 13, 14),
@@ -730,5 +899,14 @@ const createStyles = (
       fontSize: responsive.getScaledFont("body"),
       fontWeight: "500",
       color: "#636E72",
+    },
+    shareOverlay: {
+      position: "absolute",
+      top: responsive.getValueForSize(6, 6, 6, 8),
+      right: responsive.getValueForSize(6, 6, 6, 8),
+      padding: 4,
+      borderRadius: theme.borderRadius.sm,
+      backgroundColor:
+        theme.mode === "light" ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.06)",
     },
   });

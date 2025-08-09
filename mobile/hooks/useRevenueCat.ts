@@ -156,7 +156,9 @@ export function useRevenueCat() {
       setState((prev) => ({ ...prev, customerInfo }));
 
       // Set optimistic subscription data immediately
-      setOptimisticSubscriptionData(customerInfo, queryClient);
+      if (customerInfo) {
+        setOptimisticSubscriptionData(customerInfo, queryClient);
+      }
     },
   });
 

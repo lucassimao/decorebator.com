@@ -18,6 +18,7 @@ type JobService interface {
 	ScheduleExampleAudioJob(ctx context.Context, definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
 	ScheduleStripeWebhookJob(ctx context.Context, eventID, eventType string, eventData []byte) (int64, error)
 	ScheduleRevenueCatWebhookJob(ctx context.Context, eventType string, eventData []byte) (int64, error)
+	SchedulePublicQuizOgJob(ctx context.Context, quizID int64) (int64, error)
 	RetryJob(ctx context.Context, jobID int64) error
 }
 
@@ -34,9 +35,7 @@ func NewJobService(riverClient *river.Client[pgx.Tx]) *JobServiceImpl {
 }
 
 func (js *JobServiceImpl) ScheduleImageJob(ctx context.Context, definitionID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
-	opts := river.InsertOpts{
-		Queue: IMAGE_GENERATOR_QUEUE,
-	}
+	opts := river.InsertOpts{Queue: ImageGeneratorQueue}
 
 	return js.enqueueJob(ctx, &opts, ImageGeneratorArgs{
 		DefinitionId: definitionID,
@@ -46,9 +45,7 @@ func (js *JobServiceImpl) ScheduleImageJob(ctx context.Context, definitionID int
 }
 
 func (js *JobServiceImpl) ScheduleAudioJob(ctx context.Context, wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
-	opts := river.InsertOpts{
-		Queue: TEXT_TO_SPEECH_QUEUE,
-	}
+	opts := river.InsertOpts{Queue: TextToSpeechQueue}
 
 	return js.enqueueJob(ctx, &opts, TextToSpeechArgs{
 		WordId:      wordID,
@@ -58,9 +55,7 @@ func (js *JobServiceImpl) ScheduleAudioJob(ctx context.Context, wordID int64, us
 }
 
 func (js *JobServiceImpl) ScheduleDefinitionJob(ctx context.Context, wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error) {
-	opts := river.InsertOpts{
-		Queue: DEFINITION_FETCHER_QUEUE,
-	}
+	opts := river.InsertOpts{Queue: DefinitionFetcherQueue}
 
 	return js.enqueueJob(ctx, &opts, DefinitionFetcherArgs{
 		WordId:      wordID,
@@ -76,9 +71,7 @@ func (js *JobServiceImpl) ScheduleExampleAudioJob(ctx context.Context, definitio
 		UserID:       userID,
 	}
 
-	opts := &river.InsertOpts{
-		Queue: EXAMPLE_AUDIO_QUEUE,
-	}
+	opts := &river.InsertOpts{Queue: ExampleAudioQueue}
 
 	if tx != nil {
 		_, err := js.riverClient.InsertTx(ctx, *tx, args, opts)
@@ -106,6 +99,11 @@ func (js *JobServiceImpl) enqueueJob(ctx context.Context, opts *river.InsertOpts
 	}
 
 	return result.Job.ID, nil
+}
+
+func (js *JobServiceImpl) SchedulePublicQuizOgJob(ctx context.Context, quizID int64) (int64, error) {
+	opts := river.InsertOpts{Queue: PublicQuizOgQueue}
+	return js.enqueueJob(ctx, &opts, PublicQuizOgArgs{QuizID: quizID}, nil)
 }
 
 func (js *JobServiceImpl) ScheduleStripeWebhookJob(ctx context.Context, eventID, eventType string, eventData []byte) (int64, error) {

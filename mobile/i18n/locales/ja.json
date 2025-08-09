@@ -152,6 +152,11 @@
       "premium": {
         "title": "詳細な分析をアンロック",
         "subtitle": "進捗、習熟度レベルなどを追跡"
+      },
+      "feature": {
+        "historicalTrends": "履歴トレンド",
+        "accuracyInsights": "正確性インサイト",
+        "boxDistribution": "ボックス分布"
       }
     },
     "wordlists": {
@@ -603,7 +608,43 @@
     "viewAnalytics": "分析を表示",
     "analytics": "分析",
     "flashcards": "フラッシュカード",
-    "quiz": "クイズ"
+    "quiz": "クイズ",
+    "publishPublicQuiz": "公開クイズを公開",
+    "editPublicQuiz": "公開クイズを編集",
+    "publishTitle": "公開クイズを公開",
+    "quizTitle": "クイズのタイトル",
+    "quizTitlePlaceholder": "タイトルを入力",
+    "quizDescription": "説明（任意）",
+    "quizDescriptionPlaceholder": "短い説明",
+    "difficulty": "難易度",
+    "diff": { "easy": "かんたん", "medium": "ふつう", "hard": "むずかしい" },
+    "timeLimit": "制限時間（分）",
+    "publish": "公開",
+    "public": "公開",
+    "publicBadge": "公開",
+    "viewOnWeb": "Webで見る",
+    "unpublishPublicQuiz": "公開を解除",
+    "publishSuccessTitle": "公開しました",
+    "publishSuccess": "公開に成功しました！",
+    "publishReadyToShare": "クイズを共有できる準備ができました！",
+    "publishError": "このリストを公開クイズとして公開できませんでした。",
+    "titleRequired": "タイトルは必須です",
+    "timeLimitInvalid": "時間は1〜15分の間で設定してください。",
+    "copyUrl": "リンクをコピー",
+    "copyPublicLink": "公開リンクをコピー",
+    "shareLink": "リンクを共有",
+    "shareCta": "語彙クイズを公開しました—挑戦してみませんか？",
+    "urlLabel": "リンク",
+    "premiumUpsell": {
+      "title": "プレミアムをアンロック",
+      "subtitle": "高度な機能にアクセス",
+      "finePrint": "いつでも解約できます。データは安全です。"
+    },
+    "feature": {
+      "publishQuizzes": "公開クイズを作成",
+      "shareLinks": "リンク共有とランキング",
+      "betterBranding": "より良いビジュアルとブランディング"
+    }
   },
   "analytics": {
     "header": {
