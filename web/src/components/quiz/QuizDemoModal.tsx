@@ -519,7 +519,7 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
         )}
 
         {/* Quiz Content */}
-        <div className="p-4 sm:p-8 flex-1 overflow-y-auto pb-24">
+        <div className="p-4 sm:p-8 flex-1 overflow-y-auto pb-28 sm:pb-4">
           {isCompleted ? (
             // Completion Screen
             <div className="space-y-6 text-center">
