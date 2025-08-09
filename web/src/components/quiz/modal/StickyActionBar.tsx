@@ -21,7 +21,7 @@ export default function StickyActionBar({
 }: Props) {
   if (isCompleted) return null
   return (
-    <div className="border-t border-gray-200 bg-white/95 p-3 sm:hidden supports-[padding:env(safe-area-inset-bottom)]:pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
+    <div className="border-t border-gray-200 bg-white/95 p-3 supports-[padding:env(safe-area-inset-bottom)]:pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
       {isWriteMode ? (
         !showFeedback ? (
           <div className="flex gap-2">

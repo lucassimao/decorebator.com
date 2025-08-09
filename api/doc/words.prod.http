@@ -1,9 +1,9 @@
-@email="abc@gmail.com"
+@email="lsimaocosta@gmail.com"
 @password= "12345"
 
 
 ### Creating user
-POST http://localhost:3000/users
+POST https://api.decorebator.com/users
 content-type: application/json
 
 {
@@ -15,7 +15,7 @@ content-type: application/json
 
 ### Login
 # @name loginRequest
-POST https://dolphin-app-3u25d.ondigitalocean.app/decorebator-com-api2/login
+POST https://api.decorebator.com/login
 content-type: application/json
 
 {
@@ -27,13 +27,13 @@ content-type: application/json
 
 ### Listing wordlists
 # @name wordlistRequest
-GET https://dolphin-app-3u25d.ondigitalocean.app/decorebator-com-api2/wordlists
+GET https://api.decorebator.com/wordlists
 authorization: {{authToken}}
 
 
 ### Creating wordlist
 # @name wordlistRequest
-POST http://localhost:3000/wordlists
+POST https://api.decorebator.com/wordlists
 authorization: {{authToken}}
 
 {
@@ -45,7 +45,7 @@ authorization: {{authToken}}
 @wordlistId = 34
 
 ### Creating word
-POST https://dolphin-app-3u25d.ondigitalocean.app/decorebator-com-api2/wordlists/{{wordlistId}}/words
+POST https://api.decorebator.com/wordlists/{{wordlistId}}/words
 authorization: {{authToken}}
 
 {
@@ -55,17 +55,36 @@ authorization: {{authToken}}
 
 
 ### Generating a quiz
-POST http://localhost:3000/wordlists/{{wordlistId}}/quizzes
+POST https://api.decorebator.com/wordlists/{{wordlistId}}/quizzes
 authorization: {{authToken}}
 
 {
 }
 
 ### Saving quiz result
-PATCH http://localhost:3000/wordlists/{{wordlistId}}/quizzes
+PATCH https://api.decorebator.com/wordlists/{{wordlistId}}/quizzes
 authorization: {{authToken}}
 
 {
     "success": true,
     "id":30
 }
+
+
+
+
+### Publish wordlist
+# @name Publish
+POST https://api.decorebator.com/wordlists/3150/publish
+content-type: application/json
+authorization: {{authToken}}
+
+{
+"title":"For Whom The Bell Tolls",
+"description":"novel by Ernest Hemingway",
+"difficulty":"medium",
+"timeLimitMinutes":10
+}
+
+### Publish wordlist
+GET https://api.decorebator.com/public-quizzes/for-whom-the-bell-tolls

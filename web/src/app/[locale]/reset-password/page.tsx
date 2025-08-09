@@ -38,7 +38,7 @@ const ResetPasswordFormContent: React.FC = () => {
     setIsLoading(true)
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE
+      const apiBase = process.env.NEXT_PUBLIC_API_URL
       const res = await fetch(`${apiBase}/password/reset`, {
         method: 'PATCH',
         headers: {

@@ -26,7 +26,10 @@
   "submit": {
     "production": {
       "ios": {},
-      "android": {}
+      "android": {
+        "serviceAccountKeyPath":"./decorebator-465316-0520ea65e130.json",
+        "track":"production"
+      }
     }
   }
 }

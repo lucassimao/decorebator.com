@@ -779,8 +779,9 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                     )}
                   </div>
 
+                  {/* Hide inline footer buttons across all sizes when sticky bar is present */}
                   {!showFeedback && (
-                    <div className="hidden sm:flex gap-3">
+                    <div className="hidden">
                       <button
                         onClick={handleWriteAnswer}
                         disabled={!userInput.trim()}
@@ -798,7 +799,7 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                   )}
 
                   {showFeedback && (
-                    <div className="hidden sm:flex justify-center pt-4">
+                    <div className="hidden">
                       <button
                         onClick={handleNext}
                         className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-[#FF7B54] to-orange-600 px-8 py-3 font-semibold text-white transition-transform duration-150 hover:shadow-lg active:scale-[0.98]"
