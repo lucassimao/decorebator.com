@@ -62,7 +62,7 @@ export default async function PublicQuizPage({ params }: Props) {
   // Fetch questions for this public quiz; if unavailable, show a friendly message instead of fallback
   const [quizzes, leaderboard] = await Promise.all([
     getPublicQuizQuestions(slug, { next: { revalidate: 300 } }).catch(() => []),
-    getPublicQuizLeaderboard(slug, { next: { revalidate: 300 } }).catch(() => []),
+    getPublicQuizLeaderboard(slug, { next: { revalidate: 30 } }).catch(() => []),
   ])
 
 
