@@ -144,11 +144,12 @@ export async function submitPublicQuizAttempt(args: {
   }
 }
 
-export async function listActivePublicQuizzes(limit = 5000): Promise<{ slug: string; title: string }[]> {
+export async function listActivePublicQuizzes(limit = 5000, staticToken?: string): Promise<{ slug: string; title: string }[]> {
   const base = getApiBaseUrl()
   const res = await fetch(`${base}/public-quizzes?limit=${encodeURIComponent(String(limit))}`, {
     method: 'GET',
     cache: 'no-store',
+    headers: staticToken ? { Authorization: staticToken } : undefined,
   })
   if (!res.ok) throw new Error(`Failed to list public quizzes: ${res.status}`)
   const data = await res.json()

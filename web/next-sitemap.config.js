@@ -7,6 +7,32 @@ module.exports = {
   changefreq: 'daily',
   priority: 0.7,
   sitemapSize: 5000,
+  additionalPaths: async (config) => {
+    // Include public quizzes in the sitemap (canonical paths without locale)
+    const baseApi = (process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL.startsWith('http'))
+      ? process.env.NEXT_PUBLIC_API_URL
+      : 'http://localhost:3000'
+    const token = process.env.STATIC_AUTHENTICATION || ''
+    try {
+      const res = await fetch(`${baseApi}/public-quizzes?limit=5000`, {
+        headers: token ? { Authorization: token } : undefined,
+      })
+      if (!res.ok) throw new Error(`Failed to list public quizzes: ${res.status}`)
+      const data = await res.json()
+      const quizzes = Array.isArray(data?.quizzes) ? data.quizzes : []
+      return quizzes.map((q) => ({
+        loc: `/q/${q.slug}`,
+        changefreq: 'weekly',
+        priority: 0.8,
+        lastmod: new Date().toISOString(),
+        alternateRefs: config.alternateRefs ?? [],
+      }))
+    } catch (e) {
+      // If API is unavailable at build time, skip without failing the sitemap
+      console.warn('Sitemap: failed to fetch public quizzes', e)
+      return []
+    }
+  },
 
   // Multi-language support
   alternateRefs: [

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-    "time"
+	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -83,49 +83,49 @@ func (h *PublicQuizRoutes) GetBySlug(c *gin.Context) {
 // ListActive returns a list of active public quizzes for sitemap and discovery (unauthenticated)
 // Response is intentionally lightweight
 func (h *PublicQuizRoutes) ListActive(c *gin.Context) {
-    // Optional limit query param; default to 5000 (sitemap chunk size)
-    limit := 5000
-    if v := c.Query("limit"); v != "" {
-        if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 10000 {
-            limit = n
-        }
-    }
+	// Optional limit query param; default to 5000 (sitemap chunk size)
+	limit := 5000
+	if v := c.Query("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 10000 {
+			limit = n
+		}
+	}
 
-    onlyActive := true
-    list, err := h.repo.Find(c.Request.Context(), repository.FindPublicQuizArgs{OnlyActive: &onlyActive, Limit: &limit})
-    if err != nil {
-        c.Status(http.StatusInternalServerError)
-        return
-    }
+	onlyActive := true
+	list, err := h.repo.Find(c.Request.Context(), repository.FindPublicQuizArgs{OnlyActive: &onlyActive, Limit: &limit})
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
-    type item struct {
-        Slug        string  `json:"slug"`
-        Title       string  `json:"title"`
-        Description *string `json:"description,omitempty"`
-        Preview     *string `json:"previewImageUrl,omitempty"`
-        UpdatedAt   any     `json:"updatedAt,omitempty"`
-        PublishedAt any     `json:"publishedAt,omitempty"`
-    }
-    out := make([]item, 0, len(list))
-    for _, q := range list {
-        var updated any
-        if q.UpdatedAt.Status == 1 {
-            updated = q.UpdatedAt.Time.UTC().Format(time.RFC3339)
-        }
-        var published any
-        if q.PublishedAt.Status == 1 {
-            published = q.PublishedAt.Time.UTC().Format(time.RFC3339)
-        }
-        out = append(out, item{
-            Slug:        q.Slug,
-            Title:       q.Title,
-            Description: q.Description,
-            Preview:     q.PreviewImageURL,
-            UpdatedAt:   updated,
-            PublishedAt: published,
-        })
-    }
-    c.JSON(http.StatusOK, gin.H{"quizzes": out})
+	type item struct {
+		Slug        string  `json:"slug"`
+		Title       string  `json:"title"`
+		Description *string `json:"description,omitempty"`
+		Preview     *string `json:"previewImageUrl,omitempty"`
+		UpdatedAt   any     `json:"updatedAt,omitempty"`
+		PublishedAt any     `json:"publishedAt,omitempty"`
+	}
+	out := make([]item, 0, len(list))
+	for _, q := range list {
+		var updated any
+		if q.UpdatedAt.Status == 1 {
+			updated = q.UpdatedAt.Time.UTC().Format(time.RFC3339)
+		}
+		var published any
+		if q.PublishedAt.Status == 1 {
+			published = q.PublishedAt.Time.UTC().Format(time.RFC3339)
+		}
+		out = append(out, item{
+			Slug:        q.Slug,
+			Title:       q.Title,
+			Description: q.Description,
+			Preview:     q.PreviewImageURL,
+			UpdatedAt:   updated,
+			PublishedAt: published,
+		})
+	}
+	c.JSON(http.StatusOK, gin.H{"quizzes": out})
 }
 
 // GetQuestionsBySlug returns a spaced-repetition-like sequence of questions for a public quiz
