@@ -53,7 +53,6 @@ export async function getPublicQuizBySlug(slug: string, init?: RequestInit): Pro
 
   const data = await res.json()
 
-  // Map API response to PublicQuiz type
   const quiz: PublicQuiz = {
     id: data.id,
     slug: data.slug,
@@ -63,6 +62,7 @@ export async function getPublicQuizBySlug(slug: string, init?: RequestInit): Pro
     timeLimitMinutes: data.timeLimitMinutes ?? data.time_limit_minutes ?? 10,
     wordlistId: data.wordlistId ?? data.wordlist_id,
     creatorName: data.creatorName ?? data.creator_name ?? null,
+    previewImageUrl: data.previewImageUrl
   }
 
   return quiz

@@ -19,11 +19,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${quiz.title} — Public Quiz`
   const description = quiz.description || `Play this ${quiz.difficulty} quiz. Can you beat it?`
   const canonical = `https://decorebator.com/q/${quiz.slug}`
-  // Prefer platform-optimized variants derived from master; fall back to default placeholder
-  const defaultOg = ``
   const master = quiz.previewImageUrl || ''
-  const ogTwitter = master ? master.replace('-master.jpg', '-twitter_x.jpg') : defaultOg
-  const ogSquare = master ? master.replace('-master.jpg', '-square.jpg') : defaultOg
+  const ogTwitter = master.replace('-master.jpg', '-twitter_x.jpg') 
+  const ogSquare = master.replace('-master.jpg', '-square.jpg') 
 
   return {
     title,
@@ -42,9 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           // 1:1 square variant for platforms preferring square
           { url: ogSquare, width: 1024, height: 1024, alt: `${quiz.title} — Decorebator quiz preview (square)` },
           // Include master as an additional hint (dimensions may vary)
-          ...(master ? [{ url: master, alt: `${quiz.title} — Decorebator quiz preview (master)` }] : []),
-          // Final fallback if no preview exists
-          ...(master ? [] : [{ url: defaultOg, width: 1200, height: 630, alt: `${quiz.title} — Decorebator quiz preview (fallback)` }]),
+          ...(master ? [{ url: master, alt: `${quiz.title} — Decorebator quiz preview (master)` }] : [])
         ] as { url: string; width?: number; height?: number; alt?: string }[]
       ),
     },

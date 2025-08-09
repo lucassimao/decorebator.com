@@ -53,6 +53,71 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
 
   // no-op
 
+  // Build a randomized quiz set up to MAX_QUESTIONS ensuring at least one of each available type
+  const buildQuizSet = (provided: Quiz[], shareUrlLocal: string): Quiz[] => {
+    const list = Array.isArray(provided) ? provided : []
+    if (list.length === 0) return []
+
+    // Partition by seen/unseen using slug key in localStorage
+    let slug: string | undefined
+    try {
+      const slugMatch = (shareUrlLocal || '').match(/\/q\/([^\/?#]+)/)
+      slug = slugMatch?.[1]
+    } catch {}
+    const key = slug ? `pq_seen:${slug}` : ''
+    const seenIds: number[] = key ? JSON.parse(localStorage.getItem(key) || '[]') : []
+    const seenSet = new Set<number>(seenIds)
+    const unseen: Quiz[] = []
+    const seen: Quiz[] = []
+    for (const q of list) {
+      if (seenSet.has(q.definitionId)) seen.push(q)
+      else unseen.push(q)
+    }
+
+    // Deterministic daily seed using slug + date
+    const seedBase = `${slug || 'quiz'}:${new Date().toISOString().slice(0, 10)}`
+    let seed = 0
+    for (let i = 0; i < seedBase.length; i++) seed = (seed * 31 + seedBase.charCodeAt(i)) >>> 0
+    const seededShuffle = (arr: Quiz[]) => {
+      const copy = [...arr]
+      for (let i = copy.length - 1; i > 0; i--) {
+        seed = (1664525 * seed + 1013904223) >>> 0
+        const j = seed % (i + 1)
+        const tmp = copy[i]
+        copy[i] = copy[j]
+        copy[j] = tmp
+      }
+      return copy
+    }
+
+    const reordered: Quiz[] = [...seededShuffle(unseen), ...seededShuffle(seen)]
+
+    // Ensure at least one of each available type, then fill up to MAX_QUESTIONS
+    const MAX_QUESTIONS = 20
+    const maxTake = Math.min(MAX_QUESTIONS, reordered.length)
+    const firstByType = new Map<Quiz['type'], Quiz>()
+    for (const q of reordered) {
+      if (!firstByType.has(q.type)) firstByType.set(q.type, q)
+    }
+    const picks: Quiz[] = Array.from(firstByType.values())
+    const pickedIds = new Set<number>(picks.map((q) => q.definitionId))
+    for (const q of reordered) {
+      if (picks.length >= maxTake) break
+      if (!pickedIds.has(q.definitionId)) {
+        picks.push(q)
+        pickedIds.add(q.definitionId)
+      }
+    }
+    // If we still don't reach maxTake due to heavy duplicates, allow repeats
+    let idx = 0
+    while (picks.length < maxTake && reordered.length > 0) {
+      picks.push(reordered[idx % reordered.length])
+      idx++
+    }
+
+    return picks
+  }
+
   const validateName = (name: string) => {
     if (!name || name.trim().length < 2) return 'Please enter your name'
     return ''
@@ -68,40 +133,21 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
   useEffect(() => {
     if (isOpen) {
       const provided = Array.isArray(demoQuizzes) ? demoQuizzes : []
-      // Local progression: unseen first, then seen, with deterministic shuffle per day
       try {
-        const slugMatch = (shareUrl || '').match(/\/q\/([^\/?#]+)/)
-        const slug = slugMatch?.[1]
-        const key = slug ? `pq_seen:${slug}` : ''
-        const seenIds: number[] = key ? JSON.parse(localStorage.getItem(key) || '[]') : []
-        const seenSet = new Set<number>(seenIds)
-        const unseen: Quiz[] = []
-        const seen: Quiz[] = []
-        for (const q of provided) {
-          if (seenSet.has(q.definitionId)) seen.push(q)
-          else unseen.push(q)
-        }
-        // Deterministic daily seed using slug + date
-        const seedBase = `${slug || 'quiz'}:${new Date().toISOString().slice(0,10)}`
-        let seed = 0
-        for (let i = 0; i < seedBase.length; i++) seed = (seed * 31 + seedBase.charCodeAt(i)) >>> 0
-        const seededShuffle = (arr: Quiz[]) => {
-          const copy = [...arr]
-          for (let i = copy.length - 1; i > 0; i--) {
-            seed = (1664525 * seed + 1013904223) >>> 0
-            const j = seed % (i + 1)
-            const tmp = copy[i]
-            copy[i] = copy[j]
-            copy[j] = tmp
-          }
-          return copy
-        }
-        const reordered = [...seededShuffle(unseen), ...seededShuffle(seen)]
-        setQuizSet(reordered)
+        const nextSet = buildQuizSet(provided, shareUrl)
+        setQuizSet(nextSet)
+        // lock submission if already submitted
+        const m = (shareUrl || '').match(/\/q\/([^\/?#]+)/)
+        const slug = m?.[1]
         const stored = slug ? localStorage.getItem(`pq_submitted:${slug}`) : null
         setSubmittedLocked(stored === '1')
+        // initialize from first question of the selected set
+        setIsWriteMode(nextSet[0]?.type === 'WRITE_WORD_FROM_DEFINITION')
+        setRevealed(new Array(nextSet[0]?.options?.length || 0).fill(false))
       } catch {
         setQuizSet(provided)
+        setIsWriteMode(provided[0]?.type === 'WRITE_WORD_FROM_DEFINITION')
+        setRevealed(new Array(provided[0]?.options?.length || 0).fill(false))
       }
       setCurrentQuestionIndex(0)
       setSelectedAnswer(null)
@@ -109,9 +155,7 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
       setScore(0)
       setIsCompleted(false)
       setUserInput('')
-      setIsWriteMode(provided[0]?.type === 'WRITE_WORD_FROM_DEFINITION')
       // reporting removed
-      setRevealed(new Array(provided[0]?.options?.length || 0).fill(false))
       reportedRef.current = false
       setStartedAt(Date.now())
     }
@@ -321,14 +365,22 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
 
   const handleRestart = () => {
     const provided = Array.isArray(demoQuizzes) ? demoQuizzes : []
-    setQuizSet(provided)
+    try {
+      const nextSet = buildQuizSet(provided, shareUrl || '')
+      setQuizSet(nextSet)
+      setIsWriteMode(nextSet[0]?.type === 'WRITE_WORD_FROM_DEFINITION')
+      setRevealed(new Array(nextSet[0]?.options?.length || 0).fill(false))
+    } catch {
+      setQuizSet(provided)
+      setIsWriteMode(provided[0]?.type === 'WRITE_WORD_FROM_DEFINITION')
+      setRevealed(new Array(provided[0]?.options?.length || 0).fill(false))
+    }
     setCurrentQuestionIndex(0)
     setSelectedAnswer(null)
     setShowFeedback(false)
     setScore(0)
     setIsCompleted(false)
     setUserInput('')
-    setIsWriteMode(provided[0]?.type === 'WRITE_WORD_FROM_DEFINITION')
   }
 
   // Audio playing functionality using Web Speech API
