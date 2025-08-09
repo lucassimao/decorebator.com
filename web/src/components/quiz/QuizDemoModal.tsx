@@ -499,8 +499,8 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
       {/* Backdrop (dim background on all devices) */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300" onClick={onClose} />
 
-      {/* Modal/Full-screen Content */}
-      <div className="relative mx-0 h-screen w-screen overflow-hidden rounded-none bg-white/95 shadow-none animate-[fadeIn_200ms_ease-out] flex flex-col sm:mx-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-2xl sm:rounded-3xl sm:shadow-2xl supports-[padding:env(safe-area-inset-bottom)]:pb-[env(safe-area-inset-bottom)] supports-[padding:env(safe-area-inset-top)]:pt-[env(safe-area-inset-top)]">
+        {/* Modal/Full-screen Content */}
+        <div className="relative mx-0 min-h-[100dvh] w-screen overflow-hidden rounded-none bg-white/95 shadow-none animate-[fadeIn_200ms_ease-out] flex flex-col sm:mx-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-2xl sm:rounded-3xl sm:shadow-2xl supports-[padding:env(safe-area-inset-bottom)]:pb-[env(safe-area-inset-bottom)] supports-[padding:env(safe-area-inset-top)]:pt-[env(safe-area-inset-top)]">
         {/* Header */}
         <QuizHeader
           shareTitle={shareTitle}
