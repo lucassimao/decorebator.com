@@ -192,6 +192,7 @@ type UserAction int
 const (
 	UserActionCreateWordlist UserAction = iota
 	UserActionAddWord
+	UserActionPublishPublicQuiz
 )
 
 // IsActive returns true if the subscription is in a valid state

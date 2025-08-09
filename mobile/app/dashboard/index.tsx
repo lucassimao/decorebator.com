@@ -75,29 +75,23 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
   const hasNoWordlist = wordlists && wordlists.length === 0;
 
-  // Check if user is first-time user on mount
+  // Check if user is first-time user immediately on mount
   useEffect(() => {
+    let cancelled = false;
     const checkFirstTimeUser = async () => {
       try {
-        const hasSeenDashboard = await AsyncStorage.getItem("hasSeenDashboard");
         const isJustSignedUp = await AsyncStorage.getItem("justSignedUp");
 
         if (__DEV__) {
-          console.log("Dashboard welcome check:", {
-            hasSeenDashboard,
+          console.log("Dashboard welcome check (immediate):", {
             isJustSignedUp,
           });
         }
 
-        // Only show welcome if user literally just signed up
-        if (isJustSignedUp) {
-          if (__DEV__) {
-            console.log("Showing welcome overlay for newly signed up user");
-          }
+        if (isJustSignedUp && !cancelled) {
           setIsNewUser(true);
           setShowWelcomeOverlay(true);
 
-          // Clear the signup flag and mark dashboard as seen
           await AsyncStorage.removeItem("justSignedUp");
           await AsyncStorage.setItem("hasSeenDashboard", "true");
         }
@@ -106,16 +100,12 @@ const Dashboard: React.FC<DashboardProps> = () => {
       }
     };
 
-    // Check immediately when component mounts, don't wait for wordlists
-    if (!isLoading) {
-      // Small delay to ensure component is fully mounted
-      const timer = setTimeout(() => {
-        checkFirstTimeUser();
-      }, 300);
+    checkFirstTimeUser();
 
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading]);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Animate when wordlist state changes
   useEffect(() => {

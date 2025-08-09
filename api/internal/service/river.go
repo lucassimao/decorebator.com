@@ -14,11 +14,12 @@ import (
 	"github.com/riverqueue/river/rivertype"
 )
 
-const IMAGE_GENERATOR_QUEUE = "image_generator"
-const TEXT_TO_SPEECH_QUEUE = "text_to_speech"
-const DEFINITION_FETCHER_QUEUE = "definition_fetcher"
-const SUBSCRIPTION_REMINDER_QUEUE = "subscription_reminder"
-const EXAMPLE_AUDIO_QUEUE = "example_audio"
+const ImageGeneratorQueue = "image_generator"
+const TextToSpeechQueue = "text_to_speech"
+const DefinitionFetcherQueue = "definition_fetcher"
+const SubscriptionReminderQueue = "subscription_reminder"
+const ExampleAudioQueue = "example_audio"
+const PublicQuizOgQueue = "public_quiz_og"
 
 // NoOpJobArgs is a no-op job used for periodic jobs that execute inline
 type NoOpJobArgs struct{}
@@ -53,6 +54,8 @@ func NewWorkerRiverClient(
 	river.AddWorker(riverWorkers, NewTextToSpeechWorker(wordService, definitionService, leitnerSystemStrategy, userService))
 	river.AddWorker(riverWorkers, NewDefinitionFetcherWorker(db, wordService, definitionService, jobService, leitnerSystemStrategy, leitnerSystemStrategy.leitnerTrackingService, userService))
 	river.AddWorker(riverWorkers, NewExampleAudioWorker(definitionService, wordService, userService))
+	// Worker to generate OG images for public quizzes
+	river.AddWorker(riverWorkers, NewPublicQuizOgWorker(repository.NewPublicQuizRepository(db)))
 	river.AddWorker(riverWorkers, &SubscriptionReminderWorker{
 		db:          db,
 		subRepo:     repository.NewSubscriptionRepository(db),
@@ -87,14 +90,15 @@ func NewWorkerRiverClient(
 
 	riverClient, err := river.NewClient(riverpgxv5.New(db), &river.Config{
 		Queues: map[string]river.QueueConfig{
-			river.QueueDefault:          {MaxWorkers: 100},
-			IMAGE_GENERATOR_QUEUE:       {MaxWorkers: 5},
-			TEXT_TO_SPEECH_QUEUE:        {MaxWorkers: 30}, //max of 50 per openai docs
-			DEFINITION_FETCHER_QUEUE:    {MaxWorkers: 50},
-			SUBSCRIPTION_REMINDER_QUEUE: {MaxWorkers: 10},
-			EXAMPLE_AUDIO_QUEUE:         {MaxWorkers: 20},
-			"revenuecat-webhook":        {MaxWorkers: 5},
-			"stripe-webhook":            {MaxWorkers: 5},
+			river.QueueDefault:        {MaxWorkers: 100},
+			ImageGeneratorQueue:       {MaxWorkers: 5},
+			TextToSpeechQueue:         {MaxWorkers: 30}, //max of 50 per openai docs
+			DefinitionFetcherQueue:    {MaxWorkers: 50},
+			SubscriptionReminderQueue: {MaxWorkers: 10},
+			ExampleAudioQueue:         {MaxWorkers: 20},
+			PublicQuizOgQueue:         {MaxWorkers: 5},
+			"revenuecat-webhook":      {MaxWorkers: 5},
+			"stripe-webhook":          {MaxWorkers: 5},
 		},
 		Workers:      riverWorkers,
 		Logger:       common.Logger,

@@ -10,15 +10,22 @@ import (
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 type PublicQuizRoutes struct {
-	repo        *repository.PublicQuizRepository
-	wordlistSvc *service.WordlistService
+	repo          *repository.PublicQuizRepository
+	wordlistSvc   *service.WordlistService
+	definitionSvc *service.DefinitionService
+	db            *pgxpool.Pool
+	redis         *redis.Client
+	jobs          service.JobService
+	quizSvc       *service.PublicQuizService
 }
 
-func NewPublicQuizRoutes(repo *repository.PublicQuizRepository, wordlistSvc *service.WordlistService) *PublicQuizRoutes {
-	return &PublicQuizRoutes{repo: repo, wordlistSvc: wordlistSvc}
+func NewPublicQuizRoutes(repo *repository.PublicQuizRepository, wordlistSvc *service.WordlistService, definitionSvc *service.DefinitionService, db *pgxpool.Pool, redis *redis.Client, jobs service.JobService) *PublicQuizRoutes {
+	return &PublicQuizRoutes{repo: repo, wordlistSvc: wordlistSvc, definitionSvc: definitionSvc, db: db, redis: redis, jobs: jobs, quizSvc: service.NewPublicQuizService(repo, definitionSvc, wordlistSvc, jobs)}
 }
 
 // Publish creates a new public quiz for a given wordlist. Returns only the slug.
@@ -29,85 +36,27 @@ func (h *PublicQuizRoutes) Publish(c *gin.Context) {
 		return
 	}
 
-	var input model.PublicQuizSettings
+	var input model.PublishQuizDTO
 	if bindErr := c.BindJSON(&input); bindErr != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": bindErr.Error()})
 		return
 	}
-	if validateErr := input.Validate(); validateErr != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": validateErr.Error()})
-		return
-	}
-
 	userID := c.GetInt64("userID")
-
-	// Ensure the wordlist belongs to the user
-	wl, err := h.wordlistSvc.GetWordlistByID(c.Request.Context(), wordlistID, userID)
+	slug, err := h.quizSvc.PublishPublicQuiz(c.Request.Context(), wordlistID, userID, input)
 	if err != nil {
 		var notFound common.NotFoundError
 		if errors.As(err, &notFound) {
 			c.Status(http.StatusNotFound)
-		} else {
-			common.Logger.Error("failed to get wordlist for publish", "error", err, "wordlistId", wordlistID, "userID", userID)
-			c.Status(http.StatusInternalServerError)
-		}
-		return
-	}
-	if wl == nil {
-		c.Status(http.StatusNotFound)
-		return
-	}
-
-	// If a quiz exists for this wordlist/user, reactivate and update it (slug stays immutable). Otherwise create.
-	limit := 1
-	existingList, findErr := h.repo.Find(c.Request.Context(), repository.FindPublicQuizArgs{
-		WordlistID: &wordlistID,
-		CreatorID:  &userID,
-		Limit:      &limit,
-	})
-	if findErr != nil {
-		common.Logger.Error("failed to check existing public quiz", "error", findErr)
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-	if len(existingList) > 0 {
-		existing := existingList[0]
-		var desc string
-		if input.Description != nil {
-			desc = *input.Description
-		}
-		if updateErr := h.repo.ReactivateAndUpdatePublicQuiz(c.Request.Context(), existing.ID, input.Title, desc, input.Difficulty, input.TimeLimitMinutes); updateErr != nil {
-			common.Logger.Error("failed to reactivate/update public quiz", "error", updateErr)
-			c.Status(http.StatusInternalServerError)
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{"slug": existing.Slug})
-		return
-	}
-
-	// Create brand new with generated slug
-	slug, err := h.repo.GenerateUniqueSlug(c.Request.Context(), input.Title)
-	if err != nil {
-		common.Logger.Error("failed to generate slug", "error", err)
+		if be, ok := err.(common.BusinessError); ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": be.Error()})
+			return
+		}
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	pq := &model.PublicQuiz{
-		Slug:             slug,
-		WordlistID:       wordlistID,
-		CreatorID:        userID,
-		Title:            input.Title,
-		Description:      input.Description,
-		Difficulty:       input.Difficulty,
-		TimeLimitMinutes: input.TimeLimitMinutes,
-		IsActive:         true,
-	}
-	if err := h.repo.CreatePublicQuiz(c.Request.Context(), pq); err != nil {
-		common.Logger.Error("failed to create public quiz", "error", err)
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-	c.JSON(http.StatusCreated, gin.H{"slug": pq.Slug})
+	c.JSON(http.StatusCreated, gin.H{"slug": slug})
 }
 
 // GetBySlug returns public quiz metadata by slug (unauthenticated)
@@ -117,21 +66,100 @@ func (h *PublicQuizRoutes) GetBySlug(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing slug"})
 		return
 	}
-
-	onlyActive := true
-	limit := 1
-	res, err := h.repo.Find(c.Request.Context(), repository.FindPublicQuizArgs{Slug: &slug, OnlyActive: &onlyActive, Limit: &limit})
+	quiz, err := h.quizSvc.GetBySlug(c.Request.Context(), slug)
 	if err != nil {
-		common.Logger.Error("failed to get public quiz by slug", "error", err, "slug", slug)
+		var notFound common.NotFoundError
+		if errors.As(err, &notFound) {
+			c.Status(http.StatusNotFound)
+			return
+		}
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	if len(res) == 0 {
-		c.Status(http.StatusNotFound)
+	c.JSON(http.StatusOK, quiz)
+}
+
+// GetQuestionsBySlug returns a spaced-repetition-like sequence of questions for a public quiz
+// Minimal, unauthenticated: generated from the creator's wordlist definitions
+func (h *PublicQuizRoutes) GetQuestionsBySlug(c *gin.Context) {
+	slug := c.Param("slug")
+	if slug == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing slug"})
 		return
 	}
 
-	c.JSON(http.StatusOK, res[0])
+	questions, err := h.quizSvc.BuildQuestionsForSlug(c.Request.Context(), slug, 100)
+	if err != nil {
+		var notFound common.NotFoundError
+		if errors.As(err, &notFound) {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"questions": questions})
+}
+
+// RecordAttempt records final aggregated performance for a public quiz (tries/right)
+// MVP: Accepts counters and increments aggregated stats; no per-player data
+type recordAttemptInput struct {
+	Tried           int     `json:"tried"`
+	Correct         int     `json:"correct"`
+	Name            *string `json:"name,omitempty"`
+	Email           *string `json:"email,omitempty"`
+	DurationSeconds *int    `json:"durationSeconds,omitempty"`
+}
+
+func (h *PublicQuizRoutes) RecordAttempt(c *gin.Context) {
+	slug := c.Param("slug")
+	if slug == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing slug"})
+		return
+	}
+	var input recordAttemptInput
+	if err := c.BindJSON(&input); err != nil || input.Tried < 0 || input.Correct < 0 || input.Correct > input.Tried {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+		return
+	}
+	var name *string
+	if input.Name != nil && *input.Name != "" {
+		name = input.Name
+	}
+	var email *string
+	if input.Email != nil && *input.Email != "" {
+		email = input.Email
+	}
+	if err := h.quizSvc.RecordAttempt(c.Request.Context(), slug, input.Tried, input.Correct, name, email, input.DurationSeconds); err != nil {
+		var notFound common.NotFoundError
+		if errors.As(err, &notFound) {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+// GetLeaderboardBySlug returns top 10 players for a public quiz ordered by score desc then time asc
+func (h *PublicQuizRoutes) GetLeaderboardBySlug(c *gin.Context) {
+	slug := c.Param("slug")
+	if slug == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing slug"})
+		return
+	}
+	top, err := h.quizSvc.GetLeaderboardTop(c.Request.Context(), slug, 10)
+	if err != nil {
+		var notFound common.NotFoundError
+		if errors.As(err, &notFound) {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"top": top})
 }
 
 // Unpublish deactivates the active public quiz for a user's wordlist (MVP)
@@ -143,44 +171,14 @@ func (h *PublicQuizRoutes) Unpublish(c *gin.Context) {
 	}
 
 	userID := c.GetInt64("userID")
-
-	// Verify ownership
-	wl, err := h.wordlistSvc.GetWordlistByID(c.Request.Context(), wordlistID, userID)
-	if err != nil {
+	if err := h.quizSvc.UnpublishPublicQuiz(c.Request.Context(), wordlistID, userID); err != nil {
 		var notFound common.NotFoundError
 		if errors.As(err, &notFound) {
 			c.Status(http.StatusNotFound)
-		} else {
-			common.Logger.Error("failed to get wordlist for unpublish", "error", err, "wordlistId", wordlistID, "userID", userID)
-			c.Status(http.StatusInternalServerError)
+			return
 		}
-		return
-	}
-	if wl == nil {
-		c.Status(http.StatusNotFound)
-		return
-	}
-
-	onlyActive := true
-	limit := 1
-	list, err := h.repo.Find(c.Request.Context(), repository.FindPublicQuizArgs{WordlistID: &wordlistID, CreatorID: &userID, OnlyActive: &onlyActive, Limit: &limit})
-	if err != nil {
-		common.Logger.Error("failed to get active public quiz for owner", "error", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	if len(list) == 0 {
-		// Nothing to unpublish
-		c.Status(http.StatusNoContent)
-		return
-	}
-	pq := list[0]
-
-	if err := h.repo.DeactivatePublicQuiz(c.Request.Context(), pq.ID); err != nil {
-		common.Logger.Error("failed to deactivate public quiz", "error", err, "publicQuizId", pq.ID)
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-
 	c.Status(http.StatusNoContent)
 }

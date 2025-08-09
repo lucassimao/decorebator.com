@@ -59,16 +59,19 @@ export const metadata: Metadata = {
       'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes.',
     images: ['https://decorebator.com/social-share-image.jpg'],
   },
+  manifest: '/manifest.json',
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
       { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
     ],
-    shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    other: [
+      { rel: 'icon', url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { rel: 'icon', url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
   },
-  manifest: '/manifest.json',
   metadataBase: new URL('https://decorebator.com'),
   alternates: {
     canonical: 'https://decorebator.com',

@@ -68,6 +68,17 @@ func (r *PublicQuizRepository) DeactivatePublicQuiz(ctx context.Context, id int6
 	return err
 }
 
+// UpdatePreviewImageURL sets the preview image URL for a public quiz
+func (r *PublicQuizRepository) UpdatePreviewImageURL(ctx context.Context, id int64, url string) error {
+	query := `
+        UPDATE public_quizzes
+        SET preview_image_url = $1,
+            updated_at = NOW()
+        WHERE id = $2`
+	_, err := r.db.Exec(ctx, query, url, id)
+	return err
+}
+
 // Find pattern to retrieve public quizzes with flexible filters
 type FindPublicQuizArgs struct {
 	ID         *int64
@@ -154,8 +165,72 @@ func (r *PublicQuizRepository) Find(ctx context.Context, args FindPublicQuizArgs
 	return quizzes, nil
 }
 
-// CreateQuizAttempt creates a new quiz attempt
-// CreateQuizAttempt omitted for MVP
+// Leaderboard entry DTO
+type LeaderboardEntry struct {
+	GuestName             string
+	ScorePercentage       float64
+	CompletionTimeSeconds int
+}
+
+// GetLeaderboardTopByQuizID returns top N attempts ordered by score desc, then time asc, then completed_at desc
+func (r *PublicQuizRepository) GetLeaderboardTopByQuizID(ctx context.Context, quizID int64, limit int) ([]LeaderboardEntry, error) {
+	if limit <= 0 || limit > 50 {
+		limit = 10
+	}
+	rows, err := r.db.Query(ctx, `
+        SELECT COALESCE(guest_name, ''), score_percentage, completion_time_seconds
+        FROM quiz_attempts
+        WHERE public_quiz_id = $1
+        ORDER BY score_percentage DESC, completion_time_seconds ASC, completed_at DESC
+        LIMIT $2
+    `, quizID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []LeaderboardEntry
+	for rows.Next() {
+		var e LeaderboardEntry
+		if scanErr := rows.Scan(&e.GuestName, &e.ScorePercentage, &e.CompletionTimeSeconds); scanErr != nil {
+			return nil, scanErr
+		}
+		list = append(list, e)
+	}
+	return list, rows.Err()
+}
+
+// InsertQuizAttempt records a new attempt row for leaderboard (guest play)
+func (r *PublicQuizRepository) InsertQuizAttempt(ctx context.Context, quizID int64, guestName *string, guestEmail *string, scorePercentage float64, accuracyPercentage float64, completionTimeSeconds int) error {
+	_, err := r.db.Exec(ctx, `
+        INSERT INTO quiz_attempts (public_quiz_id, player_id, guest_name, guest_email, score_percentage, accuracy_percentage, completion_time_seconds)
+        VALUES ($1, NULL, $2, $3, $4, $5, $6)
+        ON CONFLICT (public_quiz_id, guest_email)
+        WHERE guest_email IS NOT NULL
+        DO UPDATE SET
+            guest_name = COALESCE(EXCLUDED.guest_name, quiz_attempts.guest_name),
+            score_percentage = GREATEST(quiz_attempts.score_percentage, EXCLUDED.score_percentage),
+            accuracy_percentage = GREATEST(quiz_attempts.accuracy_percentage, EXCLUDED.accuracy_percentage),
+            completion_time_seconds = LEAST(quiz_attempts.completion_time_seconds, EXCLUDED.completion_time_seconds),
+            completed_at = NOW()
+    `, quizID, guestName, guestEmail, scorePercentage, accuracyPercentage, completionTimeSeconds)
+	return err
+}
+
+// UpdateAggregatesForAttempt updates play_count and average_score on public_quizzes
+func (r *PublicQuizRepository) UpdateAggregatesForAttempt(ctx context.Context, quizID int64, scorePct float64) error {
+	_, err := r.db.Exec(ctx, `
+        UPDATE public_quizzes
+        SET play_count = play_count + 1,
+            average_score = CASE 
+                WHEN play_count = 0 THEN ($1::float)
+                WHEN average_score IS NULL THEN ($1::float)
+                ELSE ((average_score * play_count) + $1::float) / (play_count + 1)
+            END,
+            updated_at = NOW()
+        WHERE id = $2
+    `, scorePct, quizID)
+	return err
+}
 
 // GetCreatorEntitlement retrieves creator entitlements for a user
 // Creator entitlement methods omitted for MVP

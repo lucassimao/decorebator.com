@@ -152,6 +152,11 @@
       "premium": {
         "title": "Débloquez les Analyses Détaillées",
         "subtitle": "Suivez progrès, niveaux de maîtrise et plus"
+      },
+      "feature": {
+        "historicalTrends": "Tendances historiques",
+        "accuracyInsights": "Informations de précision",
+        "boxDistribution": "Répartition par boîtes"
       }
     },
     "wordlists": {
@@ -621,7 +626,17 @@
     "titleRequired": "Le titre est requis",
     "timeLimitInvalid": "La durée doit être comprise entre 1 et 15 minutes.",
     "copyUrl": "Copier le lien",
-    "urlLabel": "Lien"
+    "urlLabel": "Lien",
+    "premiumUpsell": {
+      "title": "Débloquer Premium",
+      "subtitle": "Accédez aux fonctionnalités avancées",
+      "finePrint": "Annulable à tout moment. Vos données restent en sécurité."
+    },
+    "feature": {
+      "publishQuizzes": "Publier des quiz publics",
+      "shareLinks": "Partager des liens et classements",
+      "betterBranding": "Meilleurs visuels et image de marque"
+    }
   },
   "analytics": {
     "header": {

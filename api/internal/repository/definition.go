@@ -357,6 +357,77 @@ func NewDefinitionRepository(db *pgxpool.Pool) *DefinitionRepository {
 	return &DefinitionRepository{Db: db}
 }
 
+// DefinitionForPublicQuiz contains denormalized fields needed to build quiz questions
+type DefinitionForPublicQuiz struct {
+	ID               int64
+	Token            string
+	PartOfSpeech     string
+	Language         string
+	IsVerbType       bool
+	Meaning          string
+	WordID           int64
+	WordAudio        string
+	ImageURL         string
+	ImageDescription string
+	ExampleAudioJSON []byte
+}
+
+// GetDefinitionsForPublicQuiz returns recent definitions and related media for building public quiz questions
+func (repository *DefinitionRepository) GetDefinitionsForPublicQuiz(ctx context.Context, wordlistID int64) ([]DefinitionForPublicQuiz, error) {
+	query := `
+        SELECT 
+            d.id,
+            d.token,
+            d.part_of_speech,
+            d.language,
+            d.is_verb_type,
+            d.meaning,
+            w.id as word_id,
+            COALESCE(w.audio_url,'') as word_audio,
+            COALESCE(di.url,'') as image_url,
+            COALESCE(di.description,'') as image_description,
+            COALESCE(
+                json_agg(
+                    json_build_object(
+                        'id', dea.id,
+                        'definitionId', dea.definition_id,
+                        'exampleText', dea.example_text,
+                        'exampleHash', dea.example_hash,
+                        'audioUrl', dea.audio_url,
+                        'inflectionType', COALESCE(dea.inflection_type, '')
+                    ) ORDER BY dea.created_at DESC
+                ) FILTER (WHERE dea.id IS NOT NULL),
+                '[]'::json
+            ) as example_audio_files
+        FROM definitions d
+        JOIN word_definitions wd ON wd.definition_id = d.id
+        JOIN words w ON w.id = wd.word_id
+        LEFT JOIN definition_images di ON di.definition_id = d.id AND di.is_visible = TRUE
+        LEFT JOIN definition_example_audio dea ON dea.definition_id = d.id
+        WHERE w.wordlist_id = $1 AND d.meaning IS NOT NULL AND d.meaning <> ''
+        GROUP BY d.id, w.id, di.url, di.description
+        ORDER BY d.id DESC`
+
+	rows, err := repository.Db.Query(ctx, query, wordlistID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	results := make([]DefinitionForPublicQuiz, 0)
+	for rows.Next() {
+		var r DefinitionForPublicQuiz
+		if scanErr := rows.Scan(&r.ID, &r.Token, &r.PartOfSpeech, &r.Language, &r.IsVerbType, &r.Meaning, &r.WordID, &r.WordAudio, &r.ImageURL, &r.ImageDescription, &r.ExampleAudioJSON); scanErr != nil {
+			return nil, scanErr
+		}
+		results = append(results, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
 func (repository *DefinitionRepository) GetDefinitionByID(ctx context.Context, definitionID int64) (*Definition, error) {
 	query := `
 		SELECT id, token, language, part_of_speech, part_of_speech_normalized, is_verb_type, meaning, examples, inflections, 

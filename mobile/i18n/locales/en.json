@@ -140,6 +140,11 @@
       "premium": {
         "title": "Unlock Detailed Analytics",
         "subtitle": "Track progress, mastery levels & more"
+      },
+      "feature": {
+        "historicalTrends": "Historical trends",
+        "accuracyInsights": "Accuracy insights",
+        "boxDistribution": "Box distribution"
       }
     },
     "wordlists": {
@@ -649,7 +654,17 @@
     "copyPublicLink": "Copy public link",
     "shareLink": "Share link",
     "shareCta": "I just published a vocab quiz—can you beat it?",
-    "urlLabel": "Link"
+      "urlLabel": "Link",
+      "premiumUpsell": {
+        "title": "Unlock Premium",
+        "subtitle": "Get access to advanced features",
+        "finePrint": "Cancel anytime. Existing data remains safe."
+      },
+      "feature": {
+        "publishQuizzes": "Publish public quizzes",
+        "shareLinks": "Share links & leaderboards",
+        "betterBranding": "Better visuals & branding"
+      }
   },
   "analytics": {
     "header": {

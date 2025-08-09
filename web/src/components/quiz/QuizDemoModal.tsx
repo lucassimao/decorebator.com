@@ -1,107 +1,30 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Quiz, getRandomQuizSet, getQuizTypeDisplayName } from '@/lib/quiz-data'
-import SmartDownloadButton from '@/components/common/SmartDownloadButton'
+import Image from 'next/image'
+import QuizHeader from '@/components/quiz/modal/QuizHeader'
+import QuizProgress from '@/components/quiz/modal/QuizProgress'
+import FastModeToggle from '@/components/quiz/modal/FastModeToggle'
+import StickyActionBar from '@/components/quiz/modal/StickyActionBar'
+import type { QuizQuestion as Quiz } from '@/lib/api'
+import { submitPublicQuizAttempt } from '@/lib/api'
+import AppStoreButton from '@/components/common/AppStoreButton'
+import ShareQuizButton from '@/components/quiz/ShareQuizButton'
 
 interface QuizDemoModalProps {
   isOpen: boolean
   onClose: () => void
   demoQuizzes: Quiz[]
+  onComplete?: (stats: { tried: number; correct: number }) => void
+  shareUrl?: string
+  shareTitle?: string
 }
 
-type ErrorType =
-  | 'wrong_meaning'
-  | 'image_not_match'
-  | 'image_not_loading'
-  | 'wrong_example'
-  | 'sound_not_playing'
 
-interface ErrorReportModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onReportError: (errorType: ErrorType) => void
-  isLoading: boolean
-}
 
-const ErrorReportModal: React.FC<ErrorReportModalProps> = ({
-  isOpen,
-  onClose,
-  onReportError,
-  isLoading,
-}) => {
-  if (!isOpen) return null
+// Removed ErrorReportModal for public demo
 
-  const errorOptions = [
-    {
-      type: 'wrong_meaning' as ErrorType,
-      icon: 'fa-question-circle',
-      label: 'Wrong meaning or definition',
-    },
-    {
-      type: 'image_not_match' as ErrorType,
-      icon: 'fa-image',
-      label: "Image doesn't match the word",
-    },
-    {
-      type: 'image_not_loading' as ErrorType,
-      icon: 'fa-exclamation-triangle',
-      label: 'Image not loading',
-    },
-    { type: 'wrong_example' as ErrorType, icon: 'fa-quote-left', label: 'Wrong example sentence' },
-    { type: 'sound_not_playing' as ErrorType, icon: 'fa-volume-mute', label: 'Audio not playing' },
-  ]
-
-  return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center">
-      <div className="bg-opacity-50 absolute inset-0 bg-black" onClick={onClose} />
-      <div className="relative mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-            <i className="fas fa-exclamation-triangle text-xl text-red-500"></i>
-          </div>
-          <h3 className="mb-2 text-xl font-bold text-[#2D3436]">Report an Issue</h3>
-          <p className="text-[#636E72]">What seems to be wrong with this question?</p>
-        </div>
-
-        <div className="mb-6 space-y-3">
-          {errorOptions.map((option) => (
-            <button
-              key={option.type}
-              onClick={() => onReportError(option.type)}
-              disabled={isLoading}
-              className="flex w-full items-center space-x-3 rounded-xl bg-gray-50 p-4 text-left transition-colors duration-200 hover:bg-gray-100 disabled:opacity-50"
-            >
-              <i className={`fas ${option.icon} text-lg text-[#636E72]`}></i>
-              <span className="text-[#2D3436]">{option.label}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="flex justify-center">
-          <button
-            onClick={onClose}
-            disabled={isLoading}
-            className="px-6 py-2 text-[#636E72] transition-colors duration-200 hover:text-[#2D3436] disabled:opacity-50"
-          >
-            Cancel
-          </button>
-        </div>
-
-        {isLoading && (
-          <div className="bg-opacity-80 absolute inset-0 flex items-center justify-center rounded-2xl bg-white">
-            <div className="flex items-center space-x-3">
-              <i className="fas fa-spinner fa-spin text-xl text-[#FF7B54]"></i>
-              <span className="text-[#2D3436]">Reporting issue...</span>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuizzes }) => {
+const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuizzes, onComplete, shareUrl = '', shareTitle = 'Decorebator Quiz' }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [showFeedback, setShowFeedback] = useState(false)
@@ -109,28 +32,90 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
   const [score, setScore] = useState(0)
   const [isCompleted, setIsCompleted] = useState(false)
   const [isPlayingAudio, setIsPlayingAudio] = useState(false)
+  const htmlAudioRef = React.useRef<HTMLAudioElement | null>(null)
   const [fastMode, setFastMode] = useState(false)
-  const [showErrorReport, setShowErrorReport] = useState(false)
-  const [isReporting, setIsReporting] = useState(false)
+  // reporting removed
   const [userInput, setUserInput] = useState('')
   const [isWriteMode, setIsWriteMode] = useState(false)
+  const [revealed, setRevealed] = useState<boolean[]>([])
+  const reportedRef = React.useRef(false)
+  const [imageLoading, setImageLoading] = useState(false)
+  const [imageError, setImageError] = useState(false)
+  const [playerName, setPlayerName] = useState('')
+  const [playerEmail, setPlayerEmail] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [startedAt, setStartedAt] = useState<number | null>(null)
+  const [nameError, setNameError] = useState<string>('')
+  const [emailError, setEmailError] = useState<string>('')
+  const [submitOk, setSubmitOk] = useState<boolean | null>(null)
+  const [submittedLocked, setSubmittedLocked] = useState(false)
+  // const [quizSlug, setQuizSlug] = useState<string | null>(null)
+
+  // no-op
+
+  const validateName = (name: string) => {
+    if (!name || name.trim().length < 2) return 'Please enter your name'
+    return ''
+  }
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email || !re.test(email)) return 'Enter a valid email address'
+    return ''
+  }
+  const isFormValid = () => validateName(playerName) === '' && validateEmail(playerEmail) === ''
 
   // Initialize quiz set when modal opens
   useEffect(() => {
-    if (isOpen && demoQuizzes.length > 0) {
-      const randomQuizzes = getRandomQuizSet(demoQuizzes, 5)
-      setQuizSet(randomQuizzes)
+    if (isOpen) {
+      const provided = Array.isArray(demoQuizzes) ? demoQuizzes : []
+      // Local progression: unseen first, then seen, with deterministic shuffle per day
+      try {
+        const slugMatch = (shareUrl || '').match(/\/q\/([^\/?#]+)/)
+        const slug = slugMatch?.[1]
+        const key = slug ? `pq_seen:${slug}` : ''
+        const seenIds: number[] = key ? JSON.parse(localStorage.getItem(key) || '[]') : []
+        const seenSet = new Set<number>(seenIds)
+        const unseen: Quiz[] = []
+        const seen: Quiz[] = []
+        for (const q of provided) {
+          if (seenSet.has(q.definitionId)) seen.push(q)
+          else unseen.push(q)
+        }
+        // Deterministic daily seed using slug + date
+        const seedBase = `${slug || 'quiz'}:${new Date().toISOString().slice(0,10)}`
+        let seed = 0
+        for (let i = 0; i < seedBase.length; i++) seed = (seed * 31 + seedBase.charCodeAt(i)) >>> 0
+        const seededShuffle = (arr: Quiz[]) => {
+          const copy = [...arr]
+          for (let i = copy.length - 1; i > 0; i--) {
+            seed = (1664525 * seed + 1013904223) >>> 0
+            const j = seed % (i + 1)
+            const tmp = copy[i]
+            copy[i] = copy[j]
+            copy[j] = tmp
+          }
+          return copy
+        }
+        const reordered = [...seededShuffle(unseen), ...seededShuffle(seen)]
+        setQuizSet(reordered)
+        const stored = slug ? localStorage.getItem(`pq_submitted:${slug}`) : null
+        setSubmittedLocked(stored === '1')
+      } catch {
+        setQuizSet(provided)
+      }
       setCurrentQuestionIndex(0)
       setSelectedAnswer(null)
       setShowFeedback(false)
       setScore(0)
       setIsCompleted(false)
       setUserInput('')
-      setIsWriteMode(randomQuizzes[0]?.type === 'WRITE_WORD_FROM_DEFINITION')
-      setShowErrorReport(false)
-      setIsReporting(false)
+      setIsWriteMode(provided[0]?.type === 'WRITE_WORD_FROM_DEFINITION')
+      // reporting removed
+      setRevealed(new Array(provided[0]?.options?.length || 0).fill(false))
+      reportedRef.current = false
+      setStartedAt(Date.now())
     }
-  }, [isOpen, demoQuizzes])
+  }, [isOpen, demoQuizzes, shareUrl])
 
   const currentQuiz = quizSet[currentQuestionIndex]
 
@@ -138,13 +123,45 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
   useEffect(() => {
     if (currentQuiz) {
       setIsWriteMode(currentQuiz.type === 'WRITE_WORD_FROM_DEFINITION')
+      if (currentQuiz.type === 'WORD_FROM_IMAGE') {
+        setImageLoading(true)
+        setImageError(false)
+      } else {
+        setImageLoading(false)
+        setImageError(false)
+      }
+      // reset reveal state for new question
+      const count = currentQuiz.options?.length || 0
+      setRevealed(new Array(count).fill(false))
+      // stagger reveal
+      const timeouts: number[] = []
+      for (let i = 0; i < count; i++) {
+        const id = window.setTimeout(() => {
+          setRevealed((prev) => {
+            const next = [...prev]
+            next[i] = true
+            return next
+          })
+        }, 60 * i)
+        timeouts.push(id)
+      }
+      return () => {
+        timeouts.forEach((t) => window.clearTimeout(t))
+      }
     }
-  }, [currentQuiz])
+  }, [currentQuiz, shareUrl])
 
-  // Cleanup audio when modal closes or question changes
+  // Cleanup audio when modal closes
   useEffect(() => {
     if (!isOpen) {
       // Stop any playing audio when modal closes
+      if (htmlAudioRef.current) {
+        try {
+          htmlAudioRef.current.pause()
+          htmlAudioRef.current.currentTime = 0
+        } catch {}
+        htmlAudioRef.current = null
+      }
       if ('speechSynthesis' in window) {
         speechSynthesis.cancel()
       }
@@ -154,6 +171,13 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
 
   // Stop audio when navigating to different questions
   useEffect(() => {
+    if (htmlAudioRef.current) {
+      try {
+        htmlAudioRef.current.pause()
+        htmlAudioRef.current.currentTime = 0
+      } catch {}
+      htmlAudioRef.current = null
+    }
     if ('speechSynthesis' in window) {
       speechSynthesis.cancel()
     }
@@ -185,9 +209,15 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
 
     setShowFeedback(true)
 
-    // Check if correct (case insensitive)
+    // Check if correct (case/diacritics insensitive)
+    const normalize = (s: string) =>
+      s
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
     const isCorrect =
-      userInput.toLowerCase().trim() === currentQuiz.options[currentQuiz.answerIndex]?.toLowerCase()
+      normalize(userInput) === normalize(currentQuiz.options[currentQuiz.answerIndex] || '')
     if (isCorrect) {
       setScore(score + 1)
       setSelectedAnswer(currentQuiz.answerIndex)
@@ -204,33 +234,13 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
   }
 
   const handleSkipQuestion = () => {
-    setShowFeedback(true)
-    setSelectedAnswer(-1) // Mark as skipped
-
-    // Auto-advance in fast mode
-    if (fastMode) {
-      setTimeout(() => {
-        handleNext()
-      }, 600)
-    }
+    // Treat skip as incorrect and immediately proceed without showing feedback
+    setSelectedAnswer(null)
+    setShowFeedback(false)
+    handleNext()
   }
 
-  const handleReportError = (errorType: ErrorType) => {
-    setIsReporting(true)
-
-    // Log the error type for demo purposes
-    console.log('Demo: Reported error type:', errorType)
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsReporting(false)
-      setShowErrorReport(false)
-
-      // Show success message and advance to next question
-      alert('Thank you for your feedback! This will help us improve the content.')
-      handleNext()
-    }, 1000)
-  }
+  // reporting removed
 
   const toggleFastMode = () => {
     setFastMode(!fastMode)
@@ -252,50 +262,172 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
       setIsWriteMode(currentQuiz?.type === 'WRITE_WORD_FROM_DEFINITION')
     } else {
       setIsCompleted(true)
+      // Persist seen locally
+      try {
+        const slugMatch = (shareUrl || '').match(/\/q\/([^/?#]+)/)
+        const slug = slugMatch?.[1]
+        if (slug) {
+          const key = `pq_seen:${slug}`
+          const prev: number[] = JSON.parse(localStorage.getItem(key) || '[]')
+          const set = new Set<number>(prev)
+          for (const q of quizSet) set.add(q.definitionId)
+          const merged = Array.from(set).slice(-120)
+          localStorage.setItem(key, JSON.stringify(merged))
+        }
+      } catch {}
+    }
+  }
+
+  // Notify completion once (still notify parent for UI), but attempt submission handled here
+  useEffect(() => {
+    if (isCompleted && !reportedRef.current) {
+      reportedRef.current = true
+      onComplete?.({ tried: quizSet.length, correct: score })
+    }
+  }, [isCompleted, quizSet.length, score, onComplete])
+
+  const submitAttempt = async () => {
+    try {
+      if (!shareUrl) return
+      const m = shareUrl.match(/\/q\/([^\/?#]+)/)
+      const slug = m?.[1]
+      if (!slug) return
+      setSubmitting(true)
+      const durationSeconds = startedAt ? Math.max(0, Math.round((Date.now() - startedAt) / 1000)) : undefined
+      await submitPublicQuizAttempt({
+        slug,
+        tried: quizSet.length,
+        correct: score,
+        name: playerName || undefined,
+        email: playerEmail || undefined,
+        durationSeconds,
+      })
+      setSubmitOk(true)
+      setSubmittedLocked(true)
+      try { localStorage.setItem(`pq_submitted:${slug}`, '1') } catch {}
+      if (typeof window !== 'undefined') {
+        window.setTimeout(() => setSubmitOk(null), 3000)
+      }
+    } catch {
+      // ignore errors for MVP
+      setSubmitOk(false)
+      if (typeof window !== 'undefined') {
+        window.setTimeout(() => setSubmitOk(null), 3500)
+      }
+    } finally {
+      setSubmitting(false)
     }
   }
 
   const handleRestart = () => {
-    const randomQuizzes = getRandomQuizSet(demoQuizzes, 5)
-    setQuizSet(randomQuizzes)
+    const provided = Array.isArray(demoQuizzes) ? demoQuizzes : []
+    setQuizSet(provided)
     setCurrentQuestionIndex(0)
     setSelectedAnswer(null)
     setShowFeedback(false)
     setScore(0)
     setIsCompleted(false)
     setUserInput('')
-    setIsWriteMode(randomQuizzes[0]?.type === 'WRITE_WORD_FROM_DEFINITION')
-    setShowErrorReport(false)
-    setIsReporting(false)
+    setIsWriteMode(provided[0]?.type === 'WRITE_WORD_FROM_DEFINITION')
   }
 
   // Audio playing functionality using Web Speech API
-  const playAudio = (text: string) => {
-    if (isPlayingAudio) return
+  const pickPreferredVoice = (): SpeechSynthesisVoice | null => {
+    if (!('speechSynthesis' in window)) return null
+    const voices = window.speechSynthesis.getVoices()
+    if (!voices || voices.length === 0) return null
+    const preferred = [
+      'Google US English',
+      'Google UK English Female',
+      'Google UK English Male',
+      'Microsoft Aria Online (Natural) - English (United States)',
+      'Microsoft Guy Online (Natural) - English (United States)',
+    ]
+    for (const name of preferred) {
+      const v = voices.find((vv) => vv.name === name)
+      if (v) return v
+    }
+    const en = voices.find((v) => v.lang?.toLowerCase().startsWith('en'))
+    return en || voices[0]
+  }
 
+  const playAudio = (text: string, audioUrl?: string) => {
+    if (isPlayingAudio) return
     setIsPlayingAudio(true)
 
+    // Prefer real audio URL if provided
+    if (audioUrl) {
+      try {
+        // Stop any existing audio
+        if (htmlAudioRef.current) {
+          try {
+            htmlAudioRef.current.pause()
+            htmlAudioRef.current.currentTime = 0
+          } catch {}
+        }
+        const audio = new Audio(audioUrl)
+        htmlAudioRef.current = audio
+        audio.onended = () => {
+          setIsPlayingAudio(false)
+        }
+        audio.onerror = () => {
+          // Fallback to speech synthesis if playback fails
+          htmlAudioRef.current = null
+          playWithSpeechSynthesis(text)
+        }
+        audio.play().catch(() => {
+          // Autoplay blocked or error — fallback to speech
+          htmlAudioRef.current = null
+          playWithSpeechSynthesis(text)
+        })
+        return
+      } catch {
+        // In case constructing Audio fails, fallback
+        htmlAudioRef.current = null
+        playWithSpeechSynthesis(text)
+        return
+      }
+    }
+
+    // No URL — use speech synthesis
+    playWithSpeechSynthesis(text)
+  }
+
+  const playWithSpeechSynthesis = (text: string) => {
     // Use Web Speech API for text-to-speech
     if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.rate = 0.8 // Slightly slower for learning
-      utterance.volume = 0.8
+      const speak = () => {
+        const utterance = new SpeechSynthesisUtterance(text)
+        const v = pickPreferredVoice()
+        if (v) utterance.voice = v
+        utterance.rate = 0.95
+        utterance.pitch = 1.0
+        utterance.volume = 0.95
 
-      utterance.onend = () => {
-        setIsPlayingAudio(false)
+        utterance.onend = () => {
+          setIsPlayingAudio(false)
+        }
+
+        utterance.onerror = () => {
+          setIsPlayingAudio(false)
+        }
+
+        speechSynthesis.speak(utterance)
       }
 
-      utterance.onerror = () => {
-        setIsPlayingAudio(false)
+      if (speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          speak()
+          window.speechSynthesis.onvoiceschanged = null
+        }
+      } else {
+        speak()
       }
-
-      speechSynthesis.speak(utterance)
     } else {
-      // Fallback for browsers without speech synthesis
-      console.log('Playing audio for:', text)
+      // Final fallback if no speech synthesis
       setTimeout(() => {
         setIsPlayingAudio(false)
-      }, 2000)
+      }, 1200)
     }
   }
 
@@ -324,10 +456,11 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
 
   const getOptionStyle = (index: number) => {
     let baseClasses =
-      'flex items-center justify-between w-full p-4 rounded-xl border-2 transition-all duration-300 text-left '
+      'flex items-center justify-between w-full p-4 rounded-xl border-2 transition-all duration-300 text-left transform '
 
     if (!showFeedback) {
       baseClasses += 'border-gray-200 bg-gray-50 hover:border-[#FF7B54] hover:bg-orange-50 '
+      baseClasses += revealed[index] ? 'opacity-100 translate-y-0 ' : 'opacity-0 translate-y-1 '
     } else {
       if (index === currentQuiz.answerIndex) {
         baseClasses += 'border-green-500 bg-green-50 '
@@ -362,89 +495,36 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div className="bg-opacity-50 absolute inset-0 bg-black backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-[9999] flex items-stretch sm:items-center sm:justify-center">
+      {/* Backdrop (dim background on all devices) */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300" onClick={onClose} />
 
-      {/* Modal Content */}
-      <div className="relative mx-4 max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+      {/* Modal/Full-screen Content */}
+      <div className="relative mx-0 h-screen w-screen overflow-hidden rounded-none bg-white/95 shadow-none animate-[fadeIn_200ms_ease-out] flex flex-col sm:mx-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-2xl sm:rounded-3xl sm:shadow-2xl supports-[padding:env(safe-area-inset-bottom)]:pb-[env(safe-area-inset-bottom)] supports-[padding:env(safe-area-inset-top)]:pt-[env(safe-area-inset-top)]">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 p-6">
-          <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF7B54] to-orange-600">
-              <i className="fas fa-brain text-lg text-white"></i>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-[#2D3436]">Quick Quiz Demo</h2>
-              {!isCompleted && quizSet.length > 0 && (
-                <p className="text-sm text-[#636E72]">
-                  Question {currentQuestionIndex + 1} of {quizSet.length} • Score: {score}/
-                  {currentQuestionIndex + (showFeedback ? 1 : 0)}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            {!isCompleted && currentQuiz && (
-              <button
-                onClick={() => setShowErrorReport(true)}
-                className="flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 hover:bg-red-50"
-                title="Report an issue"
-              >
-                <i className="fas fa-flag text-sm text-red-500"></i>
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 hover:bg-gray-100"
-            >
-              <i className="fas fa-times text-lg text-[#636E72]"></i>
-            </button>
-          </div>
-        </div>
+        <QuizHeader
+          shareTitle={shareTitle}
+          isCompleted={isCompleted}
+          currentIndex={currentQuestionIndex}
+          total={quizSet.length}
+          score={currentQuestionIndex + (showFeedback ? 1 : 0) ? score : score}
+          onClose={onClose}
+        />
 
         {/* Progress Bar */}
-        {!isCompleted && quizSet.length > 0 && (
-          <div className="h-2 bg-gray-100">
-            <div
-              className="h-full bg-gradient-to-r from-[#FF7B54] to-orange-600 transition-all duration-500"
-              style={{ width: `${((currentQuestionIndex + 1) / quizSet.length) * 100}%` }}
-            />
-          </div>
-        )}
+        <QuizProgress current={currentQuestionIndex + 1} total={quizSet.length} hidden={isCompleted} />
 
-        {/* Fast Mode Toggle */}
         {!isCompleted && currentQuiz && (
-          <div className="flex items-center justify-center border-b border-gray-100 py-4">
-            <div className="flex items-center space-x-3">
-              <span className="text-sm font-medium text-[#2D3436]">Fast Mode</span>
-              <button
-                onClick={toggleFastMode}
-                className={`relative h-6 w-12 rounded-full transition-colors duration-300 ${
-                  fastMode ? 'bg-[#FF7B54]' : 'bg-gray-300'
-                }`}
-              >
-                <div
-                  className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform duration-300 ${
-                    fastMode ? 'translate-x-7' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-              <span className="text-xs text-[#636E72]">
-                {fastMode ? 'Auto-advance enabled' : 'Manual progression'}
-              </span>
-            </div>
-          </div>
+          <FastModeToggle enabled={fastMode} onToggle={toggleFastMode} />
         )}
 
         {/* Quiz Content */}
-        <div className="p-8">
+        <div className="p-4 sm:p-8 flex-1 overflow-y-auto pb-24">
           {isCompleted ? (
             // Completion Screen
             <div className="space-y-6 text-center">
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600">
-                <i className="fas fa-trophy text-2xl text-white"></i>
+              <div className="mx-auto flex items-center justify-center">
+                <Image src="/quiz-icon.png" alt="Quiz complete" width={80} height={80} />
               </div>
 
               <div>
@@ -454,34 +534,118 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                 </p>
               </div>
 
-              <div className="flex flex-col justify-center gap-3 sm:flex-row">
+              <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 gap-3">
+                  <ShareQuizButton
+                    url={shareUrl}
+                    title={shareTitle}
+                    text={`I scored ${quizSet.length > 0 ? Math.round((score / quizSet.length) * 100) : 0}% on “${shareTitle}” — can you beat me?`}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF7B54] to-orange-600 px-6 py-3 font-semibold text-white transition-all duration-300 hover:shadow-lg w-full"
+                  />
+
+                {(submittedLocked || submitOk === true) ? null : (
+                <div className="rounded-2xl border border-gray-200 p-4 text-left">
+                  <p className="mb-3 text-sm font-semibold text-[#2D3436]">Want to appear on the leaderboard?</p>
+                  {submitOk === false ? (
+                    <div className="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                      <i className="fas fa-exclamation-circle" />
+                      <span>Couldn’t submit right now. Please try again.</span>
+                    </div>
+                  ) : null}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <input
+                      type="text"
+                      value={playerName}
+                      onChange={(e) => {
+                        setPlayerName(e.target.value)
+                        setNameError(validateName(e.target.value))
+                      }}
+                      onBlur={() => setNameError(validateName(playerName))}
+                      placeholder="Your name"
+                      disabled={submittedLocked}
+                      className={`w-full rounded-xl border-2 bg-white px-4 py-3 text-sm text-[#2D3436] placeholder:text-gray-400 focus:outline-none ${submittedLocked ? 'opacity-60 cursor-not-allowed' : nameError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#FF7B54]'}`}
+                    />
+                    {nameError ? <p className="text-xs text-red-600">{nameError}</p> : null}
+                    <input
+                      type="email"
+                      value={playerEmail}
+                      onChange={(e) => {
+                        setPlayerEmail(e.target.value)
+                        setEmailError(validateEmail(e.target.value))
+                      }}
+                      onBlur={() => setEmailError(validateEmail(playerEmail))}
+                      placeholder="Your email"
+                      disabled={submittedLocked}
+                      className={`w-full rounded-xl border-2 bg-white px-4 py-3 text-sm text-[#2D3436] placeholder:text-gray-400 focus:outline-none ${submittedLocked ? 'opacity-60 cursor-not-allowed' : emailError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#FF7B54]'}`}
+                    />
+                    {emailError ? <p className="text-xs text-red-600">{emailError}</p> : null}
+                  </div>
+                  <div className="mt-3 flex items-center justify-end gap-2">
+                    <button
+                      disabled={submitting || !isFormValid() || Boolean(submitOk) || submittedLocked}
+                      onClick={async () => {
+                        const nErr = validateName(playerName)
+                        const eErr = validateEmail(playerEmail)
+                        setNameError(nErr)
+                        setEmailError(eErr)
+                        if (nErr || eErr) return
+                        await submitAttempt()
+                      }}
+                      className="rounded-xl bg-gradient-to-r from-[#FF7B54] to-orange-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {submitting ? 'Submitting…' : (Boolean(submitOk) || submittedLocked) ? 'Submitted' : 'Submit to leaderboard'}
+                    </button>
+                  </div>
+                </div>
+                )}
+
+                {/* Conversion CTA: App features */}
+                <div className="rounded-2xl border border-gray-200 p-4 text-left bg-white/60">
+                  <h4 className="mb-2 text-sm font-semibold text-[#2D3436]">Why Decorebator?</h4>
+                  <ul className="grid gap-1 sm:grid-cols-2 pl-1 text-sm text-[#636E72]">
+                    <li className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-[#FF7B54]">Smart spaced repetition to retain words faster</li>
+                    <li className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-[#FF7B54]">Multiple quiz modes that keep practice fun</li>
+                    <li className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-[#FF7B54]">Track your progress and unlock achievements</li>
+                    <li className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-[#FF7B54]">Create and share your own public quizzes</li>
+                  </ul>
+                </div>
+                </div>
+              </div>
+
+              <div className="mt-2 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <AppStoreButton store="apple" size="small" />
+                <AppStoreButton store="google" size="small" />
+              </div>
+
+              <div className="pt-1">
+                <button
+                  onClick={() => {
+                    try {
+                      const m = (shareUrl || '').match(/\/q\/([^/?#]+)/)
+                      const slug = m?.[1]
+                      if (!slug) return
+                      localStorage.removeItem(`pq_seen:${slug}`)
+                    } catch {}
+                  }}
+                  className="text-xs text-[#999] underline-offset-2 hover:underline"
+                >
+                  Reset my progress for this quiz
+                </button>
+              </div>
+
+              <div className="pt-2">
                 <button
                   onClick={handleRestart}
-                  className="flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-[#FF7B54] to-orange-600 px-6 py-3 font-semibold text-white transition-all duration-300 hover:shadow-lg"
+                  className="text-sm font-semibold text-[#636E72] underline-offset-2 hover:underline"
                 >
-                  <i className="fas fa-redo text-sm"></i>
-                  <span>Try Again</span>
+                  Play again
                 </button>
-
-                <SmartDownloadButton
-                  className="flex items-center justify-center space-x-2 rounded-xl bg-gray-100 px-6 py-3 font-semibold text-[#2D3436] transition-all duration-300 hover:bg-gray-200"
-                  size="medium"
-                  onClick={onClose}
-                >
-                  <i className="fas fa-download text-sm"></i>
-                  <span>Download App</span>
-                </SmartDownloadButton>
               </div>
             </div>
           ) : currentQuiz ? (
             // Quiz Question
             <div className="space-y-6">
-              {/* Quiz Type Badge */}
-              <div className="flex justify-center">
-                <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-[#FF7B54]">
-                  {getQuizTypeDisplayName(currentQuiz.type)}
-                </span>
-              </div>
+
 
               {/* Question Title */}
               <h3 className="text-center text-xl font-semibold text-[#2D3436]">{getQuizTitle()}</h3>
@@ -502,14 +666,13 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                 ) : currentQuiz.type === 'WORD_FROM_AUDIO' ? (
                   // Only show play button for audio questions - no word displayed
                   <div className="rounded-xl bg-blue-50 p-8 text-center">
-                    <i className="fas fa-headphones mb-4 text-4xl text-[#FF7B54]"></i>
                     <p className="mb-4 text-lg text-[#2D3436]">
                       Listen to the audio and select the word you hear
                     </p>
                     <button
-                      onClick={() => playAudio(currentQuiz.value)}
+                      onClick={() => playAudio(currentQuiz.value, currentQuiz.audioURL)}
                       disabled={isPlayingAudio}
-                      className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#FF7B54] to-orange-600 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                    className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#FF7B54] to-orange-600 transition-transform duration-200 hover:scale-105 hover:shadow-lg ${
                         isPlayingAudio ? 'cursor-not-allowed opacity-70' : ''
                       }`}
                     >
@@ -519,13 +682,6 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                         <i className="fas fa-play text-2xl text-white"></i>
                       )}
                     </button>
-                  </div>
-                ) : currentQuiz.type === 'WORD_FROM_IMAGE' ? (
-                  <div className="rounded-xl bg-gray-100 p-8 text-center">
-                    <i className="fas fa-image mb-2 text-4xl text-[#636E72]"></i>
-                    <p className="text-[#636E72] italic">
-                      {currentQuiz.imageDescription || 'Image would be displayed here'}
-                    </p>
                   </div>
                 ) : currentQuiz.type === 'WORD_FROM_MEANING' ||
                   currentQuiz.type === 'WRITE_WORD_FROM_DEFINITION' ? (
@@ -537,9 +693,9 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                   <div className="rounded-xl bg-purple-50 p-6 text-center">
                     <p className="mb-4 text-lg text-[#2D3436]">{currentQuiz.value}</p>
                     <button
-                      onClick={() => playAudio(currentQuiz.value)}
+                      onClick={() => playAudio(currentQuiz.value, currentQuiz.audioURL)}
                       disabled={isPlayingAudio}
-                      className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#FF7B54] to-orange-600 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                      className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#FF7B54] to-orange-600 transition-transform duration-200 hover:scale-105 hover:shadow-lg ${
                         isPlayingAudio ? 'cursor-not-allowed opacity-70' : ''
                       }`}
                     >
@@ -549,6 +705,38 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                         <i className="fas fa-play text-lg text-white"></i>
                       )}
                     </button>
+                  </div>
+                ) : currentQuiz.type === 'WORD_FROM_IMAGE' ? (
+                  <div className="rounded-xl overflow-hidden bg-gray-100">
+                    {imageLoading && (
+                      <div className="flex h-64 w-full items-center justify-center animate-pulse bg-gray-200">
+                        <i className="fas fa-image text-3xl text-gray-400"></i>
+                      </div>
+                    )}
+                    {!imageError && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={currentQuiz.value}
+                        alt={currentQuiz.value || 'Quiz image'}
+                        onLoad={() => setImageLoading(false)}
+                        onError={() => {
+                          setImageLoading(false)
+                          setImageError(true)
+                        }}
+                        className={`${imageLoading ? 'hidden' : 'block'} max-h-64 sm:max-h-96 w-full object-cover`}
+                      />
+                    )}
+                    {imageError && (
+                      <div className="flex h-64 w-full flex-col items-center justify-center bg-gray-200 text-center">
+                        <i className="fas fa-broken-image mb-2 text-3xl text-gray-500"></i>
+                        <p className="text-sm text-gray-600">Image unavailable</p>
+                      </div>
+                    )}
+                    {currentQuiz.imageDescription && (
+                      <div className="border-t border-gray-200 p-4 text-center text-[#636E72]">
+                        <p className="italic">{currentQuiz.imageDescription}</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="rounded-xl bg-purple-50 p-6">
@@ -568,34 +756,57 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                       onKeyDown={(e) => e.key === 'Enter' && !showFeedback && handleWriteAnswer()}
                       placeholder="Type your answer here..."
                       disabled={showFeedback}
-                      className="w-full rounded-xl border-2 border-gray-200 p-4 text-lg transition-colors duration-200 focus:border-[#FF7B54] focus:outline-none disabled:bg-gray-50"
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white p-4 text-lg text-[#2D3436] placeholder:text-gray-400 transition-colors duration-200 focus:border-[#FF7B54] focus:outline-none disabled:bg-gray-50"
                     />
                     {showFeedback && (
-                      <div className="rounded-xl border-2 border-green-500 bg-green-50 p-4">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-green-700">
-                            Correct answer: {currentQuiz.options[currentQuiz.answerIndex]}
-                          </span>
-                          <i className="fas fa-check-circle text-xl text-green-500"></i>
+                      selectedAnswer === currentQuiz.answerIndex ? (
+                        <div className="rounded-xl border-2 border-green-500 bg-green-50 p-4">
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-green-700">Correct!</span>
+                            <i className="fas fa-check-circle text-xl text-green-500"></i>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="rounded-xl border-2 border-red-500 bg-red-50 p-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-red-700">
+                              Not quite. Correct answer: {currentQuiz.options[currentQuiz.answerIndex]}
+                            </span>
+                            <i className="fas fa-times-circle text-xl text-red-500"></i>
+                          </div>
+                        </div>
+                      )
                     )}
                   </div>
 
                   {!showFeedback && (
-                    <div className="flex gap-3">
+                    <div className="hidden sm:flex gap-3">
                       <button
                         onClick={handleWriteAnswer}
                         disabled={!userInput.trim()}
-                        className="flex-1 rounded-xl bg-gradient-to-r from-[#FF7B54] to-orange-600 px-6 py-3 font-semibold text-white transition-all duration-300 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex-1 rounded-xl bg-gradient-to-r from-[#FF7B54] to-orange-600 px-6 py-3 font-semibold text-white transition-transform duration-150 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Submit Answer
                       </button>
                       <button
                         onClick={handleSkipQuestion}
-                        className="rounded-xl border-2 border-gray-300 px-6 py-3 font-semibold text-gray-600 transition-colors duration-200 hover:border-gray-400"
+                        className="rounded-xl border-2 border-gray-300 px-6 py-3 font-semibold text-gray-600 transition-transform duration-150 hover:border-gray-400 active:scale-[0.98]"
                       >
                         Skip
+                      </button>
+                    </div>
+                  )}
+
+                  {showFeedback && (
+                    <div className="hidden sm:flex justify-center pt-4">
+                      <button
+                        onClick={handleNext}
+                        className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-[#FF7B54] to-orange-600 px-8 py-3 font-semibold text-white transition-transform duration-150 hover:shadow-lg active:scale-[0.98]"
+                      >
+                        <span>
+                          {currentQuestionIndex < quizSet.length - 1 ? 'Next Question' : 'Complete Quiz'}
+                        </span>
+                        <i className="fas fa-arrow-right text-sm"></i>
                       </button>
                     </div>
                   )}
@@ -625,31 +836,7 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex justify-center pt-6">
-                {showFeedback ? (
-                  // Next button always visible after answering
-                  <button
-                    onClick={handleNext}
-                    className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-[#FF7B54] to-orange-600 px-8 py-3 font-semibold text-white transition-all duration-300 hover:shadow-lg"
-                  >
-                    <span>
-                      {currentQuestionIndex < quizSet.length - 1
-                        ? 'Next Question'
-                        : 'Complete Quiz'}
-                    </span>
-                    <i className="fas fa-arrow-right text-sm"></i>
-                  </button>
-                ) : !isWriteMode ? (
-                  // Skip button for multiple choice questions
-                  <button
-                    onClick={handleSkipQuestion}
-                    className="rounded-xl border-2 border-gray-300 px-6 py-3 font-semibold text-gray-600 transition-colors duration-200 hover:border-gray-400"
-                  >
-                    Skip Question
-                  </button>
-                ) : null}
-              </div>
+              {/* Action Buttons moved to sticky bottom bar for better mobile UX */}
             </div>
           ) : (
             // Loading or Error State
@@ -671,13 +858,17 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
           )}
         </div>
 
-        {/* Error Report Modal */}
-        <ErrorReportModal
-          isOpen={showErrorReport}
-          onClose={() => setShowErrorReport(false)}
-          onReportError={handleReportError}
-          isLoading={isReporting}
+        <StickyActionBar
+          isCompleted={isCompleted}
+          isWriteMode={isWriteMode}
+          showFeedback={showFeedback}
+          canSubmitWrite={Boolean(userInput.trim())}
+          onSubmitWrite={handleWriteAnswer}
+          onSkip={handleSkipQuestion}
+          onNext={handleNext}
         />
+
+        {/* Reporting removed */}
       </div>
     </div>
   )

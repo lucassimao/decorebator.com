@@ -22,7 +22,7 @@ import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useUserSession } from "@/hooks/useUserSession";
-import { LinearGradient } from "expo-linear-gradient";
+import PremiumUpsellModal from "@/components/common/PremiumUpsellModal";
 import { useTheme } from "@/contexts/ThemeContext";
 
 type WordlistItemProps = {
@@ -145,12 +145,19 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
   const openPublishModal = () => {
     setShowMenu(false);
+    if (!isPremium) {
+      setShowPremiumModal(true);
+      return;
+    }
     setShowPublishModal(true);
   };
 
   const getPublicUrl = (slug: string) => {
     const appDomain = process.env.EXPO_PUBLIC_APP_DOMAIN?.trim();
-    const baseUrl = appDomain && appDomain.startsWith("http") ? appDomain : "http://localhost:3000";
+    const baseUrl =
+      appDomain && appDomain.startsWith("http")
+        ? appDomain
+        : "http://localhost:4000";
     return `${baseUrl}/q/${slug}`;
   };
 
@@ -211,13 +218,18 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
               {item.name}
             </Text>
             {item.publicQuizSlug ? (
-              <View style={styles.publicBadge} accessibilityLabel={t("wordlistItem.publicBadge", "Public")}>
+              <View
+                style={styles.publicBadge}
+                accessibilityLabel={t("wordlistItem.publicBadge", "Public")}
+              >
                 <MaterialIcons
                   name="public"
                   size={responsive.getValueForSize(12, 14, 14, 16)}
                   color={theme.colors.text.inverse}
                 />
-                <Text style={styles.publicBadgeText}>{t("wordlistItem.publicBadge", "Public")}</Text>
+                <Text style={styles.publicBadgeText}>
+                  {t("wordlistItem.publicBadge", "Public")}
+                </Text>
               </View>
             ) : null}
           </View>
@@ -332,55 +344,45 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
           <TouchableOpacity
             style={styles.actionButtonLarge}
-            onPress={() =>
-              item.publicQuizSlug
-                ? handleViewOnWeb(item.publicQuizSlug)
-                : openPublishModal()
-            }
+            onPress={async () => {
+              if (item.publicQuizSlug) {
+                const url = getPublicUrl(item.publicQuizSlug!);
+                const cta = t(
+                  "wordlistItem.shareCta",
+                  "I just published a vocab quiz—can you beat it?",
+                );
+                const message = `${cta} ${url}`;
+                try {
+                  await Share.share({ message, title: item.name });
+                } catch {
+                  // no-op
+                }
+              } else {
+                openPublishModal();
+              }
+            }}
             accessibilityRole="button"
             accessibilityLabel={
               item.publicQuizSlug
-                ? t("wordlistItem.viewOnWeb", "View on web")
+                ? t("wordlistItem.share", "Share")
                 : t("wordlistItem.publishPublicQuiz", "Publish public quiz")
             }
             accessibilityHint={
               item.publicQuizSlug
-                ? "Open this public quiz on the web"
+                ? "Share this public quiz link"
                 : "Publish this wordlist as a public quiz"
             }
           >
             <MaterialIcons
-              name={item.publicQuizSlug ? "public" : "upload"}
+              name={item.publicQuizSlug ? "share" : "upload"}
               size={responsive.getValueForSize(18, 20, 22, 24)}
               color={theme.colors.primary}
             />
             <Text style={styles.actionButtonText} numberOfLines={1}>
               {item.publicQuizSlug
-                ? t("wordlistItem.public", "Public")
+                ? t("wordlistItem.share", "Share")
                 : t("wordlistItem.publish", "Publish")}
             </Text>
-            {item.publicQuizSlug ? (
-              <TouchableOpacity
-                onPress={() => {
-                  const url = getPublicUrl(item.publicQuizSlug!)
-                  const cta = t(
-                    "wordlistItem.shareCta",
-                    "I just published a vocab quiz—can you beat it?",
-                  )
-                  const message = `${cta} ${url}`
-                  Share.share({ message, title: item.name })
-                }}
-                accessibilityLabel={t("wordlistItem.shareLink", "Share link")}
-                style={styles.shareOverlay}
-                hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
-              >
-                <MaterialIcons
-                  name="share"
-                  size={responsive.getValueForSize(14, 16, 18, 18)}
-                  color={theme.colors.text.secondary}
-                />
-              </TouchableOpacity>
-            ) : null}
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -434,7 +436,10 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   accessibilityLabel={
                     item.publicQuizSlug
                       ? t("wordlistItem.editPublicQuiz", "Edit public quiz")
-                      : t("wordlistItem.publishPublicQuiz", "Publish public quiz")
+                      : t(
+                          "wordlistItem.publishPublicQuiz",
+                          "Publish public quiz",
+                        )
                   }
                   accessibilityHint={
                     item.publicQuizSlug
@@ -450,7 +455,10 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   <Text style={styles.menuItemText}>
                     {item.publicQuizSlug
                       ? t("wordlistItem.editPublicQuiz", "Edit public quiz")
-                      : t("wordlistItem.publishPublicQuiz", "Publish public quiz")}
+                      : t(
+                          "wordlistItem.publishPublicQuiz",
+                          "Publish public quiz",
+                        )}
                   </Text>
                 </TouchableOpacity>
 
@@ -459,7 +467,10 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                     style={styles.menuItem}
                     onPress={() => copyPublicLink(item.publicQuizSlug!)}
                     accessibilityRole="button"
-                    accessibilityLabel={t("wordlistItem.copyPublicLink", "Copy public link")}
+                    accessibilityLabel={t(
+                      "wordlistItem.copyPublicLink",
+                      "Copy public link",
+                    )}
                     accessibilityHint="Copy the shareable link for this public quiz"
                   >
                     <MaterialIcons
@@ -477,12 +488,17 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   <TouchableOpacity
                     style={styles.menuItem}
                     onPress={async () => {
-                      await wordlistsApi.unpublishPublicQuiz(item.id)
-                      queryClient.invalidateQueries({ queryKey: ["wordlists"] })
-                      setShowMenu(false)
+                      await wordlistsApi.unpublishPublicQuiz(item.id);
+                      queryClient.invalidateQueries({
+                        queryKey: ["wordlists"],
+                      });
+                      setShowMenu(false);
                     }}
                     accessibilityRole="button"
-                    accessibilityLabel={t("wordlistItem.unpublishPublicQuiz", "Unpublish public quiz")}
+                    accessibilityLabel={t(
+                      "wordlistItem.unpublishPublicQuiz",
+                      "Unpublish public quiz",
+                    )}
                     accessibilityHint="Disable public access to this quiz"
                   >
                     <MaterialIcons
@@ -491,7 +507,10 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                       color={theme.colors.error}
                     />
                     <Text style={styles.menuItemText}>
-                      {t("wordlistItem.unpublishPublicQuiz", "Unpublish public quiz")}
+                      {t(
+                        "wordlistItem.unpublishPublicQuiz",
+                        "Unpublish public quiz",
+                      )}
                     </Text>
                   </TouchableOpacity>
                 ) : null}
@@ -501,7 +520,10 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                     style={styles.menuItem}
                     onPress={() => handleViewOnWeb(item.publicQuizSlug!)}
                     accessibilityRole="button"
-                    accessibilityLabel={t("wordlistItem.viewOnWeb", "View on web")}
+                    accessibilityLabel={t(
+                      "wordlistItem.viewOnWeb",
+                      "View on web",
+                    )}
                     accessibilityHint="Open this public quiz in the browser"
                   >
                     <MaterialIcons
@@ -613,91 +635,11 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         onSuccess={handlePublishSuccess}
       />
 
-      {/* Premium Analytics Upsell Modal */}
-      <Modal
+      <PremiumUpsellModal
         visible={showPremiumModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowPremiumModal(false)}
-        accessibilityViewIsModal={true}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowPremiumModal(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback>
-              <View style={styles.premiumModalContainer}>
-                <LinearGradient
-                  colors={[theme.colors.premium, theme.colors.semantic.warning]}
-                  style={styles.premiumGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  <View style={styles.premiumContent}>
-                    <View style={styles.premiumIconContainer}>
-                      <MaterialIcons
-                        name="analytics"
-                        size={responsive.getValueForSize(28, 32, 36, 40)}
-                        color={theme.colors.text.inverse}
-                      />
-                    </View>
-                    <Text
-                      style={styles.premiumTitle}
-                      accessibilityRole="header"
-                      accessibilityLabel={item.name}
-                    >
-                      {t("dashboard.stats.premium.title")}
-                    </Text>
-                    <Text
-                      style={styles.premiumSubtitle}
-                      accessibilityRole="text"
-                    >
-                      {t("dashboard.stats.premium.subtitle")}
-                    </Text>
-
-                    <View style={styles.premiumButtons}>
-                      <TouchableOpacity
-                        style={styles.upgradeButton}
-                        onPress={() => {
-                          setShowPremiumModal(false);
-                          onUpgradePress?.();
-                        }}
-                        accessibilityRole="button"
-                        accessibilityLabel={t(
-                          "settings.subscription.upgradeButton",
-                        )}
-                        accessibilityHint="Upgrade to premium to access analytics features"
-                      >
-                        <Text style={styles.upgradeButtonText}>
-                          {t("settings.subscription.upgradeButton")}
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.cancelButton}
-                        onPress={() => setShowPremiumModal(false)}
-                        accessibilityRole="button"
-                        accessibilityLabel={t("upgradePrompt.maybeLater")}
-                        accessibilityHint="Close this upgrade prompt"
-                      >
-                        <Text style={styles.cancelButtonText}>
-                          {t("upgradePrompt.maybeLater")}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </LinearGradient>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-
-      {/* Publish Public Quiz Modal */}
-      <PublishPublicQuizModal
-        visible={showPublishModal}
-        wordlistId={item.id}
-        defaultTitle={item.name}
-        onClose={() => setShowPublishModal(false)}
-        onSuccess={handlePublishSuccess}
+        onClose={() => setShowPremiumModal(false)}
+        context="analytics"
+        onUpgradePress={onUpgradePress}
       />
     </>
   );
@@ -774,7 +716,7 @@ const createStyles = (
     actionButtonsRow: {
       flexDirection: "row",
       marginTop: responsive.spacing.elementSpacing,
-      gap: responsive.spacing.elementSpacing,
+      gap: responsive.spacing.elementSpacing / 2,
       paddingTop: responsive.spacing.elementSpacing / 2,
       borderTopWidth: 1,
       borderTopColor: theme.colors.ui.divider,

@@ -69,8 +69,8 @@ type LeaderboardEntry struct {
 	Rank                  int     `json:"rank"`
 }
 
-// PublicQuizSettings represents the configuration for publishing a quiz
-type PublicQuizSettings struct {
+// PublishQuizDTO represents the configuration for publishing a quiz
+type PublishQuizDTO struct {
 	Title            string         `json:"title" binding:"required"`
 	Description      *string        `json:"description,omitempty"`
 	Difficulty       QuizDifficulty `json:"difficulty" binding:"required"`
@@ -178,7 +178,7 @@ func (qa QuizAttempt) MarshalJSON() ([]byte, error) {
 }
 
 // Validate checks if the public quiz settings are valid
-func (pqs PublicQuizSettings) Validate() error {
+func (pqs PublishQuizDTO) Validate() error {
 	if pqs.Title == "" {
 		return errors.New("title is required")
 	}

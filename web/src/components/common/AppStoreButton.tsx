@@ -8,9 +8,10 @@ import { useAppStoreModal } from './AppStoreModalProvider'
 interface AppStoreButtonProps {
   store: 'apple' | 'google'
   className?: string
+  size?: 'small' | 'medium' | 'large'
 }
 
-const AppStoreButton: React.FC<AppStoreButtonProps> = ({ store, className = '' }) => {
+const AppStoreButton: React.FC<AppStoreButtonProps> = ({ store, className = '', size = 'medium' }) => {
   const { showModal } = useAppStoreModal()
 
   const handleClick = () => {
@@ -37,13 +38,15 @@ const AppStoreButton: React.FC<AppStoreButtonProps> = ({ store, className = '' }
           alt: 'Get it on Google Play',
         }
 
+  const sizeClass = size === 'small' ? 'h-10' : size === 'large' ? 'h-16' : 'h-14'
+
   return (
     <button
       onClick={handleClick}
       className={`transform transition-transform duration-300 hover:scale-105 ${className}`}
       aria-label={imageProps.alt}
     >
-      <Image src={imageProps.src} alt={imageProps.alt} width={168} height={56} className="h-14" />
+      <Image src={imageProps.src} alt={imageProps.alt} width={168} height={56} className={`${sizeClass} w-auto`} />
     </button>
   )
 }

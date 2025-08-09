@@ -152,6 +152,11 @@
       "premium": {
         "title": "Desbloquea Análisis Detallados",
         "subtitle": "Rastrea progreso, niveles de dominio y más"
+      },
+      "feature": {
+        "historicalTrends": "Tendencias históricas",
+        "accuracyInsights": "Información de precisión",
+        "boxDistribution": "Distribución por cajas"
       }
     },
     "wordlists": {
@@ -621,7 +626,17 @@
     "titleRequired": "El título es obligatorio",
     "timeLimitInvalid": "El tiempo debe estar entre 1 y 15 minutos.",
     "copyUrl": "Copiar enlace",
-    "urlLabel": "Enlace"
+    "urlLabel": "Enlace",
+    "premiumUpsell": {
+      "title": "Desbloquea Premium",
+      "subtitle": "Accede a funciones avanzadas",
+      "finePrint": "Cancela cuando quieras. Tus datos permanecen seguros."
+    },
+    "feature": {
+      "publishQuizzes": "Publicar quizzes públicos",
+      "shareLinks": "Compartir enlaces y clasificaciones",
+      "betterBranding": "Mejoras visuales y de marca"
+    }
   },
   "analytics": {
     "header": {

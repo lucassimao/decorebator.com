@@ -152,6 +152,11 @@
       "premium": {
         "title": "Desbloqueie Análises Detalhadas",
         "subtitle": "Acompanhe progresso, níveis de domínio e mais"
+      },
+      "feature": {
+        "historicalTrends": "Tendências históricas",
+        "accuracyInsights": "Insights de precisão",
+        "boxDistribution": "Distribuição por caixas"
       }
     },
     "wordlists": {
@@ -632,7 +637,17 @@
     "copyPublicLink": "Copiar link público",
     "shareLink": "Compartilhar link",
     "shareCta": "Acabei de publicar um quiz de vocabulário — consegue me superar?",
-    "urlLabel": "Link"
+    "urlLabel": "Link",
+    "premiumUpsell": {
+      "title": "Desbloquear Premium",
+      "subtitle": "Acesse recursos avançados",
+      "finePrint": "Cancele quando quiser. Seus dados permanecem seguros."
+    },
+    "feature": {
+      "publishQuizzes": "Publicar quizzes públicos",
+      "shareLinks": "Compartilhar links e rankings",
+      "betterBranding": "Melhores visuais e branding"
+    }
   },
   "analytics": {
     "header": {

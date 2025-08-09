@@ -36,9 +36,8 @@ const PublishPublicQuizModal: React.FC<Props> = ({
 
   const [title, setTitle] = useState<string>(defaultTitle);
   const [description, setDescription] = useState<string>("");
-  const [difficulty, setDifficulty] = useState<
-    wordlistsApi.PublicQuizDifficulty
-  >("medium");
+  const [difficulty, setDifficulty] =
+    useState<wordlistsApi.PublicQuizDifficulty>("medium");
   const [timeLimit, setTimeLimit] = useState<number>(10);
 
   const publishMutation = useMutation({
@@ -176,7 +175,9 @@ const PublishPublicQuizModal: React.FC<Props> = ({
                   accessibilityRole="button"
                   accessibilityLabel={t("common.cancel")}
                 >
-                  <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
+                  <Text style={styles.cancelButtonText}>
+                    {t("common.cancel")}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
@@ -330,5 +331,3 @@ const createStyles = (
       color: theme.colors.text.secondary,
     },
   });
-
-

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"errors"
 	"os"
@@ -9,6 +10,21 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 )
+
+// GenerateRandomString returns a URL-safe random string of n bytes (hex-encoded length 2n)
+func GenerateRandomString(n int) string {
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		return ""
+	}
+	const hexdigits = "0123456789abcdef"
+	out := make([]byte, n*2)
+	for i, by := range b {
+		out[i*2] = hexdigits[by>>4]
+		out[i*2+1] = hexdigits[by&0x0f]
+	}
+	return string(out)
+}
 
 // DecodeImageBase64 takes a Base64 string (with or without a `data:` URI prefix)
 // and returns the decoded bytes and, if present, the MIME content type.

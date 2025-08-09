@@ -152,6 +152,11 @@
       "premium": {
         "title": "詳細な分析をアンロック",
         "subtitle": "進捗、習熟度レベルなどを追跡"
+      },
+      "feature": {
+        "historicalTrends": "履歴トレンド",
+        "accuracyInsights": "正確性インサイト",
+        "boxDistribution": "ボックス分布"
       }
     },
     "wordlists": {
@@ -629,7 +634,17 @@
     "copyPublicLink": "公開リンクをコピー",
     "shareLink": "リンクを共有",
     "shareCta": "語彙クイズを公開しました—挑戦してみませんか？",
-    "urlLabel": "リンク"
+    "urlLabel": "リンク",
+    "premiumUpsell": {
+      "title": "プレミアムをアンロック",
+      "subtitle": "高度な機能にアクセス",
+      "finePrint": "いつでも解約できます。データは安全です。"
+    },
+    "feature": {
+      "publishQuizzes": "公開クイズを作成",
+      "shareLinks": "リンク共有とランキング",
+      "betterBranding": "より良いビジュアルとブランディング"
+    }
   },
   "analytics": {
     "header": {

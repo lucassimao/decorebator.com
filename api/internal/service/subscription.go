@@ -590,6 +590,8 @@ func (s *SubscriptionService) CheckSubscriptionLimits(ctx context.Context, userI
 					return fmt.Errorf("free plan limit reached: maximum %d words per wordlist", model.FreeWordsPerList)
 				}
 			}
+		case model.UserActionPublishPublicQuiz:
+			return fmt.Errorf("premium required to publish public quizzes")
 		}
 	}
 

@@ -32,12 +32,18 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	var WorkerRoutes = NewWorkerRoutes(appCtx.DefinitionService, appCtx.JobService)
 	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService)
 	var UserRoutes = NewUserRoutes(appCtx.UserService, appCtx.MailService)
-	var PublicQuizRoutes = NewPublicQuizRoutes(repository.NewPublicQuizRepository(appCtx.Database), appCtx.WordlistService)
+	var PublicQuizRoutes = NewPublicQuizRoutes(
+		repository.NewPublicQuizRepository(appCtx.Database),
+		appCtx.WordlistService,
+		appCtx.DefinitionService,
+		appCtx.Database,
+		appCtx.RedisClient,
+		appCtx.JobService,
+	)
 
 	// Use Leitner strategy from AppContext
 	var quizRoutes = NewQuizRoutes(appCtx.LeitnerSystemStrategy)
 	var ErrorReportsRoutes = NewErrorReportRoutes(appCtx.ErrorReportService)
-	var demoRoutes = DemoRoutes{}
 
 	router := gin.New()
 
@@ -70,11 +76,13 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		// Redirect to local expo scheme
 		router.GET("/subscription/checkout-redirect", CheckoutRedirect())
 
-		// Demo quiz endpoint for web landing page (static auth)
-		router.GET("/quiz/demo", AuthenticateStatic, demoRoutes.GetDemoQuizzes)
+		// Deprecated demo quiz endpoint removed
 
 		// Public quiz (unauthenticated)
 		router.GET("/public-quizzes/:slug", PublicQuizRoutes.GetBySlug)
+		router.GET("/public-quizzes/:slug/questions", PublicQuizRoutes.GetQuestionsBySlug)
+		router.GET("/public-quizzes/:slug/leaderboard", PublicQuizRoutes.GetLeaderboardBySlug)
+		router.POST("/public-quizzes/:slug/attempts", PublicQuizRoutes.RecordAttempt)
 	}
 
 	// Routes with authentication
@@ -96,9 +104,17 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionAddWord), WordRoutes.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizRoutes.Save)
-		// Publish/unpublish wordlist as public quiz (MVP)
-		authenticatedRoutes.POST("/wordlists/:wordlistId/publish", PublicQuizRoutes.Publish)
-		authenticatedRoutes.DELETE("/wordlists/:wordlistId/publish", PublicQuizRoutes.Unpublish)
+		// Publish/unpublish wordlist as public quiz (MVP) - premium only
+		authenticatedRoutes.POST(
+			"/wordlists/:wordlistId/publish",
+			CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionPublishPublicQuiz),
+			PublicQuizRoutes.Publish,
+		)
+		authenticatedRoutes.DELETE(
+			"/wordlists/:wordlistId/publish",
+			CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionPublishPublicQuiz),
+			PublicQuizRoutes.Unpublish,
+		)
 		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(appCtx.Database), ErrorReportsRoutes.Create)
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus(appCtx.Database))
 
