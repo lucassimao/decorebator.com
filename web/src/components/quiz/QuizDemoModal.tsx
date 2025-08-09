@@ -592,6 +592,8 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                     url={shareUrl}
                     title={shareTitle}
                     text={`I scored ${quizSet.length > 0 ? Math.round((score / quizSet.length) * 100) : 0}% on “${shareTitle}” — can you beat me?`}
+                    label="Share my score"
+                    showLabelOnMobile={true}
                     className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF7B54] to-orange-600 px-6 py-3 font-semibold text-white transition-all duration-300 hover:shadow-lg w-full"
                   />
 
@@ -651,15 +653,52 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                 </div>
                 )}
 
-                {/* Conversion CTA: App features */}
-                <div className="rounded-2xl border border-gray-200 p-4 text-left bg-white/60">
-                  <h4 className="mb-2 text-sm font-semibold text-[#2D3436]">Why Decorebator?</h4>
-                  <ul className="grid gap-1 sm:grid-cols-2 pl-1 text-sm text-[#636E72]">
-                    <li className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-[#FF7B54]">Smart spaced repetition to retain words faster</li>
-                    <li className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-[#FF7B54]">Multiple quiz modes that keep practice fun</li>
-                    <li className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-[#FF7B54]">Track your progress and unlock achievements</li>
-                    <li className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-[#FF7B54]">Create and share your own public quizzes</li>
-                  </ul>
+                {/* Persuasive conversion block */}
+                <div className="rounded-2xl border border-gray-200 p-5 text-left bg-white/70">
+                  <div className="flex flex-col gap-2">
+                    <h4 className="text-lg font-semibold text-[#2D3436]">Turn this win into a daily habit</h4>
+                    <p className="text-sm text-[#636E72]">
+                      Decorebator helps you remember new words with smart spaced repetition, bite‑size quizzes,
+                      and rich audio & images. Build momentum, one quick session at a time.
+                    </p>
+                    <div className="flex items-center gap-2 pt-1 text-[#2D3436]">
+                      <div className="text-[#F59E0B]">
+                        <i className="fas fa-star"></i>
+                        <i className="fas fa-star ml-0.5"></i>
+                        <i className="fas fa-star ml-0.5"></i>
+                        <i className="fas fa-star ml-0.5"></i>
+                        <i className="fas fa-star ml-0.5"></i>
+                      </div>
+                      <span className="text-xs sm:text-sm text-[#636E72]">Loved by language learners worldwide</span>
+                    </div>
+                    <ul className="grid gap-1 sm:grid-cols-2 pl-1 text-sm text-[#2D3436]">
+                      <li className="pl-5 relative">
+                        <i className="fas fa-check absolute left-0 top-0.5 text-green-600"></i>
+                        Daily reminders to keep you consistent
+                      </li>
+                      <li className="pl-5 relative">
+                        <i className="fas fa-check absolute left-0 top-0.5 text-green-600"></i>
+                        Smart repetition focuses on what you forget
+                      </li>
+                      <li className="pl-5 relative">
+                        <i className="fas fa-check absolute left-0 top-0.5 text-green-600"></i>
+                        8 quiz modes keep practice engaging
+                      </li>
+                      <li className="pl-5 relative">
+                        <i className="fas fa-check absolute left-0 top-0.5 text-green-600"></i>
+                        Works offline on the go
+                      </li>
+                      <li className="pl-5 relative">
+                        <i className="fas fa-check absolute left-0 top-0.5 text-green-600"></i>
+                        Add your own wordlists and share with friends
+                      </li>
+                      <li className="pl-5 relative">
+                        <i className="fas fa-check absolute left-0 top-0.5 text-green-600"></i>
+                        Track progress and celebrate milestones
+                      </li>
+                    </ul>
+                    <div className="pt-2 text-xs text-[#8E979B]">No ads • Privacy‑first • Optional premium</div>
+                  </div>
                 </div>
                 </div>
               </div>

@@ -116,11 +116,13 @@ export default function ShareQuizButton({ url, title, text, className, label, sh
         onClick={onShare}
         className={
           className ||
-          'inline-flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-[#2D3436] hover:bg-gray-50'
+          'group inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-[#2D3436] hover:bg-gray-50 active:scale-[0.99] transition'
         }
         aria-label={label ? label : 'Share this quiz'}
       >
-        <i className="fas fa-share-alt text-[#FF7B54]"></i>
+        <span className="relative inline-flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF7B54] to-orange-600 text-white shadow-sm group-hover:shadow">
+          <i className="fas fa-share-alt text-[12px]"></i>
+        </span>
         <span className={showLabelOnMobile ? 'inline' : 'hidden sm:inline'}>
           {copied ? 'Link copied!' : label || 'Share'}
         </span>
