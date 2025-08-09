@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!quiz) return {}
 
-  const title = `${quiz.title} — Public Quiz`
+  const title = `${quiz.title} — Decorebator Quiz`
   const description = quiz.description || `Play this ${quiz.difficulty} quiz. Can you beat it?`
   const canonical = `https://decorebator.com/q/${quiz.slug}`
   const master = quiz.previewImageUrl || ''

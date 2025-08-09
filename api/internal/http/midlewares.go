@@ -112,7 +112,7 @@ func CORSMiddleware() gin.HandlerFunc {
 
 		if os.Getenv("ENV") == productionEnv {
 			c.Writer.Header().Add("Access-Control-Allow-Origin", "https://decorebator.com")
-			c.Writer.Header().Add("Access-Control-Allow-Origin", "https://api.decorebator.com")
+			c.Writer.Header().Add("Access-Control-Allow-Origin", "https://www.decorebator.com")
 		} else {
 			origin := c.Request.Header.Get("Origin")
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)

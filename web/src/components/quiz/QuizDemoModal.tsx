@@ -708,22 +708,6 @@ const QuizDemoModal: React.FC<QuizDemoModalProps> = ({ isOpen, onClose, demoQuiz
                 <AppStoreButton store="google" size="small" />
               </div>
 
-              <div className="pt-1">
-                <button
-                  onClick={() => {
-                    try {
-                      const m = (shareUrl || '').match(/\/q\/([^/?#]+)/)
-                      const slug = m?.[1]
-                      if (!slug) return
-                      localStorage.removeItem(`pq_seen:${slug}`)
-                    } catch {}
-                  }}
-                  className="text-xs text-[#999] underline-offset-2 hover:underline"
-                >
-                  Reset my progress for this quiz
-                </button>
-              </div>
-
               <div className="pt-2">
                 <button
                   onClick={handleRestart}

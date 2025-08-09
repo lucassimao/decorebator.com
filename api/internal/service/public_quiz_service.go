@@ -288,9 +288,8 @@ func (s *PublicQuizService) BuildQuestionsForSlug(ctx context.Context, slug stri
 				break
 			}
 		}
-		sentence := "_____ — " + d.Meaning
 		q := model.Quiz{
-			Value:        sentence,
+			Value:        d.Meaning,
 			Options:      opts,
 			AnswerIndex:  answerIndex,
 			ID:           d.ID,
