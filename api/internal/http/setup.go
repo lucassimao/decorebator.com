@@ -78,8 +78,8 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 
 		// Deprecated demo quiz endpoint removed
 
-		// Public quiz (unauthenticated)
-		router.GET("/public-quizzes/:slug", PublicQuizRoutes.GetBySlug)
+        // Public quiz (unauthenticated)
+        router.GET("/public-quizzes/:slug", PublicQuizRoutes.GetBySlug)
 		router.GET("/public-quizzes/:slug/questions", PublicQuizRoutes.GetQuestionsBySlug)
 		router.GET("/public-quizzes/:slug/leaderboard", PublicQuizRoutes.GetLeaderboardBySlug)
 		router.POST("/public-quizzes/:slug/attempts", PublicQuizRoutes.RecordAttempt)
@@ -157,6 +157,13 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		// pprof endpoints for performance profiling
 		adminRoutes.GET("/debug/pprof/*profile", PprofHandler())
 	}
+
+  // Static-auth protected endpoints (keep original paths)
+  staticProtected := router.Group("/")
+  staticProtected.Use(AuthenticateStatic)
+  {
+    staticProtected.GET("/public-quizzes", PublicQuizRoutes.ListActive)
+  }
 
 	return router
 }

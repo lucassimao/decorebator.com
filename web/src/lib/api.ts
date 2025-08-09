@@ -144,4 +144,16 @@ export async function submitPublicQuizAttempt(args: {
   }
 }
 
+export async function listActivePublicQuizzes(limit = 5000): Promise<{ slug: string; title: string }[]> {
+  const base = getApiBaseUrl()
+  const res = await fetch(`${base}/public-quizzes?limit=${encodeURIComponent(String(limit))}`, {
+    method: 'GET',
+    cache: 'no-store',
+  })
+  if (!res.ok) throw new Error(`Failed to list public quizzes: ${res.status}`)
+  const data = await res.json()
+  const list = Array.isArray(data?.quizzes) ? data.quizzes : []
+  return list.map((q: any) => ({ slug: String(q.slug), title: String(q.title || '') }))
+}
+
 
