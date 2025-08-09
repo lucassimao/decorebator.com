@@ -11,7 +11,7 @@ type Props = {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug, locale } = await params
+  const { slug } = await params
   const quiz = await getPublicQuizBySlug(slug).catch(() => null)
 
   if (!quiz) return {}
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = quiz.description || `Play this ${quiz.difficulty} quiz. Can you beat it?`
   const canonical = `https://decorebator.com/q/${quiz.slug}`
   // Prefer platform-optimized variants derived from master; fall back to default placeholder
-  const defaultOg = `https://decorebator.com/${locale}/og/quiz-default?slug=${quiz.slug}`
+  const defaultOg = ``
   const master = quiz.previewImageUrl || ''
   const ogTwitter = master ? master.replace('-master.jpg', '-twitter_x.jpg') : defaultOg
   const ogSquare = master ? master.replace('-master.jpg', '-square.jpg') : defaultOg
