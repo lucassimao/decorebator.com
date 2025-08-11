@@ -88,7 +88,7 @@ export default async function PublicQuizPage({ params }: Props) {
         <div className="mb-8 rounded-2xl border border-orange-100 bg-white/70 p-6 shadow-sm backdrop-blur">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-2">
-              <h1 className="bg-gradient-to-r from-[#FF7B54] to-orange-600 bg-clip-text text-3xl font-extrabold text-transparent sm:text-4xl">
+              <h1 className="bg-gradient-to-r from-[#FF7B54] to-orange-600 bg-clip-text text-3xl font-extrabold text-transparent sm:text-4xl leading-snug break-words" title={quiz.title}>
                 {quiz.title}
               </h1>
               {quiz.description ? (
@@ -108,17 +108,18 @@ export default async function PublicQuizPage({ params }: Props) {
                 ) : null}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {quizzes.length > 0 ? (
-                <PlayAgainButton quizzes={quizzes} slug={quiz.slug} title={quiz.title} />
-              ) : null}
-              <ShareQuizButton
-                url={`https://decorebator.com/q/${quiz.slug}`}
-                title={quiz.title}
-                label="Share this quiz"
-                showLabelOnMobile={true}
-              />
-            </div>
+            <div className="flex items-center gap-2" />
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-start gap-2 sm:justify-end">
+            {quizzes.length > 0 ? (
+              <PlayAgainButton quizzes={quizzes} slug={quiz.slug} title={quiz.title} />
+            ) : null}
+            <ShareQuizButton
+              url={`https://decorebator.com/q/${quiz.slug}`}
+              title={quiz.title}
+              label="Share this quiz"
+              showLabelOnMobile={true}
+            />
           </div>
           {/* Leaderboard (Top 10) */}
           {leaderboard.length > 0 && (
