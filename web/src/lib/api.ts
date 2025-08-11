@@ -32,6 +32,8 @@ export type LeaderboardEntry = {
   completionTimeSeconds: number
 }
 
+type NextFetchInit = RequestInit & { next?: { revalidate?: number; tags?: string[] } }
+
 function getApiBaseUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim()
   if (envUrl && envUrl.startsWith('http')) return envUrl
@@ -96,12 +98,12 @@ export async function getPublicQuizQuestions(slug: string, init?: RequestInit): 
   return list
 }
 
-export async function getPublicQuizLeaderboard(slug: string, init?: RequestInit): Promise<LeaderboardEntry[]> {
+export async function getPublicQuizLeaderboard(slug: string, init?: NextFetchInit): Promise<LeaderboardEntry[]> {
   const base = getApiBaseUrl()
   const res = await fetch(`${base}/public-quizzes/${encodeURIComponent(slug)}/leaderboard`, {
     method: 'GET',
     // Default to short cache for leaderboard so it stays fresh
-    ...(init || { next: { revalidate: 30 } as any }),
+    ...(init ?? ({ next: { revalidate: 30 } } as NextFetchInit)),
   })
   if (res.status === 404) return []
   if (!res.ok) throw new Error(`Failed to load leaderboard: ${res.status}`)
