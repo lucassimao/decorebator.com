@@ -24,7 +24,11 @@
     "build:preview": "eas build --platform all --profile preview",
     "submit:ios": "eas submit --platform ios",
     "submit:android": "eas submit --platform android",
-    "submit:all": "eas submit --platform all"
+    "submit:all": "eas submit --platform all",
+    "version:patch": "node -e \"const fs=require('fs'); const semver=require('semver'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); const newVer=semver.inc(pkg.version,'patch'); pkg.version=newVer; fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)); console.log('Updated to',newVer);\" && npm run version:sync",
+    "version:minor": "node -e \"const fs=require('fs'); const semver=require('semver'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); const newVer=semver.inc(pkg.version,'minor'); pkg.version=newVer; fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)); console.log('Updated to',newVer);\" && npm run version:sync",
+    "version:major": "node -e \"const fs=require('fs'); const semver=require('semver'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); const newVer=semver.inc(pkg.version,'major'); pkg.version=newVer; fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)); console.log('Updated to',newVer);\" && npm run version:sync",
+    "version:sync": "node -e \"const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); const ver=pkg.version; const app=JSON.parse(fs.readFileSync('app.json','utf8')); app.expo.version=ver; app.expo.runtimeVersion=ver; fs.writeFileSync('app.json',JSON.stringify(app,null,2)); const iosPlist=fs.readFileSync('ios/decorebator/Info.plist','utf8'); const updatedPlist=iosPlist.replace(/<key>CFBundleShortVersionString<\\/key>\\s*<string>[^<]+<\\/string>/,'<key>CFBundleShortVersionString</key>\\n    <string>'+ver+'</string>'); fs.writeFileSync('ios/decorebator/Info.plist',updatedPlist); const gradlePath='android/app/build.gradle'; const gradle=fs.readFileSync(gradlePath,'utf8'); const updatedGradle=gradle.replace(/versionName \\\"[^\\\"]+\\\"/,'versionName \\\"'+ver+'\\\"'); fs.writeFileSync(gradlePath,updatedGradle); console.log('Synced version',ver,'to all platforms');\""
   },
   "prepare": "cd .. && husky mobile/.husky",
   "jest": {
@@ -78,6 +82,7 @@
     "expo-web-browser": "~14.2.0",
     "i18next": "^25.2.1",
     "install": "^0.13.0",
+    "lottie-react-native": "7.2.2",
     "npm": "^10.7.0",
     "posthog-react-native": "^3.16.1",
     "react": "19.0.0",
@@ -95,8 +100,7 @@
     "react-native-vector-icons": "^10.1.0",
     "react-native-web": "^0.20.0",
     "react-native-webrtc": "^124.0.6",
-    "zod": "^3.23.8",
-    "lottie-react-native": "7.2.2"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -114,6 +118,7 @@
     "jest-expo": "~53.0.10",
     "lint-staged": "^15.2.5",
     "prettier": "3.2.5",
+    "semver": "^7.7.2",
     "typescript": "~5.8.3"
   },
   "private": true,

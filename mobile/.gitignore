@@ -16,8 +16,11 @@ web-build/
 *.key
 *.mobileprovision
 
-# Android (handled by EAS Cloud Build)
-android/
+# Android build artifacts (keep source code, ignore build outputs)
+android/app/build/
+android/build/
+android/.gradle/
+android/app/.cxx/
 
 # Metro
 .metro-health-check*
