@@ -91,6 +91,7 @@ func (w Wordlist) MarshalJSON() ([]byte, error) {
 		"name":                w.Name,
 		"description":         w.Description,
 		"languageCode":        w.LanguageCode,
+		"languageName":        getLanguageName(w.LanguageCode),
 		"pronunciationSystem": w.PronunciationSystem,
 		"createdAt":           createdAtValue, // será string ou nil → "null"
 		"updatedAt":           updatedAtValue, // será string ou nil → "null"
@@ -109,6 +110,23 @@ func (w Wordlist) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(m)
+}
+
+// getLanguageName returns the full language name for a given language code
+func getLanguageName(languageCode string) string {
+	languageMap := map[string]string{
+		"en": "English",
+		"es": "Spanish", 
+		"fr": "French",
+		"de": "German",
+		"it": "Italian",
+		"pt": "Portuguese",
+		"ja": "Japanese",
+	}
+	if name, exists := languageMap[languageCode]; exists {
+		return name
+	}
+	return languageCode // fallback to code if not found
 }
 
 func (w *Wordlist) UnmarshalJSON(data []byte) error {

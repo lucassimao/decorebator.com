@@ -592,6 +592,8 @@ func (s *SubscriptionService) CheckSubscriptionLimits(ctx context.Context, userI
 			}
 		case model.UserActionPublishPublicQuiz:
 			return fmt.Errorf("premium required to publish public quizzes")
+		case model.UserActionChatSession:
+			return fmt.Errorf("premium required to use chat feature")
 		}
 	}
 

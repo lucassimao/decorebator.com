@@ -30,7 +30,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	// Initialize route handlers using services from AppContext
 	var WordRoutes = NewWordRoutes(appCtx.WordService, appCtx.DefinitionService)
 	var WorkerRoutes = NewWorkerRoutes(appCtx.DefinitionService, appCtx.JobService)
-	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService)
+	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService, appCtx.DefinitionService)
 	var UserRoutes = NewUserRoutes(appCtx.UserService, appCtx.MailService)
 	var PublicQuizRoutes = NewPublicQuizRoutes(
 		repository.NewPublicQuizRepository(appCtx.Database),
@@ -104,6 +104,8 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionAddWord), WordRoutes.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizRoutes.Save)
+		// Chat session endpoint - premium only
+		authenticatedRoutes.POST("/wordlists/:wordlistId/chat/session", CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionChatSession), WordlistRoutes.CreateChatSession)
 		// Publish/unpublish wordlist as public quiz (MVP) - premium only
 		authenticatedRoutes.POST(
 			"/wordlists/:wordlistId/publish",
