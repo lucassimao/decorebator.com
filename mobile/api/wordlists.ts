@@ -15,6 +15,7 @@ export type Wordlist = {
   updatedAt: string;
   userId: number;
   languageCode: string;
+  languageName: string;
   pronunciationSystem: PronunciationSystem;
   wordsCount: number;
   wordsLearnedCount: number;
@@ -290,4 +291,43 @@ export async function unpublishPublicQuiz(wordlistId: number): Promise<void> {
   const endpoint =
     process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/publish`;
   await callAPI<void>("DELETE", endpoint);
+}
+
+// Realtime Chat Session Types and API
+export interface ChatDefinition {
+  id: number;
+  meaning: string;
+  partOfSpeech: string;
+  examples?: string[];
+}
+
+export interface WordWithDefinitions {
+  name: string;
+  definitions: ChatDefinition[];
+}
+
+export interface ChatSessionData {
+  token: string;
+  expiresAt: number;
+  wordlist: {
+    id: number;
+    name: string;
+    languageCode: string;
+    languageName: string;
+    wordsCount: number;
+  };
+  selectedWords: WordWithDefinitions[];
+  webrtcConfig: {
+    baseUrl: string;
+    model: string;
+  };
+}
+
+// Create a new realtime chat session for vocabulary practice
+export async function createChatSession(
+  wordlistId: number,
+): Promise<ChatSessionData> {
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/chat/session`;
+  return await callAPI<ChatSessionData>("POST", endpoint);
 }

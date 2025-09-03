@@ -239,6 +239,23 @@
       "listening": "Listening"
     }
   },
+  "realtimeChat": {
+    "title": "Voice Chat",
+    "connecting": "Connecting...",
+    "connected": "Connected - Start speaking!",
+    "disconnected": "Disconnected",
+    "connectionError": "Connection error",
+    "initializationError": "Failed to start chat session",
+    "initializing": "Starting chat session...",
+    "listening": "Listening...",
+    "speakNow": "Speak now to practice your vocabulary",
+    "wordsAvailable": "{{count}} words available for practice",
+    "focusWords": "Practicing {{count}} focus words from your wordlist",
+    "transcript": "AI Response:",
+    "mute": "Mute microphone",
+    "unmute": "Unmute microphone",
+    "endCall": "End call"
+  },
   "settings": {
     "title": "Settings",
     "otherSettings": "Other Settings",
@@ -655,6 +672,13 @@
     "shareLink": "Share link",
     "shareCta": "I just published a vocab quiz—can you beat it?",
       "urlLabel": "Link",
+      "chat": "Chat",
+      "startChat": "Start chat",
+      "chatHint": "Start a conversation using the words in this list",
+      "chatUpsell": {
+        "title": "Unlock AI Conversations",
+        "subtitle": "Practice vocabulary through natural voice conversations"
+      },
       "premiumUpsell": {
         "title": "Unlock Premium",
         "subtitle": "Get access to advanced features",
@@ -663,7 +687,11 @@
       "feature": {
         "publishQuizzes": "Publish public quizzes",
         "shareLinks": "Share links & leaderboards",
-        "betterBranding": "Better visuals & branding"
+        "betterBranding": "Better visuals & branding",
+        "voiceConversations": "Voice conversations with AI",
+        "vocabularyPractice": "Practice your vocabulary naturally",
+        "pronunciationHelp": "Get pronunciation guidance",
+        "unlimitedChatTime": "Unlimited conversation time"
       }
   },
   "analytics": {

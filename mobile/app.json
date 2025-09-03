@@ -2,7 +2,7 @@
   "expo": {
     "name": "decorebator",
     "slug": "decorebator",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "decorebator",
@@ -23,10 +23,10 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"],
-        "NSMicrophoneUsageDescription": "Decorebator plays audio pronunciations and example sentences to help you learn correct pronunciation. For example, you'll hear how words sound when practicing vocabulary in quizzes and flashcards.",
+        "UIBackgroundModes": ["remote-notification", "audio", "voip"],
+        "NSMicrophoneUsageDescription": "Decorebator uses your microphone to provide interactive voice conversations for vocabulary practice and to play audio pronunciations. For example, you can have voice conversations with AI to practice new words, and hear pronunciations in quizzes and flashcards.",
+        "NSCameraUsageDescription": "Decorebator uses your camera to take profile pictures and supports video features during vocabulary practice sessions. For example, you can take a new photo in the profile settings to personalize your learning experience.",
         "NSPhotoLibraryUsageDescription": "Decorebator accesses your photo library to let you choose an existing photo as your profile picture. For example, you can select a photo from your gallery in the profile settings to personalize your account.",
-        "NSCameraUsageDescription": "Decorebator uses your camera to take profile pictures for your account. For example, you can take a new photo in the profile settings to personalize your learning experience.",
         "CFBundleDisplayName": "Decorebator",
         "LSApplicationCategoryType": "public.app-category.education"
       }
@@ -42,7 +42,14 @@
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.WAKE_LOCK",
-        "android.permission.VIBRATE"
+        "android.permission.VIBRATE",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.CHANGE_NETWORK_STATE",
+        "android.permission.CAMERA",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_CONNECT"
       ],
       "package": "com.lsimaocosta.decorebator"
     },
@@ -56,6 +63,13 @@
       "expo-audio",
       "expo-secure-store",
       "expo-mail-composer",
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Decorebator uses your camera to support video features during vocabulary practice sessions. WebRTC functionality requires camera access even for audio-only conversations.",
+          "microphonePermission": "Decorebator uses your microphone to provide interactive voice conversations for vocabulary practice and to play audio pronunciations. You can have voice conversations with AI to practice new words."
+        }
+      ],
       [
         "expo-notifications",
         {
@@ -91,7 +105,7 @@
       }
     },
     "owner": "lsimaocosta",
-    "runtimeVersion": {"policy":"appVersion"},
+    "runtimeVersion": "1.0.2",
     "updates": {
       "url": "https://u.expo.dev/882f0434-5dcf-448c-92ac-47e70c9a8d84",
       "enabled": true,

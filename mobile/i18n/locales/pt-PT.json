@@ -251,6 +251,23 @@
       "listening": "Audição"
     }
   },
+  "realtimeChat": {
+    "title": "Conversa por Voz",
+    "connecting": "A conectar...",
+    "connected": "Conectado - Comece a falar!",
+    "disconnected": "Desconectado",
+    "connectionError": "Erro de conexão",
+    "initializationError": "Falha ao iniciar sessão de conversa",
+    "initializing": "A iniciar sessão de conversa...",
+    "listening": "A escutar...",
+    "speakNow": "Fale agora para praticar o seu vocabulário",
+    "wordsAvailable": "{{count}} palavras disponíveis para prática",
+    "focusWords": "Practicing {{count}} focus words from your wordlist",
+    "transcript": "Resposta da IA:",
+    "mute": "Silenciar microfone",
+    "unmute": "Activar microfone",
+    "endCall": "Terminar chamada"
+  },
   "settings": {
     "title": "Definições",
     "otherSettings": "Outras Definições",
@@ -627,6 +644,13 @@
     "timeLimitInvalid": "O tempo deve estar entre 1 e 15 minutos.",
     "copyUrl": "Copiar link",
     "urlLabel": "Link",
+    "chat": "Chat",
+    "startChat": "Iniciar chat",
+    "chatHint": "Inicie uma conversa usando as palavras desta lista",
+    "chatUpsell": {
+      "title": "Desbloquear conversas com IA",
+      "subtitle": "Pratique vocabulário através de conversas por voz naturais"
+    },
     "premiumUpsell": {
       "title": "Desbloquear Premium",
       "subtitle": "Aceda a funcionalidades avançadas",
@@ -635,7 +659,11 @@
     "feature": {
       "publishQuizzes": "Publicar questionários públicos",
       "shareLinks": "Partilhar ligações e classificações",
-      "betterBranding": "Melhores visuais e imagem de marca"
+      "betterBranding": "Melhores visuais e imagem de marca",
+      "voiceConversations": "Conversas por voz com IA",
+      "vocabularyPractice": "Pratique o seu vocabulário naturalmente",
+      "pronunciationHelp": "Obtenha ajuda com a pronunciação",
+      "unlimitedChatTime": "Tempo de conversa ilimitado"
     }
   },
   "analytics": {

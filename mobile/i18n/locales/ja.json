@@ -251,6 +251,23 @@
       "listening": "リスニング"
     }
   },
+  "realtimeChat": {
+    "title": "音声チャット",
+    "connecting": "接続中...",
+    "connected": "接続されました - 話し始めてください！",
+    "disconnected": "切断されました",
+    "connectionError": "接続エラー",
+    "initializationError": "チャットセッションの開始に失敗しました",
+    "initializing": "チャットセッションを開始しています...",
+    "listening": "聞いています...",
+    "speakNow": "語彙を練習するために今話してください",
+    "wordsAvailable": "{{count}}語の練習用単語が利用可能です",
+    "focusWords": "Practicing {{count}} focus words from your wordlist",
+    "transcript": "AI応答：",
+    "mute": "マイクをミュート",
+    "unmute": "マイクのミュートを解除",
+    "endCall": "通話を終了"
+  },
   "settings": {
     "title": "設定",
     "otherSettings": "その他の設定",
@@ -635,6 +652,13 @@
     "shareLink": "リンクを共有",
     "shareCta": "語彙クイズを公開しました—挑戦してみませんか？",
     "urlLabel": "リンク",
+    "chat": "チャット",
+    "startChat": "チャットを開始",
+    "chatHint": "このリストの単語を使って会話を始める",
+    "chatUpsell": {
+      "title": "AI会話をアンロック",
+      "subtitle": "自然な音声会話で語彙を練習"
+    },
     "premiumUpsell": {
       "title": "プレミアムをアンロック",
       "subtitle": "高度な機能にアクセス",
@@ -643,7 +667,11 @@
     "feature": {
       "publishQuizzes": "公開クイズを作成",
       "shareLinks": "リンク共有とランキング",
-      "betterBranding": "より良いビジュアルとブランディング"
+      "betterBranding": "より良いビジュアルとブランディング",
+      "voiceConversations": "AIとの音声会話",
+      "vocabularyPractice": "自然に語彙を練習",
+      "pronunciationHelp": "発音のガイダンスを取得",
+      "unlimitedChatTime": "無制限の会話時間"
     }
   },
   "analytics": {

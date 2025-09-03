@@ -251,6 +251,23 @@
       "listening": "Écoute"
     }
   },
+  "realtimeChat": {
+    "title": "Chat Vocal",
+    "connecting": "Connexion en cours...",
+    "connected": "Connecté - Commencez à parler !",
+    "disconnected": "Déconnecté",
+    "connectionError": "Erreur de connexion",
+    "initializationError": "Échec du démarrage de la session de chat",
+    "initializing": "Démarrage de la session de chat...",
+    "listening": "Écoute...",
+    "speakNow": "Parlez maintenant pour pratiquer votre vocabulaire",
+    "wordsAvailable": "{{count}} mots disponibles pour la pratique",
+    "focusWords": "Practicing {{count}} focus words from your wordlist",
+    "transcript": "Réponse IA :",
+    "mute": "Couper le microphone",
+    "unmute": "Activer le microphone",
+    "endCall": "Terminer l'appel"
+  },
   "settings": {
     "title": "Paramètres",
     "otherSettings": "Autres Paramètres",
@@ -627,6 +644,13 @@
     "timeLimitInvalid": "La durée doit être comprise entre 1 et 15 minutes.",
     "copyUrl": "Copier le lien",
     "urlLabel": "Lien",
+    "chat": "Chat",
+    "startChat": "Démarrer le chat",
+    "chatHint": "Commencez une conversation en utilisant les mots de cette liste",
+    "chatUpsell": {
+      "title": "Débloquer les conversations IA",
+      "subtitle": "Pratiquez le vocabulaire grâce à des conversations vocales naturelles"
+    },
     "premiumUpsell": {
       "title": "Débloquer Premium",
       "subtitle": "Accédez aux fonctionnalités avancées",
@@ -635,7 +659,11 @@
     "feature": {
       "publishQuizzes": "Publier des quiz publics",
       "shareLinks": "Partager des liens et classements",
-      "betterBranding": "Meilleurs visuels et image de marque"
+      "betterBranding": "Meilleurs visuels et image de marque",
+      "voiceConversations": "Conversations vocales avec IA",
+      "vocabularyPractice": "Pratiquez votre vocabulaire naturellement",
+      "pronunciationHelp": "Obtenez de l'aide pour la prononciation",
+      "unlimitedChatTime": "Temps de conversation illimité"
     }
   },
   "analytics": {

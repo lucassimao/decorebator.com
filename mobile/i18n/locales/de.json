@@ -254,6 +254,23 @@
       "listening": "Hörverständnis"
     }
   },
+  "realtimeChat": {
+    "title": "Sprach-Chat",
+    "connecting": "Verbindung wird hergestellt...",
+    "connected": "Verbunden - Fangen Sie an zu sprechen!",
+    "disconnected": "Getrennt",
+    "connectionError": "Verbindungsfehler",
+    "initializationError": "Fehler beim Starten der Chat-Sitzung",
+    "initializing": "Chat-Sitzung wird gestartet...",
+    "listening": "Hört zu...",
+    "speakNow": "Sprechen Sie jetzt, um Ihren Wortschatz zu üben",
+    "wordsAvailable": "{{count}} Wörter zum Üben verfügbar",
+    "focusWords": "Practicing {{count}} focus words from your wordlist",
+    "transcript": "KI-Antwort:",
+    "mute": "Mikrofon stummschalten",
+    "unmute": "Mikrofon aktivieren",
+    "endCall": "Anruf beenden"
+  },
   "settings": {
     "title": "Einstellungen",
     "otherSettings": "Weitere Einstellungen",
@@ -644,6 +661,13 @@
     "timeLimitInvalid": "Das Zeitlimit muss zwischen 1 und 15 Minuten liegen.",
     "copyUrl": "Link kopieren",
     "urlLabel": "Link",
+    "chat": "Chat",
+    "startChat": "Chat starten",
+    "chatHint": "Beginne ein Gespräch mit den Wörtern aus dieser Liste",
+    "chatUpsell": {
+      "title": "KI-Gespräche freischalten",
+      "subtitle": "Vokabeln durch natürliche Sprachgespräche üben"
+    },
     "premiumUpsell": {
       "title": "Premium freischalten",
       "subtitle": "Zugriff auf erweiterte Funktionen erhalten",
@@ -652,7 +676,11 @@
     "feature": {
       "publishQuizzes": "Öffentliche Quizze veröffentlichen",
       "shareLinks": "Links & Bestenlisten teilen",
-      "betterBranding": "Bessere Optik & Branding"
+      "betterBranding": "Bessere Optik & Branding",
+      "voiceConversations": "Sprachgespräche mit KI",
+      "vocabularyPractice": "Vokabeln natürlich üben",
+      "pronunciationHelp": "Aussprachehilfe erhalten",
+      "unlimitedChatTime": "Unbegrenzte Gesprächszeit"
     }
   },
    "analytics": {

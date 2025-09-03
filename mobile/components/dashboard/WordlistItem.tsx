@@ -22,7 +22,9 @@ import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useUserSession } from "@/hooks/useUserSession";
-import PremiumUpsellModal from "@/components/common/PremiumUpsellModal";
+import PremiumUpsellModal, {
+  PremiumUpsellContext,
+} from "@/components/common/PremiumUpsellModal";
 import { useTheme } from "@/contexts/ThemeContext";
 
 type WordlistItemProps = {
@@ -44,6 +46,8 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [premiumModalContext, setPremiumModalContext] =
+    useState<PremiumUpsellContext>("analytics");
   const router = useRouter();
   const { t } = useTranslation();
   const { isPremium } = useUserSession();
@@ -127,10 +131,33 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     router.push(`/flashcard?wordlistId=${item.id}&wordlistName=${item.name}`);
   };
 
+  const handleChatStart = () => {
+    setShowMenu(false);
+
+    if (item.wordsCount === 0) {
+      Alert.alert(
+        t("wordlistItem.noWordsTitle"),
+        t("wordlistItem.noWordsMessage"),
+        [{ text: t("common.ok") }],
+      );
+      return;
+    }
+
+    // if (!isPremium) {
+    //   setPremiumModalContext("chat");
+    //   setShowPremiumModal(true);
+    //   return;
+    // }
+    router.push(
+      `/realtime-chat?wordlistId=${item.id}&wordlistName=${item.name}`,
+    );
+  };
+
   const handleAnalytics = () => {
     setShowMenu(false);
 
     if (!isPremium) {
+      setPremiumModalContext("analytics");
       setShowPremiumModal(true);
       return;
     }
@@ -146,6 +173,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const openPublishModal = () => {
     setShowMenu(false);
     if (!isPremium) {
+      setPremiumModalContext("public_quiz");
       setShowPremiumModal(true);
       return;
     }
@@ -285,105 +313,131 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           />
         </View>
 
-        {/* Action Buttons Row */}
-        <View style={styles.actionButtonsRow}>
-          <TouchableOpacity
-            style={styles.actionButtonLarge}
-            onPress={handleAnalytics}
-            accessibilityRole="button"
-            accessibilityLabel={t("wordlistItem.analytics")}
-            accessibilityHint={
-              isPremium
-                ? "View detailed learning analytics"
-                : "Premium feature - tap to upgrade"
-            }
-          >
-            <MaterialIcons
-              name="bar-chart"
-              size={responsive.getValueForSize(18, 20, 22, 24)}
-              color={theme.colors.premium}
-            />
-            <Text style={styles.actionButtonText} numberOfLines={1}>
-              {t("wordlistItem.analytics")}
-            </Text>
-          </TouchableOpacity>
+        {/* Action Buttons - Two Row Layout */}
+        <View style={styles.actionButtonsContainer}>
+          {/* Primary Learning Actions Row */}
+          <View style={styles.primaryActionRow}>
+            <TouchableOpacity
+              style={styles.actionButtonPrimary}
+              onPress={handleQuizStart}
+              accessibilityRole="button"
+              accessibilityLabel={t("wordlistItem.quiz")}
+              accessibilityHint="Start quiz session"
+            >
+              <MaterialIcons
+                name="play-circle-filled"
+                size={responsive.getValueForSize(20, 22, 24, 26)}
+                color={theme.colors.success}
+              />
+              <Text style={styles.actionButtonPrimaryText} numberOfLines={1}>
+                {t("wordlistItem.quiz")}
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButtonLarge}
-            onPress={handlePractice}
-            accessibilityRole="button"
-            accessibilityLabel={t("wordlistItem.flashcards")}
-            accessibilityHint="Practice with flashcards"
-          >
-            <MaterialIcons
-              name="style"
-              size={responsive.getValueForSize(18, 20, 22, 24)}
-              color={theme.colors.semantic.info}
-            />
-            <Text style={styles.actionButtonText} numberOfLines={1}>
-              {t("wordlistItem.flashcards")}
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButtonPrimary}
+              onPress={handlePractice}
+              accessibilityRole="button"
+              accessibilityLabel={t("wordlistItem.flashcards")}
+              accessibilityHint="Practice with flashcards"
+            >
+              <MaterialIcons
+                name="style"
+                size={responsive.getValueForSize(20, 22, 24, 26)}
+                color={theme.colors.semantic.info}
+              />
+              <Text style={styles.actionButtonPrimaryText} numberOfLines={1}>
+                {t("wordlistItem.flashcards")}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            style={styles.actionButtonLarge}
-            onPress={handleQuizStart}
-            accessibilityRole="button"
-            accessibilityLabel={t("wordlistItem.quiz")}
-            accessibilityHint="Start quiz session"
-          >
-            <MaterialIcons
-              name="play-circle-filled"
-              size={responsive.getValueForSize(18, 20, 22, 24)}
-              color={theme.colors.success}
-            />
-            <Text style={styles.actionButtonText} numberOfLines={1}>
-              {t("wordlistItem.quiz")}
-            </Text>
-          </TouchableOpacity>
+          {/* Secondary Features Row */}
+          <View style={styles.secondaryActionRow}>
+            <TouchableOpacity
+              style={styles.actionButtonSecondary}
+              onPress={handleChatStart}
+              accessibilityRole="button"
+              accessibilityLabel={t("wordlistItem.chat", "Chat")}
+              accessibilityHint={t(
+                "wordlistItem.chatHint",
+                "Start a conversation using the words in this list",
+              )}
+            >
+              <MaterialIcons
+                name="chat"
+                size={responsive.getValueForSize(16, 18, 20, 22)}
+                color={theme.colors.primary}
+              />
+              <Text style={styles.actionButtonSecondaryText} numberOfLines={1}>
+                {t("wordlistItem.chat", "Chat")}
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButtonLarge}
-            onPress={async () => {
-              if (item.publicQuizSlug) {
-                const url = getPublicUrl(item.publicQuizSlug!);
-                const cta = t(
-                  "wordlistItem.shareCta",
-                  "I just published a vocab quiz—can you beat it?",
-                );
-                const message = `${cta} ${url}`;
-                try {
-                  await Share.share({ message, title: item.name });
-                } catch {
-                  // no-op
-                }
-              } else {
-                openPublishModal();
+            <TouchableOpacity
+              style={styles.actionButtonSecondary}
+              onPress={handleAnalytics}
+              accessibilityRole="button"
+              accessibilityLabel={t("wordlistItem.analytics")}
+              accessibilityHint={
+                isPremium
+                  ? "View detailed learning analytics"
+                  : "Premium feature - tap to upgrade"
               }
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={
-              item.publicQuizSlug
-                ? t("wordlistItem.share", "Share")
-                : t("wordlistItem.publishPublicQuiz", "Publish public quiz")
-            }
-            accessibilityHint={
-              item.publicQuizSlug
-                ? "Share this public quiz link"
-                : "Publish this wordlist as a public quiz"
-            }
-          >
-            <MaterialIcons
-              name={item.publicQuizSlug ? "share" : "upload"}
-              size={responsive.getValueForSize(18, 20, 22, 24)}
-              color={theme.colors.primary}
-            />
-            <Text style={styles.actionButtonText} numberOfLines={1}>
-              {item.publicQuizSlug
-                ? t("wordlistItem.share", "Share")
-                : t("wordlistItem.publish", "Publish")}
-            </Text>
-          </TouchableOpacity>
+            >
+              <MaterialIcons
+                name="bar-chart"
+                size={responsive.getValueForSize(16, 18, 20, 22)}
+                color={theme.colors.premium}
+              />
+              <Text style={styles.actionButtonSecondaryText} numberOfLines={1}>
+                {t("wordlistItem.analytics")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButtonSecondary}
+              onPress={async () => {
+                if (item.publicQuizSlug) {
+                  const url = getPublicUrl(item.publicQuizSlug!);
+                  const cta = t(
+                    "wordlistItem.shareCta",
+                    "I just published a vocab quiz—can you beat it?",
+                  );
+                  const message = `${cta} ${url}`;
+                  try {
+                    await Share.share({ message, title: item.name });
+                  } catch {
+                    // no-op
+                  }
+                } else {
+                  openPublishModal();
+                }
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={
+                item.publicQuizSlug
+                  ? t("wordlistItem.share", "Share")
+                  : t("wordlistItem.publishPublicQuiz", "Publish public quiz")
+              }
+              accessibilityHint={
+                item.publicQuizSlug
+                  ? "Share this public quiz link"
+                  : "Publish this wordlist as a public quiz"
+              }
+            >
+              <MaterialIcons
+                name={item.publicQuizSlug ? "share" : "upload"}
+                size={responsive.getValueForSize(16, 18, 20, 22)}
+                color={theme.colors.primary}
+              />
+              <Text style={styles.actionButtonSecondaryText} numberOfLines={1}>
+                {item.publicQuizSlug
+                  ? t("wordlistItem.share", "Share")
+                  : t("wordlistItem.publish", "Publish")}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </TouchableOpacity>
 
@@ -539,6 +593,26 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 
                 <TouchableOpacity
                   style={styles.menuItem}
+                  onPress={handleChatStart}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("wordlistItem.startChat", "Start chat")}
+                  accessibilityHint={t(
+                    "wordlistItem.chatHint",
+                    "Start a conversation using the words in this list",
+                  )}
+                >
+                  <MaterialIcons
+                    name="chat"
+                    size={responsive.getValueForSize(20, 24, 26, 28)}
+                    color={theme.colors.primary}
+                  />
+                  <Text style={styles.menuItemText}>
+                    {t("wordlistItem.startChat", "Start chat")}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.menuItem}
                   onPress={handlePractice}
                   accessibilityRole="button"
                   accessibilityLabel={t("wordlistItem.practiceFlashcards")}
@@ -638,7 +712,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
       <PremiumUpsellModal
         visible={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
-        context="analytics"
+        context={premiumModalContext}
         onUpgradePress={onUpgradePress}
       />
     </>
@@ -713,15 +787,38 @@ const createStyles = (
       padding: 4,
       borderRadius: theme.borderRadius.sm,
     },
-    actionButtonsRow: {
-      flexDirection: "row",
+    actionButtonsContainer: {
       marginTop: responsive.spacing.elementSpacing,
-      gap: responsive.spacing.elementSpacing / 2,
       paddingTop: responsive.spacing.elementSpacing / 2,
       borderTopWidth: 1,
       borderTopColor: theme.colors.ui.divider,
+      gap: responsive.spacing.elementSpacing / 2,
     },
-    actionButtonLarge: {
+    primaryActionRow: {
+      flexDirection: "row",
+      gap: responsive.spacing.elementSpacing,
+    },
+    secondaryActionRow: {
+      flexDirection: "row",
+      gap: responsive.spacing.elementSpacing / 2,
+    },
+    actionButtonPrimary: {
+      flex: 1,
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: responsive.getValueForSize(12, 14, 16, 18),
+      paddingHorizontal: responsive.getValueForSize(8, 10, 12, 14),
+      borderRadius: theme.borderRadius.md,
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(253, 246, 227, 0.3)" // Slightly more visible for primary actions
+          : theme.colors.background.subtle,
+      gap: responsive.spacing.elementSpacing / 3,
+      minHeight: responsive.getValueForSize(70, 74, 78, 82),
+      ...theme.shadows.sm,
+    },
+    actionButtonSecondary: {
       flex: 1,
       flexDirection: "column",
       alignItems: "center",
@@ -731,14 +828,19 @@ const createStyles = (
       borderRadius: theme.borderRadius.sm,
       backgroundColor:
         theme.mode === "light"
-          ? "rgba(253, 246, 227, 0.2)" // Very subtle web beige tint
+          ? "rgba(253, 246, 227, 0.15)" // More subtle for secondary actions
           : theme.colors.background.subtle,
       gap: responsive.spacing.elementSpacing / 4,
-      minHeight: responsive.getValueForSize(60, 64, 68, 72),
-      position: "relative",
+      minHeight: responsive.getValueForSize(50, 54, 58, 62),
     },
-    actionButtonText: {
-      fontSize: responsive.getValueForSize(10, 12, 13, 14),
+    actionButtonPrimaryText: {
+      fontSize: responsive.getValueForSize(12, 14, 15, 16),
+      color: theme.colors.text.primary,
+      fontWeight: "600",
+      textAlign: "center",
+    },
+    actionButtonSecondaryText: {
+      fontSize: responsive.getValueForSize(10, 11, 12, 13),
       color: theme.colors.text.secondary,
       fontWeight: "500",
       textAlign: "center",
