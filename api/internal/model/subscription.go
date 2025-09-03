@@ -193,6 +193,7 @@ const (
 	UserActionCreateWordlist UserAction = iota
 	UserActionAddWord
 	UserActionPublishPublicQuiz
+	UserActionChatSession
 )
 
 // IsActive returns true if the subscription is in a valid state
