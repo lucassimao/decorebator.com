@@ -5,6 +5,7 @@ import {
   RTCPeerConnection,
   RTCSessionDescription,
 } from "react-native-webrtc";
+import { Platform } from "react-native";
 import { ChatSessionData } from "../api/wordlists";
 
 export interface ConnectionState {
@@ -28,10 +29,52 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
 
+  // Configure audio session for better volume
+  const configureAudioSession = useCallback(async () => {
+    try {
+      if (Platform.OS === "ios") {
+        // iOS audio session for VoIP with optimal volume
+        await mediaDevices.setAudioConfiguration({
+          category: "playAndRecord",
+          mode: "voiceChat", // Optimized for voice communication
+          options: ["defaultToSpeaker", "allowBluetooth", "allowAirPlay"],
+        });
+        console.log("iOS audio session configured for optimal volume");
+      } else if (Platform.OS === "android") {
+        // Android audio routing with COMMUNICATION mode for proper volume handling
+        await mediaDevices.setAudioConfiguration({
+          audioMode: "COMMUNICATION", // Critical for WebRTC volume on Android
+          useSpeakerPhone: true,
+          bluetoothScoOn: false, // Ensure main speaker is used
+        });
+        console.log("Android audio session configured for optimal volume");
+      }
+    } catch (error) {
+      console.warn(
+        "Audio configuration failed, using fallback settings:",
+        error,
+      );
+      // Fallback: Try basic speaker configuration
+      try {
+        await mediaDevices.setAudioConfiguration({
+          useSpeakerPhone: true,
+        });
+      } catch (fallbackError) {
+        console.warn(
+          "Fallback audio configuration also failed:",
+          fallbackError,
+        );
+      }
+    }
+  }, []);
+
   // Initialize WebRTC connection
   const initializeConnection = useCallback(async () => {
     try {
       onConnectionStateChange({ status: "connecting" });
+
+      // Configure audio session first for better volume
+      await configureAudioSession();
 
       // Create RTCPeerConnection with proper ICE servers
       const pc = new RTCPeerConnection({
@@ -66,17 +109,32 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
         }
       });
 
-      // Handle remote audio tracks
+      // Handle remote audio tracks with volume optimization
       pc.addEventListener("track", (event) => {
         if (event.track) {
           console.log("Received remote track:", event.track.kind);
+
+          // Optimize volume for remote audio tracks
+          if (event.track.kind === "audio" && event.track._setVolume) {
+            // Set volume to maximum (range 0-10, not 0-1)
+            event.track._setVolume(8); // Use 8 instead of 10 to avoid distortion
+            console.log("Remote audio volume optimized");
+          }
         }
-        // Remote audio is handled automatically by react-native-webrtc
       });
 
-      // Get user media with proper audio constraints
+      // Get user media with enhanced audio constraints for better volume
       const stream = await mediaDevices.getUserMedia({
-        audio: true,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 48000,
+          sampleSize: 16,
+          channelCount: 1,
+          latency: 0.01, // Low latency for real-time communication
+          volume: 1.0, // Maximum input volume
+        },
         video: false,
       });
 
@@ -153,7 +211,12 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [sessionData, onConnectionStateChange, onServerEvent]);
+  }, [
+    sessionData,
+    onConnectionStateChange,
+    onServerEvent,
+    configureAudioSession,
+  ]);
 
   // Send session update following OpenAI documentation format
   // https://platform.openai.com/docs/api-reference/realtime-client-events
