@@ -247,6 +247,8 @@
     "connectionError": "Connection error",
     "initializationError": "Failed to start chat session",
     "initializing": "Starting chat session...",
+    "connectionSlow": "Connection is taking longer than expected",
+    "genericError": "Something went wrong. Please try again.",
     "listening": "Listening...",
     "speakNow": "Speak now to practice your vocabulary",
     "wordsAvailable": "{{count}} words available for practice",

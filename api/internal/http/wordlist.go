@@ -348,7 +348,16 @@ func (h *WordlistsRoutes) CreateChatSession(c *gin.Context) {
 	// Create ephemeral token for OpenAI Realtime API
 	tokenResponse, err := openai.CreateEphemeralToken(wordlist.Name, wordlist.LanguageCode)
 	if err != nil {
-		common.Logger.Error("failed to create ephemeral token", "wordlistId", wordlistID, "error", err)
+		// Enhanced logging with context for better debugging (automatically sent to Sentry in production)
+		common.Logger.Error("failed to create ephemeral token", 
+			"wordlistId", wordlistID, 
+			"userId", userID,
+			"wordlistName", wordlist.Name,
+			"languageCode", wordlist.LanguageCode,
+			"wordsCount", len(wordsWithDefinitions),
+			"operation", "create_ephemeral_token",
+			"error", err)
+		
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create chat session"})
 		return
 	}

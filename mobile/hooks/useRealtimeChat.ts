@@ -365,21 +365,6 @@ ${wordsList}
 - Do not repeat the same sentence twice. Vary your responses so it doesn't sound robotic.`;
   };
 
-  // Select appropriate voice for language (GA API supported voices only)
-  const getVoiceForLanguage = (languageCode: string): string => {
-    const voiceMap: Record<string, string> = {
-      en: "alloy", // English
-      es: "coral", // Spanish (nova no longer supported)
-      fr: "shimmer", // French
-      de: "echo", // German
-      it: "ballad", // Italian
-      pt: "sage", // Portuguese (coral moved to Spanish)
-      ja: "marin", // Japanese (sage moved to Portuguese)
-    };
-
-    return voiceMap[languageCode] || "alloy";
-  };
-
   return {
     initializeConnection,
     cleanup,

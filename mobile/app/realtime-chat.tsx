@@ -12,8 +12,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
-  ActivityIndicator,
   SafeAreaView,
   StatusBar,
   Platform,
@@ -28,6 +26,7 @@ import {
   RealtimeEventHandler,
   EventCallbacks,
 } from "@/utils/realtimeEventHandler";
+import { LoadingWithTimeout } from "@/components/LoadingWithTimeout";
 
 const RealtimeChatScreen: React.FC = () => {
   const { wordlistId, wordlistName } = useLocalSearchParams<{
@@ -42,6 +41,8 @@ const RealtimeChatScreen: React.FC = () => {
   // State
   const [sessionData, setSessionData] = useState<ChatSessionData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasTimeout, setHasTimeout] = useState(false);
+  const [initError, setInitError] = useState<Error | null>(null);
   const [connectionState, setConnectionState] = useState<ConnectionState>({
     status: "disconnected",
   });
@@ -202,28 +203,33 @@ const RealtimeChatScreen: React.FC = () => {
   const initializeSession = useCallback(async () => {
     try {
       setLoading(true);
+      setHasTimeout(false);
+      setInitError(null);
+      setConnectionState({ status: "disconnected" });
+
+      // Set timeout for session initialization (10 seconds)
+      const timeoutId = setTimeout(() => {
+        setHasTimeout(true);
+      }, 10000);
 
       // Get session token from backend
       const response = await createChatSession(parseInt(wordlistId));
+      clearTimeout(timeoutId);
       setSessionData(response);
 
       // The WebRTC connection will be initialized by the hook
       // when sessionData is set
     } catch (error: any) {
       console.error("Failed to initialize chat session:", error);
+      setInitError(error);
       setConnectionState({
         status: "error",
         error: error.message || "Failed to start chat session",
       });
-      Alert.alert(
-        t("common.error"),
-        t("realtimeChat.initializationError", "Failed to start chat session"),
-        [{ text: t("common.ok"), onPress: () => router.back() }],
-      );
     } finally {
       setLoading(false);
     }
-  }, [wordlistId, t, router]);
+  }, [wordlistId]);
 
   // Initialize connection when sessionData is available
   useEffect(() => {
@@ -259,6 +265,8 @@ const RealtimeChatScreen: React.FC = () => {
     setTranscript("");
     setTranscriptHistory([]);
     setIsSpeaking(false);
+    setHasTimeout(false);
+    setInitError(null);
     initializeSession();
   }, [initializeSession]);
 
@@ -317,12 +325,21 @@ const RealtimeChatScreen: React.FC = () => {
         <StatusBar
           barStyle={theme.mode === "light" ? "dark-content" : "light-content"}
         />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>
-            {t("realtimeChat.initializing", "Starting chat session...")}
-          </Text>
-        </View>
+        <LoadingWithTimeout
+          isLoading={loading}
+          hasTimeout={hasTimeout}
+          error={initError}
+          loadingMessage={t(
+            "realtimeChat.initializing",
+            "Starting chat session...",
+          )}
+          timeoutMessage={t(
+            "realtimeChat.connectionSlow",
+            "Connection is taking longer than expected",
+          )}
+          onRetry={handleRetry}
+          onGoBack={() => router.back()}
+        />
       </SafeAreaView>
     );
   }
@@ -445,7 +462,10 @@ const RealtimeChatScreen: React.FC = () => {
               color={theme.colors.error}
             />
             <Text style={styles.errorText}>
-              {connectionState.error || t("realtimeChat.connectionError")}
+              {t(
+                "realtimeChat.genericError",
+                "Something went wrong. Please try again.",
+              )}
             </Text>
             <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
               <Text style={styles.retryButtonText}>

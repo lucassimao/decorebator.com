@@ -259,6 +259,8 @@
     "connectionError": "Erro de conexão",
     "initializationError": "Falha ao iniciar sessão de conversa",
     "initializing": "A iniciar sessão de conversa...",
+    "connectionSlow": "A ligação está a demorar mais tempo que o esperado",
+    "genericError": "Algo correu mal. Por favor, tente novamente.",
     "listening": "A escutar...",
     "speakNow": "Fale agora para praticar o seu vocabulário",
     "wordsAvailable": "{{count}} palavras disponíveis para prática",

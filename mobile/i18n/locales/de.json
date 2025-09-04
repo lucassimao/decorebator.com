@@ -262,6 +262,8 @@
     "connectionError": "Verbindungsfehler",
     "initializationError": "Fehler beim Starten der Chat-Sitzung",
     "initializing": "Chat-Sitzung wird gestartet...",
+    "connectionSlow": "Die Verbindung dauert länger als erwartet",
+    "genericError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
     "listening": "Hört zu...",
     "speakNow": "Sprechen Sie jetzt, um Ihren Wortschatz zu üben",
     "wordsAvailable": "{{count}} Wörter zum Üben verfügbar",

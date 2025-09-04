@@ -259,6 +259,8 @@
     "connectionError": "Errore di connessione",
     "initializationError": "Impossibile avviare la sessione di chat",
     "initializing": "Avvio sessione di chat...",
+    "connectionSlow": "La connessione sta richiedendo più tempo del previsto",
+    "genericError": "Qualcosa è andato storto. Per favore riprova.",
     "listening": "In ascolto...",
     "speakNow": "Parla ora per praticare il tuo vocabolario",
     "wordsAvailable": "{{count}} parole disponibili per la pratica",

@@ -259,6 +259,8 @@
     "connectionError": "接続エラー",
     "initializationError": "チャットセッションの開始に失敗しました",
     "initializing": "チャットセッションを開始しています...",
+    "connectionSlow": "接続が予想より時間がかかっています",
+    "genericError": "何らかの問題が発生しました。もう一度お試しください。",
     "listening": "聞いています...",
     "speakNow": "語彙を練習するために今話してください",
     "wordsAvailable": "{{count}}語の練習用単語が利用可能です",
