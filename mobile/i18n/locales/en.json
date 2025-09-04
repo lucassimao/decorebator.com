@@ -239,6 +239,24 @@
       "listening": "Listening"
     }
   },
+  "wordSelection": {
+    "title": "Select Words for Chat",
+    "subtitle": "Choose up to {{count}} words to practice",
+    "selectAll": "Select All",
+    "clearAll": "Clear All",
+    "wordsSelected": "{{count}}/{{max}} words selected",
+    "continueToChat": "Continue to Chat",
+    "noWordsTitle": "No Words Selected",
+    "noWordsMessage": "Please select at least one word to continue.",
+    "maxWordsTitle": "Maximum Words Reached",
+    "maxWordsMessage": "You can only select up to {{count}} words for chat practice.",
+    "loading": "Loading words...",
+    "loadError": "Failed to load words. Please try again.",
+    "noWordsAvailableTitle": "No Words Available",
+    "noWordsAvailableMessage": "This wordlist doesn't have any words with definitions ready for chat practice.",
+    "navigationError": "Failed to start chat session. Please try again.",
+    "selected": " - selected"
+  },
   "realtimeChat": {
     "title": "Voice Chat",
     "connecting": "Connecting...",

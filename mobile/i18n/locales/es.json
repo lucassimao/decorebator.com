@@ -251,6 +251,24 @@
       "listening": "Escucha"
     }
   },
+  "wordSelection": {
+    "title": "Seleccionar Palabras para Chat",
+    "subtitle": "Elige hasta {{count}} palabras para practicar",
+    "selectAll": "Seleccionar Todo",
+    "clearAll": "Limpiar Todo",
+    "wordsSelected": "{{count}}/{{max}} palabras seleccionadas",
+    "continueToChat": "Continuar al Chat",
+    "noWordsTitle": "No hay Palabras Seleccionadas",
+    "noWordsMessage": "Por favor selecciona al menos una palabra para continuar.",
+    "maxWordsTitle": "Máximo de Palabras Alcanzado",
+    "maxWordsMessage": "Solo puedes seleccionar hasta {{count}} palabras para la práctica de chat.",
+    "loading": "Cargando palabras...",
+    "loadError": "Error al cargar las palabras. Por favor intenta de nuevo.",
+    "noWordsAvailableTitle": "No hay Palabras Disponibles",
+    "noWordsAvailableMessage": "Esta lista de palabras no tiene palabras con definiciones listas para la práctica de chat.",
+    "navigationError": "Error al iniciar la sesión de chat. Por favor intenta de nuevo.",
+    "selected": " - seleccionada"
+  },
   "realtimeChat": {
     "title": "Chat de Voz",
     "connecting": "Conectando...",

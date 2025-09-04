@@ -254,6 +254,24 @@
       "listening": "Hörverständnis"
     }
   },
+  "wordSelection": {
+    "title": "Wörter für Chat auswählen",
+    "subtitle": "Wähle bis zu {{count}} Wörter zum Üben",
+    "selectAll": "Alle auswählen",
+    "clearAll": "Alle löschen",
+    "wordsSelected": "{{count}}/{{max}} Wörter ausgewählt",
+    "continueToChat": "Weiter zum Chat",
+    "noWordsTitle": "Keine Wörter ausgewählt",
+    "noWordsMessage": "Bitte wähle mindestens ein Wort aus, um fortzufahren.",
+    "maxWordsTitle": "Maximum erreicht",
+    "maxWordsMessage": "Du kannst nur bis zu {{count}} Wörter für Chat-Übungen auswählen.",
+    "loading": "Lade Wörter...",
+    "loadError": "Fehler beim Laden der Wörter. Bitte versuche es erneut.",
+    "noWordsAvailableTitle": "Keine Wörter verfügbar",
+    "noWordsAvailableMessage": "Diese Wortliste hat keine Wörter mit Definitionen, die für Chat-Übungen bereit sind.",
+    "navigationError": "Chat-Session konnte nicht gestartet werden. Bitte versuche es erneut.",
+    "selected": " - ausgewählt"
+  },
   "realtimeChat": {
     "title": "Sprach-Chat",
     "connecting": "Verbindung wird hergestellt...",

@@ -309,14 +309,6 @@ export interface WordWithDefinitions {
 export interface ChatSessionData {
   token: string;
   expiresAt: number;
-  wordlist: {
-    id: number;
-    name: string;
-    languageCode: string;
-    languageName: string;
-    wordsCount: number;
-  };
-  selectedWords: WordWithDefinitions[];
   webrtcConfig: {
     baseUrl: string;
     model: string;

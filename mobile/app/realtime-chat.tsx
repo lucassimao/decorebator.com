@@ -20,7 +20,13 @@ import LottieView from "lottie-react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
-import { createChatSession, ChatSessionData } from "../api/wordlists";
+import {
+  createChatSession,
+  ChatSessionData,
+  getWords,
+  getWordDefinitions,
+} from "../api/wordlists";
+import { useQuery } from "@tanstack/react-query";
 import { useRealtimeChat, ConnectionState } from "@/hooks/useRealtimeChat";
 import {
   RealtimeEventHandler,
@@ -29,9 +35,10 @@ import {
 import { LoadingWithTimeout } from "@/components/LoadingWithTimeout";
 
 const RealtimeChatScreen: React.FC = () => {
-  const { wordlistId, wordlistName } = useLocalSearchParams<{
+  const { wordlistId, wordlistName, selectedWordIds } = useLocalSearchParams<{
     wordlistId: string;
     wordlistName: string;
+    selectedWordIds: string;
   }>();
   const router = useRouter();
   const { t } = useTranslation();
@@ -40,6 +47,7 @@ const RealtimeChatScreen: React.FC = () => {
 
   // State
   const [sessionData, setSessionData] = useState<ChatSessionData | null>(null);
+  const [selectedWords, setSelectedWords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasTimeout, setHasTimeout] = useState(false);
   const [initError, setInitError] = useState<Error | null>(null);
@@ -55,6 +63,77 @@ const RealtimeChatScreen: React.FC = () => {
   const transcriptScrollRef = useRef<ScrollView | null>(null);
   // Track whether assistant audio finished; we now finalize on user's next speech start
   const audioFinishedRef = useRef<boolean>(false);
+
+  // Parse selected word IDs
+  const selectedWordIdList = useMemo(() => {
+    if (!selectedWordIds) return [];
+    return selectedWordIds
+      .split(",")
+      .map((id) => parseInt(id.trim(), 10))
+      .filter((id) => !isNaN(id));
+  }, [selectedWordIds]);
+
+  // Redirect to word selection if no words are selected
+  useEffect(() => {
+    if (selectedWordIds === undefined && wordlistId) {
+      router.replace(
+        `/word-selection?wordlistId=${wordlistId}&wordlistName=${encodeURIComponent(wordlistName || "")}`,
+      );
+    }
+  }, [selectedWordIds, wordlistId, wordlistName, router]);
+
+  // Fetch selected words and their definitions
+  const { data: wordsData, isLoading: wordsLoading } = useQuery({
+    queryKey: ["selected-words", wordlistId, selectedWordIdList],
+    queryFn: async () => {
+      if (selectedWordIdList.length === 0) return [];
+
+      // Fetch all words from the wordlist
+      const allWords = await getWords(Number(wordlistId), true);
+
+      // Filter to only selected words
+      const selectedWordsData = allWords.filter((word) =>
+        selectedWordIdList.includes(word.id),
+      );
+
+      // Fetch definitions for each selected word
+      const wordsWithDefinitions = await Promise.all(
+        selectedWordsData.map(async (word) => {
+          try {
+            const definitions = await getWordDefinitions(
+              Number(wordlistId),
+              word.id,
+            );
+            return {
+              name: word.name,
+              definitions: definitions.map((def) => ({
+                meaning: def.meaning,
+                partOfSpeech: def.partOfSpeech || "",
+                examples: def.examples || [],
+              })),
+            };
+          } catch (error) {
+            console.error(
+              `Failed to fetch definitions for word ${word.id}:`,
+              error,
+            );
+            return null;
+          }
+        }),
+      );
+
+      return wordsWithDefinitions.filter((word) => word !== null);
+    },
+    enabled: !!wordlistId && selectedWordIdList.length > 0,
+    retry: 2,
+  });
+
+  // Update selected words when data is fetched
+  useEffect(() => {
+    if (wordsData) {
+      setSelectedWords(wordsData);
+    }
+  }, [wordsData]);
 
   // Event callbacks for handling OpenAI server events
   const eventCallbacks: EventCallbacks = useMemo(
@@ -190,13 +269,16 @@ const RealtimeChatScreen: React.FC = () => {
 
   // Initialize WebRTC chat using the hook
   const realtimeChat = useRealtimeChat(
-    sessionData
+    sessionData && selectedWords.length > 0
       ? {
           sessionData,
+          selectedWords,
+          wordlistName: wordlistName || "",
+          languageCode: "en", // TODO: Get this from wordlist data
           onConnectionStateChange: handleConnectionStateChange,
           onServerEvent: handleServerEvent,
         }
-      : ({} as any), // This will be properly set once sessionData is available
+      : ({} as any), // This will be properly set once sessionData and selectedWords are available
   );
 
   // Initialize session
@@ -206,6 +288,11 @@ const RealtimeChatScreen: React.FC = () => {
       setHasTimeout(false);
       setInitError(null);
       setConnectionState({ status: "disconnected" });
+
+      // Check if we have selected words
+      if (selectedWordIdList.length === 0) {
+        throw new Error("No words selected for chat practice");
+      }
 
       // Set timeout for session initialization (10 seconds)
       const timeoutId = setTimeout(() => {
@@ -229,7 +316,7 @@ const RealtimeChatScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [wordlistId]);
+  }, [wordlistId, selectedWordIdList]);
 
   // Initialize connection when sessionData is available
   useEffect(() => {
@@ -238,9 +325,11 @@ const RealtimeChatScreen: React.FC = () => {
     }
   }, [sessionData, realtimeChat.initializeConnection]);
 
-  // Initialize session on mount
+  // Initialize session on mount, but only after we have selected words
   useEffect(() => {
-    initializeSession();
+    if (selectedWordIdList.length > 0 && !wordsLoading) {
+      initializeSession();
+    }
 
     // Cleanup on unmount
     return () => {
@@ -249,7 +338,12 @@ const RealtimeChatScreen: React.FC = () => {
       }
       // no timers to clear in current turn-taking strategy
     };
-  }, [initializeSession, realtimeChat.cleanup]);
+  }, [
+    initializeSession,
+    selectedWordIdList,
+    wordsLoading,
+    realtimeChat.cleanup,
+  ]);
 
   // UI event handlers
   const handleToggleMute = useCallback(() => {
@@ -316,9 +410,11 @@ const RealtimeChatScreen: React.FC = () => {
     }
   };
 
-  const headerTitle = `${t("realtimeChat.title", "Voice Chat")} • ${sessionData?.wordlist.name || wordlistName}`;
+  const headerTitle = `${t("realtimeChat.title", "Voice Chat")} • ${wordlistName}`;
 
-  if (loading) {
+  const isInitialLoading = loading || wordsLoading;
+
+  if (isInitialLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <Stack.Screen options={{ title: headerTitle }} />
@@ -326,7 +422,7 @@ const RealtimeChatScreen: React.FC = () => {
           barStyle={theme.mode === "light" ? "dark-content" : "light-content"}
         />
         <LoadingWithTimeout
-          isLoading={loading}
+          isLoading={isInitialLoading}
           hasTimeout={hasTimeout}
           error={initError}
           loadingMessage={t(
@@ -383,14 +479,14 @@ const RealtimeChatScreen: React.FC = () => {
                 : t("realtimeChat.connecting", "Connecting...")}
           </Text>
           <Text style={styles.wordsCountText}>
-            {sessionData?.selectedWords
+            {selectedWords.length > 0
               ? t("realtimeChat.focusWords", {
-                  count: sessionData.selectedWords.length,
+                  count: selectedWords.length,
                   defaultValue:
                     "Practicing {{count}} focus words from your wordlist",
                 })
               : t("realtimeChat.wordsAvailable", {
-                  count: sessionData?.wordlist.wordsCount || 0,
+                  count: 0,
                   defaultValue: "{{count}} words available for practice",
                 })}
           </Text>

@@ -4,6 +4,7 @@ import {
   MediaStream,
   RTCPeerConnection,
   RTCSessionDescription,
+  RTCAudioSession,
 } from "react-native-webrtc";
 import { Platform } from "react-native";
 import { ChatSessionData } from "../api/wordlists";
@@ -13,14 +14,33 @@ export interface ConnectionState {
   error?: string;
 }
 
+export interface WordWithDefinitions {
+  name: string;
+  definitions: {
+    meaning: string;
+    partOfSpeech: string;
+    examples?: string[];
+  }[];
+}
+
 export interface RealtimeChatConfig {
   sessionData: ChatSessionData;
+  selectedWords: WordWithDefinitions[];
+  wordlistName: string;
+  languageCode: string;
   onConnectionStateChange: (state: ConnectionState) => void;
   onServerEvent: (event: any) => void;
 }
 
 export const useRealtimeChat = (config: RealtimeChatConfig) => {
-  const { sessionData, onConnectionStateChange, onServerEvent } = config;
+  const {
+    sessionData,
+    selectedWords,
+    wordlistName,
+    languageCode,
+    onConnectionStateChange,
+    onServerEvent,
+  } = config;
 
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const dataChannelRef = useRef<any>(null);
@@ -33,38 +53,17 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
   const configureAudioSession = useCallback(async () => {
     try {
       if (Platform.OS === "ios") {
-        // iOS audio session for VoIP with optimal volume
-        await mediaDevices.setAudioConfiguration({
-          category: "playAndRecord",
-          mode: "voiceChat", // Optimized for voice communication
-          options: ["defaultToSpeaker", "allowBluetooth", "allowAirPlay"],
-        });
+        // Use RTCAudioSession for iOS audio configuration
+        RTCAudioSession.audioSessionDidActivate();
         console.log("iOS audio session configured for optimal volume");
       } else if (Platform.OS === "android") {
-        // Android audio routing with COMMUNICATION mode for proper volume handling
-        await mediaDevices.setAudioConfiguration({
-          audioMode: "COMMUNICATION", // Critical for WebRTC volume on Android
-          useSpeakerPhone: true,
-          bluetoothScoOn: false, // Ensure main speaker is used
-        });
-        console.log("Android audio session configured for optimal volume");
-      }
-    } catch (error) {
-      console.warn(
-        "Audio configuration failed, using fallback settings:",
-        error,
-      );
-      // Fallback: Try basic speaker configuration
-      try {
-        await mediaDevices.setAudioConfiguration({
-          useSpeakerPhone: true,
-        });
-      } catch (fallbackError) {
-        console.warn(
-          "Fallback audio configuration also failed:",
-          fallbackError,
+        // Android audio configuration is handled via getUserMedia constraints
+        console.log(
+          "Android audio will be configured via getUserMedia constraints",
         );
       }
+    } catch (error) {
+      console.warn("Audio configuration failed:", error);
     }
   }, []);
 
@@ -124,6 +123,7 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
       });
 
       // Get user media with enhanced audio constraints for better volume
+      // Note: Audio constraints are supported at runtime but not fully typed in react-native-webrtc
       const stream = await mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -136,7 +136,7 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
           volume: 1.0, // Maximum input volume
         },
         video: false,
-      });
+      } as any);
 
       localStreamRef.current = stream;
 
@@ -241,12 +241,12 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
             //   type: "audio/pcm",
             //   rate: 24000
             // },
-            // voice: getVoiceForLanguage(sessionData.wordlist.languageCode),
+            // voice: getVoiceForLanguage(languageCode),
             speed: 1.0,
           },
         },
         // System instructions following documented format with specific words context
-        instructions: generateInstructionsWithWords(sessionData),
+        instructions: generateInstructionsWithWords(),
       },
     };
 
@@ -298,11 +298,9 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
   }, []);
 
   // Generate instructions with specific words context
-  const generateInstructionsWithWords = (
-    sessionData: ChatSessionData,
-  ): string => {
+  const generateInstructionsWithWords = (): string => {
     // Create a formatted list of words with their definitions
-    const wordsList = sessionData.selectedWords
+    const wordsList = selectedWords
       .map((word) => {
         const definitionsText = word.definitions
           .map((def) => {
@@ -317,7 +315,7 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
       })
       .join("\n\n");
 
-    return `You are helping the user practice ${sessionData.wordlist.languageCode} vocabulary from the wordlist "${sessionData.wordlist.name}". 
+    return `You are helping the user practice ${languageCode} vocabulary from the wordlist "${wordlistName}". 
 
 # Role & Objective
 You are a friendly vocabulary practice assistant helping users master new words through conversation.
@@ -341,14 +339,14 @@ Here are the specific words from their wordlist that you should help them practi
 ${wordsList}
 
 # Instructions
-- **PRIORITY**: Focus conversations around these ${sessionData.selectedWords.length} specific words above
+- **PRIORITY**: Focus conversations around these ${selectedWords.length} specific words above
 - Use these words naturally in context and encourage the user to use them
 - Ask questions about these words: "What does [word] mean?", "Can you use [word] in a sentence?"
 - Provide examples using these words
 - Help with pronunciation when users struggle with these words
 - Provide positive feedback when they use the words correctly
 - Keep conversations educational but fun
-- Speak in the target language: ${sessionData.wordlist.languageName}
+- Speak in the target language: ${languageCode}
 
 # Conversation Strategy
 - Start by introducing 1-2 of these words in your first response
@@ -357,7 +355,7 @@ ${wordsList}
 - Ask follow-up questions to reinforce understanding
 
 # Unclear Audio
-- Always respond in ${sessionData.wordlist.languageName} if the user is speaking it
+- Always respond in ${languageCode} if the user is speaking it
 - Only respond to clear audio or text
 - If audio is unclear/partial/noisy/silent, ask for clarification politely
 

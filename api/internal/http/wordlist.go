@@ -2,7 +2,6 @@ package http
 
 import (
 	"errors"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -22,11 +21,6 @@ type WordlistInput struct {
 	PronunciationSystem *model.PronunciationSystem `json:"pronunciationSystem,omitempty"`
 }
 
-// WordWithDefinitions represents a word with its definitions for chat context
-type WordWithDefinitions struct {
-	Name        string                `json:"name"`
-	Definitions []*model.Definition   `json:"definitions"`
-}
 
 type WordlistsRoutes struct {
 	wordlistService   *service.WordlistService
@@ -287,7 +281,7 @@ func (h *WordlistsRoutes) CreateChatSession(c *gin.Context) {
 	}
 	userID := c.GetInt64("userID")
 
-	// First check if the wordlist belongs to the user
+	// Validate that the wordlist belongs to the user
 	wordlist, err := h.wordlistService.GetWordlistByID(c.Request.Context(), wordlistID, userID)
 	if err != nil {
 		var notFoundErr common.NotFoundError
@@ -300,51 +294,6 @@ func (h *WordlistsRoutes) CreateChatSession(c *gin.Context) {
 		return
 	}
 
-	// Get words with definitions for chat context
-	words, err := h.wordService.GetWordByWordlist(c.Request.Context(), wordlistID, userID, true)
-	if err != nil {
-		common.Logger.Error("failed to get words for chat session", "wordlistId", wordlistID, "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get wordlist words"})
-		return
-	}
-
-	// Check if wordlist has words
-	if len(words) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot start chat session with empty wordlist"})
-		return
-	}
-
-	// Filter words that have definitions and select up to 10 random ones
-	var wordsWithDefinitions []WordWithDefinitions
-	for _, word := range words {
-		definitions, err := h.definitionService.GetDefinitionsByWordID(c.Request.Context(), word.ID, userID)
-		if err != nil {
-			continue // Skip words that can't get definitions
-		}
-		if len(definitions) > 0 {
-			wordsWithDefinitions = append(wordsWithDefinitions, WordWithDefinitions{
-				Name:        word.Name,
-				Definitions: definitions,
-			})
-		}
-	}
-
-	// If no words with definitions, return error
-	if len(wordsWithDefinitions) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No words with definitions found for chat practice"})
-		return
-	}
-
-	// Randomly select up to 10 words
-	const maxWordsForChat = 10
-	if len(wordsWithDefinitions) > maxWordsForChat {
-		// Shuffle and take first 10
-		rand.Shuffle(len(wordsWithDefinitions), func(i, j int) {
-			wordsWithDefinitions[i], wordsWithDefinitions[j] = wordsWithDefinitions[j], wordsWithDefinitions[i]
-		})
-		wordsWithDefinitions = wordsWithDefinitions[:maxWordsForChat]
-	}
-
 	// Create ephemeral token for OpenAI Realtime API
 	tokenResponse, err := openai.CreateEphemeralToken(wordlist.Name, wordlist.LanguageCode)
 	if err != nil {
@@ -354,7 +303,6 @@ func (h *WordlistsRoutes) CreateChatSession(c *gin.Context) {
 			"userId", userID,
 			"wordlistName", wordlist.Name,
 			"languageCode", wordlist.LanguageCode,
-			"wordsCount", len(wordsWithDefinitions),
 			"operation", "create_ephemeral_token",
 			"error", err)
 		
@@ -362,12 +310,10 @@ func (h *WordlistsRoutes) CreateChatSession(c *gin.Context) {
 		return
 	}
 
-	// Return the session information with selected words
+	// Return simplified session information
 	c.JSON(http.StatusOK, gin.H{
 		"token":     tokenResponse.Value,
 		"expiresAt": tokenResponse.ExpiresAt,
-		"wordlist":      wordlist,
-		"selectedWords": wordsWithDefinitions,
 		"webrtcConfig": gin.H{
 			"baseUrl": "https://api.openai.com/v1/realtime/calls",
 			"model":   "gpt-realtime",

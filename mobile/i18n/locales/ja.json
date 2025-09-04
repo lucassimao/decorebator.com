@@ -251,6 +251,24 @@
       "listening": "リスニング"
     }
   },
+  "wordSelection": {
+    "title": "チャット用の単語を選択",
+    "subtitle": "練習する単語を{{count}}個まで選択してください",
+    "selectAll": "全て選択",
+    "clearAll": "全て解除",
+    "wordsSelected": "{{count}}/{{max}}個の単語を選択中",
+    "continueToChat": "チャットに進む",
+    "noWordsTitle": "単語が選択されていません",
+    "noWordsMessage": "続行するには少なくとも1つの単語を選択してください。",
+    "maxWordsTitle": "最大単語数に達しました",
+    "maxWordsMessage": "チャット練習では{{count}}個までの単語しか選択できません。",
+    "loading": "単語を読み込み中...",
+    "loadError": "単語の読み込みに失敗しました。もう一度お試しください。",
+    "noWordsAvailableTitle": "利用可能な単語がありません",
+    "noWordsAvailableMessage": "この単語リストには、チャット練習用の定義が準備された単語がありません。",
+    "navigationError": "チャットセッションの開始に失敗しました。もう一度お試しください。",
+    "selected": " - 選択済み"
+  },
   "realtimeChat": {
     "title": "音声チャット",
     "connecting": "接続中...",

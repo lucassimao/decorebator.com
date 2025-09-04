@@ -149,7 +149,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     //   return;
     // }
     router.push(
-      `/realtime-chat?wordlistId=${item.id}&wordlistName=${item.name}`,
+      `/word-selection?wordlistId=${item.id}&wordlistName=${encodeURIComponent(item.name)}`,
     );
   };
 

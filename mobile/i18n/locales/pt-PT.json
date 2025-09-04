@@ -251,6 +251,24 @@
       "listening": "Audição"
     }
   },
+  "wordSelection": {
+    "title": "Seleccionar Palavras para Conversa",
+    "subtitle": "Escolha até {{count}} palavras para praticar",
+    "selectAll": "Seleccionar Todas",
+    "clearAll": "Limpar Todas",
+    "wordsSelected": "{{count}}/{{max}} palavras seleccionadas",
+    "continueToChat": "Continuar para a Conversa",
+    "noWordsTitle": "Nenhuma Palavra Seleccionada",
+    "noWordsMessage": "Por favor seleccione pelo menos uma palavra para continuar.",
+    "maxWordsTitle": "Máximo de Palavras Atingido",
+    "maxWordsMessage": "Pode seleccionar apenas até {{count}} palavras para a prática de conversa.",
+    "loading": "A carregar palavras...",
+    "loadError": "Falha ao carregar palavras. Tente novamente.",
+    "noWordsAvailableTitle": "Nenhuma Palavra Disponível",
+    "noWordsAvailableMessage": "Esta lista de palavras não tem palavras com definições prontas para a prática de conversa.",
+    "navigationError": "Falha ao iniciar a sessão de conversa. Tente novamente.",
+    "selected": " - seleccionada"
+  },
   "realtimeChat": {
     "title": "Conversa por Voz",
     "connecting": "A conectar...",
