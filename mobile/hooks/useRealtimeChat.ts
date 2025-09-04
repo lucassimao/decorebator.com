@@ -8,6 +8,8 @@ import {
 } from "react-native-webrtc";
 import { Platform } from "react-native";
 import { ChatSessionData } from "../api/wordlists";
+import { AudioManager, AudioQualityMonitor } from "../utils/audioManagers";
+import { getOptimalAudioConstraints, optimizeOpusCodec, logAudioConfiguration } from "../utils/audioOptimization";
 
 export interface ConnectionState {
   status: "disconnected" | "connecting" | "connected" | "error";
@@ -30,6 +32,14 @@ export interface RealtimeChatConfig {
   languageCode: string;
   onConnectionStateChange: (state: ConnectionState) => void;
   onServerEvent: (event: any) => void;
+  onAudioQualityUpdate?: (metrics: {
+    rtt: number;
+    packetLoss: number;
+    jitter: number;
+    audioLevel: number;
+    bitrate: number;
+    quality: 'poor' | 'fair' | 'good' | 'excellent';
+  }) => void;
 }
 
 export const useRealtimeChat = (config: RealtimeChatConfig) => {
@@ -40,6 +50,7 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
     languageCode,
     onConnectionStateChange,
     onServerEvent,
+    onAudioQualityUpdate,
   } = config;
 
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -49,21 +60,26 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
 
-  // Configure audio session for better volume
+  // Configure audio session for optimal WebRTC quality
   const configureAudioSession = useCallback(async () => {
     try {
-      if (Platform.OS === "ios") {
-        // Use RTCAudioSession for iOS audio configuration
-        RTCAudioSession.audioSessionDidActivate();
-        console.log("iOS audio session configured for optimal volume");
-      } else if (Platform.OS === "android") {
-        // Android audio configuration is handled via getUserMedia constraints
-        console.log(
-          "Android audio will be configured via getUserMedia constraints",
-        );
-      }
+      console.log("Configuring audio session for optimal WebRTC quality...");
+      
+      // Use enhanced audio manager for platform-specific optimization
+      await AudioManager.configureForWebRTC();
+      
+      console.log("Audio session configured successfully");
     } catch (error) {
-      console.warn("Audio configuration failed:", error);
+      console.error("Enhanced audio configuration failed:", error);
+      // Fallback to basic configuration
+      try {
+        if (Platform.OS === "ios") {
+          RTCAudioSession.audioSessionDidActivate();
+          console.log("iOS fallback audio session configured");
+        }
+      } catch (fallbackError) {
+        console.warn("Fallback audio configuration also failed:", fallbackError);
+      }
     }
   }, []);
 
@@ -92,6 +108,11 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
           case "connected":
             onConnectionStateChange({ status: "connected" });
             setIsConnected(true);
+            
+            // Start audio quality monitoring when connected
+            if (onAudioQualityUpdate) {
+              AudioQualityMonitor.startMonitoring(pc, onAudioQualityUpdate, 3000);
+            }
             break;
           case "connecting":
             onConnectionStateChange({ status: "connecting" });
@@ -104,6 +125,9 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
               error: "Connection lost",
             });
             setIsConnected(false);
+            
+            // Stop audio quality monitoring when disconnected
+            AudioQualityMonitor.stopMonitoring();
             break;
         }
       });
@@ -122,19 +146,12 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
         }
       });
 
-      // Get user media with enhanced audio constraints for better volume
-      // Note: Audio constraints are supported at runtime but not fully typed in react-native-webrtc
+      // Get user media with platform-optimized audio constraints
+      const audioConstraints = getOptimalAudioConstraints();
+      logAudioConfiguration(audioConstraints);
+      
       const stream = await mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 48000,
-          sampleSize: 16,
-          channelCount: 1,
-          latency: 0.01, // Low latency for real-time communication
-          volume: 1.0, // Maximum input volume
-        },
+        audio: audioConstraints,
         video: false,
       } as any);
 
@@ -176,14 +193,22 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
 
       // Create offer
       const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
+      
+      // Optimize SDP for Opus codec before setting local description
+      const optimizedSdp = optimizeOpusCodec(offer.sdp || "");
+      const optimizedOffer = new RTCSessionDescription({
+        type: "offer",
+        sdp: optimizedSdp,
+      });
+      
+      await pc.setLocalDescription(optimizedOffer);
 
-      // Send offer to OpenAI Realtime API
+      // Send optimized offer to OpenAI Realtime API
       const sdpResponse = await fetch(
         `${sessionData.webrtcConfig.baseUrl}?model=${sessionData.webrtcConfig.model}`,
         {
           method: "POST",
-          body: offer.sdp || "",
+          body: optimizedSdp,
           headers: {
             Authorization: `Bearer ${sessionData.token}`,
             "Content-Type": "application/sdp",
@@ -198,9 +223,12 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
       }
 
       const answerSdp = await sdpResponse.text();
+      
+      // Optimize answer SDP as well for consistency
+      const optimizedAnswerSdp = optimizeOpusCodec(answerSdp);
       const answer = new RTCSessionDescription({
         type: "answer",
-        sdp: answerSdp,
+        sdp: optimizedAnswerSdp,
       });
 
       await pc.setRemoteDescription(answer);
@@ -273,8 +301,11 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
     }
   }, [isMuted]);
 
-  // Cleanup function
+  // Cleanup function with audio session reset
   const cleanup = useCallback(() => {
+    // Stop audio quality monitoring
+    AudioQualityMonitor.stopMonitoring();
+
     // Stop local stream
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -292,6 +323,11 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
       dataChannelRef.current.close();
       dataChannelRef.current = null;
     }
+
+    // Reset audio session to default state
+    AudioManager.reset().catch((error) => {
+      console.warn("Failed to reset audio session:", error);
+    });
 
     setIsConnected(false);
     setIsMuted(false);
