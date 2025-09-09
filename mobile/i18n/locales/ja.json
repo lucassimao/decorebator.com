@@ -284,6 +284,9 @@
     "wordsAvailable": "{{count}}語の練習用単語が利用可能です",
     "focusWords": "Practicing {{count}} focus words from your wordlist",
     "transcript": "AI応答：",
+    "previousResponses": "以前の応答",
+    "hideTranscript": "文字起こしを非表示",
+    "showTranscript": "文字起こしを表示",
     "mute": "マイクをミュート",
     "unmute": "マイクのミュートを解除",
     "endCall": "通話を終了"

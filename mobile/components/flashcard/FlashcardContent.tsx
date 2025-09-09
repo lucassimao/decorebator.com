@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { Definition, Word } from "../../api/wordlists";
 import { useTheme } from "@/contexts/ThemeContext";
+import { assertMediaPlaybackMode } from "@/utils/AudioModeManager";
 
 interface FlashcardContentProps {
   currentWord: Word;
@@ -54,6 +55,11 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
       player.seekTo(0);
     }
   }, [didJustFinish, player]);
+
+  // Ensure media playback mode when entering flashcard view
+  useEffect(() => {
+    assertMediaPlaybackMode();
+  }, []);
 
   // Reset flip animation when word changes
   useEffect(() => {

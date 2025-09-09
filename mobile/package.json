@@ -10,7 +10,7 @@
     "test": "jest --watchAll",
     "prepare": "husky",
     "expo:update": "expo install --fix",
-    "android-emulator": "$ANDROID_SDK_ROOT/emulator/emulator -avd expo-emulator -gpu guest",
+    "android-emulator": "$ANDROID_SDK_ROOT/emulator/emulator -avd Galaxy_S25_Ultra_6_9_inch -gpu guest",
     "lint": "eslint .",
     "lint-fix": "eslint --fix .",
     "typecheck": "npx tsc --noEmit",

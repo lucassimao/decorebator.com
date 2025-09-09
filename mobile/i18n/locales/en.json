@@ -272,6 +272,9 @@
     "wordsAvailable": "{{count}} words available for practice",
     "focusWords": "Practicing {{count}} focus words from your wordlist",
     "transcript": "AI Response:",
+    "previousResponses": "Previous responses",
+    "hideTranscript": "Hide transcript",
+    "showTranscript": "Show transcript",
     "mute": "Mute microphone",
     "unmute": "Unmute microphone",
     "endCall": "End call"

@@ -287,6 +287,9 @@
     "wordsAvailable": "{{count}} Wörter zum Üben verfügbar",
     "focusWords": "Practicing {{count}} focus words from your wordlist",
     "transcript": "KI-Antwort:",
+    "previousResponses": "Frühere Antworten",
+    "hideTranscript": "Transkript ausblenden",
+    "showTranscript": "Transkript anzeigen",
     "mute": "Mikrofon stummschalten",
     "unmute": "Mikrofon aktivieren",
     "endCall": "Anruf beenden"

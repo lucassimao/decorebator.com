@@ -117,6 +117,10 @@ function RootLayoutNav() {
                     name="profileSettings"
                     options={{ headerShown: false }}
                   />
+                  <Stack.Screen
+                    name="word-selection"
+                    options={{ headerShown: false }}
+                  />
                 </Stack>
               </PostHogProvider>
             </UpgradePromptDialogProvider>

@@ -6,7 +6,7 @@ import {
   RTCSessionDescription,
   RTCAudioSession,
 } from "react-native-webrtc";
-import { Platform } from "react-native";
+import { Platform, NativeModules } from "react-native";
 import { ChatSessionData } from "../api/wordlists";
 
 export interface ConnectionState {
@@ -67,6 +67,98 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
     }
   }, []);
 
+  // Send event through data channel (defined early for dependency order)
+  const sendEvent = useCallback((event: any) => {
+    if (dataChannelRef.current?.readyState === "open") {
+      dataChannelRef.current.send(JSON.stringify(event));
+    } else {
+      console.warn("Data channel not open, cannot send event:", event);
+    }
+  }, []);
+
+  // Generate instructions with specific words context
+  const generateInstructionsWithWords = useCallback((): string => {
+    const wordsList = selectedWords
+      .map((word) => {
+        const definitionsText = word.definitions
+          .map((def) => {
+            const example =
+              def.examples && def.examples.length > 0
+                ? ` Example: "${def.examples[0]}"`
+                : "";
+            return `- ${def.meaning} (${def.partOfSpeech})${example}`;
+          })
+          .join("\n      ");
+        return `  • **${word.name}**:\n      ${definitionsText}`;
+      })
+      .join("\n\n");
+
+    return `You are helping the user practice ${languageCode} vocabulary from the wordlist "${wordlistName}". 
+
+# Role & Objective
+You are a friendly vocabulary practice assistant helping users master new words through conversation.
+
+# Personality & Tone
+Friendly, encouraging, and patient language learning assistant.
+
+# Tone
+Warm, supportive, conversational, never condescending.
+
+# Length
+2–3 sentences per turn.
+
+# Pacing
+Deliver your audio response at a natural pace. Speak clearly for language learners.
+
+# Focus Words for Practice
+Here are the specific words from their wordlist that you should help them practice:
+
+${wordsList}
+
+# Instructions
+- **PRIORITY**: Focus conversations around these ${selectedWords.length} specific words above
+- Use these words naturally in context and encourage the user to use them
+- Ask questions about these words: "What does [word] mean?", "Can you use [word] in a sentence?"
+- Provide examples using these words
+- Help with pronunciation when users struggle with these words
+- Provide positive feedback when they use the words correctly
+- Keep conversations educational but fun
+- Speak in the target language: ${languageCode}
+
+# Conversation Strategy
+- Start by introducing 1-2 of these words in your first response
+- Gradually introduce more words as the conversation progresses  
+- Repeat words they struggle with in different contexts
+- Ask follow-up questions to reinforce understanding
+
+# Unclear Audio
+- Always respond in ${languageCode} if the user is speaking it
+- Only respond to clear audio or text
+- If audio is unclear/partial/noisy/silent, ask for clarification politely
+
+# Variety
+- Do not repeat the same sentence twice. Vary your responses so it doesn't sound robotic.`;
+  }, [selectedWords, languageCode, wordlistName]);
+
+  // Send session update following OpenAI documentation format
+  const sendSessionUpdate = useCallback(() => {
+    const sessionUpdateEvent = {
+      type: "session.update",
+      session: {
+        type: "realtime",
+        model: "gpt-realtime",
+        output_modalities: ["audio"],
+        audio: {
+          input: { turn_detection: { type: "semantic_vad", create_response: true } },
+          output: { speed: 1.0 },
+        },
+        instructions: generateInstructionsWithWords(),
+      },
+    };
+
+    sendEvent(sessionUpdateEvent);
+  }, [sendEvent, generateInstructionsWithWords]);
+
   // Initialize WebRTC connection
   const initializeConnection = useCallback(async () => {
     try {
@@ -74,6 +166,16 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
 
       // Configure audio session first for better volume
       await configureAudioSession();
+
+      // On Android, prefer speakerphone during chat for clearer output
+      try {
+        if (Platform.OS === "android") {
+          const { WebRTCModule } = NativeModules as any;
+          WebRTCModule?.setSpeakerphoneOn?.(true);
+        }
+      } catch (e) {
+        console.warn("Failed to enable Android speakerphone:", e);
+      }
 
       // Create RTCPeerConnection with proper ICE servers
       const pc = new RTCPeerConnection({
@@ -216,51 +318,10 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
     onConnectionStateChange,
     onServerEvent,
     configureAudioSession,
+    sendSessionUpdate,
   ]);
 
-  // Send session update following OpenAI documentation format
-  // https://platform.openai.com/docs/api-reference/realtime-client-events
-  const sendSessionUpdate = useCallback(() => {
-    const sessionUpdateEvent = {
-      type: "session.update",
-      session: {
-        type: "realtime",
-        model: "gpt-realtime",
-        // Lock the output to audio (add "text" if you also want text)
-        output_modalities: ["audio"],
-        audio: {
-          input: {
-            // format: {
-            //   type: "audio/pcm",
-            //   rate: 24000
-            // },
-            turn_detection: { type: "semantic_vad", create_response: true },
-          },
-          output: {
-            // format: {
-            //   type: "audio/pcm",
-            //   rate: 24000
-            // },
-            // voice: getVoiceForLanguage(languageCode),
-            speed: 1.0,
-          },
-        },
-        // System instructions following documented format with specific words context
-        instructions: generateInstructionsWithWords(),
-      },
-    };
-
-    sendEvent(sessionUpdateEvent);
-  }, [sessionData]);
-
-  // Send event through data channel
-  const sendEvent = useCallback((event: any) => {
-    if (dataChannelRef.current?.readyState === "open") {
-      dataChannelRef.current.send(JSON.stringify(event));
-    } else {
-      console.warn("Data channel not open, cannot send event:", event);
-    }
-  }, []);
+  // (moved above)
 
   // Toggle mute functionality
   const toggleMute = useCallback(() => {
@@ -275,6 +336,27 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
 
   // Cleanup function
   const cleanup = useCallback(() => {
+    // On iOS, explicitly deactivate the WebRTC audio session so
+    // subsequent app audio (quiz/flashcards) uses the normal device route/volume
+    try {
+      if (Platform.OS === "ios") {
+        RTCAudioSession.audioSessionDidDeactivate();
+      }
+    } catch (e) {
+      console.warn("Failed to deactivate iOS audio session:", e);
+    }
+
+    // On Android, explicitly disable speakerphone and allow system to return
+    // to MODE_NORMAL for media playback routing
+    try {
+      if (Platform.OS === "android") {
+        const { WebRTCModule } = NativeModules as any;
+        WebRTCModule?.setSpeakerphoneOn?.(false);
+      }
+    } catch (e) {
+      console.warn("Failed to disable Android speakerphone:", e);
+    }
+
     // Stop local stream
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -297,71 +379,7 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
     setIsMuted(false);
   }, []);
 
-  // Generate instructions with specific words context
-  const generateInstructionsWithWords = (): string => {
-    // Create a formatted list of words with their definitions
-    const wordsList = selectedWords
-      .map((word) => {
-        const definitionsText = word.definitions
-          .map((def) => {
-            const example =
-              def.examples && def.examples.length > 0
-                ? ` Example: "${def.examples[0]}"`
-                : "";
-            return `- ${def.meaning} (${def.partOfSpeech})${example}`;
-          })
-          .join("\n      ");
-        return `  • **${word.name}**:\n      ${definitionsText}`;
-      })
-      .join("\n\n");
-
-    return `You are helping the user practice ${languageCode} vocabulary from the wordlist "${wordlistName}". 
-
-# Role & Objective
-You are a friendly vocabulary practice assistant helping users master new words through conversation.
-
-# Personality & Tone
-## Personality
-Friendly, encouraging, and patient language learning assistant.
-
-## Tone
-Warm, supportive, conversational, never condescending.
-
-## Length
-2–3 sentences per turn.
-
-## Pacing
-Deliver your audio response at a natural pace. Speak clearly for language learners.
-
-# Focus Words for Practice
-Here are the specific words from their wordlist that you should help them practice:
-
-${wordsList}
-
-# Instructions
-- **PRIORITY**: Focus conversations around these ${selectedWords.length} specific words above
-- Use these words naturally in context and encourage the user to use them
-- Ask questions about these words: "What does [word] mean?", "Can you use [word] in a sentence?"
-- Provide examples using these words
-- Help with pronunciation when users struggle with these words
-- Provide positive feedback when they use the words correctly
-- Keep conversations educational but fun
-- Speak in the target language: ${languageCode}
-
-# Conversation Strategy
-- Start by introducing 1-2 of these words in your first response
-- Gradually introduce more words as the conversation progresses  
-- Repeat words they struggle with in different contexts
-- Ask follow-up questions to reinforce understanding
-
-# Unclear Audio
-- Always respond in ${languageCode} if the user is speaking it
-- Only respond to clear audio or text
-- If audio is unclear/partial/noisy/silent, ask for clarification politely
-
-# Variety
-- Do not repeat the same sentence twice. Vary your responses so it doesn't sound robotic.`;
-  };
+  // (moved above)
 
   return {
     initializeConnection,

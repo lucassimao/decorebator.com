@@ -284,6 +284,9 @@
     "wordsAvailable": "{{count}} parole disponibili per la pratica",
     "focusWords": "Practicing {{count}} focus words from your wordlist",
     "transcript": "Risposta IA:",
+    "previousResponses": "Risposte precedenti",
+    "hideTranscript": "Nascondi trascrizione",
+    "showTranscript": "Mostra trascrizione",
     "mute": "Silenzia microfono",
     "unmute": "Attiva microfono",
     "endCall": "Termina chiamata"

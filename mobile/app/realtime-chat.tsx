@@ -281,6 +281,11 @@ const RealtimeChatScreen: React.FC = () => {
       : ({} as any), // This will be properly set once sessionData and selectedWords are available
   );
 
+  // Destructure to stabilize hook dependencies
+  const initializeConnection = realtimeChat.initializeConnection;
+  const cleanupConnection = realtimeChat.cleanup;
+  const toggleMute = realtimeChat.toggleMute;
+
   // Initialize session
   const initializeSession = useCallback(async () => {
     try {
@@ -320,10 +325,10 @@ const RealtimeChatScreen: React.FC = () => {
 
   // Initialize connection when sessionData is available
   useEffect(() => {
-    if (sessionData && realtimeChat.initializeConnection) {
-      realtimeChat.initializeConnection();
+    if (sessionData && initializeConnection) {
+      initializeConnection();
     }
-  }, [sessionData, realtimeChat.initializeConnection]);
+  }, [sessionData, initializeConnection]);
 
   // Initialize session on mount, but only after we have selected words
   useEffect(() => {
@@ -333,27 +338,22 @@ const RealtimeChatScreen: React.FC = () => {
 
     // Cleanup on unmount
     return () => {
-      if (realtimeChat.cleanup) {
-        realtimeChat.cleanup();
+      if (cleanupConnection) {
+        cleanupConnection();
       }
       // no timers to clear in current turn-taking strategy
     };
-  }, [
-    initializeSession,
-    selectedWordIdList,
-    wordsLoading,
-    realtimeChat.cleanup,
-  ]);
+  }, [initializeSession, selectedWordIdList, wordsLoading, cleanupConnection]);
 
   // UI event handlers
   const handleToggleMute = useCallback(() => {
-    realtimeChat.toggleMute?.();
-  }, [realtimeChat.toggleMute]);
+    toggleMute?.();
+  }, [toggleMute]);
 
   const handleEndCall = useCallback(() => {
-    realtimeChat.cleanup?.();
+    cleanupConnection?.();
     router.back();
-  }, [realtimeChat.cleanup, router]);
+  }, [cleanupConnection, router]);
 
   const handleRetry = useCallback(() => {
     setTranscript("");
@@ -397,20 +397,37 @@ const RealtimeChatScreen: React.FC = () => {
     }
   };
 
-  const getStatusColor = () => {
+  // Uniform status color/background using theme tokens
+  const getStatusColors = () => {
     switch (connectionState.status) {
       case "connected":
-        return theme.colors.success;
+        return {
+          fg: theme.colors.success,
+          bg: theme.colors.state.correctBackground,
+          border: theme.colors.border.light,
+        } as const;
       case "connecting":
-        return theme.colors.error;
+        return {
+          fg: theme.colors.semantic.info,
+          bg: theme.colors.state.infoBackground,
+          border: theme.colors.border.light,
+        } as const;
       case "error":
-        return theme.colors.error;
+        return {
+          fg: theme.colors.error,
+          bg: theme.colors.state.incorrectBackground,
+          border: theme.colors.border.light,
+        } as const;
       default:
-        return theme.colors.text.secondary;
+        return {
+          fg: theme.colors.text.secondary,
+          bg: theme.colors.background.elevated,
+          border: theme.colors.ui.divider,
+        } as const;
     }
   };
 
-  const headerTitle = `${t("realtimeChat.title", "Voice Chat")} • ${wordlistName}`;
+  const headerTitle = `${t("realtimeChat.title")} • ${wordlistName}`;
 
   const isInitialLoading = loading || wordsLoading;
 
@@ -425,14 +442,8 @@ const RealtimeChatScreen: React.FC = () => {
           isLoading={isInitialLoading}
           hasTimeout={hasTimeout}
           error={initError}
-          loadingMessage={t(
-            "realtimeChat.initializing",
-            "Starting chat session...",
-          )}
-          timeoutMessage={t(
-            "realtimeChat.connectionSlow",
-            "Connection is taking longer than expected",
-          )}
+          loadingMessage={t("realtimeChat.initializing")}
+          timeoutMessage={t("realtimeChat.connectionSlow")}
           onRetry={handleRetry}
           onGoBack={() => router.back()}
         />
@@ -449,14 +460,27 @@ const RealtimeChatScreen: React.FC = () => {
 
       {/* Main Chat Area */}
       <View style={styles.chatArea}>
-        <View style={styles.statusIndicator}>
-          <View
-            style={[styles.statusDot, { backgroundColor: getStatusColor() }]}
-          />
-          <Text style={[styles.statusText, { color: getStatusColor() }]}>
+        {(() => {
+          const status = getStatusColors();
+          return (
+            <View
+              style={[
+                styles.statusIndicator,
+                {
+                  backgroundColor: status.bg,
+                  borderColor: status.border,
+                },
+              ]}
+            >
+              <View
+                style={[styles.statusDot, { backgroundColor: status.fg }]}
+              />
+              <Text style={[styles.statusText, { color: status.fg }]}>
             {getStatusText()}
-          </Text>
-        </View>
+              </Text>
+            </View>
+          );
+        })()}
 
         <View style={styles.conversationIndicator}>
           <MaterialIcons
@@ -470,24 +494,18 @@ const RealtimeChatScreen: React.FC = () => {
           />
           <Text style={styles.conversationText}>
             {isSpeaking
-              ? t("realtimeChat.listening", "Listening...")
+              ? t("realtimeChat.listening")
               : realtimeChat.isConnected
-                ? t(
-                    "realtimeChat.speakNow",
-                    "Speak now to practice your vocabulary",
-                  )
-                : t("realtimeChat.connecting", "Connecting...")}
+                ? t("realtimeChat.speakNow")
+                : t("realtimeChat.connecting")}
           </Text>
           <Text style={styles.wordsCountText}>
             {selectedWords.length > 0
               ? t("realtimeChat.focusWords", {
                   count: selectedWords.length,
-                  defaultValue:
-                    "Practicing {{count}} focus words from your wordlist",
                 })
               : t("realtimeChat.wordsAvailable", {
                   count: 0,
-                  defaultValue: "{{count}} words available for practice",
                 })}
           </Text>
 
@@ -504,10 +522,7 @@ const RealtimeChatScreen: React.FC = () => {
                 {transcriptHistory.length > 0 && (
                   <View style={styles.transcriptHistoryContainer}>
                     <Text style={styles.transcriptHistoryLabel}>
-                      {t(
-                        "realtimeChat.previousResponses",
-                        "Previous responses",
-                      )}
+                      {t("realtimeChat.previousResponses")}
                     </Text>
                     {transcriptHistory
                       .slice() // clone
@@ -527,7 +542,7 @@ const RealtimeChatScreen: React.FC = () => {
                 {!!transcript && (
                   <View style={styles.transcriptContainer}>
                     <Text style={styles.transcriptLabel}>
-                      {t("realtimeChat.transcript", "AI Response:")}
+                      {t("realtimeChat.transcript")}
                     </Text>
                     <Text style={styles.transcriptText}>{transcript}</Text>
                   </View>
@@ -558,15 +573,10 @@ const RealtimeChatScreen: React.FC = () => {
               color={theme.colors.error}
             />
             <Text style={styles.errorText}>
-              {t(
-                "realtimeChat.genericError",
-                "Something went wrong. Please try again.",
-              )}
+              {t("realtimeChat.genericError")}
             </Text>
             <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-              <Text style={styles.retryButtonText}>
-                {t("common.retry", "Retry")}
-              </Text>
+              <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -583,8 +593,8 @@ const RealtimeChatScreen: React.FC = () => {
           accessibilityRole="button"
           accessibilityLabel={
             showTranscript
-              ? t("realtimeChat.hideTranscript", "Hide transcript")
-              : t("realtimeChat.showTranscript", "Show transcript")
+              ? t("realtimeChat.hideTranscript")
+              : t("realtimeChat.showTranscript")
           }
         >
           <MaterialIcons
@@ -628,7 +638,7 @@ const RealtimeChatScreen: React.FC = () => {
           style={[styles.endCallButton]}
           onPress={handleEndCall}
           accessibilityRole="button"
-          accessibilityLabel={t("realtimeChat.endCall", "End call")}
+          accessibilityLabel={t("realtimeChat.endCall")}
         >
           <MaterialIcons
             name="call-end"
@@ -676,6 +686,11 @@ const createStyles = (
       alignItems: "center",
       gap: responsive.spacing.elementSpacing / 2,
       marginBottom: responsive.spacing.vertical,
+      paddingHorizontal: responsive.getValueForSize(10, 12, 14, 16),
+      paddingVertical: responsive.getValueForSize(6, 8, 8, 10),
+      borderRadius: theme.borderRadius.full,
+      borderWidth: 1,
+      alignSelf: "center",
     },
     statusDot: {
       width: responsive.getValueForSize(8, 10, 12, 14),

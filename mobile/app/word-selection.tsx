@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import {
   View,
@@ -9,6 +9,7 @@ import {
   StatusBar,
   FlatList,
   Alert,
+  TextInput,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -18,7 +19,7 @@ import { LoadingWithTimeout } from "@/components/LoadingWithTimeout";
 import * as wordlistsApi from "@/api/wordlists";
 import { Word } from "@/api/wordlists";
 
-const MAX_SELECTED_WORDS = 10;
+const MAX_SELECTED_WORDS = 5;
 
 const WordSelectionScreen: React.FC = () => {
   const { wordlistId, wordlistName } = useLocalSearchParams<{
@@ -35,6 +36,7 @@ const WordSelectionScreen: React.FC = () => {
     new Set(),
   );
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch words from the wordlist
   const {
@@ -49,9 +51,18 @@ const WordSelectionScreen: React.FC = () => {
     retry: 2,
   });
 
-  // Filter words that have definitions (words without definitions can't be used for chat)
-  const wordsWithDefinitions =
-    words?.filter((word) => word.processingStatus === "completed") || [];
+  // Words available for selection (memoized)
+  const selectableWords = useMemo(
+    () => words?.filter((w) => w.processingStatus === "completed") || [],
+    [words],
+  );
+
+  // Search filter (memoized)
+  const filteredWords = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return selectableWords;
+    return selectableWords.filter((w) => w.name.toLowerCase().includes(q));
+  }, [selectableWords, searchQuery]);
 
   const handleWordToggle = useCallback(
     (wordId: number) => {
@@ -83,9 +94,9 @@ const WordSelectionScreen: React.FC = () => {
   );
 
   const handleSelectAll = useCallback(() => {
-    const wordsToSelect = wordsWithDefinitions.slice(0, MAX_SELECTED_WORDS);
+    const wordsToSelect = selectableWords.slice(0, MAX_SELECTED_WORDS);
     setSelectedWordIds(new Set(wordsToSelect.map((word) => word.id)));
-  }, [wordsWithDefinitions]);
+  }, [selectableWords]);
 
   const handleClearAll = useCallback(() => {
     setSelectedWordIds(new Set());
@@ -127,35 +138,21 @@ const WordSelectionScreen: React.FC = () => {
     }
   }, [selectedWordIds, wordlistId, wordlistName, router, t]);
 
-  const renderWordItem = ({ item }: { item: Word }) => {
-    const isSelected = selectedWordIds.has(item.id);
+  const renderWordItem = useCallback(
+    ({ item }: { item: Word }) => {
+      const isSelected = selectedWordIds.has(item.id);
 
-    return (
-      <TouchableOpacity
-        style={[styles.wordItem, isSelected && styles.wordItemSelected]}
-        onPress={() => handleWordToggle(item.id)}
-        activeOpacity={0.7}
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: isSelected }}
-        accessibilityLabel={`${item.name}${isSelected ? t("wordSelection.selected", " - selected") : ""}`}
-      >
-        <View style={styles.wordItemContent}>
-          <View style={styles.wordInfo}>
-            <Text
-              style={[styles.wordName, isSelected && styles.wordNameSelected]}
-            >
-              {item.name}
-            </Text>
-            {item.pronunciation && (
-              <Text
-                style={[
-                  styles.wordPronunciation,
-                  isSelected && styles.wordPronunciationSelected,
-                ]}
-              >
-                {item.pronunciation}
-              </Text>
-            )}
+      return (
+        <TouchableOpacity
+          style={[styles.wordCard, isSelected && styles.wordCardSelected]}
+          onPress={() => handleWordToggle(item.id)}
+          activeOpacity={0.8}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: isSelected }}
+          accessibilityLabel={`${item.name}${isSelected ? t("wordSelection.selected", " - selected") : ""}`}
+        >
+          <View style={styles.wordContent}>
+            <Text style={styles.wordTerm}>{item.name}</Text>
           </View>
           <View
             style={[styles.checkbox, isSelected && styles.checkboxSelected]}
@@ -163,15 +160,23 @@ const WordSelectionScreen: React.FC = () => {
             {isSelected && (
               <MaterialIcons
                 name="check"
-                size={responsive.getValueForSize(16, 18, 20, 22)}
+                size={responsive.getValueForSize(18, 20, 22, 24)}
                 color={theme.colors.text.inverse}
               />
             )}
           </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+        </TouchableOpacity>
+      );
+    },
+    [
+      selectedWordIds,
+      styles,
+      responsive,
+      theme.colors.text.inverse,
+      handleWordToggle,
+      t,
+    ],
+  );
 
   const headerTitle = t("wordSelection.title", "Select Words for Chat");
 
@@ -226,7 +231,7 @@ const WordSelectionScreen: React.FC = () => {
     );
   }
 
-  if (wordsWithDefinitions.length === 0) {
+  if (selectableWords.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
         <Stack.Screen options={{ title: headerTitle }} />
@@ -263,13 +268,32 @@ const WordSelectionScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen options={{ title: headerTitle }} />
+      <Stack.Screen options={{ headerShown: false }} />
       <StatusBar
         barStyle={theme.mode === "light" ? "dark-content" : "light-content"}
       />
 
       {/* Header */}
       <View style={styles.header}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.goBack", "Go back")}
+            style={styles.backButtonIcon}
+            hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+          >
+            <MaterialIcons
+              name="arrow-back"
+              size={responsive.getValueForSize(22, 24, 26, 28)}
+              color={theme.colors.text.primary}
+            />
+          </TouchableOpacity>
+          <Text style={styles.title}>
+            {t("wordSelection.title", "Select Words for Chat")}
+          </Text>
+          <View style={{ width: responsive.getValueForSize(22, 24, 26, 28) }} />
+        </View>
         <Text style={styles.subtitle}>
           {t(
             "wordSelection.subtitle",
@@ -277,39 +301,85 @@ const WordSelectionScreen: React.FC = () => {
             { count: MAX_SELECTED_WORDS },
           )}
         </Text>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleSelectAll}
-            disabled={wordsWithDefinitions.length === 0}
-          >
-            <Text style={styles.actionButtonText}>
-              {t("wordSelection.selectAll", "Select All")}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.clearButton]}
-            onPress={handleClearAll}
-            disabled={selectedWordIds.size === 0}
-          >
-            <Text style={[styles.actionButtonText, styles.clearButtonText]}>
-              {t("wordSelection.clearAll", "Clear All")}
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBox}>
+            <MaterialIcons
+              name="search"
+              size={20}
+              color={theme.colors.text.secondary}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t("wordSelection.search", "Search words")}
+              placeholderTextColor={theme.colors.text.tertiary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCorrect={false}
+              autoCapitalize="none"
+            />
+          </View>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={[styles.chip, styles.chipSpacing]}
+              onPress={handleSelectAll}
+              disabled={selectableWords.length === 0}
+            >
+              <Text style={styles.chipText}>
+                {t("wordSelection.selectAll", "Select All")}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.chip, styles.chipSecondary]}
+              onPress={handleClearAll}
+              disabled={selectedWordIds.size === 0}
+            >
+              <Text style={[styles.chipText, styles.chipSecondaryText]}>
+                {t("wordSelection.clearAll", "Clear All")}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
       {/* Words List */}
       <FlatList
-        data={wordsWithDefinitions}
+        data={filteredWords}
         renderItem={renderWordItem}
         keyExtractor={(item) => item.id.toString()}
         style={styles.wordsList}
         contentContainerStyle={styles.wordsListContent}
         showsVerticalScrollIndicator={false}
-        initialNumToRender={20}
-        maxToRenderPerBatch={20}
+        initialNumToRender={12}
+        maxToRenderPerBatch={12}
+        updateCellsBatchingPeriod={50}
         windowSize={10}
+        removeClippedSubviews
+        extraData={selectedWordIds}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <MaterialIcons
+              name="library-books"
+              size={48}
+              color={theme.colors.text.tertiary}
+            />
+            <Text style={styles.emptyText}>
+              {searchQuery
+                ? t("wordSelection.noMatch", "No words match your search")
+                : t(
+                    "wordSelection.noWordsAvailableTitle",
+                    "No Words Available",
+                  )}
+            </Text>
+            {!searchQuery && (
+              <Text style={styles.emptySubtext}>
+                {t(
+                  "wordSelection.noWordsAvailableMessage",
+                  "This wordlist doesn't have any words with definitions ready for chat practice.",
+                )}
+              </Text>
+            )}
+          </View>
+        }
       />
 
       {/* Bottom Controls */}
@@ -381,16 +451,96 @@ const createStyles = (
     },
     header: {
       paddingHorizontal: responsive.spacing.horizontal,
-      paddingVertical: responsive.spacing.vertical,
+      paddingTop: responsive.spacing.vertical,
+      paddingBottom: responsive.spacing.vertical,
       backgroundColor: theme.colors.background.surface,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.ui.divider,
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: responsive.spacing.elementSpacing / 2,
+    },
+    backButtonIcon: {
+      padding: 4,
+      borderRadius: theme.borderRadius.full,
     },
     subtitle: {
       fontSize: responsive.getScaledFont("body"),
       color: theme.colors.text.secondary,
       textAlign: "center",
       marginBottom: responsive.spacing.elementSpacing,
+    },
+    handle: {
+      alignSelf: "center",
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: theme.colors.border.light,
+      marginBottom: responsive.getValueForSize(8, 10, 12, 12),
+    },
+    title: {
+      fontSize: responsive.getScaledFont("headline"),
+      fontWeight: "700",
+      color: theme.colors.text.primary,
+      textAlign: "center",
+      marginBottom: responsive.spacing.elementSpacing / 2,
+    },
+    searchContainer: {
+      marginTop: responsive.spacing.elementSpacing / 2,
+      gap: responsive.spacing.elementSpacing / 2,
+      // Provide comfortable separation from chips and list
+      marginBottom: responsive.spacing.vertical,
+    },
+    searchBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.background.elevated,
+      borderRadius: theme.borderRadius.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.divider,
+      paddingHorizontal: 12,
+      paddingVertical: responsive.getValueForSize(10, 12, 12, 14),
+      // Tighter vertical separation to bring chips closer to the field
+      marginBottom: responsive.getValueForSize(8, 10, 12, 14),
+    },
+    searchInput: {
+      flex: 1,
+      marginLeft: 8,
+      color: theme.colors.text.primary,
+      fontSize: responsive.getScaledFont("body"),
+    },
+    headerActions: {
+      flexDirection: "row",
+      justifyContent: "flex-start",
+      // Horizontal separation between chips (expanded)
+      gap: responsive.spacing.elementSpacing,
+      // Provide additional breathing room below search on dense screens
+      marginTop: responsive.getValueForSize(6, 8, 10, 12),
+    },
+    chip: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: theme.borderRadius.full,
+      backgroundColor: theme.colors.primary,
+    },
+    chipText: {
+      color: theme.colors.text.inverse,
+      fontWeight: "600",
+      fontSize: responsive.getScaledFont("label"),
+    },
+    chipSecondary: {
+      backgroundColor: theme.colors.background.elevated,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.divider,
+    },
+    chipSecondaryText: {
+      color: theme.colors.text.secondary,
+    },
+    chipSpacing: {
+      marginRight: responsive.getValueForSize(12, 16, 20, 24),
     },
     actionButtons: {
       flexDirection: "row",
@@ -425,6 +575,52 @@ const createStyles = (
       paddingTop: responsive.spacing.vertical / 2,
       paddingBottom: responsive.spacing.vertical,
     },
+    emptyState: {
+      alignItems: "center",
+      paddingVertical: responsive.getValueForSize(40, 48, 56, 64),
+      gap: responsive.spacing.elementSpacing / 2,
+    },
+    emptyText: {
+      fontSize: responsive.getScaledFont("headline"),
+      color: theme.colors.text.secondary,
+      marginTop: responsive.spacing.elementSpacing / 2,
+      textAlign: "center",
+    },
+    emptySubtext: {
+      fontSize: responsive.getScaledFont("body"),
+      color: theme.colors.text.tertiary,
+      textAlign: "center",
+      marginTop: 4,
+      paddingHorizontal: responsive.spacing.horizontal,
+    },
+    wordCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginHorizontal: responsive.spacing.horizontal,
+      marginVertical: 6,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.divider,
+      shadowColor: theme.colors.text.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    wordCardSelected: {
+      borderColor: theme.colors.primary,
+      backgroundColor: theme.colors.background.elevated,
+    },
+    wordContent: { flex: 1 },
+    wordTerm: {
+      fontSize: responsive.getScaledFont("headline"),
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      // single-line display; no extra margin under term
+      marginBottom: 0,
+    },
     wordItem: {
       backgroundColor: theme.colors.background.surface,
       borderRadius: theme.borderRadius.md,
@@ -454,29 +650,25 @@ const createStyles = (
     wordNameSelected: {
       color: theme.colors.text.inverse,
     },
-    wordPronunciation: {
-      fontSize: responsive.getScaledFont("body"),
-      color: theme.colors.text.secondary,
-    },
-    wordPronunciationSelected: {
-      color: theme.colors.text.inverse,
-      opacity: 0.8,
-    },
+    // Removed pronunciation from word selection list for a cleaner UI
     checkbox: {
-      width: responsive.getValueForSize(24, 26, 28, 30),
-      height: responsive.getValueForSize(24, 26, 28, 30),
-      borderRadius: responsive.getValueForSize(12, 13, 14, 15),
+      width: responsive.getValueForSize(28, 32, 36, 40),
+      height: responsive.getValueForSize(28, 32, 36, 40),
+      borderRadius: theme.borderRadius.full,
       borderWidth: 2,
       borderColor: theme.colors.border.medium,
-      backgroundColor: theme.colors.background.default,
+      backgroundColor: theme.colors.background.elevated,
       justifyContent: "center",
       alignItems: "center",
     },
     checkboxSelected: {
-      backgroundColor: theme.colors.text.inverse,
-      borderColor: theme.colors.text.inverse,
+      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.primary,
     },
     bottomControls: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
       backgroundColor: theme.colors.background.surface,
       borderTopWidth: 1,
       borderTopColor: theme.colors.ui.divider,
@@ -484,31 +676,34 @@ const createStyles = (
       paddingVertical: responsive.spacing.vertical,
     },
     selectionIndicator: {
-      alignItems: "center",
-      marginBottom: responsive.spacing.elementSpacing,
+      backgroundColor: theme.colors.background.elevated,
+      borderRadius: theme.borderRadius.full,
+      paddingHorizontal: responsive.getValueForSize(12, 14, 16, 18),
+      paddingVertical: responsive.getValueForSize(6, 8, 8, 10),
+      borderWidth: 1,
+      borderColor: theme.colors.ui.divider,
     },
     selectionCount: {
-      fontSize: responsive.getScaledFont("body"),
+      fontSize: responsive.getScaledFont("label"),
       color: theme.colors.text.secondary,
-      fontWeight: "500",
+      fontWeight: "600",
     },
     continueButton: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
+      gap: 8,
       backgroundColor: theme.colors.primary,
-      paddingHorizontal: responsive.spacing.horizontal,
-      paddingVertical: responsive.spacing.vertical,
-      borderRadius: theme.borderRadius.lg,
-      ...theme.shadows.md,
-      gap: responsive.spacing.elementSpacing / 2,
+      paddingHorizontal: responsive.getValueForSize(14, 16, 18, 20),
+      paddingVertical: responsive.getValueForSize(10, 12, 12, 14),
+      borderRadius: theme.borderRadius.full,
+      ...theme.shadows.sm,
     },
     continueButtonDisabled: {
       backgroundColor: theme.colors.ui.disabled,
     },
     continueButtonText: {
-      fontSize: responsive.getScaledFont("headline"),
-      fontWeight: "600",
+      fontSize: responsive.getScaledFont("label"),
+      fontWeight: "700",
       color: theme.colors.text.inverse,
     },
     continueButtonTextDisabled: {
