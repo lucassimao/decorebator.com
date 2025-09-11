@@ -43,7 +43,35 @@ export function setPlaybackMode() {
       session?.setActive?.(false);
       session?.setCategory?.("AVAudioSessionCategoryPlayback");
       session?.setMode?.("AVAudioSessionModeDefault");
+      // Prefer Opus-friendly 48kHz and a slightly larger buffer for smooth playback
+      try {
+        session?.setPreferredSampleRate?.(48000);
+        session?.setPreferredIOBufferDuration?.(0.02); // ~20ms
+      } catch {}
       session?.setActive?.(true);
+      // Best-effort log of active audio session parameters
+      try {
+        const sr = session?.sampleRate ?? session?.preferredSampleRate;
+        const buf =
+          session?.ioBufferDuration ?? session?.preferredIOBufferDuration;
+        const cat = session?.category ?? "unknown";
+        const mode = session?.mode ?? "unknown";
+        const active = session?.isActive ?? true;
+
+        console.log(
+          `[Audio][iOS][Playback] active=${active} category=${cat} mode=${mode} sampleRate=${sr}Hz ioBuffer=${buf}s`,
+        );
+      } catch {}
+    } else if (Platform.OS === "android") {
+      const { WebRTCModule } = NativeModules as any;
+      // Prefer speakerphone for assistant playback phase
+      try {
+        WebRTCModule?.setSpeakerphoneOn?.(true);
+
+        console.log(`[Audio][Android][Playback] speakerphone=on`);
+      } catch (e) {
+        console.warn("Android setPlaybackMode failed:", e);
+      }
     }
   } catch {}
 }
@@ -62,7 +90,35 @@ export function setVoiceChatMode() {
         "AVAudioSessionCategoryOptionAllowBluetoothA2DP",
         "AVAudioSessionCategoryOptionDefaultToSpeaker",
       ]);
+      // Prefer 48kHz and a smaller buffer for interactive duplex voice
+      try {
+        session?.setPreferredSampleRate?.(48000);
+        session?.setPreferredIOBufferDuration?.(0.01); // ~10ms
+      } catch {}
       session?.setActive?.(true);
+      // Best-effort log of active audio session parameters
+      try {
+        const sr = session?.sampleRate ?? session?.preferredSampleRate;
+        const buf =
+          session?.ioBufferDuration ?? session?.preferredIOBufferDuration;
+        const cat = session?.category ?? "unknown";
+        const mode = session?.mode ?? "unknown";
+        const active = session?.isActive ?? true;
+
+        console.log(
+          `[Audio][iOS][Voice] active=${active} category=${cat} mode=${mode} sampleRate=${sr}Hz ioBuffer=${buf}s`,
+        );
+      } catch {}
+    } else if (Platform.OS === "android") {
+      const { WebRTCModule } = NativeModules as any;
+      // Use speakerphone during interactive voice (common UX in chat)
+      try {
+        WebRTCModule?.setSpeakerphoneOn?.(true);
+
+        console.log(`[Audio][Android][Voice] speakerphone=on`);
+      } catch (e) {
+        console.warn("Android setVoiceChatMode failed:", e);
+      }
     }
   } catch {}
 }

@@ -341,23 +341,23 @@ export async function getDefinitionsForWords(
   wordlistId: number,
   wordIds: number[],
 ): Promise<WordWithDefinitions[]> {
-  if (!wordIds || wordIds.length === 0) return []
+  if (!wordIds || wordIds.length === 0) return [];
 
-  const idsParam = wordIds.join(",")
+  const idsParam = wordIds.join(",");
   const endpoint =
     process.env.EXPO_PUBLIC_API_URL +
-    `/wordlists/${wordlistId}/words/definitions?ids=${idsParam}`
+    `/wordlists/${wordlistId}/words/definitions?ids=${idsParam}`;
 
-  const resp = await callAPI<WordDefinitionsBatchResponse[]>("GET", endpoint)
+  const resp = await callAPI<WordDefinitionsBatchResponse[]>("GET", endpoint);
 
   // Map server definition model to chat-friendly minimal shape
-  return resp.map(item => ({
+  return resp.map((item) => ({
     name: item.name,
-    definitions: (item.definitions || []).map(def => ({
+    definitions: (item.definitions || []).map((def) => ({
       id: def.id,
       meaning: def.meaning,
       partOfSpeech: def.partOfSpeech || "",
       examples: def.examples || [],
     })),
-  }))
+  }));
 }

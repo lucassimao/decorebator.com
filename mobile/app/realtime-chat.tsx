@@ -88,11 +88,7 @@ const RealtimeChatScreen: React.FC = () => {
   }, [selectedWordIdList]);
 
   const { data: wordsData, isLoading: wordsLoading } = useQuery({
-    queryKey: [
-      "selected-words-batch",
-      wordlistId,
-      uniqueSelectedIds.join("-"),
-    ],
+    queryKey: ["selected-words-batch", wordlistId, uniqueSelectedIds.join("-")],
     queryFn: async () => {
       if (uniqueSelectedIds.length === 0) return [];
       const results = await getDefinitionsForWords(

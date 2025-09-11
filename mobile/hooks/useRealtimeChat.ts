@@ -3,10 +3,10 @@ import {
   mediaDevices,
   MediaStream,
   RTCPeerConnection,
-  RTCSessionDescription,
   RTCAudioSession,
 } from "react-native-webrtc";
 import { Platform, NativeModules } from "react-native";
+import InCallManager from "react-native-incall-manager";
 import { ChatSessionData } from "../api/wordlists";
 
 export interface ConnectionState {
@@ -167,6 +167,15 @@ ${wordsList}
           case "connected":
             onConnectionStateChange({ status: "connected" });
             setIsConnected(true);
+            // Engage in-call audio behavior (both iOS and Android)
+            try {
+              InCallManager.start({ media: "audio" });
+              InCallManager.setForceSpeakerphoneOn(true);
+
+              console.log("[InCallManager] start + speakerphone ON");
+            } catch (e) {
+              console.warn("Failed to start InCallManager:", e);
+            }
             break;
           case "connecting":
             onConnectionStateChange({ status: "connecting" });
@@ -179,17 +188,22 @@ ${wordsList}
               error: "Connection lost",
             });
             setIsConnected(false);
+            try {
+              InCallManager.stop();
+
+              console.log("[InCallManager] stop (disconnected)");
+            } catch {}
             break;
         }
       });
 
       const stream = await mediaDevices.getUserMedia({
-           audio: true,
+        audio: true,
       });
 
       localStreamRef.current = stream;
 
-     pc.addTrack(stream.getTracks()[0]);
+      pc.addTrack(stream.getTracks()[0]);
 
       // Listen for remote tracks (audio)
       pc.addEventListener("track", (event: any) => {
@@ -243,7 +257,10 @@ ${wordsList}
         const tryResolve = () => {
           if (!resolved) {
             resolved = true;
-            pc.removeEventListener("icegatheringstatechange", onGatheringChange);
+            pc.removeEventListener(
+              "icegatheringstatechange",
+              onGatheringChange,
+            );
             pc.removeEventListener("icecandidate", onIceCandidate);
             resolve();
           }
@@ -284,8 +301,8 @@ ${wordsList}
       }
 
       const answer = {
-          type: "answer",
-          sdp: await sdpResponse.text(),
+        type: "answer",
+        sdp: await sdpResponse.text(),
       };
 
       await pc.setRemoteDescription(answer);
@@ -302,15 +319,28 @@ ${wordsList}
   const toggleMute = useCallback(() => {
     if (localStreamRef.current) {
       const audioTracks = localStreamRef.current.getAudioTracks();
+      const nextMuted = !isMuted;
       audioTracks.forEach((track) => {
-        track.enabled = isMuted; // Toggle current state
+        track.enabled = !nextMuted; // enabled=false means muted
       });
-      setIsMuted(!isMuted);
+      // Mirror mute with InCallManager on both platforms
+      try {
+        InCallManager.setMicrophoneMute(nextMuted);
+      } catch {}
+      setIsMuted(nextMuted);
     }
   }, [isMuted]);
 
   // Cleanup function
   const cleanup = useCallback(() => {
+    // First, stop in-call manager (both platforms) to release audio focus/routes
+    try {
+      InCallManager.stop();
+      InCallManager.setMicrophoneMute(false);
+      // eslint-disable-next-line no-console
+      console.log("[InCallManager] stop (cleanup)");
+    } catch {}
+
     // On iOS, explicitly deactivate the WebRTC audio session so
     // subsequent app audio (quiz/flashcards) uses the normal device route/volume
     try {
@@ -343,6 +373,8 @@ ${wordsList}
       localStreamRef.current.getTracks().forEach((track) => track.stop());
       localStreamRef.current = null;
     }
+    // Release remote stream ref
+    remoteStreamRef.current = null;
 
     // Close peer connection
     if (peerConnectionRef.current) {
