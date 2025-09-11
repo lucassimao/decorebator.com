@@ -184,20 +184,12 @@ ${wordsList}
       });
 
       const stream = await mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        } as any,
-        video: false,
+           audio: true,
       });
 
       localStreamRef.current = stream;
 
-      // Add local audio track
-      stream.getTracks().forEach((track) => {
-        pc.addTrack(track, stream);
-      });
+     pc.addTrack(stream.getTracks()[0]);
 
       // Listen for remote tracks (audio)
       pc.addEventListener("track", (event: any) => {
@@ -242,12 +234,7 @@ ${wordsList}
       });
 
       // Create offer
-      const offer = await pc.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: false,
-        voiceActivityDetection: true,
-      });
-
+      const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
       // Wait for ICE gathering to complete (non-trickle) before sending SDP
@@ -282,7 +269,7 @@ ${wordsList}
         `${sessionData.webrtcConfig.baseUrl}?model=${sessionData.webrtcConfig.model}`,
         {
           method: "POST",
-          body: (pc.localDescription && pc.localDescription.sdp) || offer.sdp || "",
+          body: offer.sdp,
           headers: {
             Authorization: `Bearer ${sessionData.token}`,
             "Content-Type": "application/sdp",
@@ -296,11 +283,10 @@ ${wordsList}
         );
       }
 
-      const answerSdp = await sdpResponse.text();
-      const answer = new RTCSessionDescription({
-        type: "answer",
-        sdp: answerSdp,
-      });
+      const answer = {
+          type: "answer",
+          sdp: await sdpResponse.text(),
+      };
 
       await pc.setRemoteDescription(answer);
     } catch (error) {
