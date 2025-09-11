@@ -44,7 +44,7 @@ type EphemeralTokenResponse struct {
 // CreateEphemeralToken creates an ephemeral API key for WebRTC connection to OpenAI Realtime API
 func CreateEphemeralToken(wordlistName string, languageCode string) (*EphemeralTokenResponse, error) {
 	logger := common.Logger.With("func", "CreateEphemeralToken", "package", "openai", "wordlist", wordlistName, "language", languageCode)
-	
+
 	logger.Debug("creating ephemeral token for realtime session")
 
 	// Select appropriate voice based on language
@@ -109,7 +109,7 @@ func CreateEphemeralToken(wordlistName string, languageCode string) (*EphemeralT
 	}
 
 	logger.Debug("ephemeral token created successfully")
-	
+
 	return &tokenResponse, nil
 }
 
@@ -118,7 +118,7 @@ func selectVoiceForLanguage(languageCode string) string {
 	// Voice mapping updated for GA API - only supported voices
 	voiceMap := map[string]string{
 		"en": "alloy",   // English
-		"es": "coral",   // Spanish (nova no longer supported) 
+		"es": "coral",   // Spanish (nova no longer supported)
 		"fr": "shimmer", // French
 		"de": "echo",    // German
 		"it": "ballad",  // Italian (fable no longer supported)

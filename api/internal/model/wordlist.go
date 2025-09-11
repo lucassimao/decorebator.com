@@ -116,7 +116,7 @@ func (w Wordlist) MarshalJSON() ([]byte, error) {
 func getLanguageName(languageCode string) string {
 	languageMap := map[string]string{
 		"en": "English",
-		"es": "Spanish", 
+		"es": "Spanish",
 		"fr": "French",
 		"de": "German",
 		"it": "Italian",
