@@ -22,15 +22,12 @@ type WordlistInput struct {
 	PronunciationSystem *model.PronunciationSystem `json:"pronunciationSystem,omitempty"`
 }
 
-<<<<<<< HEAD
 // WordWithDefinitions represents a word with its definitions for chat context
 type WordWithDefinitions struct {
 	Name        string                `json:"name"`
 	Definitions []*model.Definition   `json:"definitions"`
 }
 
-=======
->>>>>>> 4ae71bf (new endpoint)
 type WordlistsRoutes struct {
 	wordlistService   *service.WordlistService
 	wordService       *service.WordService
