@@ -21,7 +21,6 @@ type WordlistInput struct {
 	PronunciationSystem *model.PronunciationSystem `json:"pronunciationSystem,omitempty"`
 }
 
-
 type WordlistsRoutes struct {
 	wordlistService   *service.WordlistService
 	wordService       *service.WordService
@@ -298,14 +297,14 @@ func (h *WordlistsRoutes) CreateChatSession(c *gin.Context) {
 	tokenResponse, err := openai.CreateEphemeralToken(wordlist.Name, wordlist.LanguageCode)
 	if err != nil {
 		// Enhanced logging with context for better debugging (automatically sent to Sentry in production)
-		common.Logger.Error("failed to create ephemeral token", 
-			"wordlistId", wordlistID, 
+		common.Logger.Error("failed to create ephemeral token",
+			"wordlistId", wordlistID,
 			"userId", userID,
 			"wordlistName", wordlist.Name,
 			"languageCode", wordlist.LanguageCode,
 			"operation", "create_ephemeral_token",
 			"error", err)
-		
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create chat session"})
 		return
 	}

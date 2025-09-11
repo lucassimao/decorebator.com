@@ -357,6 +357,72 @@ func NewDefinitionRepository(db *pgxpool.Pool) *DefinitionRepository {
 	return &DefinitionRepository{Db: db}
 }
 
+// WordDefinitionsResponse is used by the batch endpoint to return grouped data
+type WordDefinitionsResponse struct {
+	WordID      int64        `json:"wordId"`
+	Name        string       `json:"name"` // token/name of the word
+	Definitions []Definition `json:"definitions"`
+}
+
+// GetDefinitionsByWordIDs fetches definitions for multiple word IDs, scoped to user and wordlist
+func (repository *DefinitionRepository) GetDefinitionsByWordIDs(ctx context.Context, wordlistID, userID int64, wordIDs []int64) ([]WordDefinitionsResponse, error) {
+	if len(wordIDs) == 0 {
+		return []WordDefinitionsResponse{}, nil
+	}
+
+	query := `
+        SELECT 
+            w.id as word_id,
+            d.token as name,
+            d.id, d.token, d.language, d.part_of_speech, d.part_of_speech_normalized, d.is_verb_type, d.meaning, d.examples, d.inflections,
+            d.source, d.source_id, d.sounds, d.phonetic_notations, d.created_at, d.updated_at
+        FROM words w
+        JOIN word_definitions wd ON wd.word_id = w.id
+        JOIN definitions d ON d.id = wd.definition_id
+        WHERE w.wordlist_id = $1 AND w.user_id = $2 AND w.id = ANY($3)
+        ORDER BY w.id ASC, d.id ASC`
+
+	rows, err := repository.Db.Query(ctx, query, wordlistID, userID, wordIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Group rows by word_id
+	grouped := make(map[int64]*WordDefinitionsResponse)
+	order := make([]int64, 0)
+
+	for rows.Next() {
+		var wordID int64
+		var name string
+		var def Definition
+		if scanErr := rows.Scan(
+			&wordID, &name,
+			&def.ID, &def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning,
+			&def.Examples, &def.Inflections, &def.Source, &def.SourceID, &def.Sounds, &def.PhoneticNotations,
+			&def.CreatedAt, &def.UpdatedAt,
+		); scanErr != nil {
+			return nil, scanErr
+		}
+
+		if _, exists := grouped[wordID]; !exists {
+			grouped[wordID] = &WordDefinitionsResponse{WordID: wordID, Name: name, Definitions: make([]Definition, 0)}
+			order = append(order, wordID)
+		}
+		grouped[wordID].Definitions = append(grouped[wordID].Definitions, def)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Preserve ascending order by first appearance
+	results := make([]WordDefinitionsResponse, 0, len(grouped))
+	for _, id := range order {
+		results = append(results, *grouped[id])
+	}
+	return results, nil
+}
+
 // DefinitionForPublicQuiz contains denormalized fields needed to build quiz questions
 type DefinitionForPublicQuiz struct {
 	ID               int64

@@ -80,6 +80,11 @@ func (s *DefinitionService) GetDefinitionsByWordID(ctx context.Context, wordID, 
 	return s.definitionRepository.GetDefinitionsByWordID(ctx, wordID, userID)
 }
 
+// GetDefinitionsByWordIDs returns a denormalized response including wordID, token(name) and its definitions
+func (s *DefinitionService) GetDefinitionsByWordIDs(ctx context.Context, wordlistID, userID int64, wordIDs []int64) ([]repo.WordDefinitionsResponse, error) {
+	return s.definitionRepository.GetDefinitionsByWordIDs(ctx, wordlistID, userID, wordIDs)
+}
+
 func (s *DefinitionService) CreateExampleAudio(ctx context.Context, definitionID int64, exampleText, audioURL, inflectionType string) error {
 	return s.definitionRepository.CreateExampleAudio(ctx, definitionID, exampleText, audioURL, inflectionType)
 }

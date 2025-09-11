@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/service"
@@ -127,4 +128,52 @@ func (h *WordRoutes) GetDefinitions(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, definitions)
+}
+
+// GetDefinitionsBatch returns definitions for multiple word IDs in one request
+// GET /wordlists/:wordlistId/words/definitions?ids=1,2,3
+func (h *WordRoutes) GetDefinitionsBatch(c *gin.Context) {
+	userID := c.GetInt64("userID")
+	wordlistID, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
+
+	idsParam := c.Query("ids")
+	if idsParam == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing ids query parameter"})
+		return
+	}
+
+	// Parse and validate IDs
+	parts := strings.Split(idsParam, ",")
+	wordIDs := make([]int64, 0, len(parts))
+	for _, p := range parts {
+		trimmed := strings.TrimSpace(p)
+		if trimmed == "" {
+			continue
+		}
+		id, convErr := strconv.ParseInt(trimmed, 10, 64)
+		if convErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid id in ids parameter"})
+			return
+		}
+		wordIDs = append(wordIDs, id)
+	}
+
+	if len(wordIDs) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No valid ids provided"})
+		return
+	}
+
+	// Fetch batched definitions and names (token) scoped by wordlist and user
+	results, err := h.definitionService.GetDefinitionsByWordIDs(c.Request.Context(), wordlistID, userID, wordIDs)
+	if err != nil {
+		common.Logger.Error("failed to get batched definitions", "error", err, "userID", userID, "wordlistID", wordlistID, "ids", idsParam)
+		c.String(http.StatusInternalServerError, "Could not get definitions")
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, results)
 }

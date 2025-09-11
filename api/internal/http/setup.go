@@ -98,6 +98,8 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.DELETE("/wordlists/:wordlistId", WordlistRoutes.Delete)
 		authenticatedRoutes.GET("/wordlists/:wordlistId/processing-status", WordlistRoutes.GetProcessingStatus)
 		authenticatedRoutes.GET("/wordlists/:wordlistId/words", WordRoutes.GetAll)
+		// Batched definitions lookup for multiple word IDs
+		authenticatedRoutes.GET("/wordlists/:wordlistId/words/definitions", WordRoutes.GetDefinitionsBatch)
 		authenticatedRoutes.DELETE("/wordlists/:wordlistId/words/:wordId", WordRoutes.Delete)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId/words/:wordId", WordRoutes.Update)
 		authenticatedRoutes.GET("/wordlists/:wordlistId/words/:wordId/definitions", WordRoutes.GetDefinitions)
