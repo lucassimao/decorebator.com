@@ -45,27 +45,10 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const dataChannelRef = useRef<any>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
 
   const [isMuted, setIsMuted] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-
-  // Configure audio session for better volume
-  const configureAudioSession = useCallback(async () => {
-    try {
-      if (Platform.OS === "ios") {
-        // Use RTCAudioSession for iOS audio configuration
-        RTCAudioSession.audioSessionDidActivate();
-        console.log("iOS audio session configured for optimal volume");
-      } else if (Platform.OS === "android") {
-        // Android audio configuration is handled via getUserMedia constraints
-        console.log(
-          "Android audio will be configured via getUserMedia constraints",
-        );
-      }
-    } catch (error) {
-      console.warn("Audio configuration failed:", error);
-    }
-  }, []);
 
   // Send event through data channel (defined early for dependency order)
   const sendEvent = useCallback((event: any) => {
@@ -149,7 +132,9 @@ ${wordsList}
         model: "gpt-realtime",
         output_modalities: ["audio"],
         audio: {
-          input: { turn_detection: { type: "semantic_vad", create_response: true } },
+          input: {
+            turn_detection: { type: "semantic_vad", create_response: true },
+          },
           output: { speed: 1.0 },
         },
         instructions: generateInstructionsWithWords(),
@@ -164,25 +149,13 @@ ${wordsList}
     try {
       onConnectionStateChange({ status: "connecting" });
 
-      // Configure audio session first for better volume
-      await configureAudioSession();
-
-      // On Android, prefer speakerphone during chat for clearer output
-      try {
-        if (Platform.OS === "android") {
-          const { WebRTCModule } = NativeModules as any;
-          WebRTCModule?.setSpeakerphoneOn?.(true);
-        }
-      } catch (e) {
-        console.warn("Failed to enable Android speakerphone:", e);
-      }
-
-      // Create RTCPeerConnection with proper ICE servers
+      // Create RTCPeerConnection with proper ICE servers (merge TURN if provided)
+      const mergedIceServers = [
+        { urls: "stun:stun.l.google.com:19302" },
+        ...(sessionData.webrtcConfig.iceServers || []),
+      ];
       const pc = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-        ],
+        iceServers: mergedIceServers,
       });
 
       peerConnectionRef.current = pc;
@@ -210,41 +183,33 @@ ${wordsList}
         }
       });
 
-      // Handle remote audio tracks with volume optimization
-      pc.addEventListener("track", (event) => {
-        if (event.track) {
-          console.log("Received remote track:", event.track.kind);
-
-          // Optimize volume for remote audio tracks
-          if (event.track.kind === "audio" && event.track._setVolume) {
-            // Set volume to maximum (range 0-10, not 0-1)
-            event.track._setVolume(8); // Use 8 instead of 10 to avoid distortion
-            console.log("Remote audio volume optimized");
-          }
-        }
-      });
-
-      // Get user media with enhanced audio constraints for better volume
-      // Note: Audio constraints are supported at runtime but not fully typed in react-native-webrtc
       const stream = await mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 48000,
-          sampleSize: 16,
-          channelCount: 1,
-          latency: 0.01, // Low latency for real-time communication
-          volume: 1.0, // Maximum input volume
-        },
+        } as any,
         video: false,
-      } as any);
+      });
 
       localStreamRef.current = stream;
 
       // Add local audio track
       stream.getTracks().forEach((track) => {
         pc.addTrack(track, stream);
+      });
+
+      // Listen for remote tracks (audio)
+      pc.addEventListener("track", (event: any) => {
+        try {
+          const [remoteStream] = event.streams || [];
+          if (remoteStream && !remoteStreamRef.current) {
+            remoteStreamRef.current = remoteStream;
+            console.log("Remote audio stream attached");
+          }
+        } catch (e) {
+          console.warn("Failed to attach remote track:", e);
+        }
       });
 
       // Create data channel for events
@@ -277,15 +242,47 @@ ${wordsList}
       });
 
       // Create offer
-      const offer = await pc.createOffer();
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: false,
+        voiceActivityDetection: true,
+      });
+
       await pc.setLocalDescription(offer);
+
+      // Wait for ICE gathering to complete (non-trickle) before sending SDP
+      await new Promise<void>((resolve) => {
+        let resolved = false;
+        const tryResolve = () => {
+          if (!resolved) {
+            resolved = true;
+            pc.removeEventListener("icegatheringstatechange", onGatheringChange);
+            pc.removeEventListener("icecandidate", onIceCandidate);
+            resolve();
+          }
+        };
+        const onGatheringChange = () => {
+          if (pc.iceGatheringState === "complete") tryResolve();
+        };
+        const onIceCandidate = (e: any) => {
+          if (!e.candidate) tryResolve();
+        };
+        if (pc.iceGatheringState === "complete") {
+          tryResolve();
+        } else {
+          pc.addEventListener("icegatheringstatechange", onGatheringChange);
+          pc.addEventListener("icecandidate", onIceCandidate);
+          // safety timeout in case events are missed
+          setTimeout(tryResolve, 1500);
+        }
+      });
 
       // Send offer to OpenAI Realtime API
       const sdpResponse = await fetch(
         `${sessionData.webrtcConfig.baseUrl}?model=${sessionData.webrtcConfig.model}`,
         {
           method: "POST",
-          body: offer.sdp || "",
+          body: (pc.localDescription && pc.localDescription.sdp) || offer.sdp || "",
           headers: {
             Authorization: `Bearer ${sessionData.token}`,
             "Content-Type": "application/sdp",
@@ -313,15 +310,7 @@ ${wordsList}
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [
-    sessionData,
-    onConnectionStateChange,
-    onServerEvent,
-    configureAudioSession,
-    sendSessionUpdate,
-  ]);
-
-  // (moved above)
+  }, [sessionData, onConnectionStateChange, onServerEvent, sendSessionUpdate]);
 
   // Toggle mute functionality
   const toggleMute = useCallback(() => {
@@ -340,7 +329,13 @@ ${wordsList}
     // subsequent app audio (quiz/flashcards) uses the normal device route/volume
     try {
       if (Platform.OS === "ios") {
-        RTCAudioSession.audioSessionDidDeactivate();
+        try {
+          const session: any = (RTCAudioSession as any).sharedInstance
+            ? (RTCAudioSession as any).sharedInstance()
+            : RTCAudioSession;
+          session?.setActive?.(false);
+        } catch {}
+        RTCAudioSession.audioSessionDidDeactivate?.();
       }
     } catch (e) {
       console.warn("Failed to deactivate iOS audio session:", e);

@@ -2,7 +2,7 @@
   "expo": {
     "name": "decorebator",
     "slug": "decorebator",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "decorebator",
@@ -23,7 +23,11 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification", "audio", "voip"],
+        "UIBackgroundModes": [
+          "remote-notification",
+          "audio",
+          "voip"
+        ],
         "NSMicrophoneUsageDescription": "Decorebator uses your microphone to provide interactive voice conversations for vocabulary practice and to play audio pronunciations. For example, you can have voice conversations with AI to practice new words, and hear pronunciations in quizzes and flashcards.",
         "NSCameraUsageDescription": "Decorebator uses your camera to take profile pictures and supports video features during vocabulary practice sessions. For example, you can take a new photo in the profile settings to personalize your learning experience.",
         "NSPhotoLibraryUsageDescription": "Decorebator accesses your photo library to let you choose an existing photo as your profile picture. For example, you can select a photo from your gallery in the profile settings to personalize your account.",
@@ -87,14 +91,15 @@
       ],
       "expo-localization",
       "expo-web-browser",
-  [
-      "@sentry/react-native/expo",
-      {
-        "url": "https://sentry.io/",
-        "project": "decorebator-mobile",
-        "organization": "lucas-apps"
-      }
-    ]    ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "decorebator-mobile",
+          "organization": "lucas-apps"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },
@@ -105,12 +110,12 @@
       }
     },
     "owner": "lsimaocosta",
-    "runtimeVersion": "1.0.2",
+    "runtimeVersion": "1.0.3",
     "updates": {
       "url": "https://u.expo.dev/882f0434-5dcf-448c-92ac-47e70c9a8d84",
       "enabled": true,
       "checkAutomatically": "ON_LOAD",
-      "fallbackToCacheTimeout": 0  
+      "fallbackToCacheTimeout": 0
     }
   }
 }

@@ -118,6 +118,10 @@ function RootLayoutNav() {
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen
+                    name="realtime-chat"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
                     name="word-selection"
                     options={{ headerShown: false }}
                   />

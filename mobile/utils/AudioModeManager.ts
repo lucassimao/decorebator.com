@@ -10,7 +10,20 @@ export function enterCommunicationMode() {
   try {
     if (Platform.OS === "ios") {
       // Ensure AVAudioSession is active for comms (handled implicitly by WebRTC)
-      RTCAudioSession.audioSessionDidActivate();
+      try {
+        const session: any = (RTCAudioSession as any).sharedInstance
+          ? (RTCAudioSession as any).sharedInstance()
+          : RTCAudioSession;
+        session?.setCategory?.("AVAudioSessionCategoryPlayAndRecord");
+        session?.setMode?.("AVAudioSessionModeVideoChat");
+        session?.setCategoryOptions?.([
+          "AVAudioSessionCategoryOptionAllowBluetooth",
+          "AVAudioSessionCategoryOptionAllowBluetoothA2DP",
+          "AVAudioSessionCategoryOptionDefaultToSpeaker",
+        ]);
+        session?.setActive?.(true);
+      } catch {}
+      RTCAudioSession.audioSessionDidActivate?.();
     } else if (Platform.OS === "android") {
       const { WebRTCModule } = NativeModules as any;
       // Prefer speakerphone for assistant audio during chat
@@ -21,11 +34,53 @@ export function enterCommunicationMode() {
   }
 }
 
+export function setPlaybackMode() {
+  try {
+    if (Platform.OS === "ios") {
+      const session: any = (RTCAudioSession as any).sharedInstance
+        ? (RTCAudioSession as any).sharedInstance()
+        : RTCAudioSession;
+      session?.setActive?.(false);
+      session?.setCategory?.("AVAudioSessionCategoryPlayback");
+      session?.setMode?.("AVAudioSessionModeDefault");
+      session?.setActive?.(true);
+    }
+  } catch {}
+}
+
+export function setVoiceChatMode() {
+  try {
+    if (Platform.OS === "ios") {
+      const session: any = (RTCAudioSession as any).sharedInstance
+        ? (RTCAudioSession as any).sharedInstance()
+        : RTCAudioSession;
+      session?.setActive?.(false);
+      session?.setCategory?.("AVAudioSessionCategoryPlayAndRecord");
+      session?.setMode?.("AVAudioSessionModeVideoChat");
+      session?.setCategoryOptions?.([
+        "AVAudioSessionCategoryOptionAllowBluetooth",
+        "AVAudioSessionCategoryOptionAllowBluetoothA2DP",
+        "AVAudioSessionCategoryOptionDefaultToSpeaker",
+      ]);
+      session?.setActive?.(true);
+    }
+  } catch {}
+}
+
 export function leaveCommunicationMode() {
   try {
     if (Platform.OS === "ios") {
-      // Return to normal media routing/volume
-      RTCAudioSession.audioSessionDidDeactivate();
+      // Return to normal media routing/volume and prefer high-fidelity playback
+      try {
+        const session: any = (RTCAudioSession as any).sharedInstance
+          ? (RTCAudioSession as any).sharedInstance()
+          : RTCAudioSession;
+        session?.setActive?.(false);
+        session?.setCategory?.("AVAudioSessionCategoryPlayback");
+        session?.setMode?.("AVAudioSessionModeDefault");
+        session?.setActive?.(true);
+      } catch {}
+      RTCAudioSession.audioSessionDidDeactivate?.();
     } else if (Platform.OS === "android") {
       const { WebRTCModule } = NativeModules as any;
       // Disable speakerphone; system should fall back to media (MODE_NORMAL)
@@ -44,7 +99,16 @@ export function leaveCommunicationMode() {
 export function assertMediaPlaybackMode() {
   try {
     if (Platform.OS === "ios") {
-      // No-op: RTC deactivate is handled elsewhere; media players use normal route
+      // Ensure iOS is using a playback-optimized session after calls
+      try {
+        const session: any = (RTCAudioSession as any).sharedInstance
+          ? (RTCAudioSession as any).sharedInstance()
+          : RTCAudioSession;
+        session?.setActive?.(false);
+        session?.setCategory?.("AVAudioSessionCategoryPlayback");
+        session?.setMode?.("AVAudioSessionModeDefault");
+        session?.setActive?.(true);
+      } catch {}
       return;
     }
     if (Platform.OS === "android") {

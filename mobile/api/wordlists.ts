@@ -312,6 +312,11 @@ export interface ChatSessionData {
   webrtcConfig: {
     baseUrl: string;
     model: string;
+    iceServers?: {
+      urls: string | string[];
+      username?: string;
+      credential?: string;
+    }[];
   };
 }
 
@@ -322,4 +327,37 @@ export async function createChatSession(
   const endpoint =
     process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/chat/session`;
   return await callAPI<ChatSessionData>("POST", endpoint);
+}
+
+// Server response for batched definitions endpoint
+type WordDefinitionsBatchResponse = {
+  wordId: number;
+  name: string;
+  definitions: Definition[];
+};
+
+// Fetch definitions for multiple words in a single request and map to chat shape
+export async function getDefinitionsForWords(
+  wordlistId: number,
+  wordIds: number[],
+): Promise<WordWithDefinitions[]> {
+  if (!wordIds || wordIds.length === 0) return []
+
+  const idsParam = wordIds.join(",")
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL +
+    `/wordlists/${wordlistId}/words/definitions?ids=${idsParam}`
+
+  const resp = await callAPI<WordDefinitionsBatchResponse[]>("GET", endpoint)
+
+  // Map server definition model to chat-friendly minimal shape
+  return resp.map(item => ({
+    name: item.name,
+    definitions: (item.definitions || []).map(def => ({
+      id: def.id,
+      meaning: def.meaning,
+      partOfSpeech: def.partOfSpeech || "",
+      examples: def.examples || [],
+    })),
+  }))
 }

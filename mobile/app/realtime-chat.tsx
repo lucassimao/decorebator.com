@@ -1,38 +1,38 @@
+import { LoadingWithTimeout } from "@/components/LoadingWithTimeout";
+import { useTheme } from "@/contexts/ThemeContext";
+import { ConnectionState, useRealtimeChat } from "@/hooks/useRealtimeChat";
+import { setPlaybackMode, setVoiceChatMode } from "@/utils/AudioModeManager";
+import {
+  EventCallbacks,
+  RealtimeEventHandler,
+} from "@/utils/realtimeEventHandler";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import LottieView from "lottie-react-native";
 import React, {
-  useEffect,
-  useState,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
-  View,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
-  ScrollView,
   TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  Platform,
+  View,
 } from "react-native";
-import LottieView from "lottie-react-native";
-import { MaterialIcons } from "@expo/vector-icons";
-import { useTranslation } from "react-i18next";
-import { useTheme } from "@/contexts/ThemeContext";
 import {
-  createChatSession,
   ChatSessionData,
-  getWords,
-  getWordDefinitions,
+  createChatSession,
+  getDefinitionsForWords,
 } from "../api/wordlists";
-import { useQuery } from "@tanstack/react-query";
-import { useRealtimeChat, ConnectionState } from "@/hooks/useRealtimeChat";
-import {
-  RealtimeEventHandler,
-  EventCallbacks,
-} from "@/utils/realtimeEventHandler";
-import { LoadingWithTimeout } from "@/components/LoadingWithTimeout";
 
 const RealtimeChatScreen: React.FC = () => {
   const { wordlistId, wordlistName, selectedWordIds } = useLocalSearchParams<{
@@ -82,49 +82,30 @@ const RealtimeChatScreen: React.FC = () => {
     }
   }, [selectedWordIds, wordlistId, wordlistName, router]);
 
-  // Fetch selected words and their definitions
+  // Fetch selected words and their definitions (batched)
+  const uniqueSelectedIds = useMemo(() => {
+    return Array.from(new Set(selectedWordIdList)).sort((a, b) => a - b);
+  }, [selectedWordIdList]);
+
   const { data: wordsData, isLoading: wordsLoading } = useQuery({
-    queryKey: ["selected-words", wordlistId, selectedWordIdList],
+    queryKey: [
+      "selected-words-batch",
+      wordlistId,
+      uniqueSelectedIds.join("-"),
+    ],
     queryFn: async () => {
-      if (selectedWordIdList.length === 0) return [];
-
-      // Fetch all words from the wordlist
-      const allWords = await getWords(Number(wordlistId), true);
-
-      // Filter to only selected words
-      const selectedWordsData = allWords.filter((word) =>
-        selectedWordIdList.includes(word.id),
+      if (uniqueSelectedIds.length === 0) return [];
+      const results = await getDefinitionsForWords(
+        Number(wordlistId),
+        uniqueSelectedIds,
       );
-
-      // Fetch definitions for each selected word
-      const wordsWithDefinitions = await Promise.all(
-        selectedWordsData.map(async (word) => {
-          try {
-            const definitions = await getWordDefinitions(
-              Number(wordlistId),
-              word.id,
-            );
-            return {
-              name: word.name,
-              definitions: definitions.map((def) => ({
-                meaning: def.meaning,
-                partOfSpeech: def.partOfSpeech || "",
-                examples: def.examples || [],
-              })),
-            };
-          } catch (error) {
-            console.error(
-              `Failed to fetch definitions for word ${word.id}:`,
-              error,
-            );
-            return null;
-          }
-        }),
-      );
-
-      return wordsWithDefinitions.filter((word) => word !== null);
+      return results;
     },
-    enabled: !!wordlistId && selectedWordIdList.length > 0,
+    enabled: !!wordlistId && uniqueSelectedIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: 2,
   });
 
@@ -149,11 +130,15 @@ const RealtimeChatScreen: React.FC = () => {
         console.log("🤖 AI response started");
         // Assistant is about to speak; if transcript is hidden, show the wave
         setIsAssistantSpeaking(true);
+        // Prefer high-fidelity playback while assistant is speaking (iOS)
+        setPlaybackMode();
         // Keep current transcript until the user starts speaking
       },
 
       onInputAudioBufferSpeechStarted: (event: any) => {
         setIsSpeaking(true);
+        // Switch to voice chat mode when user starts speaking (iOS)
+        setVoiceChatMode();
         // When user starts speaking, finalize the previous assistant utterance (if present)
         const finalText = (transcriptRef.current || "")
           .trim()
@@ -232,6 +217,8 @@ const RealtimeChatScreen: React.FC = () => {
         audioFinishedRef.current = true;
         // Stop the animation when audio playback is actually done
         setIsAssistantSpeaking(false);
+        // After assistant stops, prepare for user input again
+        setVoiceChatMode();
       },
 
       // Do not toggle speaking state on output item done to avoid early stop
@@ -304,7 +291,7 @@ const RealtimeChatScreen: React.FC = () => {
         setHasTimeout(true);
       }, 10000);
 
-      // Get session token from backend
+      // Get session token from backend (iOS will prompt for mic on getUserMedia)
       const response = await createChatSession(parseInt(wordlistId));
       clearTimeout(timeoutId);
       setSessionData(response);
@@ -434,10 +421,32 @@ const RealtimeChatScreen: React.FC = () => {
   if (isInitialLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <Stack.Screen options={{ title: headerTitle }} />
+        <Stack.Screen options={{ headerShown: false }} />
         <StatusBar
           barStyle={theme.mode === "light" ? "dark-content" : "light-content"}
         />
+        {/* In-app header consistent with other screens */}
+        <View style={styles.header}>
+          <View style={styles.headerRow}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.goBack", "Go back")}
+              style={styles.backButtonIcon}
+              hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+            >
+              <MaterialIcons
+                name="arrow-back"
+                size={responsive.getValueForSize(22, 24, 26, 28)}
+                color={theme.colors.text.primary}
+              />
+            </TouchableOpacity>
+            <Text style={styles.title}>{headerTitle}</Text>
+            <View
+              style={{ width: responsive.getValueForSize(22, 24, 26, 28) }}
+            />
+          </View>
+        </View>
         <LoadingWithTimeout
           isLoading={isInitialLoading}
           hasTimeout={hasTimeout}
@@ -453,10 +462,30 @@ const RealtimeChatScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen options={{ title: headerTitle }} />
+      <Stack.Screen options={{ headerShown: false }} />
       <StatusBar
         barStyle={theme.mode === "light" ? "dark-content" : "light-content"}
       />
+      {/* In-app header consistent with other screens */}
+      <View style={styles.header}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.goBack", "Go back")}
+            style={styles.backButtonIcon}
+            hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+          >
+            <MaterialIcons
+              name="arrow-back"
+              size={responsive.getValueForSize(22, 24, 26, 28)}
+              color={theme.colors.text.primary}
+            />
+          </TouchableOpacity>
+          <Text style={styles.title}>{headerTitle}</Text>
+          <View style={{ width: responsive.getValueForSize(22, 24, 26, 28) }} />
+        </View>
+      </View>
 
       {/* Main Chat Area */}
       <View style={styles.chatArea}>
@@ -476,7 +505,7 @@ const RealtimeChatScreen: React.FC = () => {
                 style={[styles.statusDot, { backgroundColor: status.fg }]}
               />
               <Text style={[styles.statusText, { color: status.fg }]}>
-            {getStatusText()}
+                {getStatusText()}
               </Text>
             </View>
           );
@@ -663,6 +692,29 @@ const createStyles = (
     container: {
       flex: 1,
       backgroundColor: theme.colors.background.default,
+    },
+    header: {
+      paddingHorizontal: responsive.spacing.horizontal,
+      paddingTop: responsive.spacing.vertical,
+      paddingBottom: responsive.spacing.vertical,
+      backgroundColor: theme.colors.background.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.ui.divider,
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    backButtonIcon: {
+      padding: 4,
+      borderRadius: theme.borderRadius.full,
+    },
+    title: {
+      fontSize: responsive.getScaledFont("headline"),
+      fontWeight: "700",
+      color: theme.colors.text.primary,
+      textAlign: "center",
     },
     loadingContainer: {
       flex: 1,

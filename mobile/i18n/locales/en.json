@@ -279,6 +279,9 @@
     "unmute": "Unmute microphone",
     "endCall": "End call"
   },
+  "permissions": {
+    "microphoneDenied": "Microphone permission is required for voice chat"
+  },
   "settings": {
     "title": "Settings",
     "otherSettings": "Other Settings",
