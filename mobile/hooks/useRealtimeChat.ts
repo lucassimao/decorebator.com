@@ -337,7 +337,7 @@ ${wordsList}
     try {
       InCallManager.stop();
       InCallManager.setMicrophoneMute(false);
-      // eslint-disable-next-line no-console
+
       console.log("[InCallManager] stop (cleanup)");
     } catch {}
 

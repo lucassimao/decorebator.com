@@ -14,7 +14,6 @@ import {
   View,
 } from "react-native";
 import { Quiz } from "../../api/wordlists";
-import { assertMediaPlaybackMode } from "@/utils/AudioModeManager";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -57,11 +56,6 @@ export const QuizContent: React.FC<QuizContentProps> = ({
       player.seekTo(0);
     }
   }, [didJustFinish, player]);
-
-  // Ensure media playback mode when entering quiz view
-  useEffect(() => {
-    assertMediaPlaybackMode();
-  }, []);
 
   // Audio setup
   useEffect(() => {

@@ -1,7 +1,6 @@
 import { LoadingWithTimeout } from "@/components/LoadingWithTimeout";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ConnectionState, useRealtimeChat } from "@/hooks/useRealtimeChat";
-import { setPlaybackMode, setVoiceChatMode } from "@/utils/AudioModeManager";
 import {
   EventCallbacks,
   RealtimeEventHandler,
@@ -126,15 +125,11 @@ const RealtimeChatScreen: React.FC = () => {
         console.log("🤖 AI response started");
         // Assistant is about to speak; if transcript is hidden, show the wave
         setIsAssistantSpeaking(true);
-        // Prefer high-fidelity playback while assistant is speaking (iOS)
-        setPlaybackMode();
         // Keep current transcript until the user starts speaking
       },
 
       onInputAudioBufferSpeechStarted: (event: any) => {
         setIsSpeaking(true);
-        // Switch to voice chat mode when user starts speaking (iOS)
-        setVoiceChatMode();
         // When user starts speaking, finalize the previous assistant utterance (if present)
         const finalText = (transcriptRef.current || "")
           .trim()
@@ -213,8 +208,6 @@ const RealtimeChatScreen: React.FC = () => {
         audioFinishedRef.current = true;
         // Stop the animation when audio playback is actually done
         setIsAssistantSpeaking(false);
-        // After assistant stops, prepare for user input again
-        setVoiceChatMode();
       },
 
       // Do not toggle speaking state on output item done to avoid early stop
