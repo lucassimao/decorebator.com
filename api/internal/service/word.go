@@ -19,17 +19,15 @@ type Word = model.Word
 // WordService handles word-related operations with dependency injection
 type WordService struct {
 	repository             *repo.WordRepository
-	moderationService      ModerationService
 	definitionService      *DefinitionService
 	jobService             JobService
 	leitnerTrackingService *LeitnerTrackingService
 }
 
 // NewWordService creates a new word service with dependencies
-func NewWordService(db *pgxpool.Pool, definitionService *DefinitionService, moderationService ModerationService, jobService JobService, leitnerTrackingService *LeitnerTrackingService) *WordService {
+func NewWordService(db *pgxpool.Pool, definitionService *DefinitionService, jobService JobService, leitnerTrackingService *LeitnerTrackingService) *WordService {
 	return &WordService{
 		repository:             &repo.WordRepository{Db: db},
-		moderationService:      moderationService,
 		definitionService:      definitionService,
 		jobService:             jobService,
 		leitnerTrackingService: leitnerTrackingService,
@@ -97,24 +95,6 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 	// count runes (Unicode characters), not bytes
 	if utf8.RuneCountInString(trimmedName) > 15 {
 		return nil, common.BusinessError{Message: "words must be limited to 15 chars"}
-	}
-
-	// Validate word content using moderation service
-	filterResult := ws.moderationService.Validate(ctx, trimmedName)
-	if !filterResult.IsAppropriate {
-		return nil, common.BusinessError{
-			Message: fmt.Sprintf("Word content not appropriate: %s", filterResult.Reason),
-		}
-	}
-
-	// Validate notes content if provided
-	if dto.Notes != "" {
-		notesResult := ws.moderationService.Validate(ctx, dto.Notes)
-		if !notesResult.IsAppropriate {
-			return nil, common.BusinessError{
-				Message: fmt.Sprintf("Word notes not appropriate: %s", notesResult.Reason),
-			}
-		}
 	}
 
 	tx, err := ws.repository.Db.Begin(ctx)

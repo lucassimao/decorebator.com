@@ -30,7 +30,6 @@ type Context struct {
 	DefinitionImageService *service.DefinitionImageService
 	SubscriptionService    *service.SubscriptionService
 	RevenueCatService      service.RevenueCatService
-	ModerationService      service.ModerationService
 	LeitnerTrackingService *service.LeitnerTrackingService
 	LeitnerSystemStrategy  *service.LeitnerSystemStrategy
 	ErrorReportService     *service.ErrorReportService
@@ -95,11 +94,6 @@ func (b *ContextBuilder) WithEnvironment(env string) *ContextBuilder {
 	return b
 }
 
-// WithModerationService sets a custom moderation service
-func (b *ContextBuilder) WithModerationService(moderationService service.ModerationService) *ContextBuilder {
-	b.context.ModerationService = moderationService
-	return b
-}
 
 // WithRevenueCatService sets a custom RevenueCat service
 func (b *ContextBuilder) WithRevenueCatService(revenueCatService service.RevenueCatService) *ContextBuilder {
@@ -222,11 +216,6 @@ func (b *ContextBuilder) initializeServices() error {
 		b.context.JobService = service.NewJobService(riverClient)
 	}
 
-	// Initialize ModerationService if not provided
-	if b.context.ModerationService == nil {
-		b.context.ModerationService = service.NewOpenAIModerationService()
-	}
-
 	// Initialize core services if not provided
 	if b.context.DefinitionService == nil {
 		b.context.DefinitionService = service.NewDefinitionService(b.context.Database)
@@ -241,10 +230,10 @@ func (b *ContextBuilder) initializeServices() error {
 	}
 
 	if b.context.WordService == nil {
-		b.context.WordService = service.NewWordService(b.context.Database, b.context.DefinitionService, b.context.ModerationService, b.context.JobService, b.context.LeitnerTrackingService)
+		b.context.WordService = service.NewWordService(b.context.Database, b.context.DefinitionService, b.context.JobService, b.context.LeitnerTrackingService)
 	}
 	if b.context.WordlistService == nil {
-		b.context.WordlistService = service.NewWordlistService(b.context.Database, b.context.ModerationService)
+		b.context.WordlistService = service.NewWordlistService(b.context.Database)
 	}
 
 	// Initialize MailService early since other services depend on it
