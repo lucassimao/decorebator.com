@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useQuery } from "@tanstack/react-query";
 import { LoadingWithTimeout } from "@/components/LoadingWithTimeout";
+import ScreenHeader from "@/components/common/ScreenHeader";
 import * as wordlistsApi from "@/api/wordlists";
 import { Word } from "@/api/wordlists";
 
@@ -179,6 +180,11 @@ const WordSelectionScreen: React.FC = () => {
   );
 
   const headerTitle = t("wordSelection.title", "Select Words for Chat");
+  const headerSubtitle = t(
+    "wordSelection.subtitle",
+    "Choose up to {{count}} words to practice",
+    { count: MAX_SELECTED_WORDS },
+  );
 
   if (isLoading) {
     return (
@@ -273,71 +279,57 @@ const WordSelectionScreen: React.FC = () => {
         barStyle={theme.mode === "light" ? "dark-content" : "light-content"}
       />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel={t("common.goBack", "Go back")}
-            style={styles.backButtonIcon}
-            hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-          >
-            <MaterialIcons
-              name="arrow-back"
-              size={responsive.getValueForSize(22, 24, 26, 28)}
-              color={theme.colors.text.primary}
-            />
-          </TouchableOpacity>
-          <Text style={styles.title}>
-            {t("wordSelection.title", "Select Words for Chat")}
-          </Text>
-          <View style={{ width: responsive.getValueForSize(22, 24, 26, 28) }} />
-        </View>
-        <Text style={styles.subtitle}>
+      {/* Header (standardized) */}
+      <ScreenHeader
+        title={headerTitle}
+        subtitle={headerSubtitle}
+        onBackPress={() => router.back()}
+      />
+
+      {/* Header extras: search and actions (contained) */}
+      <View style={styles.searchPanel}>
+        <Text style={styles.searchHelpText}>
           {t(
-            "wordSelection.subtitle",
-            "Choose up to {{count}} words to practice",
+            'wordSelection.searchHelp',
+            'Search and select up to {{count}} words to practice',
             { count: MAX_SELECTED_WORDS },
           )}
         </Text>
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBox}>
-            <MaterialIcons
-              name="search"
-              size={20}
-              color={theme.colors.text.secondary}
-            />
-            <TextInput
-              style={styles.searchInput}
-              placeholder={t("wordSelection.search", "Search words")}
-              placeholderTextColor={theme.colors.text.tertiary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoCorrect={false}
-              autoCapitalize="none"
-            />
-          </View>
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={[styles.chip, styles.chipSpacing]}
-              onPress={handleSelectAll}
-              disabled={selectableWords.length === 0}
-            >
-              <Text style={styles.chipText}>
-                {t("wordSelection.selectAll", "Select All")}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.chip, styles.chipSecondary]}
-              onPress={handleClearAll}
-              disabled={selectedWordIds.size === 0}
-            >
-              <Text style={[styles.chipText, styles.chipSecondaryText]}>
-                {t("wordSelection.clearAll", "Clear All")}
-              </Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.searchBox}>
+          <MaterialIcons
+            name="search"
+            size={18}
+            color={theme.colors.text.secondary}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={t("wordSelection.search", "Search words")}
+            placeholderTextColor={theme.colors.text.tertiary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={[styles.chip, styles.chipSpacing]}
+            onPress={handleSelectAll}
+            disabled={selectableWords.length === 0}
+          >
+            <Text style={styles.chipText}>
+              {t("wordSelection.selectAll", "Select All")}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.chip, styles.chipSecondary]}
+            onPress={handleClearAll}
+            disabled={selectedWordIds.size === 0}
+          >
+            <Text style={[styles.chipText, styles.chipSecondaryText]}>
+              {t("wordSelection.clearAll", "Clear All")}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -449,29 +441,24 @@ const createStyles = (
       flex: 1,
       backgroundColor: theme.colors.background.default,
     },
-    header: {
-      paddingHorizontal: responsive.spacing.horizontal,
-      paddingTop: responsive.spacing.vertical,
-      paddingBottom: responsive.spacing.vertical,
+    // header removed in favor of ScreenHeader
+    searchPanel: {
       backgroundColor: theme.colors.background.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.ui.divider,
-    },
-    headerRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: responsive.spacing.elementSpacing / 2,
-    },
-    backButtonIcon: {
-      padding: 4,
-      borderRadius: theme.borderRadius.full,
-    },
-    subtitle: {
-      fontSize: responsive.getScaledFont("body"),
-      color: theme.colors.text.secondary,
-      textAlign: "center",
+      borderRadius: theme.borderRadius.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.divider,
+      marginHorizontal: responsive.spacing.horizontal,
+      marginTop: responsive.spacing.elementSpacing / 2,
       marginBottom: responsive.spacing.elementSpacing,
+      paddingHorizontal: responsive.spacing.horizontal,
+      paddingVertical: responsive.getValueForSize(8, 10, 10, 12),
+      ...theme.shadows.sm,
+    },
+    searchHelpText: {
+      fontSize: responsive.getScaledFont('label'),
+      color: theme.colors.text.secondary,
+      marginBottom: responsive.getValueForSize(6, 8, 8, 10),
+      textAlign: 'left',
     },
     handle: {
       alignSelf: "center",
@@ -489,47 +476,46 @@ const createStyles = (
       marginBottom: responsive.spacing.elementSpacing / 2,
     },
     searchContainer: {
-      marginTop: responsive.spacing.elementSpacing / 2,
+      marginTop: 0,
       gap: responsive.spacing.elementSpacing / 2,
-      // Provide comfortable separation from chips and list
-      marginBottom: responsive.spacing.vertical,
+      marginBottom: 0,
     },
     searchBox: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.colors.background.elevated,
-      borderRadius: theme.borderRadius.lg,
+      borderRadius: theme.borderRadius.md,
       borderWidth: 1,
       borderColor: theme.colors.ui.divider,
       paddingHorizontal: 12,
-      paddingVertical: responsive.getValueForSize(10, 12, 12, 14),
+      paddingVertical: responsive.getValueForSize(4, 6, 6, 8),
       // Tighter vertical separation to bring chips closer to the field
-      marginBottom: responsive.getValueForSize(8, 10, 12, 14),
+      marginBottom: responsive.getValueForSize(6, 8, 8, 10),
     },
     searchInput: {
       flex: 1,
       marginLeft: 8,
       color: theme.colors.text.primary,
-      fontSize: responsive.getScaledFont("body"),
+      fontSize: responsive.getScaledFont("label"),
+      lineHeight: Math.round(responsive.getScaledFont("label") * 1.2),
     },
     headerActions: {
       flexDirection: "row",
       justifyContent: "flex-start",
-      // Horizontal separation between chips (expanded)
-      gap: responsive.spacing.elementSpacing,
-      // Provide additional breathing room below search on dense screens
+      // Slightly tighter spacing between chips
+      gap: responsive.spacing.elementSpacing / 2,
       marginTop: responsive.getValueForSize(6, 8, 10, 12),
     },
     chip: {
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingHorizontal: responsive.getValueForSize(12, 14, 14, 16),
+      paddingVertical: responsive.getValueForSize(8, 9, 10, 10),
       borderRadius: theme.borderRadius.full,
       backgroundColor: theme.colors.primary,
     },
     chipText: {
       color: theme.colors.text.inverse,
-      fontWeight: "600",
-      fontSize: responsive.getScaledFont("label"),
+      fontWeight: "700",
+      fontSize: responsive.getScaledFont("body"),
     },
     chipSecondary: {
       backgroundColor: theme.colors.background.elevated,
@@ -540,7 +526,7 @@ const createStyles = (
       color: theme.colors.text.secondary,
     },
     chipSpacing: {
-      marginRight: responsive.getValueForSize(12, 16, 20, 24),
+      marginRight: responsive.getValueForSize(6, 8, 10, 12),
     },
     actionButtons: {
       flexDirection: "row",

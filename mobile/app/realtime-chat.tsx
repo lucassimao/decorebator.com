@@ -31,7 +31,10 @@ import {
   ChatSessionData,
   createChatSession,
   getDefinitionsForWords,
+  getWordlist,
 } from "../api/wordlists";
+import type { WordWithDefinitions as ApiWordWithDefinitions } from "../api/wordlists";
+import ScreenHeader from "@/components/common/ScreenHeader";
 
 const RealtimeChatScreen: React.FC = () => {
   const { wordlistId, wordlistName, selectedWordIds } = useLocalSearchParams<{
@@ -46,7 +49,9 @@ const RealtimeChatScreen: React.FC = () => {
 
   // State
   const [sessionData, setSessionData] = useState<ChatSessionData | null>(null);
-  const [selectedWords, setSelectedWords] = useState<any[]>([]);
+  const [selectedWords, setSelectedWords] = useState<ApiWordWithDefinitions[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
   const [hasTimeout, setHasTimeout] = useState(false);
   const [initError, setInitError] = useState<Error | null>(null);
@@ -102,6 +107,14 @@ const RealtimeChatScreen: React.FC = () => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     retry: 2,
+  });
+
+  // Fetch wordlist metadata to obtain languageCode for better assistant responses
+  const { data: wordlistMeta } = useQuery({
+    queryKey: ["wordlist-meta", wordlistId],
+    queryFn: () => getWordlist(Number(wordlistId)),
+    enabled: !!wordlistId,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Update selected words when data is fetched
@@ -250,7 +263,7 @@ const RealtimeChatScreen: React.FC = () => {
           sessionData,
           selectedWords,
           wordlistName: wordlistName || "",
-          languageCode: "en", // TODO: Get this from wordlist data
+          languageCode: wordlistMeta?.languageCode || "en",
           onConnectionStateChange: handleConnectionStateChange,
           onServerEvent: handleServerEvent,
         }
@@ -414,28 +427,13 @@ const RealtimeChatScreen: React.FC = () => {
         <StatusBar
           barStyle={theme.mode === "light" ? "dark-content" : "light-content"}
         />
-        {/* In-app header consistent with other screens */}
-        <View style={styles.header}>
-          <View style={styles.headerRow}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              accessibilityRole="button"
-              accessibilityLabel={t("common.goBack", "Go back")}
-              style={styles.backButtonIcon}
-              hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-            >
-              <MaterialIcons
-                name="arrow-back"
-                size={responsive.getValueForSize(22, 24, 26, 28)}
-                color={theme.colors.text.primary}
-              />
-            </TouchableOpacity>
-            <Text style={styles.title}>{headerTitle}</Text>
-            <View
-              style={{ width: responsive.getValueForSize(22, 24, 26, 28) }}
-            />
-          </View>
-        </View>
+        <ScreenHeader
+          title={headerTitle}
+          subtitle={t("realtimeChat.focusWords", {
+            count: selectedWords.length,
+          })}
+          onBackPress={() => router.back()}
+        />
         <LoadingWithTimeout
           isLoading={isInitialLoading}
           hasTimeout={hasTimeout}
@@ -455,26 +453,11 @@ const RealtimeChatScreen: React.FC = () => {
       <StatusBar
         barStyle={theme.mode === "light" ? "dark-content" : "light-content"}
       />
-      {/* In-app header consistent with other screens */}
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel={t("common.goBack", "Go back")}
-            style={styles.backButtonIcon}
-            hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-          >
-            <MaterialIcons
-              name="arrow-back"
-              size={responsive.getValueForSize(22, 24, 26, 28)}
-              color={theme.colors.text.primary}
-            />
-          </TouchableOpacity>
-          <Text style={styles.title}>{headerTitle}</Text>
-          <View style={{ width: responsive.getValueForSize(22, 24, 26, 28) }} />
-        </View>
-      </View>
+      <ScreenHeader
+        title={headerTitle}
+        subtitle={t("realtimeChat.focusWords", { count: selectedWords.length })}
+        onBackPress={() => router.back()}
+      />
 
       {/* Main Chat Area */}
       <View style={styles.chatArea}>
@@ -574,7 +557,6 @@ const RealtimeChatScreen: React.FC = () => {
             <View style={styles.lottieContainer}>
               <LottieWave
                 color={theme.colors.primary}
-                width="100%"
                 height={responsive.getValueForSize(60, 70, 80, 90)}
                 speed={1}
                 active={isAssistantSpeaking}
@@ -593,6 +575,9 @@ const RealtimeChatScreen: React.FC = () => {
             <Text style={styles.errorText}>
               {t("realtimeChat.genericError")}
             </Text>
+            {!!connectionState.error && (
+              <Text style={styles.errorSubtext}>{connectionState.error}</Text>
+            )}
             <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
               <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
             </TouchableOpacity>
@@ -633,6 +618,7 @@ const RealtimeChatScreen: React.FC = () => {
           onPress={handleToggleMute}
           disabled={!realtimeChat.isConnected}
           accessibilityRole="button"
+          accessibilityState={{ disabled: !realtimeChat.isConnected }}
           accessibilityLabel={
             realtimeChat.isMuted
               ? t("realtimeChat.unmute")
@@ -682,29 +668,7 @@ const createStyles = (
       flex: 1,
       backgroundColor: theme.colors.background.default,
     },
-    header: {
-      paddingHorizontal: responsive.spacing.horizontal,
-      paddingTop: responsive.spacing.vertical,
-      paddingBottom: responsive.spacing.vertical,
-      backgroundColor: theme.colors.background.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.ui.divider,
-    },
-    headerRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-    },
-    backButtonIcon: {
-      padding: 4,
-      borderRadius: theme.borderRadius.full,
-    },
-    title: {
-      fontSize: responsive.getScaledFont("headline"),
-      fontWeight: "700",
-      color: theme.colors.text.primary,
-      textAlign: "center",
-    },
+    // header removed in favor of ScreenHeader
     loadingContainer: {
       flex: 1,
       justifyContent: "center",
@@ -863,6 +827,11 @@ const createStyles = (
       color: theme.colors.error,
       textAlign: "center",
     },
+    errorSubtext: {
+      fontSize: responsive.getScaledFont("micro"),
+      color: theme.colors.text.secondary,
+      textAlign: "center",
+    },
     retryButton: {
       backgroundColor: theme.colors.primary,
       paddingHorizontal: responsive.spacing.horizontal,
@@ -917,7 +886,6 @@ export default RealtimeChatScreen;
 // Cross-platform wave using Lottie on native and ActivityIndicator on web
 type LottieWaveProps = {
   color: string;
-  width: string;
   height: number;
   speed?: number;
   active?: boolean;

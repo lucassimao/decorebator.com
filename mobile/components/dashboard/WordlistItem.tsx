@@ -9,9 +9,6 @@ import {
   View,
   Alert,
   ActivityIndicator,
-  Modal,
-  TouchableWithoutFeedback,
-  Linking,
   Share,
 } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -43,7 +40,6 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   onUpgradePress,
 }) => {
   const queryClient = useQueryClient();
-  const [showMenu, setShowMenu] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [premiumModalContext, setPremiumModalContext] =
@@ -73,33 +69,22 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   });
 
   const handleDelete = () => {
-    setShowMenu(false);
-
-    setTimeout(() => {
-      Alert.alert(
-        t("wordlistItem.deleteTitle"),
-        t("wordlistItem.deleteConfirmMessage", { name: item.name }),
-        [
-          {
-            text: t("common.cancel"),
-            style: "cancel",
-          },
-          {
-            text: t("common.delete"),
-            style: "destructive",
-            onPress: () => {
-              deleteMutation.mutate();
-            },
-          },
-        ],
-        { cancelable: true },
-      );
-    }, 100);
+    Alert.alert(
+      t("wordlistItem.deleteTitle"),
+      t("wordlistItem.deleteConfirmMessage", { name: item.name }),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.delete"),
+          style: "destructive",
+          onPress: () => deleteMutation.mutate(),
+        },
+      ],
+      { cancelable: true },
+    );
   };
 
   const handleQuizStart = () => {
-    setShowMenu(false);
-
     if (item.wordsCount === 0) {
       Alert.alert(
         t("wordlistItem.noWordsTitle"),
@@ -117,8 +102,6 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   };
 
   const handlePractice = () => {
-    setShowMenu(false);
-
     if (item.wordsCount === 0) {
       Alert.alert(
         t("wordlistItem.noWordsTitle"),
@@ -132,8 +115,6 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   };
 
   const handleChatStart = () => {
-    setShowMenu(false);
-
     if (item.wordsCount === 0) {
       Alert.alert(
         t("wordlistItem.noWordsTitle"),
@@ -154,8 +135,6 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   };
 
   const handleAnalytics = () => {
-    setShowMenu(false);
-
     if (!isPremium) {
       setPremiumModalContext("analytics");
       setShowPremiumModal(true);
@@ -165,13 +144,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     router.push(`/analytics?wordlistId=${item.id}`);
   };
 
-  const handleEdit = () => {
-    setShowMenu(false);
-    onPressed?.();
-  };
-
   const openPublishModal = () => {
-    setShowMenu(false);
     if (!isPremium) {
       setPremiumModalContext("public_quiz");
       setShowPremiumModal(true);
@@ -212,10 +185,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     queryClient.invalidateQueries({ queryKey: ["wordlists"] });
   };
 
-  const handleViewOnWeb = (slug: string) => {
-    const url = getPublicUrl(slug);
-    Linking.openURL(url).catch((e) => console.warn("Failed to open URL", e));
-  };
+  // Removed menu-only: view on web handled elsewhere if needed
 
   return (
     <>
@@ -223,7 +193,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         style={styles.wordlistCard}
         onPress={onPressed}
         activeOpacity={0.7}
-        onLongPress={() => setShowMenu(true)}
+        // removed menu long-press
         accessibilityRole="button"
         accessibilityLabel={`${item.name} wordlist. ${item.wordsCount} words. ${progressPercentage > 0 ? `${Math.round(progressPercentage)}% learned.` : "No progress yet."} Double tap to open details, long press for menu.`}
         accessibilityHint="Open wordlist details or long press for actions menu"
@@ -263,15 +233,24 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           </View>
           <TouchableOpacity
             style={styles.headerMoreButton}
-            onPress={() => setShowMenu(true)}
+            onPress={handleDelete}
             accessibilityRole="button"
-            accessibilityLabel={t("common.more")}
+            accessibilityLabel={t("wordlistItem.deleteWordlist")}
+            accessibilityHint={t("wordlistItem.deleteConfirmMessage", {
+              name: item.name,
+            })}
+            disabled={deleteMutation.isPending}
+            accessibilityState={{ disabled: deleteMutation.isPending }}
           >
-            <MaterialIcons
-              name="more-vert"
-              size={responsive.getValueForSize(18, 20, 22, 24)}
-              color={theme.colors.text.secondary}
-            />
+            {deleteMutation.isPending ? (
+              <ActivityIndicator size="small" color={theme.colors.error} />
+            ) : (
+              <Ionicons
+                name="trash-outline"
+                size={responsive.getValueForSize(18, 20, 22, 24)}
+                color={theme.colors.error}
+              />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -440,266 +419,6 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           </View>
         </View>
       </TouchableOpacity>
-
-      {/* Action Menu Modal */}
-      <Modal
-        visible={showMenu}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowMenu(false)}
-        accessibilityViewIsModal={true}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowMenu(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback>
-              <View style={styles.menuContainer}>
-                <Text
-                  style={styles.menuTitle}
-                  numberOfLines={responsive.getValueForSize(2, 2, 3, 3)}
-                  ellipsizeMode="tail"
-                  accessibilityRole="header"
-                  accessibilityLabel={item.name}
-                >
-                  {item.name}
-                </Text>
-
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() => {
-                    setShowMenu(false);
-                    router.push(`/analytics?wordlistId=${item.id}`);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("wordlistItem.viewAnalytics")}
-                  accessibilityHint="View detailed learning analytics for this wordlist"
-                >
-                  <MaterialIcons
-                    name="analytics"
-                    size={responsive.getValueForSize(20, 24, 26, 28)}
-                    color={theme.colors.premium}
-                  />
-                  <Text style={styles.menuItemText}>
-                    {t("wordlistItem.viewAnalytics")}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={openPublishModal}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    item.publicQuizSlug
-                      ? t("wordlistItem.editPublicQuiz", "Edit public quiz")
-                      : t(
-                          "wordlistItem.publishPublicQuiz",
-                          "Publish public quiz",
-                        )
-                  }
-                  accessibilityHint={
-                    item.publicQuizSlug
-                      ? "Update the public quiz settings"
-                      : "Publish this wordlist as a shareable quiz"
-                  }
-                >
-                  <MaterialIcons
-                    name="public"
-                    size={responsive.getValueForSize(20, 24, 26, 28)}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={styles.menuItemText}>
-                    {item.publicQuizSlug
-                      ? t("wordlistItem.editPublicQuiz", "Edit public quiz")
-                      : t(
-                          "wordlistItem.publishPublicQuiz",
-                          "Publish public quiz",
-                        )}
-                  </Text>
-                </TouchableOpacity>
-
-                {item.publicQuizSlug ? (
-                  <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={() => copyPublicLink(item.publicQuizSlug!)}
-                    accessibilityRole="button"
-                    accessibilityLabel={t(
-                      "wordlistItem.copyPublicLink",
-                      "Copy public link",
-                    )}
-                    accessibilityHint="Copy the shareable link for this public quiz"
-                  >
-                    <MaterialIcons
-                      name="link"
-                      size={responsive.getValueForSize(20, 24, 26, 28)}
-                      color={theme.colors.success}
-                    />
-                    <Text style={styles.menuItemText}>
-                      {t("wordlistItem.copyPublicLink", "Copy public link")}
-                    </Text>
-                  </TouchableOpacity>
-                ) : null}
-
-                {item.publicQuizSlug ? (
-                  <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={async () => {
-                      await wordlistsApi.unpublishPublicQuiz(item.id);
-                      queryClient.invalidateQueries({
-                        queryKey: ["wordlists"],
-                      });
-                      setShowMenu(false);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={t(
-                      "wordlistItem.unpublishPublicQuiz",
-                      "Unpublish public quiz",
-                    )}
-                    accessibilityHint="Disable public access to this quiz"
-                  >
-                    <MaterialIcons
-                      name="visibility-off"
-                      size={responsive.getValueForSize(20, 24, 26, 28)}
-                      color={theme.colors.error}
-                    />
-                    <Text style={styles.menuItemText}>
-                      {t(
-                        "wordlistItem.unpublishPublicQuiz",
-                        "Unpublish public quiz",
-                      )}
-                    </Text>
-                  </TouchableOpacity>
-                ) : null}
-
-                {item.publicQuizSlug ? (
-                  <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={() => handleViewOnWeb(item.publicQuizSlug!)}
-                    accessibilityRole="button"
-                    accessibilityLabel={t(
-                      "wordlistItem.viewOnWeb",
-                      "View on web",
-                    )}
-                    accessibilityHint="Open this public quiz in the browser"
-                  >
-                    <MaterialIcons
-                      name="open-in-new"
-                      size={responsive.getValueForSize(20, 24, 26, 28)}
-                      color={theme.colors.primary}
-                    />
-                    <Text style={styles.menuItemText}>
-                      {t("wordlistItem.viewOnWeb", "View on web")}
-                    </Text>
-                  </TouchableOpacity>
-                ) : null}
-
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={handleChatStart}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("wordlistItem.startChat", "Start chat")}
-                  accessibilityHint={t(
-                    "wordlistItem.chatHint",
-                    "Start a conversation using the words in this list",
-                  )}
-                >
-                  <MaterialIcons
-                    name="chat"
-                    size={responsive.getValueForSize(20, 24, 26, 28)}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={styles.menuItemText}>
-                    {t("wordlistItem.startChat", "Start chat")}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={handlePractice}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("wordlistItem.practiceFlashcards")}
-                  accessibilityHint="Practice with interactive flashcards"
-                >
-                  <MaterialIcons
-                    name="style"
-                    size={responsive.getValueForSize(20, 24, 26, 28)}
-                    color={theme.colors.semantic.info}
-                  />
-                  <Text style={styles.menuItemText}>
-                    {t("wordlistItem.practiceFlashcards")}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={handleQuizStart}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("wordlistItem.startQuiz")}
-                  accessibilityHint="Start an interactive quiz session"
-                >
-                  <MaterialIcons
-                    name="quiz"
-                    size={responsive.getValueForSize(20, 24, 26, 28)}
-                    color={theme.colors.success}
-                  />
-                  <Text style={styles.menuItemText}>
-                    {t("wordlistItem.startQuiz")}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={handleEdit}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("wordlistItem.editWordlist")}
-                  accessibilityHint="Edit wordlist details and add or remove words"
-                >
-                  <MaterialIcons
-                    name="edit"
-                    size={responsive.getValueForSize(20, 24, 26, 28)}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={styles.menuItemText}>
-                    {t("wordlistItem.editWordlist")}
-                  </Text>
-                </TouchableOpacity>
-
-                <View style={styles.menuDivider} />
-
-                <TouchableOpacity
-                  style={[styles.menuItem, styles.deleteMenuItem]}
-                  onPress={handleDelete}
-                  disabled={deleteMutation.isPending}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    deleteMutation.isPending
-                      ? "Deleting wordlist..."
-                      : t("wordlistItem.deleteWordlist")
-                  }
-                  accessibilityHint="Permanently delete this wordlist and all its words"
-                  accessibilityState={{ disabled: deleteMutation.isPending }}
-                >
-                  {deleteMutation.isPending ? (
-                    <ActivityIndicator
-                      size="small"
-                      color={theme.colors.error}
-                    />
-                  ) : (
-                    <Ionicons
-                      name="trash-outline"
-                      size={responsive.getValueForSize(20, 24, 26, 28)}
-                      color={theme.colors.error}
-                    />
-                  )}
-                  <Text
-                    style={[styles.menuItemText, styles.deleteMenuItemText]}
-                  >
-                    {t("wordlistItem.deleteWordlist")}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
 
       <PublishPublicQuizModal
         visible={showPublishModal}

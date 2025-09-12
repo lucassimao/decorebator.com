@@ -1,13 +1,12 @@
 import { useCallback, useRef, useState } from "react";
+import InCallManager from "react-native-incall-manager";
 import {
   mediaDevices,
   MediaStream,
-  RTCPeerConnection,
-  RTCAudioSession,
+  RTCPeerConnection
 } from "react-native-webrtc";
-import { Platform, NativeModules } from "react-native";
-import InCallManager from "react-native-incall-manager";
 import { ChatSessionData } from "../api/wordlists";
+import inCallManager from "react-native-incall-manager";
 
 export interface ConnectionState {
   status: "disconnected" | "connecting" | "connected" | "error";
@@ -337,36 +336,9 @@ ${wordsList}
     try {
       InCallManager.stop();
       InCallManager.setMicrophoneMute(false);
-
+      inCallManager.setForceSpeakerphoneOn(false);
       console.log("[InCallManager] stop (cleanup)");
     } catch {}
-
-    // On iOS, explicitly deactivate the WebRTC audio session so
-    // subsequent app audio (quiz/flashcards) uses the normal device route/volume
-    try {
-      if (Platform.OS === "ios") {
-        try {
-          const session: any = (RTCAudioSession as any).sharedInstance
-            ? (RTCAudioSession as any).sharedInstance()
-            : RTCAudioSession;
-          session?.setActive?.(false);
-        } catch {}
-        RTCAudioSession.audioSessionDidDeactivate?.();
-      }
-    } catch (e) {
-      console.warn("Failed to deactivate iOS audio session:", e);
-    }
-
-    // On Android, explicitly disable speakerphone and allow system to return
-    // to MODE_NORMAL for media playback routing
-    try {
-      if (Platform.OS === "android") {
-        const { WebRTCModule } = NativeModules as any;
-        WebRTCModule?.setSpeakerphoneOn?.(false);
-      }
-    } catch (e) {
-      console.warn("Failed to disable Android speakerphone:", e);
-    }
 
     // Stop local stream
     if (localStreamRef.current) {
