@@ -1,10 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import {
+  setAudioModeAsync,
+  useAudioPlayer,
+  useAudioPlayerStatus,
+} from "expo-audio";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  // Alert, // Removed unused import
   Dimensions,
   Image,
   StyleSheet,
@@ -98,6 +101,8 @@ export const QuizContent: React.FC<QuizContentProps> = ({
   }, []);
 
   const playAudio = async () => {
+    await setAudioModeAsync({ allowsRecording: false });
+
     try {
       if (isPlaying) {
         player.pause();

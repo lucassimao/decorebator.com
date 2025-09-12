@@ -290,8 +290,8 @@ const WordSelectionScreen: React.FC = () => {
       <View style={styles.searchPanel}>
         <Text style={styles.searchHelpText}>
           {t(
-            'wordSelection.searchHelp',
-            'Search and select up to {{count}} words to practice',
+            "wordSelection.searchHelp",
+            "Search and select up to {{count}} words to practice",
             { count: MAX_SELECTED_WORDS },
           )}
         </Text>
@@ -455,10 +455,10 @@ const createStyles = (
       ...theme.shadows.sm,
     },
     searchHelpText: {
-      fontSize: responsive.getScaledFont('label'),
+      fontSize: responsive.getScaledFont("label"),
       color: theme.colors.text.secondary,
       marginBottom: responsive.getValueForSize(6, 8, 8, 10),
-      textAlign: 'left',
+      textAlign: "left",
     },
     handle: {
       alignSelf: "center",

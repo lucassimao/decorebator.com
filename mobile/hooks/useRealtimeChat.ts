@@ -3,10 +3,9 @@ import InCallManager from "react-native-incall-manager";
 import {
   mediaDevices,
   MediaStream,
-  RTCPeerConnection
+  RTCPeerConnection,
 } from "react-native-webrtc";
 import { ChatSessionData } from "../api/wordlists";
-import inCallManager from "react-native-incall-manager";
 
 export interface ConnectionState {
   status: "disconnected" | "connecting" | "connected" | "error";
@@ -336,7 +335,6 @@ ${wordsList}
     try {
       InCallManager.stop();
       InCallManager.setMicrophoneMute(false);
-      inCallManager.setForceSpeakerphoneOn(false);
       console.log("[InCallManager] stop (cleanup)");
     } catch {}
 
