@@ -15,7 +15,7 @@ import { useWordlistProgress } from "@/hooks/useWordlistProgress";
 import { useWordlists } from "@/hooks/useWordlists";
 import { createCommonStyles } from "@/styles/common";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -31,6 +31,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Easing,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -53,10 +54,45 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const { theme, responsive } = useTheme();
   const commonStyles = createCommonStyles(theme, responsive);
   const styles = createStyles(theme);
+  const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
   // Animation refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  const stopPulse = () => {
+    if (pulseLoopRef.current) {
+      pulseLoopRef.current.stop();
+      pulseLoopRef.current = null;
+    }
+    pulseAnim.stopAnimation();
+    pulseAnim.setValue(1);
+  };
+
+  const startPulse = () => {
+    if (pulseLoopRef.current) return; // avoid duplicates
+    const maxScale = hasNoWordlist ? 1.1 : 1.05;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: maxScale,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    pulseLoopRef.current = loop;
+    loop.start();
+  };
 
   // Get premium status from centralized session
   const { isPremium } = useUserSession();
@@ -128,6 +164,29 @@ const Dashboard: React.FC<DashboardProps> = () => {
     }
   }, [hasNoWordlist, isLoading, fadeAnim, slideAnim]);
 
+  // Start pulse when focused; stop on blur
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!isLoading) startPulse();
+      return () => stopPulse();
+    }, [isLoading, hasNoWordlist]),
+  );
+
+  // Restart pulse when empty state changes to update amplitude
+  useEffect(() => {
+    if (pulseLoopRef.current) {
+      stopPulse();
+      startPulse();
+    }
+  }, [hasNoWordlist]);
+
+  // Pause while the create modal is open
+  useEffect(() => {
+    if (showCreateModal) stopPulse();
+    else startPulse();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCreateModal]);
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await refetch();
@@ -180,16 +239,20 @@ const Dashboard: React.FC<DashboardProps> = () => {
             <Text style={styles.sectionTitle}>
               {t("dashboard.wordlists.myWordlists")}
             </Text>
-            <TouchableOpacity
-              style={styles.addButton}
+            <AnimatedTouchable
+              style={[styles.addButton, { transform: [{ scale: pulseAnim }] }]}
               onPress={handleAddNewWordlist}
+              onPressIn={stopPulse}
+              onPressOut={startPulse}
+              activeOpacity={0.85}
+              accessibilityLabel={t("dashboard.wordlists.addNewWordlist", "Add New Wordlist")}
             >
               <Ionicons
                 name="add-circle"
                 size={34}
                 color={theme.colors.primary}
               />
-            </TouchableOpacity>
+            </AnimatedTouchable>
           </View>
         </>
       )}
@@ -290,6 +353,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
               ListHeaderComponent={renderStatsAndSection}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
+              onScrollBeginDrag={stopPulse}
+              onMomentumScrollEnd={startPulse}
               refreshControl={
                 <RefreshControl
                   refreshing={refreshing}
@@ -335,6 +400,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 ListHeaderComponent={renderStatsAndSection}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
+                onScrollBeginDrag={stopPulse}
+                onMomentumScrollEnd={startPulse}
                 refreshControl={
                   <RefreshControl
                     refreshing={refreshing}
@@ -508,7 +575,21 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.colors.text.primary,
     },
     addButton: {
-      padding: 4,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor:
+        theme.mode === 'light' ? '#FFFFFF' : theme.colors.background.surface,
+      borderWidth: 1,
+      borderColor:
+        theme.mode === 'light' ? theme.colors.border.light : theme.colors.ui.border,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: theme.mode === 'light' ? 0.18 : 0.3,
+      shadowRadius: 12,
+      elevation: 10,
     },
 
     emptyContainer: {

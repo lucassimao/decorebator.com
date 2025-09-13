@@ -239,9 +239,12 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       backgroundColor: theme.colors.background.surface,
       borderWidth: 1,
       borderColor: theme.colors.ui.border,
-      ...theme.shadows.md,
-      shadowColor: theme.colors.text.primary,
-      shadowOpacity: theme.mode === "light" ? 0.08 : 0.2,
+      // Stronger shadow + elevation so the avatar floats above content
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: theme.mode === "light" ? 0.18 : 0.3,
+      shadowRadius: 12,
+      elevation: 10,
     },
     avatarContainer: {
       width: "100%",

@@ -40,6 +40,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const language = LANGUAGES.find((l) => item.languageCode === l.code)!;
   const { theme, responsive } = useTheme();
   const styles = createStyles(theme, responsive);
+  
 
   // Use progress from props
   const progressPercentage = progress?.progressPercent ?? 0;
@@ -184,7 +185,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             ) : (
               <Ionicons
                 name="trash-outline"
-                size={responsive.getValueForSize(18, 20, 22, 24)}
+                size={responsive.getValueForSize(16, 18, 20, 22)}
                 color={theme.colors.error}
               />
             )}
@@ -240,11 +241,13 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
               accessibilityLabel={t("wordlistItem.quiz")}
               accessibilityHint="Start quiz session"
             >
-              <MaterialIcons
-                name="play-circle-filled"
-                size={responsive.getValueForSize(20, 22, 24, 26)}
-                color={theme.colors.success}
-              />
+              <View style={styles.playIconWrapper}>
+                <MaterialIcons
+                  name="play-arrow"
+                  size={responsive.getValueForSize(22, 24, 26, 28)}
+                  color={theme.colors.success}
+                />
+              </View>
               <Text style={styles.actionButtonPrimaryText} numberOfLines={1}>
                 {t("wordlistItem.quiz")}
               </Text>
@@ -257,11 +260,13 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
               accessibilityLabel={t("wordlistItem.flashcards")}
               accessibilityHint="Practice with flashcards"
             >
-              <MaterialIcons
-                name="style"
-                size={responsive.getValueForSize(20, 22, 24, 26)}
-                color={theme.colors.semantic.info}
-              />
+              <View style={styles.flashIconWrapper}>
+                <MaterialIcons
+                  name="style"
+                  size={responsive.getValueForSize(20, 22, 24, 26)}
+                  color={theme.colors.semantic.info}
+                />
+              </View>
               <Text style={styles.actionButtonPrimaryText} numberOfLines={1}>
                 {t("wordlistItem.flashcards")}
               </Text>
@@ -377,8 +382,55 @@ const createStyles = (
     },
     // public badge styles removed
     headerMoreButton: {
-      padding: 4,
-      borderRadius: theme.borderRadius.sm,
+      width: responsive.getValueForSize(32, 34, 36, 38),
+      height: responsive.getValueForSize(32, 34, 36, 38),
+      borderRadius: 999,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor:
+        theme.mode === "light" ? "#FFFFFF" : theme.colors.background.surface,
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light" ? theme.colors.border.light : theme.colors.ui.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: theme.mode === "light" ? 0.10 : 0.2,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    playIconWrapper: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor:
+        theme.mode === "light" ? "#FFFFFF" : theme.colors.background.surface,
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light" ? theme.colors.border.light : theme.colors.ui.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: theme.mode === "light" ? 0.18 : 0.3,
+      shadowRadius: 12,
+      elevation: 10,
+    },
+    flashIconWrapper: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor:
+        theme.mode === "light" ? "#FFFFFF" : theme.colors.background.surface,
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light" ? theme.colors.border.light : theme.colors.ui.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: theme.mode === "light" ? 0.18 : 0.3,
+      shadowRadius: 12,
+      elevation: 10,
     },
     actionButtonsContainer: {
       marginTop: responsive.spacing.elementSpacing,
@@ -403,14 +455,12 @@ const createStyles = (
       paddingVertical: responsive.getValueForSize(12, 14, 16, 18),
       paddingHorizontal: responsive.getValueForSize(8, 10, 12, 14),
       borderRadius: theme.borderRadius.md,
-      backgroundColor:
-        theme.mode === "light"
-          ? "rgba(253, 246, 227, 0.3)" // Slightly more visible for primary actions
-          : theme.colors.background.subtle,
+      backgroundColor: theme.colors.background.surface,
       gap: responsive.spacing.elementSpacing / 3,
       minHeight: responsive.getValueForSize(70, 74, 78, 82),
       ...theme.shadows.sm,
     },
+    
     actionButtonSecondary: {
       flex: 1,
       flexDirection: "column",
@@ -421,11 +471,12 @@ const createStyles = (
       borderRadius: theme.borderRadius.sm,
       backgroundColor:
         theme.mode === "light"
-          ? "rgba(253, 246, 227, 0.15)" // More subtle for secondary actions
+          ? "rgba(0, 0, 0, 0.03)" // toned down tint for flatter appearance
           : theme.colors.background.subtle,
       gap: responsive.spacing.elementSpacing / 4,
       minHeight: responsive.getValueForSize(50, 54, 58, 62),
     },
+    
     actionButtonPrimaryText: {
       fontSize: responsive.getValueForSize(12, 14, 15, 16),
       color: theme.colors.text.primary,
