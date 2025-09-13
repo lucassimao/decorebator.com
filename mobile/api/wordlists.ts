@@ -87,18 +87,7 @@ export type Quiz = {
 };
 
 // Public Quiz (MVP)
-export type PublicQuizDifficulty = "easy" | "medium" | "hard";
-
-export type PublishPublicQuizDTO = {
-  title: string;
-  description?: string;
-  difficulty: PublicQuizDifficulty;
-  timeLimitMinutes: number; // 1-15
-};
-
-export type PublishPublicQuizResponse = {
-  slug: string;
-};
+// Public quiz publishing removed from mobile UI; keep read-only endpoints elsewhere
 
 export type CreateWordDTO = Pick<Word, "wordlistId" | "name" | "notes"> & {
   hasOptimisticSubscription?: boolean;
@@ -273,25 +262,7 @@ export async function getProcessingStatus(
 }
 
 // Publish current wordlist as a public quiz (MVP)
-export async function publishPublicQuiz(
-  wordlistId: number,
-  settings: PublishPublicQuizDTO,
-): Promise<PublishPublicQuizResponse> {
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/publish`;
-  return await callAPI<PublishPublicQuizResponse>(
-    "POST",
-    endpoint,
-    JSON.stringify(settings),
-  );
-}
-
-// Unpublish current public quiz for this wordlist (MVP)
-export async function unpublishPublicQuiz(wordlistId: number): Promise<void> {
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/publish`;
-  await callAPI<void>("DELETE", endpoint);
-}
+// Note: publish/unpublish endpoints removed; functions intentionally deleted
 
 // Realtime Chat Session Types and API
 export interface ChatDefinition {

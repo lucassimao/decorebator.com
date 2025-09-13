@@ -2,20 +2,10 @@ import { Wordlist } from "@/api/wordlists";
 import { WordlistProgress } from "@/api/analytics";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Alert,
-  ActivityIndicator,
-  Share,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, Alert, ActivityIndicator } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LANGUAGES } from "./CreateWordlistModal";
 import * as wordlistsApi from "@/api/wordlists";
-import PublishPublicQuizModal from "./PublishPublicQuizModal";
-import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useUserSession } from "@/hooks/useUserSession";
@@ -41,9 +31,9 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [showPublishModal, setShowPublishModal] = useState(false);
-  const [premiumModalContext, setPremiumModalContext] =
-    useState<PremiumUpsellContext>("analytics");
+  const [premiumModalContext, setPremiumModalContext] = useState<PremiumUpsellContext>(
+    "analytics",
+  );
   const router = useRouter();
   const { t } = useTranslation();
   const { isPremium } = useUserSession();
@@ -144,46 +134,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     router.push(`/analytics?wordlistId=${item.id}`);
   };
 
-  const openPublishModal = () => {
-    if (!isPremium) {
-      setPremiumModalContext("public_quiz");
-      setShowPremiumModal(true);
-      return;
-    }
-    setShowPublishModal(true);
-  };
-
-  const getPublicUrl = (slug: string) => {
-    const appDomain = process.env.EXPO_PUBLIC_APP_DOMAIN?.trim();
-    const baseUrl =
-      appDomain && appDomain.startsWith("http")
-        ? appDomain
-        : "http://localhost:4000";
-    return `${baseUrl}/q/${slug}`;
-  };
-
-  const copyPublicLink = async (slug: string) => {
-    const fullUrl = getPublicUrl(slug);
-    const copyLabel = t("wordlistItem.copyUrl", "Copy link");
-    const okLabel = t("common.ok");
-    Alert.alert(
-      t("wordlistItem.publishSuccessTitle", "Published"),
-      t("wordlistItem.publishReadyToShare", "Your quiz is ready to be shared!"),
-      [
-        { text: okLabel, style: "default" },
-        {
-          text: copyLabel,
-          onPress: () => Clipboard.setStringAsync(fullUrl),
-        },
-      ],
-    );
-  };
-
-  const handlePublishSuccess = async (slug: string) => {
-    await copyPublicLink(slug);
-    // refresh lists to pull in publicQuizSlug
-    queryClient.invalidateQueries({ queryKey: ["wordlists"] });
-  };
+  // Removed publish/share functionality
 
   // Removed menu-only: view on web handled elsewhere if needed
 
@@ -215,21 +166,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             >
               {item.name}
             </Text>
-            {item.publicQuizSlug ? (
-              <View
-                style={styles.publicBadge}
-                accessibilityLabel={t("wordlistItem.publicBadge", "Public")}
-              >
-                <MaterialIcons
-                  name="public"
-                  size={responsive.getValueForSize(12, 14, 14, 16)}
-                  color={theme.colors.text.inverse}
-                />
-                <Text style={styles.publicBadgeText}>
-                  {t("wordlistItem.publicBadge", "Public")}
-                </Text>
-              </View>
-            ) : null}
+            {/* Public badge removed */}
           </View>
           <TouchableOpacity
             style={styles.headerMoreButton}
@@ -374,59 +311,10 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.actionButtonSecondary}
-              onPress={async () => {
-                if (item.publicQuizSlug) {
-                  const url = getPublicUrl(item.publicQuizSlug!);
-                  const cta = t(
-                    "wordlistItem.shareCta",
-                    "I just published a vocab quiz—can you beat it?",
-                  );
-                  const message = `${cta} ${url}`;
-                  try {
-                    await Share.share({ message, title: item.name });
-                  } catch {
-                    // no-op
-                  }
-                } else {
-                  openPublishModal();
-                }
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={
-                item.publicQuizSlug
-                  ? t("wordlistItem.share", "Share")
-                  : t("wordlistItem.publishPublicQuiz", "Publish public quiz")
-              }
-              accessibilityHint={
-                item.publicQuizSlug
-                  ? "Share this public quiz link"
-                  : "Publish this wordlist as a public quiz"
-              }
-            >
-              <MaterialIcons
-                name={item.publicQuizSlug ? "share" : "upload"}
-                size={responsive.getValueForSize(16, 18, 20, 22)}
-                color={theme.colors.primary}
-              />
-              <Text style={styles.actionButtonSecondaryText} numberOfLines={1}>
-                {item.publicQuizSlug
-                  ? t("wordlistItem.share", "Share")
-                  : t("wordlistItem.publish", "Publish")}
-              </Text>
-            </TouchableOpacity>
+            {/* Publish/Share action removed */}
           </View>
         </View>
       </TouchableOpacity>
-
-      <PublishPublicQuizModal
-        visible={showPublishModal}
-        wordlistId={item.id}
-        defaultTitle={item.name}
-        onClose={() => setShowPublishModal(false)}
-        onSuccess={handlePublishSuccess}
-      />
 
       <PremiumUpsellModal
         visible={showPremiumModal}
@@ -487,21 +375,7 @@ const createStyles = (
       color: theme.colors.text.primary,
       marginBottom: responsive.spacing.elementSpacing / 4,
     },
-    publicBadge: {
-      flexDirection: "row",
-      alignSelf: "flex-start",
-      alignItems: "center",
-      gap: 6,
-      backgroundColor: theme.colors.primary,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: theme.borderRadius.sm,
-    },
-    publicBadgeText: {
-      color: theme.colors.text.inverse,
-      fontSize: responsive.getScaledFont("label"),
-      fontWeight: "600",
-    },
+    // public badge styles removed
     headerMoreButton: {
       padding: 4,
       borderRadius: theme.borderRadius.sm,
@@ -721,13 +595,5 @@ const createStyles = (
       fontWeight: "500",
       color: "#636E72",
     },
-    shareOverlay: {
-      position: "absolute",
-      top: responsive.getValueForSize(6, 6, 6, 8),
-      right: responsive.getValueForSize(6, 6, 6, 8),
-      padding: 4,
-      borderRadius: theme.borderRadius.sm,
-      backgroundColor:
-        theme.mode === "light" ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.06)",
-    },
+    // share overlay style removed
   });
