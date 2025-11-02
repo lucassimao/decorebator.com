@@ -96,10 +96,35 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html>
       <head>
+        {/* Preload LCP hero image to improve discovery/prioritization */}
+        <link rel="preload" as="image" href="/app-screenshot.jpeg" fetchPriority="high" />
+
+        {/* Make Font Awesome non-blocking: preload + media=print swap */}
         <link
-          rel="stylesheet"
+          rel="preload"
+          as="style"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         />
+        <link
+          id="fa-css"
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          media="print"
+        />
+        <script
+          // Swap Font Awesome to media=all after it loads (non-blocking)
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){var l=document.getElementById('fa-css');if(!l)return;function s(){l.media='all';} if(l.addEventListener){l.addEventListener('load',s);} else {l.onload=s;}})();",
+          }}
+        />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          />
+        </noscript>
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />

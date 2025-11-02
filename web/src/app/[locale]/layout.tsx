@@ -20,7 +20,7 @@ export async function generateMetadata({
     de: 'Meistern Sie jede Sprache mit KI-gestütztem Vokabellernen, Wiederholung mit Abstand und 8 fesselnden Quiz-Modi. Schließen Sie sich Lernenden aus aller Welt an, die effektiv neue Sprachen meistern.',
     it: "Padroneggia qualsiasi lingua con l'apprendimento del vocabolario alimentato dall'IA, la ripetizione distanziata e 8 modalità quiz coinvolgenti. Unisciti a studenti di tutto il mondo che padroneggiano efficacemente nuove lingue.",
     pt: 'Domine qualquer idioma com aprendizado de vocabulário com IA, repetição espaçada e 8 modos de quiz envolventes. Junte-se a estudantes de todo o mundo dominando novos idiomas de forma eficaz.',
-    ja: 'AI搭載語彙学習、科学的に証明された間隔反復、8つの魅力的なクイズモードで任意の言語をマスターしましょう。世界中の学習者と一緒に効果的に新しい言語を習得しましょう。',
+    ja: 'AIが定義・例文・画像・音声を自動生成。実証済みの間隔反復と8種類のクイズで、語彙がしっかり定着します。',
   }
 
   const localeNames: Record<string, string> = {
