@@ -4,7 +4,6 @@ import { SplashScreen, useRouter } from "expo-router";
 import { useEffect } from "react";
 import * as Sentry from "@sentry/react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Index() {
   const { user, isLoading, error } = useUserSession();
@@ -34,15 +33,7 @@ export default function Index() {
           // Log authentication errors to Sentry for debugging
           Sentry.captureException(error);
         }
-        try {
-          const completed = await AsyncStorage.getItem("@onboarding_completed");
-          if (!completed) {
-            router.replace("/onboarding");
-            return;
-          }
-        } catch {
-          // If storage fails, fall back to signin
-        }
+
         router.replace("/signin");
       } else {
         // User is authenticated

@@ -29,7 +29,10 @@
     "more": "Más",
     "retry": "Reintentar",
     "tryAgain": "Intenta de Nuevo",
-    "info": "Información"
+    "info": "Información",
+    "skip": "Omitir",
+    "notNow": "Ahora no",
+    "min": "min"
   },
   "update": {
     "checkForUpdates": "Buscar actualizaciones",
@@ -115,11 +118,113 @@
   },
   "welcome": {
     "title": "¡Bienvenido a Decorebator! 🎉",
-    "subtitle": "Tu viaje de aprendizaje de idiomas con IA comienza aquí",
+    "subtitle": "Crea tu lista de palabras y Decorebator la convierte en cuestionarios adaptativos, imágenes y práctica diaria",
     "firstWordlistSuccess": "¡Felicitaciones! 🎉",
     "firstWordlistMessage": "¡Tu primera lista está lista! Comienza agregando palabras.",
     "addWordsNow": "Agregar Palabras",
     "addWordsLater": "Más Tarde"
+  },
+  "onboarding": {
+    "stepIndicator": "Paso {{step}} de {{total}}",
+    "welcome": {
+      "greeting": "Te damos la bienvenida a",
+      "highlight": {
+        "generator": "Crea listas y nuestra IA genera 8 pruebas, imágenes, audios y desafíos",
+        "chat": "El coach de voz con IA practica en voz alta las palabras que guardas",
+        "modes": "Ocho modos de cuestionario que mantienen la práctica fresca",
+        "progress": "Analíticas en tiempo real para celebrar tus rachas"
+      }
+    },
+    "features": {
+      "heading": "Descubre todo lo que puedes hacer",
+      "description": "Desliza los destacados y descubre cómo Decorebator te inspira cada día.",
+      "quizzes": {
+        "title": "Cuestionarios adaptativos",
+        "subtitle": "Cambia entre significados, escucha, escritura e imágenes en segundos.",
+        "bulletOne": "La dificultad inteligente te mantiene desafiado.",
+        "bulletTwo": "8 modos listos para sesiones rápidas."
+      },
+      "chat": {
+        "title": "Coach de conversación en vivo",
+        "subtitle": "Practica tus palabras guardadas en voz alta con la guía instantánea de nuestra IA.",
+        "bulletOne": "Inicia una sesión de voz desde cualquier lista en cuestión de segundos.",
+        "bulletTwo": "Las transcripciones en tiempo real registran cada corrección."
+      },
+      "flashcards": {
+        "title": "Tarjetas inteligentes",
+        "subtitle": "Las cajas Leitner espacian tus repasos para fijar cada palabra.",
+        "bulletOne": "La IA enriquece las tarjetas con ejemplos y audio.",
+        "bulletTwo": "El modo sin conexión mantiene la práctica en cualquier lugar."
+      },
+      "progress": {
+        "title": "Sigue tu progreso",
+        "subtitle": "Celebra rachas, niveles de dominio e impulso semanal con gráficos preciosos.",
+        "bulletOne": "Los recordatorios diarios de tu meta mantienen viva la racha.",
+        "bulletTwo": "Detecta fortalezas y vacíos por lista al instante."
+      },
+      "images": {
+        "title": "Visuales y audio con IA",
+        "subtitle": "Cada palabra recibe contexto con imágenes, pronunciación y matices culturales.",
+        "bulletOne": "Las pronunciaciones las narran acentos nativos.",
+        "bulletTwo": "Ilustraciones generadas para tu idioma."
+      }
+    },
+    "personalize": {
+      "title": "Personalicemos esto",
+      "subtitle": "Elige un idioma y un foco diario para adaptar las lecciones a tu agenda.",
+      "language": "Idioma de aprendizaje",
+      "goal": "Meta diaria",
+      "goalValue": "{{minutes}} min/día",
+      "preview": {
+        "title": "Tu vista previa de estudio",
+        "language": "Tarjetas diarias en {{language}}",
+        "goal": "Meta fijada en {{minutes}} minutos",
+        "hint": "Puedes ajustarlo cuando quieras en Configuración."
+      }
+    },
+    "notifications": {
+      "title": "Mantente al día",
+      "subtitle": "Recordatorios suaves te avisan cuando toca repasar para que no pierdas la racha.",
+      "enable": "Activar recordatorios",
+      "loading": "Activando...",
+      "morning": "Elige horarios de mañana, tarde o noche que encajen con tu rutina.",
+      "goal": "Los recordatorios siguen los minutos diarios que elegiste.",
+      "control": "Tú mandas: apágalos cuando quieras."
+    },
+    "account": {
+      "title": "Crea tu cuenta",
+      "subtitle": "Asegura tu progreso hoy, descubre lo que incluye el plan gratuito y aprende cómo mejorar cuando quieras.",
+      "free": {
+        "title": "El plan gratuito incluye",
+        "features": {
+          "wordlists": "Listas sincronizadas en todos tus dispositivos.",
+          "quizzes": "Cuestionarios adaptativos con seguimiento de rachas.",
+          "analytics": "Resumen de progreso de los últimos 7 días."
+        }
+      },
+      "premium": {
+        "title": "Premium desbloquea",
+        "features": {
+          "quizzes": "Coach de voz en vivo con transcripciones en tiempo real.",
+          "offline": "Los ocho modos de cuestionario más visuales y audio IA.",
+          "analytics": "Práctica offline con autosincronización y analíticas profundas."
+        }
+      },
+      "upgrade": {
+        "title": "Cómo mejorar más adelante",
+        "steps": {
+          "settings": "Cuando estés dentro de la app, abre Configuración desde el menú del panel.",
+          "option": "Toca \"Mejorar a Premium\" en la sección Cuenta para ver los detalles del plan.",
+          "confirm": "Elige tu plan, confirma la mejora o inicia una prueba gratuita cuando quieras."
+        }
+      },
+      "summary": {
+        "language": "Aprendiendo: {{flag}} {{language}}",
+        "goal": "Foco diario: {{minutes}} min/día",
+        "ready": "El seguimiento de rachas empieza en cuanto te registres."
+      },
+      "haveAccount": "¿Ya tienes cuenta? Inicia sesión"
+    }
   },
   "dashboard": {
     "header": {
@@ -279,6 +384,7 @@
     "initializing": "Iniciando sesión de chat...",
     "connectionSlow": "La conexión está tardando más de lo esperado",
     "genericError": "Algo salió mal. Por favor, inténtalo de nuevo.",
+    "microphonePermission": "Necesitas permitir el micrófono para usar el chat de voz.",
     "listening": "Escuchando...",
     "speakNow": "Habla ahora para practicar tu vocabulario",
     "wordsAvailable": "{{count}} palabras disponibles para practicar",
@@ -292,6 +398,9 @@
     "endCall": "Finalizar llamada"
   },
   "settings": {
+    "restartOnboarding": "Reiniciar introducción",
+    "onboardingReset": "Introducción restablecida. Te guiaremos de nuevo la próxima vez.",
+    "onboardingResetError": "Error al restablecer la introducción.",
     "title": "Configuración",
     "otherSettings": "Otras Configuraciones",
     "helpAndSupport": "Ayuda y Soporte",
@@ -656,7 +765,11 @@
     "quizDescription": "Descripción (opcional)",
     "quizDescriptionPlaceholder": "Breve descripción",
     "difficulty": "Dificultad",
-    "diff": { "easy": "Fácil", "medium": "Medio", "hard": "Difícil" },
+    "diff": {
+      "easy": "Fácil",
+      "medium": "Medio",
+      "hard": "Difícil"
+    },
     "timeLimit": "Límite de tiempo (minutos)",
     "publish": "Publicar",
     "publishSuccessTitle": "Publicado",

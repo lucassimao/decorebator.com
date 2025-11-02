@@ -27,6 +27,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { requestRecordingPermissionsAsync } from "expo-audio";
 import {
   ChatSessionData,
   createChatSession,
@@ -256,19 +257,35 @@ const RealtimeChatScreen: React.FC = () => {
     [eventHandler],
   );
 
+  const ensureAudioPermission = useCallback(async () => {
+    const { granted } = await requestRecordingPermissionsAsync();
+    return granted;
+  }, []);
+
+  const chatConfig = useMemo(() => {
+    if (!sessionData || selectedWords.length === 0) {
+      return null;
+    }
+
+    return {
+      sessionData,
+      selectedWords,
+      wordlistName: wordlistName || "",
+      languageCode: wordlistMeta?.languageCode || "en",
+      onConnectionStateChange: handleConnectionStateChange,
+      onServerEvent: handleServerEvent,
+    } as const;
+  }, [
+    sessionData,
+    selectedWords,
+    wordlistName,
+    wordlistMeta?.languageCode,
+    handleConnectionStateChange,
+    handleServerEvent,
+  ]);
+
   // Initialize WebRTC chat using the hook
-  const realtimeChat = useRealtimeChat(
-    sessionData && selectedWords.length > 0
-      ? {
-          sessionData,
-          selectedWords,
-          wordlistName: wordlistName || "",
-          languageCode: wordlistMeta?.languageCode || "en",
-          onConnectionStateChange: handleConnectionStateChange,
-          onServerEvent: handleServerEvent,
-        }
-      : ({} as any), // This will be properly set once sessionData and selectedWords are available
-  );
+  const realtimeChat = useRealtimeChat(chatConfig);
 
   // Destructure to stabilize hook dependencies
   const initializeConnection = realtimeChat.initializeConnection;
@@ -286,6 +303,16 @@ const RealtimeChatScreen: React.FC = () => {
       // Check if we have selected words
       if (selectedWordIdList.length === 0) {
         throw new Error("No words selected for chat practice");
+      }
+
+      const permissionGranted = await ensureAudioPermission();
+      if (!permissionGranted) {
+        throw new Error(
+          t(
+            "realtimeChat.microphonePermission",
+            "Microphone access is required for voice chat.",
+          ),
+        );
       }
 
       // Set timeout for session initialization (10 seconds)
@@ -310,14 +337,14 @@ const RealtimeChatScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [wordlistId, selectedWordIdList]);
+  }, [wordlistId, selectedWordIdList, ensureAudioPermission, t]);
 
-  // Initialize connection when sessionData is available
+  // Initialize connection when configuration is ready
   useEffect(() => {
-    if (sessionData && initializeConnection) {
+    if (chatConfig && !realtimeChat.isConnected) {
       initializeConnection();
     }
-  }, [sessionData, initializeConnection]);
+  }, [chatConfig, initializeConnection, realtimeChat.isConnected]);
 
   // Initialize session on mount, but only after we have selected words
   useEffect(() => {

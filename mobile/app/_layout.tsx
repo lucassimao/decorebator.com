@@ -82,6 +82,22 @@ function RootLayoutNav() {
                 <Stack>
                   <Stack.Screen name="index" options={{ headerShown: false }} />
                   <Stack.Screen
+                    name="onboarding/index"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="onboarding/features"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="onboarding/personalize"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="onboarding/account"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
                     name="analytics"
                     options={{ headerShown: false }}
                   />

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import InCallManager from "react-native-incall-manager";
 import {
   mediaDevices,
@@ -6,6 +6,8 @@ import {
   RTCPeerConnection,
 } from "react-native-webrtc";
 import { ChatSessionData } from "../api/wordlists";
+
+const noop = () => {};
 
 export interface ConnectionState {
   status: "disconnected" | "connecting" | "connected" | "error";
@@ -30,15 +32,23 @@ export interface RealtimeChatConfig {
   onServerEvent: (event: any) => void;
 }
 
-export const useRealtimeChat = (config: RealtimeChatConfig) => {
-  const {
-    sessionData,
-    selectedWords,
-    wordlistName,
-    languageCode,
-    onConnectionStateChange,
-    onServerEvent,
-  } = config;
+export const useRealtimeChat = (config: RealtimeChatConfig | null) => {
+  const sessionData = config?.sessionData ?? null;
+  const selectedWords = useMemo(
+    () => config?.selectedWords ?? [],
+    [config?.selectedWords],
+  );
+  const wordlistName = config?.wordlistName ?? "";
+  const languageCode = config?.languageCode ?? "en";
+  const onConnectionStateChange = config?.onConnectionStateChange ?? noop;
+  const onServerEvent = config?.onServerEvent ?? noop;
+
+  const isConfigReady = Boolean(
+    sessionData &&
+      selectedWords.length > 0 &&
+      config?.onConnectionStateChange &&
+      config?.onServerEvent,
+  );
 
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const dataChannelRef = useRef<any>(null);
@@ -59,6 +69,12 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
 
   // Generate instructions with specific words context
   const generateInstructionsWithWords = useCallback((): string => {
+    if (!selectedWords.length) {
+      return `You are helping the user practice ${languageCode} vocabulary. Keep the conversation light and focus on reinforcing recently studied words once they are available.`;
+    }
+
+    const listLabel = wordlistName || "their current wordlist";
+
     const wordsList = selectedWords
       .map((word) => {
         const definitionsText = word.definitions
@@ -74,7 +90,7 @@ export const useRealtimeChat = (config: RealtimeChatConfig) => {
       })
       .join("\n\n");
 
-    return `You are helping the user practice ${languageCode} vocabulary from the wordlist "${wordlistName}". 
+    return `You are helping the user practice ${languageCode} vocabulary from the wordlist "${listLabel}". 
 
 # Role & Objective
 You are a friendly vocabulary practice assistant helping users master new words through conversation.
@@ -123,11 +139,20 @@ ${wordsList}
 
   // Send session update following OpenAI documentation format
   const sendSessionUpdate = useCallback(() => {
+    if (!isConfigReady) {
+      console.warn(
+        "Realtime chat session update skipped; configuration not ready.",
+      );
+      return;
+    }
+
+    const modelId = sessionData?.webrtcConfig.model ?? "gpt-realtime";
+
     const sessionUpdateEvent = {
       type: "session.update",
       session: {
         type: "realtime",
-        model: "gpt-realtime",
+        model: modelId,
         output_modalities: ["audio"],
         audio: {
           input: {
@@ -140,36 +165,72 @@ ${wordsList}
     };
 
     sendEvent(sessionUpdateEvent);
-  }, [sendEvent, generateInstructionsWithWords]);
+  }, [
+    sendEvent,
+    generateInstructionsWithWords,
+    isConfigReady,
+    sessionData?.webrtcConfig.model,
+  ]);
+
+  const cleanup = useCallback(() => {
+    try {
+      InCallManager.setForceSpeakerphoneOn(false);
+    } catch {}
+
+    try {
+      InCallManager.stop();
+      InCallManager.setMicrophoneMute(false);
+      console.log("[InCallManager] stop (cleanup)");
+    } catch {}
+
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current = null;
+    }
+    remoteStreamRef.current = null;
+
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
+    }
+
+    if (dataChannelRef.current) {
+      dataChannelRef.current.close();
+      dataChannelRef.current = null;
+    }
+
+    setIsConnected(false);
+    setIsMuted(false);
+  }, []);
 
   // Initialize WebRTC connection
   const initializeConnection = useCallback(async () => {
+    if (!isConfigReady || !sessionData) {
+      console.warn(
+        "Realtime chat connection skipped; configuration or session data missing.",
+      );
+      return;
+    }
+
     try {
       onConnectionStateChange({ status: "connecting" });
 
-      // Create RTCPeerConnection with proper ICE servers (merge TURN if provided)
       const mergedIceServers = [
         { urls: "stun:stun.l.google.com:19302" },
         ...(sessionData.webrtcConfig.iceServers || []),
       ];
-      const pc = new RTCPeerConnection({
-        iceServers: mergedIceServers,
-      });
-
+      const pc = new RTCPeerConnection({ iceServers: mergedIceServers });
       peerConnectionRef.current = pc;
 
-      // Set up connection state listeners
       pc.addEventListener("connectionstatechange", () => {
         console.log("Connection state:", pc.connectionState);
         switch (pc.connectionState) {
           case "connected":
             onConnectionStateChange({ status: "connected" });
             setIsConnected(true);
-            // Engage in-call audio behavior (both iOS and Android)
             try {
               InCallManager.start({ media: "audio" });
               InCallManager.setForceSpeakerphoneOn(true);
-
               console.log("[InCallManager] start + speakerphone ON");
             } catch (e) {
               console.warn("Failed to start InCallManager:", e);
@@ -185,25 +246,27 @@ ${wordsList}
               status: "error",
               error: "Connection lost",
             });
-            setIsConnected(false);
-            try {
-              InCallManager.stop();
-
-              console.log("[InCallManager] stop (disconnected)");
-            } catch {}
+            cleanup();
             break;
         }
       });
 
-      const stream = await mediaDevices.getUserMedia({
-        audio: true,
+      pc.addEventListener("iceconnectionstatechange", () => {
+        const state = pc.iceConnectionState;
+        console.log("ICE state:", state);
+        if (state === "failed" || state === "disconnected") {
+          onConnectionStateChange({
+            status: "error",
+            error: "Network connection lost",
+          });
+          cleanup();
+        }
       });
 
+      const stream = await mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
+      stream.getTracks().forEach((track) => pc.addTrack(track));
 
-      pc.addTrack(stream.getTracks()[0]);
-
-      // Listen for remote tracks (audio)
       pc.addEventListener("track", (event: any) => {
         try {
           const [remoteStream] = event.streams || [];
@@ -216,7 +279,6 @@ ${wordsList}
         }
       });
 
-      // Create data channel for events
       const dataChannel = pc.createDataChannel("oai-events");
       dataChannelRef.current = dataChannel;
 
@@ -227,7 +289,6 @@ ${wordsList}
 
       dataChannel.addEventListener("message", (event) => {
         try {
-          // Ensure event.data is a string before parsing
           const data =
             typeof event.data === "string" ? event.data : event.data.toString();
           const serverEvent = JSON.parse(data);
@@ -243,6 +304,7 @@ ${wordsList}
           status: "error",
           error: "Data channel error",
         });
+        cleanup();
       });
 
       // Create offer
@@ -303,6 +365,14 @@ ${wordsList}
         sdp: await sdpResponse.text(),
       };
 
+      // It's possible the peer connection was closed while we awaited the
+      // server response (for example, the user ended the call). Bail out early
+      // in that case to avoid "Peer Connection is closed" errors.
+      if (peerConnectionRef.current !== pc || pc.connectionState === "closed") {
+        console.warn("Skipping remote description: peer connection already closed");
+        return;
+      }
+
       await pc.setRemoteDescription(answer);
     } catch (error) {
       console.error("WebRTC initialization error:", error);
@@ -310,8 +380,16 @@ ${wordsList}
         status: "error",
         error: error instanceof Error ? error.message : "Unknown error",
       });
+      cleanup();
     }
-  }, [sessionData, onConnectionStateChange, onServerEvent, sendSessionUpdate]);
+  }, [
+    sessionData,
+    onConnectionStateChange,
+    onServerEvent,
+    sendSessionUpdate,
+    isConfigReady,
+    cleanup,
+  ]);
 
   // Toggle mute functionality
   const toggleMute = useCallback(() => {
@@ -330,40 +408,6 @@ ${wordsList}
   }, [isMuted]);
 
   // Cleanup function
-  const cleanup = useCallback(() => {
-    // First, stop in-call manager (both platforms) to release audio focus/routes
-    try {
-      InCallManager.stop();
-      InCallManager.setMicrophoneMute(false);
-      console.log("[InCallManager] stop (cleanup)");
-    } catch {}
-
-    // Stop local stream
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((track) => track.stop());
-      localStreamRef.current = null;
-    }
-    // Release remote stream ref
-    remoteStreamRef.current = null;
-
-    // Close peer connection
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
-
-    // Close data channel
-    if (dataChannelRef.current) {
-      dataChannelRef.current.close();
-      dataChannelRef.current = null;
-    }
-
-    setIsConnected(false);
-    setIsMuted(false);
-  }, []);
-
-  // (moved above)
-
   return {
     initializeConnection,
     cleanup,

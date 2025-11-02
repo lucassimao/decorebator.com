@@ -2,7 +2,14 @@ import { Wordlist } from "@/api/wordlists";
 import { WordlistProgress } from "@/api/analytics";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View, Alert, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LANGUAGES } from "./CreateWordlistModal";
 import * as wordlistsApi from "@/api/wordlists";
@@ -31,16 +38,14 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [premiumModalContext, setPremiumModalContext] = useState<PremiumUpsellContext>(
-    "analytics",
-  );
+  const [premiumModalContext, setPremiumModalContext] =
+    useState<PremiumUpsellContext>("analytics");
   const router = useRouter();
   const { t } = useTranslation();
   const { isPremium } = useUserSession();
   const language = LANGUAGES.find((l) => item.languageCode === l.code)!;
   const { theme, responsive } = useTheme();
   const styles = createStyles(theme, responsive);
-  
 
   // Use progress from props
   const progressPercentage = progress?.progressPercent ?? 0;
@@ -391,10 +396,12 @@ const createStyles = (
         theme.mode === "light" ? "#FFFFFF" : theme.colors.background.surface,
       borderWidth: 1,
       borderColor:
-        theme.mode === "light" ? theme.colors.border.light : theme.colors.ui.border,
+        theme.mode === "light"
+          ? theme.colors.border.light
+          : theme.colors.ui.border,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: theme.mode === "light" ? 0.10 : 0.2,
+      shadowOpacity: theme.mode === "light" ? 0.1 : 0.2,
       shadowRadius: 8,
       elevation: 6,
     },
@@ -408,7 +415,9 @@ const createStyles = (
         theme.mode === "light" ? "#FFFFFF" : theme.colors.background.surface,
       borderWidth: 1,
       borderColor:
-        theme.mode === "light" ? theme.colors.border.light : theme.colors.ui.border,
+        theme.mode === "light"
+          ? theme.colors.border.light
+          : theme.colors.ui.border,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: theme.mode === "light" ? 0.18 : 0.3,
@@ -425,7 +434,9 @@ const createStyles = (
         theme.mode === "light" ? "#FFFFFF" : theme.colors.background.surface,
       borderWidth: 1,
       borderColor:
-        theme.mode === "light" ? theme.colors.border.light : theme.colors.ui.border,
+        theme.mode === "light"
+          ? theme.colors.border.light
+          : theme.colors.ui.border,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: theme.mode === "light" ? 0.18 : 0.3,
@@ -460,7 +471,7 @@ const createStyles = (
       minHeight: responsive.getValueForSize(70, 74, 78, 82),
       ...theme.shadows.sm,
     },
-    
+
     actionButtonSecondary: {
       flex: 1,
       flexDirection: "column",
@@ -476,7 +487,7 @@ const createStyles = (
       gap: responsive.spacing.elementSpacing / 4,
       minHeight: responsive.getValueForSize(50, 54, 58, 62),
     },
-    
+
     actionButtonPrimaryText: {
       fontSize: responsive.getValueForSize(12, 14, 15, 16),
       color: theme.colors.text.primary,

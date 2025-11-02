@@ -29,7 +29,10 @@
     "more": "Più",
     "retry": "Riprova",
     "tryAgain": "Riprova",
-    "info": "Info"
+    "info": "Info",
+    "skip": "Salta",
+    "notNow": "Non ora",
+    "min": "min"
   },
   "update": {
     "checkForUpdates": "Verifica aggiornamenti",
@@ -115,11 +118,113 @@
   },
   "welcome": {
     "title": "Benvenuto su Decorebator! 🎉",
-    "subtitle": "Il tuo viaggio nell'apprendimento delle lingue con IA inizia qui",
+    "subtitle": "Crea la tua lista di parole e Decorebator la trasforma in quiz adattivi, visual e pratica quotidiana",
     "firstWordlistSuccess": "Congratulazioni! 🎉",
     "firstWordlistMessage": "La tua prima lista è pronta! Inizia ad aggiungere parole.",
     "addWordsNow": "Aggiungi Parole",
     "addWordsLater": "Più Tardi"
+  },
+  "onboarding": {
+    "stepIndicator": "Passo {{step}} di {{total}}",
+    "welcome": {
+      "greeting": "Benvenuto in",
+      "highlight": {
+        "generator": "Crea le tue liste e la nostra IA genera 8 test, immagini, audio e sfide",
+        "chat": "Il coach vocale IA ripassa ad alta voce le parole che salvi",
+        "modes": "Otto modalità quiz per mantenere la pratica stimolante",
+        "progress": "Analitiche in tempo reale per celebrare le tue streak"
+      }
+    },
+    "features": {
+      "heading": "Scopri tutto ciò che puoi fare",
+      "description": "Scorri i punti salienti e scopri come Decorebator ti motiva ogni giorno.",
+      "quizzes": {
+        "title": "Quiz adattivi",
+        "subtitle": "Passa in pochi secondi da significati, ascolto, scrittura e immagini.",
+        "bulletOne": "La difficoltà intelligente ti mette sempre alla prova.",
+        "bulletTwo": "8 modalità pronte per sessioni lampo."
+      },
+      "chat": {
+        "title": "Coach di conversazione live",
+        "subtitle": "Allena ad alta voce le parole salvate con il feedback immediato dell'IA.",
+        "bulletOne": "Avvia una sessione vocale da qualsiasi lista in pochi secondi.",
+        "bulletTwo": "Le trascrizioni in tempo reale registrano ogni correzione."
+      },
+      "flashcards": {
+        "title": "Flashcard intelligenti",
+        "subtitle": "Le scatole Leitner diluiscono le ripetizioni così ogni parola resta impressa.",
+        "bulletOne": "L'IA arricchisce le card con esempi e audio.",
+        "bulletTwo": "La modalità offline ti fa studiare ovunque."
+      },
+      "progress": {
+        "title": "Monitora i tuoi progressi",
+        "subtitle": "Festeggia streak, livelli di padronanza e ritmo settimanale con grafici splendidi.",
+        "bulletOne": "I promemoria dell'obiettivo giornaliero mantengono viva la streak.",
+        "bulletTwo": "Vedi subito punti di forza e lacune per lista."
+      },
+      "images": {
+        "title": "Visual e audio IA",
+        "subtitle": "Ogni parola ha contesto con immagini, pronuncia e sfumature culturali.",
+        "bulletOne": "Pronunce registrate da parlanti nativi.",
+        "bulletTwo": "Illustrazioni generate per la tua lingua."
+      }
+    },
+    "personalize": {
+      "title": "Personalizziamo tutto",
+      "subtitle": "Scegli una lingua e un focus giornaliero per adattare le lezioni alla tua agenda.",
+      "language": "Lingua di apprendimento",
+      "goal": "Obiettivo giornaliero",
+      "goalValue": "{{minutes}} min/giorno",
+      "preview": {
+        "title": "Anteprima del tuo percorso",
+        "language": "Card quotidiane in {{language}}",
+        "goal": "Obiettivo fissato a {{minutes}} minuti",
+        "hint": "Puoi modificarlo in qualsiasi momento nelle Impostazioni."
+      }
+    },
+    "notifications": {
+      "title": "Resta sul pezzo",
+      "subtitle": "Promemoria delicati ti avvisano quando studiare così la streak non si interrompe.",
+      "enable": "Attiva i promemoria",
+      "loading": "Attivazione...",
+      "morning": "Scegli fasce mattina, pomeriggio o sera in linea con la tua routine.",
+      "goal": "Promemoria basati sull'obiettivo seguono i minuti quotidiani scelti.",
+      "control": "Hai sempre il controllo: disattivali quando vuoi."
+    },
+    "account": {
+      "title": "Crea il tuo account",
+      "subtitle": "Metti al sicuro i tuoi progressi, scopri cosa include il piano gratuito e capisci come passare a Premium quando vuoi.",
+      "free": {
+        "title": "Il piano gratuito include",
+        "features": {
+          "wordlists": "Liste di parole sincronizzate su tutti i dispositivi.",
+          "quizzes": "Quiz adattivi con tracciamento della streak.",
+          "analytics": "Panoramica dei progressi degli ultimi 7 giorni."
+        }
+      },
+      "premium": {
+        "title": "Premium sblocca",
+        "features": {
+          "quizzes": "Coach vocale live con trascrizioni in tempo reale.",
+          "offline": "Tutti e otto i quiz, visual IA e pacchetti audio.",
+          "analytics": "Studio offline con autosync e analisi approfondite."
+        }
+      },
+      "upgrade": {
+        "title": "Come passare a Premium più avanti",
+        "steps": {
+          "settings": "Una volta nell'app, apri Impostazioni dal menu della dashboard.",
+          "option": "Tocca \"Passa a Premium\" nella sezione Account per vedere i dettagli del piano.",
+          "confirm": "Scegli il piano, conferma l'upgrade o avvia una prova gratuita quando vuoi."
+        }
+      },
+      "summary": {
+        "language": "Stai imparando: {{flag}} {{language}}",
+        "goal": "Focus giornaliero: {{minutes}} min/giorno",
+        "ready": "Il monitoraggio delle streak parte appena ti registri."
+      },
+      "haveAccount": "Hai già un account? Accedi"
+    }
   },
   "dashboard": {
     "header": {
@@ -279,6 +384,7 @@
     "initializing": "Avvio sessione di chat...",
     "connectionSlow": "La connessione sta richiedendo più tempo del previsto",
     "genericError": "Qualcosa è andato storto. Per favore riprova.",
+    "microphonePermission": "Il microfono è necessario per usare il chat vocale.",
     "listening": "In ascolto...",
     "speakNow": "Parla ora per praticare il tuo vocabolario",
     "wordsAvailable": "{{count}} parole disponibili per la pratica",
@@ -292,6 +398,9 @@
     "endCall": "Termina chiamata"
   },
   "settings": {
+    "restartOnboarding": "Riavvia onboarding",
+    "onboardingReset": "Onboarding reimpostato. Ti guideremo di nuovo la prossima volta.",
+    "onboardingResetError": "Impossibile reimpostare l'onboarding.",
     "title": "Impostazioni",
     "otherSettings": "Altre Impostazioni",
     "helpAndSupport": "Aiuto e Supporto",
@@ -656,7 +765,11 @@
     "quizDescription": "Descrizione (opzionale)",
     "quizDescriptionPlaceholder": "Breve descrizione",
     "difficulty": "Difficoltà",
-    "diff": { "easy": "Facile", "medium": "Medio", "hard": "Difficile" },
+    "diff": {
+      "easy": "Facile",
+      "medium": "Medio",
+      "hard": "Difficile"
+    },
     "timeLimit": "Limite di tempo (minuti)",
     "publish": "Pubblica",
     "publishSuccessTitle": "Pubblicato",

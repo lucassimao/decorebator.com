@@ -1,0 +1,407 @@
+import React, { useMemo, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
+import { usePostHog } from "posthog-react-native";
+import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import { Feather } from "@expo/vector-icons";
+import LottieView, { AnimationObject } from "lottie-react-native";
+
+const { width } = Dimensions.get("window");
+
+// Mirror the horizontal padding applied in OnboardingLayout.content for accurate slide sizing.
+const LAYOUT_HORIZONTAL_PADDING = 24;
+const CAROUSEL_HORIZONTAL_PADDING = 20;
+const SLIDE_HORIZONTAL_MARGIN = 12;
+const TOTAL_SLIDE_INSETS =
+  2 *
+  (LAYOUT_HORIZONTAL_PADDING +
+    CAROUSEL_HORIZONTAL_PADDING +
+    SLIDE_HORIZONTAL_MARGIN);
+const slideWidth = Math.max(width - TOTAL_SLIDE_INSETS, 1);
+const pageWidth = Math.max(width - LAYOUT_HORIZONTAL_PADDING * 2, 1);
+
+type Slide = {
+  key: string;
+  title: string;
+  subtitle: string;
+  bullets: string[];
+  icon: keyof typeof Feather.glyphMap;
+  iconAccent: string;
+  animation?: string | { uri: string } | AnimationObject;
+};
+
+export default function OnboardingFeatures() {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  const router = useRouter();
+  const { t } = useTranslation();
+  const posthog = usePostHog();
+
+  const slides: Slide[] = useMemo(
+    () => [
+      {
+        key: "quizzes",
+        title: t("onboarding.features.quizzes.title", "Adaptive quizzes"),
+        subtitle: t(
+          "onboarding.features.quizzes.subtitle",
+          "Switch between meanings, listening, writing, and picture drills in seconds.",
+        ),
+        bullets: [
+          t(
+            "onboarding.features.quizzes.bulletOne",
+            "Smart difficulty keeps you challenged.",
+          ),
+          t(
+            "onboarding.features.quizzes.bulletTwo",
+            "8 quiz modes ready for micro-sessions.",
+          ),
+        ],
+        icon: "zap",
+        iconAccent: "#FFB38A",
+      },
+      {
+        key: "chat",
+        title: t("onboarding.features.chat.title", "Live speaking coach"),
+        subtitle: t(
+          "onboarding.features.chat.subtitle",
+          "Practice your saved words out loud with instant guidance from our AI.",
+        ),
+        bullets: [
+          t(
+            "onboarding.features.chat.bulletOne",
+            "Launch voice sessions from any wordlist in seconds.",
+          ),
+          t(
+            "onboarding.features.chat.bulletTwo",
+            "Realtime transcripts capture every correction.",
+          ),
+        ],
+        icon: "mic",
+        iconAccent: "#FCD7F6",
+        animation:
+          require("@/assets/animations/voice-wave.json") as AnimationObject,
+      },
+      {
+        key: "flashcards",
+        title: t("onboarding.features.flashcards.title", "Smart flashcards"),
+        subtitle: t(
+          "onboarding.features.flashcards.subtitle",
+          "Leitner boxes space your reviews so every word sticks for good.",
+        ),
+        bullets: [
+          t(
+            "onboarding.features.flashcards.bulletOne",
+            "AI enriches cards with examples and audio.",
+          ),
+          t(
+            "onboarding.features.flashcards.bulletTwo",
+            "Offline mode keeps practice flowing anywhere.",
+          ),
+        ],
+        icon: "layers",
+        iconAccent: "#D1C4E9",
+      },
+      {
+        key: "progress",
+        title: t("onboarding.features.progress.title", "Track your progress"),
+        subtitle: t(
+          "onboarding.features.progress.subtitle",
+          "Celebrate streaks, mastery levels, and weekly momentum with beautiful charts.",
+        ),
+        bullets: [
+          t(
+            "onboarding.features.progress.bulletOne",
+            "Daily goal reminders keep the streak alive.",
+          ),
+          t(
+            "onboarding.features.progress.bulletTwo",
+            "See strengths and gaps by wordlist instantly.",
+          ),
+        ],
+        icon: "bar-chart-2",
+        iconAccent: "#C8E6C9",
+      },
+      {
+        key: "images",
+        title: t("onboarding.features.images.title", "AI visuals & audio"),
+        subtitle: t(
+          "onboarding.features.images.subtitle",
+          "Every word gets context with imagery, pronunciation, and cultural nuance.",
+        ),
+        bullets: [
+          t(
+            "onboarding.features.images.bulletOne",
+            "Pronunciations voiced by native accents.",
+          ),
+          t(
+            "onboarding.features.images.bulletTwo",
+            "Illustrations generated for your language.",
+          ),
+        ],
+        icon: "image",
+        iconAccent: "#FFE0B2",
+      },
+    ],
+    [t],
+  );
+
+  const [index, setIndex] = useState(0);
+  const ref = useRef<FlatList<Slide>>(null);
+
+  const onNext = () => {
+    const next = Math.min(index + 1, slides.length - 1);
+    if (next !== index) {
+      ref.current?.scrollToIndex({ index: next, animated: true });
+      setIndex(next);
+      posthog.capture("onboarding_feature_viewed", { slide: slides[next].key });
+    } else {
+      router.replace("/onboarding/personalize");
+    }
+  };
+
+  const onSkip = () => router.replace("/onboarding/personalize");
+
+  const nextLabel =
+    index === slides.length - 1
+      ? t("common.continue", "Continue")
+      : t("common.next", "Next");
+
+  return (
+    <OnboardingLayout
+      step={2}
+      totalSteps={4}
+      showSkip
+      skipLabel={t("common.skip", "Skip")}
+      onSkip={onSkip}
+      showBack
+      backLabel={t("common.back", "Back")}
+      onBack={() => router.replace("/onboarding")}
+      stepLabel={t("onboarding.stepIndicator", {
+        step: 2,
+        total: 4,
+        defaultValue: "Step 2 of 4",
+      })}
+      contentStyle={styles.content}
+      footer={
+        <TouchableOpacity
+          onPress={onNext}
+          style={styles.primaryButton}
+          accessibilityRole="button"
+        >
+          <Text style={styles.primaryText}>{nextLabel}</Text>
+        </TouchableOpacity>
+      }
+    >
+      <View>
+        <Text style={styles.heading}>
+          {t("onboarding.features.heading", "See what you can do")}
+        </Text>
+        <Text style={styles.description}>
+          {t(
+            "onboarding.features.description",
+            "Swipe through the highlights to discover how Decorebator keeps you inspired every day.",
+          )}
+        </Text>
+      </View>
+      <FlatList
+        ref={ref}
+        data={slides}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item) => item.key}
+        renderItem={({ item }) => (
+          <View
+            style={[
+              styles.slide,
+              {
+                width: slideWidth,
+                backgroundColor: theme.colors.background.surface,
+              },
+            ]}
+          >
+            <View
+              style={[styles.iconBadge, { backgroundColor: item.iconAccent }]}
+            >
+              <Feather
+                name={item.icon}
+                size={22}
+                color={theme.colors.primary}
+              />
+            </View>
+            <Text style={styles.title}>{item.title}</Text>
+            <Text style={styles.subtitle}>{item.subtitle}</Text>
+            {item.animation ? (
+              <View style={styles.animationContainer}>
+                <LottieView
+                  source={item.animation}
+                  autoPlay
+                  loop
+                  style={styles.animation}
+                />
+              </View>
+            ) : null}
+            <View style={styles.bulletList}>
+              {item.bullets.map((bullet) => (
+                <View key={bullet} style={styles.bulletRow}>
+                  <View
+                    style={[
+                      styles.bulletDot,
+                      { backgroundColor: theme.colors.primary },
+                    ]}
+                  />
+                  <Text style={styles.bulletText}>{bullet}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+        contentContainerStyle={styles.carouselContent}
+        snapToAlignment="center"
+        decelerationRate="fast"
+        onMomentumScrollEnd={(event) => {
+          const position = event.nativeEvent.contentOffset.x;
+          const calculatedIndex = Math.round(position / pageWidth);
+          if (calculatedIndex !== index) {
+            setIndex(calculatedIndex);
+            const slide = slides[calculatedIndex];
+            if (slide) {
+              posthog.capture("onboarding_feature_viewed", {
+                slide: slide.key,
+              });
+            }
+          }
+        }}
+      />
+      <View style={styles.pagination}>
+        {slides.map((_, i) => (
+          <View key={i} style={[styles.dot, i === index && styles.dotActive]} />
+        ))}
+      </View>
+    </OnboardingLayout>
+  );
+}
+
+const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
+  StyleSheet.create({
+    content: {
+      paddingBottom: 12,
+      gap: 18,
+    },
+    heading: {
+      fontSize: 24,
+      fontWeight: "700",
+      color: theme.colors.text.primary,
+    },
+    description: {
+      marginTop: 6,
+      fontSize: 15,
+      color: theme.colors.text.secondary,
+      lineHeight: 22,
+    },
+    carouselContent: {
+      paddingVertical: 12,
+      paddingHorizontal: CAROUSEL_HORIZONTAL_PADDING,
+    },
+    slide: {
+      borderRadius: 24,
+      padding: 24,
+      marginHorizontal: SLIDE_HORIZONTAL_MARGIN,
+      shadowColor: "#000",
+      shadowOpacity: 0.08,
+      shadowOffset: { width: 0, height: 12 },
+      shadowRadius: 24,
+      elevation: 3,
+    },
+    iconBadge: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 18,
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: theme.colors.text.primary,
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: theme.colors.text.secondary,
+      lineHeight: 22,
+      marginBottom: 14,
+    },
+    animationContainer: {
+      height: 96,
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 10,
+    },
+    animation: {
+      width: "100%",
+      height: "100%",
+    },
+    bulletList: {
+      gap: 10,
+    },
+    bulletRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 10,
+    },
+    bulletDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      marginTop: 7,
+    },
+    bulletText: {
+      flex: 1,
+      fontSize: 14,
+      color: theme.colors.text.primary,
+      lineHeight: 20,
+    },
+    pagination: {
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 6,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: theme.colors.ui.divider,
+    },
+    dotActive: {
+      backgroundColor: theme.colors.primary,
+      width: 20,
+    },
+    primaryButton: {
+      backgroundColor: theme.colors.primary,
+      paddingVertical: 16,
+      borderRadius: 18,
+      alignItems: "center",
+      marginTop: 12,
+      shadowColor: "#FF7B54",
+      shadowOpacity: 0.32,
+      shadowOffset: { width: 0, height: 10 },
+      shadowRadius: 18,
+      elevation: 3,
+    },
+    primaryText: {
+      color: theme.colors.text.inverse,
+      fontWeight: "700",
+      fontSize: 16,
+    },
+  });

@@ -1,45 +1,30 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `api/` — Go backend (Gin); migrations in `cmd/migrate/migrations/`, business code in `internal/`.
-- `mobile/` — React Native (Expo) app; routes in `app/`, UI in `components/`.
-- `web/` — Next.js 15 site; app routes in `src/`, static assets in `public/`.
-- `docs/` — Additional documentation. See `README.md` for architecture details.
+- `api/`: Go 1.23 backend (Gin) with layers under `internal/*`; migrations in `migrations/`; workers in `cmd/workers/`; tests split between `internal/tests` and `tests/integration`.
+- `mobile/`: Expo app under `app/` with shared UI in `components/`, translations in `i18n/`, theming in `theme/`, media in `assets/`, and Jest mocks in `__mocks__/`.
+- `web/`: Next.js App Router in `src/`; localized copy in `messages/`, marketing assets in `public/`, Tailwind config in `styles/`.
+- `docs/`, `todo/`: design notes and backlog context—update alongside feature work.
 
 ## Build, Test, and Development Commands
-- API
-  - `cd api && make watch` — Run API with auto-reload.
-  - `cd api && make workers` — Start background workers.
-  - `cd api && make migrate-up` — Apply DB migrations.
-  - `cd api && make test` — Integration tests in Docker; writes `coverage.out`.
-- Mobile
-  - `cd mobile && npm start` — Expo dev server.
-  - `cd mobile && npm test` — Jest test runner.
-  - `cd mobile && npm run lint` — ESLint; `lint-staged` + Prettier on commit.
-- Web
-  - `cd web && npm run dev` — Next.js dev server.
-  - `cd web && npm run build && npm start` — Production build and start.
+- **API backend**: `cd api && make setup` installs tools; `make test` runs the dockerized suite; `make lint`/`make format-check` match CI; use `docker compose -f docker-compose.yml up` for services, then `go run ./cmd/api`.
+- **Mobile app**: `cd mobile && npm install`; `npm run start` launches Expo; run `npm run lint`, `npm run typecheck`, and `npm test` (Jest + Testing Library) before pushing.
+- **Web app**: `cd web && npm install`; `npm run dev` serves Next; `npm run build` creates production output and sitemap; `npm run lint` or `npm run format:check` guard style.
 
 ## Coding Style & Naming Conventions
-- Go (api): `golangci-lint` configured via `api/.golangci.yml`; run `make lint`. Use `go fmt`, idiomatic naming (`CamelCase` for exported, `camelCase` for locals), small cohesive packages.
-- TypeScript/JS (web, mobile): ESLint + Prettier.
-  - Prettier: 2 spaces, single quotes, no semicolons, 100 char width.
-  - Filenames: `PascalCase` for components, `camelCase` for hooks/utils, `kebab-case` for routes.
+- **Go**: Run `make format` (gofmt + goimports) and `make lint` (golangci-lint); use PascalCase for exports, camelCase for locals, SCREAMING_SNAKE_CASE for env vars.
+- **TypeScript/Tailwind**: Prettier (see `web/.prettierrc.json`) sets 2-space indent, single quotes, Tailwind class sorting; keep PascalCase components, camelCase utilities, and pull design tokens from `theme/` or `styles/` instead of hard-coded values.
 
 ## Testing Guidelines
-- API: Prefer table-driven tests under `api/internal/...` and `api/tests`. Coverage gates exist; keep unit ≥70% and integration ≥80% (see `make coverage-threshold`).
-- Mobile: Place tests in `mobile/__tests__/` or `*.test.ts(x)`. Use Testing Library and `jest-setup.js`.
-- Web: Linting required; add tests if introducing complex logic.
-- Run locally before PR: `make test` (api), `npm test` (mobile).
+- **API**: Keep unit specs in `internal/tests/unit`, integration specs in `tests/integration`, and enforce ≥70% coverage with `make coverage-threshold`.
+- **Mobile**: Co-locate `.test.tsx` files with components, use Testing Library queries, and mock network or storage via `__mocks__/`.
+- **Web**: No automated suite yet—run `npm run lint` and add Playwright or Vitest when UI logic expands.
 
 ## Commit & Pull Request Guidelines
-- Commits: Follow Conventional Commit style where practical: `feat:`, `fix:`, `chore:`, with optional scope (`web:`, `api:`). Keep messages imperative and focused.
-- PRs must:
-  - Describe the change, rationale, and impact.
-  - Link issues (e.g., `Closes #123`).
-  - Include screenshots/GIFs for UI changes (mobile/web).
-  - Pass CI (lint, tests, coverage). No secrets in VCS; use `.env`/`.env.example`.
+- Write concise, imperative commit subjects and describe intent in the body.
+- Ensure lint, format, and tests pass locally; Husky scripts assume staged files are clean.
+- PRs should outline scope, affected modules, linked issues, and include UI screenshots or API contract notes when relevant; call out environment or schema changes.
 
-## Security & Configuration Tips
-- Never commit real API keys. Copy from `.env.example` files and set local `.env`/`.env.local`.
-- For local infra, use `api/docker-compose.yml` and run migrations before starting services.
+## Configuration & Secrets
+- API expects `.env` values for Postgres, Redis, MinIO, OpenAI, SendGrid, and Stripe; bootstrap from `.env.example` before running `make` targets.
+- Store secrets outside version control and use `docker-compose.override.yml` or Expo secrets for local overrides—never commit real keys.

@@ -62,16 +62,33 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
-  const stopPulse = () => {
+  // Get premium status from centralized session
+  const { isPremium } = useUserSession();
+
+  // Fetch wordlists using the centralized hook
+  const { data: wordlists, isLoading, refetch } = useWordlists();
+
+  // Fetch batch progress data
+  const { data: progressData } = useWordlistProgress();
+
+  // Create progress map for O(1) lookup
+  const progressMap = useMemo(() => {
+    if (!progressData?.wordlists) return new Map();
+    return new Map(progressData.wordlists.map((p) => [p.wordlistId, p]));
+  }, [progressData]);
+
+  const hasNoWordlist = wordlists && wordlists.length === 0;
+
+  const stopPulse = React.useCallback(() => {
     if (pulseLoopRef.current) {
       pulseLoopRef.current.stop();
       pulseLoopRef.current = null;
     }
     pulseAnim.stopAnimation();
     pulseAnim.setValue(1);
-  };
+  }, [pulseAnim]);
 
-  const startPulse = () => {
+  const startPulse = React.useCallback(() => {
     if (pulseLoopRef.current) return; // avoid duplicates
     const maxScale = hasNoWordlist ? 1.1 : 1.05;
     const loop = Animated.loop(
@@ -92,24 +109,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
     );
     pulseLoopRef.current = loop;
     loop.start();
-  };
-
-  // Get premium status from centralized session
-  const { isPremium } = useUserSession();
-
-  // Fetch wordlists using the centralized hook
-  const { data: wordlists, isLoading, refetch } = useWordlists();
-
-  // Fetch batch progress data
-  const { data: progressData } = useWordlistProgress();
-
-  // Create progress map for O(1) lookup
-  const progressMap = useMemo(() => {
-    if (!progressData?.wordlists) return new Map();
-    return new Map(progressData.wordlists.map((p) => [p.wordlistId, p]));
-  }, [progressData]);
-
-  const hasNoWordlist = wordlists && wordlists.length === 0;
+  }, [hasNoWordlist, pulseAnim]);
 
   // Check if user is first-time user immediately on mount
   useEffect(() => {
@@ -169,7 +169,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
     React.useCallback(() => {
       if (!isLoading) startPulse();
       return () => stopPulse();
-    }, [isLoading, hasNoWordlist]),
+    }, [isLoading, startPulse, stopPulse]),
   );
 
   // Restart pulse when empty state changes to update amplitude
@@ -178,14 +178,13 @@ const Dashboard: React.FC<DashboardProps> = () => {
       stopPulse();
       startPulse();
     }
-  }, [hasNoWordlist]);
+  }, [hasNoWordlist, startPulse, stopPulse]);
 
   // Pause while the create modal is open
   useEffect(() => {
     if (showCreateModal) stopPulse();
     else startPulse();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showCreateModal]);
+  }, [showCreateModal, startPulse, stopPulse]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -245,7 +244,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
               onPressIn={stopPulse}
               onPressOut={startPulse}
               activeOpacity={0.85}
-              accessibilityLabel={t("dashboard.wordlists.addNewWordlist", "Add New Wordlist")}
+              accessibilityLabel={t(
+                "dashboard.wordlists.addNewWordlist",
+                "Add New Wordlist",
+              )}
             >
               <Ionicons
                 name="add-circle"
@@ -578,16 +580,18 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       width: 44,
       height: 44,
       borderRadius: 22,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
       backgroundColor:
-        theme.mode === 'light' ? '#FFFFFF' : theme.colors.background.surface,
+        theme.mode === "light" ? "#FFFFFF" : theme.colors.background.surface,
       borderWidth: 1,
       borderColor:
-        theme.mode === 'light' ? theme.colors.border.light : theme.colors.ui.border,
-      shadowColor: '#000',
+        theme.mode === "light"
+          ? theme.colors.border.light
+          : theme.colors.ui.border,
+      shadowColor: "#000",
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: theme.mode === 'light' ? 0.18 : 0.3,
+      shadowOpacity: theme.mode === "light" ? 0.18 : 0.3,
       shadowRadius: 12,
       elevation: 10,
     },
