@@ -12,11 +12,18 @@ interface AppStoreButtonProps {
   size?: 'small' | 'medium' | 'large'
 }
 
+declare global {
+  interface Window {
+    twq?: (...args: unknown[]) => void
+  }
+}
+
 const AppStoreButton: React.FC<AppStoreButtonProps> = ({ store, className = '', size = 'medium' }) => {
   const { showModal } = useAppStoreModal()
   const t = useTranslations('common.appStore')
 
   const handleClick = () => {
+    window.twq?.('event', 'tw-qpm75-qpm78')
     const url = store === 'apple' ? appStoreConfig.appStoreUrl : appStoreConfig.playStoreUrl
 
     if (url) {
