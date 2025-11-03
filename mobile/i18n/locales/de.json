@@ -29,7 +29,10 @@
     "more": "Mehr",
     "retry": "Wiederholen",
     "tryAgain": "Erneut versuchen",
-    "info": "Info"
+    "info": "Info",
+    "skip": "Überspringen",
+    "notNow": "Nicht jetzt",
+    "min": "Min"
   },
   "update": {
     "checkForUpdates": "Updates prüfen",
@@ -117,12 +120,114 @@
     "tagline": "Sprachen lernen, Welten verbinden"
   },
   "welcome": {
-    "title": "Willkommen bei Decorebator! 🎉",
-    "subtitle": "Ihre KI-gestützte Sprachlernreise beginnt hier",
+  "title": "Willkommen bei Decorebator! 🎉",
+    "subtitle": "Erstellen Sie Ihre Wortliste und Decorebator verwandelt sie in adaptive Quizze, Visuals und tägliche Übung",
     "firstWordlistSuccess": "Herzlichen Glückwunsch! 🎉",
     "firstWordlistMessage": "Ihre erste Liste ist bereit! Beginnen Sie mit dem Hinzufügen von Wörtern.",
     "addWordsNow": "Wörter Hinzufügen",
     "addWordsLater": "Später"
+  },
+  "onboarding": {
+    "stepIndicator": "Schritt {{step}} von {{total}}",
+    "welcome": {
+      "greeting": "Willkommen bei",
+      "highlight": {
+        "generator": "Erstelle Wortlisten und unsere KI baut 8 Tests, Bilder, Audio und Challenges daraus",
+        "chat": "Die KI-Sprachtrainerin übt deine gespeicherten Wörter laut mit dir",
+        "modes": "Acht Quiz-Modi halten dein Training frisch",
+        "progress": "Echtzeit-Analysen feiern deine Lernserien"
+      }
+    },
+    "features": {
+      "heading": "Entdecke, was du erreichen kannst",
+      "description": "Wische durch die Highlights und sieh, wie Decorebator dich jeden Tag motiviert.",
+      "quizzes": {
+        "title": "Adaptive Quizze",
+        "subtitle": "Wechsle in Sekunden zwischen Bedeutungen, Hören, Schreiben und Bildaufgaben.",
+        "bulletOne": "Intelligente Schwierigkeit fordert dich kontinuierlich heraus.",
+        "bulletTwo": "8 Quiz-Modi für kurze Lerneinheiten."
+      },
+      "chat": {
+        "title": "Live-Sprachcoach",
+        "subtitle": "Trainiere Gespräche mit deinen gespeicherten Wörtern und erhalte sofortiges Feedback.",
+        "bulletOne": "Starte Sprachsessions aus jeder Wortliste in wenigen Sekunden.",
+        "bulletTwo": "Echtzeit-Transkripte halten jede Korrektur fest."
+      },
+      "flashcards": {
+        "title": "Smarte Karteikarten",
+        "subtitle": "Leitner-Boxen takten deine Wiederholungen, damit jedes Wort sitzt.",
+        "bulletOne": "KI ergänzt Karten mit Beispielen und Audio.",
+        "bulletTwo": "Der Offline-Modus lässt dich überall weiterlernen."
+      },
+      "progress": {
+        "title": "Verfolge deinen Fortschritt",
+        "subtitle": "Feiere Serien, Meisterstufen und Wochenimpulse mit eindrucksvollen Charts.",
+        "bulletOne": "Tägliche Ziel-Erinnerungen halten die Serie am Leben.",
+        "bulletTwo": "Erkenne Stärken und Lücken pro Wortliste auf einen Blick."
+      },
+      "images": {
+        "title": "KI-Visuals & Audio",
+        "subtitle": "Jedes Wort erhält Kontext mit Bildern, Aussprache und kulturellen Nuancen.",
+        "bulletOne": "Aussprachen, eingesprochen von Muttersprachler:innen.",
+        "bulletTwo": "Illustrationen, die für deine Sprache generiert werden."
+      }
+    },
+    "personalize": {
+      "title": "Lass uns das personalisieren",
+      "subtitle": "Wähle eine Sprache und einen täglichen Fokus, damit wir den Plan auf deinen Alltag abstimmen.",
+      "language": "Lernsprache",
+      "goal": "Tagesziel",
+      "goalValue": "{{minutes}} Min./Tag",
+      "preview": {
+        "title": "Deine Lernvorschau",
+        "language": "Tägliche Karten in {{language}}",
+        "goal": "Ziel auf {{minutes}} Minuten gesetzt",
+        "hint": "Du kannst das jederzeit in den Einstellungen anpassen."
+      }
+    },
+    "notifications": {
+      "title": "Bleib auf Kurs",
+      "subtitle": "Sanfte Erinnerungen stupsen dich an, wenn es Zeit zum Üben ist - so reißt deine Serie nicht ab.",
+      "enable": "Erinnerungen aktivieren",
+      "loading": "Aktiviere...",
+      "morning": "Wähle Morgen-, Nachmittags- oder Abendzeiten, die zu deinem Rhythmus passen.",
+      "goal": "Zielbasierte Erinnerungen richten sich nach deinen täglichen Minuten.",
+      "control": "Du behältst die Kontrolle - schalte sie jederzeit aus."
+    },
+    "account": {
+      "title": "Erstelle dein Konto",
+      "subtitle": "Sichere dir deinen Fortschritt, sieh was im Gratisplan steckt und erfahre, wie du jederzeit upgraden kannst.",
+      "free": {
+        "title": "Gratisplan enthält",
+        "features": {
+          "wordlists": "Wortlisten syncen auf all deinen Geräten.",
+          "quizzes": "Adaptive Quizze mit Serienverfolgung.",
+          "analytics": "7-Tage-Überblick über deine Fortschritte."
+        }
+      },
+      "premium": {
+        "title": "Premium schaltet frei",
+        "features": {
+          "quizzes": "Live-Sprachcoach mit Echtzeit-Transkripten.",
+          "offline": "Alle acht Quiz-Modi sowie KI-Visuals und Audio-Pakete.",
+          "analytics": "Offline-Training mit Autosync und tiefen Analysen."
+        }
+      },
+      "upgrade": {
+        "title": "So upgraden Sie später",
+        "steps": {
+          "settings": "Öffnen Sie nach dem Start das Dashboard-Menü und wählen Sie Einstellungen.",
+          "option": "Tippen Sie im Bereich Konto auf \"Auf Premium upgraden\", um Details zu sehen.",
+          "confirm": "Wählen Sie Ihren Plan, bestätigen Sie das Upgrade oder starten Sie jederzeit eine kostenlose Testphase."
+        }
+      },
+      "summary": {
+        "language": "Lernst: {{flag}} {{language}}",
+        "goal": "Tagesfokus: {{minutes}} Min./Tag",
+        "ready": "Das Serien-Tracking startet, sobald du dich registrierst."
+      },
+      "haveAccount": "Du hast schon ein Konto? Anmelden"
+    }
   },
   "dashboard": {
     "header": {
@@ -254,7 +359,51 @@
       "listening": "Hörverständnis"
     }
   },
+  "wordSelection": {
+    "title": "Wörter für Chat auswählen",
+    "subtitle": "Wähle bis zu {{count}} Wörter zum Üben",
+    "selectAll": "Alle auswählen",
+    "clearAll": "Alle löschen",
+    "wordsSelected": "{{count}}/{{max}} Wörter ausgewählt",
+    "continueToChat": "Weiter zum Chat",
+    "noWordsTitle": "Keine Wörter ausgewählt",
+    "noWordsMessage": "Bitte wähle mindestens ein Wort aus, um fortzufahren.",
+    "maxWordsTitle": "Maximum erreicht",
+    "maxWordsMessage": "Du kannst nur bis zu {{count}} Wörter für Chat-Übungen auswählen.",
+    "loading": "Lade Wörter...",
+    "loadError": "Fehler beim Laden der Wörter. Bitte versuche es erneut.",
+    "noWordsAvailableTitle": "Keine Wörter verfügbar",
+    "noWordsAvailableMessage": "Diese Wortliste hat keine Wörter mit Definitionen, die für Chat-Übungen bereit sind.",
+    "navigationError": "Chat-Session konnte nicht gestartet werden. Bitte versuche es erneut.",
+    "selected": " - ausgewählt"
+  },
+  "realtimeChat": {
+    "title": "Sprach-Chat",
+    "connecting": "Verbindung wird hergestellt...",
+    "connected": "Verbunden - Fangen Sie an zu sprechen!",
+    "disconnected": "Getrennt",
+    "connectionError": "Verbindungsfehler",
+    "initializationError": "Fehler beim Starten der Chat-Sitzung",
+    "initializing": "Chat-Sitzung wird gestartet...",
+    "connectionSlow": "Die Verbindung dauert länger als erwartet",
+    "genericError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "microphonePermission": "Mikrofonzugriff ist für den Sprachchat erforderlich.",
+    "listening": "Hört zu...",
+    "speakNow": "Sprechen Sie jetzt, um Ihren Wortschatz zu üben",
+    "wordsAvailable": "{{count}} Wörter zum Üben verfügbar",
+    "focusWords": "Practicing {{count}} focus words from your wordlist",
+    "transcript": "KI-Antwort:",
+    "previousResponses": "Frühere Antworten",
+    "hideTranscript": "Transkript ausblenden",
+    "showTranscript": "Transkript anzeigen",
+    "mute": "Mikrofon stummschalten",
+    "unmute": "Mikrofon aktivieren",
+    "endCall": "Anruf beenden"
+  },
   "settings": {
+    "restartOnboarding": "Onboarding neu starten",
+    "onboardingReset": "Onboarding zurückgesetzt. Beim nächsten Mal führen wir dich erneut durch.",
+    "onboardingResetError": "Onboarding konnte nicht zurückgesetzt werden.",
     "title": "Einstellungen",
     "otherSettings": "Weitere Einstellungen",
     "helpAndSupport": "Hilfe & Support",
@@ -315,7 +464,6 @@
         "prioritySupport": "Prioritäts-Support"
       },
       "upgradeButton": "Premium abonnieren",
-      "manageSubscription": "Abonnement verwalten",
       "cancelSubscription": "Abonnement kündigen",
       "reactivateSubscription": "Abonnement reaktivieren",
       "billingCycle": "Abrechnungszyklus",
@@ -465,13 +613,7 @@
     "signupFailed": "Registrierung fehlgeschlagen. Erneut versuchen."
   },
   "success": {
-    "wordlistCreated": "Wortliste erfolgreich erstellt",
-    "wordlistUpdated": "Wortliste erfolgreich aktualisiert",
-    "wordlistDeleted": "Wortliste erfolgreich gelöscht",
-    "wordAdded": "Wort erfolgreich hinzugefügt",
-    "wordRemoved": "Wort erfolgreich entfernt",
-    "profileUpdated": "Profil erfolgreich aktualisiert",
-    "passwordChanged": "Passwort erfolgreich geändert"
+    "title": "Erfolg"
   },
   "offline": {
     "indicator": "Offline-Modus",
@@ -633,7 +775,11 @@
     "quizDescription": "Beschreibung (optional)",
     "quizDescriptionPlaceholder": "Kurze Beschreibung",
     "difficulty": "Schwierigkeit",
-    "diff": { "easy": "Leicht", "medium": "Mittel", "hard": "Schwer" },
+    "diff": {
+      "easy": "Leicht",
+      "medium": "Mittel",
+      "hard": "Schwer"
+    },
     "timeLimit": "Zeitlimit (Minuten)",
     "publish": "Veröffentlichen",
     "publishSuccessTitle": "Veröffentlicht",
@@ -644,6 +790,13 @@
     "timeLimitInvalid": "Das Zeitlimit muss zwischen 1 und 15 Minuten liegen.",
     "copyUrl": "Link kopieren",
     "urlLabel": "Link",
+    "chat": "Chat",
+    "startChat": "Chat starten",
+    "chatHint": "Beginne ein Gespräch mit den Wörtern aus dieser Liste",
+    "chatUpsell": {
+      "title": "KI-Gespräche freischalten",
+      "subtitle": "Vokabeln durch natürliche Sprachgespräche üben"
+    },
     "premiumUpsell": {
       "title": "Premium freischalten",
       "subtitle": "Zugriff auf erweiterte Funktionen erhalten",
@@ -652,14 +805,18 @@
     "feature": {
       "publishQuizzes": "Öffentliche Quizze veröffentlichen",
       "shareLinks": "Links & Bestenlisten teilen",
-      "betterBranding": "Bessere Optik & Branding"
+      "betterBranding": "Bessere Optik & Branding",
+      "voiceConversations": "Sprachgespräche mit KI",
+      "vocabularyPractice": "Vokabeln natürlich üben",
+      "pronunciationHelp": "Aussprachehilfe erhalten",
+      "unlimitedChatTime": "Unbegrenzte Gesprächszeit"
     }
   },
-   "analytics": {
+  "analytics": {
     "header": {
       "title": "Lernanalyse",
       "subtitle": "Verfolgen Sie Ihren Fortschritt und Ihre Beherrschung",
-"updateNote":"Statistiken werden stündlich aktualisiert"
+      "updateNote": "Statistiken werden stündlich aktualisiert"
     },
     "stats": {
       "wordsToday": "Wörter Heute",
@@ -764,9 +921,6 @@
     "title": "Rate Limit",
     "cooldownMessage": "Sie haben diesen Fehler kürzlich bereits gemeldet. Bitte warten Sie {{minutes}} Minuten, bevor Sie es erneut versuchen.",
     "limitReachedMessage": "Sie haben die maximale Anzahl an Fehlermeldungen erreicht. Bitte versuchen Sie es später erneut."
-  },
-  "success": {
-    "title": "Erfolg"
   },
   "error": {
     "title": "Fehler"

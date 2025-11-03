@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 import { usePaymentProvider } from "@/hooks/useRevenueCat";
 
-export type PremiumUpsellContext = "analytics" | "public_quiz";
+export type PremiumUpsellContext = "analytics" | "public_quiz" | "chat";
 
 type Props = {
   visible: boolean;
@@ -74,11 +74,33 @@ export default function PremiumUpsellModal({
           t("dashboard.stats.feature.accuracyInsights", "Accuracy insights"),
           t("dashboard.stats.feature.boxDistribution", "Box distribution"),
         ]
-      : [
-          t("wordlistItem.feature.publishQuizzes", "Publish public quizzes"),
-          t("wordlistItem.feature.shareLinks", "Share links & leaderboards"),
-          t("wordlistItem.feature.betterBranding", "Better visuals & branding"),
-        ];
+      : context === "chat"
+        ? [
+            t(
+              "wordlistItem.feature.voiceConversations",
+              "Voice conversations with AI",
+            ),
+            t(
+              "wordlistItem.feature.vocabularyPractice",
+              "Practice your vocabulary naturally",
+            ),
+            t(
+              "wordlistItem.feature.pronunciationHelp",
+              "Get pronunciation guidance",
+            ),
+            t(
+              "wordlistItem.feature.unlimitedChatTime",
+              "Unlimited conversation time",
+            ),
+          ]
+        : [
+            t("wordlistItem.feature.publishQuizzes", "Publish public quizzes"),
+            t("wordlistItem.feature.shareLinks", "Share links & leaderboards"),
+            t(
+              "wordlistItem.feature.betterBranding",
+              "Better visuals & branding",
+            ),
+          ];
 
   const handleUpgrade = () => {
     if (onUpgradePress) {
@@ -116,15 +138,25 @@ export default function PremiumUpsellModal({
                 <Text style={styles.title}>
                   {context === "analytics"
                     ? t("dashboard.stats.premium.title")
-                    : t("wordlistItem.premiumUpsell.title", "Unlock Premium")}
+                    : context === "chat"
+                      ? t(
+                          "wordlistItem.chatUpsell.title",
+                          "Unlock AI Conversations",
+                        )
+                      : t("wordlistItem.premiumUpsell.title", "Unlock Premium")}
                 </Text>
                 <Text style={styles.subtitle}>
                   {context === "analytics"
                     ? t("dashboard.stats.premium.subtitle")
-                    : t(
-                        "wordlistItem.premiumUpsell.subtitle",
-                        "Get access to advanced features",
-                      )}
+                    : context === "chat"
+                      ? t(
+                          "wordlistItem.chatUpsell.subtitle",
+                          "Practice vocabulary through natural voice conversations",
+                        )
+                      : t(
+                          "wordlistItem.premiumUpsell.subtitle",
+                          "Get access to advanced features",
+                        )}
                 </Text>
               </View>
 

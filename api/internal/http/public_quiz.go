@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"decorebator.com/internal/common"
-	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
@@ -27,37 +26,6 @@ type PublicQuizRoutes struct {
 
 func NewPublicQuizRoutes(repo *repository.PublicQuizRepository, wordlistSvc *service.WordlistService, definitionSvc *service.DefinitionService, db *pgxpool.Pool, redis *redis.Client, jobs service.JobService) *PublicQuizRoutes {
 	return &PublicQuizRoutes{repo: repo, wordlistSvc: wordlistSvc, definitionSvc: definitionSvc, db: db, redis: redis, jobs: jobs, quizSvc: service.NewPublicQuizService(repo, definitionSvc, wordlistSvc, jobs)}
-}
-
-// Publish creates a new public quiz for a given wordlist. Returns only the slug.
-func (h *PublicQuizRoutes) Publish(c *gin.Context) {
-	wordlistID, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid wordlist id"})
-		return
-	}
-
-	var input model.PublishQuizDTO
-	if bindErr := c.BindJSON(&input); bindErr != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": bindErr.Error()})
-		return
-	}
-	userID := c.GetInt64("userID")
-	slug, err := h.quizSvc.PublishPublicQuiz(c.Request.Context(), wordlistID, userID, input)
-	if err != nil {
-		var notFound common.NotFoundError
-		if errors.As(err, &notFound) {
-			c.Status(http.StatusNotFound)
-			return
-		}
-		if be, ok := err.(common.BusinessError); ok {
-			c.JSON(http.StatusBadRequest, gin.H{"error": be.Error()})
-			return
-		}
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-	c.JSON(http.StatusCreated, gin.H{"slug": slug})
 }
 
 // GetBySlug returns public quiz metadata by slug (unauthenticated)
@@ -211,23 +179,4 @@ func (h *PublicQuizRoutes) GetLeaderboardBySlug(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"top": top})
 }
 
-// Unpublish deactivates the active public quiz for a user's wordlist (MVP)
-func (h *PublicQuizRoutes) Unpublish(c *gin.Context) {
-	wordlistID, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid wordlist id"})
-		return
-	}
-
-	userID := c.GetInt64("userID")
-	if err := h.quizSvc.UnpublishPublicQuiz(c.Request.Context(), wordlistID, userID); err != nil {
-		var notFound common.NotFoundError
-		if errors.As(err, &notFound) {
-			c.Status(http.StatusNotFound)
-			return
-		}
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-	c.Status(http.StatusNoContent)
-}
+// Unpublish handler removed; feature disabled in mobile UI

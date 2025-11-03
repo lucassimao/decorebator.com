@@ -123,7 +123,7 @@ const LoginScreen: React.FC = () => {
   };
 
   const handleSignUp = () => {
-    router.replace("/signup");
+    router.replace("/onboarding");
   };
 
   const handleForgotPassword = () => {

@@ -15,15 +15,13 @@ type Wordlist = model.Wordlist
 
 // WordlistService handles wordlist-related operations with dependency injection
 type WordlistService struct {
-	repository        *repo.WordlistRepository
-	moderationService ModerationService
+	repository *repo.WordlistRepository
 }
 
 // NewWordlistService creates a new wordlist service with dependencies
-func NewWordlistService(db *pgxpool.Pool, moderationService ModerationService) *WordlistService {
+func NewWordlistService(db *pgxpool.Pool) *WordlistService {
 	return &WordlistService{
-		repository:        &repo.WordlistRepository{Db: db},
-		moderationService: moderationService,
+		repository: &repo.WordlistRepository{Db: db},
 	}
 }
 
@@ -47,24 +45,6 @@ func (wls *WordlistService) GetUserWordlistsWithWordStats(ctx context.Context, u
 }
 
 func (wls *WordlistService) SaveWordlist(ctx context.Context, newWordlist *Wordlist) (*Wordlist, error) {
-	// Content filtering validation
-	nameResult := wls.moderationService.Validate(ctx, newWordlist.Name)
-	if !nameResult.IsAppropriate {
-		return nil, common.BusinessError{
-			Message: fmt.Sprintf("Wordlist name not appropriate: %s", nameResult.Reason),
-		}
-	}
-
-	// Validate description if provided
-	if newWordlist.Description != "" {
-		descResult := wls.moderationService.Validate(ctx, newWordlist.Description)
-		if !descResult.IsAppropriate {
-			return nil, common.BusinessError{
-				Message: fmt.Sprintf("Wordlist description not appropriate: %s", descResult.Reason),
-			}
-		}
-	}
-
 	wordlist, err := wls.repository.Save(ctx, newWordlist.Name, newWordlist.Description, newWordlist.LanguageCode, newWordlist.UserID, newWordlist.PronunciationSystem)
 	if err != nil {
 		wrappedErr := fmt.Errorf(
@@ -114,24 +94,6 @@ func (wls *WordlistService) DeleteWordlist(ctx context.Context, id, userID int64
 }
 
 func (wls *WordlistService) UpdateWordlist(ctx context.Context, wordlist *Wordlist) error {
-	// Content filtering validation for updates
-	nameResult := wls.moderationService.Validate(ctx, wordlist.Name)
-	if !nameResult.IsAppropriate {
-		return common.BusinessError{
-			Message: fmt.Sprintf("Wordlist name not appropriate: %s", nameResult.Reason),
-		}
-	}
-
-	// Validate description if provided
-	if wordlist.Description != "" {
-		descResult := wls.moderationService.Validate(ctx, wordlist.Description)
-		if !descResult.IsAppropriate {
-			return common.BusinessError{
-				Message: fmt.Sprintf("Wordlist description not appropriate: %s", descResult.Reason),
-			}
-		}
-	}
-
 	count, err := wls.repository.Update(ctx, wordlist)
 	if err != nil {
 		wrappedErr := fmt.Errorf(

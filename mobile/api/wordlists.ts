@@ -15,6 +15,7 @@ export type Wordlist = {
   updatedAt: string;
   userId: number;
   languageCode: string;
+  languageName: string;
   pronunciationSystem: PronunciationSystem;
   wordsCount: number;
   wordsLearnedCount: number;
@@ -86,18 +87,7 @@ export type Quiz = {
 };
 
 // Public Quiz (MVP)
-export type PublicQuizDifficulty = "easy" | "medium" | "hard";
-
-export type PublishPublicQuizDTO = {
-  title: string;
-  description?: string;
-  difficulty: PublicQuizDifficulty;
-  timeLimitMinutes: number; // 1-15
-};
-
-export type PublishPublicQuizResponse = {
-  slug: string;
-};
+// Public quiz publishing removed from mobile UI; keep read-only endpoints elsewhere
 
 export type CreateWordDTO = Pick<Word, "wordlistId" | "name" | "notes"> & {
   hasOptimisticSubscription?: boolean;
@@ -272,22 +262,73 @@ export async function getProcessingStatus(
 }
 
 // Publish current wordlist as a public quiz (MVP)
-export async function publishPublicQuiz(
-  wordlistId: number,
-  settings: PublishPublicQuizDTO,
-): Promise<PublishPublicQuizResponse> {
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/publish`;
-  return await callAPI<PublishPublicQuizResponse>(
-    "POST",
-    endpoint,
-    JSON.stringify(settings),
-  );
+// Note: publish/unpublish endpoints removed; functions intentionally deleted
+
+// Realtime Chat Session Types and API
+export interface ChatDefinition {
+  id: number;
+  meaning: string;
+  partOfSpeech: string;
+  examples?: string[];
 }
 
-// Unpublish current public quiz for this wordlist (MVP)
-export async function unpublishPublicQuiz(wordlistId: number): Promise<void> {
+export interface WordWithDefinitions {
+  name: string;
+  definitions: ChatDefinition[];
+}
+
+export interface ChatSessionData {
+  token: string;
+  expiresAt: number;
+  webrtcConfig: {
+    baseUrl: string;
+    model: string;
+    iceServers?: {
+      urls: string | string[];
+      username?: string;
+      credential?: string;
+    }[];
+  };
+}
+
+// Create a new realtime chat session for vocabulary practice
+export async function createChatSession(
+  wordlistId: number,
+): Promise<ChatSessionData> {
   const endpoint =
-    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/publish`;
-  await callAPI<void>("DELETE", endpoint);
+    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/chat/session`;
+  return await callAPI<ChatSessionData>("POST", endpoint);
+}
+
+// Server response for batched definitions endpoint
+type WordDefinitionsBatchResponse = {
+  wordId: number;
+  name: string;
+  definitions: Definition[];
+};
+
+// Fetch definitions for multiple words in a single request and map to chat shape
+export async function getDefinitionsForWords(
+  wordlistId: number,
+  wordIds: number[],
+): Promise<WordWithDefinitions[]> {
+  if (!wordIds || wordIds.length === 0) return [];
+
+  const idsParam = wordIds.join(",");
+  const endpoint =
+    process.env.EXPO_PUBLIC_API_URL +
+    `/wordlists/${wordlistId}/words/definitions?ids=${idsParam}`;
+
+  const resp = await callAPI<WordDefinitionsBatchResponse[]>("GET", endpoint);
+
+  // Map server definition model to chat-friendly minimal shape
+  return resp.map((item) => ({
+    name: item.name,
+    definitions: (item.definitions || []).map((def) => ({
+      id: def.id,
+      meaning: def.meaning,
+      partOfSpeech: def.partOfSpeech || "",
+      examples: def.examples || [],
+    })),
+  }));
 }

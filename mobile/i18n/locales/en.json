@@ -29,7 +29,10 @@
     "more": "More",
     "retry": "Retry",
     "tryAgain": "Try Again",
-    "info": "Info"
+    "info": "Info",
+    "skip": "Skip",
+    "notNow": "Not now",
+    "min": "min"
   },
   "auth": {
     "signin": {
@@ -103,11 +106,113 @@
   },
   "welcome": {
     "title": "Welcome to Decorebator! 🎉",
-    "subtitle": "Your AI-powered language learning journey starts here",
+    "subtitle": "Create your wordlist and Decorebator turns it into adaptive quizzes, visuals, and daily practice",
     "firstWordlistSuccess": "Congratulations! 🎉",
     "firstWordlistMessage": "Your first wordlist is ready! Start adding words to begin learning.",
     "addWordsNow": "Add Words",
     "addWordsLater": "Later"
+  },
+  "onboarding": {
+    "stepIndicator": "Step {{step}} of {{total}}",
+    "welcome": {
+      "greeting": "Welcome to",
+      "highlight": {
+        "generator": "Create wordlists and our AI builds 8 tests, visuals, audio, and challenges",
+        "chat": "AI voice coach drills the words you save out loud",
+        "modes": "Eight quiz modes that keep practice fresh",
+        "progress": "Real-time analytics to celebrate your streaks"
+      }
+    },
+    "features": {
+      "heading": "See what you can do",
+      "description": "Swipe through the highlights to discover how Decorebator keeps you inspired every day.",
+      "quizzes": {
+        "title": "Adaptive quizzes",
+        "subtitle": "Switch between meanings, listening, writing, and picture drills in seconds.",
+        "bulletOne": "Smart difficulty keeps you challenged.",
+        "bulletTwo": "8 quiz modes ready for micro-sessions."
+      },
+      "chat": {
+        "title": "Live speaking coach",
+        "subtitle": "Practice conversations around your saved words with instant guidance.",
+        "bulletOne": "Launch a voice session from any wordlist in seconds.",
+        "bulletTwo": "Realtime transcripts capture every correction you can revisit."
+      },
+      "flashcards": {
+        "title": "Smart flashcards",
+        "subtitle": "Leitner boxes space your reviews so every word sticks for good.",
+        "bulletOne": "AI enriches cards with examples and audio.",
+        "bulletTwo": "Offline mode keeps practice flowing anywhere."
+      },
+      "progress": {
+        "title": "Track your progress",
+        "subtitle": "Celebrate streaks, mastery levels, and weekly momentum with beautiful charts.",
+        "bulletOne": "Daily goal reminders keep the streak alive.",
+        "bulletTwo": "See strengths and gaps by wordlist instantly."
+      },
+      "images": {
+        "title": "AI visuals & audio",
+        "subtitle": "Every word gets context with imagery, pronunciation, and cultural nuance.",
+        "bulletOne": "Pronunciations voiced by native accents.",
+        "bulletTwo": "Illustrations generated for your language."
+      }
+    },
+    "personalize": {
+      "title": "Let’s personalize this",
+      "subtitle": "Pick a language and daily focus so we can shape lessons around your schedule.",
+      "language": "Learning language",
+      "goal": "Daily focus",
+      "goalValue": "{{minutes}} min/day",
+      "preview": {
+        "title": "Your study preview",
+        "language": "Daily cards in {{language}}",
+        "goal": "Goal set to {{minutes}} minutes",
+        "hint": "You can tweak this anytime in Settings."
+      }
+    },
+    "notifications": {
+      "title": "Stay on track",
+      "subtitle": "Gentle reminders nudge you when it’s time to review so your streak never slips.",
+      "enable": "Enable reminders",
+      "loading": "Enabling...",
+      "morning": "Pick morning, afternoon, or evening slots that fit your routine.",
+      "goal": "Goal-based reminders react to the daily minutes you picked.",
+      "control": "You have full control—toggle them off anytime."
+    },
+    "account": {
+      "title": "Create your account",
+      "subtitle": "Lock in your progress today, see what's included for free, and know exactly how to upgrade.",
+      "free": {
+        "title": "Free plan includes",
+        "features": {
+          "wordlists": "Wordlists sync across every device.",
+          "quizzes": "Adaptive quizzes with streak tracking.",
+          "analytics": "7-day progress snapshots and stats."
+        }
+      },
+      "premium": {
+        "title": "Premium unlocks",
+        "features": {
+          "quizzes": "Live voice coach with real-time transcripts.",
+          "offline": "All eight quiz modes, AI visuals, and audio packs.",
+          "analytics": "Offline practice with auto sync and deep analytics."
+        }
+      },
+      "upgrade": {
+        "title": "How to upgrade later",
+        "steps": {
+          "settings": "Open Settings from the dashboard menu once you're inside the app.",
+          "option": "Tap \"Upgrade to Premium\" under Account to review plan details.",
+          "confirm": "Choose your plan, confirm the upgrade, or start a free trial anytime."
+        }
+      },
+      "summary": {
+        "language": "Learning: {{flag}} {{language}}",
+        "goal": "Daily focus: {{minutes}} min/day",
+        "ready": "Streak tracking will start as soon as you sign up."
+      },
+      "haveAccount": "Already have an account? Sign in"
+    }
   },
   "dashboard": {
     "header": {
@@ -239,7 +344,54 @@
       "listening": "Listening"
     }
   },
+  "wordSelection": {
+    "title": "Select Words for Chat",
+    "subtitle": "Choose up to {{count}} words to practice",
+    "selectAll": "Select All",
+    "clearAll": "Clear All",
+    "wordsSelected": "{{count}}/{{max}} words selected",
+    "continueToChat": "Continue to Chat",
+    "noWordsTitle": "No Words Selected",
+    "noWordsMessage": "Please select at least one word to continue.",
+    "maxWordsTitle": "Maximum Words Reached",
+    "maxWordsMessage": "You can only select up to {{count}} words for chat practice.",
+    "loading": "Loading words...",
+    "loadError": "Failed to load words. Please try again.",
+    "noWordsAvailableTitle": "No Words Available",
+    "noWordsAvailableMessage": "This wordlist doesn't have any words with definitions ready for chat practice.",
+    "navigationError": "Failed to start chat session. Please try again.",
+    "selected": " - selected"
+  },
+  "realtimeChat": {
+    "title": "Voice Chat",
+    "connecting": "Connecting...",
+    "connected": "Connected - Start speaking!",
+    "disconnected": "Disconnected",
+    "connectionError": "Connection error",
+    "initializationError": "Failed to start chat session",
+  "initializing": "Starting chat session...",
+  "connectionSlow": "Connection is taking longer than expected",
+  "genericError": "Something went wrong. Please try again.",
+  "microphonePermission": "Microphone access is required for voice chat.",
+  "listening": "Listening...",
+    "speakNow": "Speak now to practice your vocabulary",
+    "wordsAvailable": "{{count}} words available for practice",
+    "focusWords": "Practicing {{count}} focus words from your wordlist",
+    "transcript": "AI Response:",
+    "previousResponses": "Previous responses",
+    "hideTranscript": "Hide transcript",
+    "showTranscript": "Show transcript",
+    "mute": "Mute microphone",
+    "unmute": "Unmute microphone",
+    "endCall": "End call"
+  },
+  "permissions": {
+    "microphoneDenied": "Microphone permission is required for voice chat"
+  },
   "settings": {
+    "restartOnboarding": "Restart Onboarding",
+    "onboardingReset": "Onboarding reset. We will guide you again next time.",
+    "onboardingResetError": "Failed to reset onboarding.",
     "title": "Settings",
     "otherSettings": "Other Settings",
     "helpAndSupport": "Help & Support",
@@ -268,7 +420,7 @@
       "statusActive": "Active",
       "statusCanceling": "Canceling",
       "statusCancelledActive": "Cancelled (Active Until Expiry)",
-      "statusExpired": "Expired", 
+      "statusExpired": "Expired",
       "statusGracePeriod": "Payment Issue - Grace Period",
       "expiresOn": "Expires on",
       "renewsOn": "Renews on",
@@ -466,13 +618,7 @@
     "signupFailed": "Sign up failed. Please try again."
   },
   "success": {
-    "wordlistCreated": "Wordlist created successfully",
-    "wordlistUpdated": "Wordlist updated successfully",
-    "wordlistDeleted": "Wordlist deleted successfully",
-    "wordAdded": "Word added successfully",
-    "wordRemoved": "Word removed successfully",
-    "profileUpdated": "Profile updated successfully",
-    "passwordChanged": "Password changed successfully"
+    "title": "Success"
   },
   "offline": {
     "indicator": "Offline Mode",
@@ -635,7 +781,11 @@
     "quizDescription": "Description (optional)",
     "quizDescriptionPlaceholder": "Short description",
     "difficulty": "Difficulty",
-    "diff": { "easy": "Easy", "medium": "Medium", "hard": "Hard" },
+    "diff": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
     "timeLimit": "Time limit (minutes)",
     "publish": "Publish",
     "public": "Public",
@@ -654,17 +804,28 @@
     "copyPublicLink": "Copy public link",
     "shareLink": "Share link",
     "shareCta": "I just published a vocab quiz—can you beat it?",
-      "urlLabel": "Link",
-      "premiumUpsell": {
-        "title": "Unlock Premium",
-        "subtitle": "Get access to advanced features",
-        "finePrint": "Cancel anytime. Existing data remains safe."
-      },
-      "feature": {
-        "publishQuizzes": "Publish public quizzes",
-        "shareLinks": "Share links & leaderboards",
-        "betterBranding": "Better visuals & branding"
-      }
+    "urlLabel": "Link",
+    "chat": "Chat",
+    "startChat": "Start chat",
+    "chatHint": "Start a conversation using the words in this list",
+    "chatUpsell": {
+      "title": "Unlock AI Conversations",
+      "subtitle": "Practice vocabulary through natural voice conversations"
+    },
+    "premiumUpsell": {
+      "title": "Unlock Premium",
+      "subtitle": "Get access to advanced features",
+      "finePrint": "Cancel anytime. Existing data remains safe."
+    },
+    "feature": {
+      "publishQuizzes": "Publish public quizzes",
+      "shareLinks": "Share links & leaderboards",
+      "betterBranding": "Better visuals & branding",
+      "voiceConversations": "Voice conversations with AI",
+      "vocabularyPractice": "Practice your vocabulary naturally",
+      "pronunciationHelp": "Get pronunciation guidance",
+      "unlimitedChatTime": "Unlimited conversation time"
+    }
   },
   "analytics": {
     "header": {
@@ -747,9 +908,6 @@
     "title": "Rate Limit",
     "cooldownMessage": "You've already reported this error recently. Please wait {{minutes}} minutes before trying again.",
     "limitReachedMessage": "You've reached the maximum number of error reports. Please try again later."
-  },
-  "success": {
-    "title": "Success"
   },
   "error": {
     "title": "Error"

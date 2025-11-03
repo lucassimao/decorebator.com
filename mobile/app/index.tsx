@@ -33,6 +33,7 @@ export default function Index() {
           // Log authentication errors to Sentry for debugging
           Sentry.captureException(error);
         }
+
         router.replace("/signin");
       } else {
         // User is authenticated

@@ -29,7 +29,10 @@
     "more": "もっと",
     "retry": "再試行",
     "tryAgain": "もう一度",
-    "info": "情報"
+    "info": "情報",
+    "skip": "スキップ",
+    "notNow": "後で",
+    "min": "分"
   },
   "update": {
     "checkForUpdates": "アップデート確認",
@@ -115,11 +118,113 @@
   },
   "welcome": {
     "title": "Decorebatorへようこそ! 🎉",
-    "subtitle": "AI搭載の言語学習の旅がここから始まります",
+    "subtitle": "単語リストを作成すると、Decorebator がそれを適応型クイズ、ビジュアル、毎日の練習へと変換します",
     "firstWordlistSuccess": "おめでとうございます! 🎉",
     "firstWordlistMessage": "最初の単語リストが完成しました！単語を追加して学習を始めましょう。",
     "addWordsNow": "単語を追加",
     "addWordsLater": "後で"
+  },
+  "onboarding": {
+    "stepIndicator": "ステップ{{step}} / {{total}}",
+    "welcome": {
+      "greeting": "ようこそ",
+      "highlight": {
+        "generator": "単語リストを作るとAIが8種類のテストや画像・音声・チャレンジを生成",
+        "chat": "AIボイスコーチが保存した単語を声に出して練習させてくれます",
+        "modes": "8 つのクイズモードで練習がいつも新鮮",
+        "progress": "リアルタイム分析で連続学習を祝おう"
+      }
+    },
+    "features": {
+      "heading": "できることを覗いてみましょう",
+      "description": "ハイライトをスワイプして、Decorebator が毎日どうやってやる気を高めるか確かめてください。",
+      "quizzes": {
+        "title": "適応型クイズ",
+        "subtitle": "意味・リスニング・ライティング・画像問題を数秒で切り替え。",
+        "bulletOne": "スマートな難易度調整で常にチャレンジ。",
+        "bulletTwo": "スキマ時間にぴったりの 8 つのモード。"
+      },
+      "chat": {
+        "title": "ライブ発音コーチ",
+        "subtitle": "保存した単語をAIと一緒に会話形式で練習しましょう。",
+        "bulletOne": "どの単語リストからでも数秒で音声セッションを開始。",
+        "bulletTwo": "リアルタイム文字起こしで修正ポイントを逃しません。"
+      },
+      "flashcards": {
+        "title": "スマート単語カード",
+        "subtitle": "ライナー方式で復習間隔を最適化し、確実に記憶に定着。",
+        "bulletOne": "AI が例文と音声でカードを強化。",
+        "bulletTwo": "オフラインでもどこでも学習可能。"
+      },
+      "progress": {
+        "title": "進捗を可視化",
+        "subtitle": "連続日数・習熟度・週間リズムを美しいグラフで振り返りましょう。",
+        "bulletOne": "日々の目標リマインダーで連続学習を継続。",
+        "bulletTwo": "単語帳ごとの得意と課題をすぐに把握。"
+      },
+      "images": {
+        "title": "AI ビジュアル & オーディオ",
+        "subtitle": "各単語に画像・発音・文化的ニュアンスで背景を与えます。",
+        "bulletOne": "ネイティブの発音を収録。",
+        "bulletTwo": "あなたの学習言語に合わせたイラストを生成。"
+      }
+    },
+    "personalize": {
+      "title": "あなた用にカスタマイズ",
+      "subtitle": "学習言語と毎日の目標時間を選び、スケジュールに合ったレッスンを作りましょう。",
+      "language": "学習言語",
+      "goal": "1 日の目標",
+      "goalValue": "1 日 {{minutes}} 分",
+      "preview": {
+        "title": "学習プランのプレビュー",
+        "language": "{{language}} のカードを毎日お届け",
+        "goal": "目標は {{minutes}} 分に設定済み",
+        "hint": "設定からいつでも変更できます。"
+      }
+    },
+    "notifications": {
+      "title": "ペースを保ちましょう",
+      "subtitle": "やさしいリマインダーで復習のタイミングを知らせ、連続学習を途切れさせません。",
+      "enable": "リマインダーを有効にする",
+      "loading": "有効化しています...",
+      "morning": "朝・昼・夜など、リズムに合う時間帯を選びましょう。",
+      "goal": "選んだ 1 日の学習時間に合わせてリマインダーが届きます。",
+      "control": "必要に応じていつでもオン・オフを切り替えられます。"
+    },
+    "account": {
+      "title": "アカウントを作成",
+      "subtitle": "今の進捗をしっかり保存し、無料プランの内容とプレミアムへの切り替え手順をチェックしましょう。",
+      "free": {
+        "title": "無料プランでできること",
+        "features": {
+          "wordlists": "単語リストはすべての端末で同期。",
+          "quizzes": "適応型クイズとストリーク追跡。",
+          "analytics": "直近7日間の進捗サマリー。"
+        }
+      },
+      "premium": {
+        "title": "プレミアムで解放されるもの",
+        "features": {
+          "quizzes": "ライブ音声コーチとリアルタイム文字起こし。",
+          "offline": "8つのクイズ、AIビジュアル、音声パックをすべて利用。",
+          "analytics": "オフライン学習も自動同期し、詳細な分析を表示。"
+        }
+      },
+      "upgrade": {
+        "title": "あとでプレミアムにアップグレードするには",
+        "steps": {
+          "settings": "アプリに入ったらダッシュボードのメニューから「設定」を開きます。",
+          "option": "アカウントセクションの「プレミアムにアップグレード」をタップしてプラン詳細を確認します。",
+          "confirm": "プランを選んでアップグレードを確定、または無料トライアルをいつでも開始できます。"
+        }
+      },
+      "summary": {
+        "language": "学習中: {{flag}} {{language}}",
+        "goal": "1 日 {{minutes}} 分のフォーカス",
+        "ready": "登録後すぐに連続記録の追跡が始まります。"
+      },
+      "haveAccount": "すでにアカウントをお持ちですか？ログイン"
+    }
   },
   "dashboard": {
     "header": {
@@ -251,7 +356,51 @@
       "listening": "リスニング"
     }
   },
+  "wordSelection": {
+    "title": "チャット用の単語を選択",
+    "subtitle": "練習する単語を{{count}}個まで選択してください",
+    "selectAll": "全て選択",
+    "clearAll": "全て解除",
+    "wordsSelected": "{{count}}/{{max}}個の単語を選択中",
+    "continueToChat": "チャットに進む",
+    "noWordsTitle": "単語が選択されていません",
+    "noWordsMessage": "続行するには少なくとも1つの単語を選択してください。",
+    "maxWordsTitle": "最大単語数に達しました",
+    "maxWordsMessage": "チャット練習では{{count}}個までの単語しか選択できません。",
+    "loading": "単語を読み込み中...",
+    "loadError": "単語の読み込みに失敗しました。もう一度お試しください。",
+    "noWordsAvailableTitle": "利用可能な単語がありません",
+    "noWordsAvailableMessage": "この単語リストには、チャット練習用の定義が準備された単語がありません。",
+    "navigationError": "チャットセッションの開始に失敗しました。もう一度お試しください。",
+    "selected": " - 選択済み"
+  },
+  "realtimeChat": {
+    "title": "音声チャット",
+    "connecting": "接続中...",
+    "connected": "接続されました - 話し始めてください！",
+    "disconnected": "切断されました",
+    "connectionError": "接続エラー",
+    "initializationError": "チャットセッションの開始に失敗しました",
+    "initializing": "チャットセッションを開始しています...",
+    "connectionSlow": "接続が予想より時間がかかっています",
+    "genericError": "何らかの問題が発生しました。もう一度お試しください。",
+    "microphonePermission": "音声チャットにはマイクへのアクセスが必要です。",
+    "listening": "聞いています...",
+    "speakNow": "語彙を練習するために今話してください",
+    "wordsAvailable": "{{count}}語の練習用単語が利用可能です",
+    "focusWords": "Practicing {{count}} focus words from your wordlist",
+    "transcript": "AI応答：",
+    "previousResponses": "以前の応答",
+    "hideTranscript": "文字起こしを非表示",
+    "showTranscript": "文字起こしを表示",
+    "mute": "マイクをミュート",
+    "unmute": "マイクのミュートを解除",
+    "endCall": "通話を終了"
+  },
   "settings": {
+    "restartOnboarding": "オンボーディングをやり直す",
+    "onboardingReset": "オンボーディングをリセットしました。次回もう一度ご案内します。",
+    "onboardingResetError": "オンボーディングのリセットに失敗しました。",
     "title": "設定",
     "otherSettings": "その他の設定",
     "helpAndSupport": "ヘルプとサポート",
@@ -617,7 +766,11 @@
     "quizDescription": "説明（任意）",
     "quizDescriptionPlaceholder": "短い説明",
     "difficulty": "難易度",
-    "diff": { "easy": "かんたん", "medium": "ふつう", "hard": "むずかしい" },
+    "diff": {
+      "easy": "かんたん",
+      "medium": "ふつう",
+      "hard": "むずかしい"
+    },
     "timeLimit": "制限時間（分）",
     "publish": "公開",
     "public": "公開",
@@ -635,6 +788,13 @@
     "shareLink": "リンクを共有",
     "shareCta": "語彙クイズを公開しました—挑戦してみませんか？",
     "urlLabel": "リンク",
+    "chat": "チャット",
+    "startChat": "チャットを開始",
+    "chatHint": "このリストの単語を使って会話を始める",
+    "chatUpsell": {
+      "title": "AI会話をアンロック",
+      "subtitle": "自然な音声会話で語彙を練習"
+    },
     "premiumUpsell": {
       "title": "プレミアムをアンロック",
       "subtitle": "高度な機能にアクセス",
@@ -643,7 +803,11 @@
     "feature": {
       "publishQuizzes": "公開クイズを作成",
       "shareLinks": "リンク共有とランキング",
-      "betterBranding": "より良いビジュアルとブランディング"
+      "betterBranding": "より良いビジュアルとブランディング",
+      "voiceConversations": "AIとの音声会話",
+      "vocabularyPractice": "自然に語彙を練習",
+      "pronunciationHelp": "発音のガイダンスを取得",
+      "unlimitedChatTime": "無制限の会話時間"
     }
   },
   "analytics": {

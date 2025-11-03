@@ -29,7 +29,10 @@
     "more": "Mais",
     "retry": "Tentar novamente",
     "tryAgain": "Tente Novamente",
-    "info": "Info"
+    "info": "Info",
+    "skip": "Pular",
+    "notNow": "Agora não",
+    "min": "min"
   },
   "update": {
     "checkForUpdates": "Verificar atualizações",
@@ -115,11 +118,113 @@
   },
   "welcome": {
     "title": "Bem-vindo ao Decorebator! 🎉",
-    "subtitle": "Sua jornada de aprendizado de idiomas com IA começa aqui",
+    "subtitle": "Crie sua lista de palavras e o Decorebator a transforma em quizzes adaptativos, visuais e prática diária",
     "firstWordlistSuccess": "Parabéns! 🎉",
     "firstWordlistMessage": "Sua primeira lista está pronta! Comece adicionando palavras.",
     "addWordsNow": "Adicionar Palavras",
     "addWordsLater": "Mais Tarde"
+  },
+  "onboarding": {
+    "stepIndicator": "Etapa {{step}} de {{total}}",
+    "welcome": {
+      "greeting": "Bem-vindo ao",
+      "highlight": {
+        "generator": "Crie suas listas e a nossa IA gera 8 testes, imagens, áudios e desafios",
+        "chat": "O coach de voz com IA treina em voz alta as palavras que você salva",
+        "modes": "Oito modos de quiz que mantêm a prática empolgante",
+        "progress": "Análises em tempo real para celebrar suas sequências"
+      }
+    },
+    "features": {
+      "heading": "Descubra tudo o que você pode fazer",
+      "description": "Passe pelos destaques e veja como o Decorebator te inspira todos os dias.",
+      "quizzes": {
+        "title": "Quizzes adaptativos",
+        "subtitle": "Alterne entre significados, escuta, escrita e imagens em segundos.",
+        "bulletOne": "Dificuldade inteligente que sempre te desafia.",
+        "bulletTwo": "8 modos prontos para sessões rápidas."
+      },
+      "chat": {
+        "title": "Coach de conversação ao vivo",
+        "subtitle": "Pratique suas palavras salvas em voz alta com orientação instantânea da IA.",
+        "bulletOne": "Inicie uma sessão de voz a partir de qualquer lista em segundos.",
+        "bulletTwo": "Transcrições em tempo real registram cada correção."
+      },
+      "flashcards": {
+        "title": "Flashcards inteligentes",
+        "subtitle": "As caixas de Leitner espaçam os estudos para fixar cada palavra.",
+        "bulletOne": "A IA enriquece os cards com exemplos e áudio.",
+        "bulletTwo": "O modo offline mantém o treino em qualquer lugar."
+      },
+      "progress": {
+        "title": "Acompanhe seu progresso",
+        "subtitle": "Celebre sequências, níveis de domínio e ritmo semanal com gráficos incríveis.",
+        "bulletOne": "Lembretes diários da meta mantêm a sequência viva.",
+        "bulletTwo": "Identifique forças e lacunas por lista instantaneamente."
+      },
+      "images": {
+        "title": "Visuais e áudio com IA",
+        "subtitle": "Cada palavra ganha contexto com imagens, pronúncia e nuances culturais.",
+        "bulletOne": "Pronúncias gravadas por falantes nativos.",
+        "bulletTwo": "Ilustrações geradas para o seu idioma."
+      }
+    },
+    "personalize": {
+      "title": "Vamos personalizar",
+      "subtitle": "Escolha um idioma e um foco diário para ajustar as lições à sua rotina.",
+      "language": "Idioma de aprendizado",
+      "goal": "Meta diária",
+      "goalValue": "{{minutes}} min/dia",
+      "preview": {
+        "title": "Prévia do seu estudo",
+        "language": "Cards diários em {{language}}",
+        "goal": "Meta definida em {{minutes}} minutos",
+        "hint": "Você pode ajustar isso quando quiser nas Configurações."
+      }
+    },
+    "notifications": {
+      "title": "Mantenha o ritmo",
+      "subtitle": "Lembretes suaves avisam quando é hora de revisar para sua sequência não quebrar.",
+      "enable": "Ativar lembretes",
+      "loading": "Ativando...",
+      "morning": "Escolha horários de manhã, tarde ou noite que combinam com você.",
+      "goal": "Os lembretes seguem os minutos diários que você escolheu.",
+      "control": "Você decide — desligue quando quiser."
+    },
+    "account": {
+      "title": "Crie sua conta",
+      "subtitle": "Garanta seu progresso hoje, descubra o que está no plano gratuito e saiba como fazer upgrade quando quiser.",
+      "free": {
+        "title": "O plano gratuito inclui",
+        "features": {
+          "wordlists": "Listas sincronizadas em todos os dispositivos.",
+          "quizzes": "Quizzes adaptativos com sequência.",
+          "analytics": "Resumo dos últimos 7 dias."
+        }
+      },
+      "premium": {
+        "title": "Premium libera",
+        "features": {
+          "quizzes": "Coach de voz ao vivo com transcrições em tempo real.",
+          "offline": "Oito modos de quiz, visuais IA e pacotes de áudio.",
+          "analytics": "Prática offline com autosync e análises avançadas."
+        }
+      },
+      "upgrade": {
+        "title": "Como fazer upgrade depois",
+        "steps": {
+          "settings": "Dentro do app, abra Configurações pelo menu do painel.",
+          "option": "Toque em \"Atualizar para Premium\" na seção Conta para ver os detalhes do plano.",
+          "confirm": "Escolha o plano, confirme o upgrade ou inicie um teste gratuito quando quiser."
+        }
+      },
+      "summary": {
+        "language": "Aprendendo: {{flag}} {{language}}",
+        "goal": "Foco diário: {{minutes}} min/dia",
+        "ready": "O acompanhamento da sequência começa assim que você se cadastrar."
+      },
+      "haveAccount": "Já tem conta? Entrar"
+    }
   },
   "dashboard": {
     "header": {
@@ -251,7 +356,51 @@
       "listening": "Audição"
     }
   },
+  "wordSelection": {
+    "title": "Selecionar Palavras para Chat",
+    "subtitle": "Escolha até {{count}} palavras para praticar",
+    "selectAll": "Selecionar Todas",
+    "clearAll": "Limpar Todas",
+    "wordsSelected": "{{count}}/{{max}} palavras selecionadas",
+    "continueToChat": "Continuar para o Chat",
+    "noWordsTitle": "Nenhuma Palavra Selecionada",
+    "noWordsMessage": "Por favor selecione pelo menos uma palavra para continuar.",
+    "maxWordsTitle": "Máximo de Palavras Atingido",
+    "maxWordsMessage": "Você pode selecionar apenas até {{count}} palavras para a prática de chat.",
+    "loading": "Carregando palavras...",
+    "loadError": "Falha ao carregar palavras. Tente novamente.",
+    "noWordsAvailableTitle": "Nenhuma Palavra Disponível",
+    "noWordsAvailableMessage": "Esta lista de palavras não tem palavras com definições prontas para a prática de chat.",
+    "navigationError": "Falha ao iniciar a sessão de chat. Tente novamente.",
+    "selected": " - selecionada"
+  },
+  "realtimeChat": {
+    "title": "Chat por Voz",
+    "connecting": "Conectando...",
+    "connected": "Conectado - Comece a falar!",
+    "disconnected": "Desconectado",
+    "connectionError": "Erro de conexão",
+    "initializationError": "Falha ao iniciar sessão de chat",
+    "initializing": "Iniciando sessão de chat...",
+    "connectionSlow": "A conexão está demorando mais do que o esperado",
+    "genericError": "Algo deu errado. Por favor, tente novamente.",
+    "microphonePermission": "É preciso conceder o microfone para usar o chat de voz.",
+    "listening": "Ouvindo...",
+    "speakNow": "Fale agora para praticar seu vocabulário",
+    "wordsAvailable": "{{count}} palavras disponíveis para prática",
+    "focusWords": "Practicing {{count}} focus words from your wordlist",
+    "transcript": "Resposta da IA:",
+    "previousResponses": "Respostas anteriores",
+    "hideTranscript": "Ocultar transcrição",
+    "showTranscript": "Mostrar transcrição",
+    "mute": "Silenciar microfone",
+    "unmute": "Ativar microfone",
+    "endCall": "Encerrar chamada"
+  },
   "settings": {
+    "restartOnboarding": "Reiniciar Onboarding",
+    "onboardingReset": "Onboarding redefinido. Vamos guiá-lo novamente da próxima vez.",
+    "onboardingResetError": "Falha ao redefinir o onboarding.",
     "title": "Configurações",
     "otherSettings": "Outras Configurações",
     "helpAndSupport": "Ajuda e Suporte",
@@ -323,7 +472,7 @@
       "restoreNoEntitlements": "Nenhuma assinatura premium ativa encontrada para restaurar.",
       "restorePurchases": "Restaurar Compras",
       "terms": "Ao continuar, você concorda com nossos Termos de Serviço e Política de Privacidade. As assinaturas se renovam automaticamente, a menos que sejam canceladas.",
-      "termsPrefix": "Ao continuar, você concorda com nossos",  
+      "termsPrefix": "Ao continuar, você concorda com nossos",
       "termsMiddle": "e",
       "termsSuffix": "As assinaturas se renovam automaticamente, a menos que sejam canceladas",
       "storeProblem": "Problema na loja. Tente novamente mais tarde.",
@@ -618,7 +767,11 @@
     "quizDescription": "Descrição (opcional)",
     "quizDescriptionPlaceholder": "Breve descrição",
     "difficulty": "Dificuldade",
-    "diff": { "easy": "Fácil", "medium": "Médio", "hard": "Difícil" },
+    "diff": {
+      "easy": "Fácil",
+      "medium": "Médio",
+      "hard": "Difícil"
+    },
     "timeLimit": "Tempo limite (minutos)",
     "publish": "Publicar",
     "public": "Público",
@@ -638,6 +791,13 @@
     "shareLink": "Compartilhar link",
     "shareCta": "Acabei de publicar um quiz de vocabulário — consegue me superar?",
     "urlLabel": "Link",
+    "chat": "Chat",
+    "startChat": "Iniciar chat",
+    "chatHint": "Inicie uma conversa usando as palavras desta lista",
+    "chatUpsell": {
+      "title": "Desbloquear conversas com IA",
+      "subtitle": "Pratique vocabulário através de conversas por voz naturais"
+    },
     "premiumUpsell": {
       "title": "Desbloquear Premium",
       "subtitle": "Acesse recursos avançados",
@@ -646,7 +806,11 @@
     "feature": {
       "publishQuizzes": "Publicar quizzes públicos",
       "shareLinks": "Compartilhar links e rankings",
-      "betterBranding": "Melhores visuais e branding"
+      "betterBranding": "Melhores visuais e branding",
+      "voiceConversations": "Conversas por voz com IA",
+      "vocabularyPractice": "Pratique seu vocabulário naturalmente",
+      "pronunciationHelp": "Obtenha ajuda com pronunciação",
+      "unlimitedChatTime": "Tempo de conversa ilimitado"
     }
   },
   "analytics": {

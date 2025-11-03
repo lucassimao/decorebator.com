@@ -7,6 +7,7 @@ import {
   Animated,
   Modal,
   Platform,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -71,49 +72,69 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
             <Ionicons name="sparkles" size={22} color={theme.colors.primary} />
           </View>
 
-          <View style={styles.welcomeHeader}>
-            <Text style={styles.welcomeTitle}>
-              {t("welcome.title", "Welcome to Decorebator! 🎉")}
-            </Text>
-            <Text style={styles.welcomeSubtitle}>
-              {t(
-                "welcome.subtitle",
-                "Your AI-powered language learning journey starts here",
-              )}
-            </Text>
-          </View>
-
-          <View style={styles.welcomeFeatures}>
-            <View style={styles.welcomeFeature}>
-              <View style={styles.welcomeFeatureIcon}>
-                <Ionicons name="book" size={22} color={theme.colors.primary} />
+          <View style={styles.contentWrapper}>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              bounces={false}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.welcomeHeader}>
+                <Text style={styles.welcomeTitle}>
+                  {t("welcome.title", "Welcome to Decorebator! 🎉")}
+                </Text>
+                <Text style={styles.welcomeSubtitle}>
+                  {t(
+                    "welcome.subtitle",
+                    "Your AI-powered language learning journey starts here",
+                  )}
+                </Text>
               </View>
-              <Text style={styles.welcomeFeatureText}>
-                {t("welcome.feature1", "Create custom wordlists")}
-              </Text>
-            </View>
 
-            <View style={styles.welcomeFeature}>
-              <View style={styles.welcomeFeatureIcon}>
-                <Ionicons name="bulb" size={22} color={theme.colors.primary} />
-              </View>
-              <Text style={styles.welcomeFeatureText}>
-                {t("welcome.feature2", "AI-powered definitions & images")}
-              </Text>
-            </View>
+              <View style={styles.welcomeFeatures}>
+                <View
+                  style={[styles.welcomeFeature, styles.welcomeFeatureSpacing]}
+                >
+                  <View style={styles.welcomeFeatureIcon}>
+                    <Ionicons
+                      name="book"
+                      size={22}
+                      color={theme.colors.primary}
+                    />
+                  </View>
+                  <Text style={styles.welcomeFeatureText}>
+                    {t("welcome.feature1", "Create custom wordlists")}
+                  </Text>
+                </View>
 
-            <View style={styles.welcomeFeature}>
-              <View style={styles.welcomeFeatureIcon}>
-                <Ionicons
-                  name="repeat"
-                  size={22}
-                  color={theme.colors.primary}
-                />
+                <View
+                  style={[styles.welcomeFeature, styles.welcomeFeatureSpacing]}
+                >
+                  <View style={styles.welcomeFeatureIcon}>
+                    <Ionicons
+                      name="bulb"
+                      size={22}
+                      color={theme.colors.primary}
+                    />
+                  </View>
+                  <Text style={styles.welcomeFeatureText}>
+                    {t("welcome.feature2", "AI-powered definitions & images")}
+                  </Text>
+                </View>
+
+                <View style={styles.welcomeFeature}>
+                  <View style={styles.welcomeFeatureIcon}>
+                    <Ionicons
+                      name="repeat"
+                      size={22}
+                      color={theme.colors.primary}
+                    />
+                  </View>
+                  <Text style={styles.welcomeFeatureText}>
+                    {t("welcome.feature3", "Smart spaced repetition")}
+                  </Text>
+                </View>
               </View>
-              <Text style={styles.welcomeFeatureText}>
-                {t("welcome.feature3", "Smart spaced repetition")}
-              </Text>
-            </View>
+            </ScrollView>
           </View>
 
           <TouchableOpacity
@@ -152,8 +173,25 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
 const createStyles = (
   theme: ReturnType<typeof useTheme>["theme"],
   responsive: ReturnType<typeof useTheme>["responsive"],
-) =>
-  StyleSheet.create({
+) => {
+  const modalHeightTarget = responsive.getValueForSize(520, 580, 640, 720);
+  const availableHeight =
+    responsive.screenHeight - responsive.spacing.vertical * 2;
+  const maxModalHeight =
+    Number.isFinite(availableHeight) && availableHeight > 0
+      ? Math.min(modalHeightTarget, availableHeight)
+      : modalHeightTarget;
+  const baseContentMaxHeight = responsive.getValueForSize(260, 320, 360, 420);
+  const reservedHeight =
+    responsive.spacing.minTouchTarget * 2 +
+    responsive.spacing.elementSpacing * 3;
+  const computedContentMaxHeight = maxModalHeight - reservedHeight;
+  const contentMaxHeight =
+    computedContentMaxHeight > 0
+      ? Math.min(baseContentMaxHeight, computedContentMaxHeight)
+      : baseContentMaxHeight;
+
+  return StyleSheet.create({
     backdrop: {
       flex: 1,
       backgroundColor: "rgba(0, 0, 0, 0.6)",
@@ -165,15 +203,27 @@ const createStyles = (
     welcomeModal: {
       backgroundColor: theme.colors.background.surface,
       borderRadius: theme.borderRadius.xl,
-      padding: responsive.spacing.formPadding,
+      paddingHorizontal: responsive.spacing.formPadding,
+      paddingBottom: responsive.spacing.formPadding,
+      paddingTop:
+        responsive.spacing.formPadding + responsive.spacing.elementSpacing,
       maxWidth: responsive.getValueForSize(340, 380, 420, 460),
       width: "100%",
+      maxHeight: maxModalHeight,
       ...theme.shadows.lg,
+    },
+    contentWrapper: {
+      flexShrink: 1,
+      width: "100%",
+      marginBottom: responsive.spacing.formPadding,
+      maxHeight: contentMaxHeight,
+    },
+    scrollContent: {
+      paddingBottom: responsive.spacing.elementSpacing,
     },
     welcomeHeader: {
       alignItems: "center",
-      marginBottom: responsive.spacing.formPadding,
-      paddingTop: responsive.spacing.elementSpacing,
+      marginBottom: responsive.spacing.elementSpacing,
     },
     badge: {
       position: "absolute",
@@ -195,15 +245,18 @@ const createStyles = (
       fontSize: responsive.fontSizes.body,
       color: theme.colors.text.secondary,
       textAlign: "center",
+      marginBottom: responsive.spacing.elementSpacing,
       lineHeight: responsive.fontSizes.body * responsive.fontSizes.lineHeight,
     },
     welcomeFeatures: {
-      marginBottom: responsive.spacing.formPadding,
+      paddingTop: responsive.spacing.elementSpacing,
     },
     welcomeFeature: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: responsive.spacing.horizontal,
+    },
+    welcomeFeatureSpacing: {
+      marginBottom: responsive.spacing.elementSpacing,
     },
     welcomeFeatureIcon: {
       width: responsive.getValueForSize(36, 40, 44, 48),
@@ -224,7 +277,7 @@ const createStyles = (
     welcomeButton: {
       backgroundColor: theme.colors.primary,
       borderRadius: theme.borderRadius.md,
-      paddingVertical: responsive.spacing.horizontal,
+      paddingVertical: responsive.spacing.elementSpacing,
       paddingHorizontal: responsive.spacing.formPadding,
       flexDirection: "row",
       justifyContent: "center",
@@ -238,10 +291,10 @@ const createStyles = (
       color: theme.colors.text.inverse,
       fontSize: responsive.fontSizes.headline,
       fontWeight: "600",
-      marginRight: responsive.spacing.elementSpacing,
+      marginRight: responsive.getValueForSize(6, 8, 10, 12),
     },
     welcomeSkip: {
-      paddingVertical: responsive.spacing.elementSpacing,
+      paddingVertical: responsive.spacing.horizontal,
       alignItems: "center",
       minHeight: responsive.spacing.minTouchTarget,
     },
@@ -251,3 +304,4 @@ const createStyles = (
       fontWeight: "500",
     },
   });
+};

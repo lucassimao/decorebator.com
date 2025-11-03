@@ -92,8 +92,8 @@ func TestGetDefinitionsBatch_Basic(t *testing.T) {
 
 	// Validate contents
 	// First result could be for w1 or w2 depending on ordering by word_id ASC
-	obj1 := resp.Element(0).Object()
-	obj2 := resp.Element(1).Object()
+	obj1 := resp.Value(0).Object()
+	obj2 := resp.Value(1).Object()
 
 	ids := []int64{int64(obj1.Value("wordId").Number().Raw()), int64(obj2.Value("wordId").Number().Raw())}
 	require.ElementsMatch(t, []int64{w1, w2}, ids)
@@ -149,5 +149,5 @@ func TestGetDefinitionsBatch_ErrorsAndIsolation(t *testing.T) {
 		JSON().Array()
 
 	arr.Length().IsEqual(1)
-	arr.Element(0).Object().Value("wordId").Number().IsEqual(float64(w1))
+	arr.Value(0).Object().Value("wordId").Number().IsEqual(float64(w1))
 }

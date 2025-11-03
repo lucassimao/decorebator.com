@@ -15,7 +15,7 @@ import { useWordlistProgress } from "@/hooks/useWordlistProgress";
 import { useWordlists } from "@/hooks/useWordlists";
 import { createCommonStyles } from "@/styles/common";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -31,6 +31,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Easing,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -43,6 +44,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
     React.useState<Wordlist | null>(null);
   const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [hasSeenDashboardFlag, setHasSeenDashboardFlag] = useState(false);
+  const [hasCheckedWelcomeState, setHasCheckedWelcomeState] = useState(false);
   const [showCongratulationsModal, setShowCongratulationsModal] =
     useState(false);
   const [congratulationsWordlist, setCongratulationsWordlist] =
@@ -53,10 +56,13 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const { theme, responsive } = useTheme();
   const commonStyles = createCommonStyles(theme, responsive);
   const styles = createStyles(theme);
+  const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
   // Animation refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   // Get premium status from centralized session
   const { isPremium } = useUserSession();
@@ -75,16 +81,62 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
   const hasNoWordlist = wordlists && wordlists.length === 0;
 
+  const stopPulse = React.useCallback(() => {
+    if (pulseLoopRef.current) {
+      pulseLoopRef.current.stop();
+      pulseLoopRef.current = null;
+    }
+    pulseAnim.stopAnimation();
+    pulseAnim.setValue(1);
+  }, [pulseAnim]);
+
+  const startPulse = React.useCallback(() => {
+    if (pulseLoopRef.current) return; // avoid duplicates
+    const maxScale = hasNoWordlist ? 1.1 : 1.05;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: maxScale,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    pulseLoopRef.current = loop;
+    loop.start();
+  }, [hasNoWordlist, pulseAnim]);
+
   // Check if user is first-time user immediately on mount
   useEffect(() => {
     let cancelled = false;
     const checkFirstTimeUser = async () => {
       try {
-        const isJustSignedUp = await AsyncStorage.getItem("justSignedUp");
+        const entries = await AsyncStorage.multiGet([
+          "justSignedUp",
+          "hasSeenDashboard",
+        ]);
+        const isJustSignedUp = entries.find(
+          ([key]) => key === "justSignedUp",
+        )?.[1];
+        const hasSeenDashboard = entries.find(
+          ([key]) => key === "hasSeenDashboard",
+        )?.[1];
+
+        if (!cancelled) {
+          setHasSeenDashboardFlag(hasSeenDashboard === "true");
+        }
 
         if (__DEV__) {
           console.log("Dashboard welcome check (immediate):", {
             isJustSignedUp,
+            hasSeenDashboard,
           });
         }
 
@@ -94,9 +146,17 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
           await AsyncStorage.removeItem("justSignedUp");
           await AsyncStorage.setItem("hasSeenDashboard", "true");
+
+          if (!cancelled) {
+            setHasSeenDashboardFlag(true);
+          }
         }
       } catch (error) {
         console.warn("Error checking first-time user status:", error);
+      } finally {
+        if (!cancelled) {
+          setHasCheckedWelcomeState(true);
+        }
       }
     };
 
@@ -127,6 +187,45 @@ const Dashboard: React.FC<DashboardProps> = () => {
       ]).start();
     }
   }, [hasNoWordlist, isLoading, fadeAnim, slideAnim]);
+
+  // Start pulse when focused; stop on blur
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!isLoading) startPulse();
+      return () => stopPulse();
+    }, [isLoading, startPulse, stopPulse]),
+  );
+
+  // Restart pulse when empty state changes to update amplitude
+  useEffect(() => {
+    if (pulseLoopRef.current) {
+      stopPulse();
+      startPulse();
+    }
+  }, [hasNoWordlist, startPulse, stopPulse]);
+
+  // Pause while the create modal is open
+  useEffect(() => {
+    if (showCreateModal) stopPulse();
+    else startPulse();
+  }, [showCreateModal, startPulse, stopPulse]);
+
+  const markDashboardSeen = React.useCallback(() => {
+    setHasSeenDashboardFlag(true);
+    AsyncStorage.setItem("hasSeenDashboard", "true").catch((error) => {
+      console.warn("Failed to persist dashboard seen flag:", error);
+    });
+  }, []);
+
+  const handleWelcomeDismiss = React.useCallback(() => {
+    setShowWelcomeOverlay(false);
+    markDashboardSeen();
+  }, [markDashboardSeen]);
+
+  const handleWelcomeGetStarted = React.useCallback(() => {
+    handleWelcomeDismiss();
+    setShowCreateModal(true);
+  }, [handleWelcomeDismiss]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -180,16 +279,23 @@ const Dashboard: React.FC<DashboardProps> = () => {
             <Text style={styles.sectionTitle}>
               {t("dashboard.wordlists.myWordlists")}
             </Text>
-            <TouchableOpacity
-              style={styles.addButton}
+            <AnimatedTouchable
+              style={[styles.addButton, { transform: [{ scale: pulseAnim }] }]}
               onPress={handleAddNewWordlist}
+              onPressIn={stopPulse}
+              onPressOut={startPulse}
+              activeOpacity={0.85}
+              accessibilityLabel={t(
+                "dashboard.wordlists.addNewWordlist",
+                "Add New Wordlist",
+              )}
             >
               <Ionicons
                 name="add-circle"
                 size={34}
                 color={theme.colors.primary}
               />
-            </TouchableOpacity>
+            </AnimatedTouchable>
           </View>
         </>
       )}
@@ -252,20 +358,37 @@ const Dashboard: React.FC<DashboardProps> = () => {
   // Fallback: Show welcome for empty wordlists if no welcome was shown yet
   // Note: Don't set isNewUser flag here as this could be an existing user with no wordlists
   useEffect(() => {
-    if (!isLoading && hasNoWordlist && !showWelcomeOverlay && !isNewUser) {
-      const timer = setTimeout(() => {
-        if (__DEV__) {
-          console.log(
-            "Fallback: Showing welcome for empty wordlist (not marking as new user)",
-          );
-        }
-        // Only show welcome overlay, don't mark as new user
-        setShowWelcomeOverlay(true);
-      }, 1000);
-
-      return () => clearTimeout(timer);
+    if (
+      !hasCheckedWelcomeState ||
+      isLoading ||
+      !hasNoWordlist ||
+      showWelcomeOverlay ||
+      isNewUser ||
+      hasSeenDashboardFlag
+    ) {
+      return;
     }
-  }, [isLoading, hasNoWordlist, showWelcomeOverlay, isNewUser]);
+
+    const timer = setTimeout(() => {
+      if (__DEV__) {
+        console.log(
+          "Fallback: Showing welcome for empty wordlist (persisting dismissal after first display)",
+        );
+      }
+      setShowWelcomeOverlay(true);
+      markDashboardSeen();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [
+    hasCheckedWelcomeState,
+    isLoading,
+    hasNoWordlist,
+    showWelcomeOverlay,
+    isNewUser,
+    hasSeenDashboardFlag,
+    markDashboardSeen,
+  ]);
 
   return (
     <>
@@ -290,6 +413,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
               ListHeaderComponent={renderStatsAndSection}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
+              onScrollBeginDrag={stopPulse}
+              onMomentumScrollEnd={startPulse}
               refreshControl={
                 <RefreshControl
                   refreshing={refreshing}
@@ -335,6 +460,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 ListHeaderComponent={renderStatsAndSection}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
+                onScrollBeginDrag={stopPulse}
+                onMomentumScrollEnd={startPulse}
                 refreshControl={
                   <RefreshControl
                     refreshing={refreshing}
@@ -402,11 +529,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
       {/* Welcome Overlay for First-Time Users */}
       <WelcomeOverlay
         visible={showWelcomeOverlay}
-        onGetStarted={() => {
-          setShowWelcomeOverlay(false);
-          setShowCreateModal(true);
-        }}
-        onSkip={() => setShowWelcomeOverlay(false)}
+        onGetStarted={handleWelcomeGetStarted}
+        onSkip={handleWelcomeDismiss}
       />
     </>
   );
@@ -508,7 +632,23 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.colors.text.primary,
     },
     addButton: {
-      padding: 4,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor:
+        theme.mode === "light" ? "#FFFFFF" : theme.colors.background.surface,
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light"
+          ? theme.colors.border.light
+          : theme.colors.ui.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: theme.mode === "light" ? 0.18 : 0.3,
+      shadowRadius: 12,
+      elevation: 10,
     },
 
     emptyContainer: {

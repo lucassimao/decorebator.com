@@ -29,7 +29,10 @@
     "more": "Mais",
     "retry": "Tentar novamente",
     "tryAgain": "Tente Novamente",
-    "info": "Info"
+    "info": "Info",
+    "skip": "Saltar",
+    "notNow": "Agora não",
+    "min": "min"
   },
   "update": {
     "checkForUpdates": "Verificar atualizações",
@@ -115,11 +118,113 @@
   },
   "welcome": {
     "title": "Bem-vindo ao Decorebator! 🎉",
-    "subtitle": "A sua jornada de aprendizagem de idiomas com IA começa aqui",
+    "subtitle": "Crie a sua lista de palavras e o Decorebator transforma-a em questionários adaptativos, visuais e prática diária",
     "firstWordlistSuccess": "Parabéns! 🎉",
     "firstWordlistMessage": "A sua primeira lista está pronta! Comece a adicionar palavras.",
     "addWordsNow": "Adicionar Palavras",
     "addWordsLater": "Mais Tarde"
+  },
+  "onboarding": {
+    "stepIndicator": "Passo {{step}} de {{total}}",
+    "welcome": {
+      "greeting": "Bem-vindo ao",
+      "highlight": {
+        "generator": "Crie as suas listas e a nossa IA gera 8 testes, imagens, áudios e desafios",
+        "chat": "O coach de voz com IA pratica em voz alta as palavras que guarda",
+        "modes": "Oito modos de questionário que mantêm a prática dinâmica",
+        "progress": "Análises em tempo real para celebrar as suas sequências"
+      }
+    },
+    "features": {
+      "heading": "Descubra tudo o que pode fazer",
+      "description": "Percorra os destaques e veja como o Decorebator o motiva todos os dias.",
+      "quizzes": {
+        "title": "Questionários adaptativos",
+        "subtitle": "Altere entre significados, audição, escrita e imagens em segundos.",
+        "bulletOne": "A dificuldade inteligente mantém o desafio sempre presente.",
+        "bulletTwo": "8 modos prontos para sessões rápidas."
+      },
+      "chat": {
+        "title": "Coach de conversação ao vivo",
+        "subtitle": "Pratique em voz alta as palavras guardadas com orientação instantânea da IA.",
+        "bulletOne": "Inicie uma sessão de voz a partir de qualquer lista em segundos.",
+        "bulletTwo": "Transcrições em tempo real registam cada correção."
+      },
+      "flashcards": {
+        "title": "Flashcards inteligentes",
+        "subtitle": "As caixas de Leitner espaçam as revisões para fixar cada palavra.",
+        "bulletOne": "A IA enriquece os cartões com exemplos e áudio.",
+        "bulletTwo": "O modo offline mantém o estudo em qualquer lugar."
+      },
+      "progress": {
+        "title": "Acompanhe o seu progresso",
+        "subtitle": "Celebre sequências, níveis de domínio e ritmo semanal com gráficos impressionantes.",
+        "bulletOne": "Lembretes diários do objetivo mantêm a sequência viva.",
+        "bulletTwo": "Identifique forças e lacunas por lista de imediato."
+      },
+      "images": {
+        "title": "Visuais e áudio com IA",
+        "subtitle": "Cada palavra ganha contexto com imagens, pronúncia e nuances culturais.",
+        "bulletOne": "Pronúncias gravadas por falantes nativos.",
+        "bulletTwo": "Ilustrações geradas para a sua língua."
+      }
+    },
+    "personalize": {
+      "title": "Vamos personalizar isto",
+      "subtitle": "Escolha uma língua e um foco diário para adaptar as lições à sua rotina.",
+      "language": "Língua de aprendizagem",
+      "goal": "Objetivo diário",
+      "goalValue": "{{minutes}} min/dia",
+      "preview": {
+        "title": "Pré-visualização do seu estudo",
+        "language": "Cartões diários em {{language}}",
+        "goal": "Objetivo definido em {{minutes}} minutos",
+        "hint": "Pode ajustar isto a qualquer momento nas Definições."
+      }
+    },
+    "notifications": {
+      "title": "Mantenha o ritmo",
+      "subtitle": "Lembretes suaves avisam quando é hora de rever para que a sequência não quebre.",
+      "enable": "Ativar lembretes",
+      "loading": "A ativar...",
+      "morning": "Escolha períodos de manhã, tarde ou noite que encaixem na sua rotina.",
+      "goal": "Os lembretes adaptam-se aos minutos diários que escolheu.",
+      "control": "Tem sempre controlo — desligue quando quiser."
+    },
+    "account": {
+      "title": "Crie a sua conta",
+      "subtitle": "Garanta o progresso de hoje, veja o que está incluído no plano gratuito e saiba como fazer upgrade quando quiser.",
+      "free": {
+        "title": "O plano gratuito inclui",
+        "features": {
+          "wordlists": "Listas sincronizadas em todos os dispositivos.",
+          "quizzes": "Questionários adaptativos com sequência.",
+          "analytics": "Resumo dos últimos 7 dias."
+        }
+      },
+      "premium": {
+        "title": "Premium desbloqueia",
+        "features": {
+          "quizzes": "Coach de voz ao vivo com transcrições em tempo real.",
+          "offline": "Oito modos de questionário, visuais IA e pacotes de áudio.",
+          "analytics": "Prática offline com autosync e análises avançadas."
+        }
+      },
+      "upgrade": {
+        "title": "Como fazer upgrade mais tarde",
+        "steps": {
+          "settings": "Quando estiver na app, abra Definições através do menu do painel.",
+          "option": "Toque em \"Atualizar para Premium\" na secção Conta para consultar os detalhes do plano.",
+          "confirm": "Escolha o plano, confirme o upgrade ou inicie uma avaliação gratuita quando quiser."
+        }
+      },
+      "summary": {
+        "language": "A aprender: {{flag}} {{language}}",
+        "goal": "Foco diário: {{minutes}} min/dia",
+        "ready": "O acompanhamento da sequência começa assim que concluir o registo."
+      },
+      "haveAccount": "Já tem conta? Inicie sessão"
+    }
   },
   "dashboard": {
     "header": {
@@ -251,7 +356,51 @@
       "listening": "Audição"
     }
   },
+  "wordSelection": {
+    "title": "Seleccionar Palavras para Conversa",
+    "subtitle": "Escolha até {{count}} palavras para praticar",
+    "selectAll": "Seleccionar Todas",
+    "clearAll": "Limpar Todas",
+    "wordsSelected": "{{count}}/{{max}} palavras seleccionadas",
+    "continueToChat": "Continuar para a Conversa",
+    "noWordsTitle": "Nenhuma Palavra Seleccionada",
+    "noWordsMessage": "Por favor seleccione pelo menos uma palavra para continuar.",
+    "maxWordsTitle": "Máximo de Palavras Atingido",
+    "maxWordsMessage": "Pode seleccionar apenas até {{count}} palavras para a prática de conversa.",
+    "loading": "A carregar palavras...",
+    "loadError": "Falha ao carregar palavras. Tente novamente.",
+    "noWordsAvailableTitle": "Nenhuma Palavra Disponível",
+    "noWordsAvailableMessage": "Esta lista de palavras não tem palavras com definições prontas para a prática de conversa.",
+    "navigationError": "Falha ao iniciar a sessão de conversa. Tente novamente.",
+    "selected": " - seleccionada"
+  },
+  "realtimeChat": {
+    "title": "Conversa por Voz",
+    "connecting": "A conectar...",
+    "connected": "Conectado - Comece a falar!",
+    "disconnected": "Desconectado",
+    "connectionError": "Erro de conexão",
+    "initializationError": "Falha ao iniciar sessão de conversa",
+    "initializing": "A iniciar sessão de conversa...",
+    "connectionSlow": "A ligação está a demorar mais tempo que o esperado",
+    "genericError": "Algo correu mal. Por favor, tente novamente.",
+    "microphonePermission": "É necessário o microfone para usar o chat de voz.",
+    "listening": "A escutar...",
+    "speakNow": "Fale agora para praticar o seu vocabulário",
+    "wordsAvailable": "{{count}} palavras disponíveis para prática",
+    "focusWords": "Practicing {{count}} focus words from your wordlist",
+    "transcript": "Resposta da IA:",
+    "previousResponses": "Respostas anteriores",
+    "hideTranscript": "Ocultar transcrição",
+    "showTranscript": "Mostrar transcrição",
+    "mute": "Silenciar microfone",
+    "unmute": "Activar microfone",
+    "endCall": "Terminar chamada"
+  },
   "settings": {
+    "restartOnboarding": "Reiniciar Onboarding",
+    "onboardingReset": "Onboarding redefinido. Vamos guiá-lo novamente da próxima vez.",
+    "onboardingResetError": "Falha ao redefinir o onboarding.",
     "title": "Definições",
     "otherSettings": "Outras Definições",
     "helpAndSupport": "Ajuda e Suporte",
@@ -616,7 +765,11 @@
     "quizDescription": "Descrição (opcional)",
     "quizDescriptionPlaceholder": "Breve descrição",
     "difficulty": "Dificuldade",
-    "diff": { "easy": "Fácil", "medium": "Médio", "hard": "Difícil" },
+    "diff": {
+      "easy": "Fácil",
+      "medium": "Médio",
+      "hard": "Difícil"
+    },
     "timeLimit": "Tempo limite (minutos)",
     "publish": "Publicar",
     "publishSuccessTitle": "Publicado",
@@ -627,6 +780,13 @@
     "timeLimitInvalid": "O tempo deve estar entre 1 e 15 minutos.",
     "copyUrl": "Copiar link",
     "urlLabel": "Link",
+    "chat": "Chat",
+    "startChat": "Iniciar chat",
+    "chatHint": "Inicie uma conversa usando as palavras desta lista",
+    "chatUpsell": {
+      "title": "Desbloquear conversas com IA",
+      "subtitle": "Pratique vocabulário através de conversas por voz naturais"
+    },
     "premiumUpsell": {
       "title": "Desbloquear Premium",
       "subtitle": "Aceda a funcionalidades avançadas",
@@ -635,7 +795,11 @@
     "feature": {
       "publishQuizzes": "Publicar questionários públicos",
       "shareLinks": "Partilhar ligações e classificações",
-      "betterBranding": "Melhores visuais e imagem de marca"
+      "betterBranding": "Melhores visuais e imagem de marca",
+      "voiceConversations": "Conversas por voz com IA",
+      "vocabularyPractice": "Pratique o seu vocabulário naturalmente",
+      "pronunciationHelp": "Obtenha ajuda com a pronunciação",
+      "unlimitedChatTime": "Tempo de conversa ilimitado"
     }
   },
   "analytics": {

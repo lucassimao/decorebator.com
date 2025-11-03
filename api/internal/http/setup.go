@@ -108,21 +108,11 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizRoutes.Save)
 		// Chat session endpoint - premium only
 		authenticatedRoutes.POST("/wordlists/:wordlistId/chat/session", CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionChatSession), WordlistRoutes.CreateChatSession)
-		// Publish/unpublish wordlist as public quiz (MVP) - premium only
-		authenticatedRoutes.POST(
-			"/wordlists/:wordlistId/publish",
-			CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionPublishPublicQuiz),
-			PublicQuizRoutes.Publish,
-		)
-		authenticatedRoutes.DELETE(
-			"/wordlists/:wordlistId/publish",
-			CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionPublishPublicQuiz),
-			PublicQuizRoutes.Unpublish,
-		)
 		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(appCtx.Database), ErrorReportsRoutes.Create)
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus(appCtx.Database))
 
 		RegisterAnalyticsRoutes(authenticatedRoutes, appCtx.WordlistService, appCtx.Database)
+		RegisterRealtimeTelemetryRoutes(authenticatedRoutes, appCtx.RealtimeTelemetryService)
 
 		// Subscription routes
 		authenticatedRoutes.POST("/subscription/checkout-session", CreateCheckoutSession(appCtx.SubscriptionService))

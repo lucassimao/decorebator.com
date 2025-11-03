@@ -289,7 +289,7 @@ func (s *PublicQuizService) BuildQuestionsForSlug(ctx context.Context, slug stri
 			}
 		}
 		q := model.Quiz{
-			Value:        d.Meaning,
+			Value:        "_____ — " + d.Meaning,
 			Options:      opts,
 			AnswerIndex:  answerIndex,
 			ID:           d.ID,

@@ -11,7 +11,11 @@ import {
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import {
+  setAudioModeAsync,
+  useAudioPlayer,
+  useAudioPlayerStatus,
+} from "expo-audio";
 import { Definition, Word } from "../../api/wordlists";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -82,6 +86,8 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
   // Play audio function
   const playAudio = async () => {
     if (!currentWord?.audioURL) return;
+
+    await setAudioModeAsync({ allowsRecording: false });
 
     try {
       if (isPlaying) {
