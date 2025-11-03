@@ -369,7 +369,9 @@ ${wordsList}
       // server response (for example, the user ended the call). Bail out early
       // in that case to avoid "Peer Connection is closed" errors.
       if (peerConnectionRef.current !== pc || pc.connectionState === "closed") {
-        console.warn("Skipping remote description: peer connection already closed");
+        console.warn(
+          "Skipping remote description: peer connection already closed",
+        );
         return;
       }
 

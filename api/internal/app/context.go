@@ -23,18 +23,19 @@ type Context struct {
 	JobService  service.JobService
 
 	// Services
-	WordService            *service.WordService
-	WordlistService        *service.WordlistService
-	UserService            *service.UserService
-	DefinitionService      *service.DefinitionService
-	DefinitionImageService *service.DefinitionImageService
-	SubscriptionService    *service.SubscriptionService
-	RevenueCatService      service.RevenueCatService
-	LeitnerTrackingService *service.LeitnerTrackingService
-	LeitnerSystemStrategy  *service.LeitnerSystemStrategy
-	ErrorReportService     *service.ErrorReportService
-	AnalyticsService       service.AnalyticsServiceInterface
-	MailService            *mail.MailService
+	WordService              *service.WordService
+	WordlistService          *service.WordlistService
+	UserService              *service.UserService
+	DefinitionService        *service.DefinitionService
+	DefinitionImageService   *service.DefinitionImageService
+	SubscriptionService      *service.SubscriptionService
+	RevenueCatService        service.RevenueCatService
+	LeitnerTrackingService   *service.LeitnerTrackingService
+	LeitnerSystemStrategy    *service.LeitnerSystemStrategy
+	ErrorReportService       *service.ErrorReportService
+	AnalyticsService         service.AnalyticsServiceInterface
+	RealtimeTelemetryService *service.RealtimeTelemetryService
+	MailService              *mail.MailService
 
 	// Monitoring
 	DatadogService *common.DatadogService
@@ -93,7 +94,6 @@ func (b *ContextBuilder) WithEnvironment(env string) *ContextBuilder {
 	b.context.Environment = env
 	return b
 }
-
 
 // WithRevenueCatService sets a custom RevenueCat service
 func (b *ContextBuilder) WithRevenueCatService(revenueCatService service.RevenueCatService) *ContextBuilder {
@@ -158,6 +158,12 @@ func (b *ContextBuilder) WithErrorReportService(errorReportService *service.Erro
 // WithAnalyticsService sets a custom analytics service
 func (b *ContextBuilder) WithAnalyticsService(analyticsService service.AnalyticsServiceInterface) *ContextBuilder {
 	b.context.AnalyticsService = analyticsService
+	return b
+}
+
+// WithRealtimeTelemetryService sets a custom realtime telemetry service
+func (b *ContextBuilder) WithRealtimeTelemetryService(telemetryService *service.RealtimeTelemetryService) *ContextBuilder {
+	b.context.RealtimeTelemetryService = telemetryService
 	return b
 }
 
@@ -234,6 +240,10 @@ func (b *ContextBuilder) initializeServices() error {
 	}
 	if b.context.WordlistService == nil {
 		b.context.WordlistService = service.NewWordlistService(b.context.Database)
+	}
+
+	if b.context.RealtimeTelemetryService == nil {
+		b.context.RealtimeTelemetryService = service.NewRealtimeTelemetryService(b.context.Database)
 	}
 
 	// Initialize MailService early since other services depend on it

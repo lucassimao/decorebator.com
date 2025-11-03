@@ -113,6 +113,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus(appCtx.Database))
 
 		RegisterAnalyticsRoutes(authenticatedRoutes, appCtx.WordlistService, appCtx.Database)
+		RegisterRealtimeTelemetryRoutes(authenticatedRoutes, appCtx.RealtimeTelemetryService)
 
 		// Subscription routes
 		authenticatedRoutes.POST("/subscription/checkout-session", CreateCheckoutSession(appCtx.SubscriptionService))

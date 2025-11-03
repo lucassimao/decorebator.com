@@ -36,6 +36,8 @@ import {
 } from "../api/wordlists";
 import type { WordWithDefinitions as ApiWordWithDefinitions } from "../api/wordlists";
 import ScreenHeader from "@/components/common/ScreenHeader";
+import { RealtimeChatTelemetryBuilder } from "@/utils/realtimeTelemetry";
+import { sendRealtimeChatTelemetry } from "@/api/telemetry";
 
 const RealtimeChatScreen: React.FC = () => {
   const { wordlistId, wordlistName, selectedWordIds } = useLocalSearchParams<{
@@ -68,6 +70,8 @@ const RealtimeChatScreen: React.FC = () => {
   const transcriptScrollRef = useRef<ScrollView | null>(null);
   // Track whether assistant audio finished; we now finalize on user's next speech start
   const audioFinishedRef = useRef<boolean>(false);
+  const telemetryRef = useRef<RealtimeChatTelemetryBuilder | null>(null);
+  const telemetrySentRef = useRef(false);
 
   // Parse selected word IDs
   const selectedWordIdList = useMemo(() => {
@@ -133,6 +137,8 @@ const RealtimeChatScreen: React.FC = () => {
         // Clear any previous transcript when new session starts
         setTranscript("");
         setTranscriptHistory([]);
+        telemetrySentRef.current = false;
+        telemetryRef.current?.markConversationId(event?.session?.conversation_id);
       },
 
       onResponseCreated: (event: any) => {
@@ -140,10 +146,15 @@ const RealtimeChatScreen: React.FC = () => {
         // Assistant is about to speak; if transcript is hidden, show the wave
         setIsAssistantSpeaking(true);
         // Keep current transcript until the user starts speaking
+        telemetryRef.current?.recordResponseCreated(event?.response?.id);
+        telemetryRef.current?.markConversationId(
+          event?.response?.conversation_id,
+        );
       },
 
       onInputAudioBufferSpeechStarted: (event: any) => {
         setIsSpeaking(true);
+        telemetryRef.current?.recordUserSpeechStart();
         // When user starts speaking, finalize the previous assistant utterance (if present)
         const finalText = (transcriptRef.current || "")
           .trim()
@@ -164,6 +175,7 @@ const RealtimeChatScreen: React.FC = () => {
 
       onInputAudioBufferSpeechStopped: (event: any) => {
         setIsSpeaking(false);
+        telemetryRef.current?.recordUserSpeechStop();
       },
 
       onResponseAudioTranscriptDelta: (event: any) => {
@@ -213,6 +225,13 @@ const RealtimeChatScreen: React.FC = () => {
       onResponseDone: (event: any) => {
         console.log("Response completed:", event);
         // Keep transcript visible until audio playback finishes
+        telemetryRef.current?.recordResponseCompleted(
+          event?.response?.id,
+          event?.response?.usage,
+        );
+        telemetryRef.current?.markConversationId(
+          event?.response?.conversation_id,
+        );
       },
 
       // Audio finished (if event is emitted): now move live transcript into history and clear the live slot
@@ -229,13 +248,24 @@ const RealtimeChatScreen: React.FC = () => {
 
       onError: (event: any) => {
         console.error("OpenAI API error:", event);
+        telemetryRef.current?.recordError();
         setConnectionState({
           status: "error",
           error: event.error?.message || "Unknown error",
         });
       },
+
+      onRateLimitsUpdated: (event: any) => {
+        telemetryRef.current?.recordRateLimits(event?.rate_limits);
+      },
     }),
-    [setTranscript, setTranscriptHistory, setIsSpeaking, setConnectionState],
+    [
+      setTranscript,
+      setTranscriptHistory,
+      setIsSpeaking,
+      setIsAssistantSpeaking,
+      setConnectionState,
+    ],
   );
 
   // Event handler instance
@@ -286,6 +316,27 @@ const RealtimeChatScreen: React.FC = () => {
 
   // Initialize WebRTC chat using the hook
   const realtimeChat = useRealtimeChat(chatConfig);
+
+  useEffect(() => {
+    if (chatConfig && !telemetryRef.current) {
+      const parsedWordlistId = Number(wordlistId);
+      telemetryRef.current = new RealtimeChatTelemetryBuilder({
+        wordlistId: Number.isFinite(parsedWordlistId)
+          ? parsedWordlistId
+          : undefined,
+        languageCode: chatConfig.languageCode,
+        model: chatConfig.sessionData.webrtcConfig.model,
+      });
+      telemetrySentRef.current = false;
+    }
+  }, [chatConfig, wordlistId]);
+
+  useEffect(() => {
+    if (telemetryRef.current) {
+      telemetryRef.current.updateLanguage(wordlistMeta?.languageCode);
+      telemetryRef.current.updateModel(chatConfig?.sessionData.webrtcConfig.model);
+    }
+  }, [wordlistMeta?.languageCode, chatConfig?.sessionData.webrtcConfig.model]);
 
   // Destructure to stabilize hook dependencies
   const initializeConnection = realtimeChat.initializeConnection;
@@ -339,6 +390,25 @@ const RealtimeChatScreen: React.FC = () => {
     }
   }, [wordlistId, selectedWordIdList, ensureAudioPermission, t]);
 
+  const finalizeTelemetry = useCallback(() => {
+    if (telemetrySentRef.current) {
+      return;
+    }
+    const builder = telemetryRef.current;
+    if (!builder) {
+      return;
+    }
+    telemetrySentRef.current = true;
+    const payload = builder.finalize();
+    telemetryRef.current = null;
+    if (!payload) {
+      return;
+    }
+    sendRealtimeChatTelemetry(payload).catch((error) => {
+      console.warn("Failed to send realtime telemetry", error);
+    });
+  }, []);
+
   // Initialize connection when configuration is ready
   useEffect(() => {
     if (chatConfig && !realtimeChat.isConnected) {
@@ -361,6 +431,12 @@ const RealtimeChatScreen: React.FC = () => {
     };
   }, [initializeSession, selectedWordIdList, wordsLoading, cleanupConnection]);
 
+  useEffect(() => {
+    return () => {
+      finalizeTelemetry();
+    };
+  }, [finalizeTelemetry]);
+
   // UI event handlers
   const handleToggleMute = useCallback(() => {
     toggleMute?.();
@@ -368,8 +444,9 @@ const RealtimeChatScreen: React.FC = () => {
 
   const handleEndCall = useCallback(() => {
     cleanupConnection?.();
+    finalizeTelemetry();
     router.back();
-  }, [cleanupConnection, router]);
+  }, [cleanupConnection, finalizeTelemetry, router]);
 
   const handleRetry = useCallback(() => {
     setTranscript("");
@@ -377,8 +454,9 @@ const RealtimeChatScreen: React.FC = () => {
     setIsSpeaking(false);
     setHasTimeout(false);
     setInitError(null);
+    finalizeTelemetry();
     initializeSession();
-  }, [initializeSession]);
+  }, [finalizeTelemetry, initializeSession]);
 
   const handleToggleTranscript = useCallback(() => {
     setShowTranscript((prev) => !prev);
