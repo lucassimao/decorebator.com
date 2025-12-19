@@ -10,7 +10,7 @@
     "test": "jest --watchAll",
     "prepare": "husky",
     "expo:update": "expo install --fix",
-    "android-emulator": "$ANDROID_SDK_ROOT/emulator/emulator -avd Galaxy_S25_Ultra_6_9_inch -gpu guest",
+    "android-emulator": "$ANDROID_SDK_ROOT/emulator/emulator -avd Galaxy_S25_Ultra_6_9_inch --gpu host --feature-vulkan=false",
     "lint": "eslint .",
     "lint-fix": "eslint --fix .",
     "typecheck": "npx tsc --noEmit",
@@ -30,7 +30,6 @@
     "version:major": "node -e \"const fs=require('fs'); const semver=require('semver'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); const newVer=semver.inc(pkg.version,'major'); pkg.version=newVer; fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)); console.log('Updated to',newVer);\" && npm run version:sync",
     "version:sync": "node -e \"const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); const ver=pkg.version; const app=JSON.parse(fs.readFileSync('app.json','utf8')); app.expo.version=ver; app.expo.runtimeVersion=ver; fs.writeFileSync('app.json',JSON.stringify(app,null,2)); const iosPlist=fs.readFileSync('ios/decorebator/Info.plist','utf8'); const updatedPlist=iosPlist.replace(/<key>CFBundleShortVersionString<\\/key>\\s*<string>[^<]+<\\/string>/,'<key>CFBundleShortVersionString</key>\\n    <string>'+ver+'</string>'); fs.writeFileSync('ios/decorebator/Info.plist',updatedPlist); const gradlePath='android/app/build.gradle'; const gradle=fs.readFileSync(gradlePath,'utf8'); const updatedGradle=gradle.replace(/versionName \\\"[^\\\"]+\\\"/,'versionName \\\"'+ver+'\\\"'); fs.writeFileSync(gradlePath,updatedGradle); console.log('Synced version',ver,'to all platforms');\""
   },
-  "prepare": "cd .. && husky mobile/.husky",
   "jest": {
     "preset": "jest-expo",
     "setupFilesAfterEnv": [

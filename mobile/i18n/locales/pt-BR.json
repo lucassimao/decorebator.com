@@ -129,9 +129,9 @@
     "welcome": {
       "greeting": "Bem-vindo ao",
       "highlight": {
-        "generator": "Crie suas listas e a nossa IA gera 8 testes, imagens, áudios e desafios",
-        "chat": "O coach de voz com IA treina em voz alta as palavras que você salva",
-        "modes": "Oito modos de quiz que mantêm a prática empolgante",
+        "generator": "Make a wordlist; we generate the rest—quizzes, visuals, audio, challenges.",
+        "chat": "Practice speaking out loud with our AI coach.",
+        "modes": "Mix up practice with varied quiz modes",
         "progress": "Análises em tempo real para celebrar suas sequências"
       }
     },
@@ -169,19 +169,6 @@
         "bulletTwo": "Ilustrações geradas para o seu idioma."
       }
     },
-    "personalize": {
-      "title": "Vamos personalizar",
-      "subtitle": "Escolha um idioma e um foco diário para ajustar as lições à sua rotina.",
-      "language": "Idioma de aprendizado",
-      "goal": "Meta diária",
-      "goalValue": "{{minutes}} min/dia",
-      "preview": {
-        "title": "Prévia do seu estudo",
-        "language": "Cards diários em {{language}}",
-        "goal": "Meta definida em {{minutes}} minutos",
-        "hint": "Você pode ajustar isso quando quiser nas Configurações."
-      }
-    },
     "notifications": {
       "title": "Mantenha o ritmo",
       "subtitle": "Lembretes suaves avisam quando é hora de revisar para sua sequência não quebrar.",
@@ -217,11 +204,6 @@
           "option": "Toque em \"Atualizar para Premium\" na seção Conta para ver os detalhes do plano.",
           "confirm": "Escolha o plano, confirme o upgrade ou inicie um teste gratuito quando quiser."
         }
-      },
-      "summary": {
-        "language": "Aprendendo: {{flag}} {{language}}",
-        "goal": "Foco diário: {{minutes}} min/dia",
-        "ready": "O acompanhamento da sequência começa assim que você se cadastrar."
       },
       "haveAccount": "Já tem conta? Entrar"
     }
@@ -791,7 +773,7 @@
     "shareLink": "Compartilhar link",
     "shareCta": "Acabei de publicar um quiz de vocabulário — consegue me superar?",
     "urlLabel": "Link",
-    "chat": "Chat",
+    "chat": "Practice speaking out loud with our AI coach.",
     "startChat": "Iniciar chat",
     "chatHint": "Inicie uma conversa usando as palavras desta lista",
     "chatUpsell": {

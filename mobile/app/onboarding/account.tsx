@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -8,12 +8,10 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { Feather } from "@expo/vector-icons";
-import { LANGUAGES } from "@/components/dashboard/CreateWordlistModal";
 
 export default function OnboardingAccount() {
   const router = useRouter();
@@ -21,29 +19,6 @@ export default function OnboardingAccount() {
   const styles = createStyles(theme);
   const { t } = useTranslation();
   const posthog = usePostHog();
-  const [preferredLanguage, setPreferredLanguage] = useState<
-    string | undefined
-  >();
-  const [dailyGoal, setDailyGoal] = useState<number | undefined>();
-
-  useEffect(() => {
-    const fetchPrefs = async () => {
-      try {
-        const [language, goal] = await AsyncStorage.multiGet([
-          "@onboarding_language",
-          "@onboarding_daily_goal",
-        ]);
-        if (language?.[1]) setPreferredLanguage(language[1]);
-        if (goal?.[1]) {
-          const parsed = Number(goal[1]);
-          if (!Number.isNaN(parsed)) setDailyGoal(parsed);
-        }
-      } catch {
-        // ignore - onboarding continues without personalization
-      }
-    };
-    fetchPrefs();
-  }, []);
 
   const planSections = useMemo(
     () => [
@@ -115,24 +90,17 @@ export default function OnboardingAccount() {
     router.replace(to);
   };
 
-  const languageName = preferredLanguage
-    ? LANGUAGES.find((l) => l.code === preferredLanguage)?.name
-    : undefined;
-  const languageFlag = preferredLanguage
-    ? LANGUAGES.find((l) => l.code === preferredLanguage)?.flag
-    : undefined;
-
   return (
     <OnboardingLayout
-      step={4}
-      totalSteps={4}
+      step={3}
+      totalSteps={3}
       showBack
       backLabel={t("common.back", "Back")}
-      onBack={() => router.replace("/onboarding/personalize")}
+      onBack={() => router.replace("/onboarding/features")}
       stepLabel={t("onboarding.stepIndicator", {
-        step: 4,
-        total: 4,
-        defaultValue: "Step 4 of 4",
+        step: 3,
+        total: 3,
+        defaultValue: "Step 3 of 3",
       })}
       contentStyle={styles.content}
       footer={
@@ -184,62 +152,6 @@ export default function OnboardingAccount() {
               "Lock in your progress today, see what's included for free, and know exactly how to upgrade.",
             )}
           </Text>
-
-          <View
-            style={[
-              styles.summaryCard,
-              { backgroundColor: theme.colors.background.surface },
-            ]}
-          >
-            {languageName ? (
-              <View style={styles.summaryRow}>
-                <Feather
-                  name="book-open"
-                  size={16}
-                  color={theme.colors.text.secondary}
-                />
-                <Text style={styles.summaryText}>
-                  {t(
-                    "onboarding.account.summary.language",
-                    "Learning: {{flag}} {{language}}",
-                    {
-                      language: languageName,
-                      flag: languageFlag ?? "",
-                    },
-                  )}
-                </Text>
-              </View>
-            ) : null}
-            {dailyGoal ? (
-              <View style={styles.summaryRow}>
-                <Feather
-                  name="clock"
-                  size={16}
-                  color={theme.colors.text.secondary}
-                />
-                <Text style={styles.summaryText}>
-                  {t(
-                    "onboarding.account.summary.goal",
-                    "Daily focus: {{minutes}} min/day",
-                    { minutes: dailyGoal },
-                  )}
-                </Text>
-              </View>
-            ) : null}
-            <View style={styles.summaryRow}>
-              <Feather
-                name="check-circle"
-                size={16}
-                color={theme.colors.text.secondary}
-              />
-              <Text style={styles.summaryText}>
-                {t(
-                  "onboarding.account.summary.ready",
-                  "Streak tracking will start as soon as you sign up.",
-                )}
-              </Text>
-            </View>
-          </View>
 
           <View style={styles.planSections}>
             {planSections.map((section) => (
@@ -363,23 +275,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontSize: 15,
       lineHeight: 22,
       color: theme.colors.text.secondary,
-    },
-    summaryCard: {
-      borderRadius: 18,
-      padding: 16,
-      gap: 12,
-      borderWidth: 1,
-      borderColor: "rgba(255, 123, 84, 0.12)",
-    },
-    summaryRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 10,
-    },
-    summaryText: {
-      flex: 1,
-      fontSize: 15,
-      color: theme.colors.text.primary,
     },
     planSections: {
       gap: 14,

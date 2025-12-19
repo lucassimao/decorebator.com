@@ -132,9 +132,9 @@
     "welcome": {
       "greeting": "Willkommen bei",
       "highlight": {
-        "generator": "Erstelle Wortlisten und unsere KI baut 8 Tests, Bilder, Audio und Challenges daraus",
-        "chat": "Die KI-Sprachtrainerin übt deine gespeicherten Wörter laut mit dir",
-        "modes": "Acht Quiz-Modi halten dein Training frisch",
+        "generator": "Make a wordlist; we generate the rest—quizzes, visuals, audio, challenges.",
+        "chat": "Practice speaking out loud with our AI coach.",
+        "modes": "Mix up practice with varied quiz modes",
         "progress": "Echtzeit-Analysen feiern deine Lernserien"
       }
     },
@@ -172,19 +172,6 @@
         "bulletTwo": "Illustrationen, die für deine Sprache generiert werden."
       }
     },
-    "personalize": {
-      "title": "Lass uns das personalisieren",
-      "subtitle": "Wähle eine Sprache und einen täglichen Fokus, damit wir den Plan auf deinen Alltag abstimmen.",
-      "language": "Lernsprache",
-      "goal": "Tagesziel",
-      "goalValue": "{{minutes}} Min./Tag",
-      "preview": {
-        "title": "Deine Lernvorschau",
-        "language": "Tägliche Karten in {{language}}",
-        "goal": "Ziel auf {{minutes}} Minuten gesetzt",
-        "hint": "Du kannst das jederzeit in den Einstellungen anpassen."
-      }
-    },
     "notifications": {
       "title": "Bleib auf Kurs",
       "subtitle": "Sanfte Erinnerungen stupsen dich an, wenn es Zeit zum Üben ist - so reißt deine Serie nicht ab.",
@@ -220,11 +207,6 @@
           "option": "Tippen Sie im Bereich Konto auf \"Auf Premium upgraden\", um Details zu sehen.",
           "confirm": "Wählen Sie Ihren Plan, bestätigen Sie das Upgrade oder starten Sie jederzeit eine kostenlose Testphase."
         }
-      },
-      "summary": {
-        "language": "Lernst: {{flag}} {{language}}",
-        "goal": "Tagesfokus: {{minutes}} Min./Tag",
-        "ready": "Das Serien-Tracking startet, sobald du dich registrierst."
       },
       "haveAccount": "Du hast schon ein Konto? Anmelden"
     }
@@ -790,7 +772,7 @@
     "timeLimitInvalid": "Das Zeitlimit muss zwischen 1 und 15 Minuten liegen.",
     "copyUrl": "Link kopieren",
     "urlLabel": "Link",
-    "chat": "Chat",
+    "chat": "Practice speaking out loud with our AI coach.",
     "startChat": "Chat starten",
     "chatHint": "Beginne ein Gespräch mit den Wörtern aus dieser Liste",
     "chatUpsell": {

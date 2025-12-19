@@ -129,9 +129,9 @@
     "welcome": {
       "greeting": "ようこそ",
       "highlight": {
-        "generator": "単語リストを作るとAIが8種類のテストや画像・音声・チャレンジを生成",
-        "chat": "AIボイスコーチが保存した単語を声に出して練習させてくれます",
-        "modes": "8 つのクイズモードで練習がいつも新鮮",
+        "generator": "Make a wordlist; we generate the rest—quizzes, visuals, audio, challenges.",
+        "chat": "Practice speaking out loud with our AI coach.",
+        "modes": "Mix up practice with varied quiz modes",
         "progress": "リアルタイム分析で連続学習を祝おう"
       }
     },
@@ -169,19 +169,6 @@
         "bulletTwo": "あなたの学習言語に合わせたイラストを生成。"
       }
     },
-    "personalize": {
-      "title": "あなた用にカスタマイズ",
-      "subtitle": "学習言語と毎日の目標時間を選び、スケジュールに合ったレッスンを作りましょう。",
-      "language": "学習言語",
-      "goal": "1 日の目標",
-      "goalValue": "1 日 {{minutes}} 分",
-      "preview": {
-        "title": "学習プランのプレビュー",
-        "language": "{{language}} のカードを毎日お届け",
-        "goal": "目標は {{minutes}} 分に設定済み",
-        "hint": "設定からいつでも変更できます。"
-      }
-    },
     "notifications": {
       "title": "ペースを保ちましょう",
       "subtitle": "やさしいリマインダーで復習のタイミングを知らせ、連続学習を途切れさせません。",
@@ -217,11 +204,6 @@
           "option": "アカウントセクションの「プレミアムにアップグレード」をタップしてプラン詳細を確認します。",
           "confirm": "プランを選んでアップグレードを確定、または無料トライアルをいつでも開始できます。"
         }
-      },
-      "summary": {
-        "language": "学習中: {{flag}} {{language}}",
-        "goal": "1 日 {{minutes}} 分のフォーカス",
-        "ready": "登録後すぐに連続記録の追跡が始まります。"
       },
       "haveAccount": "すでにアカウントをお持ちですか？ログイン"
     }
@@ -788,7 +770,7 @@
     "shareLink": "リンクを共有",
     "shareCta": "語彙クイズを公開しました—挑戦してみませんか？",
     "urlLabel": "リンク",
-    "chat": "チャット",
+    "chat": "Practice speaking out loud with our AI coach.",
     "startChat": "チャットを開始",
     "chatHint": "このリストの単語を使って会話を始める",
     "chatUpsell": {

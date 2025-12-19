@@ -129,9 +129,9 @@
     "welcome": {
       "greeting": "Te damos la bienvenida a",
       "highlight": {
-        "generator": "Crea listas y nuestra IA genera 8 pruebas, imágenes, audios y desafíos",
-        "chat": "El coach de voz con IA practica en voz alta las palabras que guardas",
-        "modes": "Ocho modos de cuestionario que mantienen la práctica fresca",
+        "generator": "Make a wordlist; we generate the rest—quizzes, visuals, audio, challenges.",
+        "chat": "Practice speaking out loud with our AI coach.",
+        "modes": "Mix up practice with varied quiz modes",
         "progress": "Analíticas en tiempo real para celebrar tus rachas"
       }
     },
@@ -169,19 +169,6 @@
         "bulletTwo": "Ilustraciones generadas para tu idioma."
       }
     },
-    "personalize": {
-      "title": "Personalicemos esto",
-      "subtitle": "Elige un idioma y un foco diario para adaptar las lecciones a tu agenda.",
-      "language": "Idioma de aprendizaje",
-      "goal": "Meta diaria",
-      "goalValue": "{{minutes}} min/día",
-      "preview": {
-        "title": "Tu vista previa de estudio",
-        "language": "Tarjetas diarias en {{language}}",
-        "goal": "Meta fijada en {{minutes}} minutos",
-        "hint": "Puedes ajustarlo cuando quieras en Configuración."
-      }
-    },
     "notifications": {
       "title": "Mantente al día",
       "subtitle": "Recordatorios suaves te avisan cuando toca repasar para que no pierdas la racha.",
@@ -217,11 +204,6 @@
           "option": "Toca \"Mejorar a Premium\" en la sección Cuenta para ver los detalles del plan.",
           "confirm": "Elige tu plan, confirma la mejora o inicia una prueba gratuita cuando quieras."
         }
-      },
-      "summary": {
-        "language": "Aprendiendo: {{flag}} {{language}}",
-        "goal": "Foco diario: {{minutes}} min/día",
-        "ready": "El seguimiento de rachas empieza en cuanto te registres."
       },
       "haveAccount": "¿Ya tienes cuenta? Inicia sesión"
     }
@@ -780,7 +762,7 @@
     "timeLimitInvalid": "El tiempo debe estar entre 1 y 15 minutos.",
     "copyUrl": "Copiar enlace",
     "urlLabel": "Enlace",
-    "chat": "Chat",
+    "chat": "Practice speaking out loud with our AI coach.",
     "startChat": "Iniciar chat",
     "chatHint": "Inicia una conversación usando las palabras de esta lista",
     "chatUpsell": {

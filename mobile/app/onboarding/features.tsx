@@ -164,11 +164,11 @@ export default function OnboardingFeatures() {
       setIndex(next);
       posthog.capture("onboarding_feature_viewed", { slide: slides[next].key });
     } else {
-      router.replace("/onboarding/personalize");
+      router.replace("/onboarding/account");
     }
   };
 
-  const onSkip = () => router.replace("/onboarding/personalize");
+  const onSkip = () => router.replace("/onboarding/account");
 
   const nextLabel =
     index === slides.length - 1
@@ -178,7 +178,7 @@ export default function OnboardingFeatures() {
   return (
     <OnboardingLayout
       step={2}
-      totalSteps={4}
+      totalSteps={3}
       showSkip
       skipLabel={t("common.skip", "Skip")}
       onSkip={onSkip}
@@ -187,8 +187,8 @@ export default function OnboardingFeatures() {
       onBack={() => router.replace("/onboarding")}
       stepLabel={t("onboarding.stepIndicator", {
         step: 2,
-        total: 4,
-        defaultValue: "Step 2 of 4",
+        total: 3,
+        defaultValue: "Step 2 of 3",
       })}
       contentStyle={styles.content}
       footer={

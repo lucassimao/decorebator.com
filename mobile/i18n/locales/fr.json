@@ -129,9 +129,9 @@
     "welcome": {
       "greeting": "Bienvenue sur",
       "highlight": {
-        "generator": "Créez vos listes et notre IA produit 8 tests, visuels, audios et défis",
-        "chat": "Le coach vocal IA entraîne les mots que vous enregistrez à voix haute",
-        "modes": "Huit modes de quiz pour varier les plaisirs",
+        "generator": "Make a wordlist; we generate the rest—quizzes, visuals, audio, challenges.",
+        "chat": "Practice speaking out loud with our AI coach.",
+        "modes": "Mix up practice with varied quiz modes",
         "progress": "Des analyses en temps réel pour célébrer vos séries"
       }
     },
@@ -169,19 +169,6 @@
         "bulletTwo": "Illustrations générées pour votre langue."
       }
     },
-    "personalize": {
-      "title": "Personnalisons tout ça",
-      "subtitle": "Choisissez une langue et un focus quotidien pour adapter les leçons à votre rythme.",
-      "language": "Langue d'apprentissage",
-      "goal": "Objectif quotidien",
-      "goalValue": "{{minutes}} min/jour",
-      "preview": {
-        "title": "Aperçu de votre parcours",
-        "language": "Cartes quotidiennes en {{language}}",
-        "goal": "Objectif fixé à {{minutes}} minutes",
-        "hint": "Vous pourrez modifier cela à tout moment dans les paramètres."
-      }
-    },
     "notifications": {
       "title": "Restez sur la bonne voie",
       "subtitle": "De doux rappels vous préviennent quand réviser afin de ne jamais casser votre série.",
@@ -217,11 +204,6 @@
           "option": "Touchez \"Passer en Premium\" dans la section Compte pour consulter les détails de l’offre.",
           "confirm": "Choisissez votre formule, validez la mise à niveau ou lancez un essai gratuit quand vous le souhaitez."
         }
-      },
-      "summary": {
-        "language": "Apprentissage : {{flag}} {{language}}",
-        "goal": "Focus quotidien : {{minutes}} min/jour",
-        "ready": "Le suivi des séries démarre dès votre inscription."
       },
       "haveAccount": "Vous avez déjà un compte ? Connectez-vous"
     }
@@ -780,7 +762,7 @@
     "timeLimitInvalid": "La durée doit être comprise entre 1 et 15 minutes.",
     "copyUrl": "Copier le lien",
     "urlLabel": "Lien",
-    "chat": "Chat",
+    "chat": "Practice speaking out loud with our AI coach.",
     "startChat": "Démarrer le chat",
     "chatHint": "Commencez une conversation en utilisant les mots de cette liste",
     "chatUpsell": {

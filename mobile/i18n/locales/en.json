@@ -117,9 +117,9 @@
     "welcome": {
       "greeting": "Welcome to",
       "highlight": {
-        "generator": "Create wordlists and our AI builds 8 tests, visuals, audio, and challenges",
-        "chat": "AI voice coach drills the words you save out loud",
-        "modes": "Eight quiz modes that keep practice fresh",
+        "generator": "Make a wordlist; we generate the rest—quizzes, visuals, audio, challenges.",
+        "chat": "Practice speaking out loud with our AI coach.",
+        "modes": "Mix up practice with varied quiz modes",
         "progress": "Real-time analytics to celebrate your streaks"
       }
     },
@@ -157,19 +157,6 @@
         "bulletTwo": "Illustrations generated for your language."
       }
     },
-    "personalize": {
-      "title": "Let’s personalize this",
-      "subtitle": "Pick a language and daily focus so we can shape lessons around your schedule.",
-      "language": "Learning language",
-      "goal": "Daily focus",
-      "goalValue": "{{minutes}} min/day",
-      "preview": {
-        "title": "Your study preview",
-        "language": "Daily cards in {{language}}",
-        "goal": "Goal set to {{minutes}} minutes",
-        "hint": "You can tweak this anytime in Settings."
-      }
-    },
     "notifications": {
       "title": "Stay on track",
       "subtitle": "Gentle reminders nudge you when it’s time to review so your streak never slips.",
@@ -205,11 +192,6 @@
           "option": "Tap \"Upgrade to Premium\" under Account to review plan details.",
           "confirm": "Choose your plan, confirm the upgrade, or start a free trial anytime."
         }
-      },
-      "summary": {
-        "language": "Learning: {{flag}} {{language}}",
-        "goal": "Daily focus: {{minutes}} min/day",
-        "ready": "Streak tracking will start as soon as you sign up."
       },
       "haveAccount": "Already have an account? Sign in"
     }
@@ -805,7 +787,7 @@
     "shareLink": "Share link",
     "shareCta": "I just published a vocab quiz—can you beat it?",
     "urlLabel": "Link",
-    "chat": "Chat",
+    "chat": "Practice speaking out loud with our AI coach.",
     "startChat": "Start chat",
     "chatHint": "Start a conversation using the words in this list",
     "chatUpsell": {

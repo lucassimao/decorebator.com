@@ -90,10 +90,6 @@ function RootLayoutNav() {
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen
-                    name="onboarding/personalize"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
                     name="onboarding/account"
                     options={{ headerShown: false }}
                   />

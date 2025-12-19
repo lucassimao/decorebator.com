@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -14,6 +14,20 @@ const OnboardingWelcome = () => {
   const styles = createStyles(theme);
   const { t } = useTranslation();
   const posthog = usePostHog();
+
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      try {
+        const completed = await AsyncStorage.getItem("@onboarding_completed");
+        if (completed === "1") {
+          router.replace("/signup");
+        }
+      } catch {
+        // If storage fails, continue to onboarding.
+      }
+    };
+    checkOnboardingStatus();
+  }, [router]);
 
   const highlights = useMemo(
     () => [
@@ -70,14 +84,14 @@ const OnboardingWelcome = () => {
   return (
     <OnboardingLayout
       step={1}
-      totalSteps={4}
+      totalSteps={3}
       showSkip
       skipLabel={skipLabel}
       onSkip={onSkip}
       stepLabel={t("onboarding.stepIndicator", {
         step: 1,
-        total: 4,
-        defaultValue: "Step 1 of 4",
+        total: 3,
+        defaultValue: "Step 1 of 3",
       })}
       contentStyle={styles.content}
       footer={
