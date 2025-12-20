@@ -129,44 +129,68 @@
     "welcome": {
       "greeting": "Bem-vindo ao",
       "highlight": {
-        "generator": "Make a wordlist; we generate the rest—quizzes, visuals, audio, challenges.",
-        "chat": "Practice speaking out loud with our AI coach.",
-        "modes": "Mix up practice with varied quiz modes",
-        "progress": "Análises em tempo real para celebrar suas sequências"
+        "generator": "Crie uma lista; geramos o resto: quizzes, visuais, áudio, desafios.",
+        "chat": "Pratique falando em voz alta com nosso coach IA.",
+        "modes": "Varie a prática com modos de quiz diferentes.",
+        "progress": "Crie listas em 7 idiomas de estudo."
       }
     },
     "features": {
-      "heading": "Descubra tudo o que você pode fazer",
-      "description": "Passe pelos destaques e veja como o Decorebator te inspira todos os dias.",
+      "heading": "See what you can do",
+      "description": "Swipe through the highlights to discover how Decorebator keeps you inspired every day.",
       "quizzes": {
-        "title": "Quizzes adaptativos",
-        "subtitle": "Alterne entre significados, escuta, escrita e imagens em segundos.",
-        "bulletOne": "Dificuldade inteligente que sempre te desafia.",
-        "bulletTwo": "8 modos prontos para sessões rápidas."
+        "title": "Adaptive quizzes",
+        "subtitle": "Switch between meanings, listening, writing, and picture drills in seconds.",
+        "bulletOne": "Smart difficulty keeps you challenged.",
+        "bulletTwo": "Modos variados prontos para micro‑sessões."
       },
       "chat": {
-        "title": "Coach de conversação ao vivo",
-        "subtitle": "Pratique suas palavras salvas em voz alta com orientação instantânea da IA.",
-        "bulletOne": "Inicie uma sessão de voz a partir de qualquer lista em segundos.",
-        "bulletTwo": "Transcrições em tempo real registram cada correção."
+        "title": "Live speaking coach",
+        "subtitle": "Fale em voz alta com guia IA instantâneo.",
+        "bulletOne": "Launch a voice session from any wordlist in seconds.",
+        "bulletTwo": "Realtime transcripts capture every correction you can revisit."
       },
       "flashcards": {
-        "title": "Flashcards inteligentes",
-        "subtitle": "As caixas de Leitner espaçam os estudos para fixar cada palavra.",
-        "bulletOne": "A IA enriquece os cards com exemplos e áudio.",
-        "bulletTwo": "O modo offline mantém o treino em qualquer lugar."
+        "title": "Smart flashcards",
+        "subtitle": "Definições, exemplos e áudio em um toque.",
+        "bulletOne": "Cards ricos mantêm o contexto à mão.",
+        "bulletTwo": "Perfeito para revisões rápidas."
+      },
+      "leitner": {
+        "title": "Repetição espaçada inteligente",
+        "subtitle": "As caixas Leitner marcam o tempo certo dos reviews.",
+        "bulletOne": "Agendamento determinístico, mais eficiência.",
+        "bulletTwo": "Os níveis sobem conforme a sequência cresce."
+      },
+      "enrichment": {
+        "title": "Pacote de enriquecimento IA",
+        "subtitle": "Definições, exemplos, visuais e áudio por palavra.",
+        "bulletOne": "Pronúncias nativas no seu idioma alvo.",
+        "bulletTwo": "Exemplos e visuais fixam o significado."
+      },
+      "offline": {
+        "title": "Modo offline",
+        "subtitle": "Premium deixa você praticar em qualquer lugar, com sync.",
+        "bulletOne": "Baixe listas e estude offline.",
+        "bulletTwo": "O progresso sincroniza ao reconectar."
+      },
+      "reporting": {
+        "title": "Reportar e regenerar",
+        "subtitle": "Sinalize erros da IA e regeneramos rápido.",
+        "bulletOne": "Reporte significados, imagens ou áudio errados.",
+        "bulletTwo": "Cada reporte melhora a qualidade."
       },
       "progress": {
-        "title": "Acompanhe seu progresso",
-        "subtitle": "Celebre sequências, níveis de domínio e ritmo semanal com gráficos incríveis.",
-        "bulletOne": "Lembretes diários da meta mantêm a sequência viva.",
-        "bulletTwo": "Identifique forças e lacunas por lista instantaneamente."
+        "title": "Track your progress",
+        "subtitle": "Celebrate streaks, mastery levels, and weekly momentum with beautiful charts.",
+        "bulletOne": "Daily goal reminders keep the streak alive.",
+        "bulletTwo": "See strengths and gaps by wordlist instantly."
       },
       "images": {
-        "title": "Visuais e áudio com IA",
-        "subtitle": "Cada palavra ganha contexto com imagens, pronúncia e nuances culturais.",
-        "bulletOne": "Pronúncias gravadas por falantes nativos.",
-        "bulletTwo": "Ilustrações geradas para o seu idioma."
+        "title": "AI visuals & audio",
+        "subtitle": "Every word gets context with imagery, pronunciation, and cultural nuance.",
+        "bulletOne": "Pronunciations voiced by native accents.",
+        "bulletTwo": "Illustrations generated for your language."
       }
     },
     "notifications": {
@@ -605,7 +629,7 @@
     "deleteWordConfirm": "Tem certeza que deseja excluir \"{{word}}\"?",
     "total": "Total",
     "learned": "Aprendidas",
-    "progress": "Progresso",
+    "progress": "Create wordlists in 7 learning languages.",
     "searchPlaceholder": "Buscar palavras...",
     "filterAll": "Todas ({{count}})",
     "filterLearned": "Aprendidas ({{count}})",
@@ -826,7 +850,7 @@
       },
       "boxDistribution": {
         "title": "Distribuição das Etapas de Aprendizagem",
-        "subtitle": "Palavras distribuídas nas caixas Leitner",
+        "subtitle": "Flip through definitions, examples, and audio in one tap.",
         "explanation": "O sistema Leitner usa 7 caixas com intervalos de revisão crescentes. As palavras sobem quando respondidas corretamente e voltam para a Caixa 1 quando incorretas. Caixas superiores indicam melhor retenção.",
         "box1": "Novas (Agora)",
         "box2": "Aprendendo (6h)",
@@ -838,7 +862,7 @@
       },
       "historicalBoxDistribution": {
         "title": "Progresso de Aprendizagem ao Longo do Tempo",
-        "subtitle": "Distribuição de palavras em todas as caixas Leitner",
+        "subtitle": "Flip through definitions, examples, and audio in one tap.",
         "explanation": "Este gráfico mostra sua porcentagem de domínio ao longo do tempo - a porcentagem de palavras que alcançaram a Caixa 7 (estágio dominado). Barras mais altas indicam melhor domínio geral do vocabulário!",
         "masteryPercentage": "Porcentagem de Palavras Dominadas (Caixa 7)",
         "stackedExplanation": "Este gráfico de barras empilhadas mostra como suas palavras estão distribuídas nas 7 caixas Leitner ao longo do tempo. Conforme você progride, as palavras se movem do vermelho (Caixa 1 - novas) para o verde (Caixa 7 - dominadas). A área verde crescente indica seu progresso de aprendizado!",

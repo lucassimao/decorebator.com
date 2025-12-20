@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
-import { Feather } from "@expo/vector-icons";
 
 const OnboardingWelcome = () => {
   const router = useRouter();
@@ -32,7 +31,7 @@ const OnboardingWelcome = () => {
   const highlights = useMemo(
     () => [
       {
-        icon: "zap",
+        icon: require("@/assets/onboarding-icons/welcome-generator.png"),
         accent: "rgba(255, 123, 84, 0.16)",
         label: t(
           "onboarding.welcome.highlight.generator",
@@ -40,7 +39,7 @@ const OnboardingWelcome = () => {
         ),
       },
       {
-        icon: "mic",
+        icon: require("@/assets/onboarding-icons/welcome-voice-coach.png"),
         accent: "rgba(0, 188, 212, 0.16)",
         label: t(
           "onboarding.welcome.highlight.chat",
@@ -48,7 +47,7 @@ const OnboardingWelcome = () => {
         ),
       },
       {
-        icon: "layers",
+        icon: require("@/assets/onboarding-icons/welcome-quiz-modes.png"),
         accent: "rgba(156, 39, 176, 0.14)",
         label: t(
           "onboarding.welcome.highlight.modes",
@@ -56,7 +55,7 @@ const OnboardingWelcome = () => {
         ),
       },
       {
-        icon: "bar-chart-2",
+        icon: require("@/assets/onboarding-icons/welcome-languages.png"),
         accent: "rgba(76, 175, 80, 0.14)",
         label: t(
           "onboarding.welcome.highlight.progress",
@@ -128,12 +127,16 @@ const OnboardingWelcome = () => {
               },
             ]}
           >
-            <View style={[styles.iconChip, { backgroundColor: item.accent }]}>
-              <Feather
-                name={item.icon as any}
-                size={18}
-                color={theme.colors.primary}
-              />
+            <View
+              style={[
+                styles.iconChip,
+                {
+                  backgroundColor: theme.colors.background.surface,
+                  borderColor: item.accent,
+                },
+              ]}
+            >
+              <Image source={item.icon} style={styles.iconImage} />
             </View>
             <Text
               style={[
@@ -196,11 +199,17 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       elevation: 2,
     },
     iconChip: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 50,
+      height: 50,
+      borderRadius: 25,
       alignItems: "center",
       justifyContent: "center",
+      borderWidth: 1,
+    },
+    iconImage: {
+      width: 32,
+      height: 32,
+      resizeMode: "contain",
     },
     highlightText: {
       flex: 1,

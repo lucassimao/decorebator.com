@@ -120,7 +120,7 @@
         "generator": "Make a wordlist; we generate the rest—quizzes, visuals, audio, challenges.",
         "chat": "Practice speaking out loud with our AI coach.",
         "modes": "Mix up practice with varied quiz modes",
-        "progress": "Real-time analytics to celebrate your streaks"
+        "progress": "Create wordlists in 7 learning languages."
       }
     },
     "features": {
@@ -130,19 +130,43 @@
         "title": "Adaptive quizzes",
         "subtitle": "Switch between meanings, listening, writing, and picture drills in seconds.",
         "bulletOne": "Smart difficulty keeps you challenged.",
-        "bulletTwo": "8 quiz modes ready for micro-sessions."
+        "bulletTwo": "Varied quiz modes ready for micro-sessions."
       },
       "chat": {
         "title": "Live speaking coach",
-        "subtitle": "Practice conversations around your saved words with instant guidance.",
+        "subtitle": "Practice speaking out loud with instant AI guidance.",
         "bulletOne": "Launch a voice session from any wordlist in seconds.",
         "bulletTwo": "Realtime transcripts capture every correction you can revisit."
       },
       "flashcards": {
         "title": "Smart flashcards",
-        "subtitle": "Leitner boxes space your reviews so every word sticks for good.",
-        "bulletOne": "AI enriches cards with examples and audio.",
-        "bulletTwo": "Offline mode keeps practice flowing anywhere."
+        "subtitle": "Flip through definitions, examples, and audio in one tap.",
+        "bulletOne": "Rich cards keep context at your fingertips.",
+        "bulletTwo": "Perfect for quick review bursts."
+      },
+      "leitner": {
+        "title": "Smart spaced repetition",
+        "subtitle": "Leitner boxes time your reviews so words stick long-term.",
+        "bulletOne": "Deterministic scheduling keeps practice efficient.",
+        "bulletTwo": "Mastery levels rise as you keep streaks alive."
+      },
+      "enrichment": {
+        "title": "AI enrichment pack",
+        "subtitle": "Definitions, examples, visuals, and audio generated for every word.",
+        "bulletOne": "Native-quality pronunciations in your target language.",
+        "bulletTwo": "Examples and visuals that anchor meaning fast."
+      },
+      "offline": {
+        "title": "Offline mode",
+        "subtitle": "Premium lets you practice anywhere with seamless sync.",
+        "bulletOne": "Download wordlists and keep learning offline.",
+        "bulletTwo": "Progress syncs automatically when you reconnect."
+      },
+      "reporting": {
+        "title": "Report & regenerate",
+        "subtitle": "Flag AI mistakes and we regenerate the content fast.",
+        "bulletOne": "Report wrong meanings, images, or audio.",
+        "bulletTwo": "Quality improves with every report you send."
       },
       "progress": {
         "title": "Track your progress",
@@ -351,11 +375,11 @@
     "disconnected": "Disconnected",
     "connectionError": "Connection error",
     "initializationError": "Failed to start chat session",
-  "initializing": "Starting chat session...",
-  "connectionSlow": "Connection is taking longer than expected",
-  "genericError": "Something went wrong. Please try again.",
-  "microphonePermission": "Microphone access is required for voice chat.",
-  "listening": "Listening...",
+    "initializing": "Starting chat session...",
+    "connectionSlow": "Connection is taking longer than expected",
+    "genericError": "Something went wrong. Please try again.",
+    "microphonePermission": "Microphone access is required for voice chat.",
+    "listening": "Listening...",
     "speakNow": "Speak now to practice your vocabulary",
     "wordsAvailable": "{{count}} words available for practice",
     "focusWords": "Practicing {{count}} focus words from your wordlist",
@@ -620,7 +644,7 @@
     "deleteWordConfirm": "Are you sure you want to delete \"{{word}}\"?",
     "total": "Total",
     "learned": "Learned",
-    "progress": "Progress",
+    "progress": "Create wordlists in 7 learning languages.",
     "searchPlaceholder": "Search words...",
     "filterAll": "All ({{count}})",
     "filterLearned": "Learned ({{count}})",
@@ -840,7 +864,7 @@
       },
       "boxDistribution": {
         "title": "Learning Stage Distribution",
-        "subtitle": "Words distributed across Leitner boxes",
+        "subtitle": "Flip through definitions, examples, and audio in one tap.",
         "explanation": "The Leitner system uses 7 boxes with increasing review intervals. Words move up when answered correctly and reset to Box 1 when incorrect. Higher boxes indicate better retention.",
         "box1": "New (Now)",
         "box2": "Learning (6h)",
@@ -852,7 +876,7 @@
       },
       "historicalBoxDistribution": {
         "title": "Learning Progress Over Time",
-        "subtitle": "Word distribution across all Leitner boxes",
+        "subtitle": "Flip through definitions, examples, and audio in one tap.",
         "explanation": "This chart shows your mastery percentage over time - the percentage of words that have reached Box 7 (mastered stage). Higher bars indicate better overall vocabulary mastery!",
         "masteryPercentage": "Percentage of Mastered Words (Box 7)",
         "stackedExplanation": "This stacked bar chart shows how your words are distributed across all 7 Leitner boxes over time. As you progress, words move from red (Box 1 - new) to green (Box 7 - mastered). The growing green area indicates your learning progress!",

@@ -6,13 +6,13 @@ import {
   FlatList,
   Dimensions,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
-import { Feather } from "@expo/vector-icons";
 import LottieView, { AnimationObject } from "lottie-react-native";
 
 const { width } = Dimensions.get("window");
@@ -34,7 +34,7 @@ type Slide = {
   title: string;
   subtitle: string;
   bullets: string[];
-  icon: keyof typeof Feather.glyphMap;
+  icon: any;
   iconAccent: string;
   animation?: string | { uri: string } | AnimationObject;
 };
@@ -62,10 +62,10 @@ export default function OnboardingFeatures() {
           ),
           t(
             "onboarding.features.quizzes.bulletTwo",
-            "8 quiz modes ready for micro-sessions.",
+            "Varied quiz modes ready for micro-sessions.",
           ),
         ],
-        icon: "zap",
+        icon: require("@/assets/onboarding-icons/feature-quizzes.png"),
         iconAccent: "#FFB38A",
       },
       {
@@ -73,7 +73,7 @@ export default function OnboardingFeatures() {
         title: t("onboarding.features.chat.title", "Live speaking coach"),
         subtitle: t(
           "onboarding.features.chat.subtitle",
-          "Practice your saved words out loud with instant guidance from our AI.",
+          "Practice speaking out loud with instant AI guidance.",
         ),
         bullets: [
           t(
@@ -85,7 +85,7 @@ export default function OnboardingFeatures() {
             "Realtime transcripts capture every correction.",
           ),
         ],
-        icon: "mic",
+        icon: require("@/assets/onboarding-icons/feature-voice-coach.png"),
         iconAccent: "#FCD7F6",
         animation:
           require("@/assets/animations/voice-wave.json") as AnimationObject,
@@ -95,20 +95,43 @@ export default function OnboardingFeatures() {
         title: t("onboarding.features.flashcards.title", "Smart flashcards"),
         subtitle: t(
           "onboarding.features.flashcards.subtitle",
-          "Leitner boxes space your reviews so every word sticks for good.",
+          "Flip through definitions, examples, and audio in one tap.",
         ),
         bullets: [
           t(
             "onboarding.features.flashcards.bulletOne",
-            "AI enriches cards with examples and audio.",
+            "Rich cards keep context at your fingertips.",
           ),
           t(
             "onboarding.features.flashcards.bulletTwo",
-            "Offline mode keeps practice flowing anywhere.",
+            "Perfect for quick review bursts.",
           ),
         ],
-        icon: "layers",
+        icon: require("@/assets/onboarding-icons/feature-flashcards.png"),
         iconAccent: "#D1C4E9",
+      },
+      {
+        key: "leitner",
+        title: t(
+          "onboarding.features.leitner.title",
+          "Smart spaced repetition",
+        ),
+        subtitle: t(
+          "onboarding.features.leitner.subtitle",
+          "Leitner boxes time your reviews so words stick long-term.",
+        ),
+        bullets: [
+          t(
+            "onboarding.features.leitner.bulletOne",
+            "Deterministic scheduling keeps practice efficient.",
+          ),
+          t(
+            "onboarding.features.leitner.bulletTwo",
+            "Mastery levels rise as you keep streaks alive.",
+          ),
+        ],
+        icon: require("@/assets/onboarding-icons/feature-leitner.png"),
+        iconAccent: "#C5CAE9",
       },
       {
         key: "progress",
@@ -127,8 +150,28 @@ export default function OnboardingFeatures() {
             "See strengths and gaps by wordlist instantly.",
           ),
         ],
-        icon: "bar-chart-2",
+        icon: require("@/assets/onboarding-icons/feature-progress.png"),
         iconAccent: "#C8E6C9",
+      },
+      {
+        key: "enrichment",
+        title: t("onboarding.features.enrichment.title", "AI enrichment pack"),
+        subtitle: t(
+          "onboarding.features.enrichment.subtitle",
+          "Definitions, examples, visuals, and audio generated for every word.",
+        ),
+        bullets: [
+          t(
+            "onboarding.features.enrichment.bulletOne",
+            "Native-quality pronunciations in your target language.",
+          ),
+          t(
+            "onboarding.features.enrichment.bulletTwo",
+            "Examples and visuals that anchor meaning fast.",
+          ),
+        ],
+        icon: require("@/assets/onboarding-icons/feature-enrichment.png"),
+        iconAccent: "#FFE0B2",
       },
       {
         key: "images",
@@ -147,8 +190,48 @@ export default function OnboardingFeatures() {
             "Illustrations generated for your language.",
           ),
         ],
-        icon: "image",
-        iconAccent: "#FFE0B2",
+        icon: require("@/assets/onboarding-icons/feature-visuals.png"),
+        iconAccent: "#FFECB3",
+      },
+      {
+        key: "offline",
+        title: t("onboarding.features.offline.title", "Offline mode"),
+        subtitle: t(
+          "onboarding.features.offline.subtitle",
+          "Premium lets you practice anywhere with seamless sync.",
+        ),
+        bullets: [
+          t(
+            "onboarding.features.offline.bulletOne",
+            "Download wordlists and keep learning offline.",
+          ),
+          t(
+            "onboarding.features.offline.bulletTwo",
+            "Progress syncs automatically when you reconnect.",
+          ),
+        ],
+        icon: require("@/assets/onboarding-icons/feature-offline.png"),
+        iconAccent: "#B2EBF2",
+      },
+      {
+        key: "reporting",
+        title: t("onboarding.features.reporting.title", "Report & regenerate"),
+        subtitle: t(
+          "onboarding.features.reporting.subtitle",
+          "Flag AI mistakes and we regenerate the content fast.",
+        ),
+        bullets: [
+          t(
+            "onboarding.features.reporting.bulletOne",
+            "Report wrong meanings, images, or audio.",
+          ),
+          t(
+            "onboarding.features.reporting.bulletTwo",
+            "Quality improves with every report you send.",
+          ),
+        ],
+        icon: require("@/assets/onboarding-icons/feature-reporting.png"),
+        iconAccent: "#FFCDD2",
       },
     ],
     [t],
@@ -229,16 +312,22 @@ export default function OnboardingFeatures() {
               },
             ]}
           >
-            <View
-              style={[styles.iconBadge, { backgroundColor: item.iconAccent }]}
-            >
-              <Feather
-                name={item.icon}
-                size={22}
-                color={theme.colors.primary}
-              />
+            <View style={styles.headerRow}>
+              <View
+                style={[
+                  styles.iconBadge,
+                  {
+                    backgroundColor: theme.colors.background.surface,
+                    borderColor: item.iconAccent,
+                  },
+                ]}
+              >
+                <Image source={item.icon} style={styles.iconImage} />
+              </View>
+              <View style={styles.titleContainer}>
+                <Text style={styles.title}>{item.title}</Text>
+              </View>
             </View>
-            <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.subtitle}>{item.subtitle}</Text>
             {item.animation ? (
               <View style={styles.animationContainer}>
@@ -323,18 +412,32 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       elevation: 3,
     },
     iconBadge: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: 58,
+      height: 58,
+      borderRadius: 29,
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 18,
+      borderWidth: 1,
+    },
+    iconImage: {
+      width: 38,
+      height: 38,
+      resizeMode: "contain",
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+      marginBottom: 12,
+    },
+    titleContainer: {
+      flex: 1,
     },
     title: {
       fontSize: 22,
       fontWeight: "700",
       color: theme.colors.text.primary,
-      marginBottom: 8,
+      flexShrink: 1,
     },
     subtitle: {
       fontSize: 15,

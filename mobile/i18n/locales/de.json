@@ -120,7 +120,7 @@
     "tagline": "Sprachen lernen, Welten verbinden"
   },
   "welcome": {
-  "title": "Willkommen bei Decorebator! 🎉",
+    "title": "Willkommen bei Decorebator! 🎉",
     "subtitle": "Erstellen Sie Ihre Wortliste und Decorebator verwandelt sie in adaptive Quizze, Visuals und tägliche Übung",
     "firstWordlistSuccess": "Herzlichen Glückwunsch! 🎉",
     "firstWordlistMessage": "Ihre erste Liste ist bereit! Beginnen Sie mit dem Hinzufügen von Wörtern.",
@@ -132,44 +132,68 @@
     "welcome": {
       "greeting": "Willkommen bei",
       "highlight": {
-        "generator": "Make a wordlist; we generate the rest—quizzes, visuals, audio, challenges.",
-        "chat": "Practice speaking out loud with our AI coach.",
-        "modes": "Mix up practice with varied quiz modes",
-        "progress": "Echtzeit-Analysen feiern deine Lernserien"
+        "generator": "Erstelle eine Wortliste—wir liefern Quizze, Visuals, Audio, Challenges.",
+        "chat": "Sprich laut mit unserem KI‑Coach.",
+        "modes": "Abwechslung durch verschiedene Quiz‑Modi.",
+        "progress": "Wortlisten in 7 Lernsprachen erstellen."
       }
     },
     "features": {
-      "heading": "Entdecke, was du erreichen kannst",
-      "description": "Wische durch die Highlights und sieh, wie Decorebator dich jeden Tag motiviert.",
+      "heading": "See what you can do",
+      "description": "Swipe through the highlights to discover how Decorebator keeps you inspired every day.",
       "quizzes": {
-        "title": "Adaptive Quizze",
-        "subtitle": "Wechsle in Sekunden zwischen Bedeutungen, Hören, Schreiben und Bildaufgaben.",
-        "bulletOne": "Intelligente Schwierigkeit fordert dich kontinuierlich heraus.",
-        "bulletTwo": "8 Quiz-Modi für kurze Lerneinheiten."
+        "title": "Adaptive quizzes",
+        "subtitle": "Switch between meanings, listening, writing, and picture drills in seconds.",
+        "bulletOne": "Smart difficulty keeps you challenged.",
+        "bulletTwo": "Abwechslungsreiche Quiz‑Modi für kurze Sessions."
       },
       "chat": {
-        "title": "Live-Sprachcoach",
-        "subtitle": "Trainiere Gespräche mit deinen gespeicherten Wörtern und erhalte sofortiges Feedback.",
-        "bulletOne": "Starte Sprachsessions aus jeder Wortliste in wenigen Sekunden.",
-        "bulletTwo": "Echtzeit-Transkripte halten jede Korrektur fest."
+        "title": "Live speaking coach",
+        "subtitle": "Laut üben mit sofortigem KI‑Feedback.",
+        "bulletOne": "Launch a voice session from any wordlist in seconds.",
+        "bulletTwo": "Realtime transcripts capture every correction you can revisit."
       },
       "flashcards": {
-        "title": "Smarte Karteikarten",
-        "subtitle": "Leitner-Boxen takten deine Wiederholungen, damit jedes Wort sitzt.",
-        "bulletOne": "KI ergänzt Karten mit Beispielen und Audio.",
-        "bulletTwo": "Der Offline-Modus lässt dich überall weiterlernen."
+        "title": "Smart flashcards",
+        "subtitle": "Definitionen, Beispiele und Audio mit einem Tipp.",
+        "bulletOne": "Reiche Karten halten Kontext griffbereit.",
+        "bulletTwo": "Ideal für kurze Review‑Sprints."
+      },
+      "leitner": {
+        "title": "Smartes Spaced Repetition",
+        "subtitle": "Leitner‑Boxen timen Reviews für dauerhaften Erfolg.",
+        "bulletOne": "Deterministische Planung spart Zeit.",
+        "bulletTwo": "Stufen steigen, während die Serie wächst."
+      },
+      "enrichment": {
+        "title": "KI‑Enrichment‑Pack",
+        "subtitle": "Definitionen, Beispiele, Visuals und Audio pro Wort.",
+        "bulletOne": "Hochwertige Aussprache für deine Zielsprache.",
+        "bulletTwo": "Beispiele und Visuals verankern Bedeutung."
+      },
+      "offline": {
+        "title": "Offline‑Modus",
+        "subtitle": "Premium lässt dich überall üben, mit Sync.",
+        "bulletOne": "Wortlisten laden und offline lernen.",
+        "bulletTwo": "Fortschritt synchronisiert beim Verbinden."
+      },
+      "reporting": {
+        "title": "Melden & regenerieren",
+        "subtitle": "KI‑Fehler melden, wir regenerieren schnell.",
+        "bulletOne": "Falsche Bedeutungen, Bilder oder Audio melden.",
+        "bulletTwo": "Jede Meldung verbessert die Qualität."
       },
       "progress": {
-        "title": "Verfolge deinen Fortschritt",
-        "subtitle": "Feiere Serien, Meisterstufen und Wochenimpulse mit eindrucksvollen Charts.",
-        "bulletOne": "Tägliche Ziel-Erinnerungen halten die Serie am Leben.",
-        "bulletTwo": "Erkenne Stärken und Lücken pro Wortliste auf einen Blick."
+        "title": "Track your progress",
+        "subtitle": "Celebrate streaks, mastery levels, and weekly momentum with beautiful charts.",
+        "bulletOne": "Daily goal reminders keep the streak alive.",
+        "bulletTwo": "See strengths and gaps by wordlist instantly."
       },
       "images": {
-        "title": "KI-Visuals & Audio",
-        "subtitle": "Jedes Wort erhält Kontext mit Bildern, Aussprache und kulturellen Nuancen.",
-        "bulletOne": "Aussprachen, eingesprochen von Muttersprachler:innen.",
-        "bulletTwo": "Illustrationen, die für deine Sprache generiert werden."
+        "title": "AI visuals & audio",
+        "subtitle": "Every word gets context with imagery, pronunciation, and cultural nuance.",
+        "bulletOne": "Pronunciations voiced by native accents.",
+        "bulletTwo": "Illustrations generated for your language."
       }
     },
     "notifications": {
@@ -615,7 +639,7 @@
     "deleteWordConfirm": "Möchten Sie \"{{word}}\" wirklich löschen?",
     "total": "Gesamt",
     "learned": "Gelernt",
-    "progress": "Fortschritt",
+    "progress": "Create wordlists in 7 learning languages.",
     "searchPlaceholder": "Wörter suchen...",
     "filterAll": "Alle ({{count}})",
     "filterLearned": "Gelernt ({{count}})",
@@ -825,7 +849,7 @@
       },
       "boxDistribution": {
         "title": "Lernstufen-Verteilung",
-        "subtitle": "Wörter verteilt über Leitner-Boxen",
+        "subtitle": "Flip through definitions, examples, and audio in one tap.",
         "explanation": "Das Leitner-System verwendet 7 Boxen mit steigenden Wiederholungsintervallen. Wörter steigen bei richtiger Antwort auf und werden bei falscher Antwort auf Box 1 zurückgesetzt. Höhere Boxen zeigen bessere Merkfähigkeit.",
         "box1": "Neu (Jetzt)",
         "box2": "Lernend (6h)",
@@ -837,7 +861,7 @@
       },
       "historicalBoxDistribution": {
         "title": "Lernfortschritt über Zeit",
-        "subtitle": "Wortverteilung über alle Leitner-Boxen",
+        "subtitle": "Flip through definitions, examples, and audio in one tap.",
         "explanation": "Diese Grafik zeigt Ihren Beherrschungsgrad über die Zeit - den Prozentsatz der Wörter, die Box 7 (Beherrschte Stufe) erreicht haben. Höhere Balken zeigen eine bessere Gesamtvokabelbeherrschung!",
         "masteryPercentage": "Prozentsatz beherrschter Wörter (Box 7)",
         "stackedExplanation": "Dieses gestapelte Balkendiagramm zeigt, wie Ihre Wörter im Laufe der Zeit auf alle 7 Leitner-Boxen verteilt sind. Mit Ihrem Fortschritt wandern die Wörter von rot (Box 1 - neu) zu grün (Box 7 - gemeistert). Die wachsende grüne Fläche zeigt Ihren Lernfortschritt!",

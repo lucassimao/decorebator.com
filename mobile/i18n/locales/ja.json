@@ -129,44 +129,68 @@
     "welcome": {
       "greeting": "ようこそ",
       "highlight": {
-        "generator": "Make a wordlist; we generate the rest—quizzes, visuals, audio, challenges.",
-        "chat": "Practice speaking out loud with our AI coach.",
-        "modes": "Mix up practice with varied quiz modes",
-        "progress": "リアルタイム分析で連続学習を祝おう"
+        "generator": "単語リストを作成—残りは生成：クイズ・画像・音声・チャレンジ。",
+        "chat": "AIコーチと声に出して練習。",
+        "modes": "多彩なクイズで飽きずに学習。",
+        "progress": "7言語で単語リストを作成。"
       }
     },
     "features": {
-      "heading": "できることを覗いてみましょう",
-      "description": "ハイライトをスワイプして、Decorebator が毎日どうやってやる気を高めるか確かめてください。",
+      "heading": "See what you can do",
+      "description": "Swipe through the highlights to discover how Decorebator keeps you inspired every day.",
       "quizzes": {
-        "title": "適応型クイズ",
-        "subtitle": "意味・リスニング・ライティング・画像問題を数秒で切り替え。",
-        "bulletOne": "スマートな難易度調整で常にチャレンジ。",
-        "bulletTwo": "スキマ時間にぴったりの 8 つのモード。"
+        "title": "Adaptive quizzes",
+        "subtitle": "Switch between meanings, listening, writing, and picture drills in seconds.",
+        "bulletOne": "Smart difficulty keeps you challenged.",
+        "bulletTwo": "短時間でも回せる多彩なモード。"
       },
       "chat": {
-        "title": "ライブ発音コーチ",
-        "subtitle": "保存した単語をAIと一緒に会話形式で練習しましょう。",
-        "bulletOne": "どの単語リストからでも数秒で音声セッションを開始。",
-        "bulletTwo": "リアルタイム文字起こしで修正ポイントを逃しません。"
+        "title": "Live speaking coach",
+        "subtitle": "声に出して、AIがすぐにガイド。",
+        "bulletOne": "Launch a voice session from any wordlist in seconds.",
+        "bulletTwo": "Realtime transcripts capture every correction you can revisit."
       },
       "flashcards": {
-        "title": "スマート単語カード",
-        "subtitle": "ライナー方式で復習間隔を最適化し、確実に記憶に定着。",
-        "bulletOne": "AI が例文と音声でカードを強化。",
-        "bulletTwo": "オフラインでもどこでも学習可能。"
+        "title": "Smart flashcards",
+        "subtitle": "定義・例文・音声を1タップで。",
+        "bulletOne": "情報豊富なカードで文脈を保持。",
+        "bulletTwo": "サクッと復習に最適。"
+      },
+      "leitner": {
+        "title": "スマートな間隔反復",
+        "subtitle": "Leitner方式で復習タイミングを最適化。",
+        "bulletOne": "決定的なスケジューリングで効率化。",
+        "bulletTwo": "ストリークとともに到達度UP。"
+      },
+      "enrichment": {
+        "title": "AI強化パック",
+        "subtitle": "定義・例文・画像・音声を自動生成。",
+        "bulletOne": "ネイティブ品質の発音。",
+        "bulletTwo": "例文と画像で意味が定着。"
+      },
+      "offline": {
+        "title": "オフラインモード",
+        "subtitle": "Premiumでどこでも学習、同期も自動。",
+        "bulletOne": "単語リストを保存してオフライン学習。",
+        "bulletTwo": "再接続で自動同期。"
+      },
+      "reporting": {
+        "title": "報告＆再生成",
+        "subtitle": "AIの誤りを報告、すぐ再生成。",
+        "bulletOne": "意味・画像・音声の誤りを報告。",
+        "bulletTwo": "報告で品質が向上。"
       },
       "progress": {
-        "title": "進捗を可視化",
-        "subtitle": "連続日数・習熟度・週間リズムを美しいグラフで振り返りましょう。",
-        "bulletOne": "日々の目標リマインダーで連続学習を継続。",
-        "bulletTwo": "単語帳ごとの得意と課題をすぐに把握。"
+        "title": "Track your progress",
+        "subtitle": "Celebrate streaks, mastery levels, and weekly momentum with beautiful charts.",
+        "bulletOne": "Daily goal reminders keep the streak alive.",
+        "bulletTwo": "See strengths and gaps by wordlist instantly."
       },
       "images": {
-        "title": "AI ビジュアル & オーディオ",
-        "subtitle": "各単語に画像・発音・文化的ニュアンスで背景を与えます。",
-        "bulletOne": "ネイティブの発音を収録。",
-        "bulletTwo": "あなたの学習言語に合わせたイラストを生成。"
+        "title": "AI visuals & audio",
+        "subtitle": "Every word gets context with imagery, pronunciation, and cultural nuance.",
+        "bulletOne": "Pronunciations voiced by native accents.",
+        "bulletTwo": "Illustrations generated for your language."
       }
     },
     "notifications": {
@@ -605,7 +629,7 @@
     "deleteWordConfirm": "「{{word}}」を削除してもよろしいですか？",
     "total": "合計",
     "learned": "学習済み",
-    "progress": "進捗",
+    "progress": "Create wordlists in 7 learning languages.",
     "searchPlaceholder": "単語を検索...",
     "filterAll": "すべて ({{count}})",
     "filterLearned": "学習済み ({{count}})",
