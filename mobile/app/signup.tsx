@@ -73,6 +73,10 @@ export default function SignUpScreen() {
     }
   }, [signUpError, snackbar]);
 
+  React.useEffect(() => {
+    posthog.capture("signup_started", { source: "signup_screen" });
+  }, [posthog]);
+
   // Keyboard listeners
   React.useEffect(() => {
     const keyboardWillShow = Keyboard.addListener(
@@ -134,6 +138,9 @@ export default function SignUpScreen() {
     },
     onSuccess: async (_, variables) => {
       posthog.capture("user_signed_up", {
+        email: variables.email,
+      });
+      posthog.capture("signup_completed", {
         email: variables.email,
       });
 

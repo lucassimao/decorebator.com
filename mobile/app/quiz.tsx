@@ -19,12 +19,14 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { usePostHog } from "posthog-react-native";
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 
 const QuizScreen: React.FC = () => {
   const navigation = useNavigation();
   const { wordlistId, wordlistName } = useLocalSearchParams();
   const { t } = useTranslation();
+  const posthog = usePostHog();
   const { isOnline, isOfflineAvailable } = useOffline();
   const { invalidateAllAnalytics } = useInvalidateAnalytics();
   const { theme, responsive } = useTheme();
@@ -151,9 +153,16 @@ const QuizScreen: React.FC = () => {
         wordID: quiz!.wordId,
         wordlistID: Number(wordlistId),
       }),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       // Invalidate all analytics after answering a quiz (real-time updates)
       invalidateAllAnalytics(Number(wordlistId));
+      posthog.capture("quiz_completed", {
+        wordlistId: Number(wordlistId),
+        quizId: quiz?.id,
+        quizType: quiz?.type,
+        correct: variables.success,
+        responseTimeMs: Date.now() - quizDisplayedAtRef.current,
+      });
 
       if (fastMode) {
         setTimeout(() => {

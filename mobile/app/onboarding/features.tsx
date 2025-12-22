@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Dimensions,
   TouchableOpacity,
   Image,
+  ViewToken,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -240,6 +241,27 @@ export default function OnboardingFeatures() {
   const [index, setIndex] = useState(0);
   const ref = useRef<FlatList<Slide>>(null);
 
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      const visible = viewableItems.find((item) => item.isViewable);
+      if (!visible || typeof visible.index !== "number") return;
+      if (visible.index !== index) {
+        setIndex(visible.index);
+        const slide = slides[visible.index];
+        if (slide) {
+          posthog.capture("onboarding_feature_viewed", {
+            slide: slide.key,
+          });
+        }
+      }
+    },
+    [index, slides, posthog],
+  );
+
+  const viewabilityConfig = useRef({
+    viewAreaCoveragePercentThreshold: 60,
+  }).current;
+
   const onNext = () => {
     const next = Math.min(index + 1, slides.length - 1);
     if (next !== index) {
@@ -357,23 +379,18 @@ export default function OnboardingFeatures() {
         contentContainerStyle={styles.carouselContent}
         snapToAlignment="center"
         decelerationRate="fast"
-        onMomentumScrollEnd={(event) => {
-          const position = event.nativeEvent.contentOffset.x;
-          const calculatedIndex = Math.round(position / pageWidth);
-          if (calculatedIndex !== index) {
-            setIndex(calculatedIndex);
-            const slide = slides[calculatedIndex];
-            if (slide) {
-              posthog.capture("onboarding_feature_viewed", {
-                slide: slide.key,
-              });
-            }
-          }
-        }}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
       />
       <View style={styles.pagination}>
         {slides.map((_, i) => (
-          <View key={i} style={[styles.dot, i === index && styles.dotActive]} />
+          <View
+            key={i}
+            style={[styles.dot, i === index && styles.dotActive]}
+            accessibilityRole="image"
+            accessibilityLabel={`Slide ${i + 1} of ${slides.length}`}
+            accessibilityState={{ selected: i === index }}
+          />
         ))}
       </View>
     </OnboardingLayout>

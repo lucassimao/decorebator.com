@@ -59,6 +59,8 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
               onPress={onBack}
               style={styles.headerButton}
               accessibilityRole="button"
+              accessibilityLabel={backLabel}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Text
                 style={[
@@ -107,6 +109,8 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
               onPress={onSkip}
               style={styles.headerButton}
               accessibilityRole="button"
+              accessibilityLabel={skipLabel}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Text
                 style={[

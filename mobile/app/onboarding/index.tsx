@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
@@ -13,20 +12,6 @@ const OnboardingWelcome = () => {
   const styles = createStyles(theme);
   const { t } = useTranslation();
   const posthog = usePostHog();
-
-  useEffect(() => {
-    const checkOnboardingStatus = async () => {
-      try {
-        const completed = await AsyncStorage.getItem("@onboarding_completed");
-        if (completed === "1") {
-          router.replace("/signup");
-        }
-      } catch {
-        // If storage fails, continue to onboarding.
-      }
-    };
-    checkOnboardingStatus();
-  }, [router]);
 
   const highlights = useMemo(
     () => [
@@ -73,7 +58,6 @@ const OnboardingWelcome = () => {
 
   const onSkip = async () => {
     posthog.capture("onboarding_skipped", { at_step: "welcome" });
-    await AsyncStorage.setItem("@onboarding_completed", "1");
     router.replace("/signup");
   };
 
@@ -170,7 +154,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontWeight: "700",
       letterSpacing: 1,
       textTransform: "uppercase",
-      color: "rgba(45, 52, 54, 0.6)",
+      color: theme.colors.text.secondary,
     },
     title: {
       fontSize: 36,

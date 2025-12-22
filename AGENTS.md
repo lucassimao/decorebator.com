@@ -1,15 +1,15 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `api/`: Go 1.23 backend (Gin) with layers under `internal/*`; migrations in `migrations/`; workers in `cmd/workers/`; tests split between `internal/tests` and `tests/integration`.
+- `api/`: Go 1.23 backend (Gin) with layers under `internal/*`; migrations in `cmd/migrate/migrations/`; workers in `cmd/workers/`; tests split between `internal/tests/unit` and `tests/integration`.
 - `mobile/`: Expo app under `app/` with shared UI in `components/`, translations in `i18n/`, theming in `theme/`, media in `assets/`, and Jest mocks in `__mocks__/`.
-- `web/`: Next.js App Router in `src/`; localized copy in `messages/`, marketing assets in `public/`, Tailwind config in `styles/`.
+- `web/`: Next.js App Router in `src/`; localized copy in `messages/`, marketing assets in `public/`.
 - `docs/`, `todo/`: design notes and backlog context—update alongside feature work.
 
 ## Build, Test, and Development Commands
-- **API backend**: `cd api && make setup` installs tools; `make test` runs the dockerized suite; `make lint`/`make format-check` match CI; use `docker compose -f docker-compose.yml up` for services, then `go run ./cmd/api`.
+- **API backend**: `cd api && make setup` installs tools; `make test` runs the dockerized suite; `make lint`/`make format-check` match CI; use `docker compose -f docker-compose.yml up` for services, then `make run` (and `make workers` in another terminal).
 - **Mobile app**: `cd mobile && npm install`; `npm run start` launches Expo; run `npm run lint`, `npm run typecheck`, and `npm test` (Jest + Testing Library) before pushing.
-- **Web app**: `cd web && npm install`; `npm run dev` serves Next; `npm run build` creates production output and sitemap; `npm run lint` or `npm run format:check` guard style.
+- **Web app**: `cd web && npm install`; `npm run dev` serves Next (port 4000); `npm run build` creates production output and sitemap; `npm run lint` or `npm run format:check` guard style.
 
 ## Coding Style & Naming Conventions
 - **Go**: Run `make format` (gofmt + goimports) and `make lint` (golangci-lint); use PascalCase for exports, camelCase for locals, SCREAMING_SNAKE_CASE for env vars.
@@ -27,4 +27,6 @@
 
 ## Configuration & Secrets
 - API expects `.env` values for Postgres, Redis, MinIO, OpenAI, SendGrid, and Stripe; bootstrap from `.env.example` before running `make` targets.
-- Store secrets outside version control and use `docker-compose.override.yml` or Expo secrets for local overrides—never commit real keys.
+- Mobile expects Expo public env vars from `mobile/.env.example` (API URL, RevenueCat keys, PostHog, Sentry, optional app domain).
+- Web uses `NEXT_PUBLIC_API_URL`, `STATIC_AUTHENTICATION`, and `SITE_URL` for public-quiz fetching/sitemaps.
+- Store secrets outside version control and use `docker-compose.override.yml` or Expo/EAS secrets for local overrides—never commit real keys.

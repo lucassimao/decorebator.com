@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { usePostHog } from "posthog-react-native";
 import {
   Alert,
   Animated,
@@ -53,6 +54,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const upgradeDialog = useUpgradePromptDialog();
   const router = useRouter();
   const { t } = useTranslation();
+  const posthog = usePostHog();
   const { theme, responsive } = useTheme();
   const commonStyles = createCommonStyles(theme, responsive);
   const styles = createStyles(theme);
@@ -166,6 +168,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    posthog.capture("dashboard_viewed");
+  }, [posthog]);
 
   // Animate when wordlist state changes
   useEffect(() => {

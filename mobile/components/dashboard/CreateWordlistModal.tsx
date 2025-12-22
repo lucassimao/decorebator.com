@@ -25,6 +25,7 @@ import {
 } from "react-native";
 import { ContentGuidelinesModal } from "./ContentGuidelinesModal";
 import * as Sentry from "@sentry/react-native";
+import { usePostHog } from "posthog-react-native";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -64,6 +65,7 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { hasOptimisticSubscription } = useUserSession();
+  const posthog = usePostHog();
   const [showContentGuidelines, setShowContentGuidelines] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
@@ -135,6 +137,11 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
           wordlistName: data.name,
           language: data.languageCode,
         },
+      });
+      posthog.capture("wordlist_created", {
+        wordlistId: data.id,
+        wordlistName: data.name,
+        language: data.languageCode,
       });
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });

@@ -29,16 +29,16 @@ export default function OnboardingAccount() {
         title: t("onboarding.account.free.title", "Free plan includes"),
         items: [
           t(
+            "onboarding.account.free.features.starter",
+            "Everything you need to get started.",
+          ),
+          t(
             "onboarding.account.free.features.wordlists",
-            "Create and practice your own wordlists with synced progress on every device.",
+            "Wordlists sync across every device.",
           ),
           t(
             "onboarding.account.free.features.quizzes",
-            "Adaptive quizzes with streak tracking and daily goal reminders.",
-          ),
-          t(
-            "onboarding.account.free.features.analytics",
-            "Core analytics to see wins from the past 7 days.",
+            "Adaptive quizzes.",
           ),
         ],
       },
@@ -50,15 +50,19 @@ export default function OnboardingAccount() {
         items: [
           t(
             "onboarding.account.premium.features.quizzes",
-            "All eight quiz modes, AI visuals, audio packs, and smarter review drills.",
+            "All quiz modes, AI visuals, audio packs, and smarter review drills.",
           ),
           t(
             "onboarding.account.premium.features.offline",
             "Offline practice plus progress that syncs the moment you reconnect.",
           ),
           t(
+            "onboarding.account.free.features.analytics",
+            "7-day progress snapshots and stats.",
+          ),
+          t(
             "onboarding.account.premium.features.analytics",
-            "Deep-dive analytics and weekly insights to keep momentum high.",
+            "Cancel anytime.",
           ),
         ],
       },
@@ -66,26 +70,8 @@ export default function OnboardingAccount() {
     [t],
   );
 
-  const upgradeSteps = useMemo(
-    () => [
-      t(
-        "onboarding.account.upgrade.steps.settings",
-        "Open Settings from the dashboard menu once you're inside the app.",
-      ),
-      t(
-        "onboarding.account.upgrade.steps.option",
-        'Tap "Upgrade to Premium" under Account to review plan details.',
-      ),
-      t(
-        "onboarding.account.upgrade.steps.confirm",
-        "Choose your plan, confirm the upgrade, or start a free trial anytime.",
-      ),
-    ],
-    [t],
-  );
 
   const finish = async (to: "/signup" | "/signin") => {
-    await AsyncStorage.setItem("@onboarding_completed", "1");
     posthog.capture("onboarding_completed");
     router.replace(to);
   };
@@ -111,7 +97,16 @@ export default function OnboardingAccount() {
             accessibilityRole="button"
           >
             <Text style={styles.primaryText}>
-              {t("signup.title", "Sign Up")}
+              {t("onboarding.account.cta", "Your learning starts now")}
+            </Text>
+            <Text style={styles.primarySubtext}>
+              {t("onboarding.account.ctaTime", "Takes less than a minute")}
+            </Text>
+            <Text style={styles.primarySubtext}>
+              {t(
+                "onboarding.account.ctaNote",
+                "Free to start - No credit card required",
+              )}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -135,21 +130,15 @@ export default function OnboardingAccount() {
         style={styles.scroll}
       >
         <View style={styles.containerCard}>
-          <View
-            style={[
-              styles.iconHero,
-              { backgroundColor: "rgba(255, 123, 84, 0.18)" },
-            ]}
-          >
-            <Feather name="smile" size={26} color={theme.colors.primary} />
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>
+              {t("onboarding.account.title", "Create your account")}
+            </Text>
           </View>
-          <Text style={styles.title}>
-            {t("onboarding.account.title", "Create your account")}
-          </Text>
           <Text style={styles.subtitle}>
             {t(
               "onboarding.account.subtitle",
-              "Lock in your progress today, see what's included for free, and know exactly how to upgrade.",
+              "Your words won’t forget you.",
             )}
           </Text>
 
@@ -172,8 +161,11 @@ export default function OnboardingAccount() {
                   <Text style={styles.planTitle}>{section.title}</Text>
                 </View>
                 <View style={styles.planItems}>
-                  {section.items.map((item) => (
-                    <View key={item} style={styles.planItemRow}>
+                {section.items.map((item, index) => (
+                  <View
+                    key={`${section.key}-${index}`}
+                    style={styles.planItemRow}
+                  >
                       <View
                         style={[
                           styles.planBullet,
@@ -188,47 +180,6 @@ export default function OnboardingAccount() {
             ))}
           </View>
 
-          <View style={styles.upgradeCard}>
-            <View style={styles.planHeader}>
-              <View
-                style={[
-                  styles.planIcon,
-                  { backgroundColor: "rgba(76, 175, 80, 0.16)" },
-                ]}
-              >
-                <Feather
-                  name="arrow-up-circle"
-                  size={18}
-                  color={theme.colors.primary}
-                />
-              </View>
-              <Text style={styles.planTitle}>
-                {t("onboarding.account.upgrade.title", "How to upgrade later")}
-              </Text>
-            </View>
-            <View style={styles.upgradeSteps}>
-              {upgradeSteps.map((step, index) => (
-                <View key={step} style={styles.upgradeRow}>
-                  <View
-                    style={[
-                      styles.stepBadge,
-                      { borderColor: theme.colors.primary },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.stepBadgeText,
-                        { color: theme.colors.primary },
-                      ]}
-                    >
-                      {index + 1}
-                    </Text>
-                  </View>
-                  <Text style={styles.upgradeText}>{step}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
         </View>
       </ScrollView>
     </OnboardingLayout>
@@ -259,12 +210,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       shadowRadius: 22,
       elevation: 4,
     },
-    iconHero: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
+    headerRow: {
+      flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
     },
     title: {
       fontSize: 26,
@@ -322,40 +270,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontSize: 14,
       lineHeight: 20,
     },
-    upgradeCard: {
-      marginTop: 12,
-      borderRadius: 18,
-      padding: 18,
-      borderWidth: 1,
-      borderColor: "rgba(76, 175, 80, 0.14)",
-      gap: 14,
-    },
-    upgradeSteps: {
-      gap: 14,
-    },
-    upgradeRow: {
-      flexDirection: "row",
-      gap: 12,
-      alignItems: "flex-start",
-    },
-    stepBadge: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      alignItems: "center",
-      justifyContent: "center",
-      borderWidth: 1,
-      marginTop: 2,
-    },
-    stepBadgeText: {
-      fontWeight: "700",
-    },
-    upgradeText: {
-      flex: 1,
-      fontSize: 15,
-      lineHeight: 22,
-      color: theme.colors.text.primary,
-    },
     footerActions: {
       gap: 16,
     },
@@ -378,6 +292,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     secondaryLink: {
       alignItems: "center",
       paddingVertical: 4,
+    },
+    primarySubtext: {
+      marginTop: 4,
+      color: theme.colors.text.inverse,
+      fontSize: 12,
+      fontWeight: "600",
+      opacity: 0.9,
     },
     secondaryText: {
       color: theme.colors.text.secondary,

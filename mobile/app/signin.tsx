@@ -122,13 +122,8 @@ const LoginScreen: React.FC = () => {
     loginMutation.mutate(data);
   };
 
-  const handleSignUp = async () => {
-    try {
-      const completed = await AsyncStorage.getItem("@onboarding_completed");
-      router.replace(completed === "1" ? "/signup" : "/onboarding");
-    } catch {
-      router.replace("/onboarding");
-    }
+  const handleSignUp = () => {
+    router.replace("/onboarding");
   };
 
   const handleForgotPassword = () => {
