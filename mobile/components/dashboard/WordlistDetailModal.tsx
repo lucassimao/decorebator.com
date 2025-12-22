@@ -11,6 +11,7 @@ import { useOffline } from "@/hooks/useOffline";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -20,6 +21,7 @@ import {
   Alert,
   Animated,
   Dimensions,
+  Easing,
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
@@ -53,8 +55,11 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
 }) => {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
+  const fabPulseAnim = useRef(new Animated.Value(0)).current;
+  const fabPulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
   const queryClient = useQueryClient();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [shouldPulseFab, setShouldPulseFab] = useState(false);
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,6 +71,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   const { isOnline } = useOffline();
   const { t } = useTranslation();
   const { isPremium, hasOptimisticSubscription } = useUserSession();
+  const fabHintKey = `wordlistFabHintSeen_${wordlist.id}`;
 
   // Handle modal close with animation
   const handleClose = () => {
@@ -166,6 +172,9 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
       reset();
       setShowAddForm(false);
+      AsyncStorage.setItem(fabHintKey, "true").catch((error) => {
+        console.warn("Failed to store FAB hint flag:", error);
+      });
     },
     onError: (error) => {
       console.error("Failed to add word:", error);
@@ -419,9 +428,90 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       onClose();
       updatePromptDialog.show();
     } else {
+      AsyncStorage.setItem(fabHintKey, "true").catch((error) => {
+        console.warn("Failed to store FAB hint flag:", error);
+      });
+      setShouldPulseFab(false);
       setShowAddForm(true);
     }
   };
+
+  const stopFabPulse = React.useCallback(() => {
+    if (fabPulseLoopRef.current) {
+      fabPulseLoopRef.current.stop();
+      fabPulseLoopRef.current = null;
+    }
+    fabPulseAnim.stopAnimation();
+    fabPulseAnim.setValue(0);
+  }, [fabPulseAnim]);
+
+  const startFabPulse = React.useCallback(() => {
+    if (fabPulseLoopRef.current) return;
+    fabPulseAnim.setValue(0);
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(fabPulseAnim, {
+          toValue: 1,
+          duration: 1400,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(fabPulseAnim, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    fabPulseLoopRef.current = loop;
+    loop.start();
+  }, [fabPulseAnim]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const checkFabHint = async () => {
+      if (!visible) return;
+      if (words.length > 0) {
+        if (!cancelled) {
+          setShouldPulseFab(false);
+        }
+        await AsyncStorage.setItem(fabHintKey, "true");
+        return;
+      }
+      const seenHint = await AsyncStorage.getItem(fabHintKey);
+      if (!cancelled) {
+        setShouldPulseFab(seenHint !== "true");
+      }
+    };
+    checkFabHint().catch((error) => {
+      console.warn("Failed to load FAB hint flag:", error);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fabHintKey, visible, words.length]);
+
+  const shouldShowFabPulse =
+    visible && !showAddForm && words.length === 0 && shouldPulseFab;
+
+  const fabPulseScale = fabPulseAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.8],
+  });
+
+  const fabPulseOpacity = fabPulseAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 0],
+  });
+
+  useEffect(() => {
+    if (shouldShowFabPulse) {
+      startFabPulse();
+    } else {
+      stopFabPulse();
+    }
+    return stopFabPulse;
+  }, [shouldShowFabPulse, startFabPulse, stopFabPulse]);
 
   // Helper function to get processing info for a word
   const getWordProcessingInfo = (wordId: number) => {
@@ -883,17 +973,31 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
 
           {/* FAB */}
           {!showAddForm && isOnline && (
-            <TouchableOpacity
-              style={styles.fab}
-              onPress={onPressAddWord}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="add"
-                size={28}
-                color={theme.colors.text.inverse}
-              />
-            </TouchableOpacity>
+            <View style={styles.fabWrapper} pointerEvents="box-none">
+              {shouldShowFabPulse && (
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.fabPulse,
+                    {
+                      transform: [{ scale: fabPulseScale }],
+                      opacity: fabPulseOpacity,
+                    },
+                  ]}
+                />
+              )}
+              <TouchableOpacity
+                style={styles.fab}
+                onPress={onPressAddWord}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="add"
+                  size={28}
+                  color={theme.colors.text.inverse}
+                />
+              </TouchableOpacity>
+            </View>
           )}
         </Animated.View>
       </View>
@@ -1030,9 +1134,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.colors.ui.inputBackground,
+      borderWidth: 1,
+      borderColor: theme.colors.border.light,
       borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
       gap: 12,
     },
     searchInput: {
@@ -1155,10 +1261,24 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.colors.text.tertiary,
       marginTop: 8,
     },
-    fab: {
+    fabWrapper: {
       position: "absolute",
       right: 20,
       bottom: 20,
+      width: 56,
+      height: 56,
+      justifyContent: "center",
+      alignItems: "center",
+      overflow: "visible",
+    },
+    fabPulse: {
+      position: "absolute",
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: `${theme.colors.primary}55`,
+    },
+    fab: {
       width: 56,
       height: 56,
       borderRadius: 28,
