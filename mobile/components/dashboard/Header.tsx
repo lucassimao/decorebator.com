@@ -236,9 +236,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       height: 44,
       borderRadius: 22,
       overflow: "hidden",
-      backgroundColor: theme.colors.background.surface,
-      borderWidth: 1,
-      borderColor: theme.colors.ui.border,
+      backgroundColor: "#FFFFFF",
+      borderWidth: 2,
+      borderColor: "#FFFFFF",
       // Stronger shadow + elevation so the avatar floats above content
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 4 },

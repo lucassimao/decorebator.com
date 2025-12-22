@@ -269,7 +269,10 @@
     "wordlists": {
       "myWordlists": "Mes Listes",
       "noWordlistsYet": "Aucune liste pour l'instant",
-      "createFirstWordlist": "Créez votre première liste de mots",
+      "emptyTitle": "Votre parcours d’apprentissage commence ici",
+      "emptySubtitle": "Ajoutez quelques mots pour débloquer votre progression",
+      "emptyFootnote": "La progression se débloque après vos premiers mots",
+      "createFirstWordlist": "Ajoutez votre première liste de mots",
       "addNewWordlist": "Ajouter une Nouvelle Liste",
       "wordCount": "{{count}} mots",
       "wordCount_one": "{{count}} mot",

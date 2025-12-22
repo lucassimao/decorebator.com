@@ -269,7 +269,10 @@
     "wordlists": {
       "myWordlists": "マイリスト",
       "noWordlistsYet": "まだリストがありません",
-      "createFirstWordlist": "最初の単語リストを作成",
+      "emptyTitle": "学習の旅はここから始まります",
+      "emptySubtitle": "いくつか単語を追加して進捗を解放しましょう",
+      "emptyFootnote": "最初の単語を追加すると進捗が解放されます",
+      "createFirstWordlist": "最初の単語リストを追加",
       "addNewWordlist": "新しいリストを追加",
       "wordCount": "{{count}}単語",
       "wordCount_one": "{{count}}単語",

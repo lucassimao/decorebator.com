@@ -81,7 +81,8 @@ const Dashboard: React.FC<DashboardProps> = () => {
     return new Map(progressData.wordlists.map((p) => [p.wordlistId, p]));
   }, [progressData]);
 
-  const hasNoWordlist = wordlists && wordlists.length === 0;
+  const wordlistsData = Array.isArray(wordlists) ? wordlists : [];
+  const hasNoWordlist = !isLoading && wordlistsData.length === 0;
 
   const stopPulse = React.useCallback(() => {
     if (pulseLoopRef.current) {
@@ -261,7 +262,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
   );
 
   const handleAddNewWordlist = () => {
-    const wordlistCount = wordlists?.length || 0;
+    const wordlistCount = wordlistsData.length;
     const isFreePlan = !isPremium;
 
     // Check if user has reached free plan limit
@@ -319,44 +320,64 @@ const Dashboard: React.FC<DashboardProps> = () => {
         },
       ]}
     >
-      {/* Illustration Image */}
-      <View style={styles.illustrationContainer}>
-        <Image
-          source={require("../../assets/images/empty-dashboard-bg.png")}
-          style={styles.illustrationImage}
-          resizeMode="contain"
-        />
-      </View>
-
-      {/* Bottom content */}
-      <View style={styles.emptyStateContent}>
-        {/* No wordlists message */}
-        <Text
-          style={
-            theme.mode === "dark"
-              ? styles.noWordlistsTextDark
-              : styles.noWordlistsText
-          }
-        >
-          {t("dashboard.wordlists.noWordlistsYet")}
+      <View style={styles.emptyStateCard}>
+        <Text style={styles.emptyStateTitle}>
+          {t(
+            "dashboard.wordlists.emptyTitle",
+            "Your learning journey starts here",
+          )}
+        </Text>
+        <Text style={styles.emptyStateSubtitle}>
+          {t(
+            "dashboard.wordlists.emptySubtitle",
+            "Add a few words to unlock your progress",
+          )}
         </Text>
 
-        {/* CTA Button */}
+        <Image
+          source={require("../../assets/images/empty-dashboard-rocket.png")}
+          style={styles.emptyStateIllustration}
+          resizeMode="contain"
+        />
+
+        <View style={styles.lockedProgressBar}>
+          <View style={styles.lockedProgressFill} />
+          <View style={styles.lockedProgressKnob}>
+            <Ionicons
+              name="lock-closed"
+              size={15}
+              color={theme.colors.text.secondary}
+            />
+          </View>
+        </View>
+
         <TouchableOpacity
           style={styles.ctaButton}
           onPress={() => setShowCreateModal(true)}
           activeOpacity={0.8}
         >
+          <Ionicons name="add" size={20} color={theme.colors.text.inverse} />
           <Text style={styles.ctaButtonText}>
-            {t("dashboard.wordlists.createFirstWordlist")}
+            {t(
+              "dashboard.wordlists.createFirstWordlist",
+              "Add your first words",
+            )}
           </Text>
-          <Ionicons
-            name="add-circle"
-            size={24}
-            color="#FFFFFF"
-            style={styles.ctaIcon}
-          />
         </TouchableOpacity>
+
+        <View style={styles.emptyStateFootnote}>
+          <Ionicons
+            name="lock-closed"
+            size={14}
+            color={theme.colors.text.tertiary}
+          />
+          <Text style={styles.emptyStateFootnoteText}>
+            {t(
+              "dashboard.wordlists.emptyFootnote",
+              "Progress unlocks after adding your first words",
+            )}
+          </Text>
+        </View>
       </View>
     </Animated.View>
   );
@@ -413,7 +434,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
             ]}
           >
             <FlatList
-              data={isLoading ? [] : hasNoWordlist ? [] : wordlists}
+              data={isLoading ? [] : hasNoWordlist ? [] : wordlistsData}
               renderItem={renderWordlistItem}
               keyExtractor={(item) => String(item.id)}
               ListHeaderComponent={renderStatsAndSection}
@@ -460,7 +481,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
               ]}
             >
               <FlatList
-                data={isLoading ? [] : hasNoWordlist ? [] : wordlists}
+                data={isLoading ? [] : hasNoWordlist ? [] : wordlistsData}
                 renderItem={renderWordlistItem}
                 keyExtractor={(item) => String(item.id)}
                 ListHeaderComponent={renderStatsAndSection}
@@ -669,58 +690,106 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     ctaButton: {
       backgroundColor: theme.colors.primary,
-      borderRadius: theme.borderRadius.md,
-      paddingVertical: theme.spacing.md,
+      borderRadius: 999,
+      paddingVertical: 14,
       paddingHorizontal: theme.spacing.lg,
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
       gap: 8,
+      width: "100%",
       ...theme.shadows.md,
       shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.28,
+      shadowRadius: 12,
+      elevation: 10,
     },
     ctaButtonText: {
       color: theme.colors.text.inverse,
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: "600",
     },
     ctaIcon: {
       marginLeft: 4,
     },
-    // Empty state styles
     emptyStateContainer: {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
       paddingHorizontal: 20,
     },
-    illustrationContainer: {
-      flex: 1,
+    emptyStateCard: {
+      width: "100%",
+      maxWidth: 420,
+      backgroundColor: theme.colors.background.surface,
+      borderRadius: 28,
+      paddingHorizontal: 24,
+      paddingVertical: 28,
+      alignItems: "center",
+      ...theme.shadows.lg,
+    },
+    emptyStateTitle: {
+      fontSize: 20,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+      textAlign: "center",
+    },
+    emptyStateSubtitle: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      textAlign: "center",
+      marginTop: 8,
+      marginBottom: 20,
+    },
+    emptyStateIllustration: {
+      width: width * 0.72,
+      height: width * 0.5,
+      maxWidth: 280,
+      maxHeight: 220,
+      marginBottom: 2,
+    },
+    lockedProgressBar: {
+      width: "100%",
+      height: 12,
+      borderRadius: 999,
+      backgroundColor: "#EEEFF3",
       justifyContent: "center",
+      marginBottom: 12,
+    },
+    lockedProgressFill: {
+      position: "absolute",
+      left: 6,
+      right: 6,
+      height: 6,
+      borderRadius: 999,
+      backgroundColor: "#E3E4E8",
+    },
+    lockedProgressKnob: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: theme.colors.background.surface,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
       alignItems: "center",
+      justifyContent: "center",
+      alignSelf: "center",
+      transform: [{ translateY: -8 }],
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 8,
+      elevation: 6,
     },
-    illustrationImage: {
-      width: width,
-      height: width * 0.7, // Adjust ratio based on illustration
-      maxHeight: 300,
-    },
-    emptyStateContent: {
-      paddingHorizontal: 20,
-      paddingBottom: 30,
+    emptyStateFootnote: {
+      flexDirection: "row",
       alignItems: "center",
+      gap: 6,
+      marginTop: 16,
     },
-    noWordlistsText: {
-      fontSize: 20,
-      fontWeight: "500",
-      color: "#2D3436",
-      textAlign: "center",
-      marginBottom: 30,
-    },
-    noWordlistsTextDark: {
-      fontSize: 20,
-      fontWeight: "500",
-      color: "#FFFFFF",
-      textAlign: "center",
-      marginBottom: 30,
+    emptyStateFootnoteText: {
+      fontSize: 13,
+      color: theme.colors.text.tertiary,
     },
   });

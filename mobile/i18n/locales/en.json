@@ -257,7 +257,10 @@
     "wordlists": {
       "myWordlists": "My Wordlists",
       "noWordlistsYet": "No wordlists yet",
-      "createFirstWordlist": "Create your first wordlist",
+      "emptyTitle": "Your learning journey starts here",
+      "emptySubtitle": "Add a few words to unlock your progress",
+      "emptyFootnote": "Progress unlocks after adding your first words",
+      "createFirstWordlist": "Add your first wordlist",
       "addNewWordlist": "Add New Wordlist",
       "wordCount": "{{count}} words",
       "wordCount_one": "{{count}} word",
