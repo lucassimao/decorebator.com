@@ -51,6 +51,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
     useState(false);
   const [congratulationsWordlist, setCongratulationsWordlist] =
     useState<Wordlist | null>(null);
+  const [lockTemporarilyUnlocked, setLockTemporarilyUnlocked] = useState(false);
   const upgradeDialog = useUpgradePromptDialog();
   const router = useRouter();
   const { t } = useTranslation();
@@ -64,6 +65,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const lockNudgeAnim = useRef(new Animated.Value(1)).current;
   const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   // Get premium status from centralized session
@@ -273,6 +275,31 @@ const Dashboard: React.FC<DashboardProps> = () => {
     }
   };
 
+  const triggerLockNudge = React.useCallback(() => {
+    lockNudgeAnim.stopAnimation();
+    lockNudgeAnim.setValue(1);
+    Animated.sequence([
+      Animated.timing(lockNudgeAnim, {
+        toValue: 1.08,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+      Animated.timing(lockNudgeAnim, {
+        toValue: 1,
+        duration: 160,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [lockNudgeAnim]);
+
+  const triggerLockUnlock = React.useCallback(() => {
+    setLockTemporarilyUnlocked(true);
+    const timeout = setTimeout(() => {
+      setLockTemporarilyUnlocked(false);
+    }, 600);
+    return () => clearTimeout(timeout);
+  }, []);
+
   const renderStatsAndSection = () => (
     <>
       {/* Only show stats if user has wordlists */}
@@ -343,17 +370,23 @@ const Dashboard: React.FC<DashboardProps> = () => {
         <View style={styles.lockedProgressBar}>
           <View style={styles.lockedProgressFill} />
           <View style={styles.lockedProgressKnob}>
-            <Ionicons
-              name="lock-closed"
-              size={15}
-              color={theme.colors.text.secondary}
-            />
+            <Animated.View style={{ transform: [{ scale: lockNudgeAnim }] }}>
+              <Ionicons
+                name={lockTemporarilyUnlocked ? "lock-open" : "lock-closed"}
+                size={15}
+                color={theme.colors.text.secondary}
+              />
+            </Animated.View>
           </View>
         </View>
 
         <TouchableOpacity
           style={styles.ctaButton}
-          onPress={() => setShowCreateModal(true)}
+          onPress={() => {
+            triggerLockNudge();
+            triggerLockUnlock();
+            setShowCreateModal(true);
+          }}
           activeOpacity={0.8}
         >
           <Ionicons name="add" size={20} color={theme.colors.text.inverse} />
@@ -743,10 +776,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       marginBottom: 20,
     },
     emptyStateIllustration: {
-      width: width * 0.72,
-      height: width * 0.5,
-      maxWidth: 280,
-      maxHeight: 220,
+      width: width * 0.62,
+      height: width * 0.43,
+      maxWidth: 240,
+      maxHeight: 190,
       marginBottom: 2,
     },
     lockedProgressBar: {

@@ -271,7 +271,7 @@
       "noWordlistsYet": "Aucune liste pour l'instant",
       "emptyTitle": "Votre parcours d’apprentissage commence ici",
       "emptySubtitle": "Ajoutez quelques mots pour débloquer votre progression",
-      "emptyFootnote": "La progression se débloque après vos premiers mots",
+      "emptyFootnote": "La progression se débloque après votre première liste",
       "createFirstWordlist": "Ajoutez votre première liste de mots",
       "addNewWordlist": "Ajouter une Nouvelle Liste",
       "wordCount": "{{count}} mots",

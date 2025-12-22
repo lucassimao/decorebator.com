@@ -271,7 +271,7 @@
       "noWordlistsYet": "まだリストがありません",
       "emptyTitle": "学習の旅はここから始まります",
       "emptySubtitle": "いくつか単語を追加して進捗を解放しましょう",
-      "emptyFootnote": "最初の単語を追加すると進捗が解放されます",
+      "emptyFootnote": "最初のリストで進捗が解放されます",
       "createFirstWordlist": "最初の単語リストを追加",
       "addNewWordlist": "新しいリストを追加",
       "wordCount": "{{count}}単語",
