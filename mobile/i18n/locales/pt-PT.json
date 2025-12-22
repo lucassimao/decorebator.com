@@ -131,8 +131,8 @@
       "highlight": {
         "generator": "Crie uma lista; geramos o resto: quizzes, visuais, áudio, desafios.",
         "chat": "Pratique a falar em voz alta com o nosso coach IA.",
-        "modes": "Varie a prática com diferentes modos de quiz.",
-        "progress": "Crie listas em 7 línguas de estudo."
+        "modes": "Múltiplos modos de quiz",
+        "progress": "Pratique quizzes em 7 línguas."
       }
     },
     "features": {
@@ -204,32 +204,28 @@
     },
     "account": {
       "title": "Crie a sua conta",
-      "subtitle": "Garanta o progresso de hoje, veja o que está incluído no plano gratuito e saiba como fazer upgrade quando quiser.",
+      "subtitle": "As tuas palavras não te vão esquecer.",
       "free": {
         "title": "O plano gratuito inclui",
         "features": {
           "wordlists": "Listas sincronizadas em todos os dispositivos.",
-          "quizzes": "Questionários adaptativos com sequência.",
-          "analytics": "Resumo dos últimos 7 dias."
+          "quizzes": "Questionários adaptativos.",
+          "analytics": "Estatísticas e resumos de 7 dias.",
+          "starter": "Tudo o que precisa para começar."
         }
       },
       "premium": {
         "title": "Premium desbloqueia",
         "features": {
-          "quizzes": "Coach de voz ao vivo com transcrições em tempo real.",
-          "offline": "Oito modos de questionário, visuais IA e pacotes de áudio.",
-          "analytics": "Prática offline com autosync e análises avançadas."
+          "quizzes": "Todos os modos de quiz, visuais IA, áudio e revisões inteligentes.",
+          "offline": "Apenas prática offline.",
+          "analytics": "Cancele quando quiser."
         }
       },
-      "upgrade": {
-        "title": "Como fazer upgrade mais tarde",
-        "steps": {
-          "settings": "Quando estiver na app, abra Definições através do menu do painel.",
-          "option": "Toque em \"Atualizar para Premium\" na secção Conta para consultar os detalhes do plano.",
-          "confirm": "Escolha o plano, confirme o upgrade ou inicie uma avaliação gratuita quando quiser."
-        }
-      },
-      "haveAccount": "Já tem conta? Inicie sessão"
+      "haveAccount": "Já tem conta? Inicie sessão",
+      "cta": "A sua aprendizagem começa agora",
+      "ctaNote": "Comece grátis - sem cartão",
+      "ctaTime": "Leva menos de um minuto"
     }
   },
   "dashboard": {

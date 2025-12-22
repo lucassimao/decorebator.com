@@ -131,8 +131,8 @@
       "highlight": {
         "generator": "Crie uma lista; geramos o resto: quizzes, visuais, áudio, desafios.",
         "chat": "Pratique falando em voz alta com nosso coach IA.",
-        "modes": "Varie a prática com modos de quiz diferentes.",
-        "progress": "Crie listas em 7 idiomas de estudo."
+        "modes": "Múltiplos modos de quiz",
+        "progress": "Pratique quizzes em 7 idiomas."
       }
     },
     "features": {
@@ -204,32 +204,28 @@
     },
     "account": {
       "title": "Crie sua conta",
-      "subtitle": "Garanta seu progresso hoje, descubra o que está no plano gratuito e saiba como fazer upgrade quando quiser.",
+      "subtitle": "Suas palavras não vão te esquecer.",
       "free": {
         "title": "O plano gratuito inclui",
         "features": {
           "wordlists": "Listas sincronizadas em todos os dispositivos.",
-          "quizzes": "Quizzes adaptativos com sequência.",
-          "analytics": "Resumo dos últimos 7 dias."
+          "quizzes": "Quizzes adaptativos.",
+          "analytics": "Estatísticas e resumos de 7 dias.",
+          "starter": "Tudo o que você precisa para começar."
         }
       },
       "premium": {
         "title": "Premium libera",
         "features": {
-          "quizzes": "Coach de voz ao vivo com transcrições em tempo real.",
-          "offline": "Oito modos de quiz, visuais IA e pacotes de áudio.",
-          "analytics": "Prática offline com autosync e análises avançadas."
+          "quizzes": "Todos os modos de quiz, visuais IA, áudio e revisões inteligentes.",
+          "offline": "Somente prática offline.",
+          "analytics": "Cancele quando quiser."
         }
       },
-      "upgrade": {
-        "title": "Como fazer upgrade depois",
-        "steps": {
-          "settings": "Dentro do app, abra Configurações pelo menu do painel.",
-          "option": "Toque em \"Atualizar para Premium\" na seção Conta para ver os detalhes do plano.",
-          "confirm": "Escolha o plano, confirme o upgrade ou inicie um teste gratuito quando quiser."
-        }
-      },
-      "haveAccount": "Já tem conta? Entrar"
+      "haveAccount": "Já tem conta? Entrar",
+      "cta": "Seu aprendizado começa agora",
+      "ctaNote": "Comece grátis - sem cartão",
+      "ctaTime": "Leva menos de um minuto"
     }
   },
   "dashboard": {

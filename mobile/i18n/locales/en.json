@@ -119,8 +119,8 @@
       "highlight": {
         "generator": "Make a wordlist; we generate the rest—quizzes, visuals, audio, challenges.",
         "chat": "Practice speaking out loud with our AI coach.",
-        "modes": "Mix up practice with varied quiz modes",
-        "progress": "Create wordlists in 7 learning languages."
+        "modes": "Multiple quiz modes",
+        "progress": "Practice quizzes in 7 languages."
       }
     },
     "features": {
@@ -192,32 +192,28 @@
     },
     "account": {
       "title": "Create your account",
-      "subtitle": "Lock in your progress today, see what's included for free, and know exactly how to upgrade.",
+      "subtitle": "Your words won’t forget you.",
       "free": {
         "title": "Free plan includes",
         "features": {
           "wordlists": "Wordlists sync across every device.",
-          "quizzes": "Adaptive quizzes with streak tracking.",
-          "analytics": "7-day progress snapshots and stats."
+          "quizzes": "Adaptive quizzes.",
+          "analytics": "7-day progress snapshots and stats.",
+          "starter": "Everything you need to get started."
         }
       },
       "premium": {
         "title": "Premium unlocks",
         "features": {
-          "quizzes": "Live voice coach with real-time transcripts.",
-          "offline": "All eight quiz modes, AI visuals, and audio packs.",
-          "analytics": "Offline practice with auto sync and deep analytics."
+          "quizzes": "All quiz modes, AI visuals, audio packs, and smarter review drills.",
+          "offline": "Offline practice only.",
+          "analytics": "Cancel anytime."
         }
       },
-      "upgrade": {
-        "title": "How to upgrade later",
-        "steps": {
-          "settings": "Open Settings from the dashboard menu once you're inside the app.",
-          "option": "Tap \"Upgrade to Premium\" under Account to review plan details.",
-          "confirm": "Choose your plan, confirm the upgrade, or start a free trial anytime."
-        }
-      },
-      "haveAccount": "Already have an account? Sign in"
+      "haveAccount": "Already have an account? Sign in",
+      "cta": "Your learning starts now",
+      "ctaNote": "Free to start - No credit card required",
+      "ctaTime": "Takes less than a minute"
     }
   },
   "dashboard": {

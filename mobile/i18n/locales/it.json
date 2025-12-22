@@ -131,8 +131,8 @@
       "highlight": {
         "generator": "Crea una lista; al resto pensiamo noi: quiz, visual, audio, sfide.",
         "chat": "Parla ad alta voce con il nostro coach IA.",
-        "modes": "Quiz vari per tenere vivo l’allenamento.",
-        "progress": "Crea liste in 7 lingue di studio."
+        "modes": "Più modalità di quiz",
+        "progress": "Fai quiz in 7 lingue."
       }
     },
     "features": {
@@ -204,32 +204,28 @@
     },
     "account": {
       "title": "Crea il tuo account",
-      "subtitle": "Metti al sicuro i tuoi progressi, scopri cosa include il piano gratuito e capisci come passare a Premium quando vuoi.",
+      "subtitle": "Le tue parole non ti dimenticheranno.",
       "free": {
         "title": "Il piano gratuito include",
         "features": {
-          "wordlists": "Liste di parole sincronizzate su tutti i dispositivi.",
-          "quizzes": "Quiz adattivi con tracciamento della streak.",
-          "analytics": "Panoramica dei progressi degli ultimi 7 giorni."
+          "wordlists": "Liste sincronizzate su tutti i dispositivi.",
+          "quizzes": "Quiz adattivi.",
+          "analytics": "Statistiche e riepilogo di 7 giorni.",
+          "starter": "Tutto ciò che ti serve per iniziare."
         }
       },
       "premium": {
         "title": "Premium sblocca",
         "features": {
-          "quizzes": "Coach vocale live con trascrizioni in tempo reale.",
-          "offline": "Tutti e otto i quiz, visual IA e pacchetti audio.",
-          "analytics": "Studio offline con autosync e analisi approfondite."
+          "quizzes": "Tutte le modalità quiz, visual IA, audio e review più smart.",
+          "offline": "Solo pratica offline.",
+          "analytics": "Annulla quando vuoi."
         }
       },
-      "upgrade": {
-        "title": "Come passare a Premium più avanti",
-        "steps": {
-          "settings": "Una volta nell'app, apri Impostazioni dal menu della dashboard.",
-          "option": "Tocca \"Passa a Premium\" nella sezione Account per vedere i dettagli del piano.",
-          "confirm": "Scegli il piano, conferma l'upgrade o avvia una prova gratuita quando vuoi."
-        }
-      },
-      "haveAccount": "Hai già un account? Accedi"
+      "haveAccount": "Hai già un account? Accedi",
+      "cta": "Il tuo apprendimento inizia ora",
+      "ctaNote": "Inizia gratis - senza carta",
+      "ctaTime": "Richiede meno di un minuto"
     }
   },
   "dashboard": {

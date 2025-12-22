@@ -131,8 +131,8 @@
       "highlight": {
         "generator": "Créez une liste; on génère le reste : quiz, visuels, audio, défis.",
         "chat": "Parlez à voix haute avec notre coach IA.",
-        "modes": "Des modes de quiz variés pour rester frais.",
-        "progress": "Créez des listes dans 7 langues d’étude."
+        "modes": "Plusieurs modes de quiz",
+        "progress": "Pratiquez des quiz en 7 langues."
       }
     },
     "features": {
@@ -204,32 +204,28 @@
     },
     "account": {
       "title": "Créez votre compte",
-      "subtitle": "Enregistrez vos progrès, découvrez ce que comprend le plan gratuit et apprenez comment passer en Premium quand vous le souhaitez.",
+      "subtitle": "Tes mots ne t’oublieront pas.",
       "free": {
         "title": "Le plan gratuit inclut",
         "features": {
-          "wordlists": "Listes de mots synchronisées sur tous vos appareils.",
-          "quizzes": "Quiz adaptatifs avec suivi des séries.",
-          "analytics": "Bilan de vos progrès sur les 7 derniers jours."
+          "wordlists": "Listes synchronisées sur tous vos appareils.",
+          "quizzes": "Quiz adaptatifs.",
+          "analytics": "Stats et récap de 7 jours.",
+          "starter": "Tout ce qu’il faut pour bien commencer."
         }
       },
       "premium": {
         "title": "Premium débloque",
         "features": {
-          "quizzes": "Coach vocal en direct avec transcriptions en temps réel.",
-          "offline": "Les huit modes de quiz, visuels IA et packs audio.",
-          "analytics": "Pratique hors ligne, autosynchro et analyses avancées."
+          "quizzes": "Tous les modes de quiz, visuels IA, audio et révisions intelligentes.",
+          "offline": "Pratique hors ligne uniquement.",
+          "analytics": "Annulable à tout moment."
         }
       },
-      "upgrade": {
-        "title": "Comment passer en Premium plus tard",
-        "steps": {
-          "settings": "Une fois dans l’app, ouvrez Paramètres depuis le menu du tableau de bord.",
-          "option": "Touchez \"Passer en Premium\" dans la section Compte pour consulter les détails de l’offre.",
-          "confirm": "Choisissez votre formule, validez la mise à niveau ou lancez un essai gratuit quand vous le souhaitez."
-        }
-      },
-      "haveAccount": "Vous avez déjà un compte ? Connectez-vous"
+      "haveAccount": "Vous avez déjà un compte ? Connectez-vous",
+      "cta": "Votre apprentissage commence maintenant",
+      "ctaNote": "Commencez gratuitement – sans carte",
+      "ctaTime": "Prend moins d’une minute"
     }
   },
   "dashboard": {

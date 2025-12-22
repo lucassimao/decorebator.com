@@ -134,8 +134,8 @@
       "highlight": {
         "generator": "Erstelle eine Wortliste—wir liefern Quizze, Visuals, Audio, Challenges.",
         "chat": "Sprich laut mit unserem KI‑Coach.",
-        "modes": "Abwechslung durch verschiedene Quiz‑Modi.",
-        "progress": "Wortlisten in 7 Lernsprachen erstellen."
+        "modes": "Mehrere Quiz‑Modi",
+        "progress": "Quiz-Übung in 7 Sprachen."
       }
     },
     "features": {
@@ -207,32 +207,28 @@
     },
     "account": {
       "title": "Erstelle dein Konto",
-      "subtitle": "Sichere dir deinen Fortschritt, sieh was im Gratisplan steckt und erfahre, wie du jederzeit upgraden kannst.",
+      "subtitle": "Deine Wörter vergessen dich nicht.",
       "free": {
         "title": "Gratisplan enthält",
         "features": {
           "wordlists": "Wortlisten syncen auf all deinen Geräten.",
-          "quizzes": "Adaptive Quizze mit Serienverfolgung.",
-          "analytics": "7-Tage-Überblick über deine Fortschritte."
+          "quizzes": "Adaptive Quizze.",
+          "analytics": "7-Tage-Statistiken und Fortschritts-Snapshots.",
+          "starter": "Alles, was du für den Start brauchst."
         }
       },
       "premium": {
         "title": "Premium schaltet frei",
         "features": {
-          "quizzes": "Live-Sprachcoach mit Echtzeit-Transkripten.",
-          "offline": "Alle acht Quiz-Modi sowie KI-Visuals und Audio-Pakete.",
-          "analytics": "Offline-Training mit Autosync und tiefen Analysen."
+          "quizzes": "Alle Quiz‑Modi, KI‑Visuals, Audio‑Pakete und smartere Reviews.",
+          "offline": "Nur Offline-Training.",
+          "analytics": "Jederzeit kündbar."
         }
       },
-      "upgrade": {
-        "title": "So upgraden Sie später",
-        "steps": {
-          "settings": "Öffnen Sie nach dem Start das Dashboard-Menü und wählen Sie Einstellungen.",
-          "option": "Tippen Sie im Bereich Konto auf \"Auf Premium upgraden\", um Details zu sehen.",
-          "confirm": "Wählen Sie Ihren Plan, bestätigen Sie das Upgrade oder starten Sie jederzeit eine kostenlose Testphase."
-        }
-      },
-      "haveAccount": "Du hast schon ein Konto? Anmelden"
+      "haveAccount": "Du hast schon ein Konto? Anmelden",
+      "cta": "Dein Lernen startet jetzt",
+      "ctaNote": "Gratis starten – keine Kreditkarte nötig",
+      "ctaTime": "Dauert weniger als eine Minute"
     }
   },
   "dashboard": {
