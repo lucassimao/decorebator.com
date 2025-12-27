@@ -233,6 +233,7 @@
       "tapToRetry": "Tap to retry",
       "learningProgress": "Learning Progress",
       "totalWords": "Total Words",
+      "words": "Words",
       "wordlists": "Wordlists",
       "learned": "Learned",
       "dayStreak": "{{count}} day streak",

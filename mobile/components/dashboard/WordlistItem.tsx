@@ -232,6 +232,25 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             </Text>
           </View>
           <TouchableOpacity
+            style={styles.headerAddButton}
+            onPress={() => {
+              if (onAddWords) {
+                onAddWords(item);
+              } else if (onPressed) {
+                onPressed();
+              }
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t("wordlistItem.addWords", "Add words")}
+            accessibilityHint="Add words to this wordlist"
+          >
+            <Ionicons
+              name="add"
+              size={responsive.getValueForSize(21, 22, 23, 24)}
+              color="#22C55E"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
             style={styles.headerMoreButton}
             onPress={handleDelete}
             accessibilityRole="button"
@@ -247,7 +266,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             ) : (
               <Ionicons
                 name="trash-outline"
-                size={responsive.getValueForSize(18, 19, 20, 21)}
+                size={responsive.getValueForSize(19, 20, 21, 22)}
                 color={theme.colors.error}
               />
             )}
@@ -334,7 +353,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
               <View style={[styles.actionIconWrapper, styles.quizIconBg]}>
                 <MaterialIcons
                   name="lightbulb-outline"
-                  size={responsive.getValueForSize(24, 25, 26, 28)}
+                  size={responsive.getValueForSize(22, 23, 24, 26)}
                   color="#000000"
                 />
               </View>
@@ -353,7 +372,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
               <View style={[styles.actionIconWrapper, styles.flashcardsIconBg]}>
                 <MaterialIcons
                   name="menu-book"
-                  size={responsive.getValueForSize(24, 25, 26, 28)}
+                  size={responsive.getValueForSize(22, 23, 24, 26)}
                   color="#2196F3"
                 />
               </View>
@@ -375,7 +394,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
               <View style={[styles.actionIconWrapper, styles.speakIconBg]}>
                 <MaterialIcons
                   name="mic"
-                  size={responsive.getValueForSize(24, 25, 26, 28)}
+                  size={responsive.getValueForSize(22, 23, 24, 26)}
                   color="#FF8533"
                 />
               </View>
@@ -398,7 +417,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
               <View style={[styles.actionIconWrapper, styles.statsIconBg]}>
                 <MaterialIcons
                   name="bar-chart"
-                  size={responsive.getValueForSize(24, 25, 26, 28)}
+                  size={responsive.getValueForSize(22, 23, 24, 26)}
                   color="#000000"
                 />
               </View>
@@ -438,10 +457,10 @@ const createStyles = (
       marginBottom: responsive.spacing.vertical,
       // Subtle shadow for premium elevated feel
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: theme.mode === "light" ? 0.08 : 0.2,
-      shadowRadius: 12,
-      elevation: theme.mode === "light" ? 4 : 8,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: theme.mode === "light" ? 0.06 : 0.2,
+      shadowRadius: 10,
+      elevation: theme.mode === "light" ? 3 : 8,
     },
     cardHeader: {
       flexDirection: "row",
@@ -450,9 +469,9 @@ const createStyles = (
       marginBottom: responsive.getValueForSize(10, 11, 12, 13),
     },
     flagContainer: {
-      width: responsive.getValueForSize(44, 48, 52, 56),
-      height: responsive.getValueForSize(44, 48, 52, 56),
-      borderRadius: responsive.getValueForSize(8, 9, 10, 11),
+      width: responsive.getValueForSize(46, 50, 54, 58),
+      height: responsive.getValueForSize(46, 50, 54, 58),
+      borderRadius: responsive.getValueForSize(10, 11, 12, 13),
       backgroundColor:
         theme.mode === "light"
           ? "rgba(0, 0, 0, 0.03)"
@@ -467,7 +486,7 @@ const createStyles = (
           : theme.colors.ui.border,
     },
     languageFlag: {
-      fontSize: responsive.getValueForSize(24, 26, 28, 30),
+      fontSize: responsive.getValueForSize(26, 28, 30, 32),
     },
     cardTitleContainer: {
       flex: 1,
@@ -478,16 +497,31 @@ const createStyles = (
       fontWeight: "700",
       color: theme.colors.text.primary,
       marginBottom: responsive.getValueForSize(2, 3, 4, 4),
+      letterSpacing: -0.3,
     },
     wordCountText: {
-      fontSize: responsive.getValueForSize(13, 14, 15, 16),
+      fontSize: responsive.getValueForSize(12.5, 13.5, 14.5, 15.5),
       color: theme.colors.text.secondary,
-      fontWeight: "400",
+      fontWeight: "500",
+      letterSpacing: 0.1,
+      opacity: 0.9,
     },
     // public badge styles removed
+    headerAddButton: {
+      width: responsive.getValueForSize(34, 36, 38, 40),
+      height: responsive.getValueForSize(34, 36, 38, 40),
+      borderRadius: 999,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(34, 197, 94, 0.12)"
+          : "rgba(34, 197, 94, 0.2)",
+      marginRight: responsive.getValueForSize(8, 9, 10, 11),
+    },
     headerMoreButton: {
-      width: responsive.getValueForSize(32, 34, 36, 38),
-      height: responsive.getValueForSize(32, 34, 36, 38),
+      width: responsive.getValueForSize(34, 36, 38, 40),
+      height: responsive.getValueForSize(34, 36, 38, 40),
       borderRadius: 999,
       alignItems: "center",
       justifyContent: "center",
@@ -552,7 +586,7 @@ const createStyles = (
       justifyContent: "center",
       paddingVertical: responsive.getValueForSize(10, 11, 12, 13),
       paddingHorizontal: responsive.getValueForSize(2, 3, 4, 5),
-      borderRadius: responsive.getValueForSize(16, 17, 18, 19),
+      borderRadius: responsive.getValueForSize(14, 15, 16, 17),
       backgroundColor:
         theme.mode === "light"
           ? "#FFFFFF"
@@ -562,18 +596,18 @@ const createStyles = (
       borderWidth: 1,
       borderColor:
         theme.mode === "light"
-          ? "rgba(0, 0, 0, 0.05)"
+          ? "rgba(0, 0, 0, 0.06)"
           : theme.colors.ui.border,
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: theme.mode === "light" ? 0.05 : 0.1,
-      shadowRadius: 6,
-      elevation: 2,
+      shadowOffset: { width: 0, height: 1.5 },
+      shadowOpacity: theme.mode === "light" ? 0.04 : 0.1,
+      shadowRadius: 5,
+      elevation: 1.5,
     },
     actionIconWrapper: {
-      width: responsive.getValueForSize(42, 44, 46, 48),
-      height: responsive.getValueForSize(42, 44, 46, 48),
-      borderRadius: responsive.getValueForSize(21, 22, 23, 24),
+      width: responsive.getValueForSize(40, 42, 44, 46),
+      height: responsive.getValueForSize(40, 42, 44, 46),
+      borderRadius: responsive.getValueForSize(20, 21, 22, 23),
       alignItems: "center",
       justifyContent: "center",
     },
@@ -602,27 +636,27 @@ const createStyles = (
           : "rgba(255, 193, 7, 0.2)",
     },
     actionButtonText: {
-      fontSize: responsive.getValueForSize(10, 11, 12, 13),
+      fontSize: responsive.getValueForSize(10.5, 11.5, 12.5, 13.5),
       color: theme.colors.text.primary,
       fontWeight: "600",
       textAlign: "center",
       width: "100%",
-      letterSpacing: -0.8,
+      letterSpacing: -0.2,
     },
     progressBar: {
-      height: responsive.getValueForSize(6, 7, 8, 8),
+      height: responsive.getValueForSize(5, 6, 7, 7),
       backgroundColor:
         theme.mode === "light"
           ? "rgba(255, 133, 51, 0.12)"
           : theme.colors.ui.divider,
-      borderRadius: 3,
+      borderRadius: 4,
       overflow: "hidden",
       marginBottom: responsive.getValueForSize(14, 16, 18, 20),
     },
     progressFill: {
       height: "100%",
       backgroundColor: theme.colors.primary,
-      borderRadius: 3,
+      borderRadius: 4,
     },
     modalOverlay: {
       flex: 1,

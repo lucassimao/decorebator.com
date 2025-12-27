@@ -245,6 +245,7 @@
       "tapToRetry": "タップして再試行",
       "learningProgress": "学習進捗",
       "totalWords": "総単語数",
+      "words": "単語",
       "wordlists": "単語リスト",
       "learned": "習得済み",
       "dayStreak": "{{count}}日連続",

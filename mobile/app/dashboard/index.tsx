@@ -329,23 +329,6 @@ const Dashboard: React.FC<DashboardProps> = () => {
             <Text style={styles.sectionTitle}>
               {t("dashboard.wordlists.myWordlists")}
             </Text>
-            <AnimatedTouchable
-              style={[styles.addButton, { transform: [{ scale: pulseAnim }] }]}
-              onPress={handleAddNewWordlist}
-              onPressIn={stopPulse}
-              onPressOut={startPulse}
-              activeOpacity={0.85}
-              accessibilityLabel={t(
-                "dashboard.wordlists.addNewWordlist",
-                "Add New Wordlist",
-              )}
-            >
-              <Ionicons
-                name="add-circle"
-                size={34}
-                color={theme.colors.primary}
-              />
-            </AnimatedTouchable>
           </View>
         </>
       )}
@@ -508,6 +491,27 @@ const Dashboard: React.FC<DashboardProps> = () => {
               }
             />
           </Animated.View>
+
+          {/* Floating Action Button */}
+          {!hasNoWordlist && (
+            <AnimatedTouchable
+              style={[styles.fab, { transform: [{ scale: pulseAnim }] }]}
+              onPress={handleAddNewWordlist}
+              onPressIn={stopPulse}
+              onPressOut={startPulse}
+              activeOpacity={0.85}
+              accessibilityLabel={t(
+                "dashboard.wordlists.addNewWordlist",
+                "Add New Wordlist",
+              )}
+            >
+              <Ionicons
+                name="add"
+                size={28}
+                color="#FFFFFF"
+              />
+            </AnimatedTouchable>
+          )}
         </SafeAreaView>
       ) : (
         <ImageBackground
@@ -555,6 +559,27 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 }
               />
             </Animated.View>
+
+            {/* Floating Action Button */}
+            {!hasNoWordlist && (
+              <AnimatedTouchable
+                style={[styles.fab, { transform: [{ scale: pulseAnim }] }]}
+                onPress={handleAddNewWordlist}
+                onPressIn={stopPulse}
+                onPressOut={startPulse}
+                activeOpacity={0.85}
+                accessibilityLabel={t(
+                  "dashboard.wordlists.addNewWordlist",
+                  "Add New Wordlist",
+                )}
+              >
+                <Ionicons
+                  name="add"
+                  size={28}
+                  color="#FFFFFF"
+                />
+              </AnimatedTouchable>
+            )}
           </SafeAreaView>
         </ImageBackground>
       )}
@@ -708,26 +733,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontWeight: "600",
       color: theme.colors.text.primary,
     },
-    addButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor:
-        theme.mode === "light" ? "#FFFFFF" : theme.colors.background.surface,
-      borderWidth: 1,
-      borderColor:
-        theme.mode === "light"
-          ? theme.colors.border.light
-          : theme.colors.ui.border,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: theme.mode === "light" ? 0.18 : 0.3,
-      shadowRadius: 12,
-      elevation: 10,
-    },
-
     emptyContainer: {
       paddingHorizontal: 20,
       paddingTop: 40,
@@ -841,5 +846,21 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     emptyStateFootnoteText: {
       fontSize: 13,
       color: theme.colors.text.tertiary,
+    },
+    fab: {
+      position: "absolute",
+      right: 20,
+      bottom: 20,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: theme.colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
     },
   });

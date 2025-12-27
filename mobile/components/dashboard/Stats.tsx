@@ -249,19 +249,15 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
       <View style={styles.statsGrid}>
         <View style={[styles.statItem, styles.statItemFirst]}>
           <View style={styles.iconContainer}>
-            <MaterialIcons
-              name="library-books"
-              size={24}
-              color={theme.colors.primary}
-            />
+            <Ionicons name="list" size={22} color={theme.colors.success} />
           </View>
           <View style={styles.labelContainer}>
             <Text style={styles.statLabel}>
-              {t("dashboard.stats.totalWords")}
+              {t("dashboard.stats.wordlists")}
             </Text>
           </View>
           <AnimatedCounter
-            value={stats?.totalWords || 0}
+            value={stats?.wordlists || 0}
             style={styles.statValue}
             delay={0}
           />
@@ -271,15 +267,19 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
 
         <View style={styles.statItem}>
           <View style={styles.iconContainer}>
-            <Ionicons name="list" size={24} color={theme.colors.success} />
+            <MaterialIcons
+              name="library-books"
+              size={22}
+              color={theme.colors.primary}
+            />
           </View>
           <View style={styles.labelContainer}>
             <Text style={styles.statLabel}>
-              {t("dashboard.stats.wordlists")}
+              {t("dashboard.stats.words")}
             </Text>
           </View>
           <AnimatedCounter
-            value={stats?.wordlists || 0}
+            value={stats?.totalWords || 0}
             style={styles.statValue}
             delay={200}
           />
@@ -291,7 +291,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
           <View style={styles.iconContainer}>
             <MaterialIcons
               name="school"
-              size={24}
+              size={22}
               color={theme.colors.semantic.info}
             />
           </View>
@@ -318,10 +318,11 @@ const createStyles = (
   StyleSheet.create({
     statsContainer: {
       borderRadius: theme.borderRadius.xl,
-      paddingVertical: theme.spacing.lg,
-      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
       marginHorizontal: 20,
-      marginBottom: 24,
+      marginBottom: 16,
       backgroundColor:
         theme.mode === "light"
           ? theme.colors.background.surface
@@ -335,10 +336,10 @@ const createStyles = (
         theme.mode === "light"
           ? theme.colors.primary
           : theme.colors.text.primary,
-      shadowOffset: { width: 0, height: 14 },
-      shadowOpacity: theme.mode === "light" ? 0.18 : 0.12,
-      shadowRadius: 24,
-      elevation: theme.mode === "light" ? 12 : 14,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: theme.mode === "light" ? 0.15 : 0.12,
+      shadowRadius: 20,
+      elevation: theme.mode === "light" ? 10 : 14,
     },
     errorContainer: {
       flexDirection: "column",
@@ -365,19 +366,26 @@ const createStyles = (
       fontWeight: "500",
     },
     progressOverview: {
-      marginBottom: 5,
+      marginBottom: 8,
+      paddingBottom: 8,
+      borderBottomWidth: 1,
+      borderBottomColor:
+        theme.mode === "light"
+          ? "rgba(0, 0, 0, 0.05)"
+          : "rgba(255, 255, 255, 0.05)",
     },
     progressHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: 8,
+      marginBottom: 6,
     },
     progressLabel: {
-      fontSize: 14,
+      fontSize: 13.5,
       color: theme.colors.text.secondary,
-      fontWeight: "500",
+      fontWeight: "600",
       flex: 1,
+      letterSpacing: 0.3,
     },
     progressBarContainer: {
       flexDirection: "row",
@@ -386,39 +394,42 @@ const createStyles = (
     },
     progressBarBackground: {
       flex: 1,
-      height: 8,
+      height: 7,
       backgroundColor: theme.colors.ui.divider,
-      borderRadius: 4,
+      borderRadius: 6,
       overflow: "hidden",
     },
     progressBarFill: {
       height: "100%",
       backgroundColor: theme.colors.success,
-      borderRadius: 4,
+      borderRadius: 6,
     },
     progressPercentage: {
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: 15,
+      fontWeight: "700",
       color: theme.colors.success,
       minWidth: 45,
+      letterSpacing: -0.3,
     },
     progressBottom: {
-      paddingTop: 6,
+      paddingTop: 4,
     },
     motivationalText: {
-      fontSize: 13,
+      fontSize: 12.5,
       color: theme.colors.text.secondary,
       fontStyle: "italic",
+      opacity: 0.85,
     },
     statsGrid: {
       flexDirection: "row",
       alignItems: "stretch",
-      minHeight: 120,
+      minHeight: 95,
+      paddingTop: 4,
     },
     statItem: {
       alignItems: "center",
       flex: 1,
-      paddingVertical: 8,
+      paddingVertical: 4,
       justifyContent: "space-between",
     },
     statItemFirst: {
@@ -429,10 +440,12 @@ const createStyles = (
     },
     statDivider: {
       width: 1,
-      height: 60,
+      alignSelf: "center",
+      height: "65%",
       backgroundColor: theme.colors.ui.divider,
       marginHorizontal: 16,
       borderRadius: 0.5,
+      opacity: 0.6,
     },
     readyStateContainer: {
       paddingVertical: theme.spacing.md,
@@ -491,9 +504,9 @@ const createStyles = (
       color: theme.colors.text.inverse,
     },
     iconContainer: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor:
         theme.mode === "light"
           ? "rgba(253, 246, 227, 0.4)" // Web beige background
@@ -505,27 +518,29 @@ const createStyles = (
           : theme.colors.ui.border,
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 12,
+      marginBottom: 8,
       ...theme.shadows.sm,
     },
     labelContainer: {
-      minHeight: 32,
+      minHeight: 22,
       justifyContent: "center",
       alignItems: "center",
       marginBottom: 4,
       paddingHorizontal: 4,
     },
     statLabel: {
-      fontSize: 13,
+      fontSize: 12.5,
       color: theme.colors.text.secondary,
-      fontWeight: "500",
+      fontWeight: "600",
       textAlign: "center",
       lineHeight: 16,
+      letterSpacing: 0.2,
     },
     statValue: {
-      fontSize: 28,
+      fontSize: 26,
       fontWeight: "700",
       color: theme.colors.text.primary,
+      letterSpacing: -0.5,
     },
     streakContainer: {
       flexDirection: "row",
@@ -533,8 +548,9 @@ const createStyles = (
       gap: 4,
     },
     streakText: {
-      fontSize: responsive.getValueForSize(12, 12, 13, 14),
-      fontWeight: "600",
+      fontSize: 12.5,
+      fontWeight: "700",
       color: theme.colors.semantic.warning,
+      letterSpacing: 0.2,
     },
   });

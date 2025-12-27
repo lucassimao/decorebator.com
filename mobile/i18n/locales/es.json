@@ -245,6 +245,7 @@
       "tapToRetry": "Toca para reintentar",
       "learningProgress": "Progreso de Aprendizaje",
       "totalWords": "Palabras Totales",
+      "words": "Palabras",
       "wordlists": "Listas",
       "learned": "Aprendidas",
       "dayStreak": "{{count}} días seguidos",
