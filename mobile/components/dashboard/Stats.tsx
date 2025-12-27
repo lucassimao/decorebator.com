@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
+  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -52,12 +53,17 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
 };
 
 // Main Component
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-type DashboardStatsProps = {};
+type DashboardStatsProps = {
+  onAddFirstWords?: () => void;
+  wordlists?: Array<{ id: number; wordsCount?: number; totalWords?: number }>;
+};
 
 const PROGRESS_OVERVIEW_ENABLED = true;
 
-const DashboardStats: React.FC<DashboardStatsProps> = () => {
+const DashboardStats: React.FC<DashboardStatsProps> = ({
+  onAddFirstWords,
+  wordlists,
+}) => {
   const { t } = useTranslation();
   const { theme, responsive } = useTheme();
   const styles = createStyles(theme, responsive);
@@ -70,15 +76,27 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
     refetch,
   } = useWordlistProgress();
 
+  const totalWordsFromWordlists = wordlists
+    ? wordlists.reduce(
+        (sum, wl) => sum + (wl.wordsCount ?? wl.totalWords ?? 0),
+        0,
+      )
+    : null;
+  const wordlistCountFromWordlists = wordlists ? wordlists.length : null;
+
   // Transform progress summary to user stats format
   const stats = progressSummary
     ? {
         totalWords:
-          progressSummary.wordlists?.reduce(
-            (sum, wl) => sum + wl.totalWords,
-            0,
-          ) || 0,
-        wordlists: progressSummary.wordlists?.length || 0,
+          (totalWordsFromWordlists ??
+            progressSummary.wordlists?.reduce(
+              (sum, wl) => sum + wl.totalWords,
+              0,
+            )) ||
+          0,
+        wordlists:
+          (wordlistCountFromWordlists ?? progressSummary.wordlists?.length) ||
+          0,
         wordsLearned:
           progressSummary.wordlists?.reduce(
             (sum, wl) => sum + wl.wordsMastered,
@@ -126,6 +144,56 @@ const DashboardStats: React.FC<DashboardStatsProps> = () => {
         </Text>
         <Text style={styles.retryText}>{t("dashboard.stats.tapToRetry")}</Text>
       </TouchableOpacity>
+    );
+  }
+
+  const singleWordlistFromStats =
+    progressSummary?.wordlists && progressSummary.wordlists.length === 1
+      ? progressSummary.wordlists[0]
+      : null;
+  const singleWordlistFromData =
+    wordlists && wordlists.length === 1 ? wordlists[0] : null;
+  const isSingleEmptyWordlist = singleWordlistFromData
+    ? (singleWordlistFromData.wordsCount ?? 0) === 0
+    : singleWordlistFromStats !== null &&
+      singleWordlistFromStats.totalWords === 0;
+
+  if (isSingleEmptyWordlist) {
+    return (
+      <View style={[styles.statsContainer, styles.readyStateContainer]}>
+        <View style={styles.readyHeaderRow}>
+          <View style={styles.readyImageWrap}>
+            <Image
+              source={require("../../assets/images/wordlist-ready.png")}
+              style={styles.readyImage}
+              resizeMode="contain"
+            />
+          </View>
+          <View style={styles.readyTextBlock}>
+            <Text style={styles.readyTitle}>
+              {t("dashboard.stats.readyState.title")}
+            </Text>
+            <Text style={styles.readySubtitle} numberOfLines={1}>
+              {t("dashboard.stats.readyState.subtitle")}
+            </Text>
+            <TouchableOpacity
+              style={styles.readyButton}
+              onPress={onAddFirstWords}
+              activeOpacity={0.85}
+              disabled={!onAddFirstWords}
+            >
+              <Ionicons
+                name="add"
+                size={18}
+                color={theme.colors.text.inverse}
+              />
+              <Text style={styles.readyButtonText} numberOfLines={1}>
+                {t("dashboard.stats.readyState.cta")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
     );
   }
 
@@ -263,14 +331,14 @@ const createStyles = (
         theme.mode === "light"
           ? "rgba(253, 246, 227, 0.5)" // Subtle web beige border
           : theme.colors.ui.divider,
-      ...theme.shadows.md,
-      // Extra elevation for contrast with subtle orange shadow
       shadowColor:
         theme.mode === "light"
           ? theme.colors.primary
           : theme.colors.text.primary,
-      shadowOpacity: theme.mode === "light" ? 0.15 : 0.1,
-      elevation: theme.mode === "light" ? 8 : 12,
+      shadowOffset: { width: 0, height: 14 },
+      shadowOpacity: theme.mode === "light" ? 0.18 : 0.12,
+      shadowRadius: 24,
+      elevation: theme.mode === "light" ? 12 : 14,
     },
     errorContainer: {
       flexDirection: "column",
@@ -365,6 +433,62 @@ const createStyles = (
       backgroundColor: theme.colors.ui.divider,
       marginHorizontal: 16,
       borderRadius: 0.5,
+    },
+    readyStateContainer: {
+      paddingVertical: theme.spacing.md,
+      paddingLeft: theme.spacing.md,
+      paddingRight: theme.spacing.lg,
+    },
+    readyHeaderRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 0,
+    },
+    readyImageWrap: {
+      width: 96,
+      height: 68,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    readyImage: {
+      width: 170,
+      height: 112,
+      marginLeft: -20,
+    },
+    readyTextBlock: {
+      flex: 1,
+      alignItems: "flex-start",
+    },
+    readyTitle: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+    },
+    readySubtitle: {
+      fontSize: 12.5,
+      color: theme.colors.text.secondary,
+      marginTop: 4,
+    },
+    readyButton: {
+      alignSelf: "flex-start",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginTop: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 999,
+      backgroundColor: theme.colors.primary,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.14,
+      shadowRadius: 14,
+      elevation: 10,
+    },
+    readyButtonText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: theme.colors.text.inverse,
     },
     iconContainer: {
       width: 48,

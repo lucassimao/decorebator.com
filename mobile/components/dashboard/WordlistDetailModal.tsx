@@ -46,12 +46,14 @@ interface WordlistDetailModalProps {
   visible: boolean;
   onClose: () => void;
   wordlist: Wordlist;
+  startInAddMode?: boolean;
 }
 
 export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   visible,
   onClose,
   wordlist,
+  startInAddMode = false,
 }) => {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -169,7 +171,6 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["words", wordlist.id] });
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
       reset();
       setShowAddForm(false);
       AsyncStorage.setItem(fabHintKey, "true").catch((error) => {
@@ -188,7 +189,6 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["words", wordlist.id] });
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
     onError: console.error,
   });
@@ -198,7 +198,6 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       wordlistsApi.updateWord({ ...word }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["words", wordlist.id] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
     },
     onError: console.error,
@@ -235,6 +234,12 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
+
+  useEffect(() => {
+    if (visible && startInAddMode) {
+      setShowAddForm(true);
+    }
+  }, [visible, startInAddMode]);
 
   // Filter words
   const filteredWords = words.filter((word) => {

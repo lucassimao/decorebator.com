@@ -1,8 +1,10 @@
 import { Wordlist } from "@/api/wordlists";
 import { WordlistProgress } from "@/api/analytics";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -10,6 +12,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
+import { useFocusEffect } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LANGUAGES } from "./CreateWordlistModal";
 import * as wordlistsApi from "@/api/wordlists";
@@ -26,6 +29,7 @@ type WordlistItemProps = {
   progress?: WordlistProgress;
   onQuizStart?: (wordlist: Wordlist) => void;
   onPressed?: () => void;
+  onAddWords?: (wordlist: Wordlist) => void;
   onUpgradePress?: () => void;
 };
 
@@ -34,6 +38,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   progress,
   onQuizStart,
   onPressed,
+  onAddWords,
   onUpgradePress,
 }) => {
   const queryClient = useQueryClient();
@@ -46,16 +51,66 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const language = LANGUAGES.find((l) => item.languageCode === l.code)!;
   const { theme, responsive } = useTheme();
   const styles = createStyles(theme, responsive);
+  const shimmerAnim = useRef(new Animated.Value(-1)).current;
+  const shimmerLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+  const shimmerPlayedRef = useRef(false);
+  const [buttonWidth, setButtonWidth] = useState(0);
 
   // Use progress from props
   const progressPercentage = progress?.progressPercent ?? 0;
+  const isEmptyWordlist = (item.wordsCount ?? 0) === 0;
+
+  const startShimmer = React.useCallback(() => {
+    if (shimmerLoopRef.current || shimmerPlayedRef.current) return;
+    shimmerAnim.setValue(-1);
+    const anim = Animated.timing(shimmerAnim, {
+      toValue: 1,
+      duration: 3200,
+      useNativeDriver: true,
+    });
+    shimmerLoopRef.current = anim;
+    anim.start(({ finished }) => {
+      shimmerLoopRef.current = null;
+      if (finished) {
+        shimmerPlayedRef.current = true;
+      }
+    });
+  }, [shimmerAnim]);
+
+  const stopShimmer = React.useCallback(() => {
+    if (shimmerLoopRef.current) {
+      shimmerLoopRef.current.stop();
+      shimmerLoopRef.current = null;
+    }
+    shimmerAnim.stopAnimation();
+    shimmerAnim.setValue(-1);
+    shimmerPlayedRef.current = false;
+  }, [shimmerAnim]);
+
+  useEffect(() => {
+    if (isEmptyWordlist) {
+      startShimmer();
+    } else {
+      stopShimmer();
+    }
+    return stopShimmer;
+  }, [isEmptyWordlist, startShimmer, stopShimmer]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (isEmptyWordlist) {
+        stopShimmer();
+        startShimmer();
+      }
+      return undefined;
+    }, [isEmptyWordlist, startShimmer, stopShimmer]),
+  );
 
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: () => wordlistsApi.deleteWordlist(item.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
       Alert.alert(t("common.success"), t("wordlistItem.deleteSuccess"));
     },
     onError: (error) => {
@@ -235,95 +290,164 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           />
         </View>
 
-        {/* Action Buttons - Two Row Layout */}
-        <View style={styles.actionButtonsContainer}>
-          {/* Primary Learning Actions Row */}
-          <View style={styles.primaryActionRow}>
+        {isEmptyWordlist ? (
+          <View style={styles.emptyActionsContainer}>
+            <Text style={styles.emptyActionsHelper}>
+              {t("wordlistItem.emptyHelper")}
+            </Text>
             <TouchableOpacity
-              style={styles.actionButtonPrimary}
-              onPress={handleQuizStart}
+              style={styles.emptyActionButton}
+              onLayout={(event) => {
+                setButtonWidth(event.nativeEvent.layout.width);
+              }}
+              onPress={() => {
+                if (onAddWords) {
+                  onAddWords(item);
+                } else if (onPressed) {
+                  onPressed();
+                }
+              }}
               accessibilityRole="button"
-              accessibilityLabel={t("wordlistItem.quiz")}
-              accessibilityHint="Start quiz session"
+              accessibilityLabel={t("dashboard.stats.readyState.cta")}
             >
-              <View style={styles.playIconWrapper}>
-                <MaterialIcons
-                  name="play-arrow"
-                  size={responsive.getValueForSize(22, 24, 26, 28)}
-                  color={theme.colors.success}
-                />
-              </View>
-              <Text style={styles.actionButtonPrimaryText} numberOfLines={1}>
-                {t("wordlistItem.quiz")}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButtonPrimary}
-              onPress={handlePractice}
-              accessibilityRole="button"
-              accessibilityLabel={t("wordlistItem.flashcards")}
-              accessibilityHint="Practice with flashcards"
-            >
-              <View style={styles.flashIconWrapper}>
-                <MaterialIcons
-                  name="style"
-                  size={responsive.getValueForSize(20, 22, 24, 26)}
-                  color={theme.colors.semantic.info}
-                />
-              </View>
-              <Text style={styles.actionButtonPrimaryText} numberOfLines={1}>
-                {t("wordlistItem.flashcards")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Secondary Features Row */}
-          <View style={styles.secondaryActionRow}>
-            <TouchableOpacity
-              style={styles.actionButtonSecondary}
-              onPress={handleChatStart}
-              accessibilityRole="button"
-              accessibilityLabel={t("wordlistItem.chat", "Chat")}
-              accessibilityHint={t(
-                "wordlistItem.chatHint",
-                "Start a conversation using the words in this list",
+              {buttonWidth > 0 && (
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.emptyActionShimmer,
+                    {
+                      transform: [
+                        {
+                          translateX: shimmerAnim.interpolate({
+                            inputRange: [-1, 1],
+                            outputRange: [
+                              -buttonWidth * 0.6,
+                              buttonWidth * 0.6,
+                            ],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <LinearGradient
+                    colors={[
+                      "rgba(255,255,255,0)",
+                      "rgba(255,255,255,0.2)",
+                      "rgba(255,255,255,0)",
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.emptyActionShimmerGradient}
+                  />
+                </Animated.View>
               )}
-            >
-              <MaterialIcons
-                name="chat"
-                size={responsive.getValueForSize(16, 18, 20, 22)}
-                color={theme.colors.primary}
+              <Ionicons
+                name="add"
+                size={18}
+                color={theme.colors.text.inverse}
               />
-              <Text style={styles.actionButtonSecondaryText} numberOfLines={1}>
-                {t("wordlistItem.chat", "Chat")}
+              <Text style={styles.emptyActionButtonText} numberOfLines={1}>
+                {t("dashboard.stats.readyState.cta")}
               </Text>
             </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButtonSecondary}
-              onPress={handleAnalytics}
-              accessibilityRole="button"
-              accessibilityLabel={t("wordlistItem.analytics")}
-              accessibilityHint={
-                isPremium
-                  ? "View detailed learning analytics"
-                  : "Premium feature - tap to upgrade"
-              }
-            >
-              <MaterialIcons
-                name="bar-chart"
-                size={responsive.getValueForSize(16, 18, 20, 22)}
-                color={theme.colors.premium}
-              />
-              <Text style={styles.actionButtonSecondaryText} numberOfLines={1}>
-                {t("wordlistItem.analytics")}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Publish/Share action removed */}
           </View>
-        </View>
+        ) : (
+          <View style={styles.actionButtonsContainer}>
+            {/* Primary Learning Actions Row */}
+            <View style={styles.primaryActionRow}>
+              <TouchableOpacity
+                style={styles.actionButtonPrimary}
+                onPress={handleQuizStart}
+                accessibilityRole="button"
+                accessibilityLabel={t("wordlistItem.quiz")}
+                accessibilityHint="Start quiz session"
+              >
+                <View style={styles.playIconWrapper}>
+                  <MaterialIcons
+                    name="play-arrow"
+                    size={responsive.getValueForSize(22, 24, 26, 28)}
+                    color={theme.colors.success}
+                  />
+                </View>
+                <Text style={styles.actionButtonPrimaryText} numberOfLines={1}>
+                  {t("wordlistItem.quiz")}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionButtonPrimary}
+                onPress={handlePractice}
+                accessibilityRole="button"
+                accessibilityLabel={t("wordlistItem.flashcards")}
+                accessibilityHint="Practice with flashcards"
+              >
+                <View style={styles.flashIconWrapper}>
+                  <MaterialIcons
+                    name="style"
+                    size={responsive.getValueForSize(20, 22, 24, 26)}
+                    color={theme.colors.semantic.info}
+                  />
+                </View>
+                <Text style={styles.actionButtonPrimaryText} numberOfLines={1}>
+                  {t("wordlistItem.flashcards")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Secondary Features Row */}
+            <View style={styles.secondaryActionRow}>
+              <TouchableOpacity
+                style={styles.actionButtonSecondary}
+                onPress={handleChatStart}
+                accessibilityRole="button"
+                accessibilityLabel={t("wordlistItem.chat", "Chat")}
+                accessibilityHint={t(
+                  "wordlistItem.chatHint",
+                  "Start a conversation using the words in this list",
+                )}
+              >
+                <MaterialIcons
+                  name="chat"
+                  size={responsive.getValueForSize(16, 18, 20, 22)}
+                  color={theme.colors.primary}
+                />
+                <Text
+                  style={styles.actionButtonSecondaryText}
+                  numberOfLines={1}
+                >
+                  {t("wordlistItem.chat", "Chat")}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionButtonSecondary}
+                onPress={handleAnalytics}
+                accessibilityRole="button"
+                accessibilityLabel={t("wordlistItem.analytics")}
+                accessibilityHint={
+                  isPremium
+                    ? "View detailed learning analytics"
+                    : "Premium feature - tap to upgrade"
+                }
+              >
+                <MaterialIcons
+                  name="bar-chart"
+                  size={responsive.getValueForSize(16, 18, 20, 22)}
+                  color={theme.colors.premium}
+                />
+                <Text
+                  style={styles.actionButtonSecondaryText}
+                  numberOfLines={1}
+                >
+                  {t("wordlistItem.analytics")}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Publish/Share action removed */}
+            </View>
+          </View>
+        )}
       </TouchableOpacity>
 
       <PremiumUpsellModal
@@ -449,6 +573,47 @@ const createStyles = (
       borderTopWidth: 1,
       borderTopColor: theme.colors.ui.divider,
       gap: responsive.spacing.elementSpacing / 2,
+    },
+    emptyActionsContainer: {
+      marginTop: responsive.spacing.elementSpacing,
+      alignItems: "center",
+    },
+    emptyActionsHelper: {
+      fontSize: responsive.getValueForSize(11, 12, 13, 13),
+      color: theme.colors.text.secondary,
+      marginBottom: 10,
+      textAlign: "center",
+    },
+    emptyActionButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingHorizontal: 28,
+      paddingVertical: 14,
+      borderRadius: 999,
+      backgroundColor: theme.colors.primary,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.16,
+      shadowRadius: 14,
+      elevation: 10,
+      overflow: "hidden",
+    },
+    emptyActionShimmer: {
+      position: "absolute",
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: "40%",
+      transform: [{ skewX: "-30deg" }],
+    },
+    emptyActionShimmerGradient: {
+      flex: 1,
+    },
+    emptyActionButtonText: {
+      fontSize: responsive.getValueForSize(13, 14, 15, 16),
+      fontWeight: "600",
+      color: theme.colors.text.inverse,
     },
     primaryActionRow: {
       flexDirection: "row",

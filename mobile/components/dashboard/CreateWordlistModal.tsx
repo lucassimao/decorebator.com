@@ -144,7 +144,6 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
         language: data.languageCode,
       });
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
 
       // Call success callback and close modal immediately
       onSuccess?.(data);
