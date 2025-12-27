@@ -118,7 +118,7 @@
       "greeting": "Welcome to",
       "highlight": {
         "generator": "Make a wordlist; we generate the rest—quizzes, visuals, audio, challenges.",
-        "chat": "Practice speaking out loud with our AI coach.",
+        "chat": "Pronunciation",
         "modes": "Multiple quiz modes",
         "progress": "Practice quizzes in 7 languages."
       }
@@ -134,7 +134,7 @@
       },
       "chat": {
         "title": "Live speaking coach",
-        "subtitle": "Practice speaking out loud with instant AI guidance.",
+        "subtitle": "Pronunciation",
         "bulletOne": "Launch a voice session from any wordlist in seconds.",
         "bulletTwo": "Realtime transcripts capture every correction you can revisit."
       },
@@ -816,7 +816,7 @@
     "shareLink": "Share link",
     "shareCta": "I just published a vocab quiz—can you beat it?",
     "urlLabel": "Link",
-    "chat": "Practice speaking out loud with our AI coach.",
+    "chat": "Pronunciation",
     "startChat": "Start chat",
     "chatHint": "Start a conversation using the words in this list",
     "chatUpsell": {
