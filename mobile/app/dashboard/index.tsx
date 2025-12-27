@@ -43,6 +43,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedWordlist, setSelectedWordlist] =
     React.useState<Wordlist | null>(null);
+  const [openAddWordOnSelect, setOpenAddWordOnSelect] = useState(false);
   const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [hasSeenDashboardFlag, setHasSeenDashboardFlag] = useState(false);
@@ -249,10 +250,17 @@ const Dashboard: React.FC<DashboardProps> = () => {
       item={item}
       progress={progressMap.get(item.id)}
       onPressed={() => setSelectedWordlist(item)}
+      onAddWords={() => {
+        setOpenAddWordOnSelect(true);
+        setSelectedWordlist(item);
+      }}
       onUpgradePress={onUpgradePress}
     />
   );
-  const hideWordlistDetailModal = () => setSelectedWordlist(null);
+  const hideWordlistDetailModal = () => {
+    setSelectedWordlist(null);
+    setOpenAddWordOnSelect(false);
+  };
 
   // Render skeleton items while loading
   const renderSkeletonItems = () => (
@@ -306,7 +314,15 @@ const Dashboard: React.FC<DashboardProps> = () => {
       {!hasNoWordlist && (
         <>
           {/* Stats */}
-          <DashboardStats />
+          <DashboardStats
+            onAddFirstWords={() => {
+              if (wordlistsData.length === 1) {
+                setOpenAddWordOnSelect(true);
+                setSelectedWordlist(wordlistsData[0]);
+              }
+            }}
+            wordlists={wordlistsData}
+          />
 
           {/* Section Header */}
           <View style={styles.sectionHeader}>
@@ -571,6 +587,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
           visible
           onClose={hideWordlistDetailModal}
           wordlist={selectedWordlist}
+          startInAddMode={openAddWordOnSelect}
         />
       )}
 

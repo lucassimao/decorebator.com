@@ -236,6 +236,11 @@
       "wordlists": "Wordlists",
       "learned": "Learned",
       "dayStreak": "{{count}} day streak",
+      "readyState": {
+        "title": "Your wordlist is ready",
+        "subtitle": "Add your first words to start learning",
+        "cta": "Add your first words"
+      },
       "progress": {
         "ready": "Ready to start your learning journey!",
         "greatStart": "Great start! Keep going!",
@@ -767,6 +772,7 @@
     "deleteConfirmMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
     "noWordsTitle": "No Words",
     "noWordsMessage": "Add some words to this wordlist first",
+    "emptyHelper": "Add words to unlock quizzes and flashcards.",
     "wordCount": "{{count}} words",
     "wordCount_plural": "{{count}} words",
     "percentLearned": "{{percent}}% learned",

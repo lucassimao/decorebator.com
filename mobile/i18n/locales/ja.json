@@ -248,6 +248,11 @@
       "wordlists": "単語リスト",
       "learned": "習得済み",
       "dayStreak": "{{count}}日連続",
+      "readyState": {
+        "title": "単語リストの準備ができました",
+        "subtitle": "最初の単語を追加して学習を始めましょう",
+        "cta": "最初の単語を追加"
+      },
       "progress": {
         "ready": "学習の旅を始める準備ができました！",
         "greatStart": "素晴らしいスタート！その調子です！",
@@ -752,6 +757,7 @@
     "deleteConfirmMessage": "「{{name}}」を削除してもよろしいですか？この操作は元に戻せません。",
     "noWordsTitle": "まだ単語がありません",
     "noWordsMessage": "クイズを開始する前に、このリストに単語を追加してください。",
+    "emptyHelper": "単語を追加してクイズとフラッシュカードを解放。",
     "wordCount": "{{count}}個の単語",
     "wordCount_plural": "{{count}}個の単語",
     "percentLearned": "{{percent}}% 学習済み",

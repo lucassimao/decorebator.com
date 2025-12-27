@@ -248,6 +248,11 @@
       "wordlists": "Listas",
       "learned": "Aprendidas",
       "dayStreak": "{{count}} dias seguidos",
+      "readyState": {
+        "title": "Sua lista está pronta",
+        "subtitle": "Adicione suas primeiras palavras para começar a aprender",
+        "cta": "Adicione suas primeiras palavras"
+      },
       "progress": {
         "ready": "Pronto para começar sua jornada de aprendizado!",
         "greatStart": "Ótimo começo! Continue assim!",
@@ -752,6 +757,7 @@
     "deleteConfirmMessage": "Tem certeza que deseja excluir \"{{name}}\"? Esta ação não pode ser desfeita.",
     "noWordsTitle": "Sem Palavras",
     "noWordsMessage": "Adicione algumas palavras a esta lista primeiro",
+    "emptyHelper": "Adicione palavras para desbloquear quizzes e flashcards.",
     "wordCount": "{{count}} palavras",
     "wordCount_one": "{{count}} palavra",
     "wordCount_other": "{{count}} palavras",

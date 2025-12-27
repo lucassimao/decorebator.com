@@ -251,6 +251,11 @@
       "wordlists": "Wortlisten",
       "learned": "Gelernt",
       "dayStreak": "{{count}} Tage Serie",
+      "readyState": {
+        "title": "Deine Wortliste ist bereit",
+        "subtitle": "Füge deine ersten Wörter hinzu, um mit dem Lernen zu starten",
+        "cta": "Füge deine ersten Wörter hinzu"
+      },
       "progress": {
         "ready": "Bereit, Ihre Lernreise zu beginnen!",
         "greatStart": "Großartiger Start! Weiter so!",
@@ -762,6 +767,7 @@
     "deleteConfirmMessage": "Möchten Sie \"{{name}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     "noWordsTitle": "Noch keine Wörter",
     "noWordsMessage": "Fügen Sie dieser Liste einige Wörter hinzu, bevor Sie ein Quiz starten.",
+    "emptyHelper": "Füge Wörter hinzu, um Quizze und Lernkarten freizuschalten.",
     "wordCount": "{{count}} Wort",
     "wordCount_plural": "{{count}} Wörter",
     "percentLearned": "{{percent}}% gelernt",

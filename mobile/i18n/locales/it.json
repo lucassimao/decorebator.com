@@ -248,6 +248,11 @@
       "wordlists": "Liste",
       "learned": "Imparate",
       "dayStreak": "{{count}} giorni consecutivi",
+      "readyState": {
+        "title": "La tua lista è pronta",
+        "subtitle": "Aggiungi le tue prime parole per iniziare a imparare",
+        "cta": "Aggiungi le tue prime parole"
+      },
       "progress": {
         "ready": "Pronto per iniziare il tuo percorso di apprendimento!",
         "greatStart": "Ottimo inizio! Continua così!",
@@ -752,6 +757,7 @@
     "deleteConfirmMessage": "Sei sicuro di voler eliminare \"{{name}}\"? Questa azione non può essere annullata.",
     "noWordsTitle": "Ancora Nessuna Parola",
     "noWordsMessage": "Aggiungi alcune parole a questa lista prima di iniziare un quiz.",
+    "emptyHelper": "Aggiungi parole per sbloccare quiz e flashcard.",
     "wordCount": "{{count}} parola",
     "wordCount_plural": "{{count}} parole",
     "percentLearned": "{{percent}}% imparato",
