@@ -211,23 +211,25 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         accessibilityHint="Open wordlist details or long press for actions menu"
       >
         <View style={styles.cardHeader}>
-          <Text
-            style={styles.languageFlag}
+          <View
+            style={styles.flagContainer}
             accessibilityLabel={`Language: ${t(`dashboard.languages.${language.name.toLowerCase()}`)}`}
           >
-            {language.flag}
-          </Text>
+            <Text style={styles.languageFlag}>{language.flag}</Text>
+          </View>
           <View style={styles.cardTitleContainer}>
             <Text
               style={styles.wordlistTitle}
-              numberOfLines={responsive.getValueForSize(1, 2, 2, 2)}
+              numberOfLines={1}
               ellipsizeMode="tail"
               accessibilityRole="header"
               accessibilityLabel={item.name}
             >
               {item.name}
             </Text>
-            {/* Public badge removed */}
+            <Text style={styles.wordCountText}>
+              {t("wordlistItem.wordCount", { count: item.wordsCount ?? 0 })}
+            </Text>
           </View>
           <TouchableOpacity
             style={styles.headerMoreButton}
@@ -245,43 +247,11 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             ) : (
               <Ionicons
                 name="trash-outline"
-                size={responsive.getValueForSize(16, 18, 20, 22)}
+                size={responsive.getValueForSize(18, 19, 20, 21)}
                 color={theme.colors.error}
               />
             )}
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.cardStats}>
-          <View style={styles.cardStat}>
-            <MaterialIcons
-              name="library-books"
-              size={responsive.getValueForSize(14, 16, 18, 20)}
-              color={theme.colors.text.secondary}
-            />
-            <Text style={styles.cardStatText}>
-              {t("wordlistItem.wordCount", { count: item.wordsCount ?? 0 })}
-            </Text>
-          </View>
-          <View style={styles.cardStat}>
-            <Text style={styles.languageName}>
-              {t(`dashboard.languages.${language.name.toLowerCase()}`)}
-            </Text>
-          </View>
-          {progressPercentage > 0 && (
-            <View style={styles.cardStat}>
-              <MaterialIcons
-                name="school"
-                size={responsive.getValueForSize(14, 16, 18, 20)}
-                color={theme.colors.text.secondary}
-              />
-              <Text style={styles.cardStatText}>
-                {t("wordlistItem.percentLearned", {
-                  percent: Math.round(progressPercentage),
-                })}
-              </Text>
-            </View>
-          )}
         </View>
 
         <View style={styles.progressBar}>
@@ -354,98 +324,88 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
           </View>
         ) : (
           <View style={styles.actionButtonsContainer}>
-            {/* Primary Learning Actions Row */}
-            <View style={styles.primaryActionRow}>
-              <TouchableOpacity
-                style={styles.actionButtonPrimary}
-                onPress={handleQuizStart}
-                accessibilityRole="button"
-                accessibilityLabel={t("wordlistItem.quiz")}
-                accessibilityHint="Start quiz session"
-              >
-                <View style={styles.playIconWrapper}>
-                  <MaterialIcons
-                    name="play-arrow"
-                    size={responsive.getValueForSize(22, 24, 26, 28)}
-                    color={theme.colors.success}
-                  />
-                </View>
-                <Text style={styles.actionButtonPrimaryText} numberOfLines={1}>
-                  {t("wordlistItem.quiz")}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.actionButtonPrimary}
-                onPress={handlePractice}
-                accessibilityRole="button"
-                accessibilityLabel={t("wordlistItem.flashcards")}
-                accessibilityHint="Practice with flashcards"
-              >
-                <View style={styles.flashIconWrapper}>
-                  <MaterialIcons
-                    name="style"
-                    size={responsive.getValueForSize(20, 22, 24, 26)}
-                    color={theme.colors.semantic.info}
-                  />
-                </View>
-                <Text style={styles.actionButtonPrimaryText} numberOfLines={1}>
-                  {t("wordlistItem.flashcards")}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Secondary Features Row */}
-            <View style={styles.secondaryActionRow}>
-              <TouchableOpacity
-                style={styles.actionButtonSecondary}
-                onPress={handleChatStart}
-                accessibilityRole="button"
-                accessibilityLabel={t("wordlistItem.chat", "Chat")}
-                accessibilityHint={t(
-                  "wordlistItem.chatHint",
-                  "Start a conversation using the words in this list",
-                )}
-              >
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleQuizStart}
+              accessibilityRole="button"
+              accessibilityLabel={t("wordlistItem.quiz")}
+              accessibilityHint="Start quiz session"
+            >
+              <View style={[styles.actionIconWrapper, styles.quizIconBg]}>
                 <MaterialIcons
-                  name="chat"
-                  size={responsive.getValueForSize(16, 18, 20, 22)}
-                  color={theme.colors.primary}
+                  name="lightbulb-outline"
+                  size={responsive.getValueForSize(24, 25, 26, 28)}
+                  color="#000000"
                 />
-                <Text
-                  style={styles.actionButtonSecondaryText}
-                  numberOfLines={1}
-                >
-                  {t("wordlistItem.chat", "Chat")}
-                </Text>
-              </TouchableOpacity>
+              </View>
+              <Text style={styles.actionButtonText} numberOfLines={1} ellipsizeMode="tail">
+                {t("wordlistItem.quiz")}
+              </Text>
+            </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.actionButtonSecondary}
-                onPress={handleAnalytics}
-                accessibilityRole="button"
-                accessibilityLabel={t("wordlistItem.analytics")}
-                accessibilityHint={
-                  isPremium
-                    ? "View detailed learning analytics"
-                    : "Premium feature - tap to upgrade"
-                }
-              >
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handlePractice}
+              accessibilityRole="button"
+              accessibilityLabel={t("wordlistItem.flashcards")}
+              accessibilityHint="Practice with flashcards"
+            >
+              <View style={[styles.actionIconWrapper, styles.flashcardsIconBg]}>
+                <MaterialIcons
+                  name="menu-book"
+                  size={responsive.getValueForSize(24, 25, 26, 28)}
+                  color="#2196F3"
+                />
+              </View>
+              <Text style={styles.actionButtonText} numberOfLines={1} ellipsizeMode="tail">
+                {t("wordlistItem.cards", "Cards")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleChatStart}
+              accessibilityRole="button"
+              accessibilityLabel={t("wordlistItem.speak", "Speak")}
+              accessibilityHint={t(
+                "wordlistItem.speakHint",
+                "Practice pronunciation",
+              )}
+            >
+              <View style={[styles.actionIconWrapper, styles.speakIconBg]}>
+                <MaterialIcons
+                  name="mic"
+                  size={responsive.getValueForSize(24, 25, 26, 28)}
+                  color="#FF8533"
+                />
+              </View>
+              <Text style={styles.actionButtonText} numberOfLines={1} ellipsizeMode="tail">
+                {t("wordlistItem.speak", "Speak")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleAnalytics}
+              accessibilityRole="button"
+              accessibilityLabel={t("wordlistItem.stats", "Stats")}
+              accessibilityHint={
+                isPremium
+                  ? "View detailed learning analytics"
+                  : "Premium feature - tap to upgrade"
+              }
+            >
+              <View style={[styles.actionIconWrapper, styles.statsIconBg]}>
                 <MaterialIcons
                   name="bar-chart"
-                  size={responsive.getValueForSize(16, 18, 20, 22)}
-                  color={theme.colors.premium}
+                  size={responsive.getValueForSize(24, 25, 26, 28)}
+                  color="#000000"
                 />
-                <Text
-                  style={styles.actionButtonSecondaryText}
-                  numberOfLines={1}
-                >
-                  {t("wordlistItem.analytics")}
-                </Text>
-              </TouchableOpacity>
-
-              {/* Publish/Share action removed */}
-            </View>
+              </View>
+              <Text style={styles.actionButtonText} numberOfLines={1} ellipsizeMode="tail">
+                {t("wordlistItem.stats", "Stats")}
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
       </TouchableOpacity>
@@ -470,44 +430,59 @@ const createStyles = (
     wordlistCard: {
       backgroundColor:
         theme.mode === "light"
-          ? theme.colors.background.surface
+          ? "#FFFFFF"
           : theme.colors.background.elevated,
-      borderRadius: theme.borderRadius.lg,
-      padding: responsive.spacing.formPadding,
+      borderRadius: responsive.getValueForSize(20, 22, 24, 26),
+      padding: responsive.getValueForSize(16, 18, 20, 22),
       marginHorizontal: responsive.spacing.horizontal,
       marginBottom: responsive.spacing.vertical,
-      borderWidth: 1,
-      borderColor:
-        theme.mode === "light"
-          ? "rgba(253, 246, 227, 0.3)" // Subtle web beige border
-          : theme.colors.ui.divider,
-      ...theme.shadows.md,
-      // Extra elevation for better contrast with subtle orange shadow
-      shadowColor:
-        theme.mode === "light"
-          ? theme.colors.primary
-          : theme.colors.text.primary,
-      shadowOpacity: theme.mode === "light" ? 0.15 : 0.1,
-      elevation: theme.mode === "light" ? 6 : 10,
+      // Subtle shadow for premium elevated feel
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: theme.mode === "light" ? 0.08 : 0.2,
+      shadowRadius: 12,
+      elevation: theme.mode === "light" ? 4 : 8,
     },
     cardHeader: {
       flexDirection: "row",
-      alignItems: "center",
+      alignItems: "flex-start",
       justifyContent: "space-between",
-      marginBottom: responsive.spacing.elementSpacing,
+      marginBottom: responsive.getValueForSize(10, 11, 12, 13),
+    },
+    flagContainer: {
+      width: responsive.getValueForSize(44, 48, 52, 56),
+      height: responsive.getValueForSize(44, 48, 52, 56),
+      borderRadius: responsive.getValueForSize(8, 9, 10, 11),
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(0, 0, 0, 0.03)"
+          : theme.colors.background.subtle,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: responsive.spacing.elementSpacing,
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light"
+          ? "rgba(0, 0, 0, 0.06)"
+          : theme.colors.ui.border,
     },
     languageFlag: {
-      fontSize: responsive.getValueForSize(28, 32, 36, 40),
-      marginRight: responsive.spacing.elementSpacing,
+      fontSize: responsive.getValueForSize(24, 26, 28, 30),
     },
     cardTitleContainer: {
       flex: 1,
+      marginRight: responsive.getValueForSize(8, 10, 12, 14),
     },
     wordlistTitle: {
-      fontSize: responsive.getScaledFont("headline"),
-      fontWeight: "600",
+      fontSize: responsive.getValueForSize(18, 20, 22, 24),
+      fontWeight: "700",
       color: theme.colors.text.primary,
-      marginBottom: responsive.spacing.elementSpacing / 4,
+      marginBottom: responsive.getValueForSize(2, 3, 4, 4),
+    },
+    wordCountText: {
+      fontSize: responsive.getValueForSize(13, 14, 15, 16),
+      color: theme.colors.text.secondary,
+      fontWeight: "400",
     },
     // public badge styles removed
     headerMoreButton: {
@@ -517,62 +492,14 @@ const createStyles = (
       alignItems: "center",
       justifyContent: "center",
       backgroundColor:
-        theme.mode === "light" ? "#FFFFFF" : theme.colors.background.surface,
-      borderWidth: 1,
-      borderColor:
         theme.mode === "light"
-          ? theme.colors.border.light
-          : theme.colors.ui.border,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: theme.mode === "light" ? 0.1 : 0.2,
-      shadowRadius: 8,
-      elevation: 6,
-    },
-    playIconWrapper: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor:
-        theme.mode === "light" ? "#FFFFFF" : theme.colors.background.surface,
-      borderWidth: 1,
-      borderColor:
-        theme.mode === "light"
-          ? theme.colors.border.light
-          : theme.colors.ui.border,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: theme.mode === "light" ? 0.18 : 0.3,
-      shadowRadius: 12,
-      elevation: 10,
-    },
-    flashIconWrapper: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor:
-        theme.mode === "light" ? "#FFFFFF" : theme.colors.background.surface,
-      borderWidth: 1,
-      borderColor:
-        theme.mode === "light"
-          ? theme.colors.border.light
-          : theme.colors.ui.border,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: theme.mode === "light" ? 0.18 : 0.3,
-      shadowRadius: 12,
-      elevation: 10,
+          ? "rgba(255, 133, 51, 0.15)"
+          : "rgba(255, 133, 51, 0.25)",
     },
     actionButtonsContainer: {
-      marginTop: responsive.spacing.elementSpacing,
-      paddingTop: responsive.spacing.elementSpacing / 2,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.ui.divider,
-      gap: responsive.spacing.elementSpacing / 2,
+      flexDirection: "row",
+      gap: responsive.getValueForSize(5, 6, 7, 8),
+      marginTop: 0,
     },
     emptyActionsContainer: {
       marginTop: responsive.spacing.elementSpacing,
@@ -615,89 +542,87 @@ const createStyles = (
       fontWeight: "600",
       color: theme.colors.text.inverse,
     },
-    primaryActionRow: {
-      flexDirection: "row",
-      gap: responsive.spacing.elementSpacing,
-    },
-    secondaryActionRow: {
-      flexDirection: "row",
-      gap: responsive.spacing.elementSpacing / 2,
-    },
-    actionButtonPrimary: {
+    actionButton: {
       flex: 1,
+      flexBasis: 0,
+      flexGrow: 1,
+      flexShrink: 1,
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: responsive.getValueForSize(12, 14, 16, 18),
-      paddingHorizontal: responsive.getValueForSize(8, 10, 12, 14),
-      borderRadius: theme.borderRadius.md,
-      backgroundColor: theme.colors.background.surface,
-      gap: responsive.spacing.elementSpacing / 3,
-      minHeight: responsive.getValueForSize(70, 74, 78, 82),
-      ...theme.shadows.sm,
-    },
-
-    actionButtonSecondary: {
-      flex: 1,
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: responsive.getValueForSize(8, 10, 12, 14),
-      paddingHorizontal: responsive.getValueForSize(4, 6, 8, 10),
-      borderRadius: theme.borderRadius.sm,
+      paddingVertical: responsive.getValueForSize(10, 11, 12, 13),
+      paddingHorizontal: responsive.getValueForSize(2, 3, 4, 5),
+      borderRadius: responsive.getValueForSize(16, 17, 18, 19),
       backgroundColor:
         theme.mode === "light"
-          ? "rgba(0, 0, 0, 0.03)" // toned down tint for flatter appearance
-          : theme.colors.background.subtle,
-      gap: responsive.spacing.elementSpacing / 4,
-      minHeight: responsive.getValueForSize(50, 54, 58, 62),
+          ? "#FFFFFF"
+          : theme.colors.background.elevated,
+      gap: responsive.getValueForSize(4, 5, 6, 7),
+      minHeight: responsive.getValueForSize(75, 78, 82, 85),
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light"
+          ? "rgba(0, 0, 0, 0.05)"
+          : theme.colors.ui.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: theme.mode === "light" ? 0.05 : 0.1,
+      shadowRadius: 6,
+      elevation: 2,
     },
-
-    actionButtonPrimaryText: {
-      fontSize: responsive.getValueForSize(12, 14, 15, 16),
+    actionIconWrapper: {
+      width: responsive.getValueForSize(42, 44, 46, 48),
+      height: responsive.getValueForSize(42, 44, 46, 48),
+      borderRadius: responsive.getValueForSize(21, 22, 23, 24),
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    quizIconBg: {
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(255, 193, 7, 0.15)"
+          : "rgba(255, 193, 7, 0.2)",
+    },
+    flashcardsIconBg: {
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(33, 150, 243, 0.15)"
+          : "rgba(33, 150, 243, 0.2)",
+    },
+    speakIconBg: {
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(255, 133, 51, 0.15)"
+          : "rgba(255, 133, 51, 0.2)",
+    },
+    statsIconBg: {
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(255, 193, 7, 0.15)"
+          : "rgba(255, 193, 7, 0.2)",
+    },
+    actionButtonText: {
+      fontSize: responsive.getValueForSize(10, 11, 12, 13),
       color: theme.colors.text.primary,
       fontWeight: "600",
       textAlign: "center",
-    },
-    actionButtonSecondaryText: {
-      fontSize: responsive.getValueForSize(10, 11, 12, 13),
-      color: theme.colors.text.secondary,
-      fontWeight: "500",
-      textAlign: "center",
-    },
-    cardStats: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      justifyContent: "space-between",
-      alignItems: "center",
-      gap: responsive.getValueForSize(12, 16, 20, 24),
-      marginBottom: responsive.spacing.elementSpacing,
-      paddingHorizontal: responsive.spacing.elementSpacing / 4,
-    },
-    cardStat: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: responsive.getValueForSize(6, 8, 10, 12),
-    },
-    cardStatText: {
-      fontSize: responsive.getScaledFont("label"),
-      color: theme.colors.text.secondary,
-    },
-    languageName: {
-      fontSize: responsive.getScaledFont("label"),
-      color: theme.colors.primary,
-      fontWeight: "500",
+      width: "100%",
+      letterSpacing: -0.8,
     },
     progressBar: {
-      height: 4,
-      backgroundColor: theme.colors.ui.divider,
-      borderRadius: 2,
+      height: responsive.getValueForSize(6, 7, 8, 8),
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(255, 133, 51, 0.12)"
+          : theme.colors.ui.divider,
+      borderRadius: 3,
       overflow: "hidden",
+      marginBottom: responsive.getValueForSize(14, 16, 18, 20),
     },
     progressFill: {
       height: "100%",
-      backgroundColor: theme.colors.success,
-      borderRadius: 2,
+      backgroundColor: theme.colors.primary,
+      borderRadius: 3,
     },
     modalOverlay: {
       flex: 1,
