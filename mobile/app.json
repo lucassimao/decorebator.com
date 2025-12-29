@@ -13,9 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "bundleIdentifier": "com.lsimaocosta.decorebator",
       "supportsTablet": true,
@@ -23,11 +21,7 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "UIBackgroundModes": [
-          "remote-notification",
-          "audio",
-          "voip"
-        ],
+        "UIBackgroundModes": ["remote-notification", "audio"],
         "NSMicrophoneUsageDescription": "Decorebator uses your microphone to provide interactive voice conversations for vocabulary practice and to play audio pronunciations. For example, you can have voice conversations with AI to practice new words, and hear pronunciations in quizzes and flashcards.",
         "NSCameraUsageDescription": "Decorebator uses your camera to take profile pictures and supports video features during vocabulary practice sessions. For example, you can take a new photo in the profile settings to personalize your learning experience.",
         "NSPhotoLibraryUsageDescription": "Decorebator accesses your photo library to let you choose an existing photo as your profile picture. For example, you can select a photo from your gallery in the profile settings to personalize your account.",
@@ -44,16 +38,11 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.WAKE_LOCK",
         "android.permission.VIBRATE",
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE",
-        "android.permission.CHANGE_NETWORK_STATE",
-        "android.permission.CAMERA",
-        "android.permission.BLUETOOTH",
-        "android.permission.BLUETOOTH_ADMIN",
-        "android.permission.BLUETOOTH_CONNECT"
+        "android.permission.CAMERA"
       ],
       "package": "com.lsimaocosta.decorebator"
     },
@@ -77,7 +66,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/icon.png",
+          "icon": "./assets/images/notification-icon.png",
           "color": "#FF7B54",
           "androidMode": "default",
           "androidCollapsedTitle": "#{unread_notifications} new notifications"
@@ -98,7 +87,8 @@
           "project": "decorebator-mobile",
           "organization": "lucas-apps"
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
@@ -110,7 +100,9 @@
       }
     },
     "owner": "lsimaocosta",
-    "runtimeVersion": "1.1.0",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
     "updates": {
       "url": "https://u.expo.dev/882f0434-5dcf-448c-92ac-47e70c9a8d84",
       "enabled": true,

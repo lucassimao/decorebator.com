@@ -9,6 +9,7 @@ This document describes the timezone and date handling improvements implemented 
 The backend API sends date information as ISO timestamps in UTC format (e.g., `"2025-06-11T00:00:00Z"`). When JavaScript's native `Date` constructor parses these timestamps, it interprets them as UTC and converts them to the user's local timezone, causing date display issues.
 
 **Example Issue:**
+
 - Backend sends: `"2025-06-11T00:00:00Z"` (representing June 11th)
 - User in UTC-3 timezone sees: June 10th (due to timezone conversion)
 - Chart displays: "6/10" instead of correct "6/11"
@@ -30,8 +31,8 @@ Instead of using `new Date(isoString)` which triggers timezone conversion, we no
 const date = new Date("2025-06-11T00:00:00Z");
 
 // ✅ New approach (timezone-safe)
-const datePart = "2025-06-11T00:00:00Z".split('T')[0]; // "2025-06-11"
-const [year, month, day] = datePart.split('-').map(Number); // [2025, 6, 11]
+const datePart = "2025-06-11T00:00:00Z".split("T")[0]; // "2025-06-11"
+const [year, month, day] = datePart.split("-").map(Number); // [2025, 6, 11]
 const date = new Date(year, month - 1, day); // Local timezone, correct date
 ```
 
@@ -42,14 +43,15 @@ const date = new Date(year, month - 1, day); // Local timezone, correct date
 **Location**: `mobile/components/analytics/HistoricalBoxDistributionChart.tsx`
 
 **Changes**:
+
 - Updated date label generation for chart x-axis
 - Fixed "Today"/"Yesterday" detection logic
 - Ensures correct MM/DD format display
 
 ```typescript
 // Extract date part from ISO timestamp
-const datePart = item.date.split('T')[0];
-const [year, month, day] = datePart.split('-').map(Number);
+const datePart = item.date.split("T")[0];
+const [year, month, day] = datePart.split("-").map(Number);
 const date = new Date(year, month - 1, day);
 ```
 
@@ -58,6 +60,7 @@ const date = new Date(year, month - 1, day);
 **Location**: `mobile/components/analytics/PracticeTimeChart.tsx`
 
 **Changes**:
+
 - Fixed `formatDateLabel` function for chart labels
 - Updated date sorting logic for chronological ordering
 - Added comprehensive error handling with fallbacks
@@ -65,15 +68,15 @@ const date = new Date(year, month - 1, day);
 ```typescript
 const formatDateLabel = (dateString: string): string => {
   try {
-    const datePart = dateString.split('T')[0];
-    const [year, month, day] = datePart.split('-').map(Number);
-    
+    const datePart = dateString.split("T")[0];
+    const [year, month, day] = datePart.split("-").map(Number);
+
     if (!year || !month || !day || isNaN(year) || isNaN(month) || isNaN(day)) {
       // Fallback to UTC parsing if manual parsing fails
       const fallbackDate = new Date(dateString);
       return `${fallbackDate.getMonth() + 1}/${fallbackDate.getDate()}`;
     }
-    
+
     const date = new Date(year, month - 1, day);
     return `${date.getMonth() + 1}/${date.getDate()}`;
   } catch (error) {
@@ -88,16 +91,17 @@ const formatDateLabel = (dateString: string): string => {
 **Location**: `mobile/components/analytics/LearningProgressChart.tsx`
 
 **Changes**:
+
 - Updated chart label generation for line chart x-axis
 - Maintains consistent date display across all analytics
 
 ```typescript
 learningProgress?.slice(-7).map((p) => {
-  const datePart = p.date.split('T')[0];
-  const [year, month, day] = datePart.split('-').map(Number);
+  const datePart = p.date.split("T")[0];
+  const [year, month, day] = datePart.split("-").map(Number);
   const date = new Date(year, month - 1, day);
   return `${date.getMonth() + 1}/${date.getDate()}`;
-})
+});
 ```
 
 ## Error Handling Strategy
@@ -123,12 +127,12 @@ For components that sort dates chronologically:
   const [yearB, monthB, dayB] = datePartB.split('-').map(Number);
   const dateA = new Date(yearA, monthA - 1, dayA);
   const dateB = new Date(yearB, monthB - 1, dayB);
-  
+
   if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
     console.error("Invalid date during sorting:", a.date, b.date);
     return 0; // Keep original order if dates are invalid
   }
-  
+
   return dateA.getTime() - dateB.getTime();
 })
 ```
@@ -156,6 +160,7 @@ To verify the fix works correctly:
 ### Backend Standardization
 
 Consider standardizing backend date format to avoid timezone ambiguity:
+
 - Option 1: Send dates as "YYYY-MM-DD" strings without time component
 - Option 2: Always include explicit timezone information
 - Option 3: Send Unix timestamps with timezone offset
@@ -167,8 +172,8 @@ For future maintenance, consider creating a centralized date parsing utility:
 ```typescript
 // utils/dateUtils.ts
 export const parseBackendDate = (dateString: string): Date => {
-  const datePart = dateString.split('T')[0];
-  const [year, month, day] = datePart.split('-').map(Number);
+  const datePart = dateString.split("T")[0];
+  const [year, month, day] = datePart.split("-").map(Number);
   return new Date(year, month - 1, day);
 };
 
@@ -203,6 +208,7 @@ export const formatChartLabel = (dateString: string): string => {
 ## Performance Impact
 
 The manual date parsing approach has minimal performance impact:
+
 - String operations are lightweight
 - Date object creation is the same cost
 - No additional API calls or processing

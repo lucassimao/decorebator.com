@@ -3,13 +3,8 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useLocalSearchParams } from "expo-router";
 import { useTheme } from "@/contexts/ThemeContext";
 import { createCommonStyles } from "@/styles/common";
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  View,
-  SafeAreaView,
-} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import {
   AnalyticsHeader,
   StatsGrid,

@@ -11,7 +11,6 @@ import {
   Alert,
   ImageBackground,
   KeyboardAvoidingView,
-  SafeAreaView,
   TextInput,
   ScrollView,
   StyleSheet,
@@ -23,6 +22,7 @@ import { authLightTheme } from "@/theme/authTheme";
 import type { Theme } from "@/contexts/ThemeContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { ResponsiveValues } from "@/contexts/ThemeContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface PasswordResetFormData {
   email: string;

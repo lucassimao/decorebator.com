@@ -55,7 +55,7 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
 // Main Component
 type DashboardStatsProps = {
   onAddFirstWords?: () => void;
-  wordlists?: Array<{ id: number; wordsCount?: number; totalWords?: number }>;
+  wordlists?: { id: number; wordsCount?: number; totalWords?: number }[];
 };
 
 const PROGRESS_OVERVIEW_ENABLED = true;
@@ -274,9 +274,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
             />
           </View>
           <View style={styles.labelContainer}>
-            <Text style={styles.statLabel}>
-              {t("dashboard.stats.words")}
-            </Text>
+            <Text style={styles.statLabel}>{t("dashboard.stats.words")}</Text>
           </View>
           <AnimatedCounter
             value={stats?.totalWords || 0}

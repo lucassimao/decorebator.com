@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProvider } from "posthog-react-native";
 import { I18nextProvider } from "react-i18next";
 import * as Sentry from "@sentry/react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Prevent auto-hide so we can control when to hide it
 SplashScreen.preventAutoHideAsync();
@@ -77,6 +78,10 @@ function RootLayoutNav() {
                 options={{
                   host: "https://us.i.posthog.com",
                   disabled: __DEV__,
+                  customStorage: {
+                    getItem: AsyncStorage.getItem,
+                    setItem: AsyncStorage.setItem,
+                  },
                 }}
               >
                 <Stack>

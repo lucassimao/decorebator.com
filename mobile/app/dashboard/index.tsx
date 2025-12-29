@@ -27,7 +27,6 @@ import {
   Image,
   ImageBackground,
   RefreshControl,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -35,6 +34,7 @@ import {
   Easing,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaView } from "react-native-safe-area-context";
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface DashboardProps {}
 
@@ -505,11 +505,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 "Add New Wordlist",
               )}
             >
-              <Ionicons
-                name="add"
-                size={28}
-                color="#FFFFFF"
-              />
+              <Ionicons name="add" size={28} color="#FFFFFF" />
             </AnimatedTouchable>
           )}
         </SafeAreaView>
@@ -573,11 +569,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
                   "Add New Wordlist",
                 )}
               >
-                <Ionicons
-                  name="add"
-                  size={28}
-                  color="#FFFFFF"
-                />
+                <Ionicons name="add" size={28} color="#FFFFFF" />
               </AnimatedTouchable>
             )}
           </SafeAreaView>

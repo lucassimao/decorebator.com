@@ -36,10 +36,7 @@ export default function OnboardingAccount() {
             "onboarding.account.free.features.wordlists",
             "Wordlists sync across every device.",
           ),
-          t(
-            "onboarding.account.free.features.quizzes",
-            "Adaptive quizzes.",
-          ),
+          t("onboarding.account.free.features.quizzes", "Adaptive quizzes."),
         ],
       },
       {
@@ -60,16 +57,12 @@ export default function OnboardingAccount() {
             "onboarding.account.free.features.analytics",
             "7-day progress snapshots and stats.",
           ),
-          t(
-            "onboarding.account.premium.features.analytics",
-            "Cancel anytime.",
-          ),
+          t("onboarding.account.premium.features.analytics", "Cancel anytime."),
         ],
       },
     ],
     [t],
   );
-
 
   const finish = async (to: "/signup" | "/signin") => {
     posthog.capture("onboarding_completed");
@@ -136,10 +129,7 @@ export default function OnboardingAccount() {
             </Text>
           </View>
           <Text style={styles.subtitle}>
-            {t(
-              "onboarding.account.subtitle",
-              "Your words won’t forget you.",
-            )}
+            {t("onboarding.account.subtitle", "Your words won’t forget you.")}
           </Text>
 
           <View style={styles.planSections}>
@@ -161,11 +151,11 @@ export default function OnboardingAccount() {
                   <Text style={styles.planTitle}>{section.title}</Text>
                 </View>
                 <View style={styles.planItems}>
-                {section.items.map((item, index) => (
-                  <View
-                    key={`${section.key}-${index}`}
-                    style={styles.planItemRow}
-                  >
+                  {section.items.map((item, index) => (
+                    <View
+                      key={`${section.key}-${index}`}
+                      style={styles.planItemRow}
+                    >
                       <View
                         style={[
                           styles.planBullet,
@@ -179,7 +169,6 @@ export default function OnboardingAccount() {
               </View>
             ))}
           </View>
-
         </View>
       </ScrollView>
     </OnboardingLayout>

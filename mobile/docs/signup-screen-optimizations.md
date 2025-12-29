@@ -7,6 +7,7 @@ The signup screen has undergone comprehensive optimizations (January 2025) to ad
 ## Problem Statement
 
 ### Original Issues
+
 - **Keyboard Overlay Problems**: Form became unusable when keyboard appeared on small screens
 - **Non-Responsive Design**: Fixed layout didn't adapt to different screen dimensions (320px-390px+ widths)
 - **Performance Issues**: Unnecessary re-renders and complex animation logic
@@ -16,6 +17,7 @@ The signup screen has undergone comprehensive optimizations (January 2025) to ad
 ### Solution Architecture
 
 Implemented a modern, responsive signup screen using industry best practices:
+
 - **Responsive Design**: Breakpoint-based layout adaptation
 - **Performance Optimization**: Memoization and component extraction
 - **Accessibility Enhancement**: Screen reader support and touch target optimization
@@ -30,9 +32,9 @@ The signup screen now supports all common mobile dimensions with adaptive layout
 ```typescript
 // Breakpoint definitions
 export const BREAKPOINTS = {
-  SMALL: 359,  // <= 359px width (iPhone SE, small Android)
+  SMALL: 359, // <= 359px width (iPhone SE, small Android)
   MEDIUM: 389, // 360-389px width (standard Android)
-  LARGE: 390,  // >= 390px width (modern iPhones, large Android)
+  LARGE: 390, // >= 390px width (modern iPhones, large Android)
 } as const;
 ```
 
@@ -42,7 +44,7 @@ export const BREAKPOINTS = {
 // Responsive spacing based on screen size
 export const getResponsiveSpacing = (width?: number) => {
   const category = getScreenSizeCategory(width);
-  
+
   switch (category) {
     case "small":
       return {
@@ -79,14 +81,17 @@ Implemented Option A approach with subtle background illustration:
 
 ```typescript
 // Responsive image configuration
-export const getResponsiveImageDimensions = (width?: number, height?: number) => {
+export const getResponsiveImageDimensions = (
+  width?: number,
+  height?: number,
+) => {
   const category = getScreenSizeCategory(width);
-  
+
   switch (category) {
     case "small":
       return {
         maxHeight: height * 0.35, // Less height on small screens
-        opacity: 0.12,            // Lighter for better contrast
+        opacity: 0.12, // Lighter for better contrast
       };
     case "medium":
       return {
@@ -110,6 +115,7 @@ export const getResponsiveImageDimensions = (width?: number, height?: number) =>
 #### Extracted ErrorMessage Component
 
 **Before** (inline component):
+
 ```typescript
 const ErrorMessage = ({ error, style, errorStyle }) => {
   if (!error) return null;
@@ -118,12 +124,13 @@ const ErrorMessage = ({ error, style, errorStyle }) => {
 ```
 
 **After** (extracted, memoized component):
+
 ```typescript
 // components/common/ErrorMessage.tsx
-export const ErrorMessage: React.FC<ErrorMessageProps> = React.memo(({ 
-  error, 
-  style, 
-  errorStyle 
+export const ErrorMessage: React.FC<ErrorMessageProps> = React.memo(({
+  error,
+  style,
+  errorStyle
 }) => {
   if (!error) return null;
   return <Text style={[style, errorStyle]}>{error?.message || "Invalid"}</Text>;
@@ -131,6 +138,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = React.memo(({
 ```
 
 #### Benefits:
+
 - **Reusability**: Can be used across multiple screens
 - **Performance**: Prevents unnecessary re-renders
 - **Maintainability**: Single source of truth for error display
@@ -140,32 +148,44 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = React.memo(({
 #### Styles Memoization
 
 **Before**:
+
 ```typescript
-const styles = createStyles(theme, spacing, fontSizes, screenWidth, screenHeight, keyboardVisible);
+const styles = createStyles(
+  theme,
+  spacing,
+  fontSizes,
+  screenWidth,
+  screenHeight,
+  keyboardVisible,
+);
 ```
 
 **After**:
+
 ```typescript
 const styles = React.useMemo(
   () => createStyles(theme, responsive, keyboardVisible),
-  [theme, responsive, keyboardVisible]
+  [theme, responsive, keyboardVisible],
 );
 ```
 
 #### Callback Memoization
 
 ```typescript
-const onSubmit = React.useCallback((data: SignupFormData) => {
-  const { agreeToTerms, ...submitData } = data;
-  const signupData = {
-    ...submitData,
-    country: detectedCountry || "US",
-  };
-  signup(signupData);
-}, [detectedCountry, signup]);
+const onSubmit = React.useCallback(
+  (data: SignupFormData) => {
+    const { agreeToTerms, ...submitData } = data;
+    const signupData = {
+      ...submitData,
+      country: detectedCountry || "US",
+    };
+    signup(signupData);
+  },
+  [detectedCountry, signup],
+);
 
 const toggleSecureTextEntry = React.useCallback(() => {
-  setSecureTextEntry(prev => !prev);
+  setSecureTextEntry((prev) => !prev);
 }, []);
 ```
 
@@ -200,6 +220,7 @@ export const useResponsive = () => {
 ```
 
 #### Performance Benefits:
+
 - **Single Computation**: Calculates all responsive values once per render
 - **Memoization**: Prevents recalculation unless screen dimensions change
 - **Centralized Logic**: Reduces duplicate responsive calculations across components
@@ -209,6 +230,7 @@ export const useResponsive = () => {
 ### Native KeyboardAvoidingView Pattern
 
 **Before** (complex animation approach):
+
 ```typescript
 const imageHeight = React.useRef(new Animated.Value(maxViewportHeight)).current;
 
@@ -225,6 +247,7 @@ React.useEffect(() => {
 ```
 
 **After** (native pattern):
+
 ```typescript
 <KeyboardAvoidingView
   style={styles.container}
@@ -245,23 +268,28 @@ React.useEffect(() => {
 ### Improved Input Focus & Scrolling
 
 **Enhanced scroll-to-input behavior**:
+
 ```typescript
-const scrollToInput = React.useCallback((inputRef: React.RefObject<TextInput>) => {
-  if (!inputRef.current || !scrollViewRef.current) return;
-  
-  inputRef.current.measureInWindow((x, y, width, height) => {
-    const offset = Math.max(0, y - 150);
-    scrollViewRef.current?.scrollTo({
-      y: offset,
-      animated: true,
+const scrollToInput = React.useCallback(
+  (inputRef: React.RefObject<TextInput>) => {
+    if (!inputRef.current || !scrollViewRef.current) return;
+
+    inputRef.current.measureInWindow((x, y, width, height) => {
+      const offset = Math.max(0, y - 150);
+      scrollViewRef.current?.scrollTo({
+        y: offset,
+        animated: true,
+      });
     });
-  });
-}, []);
+  },
+  [],
+);
 ```
 
 ### Input Navigation Flow
 
 Added proper keyboard navigation between fields:
+
 ```typescript
 <TextInput
   ref={emailInputRef}
@@ -276,6 +304,7 @@ Added proper keyboard navigation between fields:
 ### Screen Reader Support
 
 Enhanced checkbox accessibility:
+
 ```typescript
 <TouchableOpacity
   style={styles.checkboxContainer}
@@ -290,6 +319,7 @@ Enhanced checkbox accessibility:
 ### Touch Target Optimization
 
 Ensured minimum 44px touch targets for all interactive elements:
+
 ```typescript
 input: {
   // ... other styles
@@ -310,6 +340,7 @@ checkbox: {
 ### Proper Type Definitions
 
 **Before**:
+
 ```typescript
 const onSubmit = (data: any) => {
   // ... unsafe typing
@@ -317,12 +348,16 @@ const onSubmit = (data: any) => {
 ```
 
 **After**:
+
 ```typescript
 type SignupFormData = z.infer<typeof schema>;
 
-const onSubmit = React.useCallback((data: SignupFormData) => {
-  // ... type-safe implementation
-}, [detectedCountry, signup]);
+const onSubmit = React.useCallback(
+  (data: SignupFormData) => {
+    // ... type-safe implementation
+  },
+  [detectedCountry, signup],
+);
 ```
 
 ### Keyboard Behavior Typing
@@ -338,6 +373,7 @@ export const getKeyboardBehavior = (): "height" | "position" | "padding" => {
 ### Clean Import Management
 
 **Removed unused imports**:
+
 - `Dimensions`, `Image` (now handled by useResponsive)
 - `StyleProp`, `TextStyle` (moved to ErrorMessage component)
 - `FieldError` (no longer used inline)
@@ -367,14 +403,14 @@ React.useEffect(() => {
 
 ```typescript
 // ErrorMessage component can now be tested independently
-import { ErrorMessage } from '@/components/common/ErrorMessage';
+import { ErrorMessage } from "@/components/common/ErrorMessage";
 
-describe('ErrorMessage', () => {
-  it('should not render when no error provided', () => {
+describe("ErrorMessage", () => {
+  it("should not render when no error provided", () => {
     // ... test implementation
   });
-  
-  it('should display error message with proper styling', () => {
+
+  it("should display error message with proper styling", () => {
     // ... test implementation
   });
 });
@@ -384,10 +420,10 @@ describe('ErrorMessage', () => {
 
 ```typescript
 // useResponsive hook can be tested with different screen dimensions
-import { useResponsive } from '@/hooks/useResponsive';
+import { useResponsive } from "@/hooks/useResponsive";
 
-describe('useResponsive', () => {
-  it('should return small spacing for narrow screens', () => {
+describe("useResponsive", () => {
+  it("should return small spacing for narrow screens", () => {
     // Mock Dimensions.get to return small width
     // ... test implementation
   });
@@ -398,12 +434,14 @@ describe('useResponsive', () => {
 
 ### Improvements Achieved
 
-1. **Reduced Re-renders**: 
+1. **Reduced Re-renders**:
+
    - Memoized styles prevent recreation on every render
    - Extracted components eliminate inline function definitions
    - Memoized callbacks prevent child component re-renders
 
 2. **Better Memory Usage**:
+
    - useResponsive hook eliminates redundant calculations
    - Proper cleanup of keyboard listeners
    - Memoized components reduce component tree churn

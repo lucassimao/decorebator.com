@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   FlatList,
   Alert,
@@ -19,6 +18,7 @@ import { LoadingWithTimeout } from "@/components/LoadingWithTimeout";
 import ScreenHeader from "@/components/common/ScreenHeader";
 import * as wordlistsApi from "@/api/wordlists";
 import { Word } from "@/api/wordlists";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const MAX_SELECTED_WORDS = 5;
 

@@ -20,7 +20,9 @@ import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import type { PostHogEventProperties } from "@posthog/core";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const QuizScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -156,13 +158,14 @@ const QuizScreen: React.FC = () => {
     onSuccess: (_, variables) => {
       // Invalidate all analytics after answering a quiz (real-time updates)
       invalidateAllAnalytics(Number(wordlistId));
-      posthog.capture("quiz_completed", {
+      const captureProps: PostHogEventProperties = {
         wordlistId: Number(wordlistId),
-        quizId: quiz?.id,
-        quizType: quiz?.type,
         correct: variables.success,
         responseTimeMs: Date.now() - quizDisplayedAtRef.current,
-      });
+        ...(quiz?.id != null ? { quizId: quiz.id } : {}),
+        ...(quiz?.type != null ? { quizType: quiz.type } : {}),
+      };
+      posthog.capture("quiz_completed", captureProps);
 
       if (fastMode) {
         setTimeout(() => {

@@ -57,39 +57,52 @@ The app implements a comprehensive responsive design system that adapts to diffe
 
 ```typescript
 export const BREAKPOINTS = {
-  SMALL: 359,  // <= 359px width (iPhone SE, small Android)
+  SMALL: 359, // <= 359px width (iPhone SE, small Android)
   MEDIUM: 389, // 360-389px width (standard Android)
-  LARGE: 390,  // >= 390px width (modern iPhones, large Android)
+  LARGE: 390, // >= 390px width (modern iPhones, large Android)
 } as const;
 ```
 
 ### Responsive Design Patterns
 
 #### 1. Adaptive Spacing & Typography
+
 - **Dynamic Spacing**: Screen-size-aware padding, margins, and element spacing
 - **Typography Scaling**: Font sizes adapt to screen categories for optimal readability
 - **Touch Target Optimization**: Ensures minimum 44px touch targets across all screen sizes
 
 #### 2. useResponsive Hook
+
 Centralized responsive calculations to reduce redundant computation:
 
 ```typescript
 export const useResponsive = () => {
   const { width: screenWidth, height: screenHeight } = getScreenDimensions();
-  
-  return useMemo(() => ({
-    screenWidth, screenHeight, category, spacing, fontSizes, 
-    imageConfig, keyboardBehavior, keyboardOffset,
-  }), [screenWidth, screenHeight]);
+
+  return useMemo(
+    () => ({
+      screenWidth,
+      screenHeight,
+      category,
+      spacing,
+      fontSizes,
+      imageConfig,
+      keyboardBehavior,
+      keyboardOffset,
+    }),
+    [screenWidth, screenHeight],
+  );
 };
 ```
 
 **Performance Benefits**:
+
 - Single computation per render cycle
 - Memoization prevents recalculation unless screen dimensions change
 - Centralized logic reduces duplicate responsive calculations
 
 #### 3. Responsive Image Treatment
+
 - **Adaptive Background Images**: Height and opacity adjust based on screen size
 - **Progressive Enhancement**: Subtle background illustrations on larger screens
 - **Performance Optimization**: Native KeyboardAvoidingView replaces complex animations
@@ -97,12 +110,14 @@ export const useResponsive = () => {
 ### Enhanced Component Architecture
 
 #### Performance Optimizations (January 2025)
+
 1. **Component Extraction**: ErrorMessage component extracted for reusability
 2. **Memoization Strategy**: Styles and callbacks memoized to prevent unnecessary re-renders
 3. **Type Safety**: Proper TypeScript types throughout (SignupFormData = z.infer<typeof schema>)
 4. **Clean Import Management**: Unused imports removed, proper dependency management
 
 #### Accessibility Enhancements
+
 - **Screen Reader Support**: Proper accessibility roles and states
 - **Touch Target Optimization**: Minimum 44px touch targets with proper spacing
 - **Focus Management**: Enhanced keyboard navigation between form fields
@@ -113,24 +128,28 @@ export const useResponsive = () => {
 ### 1. Authentication & Session Management
 
 **Architecture**: JWT-based authentication with automatic refresh
+
 - Tokens stored in Expo SecureStore for security
 - Automatic session validation on app focus
 - Seamless token refresh without user interaction
 - Subscription status tracking in JWT payload
 
 **Key Files**:
+
 - `api/jwt.ts` - Token management and API interceptors
 - `hooks/users.ts` - Authentication hooks and user state
 
 ### 2. Dashboard & Wordlist Management
 
 **Design**: Card-based interface with stats overview
+
 - Real-time learning progress visualization
 - Wordlist creation with language selection
 - Subscription upgrade prompts for free users
 - Empty state illustrations and onboarding
 
 **Components**:
+
 - `components/dashboard/Header.tsx` - Navigation and user profile
 - `components/dashboard/Stats.tsx` - Learning progress metrics
 - `components/dashboard/WordlistItem.tsx` - Individual wordlist cards
@@ -139,12 +158,14 @@ export const useResponsive = () => {
 ### 3. Quiz System
 
 **Architecture**: Dynamic quiz type rotation with deterministic selection
+
 - Time-based quiz type rotation (5-minute intervals)
 - Multiple quiz modes: meaning recognition, word completion, audio comprehension, visual association
 - Progressive difficulty through Leitner system integration
 - Real-time performance tracking and analytics
 
 **Quiz Types**:
+
 - `GUESS_MEANING` - Multiple choice meaning selection
 - `WORD_FROM_MEANING` - Word selection from definition
 - `COMPLETE_SENTENCE` - Fill-in-the-blank with context
@@ -155,6 +176,7 @@ export const useResponsive = () => {
 - `WORD_FROM_EXAMPLE_AUDIO` - Context-based audio recognition
 
 **Components**:
+
 - `app/quiz.tsx` - Main quiz orchestration
 - `components/quiz/QuizContent.tsx` - Question rendering logic
 - `components/quiz/QuizOptions.tsx` - Answer selection interface
@@ -162,6 +184,7 @@ export const useResponsive = () => {
 - `components/quiz/QuizModeToggle.tsx` - Fast mode toggle
 
 **UX Features**:
+
 - Haptic feedback for interactions
 - Smooth transitions between questions
 - Fast mode for experienced learners
@@ -169,9 +192,10 @@ export const useResponsive = () => {
 - Retry mechanisms for network issues
 
 **Recent Loading State Fix (January 2025)**:
+
 - **Problem**: Quiz screen would hang indefinitely with loading spinner
 - **Root Cause**: Race condition between `currentQuizId`, `isLoadingNext`, and `isFetching` states
-- **Solution**: 
+- **Solution**:
   - Reset `currentQuizId` to `null` when loading new quiz
   - Simplified loading condition to `(isLoadingNext || isFetching || !quiz)`
   - Added explicit `refetch()` call in retry handler
@@ -181,6 +205,7 @@ export const useResponsive = () => {
 ### 4. Flashcard System
 
 **Architecture**: 3D flip animations with lazy content loading
+
 - Dual-sided card interface with smooth flip animations
 - On-demand definition fetching to optimize performance
 - Position saving for continuous learning sessions
@@ -188,6 +213,7 @@ export const useResponsive = () => {
 - **Route**: `/flashcard` (renamed from `/practice` for better semantic clarity)
 
 **Components**:
+
 - `app/flashcard.tsx` - Flashcard session management (renamed from practice.tsx)
 - `components/flashcard/FlashcardContent.tsx` - Card rendering and animations
 - `components/flashcard/FlashcardHeader.tsx` - Session controls
@@ -195,6 +221,7 @@ export const useResponsive = () => {
 - `components/flashcard/FlashcardProgressBar.tsx` - Visual progress
 
 **UX Features**:
+
 - 3D flip animations with backface culling
 - Slide transitions between cards
 - Audio playback with visual feedback
@@ -204,6 +231,7 @@ export const useResponsive = () => {
 - **Pronunciation Display**: Moved pronunciation to front of card for immediate visibility
 
 **Recent Improvements (January 2025)**:
+
 - **Route Rename**: Changed from `/practice` to `/flashcard` for clearer semantic meaning
 - **Pronunciation UX**: Moved pronunciation from back to front of flashcard for better learning experience
 - **Translation Updates**: Updated "practice" to "flashcards" across all 8 supported languages
@@ -214,6 +242,7 @@ export const useResponsive = () => {
 ### 5. Analytics System
 
 **Architecture**: Modular analytics with real-time data visualization
+
 - Component-based analytics dashboard extracted from monolithic 870-line component
 - Real-time box distribution tracking with automatic cache invalidation
 - Historical progress trends with daily snapshots
@@ -221,6 +250,7 @@ export const useResponsive = () => {
 - Box distribution correctly counts unique words (not definitions)
 
 **Analytics Components**:
+
 - `app/analytics.tsx` - Main analytics orchestration
 - `components/analytics/AnalyticsHeader.tsx` - Title and wordlist selection
 - `components/analytics/StatsGrid.tsx` - Overview metrics and mastery percentages
@@ -232,6 +262,7 @@ export const useResponsive = () => {
 - `components/analytics/TopWordsSection.tsx` - Highest performing vocabulary
 
 **Key Improvements (January 2025)**:
+
 - **Box Distribution Fix**: Words with multiple definitions are counted once, at their lowest box level
 - **Quiz Performance Scoping**: All quiz performance metrics are now wordlist-specific
 - **API Optimization**: Removed redundant `mv_quiz_type_performance` materialized view
@@ -242,19 +273,22 @@ export const useResponsive = () => {
 - **Optimized Data Windows**: Historical box distribution reduced from 30 days to 7 days
 
 **Data Visualization**:
+
 - React Native Chart Kit for rendering charts and graphs
 - Custom color gradients for Leitner box progression visualization
 - Responsive chart sizing based on screen dimensions
 - Interactive chart elements with clear legends and explanations
 
 **Caching Strategy**:
+
 - **Tier-Based TTLs**: 10 seconds for premium users, 15 minutes for free users
-- **Real-Time Updates**: Premium users get fresh analytics after quiz sessions  
+- **Real-Time Updates**: Premium users get fresh analytics after quiz sessions
 - **Automatic Cache Invalidation**: React Query v5 predicate functions handle `isPremium` flag
 - **Background Data Population**: Box distribution snapshots updated during quiz completion
 - **Graceful Fallback**: Direct database queries when Redis unavailable
 
 **UX Features**:
+
 - Real-time updates of learning metrics
 - Visual representation of spaced repetition progression
 - Historical trend analysis with date-based filtering
@@ -266,18 +300,21 @@ export const useResponsive = () => {
 ### 6. Offline Support
 
 **Architecture**: Enterprise-grade offline caching for premium users
+
 - React Query cache persistence with atomic operations
 - Real-time network connectivity testing
 - Circuit breaker pattern for network resilience
 - Graceful degradation for offline scenarios
 
 **Implementation**:
+
 - `hooks/useOffline.tsx` - Network state management
 - `utils/offlineManager.ts` - **Bulletproof offline manager** with enterprise reliability
 - `api/offlineWordlists.ts` - Offline-first API layer
 - `components/OfflineIndicator.tsx` - Connection status
 
 **Features**:
+
 - Premium-only offline access (72-hour cache expiry)
 - Automatic sync on reconnection
 - Offline-first data fetching
@@ -288,6 +325,7 @@ export const useResponsive = () => {
 - **Connection quality detection** (fast/slow/unknown)
 
 **Bulletproof Offline Manager (January 2025)**:
+
 - **99.9% Network Detection Accuracy**: Eliminates false positive connectivity reports
 - **Circuit Breaker Protection**: Opens after 5 consecutive failures with exponential backoff
 - **Atomic Transactions**: All cache operations support rollback on failure
@@ -299,17 +337,20 @@ export const useResponsive = () => {
 ### 6. Error Reporting System
 
 **Architecture**: User-driven quality control for AI content
+
 - Context-aware error reporting (quiz vs flashcards)
 - Rate limiting with intelligent retry logic
 - Error type categorization
 - Automatic content regeneration workflow
 
 **Components**:
+
 - `components/ErrorReportModal.tsx` - Error submission interface
 - `hooks/useErrorReporting.ts` - Reporting logic and state
 - `api/errorReporting.ts` - API integration
 
 **Error Types**:
+
 - Sound not playing
 - Unrelated meaning
 - Incorrect grammar
@@ -319,12 +360,14 @@ export const useResponsive = () => {
 ### 7. Audio System
 
 **Architecture**: Expo Audio with intelligent playback management
+
 - Automatic audio setup and cleanup
 - Visual play/pause state indicators
 - Error handling for network issues
 - Position reset on completion
 
 **Implementation**:
+
 - Consistent audio player instances across components
 - Visual feedback with dynamic icons
 - Automatic audio replacement on content changes
@@ -336,19 +379,19 @@ export const useResponsive = () => {
 
 ```typescript
 const colors = {
-  primary: "#FF7B54",        // Orange accent
-  success: "#4CAF50",        // Green success states
-  error: "#FF6B6B",          // Red error states
-  gold: "#FFD700",           // Achievement highlights
-  background: "#FDF6E3",     // Warm background
+  primary: "#FF7B54", // Orange accent
+  success: "#4CAF50", // Green success states
+  error: "#FF6B6B", // Red error states
+  gold: "#FFD700", // Achievement highlights
+  background: "#FDF6E3", // Warm background
   backgroundLight: "#FFF9F0", // Light variants
   backgroundPeach: "#FFE8D6", // Peach gradients
-  backgroundSage: "#F5F0E6",  // Sage accents
-  textDark: "#2D3436",       // Primary text
-  textMedium: "#636E72",     // Secondary text
-  textLight: "#B2BEC3",      // Tertiary text
-  white: "#FFFFFF",          // Pure white
-  borderGray: "#E0E0E0",     // Borders and dividers
+  backgroundSage: "#F5F0E6", // Sage accents
+  textDark: "#2D3436", // Primary text
+  textMedium: "#636E72", // Secondary text
+  textLight: "#B2BEC3", // Tertiary text
+  white: "#FFFFFF", // Pure white
+  borderGray: "#E0E0E0", // Borders and dividers
 };
 ```
 
@@ -385,7 +428,7 @@ const { data, isLoading, error, refetch } = useQuery({
   queryKey: ["words", wordlistId],
   queryFn: () => api.getWords(wordlistId),
   retry: (failureCount, error) => {
-    if (error.message.includes('timeout')) return false;
+    if (error.message.includes("timeout")) return false;
     return isOnline ? failureCount < 2 : false;
   },
   staleTime: 5 * 60 * 1000, // 5 minutes
@@ -472,6 +515,7 @@ const { data, isLoading, error, refetch } = useQuery({
 ### Language Support
 
 8 languages with full UI translation:
+
 - English (en)
 - German (de)
 - Spanish (es)
@@ -527,6 +571,7 @@ This architecture provides a scalable, maintainable, and user-friendly foundatio
 This architecture document is part of a comprehensive documentation suite:
 
 ### **Related Documentation:**
+
 - `ui-design-system.md` - Comprehensive UI patterns, color system, and component architecture
 - `state-management-patterns.md` - Advanced state management, caching strategies, and data flow
 - `animation-and-interactions.md` - Animation systems, gesture handling, and performance optimization
@@ -537,6 +582,7 @@ This architecture document is part of a comprehensive documentation suite:
 - `timezone-date-handling.md` - Date handling and timezone management
 
 ### **Key Implementation Files:**
+
 - `theme/colors.ts` - Centralized color system
 - `hooks/useOffline.tsx` - Network state management
 - `hooks/useErrorReporting.ts` - Error reporting system
@@ -546,6 +592,7 @@ This architecture document is part of a comprehensive documentation suite:
 - `components/flashcard/` - Flashcard system components
 
 ### **Recent Updates & Fixes:**
+
 - **Responsive Design System (January 2025)**: Comprehensive responsive design implementation with breakpoint-based layouts
 - **Signup Screen Optimization**: Complete redesign with keyboard handling, performance improvements, and accessibility enhancements
 - **Component Architecture**: Extracted reusable components (ErrorMessage) and implemented performance optimizations

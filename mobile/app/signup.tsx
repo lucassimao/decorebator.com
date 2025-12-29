@@ -18,7 +18,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   TouchableWithoutFeedback,
@@ -29,6 +28,7 @@ import { authLightTheme } from "@/theme/authTheme";
 import type { Theme } from "@/contexts/ThemeContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { ResponsiveValues } from "@/contexts/ThemeContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const schema = z
   .object({

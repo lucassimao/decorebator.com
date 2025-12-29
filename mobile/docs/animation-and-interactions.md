@@ -32,19 +32,22 @@ Animated.timing(animationValue, {
 // Proper cleanup to prevent memory leaks
 export function useAnimationCleanup() {
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
-  
+
   useEffect(() => {
     return () => {
       // Stop animations on unmount
       animationRef.current?.stop();
     };
   }, []);
-  
-  const startAnimation = useCallback((animation: Animated.CompositeAnimation) => {
-    animationRef.current = animation;
-    animation.start();
-  }, []);
-  
+
+  const startAnimation = useCallback(
+    (animation: Animated.CompositeAnimation) => {
+      animationRef.current = animation;
+      animation.start();
+    },
+    [],
+  );
+
   return { startAnimation };
 }
 ```
@@ -59,28 +62,28 @@ The flashcard system implements sophisticated 3D flip animations with proper dep
 export function FlashcardFlipAnimation() {
   const flipAnimation = useRef(new Animated.Value(0)).current;
   const [isFlipped, setIsFlipped] = useState(false);
-  
+
   // Create rotation interpolations for 3D effect
   const frontInterpolate = flipAnimation.interpolate({
     inputRange: [0, 180],
     outputRange: ["0deg", "180deg"],
   });
-  
+
   const backInterpolate = flipAnimation.interpolate({
     inputRange: [0, 180],
     outputRange: ["180deg", "360deg"],
   });
-  
+
   // Front card animation style
   const frontAnimatedStyle = {
     transform: [{ rotateY: frontInterpolate }],
   };
-  
-  // Back card animation style  
+
+  // Back card animation style
   const backAnimatedStyle = {
     transform: [{ rotateY: backInterpolate }],
   };
-  
+
   // Flip function with physics-based animation
   const flipCard = useCallback(() => {
     Animated.timing(flipAnimation, {
@@ -88,10 +91,10 @@ export function FlashcardFlipAnimation() {
       duration: 600,
       useNativeDriver: true,
     }).start();
-    
+
     setIsFlipped(!isFlipped);
   }, [isFlipped, flipAnimation]);
-  
+
   return (
     <View style={styles.cardContainer}>
       {/* Front of card */}
@@ -104,7 +107,7 @@ export function FlashcardFlipAnimation() {
       >
         <Text>Front Content</Text>
       </Animated.View>
-      
+
       {/* Back of card */}
       <Animated.View
         style={[
@@ -130,7 +133,7 @@ export function CardEntryAnimation({ children }: { children: React.ReactNode }) 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
-  
+
   useEffect(() => {
     // Parallel animations for smooth entry
     Animated.parallel([
@@ -155,7 +158,7 @@ export function CardEntryAnimation({ children }: { children: React.ReactNode }) 
       }),
     ]).start();
   }, []);
-  
+
   return (
     <Animated.View
       style={{
@@ -181,7 +184,7 @@ export function ProgressiveLoadingAnimation({ items }: { items: any[] }) {
   const animValues = useRef(
     items.map(() => new Animated.Value(0))
   ).current;
-  
+
   useEffect(() => {
     // Stagger animations for each item
     const animations = animValues.map((animValue, index) =>
@@ -192,10 +195,10 @@ export function ProgressiveLoadingAnimation({ items }: { items: any[] }) {
         useNativeDriver: true,
       })
     );
-    
+
     Animated.stagger(100, animations).start();
   }, [items.length]);
-  
+
   return (
     <View>
       {items.map((item, index) => (
@@ -227,7 +230,7 @@ export function ProgressiveLoadingAnimation({ items }: { items: any[] }) {
 export function TouchableCard({ children, onPress }: TouchableCardProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const opacityAnim = useRef(new Animated.Value(1)).current;
-  
+
   const handlePressIn = useCallback(() => {
     Animated.parallel([
       Animated.timing(scaleAnim, {
@@ -242,7 +245,7 @@ export function TouchableCard({ children, onPress }: TouchableCardProps) {
       }),
     ]).start();
   }, []);
-  
+
   const handlePressOut = useCallback(() => {
     Animated.parallel([
       Animated.spring(scaleAnim, {
@@ -257,7 +260,7 @@ export function TouchableCard({ children, onPress }: TouchableCardProps) {
       }),
     ]).start();
   }, []);
-  
+
   return (
     <Pressable
       onPressIn={handlePressIn}
@@ -283,7 +286,7 @@ export function TouchableCard({ children, onPress }: TouchableCardProps) {
 export function SnackBar({ message, type, onDismiss }: SnackBarProps) {
   const slideAnim = useRef(new Animated.Value(100)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  
+
   useEffect(() => {
     // Slide in from bottom
     Animated.parallel([
@@ -298,15 +301,15 @@ export function SnackBar({ message, type, onDismiss }: SnackBarProps) {
         useNativeDriver: true,
       }),
     ]).start();
-    
+
     // Auto dismiss after 3 seconds
     const timer = setTimeout(() => {
       dismissSnackbar();
     }, 3000);
-    
+
     return () => clearTimeout(timer);
   }, []);
-  
+
   const dismissSnackbar = useCallback(() => {
     Animated.parallel([
       Animated.timing(slideAnim, {
@@ -323,7 +326,7 @@ export function SnackBar({ message, type, onDismiss }: SnackBarProps) {
       onDismiss();
     });
   }, []);
-  
+
   return (
     <Animated.View
       style={[
@@ -349,7 +352,7 @@ export function SnackBar({ message, type, onDismiss }: SnackBarProps) {
 ```typescript
 export function AnimatedProgressBar({ progress, duration = 1000 }: ProgressBarProps) {
   const progressAnim = useRef(new Animated.Value(0)).current;
-  
+
   useEffect(() => {
     Animated.timing(progressAnim, {
       toValue: progress,
@@ -357,7 +360,7 @@ export function AnimatedProgressBar({ progress, duration = 1000 }: ProgressBarPr
       useNativeDriver: false, // Layout property
     }).start();
   }, [progress]);
-  
+
   return (
     <View style={styles.progressContainer}>
       <View style={styles.progressBackground}>
@@ -394,11 +397,11 @@ export function SwipeableFlashcard({ onSwipeLeft, onSwipeRight }: SwipeableProps
       )
     )
   ).current;
-  
+
   const onGestureStateChange = useCallback((event: PanGestureHandlerStateChangeEvent) => {
     if (event.nativeEvent.state === State.END) {
       const { translationX, velocityX } = event.nativeEvent;
-      
+
       // Determine swipe direction and threshold
       if (Math.abs(translationX) > 100 || Math.abs(velocityX) > 500) {
         if (translationX > 0) {
@@ -407,7 +410,7 @@ export function SwipeableFlashcard({ onSwipeLeft, onSwipeRight }: SwipeableProps
           onSwipeLeft?.();
         }
       }
-      
+
       // Reset position
       Animated.spring(pan, {
         toValue: { x: 0, y: 0 },
@@ -415,7 +418,7 @@ export function SwipeableFlashcard({ onSwipeLeft, onSwipeRight }: SwipeableProps
       }).start();
     }
   }, [onSwipeLeft, onSwipeRight]);
-  
+
   return (
     <PanGestureHandler
       onGestureEvent={panGesture}
@@ -448,17 +451,17 @@ export function SwipeableFlashcard({ onSwipeLeft, onSwipeRight }: SwipeableProps
 export function PullToRefreshList({ onRefresh, children }: PullToRefreshProps) {
   const [refreshing, setRefreshing] = useState(false);
   const pullAnim = useRef(new Animated.Value(0)).current;
-  
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    
+
     // Animate refresh indicator
     Animated.timing(pullAnim, {
       toValue: 1,
       duration: 200,
       useNativeDriver: true,
     }).start();
-    
+
     try {
       await onRefresh();
     } finally {
@@ -472,7 +475,7 @@ export function PullToRefreshList({ onRefresh, children }: PullToRefreshProps) {
       });
     }
   }, [onRefresh]);
-  
+
   return (
     <ScrollView
       refreshControl={
@@ -497,7 +500,7 @@ export function PullToRefreshList({ onRefresh, children }: PullToRefreshProps) {
 ```typescript
 export function SkeletonLoader({ width, height, borderRadius = 4 }: SkeletonProps) {
   const pulseAnim = useRef(new Animated.Value(0)).current;
-  
+
   useEffect(() => {
     const pulse = Animated.sequence([
       Animated.timing(pulseAnim, {
@@ -511,10 +514,10 @@ export function SkeletonLoader({ width, height, borderRadius = 4 }: SkeletonProp
         useNativeDriver: true,
       }),
     ]);
-    
+
     Animated.loop(pulse).start();
   }, []);
-  
+
   return (
     <Animated.View
       style={[
@@ -539,7 +542,7 @@ export function SkeletonLoader({ width, height, borderRadius = 4 }: SkeletonProp
 ```typescript
 export function ShimmerPlaceholder({ width, height }: ShimmerProps) {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
-  
+
   useEffect(() => {
     Animated.loop(
       Animated.timing(shimmerAnim, {
@@ -549,7 +552,7 @@ export function ShimmerPlaceholder({ width, height }: ShimmerProps) {
       })
     ).start();
   }, []);
-  
+
   return (
     <View style={[styles.shimmerContainer, { width, height }]}>
       <Animated.View
@@ -580,7 +583,7 @@ export function ShimmerPlaceholder({ width, height }: ShimmerProps) {
 // Respect user's motion preferences
 export function useReducedMotion() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  
+
   useEffect(() => {
     const checkMotionPreference = async () => {
       try {
@@ -591,10 +594,10 @@ export function useReducedMotion() {
         console.error('Error checking motion preference:', error);
       }
     };
-    
+
     checkMotionPreference();
   }, []);
-  
+
   return prefersReducedMotion;
 }
 
@@ -602,7 +605,7 @@ export function useReducedMotion() {
 export function AccessibleAnimation({ children }: { children: React.ReactNode }) {
   const prefersReducedMotion = useReducedMotion();
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  
+
   useEffect(() => {
     if (prefersReducedMotion) {
       // Skip animation for accessibility
@@ -616,7 +619,7 @@ export function AccessibleAnimation({ children }: { children: React.ReactNode })
       }).start();
     }
   }, [prefersReducedMotion]);
-  
+
   return (
     <Animated.View style={{ opacity: fadeAnim }}>
       {children}
@@ -634,22 +637,22 @@ export function useHapticFeedback() {
   const triggerSuccess = useCallback(() => {
     trigger(HapticFeedbackTypes.notificationSuccess);
   }, []);
-  
+
   const triggerError = useCallback(() => {
     trigger(HapticFeedbackTypes.notificationError);
   }, []);
-  
+
   const triggerSelection = useCallback(() => {
     trigger(HapticFeedbackTypes.selection);
   }, []);
-  
+
   return { triggerSuccess, triggerError, triggerSelection };
 }
 
 // Usage in quiz component
 export function QuizAnswer({ isCorrect, onPress }: QuizAnswerProps) {
   const { triggerSuccess, triggerError } = useHapticFeedback();
-  
+
   const handlePress = useCallback(() => {
     if (isCorrect) {
       triggerSuccess();
@@ -658,7 +661,7 @@ export function QuizAnswer({ isCorrect, onPress }: QuizAnswerProps) {
     }
     onPress();
   }, [isCorrect, onPress]);
-  
+
   return (
     <TouchableOpacity onPress={handlePress}>
       <Text>Answer Option</Text>
@@ -675,24 +678,24 @@ export function QuizAnswer({ isCorrect, onPress }: QuizAnswerProps) {
 export function useAnimationPerformance() {
   const frameCount = useRef(0);
   const startTime = useRef(0);
-  
+
   const startMonitoring = useCallback(() => {
     frameCount.current = 0;
     startTime.current = Date.now();
-    
+
     const monitor = () => {
       frameCount.current++;
       requestAnimationFrame(monitor);
     };
-    
+
     requestAnimationFrame(monitor);
   }, []);
-  
+
   const getAverageFPS = useCallback(() => {
     const duration = Date.now() - startTime.current;
     return (frameCount.current / duration) * 1000;
   }, []);
-  
+
   return { startMonitoring, getAverageFPS };
 }
 ```
@@ -703,35 +706,35 @@ export function useAnimationPerformance() {
 export function useAnimationCleanup() {
   const animationsRef = useRef<Animated.CompositeAnimation[]>([]);
   const timersRef = useRef<NodeJS.Timeout[]>([]);
-  
+
   const addAnimation = useCallback((animation: Animated.CompositeAnimation) => {
     animationsRef.current.push(animation);
     return animation;
   }, []);
-  
+
   const addTimer = useCallback((timer: NodeJS.Timeout) => {
     timersRef.current.push(timer);
     return timer;
   }, []);
-  
+
   useEffect(() => {
     return () => {
       // Clean up all animations
-      animationsRef.current.forEach(animation => {
+      animationsRef.current.forEach((animation) => {
         animation.stop();
       });
-      
+
       // Clear all timers
-      timersRef.current.forEach(timer => {
+      timersRef.current.forEach((timer) => {
         clearTimeout(timer);
       });
-      
+
       // Clear arrays
       animationsRef.current = [];
       timersRef.current = [];
     };
   }, []);
-  
+
   return { addAnimation, addTimer };
 }
 ```

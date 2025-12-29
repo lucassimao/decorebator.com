@@ -1,6 +1,4 @@
 // jest-setup.js
-import "@testing-library/jest-native/extend-expect";
-
 // Import and configure i18n for tests
 import i18n from "@/i18n";
 
@@ -80,13 +78,6 @@ jest.mock("react-native-purchases", () => ({
   purchasePackage: jest.fn(),
   restorePurchases: jest.fn(),
   getCustomerInfo: jest.fn(),
-}));
-
-jest.mock("react-native-purchases-ui", () => ({
-  presentPaywallIfNeeded: jest.fn(),
-  RevenueCatUI: {
-    presentPaywall: jest.fn(),
-  },
 }));
 
 jest.mock("@react-native-async-storage/async-storage", () => ({

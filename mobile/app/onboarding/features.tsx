@@ -28,7 +28,6 @@ const TOTAL_SLIDE_INSETS =
     CAROUSEL_HORIZONTAL_PADDING +
     SLIDE_HORIZONTAL_MARGIN);
 const slideWidth = Math.max(width - TOTAL_SLIDE_INSETS, 1);
-const pageWidth = Math.max(width - LAYOUT_HORIZONTAL_PADDING * 2, 1);
 
 type Slide = {
   key: string;

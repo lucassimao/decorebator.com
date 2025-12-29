@@ -14,7 +14,7 @@
       "channel": "preview"
     },
     "production": {
-      "channel": "production", 
+      "channel": "production",
       "ios": {
         "autoIncrement": "buildNumber"
       },
@@ -27,8 +27,8 @@
     "production": {
       "ios": {},
       "android": {
-        "serviceAccountKeyPath":"./decorebator-465316-0520ea65e130.json",
-        "track":"production"
+        "serviceAccountKeyPath": "./decorebator-465316-0520ea65e130.json",
+        "track": "production"
       }
     }
   }

@@ -16,7 +16,6 @@ import {
   KeyboardAvoidingView,
   KeyboardEvent,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -32,6 +31,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import type { ResponsiveValues } from "@/contexts/ThemeContext";
 import { decode } from "@/api/jwt";
 import * as Sentry from "@sentry/react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 interface LoginFormData {
   email: string;
   password: string;

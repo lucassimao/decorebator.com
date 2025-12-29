@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import {
   Animated,
   Dimensions,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -29,6 +28,7 @@ import { FlashcardHeader } from "@/components/flashcard/FlashcardHeader";
 import { FlashcardLoadingState } from "@/components/flashcard/FlashcardLoadingState";
 import { FlashcardNavigation } from "@/components/flashcard/FlashcardNavigation";
 import { FlashcardProgressBar } from "@/components/flashcard/FlashcardProgressBar";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: screenWidth } = Dimensions.get("window");
 

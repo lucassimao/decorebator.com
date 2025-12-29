@@ -357,7 +357,11 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   color="#000000"
                 />
               </View>
-              <Text style={styles.actionButtonText} numberOfLines={1} ellipsizeMode="tail">
+              <Text
+                style={styles.actionButtonText}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {t("wordlistItem.quiz")}
               </Text>
             </TouchableOpacity>
@@ -376,7 +380,11 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   color="#2196F3"
                 />
               </View>
-              <Text style={styles.actionButtonText} numberOfLines={1} ellipsizeMode="tail">
+              <Text
+                style={styles.actionButtonText}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {t("wordlistItem.cards", "Cards")}
               </Text>
             </TouchableOpacity>
@@ -398,7 +406,11 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   color="#FF8533"
                 />
               </View>
-              <Text style={styles.actionButtonText} numberOfLines={1} ellipsizeMode="tail">
+              <Text
+                style={styles.actionButtonText}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {t("wordlistItem.speak", "Speak")}
               </Text>
             </TouchableOpacity>
@@ -421,7 +433,11 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
                   color="#000000"
                 />
               </View>
-              <Text style={styles.actionButtonText} numberOfLines={1} ellipsizeMode="tail">
+              <Text
+                style={styles.actionButtonText}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {t("wordlistItem.stats", "Stats")}
               </Text>
             </TouchableOpacity>
@@ -448,9 +464,7 @@ const createStyles = (
   StyleSheet.create({
     wordlistCard: {
       backgroundColor:
-        theme.mode === "light"
-          ? "#FFFFFF"
-          : theme.colors.background.elevated,
+        theme.mode === "light" ? "#FFFFFF" : theme.colors.background.elevated,
       borderRadius: responsive.getValueForSize(20, 22, 24, 26),
       padding: responsive.getValueForSize(16, 18, 20, 22),
       marginHorizontal: responsive.spacing.horizontal,
@@ -481,9 +495,7 @@ const createStyles = (
       marginRight: responsive.spacing.elementSpacing,
       borderWidth: 1,
       borderColor:
-        theme.mode === "light"
-          ? "rgba(0, 0, 0, 0.06)"
-          : theme.colors.ui.border,
+        theme.mode === "light" ? "rgba(0, 0, 0, 0.06)" : theme.colors.ui.border,
     },
     languageFlag: {
       fontSize: responsive.getValueForSize(26, 28, 30, 32),
@@ -588,16 +600,12 @@ const createStyles = (
       paddingHorizontal: responsive.getValueForSize(2, 3, 4, 5),
       borderRadius: responsive.getValueForSize(14, 15, 16, 17),
       backgroundColor:
-        theme.mode === "light"
-          ? "#FFFFFF"
-          : theme.colors.background.elevated,
+        theme.mode === "light" ? "#FFFFFF" : theme.colors.background.elevated,
       gap: responsive.getValueForSize(4, 5, 6, 7),
       minHeight: responsive.getValueForSize(75, 78, 82, 85),
       borderWidth: 1,
       borderColor:
-        theme.mode === "light"
-          ? "rgba(0, 0, 0, 0.06)"
-          : theme.colors.ui.border,
+        theme.mode === "light" ? "rgba(0, 0, 0, 0.06)" : theme.colors.ui.border,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 1.5 },
       shadowOpacity: theme.mode === "light" ? 0.04 : 0.1,

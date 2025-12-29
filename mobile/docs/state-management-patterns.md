@@ -15,12 +15,12 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        if (error?.message?.includes('timeout')) return false;
+        if (error?.message?.includes("timeout")) return false;
         return isOnline ? failureCount < 2 : false;
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       staleTime: 5 * 60 * 1000, // 5 minutes default
-      gcTime: 30 * 60 * 1000,   // 30 minutes garbage collection
+      gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
     },
   },
 });
@@ -33,7 +33,7 @@ export function useAnalytics(wordlistId: number, isPremium: boolean) {
   // Premium users get fresher data and faster updates
   const staleTime = isPremium ? 10 * 1000 : 15 * 60 * 1000;
   const gcTime = isPremium ? 2 * 60 * 1000 : 60 * 60 * 1000;
-  
+
   return useQuery({
     queryKey: ["analytics", wordlistId, isPremium],
     queryFn: () => fetchAnalytics(wordlistId),
@@ -49,19 +49,22 @@ export function useAnalytics(wordlistId: number, isPremium: boolean) {
 ```typescript
 export function useInvalidateAnalytics() {
   const queryClient = useQueryClient();
-  
-  const invalidateAllAnalytics = useCallback((wordlistId: number) => {
-    // Premium users get immediate cache invalidation
-    queryClient.invalidateQueries({
-      predicate: (query) => {
-        const [resource, id, isPremium] = query.queryKey;
-        return resource === "analytics" && 
-               id === wordlistId && 
-               isPremium === true;
-      },
-    });
-  }, [queryClient]);
-  
+
+  const invalidateAllAnalytics = useCallback(
+    (wordlistId: number) => {
+      // Premium users get immediate cache invalidation
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const [resource, id, isPremium] = query.queryKey;
+          return (
+            resource === "analytics" && id === wordlistId && isPremium === true
+          );
+        },
+      });
+    },
+    [queryClient],
+  );
+
   return { invalidateAllAnalytics };
 }
 ```
@@ -74,11 +77,11 @@ export function useInvalidateAnalytics() {
 // Snackbar Provider - Global notification system
 export function SnackbarProvider({ children }: { children: React.ReactNode }) {
   const [snackbar, setSnackbar] = useState<SnackbarState | null>(null);
-  
+
   const showSnackbar = useCallback((message: string, type: SnackbarType = 'info') => {
     setSnackbar({ message, type, id: Date.now() });
   }, []);
-  
+
   return (
     <SnackbarContext.Provider value={{ showSnackbar }}>
       {children}
@@ -97,16 +100,16 @@ export function SnackbarProvider({ children }: { children: React.ReactNode }) {
 export function UpgradePromptDialogProvider({ children }: PropsWithChildren) {
   const [isVisible, setIsVisible] = useState(false);
   const [context, setContext] = useState<UpgradeContext>('general');
-  
+
   const showUpgradePrompt = useCallback((context: UpgradeContext = 'general') => {
     setContext(context);
     setIsVisible(true);
   }, []);
-  
+
   return (
     <UpgradePromptDialogContext.Provider value={{ showUpgradePrompt }}>
       {children}
-      <UpgradePromptDialog 
+      <UpgradePromptDialog
         visible={isVisible}
         context={context}
         onClose={() => setIsVisible(false)}
@@ -129,33 +132,36 @@ export function useErrorReporting({
 }: UseErrorReportingProps) {
   const [showReportModal, setShowReportModal] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
-  
-  const handleReportError = useCallback(async (errorType: ErrorType, description?: string) => {
-    if (!isOnline) {
-      showSnackbar(t("errors.offlineErrorReporting"), "error");
-      return;
-    }
-    
-    setIsReporting(true);
-    try {
-      await reportError({
-        wordId,
-        definitionId,
-        errorType,
-        description,
-        context,
-      });
-      
-      showSnackbar(t("errors.reportSuccess"), "success");
-      setShowReportModal(false);
-      onSuccess?.();
-    } catch (error) {
-      handleErrorReportingError(error);
-    } finally {
-      setIsReporting(false);
-    }
-  }, [wordId, definitionId, isOnline, context, onSuccess]);
-  
+
+  const handleReportError = useCallback(
+    async (errorType: ErrorType, description?: string) => {
+      if (!isOnline) {
+        showSnackbar(t("errors.offlineErrorReporting"), "error");
+        return;
+      }
+
+      setIsReporting(true);
+      try {
+        await reportError({
+          wordId,
+          definitionId,
+          errorType,
+          description,
+          context,
+        });
+
+        showSnackbar(t("errors.reportSuccess"), "success");
+        setShowReportModal(false);
+        onSuccess?.();
+      } catch (error) {
+        handleErrorReportingError(error);
+      } finally {
+        setIsReporting(false);
+      }
+    },
+    [wordId, definitionId, isOnline, context, onSuccess],
+  );
+
   return {
     showReportModal,
     isReporting,
@@ -170,20 +176,20 @@ export function useOffline() {
   const [isOnline, setIsOnline] = useState(true);
   const [isOfflineAvailable, setIsOfflineAvailable] = useState(false);
   const { data: userInfo } = useUserInfo();
-  
+
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
       setIsOnline(state.isConnected ?? false);
     });
-    
+
     return unsubscribe;
   }, []);
-  
+
   useEffect(() => {
     // Only premium users have offline access
-    setIsOfflineAvailable(userInfo?.subscriptionPlan !== 'free');
+    setIsOfflineAvailable(userInfo?.subscriptionPlan !== "free");
   }, [userInfo?.subscriptionPlan]);
-  
+
   return { isOnline, isOfflineAvailable };
 }
 ```
@@ -209,7 +215,7 @@ export function LoginForm() {
       password: "",
     },
   });
-  
+
   const onSubmit = async (data: FormData) => {
     try {
       await loginUser(data);
@@ -217,7 +223,7 @@ export function LoginForm() {
       // Handle login error
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Controller
@@ -244,20 +250,20 @@ export function LoginForm() {
 ```typescript
 // JWT Token Management
 class TokenManager {
-  private static readonly TOKEN_KEY = 'jwt_token';
-  private static readonly REFRESH_KEY = 'refresh_token';
-  
+  private static readonly TOKEN_KEY = "jwt_token";
+  private static readonly REFRESH_KEY = "refresh_token";
+
   static async storeTokens(token: string, refreshToken: string): Promise<void> {
     await Promise.all([
       SecureStore.setItemAsync(this.TOKEN_KEY, token),
       SecureStore.setItemAsync(this.REFRESH_KEY, refreshToken),
     ]);
   }
-  
+
   static async getToken(): Promise<string | null> {
     return await SecureStore.getItemAsync(this.TOKEN_KEY);
   }
-  
+
   static async clearTokens(): Promise<void> {
     await Promise.all([
       SecureStore.deleteItemAsync(this.TOKEN_KEY),
@@ -268,13 +274,13 @@ class TokenManager {
 
 // Preferences Management
 class PreferencesManager {
-  private static readonly LANGUAGE_KEY = 'preferred_language';
-  private static readonly FLASHCARD_POSITION_KEY = 'flashcard_save_position';
-  
+  private static readonly LANGUAGE_KEY = "preferred_language";
+  private static readonly FLASHCARD_POSITION_KEY = "flashcard_save_position";
+
   static async setLanguage(language: string): Promise<void> {
     await AsyncStorage.setItem(this.LANGUAGE_KEY, language);
   }
-  
+
   static async getLanguage(): Promise<string | null> {
     return await AsyncStorage.getItem(this.LANGUAGE_KEY);
   }
@@ -296,9 +302,9 @@ const answerMutation = useMutation({
     }),
   onMutate: async ({ success }) => {
     // Optimistically update UI
-    setQuizCount(prev => prev + 1);
+    setQuizCount((prev) => prev + 1);
     if (success) {
-      setCorrectCount(prev => prev + 1);
+      setCorrectCount((prev) => prev + 1);
     }
   },
   onSuccess: () => {
@@ -307,9 +313,9 @@ const answerMutation = useMutation({
   },
   onError: (error, variables, context) => {
     // Rollback optimistic update
-    setQuizCount(prev => prev - 1);
+    setQuizCount((prev) => prev - 1);
     if (variables.success) {
-      setCorrectCount(prev => prev - 1);
+      setCorrectCount((prev) => prev - 1);
     }
   },
 });
@@ -322,19 +328,19 @@ const answerMutation = useMutation({
 export class OfflineManager {
   private static async syncWhenOnline(): Promise<void> {
     const pendingData = await this.getPendingSync();
-    
+
     if (pendingData.length > 0) {
       try {
         await Promise.all(
-          pendingData.map(data => this.syncDataToServer(data))
+          pendingData.map((data) => this.syncDataToServer(data)),
         );
         await this.clearPendingSync();
       } catch (error) {
-        console.error('Sync failed:', error);
+        console.error("Sync failed:", error);
       }
     }
   }
-  
+
   static async handleNetworkStateChange(isOnline: boolean): Promise<void> {
     if (isOnline) {
       await this.syncWhenOnline();
@@ -348,32 +354,32 @@ export class OfflineManager {
 ```typescript
 // Offline-aware API calls
 export async function getWords(
-  wordlistId: number, 
-  onlyWithDefinitions: boolean = false
+  wordlistId: number,
+  onlyWithDefinitions: boolean = false,
 ): Promise<Word[]> {
   const { isOnline, isOfflineAvailable } = useOffline();
-  
+
   if (!isOnline && isOfflineAvailable) {
     // Try offline cache first
     const cachedWords = await OfflineManager.getCachedWords(wordlistId);
     if (cachedWords) {
-      return onlyWithDefinitions 
-        ? cachedWords.filter(word => word.hasDefinitions)
+      return onlyWithDefinitions
+        ? cachedWords.filter((word) => word.hasDefinitions)
         : cachedWords;
     }
   }
-  
+
   if (!isOnline && !isOfflineAvailable) {
-    throw new Error('Offline access requires premium subscription');
+    throw new Error("Offline access requires premium subscription");
   }
-  
+
   // Fetch from API and cache
-  const words = await callAPI<Word[]>('GET', `/wordlists/${wordlistId}/words`);
-  
+  const words = await callAPI<Word[]>("GET", `/wordlists/${wordlistId}/words`);
+
   if (isOfflineAvailable) {
     await OfflineManager.cacheWords(wordlistId, words);
   }
-  
+
   return words;
 }
 ```
@@ -386,17 +392,17 @@ export async function getWords(
 export function useRealtimeAnalytics(wordlistId: number) {
   const { isPremium } = useUserInfo();
   const queryClient = useQueryClient();
-  
+
   useEffect(() => {
     if (!isPremium) return;
-    
+
     // Premium users get real-time updates every 10 seconds
     const interval = setInterval(() => {
       queryClient.invalidateQueries({
         queryKey: ["analytics", wordlistId],
       });
     }, 10000);
-    
+
     return () => clearInterval(interval);
   }, [isPremium, wordlistId, queryClient]);
 }
@@ -408,8 +414,8 @@ export function useRealtimeAnalytics(wordlistId: number) {
 // Shared wordlist progress hook to avoid duplicate API calls
 export function useWordlistProgress() {
   const { data: userInfo } = useUserInfo();
-  const isPremium = userInfo?.subscriptionPlan !== 'free';
-  
+  const isPremium = userInfo?.subscriptionPlan !== "free";
+
   return useQuery({
     queryKey: ["wordlist-progress", isPremium],
     queryFn: () => api.getProgressSummary(),
@@ -428,7 +434,7 @@ export function useWordlistProgress() {
 export function useAuthFlow() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const queryClient = useQueryClient();
-  
+
   useEffect(() => {
     const validateSession = async () => {
       try {
@@ -437,7 +443,7 @@ export function useAuthFlow() {
           setIsAuthenticated(false);
           return;
         }
-        
+
         // Validate token with server
         await api.validateToken(token);
         setIsAuthenticated(true);
@@ -448,19 +454,19 @@ export function useAuthFlow() {
         setIsAuthenticated(false);
       }
     };
-    
+
     validateSession();
   }, []);
-  
+
   // Refresh session on app focus
   useFocusEffect(
     useCallback(() => {
       if (isAuthenticated) {
         validateSession();
       }
-    }, [isAuthenticated])
+    }, [isAuthenticated]),
   );
-  
+
   return { isAuthenticated };
 }
 ```
@@ -481,7 +487,7 @@ export function useAnalyticsData(wordlistId: number) {
         queryFn: () => api.getStats(wordlistId),
       },
       {
-        queryKey: ["progress", wordlistId], 
+        queryKey: ["progress", wordlistId],
         queryFn: () => api.getProgress(wordlistId),
       },
       {
@@ -501,7 +507,7 @@ export const WordlistItem = React.memo(({ wordlist, onPress }: Props) => {
   const handlePress = useCallback(() => {
     onPress(wordlist.id);
   }, [wordlist.id, onPress]);
-  
+
   return (
     <TouchableOpacity onPress={handlePress}>
       <Text>{wordlist.name}</Text>
@@ -516,7 +522,7 @@ export const WordlistItem = React.memo(({ wordlist, onPress }: Props) => {
 // Update state without blocking UI
 export function useBackgroundDataRefresh() {
   const queryClient = useQueryClient();
-  
+
   const refreshInBackground = useCallback(async () => {
     // Prefetch data in background
     await queryClient.prefetchQuery({
@@ -525,12 +531,12 @@ export function useBackgroundDataRefresh() {
       staleTime: 0, // Force refresh
     });
   }, [queryClient]);
-  
+
   // Refresh when app comes to foreground
   useFocusEffect(
     useCallback(() => {
       refreshInBackground();
-    }, [refreshInBackground])
+    }, [refreshInBackground]),
   );
 }
 ```
@@ -571,15 +577,18 @@ function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
 export function useNetworkErrorRecovery() {
   const { isOnline } = useOffline();
   const queryClient = useQueryClient();
-  
+
   useEffect(() => {
     if (isOnline) {
       // Retry failed queries when network comes back
-      queryClient.getQueryCache().getAll().forEach(query => {
-        if (query.state.error) {
-          query.fetch();
-        }
-      });
+      queryClient
+        .getQueryCache()
+        .getAll()
+        .forEach((query) => {
+          if (query.state.error) {
+            query.fetch();
+          }
+        });
     }
   }, [isOnline, queryClient]);
 }

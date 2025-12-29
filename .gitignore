@@ -1,2 +1,6 @@
 # Problems folder - temporary screenshots and debug files
 problems/
+
+# Expo CNG / Prebuild native folders (generated)
+mobile/android/
+mobile/ios/

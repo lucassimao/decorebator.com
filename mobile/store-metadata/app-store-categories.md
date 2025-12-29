@@ -3,17 +3,21 @@
 ## Primary Category Classification
 
 ### iOS App Store
+
 **Primary Category**: Education  
 **Secondary Category**: Reference
 
 ### Google Play Store
+
 **Primary Category**: Education  
 **Secondary Category**: Education > Language Learning
 
 ## Category Justification
 
 ### Education Category
+
 Decorebator fits perfectly in the Education category because:
+
 - **Core Purpose**: Teaching vocabulary and language learning
 - **Educational Methodology**: Uses proven spaced repetition techniques
 - **Target Audience**: Students, language learners, educators
@@ -21,7 +25,9 @@ Decorebator fits perfectly in the Education category because:
 - **Educational Features**: Progress tracking, adaptive learning algorithms
 
 ### Reference Category (Secondary)
+
 The app also serves as a reference tool:
+
 - **Dictionary Function**: AI-generated definitions and examples
 - **Pronunciation Guide**: Multiple pronunciation systems (IPA, Romaji, etc.)
 - **Offline Access**: Vocabulary reference without internet
@@ -30,7 +36,9 @@ The app also serves as a reference tool:
 ## Content Rating
 
 ### Age Rating: 4+
-**Rationale**: 
+
+**Rationale**:
+
 - No objectionable content
 - Educational focus suitable for all ages
 - User-generated content limited to vocabulary words with automated moderation
@@ -40,6 +48,7 @@ The app also serves as a reference tool:
 - Real-time content validation ensures family-safe experience
 
 ### Content Descriptors: None
+
 - No violence or aggression
 - No sexual content or nudity
 - No profanity or crude humor
@@ -50,6 +59,7 @@ The app also serves as a reference tool:
 ## App Store Keywords Strategy
 
 ### Primary Keywords (High Volume)
+
 1. **vocabulary** - Core app function
 2. **flashcards** - Primary learning method
 3. **language learning** - Main category
@@ -57,6 +67,7 @@ The app also serves as a reference tool:
 5. **study** - User intent
 
 ### Secondary Keywords (Medium Volume)
+
 6. **spaced repetition** - Key differentiator
 7. **vocabulary trainer** - Specific function
 8. **word learning** - Related function
@@ -64,6 +75,7 @@ The app also serves as a reference tool:
 10. **memory training** - Learning benefit
 
 ### Long-tail Keywords (High Intent)
+
 11. **AI vocabulary learning**
 12. **smart flashcards**
 13. **vocabulary builder app**
@@ -71,6 +83,7 @@ The app also serves as a reference tool:
 15. **pronunciation practice**
 
 ### Language-Specific Keywords
+
 16. **Portuguese vocabulary**
 17. **Spanish words**
 18. **French flashcards**
@@ -78,6 +91,7 @@ The app also serves as a reference tool:
 20. **Japanese vocabulary**
 
 ### Educational Keywords
+
 21. **student study app**
 22. **educational tools**
 23. **learning analytics**
@@ -87,6 +101,7 @@ The app also serves as a reference tool:
 ## Competitive Analysis Tags
 
 ### Direct Competitors
+
 - **Anki**: More advanced than basic flashcards, simpler than complex systems
 - **Quizlet**: AI-powered content vs manual creation
 - **Memrise**: Better offline support, more languages
@@ -94,6 +109,7 @@ The app also serves as a reference tool:
 - **Duolingo**: Specialized vocabulary vs general language learning
 
 ### Positioning Keywords
+
 - **AI-powered** - Technology advantage
 - **offline learning** - Convenience feature
 - **spaced repetition** - Scientific methodology
@@ -103,36 +119,43 @@ The app also serves as a reference tool:
 ## Localized Store Listings
 
 ### Spanish (es)
+
 **App Name**: Decorebator - Vocabulario con IA  
 **Subtitle**: Domina idiomas con tarjetas inteligentes y repetición espaciada  
 **Keywords**: vocabulario, aprendizaje idiomas, tarjetas memoria, repetición espaciada, IA, educación
 
 ### French (fr)
+
 **App Name**: Decorebator - Vocabulaire IA  
 **Subtitle**: Maîtrisez les langues avec des cartes intelligentes et répétition espacée  
 **Keywords**: vocabulaire, apprentissage langues, cartes mémoire, répétition espacée, IA, éducation
 
 ### German (de)
+
 **App Name**: Decorebator - KI Vokabeltrainer  
 **Subtitle**: Sprachen meistern mit intelligenten Karteikarten und Wiederholung  
 **Keywords**: Vokabeln, Sprachlernen, Karteikarten, Wiederholung, KI, Bildung
 
 ### Italian (it)
+
 **App Name**: Decorebator - Vocabolario IA  
 **Subtitle**: Padroneggia le lingue con flashcard intelligenti e ripetizione spaziata  
 **Keywords**: vocabolario, apprendimento lingue, flashcard, ripetizione spaziata, IA, educazione
 
 ### Portuguese (pt-BR)
+
 **App Name**: Decorebator - Vocabulário IA  
 **Subtitle**: Domine idiomas com cartões inteligentes e repetição espaçada  
 **Keywords**: vocabulário, aprendizado idiomas, cartões memória, repetição espaçada, IA, educação
 
 ### Portuguese (pt-PT)
+
 **App Name**: Decorebator - Vocabulário IA  
 **Subtitle**: Dominar idiomas com cartões inteligentes e repetição espaçada  
 **Keywords**: vocabulário, aprendizagem idiomas, cartões memória, repetição espaçada, IA, educação
 
 ### Japanese (ja)
+
 **App Name**: Decorebator - AI語彙学習  
 **Subtitle**: AIフラッシュカードと間隔反復で語彙をマスター  
 **Keywords**: 語彙学習, 言語学習, フラッシュカード, 間隔反復, AI, 教育
@@ -140,24 +163,28 @@ The app also serves as a reference tool:
 ## App Store Optimization (ASO) Strategy
 
 ### Title Optimization
+
 - Keep app name consistent: "Decorebator"
 - Include primary keyword in subtitle
 - Maintain brand recognition across languages
 - Optimize for local search patterns
 
 ### Description Optimization
+
 - Front-load important keywords in first 3 lines
 - Use bullet points for feature lists
 - Include social proof and benefits
 - End with clear call-to-action
 
 ### Visual Optimization
+
 - Screenshots showcase key features
 - Consistent branding across all materials
 - Highlight unique AI-powered features
 - Show multi-language support
 
 ### Update Strategy
+
 - Monitor keyword performance monthly
 - A/B test different descriptions
 - Update based on seasonal trends
@@ -166,6 +193,7 @@ The app also serves as a reference tool:
 ## Category Performance Metrics
 
 ### Success Indicators
+
 1. **Downloads**: Track organic vs paid acquisition
 2. **Search Rankings**: Monitor for target keywords
 3. **Conversion Rate**: App Store page visits to downloads
@@ -173,6 +201,7 @@ The app also serves as a reference tool:
 5. **Reviews**: Average rating and review sentiment
 
 ### Competitive Benchmarks
+
 - **Top 10** in Education/Language Learning subcategory
 - **4.5+ star** average rating
 - **>1000** reviews for credibility
@@ -182,6 +211,7 @@ The app also serves as a reference tool:
 ## Compliance Considerations
 
 ### Educational App Requirements
+
 - Age-appropriate content verification
 - Educational value documentation
 - Privacy compliance for children
@@ -189,6 +219,7 @@ The app also serves as a reference tool:
 - Content accuracy and quality control
 
 ### Content Moderation Compliance
+
 - **Apple App Store Guidelines 1.2**: User-generated content appropriately filtered
 - **Google Play Policy**: Comprehensive content moderation system implemented
 - **Automated Filtering**: Real-time screening of all user submissions
@@ -198,6 +229,7 @@ The app also serves as a reference tool:
 - **Compliance Logging**: Complete audit trail of moderation decisions
 
 ### International Requirements
+
 - GDPR compliance for EU users
 - COPPA compliance for US children
 - Local education standards alignment

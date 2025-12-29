@@ -1,6 +1,7 @@
 import { LoadingWithTimeout } from "@/components/LoadingWithTimeout";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ConnectionState, useRealtimeChat } from "@/hooks/useRealtimeChat";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   EventCallbacks,
   RealtimeEventHandler,
@@ -19,7 +20,6 @@ import React, {
 import { useTranslation } from "react-i18next";
 import {
   Platform,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -138,7 +138,9 @@ export default function RealtimeChatScreen() {
         setTranscript("");
         setTranscriptHistory([]);
         telemetrySentRef.current = false;
-        telemetryRef.current?.markConversationId(event?.session?.conversation_id);
+        telemetryRef.current?.markConversationId(
+          event?.session?.conversation_id,
+        );
       },
 
       onResponseCreated: (event: any) => {
@@ -334,7 +336,9 @@ export default function RealtimeChatScreen() {
   useEffect(() => {
     if (telemetryRef.current) {
       telemetryRef.current.updateLanguage(wordlistMeta?.languageCode);
-      telemetryRef.current.updateModel(chatConfig?.sessionData.webrtcConfig.model);
+      telemetryRef.current.updateModel(
+        chatConfig?.sessionData.webrtcConfig.model,
+      );
     }
   }, [wordlistMeta?.languageCode, chatConfig?.sessionData.webrtcConfig.model]);
 

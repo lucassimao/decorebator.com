@@ -2,13 +2,15 @@
 
 ## 1. Prep Environment
 - `npm install`
-- `npx expo --version` (should be 53.0.23)
+- `npx expo --version` (should be 54.x)
 - `eas --version` (must be ≥16.7.0 per `eas.json`)
 - `npx expo doctor`
+- CNG/Prebuild is enabled; `mobile/ios` and `mobile/android` are generated and gitignored.
 
 ## 2. Bump Version
-- `npm run version:patch` (or `version:minor`/`version:major`)
-- Confirm `package.json`, `app.json`, `ios/decorebator/Info.plist`, and `android/app/build.gradle` all reflect the new semantic version.
+- Update `app.json` → `expo.version` (and `package.json` version if you keep it in sync)
+- With CNG/Prebuild, native folders are generated, so do not edit `ios/` or `android/` version files directly.
+- `runtimeVersion` uses the `fingerprint` policy to keep OTA updates safe across native changes.
 
 ## 3. QA Gates
 - `npm run lint`
@@ -31,4 +33,5 @@
 
 ## 7. Utilities
 - Local Android production build: `eas build --platform android --profile production --local`
+- Local Android dev client build: `eas build --platform android --profile development --local`
 - Wipe Android emulator: `$ANDROID_SDK_ROOT/emulator/emulator -avd Galaxy_S25_Ultra_6_9_inch -wipe-data`

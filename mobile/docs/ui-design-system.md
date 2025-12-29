@@ -11,35 +11,35 @@ The Decorebator mobile app implements a comprehensive design system built for ed
 ```typescript
 export const Colors = {
   // Primary brand colors
-  primary: "#FF7B54",        // Brand orange - CTAs, emphasis
-  success: "#4CAF50",        // Green - achievements, correct answers
-  error: "#FF6B6B",          // Red - errors, incorrect answers
-  warning: "#FFC107",        // Yellow - cautions, alerts
-  premium: "#FFD700",        // Gold - premium features, achievements
-  
+  primary: "#FF7B54", // Brand orange - CTAs, emphasis
+  success: "#4CAF50", // Green - achievements, correct answers
+  error: "#FF6B6B", // Red - errors, incorrect answers
+  warning: "#FFC107", // Yellow - cautions, alerts
+  premium: "#FFD700", // Gold - premium features, achievements
+
   // Background system (warm, educational)
   background: {
-    primary: "#FDF6E3",      // Warm beige base
-    light: "#FFF9F0",        // Light gradient variant
-    peach: "#FFE8D6",        // Peachy accent
-    orange: "#FFDCC3",       // Orange tint
-    sage: "#F5F0E6",         // Sage accent
+    primary: "#FDF6E3", // Warm beige base
+    light: "#FFF9F0", // Light gradient variant
+    peach: "#FFE8D6", // Peachy accent
+    orange: "#FFDCC3", // Orange tint
+    sage: "#F5F0E6", // Sage accent
   },
-  
+
   // Text hierarchy
   text: {
-    dark: "#2D3436",         // Primary text
-    medium: "#636E72",       // Secondary text
-    light: "#B2BEC3",        // Tertiary text, hints
+    dark: "#2D3436", // Primary text
+    medium: "#636E72", // Secondary text
+    light: "#B2BEC3", // Tertiary text, hints
   },
-  
+
   // UI elements
   ui: {
-    white: "#FFFFFF",        // Pure white backgrounds
-    divider: "#F0F0F0",      // Subtle dividers
-    border: "#E0E0E0",       // Standard borders
-    disabled: "#DFE6E9",     // Disabled states
-  }
+    white: "#FFFFFF", // Pure white backgrounds
+    divider: "#F0F0F0", // Subtle dividers
+    border: "#E0E0E0", // Standard borders
+    disabled: "#DFE6E9", // Disabled states
+  },
 };
 ```
 
@@ -59,38 +59,38 @@ const Typography = {
   display: {
     size: 48,
     weight: "bold",
-    usage: "Word display on flashcards"
+    usage: "Word display on flashcards",
   },
   heading: {
     size: 32,
     weight: "700",
-    usage: "Quiz questions, main headings"
+    usage: "Quiz questions, main headings",
   },
   title: {
     size: 20,
-    weight: "600", 
-    usage: "Section headers, card titles"
+    weight: "600",
+    usage: "Section headers, card titles",
   },
   body: {
     size: 18,
     weight: "400",
-    usage: "Primary content, definitions"
+    usage: "Primary content, definitions",
   },
   caption: {
     size: 16,
     weight: "500",
-    usage: "Labels, metadata"
+    usage: "Labels, metadata",
   },
   small: {
     size: 14,
     weight: "400",
-    usage: "Hints, secondary info"
+    usage: "Hints, secondary info",
   },
   micro: {
     size: 12,
     weight: "500",
-    usage: "Badges, tiny labels"
-  }
+    usage: "Badges, tiny labels",
+  },
 };
 ```
 
@@ -109,12 +109,12 @@ All spacing follows an 8px base grid for visual consistency:
 
 ```typescript
 const Spacing = {
-  xs: 4,    // Micro spacing
-  sm: 8,    // Base unit
-  md: 16,   // Standard spacing
-  lg: 24,   // Section spacing
-  xl: 32,   // Large gaps
-  xxl: 40,  // Screen margins
+  xs: 4, // Micro spacing
+  sm: 8, // Base unit
+  md: 16, // Standard spacing
+  lg: 24, // Section spacing
+  xl: 32, // Large gaps
+  xxl: 40, // Screen margins
 };
 ```
 
@@ -134,13 +134,13 @@ const Spacing = {
 const Shadows = {
   // Card shadows
   card: {
-    shadowColor: "#FF7B54",      // Brand-colored shadows
+    shadowColor: "#FF7B54", // Brand-colored shadows
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
-    elevation: 12,               // Android
+    elevation: 12, // Android
   },
-  
+
   // Button shadows
   button: {
     shadowColor: "#FF7B54",
@@ -149,7 +149,7 @@ const Shadows = {
     shadowRadius: 8,
     elevation: 6,
   },
-  
+
   // Icon container shadows
   icon: {
     shadowColor: "#FF7B54",
@@ -157,7 +157,7 @@ const Shadows = {
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-  }
+  },
 };
 ```
 
@@ -184,46 +184,46 @@ export const analyticsTheme = {
 };
 
 // Individual components
-- AnalyticsHeader      // Title and controls
-- StatsGrid           // Metric overview  
-- WordMasteryChart    // Individual progress
-- LearningProgressChart // Daily trends
-- QuizPerformanceChart // Performance metrics
-- BoxDistributionChart // Leitner box distribution
-- TopWordsSection     // High-performing words
+-AnalyticsHeader - // Title and controls
+  StatsGrid - // Metric overview
+  WordMasteryChart - // Individual progress
+  LearningProgressChart - // Daily trends
+  QuizPerformanceChart - // Performance metrics
+  BoxDistributionChart - // Leitner box distribution
+  TopWordsSection; // High-performing words
 ```
 
 #### 2. Quiz Components (Modular Interface)
 
 ```typescript
 // Quiz rendering system
-- QuizContent         // Dynamic content rendering (7 types)
-- QuizOptions         // Answer selection interface
-- QuizHeader          // Progress and navigation
-- QuizModeToggle      // Fast mode toggle
-- QuizNextButton      // Progression control
-- QuizProgressBar     // Visual progress
-- QuizLoadingState    // Loading with timeout
+-QuizContent - // Dynamic content rendering (7 types)
+  QuizOptions - // Answer selection interface
+  QuizHeader - // Progress and navigation
+  QuizModeToggle - // Fast mode toggle
+  QuizNextButton - // Progression control
+  QuizProgressBar - // Visual progress
+  QuizLoadingState; // Loading with timeout
 ```
 
 #### 3. Flashcard Components (4-Component System)
 
 ```typescript
 // 3D flip animation system
-- FlashcardContent    // Card rendering with animations
-- FlashcardHeader     // Session controls
-- FlashcardNavigation // Card navigation
-- FlashcardProgressBar // Session progress
+-FlashcardContent - // Card rendering with animations
+  FlashcardHeader - // Session controls
+  FlashcardNavigation - // Card navigation
+  FlashcardProgressBar; // Session progress
 ```
 
 #### 4. Shared Components
 
 ```typescript
 // Cross-feature components
-- LoadingWithTimeout  // Configurable loading states
-- ErrorState          // Type-based error display
-- ErrorReportModal    // User feedback system
-- OfflineIndicator    // Network status display
+-LoadingWithTimeout - // Configurable loading states
+  ErrorState - // Type-based error display
+  ErrorReportModal - // User feedback system
+  OfflineIndicator; // Network status display
 ```
 
 ## Animation System
@@ -246,7 +246,7 @@ const backInterpolate = flipAnimation.interpolate({
 Animated.timing(flipAnimation, {
   toValue: isFlipped ? 180 : 0,
   duration: 600,
-  useNativeDriver: true,  // 60fps performance
+  useNativeDriver: true, // 60fps performance
 });
 ```
 
@@ -260,7 +260,7 @@ Animated.timing(flipAnimation, {
 ### Common Animation Patterns
 
 1. **Fade + Scale**: Entry animations for cards
-2. **Slide Transitions**: Page and modal transitions  
+2. **Slide Transitions**: Page and modal transitions
 3. **Spring Physics**: Natural feeling interactions
 4. **Rotation Effects**: 3D card flips
 5. **Progressive Loading**: Staggered content appearance
@@ -271,7 +271,7 @@ Animated.timing(flipAnimation, {
 
 ```typescript
 // Standard touch feedback
-<TouchableOpacity 
+<TouchableOpacity
   activeOpacity={0.7}
   style={styles.button}
 >
@@ -325,45 +325,58 @@ The app now implements a comprehensive responsive design system:
 
 ```typescript
 export const BREAKPOINTS = {
-  SMALL: 359,  // <= 359px width (iPhone SE, small Android)
-  MEDIUM: 389, // 360-389px width (standard Android) 
-  LARGE: 390,  // >= 390px width (modern iPhones, large Android)
+  SMALL: 359, // <= 359px width (iPhone SE, small Android)
+  MEDIUM: 389, // 360-389px width (standard Android)
+  LARGE: 390, // >= 390px width (modern iPhones, large Android)
 } as const;
 ```
 
 ### Adaptive Design Patterns
 
 #### 1. Responsive Utilities (`utils/responsive.ts`)
+
 - **Dynamic Spacing**: Screen-size-aware padding, margins, and element spacing
 - **Typography Scaling**: Font sizes adapt to screen categories
 - **Touch Target Optimization**: Ensures minimum 44px touch targets
 - **Keyboard Behavior**: Platform-specific keyboard avoidance strategies
 
 #### 2. useResponsive Hook (`hooks/useResponsive.ts`)
+
 Centralized responsive calculations with performance optimization:
 
 ```typescript
 export const useResponsive = () => {
   const { width: screenWidth, height: screenHeight } = getScreenDimensions();
-  
-  return useMemo(() => ({
-    screenWidth, screenHeight, category, spacing, fontSizes, 
-    imageConfig, keyboardBehavior, keyboardOffset,
-  }), [screenWidth, screenHeight]);
+
+  return useMemo(
+    () => ({
+      screenWidth,
+      screenHeight,
+      category,
+      spacing,
+      fontSizes,
+      imageConfig,
+      keyboardBehavior,
+      keyboardOffset,
+    }),
+    [screenWidth, screenHeight],
+  );
 };
 ```
 
 **Performance Benefits**:
+
 - Single computation per render cycle
 - Memoization prevents unnecessary recalculations
 - Centralized logic reduces code duplication
 
 #### 3. Component-Level Responsiveness
+
 ```typescript
 // Example: Responsive form styling
 const styles = React.useMemo(
   () => createStyles(theme, responsive, keyboardVisible),
-  [theme, responsive, keyboardVisible]
+  [theme, responsive, keyboardVisible],
 );
 ```
 
@@ -373,11 +386,14 @@ const styles = React.useMemo(
 // Enhanced responsive sizing
 const getResponsiveSpacing = (width?: number) => {
   const category = getScreenSizeCategory(width);
-  
+
   switch (category) {
-    case "small": return { horizontal: 16, vertical: 12, buttonHeight: 48 };
-    case "medium": return { horizontal: 20, vertical: 16, buttonHeight: 52 };
-    case "large": return { horizontal: 24, vertical: 20, buttonHeight: 56 };
+    case "small":
+      return { horizontal: 16, vertical: 12, buttonHeight: 48 };
+    case "medium":
+      return { horizontal: 20, vertical: 16, buttonHeight: 52 };
+    case "large":
+      return { horizontal: 24, vertical: 20, buttonHeight: 56 };
   }
 };
 ```
@@ -422,25 +438,31 @@ useEffect(() => {
 ### Component Performance Optimizations (January 2025)
 
 #### 1. Memoization Strategy
+
 ```typescript
 // Styles memoization
 const styles = React.useMemo(
   () => createStyles(theme, responsive, keyboardVisible),
-  [theme, responsive, keyboardVisible]
+  [theme, responsive, keyboardVisible],
 );
 
 // Callback memoization
-const onSubmit = React.useCallback((data: FormData) => {
-  // Form submission logic
-}, [dependencies]);
+const onSubmit = React.useCallback(
+  (data: FormData) => {
+    // Form submission logic
+  },
+  [dependencies],
+);
 ```
 
 #### 2. Component Extraction
+
 - **ErrorMessage Component**: Extracted reusable component with React.memo
 - **Reduced Inline Components**: Eliminated inline component definitions
 - **Proper Props Handling**: Type-safe props with proper memoization
 
 #### 3. Performance Benefits
+
 - **Reduced Re-renders**: Memoized components prevent unnecessary re-renders
 - **Better Memory Usage**: Eliminated redundant calculations with useResponsive hook
 - **Improved Responsiveness**: Native KeyboardAvoidingView replaces complex animations
@@ -453,10 +475,10 @@ const onSubmit = React.useCallback((data: FormData) => {
 ```typescript
 enum ErrorType {
   Network = "network",
-  Timeout = "timeout", 
+  Timeout = "timeout",
   Offline = "offline",
   NoData = "noData",
-  General = "general"
+  General = "general",
 }
 ```
 
@@ -488,7 +510,7 @@ useEffect(() => {
     const timeout = setTimeout(() => {
       setHasTimeout(true);
     }, 10000);
-    
+
     return () => clearTimeout(timeout);
   }
 }, [loading]);
