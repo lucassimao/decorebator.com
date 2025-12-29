@@ -39,7 +39,7 @@ import ScreenHeader from "@/components/common/ScreenHeader";
 import { RealtimeChatTelemetryBuilder } from "@/utils/realtimeTelemetry";
 import { sendRealtimeChatTelemetry } from "@/api/telemetry";
 
-const RealtimeChatScreen: React.FC = () => {
+export default function RealtimeChatScreen() {
   const { wordlistId, wordlistName, selectedWordIds } = useLocalSearchParams<{
     wordlistId: string;
     wordlistName: string;
@@ -758,7 +758,7 @@ const RealtimeChatScreen: React.FC = () => {
       </View>
     </SafeAreaView>
   );
-};
+}
 
 const createStyles = (
   theme: ReturnType<typeof useTheme>["theme"],
@@ -985,8 +985,6 @@ const createStyles = (
     },
   });
 };
-
-export default RealtimeChatScreen;
 
 // Cross-platform wave using Lottie on native and ActivityIndicator on web
 type LottieWaveProps = {
