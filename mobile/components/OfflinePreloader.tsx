@@ -19,7 +19,7 @@ export const OfflinePreloader: React.FC<OfflinePreloaderProps> = ({
   onPreloadError,
 }) => {
   const { t } = useTranslation();
-  const { isOnline, isOfflineAvailable } = useOffline();
+  const { isOnline, isPremium } = useOffline();
   const [isPreloading, setIsPreloading] = useState(false);
   const [isFullyCached, setIsFullyCached] = useState(false);
   const [cacheStats, setCacheStats] = useState({
@@ -49,7 +49,7 @@ export const OfflinePreloader: React.FC<OfflinePreloaderProps> = ({
   }, [wordlistId]);
 
   const handlePreload = async () => {
-    if (!isOnline || !isOfflineAvailable) return;
+    if (!isOnline || !isPremium) return;
 
     setIsPreloading(true);
     try {
@@ -70,7 +70,7 @@ export const OfflinePreloader: React.FC<OfflinePreloaderProps> = ({
   };
 
   // Don't show if user doesn't have offline capabilities
-  if (!isOfflineAvailable) return null;
+  if (!isPremium) return null;
 
   const getStatusIcon = () => {
     if (isPreloading) return "downloading";

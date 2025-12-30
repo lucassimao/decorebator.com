@@ -1,4 +1,5 @@
 import * as wordlistsApi from "@/api/wordlists";
+import * as offlineWordlistsApi from "@/api/offlineWordlists";
 import { QueryClient, useQuery } from "@tanstack/react-query";
 
 /**
@@ -6,7 +7,7 @@ import { QueryClient, useQuery } from "@tanstack/react-query";
  */
 export const useWordlists = () => {
   return useQuery<wordlistsApi.Wordlist[], Error>({
-    queryFn: () => wordlistsApi.getUserWordlists(),
+    queryFn: () => offlineWordlistsApi.getUserWordlists(),
     queryKey: ["wordlists"],
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes (formerly cacheTime)
@@ -20,7 +21,7 @@ export const useWordlists = () => {
 export const prefetchWordlists = async (queryClient: QueryClient) => {
   await queryClient.prefetchQuery({
     queryKey: ["wordlists"],
-    queryFn: () => wordlistsApi.getUserWordlists(),
+    queryFn: () => offlineWordlistsApi.getUserWordlists(),
     staleTime: 5 * 60 * 1000, // Same stale time as the hook
   });
 };

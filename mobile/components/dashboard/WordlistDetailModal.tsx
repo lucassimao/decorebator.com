@@ -9,6 +9,7 @@ import {
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
 import { useOffline } from "@/hooks/useOffline";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { OfflinePreloader } from "@/components/OfflinePreloader";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -729,6 +730,11 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
               {t("wordDetail.learnedToggleExplanation")}
             </Text>
           </View>
+
+          <OfflinePreloader
+            wordlistId={wordlist.id}
+            wordlistName={wordlist.name}
+          />
 
           {/* Search and Filter */}
           <View style={{ flex: 1 }}>

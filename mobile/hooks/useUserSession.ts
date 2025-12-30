@@ -5,8 +5,9 @@ import {
 } from "@/api/subscriptions";
 import offlineManager from "@/utils/offlineManager";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import * as Sentry from "@sentry/react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface UserSessionData {
   // User essentials
@@ -34,6 +35,40 @@ interface UserSessionData {
 }
 
 export function useUserSession(): UserSessionData {
+  const [cachedUser, setCachedUser] = useState<UserProfile | null>(null);
+  const [cachedSubscription, setCachedSubscription] =
+    useState<SubscriptionStatus | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCachedSession = async () => {
+      try {
+        const [userEntry, subscriptionEntry] = await AsyncStorage.multiGet([
+          "cachedUserProfile",
+          "cachedSubscription",
+        ]);
+        const userValue = userEntry?.[1];
+        const subscriptionValue = subscriptionEntry?.[1];
+
+        if (!cancelled) {
+          setCachedUser(userValue ? JSON.parse(userValue) : null);
+          setCachedSubscription(
+            subscriptionValue ? JSON.parse(subscriptionValue) : null,
+          );
+        }
+      } catch (error) {
+        console.warn("Failed to load cached session:", error);
+      }
+    };
+
+    loadCachedSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Single user profile query
   const {
     data: user,
@@ -57,14 +92,18 @@ export function useUserSession(): UserSessionData {
   });
 
   // Derive essential data
-  const userId = user?.id || null;
-  const country = user?.country || null;
-  const subscriptionPlan = user?.subscriptionPlan || "free";
+  const effectiveUser = user ?? cachedUser;
+  const effectiveSubscription = subscription ?? cachedSubscription;
+  const userId = effectiveUser?.id || null;
+  const country = effectiveUser?.country || null;
+  const subscriptionPlan = effectiveUser?.subscriptionPlan || "free";
   const isPremium = subscriptionPlan !== "free";
   const hasOptimisticSubscription =
-    subscription?.hasOptimisticSubscription ?? false;
-  const isLoading = userLoading || subscriptionLoading;
-  const error = userError || subscriptionError;
+    effectiveSubscription?.hasOptimisticSubscription ?? false;
+  const isLoading = (userLoading || subscriptionLoading) && !effectiveUser;
+  const isOnline = offlineManager.getNetworkStatus();
+  const error =
+    !isOnline && effectiveUser ? null : userError || subscriptionError;
 
   // Cache timing strategy based on subscription tier
   const cacheConfig = {
@@ -76,29 +115,36 @@ export function useUserSession(): UserSessionData {
 
   // Essential side effects only
   useEffect(() => {
-    if (user) {
+    if (effectiveUser) {
+      AsyncStorage.multiSet([
+        ["cachedUserProfile", JSON.stringify(effectiveUser)],
+        ["cachedSubscription", JSON.stringify(effectiveSubscription)],
+      ]).catch((error) => {
+        console.warn("Failed to persist cached session:", error);
+      });
+
       // Essential: Update offline manager for premium features
       offlineManager.setUserPremiumStatus(isPremium);
 
       // Essential: Set Sentry context for error tracking
       Sentry.setUser({
-        id: user.id.toString(),
-        email: user.email,
-        username: `${user.firstName} ${user.lastName}`,
+        id: effectiveUser.id.toString(),
+        email: effectiveUser.email,
+        username: `${effectiveUser.firstName} ${effectiveUser.lastName}`,
       });
     }
-  }, [user, isPremium]);
+  }, [effectiveUser, effectiveSubscription, isPremium]);
 
   return {
     // User essentials
-    user: user || null,
+    user: effectiveUser || null,
     userId,
     country,
 
     // Subscription essentials
     isPremium,
     subscriptionPlan,
-    subscription,
+    subscription: effectiveSubscription,
     hasOptimisticSubscription,
 
     // Cache configuration for analytics

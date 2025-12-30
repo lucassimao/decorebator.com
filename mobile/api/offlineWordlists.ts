@@ -1,6 +1,31 @@
 import offlineManager from "@/utils/offlineManager";
 import * as wordlistsApi from "./wordlists";
 
+export async function getUserWordlists(): Promise<wordlistsApi.Wordlist[]> {
+  const isOnline = offlineManager.getNetworkStatus();
+
+  if (isOnline) {
+    try {
+      const wordlists = await wordlistsApi.getUserWordlists();
+      offlineManager.cacheWordlists(wordlists).catch(console.error);
+      return wordlists;
+    } catch (error) {
+      const cached = await offlineManager.getCachedWordlists();
+      if (cached) {
+        return cached;
+      }
+      throw error;
+    }
+  }
+
+  const cached = await offlineManager.getCachedWordlists();
+  if (!cached) {
+    throw new Error("No cached wordlists available for offline use");
+  }
+
+  return cached;
+}
+
 export async function newQuiz(wordlistId: number): Promise<wordlistsApi.Quiz> {
   const isOnline = offlineManager.getNetworkStatus();
 

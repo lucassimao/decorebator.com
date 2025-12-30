@@ -1,21 +1,21 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo, { NetInfoState } from "@react-native-community/netinfo";
 import * as FileSystem from "expo-file-system/legacy";
-import { Quiz, Word, Definition } from "@/api/wordlists";
+import { Quiz, Word, Definition, Wordlist } from "@/api/wordlists";
 import { Platform } from "react-native";
 
 const CACHE_PREFIX = "decorebator_offline_";
 const QUIZ_CACHE_KEY = `${CACHE_PREFIX}quiz_`;
 const WORDS_CACHE_KEY = `${CACHE_PREFIX}words_`;
+const WORDLISTS_CACHE_KEY = `${CACHE_PREFIX}wordlists`;
 const DEFINITIONS_CACHE_KEY = `${CACHE_PREFIX}definitions_`;
 const ASSET_CACHE_DIR = `${FileSystem.documentDirectory}decorebator_assets/`;
 const CACHE_EXPIRY_HOURS = 72; // 3 days
 
 // Network detection constants
 const CONNECTIVITY_TEST_ENDPOINTS = [
-  "https://1.1.1.1/cdn-cgi/trace", // Cloudflare
-  "https://8.8.8.8", // Google DNS
-  "https://clients3.google.com/generate_204", // Google connectivity check
+  process.env.EXPO_PUBLIC_CONNECTIVITY_URL ||
+    "https://clients3.google.com/generate_204", // Google connectivity check
 ];
 const CONNECTIVITY_TIMEOUT = 5000; // 5 seconds
 const CONNECTIVITY_CACHE_DURATION = 30000; // 30 seconds
@@ -35,6 +35,11 @@ interface CachedWords {
   words: Word[];
   timestamp: number;
   wordlistId: number;
+}
+
+interface CachedWordlists {
+  wordlists: Wordlist[];
+  timestamp: number;
 }
 
 interface CachedDefinitions {
@@ -85,6 +90,7 @@ class OfflineManager {
     new Map();
   private netInfoUnsubscribe: (() => void) | null = null;
   private connectivityTestTimer: ReturnType<typeof setInterval> | null = null;
+  private lastNetInfoState: NetInfoState | null = null;
   private circuitBreaker: CircuitBreakerState = {
     isOpen: false,
     failureCount: 0,
@@ -103,6 +109,9 @@ class OfflineManager {
     this.initializeNetworkStatus();
     this.initializeNetworkListener();
     this.ensureAssetDirectory();
+    this.cleanupExpiredCache().catch((error) => {
+      console.error("Error cleaning up offline cache:", error);
+    });
   }
 
   private configureNetInfo() {
@@ -115,7 +124,7 @@ class OfflineManager {
       reachabilityRequestTimeout: 15 * 1000, // 15s
       reachabilityShouldRun: () => true,
       shouldFetchWiFiSSID: false, // Avoid memory leaks
-      useNativeReachability: false, // Use custom implementation
+      useNativeReachability: true,
     });
   }
 
@@ -133,18 +142,19 @@ class OfflineManager {
   private async initializeNetworkStatus() {
     try {
       const state = await NetInfo.fetch();
+      this.lastNetInfoState = state;
       const basicOnlineStatus = this.determineBasicOnlineStatus(state);
 
-      if (basicOnlineStatus) {
-        // If basic check indicates online, perform real connectivity test
+      if (basicOnlineStatus && state.isInternetReachable == null) {
+        // If internet reachability is unknown, verify with connectivity test
         const connectivityResult = await this.performConnectivityTest();
         this.updateNetworkState(
           connectivityResult.isConnected,
           connectivityResult.responseTime,
         );
       } else {
-        // If basic check indicates offline, trust it
-        this.updateNetworkState(false, -1);
+        // If we have a clear signal from NetInfo, trust it
+        this.updateNetworkState(basicOnlineStatus, -1);
       }
     } catch (error) {
       console.warn("Failed to fetch initial network state:", error);
@@ -253,7 +263,7 @@ class OfflineManager {
       }, CONNECTIVITY_TIMEOUT);
 
       fetch(endpoint, {
-        method: "HEAD",
+        method: "GET",
         cache: "no-cache",
         headers: {
           "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -416,10 +426,11 @@ class OfflineManager {
 
   private initializeNetworkListener() {
     this.netInfoUnsubscribe = NetInfo.addEventListener(async (state) => {
+      this.lastNetInfoState = state;
       const basicOnlineStatus = this.determineBasicOnlineStatus(state);
 
-      if (basicOnlineStatus) {
-        // If basic check indicates online, perform real connectivity test
+      if (basicOnlineStatus && state.isInternetReachable == null) {
+        // If basic check indicates online but reachability is unknown, verify
         try {
           const connectivityResult = await this.performConnectivityTest();
           this.updateNetworkState(
@@ -432,8 +443,8 @@ class OfflineManager {
           this.updateNetworkState(basicOnlineStatus, -1);
         }
       } else {
-        // If basic check indicates offline, trust it immediately
-        this.updateNetworkState(false, -1);
+        // If we have a clear signal from NetInfo, trust it immediately
+        this.updateNetworkState(basicOnlineStatus, -1);
       }
     });
 
@@ -449,7 +460,10 @@ class OfflineManager {
 
     // Run connectivity test every 30 seconds when online
     this.connectivityTestTimer = setInterval(async () => {
-      if (this.networkState.isOnline) {
+      if (
+        this.networkState.isOnline &&
+        this.lastNetInfoState?.isInternetReachable == null
+      ) {
         try {
           const result = await this.performConnectivityTest();
           if (!result.isConnected && this.networkState.isOnline) {
@@ -810,6 +824,39 @@ class OfflineManager {
         await AsyncStorage.setItem(cacheKey, JSON.stringify(cachedData));
       });
     }, "Words caching");
+  }
+
+  // Wordlists caching for offline dashboard access
+  public async cacheWordlists(wordlists: Wordlist[]): Promise<void> {
+    await this.withErrorRecovery(async () => {
+      const cachedData: CachedWordlists = {
+        wordlists,
+        timestamp: Date.now(),
+      };
+
+      await this.atomicCacheOperation(async () => {
+        await AsyncStorage.setItem(
+          WORDLISTS_CACHE_KEY,
+          JSON.stringify(cachedData),
+        );
+      });
+    }, "Wordlists caching");
+  }
+
+  public async getCachedWordlists(): Promise<Wordlist[] | null> {
+    return this.withErrorRecovery(async () => {
+      const cachedDataStr = await AsyncStorage.getItem(WORDLISTS_CACHE_KEY);
+      if (!cachedDataStr) return null;
+
+      const cachedData: CachedWordlists = JSON.parse(cachedDataStr);
+
+      if (this.isCacheExpired(cachedData.timestamp)) {
+        await AsyncStorage.removeItem(WORDLISTS_CACHE_KEY);
+        return null;
+      }
+
+      return cachedData.wordlists;
+    }, "Cached wordlists retrieval").catch(() => null);
   }
 
   public async getCachedWords(wordlistId: number): Promise<Word[] | null> {
