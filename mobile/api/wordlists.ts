@@ -19,7 +19,6 @@ export type Wordlist = {
   pronunciationSystem: PronunciationSystem;
   wordsCount: number;
   wordsLearnedCount: number;
-  publicQuizSlug?: string;
 };
 
 export type Word = {
@@ -260,9 +259,6 @@ export async function getProcessingStatus(
   const body = await callAPI<ProcessingStatusResponse>("GET", endpoint);
   return body;
 }
-
-// Publish current wordlist as a public quiz (MVP)
-// Note: publish/unpublish endpoints removed; functions intentionally deleted
 
 // Realtime Chat Session Types and API
 export interface ChatDefinition {

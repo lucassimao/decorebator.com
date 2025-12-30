@@ -54,11 +54,6 @@ func (s *DefinitionService) GetDefinitionByID(ctx context.Context, id int64) (*m
 	return results[0], nil
 }
 
-// GetDefinitionsForPublicQuiz delegates to repository to fetch definitions and related media
-func (s *DefinitionService) GetDefinitionsForPublicQuiz(ctx context.Context, wordlistID int64) ([]repo.DefinitionForPublicQuiz, error) {
-	return s.definitionRepository.GetDefinitionsForPublicQuiz(ctx, wordlistID)
-}
-
 func (s *DefinitionService) findDefinitionsByName(ctx context.Context, name string) ([]*model.Definition, error) {
 	return s.definitionRepository.Find(ctx, repo.FindArgs{Name: &name})
 }

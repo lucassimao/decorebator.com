@@ -770,12 +770,6 @@
     "analytics": "Analyses",
     "flashcards": "Cartes",
     "quiz": "Quiz",
-    "publishPublicQuiz": "Publier un quiz public",
-    "publishTitle": "Publier un quiz public",
-    "quizTitle": "Titre du quiz",
-    "quizTitlePlaceholder": "Entrez un titre",
-    "quizDescription": "Description (optionnel)",
-    "quizDescriptionPlaceholder": "Brève description",
     "difficulty": "Difficulté",
     "diff": {
       "easy": "Facile",
@@ -786,8 +780,6 @@
     "publish": "Publier",
     "publishSuccessTitle": "Publié",
     "publishSuccess": "Publié avec succès !",
-    "publishReadyToShare": "Votre quiz est prêt à être partagé !",
-    "publishError": "Impossible de publier cette liste en tant que quiz public.",
     "titleRequired": "Le titre est requis",
     "timeLimitInvalid": "La durée doit être comprise entre 1 et 15 minutes.",
     "copyUrl": "Copier le lien",
@@ -805,9 +797,6 @@
       "finePrint": "Annulable à tout moment. Vos données restent en sécurité."
     },
     "feature": {
-      "publishQuizzes": "Publier des quiz publics",
-      "shareLinks": "Partager des liens et classements",
-      "betterBranding": "Meilleurs visuels et image de marque",
       "voiceConversations": "Conversations vocales avec IA",
       "vocabularyPractice": "Pratiquez votre vocabulaire naturellement",
       "pronunciationHelp": "Obtenez de l'aide pour la prononciation",

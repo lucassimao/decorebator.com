@@ -69,9 +69,6 @@ type Wordlist struct {
 	// Computed dinamically based on words table
 	WordsCount        *int `json:"wordsCount"`
 	WordsLearnedCount *int `json:"wordsLearnedCount"`
-
-	// Public quiz information (MVP)
-	PublicQuizSlug *string `json:"publicQuizSlug,omitempty"`
 }
 
 func (w Wordlist) MarshalJSON() ([]byte, error) {
@@ -103,10 +100,6 @@ func (w Wordlist) MarshalJSON() ([]byte, error) {
 	}
 	if w.WordsLearnedCount != nil {
 		m["wordsLearnedCount"] = *w.WordsLearnedCount
-	}
-
-	if w.PublicQuizSlug != nil {
-		m["publicQuizSlug"] = *w.PublicQuizSlug
 	}
 
 	return json.Marshal(m)

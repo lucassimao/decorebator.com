@@ -780,12 +780,6 @@
     "analytics": "Analysen",
     "flashcards": "Lernkarten",
     "quiz": "Quiz",
-    "publishPublicQuiz": "Öffentliches Quiz veröffentlichen",
-    "publishTitle": "Öffentliches Quiz veröffentlichen",
-    "quizTitle": "Quiz-Titel",
-    "quizTitlePlaceholder": "Titel eingeben",
-    "quizDescription": "Beschreibung (optional)",
-    "quizDescriptionPlaceholder": "Kurze Beschreibung",
     "difficulty": "Schwierigkeit",
     "diff": {
       "easy": "Leicht",
@@ -796,8 +790,6 @@
     "publish": "Veröffentlichen",
     "publishSuccessTitle": "Veröffentlicht",
     "publishSuccess": "Erfolgreich veröffentlicht!",
-    "publishReadyToShare": "Ihr Quiz ist bereit zum Teilen!",
-    "publishError": "Diese Wortliste konnte nicht als öffentliches Quiz veröffentlicht werden.",
     "titleRequired": "Titel ist erforderlich",
     "timeLimitInvalid": "Das Zeitlimit muss zwischen 1 und 15 Minuten liegen.",
     "copyUrl": "Link kopieren",
@@ -815,9 +807,6 @@
       "finePrint": "Jederzeit kündbar. Bestehende Daten bleiben erhalten."
     },
     "feature": {
-      "publishQuizzes": "Öffentliche Quizze veröffentlichen",
-      "shareLinks": "Links & Bestenlisten teilen",
-      "betterBranding": "Bessere Optik & Branding",
       "voiceConversations": "Sprachgespräche mit KI",
       "vocabularyPractice": "Vokabeln natürlich üben",
       "pronunciationHelp": "Aussprachehilfe erhalten",

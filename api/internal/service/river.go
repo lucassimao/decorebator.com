@@ -19,7 +19,6 @@ const TextToSpeechQueue = "text_to_speech"
 const DefinitionFetcherQueue = "definition_fetcher"
 const SubscriptionReminderQueue = "subscription_reminder"
 const ExampleAudioQueue = "example_audio"
-const PublicQuizOgQueue = "public_quiz_og"
 
 // NoOpJobArgs is a no-op job used for periodic jobs that execute inline
 type NoOpJobArgs struct{}
@@ -54,8 +53,6 @@ func NewWorkerRiverClient(
 	river.AddWorker(riverWorkers, NewTextToSpeechWorker(wordService, definitionService, leitnerSystemStrategy, userService))
 	river.AddWorker(riverWorkers, NewDefinitionFetcherWorker(db, wordService, definitionService, jobService, leitnerSystemStrategy, leitnerSystemStrategy.leitnerTrackingService, userService))
 	river.AddWorker(riverWorkers, NewExampleAudioWorker(definitionService, wordService, userService))
-	// Worker to generate OG images for public quizzes
-	river.AddWorker(riverWorkers, NewPublicQuizOgWorker(repository.NewPublicQuizRepository(db)))
 	river.AddWorker(riverWorkers, &SubscriptionReminderWorker{
 		db:          db,
 		subRepo:     repository.NewSubscriptionRepository(db),
@@ -96,7 +93,6 @@ func NewWorkerRiverClient(
 			DefinitionFetcherQueue:    {MaxWorkers: 50},
 			SubscriptionReminderQueue: {MaxWorkers: 10},
 			ExampleAudioQueue:         {MaxWorkers: 20},
-			PublicQuizOgQueue:         {MaxWorkers: 5},
 			"revenuecat-webhook":      {MaxWorkers: 5},
 			"stripe-webhook":          {MaxWorkers: 5},
 		},

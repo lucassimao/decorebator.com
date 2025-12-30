@@ -18,7 +18,6 @@ type JobService interface {
 	ScheduleExampleAudioJob(ctx context.Context, definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
 	ScheduleStripeWebhookJob(ctx context.Context, eventID, eventType string, eventData []byte) (int64, error)
 	ScheduleRevenueCatWebhookJob(ctx context.Context, eventType string, eventData []byte) (int64, error)
-	SchedulePublicQuizOgJob(ctx context.Context, quizID int64) (int64, error)
 	RetryJob(ctx context.Context, jobID int64) error
 }
 
@@ -99,11 +98,6 @@ func (js *JobServiceImpl) enqueueJob(ctx context.Context, opts *river.InsertOpts
 	}
 
 	return result.Job.ID, nil
-}
-
-func (js *JobServiceImpl) SchedulePublicQuizOgJob(ctx context.Context, quizID int64) (int64, error) {
-	opts := river.InsertOpts{Queue: PublicQuizOgQueue}
-	return js.enqueueJob(ctx, &opts, PublicQuizOgArgs{QuizID: quizID}, nil)
 }
 
 func (js *JobServiceImpl) ScheduleStripeWebhookJob(ctx context.Context, eventID, eventType string, eventData []byte) (int64, error) {

@@ -32,15 +32,6 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	var WorkerRoutes = NewWorkerRoutes(appCtx.DefinitionService, appCtx.JobService)
 	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService, appCtx.DefinitionService)
 	var UserRoutes = NewUserRoutes(appCtx.UserService, appCtx.MailService)
-	var PublicQuizRoutes = NewPublicQuizRoutes(
-		repository.NewPublicQuizRepository(appCtx.Database),
-		appCtx.WordlistService,
-		appCtx.DefinitionService,
-		appCtx.Database,
-		appCtx.RedisClient,
-		appCtx.JobService,
-	)
-
 	// Use Leitner strategy from AppContext
 	var quizRoutes = NewQuizRoutes(appCtx.LeitnerSystemStrategy)
 	var ErrorReportsRoutes = NewErrorReportRoutes(appCtx.ErrorReportService)
@@ -78,11 +69,6 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 
 		// Deprecated demo quiz endpoint removed
 
-		// Public quiz (unauthenticated)
-		router.GET("/public-quizzes/:slug", PublicQuizRoutes.GetBySlug)
-		router.GET("/public-quizzes/:slug/questions", PublicQuizRoutes.GetQuestionsBySlug)
-		router.GET("/public-quizzes/:slug/leaderboard", PublicQuizRoutes.GetLeaderboardBySlug)
-		router.POST("/public-quizzes/:slug/attempts", PublicQuizRoutes.RecordAttempt)
 	}
 
 	// Routes with authentication
@@ -153,11 +139,5 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	}
 
 	// Static-auth protected endpoints (keep original paths)
-	staticProtected := router.Group("/")
-	staticProtected.Use(AuthenticateStatic)
-	{
-		staticProtected.GET("/public-quizzes", PublicQuizRoutes.ListActive)
-	}
-
 	return router
 }

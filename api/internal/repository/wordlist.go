@@ -65,8 +65,6 @@ func (repository *WordlistRepository) Find(ctx context.Context, args FindWordlis
 
 	// Build SELECT clause
 	builder.WriteString("SELECT wordlists.id, wordlists.name, wordlists.description, wordlists.user_id, wordlists.created_at, wordlists.updated_at, wordlists.language_code, wordlists.pronunciation_system")
-	// Include public quiz slug (if any active) via subselect to avoid affecting grouping
-	builder.WriteString(", (SELECT slug FROM public_quizzes pq WHERE pq.wordlist_id = wordlists.id AND pq.is_active = true ORDER BY pq.published_at DESC LIMIT 1) AS public_quiz_slug")
 	if args.ComputeWordsCount || args.ComputeWordsLearnedCount {
 		if args.ComputeWordsCount {
 			builder.WriteString(", COUNT(words.id) AS word_count")
@@ -131,9 +129,6 @@ func (repository *WordlistRepository) Find(ctx context.Context, args FindWordlis
 			&w.LanguageCode,
 			&w.PronunciationSystem,
 		)
-		// public_quiz_slug subselect result follows base columns
-		dest = append(dest, &w.PublicQuizSlug)
-
 		if args.ComputeWordsCount {
 			w.WordsCount = new(int)
 			dest = append(dest, w.WordsCount)

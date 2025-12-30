@@ -87,4 +87,3 @@ authorization: {{authToken}}
 }
 
 ### Publish wordlist
-GET https://api.decorebator.com/public-quizzes/for-whom-the-bell-tolls

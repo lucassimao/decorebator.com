@@ -192,7 +192,6 @@ type UserAction int
 const (
 	UserActionCreateWordlist UserAction = iota
 	UserActionAddWord
-	UserActionPublishPublicQuiz
 	UserActionChatSession
 )
 
