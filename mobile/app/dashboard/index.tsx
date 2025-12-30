@@ -470,7 +470,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
               renderItem={renderWordlistItem}
               keyExtractor={(item) => String(item.id)}
               ListHeaderComponent={renderStatsAndSection}
-              contentContainerStyle={styles.listContent}
+              contentContainerStyle={[
+                styles.listContent,
+                hasNoWordlist && styles.listContentEmpty,
+              ]}
               showsVerticalScrollIndicator={false}
               onScrollBeginDrag={stopPulse}
               onMomentumScrollEnd={startPulse}
@@ -534,7 +537,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 renderItem={renderWordlistItem}
                 keyExtractor={(item) => String(item.id)}
                 ListHeaderComponent={renderStatsAndSection}
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={[
+                  styles.listContent,
+                  hasNoWordlist && styles.listContentEmpty,
+                ]}
                 showsVerticalScrollIndicator={false}
                 onScrollBeginDrag={stopPulse}
                 onMomentumScrollEnd={startPulse}
@@ -658,6 +664,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     listContent: {
       paddingBottom: 30,
+    },
+    listContentEmpty: {
+      flexGrow: 1,
+      justifyContent: "center",
     },
     header: {
       flexDirection: "row",
