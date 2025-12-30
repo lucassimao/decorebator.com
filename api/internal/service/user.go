@@ -264,7 +264,7 @@ func (s *UserService) Delete(ctx context.Context, userID int64) error {
 	return err
 }
 
-func (s *UserService) UpdateProfile(ctx context.Context, userID int64, firstName, lastName, country, preferredLanguage, profilePictureURL, password *string, dateOfBirth *time.Time) (*User, error) {
+func (s *UserService) UpdateProfile(ctx context.Context, userID int64, firstName, lastName, country, preferredLanguage, profilePictureURL, password *string, dateOfBirth *time.Time, notificationsEnabled *bool) (*User, error) {
 	// Validate required fields
 	if firstName != nil && strings.TrimSpace(*firstName) == "" {
 		return nil, common.BusinessError{Message: "First name is required"}
@@ -279,14 +279,15 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID int64, firstName
 	}
 
 	args := repo.UpdateUserProfileArgs{
-		ID:                userID,
-		FirstName:         firstName,
-		LastName:          lastName,
-		Country:           country,
-		DateOfBirth:       dateOfBirth,
-		PreferredLanguage: preferredLanguage,
-		ProfilePictureURL: profilePictureURL,
-		Password:          password,
+		ID:                   userID,
+		FirstName:            firstName,
+		LastName:             lastName,
+		Country:              country,
+		DateOfBirth:          dateOfBirth,
+		PreferredLanguage:    preferredLanguage,
+		ProfilePictureURL:    profilePictureURL,
+		Password:             password,
+		NotificationsEnabled: notificationsEnabled,
 	}
 
 	user, err := s.userRepository.UpdateUserProfile(ctx, args)

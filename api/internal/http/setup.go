@@ -26,6 +26,8 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 
 	// Create repository instances
 	subRepo := repository.NewSubscriptionRepository(appCtx.Database)
+	userRepo := &repository.UserRepository{Db: appCtx.Database}
+	pushTokenRepo := &repository.PushTokenRepository{Db: appCtx.Database}
 
 	// Initialize route handlers using services from AppContext
 	var WordRoutes = NewWordRoutes(appCtx.WordService, appCtx.DefinitionService)
@@ -33,8 +35,9 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService, appCtx.DefinitionService)
 	var UserRoutes = NewUserRoutes(appCtx.UserService, appCtx.MailService)
 	// Use Leitner strategy from AppContext
-	var quizRoutes = NewQuizRoutes(appCtx.LeitnerSystemStrategy)
+	var quizRoutes = NewQuizRoutes(appCtx.LeitnerSystemStrategy, userRepo)
 	var ErrorReportsRoutes = NewErrorReportRoutes(appCtx.ErrorReportService)
+	var PushNotificationRoutes = NewPushNotificationRoutes(pushTokenRepo)
 
 	router := gin.New()
 
@@ -111,6 +114,10 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.GET("/users", UserRoutes.GetProfile)
 		authenticatedRoutes.PATCH("/users", UserRoutes.UpdateProfile)
 		authenticatedRoutes.DELETE("/users", UserRoutes.DeleteProfile)
+
+		// Push notification routes
+		authenticatedRoutes.POST("/push/register", PushNotificationRoutes.Register)
+		authenticatedRoutes.POST("/push/unregister", PushNotificationRoutes.Unregister)
 
 	}
 

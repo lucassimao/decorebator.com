@@ -6,16 +6,18 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
+	"decorebator.com/internal/repository"
 	"github.com/gin-gonic/gin"
 )
 
 type QuizRoutes struct {
 	strategy common.SpacedRepetitionStrategy
+	userRepo *repository.UserRepository
 }
 
 // NewQuizRoutes creates a new QuizRoutes instance with dependency injection
-func NewQuizRoutes(strategy common.SpacedRepetitionStrategy) *QuizRoutes {
-	return &QuizRoutes{strategy: strategy}
+func NewQuizRoutes(strategy common.SpacedRepetitionStrategy, userRepo *repository.UserRepository) *QuizRoutes {
+	return &QuizRoutes{strategy: strategy, userRepo: userRepo}
 }
 
 func (h *QuizRoutes) Create(c *gin.Context) {
@@ -78,6 +80,12 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	if h.userRepo != nil {
+		if updateErr := h.userRepo.UpdateLastPracticeAt(c.Request.Context(), userId); updateErr != nil {
+			common.Logger.Error("failed to update last practice timestamp", "error", updateErr, "userID", userId)
+		}
 	}
 
 	c.Status(http.StatusNoContent)

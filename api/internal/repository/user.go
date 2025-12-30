@@ -27,10 +27,10 @@ func (repository *UserRepository) Save(ctx context.Context, firstName, lastName,
 	// Note: country and preferredLanguage parameters are optional and can be nil
 	// PostgreSQL will store NULL for nil pointer values
 	query := `
-		INSERT INTO users (first_name, last_name, password_hash, email, country, preferred_language, subscription_plan)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO users (first_name, last_name, password_hash, email, country, preferred_language, subscription_plan, notifications_enabled)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id, created_at, updated_at, profile_picture_url, country, date_of_birth, preferred_language,
-			subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at`
+			subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at, notifications_enabled`
 
 	// Create User struct to populate directly from database
 	user := &User{
@@ -61,9 +61,9 @@ func (repository *UserRepository) Save(ctx context.Context, firstName, lastName,
 		preferredLanguageParam = nil
 	}
 
-	err = repository.Db.QueryRow(ctx, query, firstName, lastName, user.PasswordHash, email, countryParam, preferredLanguageParam, model.PlanFree).Scan(
+	err = repository.Db.QueryRow(ctx, query, firstName, lastName, user.PasswordHash, email, countryParam, preferredLanguageParam, model.PlanFree, true).Scan(
 		&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
-		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt)
+		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt, &user.NotificationsEnabled)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if ok := errors.As(err, &pgErr); ok {
@@ -91,7 +91,7 @@ func (repository *UserRepository) Find(ctx context.Context, args FindUserArgs) (
 	builder.WriteString(`SELECT id, email, first_name, last_name, password_hash, 
 		profile_picture_url, country, date_of_birth, preferred_language,
 		subscription_plan, subscription_status, stripe_customer_id,
-		platform, subscription_ends_at, created_at, updated_at FROM users`)
+		platform, subscription_ends_at, notifications_enabled, created_at, updated_at FROM users`)
 	var queryArgs []interface{}
 	var whereConditions []string
 
@@ -135,7 +135,7 @@ func (repository *UserRepository) Find(ctx context.Context, args FindUserArgs) (
 		err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
 			&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
 			&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID,
-			&user.Platform, &user.SubscriptionEndsAt, &user.CreatedAt, &user.UpdatedAt)
+			&user.Platform, &user.SubscriptionEndsAt, &user.NotificationsEnabled, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -165,6 +165,26 @@ func (repository *UserRepository) UpdatePassword(ctx context.Context, userID int
 	return nil
 }
 
+func (repository *UserRepository) UpdateLastPracticeAt(ctx context.Context, userID int64) error {
+	_, err := repository.Db.Exec(ctx, `
+		UPDATE users
+		SET last_practice_at = NOW(),
+			updated_at = NOW()
+		WHERE id = $1
+	`, userID)
+	return err
+}
+
+func (repository *UserRepository) SetNotificationsEnabled(ctx context.Context, userID int64, enabled bool) error {
+	_, err := repository.Db.Exec(ctx, `
+		UPDATE users
+		SET notifications_enabled = $2,
+			updated_at = NOW()
+		WHERE id = $1
+	`, userID, enabled)
+	return err
+}
+
 func (repository *UserRepository) Delete(ctx context.Context, userID int64) error {
 	query := `DELETE FROM users WHERE ID = $1`
 	_, err := repository.Db.Exec(ctx, query, userID)
@@ -172,14 +192,15 @@ func (repository *UserRepository) Delete(ctx context.Context, userID int64) erro
 }
 
 type UpdateUserProfileArgs struct {
-	ID                int64
-	FirstName         *string
-	LastName          *string
-	Country           *string
-	DateOfBirth       *time.Time
-	PreferredLanguage *string
-	ProfilePictureURL *string
-	Password          *string
+	ID                   int64
+	FirstName            *string
+	LastName             *string
+	Country              *string
+	DateOfBirth          *time.Time
+	PreferredLanguage    *string
+	ProfilePictureURL    *string
+	Password             *string
+	NotificationsEnabled *bool
 }
 
 func (repository *UserRepository) UpdateUserProfile(ctx context.Context, args UpdateUserProfileArgs) (*User, error) {
@@ -192,12 +213,13 @@ func (repository *UserRepository) UpdateUserProfile(ctx context.Context, args Up
 		    preferred_language = COALESCE($6,preferred_language),
 		    updated_at = NOW(),
 			profile_picture_url = COALESCE($7,profile_picture_url),
-			password_hash = COALESCE($8,password_hash)
+			password_hash = COALESCE($8,password_hash),
+			notifications_enabled = COALESCE($9, notifications_enabled)
 		WHERE id = $1
 		RETURNING id, email, first_name, last_name, password_hash, 
 			profile_picture_url, country, date_of_birth, preferred_language,
 			subscription_plan, subscription_status, stripe_customer_id, subscription_ends_at,
-			created_at, updated_at`
+			notifications_enabled, created_at, updated_at`
 
 	var passwordHash *string
 	if args.Password != nil {
@@ -212,11 +234,11 @@ func (repository *UserRepository) UpdateUserProfile(ctx context.Context, args Up
 	user := User{}
 	err := repository.Db.QueryRow(ctx, query,
 		args.ID, args.FirstName, args.LastName, args.Country, args.DateOfBirth, args.PreferredLanguage,
-		args.ProfilePictureURL, passwordHash).Scan(
+		args.ProfilePictureURL, passwordHash, args.NotificationsEnabled).Scan(
 		&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
 		&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
 		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt,
-		&user.CreatedAt, &user.UpdatedAt)
+		&user.NotificationsEnabled, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

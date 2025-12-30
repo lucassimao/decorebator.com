@@ -46,6 +46,7 @@ type UpdateProfileInput struct {
 	Country                   *string                    `json:"country"`
 	DateOfBirth               *string                    `json:"dateOfBirth"` // Expect ISO format: YYYY-MM-DD
 	PreferredLanguage         *string                    `json:"preferredLanguage"`
+	NotificationsEnabled      *bool                      `json:"notificationsEnabled"`
 	UpdateProfilePictureInput *UpdateProfilePictureInput `json:"updateProfilePicture"`
 	UpdatePasswordInput       *UpdatePasswordInput       `json:"updatePassword"`
 }
@@ -334,7 +335,7 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 	}
 
 	// Update user profile
-	updatedUser, err := h.userService.UpdateProfile(c.Request.Context(), user.ID, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, newPassword, dateOfBirth)
+	updatedUser, err := h.userService.UpdateProfile(c.Request.Context(), user.ID, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, newPassword, dateOfBirth, input.NotificationsEnabled)
 	if err != nil {
 		switch err.(type) {
 		case common.BusinessError:

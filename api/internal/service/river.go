@@ -19,6 +19,7 @@ const TextToSpeechQueue = "text_to_speech"
 const DefinitionFetcherQueue = "definition_fetcher"
 const SubscriptionReminderQueue = "subscription_reminder"
 const ExampleAudioQueue = "example_audio"
+const PushNotificationQueue = "push_notification"
 
 // NoOpJobArgs is a no-op job used for periodic jobs that execute inline
 type NoOpJobArgs struct{}
@@ -59,6 +60,9 @@ func NewWorkerRiverClient(
 		userRepo:    &repository.UserRepository{Db: db},
 		mailService: mailService,
 	})
+	pushService := NewPushNotificationService(&repository.PushTokenRepository{Db: db}, &repository.PushReceiptRepository{Db: db})
+	river.AddWorker(riverWorkers, NewDailyPracticeReminderWorker(pushService))
+	river.AddWorker(riverWorkers, NewPushReceiptWorker(pushService))
 	river.AddWorker(riverWorkers, &NoOpWorker{})
 	river.AddWorker(riverWorkers, NewRevenueCatWebhookWorker(revenueCatService))
 	river.AddWorker(riverWorkers, NewStripeWebhookWorker(subscriptionService))
@@ -82,6 +86,24 @@ func NewWorkerRiverClient(
 				RunOnStart: true, // Run immediately on startup
 			},
 		),
+		river.NewPeriodicJob(
+			river.PeriodicInterval(15*time.Minute),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return DailyPracticeReminderArgs{}, &river.InsertOpts{Queue: PushNotificationQueue}
+			},
+			&river.PeriodicJobOpts{
+				RunOnStart: true,
+			},
+		),
+		river.NewPeriodicJob(
+			river.PeriodicInterval(1*time.Hour),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return PushReceiptArgs{}, &river.InsertOpts{Queue: PushNotificationQueue}
+			},
+			&river.PeriodicJobOpts{
+				RunOnStart: true,
+			},
+		),
 		// Materialized view refresh job removed - now using Redis caching for analytics
 	}
 
@@ -93,6 +115,7 @@ func NewWorkerRiverClient(
 			DefinitionFetcherQueue:    {MaxWorkers: 50},
 			SubscriptionReminderQueue: {MaxWorkers: 10},
 			ExampleAudioQueue:         {MaxWorkers: 20},
+			PushNotificationQueue:     {MaxWorkers: 5},
 			"revenuecat-webhook":      {MaxWorkers: 5},
 			"stripe-webhook":          {MaxWorkers: 5},
 		},
