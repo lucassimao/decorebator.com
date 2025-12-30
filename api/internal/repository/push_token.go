@@ -89,6 +89,8 @@ func (r *PushTokenRepository) MarkNotified(ctx context.Context, expoTokens []str
 }
 
 func (r *PushTokenRepository) FindDailyReminderCandidates(ctx context.Context, now time.Time) ([]DailyReminderCandidate, error) {
+	timestamp := pgtype.Timestamptz{Time: now.UTC(), Valid: true}
+
 	rows, err := r.Db.Query(ctx, `
 		SELECT pt.user_id, pt.expo_token, pt.timezone, pt.locale, u.preferred_language
 		FROM push_tokens pt
@@ -101,7 +103,7 @@ func (r *PushTokenRepository) FindDailyReminderCandidates(ctx context.Context, n
 				pt.last_notified_at IS NULL OR
 				(pt.last_notified_at AT TIME ZONE pt.timezone)::date < ($1 AT TIME ZONE pt.timezone)::date
 			)
-	`, now)
+	`, timestamp)
 	if err != nil {
 		return nil, err
 	}
