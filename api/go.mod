@@ -24,7 +24,6 @@ require (
 	github.com/sendgrid/sendgrid-go v3.16.0+incompatible
 	github.com/stretchr/testify v1.10.0
 	github.com/stripe/stripe-go/v82 v82.1.0
-	golang.org/x/image v0.18.0
 	golang.org/x/sync v0.15.0
 	gopkg.in/DataDog/dd-trace-go.v1 v1.74.3
 )
