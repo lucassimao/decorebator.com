@@ -89,21 +89,26 @@ func (r *PushTokenRepository) MarkNotified(ctx context.Context, expoTokens []str
 }
 
 func (r *PushTokenRepository) FindDailyReminderCandidates(ctx context.Context, now time.Time) ([]DailyReminderCandidate, error) {
-	timestamp := pgtype.Timestamptz{Time: now.UTC(), Valid: true}
-
 	rows, err := r.Db.Query(ctx, `
-		SELECT pt.user_id, pt.expo_token, pt.timezone, pt.locale, u.preferred_language
-		FROM push_tokens pt
-		JOIN users u ON u.id = pt.user_id
-		WHERE pt.is_active = true
-			AND u.notifications_enabled = true
-			AND (u.last_practice_at IS NULL OR u.last_practice_at < ($1::timestamptz - INTERVAL '24 hours'))
-			AND date_part('hour', $1::timestamptz AT TIME ZONE pt.timezone) = 11
-			AND (
-				pt.last_notified_at IS NULL OR
-				(pt.last_notified_at AT TIME ZONE pt.timezone)::date < ($1::timestamptz AT TIME ZONE pt.timezone)::date
-			)
-	`, timestamp)
+		WITH local AS (
+			SELECT pt.user_id,
+				pt.expo_token,
+				pt.timezone,
+				pt.locale,
+				u.preferred_language,
+				($1 AT TIME ZONE pt.timezone) AS local_now,
+				(pt.last_notified_at AT TIME ZONE pt.timezone)::date AS last_notified_date
+			FROM push_tokens pt
+			JOIN users u ON u.id = pt.user_id
+			WHERE pt.is_active = true
+				AND u.notifications_enabled = true
+				AND (u.last_practice_at IS NULL OR u.last_practice_at < ($1 - INTERVAL '24 hours'))
+		)
+		SELECT user_id, expo_token, timezone, locale, preferred_language
+		FROM local
+		WHERE date_part('hour', local_now) = 11
+			AND (last_notified_date IS NULL OR last_notified_date < local_now::date)
+	`, now.UTC())
 	if err != nil {
 		return nil, err
 	}
