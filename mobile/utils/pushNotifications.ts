@@ -26,13 +26,22 @@ export async function registerDevicePushToken(options: {
 
   const existingToken = await getStoredPushToken();
   if (existingToken) {
-    await pushApi.registerPushToken({
-      expoPushToken: existingToken,
-      platform: Platform.OS === "ios" ? "ios" : "android",
-      deviceId: Device.osInternalBuildId || Device.modelId || undefined,
-      timezone: getDeviceTimezone(),
-      locale: i18n.language,
-    });
+    const timezone = getDeviceTimezone();
+    try {
+      await pushApi.registerPushToken({
+        expoPushToken: existingToken,
+        platform: Platform.OS === "ios" ? "ios" : "android",
+        deviceId: Device.osInternalBuildId || Device.modelId || undefined,
+        timezone,
+        locale: i18n.language,
+      });
+    } catch (error) {
+      console.warn("Failed to register push token", {
+        timezone,
+        error,
+      });
+      throw error;
+    }
     return existingToken;
   }
 
@@ -59,14 +68,23 @@ export async function registerDevicePushToken(options: {
   }
 
   const deviceId = Device.osInternalBuildId || Device.modelId || undefined;
+  const timezone = getDeviceTimezone();
 
-  await pushApi.registerPushToken({
-    expoPushToken,
-    platform: Platform.OS === "ios" ? "ios" : "android",
-    deviceId,
-    timezone: getDeviceTimezone(),
-    locale: i18n.language,
-  });
+  try {
+    await pushApi.registerPushToken({
+      expoPushToken,
+      platform: Platform.OS === "ios" ? "ios" : "android",
+      deviceId,
+      timezone,
+      locale: i18n.language,
+    });
+  } catch (error) {
+    console.warn("Failed to register push token", {
+      timezone,
+      error,
+    });
+    throw error;
+  }
 
   await AsyncStorage.setItem(PUSH_TOKEN_STORAGE_KEY, expoPushToken);
   return expoPushToken;

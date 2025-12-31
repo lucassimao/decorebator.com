@@ -1,5 +1,5 @@
 import { formatInTimeZone } from "date-fns-tz";
-import { getCalendars } from "expo-localization";
+import * as Localization from "expo-localization";
 import i18n from "@/i18n";
 
 /**
@@ -8,12 +8,36 @@ import i18n from "@/i18n";
  */
 export const getDeviceTimezone = (): string => {
   try {
-    const calendars = getCalendars();
-    return calendars[0]?.timeZone || "UTC";
+    const calendarTimezone = Localization.getCalendars()?.[0]?.timeZone || "";
+    const intlTimezone =
+      typeof Intl !== "undefined"
+        ? Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+        : "";
+    const candidate = calendarTimezone || intlTimezone;
+    if (looksLikeIanaTimezone(candidate)) {
+      return candidate;
+    }
+    if (candidate) {
+      console.warn(
+        "Invalid timezone from device, falling back to UTC:",
+        candidate,
+      );
+    }
+    return "UTC";
   } catch (error) {
     console.warn("Failed to get device timezone, falling back to UTC:", error);
     return "UTC";
   }
+};
+
+const looksLikeIanaTimezone = (value: string): boolean => {
+  if (!value) {
+    return false;
+  }
+  if (value.startsWith("Etc/")) {
+    return true;
+  }
+  return value.includes("/");
 };
 
 /**
