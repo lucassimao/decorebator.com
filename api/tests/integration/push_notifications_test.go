@@ -20,6 +20,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	expoPushEndpoint    = "https://exp.host/--/api/v2/push/send"
+	expoReceiptEndpoint = "https://exp.host/--/api/v2/push/getReceipts"
+)
+
 func TestPushNotificationRegister(t *testing.T) {
 	t.Run("stores token metadata on registration", func(t *testing.T) {
 		ts, token, userID := newAuthedPushTestServer(t)
@@ -229,7 +234,7 @@ func TestDailyPracticeReminderWorkerStoresReceiptsAndMarksNotified(t *testing.T)
 		&repository.PushReceiptRepository{Db: ts.DB},
 	)
 	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
-		service.ExpoPushEndpoint: {
+		expoPushEndpoint: {
 			Status: http.StatusOK,
 			Body:   `{"data":[{"status":"ok","id":"ticket-success"}]}`,
 		},
@@ -278,7 +283,7 @@ func TestDailyPracticeReminderWorkerDeactivatesInvalidTokens(t *testing.T) {
 		&repository.PushReceiptRepository{Db: ts.DB},
 	)
 	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
-		service.ExpoPushEndpoint: {
+		expoPushEndpoint: {
 			Status: http.StatusOK,
 			Body:   `{"data":[{"status":"error","message":"Device not registered","details":{"error":"DeviceNotRegistered"}}]}`,
 		},
@@ -325,7 +330,7 @@ func TestPushReceiptWorkerUpdatesStatusAndDeactivatesTokens(t *testing.T) {
 		&repository.PushReceiptRepository{Db: ts.DB},
 	)
 	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
-		service.ExpoReceiptEndpoint: {
+		expoReceiptEndpoint: {
 			Status: http.StatusOK,
 			Body: `{
 				"data": {

@@ -17,13 +17,6 @@ import (
 const expoPushEndpoint = "https://exp.host/--/api/v2/push/send"
 const expoReceiptEndpoint = "https://exp.host/--/api/v2/push/getReceipts"
 
-const (
-	// ExpoPushEndpoint exposes the push endpoint for testing.
-	ExpoPushEndpoint = expoPushEndpoint
-	// ExpoReceiptEndpoint exposes the receipt endpoint for testing.
-	ExpoReceiptEndpoint = expoReceiptEndpoint
-)
-
 type PushNotificationService struct {
 	repo        *repository.PushTokenRepository
 	receiptRepo *repository.PushReceiptRepository
