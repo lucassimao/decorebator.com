@@ -320,6 +320,8 @@ const SettingsScreen: React.FC = () => {
       // Find user-specific keys to remove (but preserve theme preference)
       const userKeys = allKeys.filter(
         (key) =>
+          key === "cachedUserProfile" ||
+          key === "cachedSubscription" ||
           key === "hasSeenDashboard" ||
           key === "justSignedUp" ||
           key.startsWith("flashcard_position_") ||
@@ -328,7 +330,6 @@ const SettingsScreen: React.FC = () => {
 
       if (userKeys.length > 0) {
         await AsyncStorage.multiRemove(userKeys);
-        console.log();
       }
     } catch (error) {
       console.error("Error clearing user AsyncStorage:", error);
