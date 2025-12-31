@@ -13,7 +13,7 @@ interface RestorePurchasesRequest {
 
 export async function restorePurchases(appUserId: string): Promise<void> {
   const endpoint = `${API_URL}/subscription/revenuecat/restore`;
-  const authorization = getAuthorization();
+  const authorization = await getAuthorization();
 
   if (!authorization) {
     throw new Error("Authentication required");

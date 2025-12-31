@@ -79,7 +79,7 @@ export async function signup(data: UserSignup) {
   }
   const authorization = response.headers.get("authorization");
   if (authorization) {
-    saveAuthorization(authorization);
+    await saveAuthorization(authorization);
   } else {
     throw new Error(DEFAULT_ERROR);
   }
@@ -119,7 +119,7 @@ export async function signin(data: UserSignin) {
   }
   const authorization = response.headers.get("authorization");
   if (authorization) {
-    saveAuthorization(authorization);
+    await saveAuthorization(authorization);
   } else {
     throw new Error(DEFAULT_ERROR);
   }
@@ -152,7 +152,7 @@ export async function requestResetEmailPassword(email: string) {
 
 export async function update(updates: UpdateInput) {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/users";
-  const authorization = getAuthorization();
+  const authorization = await getAuthorization();
 
   if (!authorization) {
     throw new Error("Authentication required");
@@ -183,7 +183,7 @@ export async function update(updates: UpdateInput) {
 
 export async function getProfile(): Promise<UserProfile> {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/users";
-  const authorization = getAuthorization();
+  const authorization = await getAuthorization();
 
   if (!authorization) {
     throw new Error("Authentication required");
@@ -208,7 +208,7 @@ export async function getProfile(): Promise<UserProfile> {
   // Check for JWT refresh (same pattern as login/signup)
   const newAuthorization = response.headers.get("authorization");
   if (newAuthorization) {
-    saveAuthorization(newAuthorization);
+    await saveAuthorization(newAuthorization);
   }
 
   return body;
@@ -216,7 +216,7 @@ export async function getProfile(): Promise<UserProfile> {
 
 export async function deleteProfile(): Promise<void> {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/users";
-  const authorization = getAuthorization();
+  const authorization = await getAuthorization();
 
   if (!authorization) {
     throw new Error("Authentication required");
@@ -241,12 +241,12 @@ export async function deleteProfile(): Promise<void> {
   Sentry.setUser(null);
 }
 
-function saveAuthorization(authorization: string) {
+async function saveAuthorization(authorization: string) {
   // Save the authorization token
   if (Platform.OS === "web") {
     localStorage.setItem("authorization", authorization);
   } else if (Platform.OS === "ios" || Platform.OS === "android") {
-    SecureStore.setItem("authorization", authorization);
+    await SecureStore.setItemAsync("authorization", authorization);
   } else {
     throw new Error("Unknown platform: " + Platform.OS);
   }
@@ -263,11 +263,11 @@ function saveAuthorization(authorization: string) {
   }
 }
 
-export function getAuthorization() {
+export async function getAuthorization() {
   if (Platform.OS === "web") {
     return localStorage.getItem("authorization");
   } else if (Platform.OS === "ios" || Platform.OS === "android") {
-    return SecureStore.getItem("authorization");
+    return SecureStore.getItemAsync("authorization");
   } else {
     throw new Error("Unsupported platform: " + Platform.OS);
   }

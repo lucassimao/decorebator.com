@@ -12,7 +12,7 @@ export async function callAPI<T>(
   body?: string,
   timeoutMs = 15000, // 15 second default timeout
 ): Promise<T> {
-  const authorization = getAuthorization();
+  const authorization = await getAuthorization();
 
   if (!authorization) {
     throw new Error(AUTH_REQUIRED_ERROR);

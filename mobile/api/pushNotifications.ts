@@ -12,7 +12,7 @@ export type RegisterPushTokenInput = {
 
 export async function registerPushToken(input: RegisterPushTokenInput) {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/push/register";
-  const authorization = getAuthorization();
+  const authorization = await getAuthorization();
 
   if (!authorization) {
     throw new Error("Authentication required");
@@ -54,7 +54,7 @@ export async function registerPushToken(input: RegisterPushTokenInput) {
 
 export async function unregisterPushToken(expoPushToken: string) {
   const endpoint = process.env.EXPO_PUBLIC_API_URL + "/push/unregister";
-  const authorization = getAuthorization();
+  const authorization = await getAuthorization();
 
   if (!authorization) {
     throw new Error("Authentication required");

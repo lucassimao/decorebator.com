@@ -82,7 +82,7 @@ const LoginScreen: React.FC = () => {
 
       // Extract user info from JWT for Sentry
       try {
-        const authorization = usersApi.getAuthorization();
+        const authorization = await usersApi.getAuthorization();
         if (authorization) {
           const decoded = decode(authorization);
           Sentry.setUser({

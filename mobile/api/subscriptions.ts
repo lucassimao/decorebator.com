@@ -29,7 +29,7 @@ export async function createCheckoutSession(
   expoUri: string,
 ): Promise<CheckoutSessionResponse> {
   const endpoint = `${process.env.EXPO_PUBLIC_API_URL}/subscription/checkout-session`;
-  const authorization = getAuthorization();
+  const authorization = await getAuthorization();
 
   if (!authorization) {
     throw new Error("Authentication required");
@@ -54,7 +54,7 @@ export async function createCheckoutSession(
 
 export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
   const endpoint = `${API_URL}/subscription/status`;
-  const authorization = getAuthorization();
+  const authorization = await getAuthorization();
 
   if (!authorization) {
     throw new Error("Authentication required");
