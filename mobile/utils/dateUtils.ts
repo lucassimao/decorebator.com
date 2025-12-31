@@ -14,8 +14,17 @@ export const getDeviceTimezone = (): string => {
         ? Intl.DateTimeFormat().resolvedOptions().timeZone || ""
         : "";
     const candidate = calendarTimezone || intlTimezone;
-    if (looksLikeIanaTimezone(candidate)) {
-      return candidate;
+    const normalized = normalizeTimezone(candidate);
+    if (normalized) {
+      if (normalized !== candidate) {
+        console.warn(
+          "Normalized device timezone:",
+          candidate,
+          "->",
+          normalized,
+        );
+      }
+      return normalized;
     }
     if (candidate) {
       console.warn(
@@ -28,6 +37,37 @@ export const getDeviceTimezone = (): string => {
     console.warn("Failed to get device timezone, falling back to UTC:", error);
     return "UTC";
   }
+};
+
+const normalizeTimezone = (value: string): string | null => {
+  if (!value) {
+    return null;
+  }
+  if (looksLikeIanaTimezone(value)) {
+    return value;
+  }
+  const upper = value.toUpperCase();
+  if (upper === "UTC" || upper === "GMT") {
+    return "UTC";
+  }
+  const match = upper.match(/^(?:UTC|GMT)([+-])(\d{1,2})(?::?(\d{2}))?$/);
+  if (!match) {
+    return null;
+  }
+  const sign = match[1];
+  const hours = Number(match[2]);
+  const minutes = match[3] ? Number(match[3]) : 0;
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+    return null;
+  }
+  if (minutes !== 0) {
+    return null;
+  }
+  if (hours > 14) {
+    return null;
+  }
+  const etcSign = sign === "+" ? "-" : "+";
+  return `Etc/GMT${etcSign}${hours}`;
 };
 
 const looksLikeIanaTimezone = (value: string): boolean => {
