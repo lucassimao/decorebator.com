@@ -97,11 +97,11 @@ func (r *PushTokenRepository) FindDailyReminderCandidates(ctx context.Context, n
 		JOIN users u ON u.id = pt.user_id
 		WHERE pt.is_active = true
 			AND u.notifications_enabled = true
-			AND (u.last_practice_at IS NULL OR u.last_practice_at < $1 - INTERVAL '24 hours')
-			AND date_part('hour', $1 AT TIME ZONE pt.timezone) = 11
+			AND (u.last_practice_at IS NULL OR u.last_practice_at < ($1::timestamptz - INTERVAL '24 hours'))
+			AND date_part('hour', $1::timestamptz AT TIME ZONE pt.timezone) = 11
 			AND (
 				pt.last_notified_at IS NULL OR
-				(pt.last_notified_at AT TIME ZONE pt.timezone)::date < ($1 AT TIME ZONE pt.timezone)::date
+				(pt.last_notified_at AT TIME ZONE pt.timezone)::date < ($1::timestamptz AT TIME ZONE pt.timezone)::date
 			)
 	`, timestamp)
 	if err != nil {
