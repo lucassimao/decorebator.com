@@ -25,6 +25,8 @@ func main() {
 		}
 	}()
 
+	common.SetDBPoolLimits(10, 2)
+
 	// Initialize database connection (direct database URL)
 	db := common.GetDBConnection()
 	defer common.CloseDBConnection()

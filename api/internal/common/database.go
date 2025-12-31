@@ -12,9 +12,17 @@ import (
 )
 
 var (
-	db     *pgxpool.Pool
-	dbOnce sync.Once
+	db         *pgxpool.Pool
+	dbOnce     sync.Once
+	dbMaxConns int32 = 50
+	dbMinConns int32 = 10
 )
+
+// SetDBPoolLimits overrides the default pool size limits before initialization.
+func SetDBPoolLimits(maxConns, minConns int32) {
+	dbMaxConns = maxConns
+	dbMinConns = minConns
+}
 
 func GetDBConnection() *pgxpool.Pool {
 	// Initialize the database connection pool once
@@ -44,8 +52,8 @@ func GetDBConnection() *pgxpool.Pool {
 		}
 
 		// Recommended configuration for pgxpool connecting to pgBouncer
-		config.MaxConns = 50
-		config.MinConns = 10
+		config.MaxConns = dbMaxConns
+		config.MinConns = dbMinConns
 		config.MaxConnLifetime = 30 * time.Minute
 		config.MaxConnIdleTime = 5 * time.Minute
 		config.HealthCheckPeriod = 1 * time.Minute
