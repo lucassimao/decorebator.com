@@ -815,5 +815,25 @@
       "title": "Experiencia de aprendizaje nativa en múltiples idiomas",
       "subtitle": "Experimenta contenido generado por IA en 7 idiomas diferentes"
     }
+  },
+  "resetPassword": {
+    "title": "Restablecer tu contraseña",
+    "subtitle": "Ingresa tu nueva contraseña abajo. Asegúrate de que sea segura y fácil de recordar.",
+    "newPassword": "Nueva contraseña",
+    "newPasswordPlaceholder": "Ingresa la nueva contraseña",
+    "confirmPassword": "Confirmar nueva contraseña",
+    "confirmPasswordPlaceholder": "Confirma la nueva contraseña",
+    "resetButton": "Restablecer contraseña",
+    "helpText": "Recuerda elegir una contraseña segura que no hayas usado antes.",
+    "errors": {
+      "fillBothFields": "Por favor, completa ambos campos de contraseña.",
+      "tooShort": "La contraseña debe tener al menos 4 caracteres.",
+      "noMatch": "Las contraseñas no coinciden.",
+      "resetFailed": "No se pudo restablecer la contraseña. Inténtalo de nuevo.",
+      "tokenExpired": "Este enlace de restablecimiento ha caducado. Solicita uno nuevo.",
+      "tokenInvalid": "Este enlace de restablecimiento no es válido. Solicita uno nuevo.",
+      "missingToken": "El enlace de restablecimiento falta o no es válido. Solicita uno nuevo."
+    },
+    "success": "¡La contraseña se ha restablecido correctamente!"
   }
 }

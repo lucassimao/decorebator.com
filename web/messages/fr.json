@@ -948,5 +948,25 @@
       "subtitle": "Notre équipe de support est prête à vous assister avec toute question ou problème.",
       "emailSupport": "Support par Email"
     }
+  },
+  "resetPassword": {
+    "title": "Réinitialiser votre mot de passe",
+    "subtitle": "Saisissez votre nouveau mot de passe ci-dessous. Assurez-vous qu'il soit fort et mémorable.",
+    "newPassword": "Nouveau mot de passe",
+    "newPasswordPlaceholder": "Saisissez le nouveau mot de passe",
+    "confirmPassword": "Confirmer le nouveau mot de passe",
+    "confirmPasswordPlaceholder": "Confirmez le nouveau mot de passe",
+    "resetButton": "Réinitialiser le mot de passe",
+    "helpText": "Choisissez un mot de passe fort que vous n'avez pas utilisé auparavant.",
+    "errors": {
+      "fillBothFields": "Veuillez remplir les deux champs de mot de passe.",
+      "tooShort": "Le mot de passe doit comporter au moins 4 caractères.",
+      "noMatch": "Les mots de passe ne correspondent pas.",
+      "resetFailed": "Échec de la réinitialisation du mot de passe. Veuillez réessayer.",
+      "tokenExpired": "Ce lien de réinitialisation a expiré. Veuillez en demander un nouveau.",
+      "tokenInvalid": "Ce lien de réinitialisation est invalide. Veuillez en demander un nouveau.",
+      "missingToken": "Le lien de réinitialisation est manquant ou invalide. Veuillez en demander un nouveau."
+    },
+    "success": "Le mot de passe a été réinitialisé avec succès !"
   }
 }

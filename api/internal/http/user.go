@@ -195,7 +195,11 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 
 	payload, err := mail.ValidateResetPasswordPayload(input.Token)
 	if err != nil {
-		c.Status(http.StatusBadRequest)
+		if err.Error() == "token expired" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "token_expired"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "token_invalid"})
 		return
 	}
 

@@ -655,5 +655,25 @@
       "subtitle": "Unser Support-Team ist bereit, Ihnen bei allen Fragen oder Problemen zu helfen.",
       "emailSupport": "E-Mail-Support"
     }
+  },
+  "resetPassword": {
+    "title": "Passwort zurücksetzen",
+    "subtitle": "Geben Sie unten Ihr neues Passwort ein. Achten Sie darauf, dass es stark und einprägsam ist.",
+    "newPassword": "Neues Passwort",
+    "newPasswordPlaceholder": "Neues Passwort eingeben",
+    "confirmPassword": "Neues Passwort bestätigen",
+    "confirmPasswordPlaceholder": "Neues Passwort bestätigen",
+    "resetButton": "Passwort zurücksetzen",
+    "helpText": "Wählen Sie ein starkes Passwort, das Sie bisher nicht verwendet haben.",
+    "errors": {
+      "fillBothFields": "Bitte füllen Sie beide Passwortfelder aus.",
+      "tooShort": "Das Passwort muss mindestens 4 Zeichen lang sein.",
+      "noMatch": "Passwörter stimmen nicht überein.",
+      "resetFailed": "Passwort konnte nicht zurückgesetzt werden. Bitte versuchen Sie es erneut.",
+      "tokenExpired": "Dieser Reset-Link ist abgelaufen. Bitte fordern Sie einen neuen an.",
+      "tokenInvalid": "Dieser Reset-Link ist ungültig. Bitte fordern Sie einen neuen an.",
+      "missingToken": "Der Reset-Link fehlt oder ist ungültig. Bitte fordern Sie einen neuen an."
+    },
+    "success": "Passwort wurde erfolgreich zurückgesetzt!"
   }
 }
