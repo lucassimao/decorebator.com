@@ -22,13 +22,7 @@ func GetDBConnection(disablePreparedStatements bool) *pgxpool.Pool {
 	// Initialize the database connection pool once
 	dbOnce.Do(func() {
 		dbMode = &disablePreparedStatements
-		databaseURL := ""
-		if disablePreparedStatements {
-			databaseURL = os.Getenv("WORKER_DATABASE_URL")
-		}
-		if databaseURL == "" {
-			databaseURL = os.Getenv("DATABASE_URL")
-		}
+		databaseURL := os.Getenv("DATABASE_URL")
 		if databaseURL == "" {
 			// Build URL from individual components if DATABASE_URL not set
 			user := os.Getenv("POSTGRES_USER")
