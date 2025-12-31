@@ -1,0 +1,396 @@
+package integration
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"testing"
+	"time"
+
+	httphandlers "decorebator.com/internal/http"
+	"decorebator.com/internal/repository"
+	"decorebator.com/internal/service"
+	"decorebator.com/tests/integration/setup"
+	"github.com/riverqueue/river"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestPushNotificationRegister(t *testing.T) {
+	t.Run("stores token metadata on registration", func(t *testing.T) {
+		ts, token, userID := newAuthedPushTestServer(t)
+		defer ts.Cleanup()
+
+		expoToken := "ExponentPushToken[test-device]"
+		locale := "en-US"
+		deviceID := "device-123"
+		payload := map[string]any{
+			"expoPushToken": expoToken,
+			"platform":      "ios",
+			"timezone":      "America/New_York",
+			"locale":        locale,
+			"deviceId":      deviceID,
+		}
+
+		ts.Expect.POST("/push/register").
+			WithHeader("Authorization", token).
+			WithJSON(payload).
+			Expect().
+			Status(http.StatusNoContent)
+
+		var platform, timezone string
+		var storedLocale, storedDeviceID sql.NullString
+		var isActive bool
+		var lastSeenAt time.Time
+
+		err := ts.DB.QueryRow(context.Background(), `
+			SELECT platform, timezone, locale, device_id, is_active, last_seen_at
+			FROM push_tokens
+			WHERE user_id = $1 AND expo_token = $2
+		`, userID, expoToken).Scan(&platform, &timezone, &storedLocale, &storedDeviceID, &isActive, &lastSeenAt)
+		require.NoError(t, err, "push token should be stored")
+
+		assert.Equal(t, "ios", platform)
+		assert.Equal(t, "America/New_York", timezone)
+		assert.True(t, isActive, "token should be marked active")
+		assert.True(t, storedLocale.Valid)
+		assert.Equal(t, locale, storedLocale.String)
+		assert.True(t, storedDeviceID.Valid)
+		assert.Equal(t, deviceID, storedDeviceID.String)
+		assert.WithinDuration(t, time.Now(), lastSeenAt, 5*time.Second, "last_seen_at should be set near now")
+	})
+
+	t.Run("rejects invalid platform", func(t *testing.T) {
+		ts, token, _ := newAuthedPushTestServer(t)
+		defer ts.Cleanup()
+
+		payload := map[string]any{
+			"expoPushToken": "ExponentPushToken[invalid-platform]",
+			"platform":      "web",
+			"timezone":      "America/Chicago",
+		}
+
+		ts.Expect.POST("/push/register").
+			WithHeader("Authorization", token).
+			WithJSON(payload).
+			Expect().
+			Status(http.StatusBadRequest).
+			JSON().
+			Object().
+			ValueEqual("error", "invalid platform")
+	})
+
+	t.Run("rejects invalid timezone", func(t *testing.T) {
+		ts, token, _ := newAuthedPushTestServer(t)
+		defer ts.Cleanup()
+
+		payload := map[string]any{
+			"expoPushToken": "ExponentPushToken[invalid-timezone]",
+			"platform":      "android",
+			"timezone":      "Not/A_Real_Timezone",
+		}
+
+		ts.Expect.POST("/push/register").
+			WithHeader("Authorization", token).
+			WithJSON(payload).
+			Expect().
+			Status(http.StatusBadRequest).
+			JSON().
+			Object().
+			ValueEqual("error", "invalid timezone")
+	})
+}
+
+func TestPushNotificationUnregister(t *testing.T) {
+	ts, token, userID := newAuthedPushTestServer(t)
+	defer ts.Cleanup()
+
+	expoToken := "ExponentPushToken[unregister]"
+
+	// Register first to seed the token
+	ts.Expect.POST("/push/register").
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"expoPushToken": expoToken,
+			"platform":      "android",
+			"timezone":      "Europe/London",
+		}).
+		Expect().
+		Status(http.StatusNoContent)
+
+	// Unregister should deactivate the token
+	ts.Expect.POST("/push/unregister").
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"expoPushToken": expoToken,
+		}).
+		Expect().
+		Status(http.StatusNoContent)
+
+	var isActive bool
+	err := ts.DB.QueryRow(context.Background(), `
+		SELECT is_active FROM push_tokens WHERE user_id = $1 AND expo_token = $2
+	`, userID, expoToken).Scan(&isActive)
+	require.NoError(t, err, "push token should exist")
+	assert.False(t, isActive, "token should be deactivated after unregister")
+}
+
+func newAuthedPushTestServer(t *testing.T) (*setup.TestServer, string, int64) {
+	t.Helper()
+
+	ts := setup.NewTestServer(t)
+
+	signupInput := setup.GenerateSignupInput()
+	ts.Expect.POST("/users").
+		WithJSON(signupInput).
+		Expect().
+		Status(http.StatusCreated)
+
+	loginResp := ts.Expect.POST("/login").
+		WithJSON(httphandlers.LoginInput{
+			Email:    signupInput.Email,
+			Password: signupInput.Password,
+		}).
+		Expect().
+		Status(http.StatusOK)
+
+	token := loginResp.Header("Authorization").NotEmpty().Raw()
+
+	var userID int64
+	err := ts.DB.QueryRow(context.Background(), "SELECT id FROM users WHERE email = $1", signupInput.Email).Scan(&userID)
+	require.NoError(t, err, "user should exist in database")
+
+	return ts, token, userID
+}
+
+func TestNotificationPreferencesToggle(t *testing.T) {
+	ts, token, userID := newAuthedPushTestServer(t)
+	defer ts.Cleanup()
+
+	// Disable notifications
+	disableResp := ts.Expect.PATCH("/users").
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"notificationsEnabled": false,
+		}).
+		Expect().
+		Status(http.StatusOK).
+		JSON().
+		Object()
+
+	disableResp.Value("notificationsEnabled").Equal(false)
+
+	// Verify persisted state
+	var enabled bool
+	err := ts.DB.QueryRow(context.Background(), "SELECT notifications_enabled FROM users WHERE id = $1", userID).Scan(&enabled)
+	require.NoError(t, err)
+	assert.False(t, enabled, "notifications_enabled should be false after toggle off")
+
+	// Re-enable notifications
+	enableResp := ts.Expect.PATCH("/users").
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"notificationsEnabled": true,
+		}).
+		Expect().
+		Status(http.StatusOK).
+		JSON().
+		Object()
+
+	enableResp.Value("notificationsEnabled").Equal(true)
+
+	err = ts.DB.QueryRow(context.Background(), "SELECT notifications_enabled FROM users WHERE id = $1", userID).Scan(&enabled)
+	require.NoError(t, err)
+	assert.True(t, enabled, "notifications_enabled should be true after toggle on")
+}
+
+func TestDailyPracticeReminderWorkerStoresReceiptsAndMarksNotified(t *testing.T) {
+	ts, token, userID := newAuthedPushTestServer(t)
+	defer ts.Cleanup()
+
+	timezone := timezoneForLocalEleven(time.Now().UTC())
+
+	ts.Expect.POST("/push/register").
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"expoPushToken": "ExponentPushToken[worker-success]",
+			"platform":      "android",
+			"timezone":      timezone,
+		}).
+		Expect().
+		Status(http.StatusNoContent)
+
+	pushService := service.NewPushNotificationService(
+		&repository.PushTokenRepository{Db: ts.DB},
+		&repository.PushReceiptRepository{Db: ts.DB},
+	)
+	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
+		service.ExpoPushEndpoint: {
+			Status: http.StatusOK,
+			Body:   `{"data":[{"status":"ok","id":"ticket-success"}]}`,
+		},
+	}))
+
+	worker := service.NewDailyPracticeReminderWorker(pushService)
+
+	err := worker.Work(context.Background(), &river.Job[service.DailyPracticeReminderArgs]{})
+	require.NoError(t, err)
+
+	var lastNotified time.Time
+	err = ts.DB.QueryRow(context.Background(), `
+		SELECT last_notified_at FROM push_tokens WHERE user_id = $1 AND expo_token = $2
+	`, userID, "ExponentPushToken[worker-success]").Scan(&lastNotified)
+	require.NoError(t, err)
+	assert.WithinDuration(t, time.Now(), lastNotified, 5*time.Second)
+
+	var ticketID, expoToken string
+	err = ts.DB.QueryRow(context.Background(), `
+		SELECT expo_ticket_id, expo_token FROM push_receipts WHERE expo_ticket_id = $1
+	`, "ticket-success").Scan(&ticketID, &expoToken)
+	require.NoError(t, err)
+	assert.Equal(t, "ticket-success", ticketID)
+	assert.Equal(t, "ExponentPushToken[worker-success]", expoToken)
+}
+
+func TestDailyPracticeReminderWorkerDeactivatesInvalidTokens(t *testing.T) {
+	ts, token, userID := newAuthedPushTestServer(t)
+	defer ts.Cleanup()
+
+	timezone := timezoneForLocalEleven(time.Now().UTC())
+	expoToken := "ExponentPushToken[worker-device-not-registered]"
+
+	ts.Expect.POST("/push/register").
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"expoPushToken": expoToken,
+			"platform":      "ios",
+			"timezone":      timezone,
+		}).
+		Expect().
+		Status(http.StatusNoContent)
+
+	pushService := service.NewPushNotificationService(
+		&repository.PushTokenRepository{Db: ts.DB},
+		&repository.PushReceiptRepository{Db: ts.DB},
+	)
+	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
+		service.ExpoPushEndpoint: {
+			Status: http.StatusOK,
+			Body:   `{"data":[{"status":"error","message":"Device not registered","details":{"error":"DeviceNotRegistered"}}]}`,
+		},
+	}))
+
+	worker := service.NewDailyPracticeReminderWorker(pushService)
+
+	err := worker.Work(context.Background(), &river.Job[service.DailyPracticeReminderArgs]{})
+	require.NoError(t, err)
+
+	var isActive bool
+	err = ts.DB.QueryRow(context.Background(), `
+		SELECT is_active FROM push_tokens WHERE user_id = $1 AND expo_token = $2
+	`, userID, expoToken).Scan(&isActive)
+	require.NoError(t, err)
+	assert.False(t, isActive, "token should be deactivated after DeviceNotRegistered error")
+}
+
+func TestPushReceiptWorkerUpdatesStatusAndDeactivatesTokens(t *testing.T) {
+	ts, token, userID := newAuthedPushTestServer(t)
+	defer ts.Cleanup()
+
+	expoToken := "ExponentPushToken[receipt-check]"
+	timezone := timezoneForLocalEleven(time.Now().UTC())
+
+	ts.Expect.POST("/push/register").
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"expoPushToken": expoToken,
+			"platform":      "android",
+			"timezone":      timezone,
+		}).
+		Expect().
+		Status(http.StatusNoContent)
+
+	_, err := ts.DB.Exec(context.Background(), `
+		INSERT INTO push_receipts (expo_ticket_id, expo_token, created_at, updated_at)
+		VALUES ($1, $2, NOW(), NOW())
+	`, "receipt-123", expoToken)
+	require.NoError(t, err)
+
+	pushService := service.NewPushNotificationService(
+		&repository.PushTokenRepository{Db: ts.DB},
+		&repository.PushReceiptRepository{Db: ts.DB},
+	)
+	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
+		service.ExpoReceiptEndpoint: {
+			Status: http.StatusOK,
+			Body: `{
+				"data": {
+					"receipt-123": {
+						"status": "error",
+						"message": "DeviceNotRegistered",
+						"details": {"error": "DeviceNotRegistered"}
+					}
+				}
+			}`,
+		},
+	}))
+
+	worker := service.NewPushReceiptWorker(pushService)
+
+	err = worker.Work(context.Background(), &river.Job[service.PushReceiptArgs]{})
+	require.NoError(t, err)
+
+	var status sql.NullString
+	var checkedAt time.Time
+	err = ts.DB.QueryRow(context.Background(), `
+		SELECT status, checked_at FROM push_receipts WHERE expo_ticket_id = $1
+	`, "receipt-123").Scan(&status, &checkedAt)
+	require.NoError(t, err)
+	assert.True(t, status.Valid)
+	assert.Equal(t, "error", status.String)
+	assert.WithinDuration(t, time.Now(), checkedAt, 5*time.Second)
+
+	var isActive bool
+	err = ts.DB.QueryRow(context.Background(), `
+		SELECT is_active FROM push_tokens WHERE user_id = $1 AND expo_token = $2
+	`, userID, expoToken).Scan(&isActive)
+	require.NoError(t, err)
+	assert.False(t, isActive, "token should be deactivated when receipt reports DeviceNotRegistered")
+}
+
+type stubResponse struct {
+	Status int
+	Body   string
+}
+
+type stubRoundTripper struct {
+	responses map[string]stubResponse
+}
+
+func (s stubRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	resp, ok := s.responses[req.URL.String()]
+	if !ok {
+		return nil, errors.New("unexpected request to " + req.URL.String())
+	}
+
+	return &http.Response{
+		StatusCode: resp.Status,
+		Body:       io.NopCloser(strings.NewReader(resp.Body)),
+		Header:     make(http.Header),
+	}, nil
+}
+
+func httpClientStub(responses map[string]stubResponse) *http.Client {
+	return &http.Client{
+		Transport: stubRoundTripper{responses: responses},
+	}
+}
+
+func timezoneForLocalEleven(now time.Time) string {
+	offset := now.Hour() - 11
+	return fmt.Sprintf("Etc/GMT%+d", offset)
+}

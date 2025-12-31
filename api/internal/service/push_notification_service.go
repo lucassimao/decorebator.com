@@ -17,6 +17,13 @@ import (
 const expoPushEndpoint = "https://exp.host/--/api/v2/push/send"
 const expoReceiptEndpoint = "https://exp.host/--/api/v2/push/getReceipts"
 
+const (
+	// ExpoPushEndpoint exposes the push endpoint for testing.
+	ExpoPushEndpoint = expoPushEndpoint
+	// ExpoReceiptEndpoint exposes the receipt endpoint for testing.
+	ExpoReceiptEndpoint = expoReceiptEndpoint
+)
+
 type PushNotificationService struct {
 	repo        *repository.PushTokenRepository
 	receiptRepo *repository.PushReceiptRepository
@@ -71,6 +78,11 @@ func NewPushNotificationService(repo *repository.PushTokenRepository, receiptRep
 		},
 		accessToken: os.Getenv("EXPO_PUSH_ACCESS_TOKEN"),
 	}
+}
+
+// SetHTTPClient overrides the HTTP client (used in tests).
+func (s *PushNotificationService) SetHTTPClient(client *http.Client) {
+	s.httpClient = client
 }
 
 func (s *PushNotificationService) SendDailyPracticeReminders(ctx context.Context, now time.Time) error {
