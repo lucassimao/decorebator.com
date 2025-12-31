@@ -34,5 +34,4 @@ COPY --from=builder /app/migrate .
 # Expose port 8080 to the outside world
 EXPOSE 8080
 
-RUN apk add libc6-compat
-
+RUN apk add --no-cache libc6-compat tzdata
