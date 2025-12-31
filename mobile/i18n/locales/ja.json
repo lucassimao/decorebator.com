@@ -524,7 +524,11 @@
       "privacyPolicy": "プライバシーポリシー",
       "contactSupport": "サポートに連絡",
       "rateApp": "アプリを評価"
-    }
+    },
+    "notificationsUnsupported": "Webではプッシュ通知はサポートされていません。",
+    "notificationsDeviceRequired": "プッシュ通知には実機が必要です。",
+    "notificationsPermissionDenied": "通知の許可が拒否されました。リマインダーを受け取るには設定で有効にしてください。",
+    "notificationsUpdateError": "通知の設定を更新できませんでした。もう一度お試しください。"
   },
   "profile": {
     "title": "プロフィール設定",

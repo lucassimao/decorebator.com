@@ -7,33 +7,32 @@ import DashboardStats from "@/components/dashboard/Stats";
 import { WordlistDetailModal } from "@/components/dashboard/WordlistDetailModal";
 import Wordlistitem from "@/components/dashboard/WordlistItem";
 import { WelcomeOverlay } from "@/components/dashboard/WelcomeOverlay";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { WordlistItemSkeleton } from "@/components/ui/WordlistItemSkeleton";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useUpgradePromptDialog } from "@/hooks/useUpgradePromptDialog";
 import { useWordlistProgress } from "@/hooks/useWordlistProgress";
 import { useWordlists } from "@/hooks/useWordlists";
+import { useDashboardAnimations } from "@/hooks/useDashboardAnimations";
+import { useWelcomeState } from "@/hooks/useWelcomeState";
 import { createCommonStyles } from "@/styles/common";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter, useFocusEffect } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
 import {
   Alert,
   Animated,
-  Dimensions,
   FlatList,
-  Image,
   ImageBackground,
   RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Easing,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface DashboardProps {}
@@ -44,15 +43,12 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const [selectedWordlist, setSelectedWordlist] =
     React.useState<Wordlist | null>(null);
   const [openAddWordOnSelect, setOpenAddWordOnSelect] = useState(false);
-  const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(false);
-  const [hasSeenDashboardFlag, setHasSeenDashboardFlag] = useState(false);
-  const [hasCheckedWelcomeState, setHasCheckedWelcomeState] = useState(false);
   const [showCongratulationsModal, setShowCongratulationsModal] =
     useState(false);
   const [congratulationsWordlist, setCongratulationsWordlist] =
     useState<Wordlist | null>(null);
   const [lockTemporarilyUnlocked, setLockTemporarilyUnlocked] = useState(false);
+
   const upgradeDialog = useUpgradePromptDialog();
   const router = useRouter();
   const { t } = useTranslation();
@@ -61,13 +57,6 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const commonStyles = createCommonStyles(theme, responsive);
   const styles = createStyles(theme);
   const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
-
-  // Animation refs
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const lockNudgeAnim = useRef(new Animated.Value(1)).current;
-  const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   // Get premium status from centralized session
   const { isPremium } = useUserSession();
@@ -86,156 +75,38 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
   const wordlistsData = Array.isArray(wordlists) ? wordlists : [];
   const hasNoWordlist = !isLoading && wordlistsData.length === 0;
+  const wordlistCount = wordlistsData.length;
 
-  const stopPulse = React.useCallback(() => {
-    if (pulseLoopRef.current) {
-      pulseLoopRef.current.stop();
-      pulseLoopRef.current = null;
-    }
-    pulseAnim.stopAnimation();
-    pulseAnim.setValue(1);
-  }, [pulseAnim]);
+  // Use custom animation hook
+  const {
+    fadeAnim,
+    slideAnim,
+    pulseAnim,
+    lockNudgeAnim,
+    startPulse,
+    stopPulse,
+    triggerLockNudge,
+  } = useDashboardAnimations({
+    hasNoWordlist,
+    isLoading,
+    showCreateModal,
+  });
 
-  const startPulse = React.useCallback(() => {
-    if (pulseLoopRef.current) return; // avoid duplicates
-    const maxScale = hasNoWordlist ? 1.1 : 1.05;
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: maxScale,
-          duration: 1200,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    pulseLoopRef.current = loop;
-    loop.start();
-  }, [hasNoWordlist, pulseAnim]);
-
-  // Check if user is first-time user immediately on mount
-  useEffect(() => {
-    let cancelled = false;
-    const checkFirstTimeUser = async () => {
-      try {
-        const entries = await AsyncStorage.multiGet([
-          "justSignedUp",
-          "hasSeenDashboard",
-        ]);
-        const isJustSignedUp = entries.find(
-          ([key]) => key === "justSignedUp",
-        )?.[1];
-        const hasSeenDashboard = entries.find(
-          ([key]) => key === "hasSeenDashboard",
-        )?.[1];
-
-        if (!cancelled) {
-          setHasSeenDashboardFlag(hasSeenDashboard === "true");
-        }
-
-        if (__DEV__) {
-          console.log("Dashboard welcome check (immediate):", {
-            isJustSignedUp,
-            hasSeenDashboard,
-          });
-        }
-
-        if (isJustSignedUp && !cancelled) {
-          setIsNewUser(true);
-          setShowWelcomeOverlay(true);
-
-          await AsyncStorage.removeItem("justSignedUp");
-          await AsyncStorage.setItem("hasSeenDashboard", "true");
-
-          if (!cancelled) {
-            setHasSeenDashboardFlag(true);
-          }
-        }
-      } catch (error) {
-        console.warn("Error checking first-time user status:", error);
-      } finally {
-        if (!cancelled) {
-          setHasCheckedWelcomeState(true);
-        }
-      }
-    };
-
-    checkFirstTimeUser();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // Use custom welcome state hook
+  const {
+    showWelcomeOverlay,
+    isNewUser,
+    setIsNewUser,
+    handleWelcomeDismiss,
+    handleWelcomeGetStarted,
+  } = useWelcomeState({
+    hasNoWordlist,
+    isLoading,
+  });
 
   useEffect(() => {
     posthog.capture("dashboard_viewed");
   }, [posthog]);
-
-  // Animate when wordlist state changes
-  useEffect(() => {
-    if (!isLoading) {
-      fadeAnim.setValue(0);
-      slideAnim.setValue(50);
-
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [hasNoWordlist, isLoading, fadeAnim, slideAnim]);
-
-  // Start pulse when focused; stop on blur
-  useFocusEffect(
-    React.useCallback(() => {
-      if (!isLoading) startPulse();
-      return () => stopPulse();
-    }, [isLoading, startPulse, stopPulse]),
-  );
-
-  // Restart pulse when empty state changes to update amplitude
-  useEffect(() => {
-    if (pulseLoopRef.current) {
-      stopPulse();
-      startPulse();
-    }
-  }, [hasNoWordlist, startPulse, stopPulse]);
-
-  // Pause while the create modal is open
-  useEffect(() => {
-    if (showCreateModal) stopPulse();
-    else startPulse();
-  }, [showCreateModal, startPulse, stopPulse]);
-
-  const markDashboardSeen = React.useCallback(() => {
-    setHasSeenDashboardFlag(true);
-    AsyncStorage.setItem("hasSeenDashboard", "true").catch((error) => {
-      console.warn("Failed to persist dashboard seen flag:", error);
-    });
-  }, []);
-
-  const handleWelcomeDismiss = React.useCallback(() => {
-    setShowWelcomeOverlay(false);
-    markDashboardSeen();
-  }, [markDashboardSeen]);
-
-  const handleWelcomeGetStarted = React.useCallback(() => {
-    handleWelcomeDismiss();
-    setShowCreateModal(true);
-  }, [handleWelcomeDismiss]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -283,23 +154,6 @@ const Dashboard: React.FC<DashboardProps> = () => {
     }
   };
 
-  const triggerLockNudge = React.useCallback(() => {
-    lockNudgeAnim.stopAnimation();
-    lockNudgeAnim.setValue(1);
-    Animated.sequence([
-      Animated.timing(lockNudgeAnim, {
-        toValue: 1.08,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-      Animated.timing(lockNudgeAnim, {
-        toValue: 1,
-        duration: 160,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [lockNudgeAnim]);
-
   const triggerLockUnlock = React.useCallback(() => {
     setLockTemporarilyUnlocked(true);
     const timeout = setTimeout(() => {
@@ -337,180 +191,85 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
   // Render empty state illustration when no wordlists
   const renderEmptyState = () => (
-    <Animated.View
-      style={[
-        styles.emptyStateContainer,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
-      <View style={styles.emptyStateCard}>
-        <Text style={styles.emptyStateTitle}>
-          {t(
-            "dashboard.wordlists.emptyTitle",
-            "Your learning journey starts here",
-          )}
-        </Text>
-        <Text style={styles.emptyStateSubtitle}>
-          {t(
-            "dashboard.wordlists.emptySubtitle",
-            "Add a few words to unlock your progress",
-          )}
-        </Text>
-
-        <Image
-          source={require("../../assets/images/empty-dashboard-rocket.png")}
-          style={styles.emptyStateIllustration}
-          resizeMode="contain"
-        />
-
-        <View style={styles.lockedProgressBar}>
-          <View style={styles.lockedProgressFill} />
-          <View style={styles.lockedProgressKnob}>
-            <Animated.View style={{ transform: [{ scale: lockNudgeAnim }] }}>
-              <Ionicons
-                name={lockTemporarilyUnlocked ? "lock-open" : "lock-closed"}
-                size={15}
-                color={theme.colors.text.secondary}
-              />
-            </Animated.View>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.ctaButton}
-          onPress={() => {
-            triggerLockNudge();
-            triggerLockUnlock();
-            setShowCreateModal(true);
-          }}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="add" size={20} color={theme.colors.text.inverse} />
-          <Text style={styles.ctaButtonText}>
-            {t(
-              "dashboard.wordlists.createFirstWordlist",
-              "Add your first words",
-            )}
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.emptyStateFootnote}>
-          <Ionicons
-            name="lock-closed"
-            size={14}
-            color={theme.colors.text.tertiary}
-          />
-          <Text style={styles.emptyStateFootnoteText}>
-            {t(
-              "dashboard.wordlists.emptyFootnote",
-              "Progress unlocks after adding your first words",
-            )}
-          </Text>
-        </View>
-      </View>
-    </Animated.View>
+    <EmptyState
+      fadeAnim={fadeAnim}
+      slideAnim={slideAnim}
+      lockNudgeAnim={lockNudgeAnim}
+      lockTemporarilyUnlocked={lockTemporarilyUnlocked}
+      onCreateWordlist={() => setShowCreateModal(true)}
+      onTriggerLockNudge={triggerLockNudge}
+      onTriggerLockUnlock={triggerLockUnlock}
+    />
   );
 
-  // Fallback: Show welcome for empty wordlists if no welcome was shown yet
-  // Note: Don't set isNewUser flag here as this could be an existing user with no wordlists
-  useEffect(() => {
-    if (
-      !hasCheckedWelcomeState ||
-      isLoading ||
-      !hasNoWordlist ||
-      showWelcomeOverlay ||
-      isNewUser ||
-      hasSeenDashboardFlag
-    ) {
-      return;
-    }
+  // Shared dashboard content
+  const renderDashboardContent = () => (
+    <>
+      <OfflineIndicator />
+      <Header />
+      <Animated.View
+        key={`wordlist-content-${wordlistCount}`}
+        style={[
+          { flex: 1 },
+          !hasNoWordlist &&
+            !isLoading && {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+        ]}
+      >
+        {hasNoWordlist && !isLoading ? (
+          renderEmptyState()
+        ) : (
+          <FlatList
+            data={isLoading ? [] : wordlistsData}
+            renderItem={renderWordlistItem}
+            keyExtractor={(item) => String(item.id)}
+            ListHeaderComponent={renderStatsAndSection}
+            contentContainerStyle={[
+              styles.listContent,
+              hasNoWordlist && styles.listContentEmpty,
+            ]}
+            showsVerticalScrollIndicator={false}
+            onScrollBeginDrag={stopPulse}
+            onMomentumScrollEnd={startPulse}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={[theme.colors.primary]}
+                tintColor={theme.colors.primary}
+              />
+            }
+            ListEmptyComponent={isLoading ? renderSkeletonItems() : null}
+          />
+        )}
+      </Animated.View>
 
-    const timer = setTimeout(() => {
-      if (__DEV__) {
-        console.log(
-          "Fallback: Showing welcome for empty wordlist (persisting dismissal after first display)",
-        );
-      }
-      setShowWelcomeOverlay(true);
-      markDashboardSeen();
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [
-    hasCheckedWelcomeState,
-    isLoading,
-    hasNoWordlist,
-    showWelcomeOverlay,
-    isNewUser,
-    hasSeenDashboardFlag,
-    markDashboardSeen,
-  ]);
+      {/* Floating Action Button */}
+      {!hasNoWordlist && (
+        <AnimatedTouchable
+          style={[styles.fab, { transform: [{ scale: pulseAnim }] }]}
+          onPress={handleAddNewWordlist}
+          onPressIn={stopPulse}
+          onPressOut={startPulse}
+          activeOpacity={0.85}
+          accessibilityLabel={t(
+            "dashboard.wordlists.addNewWordlist",
+            "Add New Wordlist",
+          )}
+        >
+          <Ionicons name="add" size={28} color="#FFFFFF" />
+        </AnimatedTouchable>
+      )}
+    </>
+  );
 
   return (
     <>
       {theme.mode === "dark" ? (
         <SafeAreaView style={[commonStyles.safeArea, styles.containerDark]}>
-          <OfflineIndicator />
-          <Header />
-          <Animated.View
-            style={[
-              { flex: 1 },
-              !hasNoWordlist &&
-                !isLoading && {
-                  opacity: fadeAnim,
-                  transform: [{ translateY: slideAnim }],
-                },
-            ]}
-          >
-            <FlatList
-              data={isLoading ? [] : hasNoWordlist ? [] : wordlistsData}
-              renderItem={renderWordlistItem}
-              keyExtractor={(item) => String(item.id)}
-              ListHeaderComponent={renderStatsAndSection}
-              contentContainerStyle={[
-                styles.listContent,
-                hasNoWordlist && styles.listContentEmpty,
-              ]}
-              showsVerticalScrollIndicator={false}
-              onScrollBeginDrag={stopPulse}
-              onMomentumScrollEnd={startPulse}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={handleRefresh}
-                  colors={[theme.colors.primary]}
-                  tintColor={theme.colors.primary}
-                />
-              }
-              ListEmptyComponent={
-                isLoading
-                  ? renderSkeletonItems()
-                  : hasNoWordlist
-                    ? renderEmptyState()
-                    : null
-              }
-            />
-          </Animated.View>
-
-          {/* Floating Action Button */}
-          {!hasNoWordlist && (
-            <AnimatedTouchable
-              style={[styles.fab, { transform: [{ scale: pulseAnim }] }]}
-              onPress={handleAddNewWordlist}
-              onPressIn={stopPulse}
-              onPressOut={startPulse}
-              activeOpacity={0.85}
-              accessibilityLabel={t(
-                "dashboard.wordlists.addNewWordlist",
-                "Add New Wordlist",
-              )}
-            >
-              <Ionicons name="add" size={28} color="#FFFFFF" />
-            </AnimatedTouchable>
-          )}
+          {renderDashboardContent()}
         </SafeAreaView>
       ) : (
         <ImageBackground
@@ -520,64 +279,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
           resizeMode="cover"
         >
           <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
-            <OfflineIndicator />
-            <Header />
-            <Animated.View
-              style={[
-                { flex: 1 },
-                !hasNoWordlist &&
-                  !isLoading && {
-                    opacity: fadeAnim,
-                    transform: [{ translateY: slideAnim }],
-                  },
-              ]}
-            >
-              <FlatList
-                data={isLoading ? [] : hasNoWordlist ? [] : wordlistsData}
-                renderItem={renderWordlistItem}
-                keyExtractor={(item) => String(item.id)}
-                ListHeaderComponent={renderStatsAndSection}
-                contentContainerStyle={[
-                  styles.listContent,
-                  hasNoWordlist && styles.listContentEmpty,
-                ]}
-                showsVerticalScrollIndicator={false}
-                onScrollBeginDrag={stopPulse}
-                onMomentumScrollEnd={startPulse}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={handleRefresh}
-                    colors={[theme.colors.primary]}
-                    tintColor={theme.colors.primary}
-                  />
-                }
-                ListEmptyComponent={
-                  isLoading
-                    ? renderSkeletonItems()
-                    : hasNoWordlist
-                      ? renderEmptyState()
-                      : null
-                }
-              />
-            </Animated.View>
-
-            {/* Floating Action Button */}
-            {!hasNoWordlist && (
-              <AnimatedTouchable
-                style={[styles.fab, { transform: [{ scale: pulseAnim }] }]}
-                onPress={handleAddNewWordlist}
-                onPressIn={stopPulse}
-                onPressOut={startPulse}
-                activeOpacity={0.85}
-                accessibilityLabel={t(
-                  "dashboard.wordlists.addNewWordlist",
-                  "Add New Wordlist",
-                )}
-              >
-                <Ionicons name="add" size={28} color="#FFFFFF" />
-              </AnimatedTouchable>
-            )}
+            {renderDashboardContent()}
           </SafeAreaView>
         </ImageBackground>
       )}
@@ -629,7 +331,9 @@ const Dashboard: React.FC<DashboardProps> = () => {
       {/* Welcome Overlay for First-Time Users */}
       <WelcomeOverlay
         visible={showWelcomeOverlay}
-        onGetStarted={handleWelcomeGetStarted}
+        onGetStarted={() =>
+          handleWelcomeGetStarted(() => setShowCreateModal(true))
+        }
         onSkip={handleWelcomeDismiss}
       />
     </>
@@ -637,8 +341,6 @@ const Dashboard: React.FC<DashboardProps> = () => {
 };
 
 export default Dashboard;
-
-const { width } = Dimensions.get("window");
 
 const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
   StyleSheet.create({
@@ -744,110 +446,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontSize: 18,
       color: theme.colors.text.secondary,
       marginBottom: 20,
-    },
-    ctaButton: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: 999,
-      paddingVertical: 14,
-      paddingHorizontal: theme.spacing.lg,
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      gap: 8,
-      width: "100%",
-      ...theme.shadows.md,
-      shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.28,
-      shadowRadius: 12,
-      elevation: 10,
-    },
-    ctaButtonText: {
-      color: theme.colors.text.inverse,
-      fontSize: 16,
-      fontWeight: "600",
-    },
-    ctaIcon: {
-      marginLeft: 4,
-    },
-    emptyStateContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      paddingHorizontal: 20,
-    },
-    emptyStateCard: {
-      width: "100%",
-      maxWidth: 420,
-      backgroundColor: theme.colors.background.surface,
-      borderRadius: 28,
-      paddingHorizontal: 24,
-      paddingVertical: 28,
-      alignItems: "center",
-      ...theme.shadows.lg,
-    },
-    emptyStateTitle: {
-      fontSize: 20,
-      fontWeight: "600",
-      color: theme.colors.text.primary,
-      textAlign: "center",
-    },
-    emptyStateSubtitle: {
-      fontSize: 14,
-      color: theme.colors.text.secondary,
-      textAlign: "center",
-      marginTop: 8,
-      marginBottom: 20,
-    },
-    emptyStateIllustration: {
-      width: width * 0.62,
-      height: width * 0.43,
-      maxWidth: 240,
-      maxHeight: 190,
-      marginBottom: 2,
-    },
-    lockedProgressBar: {
-      width: "100%",
-      height: 12,
-      borderRadius: 999,
-      backgroundColor: "#EEEFF3",
-      justifyContent: "center",
-      marginBottom: 12,
-    },
-    lockedProgressFill: {
-      position: "absolute",
-      left: 6,
-      right: 6,
-      height: 6,
-      borderRadius: 999,
-      backgroundColor: "#E3E4E8",
-    },
-    lockedProgressKnob: {
-      width: 30,
-      height: 30,
-      borderRadius: 15,
-      backgroundColor: theme.colors.background.surface,
-      borderWidth: 1,
-      borderColor: "#E5E7EB",
-      alignItems: "center",
-      justifyContent: "center",
-      alignSelf: "center",
-      transform: [{ translateY: -8 }],
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.12,
-      shadowRadius: 8,
-      elevation: 6,
-    },
-    emptyStateFootnote: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-      marginTop: 16,
-    },
-    emptyStateFootnoteText: {
-      fontSize: 13,
-      color: theme.colors.text.tertiary,
     },
     fab: {
       position: "absolute",

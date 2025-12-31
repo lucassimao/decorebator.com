@@ -524,7 +524,11 @@
       "privacyPolicy": "Política de Privacidad",
       "contactSupport": "Contactar Soporte",
       "rateApp": "Calificar App"
-    }
+    },
+    "notificationsUnsupported": "Las notificaciones push no son compatibles en la web.",
+    "notificationsDeviceRequired": "Las notificaciones push requieren un dispositivo físico.",
+    "notificationsPermissionDenied": "Se denegó el permiso de notificaciones. Actívalo en Configuración para recibir recordatorios.",
+    "notificationsUpdateError": "No se pudieron actualizar las preferencias de notificaciones. Inténtalo de nuevo."
   },
   "profile": {
     "title": "Configuración del Perfil",

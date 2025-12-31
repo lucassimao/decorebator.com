@@ -524,7 +524,11 @@
       "privacyPolicy": "Informativa sulla Privacy",
       "contactSupport": "Contatta Supporto",
       "rateApp": "Valuta App"
-    }
+    },
+    "notificationsUnsupported": "Le notifiche push non sono supportate sul web.",
+    "notificationsDeviceRequired": "Le notifiche push richiedono un dispositivo fisico.",
+    "notificationsPermissionDenied": "L'autorizzazione alle notifiche è stata negata. Abilitala nelle Impostazioni per ricevere promemoria.",
+    "notificationsUpdateError": "Impossibile aggiornare le preferenze delle notifiche. Riprova."
   },
   "profile": {
     "title": "Impostazioni Profilo",

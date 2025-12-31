@@ -16,6 +16,7 @@ export type UserProfile = {
   createdAt: string;
   preferredLanguage: string;
   subscriptionPlan: "free" | "monthly" | "annual";
+  notificationsEnabled: boolean;
 };
 export type UserSignup = {
   firstName: string;
@@ -37,6 +38,7 @@ export type UpdateInput = {
   country?: string;
   dateOfBirth?: string;
   preferredLanguage?: string;
+  notificationsEnabled?: boolean;
 
   // if set, triggers a password update
   updatePassword?: {

@@ -524,7 +524,11 @@
       "privacyPolicy": "Politique de confidentialité",
       "contactSupport": "Contacter le Support",
       "rateApp": "Noter l'App"
-    }
+    },
+    "notificationsUnsupported": "Les notifications push ne sont pas prises en charge sur le web.",
+    "notificationsDeviceRequired": "Les notifications push nécessitent un appareil physique.",
+    "notificationsPermissionDenied": "L’autorisation de notifications a été refusée. Activez-la dans Réglages pour recevoir des rappels.",
+    "notificationsUpdateError": "Impossible de mettre à jour les préférences de notifications. Veuillez réessayer."
   },
   "profile": {
     "title": "Paramètres du Profil",
