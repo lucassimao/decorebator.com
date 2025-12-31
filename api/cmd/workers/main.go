@@ -25,8 +25,8 @@ func main() {
 		}
 	}()
 
-	// Initialize database connection (disable prepared statements for pgBouncer)
-	db := common.GetDBConnection(true)
+	// Initialize database connection (direct database URL)
+	db := common.GetDBConnection()
 	defer common.CloseDBConnection()
 
 	// Create AppContext with all services

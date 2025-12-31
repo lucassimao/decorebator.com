@@ -21,9 +21,13 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	if pgbouncerURL := os.Getenv("PGBOUNCER_DATABASE_URL"); pgbouncerURL != "" {
+		os.Setenv("DATABASE_URL", pgbouncerURL)
+	}
+
 	// Initialize Context with all services
 	appCtx, err := app.NewContext().
-		WithDatabase(common.GetDBConnection(false)).
+		WithDatabase(common.GetDBConnection()).
 		WithEnvironment(os.Getenv("ENV")).
 		Build()
 	if err != nil {

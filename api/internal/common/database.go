@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	ddpgx "gopkg.in/DataDog/dd-trace-go.v1/contrib/jackc/pgx.v5"
 )
@@ -15,13 +14,11 @@ import (
 var (
 	db     *pgxpool.Pool
 	dbOnce sync.Once
-	dbMode *bool
 )
 
-func GetDBConnection(disablePreparedStatements bool) *pgxpool.Pool {
+func GetDBConnection() *pgxpool.Pool {
 	// Initialize the database connection pool once
 	dbOnce.Do(func() {
-		dbMode = &disablePreparedStatements
 		databaseURL := os.Getenv("DATABASE_URL")
 		if databaseURL == "" {
 			// Build URL from individual components if DATABASE_URL not set
@@ -53,20 +50,11 @@ func GetDBConnection(disablePreparedStatements bool) *pgxpool.Pool {
 		config.MaxConnIdleTime = 5 * time.Minute
 		config.HealthCheckPeriod = 1 * time.Minute
 		config.ConnConfig.ConnectTimeout = 5 * time.Second
-		if disablePreparedStatements {
-			// Use simple protocol to avoid prepared statement state with pgBouncer transaction pooling.
-			config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
-			config.ConnConfig.StatementCacheCapacity = 0
-		}
 
 		// Create connection pool with Datadog instrumentation if enabled
 		if os.Getenv("DD_ENABLED") == DDEnabledValue {
-			serviceName := "decorebator-api"
-			if disablePreparedStatements {
-				serviceName = "decorebator-workers"
-			}
 			db, err = ddpgx.NewPoolWithConfig(context.Background(), config,
-				ddpgx.WithServiceName(serviceName),
+				ddpgx.WithServiceName("decorebator-api"),
 				ddpgx.WithTraceQuery(true),
 				ddpgx.WithTraceBatch(true),
 				ddpgx.WithTracePrepare(true),
@@ -86,10 +74,6 @@ func GetDBConnection(disablePreparedStatements bool) *pgxpool.Pool {
 			os.Exit(1)
 		}
 	})
-
-	if dbMode != nil && *dbMode != disablePreparedStatements {
-		Logger.Warn("GetDBConnection called with different prepared statement setting; using initial configuration")
-	}
 
 	return db
 }
