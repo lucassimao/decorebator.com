@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
 	"decorebator.com/internal/common"
@@ -81,7 +80,6 @@ func NewWorkerRiverClient(
 					}
 				}()
 				// Return a no-op job
-				common.Logger.Debug("enqueueing periodic job", "kind", NoOpJobArgs{}.Kind(), "queue", river.QueueDefault, "args", "{}")
 				return NoOpJobArgs{}, nil
 			},
 			&river.PeriodicJobOpts{
@@ -91,10 +89,7 @@ func NewWorkerRiverClient(
 		river.NewPeriodicJob(
 			river.PeriodicInterval(15*time.Minute),
 			func() (river.JobArgs, *river.InsertOpts) {
-				args := DailyPracticeReminderArgs{}
-				argsJSON, _ := json.Marshal(args)
-				common.Logger.Debug("enqueueing periodic job", "kind", args.Kind(), "queue", PushNotificationQueue, "args", string(argsJSON))
-				return args, &river.InsertOpts{Queue: PushNotificationQueue}
+				return DailyPracticeReminderArgs{}, &river.InsertOpts{Queue: PushNotificationQueue}
 			},
 			&river.PeriodicJobOpts{
 				RunOnStart: true,
@@ -103,10 +98,7 @@ func NewWorkerRiverClient(
 		river.NewPeriodicJob(
 			river.PeriodicInterval(1*time.Hour),
 			func() (river.JobArgs, *river.InsertOpts) {
-				args := PushReceiptArgs{}
-				argsJSON, _ := json.Marshal(args)
-				common.Logger.Debug("enqueueing periodic job", "kind", args.Kind(), "queue", PushNotificationQueue, "args", string(argsJSON))
-				return args, &river.InsertOpts{Queue: PushNotificationQueue}
+				return PushReceiptArgs{}, &river.InsertOpts{Queue: PushNotificationQueue}
 			},
 			&river.PeriodicJobOpts{
 				RunOnStart: true,
