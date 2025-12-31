@@ -81,7 +81,7 @@ func TestPushNotificationRegister(t *testing.T) {
 			Status(http.StatusBadRequest).
 			JSON().
 			Object().
-			ValueEqual("error", "invalid platform")
+			HasValue("error", "invalid platform")
 	})
 
 	t.Run("rejects invalid timezone", func(t *testing.T) {
@@ -101,7 +101,7 @@ func TestPushNotificationRegister(t *testing.T) {
 			Status(http.StatusBadRequest).
 			JSON().
 			Object().
-			ValueEqual("error", "invalid timezone")
+			HasValue("error", "invalid timezone")
 	})
 }
 
@@ -182,7 +182,7 @@ func TestNotificationPreferencesToggle(t *testing.T) {
 		JSON().
 		Object()
 
-	disableResp.Value("notificationsEnabled").Equal(false)
+	disableResp.Value("notificationsEnabled").IsEqual(false)
 
 	// Verify persisted state
 	var enabled bool
@@ -201,7 +201,7 @@ func TestNotificationPreferencesToggle(t *testing.T) {
 		JSON().
 		Object()
 
-	enableResp.Value("notificationsEnabled").Equal(true)
+	enableResp.Value("notificationsEnabled").IsEqual(true)
 
 	err = ts.DB.QueryRow(context.Background(), "SELECT notifications_enabled FROM users WHERE id = $1", userID).Scan(&enabled)
 	require.NoError(t, err)
