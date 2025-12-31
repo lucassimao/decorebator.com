@@ -54,7 +54,9 @@ func GetDBConnection(disablePreparedStatements bool) *pgxpool.Pool {
 		config.HealthCheckPeriod = 1 * time.Minute
 		config.ConnConfig.ConnectTimeout = 5 * time.Second
 		if disablePreparedStatements {
-			config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeExec
+			// DescribeExec avoids prepared statements while still letting Postgres
+			// infer parameter types (needed for json/jsonb arguments in River).
+			config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeDescribeExec
 			config.ConnConfig.StatementCacheCapacity = 0
 		}
 
