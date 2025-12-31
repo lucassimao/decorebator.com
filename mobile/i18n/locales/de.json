@@ -527,7 +527,11 @@
       "privacyPolicy": "Datenschutzrichtlinie",
       "contactSupport": "Support kontaktieren",
       "rateApp": "App bewerten"
-    }
+    },
+    "notificationsUnsupported": "Push-Benachrichtigungen werden im Web nicht unterstützt.",
+    "notificationsDeviceRequired": "Push-Benachrichtigungen erfordern ein physisches Gerät.",
+    "notificationsPermissionDenied": "Die Benachrichtigungsberechtigung wurde verweigert. Aktivieren Sie sie in den Einstellungen, um Erinnerungen zu erhalten.",
+    "notificationsUpdateError": "Benachrichtigungseinstellungen konnten nicht aktualisiert werden. Bitte versuchen Sie es erneut."
   },
   "profile": {
     "title": "Profileinstellungen",

@@ -524,7 +524,11 @@
       "privacyPolicy": "Política de Privacidade",
       "contactSupport": "Contatar Suporte",
       "rateApp": "Avaliar App"
-    }
+    },
+    "notificationsUnsupported": "Notificações push não são suportadas na web.",
+    "notificationsDeviceRequired": "Notificações push exigem um dispositivo físico.",
+    "notificationsPermissionDenied": "A permissão de notificações foi negada. Ative-a nos Ajustes para receber lembretes.",
+    "notificationsUpdateError": "Não foi possível atualizar as preferências de notificações. Tente novamente."
   },
   "profile": {
     "title": "Configurações do Perfil",

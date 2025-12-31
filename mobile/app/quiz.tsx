@@ -23,17 +23,22 @@ import { usePostHog } from "posthog-react-native";
 import type { PostHogEventProperties } from "@posthog/core";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useUserSession } from "@/hooks/useUserSession";
+import { registerDevicePushToken } from "@/utils/pushNotifications";
 
 const QuizScreen: React.FC = () => {
   const navigation = useNavigation();
   const { wordlistId, wordlistName } = useLocalSearchParams();
   const { t } = useTranslation();
   const posthog = usePostHog();
+  const { user } = useUserSession();
   const { isOnline, isOfflineAvailable } = useOffline();
   const { invalidateAllAnalytics } = useInvalidateAnalytics();
   const { theme, responsive } = useTheme();
   const commonStyles = createCommonStyles(theme, responsive);
   const styles = createStyles(theme);
+  const notificationPromptedRef = useRef(false);
 
   // State
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -166,6 +171,25 @@ const QuizScreen: React.FC = () => {
         ...(quiz?.type != null ? { quizType: quiz.type } : {}),
       };
       posthog.capture("quiz_completed", captureProps);
+
+      if (
+        quizCount === 1 &&
+        !notificationPromptedRef.current &&
+        user?.notificationsEnabled
+      ) {
+        notificationPromptedRef.current = true;
+        AsyncStorage.getItem("pushPromptedAfterFirstQuiz")
+          .then(async (stored) => {
+            if (stored) {
+              return;
+            }
+            await AsyncStorage.setItem("pushPromptedAfterFirstQuiz", "true");
+            await registerDevicePushToken({ prompt: true });
+          })
+          .catch((error) => {
+            console.warn("Failed to prompt push registration:", error);
+          });
+      }
 
       if (fastMode) {
         setTimeout(() => {

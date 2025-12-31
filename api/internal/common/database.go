@@ -50,6 +50,10 @@ func GetDBConnection() *pgxpool.Pool {
 		config.MaxConnIdleTime = 5 * time.Minute
 		config.HealthCheckPeriod = 1 * time.Minute
 		config.ConnConfig.ConnectTimeout = 5 * time.Second
+		if os.Getenv("DISABLE_PREPARED_STATEMENTS") == "true" {
+			config.ConnConfig.StatementCacheCapacity = 0
+			config.ConnConfig.PreferSimpleProtocol = true
+		}
 
 		// Create connection pool with Datadog instrumentation if enabled
 		if os.Getenv("DD_ENABLED") == DDEnabledValue {

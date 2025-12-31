@@ -532,7 +532,11 @@
       "privacyPolicy": "Privacy Policy",
       "contactSupport": "Contact Support",
       "rateApp": "Rate App"
-    }
+    },
+    "notificationsUnsupported": "Push notifications are not supported on web.",
+    "notificationsDeviceRequired": "Push notifications require a physical device.",
+    "notificationsPermissionDenied": "Notifications permission was denied. Enable it in Settings to receive reminders.",
+    "notificationsUpdateError": "Failed to update notification preferences. Please try again."
   },
   "profile": {
     "title": "Profile Settings",

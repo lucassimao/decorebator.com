@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import * as Sentry from "@sentry/react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { registerDevicePushToken } from "@/utils/pushNotifications";
 
 interface UserSessionData {
   // User essentials
@@ -134,6 +135,22 @@ export function useUserSession(): UserSessionData {
       });
     }
   }, [effectiveUser, effectiveSubscription, isPremium]);
+
+  useEffect(() => {
+    if (!effectiveUser?.notificationsEnabled) {
+      return;
+    }
+    registerDevicePushToken({ prompt: false }).catch((error) => {
+      console.warn("Failed to auto-register push token:", error);
+      Sentry.captureException(error, {
+        data: {
+          action: "auto_register_push_token",
+          userId: effectiveUser?.id,
+          platform: "mobile",
+        },
+      });
+    });
+  }, [effectiveUser?.id, effectiveUser?.notificationsEnabled]);
 
   return {
     // User essentials
