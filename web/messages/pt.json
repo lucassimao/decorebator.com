@@ -1345,7 +1345,10 @@
       "fillBothFields": "Preencha ambos os campos de senha.",
       "tooShort": "Senha deve ter pelo menos 4 caracteres.",
       "noMatch": "Senhas não coincidem.",
-      "resetFailed": "Falha ao redefinir senha. Tente novamente."
+      "resetFailed": "Falha ao redefinir senha. Tente novamente.",
+      "tokenExpired": "Este link de redefinição expirou. Solicite um novo.",
+      "tokenInvalid": "Este link de redefinição é inválido. Solicite um novo.",
+      "missingToken": "O link de redefinição está ausente ou é inválido. Solicite um novo."
     },
     "success": "Senha foi redefinida com sucesso!"
   },

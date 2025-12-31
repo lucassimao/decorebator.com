@@ -1415,7 +1415,10 @@
       "fillBothFields": "Please fill in both password fields.",
       "tooShort": "Password must be at least 4 characters long.",
       "noMatch": "Passwords do not match.",
-      "resetFailed": "Failed to reset password. Please try again."
+      "resetFailed": "Failed to reset password. Please try again.",
+      "tokenExpired": "This reset link has expired. Please request a new one.",
+      "tokenInvalid": "This reset link is invalid. Please request a new one.",
+      "missingToken": "Reset link is missing or invalid. Please request a new one."
     },
     "success": "Password has been reset successfully!"
   },

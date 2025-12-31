@@ -1019,5 +1019,25 @@
       "subtitle": "Il nostro team di supporto è pronto ad assisterti con qualsiasi domanda o problema.",
       "emailSupport": "Supporto Email"
     }
+  },
+  "resetPassword": {
+    "title": "Reimposta la tua password",
+    "subtitle": "Inserisci la nuova password qui sotto. Assicurati che sia forte e facile da ricordare.",
+    "newPassword": "Nuova password",
+    "newPasswordPlaceholder": "Inserisci la nuova password",
+    "confirmPassword": "Conferma nuova password",
+    "confirmPasswordPlaceholder": "Conferma la nuova password",
+    "resetButton": "Reimposta password",
+    "helpText": "Scegli una password forte che non hai usato prima.",
+    "errors": {
+      "fillBothFields": "Compila entrambi i campi della password.",
+      "tooShort": "La password deve contenere almeno 4 caratteri.",
+      "noMatch": "Le password non coincidono.",
+      "resetFailed": "Impossibile reimpostare la password. Riprova.",
+      "tokenExpired": "Questo link di reimpostazione è scaduto. Richiedine uno nuovo.",
+      "tokenInvalid": "Questo link di reimpostazione non è valido. Richiedine uno nuovo.",
+      "missingToken": "Il link di reimpostazione è mancante o non valido. Richiedine uno nuovo."
+    },
+    "success": "La password è stata reimpostata con successo!"
   }
 }

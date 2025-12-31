@@ -1,5 +1,5 @@
 import { formatInTimeZone } from "date-fns-tz";
-import { getCalendars } from "expo-localization";
+import * as Localization from "expo-localization";
 import i18n from "@/i18n";
 
 /**
@@ -8,12 +8,76 @@ import i18n from "@/i18n";
  */
 export const getDeviceTimezone = (): string => {
   try {
-    const calendars = getCalendars();
-    return calendars[0]?.timeZone || "UTC";
+    const calendarTimezone = Localization.getCalendars()?.[0]?.timeZone || "";
+    const intlTimezone =
+      typeof Intl !== "undefined"
+        ? Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+        : "";
+    const candidate = calendarTimezone || intlTimezone;
+    const normalized = normalizeTimezone(candidate);
+    if (normalized) {
+      if (normalized !== candidate) {
+        console.warn(
+          "Normalized device timezone:",
+          candidate,
+          "->",
+          normalized,
+        );
+      }
+      return normalized;
+    }
+    if (candidate) {
+      console.warn(
+        "Invalid timezone from device, falling back to UTC:",
+        candidate,
+      );
+    }
+    return "UTC";
   } catch (error) {
     console.warn("Failed to get device timezone, falling back to UTC:", error);
     return "UTC";
   }
+};
+
+const normalizeTimezone = (value: string): string | null => {
+  if (!value) {
+    return null;
+  }
+  if (looksLikeIanaTimezone(value)) {
+    return value;
+  }
+  const upper = value.toUpperCase();
+  if (upper === "UTC" || upper === "GMT") {
+    return "UTC";
+  }
+  const match = upper.match(/^(?:UTC|GMT)([+-])(\d{1,2})(?::?(\d{2}))?$/);
+  if (!match) {
+    return null;
+  }
+  const sign = match[1];
+  const hours = Number(match[2]);
+  const minutes = match[3] ? Number(match[3]) : 0;
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+    return null;
+  }
+  if (minutes !== 0) {
+    return null;
+  }
+  if (hours > 14) {
+    return null;
+  }
+  const etcSign = sign === "+" ? "-" : "+";
+  return `Etc/GMT${etcSign}${hours}`;
+};
+
+const looksLikeIanaTimezone = (value: string): boolean => {
+  if (!value) {
+    return false;
+  }
+  if (value.startsWith("Etc/")) {
+    return true;
+  }
+  return value.includes("/");
 };
 
 /**

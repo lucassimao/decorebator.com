@@ -36,6 +36,9 @@ func (h *PushNotificationRoutes) Register(c *gin.Context) {
 		return
 	}
 	if _, err := time.LoadLocation(input.Timezone); err != nil {
+		common.Logger.Warn("invalid timezone for push token registration",
+			"timezone", input.Timezone,
+			"userID", c.GetInt64("userID"))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid timezone"})
 		return
 	}

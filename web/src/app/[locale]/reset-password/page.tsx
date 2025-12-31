@@ -3,9 +3,11 @@
 import React, { useState, FormEvent, Suspense } from 'react'
 import { LockClosedIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid'
 import { useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 // Separate component that uses useSearchParams
 const ResetPasswordFormContent: React.FC = () => {
+  const t = useTranslations('resetPassword')
   const [newPassword, setNewPassword] = useState<string>('')
   const [confirmPassword, setConfirmPassword] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
@@ -21,17 +23,22 @@ const ResetPasswordFormContent: React.FC = () => {
     setSuccessMessage(null)
 
     if (!newPassword || !confirmPassword) {
-      setError('Please fill in both password fields.')
+      setError(t('errors.fillBothFields'))
       return
     }
 
     if (newPassword.length < 4) {
-      setError('Password must be at least 4 characters long.')
+      setError(t('errors.tooShort'))
       return
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match.')
+      setError(t('errors.noMatch'))
+      return
+    }
+
+    if (!token) {
+      setError(t('errors.missingToken'))
       return
     }
 
@@ -51,17 +58,28 @@ const ResetPasswordFormContent: React.FC = () => {
       })
 
       if (!res.ok) {
-        // handle errors, e.g. 4xx or 5xx responses
-        const err = await res.json()
-        throw new Error(err.message)
+        if (res.status === 400) {
+          const err = await res.json().catch(() => null)
+          if (err?.error === 'token_expired') {
+            setError(t('errors.tokenExpired'))
+            return
+          }
+          if (err?.error === 'token_invalid') {
+            setError(t('errors.tokenInvalid'))
+            return
+          }
+        }
+        throw new Error('reset_failed')
       }
 
-      setSuccessMessage('Password has been reset successfully!')
+      setSuccessMessage(t('success'))
       setNewPassword('')
       setConfirmPassword('')
     } catch (apiError) {
       // Handle API errors (e.g., token expired, server error)
-      setError('Failed to reset password. Please try again.')
+      if (!error) {
+        setError(t('errors.resetFailed'))
+      }
       console.error('API Error:', apiError)
     } finally {
       setIsLoading(false)
@@ -73,16 +91,14 @@ const ResetPasswordFormContent: React.FC = () => {
       <div className="w-full max-w-md space-y-6 rounded-xl bg-white p-8 shadow-2xl">
         <div className="flex flex-col items-center">
           <LockClosedIcon className="mb-4 h-16 w-16 text-blue-600" />
-          <h2 className="text-center text-3xl font-bold text-gray-800">Reset Your Password</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your new password below. Make sure it&apos;s strong and memorable.
-          </p>
+          <h2 className="text-center text-3xl font-bold text-gray-800">{t('title')}</h2>
+          <p className="mt-2 text-center text-sm text-gray-600">{t('subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="newPassword" className="mb-1 block text-sm font-medium text-gray-700">
-              New Password
+              {t('newPassword')}
             </label>
             <input
               id="newPassword"
@@ -93,7 +109,7 @@ const ResetPasswordFormContent: React.FC = () => {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="block w-full appearance-none rounded-lg border border-gray-300 px-4 py-3 placeholder-gray-900 shadow-sm transition duration-150 ease-in-out focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm"
-              placeholder="Enter new password"
+              placeholder={t('newPasswordPlaceholder')}
             />
           </div>
 
@@ -102,7 +118,7 @@ const ResetPasswordFormContent: React.FC = () => {
               htmlFor="confirmPassword"
               className="mb-1 block text-sm font-medium text-gray-700"
             >
-              Confirm New Password
+              {t('confirmPassword')}
             </label>
             <input
               id="confirmPassword"
@@ -113,7 +129,7 @@ const ResetPasswordFormContent: React.FC = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="block w-full appearance-none rounded-lg border border-gray-300 px-4 py-3 placeholder-gray-400 shadow-sm transition duration-150 ease-in-out focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm"
-              placeholder="Confirm new password"
+              placeholder={t('confirmPasswordPlaceholder')}
             />
           </div>
 
@@ -172,16 +188,14 @@ const ResetPasswordFormContent: React.FC = () => {
                   Processing...
                 </>
               ) : (
-                'Reset Password'
+                t('resetButton')
               )}
             </button>
           </div>
         </form>
 
         {!successMessage && (
-          <p className="mt-6 text-center text-xs text-gray-500">
-            Remember to choose a strong password you haven&apos;t used before.
-          </p>
+          <p className="mt-6 text-center text-xs text-gray-500">{t('helpText')}</p>
         )}
       </div>
     </div>

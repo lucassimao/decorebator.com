@@ -73,6 +73,11 @@ func NewPushNotificationService(repo *repository.PushTokenRepository, receiptRep
 	}
 }
 
+// SetHTTPClient overrides the HTTP client (used in tests).
+func (s *PushNotificationService) SetHTTPClient(client *http.Client) {
+	s.httpClient = client
+}
+
 func (s *PushNotificationService) SendDailyPracticeReminders(ctx context.Context, now time.Time) error {
 	if s.repo == nil {
 		return errors.New("push token repository is nil")
@@ -161,6 +166,10 @@ func (s *PushNotificationService) CheckReceipts(ctx context.Context, now time.Ti
 		if err != nil {
 			return err
 		}
+		if len(receipts) == 0 {
+			common.Logger.Warn("empty expo receipt response", "pending", len(ids))
+			return nil
+		}
 
 		var deactivateTokens []string
 		for id, ticket := range receipts {
@@ -176,6 +185,11 @@ func (s *PushNotificationService) CheckReceipts(ctx context.Context, now time.Ti
 
 		if err := s.repo.DeactivateByTokens(ctx, deactivateTokens); err != nil {
 			common.Logger.Error("failed to deactivate push tokens from receipts", "error", err)
+		}
+
+		if len(receipts) < len(ids) {
+			common.Logger.Warn("partial expo receipt response", "expected", len(ids), "received", len(receipts))
+			return nil
 		}
 	}
 }

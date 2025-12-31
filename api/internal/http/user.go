@@ -144,9 +144,11 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	writeAuthenticationCookie(c, jwtToken)
 	c.Status(http.StatusCreated)
 	go h.mailService.AddContactToList(user)
+	ctx := c.Request.Context()
+	email := input.Email
 	go func() {
-		if err := h.mailService.SendWelcomeEmail(c.Request.Context(), input.Email); err != nil {
-			common.Logger.Error("failed to send welcome email", "email", input.Email, "error", err)
+		if err := h.mailService.SendWelcomeEmail(ctx, email); err != nil {
+			common.Logger.Error("failed to send welcome email", "email", email, "error", err)
 		}
 	}()
 }
@@ -195,7 +197,11 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 
 	payload, err := mail.ValidateResetPasswordPayload(input.Token)
 	if err != nil {
-		c.Status(http.StatusBadRequest)
+		if err.Error() == "token expired" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "token_expired"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "token_invalid"})
 		return
 	}
 
