@@ -23,7 +23,7 @@ func main() {
 
 	// Initialize Context with all services
 	appCtx, err := app.NewContext().
-		WithDatabase(common.GetDBConnection()).
+		WithDatabase(common.GetDBConnection(false)).
 		WithEnvironment(os.Getenv("ENV")).
 		Build()
 	if err != nil {
