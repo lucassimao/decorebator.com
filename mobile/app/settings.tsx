@@ -1,6 +1,6 @@
 import * as subscriptionsApi from "@/api/subscriptions";
 import * as usersApi from "@/api/users";
-import { Platform } from "react-native";
+import { Platform, Switch } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,6 +8,7 @@ import * as AuthSession from "expo-auth-session";
 import * as MailComposer from "expo-mail-composer";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import * as Notifications from "expo-notifications";
 import React, { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
@@ -30,6 +31,12 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
+import * as Sentry from "@sentry/react-native";
+import { useUserSession } from "@/hooks/useUserSession";
+import {
+  registerDevicePushToken,
+  unregisterDevicePushToken,
+} from "@/utils/pushNotifications";
 
 type PlanRecurrence = "annual" | "monthly";
 
@@ -87,6 +94,11 @@ const SettingsScreen: React.FC = () => {
   const previousSubscriptionRef = useRef<string | null>(null);
   const { theme, themeMode, setThemeMode, responsive } = useTheme();
   const commonStyles = createCommonStyles(theme, responsive);
+  const { user: profile } = useUserSession();
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(
+    profile?.notificationsEnabled ?? false,
+  );
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
 
   // Get payment provider
   const { data: providerInfo } = usePaymentProvider();
@@ -133,6 +145,103 @@ const SettingsScreen: React.FC = () => {
       }
     }, [subscription, t]),
   );
+
+  React.useEffect(() => {
+    if (profile?.notificationsEnabled !== undefined) {
+      setNotificationsEnabled(profile.notificationsEnabled);
+    }
+  }, [profile?.notificationsEnabled]);
+
+  const handleToggleNotifications = async (nextValue: boolean) => {
+    if (!profile) {
+      return;
+    }
+
+    setNotificationsLoading(true);
+    try {
+      if (nextValue) {
+        if (Platform.OS === "web") {
+          Alert.alert(
+            t("common.error"),
+            t("settings.notificationsUnsupported", {
+              defaultValue: "Push notifications are not supported on web.",
+            }),
+          );
+          setNotificationsEnabled(false);
+          return;
+        }
+        const token = await registerDevicePushToken({ prompt: true });
+        if (!token) {
+          Alert.alert(
+            t("common.error"),
+            t("settings.notificationsPermissionDenied", {
+              defaultValue:
+                "Notifications permission was denied. Enable it in Settings to receive reminders.",
+            }),
+          );
+          setNotificationsEnabled(false);
+          return;
+        }
+
+        await usersApi.update({ notificationsEnabled: true });
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+        setNotificationsEnabled(true);
+      } else {
+        await usersApi.update({ notificationsEnabled: false });
+        try {
+          await unregisterDevicePushToken();
+        } catch (error) {
+          console.warn("Failed to unregister push token:", error);
+        }
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+        setNotificationsEnabled(false);
+      }
+    } catch (error) {
+      console.error("Failed to update notifications:", error);
+      let permissionStatus: string | null = null;
+      let canAskAgain: boolean | null = null;
+      if (Platform.OS !== "web") {
+        try {
+          const permission = await Notifications.getPermissionsAsync();
+          permissionStatus = permission.status;
+          canAskAgain = permission.canAskAgain;
+        } catch (permissionError) {
+          console.warn(
+            "Failed to read notification permission state:",
+            permissionError,
+          );
+        }
+      }
+      Sentry.addBreadcrumb({
+        message: "Notification toggle failure context",
+        category: "notifications",
+        level: "error",
+        data: {
+          permissionStatus,
+          canAskAgain,
+          platform: Platform.OS,
+        },
+      });
+      Sentry.captureException(error, {
+        data: {
+          action: "toggle_notifications",
+          nextValue,
+          userId: profile?.id,
+          platform: Platform.OS,
+        },
+      });
+      Alert.alert(
+        t("common.error"),
+        t("settings.notificationsUpdateError", {
+          defaultValue:
+            "Failed to update notification preferences. Please try again.",
+        }),
+      );
+      setNotificationsEnabled(profile.notificationsEnabled ?? false);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
 
   const checkoutMutation = useMutation({
     mutationFn: async (plan: PlanRecurrence) => {
@@ -765,6 +874,34 @@ const SettingsScreen: React.FC = () => {
                 />
               </TouchableOpacity>
             </View>
+          </View>
+
+          {/* Notifications Toggle */}
+          <View style={styles.settingItem}>
+            <MaterialIcons
+              name="notifications-none"
+              size={24}
+              color={theme.colors.text.secondary}
+            />
+            <Text style={styles.settingText}>
+              {t("settings.preferences.notifications", {
+                defaultValue: "Notifications",
+              })}
+            </Text>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={handleToggleNotifications}
+              disabled={notificationsLoading}
+              thumbColor={
+                Platform.OS === "android"
+                  ? theme.colors.background.surface
+                  : undefined
+              }
+              trackColor={{
+                false: theme.colors.border.light,
+                true: theme.colors.primary,
+              }}
+            />
           </View>
 
           {/* <TouchableOpacity style={styles.settingItem}>
