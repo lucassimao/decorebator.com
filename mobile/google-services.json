@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "281767245370",
+    "project_id": "decorebator-cbf9c",
+    "storage_bucket": "decorebator-cbf9c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:281767245370:android:4ad741986a3a2e32cb2703",
+        "android_client_info": {
+          "package_name": "com.lsimaocosta.decorebator"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7At6RJd_9Tk1zfZc32wW4oHJHivHWTGk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

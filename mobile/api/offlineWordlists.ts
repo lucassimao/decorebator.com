@@ -162,7 +162,7 @@ export async function getWordDefinitions(
 export async function preloadWordlistForOffline(
   wordlistId: number,
 ): Promise<void> {
-  const words = await wordlistsApi.getWords(wordlistId);
+  const words = await wordlistsApi.getWords(wordlistId, true);
 
   await offlineManager.preloadWordlistForOffline(wordlistId, words, (wordId) =>
     wordlistsApi.getWordDefinitions(wordlistId, wordId),

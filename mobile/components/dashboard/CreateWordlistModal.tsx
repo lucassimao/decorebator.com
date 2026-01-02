@@ -23,7 +23,6 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { ContentGuidelinesModal } from "./ContentGuidelinesModal";
 import * as Sentry from "@sentry/react-native";
 import { usePostHog } from "posthog-react-native";
 
@@ -66,7 +65,6 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
   const { theme } = useTheme();
   const { hasOptimisticSubscription } = useUserSession();
   const posthog = usePostHog();
-  const [showContentGuidelines, setShowContentGuidelines] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
   const styles = createStyles(theme);
@@ -652,19 +650,6 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
           <View style={styles.headerContent}>
             <View style={styles.titleContainer}>
               <Text style={styles.title}>{t("createWordlist.title")}</Text>
-              <TouchableOpacity
-                style={styles.headerGuidelinesButton}
-                onPress={() => setShowContentGuidelines(true)}
-                accessibilityRole="button"
-                accessibilityLabel={t("createWordlist.viewGuidelines")}
-                accessibilityHint="View detailed content guidelines"
-              >
-                <Ionicons
-                  name="information-circle-outline"
-                  size={18}
-                  color={theme.colors.text.secondary}
-                />
-              </TouchableOpacity>
             </View>
             <TouchableOpacity
               style={styles.closeButton}
@@ -823,11 +808,6 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
           )}
         </View>
       </Animated.View>
-
-      <ContentGuidelinesModal
-        visible={showContentGuidelines}
-        onClose={() => setShowContentGuidelines(false)}
-      />
     </Modal>
   );
 };
@@ -884,11 +864,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       fontWeight: "600",
       color: theme.colors.text.primary,
       textAlign: "center",
-    },
-    headerGuidelinesButton: {
-      marginLeft: 8,
-      padding: 4,
-      borderRadius: 12,
     },
     closeButton: {
       position: "absolute",

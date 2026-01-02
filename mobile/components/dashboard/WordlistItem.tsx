@@ -55,6 +55,15 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
   const shimmerLoopRef = useRef<Animated.CompositeAnimation | null>(null);
   const shimmerPlayedRef = useRef(false);
   const [buttonWidth, setButtonWidth] = useState(0);
+  const [pendingAction, setPendingAction] = useState<
+    "quiz" | "flashcards" | null
+  >(null);
+  const [isPolling, setIsPolling] = useState(false);
+  const hasShownProcessingRef = useRef(false);
+  const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMountedRef = useRef(true);
+  const MIN_READY_WORDS = 1;
+  const POLL_INTERVAL_MS = 3000;
 
   // Use progress from props
   const progressPercentage = progress?.progressPercent ?? 0;
@@ -106,6 +115,116 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     }, [isEmptyWordlist, startShimmer, stopShimmer]),
   );
 
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+        pollTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  const stopPolling = React.useCallback(() => {
+    if (pollTimeoutRef.current) {
+      clearTimeout(pollTimeoutRef.current);
+      pollTimeoutRef.current = null;
+    }
+    if (isMountedRef.current) {
+      setIsPolling(false);
+      setPendingAction(null);
+      hasShownProcessingRef.current = false;
+    }
+  }, []);
+
+  const navigateToAction = React.useCallback(
+    (action: "quiz" | "flashcards") => {
+      if (action === "quiz") {
+        if (onQuizStart) {
+          onQuizStart(item);
+        } else {
+          router.push(`/quiz?wordlistId=${item.id}&wordlistName=${item.name}`);
+        }
+        return;
+      }
+
+      router.push(`/flashcard?wordlistId=${item.id}&wordlistName=${item.name}`);
+    },
+    [item, onQuizStart, router],
+  );
+
+  const checkReadyOnce = React.useCallback(async (): Promise<boolean> => {
+    const status = await wordlistsApi.getProcessingStatus(item.id);
+    return (status?.summary?.completed ?? 0) >= MIN_READY_WORDS;
+  }, [item.id, MIN_READY_WORDS]);
+
+  const schedulePoll = React.useCallback(() => {
+    pollTimeoutRef.current = setTimeout(async () => {
+      try {
+        const ready = await checkReadyOnce();
+        if (ready && pendingAction) {
+          stopPolling();
+          navigateToAction(pendingAction);
+          return;
+        }
+        schedulePoll();
+      } catch (error) {
+        console.error("Error checking wordlist processing status:", error);
+        if (isMountedRef.current) {
+          Alert.alert(t("common.error"), t("common.tryAgain"));
+        }
+        stopPolling();
+      }
+    }, POLL_INTERVAL_MS);
+  }, [checkReadyOnce, navigateToAction, pendingAction, stopPolling, t]);
+
+  const handlePracticeStart = React.useCallback(
+    async (action: "quiz" | "flashcards") => {
+      if (pendingAction) {
+        return;
+      }
+
+      setPendingAction(action);
+
+      try {
+        const ready = await checkReadyOnce();
+        if (ready) {
+          stopPolling();
+          navigateToAction(action);
+          return;
+        }
+
+        if (!hasShownProcessingRef.current) {
+          Alert.alert(
+            t("flashcards.wordsProcessing"),
+            t("flashcards.wordsProcessingMessage"),
+            [{ text: t("common.ok") }],
+          );
+          hasShownProcessingRef.current = true;
+        }
+        if (isMountedRef.current) {
+          setIsPolling(true);
+        }
+        schedulePoll();
+      } catch (error) {
+        console.error("Error checking wordlist processing status:", error);
+        if (isMountedRef.current) {
+          Alert.alert(t("common.error"), t("common.tryAgain"));
+        }
+        stopPolling();
+      }
+    },
+    [
+      checkReadyOnce,
+      navigateToAction,
+      pendingAction,
+      schedulePoll,
+      stopPolling,
+      t,
+    ],
+  );
+
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: () => wordlistsApi.deleteWordlist(item.id),
@@ -144,12 +263,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
       );
       return;
     }
-
-    if (onQuizStart) {
-      onQuizStart(item);
-    } else {
-      router.push(`/quiz?wordlistId=${item.id}&wordlistName=${item.name}`);
-    }
+    handlePracticeStart("quiz");
   };
 
   const handlePractice = () => {
@@ -161,8 +275,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
       );
       return;
     }
-
-    router.push(`/flashcard?wordlistId=${item.id}&wordlistName=${item.name}`);
+    handlePracticeStart("flashcards");
   };
 
   const handleChatStart = () => {
@@ -344,18 +457,30 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         ) : (
           <View style={styles.actionButtonsContainer}>
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[
+                styles.actionButton,
+                pendingAction ? styles.actionButtonDisabled : null,
+              ]}
               onPress={handleQuizStart}
+              disabled={!!pendingAction}
               accessibilityRole="button"
               accessibilityLabel={t("wordlistItem.quiz")}
               accessibilityHint="Start quiz session"
+              accessibilityState={{
+                disabled: !!pendingAction,
+                busy: pendingAction === "quiz" && isPolling,
+              }}
             >
               <View style={[styles.actionIconWrapper, styles.quizIconBg]}>
-                <MaterialIcons
-                  name="lightbulb-outline"
-                  size={responsive.getValueForSize(22, 23, 24, 26)}
-                  color="#000000"
-                />
+                {isPolling ? (
+                  <ActivityIndicator size="small" color="#000000" />
+                ) : (
+                  <MaterialIcons
+                    name="lightbulb-outline"
+                    size={responsive.getValueForSize(22, 23, 24, 26)}
+                    color="#000000"
+                  />
+                )}
               </View>
               <Text
                 style={styles.actionButtonText}
@@ -367,18 +492,30 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[
+                styles.actionButton,
+                pendingAction ? styles.actionButtonDisabled : null,
+              ]}
               onPress={handlePractice}
+              disabled={!!pendingAction}
               accessibilityRole="button"
               accessibilityLabel={t("wordlistItem.flashcards")}
               accessibilityHint="Practice with flashcards"
+              accessibilityState={{
+                disabled: !!pendingAction,
+                busy: pendingAction === "flashcards" && isPolling,
+              }}
             >
               <View style={[styles.actionIconWrapper, styles.flashcardsIconBg]}>
-                <MaterialIcons
-                  name="menu-book"
-                  size={responsive.getValueForSize(22, 23, 24, 26)}
-                  color="#2196F3"
-                />
+                {isPolling ? (
+                  <ActivityIndicator size="small" color="#2196F3" />
+                ) : (
+                  <MaterialIcons
+                    name="menu-book"
+                    size={responsive.getValueForSize(22, 23, 24, 26)}
+                    color="#2196F3"
+                  />
+                )}
               </View>
               <Text
                 style={styles.actionButtonText}
@@ -390,21 +527,34 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[
+                styles.actionButton,
+                pendingAction ? styles.actionButtonDisabled : null,
+              ]}
               onPress={handleChatStart}
+              disabled={!!pendingAction}
               accessibilityRole="button"
               accessibilityLabel={t("wordlistItem.speak", "Speak")}
               accessibilityHint={t(
                 "wordlistItem.speakHint",
                 "Practice pronunciation",
               )}
+              accessibilityState={{
+                disabled: !!pendingAction,
+                busy:
+                  pendingAction === "quiz" || pendingAction === "flashcards",
+              }}
             >
               <View style={[styles.actionIconWrapper, styles.speakIconBg]}>
-                <MaterialIcons
-                  name="mic"
-                  size={responsive.getValueForSize(22, 23, 24, 26)}
-                  color="#FF8533"
-                />
+                {isPolling ? (
+                  <ActivityIndicator size="small" color="#FF8533" />
+                ) : (
+                  <MaterialIcons
+                    name="mic"
+                    size={responsive.getValueForSize(22, 23, 24, 26)}
+                    color="#FF8533"
+                  />
+                )}
               </View>
               <Text
                 style={styles.actionButtonText}
@@ -650,6 +800,9 @@ const createStyles = (
       textAlign: "center",
       width: "100%",
       letterSpacing: -0.2,
+    },
+    actionButtonDisabled: {
+      opacity: 0.6,
     },
     progressBar: {
       height: responsive.getValueForSize(5, 6, 7, 7),

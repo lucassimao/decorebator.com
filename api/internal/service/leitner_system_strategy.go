@@ -73,6 +73,13 @@ type NextDefinition struct {
 	ImageDescription string            // Description of the associated image
 }
 
+type WordlistAvailability struct {
+	Total      int
+	Unlearned  int
+	Completed  int
+	InProgress int
+}
+
 // boxToQuizTypes defines the quiz difficulty progression through Leitner boxes.
 // Each box introduces a new skill level with minimal repetition for cleaner progression:
 // - Box 1: Recognition (easiest)
@@ -377,6 +384,32 @@ func (s *LeitnerSystemStrategy) getWordlistBoxDistribution(ctx context.Context, 
 	return distribution, nil
 }
 
+// getWordlistAvailability checks whether a wordlist has enough completed, unlearned words to generate quizzes.
+func (s *LeitnerSystemStrategy) getWordlistAvailability(ctx context.Context, userID, wordlistID int64) (*WordlistAvailability, error) {
+	query := `
+		SELECT
+			COUNT(*) as total_words,
+			COUNT(*) FILTER (WHERE learned = FALSE) as unlearned_words,
+			COUNT(*) FILTER (WHERE processing_status = 'completed') as completed_words,
+			COUNT(*) FILTER (WHERE processing_status IN ('pending', 'processing')) as in_progress_words
+		FROM words
+		WHERE user_id = $1 AND wordlist_id = $2
+	`
+
+	var availability WordlistAvailability
+	err := s.db.QueryRow(ctx, query, userID, wordlistID).Scan(
+		&availability.Total,
+		&availability.Unlearned,
+		&availability.Completed,
+		&availability.InProgress,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &availability, nil
+}
+
 // CreateQuiz generates a new quiz question for the user based on the Leitner spaced repetition system.
 // It selects the most appropriate word/definition that is due for review, considering:
 // - Probabilistic selection that ensures words are always available
@@ -388,13 +421,30 @@ func (s *LeitnerSystemStrategy) getWordlistBoxDistribution(ctx context.Context, 
 // Returns a Quiz object with the question, options, correct answer, and metadata.
 // Returns an error if no words are available for review or if database operations fail.
 func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userID int64) (*Quiz, error) {
-	// Early check to avoid unnecessary queries
-	hasWords, err := s.checkHasUnlearnedWords(ctx, userID, wordlistID)
+	availability, err := s.getWordlistAvailability(ctx, userID, wordlistID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check wordlist status: %w", err)
 	}
-	if !hasWords {
-		return nil, errors.New("no unlearned words in wordlist")
+
+	if availability.Total == 0 {
+		return nil, common.QuizUnavailableError{
+			Reason:  common.QuizUnavailableWordlistEmpty,
+			Message: "wordlist has no words",
+		}
+	}
+
+	if availability.Completed < 1 {
+		return nil, common.QuizUnavailableError{
+			Reason:  common.QuizUnavailableWordlistProcessing,
+			Message: "wordlist is still processing",
+		}
+	}
+
+	if availability.Unlearned == 0 {
+		return nil, common.QuizUnavailableError{
+			Reason:  common.QuizUnavailableNoUnlearnedWords,
+			Message: "no unlearned words in wordlist",
+		}
 	}
 
 	// Log box distribution for monitoring (but don't fail if it errors)

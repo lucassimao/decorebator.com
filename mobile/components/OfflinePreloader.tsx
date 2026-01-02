@@ -8,6 +8,7 @@ import * as offlineWordlistsApi from "@/api/offlineWordlists";
 interface OfflinePreloaderProps {
   wordlistId: number;
   wordlistName: string;
+  totalWords?: number;
   onPreloadComplete?: () => void;
   onPreloadError?: (error: string) => void;
 }
@@ -15,6 +16,7 @@ interface OfflinePreloaderProps {
 export const OfflinePreloader: React.FC<OfflinePreloaderProps> = ({
   wordlistId,
   wordlistName,
+  totalWords,
   onPreloadComplete,
   onPreloadError,
 }) => {
@@ -36,8 +38,23 @@ export const OfflinePreloader: React.FC<OfflinePreloaderProps> = ({
         offlineWordlistsApi.getWordlistCacheStats(wordlistId),
       ]);
 
-      setIsFullyCached(isAvailable);
-      setCacheStats(stats);
+      const resolvedTotalWords =
+        typeof totalWords === "number" && totalWords >= 0
+          ? totalWords
+          : stats.totalWords;
+      const cachePercentage =
+        resolvedTotalWords > 0
+          ? (stats.cachedDefinitions / resolvedTotalWords) * 100
+          : 0;
+      const fullyCached =
+        resolvedTotalWords > 0 && stats.cachedDefinitions >= resolvedTotalWords;
+
+      setIsFullyCached(fullyCached || isAvailable);
+      setCacheStats({
+        ...stats,
+        totalWords: resolvedTotalWords,
+        cachePercentage,
+      });
     } catch (error) {
       console.error("Error checking cache status:", error);
     }
@@ -130,7 +147,9 @@ export const OfflinePreloader: React.FC<OfflinePreloaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 8,
+    marginTop: 12,
+    marginBottom: 4,
+    marginHorizontal: 16,
   },
   button: {
     flexDirection: "row",

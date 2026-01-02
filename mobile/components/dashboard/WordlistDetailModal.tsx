@@ -282,19 +282,6 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       "no definitions found",
       "no definition found",
       "word not found",
-      "validation failed",
-      "definition validation failed",
-      // Content moderation patterns (same as getUserFriendlyErrorMessage)
-      "not appropriate for educational use",
-      "content not appropriate",
-      "hate speech",
-      "threatening language",
-      "harassment",
-      "threatening behavior",
-      "violent",
-      "graphic material",
-      "self-harm",
-      "flagged as inappropriate",
     ];
 
     return !nonRetryablePatterns.some((pattern) =>
@@ -314,32 +301,6 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
       errorLower.includes("no definition found")
     ) {
       return t("wordDetail.noDefinitionsFound");
-    }
-
-    // Check for any content moderation violation
-    const moderationPatterns = [
-      "not appropriate for educational use", // Sexual content
-      "content not appropriate", // Alternative sexual content format
-      "hate speech", // Hate speech
-      "threatening language", // Hate speech variant
-      "harassment", // Harassment
-      "threatening behavior", // Harassment variant
-      "violent", // Violence
-      "graphic material", // Violence variant
-      "self-harm", // Self-harm
-      "flagged as inappropriate", // Generic fallback
-    ];
-
-    const isModerationError = moderationPatterns.some((pattern) =>
-      errorLower.includes(pattern),
-    );
-
-    if (isModerationError) {
-      return t("wordDetail.contentNotAppropriate");
-    }
-
-    if (errorLower.includes("validation failed")) {
-      return t("wordDetail.validationFailed");
     }
 
     // Check for character limit error
@@ -734,6 +695,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
           <OfflinePreloader
             wordlistId={wordlist.id}
             wordlistName={wordlist.name}
+            totalWords={wordlist.wordsCount}
           />
 
           {/* Search and Filter */}

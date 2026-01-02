@@ -914,6 +914,10 @@ class OfflineManager {
   ): Promise<void> {
     const assetPromises: Promise<void>[] = [];
 
+    if (!Array.isArray(definitions) || definitions.length === 0) {
+      return;
+    }
+
     for (const definition of definitions) {
       // Cache sounds if present
       if (definition.sounds && definition.sounds.length > 0) {

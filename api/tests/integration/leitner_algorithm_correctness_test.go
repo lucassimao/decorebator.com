@@ -109,6 +109,13 @@ func createBasicLeitnerDataUsingServices(ctx context.Context, t *testing.T, serv
 	require.NoError(t, err)
 	require.NotNil(t, createdWord2)
 
+	_, err = server.DB.Exec(ctx, `
+		UPDATE words
+		SET processing_status = 'completed'
+		WHERE id = ANY($1)
+	`, []int64{createdWord1.ID, createdWord2.ID})
+	require.NoError(t, err)
+
 	// 4. Since background jobs don't run in tests, manually create definitions and Leitner tracking
 	tx, err := server.DB.Begin(ctx)
 	require.NoError(t, err)

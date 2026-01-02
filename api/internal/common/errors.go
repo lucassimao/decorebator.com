@@ -11,6 +11,28 @@ func (e BusinessError) Error() string {
 	return e.Message
 }
 
+type QuizUnavailableReason string
+
+const (
+	QuizUnavailableWordlistEmpty      QuizUnavailableReason = "wordlist_empty"
+	QuizUnavailableWordlistProcessing QuizUnavailableReason = "wordlist_processing"
+	QuizUnavailableNoUnlearnedWords   QuizUnavailableReason = "no_unlearned_words"
+)
+
+type QuizUnavailableError struct {
+	Reason  QuizUnavailableReason
+	Message string
+}
+
+func (e QuizUnavailableError) Error() string {
+	return e.Message
+}
+
+func (e QuizUnavailableError) Is(target error) bool {
+	_, ok := target.(QuizUnavailableError)
+	return ok
+}
+
 type NotFoundError struct {
 	ID     int64
 	Entity string

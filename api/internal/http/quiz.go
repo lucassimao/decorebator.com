@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -28,6 +29,15 @@ func (h *QuizRoutes) Create(c *gin.Context) {
 	challenge, err := h.strategy.CreateQuiz(c.Request.Context(), wordlistID, userId)
 
 	if err != nil {
+		var quizUnavailable common.QuizUnavailableError
+		if errors.As(err, &quizUnavailable) {
+			c.JSON(http.StatusConflict, gin.H{
+				"error":  quizUnavailable.Message,
+				"status": quizUnavailable.Reason,
+			})
+			return
+		}
+
 		common.Logger.Error("failed to create quiz", "error", err, "wordlistID", wordlistID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

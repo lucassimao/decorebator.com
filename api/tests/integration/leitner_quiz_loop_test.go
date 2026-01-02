@@ -233,10 +233,10 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 
 	// 3. Insert words
 	_, err = tx.Exec(ctx, `
-		INSERT INTO words (id, name, notes, learned, user_id, wordlist_id, pronunciation, audio_url)
+		INSERT INTO words (id, name, notes, learned, user_id, wordlist_id, pronunciation, audio_url, processing_status)
 		VALUES 
-			(168, 'shrill', '', false, 5, 7, '', 'https://decorebator.nyc3.digitaloceanspaces.com/audio/audio-138-shrill.mp3'),
-			(169, 'crests', '', false, 5, 7, '', 'https://decorebator.nyc3.digitaloceanspaces.com/audio/audio-131-crests.mp3')
+			(168, 'shrill', '', false, 5, 7, '', 'https://decorebator.nyc3.digitaloceanspaces.com/audio/audio-138-shrill.mp3', 'completed'),
+			(169, 'crests', '', false, 5, 7, '', 'https://decorebator.nyc3.digitaloceanspaces.com/audio/audio-131-crests.mp3', 'completed')
 		ON CONFLICT (id) DO NOTHING
 	`)
 	require.NoError(t, err)

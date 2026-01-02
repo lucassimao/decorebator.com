@@ -148,6 +148,12 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 			word.AudioURL = latestAudioURL
 			err = ws.UpdateWord(ctx, word, &tx)
 		}
+
+		if err == nil {
+			if statusErr := ws.UpdateProcessingStatus(ctx, word.ID, "completed", "", &tx); statusErr != nil {
+				return nil, statusErr
+			}
+		}
 	} else {
 		_, _ = ws.jobService.ScheduleDefinitionJob(ctx, word.ID, &word.UserID, nil, &tx)
 		_, _ = ws.jobService.ScheduleAudioJob(ctx, word.ID, &word.UserID, nil, &tx)
