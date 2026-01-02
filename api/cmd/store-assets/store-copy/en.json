@@ -1,0 +1,30 @@
+{
+  "dashboard": {
+    "headline": "All your wordlists in one place",
+    "subhead": "Organize by topic and track progress fast"
+  },
+  "quiz": {
+    "headline": "Practice with multiple quiz modes",
+    "subhead": "Adaptive difficulty with instant feedback"
+  },
+  "ai-content": {
+    "headline": "AI-generated images & examples",
+    "subhead": "Learn words in context, not in isolation"
+  },
+  "flashcards": {
+    "headline": "Swipe-ready flashcards",
+    "subhead": "Study offline anywhere, anytime"
+  },
+  "analytics": {
+    "headline": "See your progress grow",
+    "subhead": "Streaks, mastery stats, and insights"
+  },
+  "premium": {
+    "headline": "Unlock unlimited learning",
+    "subhead": "Unlimited wordlists + advanced analytics"
+  },
+  "voice-coach": {
+    "headline": "Voice coach for pronunciation",
+    "subhead": "Hear, repeat, and improve your accent"
+  }
+}

@@ -1,6 +1,8 @@
 module decorebator.com
 
-go 1.23.10
+go 1.24
+
+toolchain go1.24.11
 
 require (
 	github.com/DataDog/dd-trace-go/contrib/gin-gonic/gin/v2 v2.1.0
@@ -16,6 +18,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx v3.6.2+incompatible
+	github.com/joho/godotenv v1.5.1
 	github.com/minio/minio-go/v7 v7.0.74
 	github.com/redis/go-redis/v9 v9.10.0
 	github.com/riverqueue/river v0.23.1
@@ -24,11 +27,16 @@ require (
 	github.com/sendgrid/sendgrid-go v3.16.0+incompatible
 	github.com/stretchr/testify v1.10.0
 	github.com/stripe/stripe-go/v82 v82.1.0
+	golang.org/x/image v0.25.0
 	golang.org/x/sync v0.15.0
+	google.golang.org/genai v1.40.0
 	gopkg.in/DataDog/dd-trace-go.v1 v1.74.3
 )
 
 require (
+	cloud.google.com/go v0.116.0 // indirect
+	cloud.google.com/go/auth v0.9.3 // indirect
+	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	github.com/DataDog/appsec-internal-go v1.13.0 // indirect
 	github.com/DataDog/datadog-agent/comp/core/tagger/origindetection v0.67.0 // indirect
 	github.com/DataDog/datadog-agent/pkg/obfuscate v0.67.0 // indirect
@@ -73,10 +81,14 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.3.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/pprof v0.0.0-20250607225305-033d6d78b36a // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/google/s2a-go v0.1.8 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
@@ -126,6 +138,7 @@ require (
 	github.com/yudai/gojsondiff v1.0.0 // indirect
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
+	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/collector/component v1.31.0 // indirect
 	go.opentelemetry.io/collector/featuregate v1.31.0 // indirect

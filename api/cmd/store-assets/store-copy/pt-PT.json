@@ -1,0 +1,30 @@
+{
+  "ai-content": {
+    "headline": "Imagens geradas por IA \u0026 exemplos",
+    "subhead": "Aprenda palavras no contexto, não isoladamente"
+  },
+  "analytics": {
+    "headline": "Veja o seu progresso crescer",
+    "subhead": "Sequências, estatísticas de domínio e insights"
+  },
+  "dashboard": {
+    "headline": "Todas as suas listas de palavras num só lugar",
+    "subhead": "Organize por tópico e acompanhe o progresso rapidamente"
+  },
+  "flashcards": {
+    "headline": "Flashcards prontos para deslizar",
+    "subhead": "Estude offline em qualquer lugar, a qualquer hora"
+  },
+  "premium": {
+    "headline": "Desbloqueie aprendizagem ilimitada",
+    "subhead": "Listas de palavras ilimitadas + análises avançadas"
+  },
+  "quiz": {
+    "headline": "Pratique com múltiplos modos de quiz",
+    "subhead": "Dificuldade adaptativa com feedback instantâneo"
+  },
+  "voice-coach": {
+    "headline": "Treinador de voz para pronúncia",
+    "subhead": "Ouça, repita e melhore o seu sotaque"
+  }
+}

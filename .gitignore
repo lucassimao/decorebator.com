@@ -4,3 +4,7 @@ problems/
 # Expo CNG / Prebuild native folders (generated)
 mobile/android/
 mobile/ios/
+
+# Local asset generation outputs
+api/.local/
+api/cmd/store-assets/guides/

@@ -1,0 +1,30 @@
+{
+  "ai-content": {
+    "headline": "AI生成画像と例",
+    "subhead": "孤立せず文脈で単語を学ぶ"
+  },
+  "analytics": {
+    "headline": "進捗を確認しよう",
+    "subhead": "連続学習、習得状況、インサイト"
+  },
+  "dashboard": {
+    "headline": "すべての単語リストを一元管理",
+    "subhead": "トピック別に整理し、迅速に進捗を追跡"
+  },
+  "flashcards": {
+    "headline": "スワイプ可能なフラッシュカード",
+    "subhead": "オフラインでどこでも、いつでも学習"
+  },
+  "premium": {
+    "headline": "無限の学習を解放",
+    "subhead": "無制限の単語リスト + 高度な分析"
+  },
+  "quiz": {
+    "headline": "複数のクイズモードで練習",
+    "subhead": "適応型の難易度と即時フィードバック"
+  },
+  "voice-coach": {
+    "headline": "発音のためのボイスコーチ",
+    "subhead": "聞いて、繰り返し、アクセントを改善"
+  }
+}

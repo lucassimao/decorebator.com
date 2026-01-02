@@ -1,0 +1,30 @@
+{
+  "ai-content": {
+    "headline": "KI-generierte Bilder \u0026 Beispiele",
+    "subhead": "Lerne Wörter im Kontext, nicht isoliert"
+  },
+  "analytics": {
+    "headline": "Sieh deinen Fortschritt wachsen",
+    "subhead": "Streaks, Meisterschaftsstatistiken und Einblicke"
+  },
+  "dashboard": {
+    "headline": "Alle deine Wortlisten an einem Ort",
+    "subhead": "Organisiere nach Thema und verfolge den Fortschritt schnell"
+  },
+  "flashcards": {
+    "headline": "Swipe-fähige Karteikarten",
+    "subhead": "Offline überall und jederzeit lernen"
+  },
+  "premium": {
+    "headline": "Unbegrenztes Lernen freischalten",
+    "subhead": "Unbegrenzte Wortlisten + erweiterte Analysen"
+  },
+  "quiz": {
+    "headline": "Übe mit mehreren Quizmodi",
+    "subhead": "Adaptive Schwierigkeit mit sofortigem Feedback"
+  },
+  "voice-coach": {
+    "headline": "Sprachtrainer für Aussprache",
+    "subhead": "Hören, wiederholen und deinen Akzent verbessern"
+  }
+}

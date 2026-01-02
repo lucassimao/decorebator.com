@@ -1,0 +1,79 @@
+{
+  "locales": ["en", "pt-BR", "pt-PT", "de", "it", "fr", "es", "ja"],
+  "devices": ["iphone11"],
+  "slots": [
+    {
+      "id": 1,
+      "key": "dashboard",
+      "keywords": ["wordlists", "progress", "organization"]
+    },
+    {
+      "id": 2,
+      "key": "quiz",
+      "keywords": ["quiz modes", "instant feedback", "adaptive"]
+    },
+    {
+      "id": 3,
+      "key": "ai-content",
+      "keywords": ["images", "examples", "context"]
+    },
+    {
+      "id": 4,
+      "key": "flashcards",
+      "keywords": ["flashcards", "offline", "swipe"]
+    },
+    {
+      "id": 5,
+      "key": "analytics",
+      "keywords": ["progress", "streaks", "insights"]
+    },
+    {
+      "id": 6,
+      "key": "premium",
+      "keywords": ["premium", "unlimited", "advanced analytics"]
+    }
+    ,
+    {
+      "id": 7,
+      "key": "voice-coach",
+      "keywords": ["pronunciation", "speaking", "audio coaching"]
+    }
+  ],
+  "stores": {
+    "appstore": {
+      "width": 1290,
+      "height": 2796,
+      "format": "png"
+    },
+    "play": {
+      "width": 1080,
+      "height": 1920,
+      "format": "png"
+    }
+  },
+  "layout": {
+    "textTopPct": 0.11,
+    "textSidePct": 0.1,
+    "textMaxWidthPct": 0.84,
+    "textBackdropHeightPct": 0.34,
+    "screenshotWidthPct": 0.72,
+    "screenshotTopPct": 0.36,
+    "screenshotBottomPct": 0.08
+  },
+  "defaults": {
+    "copyDir": "cmd/store-assets/store-copy",
+    "screenshotDir": "cmd/store-assets/screenshots",
+    "guideDir": "cmd/store-assets/guides",
+    "maskDir": "cmd/store-assets/guides",
+    "framePath": "cmd/store-assets/frames/iphone11.png",
+    "framePathApp": "cmd/store-assets/frames/iphone11.png",
+    "framePathPlay": "cmd/store-assets/frames/pixel8pro.png",
+    "outputDir": ".local/store-assets",
+    "baseWidth": 1024,
+    "baseHeight": 1536
+  },
+  "models": {
+    "image": "gpt-image-1.5",
+    "translation": "gpt-4o-mini"
+  }
+}
