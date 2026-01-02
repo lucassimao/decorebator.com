@@ -25,6 +25,7 @@ The offline flash cards feature allows premium users to download wordlists and t
 - `preloadWordlistForOffline()`: Download all words and definitions for a wordlist
 - `isWordlistCachedForOffline()`: Check if a wordlist is fully available offline
 - `getWordlistCacheStats()`: Get cache completion statistics
+  - Cache stats compare cached words (with definitions) against total wordlist size
 
 ### 2. Offline API Layer (`api/offlineWordlists.ts`)
 
@@ -74,6 +75,7 @@ The offline flash cards feature allows premium users to download wordlists and t
 - **Partially Cached**: Shows progress percentage
 - **Fully Cached**: Shows "Available offline" status
 - **Downloading**: Shows loading state
+ - **Processing Words**: If some words are still processing definitions, cache progress reflects only processed words and shows cached/total counts
 
 ## Cache Management
 
@@ -137,8 +139,9 @@ interface CachedDefinitions {
 
 1. **Eager Caching**: Cache data automatically when fetched online
 2. **Preloading**: Allow users to explicitly download wordlists
-3. **Lazy Loading**: Cache definitions only when needed for flash cards
-4. **Asset Management**: Download and validate audio files
+3. **Definition-Only Preload**: Skip words without definitions to avoid null-definition errors
+4. **Lazy Loading**: Cache definitions only when needed for flash cards
+5. **Asset Management**: Download and validate audio files
 
 ### Offline Detection
 

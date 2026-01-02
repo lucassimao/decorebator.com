@@ -29,7 +29,9 @@
 - Update release notes/screenshots in App Store Connect & Play Console as needed.
 
 ## 6. OTA Updates (optional post-approval)
-- `eas update --branch production --message "fix: Improve signin screen" --environment production --clear-cache`
+- Preferred: `npm run ota:prod -- --message "fix: Improve signin screen"`
+- Direct: `eas update --channel production --message "fix: Improve signin screen" --environment production --clear-cache`
+- Note: channels are the public routing layer; branches are the source of updates. We publish to `production` channel.
 
 ## 7. Utilities
 - Local Android production build: `eas build --platform android --profile production --local`

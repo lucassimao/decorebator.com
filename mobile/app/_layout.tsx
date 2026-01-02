@@ -12,6 +12,7 @@ import { PostHogProvider } from "posthog-react-native";
 import { I18nextProvider } from "react-i18next";
 import * as Sentry from "@sentry/react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 
 // Prevent auto-hide so we can control when to hide it
 SplashScreen.preventAutoHideAsync();
@@ -66,6 +67,38 @@ function RootLayoutNav() {
   // Splash screen will be hidden by the gatekeeper (app/index.tsx)
   // once authentication check is complete
 
+  const content = (
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="onboarding/features"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="onboarding/account"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name="analytics" options={{ headerShown: false }} />
+      <Stack.Screen name="flashcard" options={{ headerShown: false }} />
+      <Stack.Screen name="signup" options={{ headerShown: false }} />
+      <Stack.Screen name="quiz" options={{ headerShown: false }} />
+      <Stack.Screen name="signin" options={{ headerShown: false }} />
+      <Stack.Screen name="forgotPassword" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="dashboard/index"
+        options={{
+          headerShown: false,
+          headerTitle: "Dashboard",
+        }}
+      />
+      <Stack.Screen name="settings" options={{ headerShown: false }} />
+      <Stack.Screen name="profileSettings" options={{ headerShown: false }} />
+      <Stack.Screen name="realtime-chat" options={{ headerShown: false }} />
+      <Stack.Screen name="word-selection" options={{ headerShown: false }} />
+    </Stack>
+  );
+
   return (
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>
@@ -73,77 +106,23 @@ function RootLayoutNav() {
           <LanguageInitializer />
           <SnackbarProvider>
             <UpgradePromptDialogProvider>
-              <PostHogProvider
-                apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
-                options={{
-                  host: "https://us.i.posthog.com",
-                  disabled: __DEV__,
-                  customStorage: {
-                    getItem: AsyncStorage.getItem,
-                    setItem: AsyncStorage.setItem,
-                  },
-                }}
-              >
-                <Stack>
-                  <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="onboarding/index"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="onboarding/features"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="onboarding/account"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="analytics"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="flashcard"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="signup"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen name="quiz" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="signin"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="forgotPassword"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="dashboard/index"
-                    options={{
-                      headerShown: false,
-                      headerTitle: "Dashboard",
-                    }}
-                  />
-                  <Stack.Screen
-                    name="settings"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="profileSettings"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="realtime-chat"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="word-selection"
-                    options={{ headerShown: false }}
-                  />
-                </Stack>
-              </PostHogProvider>
+              {Platform.OS === "web" ? (
+                content
+              ) : (
+                <PostHogProvider
+                  apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
+                  options={{
+                    host: "https://us.i.posthog.com",
+                    disabled: __DEV__,
+                    customStorage: {
+                      getItem: AsyncStorage.getItem,
+                      setItem: AsyncStorage.setItem,
+                    },
+                  }}
+                >
+                  {content}
+                </PostHogProvider>
+              )}
             </UpgradePromptDialogProvider>
           </SnackbarProvider>
         </ThemeProvider>

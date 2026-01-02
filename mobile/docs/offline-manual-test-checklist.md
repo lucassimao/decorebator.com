@@ -41,7 +41,7 @@ This checklist validates offline behavior across the core mobile flows.
 6. Preload flow
 
 - Steps: Tap "Download for offline" while online.
-- Expect: Status shows downloading, then "Available offline" with cache progress.
+- Expect: Status shows downloading, then "Available offline" with cached/total counts. If some words are still processing definitions, expect a partial count (not 100%).
 
 7. Quiz offline (cached)
 

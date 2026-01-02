@@ -78,6 +78,9 @@ interface RetryConfig {
 }
 
 class OfflineManager {
+  private isServer =
+    Platform.OS === "web" &&
+    (typeof window === "undefined" || typeof document === "undefined");
   private networkState: NetworkState = {
     isOnline: true,
     connectionQuality: "unknown",
@@ -105,6 +108,9 @@ class OfflineManager {
   };
 
   constructor() {
+    if (this.isServer) {
+      return;
+    }
     this.configureNetInfo();
     this.initializeNetworkStatus();
     this.initializeNetworkListener();
