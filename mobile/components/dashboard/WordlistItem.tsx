@@ -655,7 +655,7 @@ const createStyles = (
       marginRight: responsive.getValueForSize(8, 10, 12, 14),
     },
     wordlistTitle: {
-      fontSize: responsive.getValueForSize(18, 20, 22, 24),
+      fontSize: responsive.getValueForSize(15, 17, 19, 21),
       fontWeight: "700",
       color: theme.colors.text.primary,
       marginBottom: responsive.getValueForSize(2, 3, 4, 4),
