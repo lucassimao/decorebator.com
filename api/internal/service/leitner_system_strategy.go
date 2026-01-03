@@ -99,6 +99,8 @@ var boxToQuizTypes = map[int64][]model.QuizType{
 	7: {model.MeaningFromAudio, model.WordFromImage, model.WriteWordFromDefinition, model.CompleteSentence, model.WordFromExampleAudio}, // Mastery
 }
 
+const multipleChoiceDistractors = 2
+
 // ExampleUsage tracks when examples were last used for fair distribution
 type ExampleUsage struct {
 	ExampleHash string    `db:"example_hash"`
@@ -568,7 +570,7 @@ func (s *LeitnerSystemStrategy) createCompleteSentenceQuiz(ctx context.Context, 
 	quizAnswer := extractAnswerFromExample(selectedExample, def.Definition.Token)
 
 	// Get random options (database automatically excludes tokens from ignored definition IDs)
-	options, err := definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+	options, err := definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, multipleChoiceDistractors)
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -579,7 +581,7 @@ func (s *LeitnerSystemStrategy) createCompleteSentenceQuiz(ctx context.Context, 
 // createWordFromExampleAudioQuiz handles the complex logic for WordFromExampleAudio quiz type
 // Returns (quizAnswer, options, audioURL, error) - no visual value needed for audio quizzes
 func (s *LeitnerSystemStrategy) createWordFromExampleAudioQuiz(ctx context.Context, def *NextDefinition, definitionService *DefinitionService) (string, []string, string, error) {
-	options, err := definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+	options, err := definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, multipleChoiceDistractors)
 	if err != nil {
 		return "", nil, "", err
 	}
@@ -619,7 +621,7 @@ func (s *LeitnerSystemStrategy) createQuizForType(ctx context.Context, quizType 
 	switch quizType {
 	case model.MeaningFromAudio:
 		quizAnswer = def.Definition.Meaning
-		options, err = definitionService.GetRandomMeanings(ctx, []int{int(def.Definition.ID)}, 3)
+		options, err = definitionService.GetRandomMeanings(ctx, []int{int(def.Definition.ID)}, multipleChoiceDistractors)
 		if err != nil {
 			return nil, err
 		}
@@ -627,7 +629,7 @@ func (s *LeitnerSystemStrategy) createQuizForType(ctx context.Context, quizType 
 
 	case model.WordFromAudio:
 		quizAnswer = word.Name
-		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, multipleChoiceDistractors)
 		if err != nil {
 			return nil, err
 		}
@@ -646,7 +648,7 @@ func (s *LeitnerSystemStrategy) createQuizForType(ctx context.Context, quizType 
 
 	case model.WordFromImage:
 		quizAnswer = extractAnswerFromImageDescription(def.ImageDescription, def.Definition.Token)
-		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, multipleChoiceDistractors)
 		if err != nil {
 			return nil, err
 		}
@@ -654,7 +656,7 @@ func (s *LeitnerSystemStrategy) createQuizForType(ctx context.Context, quizType 
 
 	case model.WordFromMeaning:
 		quizAnswer = def.Definition.Token
-		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, 3)
+		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, multipleChoiceDistractors)
 		if err != nil {
 			return nil, err
 		}
@@ -662,7 +664,7 @@ func (s *LeitnerSystemStrategy) createQuizForType(ctx context.Context, quizType 
 
 	case model.GuessMeaning:
 		quizAnswer = def.Definition.Meaning
-		options, err = definitionService.GetRandomMeanings(ctx, []int{int(def.Definition.ID)}, 3)
+		options, err = definitionService.GetRandomMeanings(ctx, []int{int(def.Definition.ID)}, multipleChoiceDistractors)
 		if err != nil {
 			return nil, err
 		}
