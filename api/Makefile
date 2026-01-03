@@ -2,7 +2,8 @@
 include .env
 
 # Tool versions (matching GitHub workflow)
-GO_VERSION := 1.23
+GO_VERSION := 1.25.5
+GOLANGCI_LINT_VERSION := v1.62.2
 POSTGRES_VERSION := 15
 REDIS_VERSION := 7-alpine
 MINIO_VERSION := latest
@@ -28,6 +29,7 @@ setup: ## Install all dev and build dependencies (matching GitHub workflow versi
 	go install github.com/go-delve/delve/cmd/dlv@$(DELVE_VERSION)
 	go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION)
 	go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION)
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 	go install github.com/riverqueue/river/cmd/river@latest
 	@echo "${YELLOW}Installing system dependencies...${RESET}"
 	sudo apt-get update && sudo apt-get install -y inotify-tools migrate
@@ -212,7 +214,7 @@ qa-install: ## Install QA tools matching GitHub workflow versions
 	@echo "${YELLOW}Installing QA tools...${RESET}"
 	@if ! command -v golangci-lint >/dev/null 2>&1; then \
 		echo "Installing golangci-lint..."; \
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.62.2; \
+		GOBIN=$$(go env GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
 	fi
 	@if ! command -v gosec >/dev/null 2>&1; then \
 		echo "Installing gosec..."; \
@@ -325,7 +327,7 @@ lint-fix: ## Run golangci-lint with --fix flag on changed files
 lint-install: ## Install golangci-lint
 	@echo "${YELLOW}Installing golangci-lint...${RESET}"
 	@if ! command -v golangci-lint >/dev/null 2>&1; then \
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.62.2; \
+		GOBIN=$$(go env GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
 		echo "${GREEN}golangci-lint installed successfully${RESET}"; \
 	else \
 		echo "${GREEN}golangci-lint is already installed${RESET}"; \

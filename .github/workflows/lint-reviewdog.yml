@@ -9,7 +9,7 @@ on:
       - 'api/.golangci.yml'
 
 env:
-  GO_VERSION: '1.22'
+  GO_VERSION: '1.25.5'
 
 jobs:
   lint-reviewdog:
@@ -49,17 +49,23 @@ jobs:
             echo "has_go_files=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Install linting tools
+        if: steps.changed-files.outputs.has_go_files == 'true'
+        env:
+          GOLANGCI_LINT_VERSION: v1.62.2
+        run: |
+          GOBIN=$(go env GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
+          GOBIN=$(go env GOPATH)/bin go install github.com/reviewdog/reviewdog/cmd/reviewdog@latest
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
       - name: Run golangci-lint with reviewdog
         if: steps.changed-files.outputs.has_go_files == 'true'
-        uses: reviewdog/action-golangci-lint@v2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          golangci_lint_flags: "--timeout=5m --new-from-rev=${{ github.event.pull_request.base.sha }}"
-          workdir: ./api
-          level: error
-          reporter: github-pr-review
-          filter_mode: added
-          fail_on_error: true
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd api
+          golangci-lint run --timeout=5m --new-from-rev=${{ github.event.pull_request.base.sha }} \
+            | reviewdog -f=golangci-lint -reporter=github-pr-review -filter-mode=added -fail-on-error=true
 
       - name: No Go files changed
         if: steps.changed-files.outputs.has_go_files == 'false'

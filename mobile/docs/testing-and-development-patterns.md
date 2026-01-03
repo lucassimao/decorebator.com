@@ -74,7 +74,7 @@ describe('QuizContent', () => {
     id: 1,
     type: 'GUESS_MEANING',
     value: 'hello',
-    options: ['greeting', 'goodbye', 'question', 'statement'],
+    options: ['greeting', 'goodbye', 'question'],
     answerIndex: 0,
     audioURL: 'https://example.com/audio.mp3',
   };
@@ -528,7 +528,7 @@ describe('Offline Quiz Integration', () => {
       id: 1,
       type: 'GUESS_MEANING',
       value: 'hello',
-      options: ['greeting', 'goodbye', 'question', 'statement'],
+      options: ['greeting', 'goodbye', 'question'],
     };
 
     jest.doMock('../utils/offlineManager', () => ({

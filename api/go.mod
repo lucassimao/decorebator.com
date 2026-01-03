@@ -1,8 +1,8 @@
 module decorebator.com
 
-go 1.24
+go 1.25
 
-toolchain go1.24.11
+toolchain go1.25.5
 
 require (
 	github.com/DataDog/dd-trace-go/contrib/gin-gonic/gin/v2 v2.1.0
