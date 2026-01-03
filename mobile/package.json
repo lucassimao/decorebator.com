@@ -16,7 +16,7 @@
     "typecheck": "npx tsc --noEmit",
     "typecheck:watch": "npx tsc --noEmit --watch",
     "ota": "eas update --clear-cache",
-    "ota:prod": "eas update --environment production --clear-cache --channel production",
+    "ota:prod": "EXPO_NO_DOTENV=1 node scripts/check-ota-env.js && eas update --environment production --clear-cache --channel production",
     "ota:preview": "eas update --environment preview --clear-cache --channel preview",
     "ota:dev": "eas update --environment development --clear-cache --channel development",
     "build:ios": "eas build --platform ios --profile production",

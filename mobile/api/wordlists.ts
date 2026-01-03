@@ -1,4 +1,7 @@
 import { callAPI } from "./api";
+import { getApiBaseUrl } from "./baseUrl";
+
+const API_URL = getApiBaseUrl();
 
 export type PronunciationSystem =
   | "ipa"
@@ -100,7 +103,7 @@ export type CreateWordlistDTO = Pick<
 };
 
 export async function getUserWordlists() {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/wordlists";
+  const endpoint = API_URL + "/wordlists";
   const body = await callAPI<Wordlist[]>("GET", endpoint);
   return body;
 }
@@ -109,8 +112,7 @@ export async function getWords(
   wordlistId: number,
   onlyWithDefinitions = false,
 ): Promise<Word[]> {
-  const baseEndpoint =
-    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/words`;
+  const baseEndpoint = API_URL + `/wordlists/${wordlistId}/words`;
   const endpoint = onlyWithDefinitions
     ? `${baseEndpoint}?onlyWithDefinitions=true`
     : baseEndpoint;
@@ -120,17 +122,17 @@ export async function getWords(
 }
 
 export async function deleteWordlist(wordlistId: number): Promise<void> {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}`;
+  const endpoint = API_URL + `/wordlists/${wordlistId}`;
   await callAPI("DELETE", endpoint);
 }
 
 export async function getWordlist(wordlistId: number): Promise<Wordlist> {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}`;
+  const endpoint = API_URL + `/wordlists/${wordlistId}`;
   return await callAPI<Wordlist>("GET", endpoint);
 }
 
 export async function addWordlist(dto: CreateWordlistDTO): Promise<Wordlist> {
-  let endpoint = process.env.EXPO_PUBLIC_API_URL + `/wordlists`;
+  let endpoint = API_URL + `/wordlists`;
 
   // Add optimistic flag as query parameter if present
   if (dto.hasOptimisticSubscription) {
@@ -144,8 +146,7 @@ export async function addWordlist(dto: CreateWordlistDTO): Promise<Wordlist> {
 }
 
 export async function addWord(dto: CreateWordDTO): Promise<void> {
-  let endpoint =
-    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${dto.wordlistId}/words`;
+  let endpoint = API_URL + `/wordlists/${dto.wordlistId}/words`;
 
   // Add optimistic flag as query parameter if present
   if (dto.hasOptimisticSubscription) {
@@ -163,9 +164,7 @@ export async function deleteWord(
 ): Promise<void> {
   const { wordlistId, id: wordId } = word;
 
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL +
-    `/wordlists/${wordlistId}/words/${wordId}`;
+  const endpoint = API_URL + `/wordlists/${wordlistId}/words/${wordId}`;
 
   await callAPI("DELETE", endpoint);
 }
@@ -173,14 +172,11 @@ export async function deleteWord(
 export async function updateWord(
   dto: Pick<Word, "id" | "wordlistId" | "learned" | "name" | "notes">,
 ) {
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL +
-    `/wordlists/${dto.wordlistId}/words/${dto.id}`;
+  const endpoint = API_URL + `/wordlists/${dto.wordlistId}/words/${dto.id}`;
   await callAPI("PUT", endpoint, JSON.stringify(dto));
 }
 export async function newQuiz(wordlistId: number): Promise<Quiz> {
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/quizzes`;
+  const endpoint = API_URL + `/wordlists/${wordlistId}/quizzes`;
   return await callAPI<Quiz>("POST", endpoint);
 }
 
@@ -194,8 +190,7 @@ export type AnswerQuizInput = {
   responseTimeMs: number;
 };
 export async function answerQuiz(input: AnswerQuizInput): Promise<void> {
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${input.wordlistID}/quizzes`;
+  const endpoint = API_URL + `/wordlists/${input.wordlistID}/quizzes`;
 
   await callAPI<Quiz>("PATCH", endpoint, JSON.stringify(input));
 }
@@ -205,8 +200,7 @@ export async function getWordDefinitions(
   wordId: number,
 ): Promise<Definition[]> {
   const endpoint =
-    process.env.EXPO_PUBLIC_API_URL +
-    `/wordlists/${wordlistId}/words/${wordId}/definitions`;
+    API_URL + `/wordlists/${wordlistId}/words/${wordId}/definitions`;
 
   const body = await callAPI<Definition[]>("GET", endpoint);
   return body;
@@ -222,8 +216,7 @@ export async function getPronunciationSystems(
   languageCode: string,
 ): Promise<PronunciationSystemsResponse> {
   const endpoint =
-    process.env.EXPO_PUBLIC_API_URL +
-    `/wordlists/pronunciation-systems?languageCode=${languageCode}`;
+    API_URL + `/wordlists/pronunciation-systems?languageCode=${languageCode}`;
 
   const body = await callAPI<PronunciationSystemsResponse>("GET", endpoint);
   return body;
@@ -252,9 +245,7 @@ export type ProcessingStatusResponse = {
 export async function getProcessingStatus(
   wordlistId: number,
 ): Promise<ProcessingStatusResponse> {
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL +
-    `/wordlists/${wordlistId}/processing-status`;
+  const endpoint = API_URL + `/wordlists/${wordlistId}/processing-status`;
 
   const body = await callAPI<ProcessingStatusResponse>("GET", endpoint);
   return body;
@@ -291,8 +282,7 @@ export interface ChatSessionData {
 export async function createChatSession(
   wordlistId: number,
 ): Promise<ChatSessionData> {
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL + `/wordlists/${wordlistId}/chat/session`;
+  const endpoint = API_URL + `/wordlists/${wordlistId}/chat/session`;
   return await callAPI<ChatSessionData>("POST", endpoint);
 }
 
@@ -312,8 +302,7 @@ export async function getDefinitionsForWords(
 
   const idsParam = wordIds.join(",");
   const endpoint =
-    process.env.EXPO_PUBLIC_API_URL +
-    `/wordlists/${wordlistId}/words/definitions?ids=${idsParam}`;
+    API_URL + `/wordlists/${wordlistId}/words/definitions?ids=${idsParam}`;
 
   const resp = await callAPI<WordDefinitionsBatchResponse[]>("GET", endpoint);
 

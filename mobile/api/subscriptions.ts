@@ -1,8 +1,9 @@
 import { getAuthorization } from "./users";
 import { DEFAULT_ERROR } from "./constants";
 import { Platform, Linking } from "react-native";
+import { getApiBaseUrl } from "./baseUrl";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_URL = getApiBaseUrl();
 
 export type SubscriptionStatus = {
   plan: "free" | "monthly" | "annual";
@@ -28,7 +29,7 @@ export async function createCheckoutSession(
   plan: "monthly" | "annual",
   expoUri: string,
 ): Promise<CheckoutSessionResponse> {
-  const endpoint = `${process.env.EXPO_PUBLIC_API_URL}/subscription/checkout-session`;
+  const endpoint = `${API_URL}/subscription/checkout-session`;
   const authorization = getAuthorization();
 
   if (!authorization) {

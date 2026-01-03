@@ -1,4 +1,5 @@
 import { callAPI } from "./api";
+import { getApiBaseUrl } from "./baseUrl";
 
 export enum ErrorType {
   UnrelatedImage = "_unrelated_image",
@@ -52,7 +53,7 @@ export class ErrorReportRateLimitError extends Error {
 }
 
 export async function reportError(request: ErrorReportRequest): Promise<void> {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + `/errorReports`;
+  const endpoint = getApiBaseUrl() + `/errorReports`;
 
   try {
     await callAPI("POST", endpoint, JSON.stringify(request));

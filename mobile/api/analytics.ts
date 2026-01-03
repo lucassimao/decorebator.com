@@ -1,4 +1,5 @@
 import { callAPI } from "./api";
+import { getApiBaseUrl } from "./baseUrl";
 
 export interface WordlistStats {
   totalWords: number;
@@ -72,7 +73,7 @@ export interface PracticeTimeResponse {
   practiceTime: PracticeTimeStats[];
 }
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+const BASE_URL = getApiBaseUrl();
 
 // 1) Get statistics for a specific wordlist
 export async function getWordlistStats(

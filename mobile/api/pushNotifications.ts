@@ -1,6 +1,7 @@
 import { DEFAULT_ERROR } from "./constants";
 import { getAuthorization } from "./users";
 import * as Sentry from "@sentry/react-native";
+import { getApiBaseUrl } from "./baseUrl";
 
 export type RegisterPushTokenInput = {
   expoPushToken: string;
@@ -11,7 +12,7 @@ export type RegisterPushTokenInput = {
 };
 
 export async function registerPushToken(input: RegisterPushTokenInput) {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/push/register";
+  const endpoint = getApiBaseUrl() + "/push/register";
   const authorization = getAuthorization();
 
   if (!authorization) {
@@ -53,7 +54,7 @@ export async function registerPushToken(input: RegisterPushTokenInput) {
 }
 
 export async function unregisterPushToken(expoPushToken: string) {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/push/unregister";
+  const endpoint = getApiBaseUrl() + "/push/unregister";
   const authorization = getAuthorization();
 
   if (!authorization) {

@@ -4,6 +4,7 @@ import { DEFAULT_ERROR } from "./constants";
 import { decode } from "./jwt";
 import offlineManager from "@/utils/offlineManager";
 import * as Sentry from "@sentry/react-native";
+import { getApiBaseUrl } from "./baseUrl";
 
 export type UserProfile = {
   id: number;
@@ -58,8 +59,10 @@ export type UpdatePasswordPayload = NonNullable<UpdateInput["updatePassword"]>;
 export const SIGN_IN_ERROR =
   "Invalid credentials. Are you using the correct email and password?";
 
+const API_URL = getApiBaseUrl();
+
 export async function signup(data: UserSignup) {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/users";
+  const endpoint = API_URL + "/users";
 
   const response = await fetch(endpoint, {
     method: "POST",
@@ -104,7 +107,7 @@ export async function sigout() {
   }
 }
 export async function signin(data: UserSignin) {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/login";
+  const endpoint = API_URL + "/login";
 
   const response = await fetch(endpoint, {
     method: "POST",
@@ -126,8 +129,7 @@ export async function signin(data: UserSignin) {
 }
 
 export async function requestResetEmailPassword(email: string) {
-  const endpoint =
-    process.env.EXPO_PUBLIC_API_URL + "/password/send-reset-email";
+  const endpoint = API_URL + "/password/send-reset-email";
 
   const response = await fetch(endpoint, {
     method: "POST",
@@ -151,7 +153,7 @@ export async function requestResetEmailPassword(email: string) {
 }
 
 export async function update(updates: UpdateInput) {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/users";
+  const endpoint = API_URL + "/users";
   const authorization = getAuthorization();
 
   if (!authorization) {
@@ -182,7 +184,7 @@ export async function update(updates: UpdateInput) {
 }
 
 export async function getProfile(): Promise<UserProfile> {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/users";
+  const endpoint = API_URL + "/users";
   const authorization = getAuthorization();
 
   if (!authorization) {
@@ -215,7 +217,7 @@ export async function getProfile(): Promise<UserProfile> {
 }
 
 export async function deleteProfile(): Promise<void> {
-  const endpoint = process.env.EXPO_PUBLIC_API_URL + "/users";
+  const endpoint = API_URL + "/users";
   const authorization = getAuthorization();
 
   if (!authorization) {
