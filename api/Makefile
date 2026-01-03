@@ -212,7 +212,7 @@ qa-install: ## Install QA tools matching GitHub workflow versions
 	@echo "${YELLOW}Installing QA tools...${RESET}"
 	@if ! command -v golangci-lint >/dev/null 2>&1; then \
 		echo "Installing golangci-lint..."; \
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.62.2; \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.1.6; \
 	fi
 	@if ! command -v gosec >/dev/null 2>&1; then \
 		echo "Installing gosec..."; \
@@ -325,7 +325,7 @@ lint-fix: ## Run golangci-lint with --fix flag on changed files
 lint-install: ## Install golangci-lint
 	@echo "${YELLOW}Installing golangci-lint...${RESET}"
 	@if ! command -v golangci-lint >/dev/null 2>&1; then \
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.62.2; \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.1.6; \
 		echo "${GREEN}golangci-lint installed successfully${RESET}"; \
 	else \
 		echo "${GREEN}golangci-lint is already installed${RESET}"; \
