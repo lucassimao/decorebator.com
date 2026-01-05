@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"decorebator.com/internal/common"
-	ddhttp "github.com/DataDog/dd-trace-go/contrib/net/http/v2"
 )
 
 // RealtimeSessionConfig represents the session configuration for OpenAI Realtime API
@@ -76,11 +75,7 @@ func CreateEphemeralToken(wordlistName string, languageCode string) (*EphemeralT
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("OPENAI_API_KEY")))
 
-	// Create HTTP client with Datadog instrumentation if enabled
 	client := &http.Client{}
-	if os.Getenv("DD_ENABLED") == common.DDEnabledValue {
-		client = ddhttp.WrapClient(client, ddhttp.WithService("decorebator-api"))
-	}
 
 	resp, err := client.Do(req)
 	if err != nil {

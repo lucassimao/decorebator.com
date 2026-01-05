@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	ddpgx "gopkg.in/DataDog/dd-trace-go.v1/contrib/jackc/pgx.v5"
 )
 
 var (
@@ -59,18 +58,7 @@ func GetDBConnection() *pgxpool.Pool {
 		config.HealthCheckPeriod = 1 * time.Minute
 		config.ConnConfig.ConnectTimeout = 5 * time.Second
 
-		// Create connection pool with Datadog instrumentation if enabled
-		if os.Getenv("DD_ENABLED") == DDEnabledValue {
-			db, err = ddpgx.NewPoolWithConfig(context.Background(), config,
-				ddpgx.WithServiceName("decorebator-api"),
-				ddpgx.WithTraceQuery(true),
-				ddpgx.WithTraceBatch(true),
-				ddpgx.WithTracePrepare(true),
-				ddpgx.WithTraceConnect(true),
-			)
-		} else {
-			db, err = pgxpool.NewWithConfig(context.Background(), config)
-		}
+		db, err = pgxpool.NewWithConfig(context.Background(), config)
 		if err != nil {
 			Logger.Error("unable to create connection pool - application cannot start", "error", err)
 			os.Exit(1)

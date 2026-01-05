@@ -15,7 +15,6 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
-	"github.com/DataDog/dd-trace-go/v2/ddtrace/tracer"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
@@ -81,16 +80,6 @@ func Authenticate(c *gin.Context) {
 		SubscriptionPlan: claims.SubscriptionPlan,
 	}
 	c.Set("user", user)
-
-	// Enrich Datadog trace with user context if enabled
-	if os.Getenv("DD_ENABLED") == common.DDEnabledValue {
-		if span, ok := tracer.SpanFromContext(c.Request.Context()); ok {
-			span.SetTag("user.id", fmt.Sprintf("%d", userID))
-			span.SetTag("user.email", claims.Email)
-			span.SetTag("user.subscription_plan", string(claims.SubscriptionPlan))
-			span.SetTag("user.authenticated", "true")
-		}
-	}
 
 	c.Next()
 }
@@ -296,35 +285,6 @@ func CheckSubscriptionLimits(subService *service.SubscriptionService, action mod
 			})
 			c.Abort()
 			return
-		}
-
-		c.Next()
-	}
-}
-
-// DatadogEnrichmentMiddleware adds custom tags to Datadog traces
-func DatadogEnrichmentMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Add custom tags to Datadog trace if enabled
-		if os.Getenv("DD_ENABLED") == common.DDEnabledValue {
-			if span, ok := tracer.SpanFromContext(c.Request.Context()); ok {
-				// Add environment and version tags
-				if env := os.Getenv("DD_ENV"); env != "" {
-					span.SetTag("environment", env)
-				}
-				if version := os.Getenv("DD_VERSION"); version != "" {
-					span.SetTag("version", version)
-				}
-
-				// Add request context
-				span.SetTag("http.method", c.Request.Method)
-				span.SetTag("http.route", c.FullPath())
-				span.SetTag("http.user_agent", c.GetHeader("User-Agent"))
-
-				// Add API-specific tags
-				span.SetTag("service.type", "api")
-				span.SetTag("component", "gin-router")
-			}
 		}
 
 		c.Next()

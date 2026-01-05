@@ -38,8 +38,6 @@ type Context struct {
 	MailService              *mail.MailService
 
 	// Monitoring
-	DatadogService *common.DatadogService
-
 	// Configuration
 	Environment string
 }
@@ -201,15 +199,6 @@ func (b *ContextBuilder) Build() (*Context, error) {
 
 // initializeServices creates default service instances
 func (b *ContextBuilder) initializeServices() error {
-	// Initialize Datadog service first
-	if b.context.DatadogService == nil {
-		b.context.DatadogService = common.NewDatadogService()
-		if err := b.context.DatadogService.Start(); err != nil {
-			// Don't fail the application if Datadog fails to start
-			// This allows graceful degradation in production
-			common.Logger.Error("Datadog initialization failed", "error", err)
-		}
-	}
 	// Initialize JobService if not provided
 	if b.context.JobService == nil {
 		// Create minimal River client for job insertion only
@@ -328,11 +317,6 @@ func (b *ContextBuilder) initializeServices() error {
 // Close gracefully shuts down all services and connections
 func (ctx *Context) Close() {
 	log.Println("Shutting down Context...")
-
-	// Stop Datadog service first
-	if ctx.DatadogService != nil {
-		ctx.DatadogService.Stop()
-	}
 
 	// Close database connection
 	if ctx.Database != nil {
