@@ -8,6 +8,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
+	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,10 +24,16 @@ func NewQuizRoutes(strategy common.SpacedRepetitionStrategy, userRepo *repositor
 
 func (h *QuizRoutes) Create(c *gin.Context) {
 
+	txn := sentry.StartTransaction(c.Request.Context(), "quiz.create", sentry.WithDescription("QuizRoutes.Create"))
+	defer txn.Finish()
+	c.Request = c.Request.WithContext(txn.Context())
+
 	wordlistID, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 
-	challenge, err := h.strategy.CreateQuiz(c.Request.Context(), wordlistID, userId)
+	span := sentry.StartSpan(c.Request.Context(), "quiz.generate", sentry.WithDescription("strategy.CreateQuiz"))
+	challenge, err := h.strategy.CreateQuiz(span.Context(), wordlistID, userId)
+	span.Finish()
 
 	if err != nil {
 		var quizUnavailable common.QuizUnavailableError
@@ -59,6 +66,10 @@ type SaveInput struct {
 // Save if the users answered correctly or not
 func (h *QuizRoutes) Save(c *gin.Context) {
 
+	txn := sentry.StartTransaction(c.Request.Context(), "quiz.answer", sentry.WithDescription("QuizRoutes.Save"))
+	defer txn.Finish()
+	c.Request = c.Request.WithContext(txn.Context())
+
 	var input SaveInput
 
 	if err := c.BindJSON(&input); err != nil {
@@ -76,7 +87,8 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 		}
 	}
 
-	var err = h.strategy.SaveQuizResult(c.Request.Context(), common.QuizResult{
+	span := sentry.StartSpan(c.Request.Context(), "quiz.save", sentry.WithDescription("strategy.SaveQuizResult"))
+	var err = h.strategy.SaveQuizResult(span.Context(), common.QuizResult{
 		WordlistID:              input.WordlistID,
 		WordID:                  input.WordID,
 		DefinitionID:            input.DefinitionID,
@@ -86,6 +98,7 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 		UserID:                  userId,
 		ResponseTimeMs:          input.ResponseTimeMs,
 	}, isPremium, nil)
+	span.Finish()
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

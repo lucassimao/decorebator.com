@@ -12,6 +12,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/openai"
+	"github.com/getsentry/sentry-go"
 	"github.com/riverqueue/river"
 )
 
@@ -40,6 +41,10 @@ func NewImageGeneratorWorker(definitionService *DefinitionService, definitionIma
 
 func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGeneratorArgs]) error {
 	var logger = common.Logger.With("worker", "imagegenerator")
+
+	txn := sentry.StartTransaction(ctx, "worker.ImageGenerator", sentry.WithOpName("queue.process"), sentry.WithTransactionSource(sentry.SourceTask))
+	defer txn.Finish()
+	ctx = txn.Context()
 
 	var (
 		definitionID = job.Args.DefinitionId
@@ -93,14 +98,18 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	}
 	logger.Debug(prompt)
 
+	span := sentry.StartSpan(ctx, "openai.image.generate", sentry.WithDescription("openai.GenerateImage"))
 	data, err := generateWithOpenAI(prompt)
+	span.Finish()
 
 	if err != nil {
 		return err
 	}
 
-	url, err := common.Upload(ctx, data, "decorebator",
+	span = sentry.StartSpan(ctx, "storage.upload", sentry.WithDescription("minio.Upload"))
+	url, err := common.Upload(span.Context(), data, "decorebator",
 		fmt.Sprintf("images/definition-%d-%d.png", definitionID, time.Now().Unix()), "image/png")
+	span.Finish()
 
 	if err != nil {
 		logger.Error("failed to upload image", "error", err)
@@ -109,7 +118,8 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	logger.Debug("image generated", "definitionId", definitionID, "url", url)
 
-	_, err = w.definitionImageService.SaveDefinitionImage(ctx, model.CreateDefinitionImageDTO{
+	span = sentry.StartSpan(ctx, "db.definition_image.save", sentry.WithDescription("definitionImageService.SaveDefinitionImage"))
+	_, err = w.definitionImageService.SaveDefinitionImage(span.Context(), model.CreateDefinitionImageDTO{
 		Api:          model.OPENAI,
 		URL:          url,
 		Description:  longestExample,
@@ -117,6 +127,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		Prompt:       prompt,
 		DefinitionId: definitionID,
 	})
+	span.Finish()
 
 	if err != nil {
 		logger.Error("failed to save definition image", "err", err)

@@ -34,6 +34,9 @@ func (h *SentryLogsHandler) Enabled(_ context.Context, level slog.Level) bool {
 	if os.Getenv("SENTRY_DSN") == "" {
 		return false
 	}
+	if level < slog.LevelInfo {
+		return false
+	}
 	return level >= h.minLevel
 }
 

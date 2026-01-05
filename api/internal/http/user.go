@@ -13,6 +13,7 @@ import (
 	"decorebator.com/internal/mail"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
+	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -93,6 +94,10 @@ func translateValidationErrors(errs validator.ValidationErrors) map[string]strin
 }
 
 func (h *UserRoutes) SignUp(c *gin.Context) {
+	txn := sentry.StartTransaction(c.Request.Context(), "auth.signup", sentry.WithDescription("UserRoutes.SignUp"))
+	defer txn.Finish()
+	c.Request = c.Request.WithContext(txn.Context())
+
 	var input SignupInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		var ve validator.ValidationErrors
@@ -120,7 +125,9 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		preferredLanguage = &input.PreferredLanguage
 	}
 
-	user, err := h.userService.SaveUser(c.Request.Context(), input.FirstName, input.LastName, input.Password, input.Email, country, preferredLanguage)
+	span := sentry.StartSpan(c.Request.Context(), "auth.user.create", sentry.WithDescription("userService.SaveUser"))
+	user, err := h.userService.SaveUser(span.Context(), input.FirstName, input.LastName, input.Password, input.Email, country, preferredLanguage)
+	span.Finish()
 
 	if err != nil {
 		switch err.(type) {
@@ -154,6 +161,10 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 }
 
 func (h *UserRoutes) Login(c *gin.Context) {
+	txn := sentry.StartTransaction(c.Request.Context(), "auth.login", sentry.WithDescription("UserRoutes.Login"))
+	defer txn.Finish()
+	c.Request = c.Request.WithContext(txn.Context())
+
 	var input LoginInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -161,7 +172,9 @@ func (h *UserRoutes) Login(c *gin.Context) {
 		return
 	}
 
-	jwtToken, err := h.userService.LoginUser(c.Request.Context(), input.Email, input.Password)
+	span := sentry.StartSpan(c.Request.Context(), "auth.user.login", sentry.WithDescription("userService.LoginUser"))
+	jwtToken, err := h.userService.LoginUser(span.Context(), input.Email, input.Password)
+	span.Finish()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password"})
 		return

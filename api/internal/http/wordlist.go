@@ -10,6 +10,7 @@ import (
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/openai"
 	"decorebator.com/internal/service"
+	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/pgtype"
 )
@@ -82,13 +83,15 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 	}
 
 	var userID int64 = c.GetInt64("userID")
-	saved, err := h.wordlistService.SaveWordlist(c.Request.Context(), &Wordlist{
+	span := sentry.StartSpan(c.Request.Context(), "wordlist.create", sentry.WithDescription("WordlistsRoutes.Create"))
+	saved, err := h.wordlistService.SaveWordlist(span.Context(), &Wordlist{
 		Name:                input.Name,
 		Description:         input.Description,
 		UserID:              userID,
 		LanguageCode:        input.LanguageCode,
 		PronunciationSystem: pronunciationSystem,
 	})
+	span.Finish()
 
 	if err != nil {
 		switch err.(type) {

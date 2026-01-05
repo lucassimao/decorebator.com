@@ -10,6 +10,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/openai"
+	"github.com/getsentry/sentry-go"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 )
@@ -46,6 +47,10 @@ func NewDefinitionFetcherWorker(db *pgxpool.Pool, wordService *WordService, defi
 }
 
 func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[DefinitionFetcherArgs]) error {
+	txn := sentry.StartTransaction(ctx, "worker.DefinitionFetcher", sentry.WithOpName("queue.process"), sentry.WithTransactionSource(sentry.SourceTask))
+	defer txn.Finish()
+	ctx = txn.Context()
+
 	// Validate user eligibility before processing (skip if userId is nil - admin context)
 	if job.Args.UserID != nil {
 		if err := w.userService.ValidateUserEligibilityForWorkers(ctx, *job.Args.UserID); err != nil {
@@ -88,7 +93,9 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 
 	logger.InfoContext(ctx, "fetching definitions", "word", word.Name, "language", languageCode, "pronunciationSystem", pronunciationSystem)
 
+	span := sentry.StartSpan(ctx, "openai.definition.generate", sentry.WithDescription("openai.GetDefinition"))
 	definitionData, err := openai.GetDefinition(word.Name, languageCode, pronunciationSystem)
+	span.Finish()
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to fetch definitions using openai", "error", err)
 		errorMsg := fmt.Sprintf("Failed to fetch definitions: %v", err)
@@ -148,7 +155,9 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 	}()
 
-	definitions, err := w.definitionService.SaveDefinition(ctx, word.ID, definitionData.Definitions, &tx)
+	span = sentry.StartSpan(ctx, "db.definition.save", sentry.WithDescription("definitionService.SaveDefinition"))
+	definitions, err := w.definitionService.SaveDefinition(span.Context(), word.ID, definitionData.Definitions, &tx)
+	span.Finish()
 
 	if err != nil {
 		logger.Error("failed to save definitions", "error", err)
