@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"decorebator.com/internal/common"
+	"github.com/getsentry/sentry-go"
 	"github.com/riverqueue/river"
 	"github.com/stripe/stripe-go/v82"
 )
@@ -30,6 +31,14 @@ func NewStripeWebhookWorker(subscriptionService *SubscriptionService) *StripeWeb
 
 func (w *StripeWebhookWorker) Work(ctx context.Context, job *river.Job[StripeWebhookArgs]) error {
 	logger := common.Logger.With("worker", "stripe-webhook", "event_id", job.Args.EventID)
+
+	if hub := sentry.GetHubFromContext(ctx); hub != nil {
+		hub.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetTag("stripe_event_id", job.Args.EventID)
+			scope.SetTag("stripe_event_type", job.Args.EventType)
+			scope.SetExtra("stripe_event_payload", string(job.Args.EventData))
+		})
+	}
 
 	// Reconstruct the Stripe event from the job args
 	event := stripe.Event{
