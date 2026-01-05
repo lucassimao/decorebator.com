@@ -17,6 +17,10 @@ func main() {
 	// Initialize Sentry first, before any logging
 	if err := common.InitSentry(); err != nil {
 		common.Logger.Error("Failed to initialize Sentry for workers", "error", err)
+	} else {
+		sentry.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetTag("service", "workers")
+		})
 	}
 	defer func() {
 		// Flush any pending Sentry events before shutdown

@@ -7,6 +7,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
+	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,6 +15,10 @@ func init() {
 	// Initialize Sentry using the common initialization function
 	if err := common.InitSentry(); err != nil {
 		common.Logger.Error("Failed to initialize Sentry in http package", "error", err)
+	} else {
+		sentry.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetTag("service", "api")
+		})
 	}
 }
 
