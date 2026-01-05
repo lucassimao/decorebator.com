@@ -85,7 +85,7 @@ func recordRealtimeTelemetry(telemetryService *service.RealtimeTelemetryService)
 		}
 
 		if err := telemetryService.StoreRealtimeTelemetry(c.Request.Context(), telemetry); err != nil {
-			common.Logger.Error("failed to persist realtime telemetry", "error", err)
+			common.Logger.ErrorContext(c.Request.Context(), "failed to persist realtime telemetry", "error", err)
 			c.Status(http.StatusAccepted)
 			return
 		}

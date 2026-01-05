@@ -40,7 +40,7 @@ func (h *WordRoutes) GetAll(c *gin.Context) {
 
 	words, err := h.wordService.GetWordByWordlist(c.Request.Context(), wordlistID, userID, onlyWithDefinitions)
 	if err != nil {
-		common.Logger.Error("failed to get words", "error", err, "userID", userID, "wordlistID", wordlistID, "onlyWithDefinitions", onlyWithDefinitions)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to get words", "error", err, "userID", userID, "wordlistID", wordlistID, "onlyWithDefinitions", onlyWithDefinitions)
 		c.String(http.StatusInternalServerError, "Could not get user words")
 		return
 	}
@@ -64,7 +64,7 @@ func (h *WordRoutes) Create(ctx *gin.Context) {
 		case common.BusinessError:
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		default:
-			logger.Error("failed to create word", "error", err)
+			logger.ErrorContext(ctx.Request.Context(), "failed to create word", "error", err)
 			ctx.Status(http.StatusInternalServerError)
 		}
 	} else {
@@ -122,7 +122,7 @@ func (h *WordRoutes) GetDefinitions(c *gin.Context) {
 
 	definitions, err := h.definitionService.GetDefinitionsByWordID(c.Request.Context(), wordID, userID)
 	if err != nil {
-		common.Logger.Error("failed to get definitions", "error", err, "userID", userID, "wordId", wordID)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to get definitions", "error", err, "userID", userID, "wordId", wordID)
 		c.String(http.StatusInternalServerError, "Could not get word definitions")
 		return
 	}
@@ -170,7 +170,7 @@ func (h *WordRoutes) GetDefinitionsBatch(c *gin.Context) {
 	// Fetch batched definitions and names (token) scoped by wordlist and user
 	results, err := h.definitionService.GetDefinitionsByWordIDs(c.Request.Context(), wordlistID, userID, wordIDs)
 	if err != nil {
-		common.Logger.Error("failed to get batched definitions", "error", err, "userID", userID, "wordlistID", wordlistID, "ids", idsParam)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to get batched definitions", "error", err, "userID", userID, "wordlistID", wordlistID, "ids", idsParam)
 		c.String(http.StatusInternalServerError, "Could not get definitions")
 		return
 	}

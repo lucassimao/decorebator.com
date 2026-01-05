@@ -26,7 +26,7 @@ func (w *PushReceiptWorker) Work(ctx context.Context, _ *river.Job[PushReceiptAr
 		return nil
 	}
 	if err := w.pushService.CheckReceipts(ctx, time.Now().UTC()); err != nil {
-		common.Logger.Error("failed to check push receipts", "error", err)
+		common.Logger.ErrorContext(ctx, "failed to check push receipts", "error", err)
 		return err
 	}
 	return nil

@@ -148,7 +148,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	email := input.Email
 	go func() {
 		if err := h.mailService.SendWelcomeEmail(ctx, email); err != nil {
-			common.Logger.Error("failed to send welcome email", "email", email, "error", err)
+			common.Logger.ErrorContext(c.Request.Context(), "failed to send welcome email", "email", email, "error", err)
 		}
 	}()
 }
@@ -206,7 +206,7 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 	}
 
 	if err := h.userService.UpdatePassword(c.Request.Context(), payload.UserId, input.Password); err != nil {
-		common.Logger.Error("failed to update password", "userId", payload.UserId, "error", err)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to update password", "userId", payload.UserId, "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
 		return
 	}
@@ -233,7 +233,7 @@ func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
 
 	err := h.mailService.SendResetPasswordEmail(c.Request.Context(), input.Email)
 	if err != nil {
-		common.Logger.Error("failed to send reset password email", "error", err)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to send reset password email", "error", err)
 	}
 	c.Status(http.StatusOK)
 }
@@ -258,7 +258,7 @@ func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
 		c.SetCookie("Authorization", jwtToken, int(maxAge), path, domain, secure, httpOnly)
 	} else {
 		// clear cookie
-		common.Logger.Debug("Clearing authorization cookie")
+		common.Logger.DebugContext(c.Request.Context(), "Clearing authorization cookie")
 		c.SetCookie("Authorization", "", int(-1), path, domain, secure, httpOnly)
 	}
 }
@@ -391,7 +391,7 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 			c.Header("authorization", newJWT)
 		} else {
 			// Log error but don't fail the request
-			common.Logger.Error("failed to generate new JWT after plan downgrade", "userId", userID, "error", jwtErr)
+			common.Logger.ErrorContext(c.Request.Context(), "failed to generate new JWT after plan downgrade", "userId", userID, "error", jwtErr)
 		}
 	}
 

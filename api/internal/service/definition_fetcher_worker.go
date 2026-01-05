@@ -49,7 +49,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	// Validate user eligibility before processing (skip if userId is nil - admin context)
 	if job.Args.UserID != nil {
 		if err := w.userService.ValidateUserEligibilityForWorkers(ctx, *job.Args.UserID); err != nil {
-			common.Logger.Warn("User not eligible for definition fetching",
+			common.Logger.WarnContext(ctx, "User not eligible for definition fetching",
 				"userId", *job.Args.UserID, "wordId", job.Args.WordId, "error", err)
 			// Cancel job permanently - user needs to upgrade
 			return river.JobCancel(err)
@@ -65,42 +65,42 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 			return river.JobCancel(errors.New("word not found"))
 		}
 		if updateErr := w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", err.Error(), nil); updateErr != nil {
-			common.Logger.Error("failed to update processing status", "wordID", wordID, "error", updateErr)
+			common.Logger.ErrorContext(ctx, "failed to update processing status", "wordID", wordID, "error", updateErr)
 		}
 		return err
 	}
 
 	// Update word processing status to "processing"
 	if updateErr := w.wordService.UpdateProcessingStatus(ctx, wordID, "processing", "", nil); updateErr != nil {
-		logger.Error("failed to update processing status to processing", "wordId", wordID, "error", updateErr)
+		logger.ErrorContext(ctx, "failed to update processing status to processing", "wordId", wordID, "error", updateErr)
 		// Continue processing even if status update fails
 	}
 
 	// Get wordlist language and pronunciation system
 	languageCode, pronunciationSystem, err := w.wordService.GetWordlistLanguageAndPronunciation(ctx, wordID)
 	if err != nil {
-		logger.Error("failed to get wordlist language and pronunciation system", "error", err)
+		logger.ErrorContext(ctx, "failed to get wordlist language and pronunciation system", "error", err)
 		if updateErr := w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", "Failed to get wordlist language", nil); updateErr != nil {
-			common.Logger.Error("failed to update processing status", "wordID", wordID, "error", updateErr)
+			common.Logger.ErrorContext(ctx, "failed to update processing status", "wordID", wordID, "error", updateErr)
 		}
 		return err
 	}
 
-	logger.Info("fetching definitions", "word", word.Name, "language", languageCode, "pronunciationSystem", pronunciationSystem)
+	logger.InfoContext(ctx, "fetching definitions", "word", word.Name, "language", languageCode, "pronunciationSystem", pronunciationSystem)
 
 	definitionData, err := openai.GetDefinition(word.Name, languageCode, pronunciationSystem)
 	if err != nil {
-		logger.Error("failed to fetch definitions using openai", "error", err)
+		logger.ErrorContext(ctx, "failed to fetch definitions using openai", "error", err)
 		errorMsg := fmt.Sprintf("Failed to fetch definitions: %v", err)
 		if updateErr := w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", errorMsg, nil); updateErr != nil {
-			logger.Error("failed to update processing status", "wordID", wordID, "error", updateErr)
+			logger.ErrorContext(ctx, "failed to update processing status", "wordID", wordID, "error", updateErr)
 		}
 		return err
 	}
 
 	if len(definitionData.Definitions) == 0 {
 		if err = w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", "No definitions found for this word", nil); err != nil {
-			logger.Error("failed to update processing status", "wordID", wordID, "error", err)
+			logger.ErrorContext(ctx, "failed to update processing status", "wordID", wordID, "error", err)
 		}
 		return river.JobCancel(errors.New("no definition found"))
 	}
@@ -116,14 +116,14 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		json, err := json.Marshal(details)
 		if err != nil {
 			if updateErr := w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", "Failed to validate definitions", nil); updateErr != nil {
-				logger.Error("failed to update processing status", "wordID", wordID, "error", updateErr)
+				logger.ErrorContext(ctx, "failed to update processing status", "wordID", wordID, "error", updateErr)
 			}
 			return err
 		}
 
 		errorMsg := fmt.Sprintf("Definition validation failed: %v", validationErrors)
 		if err := w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", errorMsg, nil); err != nil {
-			logger.Error("failed to update processing status", "wordID", wordID, "error", err)
+			logger.ErrorContext(ctx, "failed to update processing status", "wordID", wordID, "error", err)
 		}
 		return errors.New(string(json))
 	}
@@ -132,7 +132,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	tx, err := w.db.Begin(ctx)
 	if err != nil {
 		if err = w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", "Failed to start database transaction", nil); err != nil {
-			logger.Error("failed to update processing status", "wordId", wordID, "error", err)
+			logger.ErrorContext(ctx, "failed to update processing status", "wordId", wordID, "error", err)
 		}
 		return err
 	}

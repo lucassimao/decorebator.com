@@ -482,7 +482,7 @@ func getProgressSummary(db *pgxpool.Pool) gin.HandlerFunc {
 
 		summary, err := analyticsService.ProgressSummary(c.Request.Context())
 		if err != nil {
-			common.Logger.Error("Failed to fetch progress summary", "error", err, "userID", userID)
+			common.Logger.ErrorContext(c.Request.Context(), "Failed to fetch progress summary", "error", err, "userID", userID)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch progress summary"})
 			return
 		}

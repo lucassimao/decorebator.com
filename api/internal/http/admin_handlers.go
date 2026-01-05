@@ -20,7 +20,7 @@ import (
 func PprofHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Log admin access for audit trail
-		common.Logger.Info("admin pprof access",
+		common.Logger.InfoContext(c.Request.Context(), "admin pprof access",
 			"endpoint", c.Request.URL.Path,
 			"method", c.Request.Method,
 			"remote_addr", c.ClientIP(),
@@ -89,7 +89,7 @@ func PprofHandler() gin.HandlerFunc {
 func HealthCheckHandler(appCtx *app.Context) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Log health check access
-		common.Logger.Info("admin health check access",
+		common.Logger.InfoContext(c.Request.Context(), "admin health check access",
 			"remote_addr", c.ClientIP(),
 			"user_agent", c.Request.UserAgent(),
 		)
@@ -164,7 +164,7 @@ func HealthCheckHandler(appCtx *app.Context) gin.HandlerFunc {
 func MetricsHandler(appCtx *app.Context) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Log metrics access
-		common.Logger.Info("admin metrics access",
+		common.Logger.InfoContext(c.Request.Context(), "admin metrics access",
 			"remote_addr", c.ClientIP(),
 			"user_agent", c.Request.UserAgent(),
 		)
@@ -203,7 +203,7 @@ func MetricsHandler(appCtx *app.Context) gin.HandlerFunc {
 func SystemInfoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Log system info access
-		common.Logger.Info("admin system info access",
+		common.Logger.InfoContext(c.Request.Context(), "admin system info access",
 			"remote_addr", c.ClientIP(),
 			"user_agent", c.Request.UserAgent(),
 		)

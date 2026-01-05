@@ -76,7 +76,7 @@ func NewWorkerRiverClient(
 				go func() {
 					ctx := context.Background()
 					if err := ScheduleRenewalReminders(ctx, db, mailService); err != nil {
-						common.Logger.Error("Failed to schedule renewal reminders", "error", err)
+						common.Logger.ErrorContext(ctx, "Failed to schedule renewal reminders", "error", err)
 					}
 				}()
 				// Return a no-op job

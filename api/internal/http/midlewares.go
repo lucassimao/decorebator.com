@@ -158,7 +158,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 		if ctx.Err() == context.DeadlineExceeded {
 			// Only respond if no response was already written
 			if !c.Writer.Written() {
-				common.Logger.Error("request timed out",
+				common.Logger.ErrorContext(ctx, "request timed out",
 					"path", c.FullPath(),
 					"method", c.Request.Method,
 					"timeout", timeout)
@@ -236,7 +236,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 					})
 				}
 
-				common.Logger.Error("Recovered from panic", attrs...)
+				common.Logger.ErrorContext(c.Request.Context(), "Recovered from panic", attrs...)
 
 				// Return a 500 error in JSON format
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{

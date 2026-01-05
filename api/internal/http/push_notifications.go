@@ -36,7 +36,7 @@ func (h *PushNotificationRoutes) Register(c *gin.Context) {
 		return
 	}
 	if _, err := time.LoadLocation(input.Timezone); err != nil {
-		common.Logger.Warn("invalid timezone for push token registration",
+		common.Logger.WarnContext(c.Request.Context(), "invalid timezone for push token registration",
 			"timezone", input.Timezone,
 			"userID", c.GetInt64("userID"))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid timezone"})
@@ -58,7 +58,7 @@ func (h *PushNotificationRoutes) Register(c *gin.Context) {
 		Locale:    input.Locale,
 	})
 	if err != nil {
-		common.Logger.Error("failed to register push token", "error", err, "userID", userID)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to register push token", "error", err, "userID", userID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to register token"})
 		return
 	}
@@ -84,7 +84,7 @@ func (h *PushNotificationRoutes) Unregister(c *gin.Context) {
 	}
 
 	if err := h.pushRepo.Deactivate(c.Request.Context(), userID, input.ExpoPushToken); err != nil {
-		common.Logger.Error("failed to deactivate push token", "error", err, "userID", userID)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to deactivate push token", "error", err, "userID", userID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unregister token"})
 		return
 	}

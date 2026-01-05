@@ -19,7 +19,12 @@ func init() {
 
 	// Wrap with Sentry handler if Sentry is configured
 	if os.Getenv("SENTRY_DSN") != "" {
-		handler = NewSentryHandler(handler)
+		sentryHandler := NewSentryHandler(handler)
+		handlers := []slog.Handler{sentryHandler}
+		if os.Getenv("ENV") == ProductionEnv {
+			handlers = append(handlers, NewSentryLogsHandler(slog.LevelDebug))
+		}
+		handler = NewMultiHandler(handlers...)
 	}
 
 	Logger = slog.New(handler)

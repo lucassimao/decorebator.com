@@ -38,7 +38,7 @@ func (h *QuizRoutes) Create(c *gin.Context) {
 			return
 		}
 
-		common.Logger.Error("failed to create quiz", "error", err, "wordlistID", wordlistID)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to create quiz", "error", err, "wordlistID", wordlistID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -94,7 +94,7 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 
 	if h.userRepo != nil {
 		if updateErr := h.userRepo.UpdateLastPracticeAt(c.Request.Context(), userId); updateErr != nil {
-			common.Logger.Error("failed to update last practice timestamp", "error", updateErr, "userID", userId)
+			common.Logger.ErrorContext(c.Request.Context(), "failed to update last practice timestamp", "error", updateErr, "userID", userId)
 		}
 	}
 

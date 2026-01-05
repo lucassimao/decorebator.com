@@ -27,6 +27,7 @@ func InitSentry() error {
 		Dsn:            sentryDsn,
 		Debug:          false, // Set to false in production to reduce overhead
 		SendDefaultPII: true,
+		EnableLogs:     os.Getenv("ENV") == ProductionEnv,
 		// Performance optimizations
 		SampleRate:       1.0, // Capture 100% of errors
 		TracesSampleRate: 0.1, // Only capture 10% of performance traces
@@ -35,6 +36,15 @@ func InitSentry() error {
 		// The SDK handles async sending internally
 		AttachStacktrace: true,
 		Environment:      os.Getenv("ENV"),
+		BeforeSendLog: func(log *sentry.Log) *sentry.Log {
+			if log == nil {
+				return nil
+			}
+			if log.Level == sentry.LogLevelTrace {
+				return nil
+			}
+			return log
+		},
 	})
 
 	if err != nil {

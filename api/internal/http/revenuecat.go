@@ -19,7 +19,7 @@ func HandleRevenueCatWebhook(jobService service.JobService) gin.HandlerFunc {
 		expectedToken, exists := os.LookupEnv("REVENUECAT_WEBHOOK_AUTHORIZATION")
 
 		if !exists {
-			common.Logger.Error("REVENUECAT_WEBHOOK_AUTHORIZATION is not set")
+			common.Logger.ErrorContext(c.Request.Context(), "REVENUECAT_WEBHOOK_AUTHORIZATION is not set")
 			panic("REVENUECAT_WEBHOOK_AUTHORIZATION env is missing")
 		}
 
@@ -39,7 +39,7 @@ func HandleRevenueCatWebhook(jobService service.JobService) gin.HandlerFunc {
 		_, err = jobService.ScheduleRevenueCatWebhookJob(c.Request.Context(), "webhook", payload)
 
 		if err != nil {
-			common.Logger.Error("failed to enqueue revenuecat webhook job", "error", err)
+			common.Logger.ErrorContext(c.Request.Context(), "failed to enqueue revenuecat webhook job", "error", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to enqueue webhook job"})
 			return
 		}
@@ -75,7 +75,7 @@ func RestorePurchases(rcService service.RevenueCatService) gin.HandlerFunc {
 
 		// Restore purchases
 		if err := rcService.RestorePurchases(c.Request.Context(), user.ID, req.AppUserID, req.Platform); err != nil {
-			common.Logger.Error("Failed to restore purchases", "error", err, "user_id", user.ID)
+			common.Logger.ErrorContext(c.Request.Context(), "Failed to restore purchases", "error", err, "user_id", user.ID)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to restore purchases"})
 			return
 		}

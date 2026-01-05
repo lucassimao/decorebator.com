@@ -69,7 +69,7 @@ func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
 
 	// Admin context - delete existing definitions and trigger new generation
 	if deleteErr := h.definitionService.DeleteWordDefinitions(c.Request.Context(), wordId, nil); deleteErr != nil {
-		common.Logger.Error("failed to delete word definitions", "wordId", wordId, "error", deleteErr)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to delete word definitions", "wordId", wordId, "error", deleteErr)
 	}
 	jobID, err := h.jobService.ScheduleDefinitionJob(c.Request.Context(), wordId, nil, nil, nil)
 

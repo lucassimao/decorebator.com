@@ -45,7 +45,7 @@ func RateLimitErrorReports(db *pgxpool.Pool) gin.HandlerFunc {
 				return
 			}
 			// Other errors - log but don't block
-			common.Logger.Error("Rate limit check failed", "error", err)
+			common.Logger.ErrorContext(c.Request.Context(), "Rate limit check failed", "error", err)
 			c.Next()
 			return
 		}

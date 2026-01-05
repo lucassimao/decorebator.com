@@ -95,7 +95,7 @@ func (h *WordlistsRoutes) Create(c *gin.Context) {
 		case common.BusinessError:
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		default:
-			common.Logger.Error("failed to create wordlist", "error", err, "userID", userID)
+			common.Logger.ErrorContext(c.Request.Context(), "failed to create wordlist", "error", err, "userID", userID)
 			c.Status(http.StatusInternalServerError)
 		}
 	} else {
@@ -179,7 +179,7 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 			case common.BusinessError:
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			default:
-				common.Logger.Error("failed to update wordlist", "error", err, "userID", userID)
+				common.Logger.ErrorContext(c.Request.Context(), "failed to update wordlist", "error", err, "userID", userID)
 				c.Status(http.StatusInternalServerError)
 			}
 		}
@@ -205,7 +205,7 @@ func (h *WordlistsRoutes) GetProcessingStatus(c *gin.Context) {
 		if errors.As(err, &notFoundErr) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 		} else {
-			common.Logger.Error("failed to get wordlist", "wordlistId", wordlistID, "error", err)
+			common.Logger.ErrorContext(c.Request.Context(), "failed to get wordlist", "wordlistId", wordlistID, "error", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get wordlist"})
 		}
 		return
@@ -215,7 +215,7 @@ func (h *WordlistsRoutes) GetProcessingStatus(c *gin.Context) {
 	words, err := h.wordService.GetWordByWordlist(c.Request.Context(), wordlist.ID, userID, false)
 
 	if err != nil {
-		common.Logger.Error("failed to get words processing status", "wordlistId", wordlistID, "error", err)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to get words processing status", "wordlistId", wordlistID, "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get processing status"})
 		return
 	}
@@ -293,7 +293,7 @@ func (h *WordlistsRoutes) CreateChatSession(c *gin.Context) {
 		if errors.As(err, &notFoundErr) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
 		} else {
-			common.Logger.Error("failed to get wordlist for chat session", "wordlistId", wordlistID, "error", err)
+			common.Logger.ErrorContext(c.Request.Context(), "failed to get wordlist for chat session", "wordlistId", wordlistID, "error", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get wordlist"})
 		}
 		return
@@ -303,7 +303,7 @@ func (h *WordlistsRoutes) CreateChatSession(c *gin.Context) {
 	tokenResponse, err := openai.CreateEphemeralToken(wordlist.Name, wordlist.LanguageCode)
 	if err != nil {
 		// Enhanced logging with context for better debugging (automatically sent to Sentry in production)
-		common.Logger.Error("failed to create ephemeral token",
+		common.Logger.ErrorContext(c.Request.Context(), "failed to create ephemeral token",
 			"wordlistId", wordlistID,
 			"userId", userID,
 			"wordlistName", wordlist.Name,

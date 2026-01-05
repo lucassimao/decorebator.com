@@ -26,7 +26,7 @@ func (w *DailyPracticeReminderWorker) Work(ctx context.Context, _ *river.Job[Dai
 		return nil
 	}
 	if err := w.pushService.SendDailyPracticeReminders(ctx, time.Now().UTC()); err != nil {
-		common.Logger.Error("failed to send daily practice reminders", "error", err)
+		common.Logger.ErrorContext(ctx, "failed to send daily practice reminders", "error", err)
 		return err
 	}
 	return nil
