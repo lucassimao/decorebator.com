@@ -58,6 +58,11 @@ const FAQSection: React.FC = () => {
       question: t('questions.10.question'),
       answer: t('questions.10.answer'),
     },
+    {
+      id: 11,
+      question: t('questions.11.question'),
+      answer: t('questions.11.answer'),
+    },
   ]
 
   const toggleFAQ = (id: number) => {
@@ -84,8 +89,8 @@ const FAQSection: React.FC = () => {
               key={faq.id}
               className={`group overflow-hidden rounded-2xl border bg-white transition-all duration-300 ${
                 openFAQ === faq.id
-                  ? 'border-primary-200 shadow-lg shadow-primary-500/5'
-                  : 'border-slate-200 hover:border-primary-200/50 hover:shadow-md'
+                  ? 'border-primary-200 shadow-primary-500/5 shadow-lg'
+                  : 'hover:border-primary-200/50 border-slate-200 hover:shadow-md'
               }`}
               style={{ animationDelay: `${index * 0.05}s` }}
             >
@@ -96,15 +101,23 @@ const FAQSection: React.FC = () => {
                 onClick={() => toggleFAQ(faq.id)}
                 aria-expanded={openFAQ === faq.id}
               >
-                <span className="pr-4 text-base font-semibold text-slate-900 sm:text-lg">{faq.question}</span>
+                <span className="pr-4 text-base font-semibold text-slate-900 sm:text-lg">
+                  {faq.question}
+                </span>
                 <span
                   className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
                     openFAQ === faq.id
-                      ? 'bg-primary-500 text-white rotate-180'
-                      : 'bg-slate-100 text-slate-500 group-hover:bg-primary-100 group-hover:text-primary-600'
+                      ? 'bg-primary-500 rotate-180 text-white'
+                      : 'group-hover:bg-primary-100 group-hover:text-primary-600 bg-slate-100 text-slate-500'
                   }`}
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </span>

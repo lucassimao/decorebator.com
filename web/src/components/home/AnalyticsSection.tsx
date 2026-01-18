@@ -153,7 +153,7 @@ const AnalyticsSection: React.FC = () => {
     { box: 6, count: 234, label: '14d', color: 'bg-indigo-400' },
     { box: 7, count: 1374, label: '30d', color: 'bg-violet-500' },
   ]
-  const maxBoxCount = Math.max(...boxDistribution.map(b => b.count))
+  const maxBoxCount = Math.max(...boxDistribution.map((b) => b.count))
 
   return (
     <section
@@ -200,7 +200,6 @@ const AnalyticsSection: React.FC = () => {
 
         {/* Modern Bento Grid Layout */}
         <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-12 lg:grid-rows-[auto_auto_auto]">
-
           {/* Stats Cards Row - Spanning full width */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -214,7 +213,9 @@ const AnalyticsSection: React.FC = () => {
                 <BookOpen className="h-5 w-5" />
               </div>
               <div className="text-3xl font-bold text-slate-900">{animatedStats.wordsStudied}</div>
-              <div className="text-sm font-medium text-slate-500">{t('stats.wordsStudiedToday')}</div>
+              <div className="text-sm font-medium text-slate-500">
+                {t('stats.wordsStudiedToday')}
+              </div>
               <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-emerald-600">
                 <TrendingUp className="h-3 w-3" />
                 +18% vs last week
@@ -236,7 +237,9 @@ const AnalyticsSection: React.FC = () => {
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 transition-transform duration-300 group-hover:scale-110">
                 <Trophy className="h-5 w-5" />
               </div>
-              <div className="text-3xl font-bold text-slate-900">{animatedStats.mastered.toLocaleString()}</div>
+              <div className="text-3xl font-bold text-slate-900">
+                {animatedStats.mastered.toLocaleString()}
+              </div>
               <div className="text-sm font-medium text-slate-500">{t('stats.wordsMastered')}</div>
               <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-emerald-600">
                 <Zap className="h-3 w-3" />
@@ -264,7 +267,9 @@ const AnalyticsSection: React.FC = () => {
           >
             <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">{t('charts.learningProgressTitle')}</h3>
+                <h3 className="text-lg font-bold text-slate-900">
+                  {t('charts.learningProgressTitle')}
+                </h3>
                 <p className="text-sm text-slate-500">Words studied per day</p>
               </div>
               <div className="flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5">
@@ -284,7 +289,9 @@ const AnalyticsSection: React.FC = () => {
             transition={{ delay: 0.3 }}
             className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-lg lg:col-span-4"
           >
-            <h3 className="mb-5 text-lg font-bold text-slate-900">{t('charts.wordMasteryTitle')}</h3>
+            <h3 className="mb-5 text-lg font-bold text-slate-900">
+              {t('charts.wordMasteryTitle')}
+            </h3>
             <div className="space-y-4">
               {wordMasteryItems.map((item, index) => (
                 <div

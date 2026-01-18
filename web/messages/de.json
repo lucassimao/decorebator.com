@@ -175,11 +175,7 @@
     "step2": {
       "title": "Nehmen Sie an ansprechenden Quiz teil",
       "description": "Üben Sie mit 8 verschiedenen Quiz-Modi, die sich an Ihren Lernfortschritt anpassen.",
-      "features": [
-        "Bedeutung ↔ Wort-Zuordnung",
-        "Bild- & Audioerkennung",
-        "Satzvervollständigung"
-      ]
+      "features": ["Bedeutung ↔ Wort-Zuordnung", "Bild- & Audioerkennung", "Satzvervollständigung"]
     },
     "step3": {
       "title": "Meistern durch Wiederholung",
@@ -393,30 +389,9 @@
       "minutes": "Minuten",
       "successRate": "Erfolgsrate",
       "words": "Wörter",
-      "weekDays": [
-        "Mo",
-        "Di",
-        "Mi",
-        "Do",
-        "Fr",
-        "Sa",
-        "So"
-      ],
-      "quizTypes": [
-        "Bedeutung erraten",
-        "Wort aus Bedeutung",
-        "Bildassoziation",
-        "Hörverständnis"
-      ],
-      "boxLabels": [
-        "Box 1",
-        "Box 2",
-        "Box 3",
-        "Box 4",
-        "Box 5",
-        "Box 6",
-        "Box 7"
-      ],
+      "weekDays": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+      "quizTypes": ["Bedeutung erraten", "Wort aus Bedeutung", "Bildassoziation", "Hörverständnis"],
+      "boxLabels": ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5", "Box 6", "Box 7"],
       "box1": "Box 1",
       "box2": "Box 2",
       "box3": "Box 3",
@@ -455,11 +430,11 @@
       },
       "3": {
         "question": "Was sind die Abonnement-Pläne und Preise?",
-        "answer": "Decorebator bietet einen kostenlosen Plan (1 Wortliste, maximal 10 Wörter) und Premium-Pläne: $6.99/Monat oder $69.90/Jahr. Premium beinhaltet unbegrenzte Wortlisten und Wörter, Offline-Unterstützung mit nahtloser Synchronisation, vollständige Analysen-Historie, Export-Funktionalität und erweiterte Lerneinblicke."
+        "answer": "Premium-Pläne beginnen bei 6,99 $ pro Monat oder 69,99 $ pro Jahr (Preise variieren je nach Region und Plattform)."
       },
       "4": {
         "question": "Kann ich Decorebator offline verwenden?",
-        "answer": "Ja! Premium-Nutzer können ihre Wortlisten herunterladen und offline mit voller Funktionalität weiterlernen. Ihr Fortschritt synchronisiert sich automatisch, wenn Sie wieder mit dem Internet verbunden sind, sodass Sie nie eine Lernsitzung verpassen."
+        "answer": "Ja! Premium-Nutzer können ihre Wortlisten herunterladen und offline mit voller Funktionalität weiterlernen."
       },
       "5": {
         "question": "Welche Sprachen werden für die KI-Inhaltserstellung unterstützt?",
@@ -475,15 +450,19 @@
       },
       "8": {
         "question": "Wie funktioniert das Fehlermeldungssystem?",
-        "answer": "Nutzer können Probleme mit KI-generierten Inhalten (Definitionen, Bilder, Audio) direkt aus der App melden. Das System beinhaltet Ratenbegrenzung (Kostenlos: 3 Meldungen/Stunde, 5/Tag; Premium: 10 Meldungen/Stunde, 30/Tag) und automatische Inhaltserneuerung. Gemeldete Wörter werden während Wiederholungen temporär übersprungen, bis neue Inhalte generiert werden."
+        "answer": "Nutzer können Probleme mit KI-generierten Inhalten (Definitionen, Bilder, Audio) direkt aus der App melden. Das System beinhaltet Ratenbegrenzung (Kostenlos: 3 Meldungen/Stunde, 5/Tag; Premium: 10 Meldungen/Stunde, 30/Tag) und automatische Inhaltserneuerung. Gemeldete Wörter werden während Wiederholungen temporär übersprungen, während wir die Meldung bearbeiten."
       },
       "9": {
         "question": "Welche Plattformen und Geräte werden unterstützt?",
-        "answer": "Decorebator ist als mobile App für iOS- und Android-Geräte verfügbar, plus eine umfassende Webanwendung mit mehrsprachiger Unterstützung. Ihr Fortschritt synchronisiert sich über alle Geräte mit automatischem Session-Management."
+        "answer": "Decorebator ist als mobile Apps für iOS- und Android-Geräte verfügbar."
       },
       "10": {
         "question": "Wie zuverlässig ist die KI-Inhaltserstellung?",
         "answer": "Unser KI-Inhaltserstellungssystem beinhaltet mehrere Qualitätssicherungsmaßnahmen: automatische Wiederholungslogik, Ratenbegrenzung und faire Nutzungsverteilung, um zuverlässige Inhaltserstellung zu gewährleisten. Das Fehlermeldungssystem ermöglicht es Nutzern, neue Inhalte anzufordern, wenn etwas nicht ihren Lernbedürfnissen entspricht."
+      },
+      "11": {
+        "question": "Was ist der Voice Coach?",
+        "answer": "Mit dem Voice Coach kannst du sprechen und verschiedene Verwendungen eines Wortes mit einem KI‑Agenten üben, um Aussprache und realistische Anwendung zu verbessern."
       }
     }
   },

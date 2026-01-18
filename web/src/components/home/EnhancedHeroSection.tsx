@@ -60,11 +60,6 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = () => {
             })}
           </p>
 
-          <div className="mb-6 inline-flex max-w-3xl flex-wrap items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-white/80 px-5 py-3 text-sm text-slate-600 shadow-sm backdrop-blur-sm">
-            <span className="text-slate-900">{t('productSummary.label')}</span>
-            <span>{t('productSummary.body')}</span>
-          </div>
-
           {/* Trust row */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -131,13 +126,13 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = () => {
               <div className="mx-auto w-fit">
                 <div className="group relative rounded-[3rem] bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 p-[10px] shadow-2xl transition-all duration-300 hover:shadow-[0_28px_90px_-20px_rgba(0,0,0,0.4)]">
                   {/* iPhone-like frame details */}
-                  <div className="pointer-events-none absolute left-1/2 top-1.5 z-20 flex h-5 w-24 -translate-x-1/2 items-center justify-center gap-2 rounded-full bg-slate-950">
+                  <div className="pointer-events-none absolute top-1.5 left-1/2 z-20 flex h-5 w-24 -translate-x-1/2 items-center justify-center gap-2 rounded-full bg-slate-950">
                     <span className="h-1.5 w-8 rounded-full bg-slate-800"></span>
                     <span className="h-1.5 w-1.5 rounded-full bg-slate-700"></span>
                   </div>
-                  <div className="pointer-events-none absolute left-1 top-28 h-14 w-1.5 rounded-full bg-slate-700/80"></div>
-                  <div className="pointer-events-none absolute left-1 top-48 h-12 w-1.5 rounded-full bg-slate-700/80"></div>
-                  <div className="pointer-events-none absolute right-1 top-36 h-24 w-1.5 rounded-full bg-slate-700/80"></div>
+                  <div className="pointer-events-none absolute top-28 left-1 h-14 w-1.5 rounded-full bg-slate-700/80"></div>
+                  <div className="pointer-events-none absolute top-48 left-1 h-12 w-1.5 rounded-full bg-slate-700/80"></div>
+                  <div className="pointer-events-none absolute top-36 right-1 h-24 w-1.5 rounded-full bg-slate-700/80"></div>
                   <div className="pointer-events-none absolute inset-1 rounded-[2.6rem] ring-1 ring-white/10"></div>
                   <div className="aspect-[9/19.5] h-[620px] w-auto overflow-hidden rounded-[2.45rem] bg-black sm:h-[700px] lg:h-[780px]">
                     <div className="h-full w-full rounded-[2.2rem] bg-white">
@@ -250,7 +245,6 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = () => {
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </motion.div>

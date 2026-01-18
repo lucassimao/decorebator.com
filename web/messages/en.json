@@ -253,11 +253,11 @@
       },
       "3": {
         "question": "What are the subscription plans and pricing?",
-        "answer": "Decorebator offers a Free plan (1 wordlist, 10 words maximum) and Premium plans: $6.99/month or $69.90/year. Premium includes unlimited wordlists and words, offline support with seamless sync, complete analytics history, export functionality, and advanced learning insights."
+        "answer": "Premium plans start at $6.99/month or $69.99/year (prices vary by region and platform)."
       },
       "4": {
         "question": "Can I use Decorebator offline?",
-        "answer": "Yes! Premium users can download their wordlists and continue learning offline with full functionality. Your progress syncs automatically when you reconnect to the internet, ensuring you never miss a learning session."
+        "answer": "Yes! Premium users can download their wordlists and continue learning offline with full functionality."
       },
       "5": {
         "question": "What languages are supported for AI content generation?",
@@ -273,15 +273,19 @@
       },
       "8": {
         "question": "How does the error reporting system work?",
-        "answer": "Users can report issues with AI-generated content (definitions, images, audio) directly from the app. The system includes rate limiting (Free: 3 reports/hour, 5/day; Premium: 10 reports/hour, 30/day) and automatic content regeneration. Reported words are temporarily skipped during reviews until new content is generated."
+        "answer": "Users can report issues with AI-generated content (definitions, images, audio) directly from the app. The system includes rate limiting (Free: 3 reports/hour, 5/day; Premium: 10 reports/hour, 30/day) and automatic content regeneration. Reported words are temporarily skipped during reviews while we process the report."
       },
       "9": {
         "question": "What platforms and devices are supported?",
-        "answer": "Decorebator is available as a mobile app for iOS and Android devices, plus a comprehensive web application with multi-language support. Your progress synchronizes across all devices with automatic session management."
+        "answer": "Decorebator is available as mobile apps for iOS and Android devices."
       },
       "10": {
         "question": "How reliable is the AI content generation?",
         "answer": "Our AI content generation system includes multiple quality assurance measures: automatic retry logic, rate limiting, and fair usage distribution to ensure reliable content creation. The error reporting system allows users to request new content if anything doesn't meet their learning needs."
+      },
+      "11": {
+        "question": "What is the Voice Coach?",
+        "answer": "Voice Coach lets you speak and practice different usages of a word with an AI agent, helping you improve pronunciation and real-world usage."
       }
     }
   },
@@ -335,11 +339,7 @@
         "period": "/year",
         "description": "Best value for committed learners",
         "savings": "Save $13.98 per year",
-        "features": [
-          "Everything in Monthly",
-          "Save $13.98 per year",
-          "Early Access to Features"
-        ],
+        "features": ["Everything in Monthly", "Save $13.98 per year", "Early Access to Features"],
         "cta": "Start Annual"
       },
       "premium": {
@@ -1589,30 +1589,14 @@
       "minutes": "Minutes",
       "successRate": "Success Rate",
       "words": "Words",
-      "weekDays": [
-        "Mon",
-        "Tue",
-        "Wed",
-        "Thu",
-        "Fri",
-        "Sat",
-        "Sun"
-      ],
+      "weekDays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
       "quizTypes": [
         "Guess Meaning",
         "Word from Meaning",
         "Image Association",
         "Audio Comprehension"
       ],
-      "boxLabels": [
-        "Box 1",
-        "Box 2",
-        "Box 3",
-        "Box 4",
-        "Box 5",
-        "Box 6",
-        "Box 7"
-      ],
+      "boxLabels": ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5", "Box 6", "Box 7"],
       "box1": "Box 1",
       "box2": "Box 2",
       "box3": "Box 3",

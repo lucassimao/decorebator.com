@@ -197,7 +197,7 @@ const PricingSection: React.FC = () => {
 
               <a
                 href="#download"
-                className="shimmer-button press-effect from-primary-500 to-primary-600 focus-visible:ring-primary-500 mb-8 block w-full rounded-full bg-gradient-to-r px-6 py-4 text-center font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-primary-500/25 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                className="shimmer-button press-effect from-primary-500 to-primary-600 focus-visible:ring-primary-500 hover:shadow-primary-500/25 mb-8 block w-full rounded-full bg-gradient-to-r px-6 py-4 text-center font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 {t('plans.premium.cta')}
               </a>

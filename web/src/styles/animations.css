@@ -253,12 +253,7 @@ video {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
   pointer-events: none;
@@ -266,7 +261,9 @@ video {
 
 /* Subtle lift effect on hover */
 .hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .hover-lift:hover {
@@ -276,7 +273,8 @@ video {
 
 /* Glow pulse effect */
 @keyframes glow-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
   }
   50% {
@@ -290,7 +288,8 @@ video {
 
 /* Badge bounce animation */
 @keyframes badge-bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -316,12 +315,7 @@ video {
 }
 
 .animate-gradient-text {
-  background: linear-gradient(
-    90deg,
-    #ff6b35,
-    #7b2cbf,
-    #ff6b35
-  );
+  background: linear-gradient(90deg, #ff6b35, #7b2cbf, #ff6b35);
   background-size: 200% auto;
   background-clip: text;
   -webkit-background-clip: text;
@@ -351,12 +345,7 @@ video {
   left: -100%;
   width: 50%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   transform: skewX(-25deg);
   transition: none;
   pointer-events: none;
@@ -368,7 +357,8 @@ video {
 
 /* Scroll progress indicator */
 @keyframes progress-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -378,7 +368,8 @@ video {
 
 /* Floating particles effect */
 @keyframes float-particle {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) rotate(0deg);
     opacity: 0.6;
   }
@@ -393,11 +384,21 @@ video {
 }
 
 /* Stagger animation delays */
-.stagger-1 { animation-delay: 0.1s; }
-.stagger-2 { animation-delay: 0.2s; }
-.stagger-3 { animation-delay: 0.3s; }
-.stagger-4 { animation-delay: 0.4s; }
-.stagger-5 { animation-delay: 0.5s; }
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+.stagger-4 {
+  animation-delay: 0.4s;
+}
+.stagger-5 {
+  animation-delay: 0.5s;
+}
 
 /* Focus ring animation */
 @keyframes focus-ring {

@@ -331,11 +331,11 @@
       },
       "3": {
         "question": "Quali sono i piani di abbonamento e i prezzi?",
-        "answer": "Decorebator offre un piano Gratuito (1 lista di parole, massimo 10 parole) e piani Premium: $6.99/mese o $69.90/anno. Premium include liste di parole e parole illimitate, supporto offline con sincronizzazione fluida, cronologia completa delle analisi, funzionalità di esportazione e insights di apprendimento avanzati."
+        "answer": "I piani Premium partono da $6,99/mese o $69,99/anno (i prezzi variano in base a regione e piattaforma)."
       },
       "4": {
         "question": "Posso usare Decorebator offline?",
-        "answer": "Sì! Gli utenti premium possono scaricare le loro liste di parole e continuare a imparare offline con funzionalità complete. I tuoi progressi si sincronizzano automaticamente quando ti riconnetti a internet, assicurando che non perda mai una sessione di apprendimento."
+        "answer": "Sì! Gli utenti premium possono scaricare le loro liste di parole e continuare a imparare offline con funzionalità complete."
       },
       "5": {
         "question": "Quali lingue sono supportate per la generazione di contenuti con IA?",
@@ -351,15 +351,19 @@
       },
       "8": {
         "question": "Come funziona il sistema di segnalazione errori?",
-        "answer": "Gli utenti possono segnalare problemi con contenuti generati dall'IA (definizioni, immagini, audio) direttamente dall'app. Il sistema include limitazione di velocità (Gratuito: 3 segnalazioni/ora, 5/giorno; Premium: 10 segnalazioni/ora, 30/giorno) e rigenerazione automatica contenuti. Le parole segnalate vengono temporaneamente saltate durante le revisioni fino a quando nuovo contenuto viene generato."
+        "answer": "Gli utenti possono segnalare problemi con contenuti generati dall'IA (definizioni, immagini, audio) direttamente dall'app. Il sistema include limitazione di velocità (Gratuito: 3 segnalazioni/ora, 5/giorno; Premium: 10 segnalazioni/ora, 30/giorno) e rigenerazione automatica contenuti. Le parole segnalate vengono temporaneamente saltate durante le revisioni mentre elaboriamo la segnalazione."
       },
       "9": {
         "question": "Quali piattaforme e dispositivi sono supportati?",
-        "answer": "Decorebator è disponibile come app mobile per dispositivi iOS e Android, più un'applicazione web completa con supporto multilingue. I tuoi progressi si sincronizzano su tutti i dispositivi con gestione sessione automatica."
+        "answer": "Decorebator è disponibile come app mobili per dispositivi iOS e Android."
       },
       "10": {
         "question": "Quanto è affidabile la generazione di contenuti con IA?",
         "answer": "Il nostro sistema di generazione contenuti IA include multiple misure di garanzia qualità: logica retry automatico, limitazione velocità e distribuzione uso equo per assicurare creazione contenuti affidabile. Il sistema segnalazione errori permette agli utenti di richiedere nuovo contenuto se qualcosa non soddisfa le loro esigenze di apprendimento."
+      },
+      "11": {
+        "question": "Che cos'è il Voice Coach?",
+        "answer": "Voice Coach ti permette di parlare e praticare diversi usi di una parola con un agente IA, aiutandoti a migliorare la pronuncia e l'uso nel mondo reale."
       }
     }
   },
@@ -624,15 +628,7 @@
       "minutes": "Minuti",
       "successRate": "Tasso di Successo",
       "words": "Parole",
-      "weekDays": [
-        "Lun",
-        "Mar",
-        "Mer",
-        "Gio",
-        "Ven",
-        "Sab",
-        "Dom"
-      ],
+      "weekDays": ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
       "quizTypes": [
         "Indovina Significato",
         "Parola dal Significato",

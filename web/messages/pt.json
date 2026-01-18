@@ -253,11 +253,11 @@
       },
       "3": {
         "question": "Quais são os planos de assinatura e preços?",
-        "answer": "O Decorebator oferece um plano Gratuito (1 lista de palavras, máximo de 10 palavras) e planos Premium: $6.99/mês ou $69.90/ano. O Premium inclui listas de palavras e palavras ilimitadas, suporte offline com sincronização perfeita, histórico completo de análises, funcionalidade de exportação e insights avançados de aprendizado."
+        "answer": "Os planos Premium começam em $6,99/mês ou $69,99/ano (os preços variam conforme a região e a plataforma)."
       },
       "4": {
         "question": "Posso usar o Decorebator offline?",
-        "answer": "Sim! Usuários Premium podem baixar suas listas de palavras e continuar aprendendo offline com funcionalidade completa. Seu progresso sincroniza automaticamente quando você se reconecta à internet, garantindo que nunca perca uma sessão de aprendizado."
+        "answer": "Sim! Usuários Premium podem baixar suas listas de palavras e continuar aprendendo offline com funcionalidade completa."
       },
       "5": {
         "question": "Quais idiomas são suportados para geração de conteúdo por IA?",
@@ -273,15 +273,19 @@
       },
       "8": {
         "question": "Como funciona o sistema de relatório de erros?",
-        "answer": "Usuários podem reportar problemas com conteúdo gerado por IA (definições, imagens, áudio) diretamente do app. O sistema inclui limitação de taxa (Gratuito: 3 relatórios/hora, 5/dia; Premium: 10 relatórios/hora, 30/dia) e regeneração automática de conteúdo. Palavras reportadas são temporariamente puladas durante revisões até que novo conteúdo seja gerado."
+        "answer": "Usuários podem reportar problemas com conteúdo gerado por IA (definições, imagens, áudio) diretamente do app. O sistema inclui limitação de taxa (Gratuito: 3 relatórios/hora, 5/dia; Premium: 10 relatórios/hora, 30/dia) e regeneração automática de conteúdo. Palavras reportadas são temporariamente puladas durante revisões enquanto processamos o reporte."
       },
       "9": {
         "question": "Quais plataformas e dispositivos são suportados?",
-        "answer": "O Decorebator está disponível como app móvel para dispositivos iOS e Android, além de uma aplicação web abrangente com suporte multilíngue. Seu progresso sincroniza entre todos os dispositivos com gerenciamento automático de sessão."
+        "answer": "O Decorebator está disponível como apps móveis para dispositivos iOS e Android."
       },
       "10": {
         "question": "Quão confiável é a geração de conteúdo por IA?",
         "answer": "Nosso sistema de geração de conteúdo por IA inclui múltiplas medidas de garantia de qualidade: lógica de retry automática, limitação de taxa e distribuição de uso justo para garantir criação confiável de conteúdo. O sistema de relatório de erros permite que usuários solicitem novo conteúdo se algo não atender suas necessidades de aprendizado."
+      },
+      "11": {
+        "question": "O que é o Voice Coach?",
+        "answer": "O Voice Coach permite que você fale e pratique diferentes usos de uma palavra com um agente de IA, ajudando a melhorar a pronúncia e o uso no mundo real."
       }
     }
   },
@@ -335,11 +339,7 @@
         "period": "/ano",
         "description": "Melhor valor para estudantes comprometidos",
         "savings": "Economize $13.98 por ano",
-        "features": [
-          "Tudo do Mensal",
-          "Economize $13.98 por ano",
-          "Acesso Antecipado a Recursos"
-        ],
+        "features": ["Tudo do Mensal", "Economize $13.98 por ano", "Acesso Antecipado a Recursos"],
         "cta": "Começar Anual"
       },
       "premium": {
@@ -1567,30 +1567,14 @@
       "minutes": "Minutos",
       "successRate": "Taxa de sucesso",
       "words": "Palavras",
-      "weekDays": [
-        "Seg",
-        "Ter",
-        "Qua",
-        "Qui",
-        "Sex",
-        "Sáb",
-        "Dom"
-      ],
+      "weekDays": ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
       "quizTypes": [
         "Adivinhar significado",
         "Palavra do significado",
         "Associação de imagem",
         "Compreensão auditiva"
       ],
-      "boxLabels": [
-        "Caixa 1",
-        "Caixa 2",
-        "Caixa 3",
-        "Caixa 4",
-        "Caixa 5",
-        "Caixa 6",
-        "Caixa 7"
-      ],
+      "boxLabels": ["Caixa 1", "Caixa 2", "Caixa 3", "Caixa 4", "Caixa 5", "Caixa 6", "Caixa 7"],
       "box1": "Caixa 1",
       "box2": "Caixa 2",
       "box3": "Caixa 3",

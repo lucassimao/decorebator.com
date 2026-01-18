@@ -125,7 +125,7 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params
   const tFaq = await getTranslations({ locale, namespace: 'faq.questions' })
-  const faqEntries = Array.from({ length: 10 }, (_, index) => {
+  const faqEntries = Array.from({ length: 11 }, (_, index) => {
     const key = String(index + 1)
     return {
       question: tFaq(`${key}.question`),

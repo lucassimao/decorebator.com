@@ -270,11 +270,7 @@
         "period": "/año",
         "description": "El mejor valor para estudiantes comprometidos",
         "savings": "Ahorra $13.98 por año",
-        "features": [
-          "Todo lo de Mensual",
-          "Ahorra $13.98 por año",
-          "Acceso Temprano a Funciones"
-        ],
+        "features": ["Todo lo de Mensual", "Ahorra $13.98 por año", "Acceso Temprano a Funciones"],
         "cta": "Comenzar Anual"
       },
       "premium": {
@@ -331,11 +327,11 @@
       },
       "3": {
         "question": "¿Cuáles son los planes de suscripción y precios?",
-        "answer": "Decorebator ofrece un plan Gratuito (1 lista de palabras, máximo 10 palabras) y planes Premium: $6.99/mes o $69.90/año. Premium incluye listas de palabras y palabras ilimitadas, soporte offline con sincronización perfecta, historial completo de análisis, funcionalidad de exportación e información avanzada de aprendizaje."
+        "answer": "Los planes Premium comienzan en $6.99/mes o $69.99/año (los precios varían según la región y la plataforma)."
       },
       "4": {
         "question": "¿Puedo usar Decorebator sin conexión?",
-        "answer": "¡Sí! Los usuarios premium pueden descargar sus listas de palabras y continuar aprendiendo sin conexión con funcionalidad completa. Tu progreso se sincroniza automáticamente cuando te reconectas a internet, asegurando que nunca pierdas una sesión de aprendizaje."
+        "answer": "¡Sí! Los usuarios premium pueden descargar sus listas de palabras y continuar aprendiendo sin conexión con funcionalidad completa."
       },
       "5": {
         "question": "¿Qué idiomas están soportados para la generación de contenido con IA?",
@@ -351,15 +347,19 @@
       },
       "8": {
         "question": "¿Cómo funciona el sistema de reporte de errores?",
-        "answer": "Los usuarios pueden reportar problemas con contenido generado por IA (definiciones, imágenes, audio) directamente desde la app. El sistema incluye limitación de velocidad (Gratis: 3 reportes/hora, 5/día; Premium: 10 reportes/hora, 30/día) y regeneración automática de contenido. Las palabras reportadas se saltan temporalmente durante las revisiones hasta que se genere nuevo contenido."
+        "answer": "Los usuarios pueden reportar problemas con contenido generado por IA (definiciones, imágenes, audio) directamente desde la app. El sistema incluye limitación de velocidad (Gratis: 3 reportes/hora, 5/día; Premium: 10 reportes/hora, 30/día) y regeneración automática de contenido. Las palabras reportadas se saltan temporalmente durante las revisiones mientras procesamos el reporte."
       },
       "9": {
         "question": "¿Qué plataformas y dispositivos están soportados?",
-        "answer": "Decorebator está disponible como una app móvil para dispositivos iOS y Android, además de una aplicación web completa con soporte multiidioma. Tu progreso se sincroniza en todos los dispositivos con gestión automática de sesiones."
+        "answer": "Decorebator está disponible como apps móviles para dispositivos iOS y Android."
       },
       "10": {
         "question": "¿Qué tan confiable es la generación de contenido con IA?",
         "answer": "Nuestro sistema de generación de contenido con IA incluye múltiples medidas de garantía de calidad: lógica de reintento automático, limitación de velocidad y distribución de uso justo para asegurar la creación confiable de contenido. El sistema de reporte de errores permite a los usuarios solicitar nuevo contenido si algo no cumple con sus necesidades de aprendizaje."
+      },
+      "11": {
+        "question": "¿Qué es el Voice Coach?",
+        "answer": "Voice Coach te permite hablar y practicar diferentes usos de una palabra con un agente de IA, ayudándote a mejorar la pronunciación y el uso en situaciones reales."
       }
     }
   },
@@ -471,30 +471,14 @@
       "minutes": "Minutos",
       "successRate": "Tasa de Éxito",
       "words": "Palabras",
-      "weekDays": [
-        "Lun",
-        "Mar",
-        "Mié",
-        "Jue",
-        "Vie",
-        "Sáb",
-        "Dom"
-      ],
+      "weekDays": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
       "quizTypes": [
         "Adivinar Significado",
         "Palabra del Significado",
         "Asociación de Imagen",
         "Comprensión Auditiva"
       ],
-      "boxLabels": [
-        "Caja 1",
-        "Caja 2",
-        "Caja 3",
-        "Caja 4",
-        "Caja 5",
-        "Caja 6",
-        "Caja 7"
-      ],
+      "boxLabels": ["Caja 1", "Caja 2", "Caja 3", "Caja 4", "Caja 5", "Caja 6", "Caja 7"],
       "box1": "Caja 1",
       "box2": "Caja 2",
       "box3": "Caja 3",

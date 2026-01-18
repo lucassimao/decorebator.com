@@ -36,7 +36,7 @@ const Header: React.FC = () => {
     <>
       {/* Scroll progress indicator */}
       <div
-        className="fixed top-0 left-0 z-[60] h-0.5 bg-gradient-to-r from-primary-500 via-accent-500 to-primary-500 transition-all duration-150"
+        className="from-primary-500 via-accent-500 to-primary-500 fixed top-0 left-0 z-[60] h-0.5 bg-gradient-to-r transition-all duration-150"
         style={{
           width: `${scrollProgress}%`,
           opacity: isScrolled ? 1 : 0,
@@ -50,142 +50,142 @@ const Header: React.FC = () => {
             : 'bg-white/60 backdrop-blur-md'
         }`}
       >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between sm:h-20">
-          {/* Logo */}
-          <Link
-            href={`/${locale}`}
-            className="group flex cursor-pointer items-center space-x-2.5 transition-transform duration-200 hover:scale-[1.02]"
-          >
-            <div className="flex h-9 w-9 items-center justify-center">
-              <Image
-                src="/logo.png"
-                alt="Decorebator Logo"
-                width={36}
-                height={36}
-                className="h-9 w-9 transition-transform duration-200 group-hover:rotate-6"
-                priority
-              />
-            </div>
-            <span className="from-primary-500 to-primary-600 bg-gradient-to-r bg-clip-text text-xl font-bold text-transparent sm:text-2xl">
-              Decorebator
-            </span>
-          </Link>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between sm:h-20">
+            {/* Logo */}
+            <Link
+              href={`/${locale}`}
+              className="group flex cursor-pointer items-center space-x-2.5 transition-transform duration-200 hover:scale-[1.02]"
+            >
+              <div className="flex h-9 w-9 items-center justify-center">
+                <Image
+                  src="/logo.png"
+                  alt="Decorebator Logo"
+                  width={36}
+                  height={36}
+                  className="h-9 w-9 transition-transform duration-200 group-hover:rotate-6"
+                  priority
+                />
+              </div>
+              <span className="from-primary-500 to-primary-600 bg-gradient-to-r bg-clip-text text-xl font-bold text-transparent sm:text-2xl">
+                Decorebator
+              </span>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden items-center space-x-1 md:flex">
-            <a
-              href={`/${locale}/#features`}
-              className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-            >
-              {t('features')}
-            </a>
-            <a
-              href={`/${locale}/#how-it-works`}
-              className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-            >
-              {t('howItWorks')}
-            </a>
-            <a
-              href={`/${locale}/#pricing`}
-              className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-            >
-              {t('pricing')}
-            </a>
-            <a
-              href={`/${locale}/#faq`}
-              className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-            >
-              {t('faq')}
-            </a>
-            <a
-              href={`/${locale}/#download`}
-              className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-            >
-              {t('getStartedFree')}
-            </a>
-            <div className="mx-2">
-              <LanguageSwitcher />
-            </div>
-            <DownloadAppButton className="bg-primary-500 hover:bg-primary-600 shimmer-button press-effect ml-2 rounded-full px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-primary-500/25">
-              {t('getStartedFree')}
-            </DownloadAppButton>
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="focus-visible:ring-primary-500 rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:hidden"
-            onClick={toggleMobileMenu}
-            aria-label="Toggle menu"
-            aria-expanded={isMobileMenuOpen}
-            aria-controls="mobile-navigation"
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div id="mobile-navigation" className="border-t border-slate-200 bg-white md:hidden">
-            <nav className="flex flex-col space-y-1 py-4">
-              <a
-                href={`/${locale}`}
-                className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {t('home')}
-              </a>
+            {/* Desktop Navigation */}
+            <nav className="hidden items-center space-x-1 md:flex">
               <a
                 href={`/${locale}/#features`}
-                className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 {t('features')}
               </a>
               <a
                 href={`/${locale}/#how-it-works`}
-                className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 {t('howItWorks')}
               </a>
               <a
                 href={`/${locale}/#pricing`}
-                className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 {t('pricing')}
               </a>
               <a
                 href={`/${locale}/#faq`}
-                className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 {t('faq')}
               </a>
               <a
                 href={`/${locale}/#download`}
-                className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 {t('getStartedFree')}
               </a>
-              <div className="border-t border-slate-200 px-4 pt-3">
+              <div className="mx-2">
                 <LanguageSwitcher />
               </div>
-              <div className="px-4 pt-2">
-                <DownloadAppButton
-                  className="bg-primary-500 w-full rounded-full px-5 py-3 text-center text-sm font-semibold text-white"
+              <DownloadAppButton className="bg-primary-500 hover:bg-primary-600 shimmer-button press-effect hover:shadow-primary-500/25 ml-2 rounded-full px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg">
+                {t('getStartedFree')}
+              </DownloadAppButton>
+            </nav>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="focus-visible:ring-primary-500 rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:hidden"
+              onClick={toggleMobileMenu}
+              aria-label="Toggle menu"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-navigation"
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+
+          {/* Mobile Navigation */}
+          {isMobileMenuOpen && (
+            <div id="mobile-navigation" className="border-t border-slate-200 bg-white md:hidden">
+              <nav className="flex flex-col space-y-1 py-4">
+                <a
+                  href={`/${locale}`}
+                  className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {t('home')}
+                </a>
+                <a
+                  href={`/${locale}/#features`}
+                  className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {t('features')}
+                </a>
+                <a
+                  href={`/${locale}/#how-it-works`}
+                  className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {t('howItWorks')}
+                </a>
+                <a
+                  href={`/${locale}/#pricing`}
+                  className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {t('pricing')}
+                </a>
+                <a
+                  href={`/${locale}/#faq`}
+                  className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {t('faq')}
+                </a>
+                <a
+                  href={`/${locale}/#download`}
+                  className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {t('getStartedFree')}
-                </DownloadAppButton>
-              </div>
-            </nav>
-          </div>
-        )}
-      </div>
-    </header>
+                </a>
+                <div className="border-t border-slate-200 px-4 pt-3">
+                  <LanguageSwitcher />
+                </div>
+                <div className="px-4 pt-2">
+                  <DownloadAppButton
+                    className="bg-primary-500 w-full rounded-full px-5 py-3 text-center text-sm font-semibold text-white"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {t('getStartedFree')}
+                  </DownloadAppButton>
+                </div>
+              </nav>
+            </div>
+          )}
+        </div>
+      </header>
     </>
   )
 }

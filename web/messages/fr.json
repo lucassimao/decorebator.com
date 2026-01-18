@@ -331,11 +331,11 @@
       },
       "3": {
         "question": "Quels sont les plans d'abonnement et les tarifs ?",
-        "answer": "Decorebator propose un plan Gratuit (1 liste de mots, maximum 10 mots) et des plans Premium : $6.99/mois ou $69.90/an. Premium inclut des listes de mots et mots illimités, support hors ligne avec synchronisation transparente, historique complet d'analyses, fonctionnalité d'exportation et insights d'apprentissage avancés."
+        "answer": "Les forfaits Premium commencent à 6,99 $/mois ou 69,99 $/an (les prix varient selon la région et la plateforme)."
       },
       "4": {
         "question": "Puis-je utiliser Decorebator hors ligne ?",
-        "answer": "Oui ! Les utilisateurs premium peuvent télécharger leurs listes de mots et continuer à apprendre hors ligne avec une fonctionnalité complète. Vos progrès se synchronisent automatiquement lorsque vous vous reconnectez à internet, vous assurant de ne jamais manquer une session d'apprentissage."
+        "answer": "Oui ! Les utilisateurs premium peuvent télécharger leurs listes de mots et continuer à apprendre hors ligne avec une fonctionnalité complète."
       },
       "5": {
         "question": "Quelles langues sont supportées pour la génération de contenu par IA ?",
@@ -351,15 +351,19 @@
       },
       "8": {
         "question": "Comment fonctionne le système de signalement d'erreurs ?",
-        "answer": "Les utilisateurs peuvent signaler des problèmes avec le contenu généré par IA (définitions, images, audio) directement depuis l'app. Le système inclut une limitation de débit (Gratuit : 3 signalements/heure, 5/jour ; Premium : 10 signalements/heure, 30/jour) et une régénération automatique de contenu. Les mots signalés sont temporairement ignorés pendant les révisions jusqu'à ce que nouveau contenu soit généré."
+        "answer": "Les utilisateurs peuvent signaler des problèmes avec le contenu généré par IA (définitions, images, audio) directement depuis l'app. Le système inclut une limitation de débit (Gratuit : 3 signalements/heure, 5/jour ; Premium : 10 signalements/heure, 30/jour) et une régénération automatique de contenu. Les mots signalés sont temporairement ignorés pendant les révisions pendant que nous traitons le signalement."
       },
       "9": {
         "question": "Quelles plateformes et appareils sont supportés ?",
-        "answer": "Decorebator est disponible comme app mobile pour appareils iOS et Android, plus une application web complète avec support multilingue. Vos progrès se synchronisent sur tous les appareils avec gestion automatique de session."
+        "answer": "Decorebator est disponible comme apps mobiles pour appareils iOS et Android."
       },
       "10": {
         "question": "À quel point la génération de contenu par IA est-elle fiable ?",
         "answer": "Notre système de génération de contenu par IA inclut plusieurs mesures d'assurance qualité : logique de nouvelle tentative automatique, limitation de débit et distribution d'usage équitable pour assurer une création de contenu fiable. Le système de signalement d'erreurs permet aux utilisateurs de demander nouveau contenu si quelque chose ne répond pas à leurs besoins d'apprentissage."
+      },
+      "11": {
+        "question": "Qu'est-ce que le Voice Coach ?",
+        "answer": "Voice Coach vous permet de parler et de pratiquer différents usages d'un mot avec un agent IA, pour améliorer la prononciation et l'usage en contexte réel."
       }
     }
   },
@@ -623,30 +627,14 @@
         "minutes": "Minutes",
         "successRate": "Taux de Réussite",
         "words": "Mots",
-        "weekDays": [
-          "Lun",
-          "Mar",
-          "Mer",
-          "Jeu",
-          "Ven",
-          "Sam",
-          "Dim"
-        ],
+        "weekDays": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
         "quizTypes": [
           "Deviner le Sens",
           "Mot du Sens",
           "Association d'Image",
           "Compréhension Auditive"
         ],
-        "boxLabels": [
-          "Boîte 1",
-          "Boîte 2",
-          "Boîte 3",
-          "Boîte 4",
-          "Boîte 5",
-          "Boîte 6",
-          "Boîte 7"
-        ],
+        "boxLabels": ["Boîte 1", "Boîte 2", "Boîte 3", "Boîte 4", "Boîte 5", "Boîte 6", "Boîte 7"],
         "box1": "Boîte 1",
         "box2": "Boîte 2",
         "box3": "Boîte 3",
@@ -691,30 +679,14 @@
       "minutes": "Minutes",
       "successRate": "Taux de Réussite",
       "words": "Mots",
-      "weekDays": [
-        "Lun",
-        "Mar",
-        "Mer",
-        "Jeu",
-        "Ven",
-        "Sam",
-        "Dim"
-      ],
+      "weekDays": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
       "quizTypes": [
         "Deviner le Sens",
         "Mot du Sens",
         "Association d'Image",
         "Compréhension Auditive"
       ],
-      "boxLabels": [
-        "Boîte 1",
-        "Boîte 2",
-        "Boîte 3",
-        "Boîte 4",
-        "Boîte 5",
-        "Boîte 6",
-        "Boîte 7"
-      ],
+      "boxLabels": ["Boîte 1", "Boîte 2", "Boîte 3", "Boîte 4", "Boîte 5", "Boîte 6", "Boîte 7"],
       "box1": "Boîte 1",
       "box2": "Boîte 2",
       "box3": "Boîte 3",
