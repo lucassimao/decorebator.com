@@ -288,11 +288,11 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
       return;
     }
 
-    // if (!isPremium) {
-    //   setPremiumModalContext("chat");
-    //   setShowPremiumModal(true);
-    //   return;
-    // }
+    if (!isPremium) {
+      setPremiumModalContext("chat");
+      setShowPremiumModal(true);
+      return;
+    }
     router.push(
       `/word-selection?wordlistId=${item.id}&wordlistName=${encodeURIComponent(item.name)}`,
     );

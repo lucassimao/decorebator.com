@@ -19,6 +19,7 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Animated,
   Platform,
   ScrollView,
   StatusBar,
@@ -38,6 +39,7 @@ import type { WordWithDefinitions as ApiWordWithDefinitions } from "../api/wordl
 import ScreenHeader from "@/components/common/ScreenHeader";
 import { RealtimeChatTelemetryBuilder } from "@/utils/realtimeTelemetry";
 import { sendRealtimeChatTelemetry } from "@/api/telemetry";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function RealtimeChatScreen() {
   const { wordlistId, wordlistName, selectedWordIds } = useLocalSearchParams<{
@@ -49,6 +51,11 @@ export default function RealtimeChatScreen() {
   const { t } = useTranslation();
   const { theme, responsive } = useTheme();
   const styles = createStyles(theme, responsive);
+
+  // Animation refs
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const orbGlowAnim = useRef(new Animated.Value(0.3)).current;
 
   // State
   const [sessionData, setSessionData] = useState<ChatSessionData | null>(null);
@@ -68,10 +75,62 @@ export default function RealtimeChatScreen() {
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
   const transcriptRef = useRef<string>("");
   const transcriptScrollRef = useRef<ScrollView | null>(null);
-  // Track whether assistant audio finished; we now finalize on user's next speech start
   const audioFinishedRef = useRef<boolean>(false);
   const telemetryRef = useRef<RealtimeChatTelemetryBuilder | null>(null);
   const telemetrySentRef = useRef(false);
+
+  // Entrance animation
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
+
+  // Pulsing animation for the orb glow
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(orbGlowAnim, {
+          toValue: 0.6,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(orbGlowAnim, {
+          toValue: 0.3,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [orbGlowAnim]);
+
+  // Active speaking pulse
+  useEffect(() => {
+    if (isAssistantSpeaking || isSpeaking) {
+      const activePulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.05,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ]),
+      );
+      activePulse.start();
+      return () => activePulse.stop();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isAssistantSpeaking, isSpeaking, pulseAnim]);
 
   // Parse selected word IDs
   const selectedWordIdList = useMemo(() => {
@@ -134,7 +193,6 @@ export default function RealtimeChatScreen() {
     () => ({
       onSessionCreated: (event: any) => {
         console.log("Session created successfully");
-        // Clear any previous transcript when new session starts
         setTranscript("");
         setTranscriptHistory([]);
         telemetrySentRef.current = false;
@@ -144,10 +202,8 @@ export default function RealtimeChatScreen() {
       },
 
       onResponseCreated: (event: any) => {
-        console.log("🤖 AI response started");
-        // Assistant is about to speak; if transcript is hidden, show the wave
+        console.log("AI response started");
         setIsAssistantSpeaking(true);
-        // Keep current transcript until the user starts speaking
         telemetryRef.current?.recordResponseCreated(event?.response?.id);
         telemetryRef.current?.markConversationId(
           event?.response?.conversation_id,
@@ -157,7 +213,6 @@ export default function RealtimeChatScreen() {
       onInputAudioBufferSpeechStarted: (event: any) => {
         setIsSpeaking(true);
         telemetryRef.current?.recordUserSpeechStart();
-        // When user starts speaking, finalize the previous assistant utterance (if present)
         const finalText = (transcriptRef.current || "")
           .trim()
           .replace(/[\x00-\x1F\x7F-\x9F]/g, "");
@@ -169,9 +224,7 @@ export default function RealtimeChatScreen() {
           );
           setTranscript("");
         }
-        // Pause wave while the user is speaking
         setIsAssistantSpeaking(false);
-        // Reset flag for next turn
         audioFinishedRef.current = false;
       },
 
@@ -181,21 +234,15 @@ export default function RealtimeChatScreen() {
       },
 
       onResponseAudioTranscriptDelta: (event: any) => {
-        console.log(
-          "🔍 Transcript delta received:",
-          JSON.stringify(event.delta),
-        );
         if (event.delta && typeof event.delta === "string") {
           setTranscript((prev) => prev + event.delta);
         }
       },
 
-      // Audio chunks streaming from assistant
       onResponseAudioDelta: () => {
         setIsAssistantSpeaking(true);
       },
 
-      // Fallback if text output is enabled in the future
       onResponseTextDelta: (event: any) => {
         if (event?.delta && typeof event.delta === "string") {
           setTranscript((prev) => prev + event.delta);
@@ -203,30 +250,18 @@ export default function RealtimeChatScreen() {
       },
 
       onResponseAudioTranscriptDone: (event: any) => {
-        console.log("🔍 FULL EVENT:", JSON.stringify(event, null, 2));
-        console.log("🔍 Transcript type:", typeof event.transcript);
-        console.log("🔍 Transcript length:", event.transcript?.length);
-        console.log("🔍 Transcript raw:", event.transcript);
-        // console.log("🔍 Transcript char codes:", event.transcript ? Array.from(event.transcript).map(c => c.charCodeAt(0)).join(',') : 'null');
-
-        // Use the complete transcript from the done event
         if (event.transcript && typeof event.transcript === "string") {
-          // Filter out non-printable characters and normalize Unicode quotes
           const cleanTranscript = event.transcript
-            .replace(/[\x00-\x1F\x7F-\x9F]/g, "") // Remove control characters
-            .replace(/[\u2018\u2019]/g, "'") // Replace smart quotes with regular apostrophes
-            .replace(/[\u201C\u201D]/g, '"') // Replace smart quotes with regular quotes
+            .replace(/[\x00-\x1F\x7F-\x9F]/g, "")
+            .replace(/[\u2018\u2019]/g, "'")
+            .replace(/[\u201C\u201D]/g, '"')
             .trim();
-
-          console.log("🔍 Clean transcript:", cleanTranscript);
-          // Keep as the live transcript only; we'll move it when the user starts speaking
           setTranscript(cleanTranscript);
         }
       },
 
       onResponseDone: (event: any) => {
         console.log("Response completed:", event);
-        // Keep transcript visible until audio playback finishes
         telemetryRef.current?.recordResponseCompleted(
           event?.response?.id,
           event?.response?.usage,
@@ -236,16 +271,12 @@ export default function RealtimeChatScreen() {
         );
       },
 
-      // Audio finished (if event is emitted): now move live transcript into history and clear the live slot
       onResponseAudioDone: (event: any) => {
-        console.log("🎵 Audio playback finished");
-        // Mark that assistant finished speaking; we will finalize on the user's next speech start
+        console.log("Audio playback finished");
         audioFinishedRef.current = true;
-        // Stop the animation when audio playback is actually done
         setIsAssistantSpeaking(false);
       },
 
-      // Do not toggle speaking state on output item done to avoid early stop
       onResponseOutputItemDone: (_event: any) => {},
 
       onError: (event: any) => {
@@ -355,7 +386,6 @@ export default function RealtimeChatScreen() {
       setInitError(null);
       setConnectionState({ status: "disconnected" });
 
-      // Check if we have selected words
       if (selectedWordIdList.length === 0) {
         throw new Error("No words selected for chat practice");
       }
@@ -370,18 +400,13 @@ export default function RealtimeChatScreen() {
         );
       }
 
-      // Set timeout for session initialization (10 seconds)
       const timeoutId = setTimeout(() => {
         setHasTimeout(true);
       }, 10000);
 
-      // Get session token from backend (iOS will prompt for mic on getUserMedia)
       const response = await createChatSession(parseInt(wordlistId));
       clearTimeout(timeoutId);
       setSessionData(response);
-
-      // The WebRTC connection will be initialized by the hook
-      // when sessionData is set
     } catch (error: any) {
       console.error("Failed to initialize chat session:", error);
       setInitError(error);
@@ -426,12 +451,10 @@ export default function RealtimeChatScreen() {
       initializeSession();
     }
 
-    // Cleanup on unmount
     return () => {
       if (cleanupConnection) {
         cleanupConnection();
       }
-      // no timers to clear in current turn-taking strategy
     };
   }, [initializeSession, selectedWordIdList, wordsLoading, cleanupConnection]);
 
@@ -474,7 +497,6 @@ export default function RealtimeChatScreen() {
   // Auto-scroll transcript area to bottom when new content arrives
   useEffect(() => {
     if (showTranscript) {
-      // slight delay to ensure layout pass completes
       const id = setTimeout(() => {
         transcriptScrollRef.current?.scrollToEnd({ animated: true });
       }, 10);
@@ -482,50 +504,49 @@ export default function RealtimeChatScreen() {
     }
   }, [showTranscript, transcript, transcriptHistory]);
 
-  const getStatusText = () => {
-    switch (connectionState.status) {
-      case "connecting":
-        return t("realtimeChat.connecting", "Connecting...");
-      case "connected":
-        return t("realtimeChat.connected", "Connected - Start speaking!");
-      case "error":
-        return t("realtimeChat.connectionError", "Connection error");
-      default:
-        return t("realtimeChat.disconnected", "Disconnected");
-    }
-  };
-
-  // Uniform status color/background using theme tokens
-  const getStatusColors = () => {
+  const getStatusConfig = () => {
     switch (connectionState.status) {
       case "connected":
         return {
-          fg: theme.colors.success,
-          bg: theme.colors.state.correctBackground,
-          border: theme.colors.border.light,
-        } as const;
+          text: t("realtimeChat.connected", "Connected"),
+          color: theme.colors.success,
+          icon: "wifi" as const,
+        };
       case "connecting":
         return {
-          fg: theme.colors.semantic.info,
-          bg: theme.colors.state.infoBackground,
-          border: theme.colors.border.light,
-        } as const;
+          text: t("realtimeChat.connecting", "Connecting..."),
+          color: theme.colors.semantic.info,
+          icon: "sync" as const,
+        };
       case "error":
         return {
-          fg: theme.colors.error,
-          bg: theme.colors.state.incorrectBackground,
-          border: theme.colors.border.light,
-        } as const;
+          text: t("realtimeChat.connectionError", "Connection error"),
+          color: theme.colors.error,
+          icon: "error-outline" as const,
+        };
       default:
         return {
-          fg: theme.colors.text.secondary,
-          bg: theme.colors.background.elevated,
-          border: theme.colors.ui.divider,
-        } as const;
+          text: t("realtimeChat.disconnected", "Disconnected"),
+          color: theme.colors.text.secondary,
+          icon: "wifi-off" as const,
+        };
     }
   };
 
-  const headerTitle = `${t("realtimeChat.title")} • ${wordlistName}`;
+  // Glassmorphic wrapper component (semi-transparent background with blur effect simulation)
+  const GlassContainer: React.FC<{
+    children: React.ReactNode;
+    style?: any;
+    intensity?: number;
+  }> = ({ children, style }) => {
+    return (
+      <View style={[styles.glassBase, styles.glassEffect, style]}>
+        {children}
+      </View>
+    );
+  };
+
+  const headerTitle = wordlistName || t("realtimeChat.title");
 
   const isInitialLoading = loading || wordsLoading;
 
@@ -556,211 +577,309 @@ export default function RealtimeChatScreen() {
     );
   }
 
+  const statusConfig = getStatusConfig();
+
   return (
-    <SafeAreaView style={styles.container}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar
-        barStyle={theme.mode === "light" ? "dark-content" : "light-content"}
-      />
-      <ScreenHeader
-        title={headerTitle}
-        subtitle={t("realtimeChat.focusWords", { count: selectedWords.length })}
-        onBackPress={() => router.back()}
+    <View style={styles.container}>
+      {/* Background gradient */}
+      <LinearGradient
+        colors={
+          theme.mode === "light"
+            ? ["#FFF8F4", "#FDF6E3", "#FFE8DC"]
+            : [
+                theme.colors.background.default,
+                theme.colors.background.surface,
+                theme.colors.background.default,
+              ]
+        }
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       />
 
-      {/* Main Chat Area */}
-      <View style={styles.chatArea}>
-        {(() => {
-          const status = getStatusColors();
-          return (
+      <SafeAreaView style={styles.safeArea}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <StatusBar
+          barStyle={theme.mode === "light" ? "dark-content" : "light-content"}
+        />
+        <ScreenHeader
+          title={headerTitle}
+          subtitle={t("realtimeChat.focusWords", {
+            count: selectedWords.length,
+          })}
+          onBackPress={() => router.back()}
+        />
+
+        {/* Main Chat Area */}
+        <Animated.View style={[styles.chatArea, { opacity: fadeAnim }]}>
+          {/* Floating Status Pill */}
+          <GlassContainer style={styles.statusPill} intensity={70}>
             <View
               style={[
-                styles.statusIndicator,
+                styles.statusDot,
+                { backgroundColor: statusConfig.color },
+              ]}
+            />
+            <MaterialIcons
+              name={statusConfig.icon}
+              size={14}
+              color={statusConfig.color}
+            />
+            <Text style={[styles.statusText, { color: statusConfig.color }]}>
+              {statusConfig.text}
+            </Text>
+          </GlassContainer>
+
+          {/* Central Orb Container */}
+          <View style={styles.orbSection}>
+            {/* Outer glow ring */}
+            <Animated.View
+              style={[
+                styles.orbGlow,
                 {
-                  backgroundColor: status.bg,
-                  borderColor: status.border,
+                  opacity: orbGlowAnim,
+                  transform: [{ scale: pulseAnim }],
+                },
+              ]}
+            />
+
+            {/* Main Orb */}
+            <Animated.View
+              style={[
+                styles.orbContainer,
+                {
+                  transform: [{ scale: pulseAnim }],
                 },
               ]}
             >
-              <View
-                style={[styles.statusDot, { backgroundColor: status.fg }]}
-              />
-              <Text style={[styles.statusText, { color: status.fg }]}>
-                {getStatusText()}
-              </Text>
+              <LinearGradient
+                colors={
+                  realtimeChat.isConnected
+                    ? [theme.colors.primary, "#FF9966", "#FFB88C"]
+                    : [
+                        theme.colors.text.secondary,
+                        theme.colors.text.tertiary,
+                        theme.colors.text.secondary,
+                      ]
+                }
+                style={styles.orbGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                {/* Lottie Wave inside orb */}
+                {(isAssistantSpeaking || isSpeaking) && (
+                  <View style={styles.orbWaveContainer}>
+                    <LottieWave
+                      color="#FFFFFF"
+                      height={responsive.getValueForSize(80, 90, 100, 110)}
+                      speed={1.2}
+                      active={isAssistantSpeaking || isSpeaking}
+                    />
+                  </View>
+                )}
+
+                {/* Icon when not actively speaking */}
+                {!isAssistantSpeaking && !isSpeaking && (
+                  <MaterialIcons
+                    name={realtimeChat.isMuted ? "mic-off" : "mic"}
+                    size={responsive.getValueForSize(48, 56, 64, 72)}
+                    color="rgba(255, 255, 255, 0.9)"
+                  />
+                )}
+              </LinearGradient>
+            </Animated.View>
+
+            {/* Status Text Below Orb */}
+            <Text style={styles.mainStatusText}>
+              {isSpeaking
+                ? t("realtimeChat.listening", "Listening...")
+                : isAssistantSpeaking
+                  ? t("realtimeChat.aiSpeaking", "AI is speaking...")
+                  : realtimeChat.isConnected
+                    ? t("realtimeChat.speakNow", "Speak to practice")
+                    : t("realtimeChat.connecting", "Connecting...")}
+            </Text>
+
+            {/* Word chips */}
+            <View style={styles.wordChips}>
+              {selectedWords.slice(0, 3).map((word, idx) => (
+                <View key={`word-${idx}-${word.name}`} style={styles.wordChip}>
+                  <Text style={styles.wordChipText}>{word.name}</Text>
+                </View>
+              ))}
+              {selectedWords.length > 3 && (
+                <View style={[styles.wordChip, styles.wordChipMore]}>
+                  <Text style={styles.wordChipText}>
+                    +{selectedWords.length - 3}
+                  </Text>
+                </View>
+              )}
             </View>
-          );
-        })()}
+          </View>
 
-        <View style={styles.conversationIndicator}>
-          <MaterialIcons
-            name="mic"
-            size={responsive.getValueForSize(48, 52, 56, 60)}
-            color={
-              realtimeChat.isConnected && !realtimeChat.isMuted
-                ? theme.colors.success
-                : theme.colors.text.secondary
-            }
-          />
-          <Text style={styles.conversationText}>
-            {isSpeaking
-              ? t("realtimeChat.listening")
-              : realtimeChat.isConnected
-                ? t("realtimeChat.speakNow")
-                : t("realtimeChat.connecting")}
-          </Text>
-          <Text style={styles.wordsCountText}>
-            {selectedWords.length > 0
-              ? t("realtimeChat.focusWords", {
-                  count: selectedWords.length,
-                })
-              : t("realtimeChat.wordsAvailable", {
-                  count: 0,
-                })}
-          </Text>
-
-          {/* Transcript & History (toggleable, scrollable) */}
-          {showTranscript && (
-            <View style={styles.transcriptPanel}>
+          {/* Collapsible Transcript Panel */}
+          {showTranscript && (transcript || transcriptHistory.length > 0) && (
+            <GlassContainer style={styles.transcriptPanel} intensity={50}>
               <ScrollView
                 ref={transcriptScrollRef}
                 style={styles.transcriptScroll}
                 contentContainerStyle={styles.transcriptScrollContent}
                 keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
               >
                 {/* Previous responses (oldest first) */}
                 {transcriptHistory.length > 0 && (
                   <View style={styles.transcriptHistoryContainer}>
-                    <Text style={styles.transcriptHistoryLabel}>
-                      {t("realtimeChat.previousResponses")}
-                    </Text>
                     {transcriptHistory
-                      .slice() // clone
-                      .reverse() // show oldest → newest
+                      .slice()
+                      .reverse()
                       .map((item, idx) => (
-                        <Text
-                          key={`hist-${idx}`}
-                          style={styles.transcriptHistoryItem}
-                        >
-                          {item}
-                        </Text>
+                        <View key={`hist-${idx}`} style={styles.historyBubble}>
+                          <Text style={styles.transcriptHistoryItem}>
+                            {item}
+                          </Text>
+                        </View>
                       ))}
                   </View>
                 )}
 
                 {/* Live transcript at the bottom */}
                 {!!transcript && (
-                  <View style={styles.transcriptContainer}>
-                    <Text style={styles.transcriptLabel}>
-                      {t("realtimeChat.transcript")}
-                    </Text>
+                  <View style={styles.liveBubble}>
+                    <View style={styles.liveIndicator}>
+                      <View style={styles.liveDot} />
+                      <Text style={styles.liveLabel}>
+                        {t("realtimeChat.live", "Live")}
+                      </Text>
+                    </View>
                     <Text style={styles.transcriptText}>{transcript}</Text>
                   </View>
                 )}
               </ScrollView>
-            </View>
+            </GlassContainer>
           )}
 
-          {/* Audio wave when transcript is hidden and assistant is speaking */}
-          {!showTranscript && isAssistantSpeaking && (
-            <View style={styles.lottieContainer}>
-              <LottieWave
-                color={theme.colors.primary}
-                height={responsive.getValueForSize(60, 70, 80, 90)}
-                speed={1}
-                active={isAssistantSpeaking}
+          {/* Error State */}
+          {connectionState.status === "error" && (
+            <GlassContainer style={styles.errorContainer} intensity={70}>
+              <MaterialIcons
+                name="error-outline"
+                size={responsive.getValueForSize(32, 36, 40, 44)}
+                color={theme.colors.error}
               />
-            </View>
+              <Text style={styles.errorText}>
+                {t("realtimeChat.genericError", "Something went wrong")}
+              </Text>
+              {!!connectionState.error && (
+                <Text style={styles.errorSubtext}>{connectionState.error}</Text>
+              )}
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={handleRetry}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={[theme.colors.primary, "#FF9966"]}
+                  style={styles.retryButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <MaterialIcons
+                    name="refresh"
+                    size={18}
+                    color={theme.colors.text.inverse}
+                  />
+                  <Text style={styles.retryButtonText}>
+                    {t("common.retry", "Retry")}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </GlassContainer>
           )}
-        </View>
+        </Animated.View>
 
-        {connectionState.status === "error" && (
-          <View style={styles.errorContainer}>
-            <MaterialIcons
-              name="error-outline"
-              size={responsive.getValueForSize(24, 26, 28, 30)}
-              color={theme.colors.error}
-            />
-            <Text style={styles.errorText}>
-              {t("realtimeChat.genericError")}
-            </Text>
-            {!!connectionState.error && (
-              <Text style={styles.errorSubtext}>{connectionState.error}</Text>
-            )}
-            <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-              <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-
-      {/* Controls */}
-      <View style={styles.controls}>
-        <TouchableOpacity
-          style={[
-            styles.controlButton,
-            showTranscript && styles.controlButtonSelected,
-          ]}
-          onPress={handleToggleTranscript}
-          accessibilityRole="button"
-          accessibilityLabel={
-            showTranscript
-              ? t("realtimeChat.hideTranscript")
-              : t("realtimeChat.showTranscript")
-          }
-        >
-          <MaterialIcons
-            name={showTranscript ? "subtitles" : "subtitles-off"}
-            size={responsive.getValueForSize(24, 26, 28, 30)}
-            color={
+        {/* Bottom Controls - Glassmorphic */}
+        <GlassContainer style={styles.controls} intensity={80}>
+          {/* Transcript Toggle */}
+          <TouchableOpacity
+            style={[
+              styles.controlButton,
+              showTranscript && styles.controlButtonActive,
+            ]}
+            onPress={handleToggleTranscript}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={
               showTranscript
-                ? theme.colors.primary
-                : theme.colors.text.secondary
+                ? t("realtimeChat.hideTranscript", "Hide transcript")
+                : t("realtimeChat.showTranscript", "Show transcript")
             }
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.controlButton,
-            realtimeChat.isMuted && styles.controlButtonActive,
-          ]}
-          onPress={handleToggleMute}
-          disabled={!realtimeChat.isConnected}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !realtimeChat.isConnected }}
-          accessibilityLabel={
-            realtimeChat.isMuted
-              ? t("realtimeChat.unmute")
-              : t("realtimeChat.mute")
-          }
-        >
-          <MaterialIcons
-            name={realtimeChat.isMuted ? "mic-off" : "mic"}
-            size={responsive.getValueForSize(24, 26, 28, 30)}
-            color={
-              realtimeChat.isMuted
-                ? theme.colors.text.inverse
-                : realtimeChat.isConnected
-                  ? theme.colors.success
+          >
+            <MaterialIcons
+              name={showTranscript ? "subtitles" : "subtitles-off"}
+              size={responsive.getValueForSize(22, 24, 26, 28)}
+              color={
+                showTranscript
+                  ? theme.colors.primary
                   : theme.colors.text.secondary
-            }
-          />
-        </TouchableOpacity>
+              }
+            />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.endCallButton]}
-          onPress={handleEndCall}
-          accessibilityRole="button"
-          accessibilityLabel={t("realtimeChat.endCall")}
-        >
-          <MaterialIcons
-            name="call-end"
-            size={responsive.getValueForSize(28, 30, 32, 34)}
-            color={theme.colors.text.inverse}
-          />
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+          {/* Mute Toggle */}
+          <TouchableOpacity
+            style={[
+              styles.controlButton,
+              realtimeChat.isMuted && styles.controlButtonMuted,
+            ]}
+            onPress={handleToggleMute}
+            disabled={!realtimeChat.isConnected}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !realtimeChat.isConnected }}
+            accessibilityLabel={
+              realtimeChat.isMuted
+                ? t("realtimeChat.unmute", "Unmute")
+                : t("realtimeChat.mute", "Mute")
+            }
+          >
+            <MaterialIcons
+              name={realtimeChat.isMuted ? "mic-off" : "mic"}
+              size={responsive.getValueForSize(22, 24, 26, 28)}
+              color={
+                realtimeChat.isMuted
+                  ? theme.colors.text.inverse
+                  : realtimeChat.isConnected
+                    ? theme.colors.success
+                    : theme.colors.text.disabled
+              }
+            />
+          </TouchableOpacity>
+
+          {/* End Call */}
+          <TouchableOpacity
+            style={styles.endCallButton}
+            onPress={handleEndCall}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={t("realtimeChat.endCall", "End call")}
+          >
+            <LinearGradient
+              colors={[theme.colors.error, "#FF6B6B"]}
+              style={styles.endCallGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <MaterialIcons
+                name="call-end"
+                size={responsive.getValueForSize(26, 28, 30, 32)}
+                color={theme.colors.text.inverse}
+              />
+            </LinearGradient>
+          </TouchableOpacity>
+        </GlassContainer>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -768,7 +887,6 @@ const createStyles = (
   theme: ReturnType<typeof useTheme>["theme"],
   responsive: ReturnType<typeof useTheme>["responsive"],
 ) => {
-  // Derive a comfortable line height for multi-line captions
   const bodyFontSize = responsive.getScaledFont("body");
   const lineHeightBody = Math.round(bodyFontSize * 1.4);
 
@@ -777,139 +895,157 @@ const createStyles = (
       flex: 1,
       backgroundColor: theme.colors.background.default,
     },
-    // header removed in favor of ScreenHeader
-    loadingContainer: {
+    safeArea: {
       flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      gap: responsive.spacing.elementSpacing,
     },
-    loadingText: {
-      fontSize: responsive.getScaledFont("body"),
-      color: theme.colors.text.secondary,
-      textAlign: "center",
+    glassBase: {
+      overflow: "hidden",
+    },
+    glassEffect: {
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(255, 255, 255, 0.85)"
+          : "rgba(30, 30, 30, 0.85)",
     },
     chatArea: {
       flex: 1,
-      justifyContent: "center",
+      justifyContent: "flex-start",
       alignItems: "center",
       paddingHorizontal: responsive.spacing.horizontal,
+      paddingTop: responsive.spacing.vertical,
     },
-    statusIndicator: {
+    statusPill: {
       flexDirection: "row",
       alignItems: "center",
-      gap: responsive.spacing.elementSpacing / 2,
-      marginBottom: responsive.spacing.vertical,
-      paddingHorizontal: responsive.getValueForSize(10, 12, 14, 16),
-      paddingVertical: responsive.getValueForSize(6, 8, 8, 10),
+      gap: 6,
+      paddingHorizontal: responsive.getValueForSize(14, 16, 18, 20),
+      paddingVertical: responsive.getValueForSize(8, 10, 10, 12),
       borderRadius: theme.borderRadius.full,
       borderWidth: 1,
-      alignSelf: "center",
+      borderColor:
+        theme.mode === "light"
+          ? "rgba(255, 255, 255, 0.6)"
+          : "rgba(255, 255, 255, 0.1)",
+      marginBottom: responsive.spacing.vertical,
     },
     statusDot: {
-      width: responsive.getValueForSize(8, 10, 12, 14),
-      height: responsive.getValueForSize(8, 10, 12, 14),
-      borderRadius: responsive.getValueForSize(4, 5, 6, 7),
+      width: 8,
+      height: 8,
+      borderRadius: 4,
     },
     statusText: {
       fontSize: responsive.getScaledFont("label"),
       fontWeight: "600",
     },
-    conversationIndicator: {
+    orbSection: {
       alignItems: "center",
-      gap: responsive.spacing.elementSpacing,
-      alignSelf: "stretch",
-      width: "100%",
+      marginVertical: responsive.getValueForSize(20, 28, 36, 44),
     },
-    conversationText: {
+    orbGlow: {
+      position: "absolute",
+      width: responsive.getValueForSize(200, 240, 280, 320),
+      height: responsive.getValueForSize(200, 240, 280, 320),
+      borderRadius: responsive.getValueForSize(100, 120, 140, 160),
+      backgroundColor: theme.colors.primary,
+    },
+    orbContainer: {
+      width: responsive.getValueForSize(160, 190, 220, 250),
+      height: responsive.getValueForSize(160, 190, 220, 250),
+      borderRadius: responsive.getValueForSize(80, 95, 110, 125),
+      overflow: "hidden",
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.4,
+      shadowRadius: 24,
+      elevation: 16,
+    },
+    orbGradient: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    orbWaveContainer: {
+      width: "100%",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    mainStatusText: {
+      marginTop: responsive.getValueForSize(20, 24, 28, 32),
       fontSize: responsive.getScaledFont("headline"),
       fontWeight: "600",
       color: theme.colors.text.primary,
       textAlign: "center",
     },
-    wordsCountText: {
-      fontSize: responsive.getScaledFont("body"),
-      color: theme.colors.text.secondary,
-      textAlign: "center",
-    },
-    transcriptContainer: {
-      marginTop: responsive.spacing.elementSpacing,
+    wordChips: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      gap: 8,
+      marginTop: responsive.getValueForSize(12, 16, 20, 24),
       paddingHorizontal: responsive.spacing.horizontal,
-      paddingVertical: responsive.spacing.elementSpacing,
-      backgroundColor: theme.colors.background.elevated,
-      borderRadius: theme.borderRadius.md,
-      alignSelf: "stretch",
-      // Ensure text can wrap within the container on all platforms
-      flexDirection: "column",
-      alignItems: "flex-start",
-      minWidth: 0,
+    },
+    wordChip: {
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(255, 123, 84, 0.12)"
+          : "rgba(255, 123, 84, 0.2)",
+      paddingHorizontal: responsive.getValueForSize(12, 14, 16, 18),
+      paddingVertical: responsive.getValueForSize(6, 8, 8, 10),
+      borderRadius: theme.borderRadius.full,
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light"
+          ? "rgba(255, 123, 84, 0.2)"
+          : "rgba(255, 123, 84, 0.3)",
+    },
+    wordChipMore: {
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(0, 0, 0, 0.06)"
+          : "rgba(255, 255, 255, 0.1)",
+      borderColor:
+        theme.mode === "light"
+          ? "rgba(0, 0, 0, 0.08)"
+          : "rgba(255, 255, 255, 0.15)",
+    },
+    wordChipText: {
+      fontSize: responsive.getScaledFont("label"),
+      fontWeight: "600",
+      color: theme.colors.primary,
     },
     transcriptPanel: {
-      marginTop: responsive.spacing.vertical,
       width: "100%",
-      maxHeight: responsive.getValueForSize(220, 280, 340, 400),
-      alignSelf: "stretch",
-      minWidth: 0,
+      maxHeight: responsive.getValueForSize(180, 220, 260, 300),
+      borderRadius: responsive.getValueForSize(16, 18, 20, 22),
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light"
+          ? "rgba(255, 255, 255, 0.6)"
+          : "rgba(255, 255, 255, 0.1)",
+      marginTop: responsive.spacing.vertical,
     },
     transcriptScroll: {
-      width: "100%",
-      borderRadius: theme.borderRadius.md,
-      backgroundColor: theme.colors.background.surface,
-      overflow: "hidden",
-      minWidth: 0,
+      flex: 1,
     },
     transcriptScrollContent: {
-      paddingHorizontal: responsive.spacing.horizontal,
-      paddingVertical: responsive.spacing.elementSpacing,
-      flexGrow: 1,
-      alignItems: "stretch",
-      minWidth: 0,
-    },
-    transcriptLabel: {
-      fontSize: responsive.getScaledFont("label"),
-      color: theme.colors.text.secondary,
-      fontWeight: "600",
-      marginBottom: responsive.spacing.elementSpacing / 2,
-    },
-    transcriptText: {
-      fontSize: bodyFontSize,
-      color: theme.colors.text.primary,
-      lineHeight: lineHeightBody,
-      // Use normal style for readability
-      fontStyle: "normal",
-      textAlign: "left",
-      width: "100%",
-      flexShrink: 1,
-      flexWrap: "wrap",
-      minWidth: 0,
-      ...(Platform.OS === "web"
-        ? ({
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            overflowWrap: "anywhere",
-          } as any)
-        : {}),
+      padding: responsive.getValueForSize(12, 14, 16, 18),
+      gap: responsive.getValueForSize(8, 10, 12, 14),
     },
     transcriptHistoryContainer: {
-      marginTop: responsive.spacing.elementSpacing,
-      gap: responsive.spacing.elementSpacing / 2,
-      alignSelf: "stretch",
+      gap: responsive.getValueForSize(8, 10, 12, 14),
     },
-    transcriptHistoryLabel: {
-      fontSize: responsive.getScaledFont("label"),
-      color: theme.colors.text.secondary,
-      fontWeight: "600",
-      marginBottom: responsive.spacing.elementSpacing / 4,
+    historyBubble: {
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(0, 0, 0, 0.04)"
+          : "rgba(255, 255, 255, 0.06)",
+      borderRadius: responsive.getValueForSize(12, 14, 16, 18),
+      padding: responsive.getValueForSize(10, 12, 14, 16),
     },
     transcriptHistoryItem: {
       fontSize: bodyFontSize,
       color: theme.colors.text.secondary,
       lineHeight: lineHeightBody,
-      textAlign: "left",
-      width: "100%",
-      flexShrink: 1,
-      flexWrap: "wrap",
-      minWidth: 0,
       ...(Platform.OS === "web"
         ? ({
             whiteSpace: "pre-wrap",
@@ -918,79 +1054,152 @@ const createStyles = (
           } as any)
         : {}),
     },
-    lottieContainer: {
-      marginTop: responsive.spacing.vertical,
-      alignItems: "stretch",
-      justifyContent: "center",
-      alignSelf: "stretch",
-      width: "100%",
+    liveBubble: {
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(255, 123, 84, 0.08)"
+          : "rgba(255, 123, 84, 0.12)",
+      borderRadius: responsive.getValueForSize(12, 14, 16, 18),
+      padding: responsive.getValueForSize(10, 12, 14, 16),
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light"
+          ? "rgba(255, 123, 84, 0.15)"
+          : "rgba(255, 123, 84, 0.2)",
+    },
+    liveIndicator: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginBottom: 6,
+    },
+    liveDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: theme.colors.primary,
+    },
+    liveLabel: {
+      fontSize: responsive.getScaledFont("micro"),
+      fontWeight: "700",
+      color: theme.colors.primary,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    transcriptText: {
+      fontSize: bodyFontSize,
+      color: theme.colors.text.primary,
+      lineHeight: lineHeightBody,
+      ...(Platform.OS === "web"
+        ? ({
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
+          } as any)
+        : {}),
     },
     errorContainer: {
       alignItems: "center",
       gap: responsive.spacing.elementSpacing,
-      paddingHorizontal: responsive.spacing.horizontal,
+      padding: responsive.spacing.formPadding,
       marginTop: responsive.spacing.vertical,
+      borderRadius: responsive.getValueForSize(16, 18, 20, 22),
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light"
+          ? "rgba(255, 255, 255, 0.6)"
+          : "rgba(255, 255, 255, 0.1)",
     },
     errorText: {
-      fontSize: responsive.getScaledFont("body"),
+      fontSize: responsive.getScaledFont("headline"),
+      fontWeight: "600",
       color: theme.colors.error,
       textAlign: "center",
     },
     errorSubtext: {
-      fontSize: responsive.getScaledFont("micro"),
+      fontSize: responsive.getScaledFont("body"),
       color: theme.colors.text.secondary,
       textAlign: "center",
     },
     retryButton: {
-      backgroundColor: theme.colors.primary,
-      paddingHorizontal: responsive.spacing.horizontal,
-      paddingVertical: responsive.spacing.elementSpacing,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.borderRadius.full,
+      overflow: "hidden",
+      marginTop: responsive.spacing.elementSpacing / 2,
+    },
+    retryButtonGradient: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingHorizontal: responsive.getValueForSize(20, 24, 28, 32),
+      paddingVertical: responsive.getValueForSize(12, 14, 14, 16),
     },
     retryButtonText: {
       fontSize: responsive.getScaledFont("body"),
-      fontWeight: "600",
+      fontWeight: "700",
       color: theme.colors.text.inverse,
     },
     controls: {
       flexDirection: "row",
-      justifyContent: "space-around",
-      alignItems: "center",
-      paddingHorizontal: responsive.spacing.horizontal,
-      paddingVertical: responsive.spacing.vertical,
-      backgroundColor: theme.colors.background.surface,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.ui.divider,
-    },
-    controlButton: {
-      width: responsive.getValueForSize(56, 60, 64, 68),
-      height: responsive.getValueForSize(56, 60, 64, 68),
-      borderRadius: responsive.getValueForSize(28, 30, 32, 34),
-      backgroundColor: theme.colors.background.elevated,
       justifyContent: "center",
       alignItems: "center",
-      ...theme.shadows.sm,
+      gap: responsive.getValueForSize(16, 20, 24, 28),
+      paddingHorizontal: responsive.spacing.horizontal,
+      paddingVertical: responsive.getValueForSize(16, 20, 24, 28),
+      borderTopWidth: 1,
+      borderTopColor:
+        theme.mode === "light"
+          ? "rgba(0, 0, 0, 0.06)"
+          : "rgba(255, 255, 255, 0.1)",
+      borderTopLeftRadius: responsive.getValueForSize(24, 28, 32, 36),
+      borderTopRightRadius: responsive.getValueForSize(24, 28, 32, 36),
     },
-    controlButtonSelected: {
-      borderWidth: 2,
-      borderColor: theme.colors.primary,
+    controlButton: {
+      width: responsive.getValueForSize(52, 56, 60, 64),
+      height: responsive.getValueForSize(52, 56, 60, 64),
+      borderRadius: responsive.getValueForSize(26, 28, 30, 32),
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(0, 0, 0, 0.06)"
+          : "rgba(255, 255, 255, 0.1)",
+      justifyContent: "center",
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor:
+        theme.mode === "light"
+          ? "rgba(0, 0, 0, 0.08)"
+          : "rgba(255, 255, 255, 0.15)",
     },
     controlButtonActive: {
+      backgroundColor:
+        theme.mode === "light"
+          ? "rgba(255, 123, 84, 0.15)"
+          : "rgba(255, 123, 84, 0.2)",
+      borderColor: theme.colors.primary,
+    },
+    controlButtonMuted: {
       backgroundColor: theme.colors.error,
+      borderColor: theme.colors.error,
     },
     endCallButton: {
       width: responsive.getValueForSize(64, 68, 72, 76),
       height: responsive.getValueForSize(64, 68, 72, 76),
       borderRadius: responsive.getValueForSize(32, 34, 36, 38),
-      backgroundColor: theme.colors.error,
+      overflow: "hidden",
+      shadowColor: theme.colors.error,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35,
+      shadowRadius: 12,
+      elevation: 10,
+    },
+    endCallGradient: {
+      flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      ...theme.shadows.md,
     },
   });
 };
 
-// Cross-platform wave using Lottie on native and ActivityIndicator on web
+// Cross-platform wave using Lottie on native
 type LottieWaveProps = {
   color: string;
   height: number;
@@ -1008,7 +1217,6 @@ const LottieWave: React.FC<LottieWaveProps> = ({
 
   useEffect(() => {
     if (!ref.current) return;
-    // play or pause based on active flag
     if (active) (ref.current as any).play?.();
     else (ref.current as any).pause?.();
   }, [active]);
