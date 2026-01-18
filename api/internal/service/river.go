@@ -61,6 +61,8 @@ func NewWorkerRiverClient(
 		mailService: mailService,
 	})
 	pushService := NewPushNotificationService(&repository.PushTokenRepository{Db: db}, &repository.PushReceiptRepository{Db: db})
+	// Register worker handlers; periodic jobs enqueue args separately.
+	river.AddWorker(riverWorkers, NewDueItemsReminderWorker(pushService))
 	river.AddWorker(riverWorkers, NewDailyPracticeReminderWorker(pushService))
 	river.AddWorker(riverWorkers, NewPushReceiptWorker(pushService))
 	river.AddWorker(riverWorkers, &NoOpWorker{})
@@ -84,6 +86,15 @@ func NewWorkerRiverClient(
 			},
 			&river.PeriodicJobOpts{
 				RunOnStart: true, // Run immediately on startup
+			},
+		),
+		river.NewPeriodicJob(
+			river.PeriodicInterval(15*time.Minute),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return DueItemsReminderArgs{}, &river.InsertOpts{Queue: PushNotificationQueue}
+			},
+			&river.PeriodicJobOpts{
+				RunOnStart: true,
 			},
 		),
 		river.NewPeriodicJob(

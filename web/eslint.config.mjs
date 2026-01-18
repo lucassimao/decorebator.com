@@ -1,5 +1,13 @@
-import next from 'eslint-config-next'
+import coreWebVitals from 'eslint-config-next/core-web-vitals'
+import nextTypescript from 'eslint-config-next/typescript'
+import prettier from 'eslint-config-prettier'
 
-const eslintConfig = [...next]
+const eslintConfig = [
+  ...coreWebVitals,
+  ...nextTypescript,
+  {
+    rules: prettier.rules,
+  },
+]
 
 export default eslintConfig
