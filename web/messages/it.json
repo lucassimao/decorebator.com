@@ -60,7 +60,7 @@
     "getStartedFree": "Scarica l'App"
   },
   "hero": {
-    "title": "Padroneggia le lingue con Decorebator",
+    "title": "Impara qualsiasi lingua con <highlight>flashcard potenziate dall’IA</highlight>",
     "rotatingWords": {
       "aiIntelligence": "Intelligenza Artificiale",
       "spacedRepetition": "Ripetizione Distanziata",
@@ -68,16 +68,45 @@
       "smartQuizzes": "Quiz Intelligenti"
     },
     "tagline": "Apprendimento con IA • 7 Lingue • Multi-piattaforma",
-    "imageAlt": "Demo dell'App Decorebator che mostra funzionalità di apprendimento interattivo, modalità quiz e monitoraggio dei progressi",
+    "imageAlt": "Interfaccia dell’app Decorebator",
     "videoTitle": "Demo Decorebator - Apprendimento del Vocabolario con IA",
     "socialProof": "+ studenti attivi",
-    "subtitle": "Trasforma il tuo apprendimento del vocabolario con contenuti generati dall'IA, ripetizione distanziata scientificamente provata e 8 modalità quiz coinvolgenti. Unisciti a studenti di tutto il mondo che padroneggiano efficacemente nuove lingue.",
+    "subtitle": "Impara il vocabolario <strong>3 volte più velocemente</strong> con ripetizione dilazionata, contenuti generati dall’IA e 8 modalità di quiz coinvolgenti. <accent>Niente memorizzazione, solo risultati.</accent>",
     "startLearningFree": "Inizia a imparare gratis",
     "watchDemo": "Guarda la demo",
     "stats": {
       "rating": "4,9/5",
       "activeLearnersCount": "10.000+ studenti attivi",
       "languagesCount": "7 lingue native IA"
+    },
+    "trustBadge": "Scelto da {count} studenti di lingue",
+    "trust": {
+      "freePlan": "Piano gratuito disponibile",
+      "noCard": "Nessuna carta di credito richiesta"
+    },
+    "rating": {
+      "reviews": "({count} recensioni)",
+      "aria": "Valutato {rating} su 5"
+    },
+    "video": {
+      "aria": "Video demo dell’app"
+    },
+    "cards": {
+      "analytics": {
+        "badge": "Funzione Premium",
+        "title": "Monitora i tuoi progressi",
+        "description": "Le analisi avanzate mostrano il tuo livello di padronanza, la velocità di apprendimento e i tassi di ritenzione.",
+        "languages": {
+          "french": "Francese",
+          "spanish": "Spagnolo",
+          "japanese": "Giapponese"
+        }
+      },
+      "ai": {
+        "badge": "Con IA",
+        "title": "Contenuti generati automaticamente",
+        "description": "Definizioni, immagini, audio ed esempi creati istantaneamente per ogni parola."
+      }
     }
   },
   "features": {
@@ -170,66 +199,116 @@
       "role": "Insegnante di lingue",
       "text": "Le 8 diverse modalità quiz rendono l'apprendimento coinvolgente ed efficace. Lo raccomando anche ai miei studenti!",
       "rating": 5
+    },
+    "testimonial1": {
+      "text": "Decorebator ha trasformato il mio modo di imparare lo spagnolo. Le immagini generate dall’IA mi aiutano a ricordare le parole molto più velocemente delle flashcard tradizionali.",
+      "author": "Sarah Johnson",
+      "role": "Sta imparando lo spagnolo"
+    },
+    "testimonial2": {
+      "text": "Il sistema di ripetizione dilazionata è brillante. Ho imparato più kanji in 3 mesi che in un anno con altre app.",
+      "author": "Marc Dubois",
+      "role": "Sta imparando il giapponese"
+    },
+    "testimonial3": {
+      "text": "Come professionista impegnata, la modalità offline è una svolta. Posso esercitarmi durante il tragitto senza preoccuparmi della connessione.",
+      "author": "Elena Rossi",
+      "role": "Sta imparando il tedesco"
     }
   },
   "pricing": {
-    "title": "Scegli il piano perfetto per te",
-    "subtitle": "Inizia gratis e fai l'upgrade quando sei pronto",
-    "free": {
-      "title": "Gratuito",
-      "price": "$0",
-      "period": "/mese",
-      "description": "Perfetto per iniziare con l'apprendimento del vocabolario",
-      "features": [
-        "1 lista di parole",
-        "Fino a 10 parole",
-        "Modalità quiz di base",
-        "Analisi limitate"
-      ],
-      "cta": "Inizia gratis",
-      "popular": false
+    "title": "Inizia gratis. <highlight>Passa a Premium quando vuoi.</highlight>",
+    "subtitle": "Scegli il piano giusto per te. Nessun contratto, annulla quando vuoi.",
+    "allPlansInclude": "✨ Tutti i Piani Includono",
+    "features": {
+      "aiContent": "Contenuti IA",
+      "spacedRepetition": "Ripetizione Spaziata",
+      "mobileAccess": "Accesso App Mobile",
+      "securePrivate": "Sicuro e Privato"
     },
-    "monthly": {
-      "title": "Premium Mensile",
-      "price": "$6.99",
-      "period": "/mese",
-      "description": "Per studenti seri",
-      "features": [
-        "Liste di parole illimitate",
-        "Parole illimitate",
-        "Tutte le 8 modalità quiz",
-        "Contenuti generati dall'IA",
-        "Apprendimento offline",
-        "Analisi dettagliate",
-        "Supporto prioritario",
-        "Nessuna pubblicità"
-      ],
-      "cta": "Inizia mensile",
-      "popular": true
+    "footer": "Nessun contratto • Cancella in qualsiasi momento • Pagamento sicuro tramite Stripe",
+    "plans": {
+      "free": {
+        "name": "Gratis",
+        "title": "Piano Gratuito",
+        "price": "$0",
+        "period": "/per sempre",
+        "description": "Perfetto per iniziare",
+        "features": [
+          "1 lista di parole",
+          "Fino a 10 parole",
+          "Modalità quiz di base",
+          "Analisi limitate",
+          "Contenuti generati dall’IA"
+        ],
+        "cta": "Inizia gratis"
+      },
+      "monthly": {
+        "name": "Premium Mensile",
+        "title": "Premium Mensile",
+        "price": "$6.99",
+        "period": "/mese",
+        "description": "Accesso completo con flessibilità mensile",
+        "badge": "PIÙ POPOLARE",
+        "features": [
+          "Liste di Parole Illimitate",
+          "Parole Illimitate",
+          "Tutte le 8 Modalità Quiz",
+          "Analisi Avanzate",
+          "Supporto Offline"
+        ],
+        "cta": "Inizia Mensile"
+      },
+      "annual": {
+        "name": "Premium Annuale",
+        "title": "Premium Annuale",
+        "price": "$69.90",
+        "period": "/anno",
+        "description": "Miglior valore per studenti impegnati",
+        "savings": "Risparmia $13.98 all'anno",
+        "features": [
+          "Tutto del Mensile",
+          "Risparmia $13.98 all'anno",
+          "Accesso Anticipato alle Funzioni"
+        ],
+        "cta": "Inizia Annuale"
+      },
+      "premium": {
+        "name": "Premium",
+        "description": "Accesso completo con flessibilità {cycle}",
+        "monthlyLabel": "/mese",
+        "annualNote": "Fatturato annualmente a ${price}",
+        "cta": "Ottieni Premium",
+        "features": {
+          "unlimitedWordlists": "Liste e parole illimitate",
+          "allQuizModes": "Tutte le 8 modalità di quiz",
+          "advancedAnalytics": "Analisi avanzate",
+          "offlineSupport": "Supporto offline",
+          "realTimeSpeaking": "Pratica di conversazione in tempo reale",
+          "publicQuizSharing": "Condivisione di quiz pubblici",
+          "errorReporting": "Segnalazione errori (10/ora, 30/giorno)",
+          "prioritySupport": "Supporto prioritario"
+        }
+      }
     },
-    "yearly": {
-      "title": "Premium Annuale",
-      "price": "$69.90",
-      "period": "/anno",
-      "originalPrice": "$83.88",
-      "savings": "Risparmia $13.98",
-      "description": "Miglior valore",
-      "features": [
-        "Liste di parole illimitate",
-        "Parole illimitate",
-        "Tutte le 8 modalità quiz",
-        "Contenuti generati dall'IA",
-        "Apprendimento offline",
-        "Analisi dettagliate",
-        "Supporto prioritario",
-        "Nessuna pubblicità"
-      ],
-      "cta": "Inizia annuale",
-      "popular": false
+    "billing": {
+      "monthly": "Mensile",
+      "annual": "Annuale",
+      "save": "Risparmia {savings}%",
+      "aria": "Ciclo di fatturazione: {cycle}",
+      "monthlyCycle": "mensile",
+      "annualCycle": "annuale"
     },
-    "guarantee": "Garanzia di rimborso di 30 giorni",
-    "allPlansInclude": "Tutti i piani includono",
-    "upgradeAnytime": "Aggiorna in qualsiasi momento"
+    "badges": {
+      "mostPopular": "PIÙ POPOLARE",
+      "new": "NOVITÀ"
+    },
+    "guarantee": "✓ Garanzia soddisfatti o rimborsati di 14 giorni",
+    "trust": {
+      "noCard": "✓ Nessuna carta di credito richiesta",
+      "cancelAnytime": "✓ Annulla quando vuoi",
+      "secureStripe": "✓ Pagamento sicuro tramite Stripe"
+    }
   },
   "faq": {
     "title": {
@@ -280,67 +359,6 @@
       }
     }
   },
-  "pricing": {
-    "title": {
-      "part1": "Scegli Il Tuo ",
-      "part2": "Piano di Apprendimento"
-    },
-    "subtitle": "Inizia gratis e aggiorna in qualsiasi momento. Tutti i piani includono arricchimento del vocabolario con IA e ripetizione distanziata.",
-    "allPlansInclude": "✨ Tutti i Piani Includono",
-    "features": {
-      "aiContent": "Contenuti con IA",
-      "spacedRepetition": "Ripetizione Distanziata",
-      "mobileAccess": "Accesso App Mobile",
-      "securePrivate": "Sicuro e Privato"
-    },
-    "footer": "Nessun contratto • Cancella in qualsiasi momento • Pagamento sicuro tramite Stripe",
-    "plans": {
-      "free": {
-        "name": "Gratuito",
-        "title": "Piano Gratuito",
-        "price": "$0",
-        "period": "",
-        "description": "Perfetto per provare l'apprendimento del vocabolario",
-        "features": [
-          "1 Lista di Parole",
-          "Fino a 10 Parole",
-          "Modalità Quiz Base",
-          "Analisi Limitate"
-        ],
-        "cta": "Inizia Gratis"
-      },
-      "monthly": {
-        "name": "Premium Mensile",
-        "title": "Premium Mensile",
-        "price": "$6.99",
-        "period": "/mese",
-        "description": "Accesso completo con flessibilità mensile",
-        "badge": "PIÙ POPOLARE",
-        "features": [
-          "Liste di Parole Illimitate",
-          "Parole Illimitate",
-          "Tutte le 8 Modalità Quiz",
-          "Analisi Avanzate",
-          "Supporto Offline"
-        ],
-        "cta": "Inizia Mensile"
-      },
-      "annual": {
-        "name": "Premium Annuale",
-        "title": "Premium Annuale",
-        "price": "$69.90",
-        "period": "/anno",
-        "description": "Miglior valore per studenti impegnati",
-        "savings": "Risparmia $13.98 all'anno",
-        "features": [
-          "Tutto del Mensile",
-          "Risparmia $13.98 all'anno",
-          "Accesso Anticipato alle Funzioni"
-        ],
-        "cta": "Inizia Annuale"
-      }
-    }
-  },
   "newFeatures": {
     "title": {
       "part1": "Tutto Ciò Di Cui Hai Bisogno Per ",
@@ -354,15 +372,18 @@
       },
       "aiContent": {
         "title": "Generazione di Contenuti con IA",
-        "description": "Genera automaticamente definizioni, esempi, immagini e pronunce audio per qualsiasi parola usando modelli IA avanzati."
+        "description": "Genera automaticamente definizioni, esempi, immagini e pronunce audio per qualsiasi parola usando modelli IA avanzati.",
+        "stats": "Definizioni, immagini e audio per 7 lingue"
       },
       "spacedRepetition": {
         "title": "Ripetizione Distanziata Leitner",
-        "description": "Sistema scientificamente provato con 7 scatole di revisione che ottimizza quando rivedi le parole per massima ritenzione a lungo termine."
+        "description": "Sistema scientificamente provato con 7 scatole di revisione che ottimizza quando rivedi le parole per massima ritenzione a lungo termine.",
+        "stats": "Ripetizione dilazionata scientificamente provata"
       },
       "quizModes": {
         "title": "8 Modalità Quiz Coinvolgenti",
-        "description": "Multipli tipi di quiz: corrispondenza significati, associazione immagini, comprensione audio, completamento frasi, scrittura da definizione e altro."
+        "description": "Multipli tipi di quiz: corrispondenza significati, associazione immagini, comprensione audio, completamento frasi, scrittura da definizione e altro.",
+        "stats": "8 modalità di quiz coinvolgenti"
       },
       "visualLearning": {
         "title": "Apprendimento Visivo con Immagini IA",
@@ -432,62 +453,46 @@
     }
   },
   "cta": {
-    "title": "Inizia oggi la tua rivoluzione dell'apprendimento del vocabolario",
-    "subtitle": "Accelera il tuo apprendimento linguistico con contenuti alimentati dall'IA e ripetizione distanziata scientificamente provata",
+    "title": "Inizia a padroneggiare le lingue oggi. <accent>Gratis.</accent>",
+    "subtitle": "Unisciti a {count} studenti che usano flashcard con IA per imparare il vocabolario più velocemente che mai.",
+    "subtitleWithStats": "Unisciti a {count}+ studenti che stanno padroneggiando nuove lingue con l'apprendimento del vocabolario alimentato dall'IA e la ripetizione distanziata.",
+    "videoTitle": "Demo Decorebator - Apprendimento del Vocabolario Alimentato dall'IA",
+    "startFreeTrial": "Inizia la Tua Prova Gratuita",
     "primaryButton": "Inizia gratis",
-    "secondaryButton": "Guarda la demo",
-    "features": [
-      "Definizioni, immagini e audio generati dall'IA",
-      "8 modalità quiz interattive",
-      "Sistema avanzato di ripetizione distanziata",
-      "Analisi dettagliate dei progressi"
-    ]
+    "trust": {
+      "noCard": "Nessuna carta di credito richiesta",
+      "trial": "Prova premium gratuita di 7 giorni",
+      "cancel": "Annulla quando vuoi"
+    }
   },
   "footer": {
-    "tagline": "Piattaforma di apprendimento del vocabolario alimentata dall'IA",
-    "description": "Rivoluziona il tuo apprendimento del vocabolario con tecnologia IA avanzata e ripetizione distanziata scientificamente provata.",
-    "product": {
-      "title": "Prodotto",
+    "heading": "Piè di pagina",
+    "support": "Supporto",
+    "copyright": "© {year} Decorebator. Tutti i diritti riservati.",
+    "screenReader": "Piè di pagina",
+    "navigation": {
       "features": "Caratteristiche",
+      "howItWorks": "Come Funziona",
       "pricing": "Prezzi",
-      "howItWorks": "Come funziona",
-      "downloadApp": "Scarica l'App"
-    },
-    "support": {
-      "title": "Supporto",
-      "helpCenter": "Centro assistenza",
       "faq": "FAQ",
-      "contact": "Contatti",
-      "feedback": "Feedback"
+      "support": "Supporto",
+      "helpCenter": "Centro Assistenza",
+      "privacy": "Informativa sulla Privacy",
+      "terms": "Termini di Servizio"
     },
-    "company": {
-      "title": "Azienda",
-      "about": "Chi siamo",
-      "blog": "Blog",
-      "careers": "Carriere",
-      "press": "Stampa"
-    },
-    "legal": {
-      "title": "Legale",
-      "privacy": "Privacy",
-      "terms": "Termini di servizio",
-      "cookies": "Impostazioni cookie"
+    "about": {
+      "title": "Chi Siamo",
+      "soloEntrepreneur": "Imprenditore Solitario",
+      "location": "Brasile 🇧🇷",
+      "description": "Responsabile dell'architettura, implementazione completa e design di questo progetto. Risolvendo un problema personale e ho pensato che sarebbe stato interessante condividerlo con altri.",
+      "followTwitter": "Segui su Twitter"
     },
     "social": {
-      "title": "Social Media",
-      "twitter": "Twitter",
-      "facebook": "Facebook",
-      "instagram": "Instagram",
-      "linkedin": "LinkedIn"
-    },
-    "newsletter": {
-      "title": "Iscriviti alla newsletter",
-      "description": "Ricevi le ultime funzionalità, consigli di apprendimento e migliori pratiche per l'apprendimento linguistico",
-      "placeholder": "Inserisci la tua email",
-      "button": "Iscriviti",
-      "success": "Grazie per esserti iscritto!"
-    },
-    "copyright": "© 2024 Decorebator. Tutti i diritti riservati."
+      "facebook": "Decorebator su Facebook",
+      "twitter": "Decorebator su Twitter",
+      "instagram": "Decorebator su Instagram",
+      "linkedin": "Decorebator su LinkedIn"
+    }
   },
   "contact": {
     "title": "Contattaci",
@@ -600,67 +605,6 @@
       }
     }
   },
-  "pricing": {
-    "title": {
-      "part1": "Scegli Il Tuo ",
-      "part2": "Piano di Apprendimento"
-    },
-    "subtitle": "Inizia gratis e aggiorna in qualsiasi momento. Tutti i piani includono arricchimento del vocabolario alimentato dall'IA e ripetizione spaziata.",
-    "allPlansInclude": "✨ Tutti i Piani Includono",
-    "features": {
-      "aiContent": "Contenuti IA",
-      "spacedRepetition": "Ripetizione Spaziata",
-      "mobileAccess": "Accesso App Mobile",
-      "securePrivate": "Sicuro e Privato"
-    },
-    "footer": "Nessun contratto • Cancella in qualsiasi momento • Pagamento sicuro tramite Stripe",
-    "plans": {
-      "free": {
-        "name": "Gratuito",
-        "title": "Piano Gratuito",
-        "price": "$0",
-        "period": "",
-        "description": "Perfetto per provare l'apprendimento del vocabolario",
-        "features": [
-          "1 Lista di Parole",
-          "Fino a 10 Parole",
-          "Modalità Quiz Base",
-          "Analisi Limitate"
-        ],
-        "cta": "Inizia Gratis"
-      },
-      "monthly": {
-        "name": "Premium Mensile",
-        "title": "Premium Mensile",
-        "price": "$6.99",
-        "period": "/mese",
-        "description": "Accesso completo con flessibilità mensile",
-        "badge": "PIÙ POPOLARE",
-        "features": [
-          "Liste di Parole Illimitate",
-          "Parole Illimitate",
-          "Tutte le 8 Modalità Quiz",
-          "Analisi Avanzate",
-          "Supporto Offline"
-        ],
-        "cta": "Inizia Mensile"
-      },
-      "annual": {
-        "name": "Premium Annuale",
-        "title": "Premium Annuale",
-        "price": "$69.90",
-        "period": "/anno",
-        "description": "Miglior valore per studenti impegnati",
-        "savings": "Risparmia $13.98 all'anno",
-        "features": [
-          "Tutto del Mensile",
-          "Risparmia $13.98 all'anno",
-          "Accesso Anticipato alle Funzioni"
-        ],
-        "cta": "Inizia Annuale"
-      }
-    }
-  },
   "analytics": {
     "title": "Dashboard di Analisi Avanzata",
     "subtitle": "Monitora la tua padronanza del vocabolario con approfondimenti completi sull'apprendimento",
@@ -676,95 +620,15 @@
       "minutes": "Minuti",
       "successRate": "Tasso di Successo",
       "words": "Parole",
-      "weekDays": ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
-      "quizTypes": [
-        "Indovina Significato",
-        "Parola dal Significato",
-        "Associazione Immagine",
-        "Comprensione Audio"
+      "weekDays": [
+        "Lun",
+        "Mar",
+        "Mer",
+        "Gio",
+        "Ven",
+        "Sab",
+        "Dom"
       ],
-      "boxLabels": [
-        "Scatola 1",
-        "Scatola 2",
-        "Scatola 3",
-        "Scatola 4",
-        "Scatola 5",
-        "Scatola 6",
-        "Scatola 7"
-      ],
-      "box1": "Scatola 1",
-      "box2": "Scatola 2",
-      "box3": "Scatola 3",
-      "box4": "Scatola 4",
-      "box5": "Scatola 5",
-      "box6": "Scatola 6",
-      "box7": "Scatola 7",
-      "learningProgressTitle": "Progresso di Apprendimento",
-      "wordsStudiedDescription": "Parole studiate negli ultimi 7 giorni",
-      "practiceTimeTitle": "Tempo di Pratica",
-      "total": "Totale",
-      "dailyAvg": "Media Giornaliera",
-      "quizPerformanceTitle": "Performance Quiz per Tipo",
-      "wordMasteryTitle": "Progresso Padronanza Parole",
-      "currentBoxTitle": "Distribuzione Scatole Attuale",
-      "leitnerExplanation": "Sistema Leitner: Le parole progrediscono attraverso 7 scatole basate sulla tua performance nei quiz. La Scatola 1 contiene parole nuove, la Scatola 7 contiene parole padroneggiate.",
-      "boxProgressTitle": "Progresso Scatole 7 Giorni",
-      "box7Description": "Parole nella Scatola 7 (Padroneggiate)",
-      "topWordsTitle": "Parole Principali per Padronanza"
-    }
-  },
-  "cta": {
-    "title": "Pronto a Trasformare il Tuo Apprendimento Linguistico?",
-    "subtitle": "Padroneggia nuove lingue con l'apprendimento del vocabolario alimentato dall'IA e la ripetizione distanziata.",
-    "subtitleWithStats": "Unisciti a {count}+ studenti che stanno padroneggiando nuove lingue con l'apprendimento del vocabolario alimentato dall'IA e la ripetizione distanziata.",
-    "videoTitle": "Demo Decorebator - Apprendimento del Vocabolario Alimentato dall'IA",
-    "startFreeTrial": "Inizia la Tua Prova Gratuita"
-  },
-  "footer": {
-    "heading": "Piè di pagina",
-    "support": "Supporto",
-    "copyright": "© {year} Decorebator. Tutti i diritti riservati.",
-    "screenReader": "Piè di pagina",
-    "navigation": {
-      "features": "Caratteristiche",
-      "howItWorks": "Come Funziona",
-      "pricing": "Prezzi",
-      "faq": "FAQ",
-      "support": "Supporto",
-      "helpCenter": "Centro Assistenza",
-      "privacy": "Informativa sulla Privacy",
-      "terms": "Termini di Servizio"
-    },
-    "about": {
-      "title": "Chi Siamo",
-      "soloEntrepreneur": "Imprenditore Solitario",
-      "location": "Brasile 🇧🇷",
-      "description": "Responsabile dell'architettura, implementazione completa e design di questo progetto. Risolvendo un problema personale e ho pensato che sarebbe stato interessante condividerlo con altri.",
-      "followTwitter": "Segui su Twitter"
-    },
-    "social": {
-      "facebook": "Decorebator su Facebook",
-      "twitter": "Decorebator su Twitter",
-      "instagram": "Decorebator su Instagram",
-      "linkedin": "Decorebator su LinkedIn"
-    }
-  },
-  "analytics": {
-    "title": "Dashboard di Analisi Avanzata",
-    "subtitle": "Monitora la tua padronanza del vocabolario con approfondimenti completi sull'apprendimento",
-    "stats": {
-      "wordsStudiedToday": "Parole Studiate Oggi",
-      "currentStreak": "Serie Attuale",
-      "wordsMastered": "Parole Padroneggiate",
-      "accuracyToday": "Precisione Oggi",
-      "daysSuffix": " giorni"
-    },
-    "charts": {
-      "wordsStudied": "Parole Studiate",
-      "minutes": "Minuti",
-      "successRate": "Tasso di Successo",
-      "words": "Parole",
-      "weekDays": ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
       "quizTypes": [
         "Indovina Significato",
         "Parola dal Significato",
@@ -886,16 +750,36 @@
             "interval": "Immediato",
             "purpose": "Parole nuove, ripassi falliti"
           },
-          { "box": "Scatola 2", "interval": "6 ore", "purpose": "Apprendimento recente" },
-          { "box": "Scatola 3", "interval": "1 giorno", "purpose": "Ritenzione a breve termine" },
-          { "box": "Scatola 4", "interval": "3 giorni", "purpose": "Ritenzione a medio termine" },
+          {
+            "box": "Scatola 2",
+            "interval": "6 ore",
+            "purpose": "Apprendimento recente"
+          },
+          {
+            "box": "Scatola 3",
+            "interval": "1 giorno",
+            "purpose": "Ritenzione a breve termine"
+          },
+          {
+            "box": "Scatola 4",
+            "interval": "3 giorni",
+            "purpose": "Ritenzione a medio termine"
+          },
           {
             "box": "Scatola 5",
             "interval": "1 settimana",
             "purpose": "Ritenzione a lungo termine"
           },
-          { "box": "Scatola 6", "interval": "2 settimane", "purpose": "Ritenzione estesa" },
-          { "box": "Scatola 7", "interval": "1 mese", "purpose": "Parole padroneggiate" }
+          {
+            "box": "Scatola 6",
+            "interval": "2 settimane",
+            "purpose": "Ritenzione estesa"
+          },
+          {
+            "box": "Scatola 7",
+            "interval": "1 mese",
+            "purpose": "Parole padroneggiate"
+          }
         ]
       },
       "progressionRules": {
@@ -955,15 +839,31 @@
       "supportedLanguages": "Lingue Supportate (7)",
       "aiFeatures": "Funzionalità IA per Lingua",
       "languages": [
-        { "flag": "🇺🇸", "name": "Inglese", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50" },
+        {
+          "flag": "🇺🇸",
+          "name": "Inglese",
+          "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"
+        },
         {
           "flag": "🇪🇸",
           "name": "Spagnolo",
           "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"
         },
-        { "flag": "🇫🇷", "name": "Francese", "bgClass": "bg-gradient-to-r from-blue-50 to-white" },
-        { "flag": "🇩🇪", "name": "Tedesco", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50" },
-        { "flag": "🇮🇹", "name": "Italiano", "bgClass": "bg-gradient-to-r from-green-50 to-red-50" },
+        {
+          "flag": "🇫🇷",
+          "name": "Francese",
+          "bgClass": "bg-gradient-to-r from-blue-50 to-white"
+        },
+        {
+          "flag": "🇩🇪",
+          "name": "Tedesco",
+          "bgClass": "bg-gradient-to-r from-gray-100 to-red-50"
+        },
+        {
+          "flag": "🇮🇹",
+          "name": "Italiano",
+          "bgClass": "bg-gradient-to-r from-green-50 to-red-50"
+        },
         {
           "flag": "🇵🇹",
           "name": "Portoghese",
@@ -1039,5 +939,16 @@
       "missingToken": "Il link di reimpostazione è mancante o non valido. Richiedine uno nuovo."
     },
     "success": "La password è stata reimpostata con successo!"
+  },
+  "socialProof": {
+    "title": "Unisciti a migliaia di persone che imparano <highlight>in modo più intelligente</highlight>",
+    "subtitle": "Scelto da studenti di lingue in tutto il mondo per raggiungere i loro obiettivi più rapidamente con l’apprendimento del vocabolario basato sull’IA.",
+    "stats": {
+      "activeLearners": "Studenti attivi",
+      "languagesSupported": "Lingue supportate",
+      "wordsLearned": "Parole imparate",
+      "wordsLearnedValue": "500.000+",
+      "averageRating": "Valutazione media"
+    }
   }
 }

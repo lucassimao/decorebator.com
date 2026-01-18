@@ -60,7 +60,7 @@
     "getStartedFree": "App herunterladen"
   },
   "hero": {
-    "title": "Sprachen meistern mit Decorebator",
+    "title": "Lerne jede Sprache mit <highlight>KI‑gestützten Karteikarten</highlight>",
     "rotatingWords": {
       "aiIntelligence": "KI-Intelligenz",
       "spacedRepetition": "Verteilte Wiederholung",
@@ -68,16 +68,45 @@
       "smartQuizzes": "Intelligente Quiz"
     },
     "tagline": "KI-gestütztes Lernen • 7 Sprachen • Multiplattform",
-    "imageAlt": "Decorebator App Demo zeigt interaktive Lernfunktionen, Quiz-Modi und Fortschrittsverfolgung",
+    "imageAlt": "Decorebator App‑Oberfläche",
     "videoTitle": "Decorebator Demo - KI-gestütztes Vokabellernen",
     "socialProof": "+ aktive Lernende",
-    "subtitle": "Transformieren Sie Ihr Vokabellernen mit KI-generierten Inhalten, wissenschaftlich bewährter verteilter Wiederholung und 8 ansprechenden Quiz-Modi. Schließen Sie sich Lernenden auf der ganzen Welt an, die neue Sprachen effektiv meistern.",
+    "subtitle": "Lerne Vokabeln <strong>3× schneller</strong> mit Spaced Repetition, KI‑generierten Inhalten und 8 spannenden Quiz‑Modi. <accent>Kein Auswendiglernen, nur Ergebnisse.</accent>",
     "startLearningFree": "Kostenlos lernen beginnen",
     "watchDemo": "Demo ansehen",
     "stats": {
       "rating": "4,9/5",
       "activeLearnersCount": "10.000+ aktive Lernende",
       "languagesCount": "7 native KI-Sprachen"
+    },
+    "trustBadge": "Vertrauen von {count} Sprachlernenden",
+    "trust": {
+      "freePlan": "Kostenloser Plan verfügbar",
+      "noCard": "Keine Kreditkarte erforderlich"
+    },
+    "rating": {
+      "reviews": "({count} Bewertungen)",
+      "aria": "Bewertet mit {rating} von 5"
+    },
+    "video": {
+      "aria": "App‑Demo‑Video"
+    },
+    "cards": {
+      "analytics": {
+        "badge": "Premium‑Funktion",
+        "title": "Verfolge deinen Fortschritt",
+        "description": "Fortgeschrittene Analysen zeigen dein Beherrschungsniveau, Lerntempo und die Behaltensraten.",
+        "languages": {
+          "french": "Französisch",
+          "spanish": "Spanisch",
+          "japanese": "Japanisch"
+        }
+      },
+      "ai": {
+        "badge": "KI‑gestützt",
+        "title": "Automatisch generierte Inhalte",
+        "description": "Definitionen, Bilder, Audio und Beispiele werden sofort für jedes Wort erstellt."
+      }
     }
   },
   "features": {
@@ -142,7 +171,11 @@
     "step2": {
       "title": "Nehmen Sie an ansprechenden Quiz teil",
       "description": "Üben Sie mit 8 verschiedenen Quiz-Modi, die sich an Ihren Lernfortschritt anpassen.",
-      "features": ["Bedeutung ↔ Wort-Zuordnung", "Bild- & Audioerkennung", "Satzvervollständigung"]
+      "features": [
+        "Bedeutung ↔ Wort-Zuordnung",
+        "Bild- & Audioerkennung",
+        "Satzvervollständigung"
+      ]
     },
     "step3": {
       "title": "Meistern durch Wiederholung",
@@ -155,11 +188,8 @@
     }
   },
   "pricing": {
-    "title": {
-      "part1": "Wählen Sie Ihren ",
-      "part2": "Lernplan"
-    },
-    "subtitle": "Beginnen Sie kostenlos und upgraden Sie jederzeit. Alle Pläne beinhalten KI-gestützte Vokabelanreicherung und verteilte Wiederholung.",
+    "title": "Kostenlos starten. <highlight>Upgraden, wenn du bereit bist.</highlight>",
+    "subtitle": "Wähle den Plan, der zu dir passt. Keine Verträge, jederzeit kündbar.",
     "allPlansInclude": "✨ Alle Pläne beinhalten",
     "features": {
       "aiContent": "KI-gestützte Inhalte",
@@ -173,15 +203,16 @@
         "name": "Kostenlos",
         "title": "Kostenloser Plan",
         "price": "$0",
-        "period": "",
-        "description": "Perfekt zum Ausprobieren des Vokabellernens",
+        "period": "/für immer",
+        "description": "Perfekt zum Ausprobieren",
         "features": [
           "1 Wortliste",
           "Bis zu 10 Wörter",
-          "Grundlegende Quiz-Modi",
-          "Begrenzte Analysen"
+          "Basis‑Quiz‑Modi",
+          "Begrenzte Analysen",
+          "KI‑generierte Inhalte"
         ],
-        "cta": "Kostenlos beginnen"
+        "cta": "Kostenlos starten"
       },
       "monthly": {
         "name": "Monatlich Premium",
@@ -212,7 +243,42 @@
           "Früher Zugang zu Funktionen"
         ],
         "cta": "Jährlich starten"
+      },
+      "premium": {
+        "name": "Premium",
+        "description": "Voller Zugriff mit {cycle} Flexibilität",
+        "monthlyLabel": "/Monat",
+        "annualNote": "Jährliche Abrechnung: ${price}",
+        "cta": "Premium holen",
+        "features": {
+          "unlimitedWordlists": "Unbegrenzte Wortlisten & Wörter",
+          "allQuizModes": "Alle 8 Quiz‑Modi",
+          "advancedAnalytics": "Erweiterte Analysen",
+          "offlineSupport": "Offline‑Support",
+          "realTimeSpeaking": "Sprechpraxis in Echtzeit",
+          "publicQuizSharing": "Öffentliches Quiz‑Teilen",
+          "errorReporting": "Fehlermeldung (10/h, 30/Tag)",
+          "prioritySupport": "Priorisierter Support"
+        }
       }
+    },
+    "billing": {
+      "monthly": "Monatlich",
+      "annual": "Jährlich",
+      "save": "Spare {savings}%",
+      "aria": "Abrechnungszyklus: {cycle}",
+      "monthlyCycle": "monatlich",
+      "annualCycle": "jährlich"
+    },
+    "badges": {
+      "mostPopular": "BELIEBTEST",
+      "new": "NEU"
+    },
+    "guarantee": "✓ 14‑Tage‑Geld‑zurück‑Garantie",
+    "trust": {
+      "noCard": "✓ Keine Kreditkarte erforderlich",
+      "cancelAnytime": "✓ Jederzeit kündbar",
+      "secureStripe": "✓ Sichere Zahlung via Stripe"
     }
   },
   "newFeatures": {
@@ -228,15 +294,18 @@
       },
       "aiContent": {
         "title": "KI-gestützte Inhaltserstellung",
-        "description": "Generiert automatisch Definitionen, Beispiele, Bilder und Audioaussprachen für jedes Wort mit fortschrittlichen KI-Modellen."
+        "description": "Generiert automatisch Definitionen, Beispiele, Bilder und Audioaussprachen für jedes Wort mit fortschrittlichen KI-Modellen.",
+        "stats": "Definitionen, Bilder & Audio für 7 Sprachen"
       },
       "spacedRepetition": {
         "title": "Leitner Verteilte Wiederholung",
-        "description": "Wissenschaftlich bewährtes System mit 7 Wiederholungsboxen, das optimiert, wann Sie Wörter für maximale Langzeitbehaltensfähigkeit wiederholen."
+        "description": "Wissenschaftlich bewährtes System mit 7 Wiederholungsboxen, das optimiert, wann Sie Wörter für maximale Langzeitbehaltensfähigkeit wiederholen.",
+        "stats": "Wissenschaftlich belegte Spaced Repetition"
       },
       "quizModes": {
         "title": "8 Ansprechende Quiz-Modi",
-        "description": "Multiple Quiz-Typen: Bedeutungszuordnung, Bildassoziation, Hörverständnis, Satzvervollständigung, Schreiben aus Definition und mehr."
+        "description": "Multiple Quiz-Typen: Bedeutungszuordnung, Bildassoziation, Hörverständnis, Satzvervollständigung, Schreiben aus Definition und mehr.",
+        "stats": "8 spannende Quiz‑Modi"
       },
       "visualLearning": {
         "title": "Visuelles Lernen mit KI-Bildern",
@@ -320,9 +389,30 @@
       "minutes": "Minuten",
       "successRate": "Erfolgsrate",
       "words": "Wörter",
-      "weekDays": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
-      "quizTypes": ["Bedeutung erraten", "Wort aus Bedeutung", "Bildassoziation", "Hörverständnis"],
-      "boxLabels": ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5", "Box 6", "Box 7"],
+      "weekDays": [
+        "Mo",
+        "Di",
+        "Mi",
+        "Do",
+        "Fr",
+        "Sa",
+        "So"
+      ],
+      "quizTypes": [
+        "Bedeutung erraten",
+        "Wort aus Bedeutung",
+        "Bildassoziation",
+        "Hörverständnis"
+      ],
+      "boxLabels": [
+        "Box 1",
+        "Box 2",
+        "Box 3",
+        "Box 4",
+        "Box 5",
+        "Box 6",
+        "Box 7"
+      ],
       "box1": "Box 1",
       "box2": "Box 2",
       "box3": "Box 3",
@@ -394,11 +484,17 @@
     }
   },
   "cta": {
-    "title": "Bereit, Ihr Sprachenlernen zu transformieren?",
-    "subtitle": "Meistern Sie neue Sprachen mit KI-gestütztem Vokabellernen und verteilter Wiederholung.",
+    "title": "Starte heute mit dem Sprachenlernen. <accent>Kostenlos.</accent>",
+    "subtitle": "Schließe dich {count} Lernenden an, die mit KI‑Flashcards schneller Vokabeln meistern als je zuvor.",
     "subtitleWithCount": "Schließen Sie sich {count}+ Lernenden an, die neue Sprachen mit KI-gestütztem Vokabellernen und verteilter Wiederholung meistern.",
     "videoTitle": "Decorebator Demo - KI-gestütztes Vokabellernen",
-    "startFreeTrial": "Starten Sie Ihre kostenlose Testversion"
+    "startFreeTrial": "Starten Sie Ihre kostenlose Testversion",
+    "primaryButton": "Kostenlos starten",
+    "trust": {
+      "noCard": "Keine Kreditkarte erforderlich",
+      "trial": "7‑tägige Premium‑Testphase",
+      "cancel": "Jederzeit kündbar"
+    }
   },
   "footer": {
     "heading": "Footer",
@@ -514,12 +610,36 @@
             "interval": "Sofort",
             "purpose": "Neue Wörter, fehlgeschlagene Wiederholungen"
           },
-          { "box": "Box 2", "interval": "6 Stunden", "purpose": "Kürzliches Lernen" },
-          { "box": "Box 3", "interval": "1 Tag", "purpose": "Kurzfristige Behaltensfähigkeit" },
-          { "box": "Box 4", "interval": "3 Tage", "purpose": "Mittelfristige Behaltensfähigkeit" },
-          { "box": "Box 5", "interval": "1 Woche", "purpose": "Langfristige Behaltensfähigkeit" },
-          { "box": "Box 6", "interval": "2 Wochen", "purpose": "Erweiterte Behaltensfähigkeit" },
-          { "box": "Box 7", "interval": "1 Monat", "purpose": "Beherrschte Wörter" }
+          {
+            "box": "Box 2",
+            "interval": "6 Stunden",
+            "purpose": "Kürzliches Lernen"
+          },
+          {
+            "box": "Box 3",
+            "interval": "1 Tag",
+            "purpose": "Kurzfristige Behaltensfähigkeit"
+          },
+          {
+            "box": "Box 4",
+            "interval": "3 Tage",
+            "purpose": "Mittelfristige Behaltensfähigkeit"
+          },
+          {
+            "box": "Box 5",
+            "interval": "1 Woche",
+            "purpose": "Langfristige Behaltensfähigkeit"
+          },
+          {
+            "box": "Box 6",
+            "interval": "2 Wochen",
+            "purpose": "Erweiterte Behaltensfähigkeit"
+          },
+          {
+            "box": "Box 7",
+            "interval": "1 Monat",
+            "purpose": "Beherrschte Wörter"
+          }
         ]
       },
       "progressionRules": {
@@ -594,7 +714,11 @@
           "name": "Französisch",
           "bgClass": "bg-gradient-to-r from-blue-50 to-white"
         },
-        { "flag": "🇩🇪", "name": "Deutsch", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50" },
+        {
+          "flag": "🇩🇪",
+          "name": "Deutsch",
+          "bgClass": "bg-gradient-to-r from-gray-100 to-red-50"
+        },
         {
           "flag": "🇮🇹",
           "name": "Italienisch",
@@ -675,5 +799,33 @@
       "missingToken": "Der Reset-Link fehlt oder ist ungültig. Bitte fordern Sie einen neuen an."
     },
     "success": "Passwort wurde erfolgreich zurückgesetzt!"
+  },
+  "socialProof": {
+    "title": "Schließe dich Tausenden an und lerne <highlight>smarter, nicht härter</highlight>",
+    "subtitle": "Vertrauen von Sprachlernenden weltweit, um ihre Ziele schneller mit KI‑gestütztem Vokabellernen zu erreichen.",
+    "stats": {
+      "activeLearners": "Aktive Lernende",
+      "languagesSupported": "Unterstützte Sprachen",
+      "wordsLearned": "Gelernte Wörter",
+      "wordsLearnedValue": "500.000+",
+      "averageRating": "Durchschnittsbewertung"
+    }
+  },
+  "testimonials": {
+    "testimonial1": {
+      "text": "Decorebator hat meine Art, Spanisch zu lernen, verändert. Die KI‑generierten Bilder helfen mir, Wörter viel schneller zu behalten als traditionelle Karteikarten.",
+      "author": "Sarah Johnson",
+      "role": "Lernt Spanisch"
+    },
+    "testimonial2": {
+      "text": "Das Spaced‑Repetition‑System ist genial. Ich habe in 3 Monaten mehr Kanji gelernt als in einem Jahr mit anderen Apps.",
+      "author": "Marc Dubois",
+      "role": "Lernt Japanisch"
+    },
+    "testimonial3": {
+      "text": "Als vielbeschäftigte Berufstätige ist der Offline‑Modus ein Game‑Changer. Ich kann unterwegs üben, ohne mir um die Verbindung Sorgen zu machen.",
+      "author": "Elena Rossi",
+      "role": "Lernt Deutsch"
+    }
   }
 }

@@ -60,7 +60,7 @@
     "getStartedFree": "アプリをダウンロード"
   },
   "hero": {
-    "title": "Decorebatorで言語をマスターしよう",
+    "title": "<highlight>AI搭載フラッシュカード</highlight>であらゆる言語を習得",
     "rotatingWords": {
       "aiIntelligence": "AI知能",
       "spacedRepetition": "間隔反復",
@@ -68,16 +68,45 @@
       "smartQuizzes": "スマートクイズ"
     },
     "tagline": "AI搭載学習 • 7言語 • マルチプラットフォーム",
-    "imageAlt": "インタラクティブな学習機能、クイズモード、進捗追跡を示すDecorebatorアプリデモ",
+    "imageAlt": "Decorebatorアプリの画面",
     "videoTitle": "Decorebatorデモ - AI搭載語彙学習",
     "socialProof": "+ アクティブ学習者",
-    "subtitle": "AI生成コンテンツ、科学的に証明された間隔反復、8つの魅力的なクイズモードで語彙学習を変革しましょう。世界中の学習者が効果的に新しい言語を習得しています。",
+    "subtitle": "<strong>3倍速く</strong>語彙を習得。間隔反復、AI生成コンテンツ、8つの魅力的なクイズモードで学習。<accent>暗記ではなく成果を。</accent>",
     "startLearningFree": "無料で学習を始める",
     "watchDemo": "デモを見る",
     "stats": {
       "rating": "4.9/5",
       "activeLearnersCount": "10,000+ アクティブ学習者",
       "languagesCount": "7つのネイティブAI言語"
+    },
+    "trustBadge": "{count}人以上の語学学習者に信頼されています",
+    "trust": {
+      "freePlan": "無料プランあり",
+      "noCard": "クレジットカード不要"
+    },
+    "rating": {
+      "reviews": "（{count}件のレビュー）",
+      "aria": "評価 {rating} / 5"
+    },
+    "video": {
+      "aria": "アプリのデモ動画"
+    },
+    "cards": {
+      "analytics": {
+        "badge": "プレミアム機能",
+        "title": "進捗を可視化",
+        "description": "高度な分析で習熟度、学習速度、定着率を確認できます。",
+        "languages": {
+          "french": "フランス語",
+          "spanish": "スペイン語",
+          "japanese": "日本語"
+        }
+      },
+      "ai": {
+        "badge": "AI搭載",
+        "title": "自動生成コンテンツ",
+        "description": "定義・画像・音声・例文を各単語に即時生成。"
+      }
     }
   },
   "features": {
@@ -188,19 +217,19 @@
       "satisfaction": "満足度4.9/5"
     },
     "testimonial1": {
-      "text": "Decorebatorは私の語彙学習を完全に変えてくれました。AI生成画像と間隔反復システムのおかげで、わずか2か月でスペイン語の単語を500語以上習得できました！",
-      "author": "Sarah Chen",
-      "role": "スペイン語学習者"
+      "text": "Decorebatorでスペイン語の学び方が変わりました。AI生成の画像のおかげで、従来のフラッシュカードよりずっと早く覚えられます。",
+      "author": "Sarah Johnson",
+      "role": "スペイン語学習中"
     },
     "testimonial2": {
-      "text": "語学教師として、私はすべての学生にDecorebatorを勧めています。分析機能で進捗を追跡でき、複数のクイズモードが学習意欲を高めます。",
-      "author": "Dr. Marcus Weber",
-      "role": "語学教授"
+      "text": "間隔反復の仕組みが素晴らしいです。3か月で他のアプリの1年分以上の漢字を学べました。",
+      "author": "Marc Dubois",
+      "role": "日本語学習中"
     },
     "testimonial3": {
-      "text": "オフライン機能は通勤時に最適です。地下鉄でも接続を気にせず語彙を練習でき、AIコンテンツの品質にも感動しています！",
-      "author": "Yuki Tanaka",
-      "role": "ビジネスパーソン"
+      "text": "忙しい仕事の合間でも、オフラインモードなら通勤中に練習できます。接続を気にしなくてよいのが助かります。",
+      "author": "Elena Rossi",
+      "role": "ドイツ語学習中"
     }
   },
   "faq": {
@@ -253,11 +282,8 @@
     }
   },
   "pricing": {
-    "title": {
-      "part1": "学習プランを",
-      "part2": "選択"
-    },
-    "subtitle": "無料で始めて、いつでもアップグレード。すべてのプランにAI搭載語彙強化と間隔反復が含まれます。",
+    "title": "無料で開始。<highlight>準備ができたらアップグレード</highlight>",
+    "subtitle": "あなたに合ったプランを選択。契約不要、いつでも解約可能。",
     "allPlansInclude": "✨ すべてのプランに含まれる",
     "features": {
       "aiContent": "AIコンテンツ",
@@ -271,9 +297,15 @@
         "name": "無料",
         "title": "無料プラン",
         "price": "$0",
-        "period": "",
-        "description": "語彙学習をお試しに最適",
-        "features": ["1つの単語リスト", "最大10語", "基本クイズモード", "限定分析"],
+        "period": "/ずっと",
+        "description": "まずはお試しに最適",
+        "features": [
+          "単語リスト1つ",
+          "最大10語",
+          "基本的なクイズモード",
+          "分析は制限付き",
+          "AI生成コンテンツ"
+        ],
         "cta": "無料で始める"
       },
       "monthly": {
@@ -299,9 +331,48 @@
         "period": "/年",
         "description": "コミットした学習者に最高の価値",
         "savings": "年間$13.98節約",
-        "features": ["月額の全て", "年間$13.98節約", "機能への早期アクセス"],
+        "features": [
+          "月額の全て",
+          "年間$13.98節約",
+          "機能への早期アクセス"
+        ],
         "cta": "年額を始める"
+      },
+      "premium": {
+        "name": "プレミアム",
+        "description": "{cycle}の柔軟性でフルアクセス",
+        "monthlyLabel": "/月",
+        "annualNote": "年額請求：${price}",
+        "cta": "プレミアムを開始",
+        "features": {
+          "unlimitedWordlists": "単語リスト＆単語数が無制限",
+          "allQuizModes": "8つのクイズモードすべて",
+          "advancedAnalytics": "高度な分析",
+          "offlineSupport": "オフライン対応",
+          "realTimeSpeaking": "リアルタイム会話練習",
+          "publicQuizSharing": "公開クイズ共有",
+          "errorReporting": "エラー報告（10/時、30/日）",
+          "prioritySupport": "優先サポート"
+        }
       }
+    },
+    "billing": {
+      "monthly": "月額",
+      "annual": "年額",
+      "save": "{savings}%お得",
+      "aria": "請求サイクル: {cycle}",
+      "monthlyCycle": "月額",
+      "annualCycle": "年額"
+    },
+    "badges": {
+      "mostPopular": "一番人気",
+      "new": "新着"
+    },
+    "guarantee": "✓ 14日間の返金保証",
+    "trust": {
+      "noCard": "✓ クレジットカード不要",
+      "cancelAnytime": "✓ いつでも解約可能",
+      "secureStripe": "✓ Stripeで安全に決済"
     }
   },
   "newFeatures": {
@@ -317,15 +388,18 @@
       },
       "aiContent": {
         "title": "AI搭載コンテンツ生成",
-        "description": "高度なAIモデルを使用して、任意の単語の定義、例、画像、音声発音を自動生成します。"
+        "description": "高度なAIモデルを使用して、任意の単語の定義、例、画像、音声発音を自動生成します。",
+        "stats": "7言語の定義・画像・音声"
       },
       "spacedRepetition": {
         "title": "ライトナー間隔反復",
-        "description": "最大長期記憶保持のために単語を復習するタイミングを最適化する7つの復習ボックスを持つ科学的に実証されたシステム。"
+        "description": "最大長期記憶保持のために単語を復習するタイミングを最適化する7つの復習ボックスを持つ科学的に実証されたシステム。",
+        "stats": "科学的に実証された間隔反復"
       },
       "quizModes": {
         "title": "8つの魅力的なクイズモード",
-        "description": "複数のクイズタイプ：意味マッチング、画像連想、音声理解、文章完成、定義から書く、その他。"
+        "description": "複数のクイズタイプ：意味マッチング、画像連想、音声理解、文章完成、定義から書く、その他。",
+        "stats": "8つの魅力的なクイズモード"
       },
       "visualLearning": {
         "title": "AI画像による視覚学習",
@@ -395,9 +469,15 @@
     }
   },
   "cta": {
-    "title": "言語学習を変革する準備はできましたか？",
-    "subtitle": "AI搭載の語彙学習と間隔反復で新しい言語をマスターしましょう。",
-    "subtitleWithCount": "AI搭載の語彙学習と間隔反復で新しい言語をマスターしている{count}人以上の学習者に参加しましょう。"
+    "title": "今日から言語学習を始めよう。<accent>無料。</accent>",
+    "subtitle": "{count}人以上の学習者が、AIフラッシュカードで語彙をより速く習得しています。",
+    "subtitleWithCount": "AI搭載の語彙学習と間隔反復で新しい言語をマスターしている{count}人以上の学習者に参加しましょう。",
+    "primaryButton": "無料で学習を開始",
+    "trust": {
+      "noCard": "クレジットカード不要",
+      "trial": "7日間のプレミアム無料トライアル",
+      "cancel": "いつでも解約可能"
+    }
   },
   "contact": {
     "title": "お問い合わせ",
@@ -1505,8 +1585,21 @@
       "minutes": "分",
       "successRate": "成功率",
       "words": "単語",
-      "weekDays": ["月", "火", "水", "木", "金", "土", "日"],
-      "quizTypes": ["意味推測", "定義から単語", "画像連想", "聴解"],
+      "weekDays": [
+        "月",
+        "火",
+        "水",
+        "木",
+        "金",
+        "土",
+        "日"
+      ],
+      "quizTypes": [
+        "意味推測",
+        "定義から単語",
+        "画像連想",
+        "聴解"
+      ],
       "boxLabels": [
         "ボックス1",
         "ボックス2",
@@ -1535,6 +1628,17 @@
       "boxProgressTitle": "7日間ボックス進捗",
       "box7Description": "ボックス7の単語（習得済み）",
       "topWordsTitle": "習得度別上位単語"
+    }
+  },
+  "socialProof": {
+    "title": "何千人もの学習者が <highlight>より賢く、より効率的に</highlight> 学んでいます",
+    "subtitle": "世界中の語学学習者が、AIによる語彙学習で目標達成を加速しています。",
+    "stats": {
+      "activeLearners": "アクティブ学習者",
+      "languagesSupported": "対応言語数",
+      "wordsLearned": "学習済み単語数",
+      "wordsLearnedValue": "500,000+",
+      "averageRating": "平均評価"
     }
   }
 }

@@ -1,32 +1,106 @@
 @import 'tailwindcss';
 @import '../styles/animations.css';
 
-:root {
-  --background: #fdf6e3;
-  --foreground: #2d3436;
-  --primary-orange: #ff7b54;
-  --secondary-gray: #636e72;
+/* Tailwind v4 CSS-first theme configuration */
+@theme {
+  /* Primary Orange */
+  --color-primary-50: #fff5f2;
+  --color-primary-100: #ffe8e0;
+  --color-primary-200: #ffd0c1;
+  --color-primary-300: #ffb8a2;
+  --color-primary-400: #ffa083;
+  --color-primary-500: #ff6b35;
+  --color-primary-600: #e65220;
+  --color-primary-700: #cc3d15;
+  --color-primary-800: #b32c0d;
+  --color-primary-900: #991f08;
+
+  /* Secondary Blue */
+  --color-secondary-50: #e6f3f9;
+  --color-secondary-100: #cce7f3;
+  --color-secondary-200: #99cfe7;
+  --color-secondary-300: #66b7db;
+  --color-secondary-400: #339fcf;
+  --color-secondary-500: #004e89;
+  --color-secondary-600: #003e6e;
+  --color-secondary-700: #002f53;
+  --color-secondary-800: #002038;
+  --color-secondary-900: #00111d;
+
+  /* Accent Purple */
+  --color-accent-50: #f5edfc;
+  --color-accent-100: #ebdcf9;
+  --color-accent-200: #d7b9f3;
+  --color-accent-300: #c396ed;
+  --color-accent-400: #af73e7;
+  --color-accent-500: #7b2cbf;
+  --color-accent-600: #6323a0;
+  --color-accent-700: #4b1a81;
+  --color-accent-800: #331162;
+  --color-accent-900: #1b0843;
+
+  /* Success Teal */
+  --color-success-50: #e6fcf5;
+  --color-success-100: #cdf9eb;
+  --color-success-200: #9bf3d7;
+  --color-success-300: #69edc3;
+  --color-success-400: #37e7af;
+  --color-success-500: #06d6a0;
+  --color-success-600: #05ab80;
+  --color-success-700: #048060;
+  --color-success-800: #035540;
+  --color-success-900: #022b20;
+
+  /* Slate (neutrals) */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+
+  /* Background */
+  --color-background: #ffffff;
+  --color-foreground: #1e293b;
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans), 'Inter', system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), 'JetBrains Mono', monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  /* CSS variable fallbacks */
+  --background: #ffffff;
+  --foreground: #1e293b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0f172a;
+    --foreground: #f8fafc;
   }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), 'Inter', system-ui, sans-serif;
   overflow-x: hidden;
+  line-height: 1.75;
 }
 
 /* Lock background scroll when quiz is open (mobile friendly) */

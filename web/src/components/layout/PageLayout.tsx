@@ -12,7 +12,7 @@ interface PageLayoutProps {
 
 const PageLayout: React.FC<PageLayoutProps> = ({ children, className = '' }) => {
   return (
-    <div className={`min-h-screen overflow-x-hidden bg-[#FDF6E3] text-[#2D3436] ${className}`}>
+    <div className={`min-h-screen overflow-x-hidden bg-white text-slate-800 ${className}`}>
       <BackgroundElements />
       <Header />
       <main className="relative z-10">{children}</main>

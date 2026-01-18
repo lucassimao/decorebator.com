@@ -1,5 +1,6 @@
 import React from 'react'
 import { getTranslations } from 'next-intl/server'
+import { PlusCircle, Gamepad2, Brain, CheckCircle2, ChevronRight, Download } from 'lucide-react'
 
 const HowItWorksSection: React.FC = async () => {
   const t = await getTranslations('howItWorks')
@@ -11,82 +12,91 @@ const HowItWorksSection: React.FC = async () => {
         <div className="mb-16 text-center">
           <h2 className="mb-4 text-4xl font-bold lg:text-5xl">
             <span>{t('title.part1')}</span>
-            <span className="bg-gradient-to-r from-[#FF7B54] to-[#FFD700] bg-clip-text text-transparent">
+            <span className="from-primary-500 to-accent-500 bg-gradient-to-r bg-clip-text text-transparent">
               {t('title.part2')}
             </span>
           </h2>
-          <p className="mx-auto max-w-3xl text-xl text-[#636E72]">{t('subtitle')}</p>
+          <p className="mx-auto max-w-3xl text-xl text-slate-600">{t('subtitle')}</p>
         </div>
 
         <div className="relative grid gap-8 lg:grid-cols-3">
           {/* Step 1 */}
           <div className="relative">
-            <div className="absolute -top-4 -left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#FF7B54] to-orange-600 text-xl font-bold text-white">
+            <div className="from-primary-500 to-primary-600 shadow-primary-500/30 absolute -top-4 -left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br text-xl font-bold text-white shadow-lg">
               1
             </div>
-            <div className="h-full transform rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 to-amber-50 p-8 transition-transform duration-300 hover:scale-105">
+            <div className="border-primary-100 from-primary-50/50 hover:shadow-primary-500/10 h-full rounded-2xl border bg-gradient-to-br to-orange-50/50 p-8 transition-all duration-300 hover:shadow-xl">
               <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-lg">
-                <i className="fas fa-plus-circle text-3xl text-[#FF7B54]"></i>
+                <PlusCircle className="text-primary-500 h-8 w-8" strokeWidth={2} />
               </div>
-              <h3 className="mb-4 text-2xl font-bold">{t('step1.title')}</h3>
-              <p className="mb-6 text-[#636E72]">{t('step1.description')}</p>
+              <h3 className="mb-4 text-2xl font-bold text-slate-900">{t('step1.title')}</h3>
+              <p className="mb-6 text-slate-600">{t('step1.description')}</p>
               <ul className="space-y-3">
                 {(t.raw('step1.features') as string[]).map((feature, index) => (
                   <li key={index} className="flex items-start">
-                    <i className="fas fa-check-circle mt-1 mr-3 text-[#4CAF50]"></i>
-                    <span className="text-sm">{feature}</span>
+                    <CheckCircle2
+                      className="text-success-500 mt-0.5 mr-3 h-5 w-5 flex-shrink-0"
+                      strokeWidth={2}
+                    />
+                    <span className="text-sm text-slate-700">{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
             {/* Connector */}
             <div className="absolute top-1/2 -right-4 z-0 hidden -translate-y-1/2 transform lg:block">
-              <i className="fas fa-arrow-right text-4xl text-orange-300"></i>
+              <ChevronRight className="text-primary-300 h-10 w-10" strokeWidth={2} />
             </div>
           </div>
 
           {/* Step 2 */}
           <div className="relative">
-            <div className="absolute -top-4 -left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#9C27B0] to-purple-600 text-xl font-bold text-white">
+            <div className="from-accent-500 to-accent-600 shadow-accent-500/30 absolute -top-4 -left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br text-xl font-bold text-white shadow-lg">
               2
             </div>
-            <div className="h-full transform rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50 to-pink-50 p-8 transition-transform duration-300 hover:scale-105">
+            <div className="border-accent-100 from-accent-50/50 hover:shadow-accent-500/10 h-full rounded-2xl border bg-gradient-to-br to-purple-50/50 p-8 transition-all duration-300 hover:shadow-xl">
               <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-lg">
-                <i className="fas fa-gamepad text-3xl text-[#9C27B0]"></i>
+                <Gamepad2 className="text-accent-500 h-8 w-8" strokeWidth={2} />
               </div>
-              <h3 className="mb-4 text-2xl font-bold">{t('step2.title')}</h3>
-              <p className="mb-6 text-[#636E72]">{t('step2.description')}</p>
+              <h3 className="mb-4 text-2xl font-bold text-slate-900">{t('step2.title')}</h3>
+              <p className="mb-6 text-slate-600">{t('step2.description')}</p>
               <ul className="space-y-3">
                 {(t.raw('step2.features') as string[]).map((feature, index) => (
                   <li key={index} className="flex items-start">
-                    <i className="fas fa-check-circle mt-1 mr-3 text-[#4CAF50]"></i>
-                    <span className="text-sm">{feature}</span>
+                    <CheckCircle2
+                      className="text-success-500 mt-0.5 mr-3 h-5 w-5 flex-shrink-0"
+                      strokeWidth={2}
+                    />
+                    <span className="text-sm text-slate-700">{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
             {/* Connector */}
             <div className="absolute top-1/2 -right-4 z-0 hidden -translate-y-1/2 transform lg:block">
-              <i className="fas fa-arrow-right text-4xl text-purple-300"></i>
+              <ChevronRight className="text-accent-300 h-10 w-10" strokeWidth={2} />
             </div>
           </div>
 
           {/* Step 3 */}
           <div className="relative">
-            <div className="absolute -top-4 -left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#4CAF50] to-green-600 text-xl font-bold text-white">
+            <div className="from-success-500 to-success-600 shadow-success-500/30 absolute -top-4 -left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br text-xl font-bold text-white shadow-lg">
               3
             </div>
-            <div className="h-full transform rounded-2xl border border-green-100 bg-gradient-to-br from-green-50 to-emerald-50 p-8 transition-transform duration-300 hover:scale-105">
+            <div className="border-success-100 from-success-50/50 hover:shadow-success-500/10 h-full rounded-2xl border bg-gradient-to-br to-emerald-50/50 p-8 transition-all duration-300 hover:shadow-xl">
               <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-lg">
-                <i className="fas fa-brain text-3xl text-[#4CAF50]"></i>
+                <Brain className="text-success-500 h-8 w-8" strokeWidth={2} />
               </div>
-              <h3 className="mb-4 text-2xl font-bold">{t('step3.title')}</h3>
-              <p className="mb-6 text-[#636E72]">{t('step3.description')}</p>
+              <h3 className="mb-4 text-2xl font-bold text-slate-900">{t('step3.title')}</h3>
+              <p className="mb-6 text-slate-600">{t('step3.description')}</p>
               <ul className="space-y-3">
                 {(t.raw('step3.features') as string[]).map((feature, index) => (
                   <li key={index} className="flex items-start">
-                    <i className="fas fa-check-circle mt-1 mr-3 text-[#4CAF50]"></i>
-                    <span className="text-sm">{feature}</span>
+                    <CheckCircle2
+                      className="text-success-500 mt-0.5 mr-3 h-5 w-5 flex-shrink-0"
+                      strokeWidth={2}
+                    />
+                    <span className="text-sm text-slate-700">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -98,10 +108,13 @@ const HowItWorksSection: React.FC = async () => {
         <div className="mt-16 text-center">
           <a
             href="#download"
-            className="group inline-block transform rounded-full bg-gradient-to-r from-[#FF7B54] to-orange-600 px-10 py-4 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+            className="group from-primary-500 to-primary-600 shadow-primary-500/30 hover:shadow-primary-500/40 inline-flex items-center gap-2 rounded-full bg-gradient-to-r px-10 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
           >
             <span>{tCommon('downloadApp')}</span>
-            <i className="fas fa-download ml-2 transition-transform group-hover:translate-x-2"></i>
+            <Download
+              className="h-5 w-5 transition-transform group-hover:translate-y-0.5"
+              strokeWidth={2.5}
+            />
           </a>
         </div>
       </div>

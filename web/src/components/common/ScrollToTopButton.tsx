@@ -32,7 +32,7 @@ const ScrollToTopButton: React.FC = () => {
   return (
     <button
       onClick={scrollToTop}
-      className={`fixed right-6 bottom-6 z-40 flex h-12 w-12 transform items-center justify-center rounded-full bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl md:hidden ${isVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-16 opacity-0'} `}
+      className={`fixed right-4 bottom-4 z-40 flex h-11 w-11 transform items-center justify-center rounded-full bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-orange-200 focus-visible:ring-offset-2 focus-visible:outline-none md:hidden ${isVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-16 opacity-0'} `}
       aria-label="Scroll to top"
     >
       <i className="fas fa-chevron-up text-sm"></i>

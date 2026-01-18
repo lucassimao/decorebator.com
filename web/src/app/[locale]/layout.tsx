@@ -130,16 +130,12 @@ export default async function LocaleLayout({
   }
 
   return (
-    <html lang={locale}>
-      <body>
-        <NextIntlClientProvider>
-          <AppStoreModalProvider>
-            <StructuredData type="website" />
-            {children}
-            <ScrollToTopButton />
-          </AppStoreModalProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider>
+      <AppStoreModalProvider>
+        <StructuredData type="website" />
+        {children}
+        <ScrollToTopButton />
+      </AppStoreModalProvider>
+    </NextIntlClientProvider>
   )
 }

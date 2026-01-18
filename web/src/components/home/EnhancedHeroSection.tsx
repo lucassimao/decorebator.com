@@ -1,227 +1,249 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { useTranslations, useLocale } from 'next-intl'
+import React from 'react'
 import Image from 'next/image'
-import VideoModal from '../common/VideoModal'
-// Quiz demo modal removed
+import { Star, Zap } from 'lucide-react'
+import { motion } from 'framer-motion'
 import AppStoreButton from '../common/AppStoreButton'
 import { statsConfig } from '@/config/statsConfig'
+import { useTranslations } from 'next-intl'
 
 type EnhancedHeroSectionProps = Record<string, never>
 
 const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = () => {
-  const [currentWordIndex, setCurrentWordIndex] = useState(0)
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
-  // const [isQuizModalOpen, setIsQuizModalOpen] = useState(false)
   const t = useTranslations('hero')
-  const locale = useLocale()
-
-  const words = [
-    { key: 'aiIntelligence', text: t('rotatingWords.aiIntelligence') || 'AI Intelligence' },
-    { key: 'spacedRepetition', text: t('rotatingWords.spacedRepetition') || 'Spaced Repetition' },
-    { key: 'visualLearning', text: t('rotatingWords.visualLearning') || 'Visual Learning' },
-    { key: 'smartQuizzes', text: t('rotatingWords.smartQuizzes') || 'Smart Quizzes' },
-  ]
-
-  // Font size mapping for each language and word combination
-  const getFontSizeClass = (wordKey: string, locale: string) => {
-    const fontSizeMap: Record<string, Record<string, string>> = {
-      en: {
-        aiIntelligence: 'text-4xl sm:text-5xl lg:text-6xl',
-        spacedRepetition: 'text-3xl sm:text-4xl lg:text-5xl', // Longer text
-        visualLearning: 'text-4xl sm:text-5xl lg:text-6xl',
-        smartQuizzes: 'text-4xl sm:text-5xl lg:text-6xl',
-      },
-      es: {
-        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "Intelligence Artificial"
-        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Repetición Espaciada"
-        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Aprendizaje Visual"
-        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl', // "Quiz Inteligentes"
-      },
-      fr: {
-        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "Intelligence Artificielle"
-        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Répétition Espacée"
-        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Apprentissage Visuel"
-        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl', // "Quiz Intelligents"
-      },
-      de: {
-        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "KI-Intelligenz"
-        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Wiederholung mit Abstand"
-        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Visuelles Lernen"
-        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl', // "Intelligente Quiz"
-      },
-      it: {
-        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "Intelligence Artificiale"
-        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Ripetizione Distanziata"
-        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Apprendimento Visivo"
-        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl', // "Quiz Intelligenti"
-      },
-      pt: {
-        aiIntelligence: 'text-3xl sm:text-4xl lg:text-5xl', // "Inteligência Artificial"
-        spacedRepetition: 'text-2xl sm:text-3xl lg:text-4xl', // "Repetição Espaçada"
-        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "Aprendizado Visual"
-        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl', // "Quiz Inteligentes"
-      },
-      ja: {
-        aiIntelligence: 'text-4xl sm:text-5xl lg:text-6xl', // "AI知能"
-        spacedRepetition: 'text-3xl sm:text-4xl lg:text-5xl', // "間隔反復"
-        visualLearning: 'text-3xl sm:text-4xl lg:text-5xl', // "視覚学習"
-        smartQuizzes: 'text-3xl sm:text-4xl lg:text-5xl', // "スマートクイズ"
-      },
-    }
-
-    return fontSizeMap[locale]?.[wordKey] || 'text-3xl sm:text-4xl lg:text-5xl'
-  }
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentWordIndex((prev) => (prev + 1) % words.length)
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [words.length])
 
   return (
-    <section className="relative overflow-hidden pt-24 pb-12 sm:pb-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
-          <div className="slide-in-left order-1 space-y-6 sm:space-y-8 lg:order-1">
-            <div className="glass inline-flex items-center rounded-full bg-orange-100/50 px-4 py-2 text-sm font-semibold text-[#FF7B54]">
-              <i className="fas fa-zap mr-2"></i>
-              {t('tagline')}
-            </div>
+    <section className="relative overflow-hidden bg-gradient-to-b from-white via-white to-slate-50 pt-20 pb-16 sm:pt-28 sm:pb-20 lg:pt-32 lg:pb-24">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="bg-primary-200/40 absolute -top-32 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full blur-[120px]" />
+        <div className="bg-accent-200/30 absolute right-[-10%] -bottom-40 h-[26rem] w-[26rem] rounded-full blur-[120px]" />
+      </div>
 
-            <h1 className="text-4xl leading-tight font-bold sm:text-5xl lg:text-6xl">
-              {t('title')}
-              <span className="mt-2 block flex h-16 items-center sm:h-20 lg:h-24">
-                <span
-                  className={`gradient-animation bg-clip-text leading-tight font-bold text-transparent transition-all duration-700 ease-in-out ${getFontSizeClass(words[currentWordIndex].key, locale)}`}
-                  style={{ transitionProperty: 'opacity, transform, font-size' }}
-                >
-                  {words[currentWordIndex].text}
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Center-aligned content */}
+        <div className="mx-auto max-w-4xl text-center">
+          {/* Trust badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="border-primary-200 bg-primary-50/50 mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-2 backdrop-blur-sm"
+          >
+            <Zap className="text-primary-500 h-4 w-4" aria-hidden="true" focusable="false" />
+            <span className="text-primary-700 text-sm font-semibold">
+              {t('trustBadge', { count: statsConfig.values.userCount })}
+            </span>
+          </motion.div>
+
+          {/* Main headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mb-6 text-4xl leading-[1.05] font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
+          >
+            {t.rich('title', {
+              highlight: (chunks) => (
+                <span className="from-primary-500 via-primary-600 to-accent-500 bg-gradient-to-r bg-clip-text text-transparent">
+                  {chunks}
                 </span>
-              </span>
-            </h1>
+              ),
+            })}
+          </motion.h1>
 
-            <p className="-mt-2 text-lg leading-relaxed text-[#636E72] sm:-mt-3 sm:text-xl">
-              {t('subtitle')}
-            </p>
-            {/*
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button 
-                onClick={() => setIsQuizModalOpen(true)}
-                className="group bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+          {/* Subheadline */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mb-8 text-lg leading-relaxed text-slate-700 sm:text-xl lg:text-2xl"
+          >
+            {t.rich('subtitle', {
+              strong: (chunks) => (
+                <strong className="font-semibold text-slate-900">{chunks}</strong>
+              ),
+              accent: (chunks) => <span className="text-slate-700">{chunks}</span>,
+            })}
+          </motion.p>
+
+          {/* Trust row */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mb-12 flex flex-col items-center justify-center gap-6 text-sm text-slate-600 sm:flex-row sm:gap-8"
+          >
+            {statsConfig.showStats.starRating && (
+              <div
+                className="flex items-center gap-2"
+                role="img"
+                aria-label={t('rating.aria', { rating: statsConfig.values.starRating })}
               >
-                <i className="fas fa-brain mr-2 group-hover:scale-110 transition-transform"></i>
-                <span>{t('startLearningFree')}</span>
-                <i className="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-              </button>
-              
-              <button 
-                onClick={() => setIsVideoModalOpen(true)}
-                className="group bg-white/80 backdrop-blur px-8 py-4 rounded-full font-semibold text-lg border-2 border-gray-200 hover:border-[#FF7B54] transition-all duration-300 flex items-center justify-center"
-              >
-                <i className="fas fa-play-circle mr-2 text-[#FF7B54] group-hover:scale-110 transition-transform"></i>
-                {t('watchDemo')}
-              </button>
-            </div>
-              */}
-
-            {/* App Store Buttons */}
-            <div className="flex flex-wrap gap-4 pt-4">
-              <AppStoreButton store="apple" className="h-12" />
-              <AppStoreButton store="google" className="h-12" />
-            </div>
-
-            {/* Social Proof */}
-            {statsConfig.locations.heroSection.showSocialProof && (
-              <div className="flex items-center space-x-8 text-sm text-[#636E72]">
-                {statsConfig.showStats.starRating && (
-                  <div className="flex items-center space-x-2">
-                    <div className="flex -space-x-1">
-                      <i className="fas fa-star text-yellow-400"></i>
-                      <i className="fas fa-star text-yellow-400"></i>
-                      <i className="fas fa-star text-yellow-400"></i>
-                      <i className="fas fa-star text-yellow-400"></i>
-                      <i className="fas fa-star text-yellow-400"></i>
-                    </div>
-                    <span className="font-semibold">{statsConfig.values.starRating}</span>
-                  </div>
-                )}
-                {statsConfig.showStats.userCount && (
-                  <div className="flex items-center space-x-2">
-                    <i className="fas fa-users text-[#FF7B54]"></i>
-                    <span>{statsConfig.values.userCount}+ active learners</span>
-                  </div>
-                )}
-                {statsConfig.showStats.languageCount && (
-                  <div className="flex items-center space-x-2">
-                    <i className="fas fa-globe text-[#FF7B54]"></i>
-                    <span>{statsConfig.values.totalLanguages}</span>
-                  </div>
-                )}
+                <div className="flex" aria-hidden="true">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className="h-5 w-5 fill-yellow-400 text-yellow-400"
+                      strokeWidth={0}
+                      aria-hidden="true"
+                      focusable="false"
+                    />
+                  ))}
+                </div>
+                <span className="font-semibold text-slate-700">
+                  {statsConfig.values.starRating}/5
+                </span>
+                <span className="text-slate-500">{t('rating.reviews', { count: '2,500+' })}</span>
               </div>
             )}
-          </div>
+            <div className="hidden h-4 w-px bg-slate-300 sm:block" aria-hidden="true"></div>
+            <span className="font-medium text-slate-600">{t('trust.freePlan')}</span>
+            <span className="font-medium text-slate-600">{t('trust.noCard')}</span>
+          </motion.div>
 
-          {/* Hero Visual */}
-          <div className="slide-in-right relative order-2 mt-8 lg:order-2 lg:mt-0">
-            <div className="relative z-10">
-              {/* Phone Mockup */}
-              <div className="relative mx-auto w-64 max-w-sm sm:w-72 md:w-80 lg:w-96 lg:max-w-md xl:w-[400px]">
-                <div className="card-3d rotate-3 transform rounded-[3rem] bg-gray-900 p-2 shadow-2xl transition-transform duration-700 hover:rotate-0 sm:rotate-6">
-                  <div className="overflow-hidden rounded-[2.5rem] bg-white">
-                    {/* App Demo Video */}
-                    <div className="relative">
-                      <video
-                        className="h-auto w-full rounded-[2rem] object-contain"
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        preload="metadata"
-                        poster="/app-screenshot.jpeg"
-                      >
-                        <source src="/hero-demo.webm" type="video/webm" />
-                        <source src="/hero-demo.mp4" type="video/mp4" />
-                        {/* Fallback for browsers without video support */}
-                        <Image
-                          src="/app-screenshot.jpeg"
-                          alt={t('imageAlt')}
-                          width={320}
-                          height={678}
-                          className="h-auto w-full rounded-[2rem] object-contain"
-                          priority
-                          sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, (max-width: 1024px) 320px, (max-width: 1280px) 352px, 384px"
-                        />
-                      </video>
+          {/* App Store Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4"
+          >
+            <AppStoreButton
+              store="apple"
+              className="h-12 opacity-90 transition-opacity hover:opacity-100"
+            />
+            <AppStoreButton
+              store="google"
+              className="h-12 opacity-90 transition-opacity hover:opacity-100"
+            />
+          </motion.div>
+        </div>
+
+        {/* Hero Visual - Bento Grid Style */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.3 }}
+          className="relative mx-auto mt-16 max-w-5xl lg:mt-20"
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-12 md:gap-6">
+            {/* Main phone mockup - larger column */}
+            <div className="relative md:col-span-7">
+              <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 p-3 shadow-2xl transition-all duration-300 hover:shadow-[0_20px_70px_-15px_rgba(0,0,0,0.3)]">
+                <div className="max-h-[460px] overflow-hidden rounded-2xl bg-white sm:max-h-[560px] lg:max-h-[620px]">
+                  <video
+                    className="h-full w-full object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="metadata"
+                    poster="/app-screenshot.jpeg"
+                    aria-label={t('video.aria')}
+                  >
+                    <source src="/hero-demo.webm" type="video/webm" />
+                    <source src="/hero-demo.mp4" type="video/mp4" />
+                    <Image
+                      src="/app-screenshot.jpeg"
+                      alt={t('imageAlt')}
+                      width={600}
+                      height={1200}
+                      className="h-full w-full object-cover"
+                      priority
+                      sizes="(max-width: 768px) 100vw, 600px"
+                    />
+                  </video>
+                </div>
+                {/* Glow effect */}
+                <div className="from-primary-500 to-accent-500 pointer-events-none absolute -inset-0.5 rounded-3xl bg-gradient-to-r opacity-0 blur transition-opacity duration-300 group-hover:opacity-20"></div>
+              </div>
+            </div>
+
+            {/* Side cards - smaller columns */}
+            <div className="flex flex-col gap-4 md:col-span-5 md:gap-6">
+              {/* Analytics preview card */}
+              <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl">
+                <div className="bg-success-100 text-success-700 mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
+                  <span className="relative flex h-2 w-2">
+                    <span className="bg-success-400 absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"></span>
+                    <span className="bg-success-500 relative inline-flex h-2 w-2 rounded-full"></span>
+                  </span>
+                  {t('cards.analytics.badge')}
+                </div>
+                <h3 className="mb-2 text-lg font-bold text-slate-900">
+                  {t('cards.analytics.title')}
+                </h3>
+                <p className="mb-4 text-sm text-slate-600">{t('cards.analytics.description')}</p>
+                {/* Mini progress bars preview */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-16 text-xs text-slate-500">
+                      {t('cards.analytics.languages.french')}
+                    </span>
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                      <div className="from-success-400 to-success-500 h-full w-[85%] rounded-full bg-gradient-to-r"></div>
                     </div>
+                    <span className="text-success-600 w-8 text-xs font-semibold">85%</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-16 text-xs text-slate-500">
+                      {t('cards.analytics.languages.spanish')}
+                    </span>
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                      <div className="from-primary-400 to-primary-500 h-full w-[72%] rounded-full bg-gradient-to-r"></div>
+                    </div>
+                    <span className="text-primary-600 w-8 text-xs font-semibold">72%</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-16 text-xs text-slate-500">
+                      {t('cards.analytics.languages.japanese')}
+                    </span>
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                      <div className="from-accent-400 to-accent-500 h-full w-[45%] rounded-full bg-gradient-to-r"></div>
+                    </div>
+                    <span className="text-accent-600 w-8 text-xs font-semibold">45%</span>
                   </div>
                 </div>
               </div>
+
+              {/* AI-generated content card */}
+              <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl">
+                <div className="bg-primary-100 text-primary-700 mb-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
+                  <Zap className="h-3 w-3" aria-hidden="true" focusable="false" />
+                  {t('cards.ai.badge')}
+                </div>
+                <h3 className="mb-2 text-lg font-bold text-slate-900">{t('cards.ai.title')}</h3>
+                <p className="mb-4 text-sm text-slate-600">{t('cards.ai.description')}</p>
+                {/* Feature icons row */}
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary-50 flex h-10 w-10 items-center justify-center rounded-lg">
+                    <span className="text-lg" aria-hidden="true">
+                      📖
+                    </span>
+                  </div>
+                  <div className="bg-accent-50 flex h-10 w-10 items-center justify-center rounded-lg">
+                    <span className="text-lg" aria-hidden="true">
+                      🖼️
+                    </span>
+                  </div>
+                  <div className="bg-success-50 flex h-10 w-10 items-center justify-center rounded-lg">
+                    <span className="text-lg" aria-hidden="true">
+                      🔊
+                    </span>
+                  </div>
+                  <div className="bg-secondary-50 flex h-10 w-10 items-center justify-center rounded-lg">
+                    <span className="text-lg" aria-hidden="true">
+                      💬
+                    </span>
+                  </div>
+                </div>
+              </div>
+
             </div>
-
-            {/* Floating Elements */}
-            <div className="pulse-glow absolute -top-4 -right-4 h-20 w-20 rounded-full bg-gradient-to-br from-yellow-400 to-[#FFD700] opacity-80"></div>
-            <div className="float-animation absolute -bottom-8 -left-8 h-16 w-16 rounded-full bg-gradient-to-br from-[#4CAF50] to-green-600 opacity-70"></div>
-            <div
-              className="float-animation absolute top-1/2 -right-12 h-12 w-12 rounded-full bg-gradient-to-br from-purple-400 to-[#9C27B0] opacity-60"
-              style={{ animationDelay: '2s' }}
-            ></div>
           </div>
-        </div>
+        </motion.div>
       </div>
-
-      {/* Video Modal */}
-      <VideoModal
-        isOpen={isVideoModalOpen}
-        onClose={() => setIsVideoModalOpen(false)}
-        videoId="dQw4w9WgXcQ" // Replace with actual demo video ID
-        title={t('videoTitle')}
-      />
-
-      {/* Quiz Demo Modal removed */}
     </section>
   )
 }

@@ -18,7 +18,11 @@ declare global {
   }
 }
 
-const AppStoreButton: React.FC<AppStoreButtonProps> = ({ store, className = '', size = 'medium' }) => {
+const AppStoreButton: React.FC<AppStoreButtonProps> = ({
+  store,
+  className = '',
+  size = 'medium',
+}) => {
   const { showModal } = useAppStoreModal()
   const t = useTranslations('common.appStore')
 

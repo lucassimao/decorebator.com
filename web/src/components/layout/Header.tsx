@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Menu, X } from 'lucide-react'
 import LanguageSwitcher from '../common/LanguageSwitcher'
 import DownloadAppButton from '../common/DownloadAppButton'
 
@@ -15,7 +16,7 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0)
+      setIsScrolled(window.scrollY > 20)
     }
 
     window.addEventListener('scroll', handleScroll)
@@ -28,121 +29,131 @@ const Header: React.FC = () => {
 
   return (
     <header
-      className={`glass fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${isScrolled ? 'backdrop-blur-lg' : ''}`}
+      className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? 'border-b border-slate-200 bg-white/80 shadow-sm backdrop-blur-xl'
+          : 'bg-white/60 backdrop-blur-md'
+      }`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="group flex cursor-pointer items-center space-x-3">
-            <div className="flex h-10 w-10 transform items-center justify-center transition-transform duration-300 group-hover:rotate-12">
+        <div className="flex h-16 items-center justify-between sm:h-20">
+          {/* Logo */}
+          <Link
+            href={`/${locale}`}
+            className="group flex cursor-pointer items-center space-x-2.5 transition-transform duration-200 hover:scale-[1.02]"
+          >
+            <div className="flex h-9 w-9 items-center justify-center">
               <Image
                 src="/logo.png"
                 alt="Decorebator Logo"
-                width={40}
-                height={40}
-                className="h-10 w-10"
+                width={36}
+                height={36}
+                className="h-9 w-9 transition-transform duration-200 group-hover:rotate-6"
                 priority
               />
             </div>
-            <span className="bg-gradient-to-r from-[#FF7B54] to-orange-600 bg-clip-text text-2xl font-bold text-transparent">
+            <span className="from-primary-500 to-primary-600 bg-gradient-to-r bg-clip-text text-xl font-bold text-transparent sm:text-2xl">
               Decorebator
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden items-center space-x-6 md:flex">
-            <a
-              href={`/${locale}`}
-              className="font-medium text-[#636E72] transition-colors duration-300 hover:text-[#FF7B54]"
-            >
-              {t('home')}
-            </a>
+          <nav className="hidden items-center space-x-8 md:flex">
             <a
               href={`/${locale}/#features`}
-              className="font-medium text-[#636E72] transition-colors duration-300 hover:text-[#FF7B54]"
+              className="hover:text-primary-500 focus-visible:ring-primary-500 text-sm font-medium text-slate-600 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t('features')}
             </a>
             <a
               href={`/${locale}/#how-it-works`}
-              className="font-medium text-[#636E72] transition-colors duration-300 hover:text-[#FF7B54]"
+              className="hover:text-primary-500 focus-visible:ring-primary-500 text-sm font-medium text-slate-600 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t('howItWorks')}
             </a>
             <a
               href={`/${locale}/#pricing`}
-              className="font-medium text-[#636E72] transition-colors duration-300 hover:text-[#FF7B54]"
+              className="hover:text-primary-500 focus-visible:ring-primary-500 text-sm font-medium text-slate-600 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t('pricing')}
             </a>
             <a
               href={`/${locale}/#faq`}
-              className="font-medium text-[#636E72] transition-colors duration-300 hover:text-[#FF7B54]"
+              className="hover:text-primary-500 focus-visible:ring-primary-500 text-sm font-medium text-slate-600 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t('faq')}
             </a>
             <LanguageSwitcher />
-            <DownloadAppButton className="inline-block transform rounded-full bg-gradient-to-r from-[#FF7B54] to-orange-600 px-6 py-2.5 font-semibold text-white transition-all duration-300 hover:scale-105 hover:shadow-lg">
+            <DownloadAppButton className="bg-primary-500 hover:bg-primary-600 rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md">
               {t('getStartedFree')}
             </DownloadAppButton>
           </nav>
 
           {/* Mobile Menu Button */}
-          <button className="p-2 md:hidden" onClick={toggleMobileMenu}>
-            <i className="fas fa-bars text-2xl text-[#2D3436]"></i>
+          <button
+            className="focus-visible:ring-primary-500 rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:hidden"
+            onClick={toggleMobileMenu}
+            aria-label="Toggle menu"
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-navigation"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
         {/* Mobile Navigation */}
-        <div
-          className={`${isMobileMenuOpen ? 'block' : 'hidden'} absolute top-16 right-0 left-0 rounded-b-2xl bg-white/95 shadow-xl backdrop-blur-lg md:hidden`}
-        >
-          <nav className="flex flex-col space-y-4 p-6">
-            <a
-              href={`/${locale}`}
-              className="font-medium text-[#636E72] transition-colors hover:text-[#FF7B54]"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {t('home')}
-            </a>
-            <a
-              href={`/${locale}/#features`}
-              className="font-medium text-[#636E72] transition-colors hover:text-[#FF7B54]"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {t('features')}
-            </a>
-            <a
-              href={`/${locale}/#how-it-works`}
-              className="font-medium text-[#636E72] transition-colors hover:text-[#FF7B54]"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {t('howItWorks')}
-            </a>
-            <a
-              href={`/${locale}/#pricing`}
-              className="font-medium text-[#636E72] transition-colors hover:text-[#FF7B54]"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {t('pricing')}
-            </a>
-            <a
-              href={`/${locale}/#faq`}
-              className="font-medium text-[#636E72] transition-colors hover:text-[#FF7B54]"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {t('faq')}
-            </a>
-            <div className="border-t border-gray-200 pt-2">
-              <LanguageSwitcher />
-            </div>
-            <DownloadAppButton
-              className="inline-block rounded-full bg-gradient-to-r from-[#FF7B54] to-orange-600 px-6 py-3 text-center font-semibold text-white"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {t('getStartedFree')}
-            </DownloadAppButton>
-          </nav>
-        </div>
+        {isMobileMenuOpen && (
+          <div id="mobile-navigation" className="border-t border-slate-200 bg-white md:hidden">
+            <nav className="flex flex-col space-y-1 py-4">
+              <a
+                href={`/${locale}`}
+                className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {t('home')}
+              </a>
+              <a
+                href={`/${locale}/#features`}
+                className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {t('features')}
+              </a>
+              <a
+                href={`/${locale}/#how-it-works`}
+                className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {t('howItWorks')}
+              </a>
+              <a
+                href={`/${locale}/#pricing`}
+                className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {t('pricing')}
+              </a>
+              <a
+                href={`/${locale}/#faq`}
+                className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {t('faq')}
+              </a>
+              <div className="border-t border-slate-200 px-4 pt-3">
+                <LanguageSwitcher />
+              </div>
+              <div className="px-4 pt-2">
+                <DownloadAppButton
+                  className="bg-primary-500 w-full rounded-full px-5 py-3 text-center text-sm font-semibold text-white"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {t('getStartedFree')}
+                </DownloadAppButton>
+              </div>
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   )

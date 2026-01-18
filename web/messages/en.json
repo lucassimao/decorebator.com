@@ -60,7 +60,7 @@
     "getStartedFree": "Download App"
   },
   "hero": {
-    "title": "Master Languages with Decorebator",
+    "title": "Master Any Language with <highlight>AI‑Powered Flashcards</highlight>",
     "rotatingWords": {
       "aiIntelligence": "AI Intelligence",
       "spacedRepetition": "Spaced Repetition",
@@ -68,16 +68,45 @@
       "smartQuizzes": "Smart Quizzes"
     },
     "tagline": "AI-Powered Learning • 7 Languages • Multi-Platform",
-    "imageAlt": "Decorebator App Demo showing interactive learning features, quiz modes, and progress tracking",
+    "imageAlt": "Decorebator app interface",
     "videoTitle": "Decorebator Demo - AI-Powered Vocabulary Learning",
     "socialProof": "+ active learners",
-    "subtitle": "Transform your vocabulary learning with AI-generated content, scientifically-proven spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.",
+    "subtitle": "Learn vocabulary <strong>3x faster</strong> with spaced repetition, AI-generated content, and 8 engaging quiz modes. <accent>No memorization, just results.</accent>",
     "startLearningFree": "Start Learning Free",
     "watchDemo": "Watch Demo",
     "stats": {
       "rating": "4.9/5",
       "activeLearnersCount": "10,000+ active learners",
       "languagesCount": "7 native AI languages"
+    },
+    "trustBadge": "Trusted by {count} language learners",
+    "trust": {
+      "freePlan": "Free plan available",
+      "noCard": "No credit card required"
+    },
+    "rating": {
+      "reviews": "({count} reviews)",
+      "aria": "Rated {rating} out of 5"
+    },
+    "video": {
+      "aria": "App demo video"
+    },
+    "cards": {
+      "analytics": {
+        "badge": "Premium Feature",
+        "title": "Track Your Progress",
+        "description": "Advanced analytics show your mastery level, learning velocity, and retention rates.",
+        "languages": {
+          "french": "French",
+          "spanish": "Spanish",
+          "japanese": "Japanese"
+        }
+      },
+      "ai": {
+        "badge": "AI-Powered",
+        "title": "Auto-Generated Content",
+        "description": "Definitions, images, audio, and examples created instantly for every word."
+      }
     }
   },
   "features": {
@@ -143,29 +172,39 @@
     }
   },
   "howItWorks": {
-    "title": "Your Learning Journey in 3 Simple Steps",
-    "subtitle": "Our streamlined process makes vocabulary learning efficient, engaging, and effective.",
+    "title": {
+      "part1": "Your Learning Journey in ",
+      "part2": "3 Simple Steps"
+    },
+    "subtitle": "Transform your vocabulary learning with our scientifically-proven approach that adapts to your learning style.",
     "step1": {
       "title": "Create Your Wordlist",
-      "description": "Simply add words you want to learn. Our AI instantly generates comprehensive learning materials.",
+      "description": "Start by adding words you want to learn. Our AI instantly generates definitions, images, and audio for each word.",
       "features": [
-        "AI-generated definitions & examples",
-        "AI visual associations",
-        "High-quality audio pronunciations"
+        "AI-powered definitions in your target language",
+        "Custom images to enhance memory retention",
+        "Natural-sounding audio pronunciation",
+        "Example sentences with context"
       ]
     },
     "step2": {
-      "title": "Take Engaging Quizzes",
-      "description": "Practice with 8 different quiz modes that adapt to your learning progress.",
-      "features": ["Meaning ↔ Word matching", "Image & audio recognition", "Sentence completion"]
+      "title": "Practice with Smart Quizzes",
+      "description": "Engage with 8 different quiz modes designed to reinforce your learning from multiple angles.",
+      "features": [
+        "Multiple choice and fill-in-the-blank questions",
+        "Visual recognition challenges",
+        "Audio comprehension exercises",
+        "Adaptive difficulty based on your progress"
+      ]
     },
     "step3": {
-      "title": "Master with Repetition",
-      "description": "Our 7-box Leitner system schedules reviews at optimal intervals for maximum retention.",
+      "title": "Master with Spaced Repetition",
+      "description": "Our advanced Leitner system schedules reviews at optimal intervals to maximize retention.",
       "features": [
-        "Adaptive review scheduling",
-        "Progress tracking & insights",
-        "Long-term retention focus"
+        "7-box progressive system",
+        "Intelligent review scheduling",
+        "Focus on challenging words",
+        "Long-term retention optimization"
       ]
     }
   },
@@ -178,19 +217,19 @@
       "satisfaction": "4.9/5 satisfaction"
     },
     "testimonial1": {
-      "text": "Decorebator completely changed how I learn vocabulary. The AI-generated images and spaced repetition system helped me master 500+ Spanish words in just 2 months!",
-      "author": "Sarah Chen",
-      "role": "Spanish Learner"
+      "text": "Decorebator transformed how I learn Spanish. The AI-generated images help me remember words much faster than traditional flashcards.",
+      "author": "Sarah Johnson",
+      "role": "Learning Spanish"
     },
     "testimonial2": {
-      "text": "As a language teacher, I recommend Decorebator to all my students. The analytics feature helps me track their progress and the multiple quiz modes keep them engaged.",
-      "author": "Dr. Marcus Weber",
-      "role": "Language Professor"
+      "text": "The spaced repetition system is brilliant. I've learned more kanji in 3 months than I did in a year with other apps.",
+      "author": "Marc Dubois",
+      "role": "Learning Japanese"
     },
     "testimonial3": {
-      "text": "The offline feature is perfect for my commute. I can practice vocabulary on the subway without worrying about connectivity. The AI content quality is impressive!",
-      "author": "Yuki Tanaka",
-      "role": "Business Professional"
+      "text": "As a busy professional, the offline mode is a game-changer. I can practice during my commute without worrying about connectivity.",
+      "author": "Elena Rossi",
+      "role": "Learning German"
     }
   },
   "faq": {
@@ -243,11 +282,8 @@
     }
   },
   "pricing": {
-    "title": {
-      "part1": "Choose Your ",
-      "part2": "Learning Plan"
-    },
-    "subtitle": "Start free and upgrade anytime. All plans include AI-powered vocabulary enrichment and spaced repetition.",
+    "title": "Start free. <highlight>Upgrade when ready.</highlight>",
+    "subtitle": "Choose the plan that's right for you. No contracts, cancel anytime.",
     "allPlansInclude": "✨ All Plans Include",
     "features": {
       "aiContent": "AI-Powered Content",
@@ -261,10 +297,16 @@
         "name": "Free",
         "title": "Free Plan",
         "price": "$0",
-        "period": "",
-        "description": "Perfect for trying out vocabulary learning",
-        "features": ["1 Wordlist", "Up to 10 Words", "Basic Quiz Modes", "Limited Analytics"],
-        "cta": "Get Started Free"
+        "period": "/forever",
+        "description": "Perfect for trying out",
+        "features": [
+          "1 Wordlist",
+          "Up to 10 Words",
+          "Basic Quiz Modes",
+          "Limited Analytics",
+          "AI-Generated Content"
+        ],
+        "cta": "Start Free"
       },
       "monthly": {
         "name": "Monthly Premium",
@@ -289,9 +331,48 @@
         "period": "/year",
         "description": "Best value for committed learners",
         "savings": "Save $13.98 per year",
-        "features": ["Everything in Monthly", "Save $13.98 per year", "Early Access to Features"],
+        "features": [
+          "Everything in Monthly",
+          "Save $13.98 per year",
+          "Early Access to Features"
+        ],
         "cta": "Start Annual"
+      },
+      "premium": {
+        "name": "Premium",
+        "description": "Full access with {cycle} flexibility",
+        "monthlyLabel": "/month",
+        "annualNote": "Billed annually at ${price}",
+        "cta": "Get Premium",
+        "features": {
+          "unlimitedWordlists": "Unlimited Wordlists & Words",
+          "allQuizModes": "All 8 Quiz Modes",
+          "advancedAnalytics": "Advanced Analytics",
+          "offlineSupport": "Offline Support",
+          "realTimeSpeaking": "Real-time Speaking Practice",
+          "publicQuizSharing": "Public Quiz Sharing",
+          "errorReporting": "Error Reporting (10/hr, 30/day)",
+          "prioritySupport": "Priority Support"
+        }
       }
+    },
+    "billing": {
+      "monthly": "Monthly",
+      "annual": "Annual",
+      "save": "Save {savings}%",
+      "aria": "Billing cycle: {cycle}",
+      "monthlyCycle": "monthly",
+      "annualCycle": "annual"
+    },
+    "badges": {
+      "mostPopular": "MOST POPULAR",
+      "new": "NEW"
+    },
+    "guarantee": "✓ 14-day money-back guarantee",
+    "trust": {
+      "noCard": "✓ No credit card required",
+      "cancelAnytime": "✓ Cancel anytime",
+      "secureStripe": "✓ Secure payment via Stripe"
     }
   },
   "newFeatures": {
@@ -307,15 +388,18 @@
       },
       "aiContent": {
         "title": "AI-Powered Content Generation",
-        "description": "Automatically generates definitions, examples, images, and audio pronunciations for any word using advanced AI models."
+        "description": "Automatically generates definitions, examples, images, and audio pronunciations for any word using advanced AI models.",
+        "stats": "Definitions, images & audio for 7 languages"
       },
       "spacedRepetition": {
         "title": "Leitner Spaced Repetition",
-        "description": "Scientifically proven system with 7 review boxes that optimizes when you review words for maximum long-term retention."
+        "description": "Scientifically proven system with 7 review boxes that optimizes when you review words for maximum long-term retention.",
+        "stats": "Scientifically-proven spaced repetition"
       },
       "quizModes": {
         "title": "8 Engaging Quiz Modes",
-        "description": "Multiple quiz types: meaning matching, image association, audio comprehension, sentence completion, write from definition, and more."
+        "description": "Multiple quiz types: meaning matching, image association, audio comprehension, sentence completion, write from definition, and more.",
+        "stats": "8 engaging quiz modes"
       },
       "visualLearning": {
         "title": "Visual Learning with AI Images",
@@ -385,11 +469,15 @@
     }
   },
   "cta": {
-    "title": "Ready to Transform Your Language Learning?",
-    "subtitle": "Master new languages with AI-powered vocabulary learning and spaced repetition.",
-    "subtitleWithStats": "Join {count}+ learners who are mastering new languages with AI-powered vocabulary learning and spaced repetition.",
-    "videoTitle": "Decorebator Demo - AI-Powered Vocabulary Learning",
-    "startFreeTrial": "Start Your Free Trial"
+    "title": "Start mastering languages today. <accent>Free.</accent>",
+    "subtitle": "Join {count} learners using AI-powered flashcards to master vocabulary faster than ever.",
+    "subtitleWithCount": "Join {count}+ learners who are mastering new languages with AI-powered vocabulary learning and spaced repetition.",
+    "primaryButton": "Start Learning Free",
+    "trust": {
+      "noCard": "No credit card required",
+      "trial": "7-day free premium trial",
+      "cancel": "Cancel anytime"
+    }
   },
   "contact": {
     "title": "Get in Touch",
@@ -435,25 +523,9 @@
     }
   },
   "footer": {
+    "heading": "Footer",
+    "support": "Support",
     "copyright": "© {year} Decorebator. All rights reserved.",
-    "screenReader": "Footer",
-    "navigation": {
-      "features": "Features",
-      "howItWorks": "How It Works",
-      "pricing": "Pricing",
-      "faq": "FAQ",
-      "support": "Support",
-      "helpCenter": "Help Center",
-      "privacy": "Privacy Policy",
-      "terms": "Terms of Service"
-    },
-    "about": {
-      "title": "About",
-      "soloEntrepreneur": "Solo Entrepreneur",
-      "location": "Brazil 🇧🇷",
-      "description": "Responsible for the architecture, full implementation, and design of this project. Solving a personal problem and thought it would be interesting to share with others.",
-      "followTwitter": "Follow on Twitter"
-    },
     "social": {
       "facebook": "Decorebator on Facebook",
       "twitter": "Decorebator on Twitter",
@@ -541,13 +613,41 @@
         "interval": "Review Interval",
         "purpose": "Purpose",
         "boxes": [
-          { "box": "Box 1", "interval": "Immediate", "purpose": "New words, failed reviews" },
-          { "box": "Box 2", "interval": "6 hours", "purpose": "Recent learning" },
-          { "box": "Box 3", "interval": "1 day", "purpose": "Short-term retention" },
-          { "box": "Box 4", "interval": "3 days", "purpose": "Medium-term retention" },
-          { "box": "Box 5", "interval": "1 week", "purpose": "Long-term retention" },
-          { "box": "Box 6", "interval": "2 weeks", "purpose": "Extended retention" },
-          { "box": "Box 7", "interval": "1 month", "purpose": "Mastered words" }
+          {
+            "box": "Box 1",
+            "interval": "Immediate",
+            "purpose": "New words, failed reviews"
+          },
+          {
+            "box": "Box 2",
+            "interval": "6 hours",
+            "purpose": "Recent learning"
+          },
+          {
+            "box": "Box 3",
+            "interval": "1 day",
+            "purpose": "Short-term retention"
+          },
+          {
+            "box": "Box 4",
+            "interval": "3 days",
+            "purpose": "Medium-term retention"
+          },
+          {
+            "box": "Box 5",
+            "interval": "1 week",
+            "purpose": "Long-term retention"
+          },
+          {
+            "box": "Box 6",
+            "interval": "2 weeks",
+            "purpose": "Extended retention"
+          },
+          {
+            "box": "Box 7",
+            "interval": "1 month",
+            "purpose": "Mastered words"
+          }
         ]
       },
       "progressionRules": {
@@ -607,11 +707,31 @@
       "supportedLanguages": "Supported Languages (7)",
       "aiFeatures": "AI Features per Language",
       "languages": [
-        { "flag": "🇺🇸", "name": "English", "bgClass": "bg-gradient-to-r from-red-50 to-orange-50" },
-        { "flag": "🇪🇸", "name": "Spanish", "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50" },
-        { "flag": "🇫🇷", "name": "French", "bgClass": "bg-gradient-to-r from-blue-50 to-white" },
-        { "flag": "🇩🇪", "name": "German", "bgClass": "bg-gradient-to-r from-gray-100 to-red-50" },
-        { "flag": "🇮🇹", "name": "Italian", "bgClass": "bg-gradient-to-r from-green-50 to-red-50" },
+        {
+          "flag": "🇺🇸",
+          "name": "English",
+          "bgClass": "bg-gradient-to-r from-red-50 to-orange-50"
+        },
+        {
+          "flag": "🇪🇸",
+          "name": "Spanish",
+          "bgClass": "bg-gradient-to-r from-yellow-50 to-red-50"
+        },
+        {
+          "flag": "🇫🇷",
+          "name": "French",
+          "bgClass": "bg-gradient-to-r from-blue-50 to-white"
+        },
+        {
+          "flag": "🇩🇪",
+          "name": "German",
+          "bgClass": "bg-gradient-to-r from-gray-100 to-red-50"
+        },
+        {
+          "flag": "🇮🇹",
+          "name": "Italian",
+          "bgClass": "bg-gradient-to-r from-green-50 to-red-50"
+        },
         {
           "flag": "🇵🇹",
           "name": "Portuguese",
@@ -831,13 +951,41 @@
         "title": "7-Box Leitner System",
         "description": "Words progress through 7 boxes based on your performance, with increasing review intervals:",
         "boxes": [
-          { "box": "Box 1", "interval": "Immediate", "purpose": "New words, failed reviews" },
-          { "box": "Box 2", "interval": "6 hours", "purpose": "Recent learning" },
-          { "box": "Box 3", "interval": "1 day", "purpose": "Short-term retention" },
-          { "box": "Box 4", "interval": "3 days", "purpose": "Medium-term retention" },
-          { "box": "Box 5", "interval": "1 week", "purpose": "Long-term retention" },
-          { "box": "Box 6", "interval": "2 weeks", "purpose": "Extended retention" },
-          { "box": "Box 7", "interval": "1 month", "purpose": "Mastered words" }
+          {
+            "box": "Box 1",
+            "interval": "Immediate",
+            "purpose": "New words, failed reviews"
+          },
+          {
+            "box": "Box 2",
+            "interval": "6 hours",
+            "purpose": "Recent learning"
+          },
+          {
+            "box": "Box 3",
+            "interval": "1 day",
+            "purpose": "Short-term retention"
+          },
+          {
+            "box": "Box 4",
+            "interval": "3 days",
+            "purpose": "Medium-term retention"
+          },
+          {
+            "box": "Box 5",
+            "interval": "1 week",
+            "purpose": "Long-term retention"
+          },
+          {
+            "box": "Box 6",
+            "interval": "2 weeks",
+            "purpose": "Extended retention"
+          },
+          {
+            "box": "Box 7",
+            "interval": "1 month",
+            "purpose": "Mastered words"
+          }
         ]
       },
       "progression": {
@@ -1422,43 +1570,6 @@
     },
     "success": "Password has been reset successfully!"
   },
-  "howItWorks": {
-    "title": {
-      "part1": "Your Learning Journey in ",
-      "part2": "3 Simple Steps"
-    },
-    "subtitle": "Transform your vocabulary learning with our scientifically-proven approach that adapts to your learning style.",
-    "step1": {
-      "title": "Create Your Wordlist",
-      "description": "Start by adding words you want to learn. Our AI instantly generates definitions, images, and audio for each word.",
-      "features": [
-        "AI-powered definitions in your target language",
-        "Custom images to enhance memory retention",
-        "Natural-sounding audio pronunciation",
-        "Example sentences with context"
-      ]
-    },
-    "step2": {
-      "title": "Practice with Smart Quizzes",
-      "description": "Engage with 8 different quiz modes designed to reinforce your learning from multiple angles.",
-      "features": [
-        "Multiple choice and fill-in-the-blank questions",
-        "Visual recognition challenges",
-        "Audio comprehension exercises",
-        "Adaptive difficulty based on your progress"
-      ]
-    },
-    "step3": {
-      "title": "Master with Spaced Repetition",
-      "description": "Our advanced Leitner system schedules reviews at optimal intervals to maximize retention.",
-      "features": [
-        "7-box progressive system",
-        "Intelligent review scheduling",
-        "Focus on challenging words",
-        "Long-term retention optimization"
-      ]
-    }
-  },
   "analytics": {
     "title": "Advanced Analytics Dashboard",
     "subtitle": "Track your vocabulary mastery with comprehensive learning insights",
@@ -1474,14 +1585,30 @@
       "minutes": "Minutes",
       "successRate": "Success Rate",
       "words": "Words",
-      "weekDays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      "weekDays": [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun"
+      ],
       "quizTypes": [
         "Guess Meaning",
         "Word from Meaning",
         "Image Association",
         "Audio Comprehension"
       ],
-      "boxLabels": ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5", "Box 6", "Box 7"],
+      "boxLabels": [
+        "Box 1",
+        "Box 2",
+        "Box 3",
+        "Box 4",
+        "Box 5",
+        "Box 6",
+        "Box 7"
+      ],
       "box1": "Box 1",
       "box2": "Box 2",
       "box3": "Box 3",
@@ -1503,20 +1630,15 @@
       "topWordsTitle": "Top Words by Mastery"
     }
   },
-  "cta": {
-    "title": "Ready to Transform Your Language Learning?",
-    "subtitle": "Master new languages with AI-powered vocabulary learning and spaced repetition.",
-    "subtitleWithCount": "Join {count}+ learners who are mastering new languages with AI-powered vocabulary learning and spaced repetition."
-  },
-  "footer": {
-    "heading": "Footer",
-    "support": "Support",
-    "copyright": "© {year} Decorebator. All rights reserved.",
-    "social": {
-      "facebook": "Decorebator on Facebook",
-      "twitter": "Decorebator on Twitter",
-      "instagram": "Decorebator on Instagram",
-      "linkedin": "Decorebator on LinkedIn"
+  "socialProof": {
+    "title": "Join thousands learning <highlight>smarter, not harder</highlight>",
+    "subtitle": "Trusted by language learners worldwide to achieve their goals faster with AI-powered vocabulary learning.",
+    "stats": {
+      "activeLearners": "Active Learners",
+      "languagesSupported": "Languages Supported",
+      "wordsLearned": "Words Learned",
+      "wordsLearnedValue": "500,000+",
+      "averageRating": "Average Rating"
     }
   }
 }

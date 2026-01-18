@@ -95,42 +95,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html>
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Preload LCP hero image to improve discovery/prioritization */}
         <link rel="preload" as="image" href="/app-screenshot.jpeg" fetchPriority="high" />
-
-        {/* Make Font Awesome non-blocking: preload + media=print swap */}
-        <link
-          rel="preload"
-          as="style"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
-        <link
-          id="fa-css"
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-          media="print"
-        />
-        <script
-          // Swap Font Awesome to media=all after it loads (non-blocking)
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){var l=document.getElementById('fa-css');if(!l)return;function s(){l.media='all';} if(l.addEventListener){l.addEventListener('load',s);} else {l.onload=s;}})();",
-          }}
-        />
-        <noscript>
-          <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-          />
-        </noscript>
-
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+        <link rel="preconnect" href="https://static.ads-twitter.com" crossOrigin="" />
+        <link rel="preconnect" href="https://upload.wikimedia.org" crossOrigin="" />
         {/* Twitter conversion tracking base code */}
-        <Script id="twitter-conversion-tracking" strategy="afterInteractive">
+        <Script id="twitter-conversion-tracking" strategy="lazyOnload">
           {`!function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);},s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-twitter.com/uwt.js',a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');twq('config','qpm75');`}
         </Script>
       </head>
