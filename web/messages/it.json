@@ -88,6 +88,10 @@
       "reviews": "({count} recensioni)",
       "aria": "Valutato {rating} su 5"
     },
+    "productSummary": {
+      "label": "Sintesi del prodotto:",
+      "body": "App di vocabolario con ripetizione dilazionata, contenuti generati dall’IA, 8 modalità di quiz e monitoraggio dei progressi multi‑dispositivo."
+    },
     "video": {
       "aria": "Video demo dell’app"
     },

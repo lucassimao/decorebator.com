@@ -234,6 +234,7 @@
 - [ ] **TC082** - Production API endpoints configured
 - [ ] **TC083** - RevenueCat production keys
 - [ ] **TC084** - Sentry production DSN
+- [ ] **TC084a** - Sentry Logs enabled for API (debug/info+); log payload reviewed for PII
 - [ ] **TC085** - No debug logs in production build
 - [ ] **TC086** - App signing properly configured
 

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { routing } from '../i18n'
+import { routing } from '../i18n/routing'
 
 const baseUrl = 'https://decorebator.com'
 

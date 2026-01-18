@@ -88,6 +88,10 @@
       "reviews": "({count} reviews)",
       "aria": "Rated {rating} out of 5"
     },
+    "productSummary": {
+      "label": "Product summary:",
+      "body": "AI vocabulary app with spaced repetition, auto-generated content, 8 quiz modes, and cross-device progress tracking."
+    },
     "video": {
       "aria": "App demo video"
     },

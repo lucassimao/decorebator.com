@@ -88,6 +88,10 @@
       "reviews": "({count} avis)",
       "aria": "Noté {rating} sur 5"
     },
+    "productSummary": {
+      "label": "Résumé du produit :",
+      "body": "Application de vocabulaire avec répétition espacée, contenu généré par IA, 8 modes de quiz et suivi des progrès multi‑appareils."
+    },
     "video": {
       "aria": "Vidéo de démonstration de l’app"
     },

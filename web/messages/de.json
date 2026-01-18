@@ -88,6 +88,10 @@
       "reviews": "({count} Bewertungen)",
       "aria": "Bewertet mit {rating} von 5"
     },
+    "productSummary": {
+      "label": "Produktzusammenfassung:",
+      "body": "Vokabel‑App mit Spaced Repetition, KI‑generierten Inhalten, 8 Quiz‑Modi und plattformübergreifendem Fortschritt."
+    },
     "video": {
       "aria": "App‑Demo‑Video"
     },

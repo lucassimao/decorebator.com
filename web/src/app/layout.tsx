@@ -4,6 +4,7 @@ import './globals.css'
 import Script from 'next/script'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/next'
+import { appStoreConfig } from '@/config/appStoreConfig'
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -84,6 +85,22 @@ export const metadata: Metadata = {
       it: 'https://decorebator.com/it',
       pt: 'https://decorebator.com/pt',
       ja: 'https://decorebator.com/ja',
+    },
+  },
+  appLinks: {
+    ios: {
+      url: appStoreConfig.appStoreUrl ?? 'https://decorebator.com',
+      app_store_id: '6749329064',
+      app_name: 'Decorebator',
+    },
+    android: {
+      package: 'com.lsimaocosta.decorebator',
+      url: appStoreConfig.playStoreUrl ?? 'https://decorebator.com',
+      app_name: 'Decorebator',
+    },
+    web: {
+      url: 'https://decorebator.com',
+      should_fallback: true,
     },
   },
   verification: {

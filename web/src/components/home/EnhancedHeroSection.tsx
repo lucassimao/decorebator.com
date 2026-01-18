@@ -60,6 +60,11 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = () => {
             })}
           </p>
 
+          <div className="mb-6 inline-flex max-w-3xl flex-wrap items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-white/80 px-5 py-3 text-sm text-slate-600 shadow-sm backdrop-blur-sm">
+            <span className="text-slate-900">{t('productSummary.label')}</span>
+            <span>{t('productSummary.body')}</span>
+          </div>
+
           {/* Trust row */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
