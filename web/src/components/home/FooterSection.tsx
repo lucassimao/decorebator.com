@@ -42,9 +42,17 @@ const FooterSection: React.FC = () => {
               quiz modes. Join 10,000+ learners today.
             </p>
             {/* App store buttons */}
-            <div className="flex flex-wrap gap-3">
-              <AppStoreButton store="apple" className="h-10 transition-opacity hover:opacity-80" />
-              <AppStoreButton store="google" className="h-10 transition-opacity hover:opacity-80" />
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <AppStoreButton
+                store="apple"
+                size="small"
+                className="transition-opacity hover:opacity-80"
+              />
+              <AppStoreButton
+                store="google"
+                size="small"
+                className="transition-opacity hover:opacity-80"
+              />
             </div>
           </div>
 

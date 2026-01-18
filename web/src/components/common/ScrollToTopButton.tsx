@@ -35,7 +35,18 @@ const ScrollToTopButton: React.FC = () => {
       className={`fixed right-4 bottom-4 z-40 flex h-11 w-11 transform items-center justify-center rounded-full bg-gradient-to-r from-[#FF7B54] to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-orange-200 focus-visible:ring-offset-2 focus-visible:outline-none md:hidden ${isVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-16 opacity-0'} `}
       aria-label="Scroll to top"
     >
-      <i className="fas fa-chevron-up text-sm"></i>
+      <svg
+        className="h-4 w-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M18 15l-6-6-6 6" />
+      </svg>
     </button>
   )
 }
