@@ -175,27 +175,29 @@ const PricingSection: React.FC = () => {
               </div>
 
               <div className="mb-6">
-                {isAnnual ? (
-                  <>
-                    <span className="text-5xl font-bold text-slate-900">
-                      ${annualMonthlyEquivalent}
-                    </span>
-                    <span className="text-slate-600">{t('plans.premium.monthlyLabel')}</span>
-                    <div className="mt-1 text-sm text-slate-500">
-                      {t('plans.premium.annualNote', { price: annualPrice })}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-5xl font-bold text-slate-900">${monthlyPrice}</span>
-                    <span className="text-slate-600">{t('plans.premium.monthlyLabel')}</span>
-                  </>
-                )}
+                <div className="flex flex-wrap items-end gap-x-2 gap-y-1">
+                  {isAnnual ? (
+                    <>
+                      <span className="text-5xl font-bold text-slate-900">
+                        ${annualMonthlyEquivalent}
+                      </span>
+                      <span className="text-slate-600">{t('plans.premium.monthlyLabel')}</span>
+                      <span className="text-xs text-slate-500">
+                        {t('plans.premium.annualNote', { price: annualPrice })}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-5xl font-bold text-slate-900">${monthlyPrice}</span>
+                      <span className="text-slate-600">{t('plans.premium.monthlyLabel')}</span>
+                    </>
+                  )}
+                </div>
               </div>
 
               <a
                 href="#download"
-                className="from-primary-500 to-primary-600 focus-visible:ring-primary-500 mb-8 block w-full rounded-full bg-gradient-to-r px-6 py-3 text-center font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                className="shimmer-button press-effect from-primary-500 to-primary-600 focus-visible:ring-primary-500 mb-8 block w-full rounded-full bg-gradient-to-r px-6 py-4 text-center font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-primary-500/25 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 {t('plans.premium.cta')}
               </a>

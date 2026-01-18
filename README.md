@@ -35,7 +35,7 @@ Decorebator is a multi-platform vocabulary learning system that combines AI cont
 - **Error reporting** with cooldowns/rate limits that trigger regeneration jobs.
 - **Background jobs** (River): definition fetch, image generation, audio generation, example-audio generation, public-quiz OG images, subscription reminders, webhook processing.
 - **Payments**: Stripe + RevenueCat with webhooks and optimistic client-side subscription updates.
-- **Monitoring**: Sentry and optional Datadog tracing.
+- **Monitoring**: Sentry error tracking + Sentry Logs (debug/info+ in production).
 
 ## 🧠 Key Business Logic
 

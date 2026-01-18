@@ -1,0 +1,24 @@
+[
+  {
+    "id": "daily.title",
+    "translation": "Il est temps de pratiquer"
+  },
+  {
+    "id": "daily.body",
+    "translation": "Votre dernier quiz remonte à un moment. Revenez pour une courte pratique."
+  },
+  {
+    "id": "due_items.title",
+    "translation": {
+      "one": "Vous avez 1 révision prévue",
+      "other": "Vous avez {{.DueCount}} révisions prévues"
+    }
+  },
+  {
+    "id": "due_items.body",
+    "translation": {
+      "one": "Vous avez 1 révision prévue dans {{.WordlistName}}. Revenez pour une courte session.",
+      "other": "Vous avez {{.DueCount}} révisions prévues dans {{.WordlistName}}. Revenez pour une courte session."
+    }
+  }
+]

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "daily.title",
+    "translation": "Hora de practicar"
+  },
+  {
+    "id": "daily.body",
+    "translation": "Tu último quiz fue hace un tiempo. Vuelve para una práctica rápida."
+  },
+  {
+    "id": "due_items.title",
+    "translation": {
+      "one": "Tienes 1 repaso pendiente",
+      "other": "Tienes {{.DueCount}} repasos pendientes"
+    }
+  },
+  {
+    "id": "due_items.body",
+    "translation": {
+      "one": "Tienes 1 repaso pendiente en {{.WordlistName}}. Vuelve para una sesión rápida.",
+      "other": "Tienes {{.DueCount}} repasos pendientes en {{.WordlistName}}. Vuelve para una sesión rápida."
+    }
+  }
+]

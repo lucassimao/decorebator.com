@@ -3,17 +3,29 @@ import { statsConfig } from '@/config/statsConfig'
 
 interface StructuredDataProps {
   type?: 'website' | 'softwareApplication' | 'mobileApplication'
+  locale?: string
+  siteUrl?: string
+  baseUrl?: string
+  description?: string
+  faqEntries?: { question: string; answer: string }[]
 }
 
-const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => {
+const StructuredData: React.FC<StructuredDataProps> = ({
+  type = 'website',
+  locale = 'en',
+  siteUrl = 'https://decorebator.com',
+  baseUrl = 'https://decorebator.com',
+  description = 'AI-powered vocabulary learning platform with spaced repetition, interactive quizzes, and comprehensive analytics',
+  faqEntries = [],
+}) => {
   const generateStructuredData = () => {
     const baseData = {
       '@context': 'https://schema.org',
       '@type': type === 'website' ? 'WebSite' : 'SoftwareApplication',
       name: 'Decorebator',
-      description:
-        'AI-powered vocabulary learning platform with spaced repetition, interactive quizzes, and comprehensive analytics',
-      url: 'https://decorebator.com',
+      description,
+      url: baseUrl,
+      inLanguage: locale,
       creator: {
         '@type': 'Organization',
         name: 'Decorebator Team',
@@ -83,7 +95,7 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
         screenshot: 'https://decorebator.com/app-screenshot.jpeg',
         softwareVersion: '2.0',
         datePublished: '2024-01-01',
-        dateModified: '2025-01-01',
+        dateModified: '2026-01-01',
         inLanguage: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja'],
         installUrl: {
           iOS: 'https://apps.apple.com/app/decorebator',
@@ -95,11 +107,6 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
     if (type === 'website') {
       return {
         ...baseData,
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: 'https://decorebator.com/search?q={search_term_string}',
-          'query-input': 'required name=search_term_string',
-        },
         mainEntity: {
           '@type': 'SoftwareApplication',
           name: 'Decorebator',
@@ -111,53 +118,29 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
     return baseData
   }
 
-  const faqStructuredData = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: 'How does the AI content generation work?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Our AI automatically generates comprehensive learning materials for each word you add. The system creates contextually relevant definitions, example sentences, culturally-aware images, and high-quality audio pronunciations in your target language, with language-specific grammar rules and voice optimization.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'What is the Advanced Leitner spaced repetition system?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Decorebator uses a scientifically optimized 7-box spaced repetition system with intervals: Box 1 (immediate), Box 2 (1 hour), Box 3 (6 hours), Box 4 (1 day), Box 5 (3 days), Box 6 (7 days), and Box 7 (1 month). Words progress through boxes based on your performance, with intelligent quiz type progression for optimal learning.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'What platforms and devices are supported?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Decorebator is available as a mobile app for iOS and Android devices with full feature support and multi-language capabilities. Your progress synchronizes across all your devices with automatic session management.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'What languages are supported for AI content generation?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `Decorebator supports ${statsConfig.showStats.languageCount ? statsConfig.values.languageCount : 'multiple'} languages with native AI processing: English, Spanish, French, German, Italian, Portuguese, and Japanese. Each language receives culturally-aware content generation, proper grammar rules, and optimized voice selection.`,
-        },
-      },
-    ],
-  }
+  const faqStructuredData =
+    faqEntries.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faqEntries.map((entry) => ({
+            '@type': 'Question',
+            name: entry.question,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: entry.answer,
+            },
+          })),
+        }
+      : null
 
   const organizationStructuredData = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Decorebator',
-    url: 'https://decorebator.com',
+    url: baseUrl,
     logo: 'https://decorebator.com/icon-512x512.png',
-    description:
-      'AI-powered vocabulary learning platform helping users master languages through spaced repetition and interactive learning',
+    description,
     foundingDate: '2024',
     contactPoint: {
       '@type': 'ContactPoint',
@@ -167,7 +150,7 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
     sameAs: [
       'https://twitter.com/decorebator',
       'https://facebook.com/decorebator',
-      'https://linkedin.com/company/decorebator',
+      'https://instagram.com/decorebator',
     ],
   }
 
@@ -179,70 +162,13 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: 'https://decorebator.com',
+        item: siteUrl,
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'Language Learning App',
-        item: 'https://decorebator.com',
-      },
-    ],
-  }
-
-  const educationalOrganizationData = {
-    '@context': 'https://schema.org',
-    '@type': 'EducationalOrganization',
-    name: 'Decorebator',
-    url: 'https://decorebator.com',
-    logo: 'https://decorebator.com/icon-512x512.png',
-    description: 'Advanced AI-powered vocabulary learning platform for language education',
-    educationalCredentialAwarded: 'Vocabulary mastery certification',
-    hasCredential: {
-      '@type': 'EducationalOccupationalCredential',
-      name: 'Language Learning Progress Tracking',
-      description: 'Comprehensive vocabulary learning progress with spaced repetition analytics',
-    },
-    teaches: [
-      'Vocabulary acquisition',
-      'Language comprehension',
-      'Spaced repetition methodology',
-      'Interactive language learning',
-      'Multi-language proficiency',
-    ],
-  }
-
-  const courseStructuredData = {
-    '@context': 'https://schema.org',
-    '@type': 'Course',
-    name: 'AI-Powered Vocabulary Learning',
-    description:
-      'Master vocabulary in any language using AI-generated content, spaced repetition, and interactive quizzes',
-    provider: {
-      '@type': 'Organization',
-      name: 'Decorebator',
-    },
-    educationalLevel: 'All levels',
-    courseMode: 'online',
-    numberOfCredits: 0,
-    timeRequired: 'PT30M',
-    inLanguage: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja'],
-    coursePrerequisites: 'None',
-    syllabusSections: [
-      {
-        '@type': 'Syllabus',
-        name: 'AI Content Generation',
-        description: 'Learn with AI-generated definitions, images, and audio',
-      },
-      {
-        '@type': 'Syllabus',
-        name: 'Spaced Repetition System',
-        description: 'Master the 7-box Leitner system for optimal retention',
-      },
-      {
-        '@type': 'Syllabus',
-        name: 'Interactive Quiz Modes',
-        description: 'Practice with 8 different quiz types and learning approaches',
+        item: siteUrl,
       },
     ],
   }
@@ -251,8 +177,7 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: 'Decorebator - AI Vocabulary Learning App',
-    description:
-      'Advanced vocabulary learning platform using AI content generation and spaced repetition',
+    description,
     brand: {
       '@type': 'Brand',
       name: 'Decorebator',
@@ -307,68 +232,14 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
     isAccessibleForFree: true,
   }
 
-  const howToStructuredData = {
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name: 'How to Learn Vocabulary with Decorebator',
-    description: 'Step-by-step guide to mastering vocabulary using AI-powered spaced repetition',
-    image: 'https://decorebator.com/app-screenshot.jpeg',
-    estimatedCost: {
-      '@type': 'MonetaryAmount',
-      currency: 'USD',
-      value: '0',
-    },
-    step: [
-      {
-        '@type': 'HowToStep',
-        name: 'Create Your Account',
-        text: 'Sign up for free and download the mobile app',
-        image: 'https://decorebator.com/step1-signup.jpg',
-      },
-      {
-        '@type': 'HowToStep',
-        name: 'Add Words to Learn',
-        text: 'Create wordlists and add vocabulary words you want to master',
-        image: 'https://decorebator.com/step2-addwords.jpg',
-      },
-      {
-        '@type': 'HowToStep',
-        name: 'AI Generates Content',
-        text: 'Our AI automatically creates definitions, images, and audio for each word',
-        image: 'https://decorebator.com/step3-ai-content.jpg',
-      },
-      {
-        '@type': 'HowToStep',
-        name: 'Practice with Quizzes',
-        text: 'Use 8 different quiz modes to test your knowledge and memory',
-        image: 'https://decorebator.com/step4-quiz.jpg',
-      },
-      {
-        '@type': 'HowToStep',
-        name: 'Track Your Progress',
-        text: 'Monitor your learning with detailed analytics and mastery levels',
-        image: 'https://decorebator.com/step5-analytics.jpg',
-      },
-    ],
-    totalTime: 'PT30M',
-  }
-
   const videoObjectData = {
     '@context': 'https://schema.org',
     '@type': 'VideoObject',
     name: 'Decorebator App Demo - AI Vocabulary Learning',
-    description:
-      'See how Decorebator uses AI to generate comprehensive learning materials and spaced repetition for vocabulary mastery',
+    description,
     thumbnailUrl: 'https://decorebator.com/app-screenshot.jpeg',
     uploadDate: '2024-12-01',
-    duration: 'PT2M30S',
-    contentUrl: 'https://decorebator.com/app-demo.mp4',
-    embedUrl: 'https://decorebator.com/embed/demo',
-    interactionStatistic: {
-      '@type': 'InteractionCounter',
-      interactionType: 'https://schema.org/WatchAction',
-      userInteractionCount: 15000,
-    },
+    contentUrl: 'https://decorebator.com/hero-demo.mp4',
     publisher: {
       '@type': 'Organization',
       name: 'Decorebator',
@@ -383,12 +254,14 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
           __html: JSON.stringify(generateStructuredData()),
         }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(faqStructuredData),
-        }}
-      />
+      {faqStructuredData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(faqStructuredData),
+          }}
+        />
+      )}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -404,25 +277,7 @@ const StructuredData: React.FC<StructuredDataProps> = ({ type = 'website' }) => 
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(educationalOrganizationData),
-        }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(courseStructuredData),
-        }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
           __html: JSON.stringify(productStructuredData),
-        }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(howToStructuredData),
         }}
       />
       <script

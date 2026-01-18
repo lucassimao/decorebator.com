@@ -8,8 +8,10 @@
 
 ## Build, Test, and Development Commands
 - **API backend**: `cd api && make setup` installs tools; `make test` runs the dockerized suite; `make lint`/`make format-check` match CI; use `docker compose -f docker-compose.yml up` for services, then `make run` (and `make workers` in another terminal).
+  - **Note**: Always check `api/Makefile` for the most up-to-date targets (e.g., `lint-changed`, `lint-staged`, `format`, `test-unit`).
 - **Mobile app**: `cd mobile && npm install`; `npm run start` launches Expo; run `npm run lint`, `npm run typecheck`, and `npm test` (Jest + Testing Library) before pushing.
 - **Web app**: `cd web && npm install`; `npm run dev` serves Next (port 4000); `npm run build` creates production output and sitemap; `npm run lint` or `npm run format:check` guard style.
+  - **Note**: Next 16 uses the new `proxy` convention (replaces `middleware`) and `next lint` is deprecated; use `npx eslint .` with the repo’s flat config if linting is needed.
 
 ## Coding Style & Naming Conventions
 - **Go**: Run `make format` (gofmt + goimports) and `make lint` (golangci-lint); use PascalCase for exports, camelCase for locals, SCREAMING_SNAKE_CASE for env vars.

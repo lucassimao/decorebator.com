@@ -1,0 +1,24 @@
+[
+  {
+    "id": "daily.title",
+    "translation": "Hora de praticar"
+  },
+  {
+    "id": "daily.body",
+    "translation": "Seu último quiz foi há algum tempo. Volte para uma prática rápida."
+  },
+  {
+    "id": "due_items.title",
+    "translation": {
+      "one": "Você tem 1 revisão pendente",
+      "other": "Você tem {{.DueCount}} revisões pendentes"
+    }
+  },
+  {
+    "id": "due_items.body",
+    "translation": {
+      "one": "Você tem 1 revisão pendente em {{.WordlistName}}. Volte para uma sessão rápida.",
+      "other": "Você tem {{.DueCount}} revisões pendentes em {{.WordlistName}}. Volte para uma sessão rápida."
+    }
+  }
+]

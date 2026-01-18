@@ -11,15 +11,20 @@ import DownloadAppButton from '../common/DownloadAppButton'
 const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [scrollProgress, setScrollProgress] = useState(0)
   const t = useTranslations('navigation')
   const locale = useLocale()
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20)
+      // Calculate scroll progress
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
+      const progress = scrollHeight > 0 ? (window.scrollY / scrollHeight) * 100 : 0
+      setScrollProgress(Math.min(progress, 100))
     }
 
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -28,13 +33,23 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header
-      className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'border-b border-slate-200 bg-white/80 shadow-sm backdrop-blur-xl'
-          : 'bg-white/60 backdrop-blur-md'
-      }`}
-    >
+    <>
+      {/* Scroll progress indicator */}
+      <div
+        className="fixed top-0 left-0 z-[60] h-0.5 bg-gradient-to-r from-primary-500 via-accent-500 to-primary-500 transition-all duration-150"
+        style={{
+          width: `${scrollProgress}%`,
+          opacity: isScrolled ? 1 : 0,
+        }}
+        aria-hidden="true"
+      />
+      <header
+        className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${
+          isScrolled
+            ? 'border-b border-slate-200/80 bg-white/90 shadow-lg shadow-slate-900/5 backdrop-blur-xl'
+            : 'bg-white/60 backdrop-blur-md'
+        }`}
+      >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between sm:h-20">
           {/* Logo */}
@@ -58,33 +73,41 @@ const Header: React.FC = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden items-center space-x-8 md:flex">
+          <nav className="hidden items-center space-x-1 md:flex">
             <a
               href={`/${locale}/#features`}
-              className="hover:text-primary-500 focus-visible:ring-primary-500 text-sm font-medium text-slate-600 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t('features')}
             </a>
             <a
               href={`/${locale}/#how-it-works`}
-              className="hover:text-primary-500 focus-visible:ring-primary-500 text-sm font-medium text-slate-600 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t('howItWorks')}
             </a>
             <a
               href={`/${locale}/#pricing`}
-              className="hover:text-primary-500 focus-visible:ring-primary-500 text-sm font-medium text-slate-600 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t('pricing')}
             </a>
             <a
               href={`/${locale}/#faq`}
-              className="hover:text-primary-500 focus-visible:ring-primary-500 text-sm font-medium text-slate-600 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t('faq')}
             </a>
-            <LanguageSwitcher />
-            <DownloadAppButton className="bg-primary-500 hover:bg-primary-600 rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md">
+            <a
+              href={`/${locale}/#download`}
+              className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+            >
+              {t('getStartedFree')}
+            </a>
+            <div className="mx-2">
+              <LanguageSwitcher />
+            </div>
+            <DownloadAppButton className="bg-primary-500 hover:bg-primary-600 shimmer-button press-effect ml-2 rounded-full px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-primary-500/25">
               {t('getStartedFree')}
             </DownloadAppButton>
           </nav>
@@ -140,6 +163,13 @@ const Header: React.FC = () => {
               >
                 {t('faq')}
               </a>
+              <a
+                href={`/${locale}/#download`}
+                className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {t('getStartedFree')}
+              </a>
               <div className="border-t border-slate-200 px-4 pt-3">
                 <LanguageSwitcher />
               </div>
@@ -156,6 +186,7 @@ const Header: React.FC = () => {
         )}
       </div>
     </header>
+    </>
   )
 }
 

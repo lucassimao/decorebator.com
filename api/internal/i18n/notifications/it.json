@@ -1,0 +1,24 @@
+[
+  {
+    "id": "daily.title",
+    "translation": "È ora di fare pratica"
+  },
+  {
+    "id": "daily.body",
+    "translation": "Il tuo ultimo quiz è passato da un po'. Torna per un rapido ripasso."
+  },
+  {
+    "id": "due_items.title",
+    "translation": {
+      "one": "Hai 1 ripasso pronto",
+      "other": "Hai {{.DueCount}} ripassi pronti"
+    }
+  },
+  {
+    "id": "due_items.body",
+    "translation": {
+      "one": "Hai 1 ripasso pronto in {{.WordlistName}}. Torna per una sessione veloce.",
+      "other": "Hai {{.DueCount}} ripassi pronti in {{.WordlistName}}. Torna per una sessione veloce."
+    }
+  }
+]

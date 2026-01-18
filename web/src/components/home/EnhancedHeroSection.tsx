@@ -28,21 +28,19 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="border-primary-200 bg-primary-50/50 mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-2 backdrop-blur-sm"
+            className="border-primary-200 bg-primary-50/80 badge-bounce mb-8 inline-flex items-center gap-2.5 rounded-full border px-5 py-2.5 shadow-sm backdrop-blur-sm"
           >
-            <Zap className="text-primary-500 h-4 w-4" aria-hidden="true" focusable="false" />
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="bg-success-400 absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"></span>
+              <span className="bg-success-500 relative inline-flex h-2.5 w-2.5 rounded-full"></span>
+            </span>
             <span className="text-primary-700 text-sm font-semibold">
               {t('trustBadge', { count: statsConfig.values.userCount })}
             </span>
           </motion.div>
 
           {/* Main headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="mb-6 text-4xl leading-[1.05] font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
-          >
+          <h1 className="mb-6 text-4xl leading-[1.05] font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
             {t.rich('title', {
               highlight: (chunks) => (
                 <span className="from-primary-500 via-primary-600 to-accent-500 bg-gradient-to-r bg-clip-text text-transparent">
@@ -50,22 +48,17 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = () => {
                 </span>
               ),
             })}
-          </motion.h1>
+          </h1>
 
           {/* Subheadline */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mb-8 text-lg leading-relaxed text-slate-700 sm:text-xl lg:text-2xl"
-          >
+          <p className="mb-8 text-lg leading-relaxed text-slate-700 sm:text-xl lg:text-2xl">
             {t.rich('subtitle', {
               strong: (chunks) => (
                 <strong className="font-semibold text-slate-900">{chunks}</strong>
               ),
               accent: (chunks) => <span className="text-slate-700">{chunks}</span>,
             })}
-          </motion.p>
+          </p>
 
           {/* Trust row */}
           <motion.div
@@ -107,15 +100,15 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4"
+            className="flex flex-col items-center justify-center gap-4 sm:flex-row"
           >
             <AppStoreButton
               store="apple"
-              className="h-12 opacity-90 transition-opacity hover:opacity-100"
+              className="h-14 transition-all duration-300 hover:scale-105 hover:shadow-lg"
             />
             <AppStoreButton
               store="google"
-              className="h-12 opacity-90 transition-opacity hover:opacity-100"
+              className="h-14 transition-all duration-300 hover:scale-105 hover:shadow-lg"
             />
           </motion.div>
         </div>
@@ -130,40 +123,53 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = () => {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-12 md:gap-6">
             {/* Main phone mockup - larger column */}
             <div className="relative md:col-span-7">
-              <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 p-3 shadow-2xl transition-all duration-300 hover:shadow-[0_20px_70px_-15px_rgba(0,0,0,0.3)]">
-                <div className="max-h-[460px] overflow-hidden rounded-2xl bg-white sm:max-h-[560px] lg:max-h-[620px]">
-                  <video
-                    className="h-full w-full object-cover"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    preload="metadata"
-                    poster="/app-screenshot.jpeg"
-                    aria-label={t('video.aria')}
-                  >
-                    <source src="/hero-demo.webm" type="video/webm" />
-                    <source src="/hero-demo.mp4" type="video/mp4" />
-                    <Image
-                      src="/app-screenshot.jpeg"
-                      alt={t('imageAlt')}
-                      width={600}
-                      height={1200}
-                      className="h-full w-full object-cover"
-                      priority
-                      sizes="(max-width: 768px) 100vw, 600px"
-                    />
-                  </video>
+              <div className="mx-auto w-fit">
+                <div className="group relative rounded-[3rem] bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 p-[10px] shadow-2xl transition-all duration-300 hover:shadow-[0_28px_90px_-20px_rgba(0,0,0,0.4)]">
+                  {/* iPhone-like frame details */}
+                  <div className="pointer-events-none absolute left-1/2 top-1.5 z-20 flex h-5 w-24 -translate-x-1/2 items-center justify-center gap-2 rounded-full bg-slate-950">
+                    <span className="h-1.5 w-8 rounded-full bg-slate-800"></span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-700"></span>
+                  </div>
+                  <div className="pointer-events-none absolute left-1 top-28 h-14 w-1.5 rounded-full bg-slate-700/80"></div>
+                  <div className="pointer-events-none absolute left-1 top-48 h-12 w-1.5 rounded-full bg-slate-700/80"></div>
+                  <div className="pointer-events-none absolute right-1 top-36 h-24 w-1.5 rounded-full bg-slate-700/80"></div>
+                  <div className="pointer-events-none absolute inset-1 rounded-[2.6rem] ring-1 ring-white/10"></div>
+                  <div className="aspect-[9/19.5] h-[620px] w-auto overflow-hidden rounded-[2.45rem] bg-black sm:h-[700px] lg:h-[780px]">
+                    <div className="h-full w-full rounded-[2.2rem] bg-white">
+                      <video
+                        className="h-full w-full object-cover"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        preload="metadata"
+                        poster="/app-screenshot.jpeg"
+                        aria-label={t('video.aria')}
+                      >
+                        <source src="/hero-demo.webm" type="video/webm" />
+                        <source src="/hero-demo.mp4" type="video/mp4" />
+                        <Image
+                          src="/app-screenshot.jpeg"
+                          alt={t('imageAlt')}
+                          width={600}
+                          height={1200}
+                          className="h-full w-full object-cover"
+                          priority
+                          sizes="(max-width: 768px) 100vw, 420px"
+                        />
+                      </video>
+                    </div>
+                  </div>
+                  {/* Glow effect */}
+                  <div className="from-primary-500 to-accent-500 pointer-events-none absolute -inset-0.5 rounded-[3.2rem] bg-gradient-to-r opacity-0 blur transition-opacity duration-300 group-hover:opacity-20"></div>
                 </div>
-                {/* Glow effect */}
-                <div className="from-primary-500 to-accent-500 pointer-events-none absolute -inset-0.5 rounded-3xl bg-gradient-to-r opacity-0 blur transition-opacity duration-300 group-hover:opacity-20"></div>
               </div>
             </div>
 
             {/* Side cards - smaller columns */}
             <div className="flex flex-col gap-4 md:col-span-5 md:gap-6">
               {/* Analytics preview card */}
-              <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl">
+              <div className="card-shine hover-lift group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50/50 p-6 shadow-lg">
                 <div className="bg-success-100 text-success-700 mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
                   <span className="relative flex h-2 w-2">
                     <span className="bg-success-400 absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"></span>
@@ -208,7 +214,7 @@ const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = () => {
               </div>
 
               {/* AI-generated content card */}
-              <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl">
+              <div className="card-shine hover-lift group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50/50 p-6 shadow-lg">
                 <div className="bg-primary-100 text-primary-700 mb-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
                   <Zap className="h-3 w-3" aria-hidden="true" focusable="false" />
                   {t('cards.ai.badge')}

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "daily.title",
+    "translation": "Zeit zum Üben"
+  },
+  {
+    "id": "daily.body",
+    "translation": "Dein letztes Quiz ist schon eine Weile her. Komm zurück für eine kurze Übung."
+  },
+  {
+    "id": "due_items.title",
+    "translation": {
+      "one": "Du hast 1 fällige Wiederholung",
+      "other": "Du hast {{.DueCount}} fällige Wiederholungen"
+    }
+  },
+  {
+    "id": "due_items.body",
+    "translation": {
+      "one": "Du hast 1 fällige Wiederholung in {{.WordlistName}}. Komm zurück für eine kurze Session.",
+      "other": "Du hast {{.DueCount}} fällige Wiederholungen in {{.WordlistName}}. Komm zurück für eine kurze Session."
+    }
+  }
+]

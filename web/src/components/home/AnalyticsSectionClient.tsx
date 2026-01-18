@@ -1,20 +1,27 @@
 'use client'
 
-import React from 'react'
-import dynamic from 'next/dynamic'
+import React, { useState, useEffect } from 'react'
 
-const AnalyticsSection = dynamic(() => import('./AnalyticsSection'), {
-  ssr: false,
-  loading: () => (
-    <section className="bg-white py-16 sm:py-20 lg:py-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="h-96 animate-pulse rounded-3xl bg-slate-100" />
-      </div>
-    </section>
-  ),
-})
+// Direct import to bypass dynamic import caching
+import AnalyticsSection from './AnalyticsSection'
 
 const AnalyticsSectionClient: React.FC = () => {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <section className="bg-gradient-to-b from-slate-50 via-white to-slate-50 py-16 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="h-[600px] animate-pulse rounded-3xl bg-slate-100" />
+        </div>
+      </section>
+    )
+  }
+
   return <AnalyticsSection />
 }
 

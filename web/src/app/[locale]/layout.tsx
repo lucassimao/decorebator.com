@@ -3,8 +3,29 @@ import ScrollToTopButton from '@/components/common/ScrollToTopButton'
 import StructuredData from '@/components/seo/StructuredData'
 import type { Metadata } from 'next'
 import { hasLocale, NextIntlClientProvider } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing } from '../../../i18n'
+
+const localeDescriptions: Record<string, string> = {
+  en: 'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
+  es: 'Domina cualquier idioma con aprendizaje de vocabulario con IA, repetición espaciada y 8 modos de quiz atractivos. Únete a estudiantes de todo el mundo que dominan nuevos idiomas eficazmente.',
+  fr: "Maîtrisez n'importe quelle langue avec l'apprentissage de vocabulaire alimenté par l'IA, la répétition espacée et 8 modes de quiz engageants. Rejoignez des apprenants du monde entier qui maîtrisent efficacement de nouvelles langues.",
+  de: 'Meistern Sie jede Sprache mit KI-gestütztem Vokabellernen, Wiederholung mit Abstand und 8 fesselnden Quiz-Modi. Schließen Sie sich Lernenden aus aller Welt an, die effektiv neue Sprachen meistern.',
+  it: "Padroneggia qualsiasi lingua con l'apprendimento del vocabolario alimentato dall'IA, la ripetizione distanziata e 8 modalità quiz coinvolgenti. Unisciti a studenti di tutto il mondo che padroneggiano efficacemente nuove lingue.",
+  pt: 'Domine qualquer idioma com aprendizado de vocabulário com IA, repetição espaçada e 8 modos de quiz envolventes. Junte-se a estudantes de todo o mundo dominando novos idiomas de forma eficaz.',
+  ja: 'AIが定義・例文・画像・音声を自動生成。実証済みの間隔反復と8種類のクイズで、語彙がしっかり定着します。',
+}
+
+const localeNames: Record<string, string> = {
+  en: 'English',
+  es: 'Español',
+  fr: 'Français',
+  de: 'Deutsch',
+  it: 'Italiano',
+  pt: 'Português',
+  ja: '日本語',
+}
 
 export async function generateMetadata({
   params,
@@ -12,26 +33,6 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>
 }): Promise<Metadata> {
   const { locale } = await params
-
-  const localeDescriptions: Record<string, string> = {
-    en: 'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
-    es: 'Domina cualquier idioma con aprendizaje de vocabulario con IA, repetición espaciada y 8 modos de quiz atractivos. Únete a estudiantes de todo el mundo que dominan nuevos idiomas eficazmente.',
-    fr: "Maîtrisez n'importe quelle langue avec l'apprentissage de vocabulaire alimenté par l'IA, la répétition espacée et 8 modes de quiz engageants. Rejoignez des apprenants du monde entier qui maîtrisent efficacement de nouvelles langues.",
-    de: 'Meistern Sie jede Sprache mit KI-gestütztem Vokabellernen, Wiederholung mit Abstand und 8 fesselnden Quiz-Modi. Schließen Sie sich Lernenden aus aller Welt an, die effektiv neue Sprachen meistern.',
-    it: "Padroneggia qualsiasi lingua con l'apprendimento del vocabolario alimentato dall'IA, la ripetizione distanziata e 8 modalità quiz coinvolgenti. Unisciti a studenti di tutto il mondo che padroneggiano efficacemente nuove lingue.",
-    pt: 'Domine qualquer idioma com aprendizado de vocabulário com IA, repetição espaçada e 8 modos de quiz envolventes. Junte-se a estudantes de todo o mundo dominando novos idiomas de forma eficaz.',
-    ja: 'AIが定義・例文・画像・音声を自動生成。実証済みの間隔反復と8種類のクイズで、語彙がしっかり定着します。',
-  }
-
-  const localeNames: Record<string, string> = {
-    en: 'English',
-    es: 'Español',
-    fr: 'Français',
-    de: 'Deutsch',
-    it: 'Italiano',
-    pt: 'Português',
-    ja: '日本語',
-  }
 
   return {
     title: `Decorebator - AI-Powered Vocabulary Learning${locale !== 'en' ? ` | ${localeNames[locale]}` : ''}`,
@@ -123,6 +124,17 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
+  const tFaq = await getTranslations({ locale, namespace: 'faq.questions' })
+  const faqEntries = Array.from({ length: 10 }, (_, index) => {
+    const key = String(index + 1)
+    return {
+      question: tFaq(`${key}.question`),
+      answer: tFaq(`${key}.answer`),
+    }
+  })
+  const description = localeDescriptions[locale] || localeDescriptions.en
+  const baseUrl = 'https://decorebator.com'
+  const siteUrl = `${baseUrl}/${locale}`
 
   // Ensure that the incoming `locale` is valid
   if (!hasLocale(routing.locales, locale)) {
@@ -132,7 +144,14 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider>
       <AppStoreModalProvider>
-        <StructuredData type="website" />
+        <StructuredData
+          type="website"
+          locale={locale}
+          siteUrl={siteUrl}
+          baseUrl={baseUrl}
+          description={description}
+          faqEntries={faqEntries}
+        />
         {children}
         <ScrollToTopButton />
       </AppStoreModalProvider>

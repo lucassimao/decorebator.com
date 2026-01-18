@@ -1,0 +1,24 @@
+[
+  {
+    "id": "daily.title",
+    "translation": "Time to practice"
+  },
+  {
+    "id": "daily.body",
+    "translation": "Your last quiz was a while ago. Come back for a quick practice."
+  },
+  {
+    "id": "due_items.title",
+    "translation": {
+      "one": "You have 1 review due",
+      "other": "You have {{.DueCount}} reviews due"
+    }
+  },
+  {
+    "id": "due_items.body",
+    "translation": {
+      "one": "You have 1 item ready in {{.WordlistName}}. Come back for a quick session.",
+      "other": "You have {{.DueCount}} items ready in {{.WordlistName}}. Come back for a quick session."
+    }
+  }
+]
