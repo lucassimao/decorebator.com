@@ -76,11 +76,7 @@ export async function generateFeatureMetadata({
   }
 }
 
-export function generateFeatureStructuredData(
-  featureKey: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  t: any
-) {
+export function generateFeatureStructuredData(featureKey: string, t: (key: string) => string) {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebPage',

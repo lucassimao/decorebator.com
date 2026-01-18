@@ -1,16 +1,16 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useSyncExternalStore } from 'react'
 
 // Direct import to bypass dynamic import caching
 import AnalyticsSection from './AnalyticsSection'
 
 const AnalyticsSectionClient: React.FC = () => {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
   if (!mounted) {
     return (
