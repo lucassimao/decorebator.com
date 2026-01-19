@@ -21,14 +21,6 @@ type UpsertPushTokenInput struct {
 	Locale    *string
 }
 
-type DailyReminderCandidate struct {
-	UserID    int64
-	ExpoToken string
-	Timezone  string
-	Locale    *string
-	Language  *string
-}
-
 func (r *PushTokenRepository) Upsert(ctx context.Context, input UpsertPushTokenInput) error {
 	_, err := r.Db.Exec(ctx, `
 		INSERT INTO push_tokens (
@@ -86,44 +78,4 @@ func (r *PushTokenRepository) MarkNotified(ctx context.Context, expoTokens []str
 		WHERE expo_token = ANY($1)
 	`, tokenArray, notifiedAt)
 	return err
-}
-
-func (r *PushTokenRepository) FindDailyReminderCandidates(ctx context.Context, now time.Time) ([]DailyReminderCandidate, error) {
-	rows, err := r.Db.Query(ctx, `
-		WITH local AS (
-			SELECT pt.user_id,
-				pt.expo_token,
-				pt.timezone,
-				pt.locale,
-				u.preferred_language,
-				($1 AT TIME ZONE pt.timezone) AS local_now,
-				(pt.last_notified_at AT TIME ZONE pt.timezone)::date AS last_notified_date
-			FROM push_tokens pt
-			JOIN users u ON u.id = pt.user_id
-			WHERE pt.is_active = true
-				AND u.notifications_enabled = true
-				AND (u.last_practice_at IS NULL OR u.last_practice_at < ($1 - INTERVAL '24 hours'))
-		)
-		SELECT user_id, expo_token, timezone, locale, preferred_language
-		FROM local
-		WHERE date_part('hour', local_now) = 11
-			AND (last_notified_date IS NULL OR last_notified_date < local_now::date)
-	`, now.UTC())
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var results []DailyReminderCandidate
-	for rows.Next() {
-		var candidate DailyReminderCandidate
-		if err := rows.Scan(&candidate.UserID, &candidate.ExpoToken, &candidate.Timezone, &candidate.Locale, &candidate.Language); err != nil {
-			return nil, err
-		}
-		results = append(results, candidate)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return results, nil
 }

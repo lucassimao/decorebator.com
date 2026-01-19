@@ -5,6 +5,8 @@ This document describes the current push notification implementation, the archit
 ## Goals
 
 - Daily reminder at 11:00 local time for users who have not practiced in the last 24 hours.
+- Due-items reminder during a local daytime window when there are reviews due and the user has not practiced today.
+- Notification copy is localized via go-i18n catalogs (API-side) with wordlist-aware messaging for due items.
 - Simple on/off toggle for users.
 - Backend-driven sending to enable future notification types.
 - Device-aware delivery with Expo push receipts to clean up invalid tokens.
@@ -18,6 +20,7 @@ This document describes the current push notification implementation, the archit
 - `users.last_practice_at` updated on quiz completion to determine inactivity.
 - `push_tokens` stores device tokens, timezone, locale, and last-notified timestamp.
 - `push_receipts` stores Expo receipt IDs and delivery outcomes for cleanup.
+- `push_notification_events` stores reminder sends for weekly cap enforcement.
 
 **HTTP Endpoints**
 - `POST /push/register`
@@ -36,15 +39,32 @@ This document describes the current push notification implementation, the archit
   - Inserts receipt IDs for later verification.
   - Checks receipts and deactivates invalid tokens.
 - River periodic jobs
+  - Due-items reminder job every 15 minutes (local 10:00–19:00 window).
   - Daily reminder job every 15 minutes (to catch the 11:00 local window).
   - Receipt check job every 1 hour.
+ - Notification copy is localized using `api/internal/i18n/notifications/*.json`.
 
 **Eligibility Logic**
-A device is eligible if all conditions match:
+A device is eligible for **daily reminders** if all conditions match:
 - `notifications_enabled = true` on the user.
 - `last_practice_at` is null or older than 24 hours.
 - Current time in the device timezone is 11:xx.
 - `last_notified_at` is not already today (local day).
+- No due items for the user (daily acts as fallback).
+
+A device is eligible for **due-items reminders** if all conditions match:
+- `notifications_enabled = true` on the user.
+- User has due items (based on `next_review_at`).
+- User has not practiced today (local day).
+- Current time in the device timezone is between 10:00 and 19:59.
+- `last_notified_at` is not already today (local day).
+- User has received fewer than 2 reminders in the past 7 days (rolling cap).
+
+**Rolling cap behavior**
+- The weekly cap is global across reminder types (daily + due-items).
+- Once a user receives 2 reminders within any rolling 7-day window, no further reminder is sent until the window advances.
+
+Due-items reminders include the most-due wordlist ID in the payload for deep-linking, and the copy includes the wordlist name.
 
 ### Mobile
 
@@ -77,11 +97,17 @@ A device is eligible if all conditions match:
 - Migrations:
   - `api/cmd/migrate/migrations/000069_add_push_notifications.*.sql`
   - `api/cmd/migrate/migrations/000070_add_push_receipts.*.sql`
+  - `api/cmd/migrate/migrations/000071_move_next_review_at_to_tracking.*.sql`
+  - `api/cmd/migrate/migrations/000072_add_push_notification_events.*.sql`
 - Repos:
   - `api/internal/repository/push_token.go`
+  - `api/internal/repository/push_notifications.go`
+  - `api/internal/repository/push_notification_events.go`
   - `api/internal/repository/push_receipt.go`
+  - `api/internal/i18n/notifications.go`
 - Services/Workers:
   - `api/internal/service/push_notification_service.go`
+  - `api/internal/service/due_items_reminder_worker.go`
   - `api/internal/service/daily_practice_reminder_worker.go`
   - `api/internal/service/push_receipt_worker.go`
   - `api/internal/service/river.go`
@@ -102,8 +128,6 @@ A device is eligible if all conditions match:
 
 ## Future Improvements
 
-- Add localized notification copy from a shared translation source.
 - Add retry/backoff for transient Expo errors.
 - Add richer notification types (streaks, milestones) using the same backend pipeline.
 - Add analytics for prompt acceptance and notification open rates.
-

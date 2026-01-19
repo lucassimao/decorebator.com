@@ -231,6 +231,8 @@ func TestDailyPracticeReminderWorkerStoresReceiptsAndMarksNotified(t *testing.T)
 
 	pushService := service.NewPushNotificationService(
 		&repository.PushTokenRepository{Db: ts.DB},
+		&repository.PushNotificationRepository{Db: ts.DB},
+		&repository.PushNotificationEventRepository{Db: ts.DB},
 		&repository.PushReceiptRepository{Db: ts.DB},
 	)
 	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
@@ -280,6 +282,8 @@ func TestDailyPracticeReminderWorkerDeactivatesInvalidTokens(t *testing.T) {
 
 	pushService := service.NewPushNotificationService(
 		&repository.PushTokenRepository{Db: ts.DB},
+		&repository.PushNotificationRepository{Db: ts.DB},
+		&repository.PushNotificationEventRepository{Db: ts.DB},
 		&repository.PushReceiptRepository{Db: ts.DB},
 	)
 	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
@@ -300,6 +304,213 @@ func TestDailyPracticeReminderWorkerDeactivatesInvalidTokens(t *testing.T) {
 	`, userID, expoToken).Scan(&isActive)
 	require.NoError(t, err)
 	assert.False(t, isActive, "token should be deactivated after DeviceNotRegistered error")
+}
+
+func TestDueItemsReminderWorkerStoresReceiptsAndMarksNotified(t *testing.T) {
+	ts, token, userID := newAuthedPushTestServer(t)
+	defer ts.Cleanup()
+
+	now := time.Now().UTC()
+	timezone := timezoneForLocalHour(now, 12)
+
+	ts.Expect.POST("/push/register").
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"expoPushToken": "ExponentPushToken[due-items-success]",
+			"platform":      "android",
+			"timezone":      timezone,
+		}).
+		Expect().
+		Status(http.StatusNoContent)
+
+	seedDueItem(t, ts, userID, now.Add(-5*time.Minute))
+
+	pushService := service.NewPushNotificationService(
+		&repository.PushTokenRepository{Db: ts.DB},
+		&repository.PushNotificationRepository{Db: ts.DB},
+		&repository.PushNotificationEventRepository{Db: ts.DB},
+		&repository.PushReceiptRepository{Db: ts.DB},
+	)
+	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
+		expoPushEndpoint: {
+			Status: http.StatusOK,
+			Body:   `{"data":[{"status":"ok","id":"ticket-due-items"}]}`,
+		},
+	}))
+
+	worker := service.NewDueItemsReminderWorker(pushService)
+
+	err := worker.Work(context.Background(), &river.Job[service.DueItemsReminderArgs]{})
+	require.NoError(t, err)
+
+	var lastNotified time.Time
+	err = ts.DB.QueryRow(context.Background(), `
+		SELECT last_notified_at FROM push_tokens WHERE user_id = $1 AND expo_token = $2
+	`, userID, "ExponentPushToken[due-items-success]").Scan(&lastNotified)
+	require.NoError(t, err)
+	assert.WithinDuration(t, time.Now(), lastNotified, 5*time.Second)
+
+	var ticketID, expoToken string
+	err = ts.DB.QueryRow(context.Background(), `
+		SELECT expo_ticket_id, expo_token FROM push_receipts WHERE expo_ticket_id = $1
+	`, "ticket-due-items").Scan(&ticketID, &expoToken)
+	require.NoError(t, err)
+	assert.Equal(t, "ticket-due-items", ticketID)
+	assert.Equal(t, "ExponentPushToken[due-items-success]", expoToken)
+}
+
+func TestDailyPracticeReminderWorkerSkipsWhenDueItemsExist(t *testing.T) {
+	ts, token, userID := newAuthedPushTestServer(t)
+	defer ts.Cleanup()
+
+	now := time.Now().UTC()
+	timezone := timezoneForLocalHour(now, 11)
+
+	ts.Expect.POST("/push/register").
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"expoPushToken": "ExponentPushToken[skip-daily-when-due]",
+			"platform":      "ios",
+			"timezone":      timezone,
+		}).
+		Expect().
+		Status(http.StatusNoContent)
+
+	seedDueItem(t, ts, userID, now.Add(-10*time.Minute))
+
+	pushService := service.NewPushNotificationService(
+		&repository.PushTokenRepository{Db: ts.DB},
+		&repository.PushNotificationRepository{Db: ts.DB},
+		&repository.PushNotificationEventRepository{Db: ts.DB},
+		&repository.PushReceiptRepository{Db: ts.DB},
+	)
+	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
+		expoPushEndpoint: {
+			Status: http.StatusOK,
+			Body:   `{"data":[{"status":"ok","id":"ticket-should-not-send"}]}`,
+		},
+	}))
+
+	worker := service.NewDailyPracticeReminderWorker(pushService)
+
+	err := worker.Work(context.Background(), &river.Job[service.DailyPracticeReminderArgs]{})
+	require.NoError(t, err)
+
+	var lastNotified sql.NullTime
+	err = ts.DB.QueryRow(context.Background(), `
+		SELECT last_notified_at FROM push_tokens WHERE user_id = $1 AND expo_token = $2
+	`, userID, "ExponentPushToken[skip-daily-when-due]").Scan(&lastNotified)
+	require.NoError(t, err)
+	assert.False(t, lastNotified.Valid, "daily reminder should not send when due items exist")
+}
+
+func TestDueItemsReminderHonorsWeeklyCap(t *testing.T) {
+	ts, token, userID := newAuthedPushTestServer(t)
+	defer ts.Cleanup()
+
+	now := time.Now().UTC()
+	timezone := timezoneForLocalHour(now, 12)
+
+	ts.Expect.POST("/push/register").
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"expoPushToken": "ExponentPushToken[due-items-cap]",
+			"platform":      "android",
+			"timezone":      timezone,
+		}).
+		Expect().
+		Status(http.StatusNoContent)
+
+	seedDueItem(t, ts, userID, now.Add(-5*time.Minute))
+
+	pushService := service.NewPushNotificationService(
+		&repository.PushTokenRepository{Db: ts.DB},
+		&repository.PushNotificationRepository{Db: ts.DB},
+		&repository.PushNotificationEventRepository{Db: ts.DB},
+		&repository.PushReceiptRepository{Db: ts.DB},
+	)
+	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
+		expoPushEndpoint: {
+			Status: http.StatusOK,
+			Body:   `{"data":[{"status":"ok","id":"ticket-cap"}]}`,
+		},
+	}))
+
+	worker := service.NewDueItemsReminderWorker(pushService)
+
+	// Send two reminders to reach weekly cap.
+	err := worker.Work(context.Background(), &river.Job[service.DueItemsReminderArgs]{})
+	require.NoError(t, err)
+	err = worker.Work(context.Background(), &river.Job[service.DueItemsReminderArgs]{})
+	require.NoError(t, err)
+
+	var afterSecond time.Time
+	err = ts.DB.QueryRow(context.Background(), `
+		SELECT last_notified_at FROM push_tokens WHERE user_id = $1 AND expo_token = $2
+	`, userID, "ExponentPushToken[due-items-cap]").Scan(&afterSecond)
+	require.NoError(t, err)
+
+	// Third attempt should be blocked by rolling weekly cap.
+	err = worker.Work(context.Background(), &river.Job[service.DueItemsReminderArgs]{})
+	require.NoError(t, err)
+
+	var afterThird time.Time
+	err = ts.DB.QueryRow(context.Background(), `
+		SELECT last_notified_at FROM push_tokens WHERE user_id = $1 AND expo_token = $2
+	`, userID, "ExponentPushToken[due-items-cap]").Scan(&afterThird)
+	require.NoError(t, err)
+	assert.Equal(t, afterSecond, afterThird, "weekly cap should prevent additional reminders")
+}
+
+func TestDueItemsReminderSendsBelowWeeklyCap(t *testing.T) {
+	ts, token, userID := newAuthedPushTestServer(t)
+	defer ts.Cleanup()
+
+	now := time.Now().UTC()
+	timezone := timezoneForLocalHour(now, 12)
+
+	ts.Expect.POST("/push/register").
+		WithHeader("Authorization", token).
+		WithJSON(map[string]any{
+			"expoPushToken": "ExponentPushToken[due-items-under-cap]",
+			"platform":      "android",
+			"timezone":      timezone,
+		}).
+		Expect().
+		Status(http.StatusNoContent)
+
+	seedDueItem(t, ts, userID, now.Add(-5*time.Minute))
+
+	_, err := ts.DB.Exec(context.Background(), `
+		INSERT INTO push_notification_events (user_id, notification_type, sent_at)
+		VALUES ($1, 'daily_practice_reminder', $2)
+	`, userID, now.Add(-2*24*time.Hour))
+	require.NoError(t, err)
+
+	pushService := service.NewPushNotificationService(
+		&repository.PushTokenRepository{Db: ts.DB},
+		&repository.PushNotificationRepository{Db: ts.DB},
+		&repository.PushNotificationEventRepository{Db: ts.DB},
+		&repository.PushReceiptRepository{Db: ts.DB},
+	)
+	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
+		expoPushEndpoint: {
+			Status: http.StatusOK,
+			Body:   `{"data":[{"status":"ok","id":"ticket-under-cap"}]}`,
+		},
+	}))
+
+	worker := service.NewDueItemsReminderWorker(pushService)
+
+	err = worker.Work(context.Background(), &river.Job[service.DueItemsReminderArgs]{})
+	require.NoError(t, err)
+
+	var lastNotified time.Time
+	err = ts.DB.QueryRow(context.Background(), `
+		SELECT last_notified_at FROM push_tokens WHERE user_id = $1 AND expo_token = $2
+	`, userID, "ExponentPushToken[due-items-under-cap]").Scan(&lastNotified)
+	require.NoError(t, err)
+	assert.WithinDuration(t, time.Now(), lastNotified, 5*time.Second)
 }
 
 func TestPushReceiptWorkerUpdatesStatusAndDeactivatesTokens(t *testing.T) {
@@ -327,6 +538,8 @@ func TestPushReceiptWorkerUpdatesStatusAndDeactivatesTokens(t *testing.T) {
 
 	pushService := service.NewPushNotificationService(
 		&repository.PushTokenRepository{Db: ts.DB},
+		&repository.PushNotificationRepository{Db: ts.DB},
+		&repository.PushNotificationEventRepository{Db: ts.DB},
 		&repository.PushReceiptRepository{Db: ts.DB},
 	)
 	pushService.SetHTTPClient(httpClientStub(map[string]stubResponse{
@@ -398,4 +611,52 @@ func httpClientStub(responses map[string]stubResponse) *http.Client {
 func timezoneForLocalEleven(now time.Time) string {
 	offset := now.Hour() - 11
 	return fmt.Sprintf("Etc/GMT%+d", offset)
+}
+
+func timezoneForLocalHour(now time.Time, hour int) string {
+	offset := now.Hour() - hour
+	return fmt.Sprintf("Etc/GMT%+d", offset)
+}
+
+func seedDueItem(t *testing.T, ts *setup.TestServer, userID int64, nextReviewAt time.Time) {
+	t.Helper()
+
+	ctx := context.Background()
+	suffix := fmt.Sprintf("%d", time.Now().UnixNano())
+
+	var wordlistID int64
+	err := ts.DB.QueryRow(ctx, `
+		INSERT INTO wordlists (name, description, user_id, language_code, pronunciation_system)
+		VALUES ($1, $2, $3, 'en', 'ipa')
+		RETURNING id
+	`, "Due Wordlist "+suffix, "Due items wordlist", userID).Scan(&wordlistID)
+	require.NoError(t, err)
+
+	var wordID int64
+	err = ts.DB.QueryRow(ctx, `
+		INSERT INTO words (name, user_id, wordlist_id, processing_status)
+		VALUES ($1, $2, $3, 'completed')
+		RETURNING id
+	`, "dueword-"+suffix, userID, wordlistID).Scan(&wordID)
+	require.NoError(t, err)
+
+	var definitionID int64
+	err = ts.DB.QueryRow(ctx, `
+		INSERT INTO definitions (token, language, part_of_speech, meaning, source, part_of_speech_normalized)
+		VALUES ($1, 'en', 'noun', $2, 'test', 'noun')
+		RETURNING id
+	`, "dueword-"+suffix, "Test meaning").Scan(&definitionID)
+	require.NoError(t, err)
+
+	_, err = ts.DB.Exec(ctx, `
+		INSERT INTO word_definitions (word_id, definition_id)
+		VALUES ($1, $2)
+	`, wordID, definitionID)
+	require.NoError(t, err)
+
+	_, err = ts.DB.Exec(ctx, `
+		INSERT INTO leitner_system_tracking (user_id, definition_id, word_id, box_id, updated_at, next_review_at)
+		VALUES ($1, $2, $3, 2, $4, $5)
+	`, userID, definitionID, wordID, nextReviewAt.Add(-6*time.Hour), nextReviewAt)
+	require.NoError(t, err)
 }

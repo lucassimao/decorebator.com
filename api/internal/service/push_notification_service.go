@@ -11,17 +11,21 @@ import (
 	"time"
 
 	"decorebator.com/internal/common"
+	i18nutil "decorebator.com/internal/i18n"
 	"decorebator.com/internal/repository"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 const expoPushEndpoint = "https://exp.host/--/api/v2/push/send"
 const expoReceiptEndpoint = "https://exp.host/--/api/v2/push/getReceipts"
 
 type PushNotificationService struct {
-	repo        *repository.PushTokenRepository
-	receiptRepo *repository.PushReceiptRepository
-	httpClient  *http.Client
-	accessToken string
+	tokenRepo    *repository.PushTokenRepository
+	reminderRepo *repository.PushNotificationRepository
+	eventRepo    *repository.PushNotificationEventRepository
+	receiptRepo  *repository.PushReceiptRepository
+	httpClient   *http.Client
+	accessToken  string
 }
 
 type expoPushMessage struct {
@@ -62,10 +66,12 @@ type expoPushError struct {
 	Message string `json:"message"`
 }
 
-func NewPushNotificationService(repo *repository.PushTokenRepository, receiptRepo *repository.PushReceiptRepository) *PushNotificationService {
+func NewPushNotificationService(tokenRepo *repository.PushTokenRepository, reminderRepo *repository.PushNotificationRepository, eventRepo *repository.PushNotificationEventRepository, receiptRepo *repository.PushReceiptRepository) *PushNotificationService {
 	return &PushNotificationService{
-		repo:        repo,
-		receiptRepo: receiptRepo,
+		tokenRepo:    tokenRepo,
+		reminderRepo: reminderRepo,
+		eventRepo:    eventRepo,
+		receiptRepo:  receiptRepo,
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
@@ -79,11 +85,17 @@ func (s *PushNotificationService) SetHTTPClient(client *http.Client) {
 }
 
 func (s *PushNotificationService) SendDailyPracticeReminders(ctx context.Context, now time.Time) error {
-	if s.repo == nil {
+	if s.tokenRepo == nil {
 		return errors.New("push token repository is nil")
 	}
+	if s.reminderRepo == nil {
+		return errors.New("push notification repository is nil")
+	}
+	if s.eventRepo == nil {
+		return errors.New("push notification event repository is nil")
+	}
 
-	candidates, err := s.repo.FindDailyReminderCandidates(ctx, now)
+	candidates, err := s.reminderRepo.FindDailyReminderCandidates(ctx, now)
 	if err != nil {
 		return err
 	}
@@ -101,11 +113,12 @@ func (s *PushNotificationService) SendDailyPracticeReminders(ctx context.Context
 		batch := candidates[start:end]
 
 		messages := make([]expoPushMessage, 0, len(batch))
+		tokenUserIDs := make(map[string]int64, len(batch))
 		for _, candidate := range batch {
 			if candidate.ExpoToken == "" {
 				continue
 			}
-			title, body := dailyReminderCopy(selectLocale(candidate))
+			title, body := dailyReminderCopy(selectLocaleForDaily(candidate))
 			messages = append(messages, expoPushMessage{
 				To:       candidate.ExpoToken,
 				Title:    title,
@@ -116,6 +129,7 @@ func (s *PushNotificationService) SendDailyPracticeReminders(ctx context.Context
 					"type": "daily_practice_reminder",
 				},
 			})
+			tokenUserIDs[candidate.ExpoToken] = candidate.UserID
 		}
 
 		if len(messages) == 0 {
@@ -127,7 +141,74 @@ func (s *PushNotificationService) SendDailyPracticeReminders(ctx context.Context
 			return err
 		}
 
-		s.processTickets(ctx, now, messages, tickets)
+		s.processTickets(ctx, now, messages, tickets, tokenUserIDs, "daily_practice_reminder")
+	}
+
+	return nil
+}
+
+func (s *PushNotificationService) SendDueItemsReminders(ctx context.Context, now time.Time) error {
+	if s.tokenRepo == nil {
+		return errors.New("push token repository is nil")
+	}
+	if s.reminderRepo == nil {
+		return errors.New("push notification repository is nil")
+	}
+	if s.eventRepo == nil {
+		return errors.New("push notification event repository is nil")
+	}
+
+	candidates, err := s.reminderRepo.FindDueItemsReminderCandidates(ctx, now)
+	if err != nil {
+		return err
+	}
+
+	if len(candidates) == 0 {
+		return nil
+	}
+
+	const batchSize = 100
+	for start := 0; start < len(candidates); start += batchSize {
+		end := start + batchSize
+		if end > len(candidates) {
+			end = len(candidates)
+		}
+		batch := candidates[start:end]
+
+		messages := make([]expoPushMessage, 0, len(batch))
+		tokenUserIDs := make(map[string]int64, len(batch))
+		for _, candidate := range batch {
+			if candidate.ExpoToken == "" {
+				continue
+			}
+			title, body := dueItemsReminderCopy(selectLocaleForDueItems(candidate), candidate.WordlistName, candidate.DueCount)
+			messages = append(messages, expoPushMessage{
+				To:       candidate.ExpoToken,
+				Title:    title,
+				Body:     body,
+				Sound:    "default",
+				Priority: "default",
+				Data: map[string]interface{}{
+					"type":       "due_items_reminder",
+					"dueCount":   candidate.DueCount,
+					"wordlistId": candidate.WordlistID,
+					"reminder":   "due_items",
+					"timestamp":  now.Unix(),
+				},
+			})
+			tokenUserIDs[candidate.ExpoToken] = candidate.UserID
+		}
+
+		if len(messages) == 0 {
+			continue
+		}
+
+		tickets, err := s.sendBatch(ctx, messages)
+		if err != nil {
+			return err
+		}
+
+		s.processTickets(ctx, now, messages, tickets, tokenUserIDs, "due_items_reminder")
 	}
 
 	return nil
@@ -183,7 +264,7 @@ func (s *PushNotificationService) CheckReceipts(ctx context.Context, now time.Ti
 			}
 		}
 
-		if err := s.repo.DeactivateByTokens(ctx, deactivateTokens); err != nil {
+		if err := s.tokenRepo.DeactivateByTokens(ctx, deactivateTokens); err != nil {
 			common.Logger.Error("failed to deactivate push tokens from receipts", "error", err)
 		}
 
@@ -194,7 +275,17 @@ func (s *PushNotificationService) CheckReceipts(ctx context.Context, now time.Ti
 	}
 }
 
-func selectLocale(candidate repository.DailyReminderCandidate) string {
+func selectLocaleForDaily(candidate repository.DailyReminderCandidate) string {
+	if candidate.Language != nil && *candidate.Language != "" {
+		return normalizeLocale(*candidate.Language)
+	}
+	if candidate.Locale != nil && *candidate.Locale != "" {
+		return normalizeLocale(*candidate.Locale)
+	}
+	return "en"
+}
+
+func selectLocaleForDueItems(candidate repository.DueItemsReminderCandidate) string {
 	if candidate.Language != nil && *candidate.Language != "" {
 		return normalizeLocale(*candidate.Language)
 	}
@@ -219,20 +310,58 @@ func normalizeLocale(locale string) string {
 }
 
 func dailyReminderCopy(locale string) (string, string) {
-	switch locale {
-	case "it":
-		return "È ora di fare pratica", "Il tuo ultimo quiz è passato da un po'. Torna per un rapido ripasso."
-	case "es":
-		return "Hora de practicar", "Tu último quiz fue hace un tiempo. Vuelve para una práctica rápida."
-	case "fr":
-		return "Il est temps de pratiquer", "Votre dernier quiz remonte à un moment. Revenez pour une courte pratique."
-	case "pt":
-		return "Hora de praticar", "Seu último quiz foi há algum tempo. Volte para uma prática rápida."
-	case "de":
-		return "Zeit zum Üben", "Dein letztes Quiz ist schon eine Weile her. Komm zurück für eine kurze Übung."
-	default:
-		return "Time to practice", "Your last quiz was a while ago. Come back for a quick practice."
+	localizer := i18nutil.LocalizerForLocale(locale)
+
+	title, titleErr := localizer.Localize(&i18n.LocalizeConfig{MessageID: "daily.title"})
+	body, bodyErr := localizer.Localize(&i18n.LocalizeConfig{MessageID: "daily.body"})
+
+	if titleErr != nil {
+		title = "Time to practice"
 	}
+	if bodyErr != nil {
+		body = "Your last quiz was a while ago. Come back for a quick practice."
+	}
+
+	return title, body
+}
+
+func dueItemsReminderCopy(locale string, wordlistName string, dueCount int) (string, string) {
+	if wordlistName == "" {
+		wordlistName = "your wordlist"
+	}
+	localizer := i18nutil.LocalizerForLocale(locale)
+	templateData := map[string]interface{}{
+		"WordlistName": wordlistName,
+		"DueCount":     dueCount,
+	}
+
+	title, titleErr := localizer.Localize(&i18n.LocalizeConfig{
+		MessageID:    "due_items.title",
+		TemplateData: templateData,
+		PluralCount:  dueCount,
+	})
+	body, bodyErr := localizer.Localize(&i18n.LocalizeConfig{
+		MessageID:    "due_items.body",
+		TemplateData: templateData,
+		PluralCount:  dueCount,
+	})
+
+	if titleErr != nil {
+		if dueCount == 1 {
+			title = "You have 1 review due"
+		} else {
+			title = "You have reviews due"
+		}
+	}
+	if bodyErr != nil {
+		if dueCount == 1 {
+			body = "You have 1 item ready in " + wordlistName + ". Come back for a quick session."
+		} else {
+			body = "You have items ready in " + wordlistName + ". Come back for a quick session."
+		}
+	}
+
+	return title, body
 }
 
 func (s *PushNotificationService) sendBatch(ctx context.Context, messages []expoPushMessage) ([]expoPushTicket, error) {
@@ -311,7 +440,7 @@ func (s *PushNotificationService) fetchReceipts(ctx context.Context, ids []strin
 	return result.Data, nil
 }
 
-func (s *PushNotificationService) processTickets(ctx context.Context, now time.Time, messages []expoPushMessage, tickets []expoPushTicket) {
+func (s *PushNotificationService) processTickets(ctx context.Context, now time.Time, messages []expoPushMessage, tickets []expoPushTicket, tokenUserIDs map[string]int64, notificationType string) {
 	if len(tickets) == 0 {
 		return
 	}
@@ -324,6 +453,7 @@ func (s *PushNotificationService) processTickets(ctx context.Context, now time.T
 	var notifiedTokens []string
 	var deactivateTokens []string
 	var receiptInserts []repository.PushReceiptInsert
+	uniqueUserIDs := make(map[int64]struct{})
 
 	for i := 0; i < limit; i++ {
 		message := messages[i]
@@ -336,6 +466,9 @@ func (s *PushNotificationService) processTickets(ctx context.Context, now time.T
 		switch ticket.Status {
 		case "ok":
 			notifiedTokens = append(notifiedTokens, token)
+			if userID, ok := tokenUserIDs[token]; ok {
+				uniqueUserIDs[userID] = struct{}{}
+			}
 			if ticket.ID != "" && s.receiptRepo != nil {
 				receiptInserts = append(receiptInserts, repository.PushReceiptInsert{
 					TicketID:  ticket.ID,
@@ -357,11 +490,20 @@ func (s *PushNotificationService) processTickets(ctx context.Context, now time.T
 		}
 	}
 
-	if err := s.repo.MarkNotified(ctx, notifiedTokens, now); err != nil {
+	if err := s.tokenRepo.MarkNotified(ctx, notifiedTokens, now); err != nil {
 		common.Logger.Error("failed to mark push notifications as sent", "error", err)
 	}
-	if err := s.repo.DeactivateByTokens(ctx, deactivateTokens); err != nil {
+	if err := s.tokenRepo.DeactivateByTokens(ctx, deactivateTokens); err != nil {
 		common.Logger.Error("failed to deactivate push tokens", "error", err)
+	}
+	if s.eventRepo != nil && len(uniqueUserIDs) > 0 {
+		userIDs := make([]int64, 0, len(uniqueUserIDs))
+		for userID := range uniqueUserIDs {
+			userIDs = append(userIDs, userID)
+		}
+		if err := s.eventRepo.InsertEvents(ctx, userIDs, notificationType, now); err != nil {
+			common.Logger.Error("failed to insert push notification events", "error", err)
+		}
 	}
 	if len(receiptInserts) > 0 && s.receiptRepo != nil {
 		if err := s.receiptRepo.InsertTickets(ctx, receiptInserts); err != nil {

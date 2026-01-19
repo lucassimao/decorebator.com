@@ -5,6 +5,8 @@
 - `mobile/`: Expo app under `app/` with shared UI in `components/`, translations in `i18n/`, theming in `theme/`, media in `assets/`, and Jest mocks in `__mocks__/`.
 - `web/`: Next.js App Router in `src/`; localized copy in `messages/`, marketing assets in `public/`.
 - `docs/`, `todo/`: design notes and backlog context—update alongside feature work.
+- Notifications: cross-table reminder queries live in `api/internal/repository/push_notifications.go`; token CRUD stays in `api/internal/repository/push_token.go`.
+- Notifications: reminders are capped at 2 per user in any rolling 7-day window (daily + due-items combined).
 
 ## Build, Test, and Development Commands
 - **API backend**: `cd api && make setup` installs tools; `make test` runs the dockerized suite; `make lint`/`make format-check` match CI; use `docker compose -f docker-compose.yml up` for services, then `make run` (and `make workers` in another terminal).

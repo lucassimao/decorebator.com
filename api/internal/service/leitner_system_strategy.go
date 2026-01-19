@@ -1100,20 +1100,38 @@ func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(ctx context.Context,
 	}
 
 	// Proper Leitner system logic with temporary skip on incorrect answers
-	query := `UPDATE leitner_system_tracking 
-	SET 
-		updated_at = now(), 
-		box_id = CASE 
-			WHEN $1 AND box_id < 7 THEN box_id + 1  -- Move to next box on success
-			WHEN $1 AND box_id = 7 THEN 7           -- Stay at max box
-			ELSE 1                                   -- Reset to box 1 on failure
-		END,
-		temporarily_skipped_until = CASE 
-			WHEN NOT $1 THEN NOW() + INTERVAL '10 minutes'  -- Skip for 10 minutes on incorrect answer
-			ELSE NULL                                        -- Clear skip on correct answer
-		END
-	WHERE id = $2
-	RETURNING box_id`
+	query := `
+		WITH updated AS (
+			SELECT id,
+				CASE 
+					WHEN $1 AND box_id < 7 THEN box_id + 1  -- Move to next box on success
+					WHEN $1 AND box_id = 7 THEN 7           -- Stay at max box
+					ELSE 1                                   -- Reset to box 1 on failure
+				END AS new_box
+			FROM leitner_system_tracking
+			WHERE id = $2
+		)
+		UPDATE leitner_system_tracking lst
+		SET 
+			updated_at = NOW(),
+			box_id = updated.new_box,
+			next_review_at = CASE updated.new_box
+				WHEN 1 THEN NOW()
+				WHEN 2 THEN NOW() + INTERVAL '6 hours'
+				WHEN 3 THEN NOW() + INTERVAL '24 hours'
+				WHEN 4 THEN NOW() + INTERVAL '72 hours'
+				WHEN 5 THEN NOW() + INTERVAL '168 hours'
+				WHEN 6 THEN NOW() + INTERVAL '336 hours'
+				WHEN 7 THEN NOW() + INTERVAL '720 hours'
+				ELSE NOW()
+			END,
+			temporarily_skipped_until = CASE 
+				WHEN NOT $1 THEN NOW() + INTERVAL '10 minutes'  -- Skip for 10 minutes on incorrect answer
+				ELSE NULL                                        -- Clear skip on correct answer
+			END
+		FROM updated
+		WHERE lst.id = updated.id
+		RETURNING updated.new_box`
 
 	var boxId int64
 	row := tx.QueryRow(ctx, query, quizResult.IsCorrect, quizResult.LeitnerSystemTrackingID)

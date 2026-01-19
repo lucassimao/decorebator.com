@@ -60,7 +60,12 @@ func NewWorkerRiverClient(
 		userRepo:    &repository.UserRepository{Db: db},
 		mailService: mailService,
 	})
-	pushService := NewPushNotificationService(&repository.PushTokenRepository{Db: db}, &repository.PushReceiptRepository{Db: db})
+	pushService := NewPushNotificationService(
+		&repository.PushTokenRepository{Db: db},
+		&repository.PushNotificationRepository{Db: db},
+		&repository.PushNotificationEventRepository{Db: db},
+		&repository.PushReceiptRepository{Db: db},
+	)
 	// Register worker handlers; periodic jobs enqueue args separately.
 	river.AddWorker(riverWorkers, NewDueItemsReminderWorker(pushService))
 	river.AddWorker(riverWorkers, NewDailyPracticeReminderWorker(pushService))
