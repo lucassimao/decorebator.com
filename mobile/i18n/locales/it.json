@@ -919,5 +919,12 @@
   },
   "error": {
     "title": "Errore"
+  },
+  "review": {
+    "title": "Ti piace Decorebator?",
+    "subtitle": "Il tuo feedback ci aiuta a migliorare e aiuta gli altri a scoprire l'app",
+    "loveIt": "Sì, lo adoro!",
+    "notReally": "Non proprio",
+    "maybeLater": "Forse più tardi"
   }
 }

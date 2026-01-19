@@ -914,6 +914,13 @@
   "error": {
     "title": "Error"
   },
+  "review": {
+    "title": "Enjoying Decorebator?",
+    "subtitle": "Your feedback helps us improve and helps others discover the app",
+    "loveIt": "Yes, I love it!",
+    "notReally": "Not really",
+    "maybeLater": "Maybe later"
+  },
   "flashcards": {
     "noWordsFound": "No words found in this wordlist",
     "cardCounter": "{{current}} / {{total}}",

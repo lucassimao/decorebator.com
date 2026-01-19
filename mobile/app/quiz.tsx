@@ -1,4 +1,5 @@
 import * as offlineQuizApi from "@/api/offlineWordlists";
+import AppReviewModal from "@/components/common/AppReviewModal";
 import { ErrorReportModal } from "@/components/ErrorReportModal";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { QuizContent } from "@/components/quiz/QuizContent";
@@ -9,6 +10,7 @@ import { QuizNextButton } from "@/components/quiz/QuizNextButton";
 import { QuizOptions } from "@/components/quiz/QuizOptions";
 import { QuizProgressBar } from "@/components/quiz/QuizProgressBar";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAppReview } from "@/hooks/useAppReview";
 import { useErrorReporting } from "@/hooks/useErrorReporting";
 import { useInvalidateAnalytics } from "@/hooks/useInvalidateAnalytics";
 import { useOffline } from "@/hooks/useOffline";
@@ -39,6 +41,17 @@ const QuizScreen: React.FC = () => {
   const commonStyles = createCommonStyles(theme, responsive);
   const styles = createStyles(theme);
   const notificationPromptedRef = useRef(false);
+
+  // App review prompt
+  const {
+    showReviewModal,
+    checkAndPromptReview,
+    handleLoveIt,
+    handleNotReally,
+    handleMaybeLater,
+    closeReviewModal,
+  } = useAppReview();
+  const [pendingNavigation, setPendingNavigation] = useState(false);
 
   // State
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -262,8 +275,50 @@ const QuizScreen: React.FC = () => {
     refetch(); // Explicitly trigger refetch
   };
 
-  const handleGoBack = () => {
+  const handleGoBack = async () => {
+    // Check if we should show review prompt before navigating
+    const shouldShowReview = await checkAndPromptReview(
+      quizCount,
+      correctCount,
+    );
+    if (shouldShowReview) {
+      setPendingNavigation(true);
+      return;
+    }
     navigation.goBack();
+  };
+
+  // Handle navigation after review modal closes
+  const handleReviewLoveIt = async () => {
+    await handleLoveIt();
+    if (pendingNavigation) {
+      setPendingNavigation(false);
+      navigation.goBack();
+    }
+  };
+
+  const handleReviewNotReally = async () => {
+    await handleNotReally();
+    if (pendingNavigation) {
+      setPendingNavigation(false);
+      navigation.goBack();
+    }
+  };
+
+  const handleReviewMaybeLater = () => {
+    handleMaybeLater();
+    if (pendingNavigation) {
+      setPendingNavigation(false);
+      navigation.goBack();
+    }
+  };
+
+  const handleReviewClose = () => {
+    closeReviewModal();
+    if (pendingNavigation) {
+      setPendingNavigation(false);
+      navigation.goBack();
+    }
   };
 
   const onPressFastModeToggle = () => {
@@ -386,6 +441,14 @@ const QuizScreen: React.FC = () => {
         onReportError={handleReportError}
         isLoading={isReporting}
         context="quiz"
+      />
+
+      <AppReviewModal
+        visible={showReviewModal}
+        onLoveIt={handleReviewLoveIt}
+        onNotReally={handleReviewNotReally}
+        onMaybeLater={handleReviewMaybeLater}
+        onClose={handleReviewClose}
       />
     </SafeAreaView>
   );
