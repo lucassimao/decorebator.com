@@ -71,7 +71,7 @@
     "imageAlt": "Decorebator app interface",
     "videoTitle": "Decorebator Demo - AI-Powered Vocabulary Learning",
     "socialProof": "+ active learners",
-    "subtitle": "Learn vocabulary <strong>3x faster</strong> with spaced repetition, AI-generated content, and 8 engaging quiz modes. <accent>No memorization, just results.</accent>",
+    "subtitle": "Learn vocabulary <strong>3x faster</strong> with spaced repetition, AI-generated content, and 9 engaging quiz modes. <accent>No memorization, just results.</accent>",
     "startLearningFree": "Start Learning Free",
     "watchDemo": "Watch Demo",
     "stats": {
@@ -90,7 +90,7 @@
     },
     "productSummary": {
       "label": "Product summary:",
-      "body": "AI vocabulary app with spaced repetition, auto-generated content, 8 quiz modes, and cross-device progress tracking."
+      "body": "AI vocabulary app with spaced repetition, auto-generated content, 9 quiz modes, and cross-device progress tracking."
     },
     "video": {
       "aria": "App demo video"
@@ -125,7 +125,7 @@
       "description": "Probabilistic 7-box Leitner system with intelligent word selection - never run out of content to study."
     },
     "multipleQuizModes": {
-      "title": "8 Interactive Quiz Modes",
+      "title": "9 Interactive Quiz Modes",
       "description": "From visual recognition to audio comprehension - practice with diverse quiz types for comprehensive learning."
     },
     "visualLearning": {
@@ -167,7 +167,7 @@
       },
       "smartQuizzes": {
         "title": "Adaptive Quiz System",
-        "description": "8 different quiz modes that adapt to your learning progress, from basic recognition to advanced comprehension."
+        "description": "9 different quiz modes that adapt to your learning progress, from basic recognition to advanced comprehension."
       },
       "analytics": {
         "title": "Learning Analytics",
@@ -193,7 +193,7 @@
     },
     "step2": {
       "title": "Practice with Smart Quizzes",
-      "description": "Engage with 8 different quiz modes designed to reinforce your learning from multiple angles.",
+      "description": "Engage with 9 different quiz modes designed to reinforce your learning from multiple angles.",
       "features": [
         "Multiple choice and fill-in-the-blank questions",
         "Visual recognition challenges",
@@ -265,7 +265,7 @@
       },
       "6": {
         "question": "How many quiz modes are available and how do they work?",
-        "answer": "There are 8 different quiz modes designed to target various aspects of vocabulary learning: Guess meaning, word from meaning, visual association, audio comprehension, sentence completion, active recall, audio recognition, and example audio. Quiz types progressively adapt based on your current learning level."
+        "answer": "There are 9 different quiz modes designed to target various aspects of vocabulary learning: Guess meaning, word from meaning, visual association, audio comprehension, meaning audio to word, sentence completion, active recall, audio recognition, and example audio. Quiz types progressively adapt based on your current learning level."
       },
       "7": {
         "question": "What analytics and progress tracking features are included?",
@@ -326,7 +326,7 @@
         "features": [
           "Unlimited Wordlists",
           "Unlimited Words",
-          "All 8 Quiz Modes",
+          "All 9 Quiz Modes",
           "Advanced Analytics",
           "Offline Support"
         ],
@@ -350,7 +350,7 @@
         "cta": "Get Premium",
         "features": {
           "unlimitedWordlists": "Unlimited Wordlists & Words",
-          "allQuizModes": "All 8 Quiz Modes",
+          "allQuizModes": "All 9 Quiz Modes",
           "advancedAnalytics": "Advanced Analytics",
           "offlineSupport": "Offline Support",
           "realTimeSpeaking": "Real-time Speaking Practice",
@@ -401,9 +401,9 @@
         "stats": "Scientifically-proven spaced repetition"
       },
       "quizModes": {
-        "title": "8 Engaging Quiz Modes",
+        "title": "9 Engaging Quiz Modes",
         "description": "Multiple quiz types: meaning matching, image association, audio comprehension, sentence completion, write from definition, and more.",
-        "stats": "8 engaging quiz modes"
+        "stats": "9 engaging quiz modes"
       },
       "visualLearning": {
         "title": "Visual Learning with AI Images",
@@ -580,10 +580,11 @@
         "description": "Automatically generates definitions, images, audio pronunciations, and example sentences for every word you add."
       },
       "quizModes": {
-        "title": "8 Quiz Modes",
+        "title": "9 Quiz Modes",
         "modes": [
           "Guess Meaning",
           "Word from Meaning",
+          "Meaning Audio to Word",
           "Image Association",
           "Audio Comprehension",
           "Sentence Completion",
@@ -686,7 +687,7 @@
         "features": [
           "Unlimited wordlists",
           "Unlimited words",
-          "All 8 quiz modes",
+          "All 9 quiz modes",
           "Advanced analytics",
           "Offline support",
           "Priority support"
@@ -822,7 +823,7 @@
       ],
       "premium": [
         "Unlimited wordlists and words",
-        "All 8 quiz modes",
+        "All 9 quiz modes",
         "Advanced analytics",
         "Offline support",
         "Priority support"
@@ -868,12 +869,12 @@
         "Download the mobile app",
         "Sign in to see your Premium features",
         "Create unlimited wordlists",
-        "Access all 8 quiz modes and offline support"
+        "Access all 9 quiz modes and offline support"
       ],
       "premiumFeatures": "Premium Features You'll Unlock:",
       "features": [
         "Unlimited wordlists and words",
-        "All 8 interactive quiz modes",
+        "All 9 interactive quiz modes",
         "Advanced learning analytics",
         "Offline learning support",
         "Priority customer support"
@@ -1014,9 +1015,9 @@
       }
     },
     "quizModes": {
-      "title": "8 Engaging Quiz Modes",
+      "title": "9 Engaging Quiz Modes",
       "subtitle": "Comprehensive testing with multiple learning approaches",
-      "description": "Challenge yourself with 8 different quiz types designed to test and strengthen different aspects of vocabulary knowledge and recall.",
+      "description": "Challenge yourself with 9 different quiz types designed to test and strengthen different aspects of vocabulary knowledge and recall.",
       "hero": {
         "title": "Multi-Modal Learning Experience",
         "subtitle": "Engage different learning pathways with varied quiz modes that test recognition, recall, comprehension, and application."
@@ -1593,6 +1594,7 @@
       "quizTypes": [
         "Guess Meaning",
         "Word from Meaning",
+        "Meaning Audio to Word",
         "Image Association",
         "Audio Comprehension"
       ],

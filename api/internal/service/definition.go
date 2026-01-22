@@ -84,6 +84,10 @@ func (s *DefinitionService) CreateExampleAudio(ctx context.Context, definitionID
 	return s.definitionRepository.CreateExampleAudio(ctx, definitionID, exampleText, audioURL, inflectionType)
 }
 
+func (s *DefinitionService) UpdateMeaningAudioURL(ctx context.Context, definitionID int64, audioURL string, tx *pgx.Tx) error {
+	return s.definitionRepository.UpdateMeaningAudioURL(ctx, definitionID, audioURL, tx)
+}
+
 // NormalizePartOfSpeech converts a language-specific part-of-speech to normalized English
 // This function uses the PartOfSpeechMappings from LANGUAGE_CONFIGS as the single source of truth
 func NormalizePartOfSpeech(partOfSpeech, languageCode string) string {

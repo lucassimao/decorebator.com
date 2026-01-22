@@ -94,7 +94,7 @@ export function generateFeatureStructuredData(featureKey: string, t: (key: strin
       applicationCategory: 'EducationalApplication',
       operatingSystem: 'Web, iOS, Android',
       description:
-        'AI-powered vocabulary learning platform with spaced repetition and 8 quiz modes',
+        'AI-powered vocabulary learning platform with spaced repetition and 9 quiz modes',
       featureList: [
         'AI Content Generation',
         'Spaced Repetition Learning',

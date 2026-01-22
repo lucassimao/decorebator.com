@@ -57,7 +57,7 @@ const StructuredData: React.FC<StructuredDataProps> = ({
             priceCurrency: 'USD',
             name: 'Monthly Premium',
             description:
-              'Unlimited wordlists and words, all 8 quiz modes, advanced analytics, offline support',
+              'Unlimited wordlists and words, all 9 quiz modes, advanced analytics, offline support',
           },
           {
             '@type': 'Offer',

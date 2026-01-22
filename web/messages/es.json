@@ -71,7 +71,7 @@
     "imageAlt": "Interfaz de la app Decorebator",
     "videoTitle": "Demo de Decorebator - Aprendizaje de Vocabulario con IA",
     "socialProof": "+ estudiantes activos",
-    "subtitle": "Aprende vocabulario <strong>3x más rápido</strong> con repetición espaciada, contenido generado por IA y 8 modos de quiz atractivos. <accent>Sin memorización, solo resultados.</accent>",
+    "subtitle": "Aprende vocabulario <strong>3x más rápido</strong> con repetición espaciada, contenido generado por IA y 9 modos de quiz atractivos. <accent>Sin memorización, solo resultados.</accent>",
     "startLearningFree": "Comenzar a aprender gratis",
     "watchDemo": "Ver demo",
     "stats": {
@@ -90,7 +90,7 @@
     },
     "productSummary": {
       "label": "Resumen del producto:",
-      "body": "App de vocabulario con repetición espaciada, contenido generado por IA, 8 modos de quiz y seguimiento de progreso multiplataforma."
+      "body": "App de vocabulario con repetición espaciada, contenido generado por IA, 9 modos de quiz y seguimiento de progreso multiplataforma."
     },
     "video": {
       "aria": "Video de demostración de la app"
@@ -125,7 +125,7 @@
       "description": "Sistema Leitner probabilístico de 7 cajas con selección inteligente de palabras - nunca te quedes sin contenido para estudiar."
     },
     "multipleQuizModes": {
-      "title": "8 modos de quiz interactivos",
+      "title": "9 modos de quiz interactivos",
       "description": "Desde reconocimiento visual hasta comprensión auditiva - practica con diversos tipos de quiz para aprendizaje integral."
     },
     "visualLearning": {
@@ -166,7 +166,7 @@
     },
     "step2": {
       "title": "Realiza Quizzes Atractivos",
-      "description": "Practica con 8 modos de quiz diferentes que se adaptan a tu progreso de aprendizaje.",
+      "description": "Practica con 9 modos de quiz diferentes que se adaptan a tu progreso de aprendizaje.",
       "features": [
         "Coincidencia Significado ↔ Palabra",
         "Reconocimiento de imagen y audio",
@@ -201,7 +201,7 @@
     "user3": {
       "name": "Ana López",
       "role": "Profesora de idiomas",
-      "text": "Los 8 modos de quiz diferentes hacen que el aprendizaje sea atractivo y efectivo. ¡También lo recomiendo a mis estudiantes!",
+      "text": "Los 9 modos de quiz diferentes hacen que el aprendizaje sea atractivo y efectivo. ¡También lo recomiendo a mis estudiantes!",
       "rating": 5
     },
     "testimonial1": {
@@ -257,7 +257,7 @@
         "features": [
           "Listas de Palabras Ilimitadas",
           "Palabras Ilimitadas",
-          "Los 8 Modos de Quiz",
+          "Los 9 Modos de Quiz",
           "Análisis Avanzado",
           "Soporte Sin Conexión"
         ],
@@ -281,7 +281,7 @@
         "cta": "Obtener Premium",
         "features": {
           "unlimitedWordlists": "Listas y palabras ilimitadas",
-          "allQuizModes": "Los 8 modos de quiz",
+          "allQuizModes": "Los 9 modos de quiz",
           "advancedAnalytics": "Analíticas avanzadas",
           "offlineSupport": "Soporte sin conexión",
           "realTimeSpeaking": "Práctica de conversación en tiempo real",
@@ -339,7 +339,7 @@
       },
       "6": {
         "question": "¿Cuántos modos de quiz están disponibles y cómo funcionan?",
-        "answer": "Hay 8 modos de quiz diferentes diseñados para abordar varios aspectos del aprendizaje de vocabulario: adivinar significado, palabra del significado, asociación visual, comprensión auditiva, completar oraciones, recuerdo activo, reconocimiento de audio y audio de ejemplo. Los tipos de quiz se adaptan progresivamente según tu nivel actual de aprendizaje."
+        "answer": "Hay 9 modos de quiz diferentes diseñados para abordar varios aspectos del aprendizaje de vocabulario: adivinar significado, palabra del significado, audio del significado a palabra, asociación visual, comprensión auditiva, completar oraciones, recuerdo activo, reconocimiento de audio y audio de ejemplo. Los tipos de quiz se adaptan progresivamente según tu nivel actual de aprendizaje."
       },
       "7": {
         "question": "¿Qué características de análisis y seguimiento de progreso están incluidas?",
@@ -385,9 +385,9 @@
         "stats": "Repetición espaciada con base científica"
       },
       "quizModes": {
-        "title": "8 Modos de Quiz Atractivos",
+        "title": "9 Modos de Quiz Atractivos",
         "description": "Múltiples tipos de quiz: coincidencia de significados, asociación de imágenes, comprensión auditiva, completar oraciones, escribir de definición y más.",
-        "stats": "8 modos de quiz atractivos"
+        "stats": "9 modos de quiz atractivos"
       },
       "visualLearning": {
         "title": "Aprendizaje Visual con Imágenes IA",
@@ -475,6 +475,7 @@
       "quizTypes": [
         "Adivinar Significado",
         "Palabra del Significado",
+        "Audio del Significado a Palabra",
         "Asociación de Imagen",
         "Comprensión Auditiva"
       ],
@@ -564,7 +565,7 @@
       },
       "quiz": {
         "title": "Quizzes interactivos",
-        "description": "Practica tu vocabulario con 8 modos de quiz diferentes."
+        "description": "Practica tu vocabulario con 9 modos de quiz diferentes."
       },
       "progress": {
         "title": "Seguimiento de progreso",
@@ -605,7 +606,7 @@
       }
     },
     "multipleQuizModes": {
-      "title": "8 modos de quiz interactivos",
+      "title": "9 modos de quiz interactivos",
       "hero": {
         "title": "Atiende a diversos estilos de aprendizaje",
         "subtitle": "Experiencia de quiz integral incluyendo comprensión visual, auditiva y contextual"
@@ -676,10 +677,11 @@
         "description": "Genera automáticamente definiciones, imágenes, pronunciaciones de audio y frases de ejemplo para cada palabra que añadas."
       },
       "quizModes": {
-        "title": "8 Modos de Quiz",
+        "title": "9 Modos de Quiz",
         "modes": [
           "Adivina el Significado",
           "Palabra desde Significado",
+          "Audio del Significado a Palabra",
           "Asociación de Imágenes",
           "Comprensión de Audio",
           "Completar Oración",
@@ -782,7 +784,7 @@
         "features": [
           "Listas de palabras ilimitadas",
           "Palabras ilimitadas",
-          "Los 8 modos de quiz",
+          "Los 9 modos de quiz",
           "Analíticas avanzadas",
           "Soporte sin conexión",
           "Soporte prioritario"

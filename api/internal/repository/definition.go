@@ -186,7 +186,7 @@ func (repository *DefinitionRepository) Find(ctx context.Context, args FindArgs)
 	var builder strings.Builder
 
 	builder.WriteString(`SELECT id, token, language, part_of_speech, part_of_speech_normalized, is_verb_type, meaning, examples, inflections, source, 
-						source_id,sounds,phonetic_notations, created_at, updated_at
+						source_id,sounds,phonetic_notations, COALESCE(meaning_audio_url,''), created_at, updated_at
 		FROM definitions`)
 
 	queryArgs := []any{}
@@ -227,7 +227,7 @@ func (repository *DefinitionRepository) Find(ctx context.Context, args FindArgs)
 
 		err = rows.Scan(&def.ID,
 			&def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning, &def.Examples, &def.Inflections,
-			&def.Source, &def.SourceID, &def.Sounds, &def.PhoneticNotations,
+			&def.Source, &def.SourceID, &def.Sounds, &def.PhoneticNotations, &def.MeaningAudioURL,
 			&def.CreatedAt, &def.UpdatedAt)
 
 		if err != nil {
@@ -316,7 +316,7 @@ func (repository *DefinitionRepository) DidUserCreateWord(ctx context.Context, w
 func (repository *DefinitionRepository) GetDefinitionsByWordID(ctx context.Context, wordID, userID int64) ([]*Definition, error) {
 	query := `
 		SELECT d.id, d.token, d.language, d.part_of_speech, d.part_of_speech_normalized, d.is_verb_type, d.meaning, d.examples, d.inflections, 
-			   d.source, d.source_id, d.sounds, d.phonetic_notations, d.created_at, d.updated_at
+			   d.source, d.source_id, d.sounds, d.phonetic_notations, COALESCE(d.meaning_audio_url,''), d.created_at, d.updated_at
 		FROM definitions d
 		JOIN word_definitions wd ON wd.definition_id = d.id
 		JOIN words w ON w.id = wd.word_id
@@ -335,7 +335,7 @@ func (repository *DefinitionRepository) GetDefinitionsByWordID(ctx context.Conte
 
 		err = rows.Scan(&def.ID,
 			&def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning, &def.Examples, &def.Inflections,
-			&def.Source, &def.SourceID, &def.Sounds, &def.PhoneticNotations,
+			&def.Source, &def.SourceID, &def.Sounds, &def.PhoneticNotations, &def.MeaningAudioURL,
 			&def.CreatedAt, &def.UpdatedAt)
 
 		if err != nil {
@@ -375,7 +375,7 @@ func (repository *DefinitionRepository) GetDefinitionsByWordIDs(ctx context.Cont
             w.id as word_id,
             d.token as name,
             d.id, d.token, d.language, d.part_of_speech, d.part_of_speech_normalized, d.is_verb_type, d.meaning, d.examples, d.inflections,
-            d.source, d.source_id, d.sounds, d.phonetic_notations, d.created_at, d.updated_at
+            d.source, d.source_id, d.sounds, d.phonetic_notations, COALESCE(d.meaning_audio_url,''), d.created_at, d.updated_at
         FROM words w
         JOIN word_definitions wd ON wd.word_id = w.id
         JOIN definitions d ON d.id = wd.definition_id
@@ -400,7 +400,7 @@ func (repository *DefinitionRepository) GetDefinitionsByWordIDs(ctx context.Cont
 			&wordID, &name,
 			&def.ID, &def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning,
 			&def.Examples, &def.Inflections, &def.Source, &def.SourceID, &def.Sounds, &def.PhoneticNotations,
-			&def.CreatedAt, &def.UpdatedAt,
+			&def.MeaningAudioURL, &def.CreatedAt, &def.UpdatedAt,
 		); scanErr != nil {
 			return nil, scanErr
 		}
@@ -426,7 +426,7 @@ func (repository *DefinitionRepository) GetDefinitionsByWordIDs(ctx context.Cont
 func (repository *DefinitionRepository) GetDefinitionByID(ctx context.Context, definitionID int64) (*Definition, error) {
 	query := `
 		SELECT id, token, language, part_of_speech, part_of_speech_normalized, is_verb_type, meaning, examples, inflections, 
-			   source, source_id, sounds, phonetic_notations, created_at, updated_at
+			   source, source_id, sounds, phonetic_notations, COALESCE(meaning_audio_url,''), created_at, updated_at
 		FROM definitions 
 		WHERE id = $1`
 
@@ -434,7 +434,7 @@ func (repository *DefinitionRepository) GetDefinitionByID(ctx context.Context, d
 	err := repository.Db.QueryRow(ctx, query, definitionID).Scan(
 		&def.ID, &def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning,
 		&def.Examples, &def.Inflections, &def.Source, &def.SourceID,
-		&def.Sounds, &def.PhoneticNotations, &def.CreatedAt, &def.UpdatedAt)
+		&def.Sounds, &def.PhoneticNotations, &def.MeaningAudioURL, &def.CreatedAt, &def.UpdatedAt)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -454,6 +454,17 @@ func (repository *DefinitionRepository) CreateExampleAudio(ctx context.Context, 
 			  VALUES ($1, $2, $3, $4, NULLIF($5, ''))`
 
 	_, err := repository.Db.Exec(ctx, query, definitionID, exampleText, exampleHash, audioURL, inflectionType)
+	return err
+}
+
+func (repository *DefinitionRepository) UpdateMeaningAudioURL(ctx context.Context, definitionID int64, audioURL string, tx *pgx.Tx) error {
+	query := `UPDATE definitions SET meaning_audio_url = $1 WHERE id = $2`
+
+	if tx != nil {
+		_, err := (*tx).Exec(ctx, query, audioURL, definitionID)
+		return err
+	}
+	_, err := repository.Db.Exec(ctx, query, audioURL, definitionID)
 	return err
 }
 

@@ -343,6 +343,7 @@
     "whatWordDescribesImage": "Quale parola descrive questa immagine?",
     "whichWordDidYouHear": "Quale parola hai sentito?",
     "whatDoesWordYouHeardMean": "Cosa significa la parola che hai sentito?",
+    "whichWordMatchesMeaningAudio": "Quale parola corrisponde a questo significato?",
     "whichWordFromExample": "Quale parola da questo esempio?",
     "reportOptions": {
       "imageDoesntMatch": "L'immagine non corrisponde",
@@ -365,7 +366,18 @@
       "multipleChoice": "Scelta Multipla",
       "typing": "Pratica di Scrittura",
       "listening": "Ascolto"
-    }
+    },
+    "audioLabelWordFromAudioPlaying": "L’audio è in riproduzione, ascolta la parola",
+    "audioLabelWordFromAudioIdle": "Riproduci l’audio per ascoltare la parola",
+    "audioLabelMeaningFromAudioPlaying": "L’audio è in riproduzione, ascolta e seleziona il significato",
+    "audioLabelMeaningFromAudioIdle": "Riproduci l’audio per ascoltare la parola, poi seleziona il significato",
+    "audioLabelWordFromMeaningAudioPlaying": "L’audio è in riproduzione, ascolta e seleziona la parola",
+    "audioLabelWordFromMeaningAudioIdle": "Riproduci l’audio per ascoltare il significato, poi seleziona la parola",
+    "audioLabelWordFromExampleAudioPlaying": "L’audio è in riproduzione, ascolta la frase di esempio",
+    "audioLabelWordFromExampleAudioIdle": "Riproduci l’audio per ascoltare una frase di esempio",
+    "audioLabelDefaultPlaying": "L’audio è in riproduzione",
+    "audioLabelDefaultIdle": "Tocca per riprodurre l’audio",
+    "audioHintPlayPause": "Doppio tocco per riprodurre o mettere in pausa l’audio"
   },
   "wordSelection": {
     "title": "Seleziona Parole per Chat",
@@ -881,6 +893,7 @@
       "write_word_from_definition": "Scrivi Parola",
       "word_from_audio": "Parola dall'Audio",
       "meaning_from_audio": "Significato dall'Audio",
+      "word_from_meaning_audio": "Parola dal significato",
       "word_from_example_audio": "Parola dall'Audio di Esempio"
     }
   },

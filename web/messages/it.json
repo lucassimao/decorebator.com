@@ -71,7 +71,7 @@
     "imageAlt": "Interfaccia dell’app Decorebator",
     "videoTitle": "Demo Decorebator - Apprendimento del Vocabolario con IA",
     "socialProof": "+ studenti attivi",
-    "subtitle": "Impara il vocabolario <strong>3 volte più velocemente</strong> con ripetizione dilazionata, contenuti generati dall’IA e 8 modalità di quiz coinvolgenti. <accent>Niente memorizzazione, solo risultati.</accent>",
+    "subtitle": "Impara il vocabolario <strong>3 volte più velocemente</strong> con ripetizione dilazionata, contenuti generati dall’IA e 9 modalità di quiz coinvolgenti. <accent>Niente memorizzazione, solo risultati.</accent>",
     "startLearningFree": "Inizia a imparare gratis",
     "watchDemo": "Guarda la demo",
     "stats": {
@@ -90,7 +90,7 @@
     },
     "productSummary": {
       "label": "Sintesi del prodotto:",
-      "body": "App di vocabolario con ripetizione dilazionata, contenuti generati dall’IA, 8 modalità di quiz e monitoraggio dei progressi multi‑dispositivo."
+      "body": "App di vocabolario con ripetizione dilazionata, contenuti generati dall’IA, 9 modalità di quiz e monitoraggio dei progressi multi‑dispositivo."
     },
     "video": {
       "aria": "Video demo dell’app"
@@ -125,7 +125,7 @@
       "description": "Sistema Leitner probabilistico a 7 scatole con selezione intelligente delle parole - non rimanere mai senza contenuti da studiare."
     },
     "multipleQuizModes": {
-      "title": "8 modalità quiz interattive",
+      "title": "9 modalità quiz interattive",
       "description": "Dal riconoscimento visivo alla comprensione uditiva - pratica con diversi tipi di quiz per un apprendimento completo."
     },
     "visualLearning": {
@@ -166,7 +166,7 @@
     },
     "step2": {
       "title": "Fai Quiz Coinvolgenti",
-      "description": "Pratica con 8 diverse modalità quiz che si adattano ai tuoi progressi di apprendimento.",
+      "description": "Pratica con 9 diverse modalità quiz che si adattano ai tuoi progressi di apprendimento.",
       "features": [
         "Abbinamento Significato ↔ Parola",
         "Riconoscimento immagini e audio",
@@ -201,7 +201,7 @@
     "user3": {
       "name": "Anna Verdi",
       "role": "Insegnante di lingue",
-      "text": "Le 8 diverse modalità quiz rendono l'apprendimento coinvolgente ed efficace. Lo raccomando anche ai miei studenti!",
+      "text": "Le 9 diverse modalità quiz rendono l'apprendimento coinvolgente ed efficace. Lo raccomando anche ai miei studenti!",
       "rating": 5
     },
     "testimonial1": {
@@ -257,7 +257,7 @@
         "features": [
           "Liste di Parole Illimitate",
           "Parole Illimitate",
-          "Tutte le 8 Modalità Quiz",
+          "Tutte le 9 Modalità Quiz",
           "Analisi Avanzate",
           "Supporto Offline"
         ],
@@ -285,7 +285,7 @@
         "cta": "Ottieni Premium",
         "features": {
           "unlimitedWordlists": "Liste e parole illimitate",
-          "allQuizModes": "Tutte le 8 modalità di quiz",
+          "allQuizModes": "Tutte le 9 modalità di quiz",
           "advancedAnalytics": "Analisi avanzate",
           "offlineSupport": "Supporto offline",
           "realTimeSpeaking": "Pratica di conversazione in tempo reale",
@@ -343,7 +343,7 @@
       },
       "6": {
         "question": "Quante modalità quiz sono disponibili e come funzionano?",
-        "answer": "Ci sono 8 diverse modalità quiz progettate per targetizzare vari aspetti dell'apprendimento del vocabolario: indovinare significato, parola dal significato, associazione visiva, comprensione uditiva, completamento frasi, richiamo attivo, riconoscimento audio e audio di esempio. I tipi di quiz si adattano progressivamente in base al tuo livello di apprendimento attuale."
+        "answer": "Ci sono 9 diverse modalità quiz progettate per targetizzare vari aspetti dell'apprendimento del vocabolario: indovinare significato, parola dal significato, audio del significato alla parola, associazione visiva, comprensione uditiva, completamento frasi, richiamo attivo, riconoscimento audio e audio di esempio. I tipi di quiz si adattano progressivamente in base al tuo livello di apprendimento attuale."
       },
       "7": {
         "question": "Quali funzionalità di analisi e tracciamento progressi sono incluse?",
@@ -389,9 +389,9 @@
         "stats": "Ripetizione dilazionata scientificamente provata"
       },
       "quizModes": {
-        "title": "8 Modalità Quiz Coinvolgenti",
+        "title": "9 Modalità Quiz Coinvolgenti",
         "description": "Multipli tipi di quiz: corrispondenza significati, associazione immagini, comprensione audio, completamento frasi, scrittura da definizione e altro.",
-        "stats": "8 modalità di quiz coinvolgenti"
+        "stats": "9 modalità di quiz coinvolgenti"
       },
       "visualLearning": {
         "title": "Apprendimento Visivo con Immagini IA",
@@ -544,7 +544,7 @@
       },
       "quiz": {
         "title": "Quiz interattivi",
-        "description": "Pratica il tuo vocabolario con 8 diverse modalità quiz."
+        "description": "Pratica il tuo vocabolario con 9 diverse modalità quiz."
       },
       "progress": {
         "title": "Monitoraggio progressi",
@@ -585,7 +585,7 @@
       }
     },
     "multipleQuizModes": {
-      "title": "8 modalità quiz interattive",
+      "title": "9 modalità quiz interattive",
       "hero": {
         "title": "Si rivolge a diversi stili di apprendimento",
         "subtitle": "Esperienza quiz completa inclusa comprensione visiva, uditiva e contestuale"
@@ -632,6 +632,7 @@
       "quizTypes": [
         "Indovina Significato",
         "Parola dal Significato",
+        "Audio del Significato alla Parola",
         "Associazione Immagine",
         "Comprensione Audio"
       ],
@@ -708,10 +709,11 @@
         "description": "Genera automaticamente definizioni, immagini, pronunce audio e frasi di esempio per ogni parola che aggiungi."
       },
       "quizModes": {
-        "title": "8 Modalità Quiz",
+        "title": "9 Modalità Quiz",
         "modes": [
           "Indovina il Significato",
           "Parola dal Significato",
+          "Audio del Significato alla Parola",
           "Associazione di Immagini",
           "Comprensione Audio",
           "Completa la Frase",
@@ -814,7 +816,7 @@
         "features": [
           "Liste di parole illimitate",
           "Parole illimitate",
-          "Tutte le 8 modalità quiz",
+          "Tutte le 9 modalità quiz",
           "Analisi avanzate",
           "Supporto offline",
           "Supporto prioritario"

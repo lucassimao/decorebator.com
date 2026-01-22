@@ -343,6 +343,7 @@
     "whatWordDescribesImage": "Que palavra descreve esta imagem?",
     "whichWordDidYouHear": "Qual palavra você ouviu?",
     "whatDoesWordYouHeardMean": "O que significa a palavra que você ouviu?",
+    "whichWordMatchesMeaningAudio": "Qual palavra corresponde a este significado?",
     "whichWordFromExample": "Qual palavra deste exemplo?",
     "reportOptions": {
       "imageDoesntMatch": "Imagem não corresponde",
@@ -365,7 +366,18 @@
       "multipleChoice": "Múltipla Escolha",
       "typing": "Prática de Digitação",
       "listening": "Audição"
-    }
+    },
+    "audioLabelWordFromAudioPlaying": "O áudio está tocando, ouça a palavra",
+    "audioLabelWordFromAudioIdle": "Toque o áudio para ouvir a palavra",
+    "audioLabelMeaningFromAudioPlaying": "O áudio está tocando, ouça e selecione o significado",
+    "audioLabelMeaningFromAudioIdle": "Toque o áudio para ouvir a palavra e selecione o significado",
+    "audioLabelWordFromMeaningAudioPlaying": "O áudio está tocando, ouça e selecione a palavra",
+    "audioLabelWordFromMeaningAudioIdle": "Toque o áudio para ouvir o significado e selecione a palavra",
+    "audioLabelWordFromExampleAudioPlaying": "O áudio está tocando, ouça a frase de exemplo",
+    "audioLabelWordFromExampleAudioIdle": "Toque o áudio para ouvir uma frase de exemplo",
+    "audioLabelDefaultPlaying": "O áudio está tocando",
+    "audioLabelDefaultIdle": "Toque para reproduzir o áudio",
+    "audioHintPlayPause": "Toque duas vezes para reproduzir ou pausar o áudio"
   },
   "wordSelection": {
     "title": "Selecionar Palavras para Chat",
@@ -889,6 +901,7 @@
       "write_word_from_definition": "Escrever Palavra",
       "word_from_audio": "Palavra pelo Áudio",
       "meaning_from_audio": "Significado pelo Áudio",
+      "word_from_meaning_audio": "Palavra do significado",
       "word_from_example_audio": "Palavra pelo Áudio de Exemplo"
     }
   },

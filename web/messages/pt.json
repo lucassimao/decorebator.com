@@ -71,7 +71,7 @@
     "imageAlt": "Interface do app Decorebator",
     "videoTitle": "Demo Decorebator - Aprendizado de Vocabulário com IA",
     "socialProof": "+ estudantes ativos",
-    "subtitle": "Aprenda vocabulário <strong>3x mais rápido</strong> com repetição espaçada, conteúdo gerado por IA e 8 modos de quiz envolventes. <accent>Sem memorização, só resultados.</accent>",
+    "subtitle": "Aprenda vocabulário <strong>3x mais rápido</strong> com repetição espaçada, conteúdo gerado por IA e 9 modos de quiz envolventes. <accent>Sem memorização, só resultados.</accent>",
     "startLearningFree": "Começar grátis",
     "watchDemo": "Ver demonstração",
     "stats": {
@@ -90,7 +90,7 @@
     },
     "productSummary": {
       "label": "Resumo do produto:",
-      "body": "App de vocabulário com repetição espaçada, conteúdo gerado por IA, 8 modos de quiz e acompanhamento de progresso multi‑dispositivo."
+      "body": "App de vocabulário com repetição espaçada, conteúdo gerado por IA, 9 modos de quiz e acompanhamento de progresso multi‑dispositivo."
     },
     "video": {
       "aria": "Vídeo de demonstração do app"
@@ -125,7 +125,7 @@
       "description": "Sistema Leitner probabilístico de 7 caixas com seleção inteligente de palavras - nunca fique sem conteúdo para estudar."
     },
     "multipleQuizModes": {
-      "title": "8 modos de quiz interativos",
+      "title": "9 modos de quiz interativos",
       "description": "Do reconhecimento visual à compreensão auditiva - pratique com diversos tipos de quiz para aprendizado abrangente."
     },
     "visualLearning": {
@@ -167,7 +167,7 @@
       },
       "smartQuizzes": {
         "title": "Sistema de quiz adaptativo",
-        "description": "8 modos de quiz diferentes que se adaptam ao seu progresso de aprendizado, do reconhecimento básico à compreensão avançada."
+        "description": "9 modos de quiz diferentes que se adaptam ao seu progresso de aprendizado, do reconhecimento básico à compreensão avançada."
       },
       "analytics": {
         "title": "Análise de aprendizado",
@@ -193,7 +193,7 @@
     },
     "step2": {
       "title": "Pratique com quizzes inteligentes",
-      "description": "Envolva-se com 8 modos de quiz diferentes projetados para reforçar seu aprendizado de múltiplos ângulos.",
+      "description": "Envolva-se com 9 modos de quiz diferentes projetados para reforçar seu aprendizado de múltiplos ângulos.",
       "features": [
         "Perguntas de múltipla escolha e preenchimento de lacunas",
         "Desafios de reconhecimento visual",
@@ -265,7 +265,7 @@
       },
       "6": {
         "question": "Quantos modos de quiz estão disponíveis e como funcionam?",
-        "answer": "Existem 8 modos de quiz diferentes projetados para atingir vários aspectos do aprendizado de vocabulário: adivinhar significado, palavra do significado, associação visual, compreensão auditiva, completar frase, recall ativo, reconhecimento de áudio e áudio de exemplo. Os tipos de quiz se adaptam progressivamente baseados em seu nível atual de aprendizado."
+        "answer": "Existem 9 modos de quiz diferentes projetados para atingir vários aspectos do aprendizado de vocabulário: adivinhar significado, palavra do significado, áudio do significado para palavra, associação visual, compreensão auditiva, completar frase, recall ativo, reconhecimento de áudio e áudio de exemplo. Os tipos de quiz se adaptam progressivamente baseados em seu nível atual de aprendizado."
       },
       "7": {
         "question": "Quais recursos de análise e acompanhamento de progresso estão incluídos?",
@@ -326,7 +326,7 @@
         "features": [
           "Listas de Palavras Ilimitadas",
           "Palavras Ilimitadas",
-          "Todos os 8 Modos de Quiz",
+          "Todos os 9 Modos de Quiz",
           "Análises Avançadas",
           "Suporte Offline"
         ],
@@ -350,7 +350,7 @@
         "cta": "Obter Premium",
         "features": {
           "unlimitedWordlists": "Listas e palavras ilimitadas",
-          "allQuizModes": "Todos os 8 modos de quiz",
+          "allQuizModes": "Todos os 9 modos de quiz",
           "advancedAnalytics": "Análises avançadas",
           "offlineSupport": "Suporte offline",
           "realTimeSpeaking": "Prática de fala em tempo real",
@@ -401,9 +401,9 @@
         "stats": "Repetição espaçada comprovada cientificamente"
       },
       "quizModes": {
-        "title": "8 Modos de Quiz Envolventes",
+        "title": "9 Modos de Quiz Envolventes",
         "description": "Múltiplos tipos de quiz: correspondência de significados, associação de imagens, compreensão auditiva, completar frases, escrever da definição e mais.",
-        "stats": "8 modos de quiz envolventes"
+        "stats": "9 modos de quiz envolventes"
       },
       "visualLearning": {
         "title": "Aprendizado Visual com Imagens IA",
@@ -558,10 +558,11 @@
         "description": "Gera automaticamente definições, imagens, pronúncias em áudio e frases de exemplo para cada palavra que você adiciona."
       },
       "quizModes": {
-        "title": "8 Modos de Quiz",
+        "title": "9 Modos de Quiz",
         "modes": [
           "Adivinhar Significado",
           "Palavra do Significado",
+          "Áudio do Significado para Palavra",
           "Associação de Imagens",
           "Compreensão de Áudio",
           "Completar Frase",
@@ -664,7 +665,7 @@
         "features": [
           "Listas de palavras ilimitadas",
           "Palavras ilimitadas",
-          "Todos os 8 modos de quiz",
+          "Todos os 9 modos de quiz",
           "Análises avançadas",
           "Suporte offline",
           "Suporte prioritário"
@@ -800,7 +801,7 @@
       ],
       "premium": [
         "Listas de palavras e palavras ilimitadas",
-        "Todos os 8 modos de quiz",
+        "Todos os 9 modos de quiz",
         "Análises avançadas",
         "Suporte offline",
         "Suporte prioritário"
@@ -846,12 +847,12 @@
         "Baixe o app móvel",
         "Entre para ver seus recursos Premium",
         "Crie listas de palavras ilimitadas",
-        "Acesse todos os 8 modos de quiz e suporte offline"
+        "Acesse todos os 9 modos de quiz e suporte offline"
       ],
       "premiumFeatures": "Recursos Premium que você desbloqueará:",
       "features": [
         "Listas de palavras e palavras ilimitadas",
-        "Todos os 8 modos de quiz interativos",
+        "Todos os 9 modos de quiz interativos",
         "Análises avançadas de aprendizado",
         "Suporte de aprendizado offline",
         "Suporte ao cliente prioritário"
@@ -992,9 +993,9 @@
       }
     },
     "quizModes": {
-      "title": "8 modos de quiz envolventes",
+      "title": "9 modos de quiz envolventes",
       "subtitle": "Teste abrangente com múltiplas abordagens de aprendizado",
-      "description": "Desafie-se com 8 tipos diferentes de quiz projetados para testar e fortalecer diferentes aspectos do conhecimento e recall de vocabulário.",
+      "description": "Desafie-se com 9 tipos diferentes de quiz projetados para testar e fortalecer diferentes aspectos do conhecimento e recall de vocabulário.",
       "hero": {
         "title": "Experiência de aprendizado multimodal",
         "subtitle": "Engaje diferentes caminhos de aprendizado com modos de quiz variados que testam reconhecimento, recall, compreensão e aplicação."
@@ -1571,6 +1572,7 @@
       "quizTypes": [
         "Adivinhar significado",
         "Palavra do significado",
+        "Áudio do significado para palavra",
         "Associação de imagem",
         "Compreensão auditiva"
       ],

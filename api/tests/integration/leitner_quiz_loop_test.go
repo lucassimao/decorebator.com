@@ -243,19 +243,23 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 
 	// 4. Insert definitions
 	_, err = tx.Exec(ctx, `
-		INSERT INTO definitions (id, token, language, part_of_speech, meaning, examples, inflections, source, sounds, phonetic_notations, part_of_speech_normalized)
+		INSERT INTO definitions (id, token, language, part_of_speech, meaning, meaning_audio_url, examples, inflections, source, sounds, phonetic_notations, part_of_speech_normalized)
 		VALUES 
-			(259, 'crests', 'en', 'noun', 'The top or highest part of something, especially a mountain or wave.', 
+			(259, 'crests', 'en', 'noun', 'The top or highest part of something, especially a mountain or wave.',
+				'https://decorebator.nyc3.digitaloceanspaces.com/audio/meaning-259.mp3',
 				'{"The mountain has two prominent [crests].","Waves form high [crests] during storms."}', 
 				'[]'::jsonb, 'ChatGPT', null, null, 'noun'),
-			(260, 'crests', 'en', 'verb', 'To reach the top or peak of something.', 
+			(260, 'crests', 'en', 'verb', 'To reach the top or peak of something.',
+				'https://decorebator.nyc3.digitaloceanspaces.com/audio/meaning-260.mp3',
 				'{"The eagle [crests] the peak.","She [crests] the hill each morning on her run.","The sun [crests] the horizon at dawn.","The eagle [crested] the peak yesterday.","She [crested] the hill every morning last week.","The sun [crested] the horizon at dawn yesterday.","The eagle has [crested] many mountains.","She had [crested] all the hills before noon.","The sun had [crested] the horizon by the time we arrived."}',
 				'[{"tense": "present", "examples": ["The eagle [crests] the peak.", "She [crests] the hill each morning on her run.", "The sun [crests] the horizon at dawn."], "inflection": "crests"}, {"tense": "past", "examples": ["The eagle [crested] the peak yesterday.", "She [crested] the hill every morning last week.", "The sun [crested] the horizon at dawn yesterday."], "inflection": "crested"}, {"tense": "past participle", "examples": ["The eagle has [crested] many mountains.", "She had [crested] all the hills before noon.", "The sun had [crested] the horizon by the time we arrived."], "inflection": "crested"}]'::jsonb,
 				'ChatGPT', null, null, 'verb'),
-			(273, 'shrill', 'en', 'adjective', 'Having a high-pitched and piercing sound that is often unpleasant to hear.', 
+			(273, 'shrill', 'en', 'adjective', 'Having a high-pitched and piercing sound that is often unpleasant to hear.',
+				'https://decorebator.nyc3.digitaloceanspaces.com/audio/meaning-273.mp3',
 				'{"The [shrill] noise of the alarm was unbearable.","Her [shrill] voice could be heard across the room.","He let out a [shrill] whistle to grab everyone''s attention."}',
 				'[]'::jsonb, 'ChatGPT', null, null, 'adjective'),
-			(274, 'shrill', 'en', 'verb', 'To make a high-pitched and piercing sound.', 
+			(274, 'shrill', 'en', 'verb', 'To make a high-pitched and piercing sound.',
+				'https://decorebator.nyc3.digitaloceanspaces.com/audio/meaning-274.mp3',
 				'{"The siren continued to [shrill] in the distance.","He would often [shrill] at his pet to stop misbehaving.","The birds began to [shrill] at dawn."}',
 				'[{"tense": "present", "examples": ["The siren [shrills] every time there is an emergency.", "He [shrills] angrily at the noisy neighbors.", "As the teacher [shrills] at the students to silence them, they went quiet."], "inflection": "shrills"}, {"tense": "past", "examples": ["The child [shrilled] with delight at the sight of the ice cream.", "He [shrilled] loudly when he stubbed his toe.", "The alarm [shrilled] in the night, waking everyone up."], "inflection": "shrilled"}, {"tense": "past participle", "examples": ["The bird has [shrilled] joyfully in the morning.", "She has [shrilled] at the top of her lungs in anger.", "The device, once activated, has [shrilled] without stopping."], "inflection": "shrilled"}]'::jsonb,
 				'ChatGPT', null, null, 'verb')

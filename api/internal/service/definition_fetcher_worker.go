@@ -194,6 +194,23 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		if err != nil {
 			logger.Error("failed to queue example audio job", "definitionId", definition.ID, "wordId", word.ID, "error", err)
 		}
+
+		if definition.Meaning != "" {
+			response, audioErr := openai.GenerateAudio(definition.Meaning, languageCode)
+			if audioErr != nil {
+				logger.Error("failed to generate meaning audio", "definitionId", definition.ID, "error", audioErr)
+			} else if response.Error != nil {
+				logger.Error("OpenAI error generating meaning audio", "definitionId", definition.ID, "error", response.Error)
+			} else {
+				audioURL, uploadErr := common.Upload(ctx, response.Data, "decorebator",
+					fmt.Sprintf("audio/meaning-%d.mp3", definition.ID), "audio/mpeg")
+				if uploadErr != nil {
+					logger.Error("failed to upload meaning audio", "definitionId", definition.ID, "error", uploadErr)
+				} else if updateErr := w.definitionService.UpdateMeaningAudioURL(ctx, definition.ID, audioURL, &tx); updateErr != nil {
+					logger.Error("failed to save meaning audio url", "definitionId", definition.ID, "error", updateErr)
+				}
+			}
+		}
 	}
 	if includeErr := w.leitnerTrackingService.IncludeDefinitions(ctx, word.ID, word.UserID, definitionIds, tx); includeErr != nil {
 		logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)

@@ -77,12 +77,13 @@ export type Quiz = {
     | "WORD_FROM_IMAGE"
     | "WORD_FROM_AUDIO"
     | "MEANING_FROM_AUDIO"
+    | "WORD_FROM_MEANING_AUDIO"
     | "WRITE_WORD_FROM_DEFINITION"
     | "WORD_FROM_EXAMPLE_AUDIO";
   pos: string; // part of speech
   isVerbType: boolean; // computed flag indicating if this is a verb/phrasal verb
   pronunciation?: string; // IPA pronunciation
-  audioURL?: string; //only present in MeaningFromAudio, GUESS_MEANING, WordFromAudio, and WordFromExampleAudio quizes
+  audioURL?: string; //only present in MeaningFromAudio, WordFromMeaningAudio, GUESS_MEANING, WordFromAudio, and WordFromExampleAudio quizes
   imageDescription: string;
   definitionId: number;
   wordId: number;

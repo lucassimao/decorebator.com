@@ -90,13 +90,13 @@ type WordlistAvailability struct {
 // - Box 6: Audio recognition (new modality)
 // - Box 7: Mastery level (most challenging types only)
 var boxToQuizTypes = map[int64][]model.QuizType{
-	1: {model.GuessMeaning},                                                                                                             // Recognition: "What does this word mean?"
-	2: {model.WordFromMeaning, model.GuessMeaning},                                                                                      // Basic recall: "Which word matches this meaning?" + recognition practice
-	3: {model.WordFromImage, model.WordFromMeaning},                                                                                     // Visual association: "What word matches this image?" + meaning recall
-	4: {model.CompleteSentence, model.WordFromExampleAudio, model.GuessMeaning},                                                         // Contextual understanding + recognition reinforcement
-	5: {model.WriteWordFromDefinition, model.WordFromExampleAudio, model.WordFromMeaning},                                               // Active recall + meaning practice
-	6: {model.WordFromAudio, model.WordFromExampleAudio, model.WordFromImage, model.GuessMeaning},                                       // Audio/Visual recognition + meaning reinforcement
-	7: {model.MeaningFromAudio, model.WordFromImage, model.WriteWordFromDefinition, model.CompleteSentence, model.WordFromExampleAudio}, // Mastery
+	1: {model.GuessMeaning},                                                                                                                                         // Recognition: "What does this word mean?"
+	2: {model.WordFromMeaning, model.GuessMeaning},                                                                                                                  // Basic recall: "Which word matches this meaning?" + recognition practice
+	3: {model.WordFromImage, model.WordFromMeaning},                                                                                                                 // Visual association: "What word matches this image?" + meaning recall
+	4: {model.CompleteSentence, model.WordFromExampleAudio, model.GuessMeaning},                                                                                     // Contextual understanding + recognition reinforcement
+	5: {model.WriteWordFromDefinition, model.WordFromExampleAudio, model.WordFromMeaning},                                                                           // Active recall + meaning practice
+	6: {model.WordFromAudio, model.WordFromMeaningAudio, model.WordFromExampleAudio, model.WordFromImage, model.GuessMeaning},                                       // Audio/Visual recognition + meaning reinforcement
+	7: {model.MeaningFromAudio, model.WordFromMeaningAudio, model.WordFromImage, model.WriteWordFromDefinition, model.CompleteSentence, model.WordFromExampleAudio}, // Mastery
 }
 
 const multipleChoiceDistractors = 2
@@ -154,7 +154,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 		WITH definition_priorities AS (
 			SELECT 
 				def.id, lst.id AS lst_id, def.token, 
-				def.part_of_speech, def.language, def.is_verb_type, def.meaning, def.examples, 
+				def.part_of_speech, def.language, def.is_verb_type, def.meaning, COALESCE(def.meaning_audio_url, '') as meaning_audio_url, def.examples, 
 				def.inflections, lst.box_id, def.sounds, def.phonetic_notations, 
 				di.url as image_url, di.description as image_description, 
 				wd.word_id AS word_id,
@@ -198,9 +198,9 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 		),
 		weighted_definitions AS (
 			SELECT 
-				id, token, part_of_speech, language, is_verb_type, meaning, examples, inflections, 
+				id, token, part_of_speech, language, is_verb_type, meaning, meaning_audio_url, examples, inflections, 
 				lst_id, box_id, sounds, phonetic_notations, 
-				COALESCE(image_url,'') as image_url, word_id, COALESCE(image_description,'') as image_description,
+				COALESCE(image_url, '') as image_url, word_id, COALESCE(image_description, '') as image_description,
 				hours_since_review, progress_ratio, updated_at,
 				-- Pure priority based on progress ratio - no complex calculations
 				CASE 
@@ -213,7 +213,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 		),
 		selected_definition AS (
 			SELECT 
-				id, token, part_of_speech, language, is_verb_type, meaning, examples, inflections, 
+				id, token, part_of_speech, language, is_verb_type, meaning, meaning_audio_url, examples, inflections, 
 				lst_id, box_id, sounds, phonetic_notations, 
 				image_url, word_id, image_description, hours_since_review, progress_ratio, updated_at
 			FROM weighted_definitions
@@ -229,7 +229,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 			LIMIT 1
 		)
 		SELECT 
-			sd.id, sd.token, sd.part_of_speech, sd.language, sd.is_verb_type, sd.meaning, sd.examples, sd.inflections, 
+			sd.id, sd.token, sd.part_of_speech, sd.language, sd.is_verb_type, sd.meaning, sd.meaning_audio_url, sd.examples, sd.inflections, 
 			sd.lst_id, sd.box_id, sd.sounds, sd.phonetic_notations, 
 			sd.image_url, sd.word_id, sd.image_description,
 			sd.hours_since_review, sd.progress_ratio,
@@ -250,7 +250,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 			) as example_audio_files
 		FROM selected_definition sd
 		LEFT JOIN definition_example_audio dea ON dea.definition_id = sd.id
-		GROUP BY sd.id, sd.token, sd.part_of_speech, sd.language, sd.is_verb_type, sd.meaning, sd.examples, sd.inflections, 
+		GROUP BY sd.id, sd.token, sd.part_of_speech, sd.language, sd.is_verb_type, sd.meaning, sd.meaning_audio_url, sd.examples, sd.inflections, 
 				 sd.lst_id, sd.box_id, sd.sounds, sd.phonetic_notations, 
 				 sd.image_url, sd.word_id, sd.image_description, sd.hours_since_review, sd.progress_ratio, sd.updated_at;
 	`
@@ -296,7 +296,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 	var exampleAudioFilesJSON []byte
 
 	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
-		&definition.Meaning, &definition.Examples,
+		&definition.Meaning, &definition.MeaningAudioURL, &definition.Examples,
 		&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
 		&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription,
 		&hoursSinceReview, &progressRatio, &exampleAudioFilesJSON)
@@ -542,6 +542,8 @@ func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Wor
 		return def.Definition.HasExamples()
 	case model.WordFromAudio, model.MeaningFromAudio:
 		return word.AudioURL != ""
+	case model.WordFromMeaningAudio:
+		return def.Definition.MeaningAudioURL != ""
 	case model.WordFromExampleAudio:
 		return len(def.Definition.ExampleAudioFiles) > 0
 	case model.WriteWordFromDefinition:
@@ -633,6 +635,15 @@ func (s *LeitnerSystemStrategy) createQuizForType(ctx context.Context, quizType 
 		if err != nil {
 			return nil, err
 		}
+		value = ""
+
+	case model.WordFromMeaningAudio:
+		quizAnswer = word.Name
+		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, multipleChoiceDistractors)
+		if err != nil {
+			return nil, err
+		}
+		audioURL = def.Definition.MeaningAudioURL
 		value = ""
 
 	case model.WriteWordFromDefinition:

@@ -74,7 +74,7 @@ const TestimonialsSection: React.FC = () => {
             </div>
             <p className="leading-relaxed text-[#636E72] italic">
               &quot;The spaced repetition system is incredibly effective. I&apos;ve expanded my
-              technical vocabulary by 300% in just 3 months. The 8 quiz modes keep learning fresh
+              technical vocabulary by 300% in just 3 months. The 9 quiz modes keep learning fresh
               and engaging every day.&quot;
             </p>
           </div>

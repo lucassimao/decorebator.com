@@ -331,6 +331,7 @@
     "whatWordDescribesImage": "What word describes this image?",
     "whichWordDidYouHear": "Which word did you hear?",
     "whatDoesWordYouHeardMean": "What does the word you heard mean?",
+    "whichWordMatchesMeaningAudio": "Which word matches this meaning?",
     "whichWordFromExample": "Which word from this example?",
     "reportOptions": {
       "imageDoesntMatch": "Image doesn't match",
@@ -353,7 +354,18 @@
       "multipleChoice": "Multiple Choice",
       "typing": "Typing Practice",
       "listening": "Listening"
-    }
+    },
+    "audioLabelWordFromAudioPlaying": "Audio is playing, listen for the word",
+    "audioLabelWordFromAudioIdle": "Play audio to hear the word",
+    "audioLabelMeaningFromAudioPlaying": "Audio is playing, listen and select the meaning",
+    "audioLabelMeaningFromAudioIdle": "Play audio to hear the word, then select its meaning",
+    "audioLabelWordFromMeaningAudioPlaying": "Audio is playing, listen and select the word",
+    "audioLabelWordFromMeaningAudioIdle": "Play audio to hear the meaning, then select the word",
+    "audioLabelWordFromExampleAudioPlaying": "Audio is playing, listen for the example sentence",
+    "audioLabelWordFromExampleAudioIdle": "Play audio to hear an example sentence",
+    "audioLabelDefaultPlaying": "Audio is playing",
+    "audioLabelDefaultIdle": "Tap to play audio",
+    "audioHintPlayPause": "Double tap to play or pause the audio"
   },
   "wordSelection": {
     "title": "Select Words for Chat",
@@ -903,6 +915,7 @@
       "write_word_from_definition": "Write Word",
       "word_from_audio": "Word from Audio",
       "meaning_from_audio": "Meaning from Audio",
+      "word_from_meaning_audio": "Word from Meaning",
       "word_from_example_audio": "Word from Example Audio"
     }
   },

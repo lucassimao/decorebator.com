@@ -343,6 +343,7 @@
     "whatWordDescribesImage": "¿Qué palabra describe esta imagen?",
     "whichWordDidYouHear": "¿Qué palabra escuchaste?",
     "whatDoesWordYouHeardMean": "¿Qué significa la palabra que escuchaste?",
+    "whichWordMatchesMeaningAudio": "¿Qué palabra coincide con este significado?",
     "whichWordFromExample": "¿Qué palabra de este ejemplo?",
     "reportOptions": {
       "imageDoesntMatch": "La imagen no coincide",
@@ -365,7 +366,18 @@
       "multipleChoice": "Opción Múltiple",
       "typing": "Práctica de Escritura",
       "listening": "Escucha"
-    }
+    },
+    "audioLabelWordFromAudioPlaying": "El audio se está reproduciendo, escucha la palabra",
+    "audioLabelWordFromAudioIdle": "Reproduce el audio para escuchar la palabra",
+    "audioLabelMeaningFromAudioPlaying": "El audio se está reproduciendo, escucha y selecciona el significado",
+    "audioLabelMeaningFromAudioIdle": "Reproduce el audio para escuchar la palabra y luego selecciona su significado",
+    "audioLabelWordFromMeaningAudioPlaying": "El audio se está reproduciendo, escucha y selecciona la palabra",
+    "audioLabelWordFromMeaningAudioIdle": "Reproduce el audio para escuchar el significado y luego selecciona la palabra",
+    "audioLabelWordFromExampleAudioPlaying": "El audio se está reproduciendo, escucha la frase de ejemplo",
+    "audioLabelWordFromExampleAudioIdle": "Reproduce el audio para escuchar una frase de ejemplo",
+    "audioLabelDefaultPlaying": "El audio se está reproduciendo",
+    "audioLabelDefaultIdle": "Toca para reproducir el audio",
+    "audioHintPlayPause": "Doble toque para reproducir o pausar el audio"
   },
   "wordSelection": {
     "title": "Seleccionar Palabras para Chat",
@@ -881,6 +893,7 @@
       "write_word_from_definition": "Escribir Palabra",
       "word_from_audio": "Palabra por Audio",
       "meaning_from_audio": "Significado por Audio",
+      "word_from_meaning_audio": "Palabra del significado",
       "word_from_example_audio": "Palabra por Audio de Ejemplo"
     }
   },

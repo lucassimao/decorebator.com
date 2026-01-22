@@ -62,6 +62,7 @@ type Definition struct {
 	Sounds                 []Sound                  `json:"sounds"`
 	PhoneticNotations      []PhoneticNotation       `json:"phoneticNotations"`
 	ExampleAudioFiles      []DefinitionExampleAudio `json:"exampleAudioFiles"`
+	MeaningAudioURL        string                   `json:"meaningAudioUrl,omitempty"`
 
 	CreatedAt pgtype.Timestamp `json:"createdAt"`
 	UpdatedAt pgtype.Timestamp `json:"updatedAt"`

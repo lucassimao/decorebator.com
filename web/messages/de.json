@@ -71,7 +71,7 @@
     "imageAlt": "Decorebator App‑Oberfläche",
     "videoTitle": "Decorebator Demo - KI-gestütztes Vokabellernen",
     "socialProof": "+ aktive Lernende",
-    "subtitle": "Lerne Vokabeln <strong>3× schneller</strong> mit Spaced Repetition, KI‑generierten Inhalten und 8 spannenden Quiz‑Modi. <accent>Kein Auswendiglernen, nur Ergebnisse.</accent>",
+    "subtitle": "Lerne Vokabeln <strong>3× schneller</strong> mit Spaced Repetition, KI‑generierten Inhalten und 9 spannenden Quiz‑Modi. <accent>Kein Auswendiglernen, nur Ergebnisse.</accent>",
     "startLearningFree": "Kostenlos lernen beginnen",
     "watchDemo": "Demo ansehen",
     "stats": {
@@ -90,7 +90,7 @@
     },
     "productSummary": {
       "label": "Produktzusammenfassung:",
-      "body": "Vokabel‑App mit Spaced Repetition, KI‑generierten Inhalten, 8 Quiz‑Modi und plattformübergreifendem Fortschritt."
+      "body": "Vokabel‑App mit Spaced Repetition, KI‑generierten Inhalten, 9 Quiz‑Modi und plattformübergreifendem Fortschritt."
     },
     "video": {
       "aria": "App‑Demo‑Video"
@@ -125,7 +125,7 @@
       "description": "Probabilistisches 7-Box-Leitner-System mit intelligenter Wortauswahl - nie mehr ohne Lerninhalt."
     },
     "multipleQuizModes": {
-      "title": "8 Interaktive Quiz-Modi",
+      "title": "9 Interaktive Quiz-Modi",
       "description": "Von visueller Erkennung bis hin zu Hörverständnis - üben Sie mit verschiedenen Quiz-Typen für umfassendes Lernen."
     },
     "visualLearning": {
@@ -174,7 +174,7 @@
     },
     "step2": {
       "title": "Nehmen Sie an ansprechenden Quiz teil",
-      "description": "Üben Sie mit 8 verschiedenen Quiz-Modi, die sich an Ihren Lernfortschritt anpassen.",
+      "description": "Üben Sie mit 9 verschiedenen Quiz-Modi, die sich an Ihren Lernfortschritt anpassen.",
       "features": ["Bedeutung ↔ Wort-Zuordnung", "Bild- & Audioerkennung", "Satzvervollständigung"]
     },
     "step3": {
@@ -224,7 +224,7 @@
         "features": [
           "Unbegrenzte Wortlisten",
           "Unbegrenzte Wörter",
-          "Alle 8 Quiz-Modi",
+          "Alle 9 Quiz-Modi",
           "Erweiterte Analysen",
           "Offline-Unterstützung"
         ],
@@ -252,7 +252,7 @@
         "cta": "Premium holen",
         "features": {
           "unlimitedWordlists": "Unbegrenzte Wortlisten & Wörter",
-          "allQuizModes": "Alle 8 Quiz‑Modi",
+          "allQuizModes": "Alle 9 Quiz‑Modi",
           "advancedAnalytics": "Erweiterte Analysen",
           "offlineSupport": "Offline‑Support",
           "realTimeSpeaking": "Sprechpraxis in Echtzeit",
@@ -303,9 +303,9 @@
         "stats": "Wissenschaftlich belegte Spaced Repetition"
       },
       "quizModes": {
-        "title": "8 Ansprechende Quiz-Modi",
+        "title": "9 Ansprechende Quiz-Modi",
         "description": "Multiple Quiz-Typen: Bedeutungszuordnung, Bildassoziation, Hörverständnis, Satzvervollständigung, Schreiben aus Definition und mehr.",
-        "stats": "8 spannende Quiz‑Modi"
+        "stats": "9 spannende Quiz‑Modi"
       },
       "visualLearning": {
         "title": "Visuelles Lernen mit KI-Bildern",
@@ -390,7 +390,7 @@
       "successRate": "Erfolgsrate",
       "words": "Wörter",
       "weekDays": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
-      "quizTypes": ["Bedeutung erraten", "Wort aus Bedeutung", "Bildassoziation", "Hörverständnis"],
+      "quizTypes": ["Bedeutung erraten", "Wort aus Bedeutung", "Bedeutungs-Audio zu Wort", "Bildassoziation", "Hörverständnis"],
       "boxLabels": ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5", "Box 6", "Box 7"],
       "box1": "Box 1",
       "box2": "Box 2",
@@ -442,7 +442,7 @@
       },
       "6": {
         "question": "Wie viele Quiz-Modi sind verfügbar und wie funktionieren sie?",
-        "answer": "Es gibt 8 verschiedene Quiz-Modi, die darauf ausgelegt sind, verschiedene Aspekte des Vokabellernens anzusprechen: Bedeutung erraten, Wort aus Bedeutung, visuelle Assoziation, Hörverständnis, Satzvervollständigung, aktive Erinnerung, Audioerkennung und Beispiel-Audio. Quiz-Typen passen sich progressiv an Ihr aktuelles Lernniveau an."
+        "answer": "Es gibt 9 verschiedene Quiz-Modi, die darauf ausgelegt sind, verschiedene Aspekte des Vokabellernens anzusprechen: Bedeutung erraten, Wort aus Bedeutung, Bedeutungs-Audio zu Wort, visuelle Assoziation, Hörverständnis, Satzvervollständigung, aktive Erinnerung, Audioerkennung und Beispiel-Audio. Quiz-Typen passen sich progressiv an Ihr aktuelles Lernniveau an."
       },
       "7": {
         "question": "Welche Analysen- und Fortschrittsverfolgungsfunktionen sind enthalten?",
@@ -551,10 +551,11 @@
         "description": "Generiert automatisch Definitionen, Bilder, Audioaussprachen und Beispielsätze für jedes Wort, das Sie hinzufügen."
       },
       "quizModes": {
-        "title": "8 Quiz-Modi",
+        "title": "9 Quiz-Modi",
         "modes": [
           "Bedeutung erraten",
           "Wort aus Bedeutung",
+          "Bedeutungs-Audio zu Wort",
           "Bildassoziation",
           "Audio-Verständnis",
           "Satz vervollständigen",
@@ -657,7 +658,7 @@
         "features": [
           "Unbegrenzte Wortlisten",
           "Unbegrenzte Wörter",
-          "Alle 8 Quiz-Modi",
+          "Alle 9 Quiz-Modi",
           "Erweiterte Analysen",
           "Offline-Unterstützung",
           "Prioritätssupport"

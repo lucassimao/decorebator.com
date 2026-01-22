@@ -346,6 +346,7 @@
     "whatWordDescribesImage": "Welches Wort beschreibt dieses Bild?",
     "whichWordDidYouHear": "Welches Wort haben Sie gehört?",
     "whatDoesWordYouHeardMean": "Was bedeutet das Wort, das Sie gehört haben?",
+    "whichWordMatchesMeaningAudio": "Welches Wort passt zur Bedeutung?",
     "whichWordFromExample": "Welches Wort aus diesem Beispiel?",
     "reportOptions": {
       "imageDoesntMatch": "Bild passt nicht",
@@ -368,7 +369,18 @@
       "multipleChoice": "Multiple Choice",
       "typing": "Schreibübung",
       "listening": "Hörverständnis"
-    }
+    },
+    "audioLabelWordFromAudioPlaying": "Audio wird abgespielt, höre auf das Wort",
+    "audioLabelWordFromAudioIdle": "Audio abspielen, um das Wort zu hören",
+    "audioLabelMeaningFromAudioPlaying": "Audio wird abgespielt, höre zu und wähle die Bedeutung",
+    "audioLabelMeaningFromAudioIdle": "Audio abspielen, um das Wort zu hören, und dann die Bedeutung wählen",
+    "audioLabelWordFromMeaningAudioPlaying": "Audio wird abgespielt, höre zu und wähle das Wort",
+    "audioLabelWordFromMeaningAudioIdle": "Audio abspielen, um die Bedeutung zu hören, und dann das Wort wählen",
+    "audioLabelWordFromExampleAudioPlaying": "Audio wird abgespielt, höre auf den Beispielsatz",
+    "audioLabelWordFromExampleAudioIdle": "Audio abspielen, um einen Beispielsatz zu hören",
+    "audioLabelDefaultPlaying": "Audio wird abgespielt",
+    "audioLabelDefaultIdle": "Tippen, um Audio abzuspielen",
+    "audioHintPlayPause": "Doppeltippen, um Audio abzuspielen oder zu pausieren"
   },
   "wordSelection": {
     "title": "Wörter für Chat auswählen",
@@ -891,6 +903,7 @@
       "write_word_from_definition": "Wort schreiben",
       "word_from_audio": "Wort aus Audio",
       "meaning_from_audio": "Bedeutung aus Audio",
+      "word_from_meaning_audio": "Wort aus Bedeutung",
       "word_from_example_audio": "Wort aus Beispiel-Audio"
     }
   },

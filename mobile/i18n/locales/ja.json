@@ -343,6 +343,7 @@
     "whatWordDescribesImage": "この画像を表す単語は何ですか？",
     "whichWordDidYouHear": "どの単語が聞こえましたか？",
     "whatDoesWordYouHeardMean": "聞こえた単語の意味は何ですか？",
+    "whichWordMatchesMeaningAudio": "この意味に合う単語は？",
     "whichWordFromExample": "この例文の単語は何ですか？",
     "reportOptions": {
       "imageDoesntMatch": "画像が一致しません",
@@ -365,7 +366,18 @@
       "multipleChoice": "選択問題",
       "typing": "タイピング練習",
       "listening": "リスニング"
-    }
+    },
+    "audioLabelWordFromAudioPlaying": "音声を再生中です。単語を聞いてください",
+    "audioLabelWordFromAudioIdle": "音声を再生して単語を聞いてください",
+    "audioLabelMeaningFromAudioPlaying": "音声を再生中です。聞いて意味を選んでください",
+    "audioLabelMeaningFromAudioIdle": "音声を再生して単語を聞き、意味を選んでください",
+    "audioLabelWordFromMeaningAudioPlaying": "音声を再生中です。聞いて単語を選んでください",
+    "audioLabelWordFromMeaningAudioIdle": "音声を再生して意味を聞き、単語を選んでください",
+    "audioLabelWordFromExampleAudioPlaying": "音声を再生中です。例文を聞いてください",
+    "audioLabelWordFromExampleAudioIdle": "音声を再生して例文を聞いてください",
+    "audioLabelDefaultPlaying": "音声を再生中です",
+    "audioLabelDefaultIdle": "タップして音声を再生",
+    "audioHintPlayPause": "ダブルタップで音声を再生または一時停止します"
   },
   "wordSelection": {
     "title": "チャット用の単語を選択",
@@ -886,6 +898,7 @@
       "write_word_from_definition": "単語を書く",
       "word_from_audio": "音声から単語",
       "meaning_from_audio": "音声から意味",
+      "word_from_meaning_audio": "意味→単語",
       "word_from_example_audio": "例文音声から単語"
     }
   },

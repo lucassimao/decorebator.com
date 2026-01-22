@@ -155,6 +155,8 @@ export const QuizContent: React.FC<QuizContentProps> = ({
         return t("quiz.whichWordDidYouHear");
       case "MEANING_FROM_AUDIO":
         return t("quiz.whatDoesWordYouHeardMean");
+      case "WORD_FROM_MEANING_AUDIO":
+        return t("quiz.whichWordMatchesMeaningAudio");
       case "WORD_FROM_EXAMPLE_AUDIO":
         return t("quiz.whichWordFromExample");
       default:
@@ -401,23 +403,30 @@ export const QuizContent: React.FC<QuizContentProps> = ({
 
       case "WORD_FROM_AUDIO":
       case "MEANING_FROM_AUDIO":
+      case "WORD_FROM_MEANING_AUDIO":
       case "WORD_FROM_EXAMPLE_AUDIO":
         const getAudioQuizLabel = () => {
           switch (quiz.type) {
             case "WORD_FROM_AUDIO":
               return isPlaying
-                ? "Audio is playing, listen for the word"
-                : "Play audio to hear the word";
+                ? t("quiz.audioLabelWordFromAudioPlaying")
+                : t("quiz.audioLabelWordFromAudioIdle");
             case "MEANING_FROM_AUDIO":
               return isPlaying
-                ? "Audio is playing, listen and select the meaning"
-                : "Play audio to hear the word, then select its meaning";
+                ? t("quiz.audioLabelMeaningFromAudioPlaying")
+                : t("quiz.audioLabelMeaningFromAudioIdle");
+            case "WORD_FROM_MEANING_AUDIO":
+              return isPlaying
+                ? t("quiz.audioLabelWordFromMeaningAudioPlaying")
+                : t("quiz.audioLabelWordFromMeaningAudioIdle");
             case "WORD_FROM_EXAMPLE_AUDIO":
               return isPlaying
-                ? "Audio is playing, listen for the example sentence"
-                : "Play audio to hear an example sentence";
+                ? t("quiz.audioLabelWordFromExampleAudioPlaying")
+                : t("quiz.audioLabelWordFromExampleAudioIdle");
             default:
-              return isPlaying ? "Audio is playing" : "Tap to play audio";
+              return isPlaying
+                ? t("quiz.audioLabelDefaultPlaying")
+                : t("quiz.audioLabelDefaultIdle");
           }
         };
 
@@ -428,7 +437,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
               onPress={playAudio}
               accessibilityRole="button"
               accessibilityLabel={getAudioQuizLabel()}
-              accessibilityHint="Double tap to play or pause the audio"
+              accessibilityHint={t("quiz.audioHintPlayPause")}
               accessibilityState={{ selected: isPlaying }}
             >
               <Ionicons

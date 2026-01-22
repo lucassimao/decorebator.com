@@ -343,6 +343,7 @@
     "whatWordDescribesImage": "Quel mot décrit cette image ?",
     "whichWordDidYouHear": "Quel mot avez-vous entendu ?",
     "whatDoesWordYouHeardMean": "Que signifie le mot que vous avez entendu ?",
+    "whichWordMatchesMeaningAudio": "Quel mot correspond à ce sens ?",
     "whichWordFromExample": "Quel mot de cet exemple ?",
     "reportOptions": {
       "imageDoesntMatch": "L'image ne correspond pas",
@@ -365,7 +366,18 @@
       "multipleChoice": "Choix Multiple",
       "typing": "Pratique de Saisie",
       "listening": "Écoute"
-    }
+    },
+    "audioLabelWordFromAudioPlaying": "L’audio est en cours de lecture, écoutez le mot",
+    "audioLabelWordFromAudioIdle": "Lancez l’audio pour entendre le mot",
+    "audioLabelMeaningFromAudioPlaying": "L’audio est en cours de lecture, écoutez et sélectionnez le sens",
+    "audioLabelMeaningFromAudioIdle": "Lancez l’audio pour entendre le mot, puis sélectionnez son sens",
+    "audioLabelWordFromMeaningAudioPlaying": "L’audio est en cours de lecture, écoutez et sélectionnez le mot",
+    "audioLabelWordFromMeaningAudioIdle": "Lancez l’audio pour entendre le sens, puis sélectionnez le mot",
+    "audioLabelWordFromExampleAudioPlaying": "L’audio est en cours de lecture, écoutez la phrase d’exemple",
+    "audioLabelWordFromExampleAudioIdle": "Lancez l’audio pour entendre une phrase d’exemple",
+    "audioLabelDefaultPlaying": "L’audio est en cours de lecture",
+    "audioLabelDefaultIdle": "Appuyez pour lancer l’audio",
+    "audioHintPlayPause": "Double‑tap pour lire ou mettre en pause l’audio"
   },
   "wordSelection": {
     "title": "Sélectionner les Mots pour le Chat",
@@ -881,6 +893,7 @@
       "write_word_from_definition": "Écrire le Mot",
       "word_from_audio": "Mot par l'Audio",
       "meaning_from_audio": "Sens par l'Audio",
+      "word_from_meaning_audio": "Mot du sens",
       "word_from_example_audio": "Mot par l'Audio d'Exemple"
     }
   },
