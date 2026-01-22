@@ -748,8 +748,9 @@ func extractAnswerFromImageDescription(description, defaultToken string) string 
 //
 // Algorithm:
 // 1. Create hash for each example to track usage
-// 2. Check database for recently used examples (within last 24 hours)
-// 3. Prioritize unused examples, then least recently used
+// 2. Check database for recently used examples (within last 7 days)
+// 3. If there are unused examples, pick one at random
+// 4. Otherwise, pick the least recently used example
 // 4. Record the selected example usage in the database
 //
 // Parameters:
@@ -793,7 +794,7 @@ func (s *LeitnerSystemStrategy) selectFairExample(ctx context.Context, definitio
 		SELECT example_hash, last_used_at 
 		FROM example_usage 
 		WHERE definition_id = $1 AND example_hash = ANY($2)
-		AND last_used_at > NOW() - INTERVAL '24 hours'`
+		AND last_used_at > NOW() - INTERVAL '7 days'`
 
 	rows, err := s.db.Query(ctx, query, definitionID, hashes)
 	if err != nil {
@@ -819,23 +820,24 @@ func (s *LeitnerSystemStrategy) selectFairExample(ctx context.Context, definitio
 		}
 	}
 
-	// Sort by usage: unused first, then by oldest usage
-	sort.Slice(exampleInfos, func(i, j int) bool {
-		if exampleInfos[i].lastUsedAt == nil && exampleInfos[j].lastUsedAt == nil {
-			return false // Both unused, maintain order
+	// Select from unused examples at random to avoid deterministic repetition
+	var unused []exampleInfo
+	for _, info := range exampleInfos {
+		if info.lastUsedAt == nil {
+			unused = append(unused, info)
 		}
-		if exampleInfos[i].lastUsedAt == nil {
-			return true // i is unused, prioritize it
-		}
-		if exampleInfos[j].lastUsedAt == nil {
-			return false // j is unused, prioritize it
-		}
-		// Both used, prioritize older usage
-		return exampleInfos[i].lastUsedAt.Before(*exampleInfos[j].lastUsedAt)
-	})
+	}
 
-	// Select the first (best) example
-	selectedExample := exampleInfos[0].example
+	var selectedExample string
+	if len(unused) > 0 {
+		selectedExample = unused[cryptoRandInt(len(unused))].example
+	} else {
+		// All examples used recently: pick least recently used
+		sort.Slice(exampleInfos, func(i, j int) bool {
+			return exampleInfos[i].lastUsedAt.Before(*exampleInfos[j].lastUsedAt)
+		})
+		selectedExample = exampleInfos[0].example
+	}
 
 	// Record the usage
 	err = s.recordExampleUsage(ctx, definitionID, selectedExample)
