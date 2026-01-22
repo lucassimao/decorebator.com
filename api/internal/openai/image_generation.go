@@ -25,7 +25,7 @@ type ImageGenerationResponse struct {
 
 func GenerateImage(prompt string) (*ImageGenerationResponse, error) {
 	var requestBodyStruct = map[string]any{
-		"model":              "gpt-image-1",
+		"model":              "gpt-image-1.5",
 		"prompt":             prompt,
 		"n":                  1,
 		"size":               "1024x1024",

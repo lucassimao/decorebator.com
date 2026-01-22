@@ -123,7 +123,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		Api:          model.OPENAI,
 		URL:          url,
 		Description:  longestExample,
-		Model:        "gpt-image-1",
+		Model:        "gpt-image-1.5",
 		Prompt:       prompt,
 		DefinitionId: definitionID,
 	})
@@ -146,27 +146,62 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 func buildImagePrompt(sentence, token, meaning, languageCode string) (string, error) {
 	// Language-specific prompt templates
 	templates := map[string]string{
-		"en": `Render an image representing the following sentence: %s
-			In that sentence, the word %s must convey %s
-			You MUST NOT include any references to that sentence neither to the word %s in the generated image.`,
-		"es": `Renderiza una imagen que represente la siguiente oración: %s
-			En esa oración, la palabra %s debe transmitir %s
-			NO DEBES incluir ninguna referencia a esa oración ni a la palabra %s en la imagen generada.`,
-		"fr": `Créez une image représentant la phrase suivante : %s
-			Dans cette phrase, le mot %s doit véhiculer %s
-			Vous NE DEVEZ PAS inclure de références à cette phrase ni au mot %s dans l'image générée.`,
-		"de": `Erstellen Sie ein Bild, das den folgenden Satz darstellt: %s
-			In diesem Satz muss das Wort %s %s vermitteln
-			Sie DÜRFEN KEINE Verweise auf diesen Satz oder das Wort %s in das generierte Bild einbeziehen.`,
-		"it": `Crea un'immagine che rappresenti la seguente frase: %s
-			In quella frase, la parola %s deve trasmettere %s
-			NON DEVI includere riferimenti a quella frase né alla parola %s nell'immagine generata.`,
-		"pt": `Crie uma imagem representando a seguinte frase: %s
-			Nessa frase, a palavra %s deve transmitir %s
-			Você NÃO DEVE incluir referências a essa frase nem à palavra %s na imagem gerada.`,
-		"ja": `次の文を表す画像を作成してください：%s
-			その文で、単語 %s は %s を伝える必要があります
-			生成された画像にその文や単語 %s への言及を含めてはいけません。`,
+		"en": `Create a single, clear, realistic scene that visually conveys the meaning of the word as used in the sentence below.
+			The scene should be easy to understand at a glance and focused on one main action or situation.
+			Do NOT depict the target word itself in the image or include the sentence text.
+			Avoid violence and avoid logos or brand names.
+
+			Sentence context: %s
+			Target word: %s
+			Intended meaning: %s`,
+		"es": `Crea una escena realista, única y clara que transmita visualmente el significado de la palabra tal como se usa en la oración de abajo.
+			La escena debe ser fácil de entender de un vistazo y centrarse en una sola acción o situación principal.
+			NO muestres la palabra objetivo en la imagen ni incluyas el texto de la oración.
+			Evita la violencia y evita logotipos o nombres de marcas.
+
+			Contexto de la oración: %s
+			Palabra objetivo: %s
+			Significado previsto: %s`,
+		"fr": `Créez une scène réaliste, unique et claire qui transmet visuellement le sens du mot tel qu’il est utilisé dans la phrase ci‑dessous.
+			La scène doit être facile à comprendre d’un coup d’œil et se concentrer sur une seule action ou situation principale.
+			Ne représentez PAS le mot cible dans l’image et n’incluez pas le texte de la phrase.
+			Évitez la violence et évitez les logos ou noms de marque.
+
+			Contexte de la phrase : %s
+			Mot cible : %s
+			Sens visé : %s`,
+		"de": `Erstellen Sie eine einzelne, klare und realistische Szene, die die Bedeutung des Wortes im untenstehenden Satz visuell vermittelt.
+			Die Szene soll auf einen Blick verständlich sein und sich auf eine Hauptaktion oder -situation konzentrieren.
+			Das Zielwort nicht im Bild darstellen und den Satztext nicht einblenden.
+			Vermeiden Sie Gewalt sowie Logos oder Markennamen.
+
+			Satzkontext: %s
+			Zielwort: %s
+			Gemeinte Bedeutung: %s`,
+		"it": `Crea una scena realistica, unica e chiara che trasmetta visivamente il significato della parola così come usata nella frase qui sotto.
+			La scena deve essere facile da capire a colpo d’occhio e concentrarsi su un’unica azione o situazione principale.
+			NON raffigurare la parola obiettivo nell’immagine e NON includere il testo della frase.
+			Evita la violenza ed evita loghi o nomi di marca.
+
+			Contesto della frase: %s
+			Parola obiettivo: %s
+			Significato previsto: %s`,
+		"pt": `Crie uma cena realista, única e clara que transmita visualmente o significado da palavra conforme ela é usada na frase abaixo.
+			A cena deve ser fácil de entender de relance e focar em uma única ação ou situação principal.
+			NÃO represente a palavra‑alvo na imagem e NÃO inclua o texto da frase.
+			Evite violência e evite logotipos ou nomes de marcas.
+
+			Contexto da frase: %s
+			Palavra‑alvo: %s
+			Significado pretendido: %s`,
+		"ja": `以下の文で使われている語の意味を、視覚的に伝える「単一で明確な現実的シーン」を作成してください。
+			一目で理解できるように、主要な行動または状況を1つに絞ってください。
+			対象語を画像内に描写せず、文のテキストも入れないでください。
+			暴力表現やロゴ・ブランド名は避けてください。
+
+			文の文脈: %s
+			対象語: %s
+			意図する意味: %s`,
 	}
 
 	template, exists := templates[languageCode]
