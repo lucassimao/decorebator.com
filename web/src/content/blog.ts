@@ -30,6 +30,62 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: 'choose-quiz-types',
+    date: '2026-01-23',
+    readingMinutes: 3,
+    tags: ['Premium', 'Practice', 'Quiz modes'],
+    author: {
+      name: 'Decorebator Team',
+      role: 'Product',
+    },
+    cover: {
+      eyebrow: 'New feature',
+      gradient: 'from-primary-500 via-amber-500 to-rose-500',
+    },
+    content: {
+      title: 'Pick your quiz types for practice sessions',
+      description:
+        'Premium learners can now choose exactly which quiz types to practice, so every session matches the skill they want to train.',
+      excerpt:
+        'Filter your practice session by quiz type and focus on the skills you want to sharpen.',
+      sections: [
+        {
+          type: 'paragraph',
+          text: 'Practice is most effective when it matches your goal. Now premium users can select the exact quiz types they want to practice in a session, whether that is listening, writing, or meaning recall.',
+        },
+        {
+          type: 'heading',
+          text: 'Why this matters',
+        },
+        {
+          type: 'list',
+          items: [
+            'Target a single skill instead of rotating through every mode.',
+            'Build focused study blocks before exams or speaking practice.',
+            'Reduce fatigue by skipping modes that are not relevant right now.',
+          ],
+        },
+        {
+          type: 'heading',
+          text: 'How it works',
+        },
+        {
+          type: 'list',
+          items: [
+            'Open a quiz session from your wordlist.',
+            'Tap the new filter icon in the quiz header.',
+            'Select the quiz types you want and start practicing.',
+          ],
+        },
+        {
+          type: 'callout',
+          title: 'Tip',
+          text: 'Combine listening and writing types for a balanced session that trains recognition and recall together.',
+        },
+      ],
+    },
+  },
+  {
     slug: 'word-from-meaning-audio',
     date: '2026-01-22',
     readingMinutes: 3,
