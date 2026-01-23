@@ -1216,6 +1216,30 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 		tx = *transactionPtr
 	}
 
+	var trackingExists bool
+	verifyErr := tx.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1
+			FROM leitner_system_tracking lst
+			JOIN words w ON w.id = lst.word_id
+			JOIN word_definitions wd ON wd.word_id = lst.word_id AND wd.definition_id = lst.definition_id
+			WHERE lst.id = $1
+				AND lst.user_id = $2
+				AND lst.definition_id = $3
+				AND lst.word_id = $4
+				AND w.wordlist_id = $5
+		)
+	`, quizResult.LeitnerSystemTrackingID, quizResult.UserID, quizResult.DefinitionID, quizResult.WordID, quizResult.WordlistID).Scan(&trackingExists)
+	if verifyErr != nil {
+		return verifyErr
+	}
+	if !trackingExists {
+		return common.NotFoundError{
+			ID:     quizResult.LeitnerSystemTrackingID,
+			Entity: "leitner_system_tracking",
+		}
+	}
+
 	// First, get the current box_id before update
 	var currentBoxId int64
 	err = tx.QueryRow(ctx, "SELECT box_id FROM leitner_system_tracking WHERE id = $1", quizResult.LeitnerSystemTrackingID).Scan(&currentBoxId)

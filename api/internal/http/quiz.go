@@ -161,6 +161,10 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 	span.Finish()
 
 	if err != nil {
+		if errors.Is(err, &common.NotFoundError{}) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "tracking not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
