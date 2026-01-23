@@ -75,11 +75,11 @@ Decorebator is a comprehensive vocabulary learning platform that combines artifi
 ## SCIENTIFIC BASIS
 ### Leitner System Implementation
 Box 1: Immediate review (new/failed words)
-Box 2: 1 hour interval
-Box 3: 6 hours interval  
-Box 4: 1 day interval
-Box 5: 3 days interval
-Box 6: 7 days interval
+Box 2: 6 hours interval
+Box 3: 1 day interval
+Box 4: 3 days interval
+Box 5: 1 week interval
+Box 6: 2 weeks interval
 Box 7: 1 month interval (mastered words)
 
 ### Learning Methodology
