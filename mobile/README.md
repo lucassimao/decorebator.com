@@ -11,47 +11,30 @@ This is used for building shareable links in the app. In local development, if t
 
 For local development, use `.env.local` or `.env.development` with a local API URL (for example `http://10.0.2.2:3000`). Do not commit `.env.local` or `.env.development`. Production OTA updates should rely on EAS environment variables.
 
-## OTA preflight checks
+## OTA updates
 
-`npm run ota:prod` runs a single script (`scripts/ota-release.js`) that:
+`npm run ota:prod` publishes a production OTA using `eas update`.
 
-- Verifies `EXPO_PUBLIC_API_URL` (prefers EAS production env vars).
-- Computes the local runtime fingerprint and compares it with the latest deployed
-  production runtimes for iOS and Android.
-- Publishes the OTA when runtimes match.
-- If runtimes don't match, it prompts to publish targeted OTAs for the deployed
-  runtimes instead (or aborts).
+## Runtime policy: appVersion
 
-The script exists because runtimeVersion policy `"fingerprint"` can produce a
-new runtime even for JS-only changes, which would prevent OTAs from reaching
-existing store builds. The planned migration is to switch to `"appVersion"`
-policy on the next store release to keep OTAs stable per app version.
-
-## Planned migration to appVersion policy
-
-Today we use `runtimeVersion: { "policy": "fingerprint" }`, which can create a
-new runtime hash even for JS-only changes. That means an OTA may publish to a
-runtime that **no installed binary has**, and users won't receive it.
-
-The planned change is to switch to:
+The app uses:
 
 ```json
 "runtimeVersion": { "policy": "appVersion" }
 ```
 
-### What this changes in the release flow
+### Release flow
 
 - **Store release = new runtime.**
   - Bump `expo.version` (e.g., `1.1.1`).
   - Build and submit new binaries.
 - **OTA updates stay on the current store version.**
   - Any JS-only changes after release are safe OTAs for that version.
-- **No more accidental runtime mismatches** from fingerprint changes.
 
-### Suggested flow once we switch
+### Suggested flow
 
 1. Decide on a new store version (e.g., `1.1.1`).
-2. Update `expo.version` in `app.json`.
+2. Run `npm run version:bump` (updates `package.json` and `app.json` only).
 3. Build & submit the binaries:
    - `eas build --platform ios --profile production`
    - `eas build --platform android --profile production`
@@ -64,13 +47,10 @@ You can override the runtime guard for one-off cases with:
 ALLOW_RUNTIME_MISMATCH=1 npm run ota:prod
 ```
 
-When a runtime mismatch is detected, the script will prompt to publish updates
-targeting the deployed runtimes.
-
 You can also customize the update message:
 
 ```
-OTA_MESSAGE="Fix critical API URL" PUBLISH_DEPLOYED=1 npm run ota:prod
+OTA_MESSAGE="Fix critical API URL" npm run ota:prod
 ```
 
 ## App Store Review Prompt

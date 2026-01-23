@@ -25,8 +25,8 @@ The Decorebator mobile app features an **enterprise-grade bulletproof offline ma
 - Images and audio files are downloaded and stored locally
 - Assets are validated before showing cached quizzes
 - If any required asset is missing, the quiz is skipped
- - Wordlist preloads only cache words that already have definitions (processed words)
- - Cache status compares cached words against total words in the wordlist to avoid misleading "100%" banners
+- Wordlist preloads only cache words that already have definitions (processed words)
+- Cache status compares cached words against total words in the wordlist to avoid misleading "100%" banners
 
 ### 4. Offline Limitations
 
@@ -60,7 +60,7 @@ The Decorebator mobile app features an **enterprise-grade bulletproof offline ma
 - Uses Expo FileSystem for images and audio with **validation**
 - **72-hour cache expiry** with automatic cleanup
 - **Corruption detection** and recovery mechanisms
- - Offline preload excludes words still processing definitions to prevent null-definition caching errors
+- Offline preload excludes words still processing definitions to prevent null-definition caching errors
 
 ## Bulletproof Offline Manager (January 2025)
 

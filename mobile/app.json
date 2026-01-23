@@ -2,7 +2,7 @@
   "expo": {
     "name": "decorebator",
     "slug": "decorebator",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "decorebator",
@@ -13,9 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "bundleIdentifier": "com.lsimaocosta.decorebator",
       "supportsTablet": true,
@@ -23,10 +21,7 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "UIBackgroundModes": [
-          "remote-notification",
-          "audio"
-        ],
+        "UIBackgroundModes": ["remote-notification", "audio"],
         "NSMicrophoneUsageDescription": "Decorebator uses your microphone to provide interactive voice conversations for vocabulary practice and to play audio pronunciations. For example, you can have voice conversations with AI to practice new words, and hear pronunciations in quizzes and flashcards.",
         "NSCameraUsageDescription": "Decorebator uses your camera to take profile pictures and supports video features during vocabulary practice sessions. For example, you can take a new photo in the profile settings to personalize your learning experience.",
         "NSPhotoLibraryUsageDescription": "Decorebator accesses your photo library to let you choose an existing photo as your profile picture. For example, you can select a photo from your gallery in the profile settings to personalize your account.",
@@ -107,7 +102,7 @@
     },
     "owner": "lsimaocosta",
     "runtimeVersion": {
-      "policy": "fingerprint"
+      "policy": "appVersion"
     },
     "updates": {
       "url": "https://u.expo.dev/882f0434-5dcf-448c-92ac-47e70c9a8d84",

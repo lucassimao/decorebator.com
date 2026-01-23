@@ -75,7 +75,7 @@ The offline flash cards feature allows premium users to download wordlists and t
 - **Partially Cached**: Shows progress percentage
 - **Fully Cached**: Shows "Available offline" status
 - **Downloading**: Shows loading state
- - **Processing Words**: If some words are still processing definitions, cache progress reflects only processed words and shows cached/total counts
+- **Processing Words**: If some words are still processing definitions, cache progress reflects only processed words and shows cached/total counts
 
 ## Cache Management
 

@@ -516,22 +516,19 @@ npm run typecheck      # TypeScript validation
 
 **Production Builds:**
 ```bash
+# Version bump (managed workflow)
+npm run version:bump           # Update app.json + package.json version
+
 # EAS Build
 npm run build:ios              # iOS production build
 npm run build:android          # Android production build
 npm run build:all              # Both platforms
 
 # OTA Updates
-npm run ota:prod               # Production OTA update (with fingerprint check)
+npm run ota:prod               # Production OTA (EAS update)
 npm run ota:preview            # Preview channel
 npm run ota:dev                # Development channel
 ```
-
-**OTA Update Safeguards:**
-- `scripts/ota-release.js` validates runtime fingerprint
-- Compares local runtime with deployed production builds
-- Prevents incompatible OTA pushes
-- Prompts for targeted updates if mismatch detected
 
 **App Store Submission:**
 ```bash
@@ -1037,9 +1034,7 @@ Platform: Web            → Stripe
 
 **OTA Updates:**
 - **Expo Updates**: JS-only updates without store submission
-- Runtime version: Currently `fingerprint` policy
-- Planned migration to `appVersion` policy
-- Pre-flight fingerprint validation via `scripts/ota-release.js`
+- Runtime version: `appVersion` policy
 
 **Analytics:**
 - Sentry: Error tracking
@@ -1168,13 +1163,14 @@ npm run lint                # ESLint
 npm run typecheck           # TypeScript check
 
 # Building
+npm run version:bump        # Update app.json + package.json version
 npm run build:ios           # Build iOS production
 npm run build:android       # Build Android production
 npm run submit:ios          # Submit to App Store
 npm run submit:android      # Submit to Play Store
 
 # OTA Updates
-npm run ota:prod            # Production OTA (with checks)
+npm run ota:prod            # Production OTA (EAS update)
 npm run ota:preview         # Preview channel
 ```
 
