@@ -398,37 +398,6 @@ git-hooks-remove: ## Remove git hooks
 	@rm -f .git/hooks/pre-commit .git/hooks/pre-push
 	@echo "${GREEN}Git hooks removed${RESET}"
 
-admin: ## Admin tool commands (usage: make admin CMD=health, make admin CMD=pprof-cpu ENV=prod TOKEN=xxx)
-	@if [ -z "$(CMD)" ]; then \
-		echo "${YELLOW}Building admin CLI tool...${RESET}"; \
-		go build -o bin/admin ./cmd/admin; \
-		echo "${GREEN}Admin CLI tool built to bin/admin${RESET}"; \
-		echo "${YELLOW}Usage: make admin CMD=<command> [ENV=local|prod] [TOKEN=xxx] [OUTPUT=file] [URL=url]${RESET}"; \
-		echo "${CYAN}Examples:${RESET}"; \
-		echo "  make admin CMD=health"; \
-		echo "  make admin CMD=health ENV=prod TOKEN=your-token"; \
-		echo "  make admin CMD=pprof-cpu ENV=local"; \
-		echo "  make admin CMD=status ENV=prod TOKEN=\$$PROD_TOKEN"; \
-		echo "  make admin CMD=pprof-heap OUTPUT=./profiles/heap.prof"; \
-		echo "  make admin CMD=metrics URL=http://staging.example.com TOKEN=staging-token"; \
-		echo "${CYAN}Commands:${RESET}"; \
-		echo "  health, metrics, info, status"; \
-		echo "  pprof-cpu, pprof-heap, pprof-goroutine, pprof-block, pprof-mutex, pprof-trace"; \
-		./bin/admin --help; \
-	else \
-		if [ ! -f bin/admin ]; then \
-			echo "${YELLOW}Building admin CLI tool...${RESET}"; \
-			go build -o bin/admin ./cmd/admin; \
-		fi; \
-		ADMIN_ARGS="$(CMD)"; \
-		if [ -n "$(ENV)" ]; then ADMIN_ARGS="$$ADMIN_ARGS -env=$(ENV)"; fi; \
-		if [ -n "$(TOKEN)" ]; then ADMIN_ARGS="$$ADMIN_ARGS -token=$(TOKEN)"; fi; \
-		if [ -n "$(OUTPUT)" ]; then ADMIN_ARGS="$$ADMIN_ARGS -output=$(OUTPUT)"; fi; \
-		if [ -n "$(URL)" ]; then ADMIN_ARGS="$$ADMIN_ARGS -url=$(URL)"; fi; \
-		if [ -n "$(TIMEOUT)" ]; then ADMIN_ARGS="$$ADMIN_ARGS -timeout=$(TIMEOUT)"; fi; \
-		./bin/admin $$ADMIN_ARGS; \
-	fi
-
 help: ## Show this help.
 	@echo ''
 	@echo 'Usage:'
