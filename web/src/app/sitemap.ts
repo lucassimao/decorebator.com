@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { routing } from '../i18n/routing'
+import { blogPosts } from '../content/blog'
 
 const baseUrl = 'https://decorebator.com'
 
@@ -30,6 +31,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: 0.4,
       },
       {
+        url: `${localeBase}/blog`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly',
+        priority: 0.6,
+      },
+      {
         url: `${localeBase}/privacy`,
         lastModified: new Date(),
         changeFrequency: 'yearly',
@@ -42,6 +49,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: 0.3,
       }
     )
+
+    blogPosts.forEach((post) => {
+      urls.push({
+        url: `${localeBase}/blog/${post.slug}`,
+        lastModified: new Date(post.date),
+        changeFrequency: 'monthly',
+        priority: 0.6,
+      })
+    })
   })
 
   return urls

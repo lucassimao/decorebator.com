@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Decorebator - AI-Powered Vocabulary Learning',
   description:
-    'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
+    'Master any language with AI-powered vocabulary learning, spaced repetition, and 9 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
   keywords:
     'vocabulary learning, language learning, AI learning, spaced repetition, flashcards, quiz app, language app, multilingual, educational app',
   authors: [{ name: 'Decorebator Team' }],
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     siteName: 'Decorebator',
     title: 'Decorebator - AI-Powered Vocabulary Learning',
     description:
-      'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
+      'Master any language with AI-powered vocabulary learning, spaced repetition, and 9 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
     images: [
       {
         url: 'https://decorebator.com/social-share-image.jpg',
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     creator: '@decorebator',
     title: 'Decorebator - AI-Powered Vocabulary Learning',
     description:
-      'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes.',
+      'Master any language with AI-powered vocabulary learning, spaced repetition, and 9 engaging quiz modes.',
     images: ['https://decorebator.com/social-share-image.jpg'],
   },
   manifest: '/manifest.json',

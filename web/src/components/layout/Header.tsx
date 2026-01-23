@@ -98,6 +98,12 @@ const Header: React.FC = () => {
               >
                 {t('faq')}
               </a>
+              <Link
+                href={`/${locale}/blog`}
+                className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              >
+                {t('blog')}
+              </Link>
               <a
                 href={`/${locale}/#download`}
                 className="hover:text-primary-600 focus-visible:ring-primary-500 relative rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
@@ -163,6 +169,13 @@ const Header: React.FC = () => {
                 >
                   {t('faq')}
                 </a>
+                <Link
+                  href={`/${locale}/blog`}
+                  className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {t('blog')}
+                </Link>
                 <a
                   href={`/${locale}/#download`}
                   className="hover:text-primary-500 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"

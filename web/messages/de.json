@@ -390,7 +390,13 @@
       "successRate": "Erfolgsrate",
       "words": "Wörter",
       "weekDays": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
-      "quizTypes": ["Bedeutung erraten", "Wort aus Bedeutung", "Bedeutungs-Audio zu Wort", "Bildassoziation", "Hörverständnis"],
+      "quizTypes": [
+        "Bedeutung erraten",
+        "Wort aus Bedeutung",
+        "Bedeutungs-Audio zu Wort",
+        "Bildassoziation",
+        "Hörverständnis"
+      ],
       "boxLabels": ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5", "Box 6", "Box 7"],
       "box1": "Box 1",
       "box2": "Box 2",
@@ -810,6 +816,24 @@
       "text": "Als vielbeschäftigte Berufstätige ist der Offline‑Modus ein Game‑Changer. Ich kann unterwegs üben, ohne mir um die Verbindung Sorgen zu machen.",
       "author": "Elena Rossi",
       "role": "Lernt Deutsch"
+    }
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Produktneuigkeiten, Lerntipps und neue Funktionen von Decorebator.",
+    "latestPosts": "Neuester Beitrag",
+    "readMore": "Weiterlesen",
+    "backToBlog": "Zurück zum Blog",
+    "minutes": "{count} Min. Lesezeit",
+    "publishedOn": "Veröffentlicht {date}",
+    "cta": {
+      "title": "App holen",
+      "subtitle": "Teste den neuen Quizmodus in deiner nächsten Sitzung.",
+      "button": "App herunterladen"
+    },
+    "empty": {
+      "title": "Noch keine Beiträge",
+      "subtitle": "Schau bald wieder vorbei für Updates und Tipps."
     }
   }
 }

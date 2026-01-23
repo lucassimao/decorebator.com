@@ -38,7 +38,7 @@ const FooterSection: React.FC = () => {
               <span className="text-xl font-bold text-white">Decorebator</span>
             </Link>
             <p className="mb-6 max-w-sm text-sm leading-relaxed text-slate-400">
-              Master vocabulary faster with AI-powered flashcards, spaced repetition, and 8 engaging
+              Master vocabulary faster with AI-powered flashcards, spaced repetition, and 9 engaging
               quiz modes. Join 10,000+ learners today.
             </p>
             {/* App store buttons */}
@@ -90,6 +90,14 @@ const FooterSection: React.FC = () => {
                 <a href={`/${locale}/#faq`} className="text-sm transition-colors hover:text-white">
                   {tNav('faq')}
                 </a>
+              </li>
+              <li>
+                <Link
+                  href={`/${locale}/blog`}
+                  className="text-sm transition-colors hover:text-white"
+                >
+                  {tNav('blog')}
+                </Link>
               </li>
               <li>
                 <a

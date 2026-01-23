@@ -952,5 +952,23 @@
       "wordsLearnedValue": "500.000+",
       "averageRating": "Valutazione media"
     }
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Aggiornamenti prodotto, consigli e nuove funzioni di Decorebator.",
+    "latestPosts": "Ultimo articolo",
+    "readMore": "Leggi di più",
+    "backToBlog": "Torna al blog",
+    "minutes": "{count} min di lettura",
+    "publishedOn": "Pubblicato {date}",
+    "cta": {
+      "title": "Scarica l'app",
+      "subtitle": "Prova il nuovo quiz nella tua prossima sessione.",
+      "button": "Scarica app"
+    },
+    "empty": {
+      "title": "Nessun articolo",
+      "subtitle": "Torna presto per aggiornamenti e consigli."
+    }
   }
 }

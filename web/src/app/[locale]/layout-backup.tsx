@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Decorebator - AI-Powered Vocabulary Learning',
   description:
-    'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Track your progress with advanced analytics. Join 10,000+ learners today!',
+    'Master any language with AI-powered vocabulary learning, spaced repetition, and 9 engaging quiz modes. Track your progress with advanced analytics. Join 10,000+ learners today!',
 }
 
 export function generateStaticParams() {

@@ -1632,5 +1632,23 @@
       "wordsLearnedValue": "500,000+",
       "averageRating": "平均評価"
     }
+  },
+  "blog": {
+    "title": "ブログ",
+    "subtitle": "Decorebatorの新機能、学習のヒント、製品アップデート。",
+    "latestPosts": "最新記事",
+    "readMore": "続きを読む",
+    "backToBlog": "ブログに戻る",
+    "minutes": "{count}分で読めます",
+    "publishedOn": "{date} 公開",
+    "cta": {
+      "title": "アプリをダウンロード",
+      "subtitle": "次の学習で新しいクイズを試してみてください。",
+      "button": "ダウンロード"
+    },
+    "empty": {
+      "title": "まだ投稿はありません",
+      "subtitle": "近いうちにアップデートや学習のヒントをお届けします。"
+    }
   }
 }

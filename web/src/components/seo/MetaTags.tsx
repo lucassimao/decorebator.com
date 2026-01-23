@@ -12,7 +12,7 @@ interface MetaTagsProps {
 
 const MetaTags: React.FC<MetaTagsProps> = ({
   title = 'Decorebator - AI-Powered Vocabulary Learning',
-  description = 'Master any language with AI-powered vocabulary learning, spaced repetition, and 8 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
+  description = 'Master any language with AI-powered vocabulary learning, spaced repetition, and 9 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
   image = 'https://decorebator.com/social-share-image.jpg',
   url = 'https://decorebator.com',
   type = 'website',
