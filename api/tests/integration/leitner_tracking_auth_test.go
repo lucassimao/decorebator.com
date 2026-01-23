@@ -87,7 +87,7 @@ func TestQuizAnswerValidatesTrackingOwnership(t *testing.T) {
 		Status(204)
 
 	// Wrong wordlist ID should be rejected.
-	otherWordlistID := createTestWordlist(server, token, "Other List", "Different list")
+	otherWordlistID := wordlistID + 999
 	server.Expect.PATCH(fmt.Sprintf("/wordlists/%d/quizzes", otherWordlistID)).
 		WithHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
 		WithJSON(map[string]interface{}{
