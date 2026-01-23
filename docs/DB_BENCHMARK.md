@@ -63,10 +63,10 @@ go run cmd/benchmark/db_connections.go \
 
 The benchmark uses the actual quiz generation query from `leitner_system_strategy.go`, which includes:
 
-- **Multiple CTEs**: Complex WITH clauses for definition priorities and weighting
+- **Multiple CTEs**: Complex WITH clauses for due-item selection
 - **Multiple JOINs**: Joins across 6+ tables (leitner_system_tracking, definitions, words, etc.)
 - **JSON Aggregation**: Aggregates example audio files into JSON arrays
-- **Complex Calculations**: Leitner box intervals, progress ratios, and priority weights
+- **Scheduling Filters**: Due-only selection based on `next_review_at`
 - **Realistic Parameters**: Uses sample userID=1 and wordlistID=1
 
 This provides a much more realistic benchmark than simple `SELECT 1` queries.
