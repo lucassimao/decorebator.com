@@ -56,6 +56,21 @@ func (h *QuizRoutes) Create(c *gin.Context) {
 	if err != nil {
 		var quizUnavailable common.QuizUnavailableError
 		if errors.As(err, &quizUnavailable) {
+			if quizUnavailable.Reason == common.QuizUnavailableNoDueItems {
+				common.Logger.InfoContext(c.Request.Context(), "no due items available",
+					"userID", userId,
+					"wordlistID", wordlistID,
+					"reason", quizUnavailable.Reason)
+				if hub := sentry.GetHubFromContext(c.Request.Context()); hub != nil {
+					hub.WithScope(func(scope *sentry.Scope) {
+						scope.SetLevel(sentry.LevelInfo)
+						scope.SetTag("quiz_unavailable_reason", string(quizUnavailable.Reason))
+						scope.SetExtra("user_id", userId)
+						scope.SetExtra("wordlist_id", wordlistID)
+					})
+					hub.CaptureMessage("quiz_unavailable_no_due_items")
+				}
+			}
 			c.JSON(http.StatusConflict, gin.H{
 				"error":  quizUnavailable.Message,
 				"status": quizUnavailable.Reason,

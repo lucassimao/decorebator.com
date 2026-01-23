@@ -158,7 +158,9 @@ func createBasicLeitnerDataUsingServices(ctx context.Context, t *testing.T, serv
 	// Manually set one definition to box 2 with earlier timestamp to test prioritization
 	_, err = tx.Exec(ctx, `
 		UPDATE leitner_system_tracking 
-		SET box_id = 2, updated_at = NOW() - INTERVAL '10 hours'
+		SET box_id = 2,
+			updated_at = NOW() - INTERVAL '10 hours',
+			next_review_at = NOW() - INTERVAL '4 hours'
 		WHERE definition_id = $1 AND user_id = $2
 	`, savedDefs2[0].ID, userID)
 	require.NoError(t, err)

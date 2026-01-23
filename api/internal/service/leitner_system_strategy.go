@@ -109,83 +109,30 @@ type ExampleUsage struct {
 	LastUsedAt  time.Time `db:"last_used_at"`
 }
 
-// getNextDefinition selects the next definition for quiz generation using pure priority-based selection.
+// getNextDefinition selects the next due definition for quiz generation.
 //
-// This function implements a clean, deterministic Leitner spaced repetition system that strictly follows
-// spaced repetition science without artificial randomness or complex calculations.
-//
-// PURE PRIORITY ALGORITHM:
-// Definitions are selected using a simple 3-tier ordering system:
-// 1. PRIMARY: selection_weight DESC (higher urgency = higher priority)
-// 2. SECONDARY: oldest reviewed first (new words with NULL updated_at = highest priority)
-// 3. TERTIARY: definition ID ASC (deterministic tiebreaker)
-//
-// WEIGHT CALCULATION (pure priority buckets):
-// - Overdue (100%+ interval): weight = 1000 (highest priority)
-// - Due soon (80-100%): weight = 800 (high priority)
-// - Available (50-80%): weight = 500 (medium priority)
-// - Not ready (<50%): weight = progress_ratio × 100 (proportional priority)
-//
-// BOX-SPECIFIC INTERVALS:
-// - Box 1: Immediate (always available, new words get NULL updated_at)
-// - Box 2: 6 hours
-// - Box 3: 1 day (24 hours)
-// - Box 4: 3 days (72 hours)
-// - Box 5: 1 week (168 hours)
-// - Box 6: 2 weeks (336 hours)
-// - Box 7: 1 month (720 hours)
-//
-// BENEFITS:
-// - 100% deterministic and predictable behavior
-// - Respects spaced repetition science exactly (no artificial randomness)
-// - Clean priority buckets with simple tiebreaking
-// - Fast performance with minimal complex calculations
-// - Easy to debug, test, and maintain
-// - Transparent system that users can understand and trust
-//
-// Parameters:
-// - userID: The user requesting a quiz
-// - wordlistID: The wordlist to select from
+// Scheduling uses next_review_at as the source of truth and orders by:
+// 1. Earliest next_review_at
+// 2. Oldest updated_at
+// 3. Lowest definition ID (deterministic tiebreaker)
 //
 // Returns:
 // - NextDefinition with selected definition details and Leitner system metadata
-// - Error if no definitions exist in wordlist or database operations fail
+// - QuizUnavailableError if no definitions are due
+// - Error if database operations fail
 func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, wordlistID int64, allowedTypes []model.QuizType) (*NextDefinition, error) {
-	// Deterministic query that guarantees definition selection
 	query := `
-		WITH definition_priorities AS (
+		WITH due_definitions AS (
 			SELECT 
 				def.id, lst.id AS lst_id, def.token, 
 				def.part_of_speech, def.language, def.is_verb_type, def.meaning, COALESCE(def.meaning_audio_url, '') as meaning_audio_url, def.examples, 
 				def.inflections, lst.box_id, def.sounds, def.phonetic_notations, 
-				di.url as image_url, di.description as image_description, 
+				COALESCE(di.url, '') as image_url, COALESCE(di.description, '') as image_description, 
 				wd.word_id AS word_id,
 				COALESCE(w.audio_url, '') as word_audio_url,
 				lst.updated_at,
-				-- Calculate hours since last review
-				EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 as hours_since_review,
-				-- Get target interval hours based on box
-				CASE lst.box_id
-					WHEN 1 THEN 0     -- Always available
-					WHEN 2 THEN 6     -- 6 hours
-					WHEN 3 THEN 24    -- 1 day
-					WHEN 4 THEN 72    -- 3 days
-					WHEN 5 THEN 168   -- 1 week
-					WHEN 6 THEN 336   -- 2 weeks
-					WHEN 7 THEN 720   -- 1 month
-				END as target_hours,
-				-- Calculate progress ratio (how close to target interval)
-				CASE 
-					WHEN lst.box_id = 1 THEN 1.0  -- Box 1 always 100% ready
-					ELSE (EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600) / NULLIF(CASE lst.box_id
-						WHEN 2 THEN 6
-						WHEN 3 THEN 24
-						WHEN 4 THEN 72
-						WHEN 5 THEN 168
-						WHEN 6 THEN 336
-						WHEN 7 THEN 720
-					END, 0)
-				END as progress_ratio
+				lst.next_review_at,
+				EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 as hours_since_review
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
 			JOIN word_definitions wd ON def.id = wd.definition_id
@@ -196,47 +143,16 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 				AND w.wordlist_id = $2
 				AND w.learned = FALSE
 				AND def.meaning IS NOT NULL
+				AND lst.next_review_at IS NOT NULL
+				AND lst.next_review_at <= NOW()
 				-- Exclude temporarily skipped definitions
 				AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())
-		),
-		weighted_definitions AS (
-			SELECT 
-				id, token, part_of_speech, language, is_verb_type, meaning, meaning_audio_url, examples, inflections, 
-				lst_id, box_id, sounds, phonetic_notations, 
-				COALESCE(image_url, '') as image_url, word_id, COALESCE(image_description, '') as image_description,
-				word_audio_url,
-				hours_since_review, progress_ratio, updated_at,
-				-- Pure priority based on progress ratio - no complex calculations
-				CASE 
-					WHEN progress_ratio >= 1.0 THEN 1000    -- Overdue (highest priority)
-					WHEN progress_ratio >= 0.8 THEN 800     -- Due soon
-					WHEN progress_ratio >= 0.5 THEN 500     -- Available
-					ELSE FLOOR(progress_ratio * 100)        -- Early (proportional priority)
-				END as selection_weight
-			FROM definition_priorities
-		),
-		selected_definition AS (
-			SELECT 
-				id, token, part_of_speech, language, is_verb_type, meaning, meaning_audio_url, examples, inflections, 
-				lst_id, box_id, sounds, phonetic_notations, 
-				image_url, word_id, image_description, word_audio_url, hours_since_review, progress_ratio, updated_at
-			FROM weighted_definitions
-			-- Pure priority-based selection: respects spaced repetition science exactly
-			-- No artificial randomness - selection is 100% predictable and deterministic
-			ORDER BY 
-				-- Primary sort: Highest weight wins (respects spaced repetition intervals)
-				selection_weight DESC,
-				-- Secondary sort: Among equal weights, prioritize oldest reviewed
-				updated_at ASC,
-				-- Final tiebreaker: Lowest definition ID wins (deterministic)
-				id ASC
-			LIMIT $3
 		)
 		SELECT 
-			sd.id, sd.token, sd.part_of_speech, sd.language, sd.is_verb_type, sd.meaning, sd.meaning_audio_url, sd.examples, sd.inflections, 
-			sd.lst_id, sd.box_id, sd.sounds, sd.phonetic_notations, 
-			sd.image_url, sd.word_id, sd.image_description, sd.word_audio_url,
-			sd.hours_since_review, sd.progress_ratio,
+			dd.id, dd.token, dd.part_of_speech, dd.language, dd.is_verb_type, dd.meaning, dd.meaning_audio_url, dd.examples, dd.inflections, 
+			dd.lst_id, dd.box_id, dd.sounds, dd.phonetic_notations, 
+			dd.image_url, dd.word_id, dd.image_description, dd.word_audio_url,
+			dd.hours_since_review, dd.next_review_at,
 			-- Aggregate example audio files into JSON array
 			COALESCE(
 				JSON_AGG(
@@ -252,11 +168,16 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 				) FILTER (WHERE dea.id IS NOT NULL),
 				'[]'::json
 			) as example_audio_files
-		FROM selected_definition sd
-		LEFT JOIN definition_example_audio dea ON dea.definition_id = sd.id
-		GROUP BY sd.id, sd.token, sd.part_of_speech, sd.language, sd.is_verb_type, sd.meaning, sd.meaning_audio_url, sd.examples, sd.inflections, 
-				 sd.lst_id, sd.box_id, sd.sounds, sd.phonetic_notations, 
-				 sd.image_url, sd.word_id, sd.image_description, sd.word_audio_url, sd.hours_since_review, sd.progress_ratio, sd.updated_at;
+		FROM due_definitions dd
+		LEFT JOIN definition_example_audio dea ON dea.definition_id = dd.id
+		GROUP BY dd.id, dd.token, dd.part_of_speech, dd.language, dd.is_verb_type, dd.meaning, dd.meaning_audio_url, dd.examples, dd.inflections, 
+				 dd.lst_id, dd.box_id, dd.sounds, dd.phonetic_notations, 
+				 dd.image_url, dd.word_id, dd.image_description, dd.word_audio_url, dd.hours_since_review, dd.next_review_at, dd.updated_at
+		ORDER BY 
+			dd.next_review_at ASC,
+			dd.updated_at ASC,
+			dd.id ASC
+		LIMIT $3;
 	`
 
 	candidateLimit := 1
@@ -275,7 +196,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 	type candidateMeta struct {
 		definition        *NextDefinition
 		hoursSinceReview  float64
-		progressRatio     float64
+		nextReviewAt      time.Time
 		exampleAudioCount int
 	}
 
@@ -285,14 +206,14 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 		definition := model.Definition{}
 		result := NextDefinition{Definition: &definition}
 		var hoursSinceReview float64
-		var progressRatio float64
+		var nextReviewAt time.Time
 		var exampleAudioFilesJSON []byte
 
 		err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
 			&definition.Meaning, &definition.MeaningAudioURL, &definition.Examples,
 			&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
 			&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription, &result.WordAudioURL,
-			&hoursSinceReview, &progressRatio, &exampleAudioFilesJSON)
+			&hoursSinceReview, &nextReviewAt, &exampleAudioFilesJSON)
 
 		if err != nil {
 			return nil, err
@@ -313,7 +234,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 		candidates = append(candidates, candidateMeta{
 			definition:        &result,
 			hoursSinceReview:  hoursSinceReview,
-			progressRatio:     progressRatio,
+			nextReviewAt:      nextReviewAt,
 			exampleAudioCount: len(definition.ExampleAudioFiles),
 		})
 	}
@@ -328,38 +249,43 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 			SELECT COUNT(*) as total_words,
 				   COUNT(CASE WHEN w.learned = FALSE THEN 1 END) as unlearned_words,
 				   COUNT(CASE WHEN def.meaning IS NOT NULL THEN 1 END) as with_meaning,
-				   COUNT(CASE WHEN lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW() THEN 1 END) as not_skipped
+				   COUNT(CASE WHEN lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW() THEN 1 END) as not_skipped,
+				   COUNT(CASE WHEN lst.next_review_at IS NOT NULL AND lst.next_review_at <= NOW() THEN 1 END) as due_now
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
 			JOIN word_definitions wd ON def.id = wd.definition_id
 			JOIN words w ON wd.word_id = w.id
 			WHERE lst.user_id = $1 AND w.wordlist_id = $2
 		`
-		var totalWords, unlearnedWords, withMeaning, notSkipped int
-		debugErr := s.db.QueryRow(ctx, debugQuery, userID, wordlistID).Scan(&totalWords, &unlearnedWords, &withMeaning, &notSkipped)
+		var totalWords, unlearnedWords, withMeaning, notSkipped, dueNow int
+		debugErr := s.db.QueryRow(ctx, debugQuery, userID, wordlistID).Scan(&totalWords, &unlearnedWords, &withMeaning, &notSkipped, &dueNow)
 		if debugErr == nil {
-			common.Logger.Error("no definitions selected - debug info",
+			common.Logger.Info("no definitions selected - debug info",
 				"userID", userID,
 				"wordlistID", wordlistID,
 				"totalWords", totalWords,
 				"unlearnedWords", unlearnedWords,
 				"withMeaning", withMeaning,
-				"notSkipped", notSkipped)
+				"notSkipped", notSkipped,
+				"dueNow", dueNow)
 		}
 
-		return nil, errors.New("no definitions found in wordlist")
+		return nil, common.QuizUnavailableError{
+			Reason:  common.QuizUnavailableNoDueItems,
+			Message: "no due items available",
+		}
 	}
 
 	if len(allowedTypes) == 0 {
 		selected := candidates[0]
-		logSelectedDefinition(userID, wordlistID, selected.definition, selected.hoursSinceReview, selected.progressRatio, selected.exampleAudioCount)
+		logSelectedDefinition(userID, wordlistID, selected.definition, selected.hoursSinceReview, selected.nextReviewAt, selected.exampleAudioCount)
 		return selected.definition, nil
 	}
 
 	for _, candidate := range candidates {
 		availableTypes := availableQuizTypesForDefinition(candidate.definition)
 		if len(filterQuizTypes(availableTypes, allowedTypes)) > 0 {
-			logSelectedDefinition(userID, wordlistID, candidate.definition, candidate.hoursSinceReview, candidate.progressRatio, candidate.exampleAudioCount)
+			logSelectedDefinition(userID, wordlistID, candidate.definition, candidate.hoursSinceReview, candidate.nextReviewAt, candidate.exampleAudioCount)
 			return candidate.definition, nil
 		}
 	}
@@ -614,15 +540,15 @@ func filterQuizTypes(availableTypes, allowedTypes []model.QuizType) []model.Quiz
 	return filteredTypes
 }
 
-func logSelectedDefinition(userID, wordlistID int64, def *NextDefinition, hoursSinceReview, progressRatio float64, exampleAudioCount int) {
-	common.Logger.Info("pure_priority_selection",
+func logSelectedDefinition(userID, wordlistID int64, def *NextDefinition, hoursSinceReview float64, nextReviewAt time.Time, exampleAudioCount int) {
+	common.Logger.Info("due_item_selection",
 		"userID", userID,
 		"wordlistID", wordlistID,
 		"definitionID", def.Definition.ID,
 		"boxID", def.BoxID,
 		"hoursSinceReview", hoursSinceReview,
-		"progressRatio", progressRatio,
-		"wasOverdue", progressRatio >= 1.0,
+		"nextReviewAt", nextReviewAt,
+		"isOverdue", nextReviewAt.Before(time.Now()),
 		"exampleAudioCount", exampleAudioCount)
 }
 

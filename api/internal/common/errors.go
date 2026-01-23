@@ -17,6 +17,7 @@ const (
 	QuizUnavailableWordlistEmpty       QuizUnavailableReason = "wordlist_empty"
 	QuizUnavailableWordlistProcessing  QuizUnavailableReason = "wordlist_processing"
 	QuizUnavailableNoUnlearnedWords    QuizUnavailableReason = "no_unlearned_words"
+	QuizUnavailableNoDueItems          QuizUnavailableReason = "no_due_items"
 	QuizUnavailableNoMatchingQuizTypes QuizUnavailableReason = "no_matching_quiz_types"
 )
 

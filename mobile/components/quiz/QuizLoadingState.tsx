@@ -29,6 +29,7 @@ export const QuizLoadingState: React.FC<QuizLoadingStateProps> = ({
     error?.message?.includes("no definitions found in wordlist") ||
     error?.message?.includes("no unlearned words in wordlist");
   const errorStatus = (error as any)?.data?.status;
+  const isNoDueItemsError = errorStatus === "no_due_items";
   const isNoMatchingTypesError =
     errorStatus === "no_matching_quiz_types" ||
     error?.message?.includes("no quiz types available for selection");
@@ -97,6 +98,60 @@ export const QuizLoadingState: React.FC<QuizLoadingStateProps> = ({
           {t(
             "quiz.quizTypeEmptyMessage",
             "Try selecting different quiz types or select all.",
+          )}
+        </Text>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[
+              styles.retryButton,
+              { backgroundColor: theme.colors.primary },
+            ]}
+            onPress={onRetry}
+          >
+            <MaterialIcons name="refresh" size={20} color="#FFFFFF" />
+            <Text style={styles.retryButtonText}>{t("common.tryAgain")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.goBackButton,
+              { backgroundColor: theme.colors.background.surface },
+            ]}
+            onPress={onGoBack}
+          >
+            <MaterialIcons
+              name="arrow-back"
+              size={20}
+              color={theme.colors.text.primary}
+            />
+            <Text
+              style={[
+                styles.goBackButtonText,
+                { color: theme.colors.text.primary },
+              ]}
+            >
+              {t("common.goBack")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  if (isNoDueItemsError && !isLoading) {
+    return (
+      <View style={styles.processingContainer}>
+        <MaterialIcons
+          name="schedule"
+          size={48}
+          color={theme.colors.text.secondary}
+        />
+        <Text style={styles.processingTitle}>
+          {t("quiz.noDueTitle", "Nothing due yet")}
+        </Text>
+        <Text style={styles.processingMessage}>
+          {t(
+            "quiz.noDueMessage",
+            "You're all caught up. Come back later for your next review.",
           )}
         </Text>
         <View style={styles.actionButtons}>

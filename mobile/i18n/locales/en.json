@@ -326,6 +326,8 @@
     "cooldownError": "You've already reported this error recently. Please wait {{minutes}} minutes before reporting again.",
     "loadingNextQuestion": "Loading next question...",
     "loadingTakingLonger": "This is taking longer than usual...",
+    "noDueTitle": "Nothing due yet",
+    "noDueMessage": "You're all caught up. Come back later for your next review.",
     "requestTimedOut": "Request timed out. Your connection might be slow or unstable.",
     "slowConnection": "Slow connection detected. This might take a bit longer.",
     "wordsProcessing": "Words Still Processing",

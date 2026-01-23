@@ -143,6 +143,14 @@ func runQuizLoopTest(t *testing.T, server *setup.TestServer, token string, itera
 			Expect().
 			Status(http.StatusNoContent)
 
+		// Keep items due for the loop test so we can observe selection behavior
+		_, err := server.DB.Exec(context.Background(), `
+			UPDATE leitner_system_tracking
+			SET next_review_at = NOW() - INTERVAL '1 minute'
+			WHERE id = $1
+		`, quizID)
+		require.NoError(t, err)
+
 		// Small delay to simulate real usage
 		time.Sleep(5 * time.Millisecond)
 	}
@@ -280,15 +288,16 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 	// 6. Insert leitner_system_tracking (with current state from production)
 	// Note: Clear temporarily_skipped_until as those are in the past
 	_, err = tx.Exec(ctx, `
-		INSERT INTO leitner_system_tracking (id, user_id, definition_id, box_id, word_id, updated_at, temporarily_skipped_until)
+		INSERT INTO leitner_system_tracking (id, user_id, definition_id, box_id, word_id, updated_at, next_review_at, temporarily_skipped_until)
 		VALUES 
-			(315, 5, 273, 7, 168, NOW() - INTERVAL '20 minutes', null),
-			(316, 5, 274, 1, 168, NOW() - INTERVAL '45 minutes', null),
-			(317, 5, 259, 4, 169, NOW() - INTERVAL '18 minutes', null),
-			(318, 5, 260, 1, 169, NOW() - INTERVAL '20 minutes', null)
+			(315, 5, 273, 7, 168, NOW() - INTERVAL '20 minutes', NOW() - INTERVAL '1 minute', null),
+			(316, 5, 274, 1, 168, NOW() - INTERVAL '45 minutes', NOW() - INTERVAL '1 minute', null),
+			(317, 5, 259, 4, 169, NOW() - INTERVAL '18 minutes', NOW() - INTERVAL '1 minute', null),
+			(318, 5, 260, 1, 169, NOW() - INTERVAL '20 minutes', NOW() - INTERVAL '1 minute', null)
 		ON CONFLICT (id) DO UPDATE SET 
 			box_id = EXCLUDED.box_id,
 			updated_at = EXCLUDED.updated_at,
+			next_review_at = EXCLUDED.next_review_at,
 			temporarily_skipped_until = EXCLUDED.temporarily_skipped_until
 	`)
 	require.NoError(t, err)
