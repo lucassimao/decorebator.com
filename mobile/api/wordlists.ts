@@ -89,6 +89,8 @@ export type Quiz = {
   wordId: number;
 };
 
+export type QuizType = Quiz["type"];
+
 // Public Quiz (MVP)
 // Public quiz publishing removed from mobile UI; keep read-only endpoints elsewhere
 
@@ -176,8 +178,14 @@ export async function updateWord(
   const endpoint = API_URL + `/wordlists/${dto.wordlistId}/words/${dto.id}`;
   await callAPI("PUT", endpoint, JSON.stringify(dto));
 }
-export async function newQuiz(wordlistId: number): Promise<Quiz> {
-  const endpoint = API_URL + `/wordlists/${wordlistId}/quizzes`;
+export async function newQuiz(
+  wordlistId: number,
+  quizTypes?: QuizType[],
+): Promise<Quiz> {
+  let endpoint = API_URL + `/wordlists/${wordlistId}/quizzes`;
+  if (quizTypes && quizTypes.length > 0) {
+    endpoint += `?quizTypes=${encodeURIComponent(quizTypes.join(","))}`;
+  }
   return await callAPI<Quiz>("POST", endpoint);
 }
 

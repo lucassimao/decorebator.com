@@ -37,7 +37,7 @@ func TestLeitnerNullUpdatedAtAssumption(t *testing.T) {
 			service.NewLeitnerTrackingService(server.DB),
 		)
 
-		quiz, err := strategy.CreateQuiz(ctx, userID, wordlistID) // Using IDs from service creation
+		quiz, err := strategy.CreateQuiz(ctx, userID, wordlistID, nil) // Using IDs from service creation
 		require.NoError(t, err)
 		require.NotNil(t, quiz)
 	})

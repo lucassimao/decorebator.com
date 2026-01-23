@@ -14,9 +14,10 @@ func (e BusinessError) Error() string {
 type QuizUnavailableReason string
 
 const (
-	QuizUnavailableWordlistEmpty      QuizUnavailableReason = "wordlist_empty"
-	QuizUnavailableWordlistProcessing QuizUnavailableReason = "wordlist_processing"
-	QuizUnavailableNoUnlearnedWords   QuizUnavailableReason = "no_unlearned_words"
+	QuizUnavailableWordlistEmpty       QuizUnavailableReason = "wordlist_empty"
+	QuizUnavailableWordlistProcessing  QuizUnavailableReason = "wordlist_processing"
+	QuizUnavailableNoUnlearnedWords    QuizUnavailableReason = "no_unlearned_words"
+	QuizUnavailableNoMatchingQuizTypes QuizUnavailableReason = "no_matching_quiz_types"
 )
 
 type QuizUnavailableError struct {

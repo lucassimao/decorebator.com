@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -31,8 +32,25 @@ func (h *QuizRoutes) Create(c *gin.Context) {
 	wordlistID, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	userId := c.GetInt64("userID")
 
+	allowedTypes, err := parseAllowedQuizTypes(c.Query("quizTypes"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if len(allowedTypes) > 0 {
+		isPremium := false
+		if user, exists := c.Get("user"); exists {
+			if userObj, ok := user.(*model.User); ok {
+				isPremium = userObj.SubscriptionPlan != model.PlanFree
+			}
+		}
+		if !isPremium {
+			allowedTypes = nil
+		}
+	}
+
 	span := sentry.StartSpan(c.Request.Context(), "quiz.generate", sentry.WithDescription("strategy.CreateQuiz"))
-	challenge, err := h.strategy.CreateQuiz(span.Context(), wordlistID, userId)
+	challenge, err := h.strategy.CreateQuiz(span.Context(), wordlistID, userId, allowedTypes)
 	span.Finish()
 
 	if err != nil {
@@ -51,6 +69,33 @@ func (h *QuizRoutes) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, challenge)
+}
+
+func parseAllowedQuizTypes(raw string) ([]model.QuizType, error) {
+	if raw == "" {
+		return nil, nil
+	}
+
+	seen := map[model.QuizType]struct{}{}
+	var allowed []model.QuizType
+
+	for _, value := range strings.Split(raw, ",") {
+		trimmed := strings.TrimSpace(value)
+		if trimmed == "" {
+			continue
+		}
+		if !model.IsValidQuizType(trimmed) {
+			return nil, errors.New("invalid quiz type selection")
+		}
+		qt := model.QuizType(trimmed)
+		if _, exists := seen[qt]; exists {
+			continue
+		}
+		seen[qt] = struct{}{}
+		allowed = append(allowed, qt)
+	}
+
+	return allowed, nil
 }
 
 type SaveInput struct {

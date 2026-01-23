@@ -26,13 +26,16 @@ export async function getUserWordlists(): Promise<wordlistsApi.Wordlist[]> {
   return cached;
 }
 
-export async function newQuiz(wordlistId: number): Promise<wordlistsApi.Quiz> {
+export async function newQuiz(
+  wordlistId: number,
+  quizTypes?: wordlistsApi.QuizType[],
+): Promise<wordlistsApi.Quiz> {
   const isOnline = offlineManager.getNetworkStatus();
 
   if (isOnline) {
     // Online mode: fetch from API and cache
     try {
-      const quiz = await wordlistsApi.newQuiz(wordlistId);
+      const quiz = await wordlistsApi.newQuiz(wordlistId, quizTypes);
 
       // Cache for offline use (async, don't wait)
       offlineManager.cacheQuiz(wordlistId, quiz).catch(console.error);

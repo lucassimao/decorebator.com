@@ -28,6 +28,10 @@ export const QuizLoadingState: React.FC<QuizLoadingStateProps> = ({
   const isProcessingError =
     error?.message?.includes("no definitions found in wordlist") ||
     error?.message?.includes("no unlearned words in wordlist");
+  const errorStatus = (error as any)?.data?.status;
+  const isNoMatchingTypesError =
+    errorStatus === "no_matching_quiz_types" ||
+    error?.message?.includes("no quiz types available for selection");
 
   if (isProcessingError && !isLoading) {
     return (
@@ -40,6 +44,60 @@ export const QuizLoadingState: React.FC<QuizLoadingStateProps> = ({
         <Text style={styles.processingTitle}>{t("quiz.wordsProcessing")}</Text>
         <Text style={styles.processingMessage}>
           {t("quiz.wordsProcessingMessage")}
+        </Text>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[
+              styles.retryButton,
+              { backgroundColor: theme.colors.primary },
+            ]}
+            onPress={onRetry}
+          >
+            <MaterialIcons name="refresh" size={20} color="#FFFFFF" />
+            <Text style={styles.retryButtonText}>{t("common.tryAgain")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.goBackButton,
+              { backgroundColor: theme.colors.background.surface },
+            ]}
+            onPress={onGoBack}
+          >
+            <MaterialIcons
+              name="arrow-back"
+              size={20}
+              color={theme.colors.text.primary}
+            />
+            <Text
+              style={[
+                styles.goBackButtonText,
+                { color: theme.colors.text.primary },
+              ]}
+            >
+              {t("common.goBack")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  if (isNoMatchingTypesError && !isLoading) {
+    return (
+      <View style={styles.processingContainer}>
+        <MaterialIcons
+          name="tune"
+          size={48}
+          color={theme.colors.text.secondary}
+        />
+        <Text style={styles.processingTitle}>
+          {t("quiz.quizTypeEmptyTitle", "No matching quiz types")}
+        </Text>
+        <Text style={styles.processingMessage}>
+          {t(
+            "quiz.quizTypeEmptyMessage",
+            "Try selecting different quiz types or select all.",
+          )}
         </Text>
         <View style={styles.actionButtons}>
           <TouchableOpacity

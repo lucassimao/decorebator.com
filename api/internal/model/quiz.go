@@ -14,6 +14,23 @@ const (
 	WordFromExampleAudio    QuizType = "WORD_FROM_EXAMPLE_AUDIO"
 )
 
+var validQuizTypes = map[QuizType]struct{}{
+	GuessMeaning:            {},
+	CompleteSentence:        {},
+	WordFromMeaning:         {},
+	WordFromImage:           {},
+	WordFromAudio:           {},
+	MeaningFromAudio:        {},
+	WordFromMeaningAudio:    {},
+	WriteWordFromDefinition: {},
+	WordFromExampleAudio:    {},
+}
+
+func IsValidQuizType(value string) bool {
+	_, ok := validQuizTypes[QuizType(value)]
+	return ok
+}
+
 type Quiz struct {
 	Value            string   `json:"value"`
 	Options          []string `json:"options"`

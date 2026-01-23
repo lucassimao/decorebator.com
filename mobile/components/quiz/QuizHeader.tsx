@@ -8,6 +8,11 @@ interface QuizHeaderProps {
   correctCount: number;
   quizCount: number;
   isOnline: boolean;
+  showQuizTypeSelector?: boolean;
+  quizTypeCount?: number;
+  quizTypeTotal?: number;
+  isQuizTypeDisabled?: boolean;
+  onQuizTypePress?: () => void;
   onBackPress: () => void;
   onReportPress: () => void;
 }
@@ -17,11 +22,21 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
   correctCount,
   quizCount,
   isOnline,
+  showQuizTypeSelector = false,
+  quizTypeCount,
+  quizTypeTotal,
+  isQuizTypeDisabled = false,
+  onQuizTypePress,
   onBackPress,
   onReportPress,
 }) => {
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const showQuizTypeBadge =
+    showQuizTypeSelector &&
+    quizTypeCount != null &&
+    quizTypeTotal != null &&
+    quizTypeCount < quizTypeTotal;
   return (
     <View style={styles.header}>
       <TouchableOpacity
@@ -55,29 +70,65 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
         </Text>
       </View>
 
-      <TouchableOpacity
-        style={[styles.settingsButton, !isOnline && styles.disabledButton]}
-        onPress={() => isOnline && onReportPress()}
-        disabled={!isOnline}
-        accessibilityRole="button"
-        accessibilityLabel={
-          isOnline ? "Report error" : "Report error (offline)"
-        }
-        accessibilityHint={
-          isOnline
-            ? "Report an issue with the current question"
-            : "Requires internet connection"
-        }
-        accessibilityState={{ disabled: !isOnline }}
-      >
-        <MaterialIcons
-          name="flag"
-          size={24}
-          color={
-            isOnline ? theme.colors.text.secondary : theme.colors.ui.disabled
+      <View style={styles.headerActions}>
+        {showQuizTypeSelector && (
+          <TouchableOpacity
+            style={[
+              styles.settingsButton,
+              isQuizTypeDisabled && styles.disabledButton,
+            ]}
+            onPress={() => !isQuizTypeDisabled && onQuizTypePress?.()}
+            disabled={isQuizTypeDisabled}
+            accessibilityRole="button"
+            accessibilityLabel="Choose quiz types"
+            accessibilityHint={
+              isQuizTypeDisabled
+                ? "Requires internet connection"
+                : "Filter the types of questions in this session"
+            }
+            accessibilityState={{ disabled: isQuizTypeDisabled }}
+          >
+            <MaterialIcons
+              name="tune"
+              size={22}
+              color={
+                isQuizTypeDisabled
+                  ? theme.colors.ui.disabled
+                  : theme.colors.text.secondary
+              }
+            />
+            {showQuizTypeBadge && (
+              <View style={styles.quizTypeBadge}>
+                <Text style={styles.quizTypeBadgeText}>{quizTypeCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          style={[styles.settingsButton, !isOnline && styles.disabledButton]}
+          onPress={() => isOnline && onReportPress()}
+          disabled={!isOnline}
+          accessibilityRole="button"
+          accessibilityLabel={
+            isOnline ? "Report error" : "Report error (offline)"
           }
-        />
-      </TouchableOpacity>
+          accessibilityHint={
+            isOnline
+              ? "Report an issue with the current question"
+              : "Requires internet connection"
+          }
+          accessibilityState={{ disabled: !isOnline }}
+        >
+          <MaterialIcons
+            name="flag"
+            size={24}
+            color={
+              isOnline ? theme.colors.text.secondary : theme.colors.ui.disabled
+            }
+          />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -124,7 +175,29 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       alignItems: "center",
       ...theme.shadows.sm,
     },
+    headerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
     disabledButton: {
       opacity: 0.5,
+    },
+    quizTypeBadge: {
+      position: "absolute",
+      top: -4,
+      right: -4,
+      minWidth: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: theme.colors.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: 4,
+    },
+    quizTypeBadgeText: {
+      fontSize: 10,
+      color: theme.colors.text.inverse,
+      fontWeight: "700",
     },
   });

@@ -69,6 +69,7 @@ type NextDefinition struct {
 	LeitnerSystemID  int64             // The tracking ID for this definition in the Leitner system
 	BoxID            int64             // Current Leitner box (1-7, determines review interval)
 	WordID           int64             // The word this definition belongs to
+	WordAudioURL     string            // Audio URL for the word (if any)
 	ImageUrl         string            // URL of associated image (if any)
 	ImageDescription string            // Description of the associated image
 }
@@ -100,6 +101,7 @@ var boxToQuizTypes = map[int64][]model.QuizType{
 }
 
 const multipleChoiceDistractors = 2
+const quizTypeFilteredCandidateLimit = 50
 
 // ExampleUsage tracks when examples were last used for fair distribution
 type ExampleUsage struct {
@@ -148,7 +150,7 @@ type ExampleUsage struct {
 // Returns:
 // - NextDefinition with selected definition details and Leitner system metadata
 // - Error if no definitions exist in wordlist or database operations fail
-func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, wordlistID int64) (*NextDefinition, error) {
+func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, wordlistID int64, allowedTypes []model.QuizType) (*NextDefinition, error) {
 	// Deterministic query that guarantees definition selection
 	query := `
 		WITH definition_priorities AS (
@@ -158,6 +160,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 				def.inflections, lst.box_id, def.sounds, def.phonetic_notations, 
 				di.url as image_url, di.description as image_description, 
 				wd.word_id AS word_id,
+				COALESCE(w.audio_url, '') as word_audio_url,
 				lst.updated_at,
 				-- Calculate hours since last review
 				EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 as hours_since_review,
@@ -201,6 +204,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 				id, token, part_of_speech, language, is_verb_type, meaning, meaning_audio_url, examples, inflections, 
 				lst_id, box_id, sounds, phonetic_notations, 
 				COALESCE(image_url, '') as image_url, word_id, COALESCE(image_description, '') as image_description,
+				word_audio_url,
 				hours_since_review, progress_ratio, updated_at,
 				-- Pure priority based on progress ratio - no complex calculations
 				CASE 
@@ -215,7 +219,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 			SELECT 
 				id, token, part_of_speech, language, is_verb_type, meaning, meaning_audio_url, examples, inflections, 
 				lst_id, box_id, sounds, phonetic_notations, 
-				image_url, word_id, image_description, hours_since_review, progress_ratio, updated_at
+				image_url, word_id, image_description, word_audio_url, hours_since_review, progress_ratio, updated_at
 			FROM weighted_definitions
 			-- Pure priority-based selection: respects spaced repetition science exactly
 			-- No artificial randomness - selection is 100% predictable and deterministic
@@ -226,12 +230,12 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 				updated_at ASC,
 				-- Final tiebreaker: Lowest definition ID wins (deterministic)
 				id ASC
-			LIMIT 1
+			LIMIT $3
 		)
 		SELECT 
 			sd.id, sd.token, sd.part_of_speech, sd.language, sd.is_verb_type, sd.meaning, sd.meaning_audio_url, sd.examples, sd.inflections, 
 			sd.lst_id, sd.box_id, sd.sounds, sd.phonetic_notations, 
-			sd.image_url, sd.word_id, sd.image_description,
+			sd.image_url, sd.word_id, sd.image_description, sd.word_audio_url,
 			sd.hours_since_review, sd.progress_ratio,
 			-- Aggregate example audio files into JSON array
 			COALESCE(
@@ -252,16 +256,73 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 		LEFT JOIN definition_example_audio dea ON dea.definition_id = sd.id
 		GROUP BY sd.id, sd.token, sd.part_of_speech, sd.language, sd.is_verb_type, sd.meaning, sd.meaning_audio_url, sd.examples, sd.inflections, 
 				 sd.lst_id, sd.box_id, sd.sounds, sd.phonetic_notations, 
-				 sd.image_url, sd.word_id, sd.image_description, sd.hours_since_review, sd.progress_ratio, sd.updated_at;
+				 sd.image_url, sd.word_id, sd.image_description, sd.word_audio_url, sd.hours_since_review, sd.progress_ratio, sd.updated_at;
 	`
 
-	rows, err := s.db.Query(ctx, query, userID, wordlistID)
+	candidateLimit := 1
+	if len(allowedTypes) > 0 {
+		// When a quiz-type filter is active, we widen the candidate pool so we can
+		// pick the first top-priority definition that supports any selected type.
+		candidateLimit = quizTypeFilteredCandidateLimit
+	}
+
+	rows, err := s.db.Query(ctx, query, userID, wordlistID, candidateLimit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
+	type candidateMeta struct {
+		definition        *NextDefinition
+		hoursSinceReview  float64
+		progressRatio     float64
+		exampleAudioCount int
+	}
+
+	var candidates []candidateMeta
+
+	for rows.Next() {
+		definition := model.Definition{}
+		result := NextDefinition{Definition: &definition}
+		var hoursSinceReview float64
+		var progressRatio float64
+		var exampleAudioFilesJSON []byte
+
+		err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
+			&definition.Meaning, &definition.MeaningAudioURL, &definition.Examples,
+			&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
+			&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription, &result.WordAudioURL,
+			&hoursSinceReview, &progressRatio, &exampleAudioFilesJSON)
+
+		if err != nil {
+			return nil, err
+		}
+
+		// Parse the JSON array of example audio files
+		if len(exampleAudioFilesJSON) > 0 {
+			err = json.Unmarshal(exampleAudioFilesJSON, &definition.ExampleAudioFiles)
+			if err != nil {
+				// Log the error but don't fail the quiz generation
+				common.Logger.Error("failed to parse example audio files JSON", "definitionID", definition.ID, "error", err)
+				definition.ExampleAudioFiles = []model.DefinitionExampleAudio{}
+			}
+		} else {
+			definition.ExampleAudioFiles = []model.DefinitionExampleAudio{}
+		}
+
+		candidates = append(candidates, candidateMeta{
+			definition:        &result,
+			hoursSinceReview:  hoursSinceReview,
+			progressRatio:     progressRatio,
+			exampleAudioCount: len(definition.ExampleAudioFiles),
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(candidates) == 0 {
 		// Debug: Let's check what's happening
 		debugQuery := `
 			SELECT COUNT(*) as total_words,
@@ -289,46 +350,24 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 		return nil, errors.New("no definitions found in wordlist")
 	}
 
-	definition := model.Definition{}
-	result := NextDefinition{Definition: &definition}
-	var hoursSinceReview float64
-	var progressRatio float64
-	var exampleAudioFilesJSON []byte
-
-	err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
-		&definition.Meaning, &definition.MeaningAudioURL, &definition.Examples,
-		&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
-		&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription,
-		&hoursSinceReview, &progressRatio, &exampleAudioFilesJSON)
-
-	if err != nil {
-		return nil, err
+	if len(allowedTypes) == 0 {
+		selected := candidates[0]
+		logSelectedDefinition(userID, wordlistID, selected.definition, selected.hoursSinceReview, selected.progressRatio, selected.exampleAudioCount)
+		return selected.definition, nil
 	}
 
-	// Parse the JSON array of example audio files
-	if len(exampleAudioFilesJSON) > 0 {
-		err = json.Unmarshal(exampleAudioFilesJSON, &definition.ExampleAudioFiles)
-		if err != nil {
-			// Log the error but don't fail the quiz generation
-			common.Logger.Error("failed to parse example audio files JSON", "definitionID", definition.ID, "error", err)
-			definition.ExampleAudioFiles = []model.DefinitionExampleAudio{}
+	for _, candidate := range candidates {
+		availableTypes := availableQuizTypesForDefinition(candidate.definition)
+		if len(filterQuizTypes(availableTypes, allowedTypes)) > 0 {
+			logSelectedDefinition(userID, wordlistID, candidate.definition, candidate.hoursSinceReview, candidate.progressRatio, candidate.exampleAudioCount)
+			return candidate.definition, nil
 		}
-	} else {
-		definition.ExampleAudioFiles = []model.DefinitionExampleAudio{}
 	}
 
-	// Log pure priority selection for monitoring
-	common.Logger.Info("pure_priority_selection",
-		"userID", userID,
-		"wordlistID", wordlistID,
-		"definitionID", definition.ID,
-		"boxID", result.BoxID,
-		"hoursSinceReview", hoursSinceReview,
-		"progressRatio", progressRatio,
-		"wasOverdue", progressRatio >= 1.0,
-		"exampleAudioCount", len(definition.ExampleAudioFiles))
-
-	return &result, nil
+	return nil, common.QuizUnavailableError{
+		Reason:  common.QuizUnavailableNoMatchingQuizTypes,
+		Message: "no quiz types available for selection",
+	}
 }
 
 // checkHasUnlearnedWords verifies if the user has any unlearned words in the wordlist
@@ -422,7 +461,7 @@ func (s *LeitnerSystemStrategy) getWordlistAvailability(ctx context.Context, use
 //
 // Returns a Quiz object with the question, options, correct answer, and metadata.
 // Returns an error if no words are available for review or if database operations fail.
-func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userID int64) (*Quiz, error) {
+func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userID int64, allowedTypes []model.QuizType) (*Quiz, error) {
 	availability, err := s.getWordlistAvailability(ctx, userID, wordlistID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check wordlist status: %w", err)
@@ -468,7 +507,7 @@ func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userI
 		}
 	}
 
-	nextDefinition, err := s.getNextDefinition(ctx, userID, wordlistID)
+	nextDefinition, err := s.getNextDefinition(ctx, userID, wordlistID, allowedTypes)
 	if err != nil {
 		return nil, err
 	}
@@ -479,7 +518,7 @@ func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userI
 	}
 
 	// Select appropriate quiz type based on box and available content
-	quizType := s.selectQuizType(ctx, nextDefinition, word, userID, wordlistID)
+	quizType := s.selectQuizType(ctx, nextDefinition, word, userID, wordlistID, allowedTypes)
 
 	// Additional logging for debugging WordFromImage availability
 	if nextDefinition.BoxID == 3 || nextDefinition.BoxID == 7 {
@@ -495,15 +534,29 @@ func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userI
 	return s.createQuizForType(ctx, quizType, nextDefinition, word, s.definitionService)
 }
 
-func (s *LeitnerSystemStrategy) selectQuizType(ctx context.Context, def *NextDefinition, word *model.Word, userID, wordlistID int64) model.QuizType {
+func (s *LeitnerSystemStrategy) selectQuizType(ctx context.Context, def *NextDefinition, word *model.Word, userID, wordlistID int64, allowedTypes []model.QuizType) model.QuizType {
 	possibleTypes := boxToQuizTypes[def.BoxID]
 
 	// Filter out quiz types that require unavailable content
 	var availableTypes []model.QuizType
 	for _, qt := range possibleTypes {
-		if isQuizTypeAvailable(qt, def, word) {
+		if isQuizTypeAvailable(qt, def, word.AudioURL) {
 			availableTypes = append(availableTypes, qt)
 		}
+	}
+
+	if len(allowedTypes) > 0 {
+		allowedSet := map[model.QuizType]struct{}{}
+		for _, qt := range allowedTypes {
+			allowedSet[qt] = struct{}{}
+		}
+		var filteredTypes []model.QuizType
+		for _, qt := range availableTypes {
+			if _, ok := allowedSet[qt]; ok {
+				filteredTypes = append(filteredTypes, qt)
+			}
+		}
+		availableTypes = filteredTypes
 	}
 
 	if len(availableTypes) == 0 {
@@ -533,7 +586,47 @@ func (s *LeitnerSystemStrategy) selectQuizType(ctx context.Context, def *NextDef
 	return selectedType
 }
 
-func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Word) bool {
+func availableQuizTypesForDefinition(def *NextDefinition) []model.QuizType {
+	possibleTypes := boxToQuizTypes[def.BoxID]
+	var availableTypes []model.QuizType
+	for _, qt := range possibleTypes {
+		if isQuizTypeAvailable(qt, def, def.WordAudioURL) {
+			availableTypes = append(availableTypes, qt)
+		}
+	}
+	return availableTypes
+}
+
+func filterQuizTypes(availableTypes, allowedTypes []model.QuizType) []model.QuizType {
+	if len(allowedTypes) == 0 {
+		return availableTypes
+	}
+	allowedSet := map[model.QuizType]struct{}{}
+	for _, qt := range allowedTypes {
+		allowedSet[qt] = struct{}{}
+	}
+	var filteredTypes []model.QuizType
+	for _, qt := range availableTypes {
+		if _, ok := allowedSet[qt]; ok {
+			filteredTypes = append(filteredTypes, qt)
+		}
+	}
+	return filteredTypes
+}
+
+func logSelectedDefinition(userID, wordlistID int64, def *NextDefinition, hoursSinceReview, progressRatio float64, exampleAudioCount int) {
+	common.Logger.Info("pure_priority_selection",
+		"userID", userID,
+		"wordlistID", wordlistID,
+		"definitionID", def.Definition.ID,
+		"boxID", def.BoxID,
+		"hoursSinceReview", hoursSinceReview,
+		"progressRatio", progressRatio,
+		"wasOverdue", progressRatio >= 1.0,
+		"exampleAudioCount", exampleAudioCount)
+}
+
+func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, wordAudioURL string) bool {
 	switch qt {
 	case model.WordFromImage:
 		return def.ImageUrl != ""
@@ -541,7 +634,7 @@ func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, word *model.Wor
 		// Use centralized method to check if definition has examples
 		return def.Definition.HasExamples()
 	case model.WordFromAudio, model.MeaningFromAudio:
-		return word.AudioURL != ""
+		return wordAudioURL != ""
 	case model.WordFromMeaningAudio:
 		return def.Definition.MeaningAudioURL != ""
 	case model.WordFromExampleAudio:

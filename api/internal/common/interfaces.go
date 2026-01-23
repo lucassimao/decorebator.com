@@ -20,6 +20,6 @@ type QuizResult struct {
 }
 
 type SpacedRepetitionStrategy interface {
-	CreateQuiz(ctx context.Context, wordlistID, userID int64) (*model.Quiz, error)
+	CreateQuiz(ctx context.Context, wordlistID, userID int64, allowedTypes []model.QuizType) (*model.Quiz, error)
 	SaveQuizResult(ctx context.Context, result QuizResult, isPremium bool, tx *pgx.Tx) error
 }

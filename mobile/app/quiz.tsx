@@ -19,28 +19,50 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
 import type { PostHogEventProperties } from "@posthog/core";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUserSession } from "@/hooks/useUserSession";
 import { registerDevicePushToken } from "@/utils/pushNotifications";
+import type { QuizType } from "@/api/wordlists";
 
 const QuizScreen: React.FC = () => {
   const navigation = useNavigation();
   const { wordlistId, wordlistName } = useLocalSearchParams();
   const { t } = useTranslation();
   const posthog = usePostHog();
-  const { user } = useUserSession();
+  const { user, isPremium } = useUserSession();
   const { isOnline, isOfflineAvailable } = useOffline();
   const { invalidateAllAnalytics } = useInvalidateAnalytics();
   const { theme, responsive } = useTheme();
   const commonStyles = createCommonStyles(theme, responsive);
   const styles = createStyles(theme);
   const notificationPromptedRef = useRef(false);
+  const allQuizTypes = useMemo<QuizType[]>(
+    () => [
+      "GUESS_MEANING",
+      "WORD_FROM_MEANING",
+      "WORD_FROM_IMAGE",
+      "COMPLETE_SENTENCE",
+      "WRITE_WORD_FROM_DEFINITION",
+      "WORD_FROM_AUDIO",
+      "MEANING_FROM_AUDIO",
+      "WORD_FROM_MEANING_AUDIO",
+      "WORD_FROM_EXAMPLE_AUDIO",
+    ],
+    [],
+  );
 
   // App review prompt
   const {
@@ -66,8 +88,23 @@ const QuizScreen: React.FC = () => {
   const [retryCount, setRetryCount] = useState(0);
   const quizDisplayedAtRef = useRef(0);
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showQuizTypeModal, setShowQuizTypeModal] = useState(false);
+  const [selectedQuizTypes, setSelectedQuizTypes] =
+    useState<QuizType[]>(allQuizTypes);
+  const [draftQuizTypes, setDraftQuizTypes] =
+    useState<QuizType[]>(allQuizTypes);
 
   // Fetch quiz
+  const quizTypeSelectionKey = useMemo(() => {
+    if (!isPremium || selectedQuizTypes.length === allQuizTypes.length) {
+      return "all";
+    }
+    return selectedQuizTypes.slice().sort().join(",");
+  }, [allQuizTypes.length, isPremium, selectedQuizTypes]);
+  const quizTypeFilter =
+    isPremium && selectedQuizTypes.length !== allQuizTypes.length
+      ? selectedQuizTypes
+      : undefined;
   const {
     data: quiz,
     isLoading,
@@ -75,8 +112,8 @@ const QuizScreen: React.FC = () => {
     error,
     isFetching,
   } = useQuery({
-    queryKey: ["quiz", wordlistId, retryCount],
-    queryFn: () => offlineQuizApi.newQuiz(Number(wordlistId)),
+    queryKey: ["quiz", wordlistId, retryCount, quizTypeSelectionKey],
+    queryFn: () => offlineQuizApi.newQuiz(Number(wordlistId), quizTypeFilter),
     retry: (failureCount, error) => {
       // Don't retry timeout errors automatically - let user decide
       if (error?.message?.includes("timeout")) {
@@ -133,6 +170,11 @@ const QuizScreen: React.FC = () => {
       }
     }
   }, [quiz, retryCount]); // Trigger on quiz object change or retry, not just ID
+
+  useEffect(() => {
+    setSelectedQuizTypes(allQuizTypes);
+    setDraftQuizTypes(allQuizTypes);
+  }, [wordlistId, allQuizTypes]);
 
   // Handle loading timeout
   useEffect(() => {
@@ -275,6 +317,45 @@ const QuizScreen: React.FC = () => {
     refetch(); // Explicitly trigger refetch
   };
 
+  const openQuizTypeModal = () => {
+    setDraftQuizTypes(selectedQuizTypes);
+    setShowQuizTypeModal(true);
+  };
+
+  const toggleQuizType = (quizType: QuizType) => {
+    setDraftQuizTypes((prev) =>
+      prev.includes(quizType)
+        ? prev.filter((type) => type !== quizType)
+        : [...prev, quizType],
+    );
+  };
+
+  const handleSelectAllQuizTypes = () => {
+    setDraftQuizTypes(allQuizTypes);
+  };
+
+  const handleClearQuizTypes = () => {
+    setDraftQuizTypes([]);
+  };
+
+  const handleApplyQuizTypes = () => {
+    if (draftQuizTypes.length === 0) return;
+    setSelectedQuizTypes(draftQuizTypes);
+    setShowQuizTypeModal(false);
+    setRetryCount(0);
+    setIsLoadingNext(true);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setUserInput("");
+    setIsSubmitted(false);
+    setLoadingTimeout(false);
+  };
+
+  const translateQuizType = (quizType: QuizType) => {
+    const key = `analytics.quizTypes.${quizType.toLowerCase()}`;
+    return t(key, quizType.replace(/_/g, " ").toLowerCase());
+  };
+
   const handleGoBack = async () => {
     // Check if we should show review prompt before navigating
     const shouldShowReview = await checkAndPromptReview(
@@ -355,6 +436,11 @@ const QuizScreen: React.FC = () => {
           correctCount={correctCount}
           quizCount={quizCount}
           isOnline={isOnline}
+          showQuizTypeSelector={isPremium}
+          quizTypeCount={selectedQuizTypes.length}
+          quizTypeTotal={allQuizTypes.length}
+          isQuizTypeDisabled={!isOnline}
+          onQuizTypePress={openQuizTypeModal}
           onBackPress={() => navigation.goBack()}
           onReportPress={openReportModal}
         />
@@ -382,6 +468,11 @@ const QuizScreen: React.FC = () => {
         correctCount={correctCount}
         quizCount={quizCount}
         isOnline={isOnline}
+        showQuizTypeSelector={isPremium}
+        quizTypeCount={selectedQuizTypes.length}
+        quizTypeTotal={allQuizTypes.length}
+        isQuizTypeDisabled={!isOnline}
+        onQuizTypePress={openQuizTypeModal}
         onBackPress={() => navigation.goBack()}
         onReportPress={openReportModal}
       />
@@ -434,6 +525,97 @@ const QuizScreen: React.FC = () => {
           )}
         </View>
       </ScrollView>
+
+      <Modal
+        visible={showQuizTypeModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowQuizTypeModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>
+              {t("quiz.quizTypeTitle", "Quiz types")}
+            </Text>
+            <Text style={styles.modalSubtitle}>
+              {t(
+                "quiz.quizTypeSubtitle",
+                "Choose which quiz types to practice in this session.",
+              )}
+            </Text>
+
+            <View style={styles.modalQuickActions}>
+              <TouchableOpacity
+                style={styles.modalQuickAction}
+                onPress={handleSelectAllQuizTypes}
+              >
+                <Text style={styles.modalQuickActionText}>
+                  {t("quiz.quizTypeSelectAll", "Select all")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalQuickAction}
+                onPress={handleClearQuizTypes}
+              >
+                <Text style={styles.modalQuickActionText}>
+                  {t("quiz.quizTypeClear", "Clear")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.quizTypeList}>
+              {allQuizTypes.map((quizType) => {
+                const isSelected = draftQuizTypes.includes(quizType);
+                return (
+                  <TouchableOpacity
+                    key={quizType}
+                    style={styles.quizTypeRow}
+                    onPress={() => toggleQuizType(quizType)}
+                  >
+                    <MaterialIcons
+                      name={
+                        isSelected ? "check-box" : "check-box-outline-blank"
+                      }
+                      size={22}
+                      color={
+                        isSelected
+                          ? theme.colors.primary
+                          : theme.colors.text.secondary
+                      }
+                    />
+                    <Text style={styles.quizTypeLabel}>
+                      {translateQuizType(quizType)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowQuizTypeModal(false)}
+              >
+                <Text style={styles.modalCancelText}>
+                  {t("common.cancel", "Cancel")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.modalApplyButton,
+                  draftQuizTypes.length === 0 && styles.modalApplyDisabled,
+                ]}
+                onPress={handleApplyQuizTypes}
+                disabled={draftQuizTypes.length === 0}
+              >
+                <Text style={styles.modalApplyText}>
+                  {t("common.apply", "Apply")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <ErrorReportModal
         visible={showReportModal}
@@ -505,5 +687,93 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       color: theme.colors.text.secondary,
       textAlign: "center",
       lineHeight: 22,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.4)",
+      justifyContent: "flex-end",
+    },
+    modalCard: {
+      backgroundColor: theme.colors.background.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      maxHeight: "80%",
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: "700",
+      color: theme.colors.text.primary,
+    },
+    modalSubtitle: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginTop: 6,
+      marginBottom: 12,
+    },
+    modalQuickActions: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 12,
+    },
+    modalQuickAction: {
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 16,
+      backgroundColor: theme.colors.background.elevated,
+    },
+    modalQuickActionText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: theme.colors.text.primary,
+    },
+    quizTypeList: {
+      marginBottom: 16,
+    },
+    quizTypeRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 10,
+      gap: 10,
+    },
+    quizTypeLabel: {
+      fontSize: 15,
+      color: theme.colors.text.primary,
+      flex: 1,
+    },
+    modalActions: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: 12,
+      paddingBottom: 6,
+    },
+    modalCancelButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.colors.ui.border,
+      alignItems: "center",
+    },
+    modalCancelText: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: theme.colors.text.secondary,
+    },
+    modalApplyButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 20,
+      backgroundColor: theme.colors.primary,
+      alignItems: "center",
+    },
+    modalApplyDisabled: {
+      opacity: 0.5,
+    },
+    modalApplyText: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: theme.colors.text.inverse,
     },
   });
