@@ -90,7 +90,7 @@ export default function PrivacyPolicy() {
                 <ul class="list-disc pl-6 mb-4 space-y-2">
                   <li><strong>OpenAI</strong>: For generating vocabulary definitions, images, and audio</li>
                   <li><strong>Stripe</strong>: For secure payment processing (subscription management)</li>
-                  <li><strong>SendGrid</strong>: For transactional email delivery</li>
+                  <li><strong>Resend</strong>: For transactional email delivery</li>
                   <li><strong>Sentry</strong>: For error monitoring and crash reporting</li>
                   <li><strong>PostHog</strong>: For privacy-focused analytics</li>
                 </ul>
@@ -194,7 +194,7 @@ export default function PrivacyPolicy() {
               content={`
                 <p class="mb-4">Your information may be transferred to and processed in countries other than your own, including:</p>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>United States (OpenAI, Stripe, SendGrid)</li>
+                  <li>United States (OpenAI, Stripe, Resend)</li>
                   <li>European Union (data protection compliance)</li>
                   <li>Other regions where our service providers operate</li>
                 </ul>

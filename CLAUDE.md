@@ -115,7 +115,7 @@ decorebator-v2/
 - **OpenAI API** (google.golang.org/genai): Definitions, image generation, TTS, realtime chat
 - **Stripe** (v82.1.0): Payment processing
 - **RevenueCat**: In-app subscriptions (iOS/Android)
-- **SendGrid**: Transactional emails
+- **Resend**: Transactional emails
 - **Sentry**: Error tracking and logging
 
 ### Mobile (`mobile/`)
@@ -172,7 +172,7 @@ internal/
 ├── middleware/     # HTTP middleware (auth, logging, etc.)
 ├── common/         # Shared utilities (logger, database, redis, sentry)
 ├── openai/         # OpenAI API integrations
-├── mail/           # Email service (SendGrid)
+├── mail/           # Email service (Resend)
 ├── app/            # Application context
 └── testutils/      # Testing utilities
 ```
@@ -329,7 +329,7 @@ All background jobs are processed using **River**, a PostgreSQL-based job queue:
 - `OPENAI_API_KEY`: OpenAI API access
 - `STRIPE_*`: Stripe API keys and webhook secrets
 - `REVENUECAT_*`: RevenueCat API keys
-- `SENDGRID_API_KEY`: Email service
+- `RESEND_API_KEY`: Email service
 - `SENTRY_DSN`: Error tracking
 - `JWT_SECRET`: Token signing key
 

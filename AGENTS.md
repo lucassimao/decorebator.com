@@ -30,7 +30,7 @@
 - PRs should outline scope, affected modules, linked issues, and include UI screenshots or API contract notes when relevant; call out environment or schema changes.
 
 ## Configuration & Secrets
-- API expects `.env` values for Postgres, Redis, MinIO, OpenAI, SendGrid, and Stripe; bootstrap from `.env.example` before running `make` targets.
+- API expects `.env` values for Postgres, Redis, MinIO, OpenAI, Resend, and Stripe; bootstrap from `.env.example` before running `make` targets.
 - Mobile expects Expo public env vars from `mobile/.env.example` (API URL, RevenueCat keys, PostHog, Sentry, optional app domain).
 - Web uses `NEXT_PUBLIC_API_URL`, `STATIC_AUTHENTICATION`, and `SITE_URL` for public-quiz fetching/sitemaps.
 - Store secrets outside version control and use `docker-compose.override.yml` or Expo/EAS secrets for local overrides—never commit real keys.

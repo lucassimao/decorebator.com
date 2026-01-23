@@ -69,7 +69,7 @@ Decorebator ("we," "our," or "us") is committed to protecting your privacy. This
 
 - **OpenAI**: For generating vocabulary definitions, images, and audio
 - **Stripe**: For secure payment processing (subscription management)
-- **SendGrid**: For transactional email delivery
+- **Resend**: For transactional email delivery
 - **Sentry**: For error monitoring and crash reporting
 - **PostHog**: For privacy-focused analytics
 
@@ -149,7 +149,7 @@ Decorebator is suitable for all ages, including children under 13. For users und
 
 Your information may be transferred to and processed in countries other than your own, including:
 
-- United States (OpenAI, Stripe, SendGrid)
+- United States (OpenAI, Stripe, Resend)
 - European Union (data protection compliance)
 - Other regions where our service providers operate
 

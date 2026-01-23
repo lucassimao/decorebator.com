@@ -197,7 +197,7 @@ Users see their account as premium in these scenarios:
 - Users receive platform notifications about payment issues
 
 #### Stripe
-- Failed payment webhooks trigger **email notifications via SendGrid**
+- Failed payment webhooks trigger **email notifications via Resend**
 - Customer portal allows users to update payment methods
 - **3-day grace period implemented in backend**
 - Multiple retry attempts over 23 days before cancellation
@@ -252,13 +252,13 @@ func (s *Subscription) IsActive() bool {
 - Automatic renewal handled by Stripe
 - `customer.subscription.updated` webhook processes renewal
 - Invoice generated and sent automatically
-- SendGrid sends renewal confirmation emails
+- Resend sends renewal confirmation emails
 
 #### Near Renewal Notifications
 
 The system includes **subscription reminder emails** via background workers:
 - Reminder emails sent 3-7 days before renewal date
-- Uses SendGrid for delivery via `subscription_reminder` worker queue
+- Uses Resend for delivery via `subscription_reminder` worker queue
 - Includes renewal amount and next billing date
 - Configurable timing in worker configuration
 
@@ -292,7 +292,7 @@ For users who reinstall the app or switch devices:
 - Users cancel through customer portal or in-app cancellation
 - Immediate webhook processing updates status
 - Access continues until current period end
-- Cancellation confirmation email sent via SendGrid
+- Cancellation confirmation email sent via Resend
 
 #### Failed Payment Cancellation
 

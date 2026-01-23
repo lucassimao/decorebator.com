@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -14,8 +13,7 @@ import (
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/sendgrid/sendgrid-go"
-	"github.com/sendgrid/sendgrid-go/helpers/mail"
+	"github.com/resend/resend-go/v3"
 
 	_ "embed"
 )
@@ -46,8 +44,7 @@ func (m *MailService) shouldSendEmails() bool {
 	return true
 }
 
-// AddContactToList adds a user to the SendGrid contact list
-// https://www.twilio.com/docs/sendgrid/api-reference/contacts/add-or-update-a-contact
+// AddContactToList adds a user to the Resend contacts list
 func (m *MailService) AddContactToList(user *model.User) {
 	logger := common.Logger.With("func", "AddContactToList", "user", user.ID)
 
@@ -61,32 +58,31 @@ func (m *MailService) AddContactToList(user *model.User) {
 		return
 	}
 
-	request := sendgrid.GetRequest(os.Getenv("SENDGRID_API_KEY"), "/v3/marketing/contacts", "")
-	request.Method = "PUT"
-	request.Body = []byte(fmt.Sprintf(`
-	{
-		"contacts":[
-			{
-				"email": "%s",
-				"external_id": "%v",
-				"first_name": "%s",
-				"last_name": "%s"
-			}
-		]
+	audienceID := os.Getenv("RESEND_AUDIENCE_ID")
+	client, err := m.newResendClient()
+	if err != nil {
+		logger.Error("failed to create Resend client", "error", err)
+		return
 	}
-	`, user.Email, user.ID, user.FirstName, user.LastName))
 
-	response, err := sendgrid.API(request)
-	// Status code 202 indicates that the contacts are queued for processing
-	if err != nil || response.StatusCode != 202 {
-		attrs := []any{}
-		if err != nil {
-			attrs = append(attrs, slog.String("error", err.Error()))
-		} else {
-			attrs = append(attrs, slog.Int("StatusCode", response.StatusCode))
-			attrs = append(attrs, slog.String("Body", response.Body))
-		}
-		logger.Error("failed to add user to sendgrid's contact list", attrs...)
+	params := &resend.CreateContactRequest{
+		Email:        user.Email,
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		Unsubscribed: false,
+	}
+	if audienceID != "" {
+		params.AudienceId = audienceID
+	}
+
+	_, err = client.Contacts.CreateWithContext(context.Background(), params)
+	if err != nil {
+		logger.Error(
+			"failed to add user to Resend contacts",
+			"error", err,
+			"email", user.Email,
+			"audienceId", audienceID,
+		)
 	}
 }
 
@@ -127,24 +123,25 @@ func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string) 
 		return err
 	}
 
-	from := mail.NewEmail("Decorebator", "support@decorebator.com")
 	subject := "Reset Your Password for Decorebator"
 	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
-	to := mail.NewEmail(fullName, user.Email)
-
 	plainTextContent := sb.String()
 	htmlContent := sb.String()
-	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-	response, err := client.Send(message)
 
+	client, err := m.newResendClient()
 	if err != nil {
 		return err
 	}
 
-	// 202 status meaning Accepted
-	if response.StatusCode != 202 {
-		return fmt.Errorf("failed to send email: %v", response.Body)
+	_, err = client.Emails.Send(&resend.SendEmailRequest{
+		From:    "Decorebator <support@decorebator.com>",
+		To:      []string{fmt.Sprintf("%s <%s>", fullName, user.Email)},
+		Subject: subject,
+		Text:    plainTextContent,
+		Html:    htmlContent,
+	})
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -164,6 +161,27 @@ var subscriptionCancelledTemplate string
 
 //go:embed payment_failed.html
 var paymentFailedTemplate string
+
+//go:embed welcome_en.html
+var welcomeEmailTemplateEN string
+
+//go:embed welcome_es.html
+var welcomeEmailTemplateES string
+
+//go:embed welcome_fr.html
+var welcomeEmailTemplateFR string
+
+//go:embed welcome_de.html
+var welcomeEmailTemplateDE string
+
+//go:embed welcome_it.html
+var welcomeEmailTemplateIT string
+
+//go:embed welcome_pt.html
+var welcomeEmailTemplatePT string
+
+//go:embed welcome_ja.html
+var welcomeEmailTemplateJA string
 
 type SubscriptionEmailData struct {
 	FirstName        string
@@ -193,7 +211,6 @@ func (m *MailService) SendSubscriptionActivatedEmail(user *model.User, data Subs
 		return err
 	}
 
-	fmt.Println(data)
 	// Format template data
 	templateData := map[string]string{
 		"FirstName":       user.FirstName,
@@ -209,25 +226,27 @@ func (m *MailService) SendSubscriptionActivatedEmail(user *model.User, data Subs
 		return err
 	}
 
-	from := mail.NewEmail("Decorebator", "support@decorebator.com")
 	subject := "Welcome to Decorebator Premium! 🎉"
 	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
-	to := mail.NewEmail(fullName, user.Email)
-
 	plainTextContent := "Your Decorebator subscription is now active!"
 	htmlContent := sb.String()
-	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-	response, err := client.Send(message)
 
+	client, err := m.newResendClient()
 	if err != nil {
-		logger.Error("failed to send email", "error", err)
+		logger.Error("failed to create Resend client", "error", err)
 		return err
 	}
 
-	if response.StatusCode != 202 {
-		logger.Error("failed to send email", "statusCode", response.StatusCode, "body", response.Body)
-		return fmt.Errorf("failed to send email: %v", response.Body)
+	_, err = client.Emails.Send(&resend.SendEmailRequest{
+		From:    "Decorebator <support@decorebator.com>",
+		To:      []string{fmt.Sprintf("%s <%s>", fullName, user.Email)},
+		Subject: subject,
+		Text:    plainTextContent,
+		Html:    htmlContent,
+	})
+	if err != nil {
+		logger.Error("failed to send email", "error", err)
+		return err
 	}
 
 	logger.Info("subscription activated email sent successfully")
@@ -264,25 +283,27 @@ func (m *MailService) SendSubscriptionRenewedEmail(user *model.User, data Subscr
 		return err
 	}
 
-	from := mail.NewEmail("Decorebator", "support@decorebator.com")
 	subject := "Subscription Renewed Successfully ✅"
 	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
-	to := mail.NewEmail(fullName, user.Email)
-
 	plainTextContent := "Your Decorebator subscription has been renewed."
 	htmlContent := sb.String()
-	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-	response, err := client.Send(message)
 
+	client, err := m.newResendClient()
 	if err != nil {
-		logger.Error("failed to send email", "error", err)
+		logger.Error("failed to create Resend client", "error", err)
 		return err
 	}
 
-	if response.StatusCode != 202 {
-		logger.Error("failed to send email", "statusCode", response.StatusCode, "body", response.Body)
-		return fmt.Errorf("failed to send email: %v", response.Body)
+	_, err = client.Emails.Send(&resend.SendEmailRequest{
+		From:    "Decorebator <support@decorebator.com>",
+		To:      []string{fmt.Sprintf("%s <%s>", fullName, user.Email)},
+		Subject: subject,
+		Text:    plainTextContent,
+		Html:    htmlContent,
+	})
+	if err != nil {
+		logger.Error("failed to send email", "error", err)
+		return err
 	}
 
 	logger.Info("subscription renewed email sent successfully")
@@ -319,25 +340,27 @@ func (m *MailService) SendRenewalReminderEmail(user *model.User, data Subscripti
 		return err
 	}
 
-	from := mail.NewEmail("Decorebator", "support@decorebator.com")
 	subject := "Subscription Renewal Reminder ⏰"
 	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
-	to := mail.NewEmail(fullName, user.Email)
-
 	plainTextContent := fmt.Sprintf("Your Decorebator subscription will renew on %s", templateData["RenewalDate"])
 	htmlContent := sb.String()
-	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-	response, err := client.Send(message)
 
+	client, err := m.newResendClient()
 	if err != nil {
-		logger.Error("failed to send email", "error", err)
+		logger.Error("failed to create Resend client", "error", err)
 		return err
 	}
 
-	if response.StatusCode != 202 {
-		logger.Error("failed to send email", "statusCode", response.StatusCode, "body", response.Body)
-		return fmt.Errorf("failed to send email: %v", response.Body)
+	_, err = client.Emails.Send(&resend.SendEmailRequest{
+		From:    "Decorebator <support@decorebator.com>",
+		To:      []string{fmt.Sprintf("%s <%s>", fullName, user.Email)},
+		Subject: subject,
+		Text:    plainTextContent,
+		Html:    htmlContent,
+	})
+	if err != nil {
+		logger.Error("failed to send email", "error", err)
+		return err
 	}
 
 	logger.Info("subscription renewal reminder email sent successfully")
@@ -373,25 +396,27 @@ func (m *MailService) SendSubscriptionCancelledEmail(user *model.User, data Subs
 		return err
 	}
 
-	from := mail.NewEmail("Decorebator", "support@decorebator.com")
 	subject := "Subscription Canceled"
 	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
-	to := mail.NewEmail(fullName, user.Email)
-
 	plainTextContent := fmt.Sprintf("Your subscription has been cancelled. You'll have access until %s", templateData["AccessUntil"])
 	htmlContent := sb.String()
-	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-	response, err := client.Send(message)
 
+	client, err := m.newResendClient()
 	if err != nil {
-		logger.Error("failed to send email", "error", err)
+		logger.Error("failed to create Resend client", "error", err)
 		return err
 	}
 
-	if response.StatusCode != 202 {
-		logger.Error("failed to send email", "statusCode", response.StatusCode, "body", response.Body)
-		return fmt.Errorf("failed to send email: %v", response.Body)
+	_, err = client.Emails.Send(&resend.SendEmailRequest{
+		From:    "Decorebator <support@decorebator.com>",
+		To:      []string{fmt.Sprintf("%s <%s>", fullName, user.Email)},
+		Subject: subject,
+		Text:    plainTextContent,
+		Html:    htmlContent,
+	})
+	if err != nil {
+		logger.Error("failed to send email", "error", err)
+		return err
 	}
 
 	logger.Info("subscription cancelled email sent successfully")
@@ -429,33 +454,32 @@ func (m *MailService) SendPaymentFailedEmail(user *model.User, data Subscription
 		return err
 	}
 
-	from := mail.NewEmail("Decorebator", "support@decorebator.com")
 	subject := "Payment Failed - Action Required ⚠️"
 	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
-	to := mail.NewEmail(fullName, user.Email)
-
 	plainTextContent := "Your payment failed. Please update your payment method to avoid service interruption."
 	htmlContent := sb.String()
-	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-	response, err := client.Send(message)
 
+	client, err := m.newResendClient()
+	if err != nil {
+		logger.Error("failed to create Resend client", "error", err)
+		return err
+	}
+
+	_, err = client.Emails.Send(&resend.SendEmailRequest{
+		From:    "Decorebator <support@decorebator.com>",
+		To:      []string{fmt.Sprintf("%s <%s>", fullName, user.Email)},
+		Subject: subject,
+		Text:    plainTextContent,
+		Html:    htmlContent,
+	})
 	if err != nil {
 		logger.Error("failed to send email", "error", err)
 		return err
 	}
 
-	if response.StatusCode != 202 {
-		logger.Error("failed to send email", "statusCode", response.StatusCode, "body", response.Body)
-		return fmt.Errorf("failed to send email: %v", response.Body)
-	}
-
 	logger.Info("payment failed email sent successfully")
 	return nil
 }
-
-//go:embed welcome.html
-var welcomeEmailTemplate string
 
 // SendWelcomeEmail sends a welcome email to new users
 func (m *MailService) SendWelcomeEmail(ctx context.Context, email string) error {
@@ -479,7 +503,10 @@ func (m *MailService) SendWelcomeEmail(ctx context.Context, email string) error 
 
 	user := result[0]
 
-	tmpl, err := template.New("email").Parse(welcomeEmailTemplate)
+	templateSource := resolveWelcomeTemplate(user.PreferredLanguage)
+	subject := resolveWelcomeSubject(user.PreferredLanguage)
+
+	tmpl, err := template.New("email").Parse(templateSource)
 	if err != nil {
 		return err
 	}
@@ -493,25 +520,91 @@ func (m *MailService) SendWelcomeEmail(ctx context.Context, email string) error 
 		return err
 	}
 
-	from := mail.NewEmail("Decorebator", "support@decorebator.com")
-	subject := "Welcome to Decorebator!"
 	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
-	to := mail.NewEmail(fullName, user.Email)
-
 	plainTextContent := sb.String()
 	htmlContent := sb.String()
-	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-	response, err := client.Send(message)
 
+	client, err := m.newResendClient()
 	if err != nil {
 		return err
 	}
 
-	// 202 status meaning Accepted
-	if response.StatusCode != 202 {
-		return fmt.Errorf("failed to send email: %v", response.Body)
+	_, err = client.Emails.Send(&resend.SendEmailRequest{
+		From:    "Decorebator <support@decorebator.com>",
+		To:      []string{fmt.Sprintf("%s <%s>", fullName, user.Email)},
+		Subject: subject,
+		Text:    plainTextContent,
+		Html:    htmlContent,
+	})
+	if err != nil {
+		return err
 	}
 
 	return nil
+}
+
+func (m *MailService) newResendClient() (*resend.Client, error) {
+	apiKey := os.Getenv("RESEND_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("RESEND_API_KEY is required")
+	}
+	return resend.NewClient(apiKey), nil
+}
+
+func normalizeLanguageTag(lang *string) string {
+	if lang == nil {
+		return "en"
+	}
+	normalized := strings.ToLower(strings.TrimSpace(*lang))
+	if normalized == "" {
+		return "en"
+	}
+	normalized = strings.ReplaceAll(normalized, "_", "-")
+	return normalized
+}
+
+func resolveWelcomeTemplate(lang *string) string {
+	templates := map[string]string{
+		"en": welcomeEmailTemplateEN,
+		"es": welcomeEmailTemplateES,
+		"fr": welcomeEmailTemplateFR,
+		"de": welcomeEmailTemplateDE,
+		"it": welcomeEmailTemplateIT,
+		"pt": welcomeEmailTemplatePT,
+		"ja": welcomeEmailTemplateJA,
+	}
+
+	tag := normalizeLanguageTag(lang)
+	if tmpl, ok := templates[tag]; ok {
+		return tmpl
+	}
+	if idx := strings.Index(tag, "-"); idx > 0 {
+		if tmpl, ok := templates[tag[:idx]]; ok {
+			return tmpl
+		}
+	}
+	return templates["en"]
+}
+
+func resolveWelcomeSubject(lang *string) string {
+	subjects := map[string]string{
+		"en": "Welcome to Decorebator!",
+		"es": "¡Bienvenido a Decorebator!",
+		"fr": "Bienvenue sur Decorebator !",
+		"de": "Willkommen bei Decorebator!",
+		"it": "Benvenuto su Decorebator!",
+		"pt": "Bem-vindo ao Decorebator!",
+		"ja": "Decorebatorへようこそ！",
+	}
+
+	tag := normalizeLanguageTag(lang)
+	if subject, ok := subjects[tag]; ok {
+		return subject
+	}
+	if idx := strings.Index(tag, "-"); idx > 0 {
+		if subject, ok := subjects[tag[:idx]]; ok {
+			return subject
+		}
+	}
+	return subjects["en"]
 }
