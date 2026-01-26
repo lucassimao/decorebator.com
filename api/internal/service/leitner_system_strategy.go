@@ -128,15 +128,15 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 				def.part_of_speech, def.language, def.is_verb_type, def.meaning, COALESCE(def.meaning_audio_url, '') as meaning_audio_url, def.examples, 
 				def.inflections, lst.box_id, def.sounds, def.phonetic_notations, 
 				COALESCE(di.url, '') as image_url, COALESCE(di.description, '') as image_description, 
-				wd.word_id AS word_id,
+				w.id AS word_id,
 				COALESCE(w.audio_url, '') as word_audio_url,
 				lst.updated_at,
 				lst.next_review_at,
 				EXTRACT(EPOCH FROM (NOW() - lst.updated_at))/3600 as hours_since_review
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
-			JOIN word_definitions wd ON def.id = wd.definition_id
-			JOIN words w ON wd.word_id = w.id
+			JOIN words w ON w.id = lst.word_id
+			JOIN word_definitions wd ON wd.definition_id = def.id AND wd.word_id = w.id
 			LEFT JOIN definition_images di ON di.definition_id = def.id AND di.is_visible=TRUE
 			WHERE 
 				lst.user_id = $1
