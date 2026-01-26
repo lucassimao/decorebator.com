@@ -15,7 +15,7 @@ func TestQuizResponseUsesTrackingWordIDForSharedDefinitions(t *testing.T) {
 	server := setup.NewTestServer(t)
 	ctx := context.Background()
 
-	token := server.WithTestUser(t)
+	token := server.WithPremiumUser(t)
 
 	// Resolve user ID for the token we just created.
 	var userID int64
