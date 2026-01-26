@@ -121,7 +121,7 @@ type ExampleUsage struct {
 // - QuizUnavailableError if no definitions are due
 // - Error if database operations fail
 func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, wordlistID int64, allowedTypes []model.QuizType) (*NextDefinition, error) {
-	query := `
+	queryTemplate := `
 		WITH due_definitions AS (
 			SELECT 
 				def.id, lst.id AS lst_id, def.token, 
@@ -144,7 +144,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 				AND w.learned = FALSE
 				AND def.meaning IS NOT NULL
 				AND lst.next_review_at IS NOT NULL
-				AND lst.next_review_at <= NOW()
+				%s
 				-- Exclude temporarily skipped definitions
 				AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())
 		)
@@ -187,12 +187,6 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 		candidateLimit = quizTypeFilteredCandidateLimit
 	}
 
-	rows, err := s.db.Query(ctx, query, userID, wordlistID, candidateLimit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
 	type candidateMeta struct {
 		definition        *NextDefinition
 		hoursSinceReview  float64
@@ -200,47 +194,83 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 		exampleAudioCount int
 	}
 
-	var candidates []candidateMeta
+	scanCandidates := func(rows pgx.Rows) ([]candidateMeta, error) {
+		var candidates []candidateMeta
+		for rows.Next() {
+			definition := model.Definition{}
+			result := NextDefinition{Definition: &definition}
+			var hoursSinceReview float64
+			var nextReviewAt time.Time
+			var exampleAudioFilesJSON []byte
 
-	for rows.Next() {
-		definition := model.Definition{}
-		result := NextDefinition{Definition: &definition}
-		var hoursSinceReview float64
-		var nextReviewAt time.Time
-		var exampleAudioFilesJSON []byte
+			err := rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
+				&definition.Meaning, &definition.MeaningAudioURL, &definition.Examples,
+				&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
+				&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription, &result.WordAudioURL,
+				&hoursSinceReview, &nextReviewAt, &exampleAudioFilesJSON)
 
-		err = rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
-			&definition.Meaning, &definition.MeaningAudioURL, &definition.Examples,
-			&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
-			&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription, &result.WordAudioURL,
-			&hoursSinceReview, &nextReviewAt, &exampleAudioFilesJSON)
+			if err != nil {
+				return nil, err
+			}
 
-		if err != nil {
+			// Parse the JSON array of example audio files
+			if len(exampleAudioFilesJSON) > 0 {
+				err = json.Unmarshal(exampleAudioFilesJSON, &definition.ExampleAudioFiles)
+				if err != nil {
+					// Log the error but don't fail the quiz generation
+					common.Logger.Error("failed to parse example audio files JSON", "definitionID", definition.ID, "error", err)
+					definition.ExampleAudioFiles = []model.DefinitionExampleAudio{}
+				}
+			} else {
+				definition.ExampleAudioFiles = []model.DefinitionExampleAudio{}
+			}
+
+			candidates = append(candidates, candidateMeta{
+				definition:        &result,
+				hoursSinceReview:  hoursSinceReview,
+				nextReviewAt:      nextReviewAt,
+				exampleAudioCount: len(definition.ExampleAudioFiles),
+			})
+		}
+
+		if err := rows.Err(); err != nil {
 			return nil, err
 		}
 
-		// Parse the JSON array of example audio files
-		if len(exampleAudioFilesJSON) > 0 {
-			err = json.Unmarshal(exampleAudioFilesJSON, &definition.ExampleAudioFiles)
-			if err != nil {
-				// Log the error but don't fail the quiz generation
-				common.Logger.Error("failed to parse example audio files JSON", "definitionID", definition.ID, "error", err)
-				definition.ExampleAudioFiles = []model.DefinitionExampleAudio{}
-			}
-		} else {
-			definition.ExampleAudioFiles = []model.DefinitionExampleAudio{}
-		}
-
-		candidates = append(candidates, candidateMeta{
-			definition:        &result,
-			hoursSinceReview:  hoursSinceReview,
-			nextReviewAt:      nextReviewAt,
-			exampleAudioCount: len(definition.ExampleAudioFiles),
-		})
+		return candidates, nil
 	}
 
-	if err := rows.Err(); err != nil {
+	query := fmt.Sprintf(queryTemplate, "AND lst.next_review_at <= NOW()")
+	rows, err := s.db.Query(ctx, query, userID, wordlistID, candidateLimit)
+	if err != nil {
 		return nil, err
+	}
+	defer rows.Close()
+	candidates, err := scanCandidates(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	practiceAhead := false
+	if len(candidates) == 0 {
+		futureQuery := fmt.Sprintf(queryTemplate, "")
+		futureRows, futureErr := s.db.Query(ctx, futureQuery, userID, wordlistID, candidateLimit)
+		if futureErr != nil {
+			return nil, futureErr
+		}
+		defer futureRows.Close()
+
+		candidates, err = scanCandidates(futureRows)
+		if err != nil {
+			return nil, err
+		}
+		if len(candidates) > 0 {
+			practiceAhead = true
+			common.Logger.Info("no_due_items_practice_ahead",
+				"userID", userID,
+				"wordlistID", wordlistID,
+				"nextReviewAt", candidates[0].nextReviewAt)
+		}
 	}
 
 	if len(candidates) == 0 {
@@ -273,6 +303,19 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 		return nil, common.QuizUnavailableError{
 			Reason:  common.QuizUnavailableNoDueItems,
 			Message: "no due items available",
+		}
+	}
+
+	if practiceAhead {
+		// Practice-ahead mode: shuffle the earliest upcoming items so we don't
+		// repeatedly quiz the exact same definition when nothing is due.
+		poolSize := 10
+		if len(candidates) < poolSize {
+			poolSize = len(candidates)
+		}
+		for i := poolSize - 1; i > 0; i-- {
+			j := cryptoRandInt(i + 1)
+			candidates[i], candidates[j] = candidates[j], candidates[i]
 		}
 	}
 
