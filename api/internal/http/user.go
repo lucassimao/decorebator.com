@@ -150,14 +150,11 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	c.Header("authorization", jwtToken)
 	writeAuthenticationCookie(c, jwtToken)
 	c.Status(http.StatusCreated)
-	go h.mailService.AddContactToList(user)
 	ctx := c.Request.Context()
 	email := input.Email
-	go func() {
-		if err := h.mailService.SendWelcomeEmail(ctx, email); err != nil {
-			common.Logger.ErrorContext(c.Request.Context(), "failed to send welcome email", "email", email, "error", err)
-		}
-	}()
+	if err := h.mailService.SendWelcomeEmail(ctx, email); err != nil {
+		common.Logger.ErrorContext(c.Request.Context(), "failed to send welcome email", "email", email, "error", err)
+	}
 }
 
 func (h *UserRoutes) Login(c *gin.Context) {
@@ -246,7 +243,7 @@ func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
 
 	err := h.mailService.SendResetPasswordEmail(c.Request.Context(), input.Email)
 	if err != nil {
-		common.Logger.ErrorContext(c.Request.Context(), "failed to send reset password email", "error", err)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to send reset password email", "email", input.Email, "error", err)
 	}
 	c.Status(http.StatusOK)
 }

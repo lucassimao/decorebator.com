@@ -44,72 +44,35 @@ func (m *MailService) shouldSendEmails() bool {
 	return true
 }
 
-// AddContactToList adds a user to the Resend contacts list
-func (m *MailService) AddContactToList(user *model.User) {
-	logger := common.Logger.With("func", "AddContactToList", "user", user.ID)
-
-	if !m.shouldSendEmails() {
-		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping")
-		return
-	}
-
-	if os.Getenv("ENV") != "production" {
-		logger.Debug("non-production environment. skipping")
-		return
-	}
-
-	audienceID := os.Getenv("RESEND_AUDIENCE_ID")
-	client, err := m.newResendClient()
-	if err != nil {
-		logger.Error("failed to create Resend client", "error", err)
-		return
-	}
-
-	params := &resend.CreateContactRequest{
-		Email:        user.Email,
-		FirstName:    user.FirstName,
-		LastName:     user.LastName,
-		Unsubscribed: false,
-	}
-	if audienceID != "" {
-		params.AudienceId = audienceID
-	}
-
-	_, err = client.Contacts.CreateWithContext(context.Background(), params)
-	if err != nil {
-		logger.Error(
-			"failed to add user to Resend contacts",
-			"error", err,
-			"email", user.Email,
-			"audienceId", audienceID,
-		)
-	}
-}
-
 //go:embed reset_password.html
 var resetPasswordEmailTemplate string
 
 // SendResetPasswordEmail sends a password reset email to the specified address
 func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string) error {
+	logger := common.Logger.With("func", "SendResetPasswordEmail", "email", email)
+
 	if !m.shouldSendEmails() {
-		common.Logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping reset password email", "email", email)
+		logger.Warn("emails disabled via DISABLE_EMAILS flag. skipping reset password email")
 		return nil
 	}
 
 	result, err := m.userRepo.Find(ctx, repository.FindUserArgs{Email: &email})
 
 	if err != nil || len(result) != 1 {
+		logger.Warn("user not found for reset password email", "error", err, "matchCount", len(result))
 		return fmt.Errorf("no user found")
 	}
 
 	user := result[0]
 	encryptedPayload, err := createResetPasswordToken(user.ID)
 	if err != nil {
+		logger.Error("failed to create reset password token", "error", err)
 		return err
 	}
 
 	tmpl, err := template.New("email").Parse(resetPasswordEmailTemplate)
 	if err != nil {
+		logger.Error("failed to parse reset password template", "error", err)
 		return err
 	}
 
@@ -120,6 +83,7 @@ func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string) 
 	var sb strings.Builder
 	err = tmpl.Execute(&sb, data)
 	if err != nil {
+		logger.Error("failed to execute reset password template", "error", err)
 		return err
 	}
 
@@ -130,6 +94,7 @@ func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string) 
 
 	client, err := m.newResendClient()
 	if err != nil {
+		logger.Error("failed to create Resend client", "error", err)
 		return err
 	}
 
@@ -141,9 +106,11 @@ func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string) 
 		Html:    htmlContent,
 	})
 	if err != nil {
+		logger.Error("failed to send reset password email", "error", err)
 		return err
 	}
 
+	logger.Info("reset password email sent successfully")
 	return nil
 }
 
@@ -486,18 +453,19 @@ func (m *MailService) SendWelcomeEmail(ctx context.Context, email string) error 
 	logger := common.Logger.With("func", "SendWelcomeEmail", "email", email)
 
 	if !m.shouldSendEmails() {
-		logger.Debug("emails disabled via DISABLE_EMAILS flag. skipping welcome email")
+		logger.Warn("emails disabled via DISABLE_EMAILS flag. skipping welcome email")
 		return nil
 	}
 
 	if os.Getenv("ENV") != "production" {
-		logger.Debug("non-production environment. skipping")
+		logger.Info("non-production environment. skipping", "env", os.Getenv("ENV"))
 		return nil
 	}
 
 	result, err := m.userRepo.Find(ctx, repository.FindUserArgs{Email: &email})
 
 	if err != nil || len(result) != 1 {
+		logger.Warn("user not found for welcome email", "error", err, "matchCount", len(result))
 		return fmt.Errorf("no user found")
 	}
 
@@ -508,6 +476,7 @@ func (m *MailService) SendWelcomeEmail(ctx context.Context, email string) error 
 
 	tmpl, err := template.New("email").Parse(templateSource)
 	if err != nil {
+		logger.Error("failed to parse welcome email template", "error", err)
 		return err
 	}
 
@@ -517,6 +486,7 @@ func (m *MailService) SendWelcomeEmail(ctx context.Context, email string) error 
 	var sb strings.Builder
 	err = tmpl.Execute(&sb, data)
 	if err != nil {
+		logger.Error("failed to execute welcome email template", "error", err)
 		return err
 	}
 
@@ -526,6 +496,7 @@ func (m *MailService) SendWelcomeEmail(ctx context.Context, email string) error 
 
 	client, err := m.newResendClient()
 	if err != nil {
+		logger.Error("failed to create Resend client", "error", err)
 		return err
 	}
 
@@ -537,9 +508,11 @@ func (m *MailService) SendWelcomeEmail(ctx context.Context, email string) error 
 		Html:    htmlContent,
 	})
 	if err != nil {
+		logger.Error("failed to send welcome email", "error", err)
 		return err
 	}
 
+	logger.Info("welcome email sent successfully")
 	return nil
 }
 
