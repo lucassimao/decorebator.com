@@ -49,7 +49,7 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		VerbTenses:          []string{"present", "past", "past participle"},
 		GrammarInstructions: "For English verbs, provide present, past, and past participle forms. Include phrasal verbs when applicable.",
 		SpecialInstructions: "Pay attention to irregular verb forms and common phrasal verb combinations.",
-		ExampleInstructions: "Wrap the target word in square brackets [word] in all example sentences.",
+		ExampleInstructions: "Wrap the target word/phrase in square brackets in all example sentences. For phrasal verbs, wrap the ENTIRE phrase including particles (e.g., '[pry loose]' or '[pick up]', NOT '[pry] loose' or '[pick] up').",
 		PronunciationInstructions: map[string]string{
 			"ipa": "Provide accurate IPA (International Phonetic Alphabet) transcription using standard symbols like /ˈhɛloʊ/ for 'hello'. Use primary stress markers (ˈ) and secondary stress markers (ˌ) when needed.",
 		},
@@ -258,7 +258,7 @@ func buildLanguageSpecificPrompt(token string, languageCode string, pronunciatio
 			" • \"inflections\" must be an array. If partOfSpeech is \"verb\" or \"phrasal verb\", you must include one item for each valid verb tense (%s). Otherwise, \"inflections\" must be an empty array. "+
 			" • Each inflection object must have exactly these required keys: \"inflection\" (string), \"tense\" (one of: %s), and \"examples\" (an array of exactly 7 strings). "+
 			" • CRITICAL FOR INFLECTIONS: Each of the 7 example strings must be UNIQUE per inflection and use the correct verb conjugation for that specific tense. Never reuse the same sentence across different inflections. "+
-			" • Each example must contain the properly conjugated verb form wrapped in square brackets. For present tense use present forms, for past tense use past forms, etc. "+
+			" • Each example must contain the properly conjugated verb form wrapped in square brackets. For phrasal verbs, wrap the ENTIRE phrase (e.g., '[pried loose]' NOT '[pried] loose'). For present tense use present forms, for past tense use past forms, etc. "+
 			" • You may include multiple \"results\" items if the word can function in multiple parts of speech OR has multiple meanings for the same part of speech. "+
 			" • If the token is not found (or the user provided an invalid word), respond with: { \"results\": [], \"pronunciation\": \"\" } "+
 			" • Under no circumstances should you output any text other than valid JSON that matches the schema exactly. "+
