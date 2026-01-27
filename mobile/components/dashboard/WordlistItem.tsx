@@ -159,25 +159,28 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
     return (status?.summary?.completed ?? 0) >= MIN_READY_WORDS;
   }, [item.id, MIN_READY_WORDS]);
 
-  const schedulePoll = React.useCallback(() => {
-    pollTimeoutRef.current = setTimeout(async () => {
-      try {
-        const ready = await checkReadyOnce();
-        if (ready && pendingAction) {
+  const schedulePoll = React.useCallback(
+    (action: "quiz" | "flashcards") => {
+      pollTimeoutRef.current = setTimeout(async () => {
+        try {
+          const ready = await checkReadyOnce();
+          if (ready) {
+            stopPolling();
+            navigateToAction(action);
+            return;
+          }
+          schedulePoll(action);
+        } catch (error) {
+          console.error("Error checking wordlist processing status:", error);
+          if (isMountedRef.current) {
+            Alert.alert(t("common.error"), t("common.tryAgain"));
+          }
           stopPolling();
-          navigateToAction(pendingAction);
-          return;
         }
-        schedulePoll();
-      } catch (error) {
-        console.error("Error checking wordlist processing status:", error);
-        if (isMountedRef.current) {
-          Alert.alert(t("common.error"), t("common.tryAgain"));
-        }
-        stopPolling();
-      }
-    }, POLL_INTERVAL_MS);
-  }, [checkReadyOnce, navigateToAction, pendingAction, stopPolling, t]);
+      }, POLL_INTERVAL_MS);
+    },
+    [checkReadyOnce, navigateToAction, stopPolling, t],
+  );
 
   const handlePracticeStart = React.useCallback(
     async (action: "quiz" | "flashcards") => {
@@ -206,7 +209,7 @@ const WordlistItem: React.FC<WordlistItemProps> = ({
         if (isMountedRef.current) {
           setIsPolling(true);
         }
-        schedulePoll();
+        schedulePoll(action);
       } catch (error) {
         console.error("Error checking wordlist processing status:", error);
         if (isMountedRef.current) {
