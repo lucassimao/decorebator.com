@@ -904,7 +904,7 @@
       "write_word_from_definition": "単語を書く",
       "word_from_audio": "音声から単語",
       "meaning_from_audio": "音声から意味",
-      "word_from_meaning_audio": "意味→単語",
+      "word_from_meaning_audio": "定義音声から単語",
       "word_from_example_audio": "例文音声から単語"
     }
   },

@@ -923,7 +923,7 @@
       "write_word_from_definition": "Write Word",
       "word_from_audio": "Word from Audio",
       "meaning_from_audio": "Meaning from Audio",
-      "word_from_meaning_audio": "Word from Meaning",
+      "word_from_meaning_audio": "Word from Definition Audio",
       "word_from_example_audio": "Word from Example Audio"
     }
   },

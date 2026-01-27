@@ -899,7 +899,7 @@
       "write_word_from_definition": "Escrever Palavra",
       "word_from_audio": "Palavra pelo Áudio",
       "meaning_from_audio": "Significado pelo Áudio",
-      "word_from_meaning_audio": "Palavra do significado",
+      "word_from_meaning_audio": "Palavra pelo Áudio de Definição",
       "word_from_example_audio": "Palavra pelo Áudio de Exemplo"
     }
   },

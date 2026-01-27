@@ -909,7 +909,7 @@
       "write_word_from_definition": "Wort schreiben",
       "word_from_audio": "Wort aus Audio",
       "meaning_from_audio": "Bedeutung aus Audio",
-      "word_from_meaning_audio": "Wort aus Bedeutung",
+      "word_from_meaning_audio": "Wort aus Definition-Audio",
       "word_from_example_audio": "Wort aus Beispiel-Audio"
     }
   },
