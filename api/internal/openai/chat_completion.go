@@ -51,7 +51,7 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 		SpecialInstructions: "Pay attention to irregular verb forms and common phrasal verb combinations.",
 		ExampleInstructions: "Wrap the target word/phrase in square brackets in all example sentences. For phrasal verbs, wrap the ENTIRE phrase including particles (e.g., '[pry loose]' or '[pick up]', NOT '[pry] loose' or '[pick] up').",
 		PronunciationInstructions: map[string]string{
-			"ipa": "Provide accurate IPA (International Phonetic Alphabet) transcription using standard symbols like /ˈhɛloʊ/ for 'hello'. Use primary stress markers (ˈ) and secondary stress markers (ˌ) when needed.",
+			"ipa": "Provide accurate IPA (International Phonetic Alphabet) transcription using standard symbols like /ˈhɛloʊ/ for 'hello'. Use primary stress markers (ˈ) and secondary stress markers (ˌ) when needed. For phrasal verbs, ALWAYS provide pronunciation for the complete phrase (e.g., /meɪk ɒf/ for 'make off').",
 		},
 	},
 	"es": {
