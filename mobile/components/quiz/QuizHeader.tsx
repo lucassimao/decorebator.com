@@ -56,8 +56,9 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
       <View style={styles.headerCenter}>
         <Text
           style={styles.headerTitle}
+          numberOfLines={1}
+          ellipsizeMode="tail"
           accessibilityRole="header"
-          // accessibilityLevel={1} // Removed deprecated prop
         >
           {wordlistName || "Quiz"}
         </Text>
@@ -153,8 +154,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     headerCenter: {
       flex: 1,
-      alignItems: "center",
-      marginHorizontal: 16,
+      marginLeft: 12,
+      marginRight: 8,
     },
     headerTitle: {
       fontSize: 18,
