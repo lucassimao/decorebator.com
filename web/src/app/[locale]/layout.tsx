@@ -71,7 +71,7 @@ export async function generateMetadata({
       description: localeDescriptions[locale] || localeDescriptions.en,
       images: [
         {
-          url: 'https://decorebator.com/social-share-image.jpg',
+          url: `https://decorebator.com/og?locale=${locale}`,
           width: 1200,
           height: 630,
           alt: 'Decorebator - AI-Powered Vocabulary Learning Platform',
@@ -84,7 +84,7 @@ export async function generateMetadata({
       creator: '@decorebator',
       title: `Decorebator - AI-Powered Vocabulary Learning${locale !== 'en' ? ` | ${localeNames[locale]}` : ''}`,
       description: localeDescriptions[locale] || localeDescriptions.en,
-      images: ['https://decorebator.com/social-share-image.jpg'],
+      images: [`https://decorebator.com/og?locale=${locale}`],
     },
     alternates: {
       canonical: `https://decorebator.com/${locale}`,

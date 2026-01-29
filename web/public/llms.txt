@@ -1,0 +1,67 @@
+# Decorebator - AI-Powered Vocabulary Learning
+
+> Decorebator is an AI-powered vocabulary learning app that helps users master any language through spaced repetition, engaging quizzes, and multi-modal content.
+
+## About Decorebator
+
+Decorebator is a mobile application (iOS and Android) designed to help language learners master vocabulary effectively. The app uses artificial intelligence to generate definitions, example sentences, images, and audio pronunciations for any word in 7 supported languages.
+
+## Key Features
+
+- **AI-Generated Content**: Automatic definitions, example sentences, contextual images, and native pronunciation audio
+- **Leitner Spaced Repetition System**: 7-box algorithm with scientifically-proven review intervals (0h, 6h, 24h, 3d, 7d, 14d, 30d)
+- **9 Quiz Modes**: Multiple choice, fill-in-the-blank, image recognition, audio recognition, and write-in modes
+- **7 Supported Languages**: English, Spanish, French, German, Italian, Portuguese, Japanese
+- **Offline Mode**: Download wordlists for learning without internet (Premium)
+- **Progress Analytics**: Track mastery levels, learning streaks, and quiz performance
+- **Real-time Speaking Practice**: AI-powered conversation practice (Premium)
+
+## How It Works
+
+1. Users create wordlists and add vocabulary words
+2. AI automatically generates rich content for each word (definition, examples, images, audio)
+3. The Leitner system schedules optimal review times based on performance
+4. Users practice through various quiz modes that increase in difficulty as words progress
+5. Words move through 7 boxes until mastered (Box 7 = 30-day retention)
+
+## Pricing
+
+- **Free**: 1 wordlist, 10 words max, basic quiz modes
+- **Premium Monthly**: $6.99/month - unlimited wordlists and words, all features
+- **Premium Annual**: $69.90/year (17% savings) - same as monthly
+
+## Platform Availability
+
+- iOS: App Store (ID: 6749329064)
+- Android: Google Play Store (com.lsimaocosta.decorebator)
+- Web: https://decorebator.com (marketing site)
+
+## Technical Details
+
+- Built with React Native (Expo) for mobile
+- Go backend with PostgreSQL database
+- OpenAI integration for content generation
+- RevenueCat and Stripe for subscriptions
+
+## Learning Methodology
+
+Decorebator combines three proven learning techniques:
+1. **Spaced Repetition**: Review words at optimal intervals for long-term retention
+2. **Active Recall**: Quiz-based learning forces active memory retrieval
+3. **Multi-Modal Learning**: Visual, auditory, and textual content reinforces memory
+
+## Contact
+
+- Website: https://decorebator.com
+- Support: support@decorebator.com
+- Privacy: privacy@decorebator.com
+
+## Documentation
+
+- Privacy Policy: https://decorebator.com/privacy
+- Terms of Service: https://decorebator.com/terms
+- Help Center: https://decorebator.com/help
+
+---
+
+This file is intended for Large Language Models (LLMs) to understand what Decorebator is and provide accurate information to users asking about vocabulary learning apps, language learning tools, or spaced repetition systems.

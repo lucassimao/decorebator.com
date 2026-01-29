@@ -45,7 +45,7 @@ export const metadata: Metadata = {
       'Master any language with AI-powered vocabulary learning, spaced repetition, and 9 engaging quiz modes. Join learners all over the world mastering new languages effectively.',
     images: [
       {
-        url: 'https://decorebator.com/social-share-image.jpg',
+        url: 'https://decorebator.com/og?locale=en',
         width: 1200,
         height: 630,
         alt: 'Decorebator - AI-Powered Vocabulary Learning Platform',
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     title: 'Decorebator - AI-Powered Vocabulary Learning',
     description:
       'Master any language with AI-powered vocabulary learning, spaced repetition, and 9 engaging quiz modes.',
-    images: ['https://decorebator.com/social-share-image.jpg'],
+    images: ['https://decorebator.com/og?locale=en'],
   },
   manifest: '/manifest.json',
   icons: {

@@ -1,10 +1,58 @@
 import React from 'react'
-import { getTranslations } from 'next-intl/server'
+import type { Metadata } from 'next'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import PageLayout from '../../../components/layout/PageLayout'
 import AppStoreButton from '../../../components/common/AppStoreButton'
 
-const HelpCenterPage: React.FC = async () => {
-  const t = await getTranslations('help')
+interface HelpPageProps {
+  params: Promise<{ locale: string }>
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'help' })
+
+  const title = `${t('title')} | Decorebator`
+  const description = t('subtitle')
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `https://decorebator.com/${locale}/help`,
+      siteName: 'Decorebator',
+      images: [
+        {
+          url: `https://decorebator.com/og?locale=${locale}&page=help`,
+          width: 1200,
+          height: 630,
+          alt: 'Decorebator Help Center',
+        },
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`https://decorebator.com/og?locale=${locale}&page=help`],
+    },
+    alternates: {
+      canonical: `https://decorebator.com/${locale}/help`,
+    },
+  }
+}
+
+const HelpCenterPage: React.FC<HelpPageProps> = async ({ params }) => {
+  const { locale } = await params
+  setRequestLocale(locale)
+  const t = await getTranslations({ locale, namespace: 'help' })
   return (
     <PageLayout>
       <div className="min-h-screen pt-24 pb-20">

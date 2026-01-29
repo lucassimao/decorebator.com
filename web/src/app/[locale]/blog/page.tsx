@@ -152,9 +152,36 @@ export async function generateMetadata({
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'blog' })
 
+  const title = `Decorebator Blog | ${t('title')}`
+  const description = t('subtitle')
+
   return {
-    title: `Decorebator Blog | ${t('title')}`,
-    description: t('subtitle'),
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `https://decorebator.com/${locale}/blog`,
+      siteName: 'Decorebator',
+      images: [
+        {
+          url: `https://decorebator.com/og?locale=${locale}&page=blog`,
+          width: 1200,
+          height: 630,
+          alt: 'Decorebator Blog - Language Learning Tips and Insights',
+        },
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`https://decorebator.com/og?locale=${locale}&page=blog`],
+    },
+    alternates: {
+      canonical: `https://decorebator.com/${locale}/blog`,
+    },
   }
 }
 
