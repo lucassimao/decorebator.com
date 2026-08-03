@@ -1,10 +1,10 @@
-# Mobile App Revamp Strategy — Top 20 Priorities
+# Decorebator Revamp Strategy — Top 25 Priorities
 
 **Date:** 2026-08-03
-**Scope:** Mobile app (`/mobile`) + supporting API changes (`/api`)
-**Goal:** Increase install→paid conversion, user retention, and engagement through a coordinated feature + design revamp.
+**Scope:** Mobile app (`/mobile`) + backend (`/api`)
+**Goal:** Increase install→paid conversion, user retention, and engagement through a coordinated feature + design revamp; simplify payments to first-party native IAP; harden and optimize the backend.
 
-This document is the output of a deep audit of the mobile codebase across three dimensions: the conversion funnel (install → signup → paywall → purchase), retention & engagement mechanics (notifications, streaks, learning loop, SRS surfacing), and design system / UX quality. Roughly 60 individual findings were consolidated into the 20 prioritized workstreams below.
+This document is the output of a deep audit across the mobile codebase (conversion funnel, retention & engagement mechanics, design system / UX quality) and the Go backend (payments stack, correctness, security, performance, AI cost). Items **#1–#20** cover the mobile revamp. Items **#21–#25** cover the backend: the migration off Stripe and RevenueCat to first-party native IAP, and the bugs, security fixes, and optimizations surfaced by the backend audit. Appendix C carries the full backend bug inventory.
 
 **The headline:** the product core is genuinely strong — a deterministic Leitner SRS, an AI enrichment pipeline (definitions, images, TTS), 9 quiz modes, and a mature server-side push notification system. But the *growth layer* around that core is broken or missing. Most new installs never see onboarding. Every upsell dead-ends in the Settings screen. Quiz sessions have no ending. And not a single monetization event is tracked, so none of this is currently measurable. Several of the highest-impact fixes are small precisely because the backend already does the hard part.
 
@@ -31,6 +31,9 @@ Items are sorted by priority: expected impact on conversion/retention/engagement
 | **Continuous** | #8, #9 | Design revamp track running alongside |
 | **Next wave** | #11–#15 | Pull in as capacity allows |
 | **Fix-as-you-touch** | #16–#20 + Appendix A | Paid down in the same PR whenever a screen is redesigned under #8 |
+| **Backend week 1** | #22 critical fixes, #23 quick wins | Broken endpoint, panic loops, JWT key validation, Sentry PII, graceful shutdown, health checks |
+| **Backend weeks 2–4** | #24 indexes + timeouts, #23 hardening, #25 cost | Index-only perf wins first, then rate limiting/token lifetimes, then AI cost |
+| **Payments migration** | #21 phases 0–4 | Entitlement refactor first; runs in parallel with the above; ~12-month Stripe read-only tail |
 
 ---
 
@@ -314,7 +317,142 @@ Premium features simultaneously use the two worst gating patterns: **bait-and-ta
 
 ---
 
-## Appendix A — Small bugs worth fixing regardless of strategy
+# Part 2 — Backend: Payments Migration, Bugs, Security, Performance, Cost
+
+## Tier 5 — Backend workstreams
+
+### 21. Replace Stripe and RevenueCat with first-party native IAP
+
+**Category:** Payments simplification (decided direction) · **Effort:** L (multi-phase)
+
+**Direction.** Eliminate both Stripe and RevenueCat. iOS purchases go through StoreKit 2 verified server-side via the App Store Server API; Android purchases go through Google Play Billing verified via the Play Developer API. One store per platform, no third-party billing SDK, no RevenueCat fees, no split-brain provider routing.
+
+**Why this is the right call.** Today the payment stack is *four* paths (Android→RevenueCat, iOS US→Stripe via external browser, iOS non-US→RevenueCat, Web→Stripe) with routing that lives only in the mobile client (`mobile/hooks/useRevenueCat.ts:229-268` — the backend will create a Stripe checkout for anyone). The two paths have different prices, different copy, and different designs; the audit found the US iOS Stripe flow is the weakest experience aimed at the highest-ARPU users (#11), and the external-browser purchase's App Store legality rides on the current US injunction posture. Consolidating to native IAP removes an entire class of complexity, risk, and reconciliation bugs — and the audit found plenty of the latter (see #22).
+
+**What the audit found we can reuse (~60% of the plumbing survives):**
+
+- The `subscriptions` + `subscription_events` tables are already provider-agnostic since migration `000056` (`external_event_id`, `provider` enum). Only the enum values and the `check_provider_fields` CHECK from `000050` need widening.
+- The `Subscription` model with `IsActive()` grace-period logic (`api/internal/model/subscription.go:200-213`), the `update_user_subscription` Postgres trigger that propagates entitlement onto `users`, the transactional `CreateSubscription`/`UpdateSubscription` repository methods, and the `HasProcessedEvent` idempotency helper — all reusable as-is.
+- The River webhook-worker pattern (`stripe_webhook_worker.go` / `revenuecat_worker.go` are near-identical templates for an Apple-notifications worker and a Google-RTDN worker).
+- The reminder worker and all five email templates; the `GET /subscription/status` client contract; the mock-based integration test harness.
+
+**What must be built:**
+
+1. **App Store Server API client** — ES256 JWT auth, subscription status/history lookups — plus **JWS verification** (x5c chain validation against Apple Root CA G3). This is the one piece with no analogue in the codebase and must not be shortcut (never "decode without verify").
+2. **App Store Server Notifications V2 endpoint + worker** — handle `SUBSCRIBED`, `DID_RENEW`, `DID_CHANGE_RENEWAL_STATUS`, `EXPIRED`, `GRACE_PERIOD_EXPIRED`, `DID_FAIL_TO_RENEW`, `REFUND`, `REVOKE`. Note: **refund/revocation handling does not exist anywhere in the current code** — today a refund changes nothing. It becomes mandatory.
+3. **Play Developer API client** (`purchases.subscriptionsv2.get`) + **purchase acknowledgement** — Google auto-refunds unacknowledged purchases after 3 days, a failure mode with no precedent in this codebase.
+4. **RTDN endpoint** — Google Cloud Pub/Sub push with OIDC verification, idempotent on `messageId`.
+5. **Unified verification service** — `POST /subscription/iap/verify` and `/iap/restore`, replacing the RevenueCat restore endpoint.
+6. **Store↔user linkage table** (`user_id ↔ original_transaction_id / purchase_token`), populated at verify time via `appAccountToken` (iOS) / `obfuscatedExternalAccountId` (Android). Server notifications must resolve to a user without the client present — today the link is `app_user_id == users.id`, which only RevenueCat provided.
+7. **Schema migration** — extend `subscription_provider` to `'apple','google'`, replace the `check_provider_fields` constraint, add `original_transaction_id`, `purchase_token`, and **`store_environment`** (sandbox/production — without it a tester's sandbox renewal grants real premium).
+8. **Mobile client** — `expo-iap`/`react-native-iap` with a `useIAP` hook; finish/acknowledge transactions only *after* server confirmation; a **pending-purchase retry queue** (a purchase can complete while the verify call fails — RevenueCat absorbed this for us; we now own it). The paywall styles survive; only the product-loading top half of `RevenueCatPaywall.tsx` is rewritten. `openNativeSubscriptionManagement` in `mobile/api/subscriptions.ts:79-143` already uses pure store deep links — keep it.
+
+**Migration risks — plan around these, don't discover them:**
+
+1. **Stripe subscribers cannot be transferred** to a store subscription. Realistic plan: stop *selling* via Stripe on day one, keep a read-only Stripe webhook path (`customer.subscription.deleted` + `invoice.payment_failed` only) until natural churn completes — with annual plans that means **~12 months of dual-stack tail**, not a clean cutover.
+2. **RevenueCat subscribers are the easy case** — RC wraps native IAP, so the underlying store subscriptions keep renewing after RC is turned off. But observability breaks unless every `provider='revenuecat'` row has its `original_transaction_id`/`purchase_token` backfilled first — and the current code sometimes stores a *synthesized* ID (`restore_<product>_<unixtime>`, `revenuecat.go:176-193`). **Audit how many such rows exist before committing to a cutover date**; those users need a client-side re-verify on next app open.
+3. **Web loses the ability to sell.** Near-zero cost today — the web app is a marketing site whose pricing buttons link to `#download`; no web checkout exists. The real loss is optionality: promo codes, B2B/invoice sales, and any future commission-free channel. Accepted trade-off; revisit only if a web learning platform ships.
+4. **US iOS margin changes.** Moving US iOS from Stripe (~2.9%+30¢) to Apple means 15% under the Small Business Program (very likely at these price points and revenue), not 30% — model the delta at ~12pp. In exchange: native purchase UX for the highest-ARPU segment, no external-browser flow, no injunction-dependent legality.
+5. **Sandbox/production bifurcation and store test accounts** become our problem directly (RC normalized this before).
+
+**Phasing:**
+
+- **Phase 0 (prerequisite):** extract `CheckSubscriptionLimits` out of the Stripe service into a standalone `EntitlementService` (`subscription.go:551-599` currently mixes entitlements into the Stripe service and calls RevenueCat), and fix the stale-JWT entitlement bug (#23) — premium state must come from the DB, not a 1-year-old token claim, or store-side renewals/refunds won't take effect.
+- **Phase 1:** build Apple + Google verification, notifications endpoints, linkage table, schema migration; ship the mobile IAP client behind a flag.
+- **Phase 2:** cut over new purchases to native IAP on both platforms; delete RevenueCat SDK + webhook after transaction-ID backfill.
+- **Phase 3:** Stripe becomes read-only (cancellation/failure events only); remove checkout-session endpoint, `usePaymentProvider`, and the Settings Stripe UI.
+- **Phase 4 (after tail):** delete `stripe-go`, remaining Stripe code, and 8 env vars. Note `NewSubscriptionService` currently **panics at boot without Stripe env vars** (`subscription.go:35-71`) — that coupling is removed in Phase 0.
+
+**Success metric:** one purchase path per platform; purchase→entitlement latency < 5s; refunds revoke access automatically; zero reconciliation bugs of the class listed in #22.
+
+---
+
+### 22. Fix the critical backend correctness bugs
+
+**Category:** Correctness / data integrity · **Effort:** S–M per bug (mostly small)
+
+**The problem.** The backend audit found live, user-facing breakage — not theoretical risk. The worst offenders:
+
+- **`PUT /wordlists/:id` is permanently broken**: a missing comma in the UPDATE statement (`api/internal/repository/wordlist.go:174` — `language_code=$3 updated_at=NOW()`) makes every wordlist rename/edit return 500. One-character fix.
+- **Stripe webhook status-enum mismatch**: Stripe statuses are written raw into a 4-value Postgres enum (`subscription.go:195,274`), and the enum spells **`cancelled`** while Stripe sends **`canceled`** — so every subscription-update webhook for a canceled/trialing sub throws an enum error and retries forever. Subscription state is silently diverging from Stripe today.
+- **Error-report image regeneration panics on every attempt**: `image_generator_worker.go:139-140` constructs a zero-value `LeitnerSystemStrategy` (nil DB pool) — each user image report triggers up to 25 retries × 25 *paid* image generations, then fails anyway.
+- **Reporting a content error deletes the user's learning history**: `_unrelated_meaning`/`_unrelated_example` reports call `DeleteWordDefinitions`, which `ON DELETE CASCADE`s through `leitner_system_tracking` and `quiz_performance` — one tap on "this example is wrong" resets the word to box 1 and erases its analytics.
+- **Updating a word wipes its audio and notes**: the "mark as learned" flow (`http/word.go:103`) sends zero values for `audio_url`/`notes` and the repository writes them unconditionally — silent data loss on a common operation, which then disables audio quiz types for that word.
+- **Case-sensitive signup + case-insensitive login = permanent lockout**: `Alice@x.com` and `alice@x.com` can both register (unique constraint is on raw `email`), after which login matches both rows and rejects the "ambiguous" credentials for **both** accounts (`repository/user.go:64,100`, `service/user.go:161`).
+- **Transactions that commit on error**: at least four `defer`-commit blocks have shadowed/unassigned `err` (`repository/definition.go:72`, `service/error_reporting.go:170`, `service/word.go:153-155`, `definition_fetcher_worker.go:221-223`) — failures commit partial state, and in the definition-fetcher case River then retries and **inserts the entire definition set twice**.
+- **`errors.Is(err, &common.NotFoundError{})` is always false** (pointer vs value receiver) in three handlers — every not-found becomes a 500 + Sentry panic event.
+- **Webhook idempotency is check-then-act**: both webhook workers check `HasProcessedEvent`, then process, then insert — concurrent redeliveries double-send emails and double-apply plan changes before the unique constraint catches the insert.
+- **Cross-user writes**: `PUT /wordlists/<victim_id>/words/<my_word_id>` reparents an attacker's word into another user's wordlist (no ownership check on the target wordlist, `repository/word.go:177,198`), inflating the victim's free-tier quota.
+- **Missing uniqueness**: no unique constraint on `words(wordlist_id, name)` or `word_definitions(word_id, definition_id)` — duplicate adds spawn duplicate AI jobs and inflate every join.
+
+**Why it matters.** These are refund tickets, support load, corrupted analytics, and silent Stripe drift happening *now*. Several also directly undermine the revamp: #22's data-loss bugs will be blamed on the redesign if they surface during it, and the webhook bugs must be fixed before #21 reuses those code paths for Apple/Google.
+
+**Goal.** All critical/high items in Appendix C fixed and covered by regression tests. The full inventory (25 medium + low findings, including timezone-dependent streak breakage, positional Expo receipt matching, and non-transactional account deletion) is in Appendix C.
+
+---
+
+### 23. Backend security hardening
+
+**Category:** Security · **Effort:** M
+
+**The problem.** The audit found several genuinely serious issues:
+
+- **Empty-key JWT verification**: the auth middleware reads `JWT_KEY` per-request with no emptiness check (`http/midlewares.go:48-53`). If the env var is ever missing or typo'd, the API boots normally and **accepts any token signed with an empty key** — full authentication bypass. There is no startup config validation for any secret.
+- **1-year JWTs with the subscription plan baked in, and no revocation**: quiz gating, analytics cache TTLs, and error-report limits read the *token claim*, not the DB (`service/user.go:42,78-88`). An upgrader stays gated until re-login; a churned user keeps premium features for up to a year; password reset does not invalidate existing sessions; logout only clears the cookie. This is simultaneously the biggest entitlement bug (blocks #21) and the biggest session-security gap. Fix: short-lived access tokens + refresh rotation, a `token_version` bumped on password change, plan read from DB.
+- **No rate limiting on any auth endpoint**: unlimited credential stuffing against `/login` (each attempt burns a ~60ms bcrypt hash — also a CPU-DoS), unlimited password-reset email bombing via Resend, unlimited signup (each free account can trigger OpenAI spend). The codebase's only rate limiter guards `/errorReports`.
+- **Auth tokens are being shipped to Sentry**: `SendDefaultPII: true` (`common/sentry_init.go:29`) attaches request headers and cookies — where the 1-year `Authorization` JWT lives — and production logs at Debug level into Sentry Logs, including every login email. Credential-theft path + GDPR exposure + ingest cost.
+- **Unauthenticated open redirect**: `GET /subscription/checkout-redirect` redirects to any `redirect_uri` (`http/subscription.go:190-200`); a webhook-signature test bypass is compiled into the production binary (`subscription.go:126-130`); the RevenueCat webhook handler does a non-constant-time compare and **panics if its env var is unset** — both go away with #21, but not for ~12 months of dual-stack.
+- **Unvalidated uploads**: profile pictures have no size cap anywhere (no `MaxBytesReader` in the codebase — a 500MB base64 body is a trivial memory DoS), attacker-controlled MIME type and file extension, path traversal into arbitrary bucket prefixes, and a world-readable bucket → stored XSS on the storage origin (`http/user.go:327-339`).
+- **Quiz distractors leak other users' private content**: `GetRandomMeanings`/`GetRandomTokens` draw from the **global** definitions table with no user, wordlist, or even *language* filter (`repository/definition.go:105-166`) — cross-tenant disclosure, wrong-language distractors, and (combined with prompt injection via user-supplied tokens interpolated into a *system* message, `openai/chat_completion.go:281-286`) a content-poisoning vector into other users' quizzes.
+- Assorted: login timing side-channel enables user enumeration; 5-char minimum passwords (and reset/update paths enforce even less); `BCRYPT_COST` env override accepted in production; deprecated `dgrijalva/jwt-go` (CVE-2020-26160); permissive dev CORS that fails *open* if `ENV` is misspelled; no security headers; missing `c.Abort()` after a failed middleware check.
+
+**Why it matters.** Any one of the first four is incident-report material. The JWT items are also hard blockers for #21 (store-driven renewals/refunds must take effect without re-login). And the pre-revamp period is the cheapest time to rotate token semantics — fewer users are affected than after the growth work succeeds.
+
+**Goal.** Startup fail-fast config validation; short-lived tokens + refresh; rate limiting on all four auth endpoints; `SendDefaultPII` off + PII scrubbed from logs; upload validation + global body limits; distractors scoped by language and pool; the checklist in Appendix C closed.
+
+---
+
+### 24. Backend performance & reliability
+
+**Category:** Performance / Ops · **Effort:** S (indexes) + M (rest)
+
+**The problem.** The scaling cliffs are concentrated in the hottest path — the quiz loop:
+
+- **Zero indexes on `word_definitions`** — the join table in every quiz-selection, box-distribution, and analytics query has only a surrogate PK (`migrations/000004`). Every quiz request sequential-scans it. Two `CREATE INDEX CONCURRENTLY` statements are the single highest-ROI change in the entire backend.
+- **`ORDER BY RANDOM()` over the whole corpus** for every question's distractors (`repository/definition.go:126,163`), with no index on `definitions(part_of_speech)` — cost grows with total corpus size, not user data.
+- **Analytics caching is broken twice over**: the stats cache is written with an already-canceled errgroup context so it *never persists* (`analytics_cached.go:57,94`), and invalidation keys omit the `days` suffix so learning-progress/practice-time caches are *never invalidated* (`analytics_cached.go:337,340` vs `:160,268`). Premium users effectively run raw recursive-CTE streak queries (up to 365 iterations per wordlist) on nearly every dashboard load, under a 2-second global route timeout that doesn't actually cancel the work.
+- **Worker fleet can wedge itself**: 226 configured concurrent workers share a 10-connection DB pool (`cmd/workers/main.go:32` vs `river.go:127-137`); OpenAI HTTP calls have **no timeout and ignore context** in all four clients, and the definition fetcher holds an open Postgres transaction across sequential TTS calls and MinIO uploads — one hung connection pins pool slots forever. No `MaxAttempts`/`JobTimeout`/`UniqueOpts` overrides on any River job (25 default retries × paid API calls on every panic bug in #22).
+- **Production graceful shutdown is inverted**: the prod branch sleeps 5s and exits without calling `srv.Shutdown` — in-flight requests die on every deploy (`cmd/api/server.go:64-77`). There is **no health-check endpoint** of any kind, so load balancers can't gate deploys or detect a dead DB pool. Redis failure at boot permanently disables caching until restart (`common/redis.go`, memoized error).
+- Assorted: an expensive 4-table diagnostic query runs on every "no due items" response (the steady state for engaged users); quiz selection materializes 50 full definitions with JSONB aggregation to use one; unbounded queries and `IndentedJSON` on the largest payloads; per-upload MinIO client construction; per-answer unbounded goroutine doing a DB write + ~60 Redis DELs with no `recover()` (a panic there kills the API process); pgBouncer wired up without pgx being configured for it; migrations run without lock timeouts.
+
+**Why it matters.** The revamp's entire purpose is to grow traffic into this backend. The quiz loop — the thing #5–#7 will drive users into many times a day — is the least-indexed, most-expensive path in the system, and the worker fleet that powers the AI magic (#4's starter packs will hammer it) can deadlock. The week-2 index work requires *zero code changes* and should be measured with `pg_stat_statements` before/after.
+
+**Goal.** Indexes shipped; OpenAI clients get timeouts/retries/status-code handling; TTS moved out of transactions; pools sized to workers; graceful shutdown fixed; `/healthz` + `/readyz`; caching actually caches. Success = p95 quiz-question latency flat as corpus and DAU grow.
+
+---
+
+### 25. AI cost optimization
+
+**Category:** Cost / Margin · **Effort:** S–M per lever
+
+**The problem (and the levers, ranked by expected saving):**
+
+1. **Definition dedup is racy and language-blind** (~60–80% of OpenAI spend): reuse only triggers when a row already exists — two users adding the same word concurrently both pay for GPT-4o + images + 7 TTS calls. Worse, reuse matches on token *only*, ignoring language (`service/word.go` → `FindArgs{Name}`) — "no" in a Spanish list reuses the English definition (a correctness bug *and* a cost bug). Fix: unique key on `(token, language)` + advisory-lock "generation in progress" coalescing.
+2. **`gpt-4o` pinned for a strict-JSON dictionary lookup** (~85–90% of chat spend): a mini-tier model handles this task; `max_tokens` is currently unbounded and `temperature` unset (`openai/chat_completion.go:295`). The existing `validateDefinitions` check is a ready-made pass/fail benchmark oracle.
+3. **7 eager TTS calls per non-verb definition** (~70% of TTS spend): all seven examples get audio up front, but only one is ever played per quiz. Generate 2–3 lazily on first audio-quiz use — verbs already do the lazy pattern correctly.
+4. **Every example audio for every non-English language is generated with the wrong voice**: `example_audio_worker.go:82,92` passes a *voice name* where the API expects a *language code*, so it silently falls through to the English `alloy` voice with English pronunciation instructions. We are **paying for wrong-language audio right now** — this is a one-line fix that also improves the product. (Related: `buildImagePrompt` passes 4 args to 3-verb format strings, so every image prompt ends with `%!(EXTRA string=...)` — `image_generator_worker.go:212`.)
+5. **Content-hash TTS dedup**: the SHA-256 of the example text is already computed but only used for naming — key audio objects on `sha256(text+voice)` globally and identical sentences across the corpus cost nothing.
+6. **Images generated eagerly per sense**: a word with 5 senses generates 5 DALL-E images up front, though image quizzes start at box 3. Generate lazily on box-3 arrival, cap to the primary sense.
+7. **Realtime voice chat has no cost ceiling**: no `max_output_tokens`, no session duration cap, no per-day quota — and its usage telemetry is *client-supplied and unvalidated* (`http/realtime_telemetry.go`), so cost dashboards built on it are forgeable. This is the most expensive API in the OpenAI catalog, gated only by "is premium".
+8. **Sentry ingest**: production ships Debug-level logs (4+ per quiz answer) to Sentry Logs — raising the threshold to Warn cuts ingest by an order of magnitude.
+
+**Why it matters.** #4 and #10 will multiply free-tier AI usage (starter packs, more words enriched); #2's trial will multiply premium usage. Unit economics need to improve *before* the growth work succeeds, not after the bill arrives. Items 1, 2, and 4 together plausibly cut AI spend by more than half while *fixing* product bugs (wrong-language definitions and audio) at the same time.
+
+**Goal.** Language-correct dedup with generation coalescing; model right-sizing with the validation oracle as the quality gate; lazy TTS/images; hash-based dedup; realtime quotas. Metric: AI cost per new enriched word and per premium user per month, tracked before/after each lever.
+
+---
+
+
 
 | Bug | Location |
 |---|---|
@@ -341,3 +479,94 @@ Premium features simultaneously use the two worst gating patterns: **bait-and-ta
 - **App review prompt**: well-built eligibility logic (`hooks/useAppReview.ts`) — just move it into the #5 session-end rotation.
 - **RevenueCat error handling + optimistic entitlement**: purchase unlocks premium instantly without waiting for the webhook (`hooks/useRevenueCat.ts:26-70`).
 - **Dashboard craft**: skeletons, empty-state illustration, entrance animations — the quality bar the rest of the app should be raised to.
+
+## Appendix C — Backend bug inventory (from the API audit)
+
+Severity: **C** = critical (broken feature, panic loop, or exploitable), **H** = high (data loss/corruption, security, or major perf), **M** = medium. Items marked ⚡ are one-line-ish fixes.
+
+### Correctness & data integrity
+
+| Sev | Bug | Location |
+|---|---|---|
+| C ⚡ | `PUT /wordlists/:id` dead: missing comma in UPDATE SQL (`language_code=$3 updated_at=NOW()`); also drops `pronunciation_system` | `repository/wordlist.go:174` |
+| C | Stripe statuses written raw into 4-value enum; `cancelled` (DB) vs `canceled` (Stripe) — subscription-updated webhooks for canceled/trialing subs fail and retry forever | `service/subscription.go:195,274` vs `model/subscription.go:44` |
+| C | Zero-value `LeitnerSystemStrategy` (nil DB) in image worker → panic on every error-report-triggered image job; 25 retries × paid image generations | `service/image_generator_worker.go:139-140` |
+| H | Error reports of type `_unrelated_meaning`/`_unrelated_example`/`_processing_failed` cascade-delete `leitner_system_tracking` + `quiz_performance` — user's learning history erased by one report | `service/error_reporting.go:191,198` + migrations `000005`/`000030` cascades |
+| H | Word update writes zero-value `audio_url`/`notes` unconditionally — "mark as learned" wipes audio and notes | `http/word.go:103`, `repository/word.go:174-180` |
+| H | Case-sensitive signup + case-insensitive login: duplicate-case emails lock out **both** accounts; `LOWER(email)` also defeats the unique index (seq scan per login) | `repository/user.go:64,100`, `service/user.go:161` |
+| H | Deferred tx commit/rollback with shadowed or unassigned `err` — commits on failure; definition-fetcher variant double-inserts entire definition sets on retry | `repository/definition.go:72`, `service/error_reporting.go:170`, `service/word.go:153-155`, `definition_fetcher_worker.go:221-223` |
+| H | `errors.Is(err, &common.NotFoundError{})` never matches (pointer vs value) — not-found becomes 500 + Sentry panic | `http/wordlist.go:139,155`, `http/word.go:81` |
+| H | Webhook idempotency is check-then-act; concurrent redeliveries double-apply side effects (emails, plan changes) before the unique insert fails | `stripe_webhook_worker.go:53`, `revenuecat_worker.go:49` |
+| H | RevenueCat worker stores the event only after successful processing — partial failures re-run side effects on retry | `revenuecat_worker.go:74-83` |
+| H | `GetDefinitionByID` returns `(nil, nil)` on error/not-found → nil-deref panics in image + example-audio workers when a definition was deleted | `service/definition.go:49-55` |
+| H | Definition-fetcher swallows errors inside an open tx (`25P02` aborted-tx cascade); job reports success, nothing saved, word stuck at `processing` forever | `definition_fetcher_worker.go:187-227` |
+| H | Restore with lost entitlement is a silent no-op — expired sub's stale active row survives; `EXPIRATION` after grace never marks the row canceled (`GetActiveSubscriptionForUser` returns nil) | `revenuecat.go:100-104,340,378,433` |
+| H | Nil deref on `*entitlement.ExpiresDate` (null for lifetime entitlements) | `revenuecat.go:113` |
+| H | Unchecked `Items.Data[0]` indexing on Stripe payloads → worker panic | `subscription.go:186-199,275-276` |
+| H | Provider switch creates a **second active subscription** (double-billing); "current sub" then picked by `created_at DESC LIMIT 1` | `revenuecat.go:151`, `repository/subscription.go:165` |
+| H | Three subscription SELECTs omit `provider`/platform columns → reminder worker's provider branch never matches; renewal emails carry empty IDs | `repository/subscription.go:244-247,324-327,364-367` |
+| H | Stats cache written with already-canceled errgroup context — never persists | `analytics_cached.go:57,94` |
+| H | Cache invalidation keys omit `days` — progress/practice-time caches never invalidated (free tier: hour-stale); free-tier invalidation gated on `isPremium` so never runs | `analytics_cached.go:337,340` vs `:160,268`; `leitner_system_strategy.go:1337` |
+| H | Per-answer analytics goroutine launched **before** tx commit (stale cache repopulation) and with no `recover()` — a panic kills the API process | `leitner_system_strategy.go:1314-1364` |
+| M | Box-distribution/unlearned-count queries join `word_definitions` without `AND wd.word_id = lst.word_id` — inflated counts; skip-rescue never fires ("no due items" instead) | `leitner_system_strategy.go:348,369,1081,1107` |
+| M | Daily aggregates mix Go-UTC dates with Postgres `CURRENT_DATE`/session TZ; no user-local timezone — streaks break at date boundaries | `service/analytics.go:108` vs `repository/analytics/learning_progress.go:91,149,185` |
+| M | `DeleteWordDefinitions` decides shared-vs-exclusive from an aggregate count across *all* definitions — exclusive definitions orphaned forever | `repository/definition.go:271-298` |
+| M | No unique constraints on `words(wordlist_id,name)` or `word_definitions(word_id,definition_id)` — duplicate adds spawn duplicate AI jobs | migration `000004`, `repository/word.go:64-88` |
+| M | Cross-user write: word can be reparented into a victim's wordlist (no target-ownership check), inflating their free-tier quota | `repository/word.go:177,198` |
+| M | Deleting another user's word returns 204 instead of 404 | `service/word.go:169-186` |
+| M | Grace period anchored on `CurrentPeriodEnd`, not the payment-failure time — access silently extended or cut short | `model/subscription.go:208` |
+| M | `MarkRenewalReminderSent` hardcodes `provider='stripe'`; reminder "sent" log reports candidate count, not sent count | `repository/subscription.go:443`, `subscription_reminder_worker.go:161` |
+| M | Unknown Stripe price ID silently maps to `PlanFree` — a typo downgrades a paying customer via the DB trigger | `subscription.go:530-542` |
+| M | Expo push tickets matched to messages positionally — partial responses deactivate the **wrong** devices | `push_notification_service.go:458-460` |
+| M | `CheckReceipts` loop has no progress guarantee on persistent update failure | `push_notification_service.go:223-275` |
+| M | One invalid user-supplied timezone string kills the reminder query for **all** users in that run | `repository/push_notifications.go:58,134` |
+| M | Account deletion non-transactional; child-delete failures only logged | `service/user.go:256-265` |
+| M | Error-report rate limit bypassable: fails open on DB error, and upserts don't increment the count | `rate_limiter.go:47-50`, `repository/error_report.go:281-308` |
+| M | pgx **v3** sentinel (`pgx.ErrNoRows`) compared against pgx/v5 errors — never matches; v3 driver shipped in the binary | `repository/user.go:12,125,244` |
+| M | `learning_progress.words_mastered` never written — permanently 0; 30-day progress query returns 29 days (exclusive bound) | migration `000030`; `learning_progress.go:91` |
+
+### Security
+
+| Sev | Issue | Location |
+|---|---|---|
+| C | JWT verification reads `JWT_KEY` per-request with no emptiness check — missing env var = auth bypass via empty-key HMAC; no startup validation of any secret | `http/midlewares.go:48-53` |
+| C | 1-year JWTs embedding `subscriptionPlan`; no refresh rotation, no revocation; password reset/logout don't invalidate sessions; gating reads the claim, not the DB | `service/user.go:42,78-88`, `http/quiz.go:44,146` |
+| H | No rate limiting on `/login`, `/users`, `/password/send-reset-email`, `/password/reset` — credential stuffing, bcrypt CPU-DoS, email bombing, signup-driven OpenAI spend | `http/setup.go:54-73` |
+| H | `SendDefaultPII: true` ships cookies (incl. the 1-year JWT) to Sentry; prod logs Debug→Sentry incl. login emails | `common/sentry_init.go:29`, `common/logger.go:8,25`, `service/user.go:176-190` |
+| H | Unauthenticated open redirect on `/subscription/checkout-redirect` | `http/subscription.go:190-200` |
+| H | Profile upload: no body size cap anywhere, attacker-controlled MIME + extension, path traversal in object key, public bucket → stored XSS | `http/user.go:327-339`, `common/utils.go:36-77`, `common/minio.go:46` |
+| H | Quiz distractors drawn from the global corpus with no user/list/language filter — cross-tenant content disclosure + wrong-language options + poisoning vector | `repository/definition.go:105-127,151-166` |
+| M | User token interpolated into the OpenAI **system** message with naive quoting — prompt injection; poisoned output propagates into image prompts | `openai/chat_completion.go:281,286`, `image_generator_worker.go:212` |
+| M | Stripe webhook test-signature bypass compiled into production; RC webhook non-constant-time compare + panics on missing env var (unauthenticated route) | `subscription.go:126-130`, `http/revenuecat.go:23,26` |
+| M | Login timing side-channel (bcrypt skipped on unknown user) — user enumeration | `service/user.go:161-169` |
+| M | 5-char min password on signup; reset/update paths enforce less; `BCRYPT_COST` override honored in prod | `http/user.go:25,36`, `common/utils.go:82-101` |
+| M | Deprecated `dgrijalva/jwt-go` (CVE-2020-26160); `Environment` claim never verified | `go.mod`, `service/user.go:80` |
+| M | Dev CORS reflects any origin with credentials; fails **open** on unrecognized `ENV`; no security headers anywhere; missing `c.Abort()` in limits middleware | `http/midlewares.go:117-120,252-256` |
+| M | Realtime telemetry: client-supplied token counts, unbounded `Turns` payload, no wordlist ownership check | `http/realtime_telemetry.go:14-85` |
+| M | Auth cookie `Max-Age` set in milliseconds (~999 years); domain hardcoded to `localhost` | `http/user.go:252,255` |
+| M | Static-auth token compared with `!=` (non-constant-time), guarding OpenAI-spend-triggering routes | `http/midlewares.go:91` |
+
+### Performance & operations
+
+| Sev | Issue | Location |
+|---|---|---|
+| C | Zero indexes on `word_definitions` (`word_id`, `definition_id`) — seq scans in every quiz/analytics query. **Highest-ROI fix in the backend** | migration `000004` |
+| C | `ORDER BY RANDOM()` over the global corpus per quiz question; no index on `definitions(part_of_speech)` | `repository/definition.go:126,163` |
+| C | All 4 OpenAI HTTP clients: no timeout, no context, status codes ignored — hung calls pin workers/transactions forever; 429s unhandled | `openai/chat_completion.go:313`, `image_generation.go:51`, `text_to_audio.go:83`, `realtime.go:78` |
+| C | Worker DB pool = 10 conns vs 226 configured concurrent workers; TTS + MinIO uploads inside an open transaction | `cmd/workers/main.go:32`, `river.go:127-137`, `definition_fetcher_worker.go:139-214` |
+| C | Production graceful shutdown inverted — prod sleeps 5s and exits without `srv.Shutdown`; in-flight requests killed on deploy | `cmd/api/server.go:64-77` |
+| H | No `/healthz`/`/readyz` endpoints — LBs can't gate deploys or detect dead pools | `http/setup.go` |
+| H | Recursive-CTE streak query (≤365 iterations per wordlist) on the dashboard path; 60s premium TTL + per-answer cache wipe + no singleflight = stampedes | `analytics/batch_progress.go:82-109`, `http/analytics.go:26-31` |
+| H | Non-sargable `DATE(created_at)` predicate + missing `(user_id, wordlist_id, created_at)` index — runs inside the quiz-answer write tx | `analytics/learning_progress.go:44-50`, migration `000030` |
+| M | Expensive 4-table diagnostic query on every "no due items" response (the engaged-user steady state) | `leitner_system_strategy.go:278-291` |
+| M | Quiz selection materializes 50 full definitions (19-column GROUP BY + JSON_AGG) to use 1; practice-ahead fallback re-runs the whole query unindexed | `leitner_system_strategy.go:104,124-181,256-266` |
+| M | Unbounded queries: word mastery, all-words, definitions batch (uncapped `ids`), filterless user `Find` (dumps password hashes); `IndentedJSON` + no gzip on the largest payloads | `analytics/word_mastery.go:94-117`, `http/word.go:41,47,130,171,178`, `repository/user.go` |
+| M | New MinIO client + TLS handshake per upload; bytes fully buffered; no presigned URLs; ACL sent as inert user metadata | `common/minio.go:33-46` |
+| M | 2s global timeout on all authenticated routes, and the middleware doesn't cancel work — timed-out requests still run to completion | `http/setup.go:78`, `http/midlewares.go:136-161` |
+| M | pgBouncer URL swapped in but pgx not configured for transaction pooling (prepared-statement errors); documented `DISABLE_PREPARED_STATEMENTS` flag doesn't exist | `cmd/api/server.go:24-26`, `common/database.go:47-59` |
+| M | Migrations without `lock_timeout`/`statement_timeout`; non-concurrent index builds; `sslmode=disable` hardcoded | `cmd/migrate/main.go:48,78` |
+| M | Redis init failure memoized forever (caching disabled until redeploy); no dial/read/write timeouts | `common/redis.go:23-67` |
+| M | No `MaxAttempts`/`JobTimeout`/`UniqueOpts` on any River job — 25 default retries × paid API calls on every panic bug | `river.go:126-145`, `job_service.go` |
+| M | Renewal-reminder scheduling in a bare goroutine from the periodic-job factory — no recover, duplicated per replica (duplicate emails when scaled) | `river.go:83-88` |
+| M | `runtime.ReadMemStats` (stop-the-world) on every job execution | `common/worker_context.go:60-61` |
+| M | Docker: runs as root, unpinned `alpine:latest`; compose has no healthchecks/limits; default MinIO creds in `.env.example`; leftover test/placeholder migrations | `Dockerfile`, `docker-compose.yml`, migrations `000022`,`000048` |
