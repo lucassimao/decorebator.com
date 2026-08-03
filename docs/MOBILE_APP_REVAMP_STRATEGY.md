@@ -33,7 +33,7 @@ Items are sorted by priority: expected impact on conversion/retention/engagement
 | **Fix-as-you-touch** | #16–#20 + Appendix A | Paid down in the same PR whenever a screen is redesigned under #8 |
 | **Backend week 1** | #22 critical fixes, #23 quick wins | Broken endpoint, panic loops, JWT key validation, Sentry PII, graceful shutdown, health checks |
 | **Backend weeks 2–4** | #24 indexes + timeouts, #23 hardening, #25 cost | Index-only perf wins first, then rate limiting/token lifetimes, then AI cost |
-| **Payments migration** | #21 phases 0–4 | Entitlement refactor first; runs in parallel with the above; ~12-month Stripe read-only tail |
+| **Payments migration** | #21 phases 0–2 | Entitlement refactor first, then a clean cutover — no paying users yet, so no dual-stack tail and no backfill |
 
 ---
 
@@ -344,24 +344,22 @@ Premium features simultaneously use the two worst gating patterns: **bait-and-ta
 4. **RTDN endpoint** — Google Cloud Pub/Sub push with OIDC verification, idempotent on `messageId`.
 5. **Unified verification service** — `POST /subscription/iap/verify` and `/iap/restore`, replacing the RevenueCat restore endpoint.
 6. **Store↔user linkage table** (`user_id ↔ original_transaction_id / purchase_token`), populated at verify time via `appAccountToken` (iOS) / `obfuscatedExternalAccountId` (Android). Server notifications must resolve to a user without the client present — today the link is `app_user_id == users.id`, which only RevenueCat provided.
-7. **Schema migration** — extend `subscription_provider` to `'apple','google'`, replace the `check_provider_fields` constraint, add `original_transaction_id`, `purchase_token`, and **`store_environment`** (sandbox/production — without it a tester's sandbox renewal grants real premium).
+7. **Schema migration** — with no paying users, simplify rather than extend: recreate `subscription_provider` as `('apple','google')`, drop the `check_provider_fields` constraint and the Stripe/RevenueCat columns, add `original_transaction_id`, `purchase_token`, and **`store_environment`** (sandbox/production — without it a tester's sandbox renewal grants real premium).
 8. **Mobile client** — `expo-iap`/`react-native-iap` with a `useIAP` hook; finish/acknowledge transactions only *after* server confirmation; a **pending-purchase retry queue** (a purchase can complete while the verify call fails — RevenueCat absorbed this for us; we now own it). The paywall styles survive; only the product-loading top half of `RevenueCatPaywall.tsx` is rewritten. `openNativeSubscriptionManagement` in `mobile/api/subscriptions.ts:79-143` already uses pure store deep links — keep it.
 
-**Migration risks — plan around these, don't discover them:**
+**Why this is the ideal moment: there are no paying users.** With zero existing subscribers there is nothing to grandfather, nothing to backfill, and no dual-stack transition period. Stripe and RevenueCat can be deleted outright in a single cutover — the schema can even be simplified rather than extended-for-compatibility (drop the `stripe`/`revenuecat` enum values and columns instead of carrying them). This window closes the moment the first subscription is sold; doing the migration **before** the conversion work in #1–#2 ships is strictly cheaper than after.
 
-1. **Stripe subscribers cannot be transferred** to a store subscription. Realistic plan: stop *selling* via Stripe on day one, keep a read-only Stripe webhook path (`customer.subscription.deleted` + `invoice.payment_failed` only) until natural churn completes — with annual plans that means **~12 months of dual-stack tail**, not a clean cutover.
-2. **RevenueCat subscribers are the easy case** — RC wraps native IAP, so the underlying store subscriptions keep renewing after RC is turned off. But observability breaks unless every `provider='revenuecat'` row has its `original_transaction_id`/`purchase_token` backfilled first — and the current code sometimes stores a *synthesized* ID (`restore_<product>_<unixtime>`, `revenuecat.go:176-193`). **Audit how many such rows exist before committing to a cutover date**; those users need a client-side re-verify on next app open.
-3. **Web loses the ability to sell.** Near-zero cost today — the web app is a marketing site whose pricing buttons link to `#download`; no web checkout exists. The real loss is optionality: promo codes, B2B/invoice sales, and any future commission-free channel. Accepted trade-off; revisit only if a web learning platform ships.
-4. **US iOS margin changes.** Moving US iOS from Stripe (~2.9%+30¢) to Apple means 15% under the Small Business Program (very likely at these price points and revenue), not 30% — model the delta at ~12pp. In exchange: native purchase UX for the highest-ARPU segment, no external-browser flow, no injunction-dependent legality.
-5. **Sandbox/production bifurcation and store test accounts** become our problem directly (RC normalized this before).
+**Remaining considerations (all small):**
 
-**Phasing:**
+1. **Web loses the ability to sell.** Near-zero cost — the web app is a marketing site whose pricing buttons link to `#download`; no web checkout exists. The real loss is optionality: promo codes, B2B/invoice sales, and any future commission-free channel. Accepted trade-off; revisit only if a web learning platform ships.
+2. **US iOS margin.** Native IAP means 15% under Apple's Small Business Program (a near-certainty at these price points), vs Stripe's ~2.9%+30¢ — model the delta at ~12pp. In exchange: native purchase UX for the highest-ARPU segment, no external-browser flow, no injunction-dependent legality, and one less integration to maintain.
+3. **Sandbox/production bifurcation and store test accounts** become our problem directly (RC normalized this before) — hence the `store_environment` column.
 
-- **Phase 0 (prerequisite):** extract `CheckSubscriptionLimits` out of the Stripe service into a standalone `EntitlementService` (`subscription.go:551-599` currently mixes entitlements into the Stripe service and calls RevenueCat), and fix the stale-JWT entitlement bug (#23) — premium state must come from the DB, not a 1-year-old token claim, or store-side renewals/refunds won't take effect.
-- **Phase 1:** build Apple + Google verification, notifications endpoints, linkage table, schema migration; ship the mobile IAP client behind a flag.
-- **Phase 2:** cut over new purchases to native IAP on both platforms; delete RevenueCat SDK + webhook after transaction-ID backfill.
-- **Phase 3:** Stripe becomes read-only (cancellation/failure events only); remove checkout-session endpoint, `usePaymentProvider`, and the Settings Stripe UI.
-- **Phase 4 (after tail):** delete `stripe-go`, remaining Stripe code, and 8 env vars. Note `NewSubscriptionService` currently **panics at boot without Stripe env vars** (`subscription.go:35-71`) — that coupling is removed in Phase 0.
+**Phasing (clean cutover):**
+
+- **Phase 0 (prerequisite):** extract `CheckSubscriptionLimits` out of the Stripe service into a standalone `EntitlementService` (`subscription.go:551-599` currently mixes entitlements into the Stripe service and calls RevenueCat), and fix the stale-JWT entitlement bug (#23) — premium state must come from the DB, not a 1-year-old token claim, or store-side renewals/refunds won't take effect. This also removes the boot-time coupling where `NewSubscriptionService` **panics without Stripe env vars** (`subscription.go:35-71`).
+- **Phase 1:** build Apple + Google verification, notification endpoints, linkage table, and the schema migration; ship the mobile IAP client.
+- **Phase 2:** delete everything in one pass — `stripe-go`, `react-native-purchases`, all `stripe*`/`revenuecat*` service/worker/handler files, both webhook routes, `usePaymentProvider` and the Settings Stripe UI, the `revenuecat_events` table, and all 8+ payment env vars. No read-only tail, no waiting period.
 
 **Success metric:** one purchase path per platform; purchase→entitlement latency < 5s; refunds revoke access automatically; zero reconciliation bugs of the class listed in #22.
 
@@ -374,7 +372,7 @@ Premium features simultaneously use the two worst gating patterns: **bait-and-ta
 **The problem.** The backend audit found live, user-facing breakage — not theoretical risk. The worst offenders:
 
 - **`PUT /wordlists/:id` is permanently broken**: a missing comma in the UPDATE statement (`api/internal/repository/wordlist.go:174` — `language_code=$3 updated_at=NOW()`) makes every wordlist rename/edit return 500. One-character fix.
-- **Stripe webhook status-enum mismatch**: Stripe statuses are written raw into a 4-value Postgres enum (`subscription.go:195,274`), and the enum spells **`cancelled`** while Stripe sends **`canceled`** — so every subscription-update webhook for a canceled/trialing sub throws an enum error and retries forever. Subscription state is silently diverging from Stripe today.
+- **Stripe webhook status-enum mismatch**: Stripe statuses are written raw into a 4-value Postgres enum (`subscription.go:195,274`), and the enum spells **`cancelled`** while Stripe sends **`canceled`** — every subscription-update webhook for a canceled/trialing sub would throw an enum error and retry forever. With no paying users and Stripe slated for deletion (#21), this needs no fix — but the same raw-status-into-enum pattern **must not be ported** to the Apple/Google workers, whose status vocabularies also won't match the enum.
 - **Error-report image regeneration panics on every attempt**: `image_generator_worker.go:139-140` constructs a zero-value `LeitnerSystemStrategy` (nil DB pool) — each user image report triggers up to 25 retries × 25 *paid* image generations, then fails anyway.
 - **Reporting a content error deletes the user's learning history**: `_unrelated_meaning`/`_unrelated_example` reports call `DeleteWordDefinitions`, which `ON DELETE CASCADE`s through `leitner_system_tracking` and `quiz_performance` — one tap on "this example is wrong" resets the word to box 1 and erases its analytics.
 - **Updating a word wipes its audio and notes**: the "mark as learned" flow (`http/word.go:103`) sends zero values for `audio_url`/`notes` and the repository writes them unconditionally — silent data loss on a common operation, which then disables audio quiz types for that word.
@@ -385,7 +383,7 @@ Premium features simultaneously use the two worst gating patterns: **bait-and-ta
 - **Cross-user writes**: `PUT /wordlists/<victim_id>/words/<my_word_id>` reparents an attacker's word into another user's wordlist (no ownership check on the target wordlist, `repository/word.go:177,198`), inflating the victim's free-tier quota.
 - **Missing uniqueness**: no unique constraint on `words(wordlist_id, name)` or `word_definitions(word_id, definition_id)` — duplicate adds spawn duplicate AI jobs and inflate every join.
 
-**Why it matters.** These are refund tickets, support load, corrupted analytics, and silent Stripe drift happening *now*. Several also directly undermine the revamp: #22's data-loss bugs will be blamed on the redesign if they surface during it, and the webhook bugs must be fixed before #21 reuses those code paths for Apple/Google.
+**Why it matters.** These are support load, corrupted analytics, and data loss happening *now* — and they directly undermine the revamp: the data-loss bugs will be blamed on the redesign if they surface during it. The webhook-pattern bugs (idempotency, enum mapping, commit-on-error) matter because #21 will otherwise copy them into the new Apple/Google workers — fix the patterns in the templates before they're cloned.
 
 **Goal.** All critical/high items in Appendix C fixed and covered by regression tests. The full inventory (25 medium + low findings, including timezone-dependent streak breakage, positional Expo receipt matching, and non-transactional account deletion) is in Appendix C.
 
