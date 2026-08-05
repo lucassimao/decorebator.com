@@ -99,31 +99,37 @@ func (s *CachedAnalyticsService) Stats(ctx context.Context) (*model.WordlistStat
 
 // ProgressSummary gets progress summary with caching
 func (s *CachedAnalyticsService) ProgressSummary(ctx context.Context) (*model.ProgressSummaryResponse, error) {
-	cacheKey := fmt.Sprintf("analytics:progress-summary:%d", s.userID)
+	cacheKey := fmt.Sprintf("analytics:progress-summary:v2:%d", s.userID)
 
 	// Try cache first
-	cached, err := s.cache.Get(ctx, cacheKey).Result()
-	if err == nil {
-		var summary model.ProgressSummaryResponse
-		if err := json.Unmarshal([]byte(cached), &summary); err == nil {
-			return &summary, nil
+	cached, cacheErr := s.cache.Get(ctx, cacheKey).Result()
+	var summary *model.ProgressSummaryResponse
+	if cacheErr == nil {
+		var cachedSummary model.ProgressSummaryResponse
+		if unmarshalErr := json.Unmarshal([]byte(cached), &cachedSummary); unmarshalErr == nil {
+			summary = &cachedSummary
 		}
 	}
 
-	// Compute from database
-	progress, err := s.repo.GetAllWordlistsProgress(ctx, s.userID)
+	if summary == nil {
+		progress, progressErr := s.repo.GetAllWordlistsProgress(ctx, s.userID)
+		if progressErr != nil {
+			return nil, progressErr
+		}
+
+		summary = &model.ProgressSummaryResponse{Wordlists: progress}
+		// Cache only slowly changing aggregates. DueCount remains zero in this
+		// serialized value and is refreshed below on every request.
+		if data, err := json.Marshal(summary); err == nil {
+			s.cache.Set(ctx, cacheKey, data, s.cacheTTL)
+		}
+	}
+
+	dueCounts, err := s.repo.GetDueCounts(ctx, s.userID)
 	if err != nil {
 		return nil, err
 	}
-
-	summary := &model.ProgressSummaryResponse{
-		Wordlists: progress,
-	}
-
-	// Cache the result
-	if data, err := json.Marshal(summary); err == nil {
-		s.cache.Set(ctx, cacheKey, data, s.cacheTTL)
-	}
+	applyDueCounts(summary.Wordlists, dueCounts)
 
 	return summary, nil
 }
@@ -339,6 +345,7 @@ func (s *CachedAnalyticsService) InvalidateWordlistAnalytics(ctx context.Context
 		fmt.Sprintf("analytics:box-distribution:%d:%d", userID, wordlistID),
 		fmt.Sprintf("analytics:practice-time:%d:%d", userID, wordlistID),
 		fmt.Sprintf("analytics:progress-summary:%d", userID),
+		fmt.Sprintf("analytics:progress-summary:v2:%d", userID),
 	}
 
 	// Also invalidate historical box distribution caches with common day ranges

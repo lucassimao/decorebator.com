@@ -18,6 +18,7 @@ type WordlistProgress struct {
 	TotalWords       int        `json:"totalWords"`
 	WordsMastered    int        `json:"wordsMastered"`
 	ProgressPercent  float64    `json:"progressPercent"`
+	DueCount         int        `json:"dueCount"`
 	CurrentStreak    int        `json:"currentStreak"`
 	LastActivityDate *time.Time `json:"lastActivityDate,omitempty"`
 }

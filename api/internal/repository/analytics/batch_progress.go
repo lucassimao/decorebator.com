@@ -152,3 +152,43 @@ func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, u
 
 	return progress, rows.Err()
 }
+
+// GetDueCounts returns a fresh per-wordlist count of definitions due now. It is
+// intentionally separate from the cacheable progress aggregates because the
+// answer changes as next_review_at crosses the current time.
+func (r *BatchProgressRepository) GetDueCounts(ctx context.Context, userID int64) (map[int64]int, error) {
+	query := `
+		SELECT
+			w.wordlist_id,
+			COUNT(DISTINCT lst.id) AS due_count
+		FROM leitner_system_tracking lst
+		JOIN definitions def ON def.id = lst.definition_id
+		JOIN words w ON w.id = lst.word_id
+		JOIN word_definitions wd ON wd.definition_id = def.id AND wd.word_id = w.id
+		WHERE lst.user_id = $1
+			AND w.learned = FALSE
+			AND def.meaning IS NOT NULL
+			AND lst.next_review_at IS NOT NULL
+			AND lst.next_review_at <= NOW()
+			AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())
+		GROUP BY w.wordlist_id
+	`
+
+	rows, err := r.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get due counts: %w", err)
+	}
+	defer rows.Close()
+
+	dueCounts := make(map[int64]int)
+	for rows.Next() {
+		var wordlistID int64
+		var dueCount int
+		if err := rows.Scan(&wordlistID, &dueCount); err != nil {
+			return nil, fmt.Errorf("failed to scan due count: %w", err)
+		}
+		dueCounts[wordlistID] = dueCount
+	}
+
+	return dueCounts, rows.Err()
+}

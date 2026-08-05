@@ -46,6 +46,7 @@ type DashboardStatsRepositoryInterface interface {
 // BatchProgressRepositoryInterface defines batch progress operations
 type BatchProgressRepositoryInterface interface {
 	GetAllWordlistsProgress(ctx context.Context, userID int64) ([]model.WordlistProgress, error)
+	GetDueCounts(ctx context.Context, userID int64) (map[int64]int, error)
 }
 
 // AnalyticsRepositoryInterface combines all analytics operations
@@ -144,4 +145,8 @@ func (r *AnalyticsRepository) GetPracticeTime(ctx context.Context, userID, wordl
 // Batch Progress Operations - delegate to sub-repository
 func (r *AnalyticsRepository) GetAllWordlistsProgress(ctx context.Context, userID int64) ([]model.WordlistProgress, error) {
 	return r.BatchProgress.GetAllWordlistsProgress(ctx, userID)
+}
+
+func (r *AnalyticsRepository) GetDueCounts(ctx context.Context, userID int64) (map[int64]int, error) {
+	return r.BatchProgress.GetDueCounts(ctx, userID)
 }

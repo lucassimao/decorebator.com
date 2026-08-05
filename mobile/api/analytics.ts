@@ -248,6 +248,7 @@ export interface WordlistProgress {
   totalWords: number;
   wordsMastered: number;
   progressPercent: number;
+  dueCount: number;
   currentStreak: number;
   lastActivityDate?: string;
 }

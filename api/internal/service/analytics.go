@@ -225,7 +225,19 @@ func (as *AnalyticsService) ProgressSummary(ctx context.Context) (*model.Progres
 		return nil, fmt.Errorf("failed to get wordlists progress: %w", err)
 	}
 
+	dueCounts, err := as.repo.GetDueCounts(ctx, as.userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get due counts: %w", err)
+	}
+	applyDueCounts(progress, dueCounts)
+
 	return &model.ProgressSummaryResponse{
 		Wordlists: progress,
 	}, nil
+}
+
+func applyDueCounts(progress []model.WordlistProgress, dueCounts map[int64]int) {
+	for i := range progress {
+		progress[i].DueCount = dueCounts[progress[i].WordlistID]
+	}
 }

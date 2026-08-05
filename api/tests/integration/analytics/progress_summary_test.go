@@ -213,6 +213,75 @@ func TestProgressSummaryEndpoint_EmptyResponse(t *testing.T) {
 	json.Value("wordlists").Array().IsEmpty()
 }
 
+// TestProgressSummaryEndpoint_DueCountMatchesQuizEligibility ensures the summary
+// only counts definitions that the quiz selection query can serve immediately.
+func TestProgressSummaryEndpoint_DueCountMatchesQuizEligibility(t *testing.T) {
+	server := setup.NewTestServer(t)
+	token := server.WithPremiumUser(t)
+	ctx := context.Background()
+
+	wordlistID := createTestWordlist(t, server, token, "Due Count", "Quiz eligibility contract")
+	_, _, dueTrackingID := createBasicWordStructure(t, server, token, wordlistID, "due")
+	_, _, futureTrackingID := createBasicWordStructure(t, server, token, wordlistID, "future")
+	_, _, skippedTrackingID := createBasicWordStructure(t, server, token, wordlistID, "skipped")
+	learnedWordID, _, learnedTrackingID := createBasicWordStructure(t, server, token, wordlistID, "learned")
+	unlinkedWordID, unlinkedDefinitionID, unlinkedTrackingID := createBasicWordStructure(t, server, token, wordlistID, "unlinked")
+
+	_, err := server.DB.Exec(ctx, `
+		UPDATE leitner_system_tracking
+		SET next_review_at = CASE
+			WHEN id = $1 THEN NOW() - INTERVAL '1 minute'
+			WHEN id = $2 THEN NOW() + INTERVAL '1 hour'
+			WHEN id IN ($3, $4, $5) THEN NOW() - INTERVAL '1 minute'
+		END,
+		temporarily_skipped_until = CASE
+			WHEN id = $3 THEN NOW() + INTERVAL '1 hour'
+			ELSE NULL
+		END
+		WHERE id IN ($1, $2, $3, $4, $5)`,
+		dueTrackingID, futureTrackingID, skippedTrackingID, learnedTrackingID, unlinkedTrackingID)
+	require.NoError(t, err)
+
+	_, err = server.DB.Exec(ctx, `UPDATE words SET learned = TRUE WHERE id = $1`, learnedWordID)
+	require.NoError(t, err)
+	_, err = server.DB.Exec(ctx,
+		`DELETE FROM word_definitions WHERE word_id = $1 AND definition_id = $2`,
+		unlinkedWordID, unlinkedDefinitionID)
+	require.NoError(t, err)
+
+	zeroDueWordlistID := createTestWordlist(t, server, token, "Nothing Due", "Future review only")
+	_, _, zeroDueTrackingID := createBasicWordStructure(t, server, token, zeroDueWordlistID, "later")
+	_, err = server.DB.Exec(ctx,
+		`UPDATE leitner_system_tracking SET next_review_at = NOW() + INTERVAL '1 hour' WHERE id = $1`,
+		zeroDueTrackingID)
+	require.NoError(t, err)
+
+	otherToken := server.WithPremiumUser(t)
+	otherWordlistID := createTestWordlist(t, server, otherToken, "Other User Due", "Must stay isolated")
+	_, _, otherTrackingID := createBasicWordStructure(t, server, otherToken, otherWordlistID, "private")
+	_, err = server.DB.Exec(ctx,
+		`UPDATE leitner_system_tracking SET next_review_at = NOW() - INTERVAL '1 minute' WHERE id = $1`,
+		otherTrackingID)
+	require.NoError(t, err)
+	flushRedisCache(t)
+
+	response := server.Expect.GET("/analytics/progress-summary").
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusOK)
+
+	wordlists := response.JSON().Object().Value("wordlists").Array()
+	require.Equal(t, 2, int(wordlists.Length().Raw()))
+	dueCounts := make(map[int64]int)
+	for _, item := range wordlists.Iter() {
+		wordlist := item.Object()
+		dueCounts[int64(wordlist.Value("wordlistId").Number().Raw())] =
+			int(wordlist.Value("dueCount").Number().Raw())
+	}
+	assert.Equal(t, map[int64]int{wordlistID: 1, zeroDueWordlistID: 0}, dueCounts)
+	assert.NotContains(t, dueCounts, otherWordlistID)
+}
+
 // TestProgressSummaryEndpoint_StreakCalculations tests current streak calculations
 func TestProgressSummaryEndpoint_StreakCalculations(t *testing.T) {
 	server := setup.NewTestServer(t)
