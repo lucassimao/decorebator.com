@@ -220,12 +220,16 @@ Phase 0.5 progress:
 
 Keep this contract independent of SDK names. Do not delete the current providers yet.
 
-- [ ] Define canonical subscription fields: account/user, store (`apple` or `google`), product ID, entitlement, status, start/end dates, cancellation/revocation state, environment, and last verified time.
+- [x] Define canonical subscription fields: account/user, store (`apple` or `google`), product ID, entitlement, status, start/end dates, cancellation/revocation state, environment, and last verified time.
 - [ ] Define Apple identity binding using an app-account identifier and original transaction identifier; define Google binding using a verified purchase token and an obfuscated account identifier. Never trust a client-supplied user ID without server binding.
 - [ ] Define event idempotency keys and unique constraints for Apple transaction/notification IDs and Google purchase tokens/event IDs.
 - [ ] Define server operations for purchase verification, restore/status refresh, and provider notification ingestion. Specify retry, pending, duplicate, invalid, revoked, and unknown-product behavior.
 - [ ] Define the mobile API response consumed by settings/paywall: products, current entitlement, pending state, error state, and restore result.
 - [ ] Select and spike an Expo-compatible native IAP implementation for SDK 54. Confirm that it works with the existing native projects and development-client workflow before committing to it.
+
+Phase 1 progress:
+
+- **2026-08-04 — canonical entitlement lifecycle complete.** Added the server-owned `StoreEntitlement` model and `docs/IAP_ENTITLEMENT_CONTRACT.md` with Apple/Google normalization, cancellation-versus-expiration semantics, fail-closed access rules, environment separation, and explicit deferral of provider identity/event persistence to the following items. Test-first evidence covers every enum, required fields, invalid periods/revocation, cancellation during a paid period, missing/expired/exact-boundary period ends, and access for each status. Claude `fable` identified deterministic pending-cancellation, fail-closed nil-period, and scope-separation issues; all were reconciled and the second `fable` review returned `APPROVED`. `make test-unit`, race-enabled unit tests, `make format-check`, changed-file lint, and `git diff --check` pass; targeted coverage reports 100% for every function in `entitlement.go`. The repository's aggregate model lint still reports only pre-existing findings in untouched `word.go`, `definition_image.go`, and legacy `subscription.go`, while the two changed Go files pass file-scoped `golangci-lint`.
 
 Gate 1 acceptance:
 
