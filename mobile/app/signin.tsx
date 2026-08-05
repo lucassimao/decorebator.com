@@ -126,7 +126,7 @@ const LoginScreen: React.FC = () => {
   };
 
   const handleSignUp = () => {
-    router.replace("/onboarding");
+    router.push("/onboarding");
   };
 
   const handleForgotPassword = () => {

@@ -9,6 +9,10 @@ import {
   ACTIVATION_EVENT_NAMES,
   captureActivationEvent,
 } from "@/utils/activationEvents";
+import {
+  markOnboardingSeen,
+  replaceOnboardingStack,
+} from "@/utils/launchRouting";
 
 const OnboardingWelcome = () => {
   const router = useRouter();
@@ -59,14 +63,19 @@ const OnboardingWelcome = () => {
     captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.ONBOARDING_STARTED, {
       source: "welcome",
     });
-    router.replace("/onboarding/features");
+    router.push("/onboarding/features");
   };
 
   const onSkip = async () => {
     captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.ONBOARDING_SKIPPED, {
       step: "welcome",
     });
-    router.replace("/signup");
+    try {
+      await markOnboardingSeen();
+    } catch (error) {
+      console.warn("Failed to persist onboarding state:", error);
+    }
+    replaceOnboardingStack(router, "/signup");
   };
 
   const skipLabel = t("common.skip", "Skip");

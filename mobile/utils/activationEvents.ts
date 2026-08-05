@@ -47,7 +47,7 @@ export type ActivationEventProperties = {
   errorCode?: string;
   step?: string;
   slide?: string;
-  destination?: "signup" | "signin";
+  destination?: "signup";
   store?: "apple" | "google";
   productId?: string;
   billingPeriod?: "monthly" | "annual";

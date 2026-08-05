@@ -80,14 +80,36 @@ jest.mock("react-native-purchases", () => ({
   getCustomerInfo: jest.fn(),
 }));
 
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getAllKeys: jest.fn(() => Promise.resolve([])),
-  multiRemove: jest.fn(() => Promise.resolve()),
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-}));
+jest.mock("@react-native-async-storage/async-storage", () => {
+  const storage = new Map();
+  return {
+    getAllKeys: jest.fn(() => Promise.resolve([...storage.keys()])),
+    multiGet: jest.fn((keys) =>
+      Promise.resolve(keys.map((key) => [key, storage.get(key) ?? null])),
+    ),
+    multiSet: jest.fn((entries) => {
+      entries.forEach(([key, value]) => storage.set(key, value));
+      return Promise.resolve();
+    }),
+    multiRemove: jest.fn((keys) => {
+      keys.forEach((key) => storage.delete(key));
+      return Promise.resolve();
+    }),
+    getItem: jest.fn((key) => Promise.resolve(storage.get(key) ?? null)),
+    setItem: jest.fn((key, value) => {
+      storage.set(key, value);
+      return Promise.resolve();
+    }),
+    removeItem: jest.fn((key) => {
+      storage.delete(key);
+      return Promise.resolve();
+    }),
+    clear: jest.fn(() => {
+      storage.clear();
+      return Promise.resolve();
+    }),
+  };
+});
 
 // Configure i18n for tests
 beforeAll(async () => {

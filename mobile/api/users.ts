@@ -61,6 +61,7 @@ export const SIGN_IN_ERROR =
   "Invalid credentials. Are you using the correct email and password?";
 
 const API_URL = getApiBaseUrl();
+let cachedAuthorization: string | null | undefined;
 
 export async function signup(data: UserSignup) {
   const endpoint = API_URL + "/users";
@@ -108,6 +109,7 @@ export async function sigout() {
       throw new Error("Unknown platform: " + Platform.OS);
     }
   } finally {
+    cachedAuthorization = null;
     requestAnalyticsIdentityReset();
   }
 }
@@ -257,6 +259,7 @@ function saveAuthorization(authorization: string) {
   } else {
     throw new Error("Unknown platform: " + Platform.OS);
   }
+  cachedAuthorization = authorization;
 
   // Update offline manager with premium status from JWT
   try {
@@ -271,11 +274,17 @@ function saveAuthorization(authorization: string) {
 }
 
 export function getAuthorization() {
-  if (Platform.OS === "web") {
-    return localStorage.getItem("authorization");
-  } else if (Platform.OS === "ios" || Platform.OS === "android") {
-    return SecureStore.getItem("authorization");
-  } else {
-    throw new Error("Unsupported platform: " + Platform.OS);
+  if (cachedAuthorization === undefined) {
+    if (Platform.OS === "web") {
+      cachedAuthorization =
+        typeof localStorage === "undefined"
+          ? null
+          : localStorage.getItem("authorization");
+    } else if (Platform.OS === "ios" || Platform.OS === "android") {
+      cachedAuthorization = SecureStore.getItem("authorization");
+    } else {
+      throw new Error("Unsupported platform: " + Platform.OS);
+    }
   }
+  return cachedAuthorization;
 }

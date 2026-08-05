@@ -16,6 +16,10 @@ import {
   ACTIVATION_EVENT_NAMES,
   captureActivationEvent,
 } from "@/utils/activationEvents";
+import {
+  markOnboardingSeen,
+  replaceOnboardingStack,
+} from "@/utils/launchRouting";
 
 export default function OnboardingAccount() {
   const router = useRouter();
@@ -69,12 +73,19 @@ export default function OnboardingAccount() {
   );
 
   const finish = async (to: "/signup" | "/signin") => {
-    captureActivationEvent(
-      posthog,
-      ACTIVATION_EVENT_NAMES.ONBOARDING_COMPLETED,
-      { destination: to === "/signup" ? "signup" : "signin" },
-    );
-    router.replace(to);
+    if (to === "/signup") {
+      captureActivationEvent(
+        posthog,
+        ACTIVATION_EVENT_NAMES.ONBOARDING_COMPLETED,
+        { destination: "signup" },
+      );
+    }
+    try {
+      await markOnboardingSeen();
+    } catch (error) {
+      console.warn("Failed to persist onboarding state:", error);
+    }
+    replaceOnboardingStack(router, to);
   };
 
   return (
@@ -83,7 +94,7 @@ export default function OnboardingAccount() {
       totalSteps={3}
       showBack
       backLabel={t("common.back", "Back")}
-      onBack={() => router.replace("/onboarding/features")}
+      onBack={() => router.back()}
       stepLabel={t("onboarding.stepIndicator", {
         step: 3,
         total: 3,

@@ -278,7 +278,7 @@ export default function OnboardingFeatures() {
         { slide: slides[next].key },
       );
     } else {
-      router.replace("/onboarding/account");
+      router.push("/onboarding/account");
     }
   };
 
@@ -286,7 +286,7 @@ export default function OnboardingFeatures() {
     captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.ONBOARDING_SKIPPED, {
       step: "features",
     });
-    router.replace("/onboarding/account");
+    router.push("/onboarding/account");
   };
 
   const nextLabel =
@@ -303,7 +303,7 @@ export default function OnboardingFeatures() {
       onSkip={onSkip}
       showBack
       backLabel={t("common.back", "Back")}
-      onBack={() => router.replace("/onboarding")}
+      onBack={() => router.back()}
       stepLabel={t("onboarding.stepIndicator", {
         step: 2,
         total: 3,

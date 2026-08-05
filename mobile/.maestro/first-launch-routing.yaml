@@ -1,0 +1,43 @@
+appId: com.lsimaocosta.decorebator
+name: First launch and onboarding routing
+tags:
+  - smoke
+  - onboarding
+---
+- clearState
+- launchApp
+- extendedWaitUntil:
+    visible: "http://10.0.2.2:8081"
+    timeout: 15000
+- tapOn: "http://10.0.2.2:8081"
+- extendedWaitUntil:
+    visible: "This is the developer menu. It gives you access to useful tools in your development builds."
+    timeout: 15000
+- runFlow:
+    when:
+      visible: "This is the developer menu. It gives you access to useful tools in your development builds."
+    commands:
+      - tapOn: "Continue"
+- runFlow:
+    when:
+      visible: "Connected to:"
+    commands:
+      - back
+- extendedWaitUntil:
+    visible: "Welcome to"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "See what you can do"
+    timeout: 5000
+- back
+- assertVisible: "Welcome to"
+- tapOn: "Skip"
+- extendedWaitUntil:
+    visible: "Sign Up"
+    timeout: 5000
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: "Welcome back!"
+    timeout: 15000

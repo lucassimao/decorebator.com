@@ -1,4 +1,4 @@
-import { getProfile, type UserProfile } from "@/api/users";
+import { getAuthorization, getProfile, type UserProfile } from "@/api/users";
 import {
   getSubscriptionStatus,
   type SubscriptionStatus,
@@ -36,6 +36,7 @@ interface UserSessionData {
 }
 
 export function useUserSession(): UserSessionData {
+  const hasAuthorization = Boolean(getAuthorization());
   const [cachedUser, setCachedUser] = useState<UserProfile | null>(null);
   const [cachedSubscription, setCachedSubscription] =
     useState<SubscriptionStatus | null>(null);
@@ -44,6 +45,11 @@ export function useUserSession(): UserSessionData {
     let cancelled = false;
 
     const loadCachedSession = async () => {
+      if (!hasAuthorization) {
+        setCachedUser(null);
+        setCachedSubscription(null);
+        return;
+      }
       try {
         const [userEntry, subscriptionEntry] = await AsyncStorage.multiGet([
           "cachedUserProfile",
@@ -68,7 +74,7 @@ export function useUserSession(): UserSessionData {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hasAuthorization]);
 
   // Single user profile query
   const {
@@ -78,6 +84,7 @@ export function useUserSession(): UserSessionData {
   } = useQuery({
     queryKey: ["userProfile"],
     queryFn: getProfile,
+    enabled: hasAuthorization,
     staleTime: 5 * 60 * 1000, // 5 minutes - matches subscription query
   });
 
@@ -89,22 +96,29 @@ export function useUserSession(): UserSessionData {
   } = useQuery({
     queryKey: ["subscription"],
     queryFn: getSubscriptionStatus,
+    enabled: hasAuthorization,
     staleTime: 5 * 60 * 1000, // 5 minutes - allows optimistic data to persist
   });
 
   // Derive essential data
-  const effectiveUser = user ?? cachedUser;
-  const effectiveSubscription = subscription ?? cachedSubscription;
+  const effectiveUser = hasAuthorization ? user ?? cachedUser : null;
+  const effectiveSubscription = hasAuthorization
+    ? subscription ?? cachedSubscription
+    : null;
   const userId = effectiveUser?.id || null;
   const country = effectiveUser?.country || null;
   const subscriptionPlan = effectiveUser?.subscriptionPlan || "free";
   const isPremium = subscriptionPlan !== "free";
   const hasOptimisticSubscription =
     effectiveSubscription?.hasOptimisticSubscription ?? false;
-  const isLoading = (userLoading || subscriptionLoading) && !effectiveUser;
+  const isLoading =
+    hasAuthorization && (userLoading || subscriptionLoading) && !effectiveUser;
   const isOnline = offlineManager.getNetworkStatus();
-  const error =
-    !isOnline && effectiveUser ? null : userError || subscriptionError;
+  const error = hasAuthorization
+    ? !isOnline && effectiveUser
+      ? null
+      : userError || subscriptionError
+    : null;
 
   // Cache timing strategy based on subscription tier
   const cacheConfig = {
