@@ -1234,22 +1234,18 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	ctx context.Context,
 	quizResult QuizResult,
 	isPremium bool,
-	transactionPtr *pgx.Tx) error {
-
+	transactionPtr *pgx.Tx) (returnErr error) {
 	var tx pgx.Tx
 	var err error
+	ownsTransaction := transactionPtr == nil
 
-	if transactionPtr == nil {
+	if ownsTransaction {
 		tx, err = s.db.Begin(ctx)
 		if err != nil {
 			return err
 		}
 		defer func() {
-			if err == nil {
-				if commitErr := tx.Commit(ctx); commitErr != nil {
-					common.Logger.Error("failed to commit transaction in leitner system", "error", commitErr)
-				}
-			} else {
+			if returnErr != nil {
 				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 					common.Logger.Error("failed to rollback transaction in leitner system", "error", rollbackErr)
 				}
@@ -1300,14 +1296,14 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	quizResult.BoxID = currentBoxId
 
 	// Track analytics using injected writer
-	err = (*s.analyticsWriter).TrackQuiz(ctx, quizResult, tx)
-	if err != nil {
-		// Log error but don't fail the transaction
-		common.Logger.Error("failed to track quiz performance",
-			"error", err,
-			"userId", quizResult.UserID,
-			"wordId", quizResult.WordID,
-			"quizType", quizResult.QuizType)
+	if err = (*s.analyticsWriter).TrackQuiz(ctx, quizResult, tx); err != nil {
+		return fmt.Errorf("failed to track quiz performance: %w", err)
+	}
+
+	if ownsTransaction {
+		if err = tx.Commit(ctx); err != nil {
+			return fmt.Errorf("failed to commit quiz result: %w", err)
+		}
 	}
 
 	// Update box distribution snapshot and invalidate cache (outside transaction)

@@ -120,10 +120,17 @@ func CleanTestData(db *pgxpool.Pool) error {
 
 	// Clean tables
 	for _, table := range tables {
+		var exists bool
+		err = tx.QueryRow(ctx, "SELECT to_regclass($1) IS NOT NULL", "public."+table).Scan(&exists)
+		if err != nil {
+			return fmt.Errorf("failed to inspect cleanup table %s: %w", table, err)
+		}
+		if !exists {
+			continue
+		}
 		_, err = tx.Exec(ctx, fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE", table))
 		if err != nil {
-			// Log the error but continue with other tables
-			fmt.Printf("Warning: failed to truncate table %s: %v\n", table, err)
+			return fmt.Errorf("failed to truncate table %s: %w", table, err)
 		}
 	}
 

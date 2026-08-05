@@ -46,6 +46,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUserSession } from "@/hooks/useUserSession";
 import { registerDevicePushToken } from "@/utils/pushNotifications";
 import type { QuizType } from "@/api/wordlists";
+import {
+  claimQuizSubmission,
+  prepareQuizTypeSelection,
+  resetQuizSubmission,
+} from "@/utils/quizSession";
 
 const QuizScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -104,6 +109,7 @@ const QuizScreen: React.FC = () => {
   const quizSessionCompletedRef = useRef(false);
   const quizCountRef = useRef(0);
   const correctCountRef = useRef(0);
+  const submissionLockRef = useRef(false);
   const [showQuizTypeModal, setShowQuizTypeModal] = useState(false);
   const [selectedQuizTypes, setSelectedQuizTypes] =
     useState<QuizType[]>(allQuizTypes);
@@ -288,7 +294,7 @@ const QuizScreen: React.FC = () => {
   });
 
   const handleAnswerSelect = (index: number) => {
-    if (showResult) return;
+    if (!claimQuizSubmission(submissionLockRef)) return;
 
     setSelectedAnswer(index);
     setShowResult(true);
@@ -305,7 +311,8 @@ const QuizScreen: React.FC = () => {
   };
 
   const handleWriteAnswer = () => {
-    if (!userInput.trim() || !quiz) return;
+    if (!userInput.trim() || !quiz || !claimQuizSubmission(submissionLockRef))
+      return;
 
     setIsSubmitted(true);
     setShowResult(true);
@@ -325,7 +332,7 @@ const QuizScreen: React.FC = () => {
   };
 
   const handleSkipQuestion = () => {
-    if (!quiz) return;
+    if (!quiz || !claimQuizSubmission(submissionLockRef)) return;
 
     setIsSubmitted(true);
     setShowResult(true);
@@ -336,6 +343,7 @@ const QuizScreen: React.FC = () => {
   };
 
   const handleNextQuiz = () => {
+    resetQuizSubmission(submissionLockRef);
     setIsLoadingNext(true);
     setSelectedAnswer(null);
     setShowResult(false);
@@ -426,7 +434,7 @@ const QuizScreen: React.FC = () => {
   };
 
   const handleApplyQuizTypes = () => {
-    if (draftQuizTypes.length === 0) return;
+    if (!prepareQuizTypeSelection(submissionLockRef, draftQuizTypes)) return;
     setSelectedQuizTypes(draftQuizTypes);
     setShowQuizTypeModal(false);
     setRetryCount(0);

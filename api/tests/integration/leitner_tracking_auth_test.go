@@ -2,14 +2,27 @@ package integration
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
 	"decorebator.com/tests/integration/setup"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
+
+type failingQuizAnalyticsWriter struct{}
+
+func (failingQuizAnalyticsWriter) TrackQuiz(context.Context, common.QuizResult, pgx.Tx) error {
+	return errors.New("forced analytics failure")
+}
+
+func (failingQuizAnalyticsWriter) UpdateBoxDistribution(context.Context, int64, int64) error {
+	return nil
+}
 
 func TestQuizAnswerValidatesTrackingOwnership(t *testing.T) {
 	server := setup.NewTestServer(t)
@@ -85,6 +98,21 @@ func TestQuizAnswerValidatesTrackingOwnership(t *testing.T) {
 		}).
 		Expect().
 		Status(204)
+
+	var persistedBox int64
+	require.NoError(t, server.DB.QueryRow(ctx, `SELECT box_id FROM leitner_system_tracking WHERE id=$1`, trackingID).Scan(&persistedBox))
+	require.Equal(t, int64(2), persistedBox, "204 must mean the answer transaction committed")
+
+	var failingWriter service.LeitnerAnalyticsWriter = failingQuizAnalyticsWriter{}
+	strategy := service.NewLeitnerSystemStrategy(server.DB, nil, nil, &failingWriter, nil)
+	err = strategy.SaveQuizResult(ctx, common.QuizResult{
+		UserID: userID, WordlistID: wordlistID, WordID: wordID, DefinitionID: definitionID,
+		LeitnerSystemTrackingID: trackingID, QuizType: model.QuizType("GUESS_MEANING"),
+		IsCorrect: true, ResponseTimeMs: 1000,
+	}, false, nil)
+	require.ErrorContains(t, err, "failed to track quiz performance")
+	require.NoError(t, server.DB.QueryRow(ctx, `SELECT box_id FROM leitner_system_tracking WHERE id=$1`, trackingID).Scan(&persistedBox))
+	require.Equal(t, int64(2), persistedBox, "analytics failure must roll back the Leitner transition")
 
 	// Wrong wordlist ID should be rejected.
 	otherWordlistID := wordlistID + 999
