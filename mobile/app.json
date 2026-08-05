@@ -54,6 +54,25 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/SpaceMono-Regular.ttf"],
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Space Mono",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/SpaceMono-Regular.ttf",
+                    "weight": 400
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
       "expo-audio",
       "expo-secure-store",
       "expo-mail-composer",

@@ -7,7 +7,7 @@ import React, {
   useMemo,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useColorScheme, useWindowDimensions } from "react-native";
+import { TextStyle, useColorScheme, useWindowDimensions } from "react-native";
 import {
   getResponsiveFontSizes,
   getResponsiveSpacing,
@@ -78,11 +78,27 @@ export interface Theme {
       backdropHeavy: string; // Darker backdrop
       backdropLight: string; // Light backdrop
     };
+    roles: {
+      action: string;
+      actionPressed: string;
+      onAction: string;
+      brandAccent: string;
+      brandAccentPressed: string;
+      onBrandAccent: string;
+      error: string;
+      emphasisSurface: string;
+      focus: string;
+      disabledBackground: string;
+      disabledText: string;
+      scrim: string;
+    };
   };
   spacing: {
     xs: number;
     sm: number;
+    compact: number;
     md: number;
+    comfortable: number;
     lg: number;
     xl: number;
     xxl: number;
@@ -93,6 +109,28 @@ export interface Theme {
     lg: number;
     xl: number;
     full: number;
+  };
+  typography: Record<
+    | "micro"
+    | "caption"
+    | "label"
+    | "small"
+    | "body"
+    | "heading"
+    | "title"
+    | "feature"
+    | "display",
+    TextStyle
+  >;
+  geometry: {
+    touchTarget: number;
+    controlHeight: number;
+  };
+  motion: {
+    fast: number;
+    standard: number;
+    sheet: number;
+    pressScale: number;
   };
   shadows: {
     sm: {
@@ -118,6 +156,40 @@ export interface Theme {
     };
   };
 }
+
+const sharedTypography: Theme["typography"] = {
+  micro: { fontSize: 10, lineHeight: 14 },
+  caption: { fontSize: 11, lineHeight: 15 },
+  label: { fontSize: 12, lineHeight: 16, fontWeight: "700" },
+  small: { fontSize: 13, lineHeight: 18 },
+  body: { fontSize: 15, lineHeight: 22 },
+  heading: { fontSize: 16, lineHeight: 22, fontWeight: "700" },
+  title: { fontSize: 20, lineHeight: 26, fontWeight: "700" },
+  feature: {
+    fontFamily: "Space Mono",
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: "400",
+  },
+  display: {
+    fontFamily: "Space Mono",
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: "400",
+  },
+};
+
+const sharedGeometry: Theme["geometry"] = {
+  touchTarget: 44,
+  controlHeight: 48,
+};
+
+const sharedMotion: Theme["motion"] = {
+  fast: 130,
+  standard: 180,
+  sheet: 240,
+  pressScale: 0.975,
+};
 
 // Light theme definition
 const lightTheme: Theme = {
@@ -172,11 +244,27 @@ const lightTheme: Theme = {
       backdropHeavy: "rgba(0, 0, 0, 0.5)",
       backdropLight: "rgba(0, 0, 0, 0.3)",
     },
+    roles: {
+      action: "#A93312",
+      actionPressed: "#81260C",
+      onAction: "#FFFFFF",
+      brandAccent: "#FF7B54",
+      brandAccentPressed: "#E85F3A",
+      onBrandAccent: "#28140D",
+      error: "#B3261E",
+      emphasisSurface: "#FFF0E6",
+      focus: "#315B7D",
+      disabledBackground: "#E6D8CA",
+      disabledText: "#675D55",
+      scrim: "rgba(15, 18, 18, 0.5)",
+    },
   },
   spacing: {
     xs: 4,
     sm: 8,
+    compact: 12,
     md: 16,
+    comfortable: 20,
     lg: 24,
     xl: 32,
     xxl: 48,
@@ -188,6 +276,9 @@ const lightTheme: Theme = {
     xl: 24,
     full: 9999,
   },
+  typography: sharedTypography,
+  geometry: sharedGeometry,
+  motion: sharedMotion,
   shadows: {
     sm: {
       shadowColor: "#000",
@@ -266,9 +357,26 @@ const darkTheme: Theme = {
       backdropHeavy: "rgba(0, 0, 0, 0.8)",
       backdropLight: "rgba(0, 0, 0, 0.5)",
     },
+    roles: {
+      action: "#FF8D69",
+      actionPressed: "#FFAC91",
+      onAction: "#28140D",
+      brandAccent: "#FF8D69",
+      brandAccentPressed: "#FFAC91",
+      onBrandAccent: "#28140D",
+      error: "#FF6B6B",
+      emphasisSurface: "#3A2720",
+      focus: "#89B8DE",
+      disabledBackground: "#394245",
+      disabledText: "#C6C0B6",
+      scrim: "rgba(0, 0, 0, 0.68)",
+    },
   },
   spacing: lightTheme.spacing,
   borderRadius: lightTheme.borderRadius,
+  typography: sharedTypography,
+  geometry: sharedGeometry,
+  motion: sharedMotion,
   shadows: {
     sm: {
       shadowColor: "#000",
