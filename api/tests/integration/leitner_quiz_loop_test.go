@@ -234,7 +234,7 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 	// 2. Insert wordlist
 	_, err = tx.Exec(ctx, `
 		INSERT INTO wordlists (id, name, description, user_id, language_code, words_count, pronunciation_system)
-		VALUES (7, 'Test browser stack1', '', 5, 'en', 2, 'ipa')
+		VALUES (7, 'Test browser stack1', '', 5, 'en', 7, 'ipa')
 		ON CONFLICT (id) DO NOTHING
 	`)
 	require.NoError(t, err)
@@ -244,7 +244,12 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 		INSERT INTO words (id, name, notes, learned, user_id, wordlist_id, pronunciation, audio_url, processing_status)
 		VALUES 
 			(168, 'shrill', '', false, 5, 7, '', 'https://decorebator.nyc3.digitaloceanspaces.com/audio/audio-138-shrill.mp3', 'completed'),
-			(169, 'crests', '', false, 5, 7, '', 'https://decorebator.nyc3.digitaloceanspaces.com/audio/audio-131-crests.mp3', 'completed')
+			(169, 'crests', '', false, 5, 7, '', 'https://decorebator.nyc3.digitaloceanspaces.com/audio/audio-131-crests.mp3', 'completed'),
+			(170, 'summit', '', false, 5, 7, '', '', 'completed'),
+			(171, 'peak', '', false, 5, 7, '', '', 'completed'),
+			(172, 'piercing', '', false, 5, 7, '', '', 'completed'),
+			(173, 'harsh', '', false, 5, 7, '', '', 'completed'),
+			(174, 'climb', '', false, 5, 7, '', '', 'completed')
 		ON CONFLICT (id) DO NOTHING
 	`)
 	require.NoError(t, err)
@@ -270,7 +275,17 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 				'https://decorebator.nyc3.digitaloceanspaces.com/audio/meaning-274.mp3',
 				'{"The siren continued to [shrill] in the distance.","He would often [shrill] at his pet to stop misbehaving.","The birds began to [shrill] at dawn."}',
 				'[{"tense": "present", "examples": ["The siren [shrills] every time there is an emergency.", "He [shrills] angrily at the noisy neighbors.", "As the teacher [shrills] at the students to silence them, they went quiet."], "inflection": "shrills"}, {"tense": "past", "examples": ["The child [shrilled] with delight at the sight of the ice cream.", "He [shrilled] loudly when he stubbed his toe.", "The alarm [shrilled] in the night, waking everyone up."], "inflection": "shrilled"}, {"tense": "past participle", "examples": ["The bird has [shrilled] joyfully in the morning.", "She has [shrilled] at the top of her lungs in anger.", "The device, once activated, has [shrilled] without stopping."], "inflection": "shrilled"}]'::jsonb,
-				'ChatGPT', null, null, 'verb')
+				'ChatGPT', null, null, 'verb'),
+			(275, 'summit', 'en', 'noun', 'The highest point of a hill or mountain.', '',
+				'{"They reached the [summit] before noon."}', '[]'::jsonb, 'ChatGPT', null, null, 'noun'),
+			(276, 'peak', 'en', 'noun', 'The pointed top of a mountain.', '',
+				'{"Snow covered the [peak]."}', '[]'::jsonb, 'ChatGPT', null, null, 'noun'),
+			(277, 'piercing', 'en', 'adjective', 'Extremely sharp or intense in sound.', '',
+				'{"A [piercing] alarm filled the room."}', '[]'::jsonb, 'ChatGPT', null, null, 'adjective'),
+			(278, 'harsh', 'en', 'adjective', 'Unpleasantly rough or severe.', '',
+				'{"The [harsh] noise made them wince."}', '[]'::jsonb, 'ChatGPT', null, null, 'adjective'),
+			(279, 'climb', 'en', 'verb', 'To move upward toward a higher place.', '',
+				'{"They [climb] the ridge together."}', '[]'::jsonb, 'ChatGPT', null, null, 'verb')
 		ON CONFLICT (id) DO NOTHING
 	`)
 	require.NoError(t, err)
@@ -280,7 +295,9 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 		INSERT INTO word_definitions (word_id, definition_id)
 		VALUES 
 			(168, 273), (168, 274),
-			(169, 259), (169, 260)
+			(169, 259), (169, 260),
+			(170, 275), (171, 276),
+			(172, 277), (173, 278), (174, 279)
 		ON CONFLICT DO NOTHING
 	`)
 	require.NoError(t, err)

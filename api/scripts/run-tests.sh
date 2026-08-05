@@ -6,7 +6,7 @@
 set -e
 
 # Tool versions (matching GitHub workflow and Makefile)
-GO_VERSION="1.23"
+GO_VERSION="1.25.5"
 POSTGRES_VERSION="15"
 REDIS_VERSION="7-alpine"
 MINIO_VERSION="latest"

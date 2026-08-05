@@ -11,6 +11,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+	"github.com/riverqueue/river/rivermigrate"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,7 +41,7 @@ func CreateTestDB(t *testing.T) *pgxpool.Pool {
 }
 
 // RunMigrations runs database migrations for tests
-func RunMigrations(_ *pgxpool.Pool) error {
+func RunMigrations(db *pgxpool.Pool) error {
 	dbURL := getTestDatabaseURL()
 
 	// Try different migration paths based on where tests are run from
@@ -71,6 +73,17 @@ func RunMigrations(_ *pgxpool.Pool) error {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
+	// Migration 52 deliberately removes the historical app-owned River schema.
+	// Recreate the current queue schema from River's bundled migrations so tests
+	// exercise the same ownership boundary as deployed workers.
+	riverMigrator, err := rivermigrate.New(riverpgxv5.New(db), nil)
+	if err != nil {
+		return fmt.Errorf("failed to create River migrator: %w", err)
+	}
+	if _, err := riverMigrator.Migrate(context.Background(), rivermigrate.DirectionUp, nil); err != nil {
+		return fmt.Errorf("failed to run River migrations: %w", err)
+	}
+
 	return nil
 }
 
@@ -80,6 +93,14 @@ func CleanTestData(db *pgxpool.Pool) error {
 
 	// List of tables to clean in order (respecting foreign key constraints)
 	tables := []string{
+		"provider_event_inbox",
+		"store_purchase_bindings",
+		"store_account_identities",
+		"store_entitlements",
+		"push_receipts",
+		"push_notification_events",
+		"push_tokens",
+		"revenuecat_events",
 		"quiz_performance",
 		"word_mastery",
 		"learning_progress",
@@ -92,6 +113,7 @@ func CleanTestData(db *pgxpool.Pool) error {
 		"definition_images",
 		"definition_example_audio",
 		"example_audio_usage",
+		"example_usage",
 		"definitions",
 		"words",
 		"wordlists",
@@ -99,6 +121,10 @@ func CleanTestData(db *pgxpool.Pool) error {
 		"subscriptions",
 		"users",
 		"river_job",
+		"river_client_queue",
+		"river_client",
+		"river_queue",
+		"river_leader",
 	}
 
 	// Use a transaction to ensure atomicity

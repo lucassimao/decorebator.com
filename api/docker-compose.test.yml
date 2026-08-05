@@ -45,7 +45,7 @@ services:
       exit 0;"
 
   main:                         
-    image: golang:1.23
+    image: golang:1.25.5
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,13 +53,24 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      createbuckets:
+        condition: service_completed_successfully
     volumes:
       - .:/app    
-      - /home/lucas/go/pkg/mod:/go/pkg/mod # '/home/lucas/go/pkg/mod' comes from `go env GOMODCACHE`
+      - go-mod-cache:/go/pkg/mod
     working_dir: /app
-    command: go test -coverpkg=./internal/... -coverprofile=coverage.out -cover -v ./tests/integration/...
+    command: go test -race -count=1 -p=1 -coverpkg=./internal/... -coverprofile=coverage.out -covermode=atomic -v ./tests/integration/...
     env_file:
       - .env.test
+    environment:
+      DATABASE_URL: postgres://test_user:test_pass@postgres:5432/decorebator_test?sslmode=disable
+      POSTGRES_URL: postgres://test_user:test_pass@postgres:5432/decorebator_test?sslmode=disable
+      TEST_DATABASE_URL: postgres://test_user:test_pass@postgres:5432/decorebator_test?sslmode=disable
+      REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MINIO_HOST: minio
+      MINIO_PORT: 9000
 
   postgres:
     image: postgres:15
@@ -79,3 +90,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5 
+
+volumes:
+  go-mod-cache:
