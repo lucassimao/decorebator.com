@@ -1,0 +1,1026 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Decorebator UI primitives prototype</title>
+    <style>
+      @font-face {
+        font-family: "Space Mono";
+        src: url("../../../mobile/assets/fonts/SpaceMono-Regular.ttf") format("truetype");
+        font-display: swap;
+      }
+
+      :root {
+        color-scheme: light;
+        --canvas: #e9e3d6;
+        --paper: #fffaf0;
+        --surface: #fffefb;
+        --surface-raised: #ffffff;
+        --hero-bg: #272b2d;
+        --hero-ink: #fffaf0;
+        --ink: #272b2d;
+        --ink-muted: #666863;
+        --line: #ded7c9;
+        --line-strong: #bdb5a7;
+        --brand: #ff7b54;
+        --action: #a93312;
+        --action-pressed: #81260c;
+        --on-action: #ffffff;
+        --blue: #315b7d;
+        --success: #27734c;
+        --danger: #b52f36;
+        --focus: #315b7d;
+        --disabled-bg: #e6d8ca;
+        --disabled-ink: #675d55;
+        --shadow: 0 24px 64px rgba(49, 42, 31, 0.18);
+        --radius-sm: 10px;
+        --radius-control: 14px;
+        --radius-md: 16px;
+        --radius-card: 20px;
+        --radius-lg: 24px;
+        --radius-full: 999px;
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-5: 20px;
+        --space-6: 24px;
+        --space-7: 32px;
+        --space-8: 48px;
+        --type-micro: 10px;
+        --type-caption: 11px;
+        --type-label: 12px;
+        --type-small: 13px;
+        --type-body: 15px;
+        --type-heading: 16px;
+        --type-title: 20px;
+        --type-feature: 24px;
+        --type-display: 34px;
+        --touch-target: 44px;
+        --control-height: 48px;
+        --phone-content-clearance: calc(var(--space-8) * 2 + var(--space-4));
+        --phone-radius: 48px;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --canvas: #12181a;
+        --paper: #171d1f;
+        --surface: #1e2527;
+        --surface-raised: #252d30;
+        --hero-bg: #252d30;
+        --hero-ink: #f7f1e6;
+        --ink: #f7f1e6;
+        --ink-muted: #b9b5ac;
+        --line: #394245;
+        --line-strong: #596366;
+        --brand: #ff8d69;
+        --action: #ff8d69;
+        --action-pressed: #ffac91;
+        --on-action: #28140d;
+        --blue: #89b8de;
+        --success: #79c89c;
+        --danger: #ff9499;
+        --focus: #89b8de;
+        --disabled-bg: #394245;
+        --disabled-ink: #c6c0b6;
+        --shadow: 0 24px 64px rgba(0, 0, 0, 0.42);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--brand) 18%, transparent), transparent 27rem),
+          linear-gradient(120deg, transparent 0 49.7%, color-mix(in srgb, var(--line) 60%, transparent) 50%, transparent 50.3%),
+          var(--canvas);
+        color: var(--ink);
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        transition: background-color 180ms ease, color 180ms ease;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .workbench {
+        width: min(1440px, 100%);
+        margin: 0 auto;
+        padding: var(--space-7);
+      }
+
+      .topbar {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: var(--space-5);
+        margin-bottom: var(--space-5);
+      }
+
+      .eyebrow,
+      .token-label {
+        margin: 0 0 var(--space-2);
+        color: var(--action);
+        font: 400 var(--type-caption)/1.3 "Space Mono", monospace;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 760px;
+        font-family: "Space Mono", monospace;
+        font-size: clamp(30px, 4vw, 56px);
+        font-weight: 400;
+        line-height: 1.08;
+        letter-spacing: -1.4px;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: var(--space-2);
+      }
+
+      .tool {
+        min-height: var(--touch-target);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-full);
+        background: color-mix(in srgb, var(--surface) 84%, transparent);
+        color: var(--ink);
+        padding: 0 var(--space-4);
+        font-size: var(--type-small);
+        font-weight: 700;
+      }
+
+      .tool:hover,
+      .tool:focus-visible {
+        border-color: var(--focus);
+        outline: 3px solid color-mix(in srgb, var(--focus) 25%, transparent);
+        outline-offset: 2px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(320px, 0.72fr) minmax(350px, 430px) minmax(300px, 0.72fr);
+        gap: var(--space-6);
+        align-items: start;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: color-mix(in srgb, var(--paper) 94%, transparent);
+        box-shadow: 0 12px 32px rgba(49, 42, 31, 0.08);
+        overflow: hidden;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: var(--space-4) var(--space-5);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .panel-header h2 {
+        margin: 0;
+        font-size: var(--type-heading);
+      }
+
+      .panel-header span {
+        color: var(--ink-muted);
+        font: var(--type-caption)/1.4 "Space Mono", monospace;
+      }
+
+      .specimen {
+        display: grid;
+        gap: var(--space-6);
+        padding: var(--space-5);
+      }
+
+      .group {
+        display: grid;
+        gap: var(--space-3);
+      }
+
+      .group-title {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin: 0;
+        font-size: var(--type-label);
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .group-title::after {
+        height: 1px;
+        flex: 1;
+        background: var(--line);
+        content: "";
+      }
+
+      .button-stack {
+        display: grid;
+        gap: var(--space-2);
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: var(--control-height);
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        border-radius: var(--radius-control);
+        padding: 0 var(--space-4);
+        border: 1px solid transparent;
+        font-weight: 800;
+        transition: transform 130ms ease, background-color 130ms ease, box-shadow 130ms ease;
+      }
+
+      .button:active {
+        transform: scale(0.975);
+      }
+
+      .button:focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--focus) 35%, transparent);
+        outline-offset: 3px;
+        border-color: var(--focus);
+      }
+
+      .button-primary {
+        background: var(--action);
+        color: var(--on-action);
+        box-shadow: 0 7px 0 color-mix(in srgb, var(--action) 72%, #000);
+      }
+
+      .button-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 0 color-mix(in srgb, var(--action) 72%, #000);
+      }
+
+      .button-primary:active {
+        background: var(--action-pressed);
+        box-shadow: 0 3px 0 color-mix(in srgb, var(--action) 72%, #000);
+        transform: translateY(4px) scale(0.99);
+      }
+
+      .button-on-ink {
+        background: var(--brand);
+        color: #28140d;
+        box-shadow: 0 7px 0 color-mix(in srgb, var(--brand) 55%, #000);
+      }
+
+      .button-on-ink:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 0 color-mix(in srgb, var(--brand) 55%, #000);
+      }
+
+      .button-on-ink:active {
+        box-shadow: 0 3px 0 color-mix(in srgb, var(--brand) 55%, #000);
+        transform: translateY(4px) scale(0.99);
+      }
+
+      .button-secondary {
+        border-color: var(--line-strong);
+        background: var(--surface-raised);
+        color: var(--ink);
+      }
+
+      .button-quiet {
+        min-height: var(--touch-target);
+        background: transparent;
+        color: var(--action);
+      }
+
+      .button[disabled] {
+        cursor: not-allowed;
+        background: var(--disabled-bg);
+        color: var(--disabled-ink);
+        opacity: 1;
+        box-shadow: none;
+      }
+
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
+        border-top-color: currentColor;
+        border-radius: 50%;
+        animation: spin 700ms linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .field {
+        display: grid;
+        gap: var(--space-2);
+      }
+
+      .field label {
+        font-size: var(--type-small);
+        font-weight: 800;
+      }
+
+      .field small {
+        color: var(--ink-muted);
+        font-size: var(--type-label);
+        line-height: 1.4;
+      }
+
+      .input-wrap {
+        display: flex;
+        min-height: var(--control-height);
+        align-items: center;
+        gap: var(--space-2);
+        border: 1.5px solid var(--line-strong);
+        border-radius: var(--radius-control);
+        background: var(--surface-raised);
+        padding: 0 var(--space-3);
+      }
+
+      .input-wrap:focus-within {
+        border-color: var(--focus);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 18%, transparent);
+      }
+
+      .input-wrap.error {
+        border-color: var(--danger);
+      }
+
+      .input-wrap input {
+        width: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--ink);
+      }
+
+      .error-copy {
+        color: var(--danger) !important;
+        font-weight: 700;
+      }
+
+      .mini-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: var(--surface-raised);
+        padding: var(--space-4);
+      }
+
+      .mini-card strong {
+        display: block;
+        margin-bottom: var(--space-1);
+      }
+
+      .mini-card p {
+        margin: 0;
+        color: var(--ink-muted);
+        font-size: var(--type-small);
+        line-height: 1.45;
+      }
+
+      .phone-stage {
+        position: sticky;
+        top: 18px;
+        display: grid;
+        place-items: center;
+        min-height: 780px;
+        padding: var(--space-5);
+      }
+
+      .phone {
+        position: relative;
+        width: min(390px, 100%);
+        height: 760px;
+        overflow: hidden;
+        border: 8px solid #252525;
+        border-radius: var(--phone-radius);
+        background: var(--paper);
+        box-shadow: var(--shadow);
+        transition: width 220ms ease;
+      }
+
+      .phone.compact {
+        width: 330px;
+      }
+
+      .statusbar {
+        display: flex;
+        height: 38px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 var(--space-5);
+        font: 400 var(--type-caption)/1 "Space Mono", monospace;
+      }
+
+      .notch {
+        position: absolute;
+        top: var(--space-2);
+        left: 50%;
+        width: 90px;
+        height: 23px;
+        border-radius: var(--radius-full);
+        background: #252525;
+        transform: translateX(-50%);
+      }
+
+      .screen {
+        height: calc(100% - 38px);
+        overflow: auto;
+        padding: var(--space-3) var(--space-4) var(--phone-content-clearance);
+        scrollbar-width: none;
+      }
+
+      .screen::-webkit-scrollbar { display: none; }
+
+      .app-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-6);
+      }
+
+      .app-header h3 {
+        margin: var(--space-1) 0 0;
+        font-family: "Space Mono", monospace;
+        font-size: var(--type-feature);
+        font-weight: 400;
+        line-height: 1.2;
+        letter-spacing: -0.6px;
+      }
+
+      .avatar {
+        display: grid;
+        width: var(--touch-target);
+        height: var(--touch-target);
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: var(--surface-raised);
+        color: var(--ink);
+        font: 400 var(--type-label)/1 "Space Mono", monospace;
+      }
+
+      .practice-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius-lg);
+        background: var(--hero-bg);
+        color: var(--hero-ink);
+        padding: var(--space-5);
+      }
+
+      .practice-card::after {
+        position: absolute;
+        top: -90px;
+        right: -20px;
+        width: 130px;
+        height: 130px;
+        border: 22px solid var(--brand);
+        border-radius: 50%;
+        z-index: 0;
+        opacity: 0.52;
+        content: "";
+      }
+
+      .practice-card .token-label {
+        color: var(--brand);
+      }
+
+      .practice-card > :not(.button) {
+        position: relative;
+        z-index: 1;
+      }
+
+      .practice-card h4 {
+        max-width: 240px;
+        margin: var(--space-2) 0 var(--space-1);
+        font-family: "Space Mono", monospace;
+        font-size: var(--type-title);
+        font-weight: 400;
+        line-height: 1.25;
+      }
+
+      .practice-card p {
+        max-width: 240px;
+        margin: 0 0 var(--space-4);
+        color: color-mix(in srgb, var(--hero-ink) 74%, transparent);
+        font-size: var(--type-small);
+        line-height: 1.45;
+      }
+
+      .practice-card .button {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin: var(--space-6) 0 var(--space-3);
+      }
+
+      .section-heading h4 {
+        margin: 0;
+        font-size: var(--type-heading);
+      }
+
+      .section-heading button {
+        min-height: var(--touch-target);
+        border: 0;
+        background: transparent;
+        color: var(--action);
+        padding: 0 var(--space-2);
+        font-size: var(--type-label);
+        font-weight: 800;
+      }
+
+      .word-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        background: var(--surface-raised);
+        padding: var(--space-4);
+      }
+
+      .word-top {
+        display: grid;
+        grid-template-columns: 42px 1fr auto;
+        align-items: center;
+        gap: var(--space-3);
+      }
+
+      .flag {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border-radius: var(--radius-control);
+        background: color-mix(in srgb, var(--brand) 16%, var(--surface));
+        font-size: var(--type-title);
+      }
+
+      .word-card h5 {
+        margin: 0 0 var(--space-1);
+        font-size: var(--type-body);
+      }
+
+      .word-card p {
+        margin: 0;
+        color: var(--ink-muted);
+        font-size: var(--type-label);
+      }
+
+      .badge {
+        display: inline-flex;
+        min-height: 28px;
+        align-items: center;
+        border-radius: var(--radius-full);
+        background: color-mix(in srgb, var(--brand) 18%, var(--surface));
+        color: var(--action);
+        padding: 0 var(--space-3);
+        font: 400 var(--type-caption)/1 "Space Mono", monospace;
+      }
+
+      .progress-track {
+        height: var(--space-2);
+        margin-top: var(--space-4);
+        overflow: hidden;
+        border-radius: var(--radius-full);
+        background: var(--line);
+      }
+
+      .progress-fill {
+        width: 64%;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--blue);
+      }
+
+      .quick-field {
+        margin-top: var(--space-3);
+      }
+
+      .quick-field .input-wrap {
+        background: var(--surface);
+      }
+
+      .tabbar {
+        position: absolute;
+        right: var(--space-3);
+        bottom: max(var(--space-2), env(safe-area-inset-bottom));
+        left: var(--space-3);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        height: 72px;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: color-mix(in srgb, var(--surface-raised) 92%, transparent);
+        box-shadow: 0 12px 28px rgba(23, 23, 20, 0.16);
+        backdrop-filter: blur(16px);
+      }
+
+      .tab {
+        display: grid;
+        gap: var(--space-1);
+        place-items: center;
+        border: 0;
+        background: transparent;
+        color: var(--ink-muted);
+        font-size: var(--type-micro);
+        font-weight: 700;
+      }
+
+      .tab .icon {
+        display: grid;
+        width: 30px;
+        height: 28px;
+        place-items: center;
+        border-radius: var(--radius-sm);
+        font-size: 17px;
+      }
+
+      .tab.active {
+        color: var(--action);
+      }
+
+      .tab.active .icon {
+        background: color-mix(in srgb, var(--brand) 20%, transparent);
+      }
+
+      .sheet-backdrop {
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        display: grid;
+        align-items: end;
+        background: rgba(15, 18, 18, 0.5);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+      }
+
+      .sheet-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .sheet {
+        max-height: calc(100% - var(--space-8));
+        overflow: auto;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        background: var(--surface-raised);
+        padding: var(--space-2) var(--space-5) max(var(--space-7), env(safe-area-inset-bottom));
+        transform: translateY(104%);
+        transition: transform 240ms cubic-bezier(0.2, 0.85, 0.25, 1);
+      }
+
+      .sheet-backdrop.open .sheet {
+        transform: translateY(0);
+      }
+
+      .grabber {
+        width: 42px;
+        height: 5px;
+        margin: 0 auto var(--space-4);
+        border-radius: var(--radius-full);
+        background: var(--line-strong);
+      }
+
+      .sheet h4 {
+        margin: 0 0 var(--space-2);
+        font-family: "Space Mono", monospace;
+        font-size: var(--type-title);
+        font-weight: 400;
+      }
+
+      .sheet p {
+        margin: 0 0 var(--space-5);
+        color: var(--ink-muted);
+        font-size: var(--type-body);
+        line-height: 1.5;
+      }
+
+      .type-scale {
+        display: grid;
+        gap: var(--space-3);
+      }
+
+      .type-row {
+        display: grid;
+        grid-template-columns: 64px 1fr;
+        align-items: baseline;
+        gap: var(--space-3);
+      }
+
+      .type-row code {
+        color: var(--ink-muted);
+        font: var(--type-micro)/1.3 "Space Mono", monospace;
+      }
+
+      .display-type { font: 400 var(--type-display)/1.15 "Space Mono", monospace; letter-spacing: -1px; }
+      .title-type { font-size: var(--type-title); font-weight: 800; }
+      .body-type { font-size: var(--type-body); line-height: 1.5; }
+      .label-type { font-size: var(--type-label); font-weight: 800; letter-spacing: 0.4px; }
+
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-2);
+      }
+
+      .swatch {
+        min-height: 76px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-control);
+        padding: var(--space-3);
+        font: var(--type-micro)/1.4 "Space Mono", monospace;
+      }
+
+      .swatch.action { background: var(--action); color: var(--on-action); }
+      .swatch.brand { background: var(--brand); color: #28140d; }
+      .swatch.surface { background: var(--surface-raised); }
+      .swatch.ink { background: var(--ink); color: var(--paper); }
+
+      .motion-note {
+        border-left: 4px solid var(--brand);
+        padding-left: var(--space-3);
+      }
+
+      .motion-note p {
+        margin: var(--space-1) 0 0;
+        color: var(--ink-muted);
+        font-size: var(--type-small);
+        line-height: 1.5;
+      }
+
+      @media (max-width: 1080px) {
+        .layout { grid-template-columns: minmax(330px, 430px) minmax(300px, 1fr); justify-content: center; }
+        .left-panel { order: 2; }
+        .phone-stage { grid-row: span 2; }
+      }
+
+      @media (max-width: 760px) {
+        .workbench { padding: var(--space-3); }
+        .topbar { align-items: flex-start; flex-direction: column; }
+        .toolbar { justify-content: flex-start; }
+        .layout { display: flex; flex-direction: column; }
+        .phone-stage { position: static; width: 100%; min-height: auto; padding: var(--space-3); }
+        .phone { height: 720px; }
+        .panel { width: 100%; }
+        .left-panel { order: initial; }
+      }
+
+      .phone.compact .word-top {
+        grid-template-columns: 42px minmax(0, 1fr);
+      }
+
+      .phone.compact .badge {
+        grid-column: 2;
+        justify-self: start;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+
+        .spinner { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="workbench">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Revamp specimen 08 / primitive layer</p>
+          <h1>A warm, legible kit for the daily learning loop.</h1>
+        </div>
+        <nav class="toolbar" aria-label="Prototype controls">
+          <button class="tool" id="theme-toggle" type="button">Switch to dark</button>
+          <button class="tool" id="size-toggle" type="button">Compact phone</button>
+          <button class="tool" id="sheet-toggle" type="button">Open sheet</button>
+        </nav>
+      </header>
+
+      <div class="layout">
+        <section class="panel left-panel" aria-labelledby="components-title">
+          <div class="panel-header">
+            <h2 id="components-title">Interaction states</h2>
+            <span>44pt min</span>
+          </div>
+          <div class="specimen">
+            <div class="group">
+              <p class="group-title">Button</p>
+              <div class="button-stack">
+                <button class="button button-primary" type="button">Practice 7 words <span aria-hidden="true">→</span></button>
+                <button class="button button-secondary" type="button">Add another word</button>
+                <button class="button button-primary" type="button" aria-busy="true"><span class="spinner" aria-hidden="true"></span> Preparing quiz</button>
+                <button class="button button-primary" type="button" disabled>Nothing due yet</button>
+                <button class="button button-quiet" type="button">Maybe later</button>
+              </div>
+            </div>
+
+            <div class="group">
+              <p class="group-title">Input</p>
+              <div class="field">
+                <label for="word-input">New word</label>
+                <div class="input-wrap"><span aria-hidden="true">✎</span><input id="word-input" value="sobremesa" /></div>
+                <small>We’ll generate meaning, audio, and practice modes.</small>
+              </div>
+              <div class="field">
+                <label for="error-input">Daily goal</label>
+                <div class="input-wrap error"><span aria-hidden="true">◷</span><input id="error-input" value="0 minutes" aria-invalid="true" aria-describedby="goal-error" /></div>
+                <small class="error-copy" id="goal-error">Choose at least 5 minutes.</small>
+              </div>
+            </div>
+
+            <div class="group">
+              <p class="group-title">Card</p>
+              <article class="mini-card">
+                <strong>Calm structure, clear priority</strong>
+                <p>One border, one surface, and semantic accents instead of decorative gradients on every element.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel phone-stage" aria-label="Mobile dashboard preview">
+          <div class="phone" id="phone">
+            <div class="notch" aria-hidden="true"></div>
+            <div class="statusbar"><span>9:41</span><span>● ● ▰</span></div>
+            <div class="screen">
+              <header class="app-header">
+                <div><p class="token-label">Tuesday · 7 due</p><h3>Keep the words moving.</h3></div>
+                <button class="avatar" type="button" aria-label="Open profile">LM</button>
+              </header>
+
+              <article class="practice-card">
+                <p class="token-label">Ready for review</p>
+                <h4>A short round keeps your streak alive.</h4>
+                <p>Seven words are ready. Most sessions take under four minutes.</p>
+                <button class="button button-on-ink" type="button">Practice 7 words <span aria-hidden="true">→</span></button>
+              </article>
+
+              <div class="section-heading"><h4>Your wordlists</h4><button type="button">See all</button></div>
+              <article class="word-card">
+                <div class="word-top">
+                  <div class="flag" aria-hidden="true">🇪🇸</div>
+                  <div><h5>Spanish essentials</h5><p>18 words · 64% learned</p></div>
+                  <span class="badge">7 due</span>
+                </div>
+                <div class="progress-track" role="progressbar" aria-label="Words learned" aria-valuemin="0" aria-valuemax="100" aria-valuenow="64"><div class="progress-fill"></div></div>
+              </article>
+
+              <div class="quick-field field">
+                <label for="quick-add">Quick add</label>
+                <div class="input-wrap"><span aria-hidden="true">＋</span><input id="quick-add" placeholder="Type a word to remember" /></div>
+              </div>
+            </div>
+
+            <nav class="tabbar" aria-label="Main tabs">
+              <button class="tab active" type="button"><span class="icon">⌂</span><span>Home</span></button>
+              <button class="tab" type="button"><span class="icon">◇</span><span>Practice</span></button>
+              <button class="tab" type="button"><span class="icon">↗</span><span>Progress</span></button>
+              <button class="tab" type="button"><span class="icon">○</span><span>Profile</span></button>
+            </nav>
+
+            <div class="sheet-backdrop" id="sheet-backdrop" role="presentation" aria-hidden="true" inert>
+              <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+                <div class="grabber" aria-hidden="true"></div>
+                <p class="token-label">Practice setup</p>
+                <h4 id="sheet-title">How long do you have?</h4>
+                <p>Choose a quick round now. You can always continue after the summary.</p>
+                <div class="button-stack">
+                  <button class="button button-primary" type="button">7 due words · about 4 min</button>
+                  <button class="button button-secondary" id="sheet-close" type="button">Not right now</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="tokens-title">
+          <div class="panel-header">
+            <h2 id="tokens-title">System decisions</h2>
+            <span>light + dark</span>
+          </div>
+          <div class="specimen">
+            <div class="group">
+              <p class="group-title">Type</p>
+              <div class="type-scale">
+                <div class="type-row"><code>display/34</code><span class="display-type">Practice</span></div>
+                <div class="type-row"><code>title/20</code><span class="title-type">Spanish essentials</span></div>
+                <div class="type-row"><code>body/15</code><span class="body-type">Build memory through short, well-timed rounds.</span></div>
+                <div class="type-row"><code>label/12</code><span class="label-type">7 WORDS DUE</span></div>
+              </div>
+            </div>
+
+            <div class="group">
+              <p class="group-title">Semantic color</p>
+              <div class="swatches">
+                <div class="swatch action">action<br />AA with on-action</div>
+                <div class="swatch brand">brand accent<br />dark ink only</div>
+                <div class="swatch surface">surface<br />quiet hierarchy</div>
+                <div class="swatch ink">ink<br />primary copy</div>
+              </div>
+            </div>
+
+            <div class="group">
+              <p class="group-title">Spacing</p>
+              <div class="mini-card">
+                <p><strong>4 · 8 · 12 · 16 · 20 · 24 · 32 · 48</strong> Components use internal gap and padding; screen edges adapt from 12 to 24.</p>
+              </div>
+            </div>
+
+            <div class="motion-note">
+              <strong>Motion language</strong>
+              <p>Press uses a 0.975 scale/spring. Sheets settle in 240ms. State swaps fade under 180ms. Reduced motion removes transforms while preserving state.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const root = document.documentElement;
+      const phone = document.getElementById("phone");
+      const sheet = document.getElementById("sheet-backdrop");
+      const sheetDialog = sheet.querySelector('[role="dialog"]');
+      const sheetTrigger = document.getElementById("sheet-toggle");
+      const obscuredAppRegions = [phone.querySelector(".screen"), phone.querySelector(".tabbar")];
+      const themeToggle = document.getElementById("theme-toggle");
+      const sizeToggle = document.getElementById("size-toggle");
+
+      themeToggle.addEventListener("click", () => {
+        const dark = root.dataset.theme === "dark";
+        root.dataset.theme = dark ? "light" : "dark";
+        themeToggle.textContent = dark ? "Switch to dark" : "Switch to light";
+      });
+
+      sizeToggle.addEventListener("click", () => {
+        const compact = phone.classList.toggle("compact");
+        sizeToggle.textContent = compact ? "Regular phone" : "Compact phone";
+      });
+
+      const setSheet = (open) => {
+        const focusWasInsideSheet = sheet.contains(document.activeElement);
+        sheet.classList.toggle("open", open);
+        sheet.toggleAttribute("inert", !open);
+        sheet.setAttribute("aria-hidden", String(!open));
+        obscuredAppRegions.forEach((region) => {
+          region.toggleAttribute("inert", open);
+          region.setAttribute("aria-hidden", String(open));
+        });
+        sheetTrigger.setAttribute("aria-expanded", String(open));
+        sheetTrigger.textContent = open ? "Close sheet" : "Open sheet";
+        if (open) {
+          sheetDialog.querySelector("button").focus();
+        } else if (focusWasInsideSheet) {
+          sheetTrigger.focus();
+        }
+      };
+
+      sheetTrigger.setAttribute("aria-expanded", "false");
+      sheetTrigger.addEventListener("click", () => setSheet(!sheet.classList.contains("open")));
+      document.getElementById("sheet-close").addEventListener("click", () => setSheet(false));
+      sheet.addEventListener("click", (event) => { if (event.target === sheet) setSheet(false); });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && sheet.classList.contains("open")) setSheet(false);
+        if (event.key === "Tab" && sheet.classList.contains("open")) {
+          const controls = [...sheetDialog.querySelectorAll("button")];
+          const first = controls[0];
+          const last = controls[controls.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
