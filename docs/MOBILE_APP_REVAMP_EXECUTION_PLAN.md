@@ -48,6 +48,8 @@ The following repository facts drive the order of work:
 
 This protocol is adapted from the completed `calculadora-price-sac/mobile/FEATURE_ROADMAP.md` workflow. It is the required workflow for each implementation item in this plan. Work phases and dependencies remain strictly ordered; once an item passes its gates, the next unlocked item starts automatically without waiting for another user message.
 
+Every Claude review starts with the model order `fable` → `opus` → `sonnet`. Try `fable` first on every new prototype or implementation review, even if it was unavailable during an earlier review; fall back to `opus` only when that attempt is temporarily unavailable, then to `sonnet` only when `opus` is also temporarily unavailable. A model's substantive review findings are not an availability failure and must be reconciled with that model rather than triggering fallback. Record the model that completed each review in the item evidence.
+
 For every item, in order:
 
 1. **Create a UI/UX prototype when needed.** Before implementing any UI-bearing item, write a short design brief from the acceptance criteria and build one or more disposable HTML/React mockups under `docs/mockups/<item-id>/`. Keep prototypes isolated from production dependencies and use real copy, representative data, and mobile viewports.
