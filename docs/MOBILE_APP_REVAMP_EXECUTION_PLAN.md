@@ -1,6 +1,6 @@
 # Mobile App Revamp — Execution Plan
 
-Status: proposed plan; implementation not started
+Status: implementation in progress; Phase 0.5 implementation readiness complete, final-release measurement owner-gated, Phase 1 next
 
 This file is the execution tracker for `MOBILE_APP_REVAMP_STRATEGY.md`. It incorporates the repository audit and an independent Claude review/reconciliation pass completed on 2026-08-04.
 
@@ -121,7 +121,7 @@ When an item needs owner-only access—production subscription data, App Store C
 ### Scope and worktree rules
 
 - Keep the IAP critical path sequential: entitlement contract → Apple/Google implementation → store test gate → cutover → provider removal.
-- Use parallel lanes only after Phase 0 and Phase 0.5 are complete, and only with an explicit disjoint write scope. The Calculadora site-track exception is not automatically applicable here.
+- Use parallel lanes only after Phase 0 and the Phase 0.5 implementation-readiness gate are complete, and only with an explicit disjoint write scope. The Calculadora site-track exception is not automatically applicable here.
 - Before starting parallel work, record each lane’s owner, worktree/branch, allowed paths, dependency gate, and merge order in the milestone note. No two lanes may edit the same production file, migration, shared contract, or roadmap section.
 - Lanes that need database migrations coordinate sequence numbers through one integration owner; lanes that share an API contract must merge the contract first and run integration tests before either lane is marked complete.
 - A parallel lane is complete only after its changes are integrated into the execution branch and the combined validation passes; isolated worktree tests alone are insufficient.
@@ -134,9 +134,9 @@ The plan is intentionally hybrid rather than fully sequential:
 
 | Lane | Can start after | Scope | Must wait for |
 |---|---|---|---|
-| Critical path | Phase 0 → 0.5 | Entitlement contract, IAP backend/mobile implementation, store validation, cutover/removal | Each prior gate; never skip the store gate before provider removal |
-| Activation UX | Phase 0.5 | Onboarding, starter content, word entry, quiz/session loop, streaks, due/practice UX, mockups and Maestro flows | Store contract only for purchase/paywall surfaces; shared auth/subscription files require coordination |
-| Reliability | Phase 0.5 | Scoped correctness, security, timeout, lookup, worker, and idempotency fixes | Any shared repository/service file already owned by another lane |
+| Critical path | Phase 0 → 0.5 implementation readiness | Entitlement contract, IAP backend/mobile implementation, store validation, cutover/removal | Each prior gate; never skip the store gate before provider removal |
+| Activation UX | Phase 0.5 implementation readiness | Onboarding, starter content, word entry, quiz/session loop, streaks, due/practice UX, mockups and Maestro flows | Store contract only for purchase/paywall surfaces; shared auth/subscription files require coordination |
+| Reliability | Phase 0.5 implementation readiness | Scoped correctness, security, timeout, lookup, worker, and idempotency fixes | Any shared repository/service file already owned by another lane |
 | Web | Phase 0 | Web checkout-disabled behavior, entitlement display contract, web validation | Final entitlement API shape before consuming mobile-store entitlements |
 
 Within Phase 2, Apple and Google provider implementations may proceed in parallel after the store-neutral contract is reviewed. Mobile purchase UI may proceed against mocked contract fixtures, but integration cannot be marked complete until the backend contract and provider verification tests pass.
@@ -189,24 +189,30 @@ Required work:
 - [x] Define canonical events and properties: `user_signed_up`, `wordlist_created`, `word_added`, `quiz_session_started`, `quiz_session_completed`, `quiz_answered`, and `practice_cta_opened`. Specify one event per semantic action, session identity, source/entry point, wordlist context, and failure/error outcome.
 - [x] Audit existing mobile/PostHog events before adding duplicates. Correct the current mismatch where `quiz_completed` represents individual answers rather than completed sessions.
 - [x] Add a development/dry-run sink and tests proving event names, required properties, deduplication, and exclusion of raw word/content data.
-- [b] Produce a cohort report for 7/30/90/365-day sign-ups with signup→wordlist, signup→word, signup→first quiz, and first quiz→completed session conversion. Keep the current database baseline alongside the post-instrumentation baseline; do not compare unlike definitions.
-- [b] Define owner-approved activation targets after the baseline is visible. Do not invent a target percentage or declare success from a local test run.
+- [x] Produce the reproducible pre-release database cohort report for 7/30/90/365-day sign-ups with signup→wordlist, signup→word, and signup→database quiz-answer conversion. Keep its quiz-answer definition explicitly separate from completed sessions.
+- [b] Produce the post-instrumentation production PostHog comparison for signup→wordlist, signup→word, signup→first quiz, and first quiz→completed session; keep the database baseline alongside it and do not compare unlike definitions.
+- [b] Define owner-approved activation targets and the observation window before the final release gate. Do not invent a target percentage or declare success from a local test run.
 
-Gate 0.5 acceptance:
+Phase 0.5 implementation-readiness gate — complete; unblocks Phase 1 and independent lanes:
 
 - The activation funnel can distinguish real users from store-approval accounts and can be queried by signup cohort and app version.
 - Tests prove that a quiz answer does not count as a completed session and that retries/background duplicates do not inflate conversion.
-- A dashboard or reproducible report shows the baseline and post-release values for all four funnel transitions.
-- The owner has chosen the activation success threshold and observation window before the final release gate.
+- The event contract, controlled registry, migrated call sites, validation/dedupe tests, and reproducible pre-release database baseline are complete.
+- PostHog React Native supplies `$app_version` from the installed Expo application metadata, so production cohorts can be segmented by app version without raw user/content properties.
+
+Final-release measurement gate — open; blocks final release only:
+
+- A production PostHog dashboard or reproducible export shows post-instrumentation values for all four funnel transitions alongside the non-equivalent database baseline.
+- The owner has chosen the activation success threshold and observation window.
 
 Phase 0.5 progress:
 
-- **2026-08-04 — canonical activation contract defined.** Added the typed, privacy-safe event contract and dry-run capture boundary in `mobile/utils/activationEvents.ts`, with unit coverage for canonical names, scalar allowlisting, raw-content rejection, falsy values, and dry-run behavior. Documented session semantics and allowed properties in `mobile/docs/posthog-events.md`. Existing call-site migration, production sink validation, cohort reporting, and owner target selection remain pending.
+- **2026-08-04 — canonical activation contract defined.** Added the typed, privacy-safe event contract and dry-run capture boundary in `mobile/utils/activationEvents.ts`, with unit coverage for canonical names, scalar allowlisting, raw-content rejection, falsy values, and dry-run behavior. Documented session semantics and allowed properties in `mobile/docs/posthog-events.md`. The production PostHog comparison and owner target selection remain final-release measurement work.
 - **2026-08-04 — controlled store-approval registry prepared.** Added `docs/fixtures/store-approval-accounts.json` with the four owner-confirmed internal user IDs from the read-only subscription audit, provenance, re-verification date, and usage rules in `docs/fixtures/README.md`. The registry artifact excludes accounts by explicit numeric ID and contains no email, payment, or secret data; production report consumption remains a separate pending item.
-- **2026-08-04 — existing activation events audited and migrated.** Removed duplicate `signup_completed` and raw email PostHog properties, removed the raw wordlist name, added `word_added`, and replaced per-answer `quiz_completed` with session-aware `quiz_session_started`, `quiz_answered`, and `quiz_session_completed` events. Quiz counts are ref-backed for cleanup accuracy, and Sentry sign-in context no longer stores email. Targeted lint, formatting, and activation tests pass; full typecheck remains blocked by pre-existing WebRTC event-typing errors, and the full Jest suite retains unrelated Expo/mock/API-environment failures. No bulk word-add path was found; reporting sink validation and cohort reporting remain pending.
-- **2026-08-04 — activation dry-run/validation sink completed.** `mobile/utils/activationEvents.ts` now enforces event-specific required properties, rejects invalid captures before sending, supports caller-owned process-scoped dedupe keys, and keeps dry-run captures from mutating real dedupe state. Seven unit tests cover names, required fields, privacy filtering, falsy values, dry-run behavior, dedupe, and session IDs. Production PostHog delivery remains intentionally non-durable; cohort reporting and production sink validation remain pending.
+- **2026-08-04 — existing activation events audited and migrated.** Removed duplicate `signup_completed` and raw email PostHog properties, removed the raw wordlist name, added `word_added`, and replaced per-answer `quiz_completed` with session-aware `quiz_session_started`, `quiz_answered`, and `quiz_session_completed` events. Quiz counts are ref-backed for cleanup accuracy, and Sentry sign-in context no longer stores email. Targeted lint, formatting, and activation tests pass; full typecheck remains blocked by pre-existing WebRTC event-typing errors, and the full Jest suite retains unrelated Expo/mock/API-environment failures. No bulk word-add path was found; the production PostHog comparison remains final-release measurement work.
+- **2026-08-04 — activation dry-run/validation sink completed.** `mobile/utils/activationEvents.ts` now enforces event-specific required properties, rejects invalid captures before sending, supports caller-owned process-scoped dedupe keys, and keeps dry-run captures from mutating real dedupe state. Seven unit tests cover names, required fields, privacy filtering, falsy values, dry-run behavior, dedupe, and session IDs. Production PostHog delivery remains intentionally non-durable; the production comparison remains a final-release measurement gate.
 - **2026-08-04 — database cohort baseline automated; analytics comparison blocked.** Added the read-only `docs/queries/run-activation-cohort-report.sh` and SQL query, which loads the controlled registry and reports 7/30/90/365-day cohorts without hardcoded test IDs. The current run produced 7d `0/0/0/0`, 30d `4/3/2/0`, 90d `6/5/4/0`, and 365d `32/26/14/3` for signups/wordlists/words/database quiz answerers; the query labels database quiz answers as non-equivalent to completed sessions. `[b] BLOCKED — owner action: provide an authenticated production PostHog read/export credential or dashboard export, then rerun the post-instrumentation cohort comparison and record the observation window. The database-only baseline is complete; no production data was changed.`
-- **2026-08-04 — activation target selection blocked.** `[b] BLOCKED — owner action: choose the activation success threshold and observation window for signup→wordlist, signup→word, signup→first quiz, and first quiz→completed session. The baseline is evidence for prioritization, not permission to invent a target; Phase 0.5 and dependent Phase 1 work remain gated until the owner records these values.`
+- **2026-08-04 — Phase 0.5 gate split corrected after Claude reconciliation.** The implementation-readiness gate is met, so Phase 1 and independent UX/reliability work may proceed. `[b] BLOCKED — owner action before final release: provide an authenticated production PostHog export and choose the activation thresholds plus observation window. These owner actions block final release measurement sign-off only, not Phase 1.`
 
 ## Phase 1 — Design the store-neutral entitlement contract
 
