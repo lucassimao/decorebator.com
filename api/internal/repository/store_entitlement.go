@@ -48,6 +48,7 @@ type StoreEntitlementApplyResult struct {
 }
 
 type StorePurchaseBinding struct {
+	ID                int64
 	EntitlementID     int64
 	UserID            int64
 	Store             model.EntitlementStore
@@ -56,6 +57,12 @@ type StorePurchaseBinding struct {
 	ProviderRecordID  string `json:"-"`
 	Current           bool
 	MatchedPrimary    bool
+	Acknowledged      *bool
+}
+
+type StoreAcknowledgementRetryCandidate struct {
+	BindingID int64
+	CreatedAt time.Time
 }
 
 type lockedStoreEntitlement struct {
@@ -188,6 +195,229 @@ func (r *StoreEntitlementRepository) readAccount(
 	return plaintext, true, nil
 }
 
+// GetCurrentEntitlement returns the canonical row for one exact environment.
+// Sandbox and production rows are never merged on this read path.
+func (r *StoreEntitlementRepository) GetCurrentEntitlement(
+	ctx context.Context,
+	userID int64,
+	store model.EntitlementStore,
+	environment model.StoreEnvironment,
+) (model.StoreEntitlement, bool, error) {
+	if userID <= 0 || !store.Valid() || !environment.Valid() {
+		return model.StoreEntitlement{}, false, fmt.Errorf("valid entitlement lookup is required")
+	}
+	var entitlement model.StoreEntitlement
+	err := r.db.QueryRow(ctx, `
+		SELECT id, user_id, store, product_id, entitlement, status, period_start,
+		       period_end, auto_renew_enabled, canceled_at, revoked_at,
+		       revocation_reason, environment, last_verified_at, created_at, updated_at
+		FROM store_entitlements
+		WHERE user_id=$1 AND store=$2 AND environment=$3 AND entitlement='premium'
+	`, userID, store, environment).Scan(
+		&entitlement.ID, &entitlement.UserID, &entitlement.Store, &entitlement.ProductID,
+		&entitlement.Entitlement, &entitlement.Status, &entitlement.PeriodStart,
+		&entitlement.PeriodEnd, &entitlement.AutoRenewEnabled, &entitlement.CanceledAt,
+		&entitlement.RevokedAt, &entitlement.RevocationReason, &entitlement.Environment,
+		&entitlement.LastVerifiedAt, &entitlement.CreatedAt, &entitlement.UpdatedAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.StoreEntitlement{}, false, nil
+	}
+	return entitlement, err == nil, err
+}
+
+func (r *StoreEntitlementRepository) CurrentGoogleBindingAcknowledged(
+	ctx context.Context,
+	entitlementID int64,
+) (bool, error) {
+	if entitlementID <= 0 {
+		return false, fmt.Errorf("valid entitlement ID is required")
+	}
+	var acknowledged bool
+	err := r.db.QueryRow(ctx, `
+		SELECT COALESCE(acknowledged, FALSE)
+		FROM store_purchase_bindings
+		WHERE entitlement_id=$1 AND store='google' AND is_current
+	`, entitlementID).Scan(&acknowledged)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, nil
+	}
+	return acknowledged, err
+}
+
+func (r *StoreEntitlementRepository) GetPurchaseBindingByID(
+	ctx context.Context,
+	bindingID int64,
+) (StorePurchaseBinding, bool, error) {
+	if bindingID <= 0 {
+		return StorePurchaseBinding{}, false, fmt.Errorf("valid binding ID is required")
+	}
+	var binding StorePurchaseBinding
+	var providerLookup, accountLookup string
+	var providerCiphertext, accountCiphertext []byte
+	var providerVersion, accountVersion int16
+	err := r.db.QueryRow(ctx, `
+		SELECT binding.id, binding.entitlement_id, binding.user_id, binding.store,
+		       binding.environment, binding.is_current, binding.acknowledged,
+		       binding.provider_record_digest, binding.encrypted_provider_record,
+		       binding.encryption_key_version, account.lookup_digest,
+		       account.encrypted_identifier, account.encryption_key_version
+		FROM store_purchase_bindings binding
+		JOIN store_account_identities account ON account.id=binding.account_identity_id
+		WHERE binding.id=$1
+	`, bindingID).Scan(
+		&binding.ID, &binding.EntitlementID, &binding.UserID, &binding.Store,
+		&binding.Environment, &binding.Current, &binding.Acknowledged,
+		&providerLookup, &providerCiphertext, &providerVersion,
+		&accountLookup, &accountCiphertext, &accountVersion,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return StorePurchaseBinding{}, false, nil
+	}
+	if err != nil {
+		return StorePurchaseBinding{}, false, err
+	}
+	binding.ProviderRecordID, err = r.protector.Decrypt(security.StoreEvidenceContext{
+		UserID: binding.UserID, Store: binding.Store, Environment: &binding.Environment,
+		Kind: security.StoreEvidenceProviderRecord, Lookup: providerLookup,
+	}, security.ProtectedStoreEvidence{Ciphertext: providerCiphertext, KeyVersion: providerVersion})
+	if err != nil {
+		return StorePurchaseBinding{}, false, err
+	}
+	binding.AccountIdentifier, err = r.protector.Decrypt(security.StoreEvidenceContext{
+		UserID: binding.UserID, Store: binding.Store,
+		Kind: security.StoreEvidenceAccountIdentifier, Lookup: accountLookup,
+	}, security.ProtectedStoreEvidence{Ciphertext: accountCiphertext, KeyVersion: accountVersion})
+	if err != nil {
+		return StorePurchaseBinding{}, false, err
+	}
+	return binding, true, nil
+}
+
+func (r *StoreEntitlementRepository) ListUnacknowledgedGoogleBindings(
+	ctx context.Context,
+	environment model.StoreEnvironment,
+	limit int,
+) ([]StoreAcknowledgementRetryCandidate, error) {
+	if !environment.Valid() || limit <= 0 || limit > 100 {
+		return nil, fmt.Errorf("valid acknowledgement retry lookup is required")
+	}
+	rows, err := r.db.Query(ctx, `
+		SELECT id, created_at
+		FROM store_purchase_bindings
+		WHERE store='google' AND environment=$1 AND is_current AND acknowledged IS FALSE
+		ORDER BY last_verified_at ASC, id ASC
+		LIMIT $2
+	`, environment, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	candidates := make([]StoreAcknowledgementRetryCandidate, 0)
+	for rows.Next() {
+		var candidate StoreAcknowledgementRetryCandidate
+		if err = rows.Scan(&candidate.BindingID, &candidate.CreatedAt); err != nil {
+			return nil, err
+		}
+		candidates = append(candidates, candidate)
+	}
+	return candidates, rows.Err()
+}
+
+// HasEffectivePremiumAccess requires a current acknowledged Google binding;
+// Apple has no analogous acknowledgement state.
+func (r *StoreEntitlementRepository) HasEffectivePremiumAccess(
+	ctx context.Context,
+	userID int64,
+	environment model.StoreEnvironment,
+	now time.Time,
+) (bool, error) {
+	if userID <= 0 || !environment.Valid() || now.IsZero() {
+		return false, fmt.Errorf("valid access lookup is required")
+	}
+	var grants bool
+	err := r.db.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1
+			FROM store_entitlements entitlement
+			WHERE entitlement.user_id=$1
+			  AND entitlement.environment=$2
+			  AND entitlement.entitlement='premium'
+			  AND entitlement.status IN ('active', 'grace_period')
+			  AND entitlement.period_end > $3
+			  AND (
+				entitlement.store='apple'
+				OR EXISTS (
+					SELECT 1 FROM store_purchase_bindings binding
+					WHERE binding.entitlement_id=entitlement.id
+					  AND binding.is_current AND binding.acknowledged IS TRUE
+				)
+			  )
+		)
+	`, userID, environment, now.UTC()).Scan(&grants)
+	return grants, err
+}
+
+// ListUserPurchaseBindings decrypts a bounded internal restore set. Callers
+// must not log or serialize the returned identifiers.
+func (r *StoreEntitlementRepository) ListUserPurchaseBindings(
+	ctx context.Context,
+	userID int64,
+	store model.EntitlementStore,
+	environment model.StoreEnvironment,
+	limit int,
+) ([]StorePurchaseBinding, error) {
+	if userID <= 0 || !store.Valid() || !environment.Valid() || limit <= 0 || limit > 20 {
+		return nil, fmt.Errorf("valid bounded binding lookup is required")
+	}
+	rows, err := r.db.Query(ctx, `
+		SELECT binding.id, binding.entitlement_id, binding.user_id, binding.store,
+		       binding.environment, binding.is_current, binding.acknowledged,
+		       binding.provider_record_digest, binding.encrypted_provider_record,
+		       binding.encryption_key_version, account.lookup_digest,
+		       account.encrypted_identifier, account.encryption_key_version
+		FROM store_purchase_bindings binding
+		JOIN store_account_identities account ON account.id=binding.account_identity_id
+		WHERE binding.user_id=$1 AND binding.store=$2 AND binding.environment=$3 AND binding.is_current
+		ORDER BY binding.is_current DESC, binding.last_verified_at DESC, binding.id DESC
+		LIMIT $4
+	`, userID, store, environment, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	bindings := make([]StorePurchaseBinding, 0)
+	for rows.Next() {
+		var binding StorePurchaseBinding
+		var providerLookup, accountLookup string
+		var providerCiphertext, accountCiphertext []byte
+		var providerVersion, accountVersion int16
+		if err = rows.Scan(
+			&binding.ID, &binding.EntitlementID, &binding.UserID, &binding.Store,
+			&binding.Environment, &binding.Current, &binding.Acknowledged,
+			&providerLookup, &providerCiphertext, &providerVersion,
+			&accountLookup, &accountCiphertext, &accountVersion,
+		); err != nil {
+			return nil, err
+		}
+		binding.ProviderRecordID, err = r.protector.Decrypt(security.StoreEvidenceContext{
+			UserID: userID, Store: store, Environment: &environment,
+			Kind: security.StoreEvidenceProviderRecord, Lookup: providerLookup,
+		}, security.ProtectedStoreEvidence{Ciphertext: providerCiphertext, KeyVersion: providerVersion})
+		if err != nil {
+			return nil, err
+		}
+		binding.AccountIdentifier, err = r.protector.Decrypt(security.StoreEvidenceContext{
+			UserID: userID, Store: store, Kind: security.StoreEvidenceAccountIdentifier, Lookup: accountLookup,
+		}, security.ProtectedStoreEvidence{Ciphertext: accountCiphertext, KeyVersion: accountVersion})
+		if err != nil {
+			return nil, err
+		}
+		bindings = append(bindings, binding)
+	}
+	return bindings, rows.Err()
+}
+
 func (r *StoreEntitlementRepository) Apply(
 	ctx context.Context,
 	update StoreEntitlementUpdate,
@@ -299,8 +529,8 @@ func (r *StoreEntitlementRepository) ResolvePurchaseBinding(
 	var matchedPrimary bool
 	var accountLookup string
 	err = r.db.QueryRow(ctx, `
-		SELECT binding.entitlement_id, binding.user_id, binding.store, binding.environment,
-		       binding.is_current,
+		SELECT binding.id, binding.entitlement_id, binding.user_id, binding.store, binding.environment,
+		       binding.is_current, binding.acknowledged,
 		       binding.provider_record_digest = $3,
 		       CASE WHEN binding.provider_record_digest = $3 THEN binding.encrypted_provider_record ELSE binding.encrypted_linked_record END,
 		       CASE WHEN binding.provider_record_digest = $3 THEN binding.encryption_key_version ELSE binding.linked_encryption_key_version END,
@@ -312,8 +542,8 @@ func (r *StoreEntitlementRepository) ResolvePurchaseBinding(
 		ORDER BY (binding.provider_record_digest=$3) DESC, binding.is_current DESC, binding.last_verified_at DESC
 		LIMIT 1
 	`, store, environment, lookup).Scan(
-		&binding.EntitlementID, &binding.UserID, &binding.Store, &binding.Environment,
-		&binding.Current,
+		&binding.ID, &binding.EntitlementID, &binding.UserID, &binding.Store, &binding.Environment,
+		&binding.Current, &binding.Acknowledged,
 		&matchedPrimary, &matchedCiphertext, &matchedVersion,
 		&accountLookup, &accountCiphertext, &accountVersion,
 	)

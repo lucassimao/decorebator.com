@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"decorebator.com/internal/config"
+	"decorebator.com/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -44,11 +45,33 @@ func TestStoreIAPConfigLoadsValidatedSecretsAndBindings(t *testing.T) {
 	loaded, err := config.LoadStoreIAPConfigFrom(mapLookup(values))
 	require.NoError(t, err)
 	require.True(t, loaded.Enabled)
+	require.Equal(t, model.StoreEnvironmentSandbox, loaded.ClientEnvironment)
+	require.Equal(t, model.IAPBillingPeriodMonthly, loaded.Apple.Products["com.example.premium.monthly"].BillingPeriod)
 	assert.Equal(t, int16(1), loaded.Evidence.ActiveVersion)
 	assert.Len(t, loaded.Evidence.LookupKey, 32)
 	assert.Equal(t, 10, loaded.Google.MaxDeliveryAttempts)
-	assert.Equal(t, "premium", loaded.Apple.Products["com.example.premium.monthly"])
-	assert.Equal(t, "premium", loaded.Google.Products["premium-monthly"])
+	assert.Equal(t, "premium", loaded.Apple.Products["com.example.premium.monthly"].Entitlement)
+	assert.Equal(t, "premium", loaded.Google.Products["premium-monthly"].Entitlement)
+}
+
+func TestStoreIAPConfigPinsProductionEnvironmentAndRequiresRedis(t *testing.T) {
+	values := validStoreIAPEnvironment(t)
+	values["ENV"] = "production"
+	_, err := config.LoadStoreIAPConfigFrom(mapLookup(values))
+	require.ErrorContains(t, err, "STORE_IAP_CLIENT_ENVIRONMENT")
+
+	values["STORE_IAP_CLIENT_ENVIRONMENT"] = "sandbox"
+	_, err = config.LoadStoreIAPConfigFrom(mapLookup(values))
+	require.ErrorContains(t, err, "production")
+
+	values["STORE_IAP_CLIENT_ENVIRONMENT"] = "production"
+	_, err = config.LoadStoreIAPConfigFrom(mapLookup(values))
+	require.ErrorContains(t, err, "REDIS_HOST")
+
+	values["REDIS_HOST"] = "redis.example.invalid"
+	loaded, err := config.LoadStoreIAPConfigFrom(mapLookup(values))
+	require.NoError(t, err)
+	require.Equal(t, model.StoreEnvironmentProduction, loaded.ClientEnvironment)
 }
 
 func TestStoreIAPConfigFailsClosedWithoutLeakingSecretValues(t *testing.T) {
@@ -116,9 +139,9 @@ func validStoreIAPEnvironment(t *testing.T) map[string]string {
 		"APPLE_IAP_APP_APPLE_ID":                   "123456789",
 		"APPLE_IAP_PRIVATE_KEY_BASE64":             privateKey,
 		"APPLE_IAP_ROOT_CERTIFICATES_BASE64_JSON":  string(roots),
-		"APPLE_IAP_PRODUCTS_JSON":                  `{"com.example.premium.monthly":"premium"}`,
+		"APPLE_IAP_PRODUCTS_JSON":                  `{"com.example.premium.monthly":{"entitlement":"premium","billingPeriod":"monthly"}}`,
 		"GOOGLE_PLAY_PACKAGE_NAME":                 "com.example.app",
-		"GOOGLE_PLAY_PRODUCTS_JSON":                `{"premium-monthly":"premium"}`,
+		"GOOGLE_PLAY_PRODUCTS_JSON":                `{"premium-monthly":{"entitlement":"premium","billingPeriod":"monthly"}}`,
 		"GOOGLE_PUBSUB_PUSH_AUDIENCE":              "https://api.example.com/webhook/google-play/rtdn",
 		"GOOGLE_PUBSUB_PUSH_SERVICE_ACCOUNT_EMAIL": "pubsub@example.iam.gserviceaccount.com",
 		"GOOGLE_PUBSUB_TOPIC":                      "projects/example/topics/store-rtdn",

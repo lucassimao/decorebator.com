@@ -10,6 +10,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/config"
 	"decorebator.com/internal/mail"
+	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/security"
 	"decorebator.com/internal/service"
@@ -47,6 +48,11 @@ type Context struct {
 	ProviderEventInboxRepository *repository.ProviderEventInboxRepository
 	AppleNotificationIngestor    *service.AppleNotificationIngestor
 	GoogleRTDNIngestor           *service.GoogleRTDNIngestor
+	EffectiveAccessService       *service.EffectiveAccessService
+	StoreIAPOrchestrator         *service.StoreIAPOrchestrator
+	GoogleAcknowledgementWorker  *service.GoogleAcknowledgementRetryWorker
+	GoogleAcknowledgementSweep   *service.GoogleAcknowledgementSweepWorker
+	StoreIAPRequestLimiter       *service.StoreIAPRequestLimiter
 	StoreIAPEnabled              bool
 
 	// Monitoring
@@ -268,6 +274,9 @@ func (b *ContextBuilder) initializeServices() error {
 	if b.context.SubscriptionService == nil {
 		b.context.SubscriptionService = service.NewSubscriptionService(b.context.Database, b.context.MailService, b.context.RevenueCatService)
 	}
+	if b.context.EffectiveAccessService != nil {
+		b.context.SubscriptionService.SetEffectiveAccess(b.context.EffectiveAccessService)
+	}
 
 	// Initialize AnalyticsService if not provided
 	if b.context.AnalyticsService == nil {
@@ -325,8 +334,23 @@ func (b *ContextBuilder) initializeServices() error {
 	if b.context.UserService == nil {
 		b.context.UserService = service.NewUserService(b.context.Database, b.context.SubscriptionService, b.context.ErrorReportService)
 	}
+	if b.context.EffectiveAccessService != nil {
+		b.context.UserService.SetEffectiveAccess(b.context.EffectiveAccessService)
+	}
 
 	return nil
+}
+
+type appleStoreDependencies struct {
+	notification *service.AppleNotificationVerifier
+	purchase     *service.ApplePurchaseVerifier
+	refresher    *service.AppleSubscriptionRefresher
+	products     []model.MobileIAPProduct
+}
+
+type googleStoreDependencies struct {
+	processor *service.GooglePurchaseProcessor
+	products  []model.MobileIAPProduct
 }
 
 func (b *ContextBuilder) initializeStoreIAP() error {
@@ -337,6 +361,18 @@ func (b *ContextBuilder) initializeStoreIAP() error {
 	if !storeConfig.Enabled {
 		b.context.StoreIAPEnabled = false
 		return nil
+	}
+	if storeConfig.RedisConfigured && b.context.RedisClient == nil {
+		return fmt.Errorf("configured Redis limiter is unavailable for store IAP")
+	}
+	requestLimiter, err := service.NewStoreIAPRequestLimiter(
+		b.context.RedisClient, storeConfig.RedisConfigured, nil,
+	)
+	if err != nil {
+		return err
+	}
+	if !storeConfig.RedisConfigured {
+		common.Logger.Warn("store IAP is using degraded process-local rate limiting")
 	}
 	protector, err := security.NewStoreEvidenceProtector(
 		storeConfig.Evidence.LookupKey,
@@ -354,68 +390,52 @@ func (b *ContextBuilder) initializeStoreIAP() error {
 	if err != nil {
 		return err
 	}
-	appleJWS, err := service.NewAppleJWSVerifier(storeConfig.Apple.Roots)
+	apple, err := buildAppleStoreDependencies(storeConfig.Apple, storeConfig.ClientEnvironment)
 	if err != nil {
-		return fmt.Errorf("configure Apple signed-data verifier: %w", err)
+		return err
 	}
-	appleClient, err := service.NewAppleAppStoreClient(service.AppleAppStoreClientConfig{
-		KeyID: storeConfig.Apple.KeyID, IssuerID: storeConfig.Apple.IssuerID,
-		BundleID: storeConfig.Apple.BundleID, PrivateKey: storeConfig.Apple.PrivateKey,
-	})
+	googleStore, err := buildGoogleStoreDependencies(storeConfig.Google)
 	if err != nil {
-		return fmt.Errorf("configure Apple App Store client: %w", err)
+		return err
 	}
-	appleProducts := make([]string, 0, len(storeConfig.Apple.Products))
-	for productID := range storeConfig.Apple.Products {
-		appleProducts = append(appleProducts, productID)
+	mobileProducts := append(apple.products, googleStore.products...)
+	effectiveAccess, err := service.NewEffectiveAccessService(entitlements, storeConfig.ClientEnvironment, nil)
+	if err != nil {
+		return err
 	}
-	appleNotificationVerifier, err := service.NewAppleNotificationVerifier(
-		appleJWS, storeConfig.Apple.BundleID, storeConfig.Apple.AppAppleID, appleProducts, nil,
+	retryRiver, err := river.NewClient(riverpgxv5.New(b.context.Database), &river.Config{Logger: common.Logger})
+	if err != nil {
+		return fmt.Errorf("create Google acknowledgement scheduler: %w", err)
+	}
+	retryScheduler := service.NewJobService(retryRiver)
+	acknowledgementWorker, err := service.NewGoogleAcknowledgementRetryWorker(
+		entitlements, googleStore.processor, persistence, storeConfig.ClientEnvironment, nil,
 	)
 	if err != nil {
 		return err
 	}
-	appleRefresher, err := service.NewAppleSubscriptionRefresher(
-		appleClient, appleJWS, storeConfig.Apple.BundleID, storeConfig.Apple.AppAppleID,
-		storeConfig.Apple.Products, nil,
+	acknowledgementSweep, err := service.NewGoogleAcknowledgementSweepWorker(
+		entitlements, acknowledgementWorker, storeConfig.ClientEnvironment,
 	)
 	if err != nil {
 		return err
 	}
-
-	credentialsContext, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	credentials, err := google.FindDefaultCredentials(credentialsContext, googleAndroidPublisherScope)
-	if err != nil {
-		return fmt.Errorf("find Google Application Default Credentials: %w", err)
-	}
-	googleTokens, err := service.NewGoogleOAuthTokenSource(credentials.TokenSource)
-	if err != nil {
-		return err
-	}
-	googleClient, err := service.NewGooglePlayClient(
-		storeConfig.Google.PackageName, googleTokens, nil, "",
+	orchestrator, err := service.NewStoreIAPOrchestrator(
+		entitlements, apple.purchase, apple.refresher, googleStore.processor,
+		persistence, retryScheduler, storeConfig.ClientEnvironment, mobileProducts, nil,
 	)
-	if err != nil {
-		return err
-	}
-	googleVerifier, err := service.NewGooglePurchaseVerifier(googleClient, storeConfig.Google.Products, nil)
-	if err != nil {
-		return err
-	}
-	googleProcessor, err := service.NewGooglePurchaseProcessor(googleVerifier, googleClient)
 	if err != nil {
 		return err
 	}
 	notificationRefresher, err := service.NewStoreNotificationRefresher(
-		entitlements, entitlements, appleRefresher, googleProcessor, persistence,
+		entitlements, entitlements, apple.refresher, googleStore.processor, persistence,
 	)
 	if err != nil {
 		return err
 	}
 	inbox := repository.NewProviderEventInboxRepository(b.context.Database)
 	appleIngestor, err := service.NewAppleNotificationIngestor(
-		appleNotificationVerifier, inbox, notificationRefresher.RefreshApple, nil,
+		apple.notification, inbox, notificationRefresher.RefreshApple, nil,
 	)
 	if err != nil {
 		return err
@@ -433,8 +453,97 @@ func (b *ContextBuilder) initializeStoreIAP() error {
 	b.context.ProviderEventInboxRepository = inbox
 	b.context.AppleNotificationIngestor = appleIngestor
 	b.context.GoogleRTDNIngestor = googleIngestor
+	b.context.EffectiveAccessService = effectiveAccess
+	b.context.StoreIAPOrchestrator = orchestrator
+	b.context.GoogleAcknowledgementWorker = acknowledgementWorker
+	b.context.GoogleAcknowledgementSweep = acknowledgementSweep
+	b.context.StoreIAPRequestLimiter = requestLimiter
 	b.context.StoreIAPEnabled = true
 	return nil
+}
+
+func buildAppleStoreDependencies(
+	storeConfig config.AppleStoreConfig,
+	environment model.StoreEnvironment,
+) (appleStoreDependencies, error) {
+	jws, err := service.NewAppleJWSVerifier(storeConfig.Roots)
+	if err != nil {
+		return appleStoreDependencies{}, fmt.Errorf("configure Apple signed-data verifier: %w", err)
+	}
+	client, err := service.NewAppleAppStoreClient(service.AppleAppStoreClientConfig{
+		KeyID: storeConfig.KeyID, IssuerID: storeConfig.IssuerID,
+		BundleID: storeConfig.BundleID, PrivateKey: storeConfig.PrivateKey,
+	})
+	if err != nil {
+		return appleStoreDependencies{}, fmt.Errorf("configure Apple App Store client: %w", err)
+	}
+	providerProducts := make([]string, 0, len(storeConfig.Products))
+	allowlist := make(map[string]string, len(storeConfig.Products))
+	mobileProducts := make([]model.MobileIAPProduct, 0, len(storeConfig.Products))
+	for productID, product := range storeConfig.Products {
+		providerProducts = append(providerProducts, productID)
+		allowlist[productID] = product.Entitlement
+		mobileProducts = append(mobileProducts, model.MobileIAPProduct{
+			Store: model.EntitlementStoreApple, ProductID: productID,
+			Entitlement: product.Entitlement, BillingPeriod: product.BillingPeriod,
+		})
+	}
+	notification, err := service.NewAppleNotificationVerifier(
+		jws, storeConfig.BundleID, storeConfig.AppAppleID, providerProducts, nil,
+	)
+	if err != nil {
+		return appleStoreDependencies{}, err
+	}
+	refresher, err := service.NewAppleSubscriptionRefresher(
+		client, jws, storeConfig.BundleID, storeConfig.AppAppleID, allowlist, nil,
+	)
+	if err != nil {
+		return appleStoreDependencies{}, err
+	}
+	purchase, err := service.NewApplePurchaseVerifier(
+		client, jws, storeConfig.BundleID, allowlist, environment, nil,
+	)
+	if err != nil {
+		return appleStoreDependencies{}, err
+	}
+	return appleStoreDependencies{
+		notification: notification, purchase: purchase, refresher: refresher, products: mobileProducts,
+	}, nil
+}
+
+func buildGoogleStoreDependencies(storeConfig config.GooglePlayConfig) (googleStoreDependencies, error) {
+	credentialsContext, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	credentials, err := google.FindDefaultCredentials(credentialsContext, googleAndroidPublisherScope)
+	if err != nil {
+		return googleStoreDependencies{}, fmt.Errorf("find Google Application Default Credentials: %w", err)
+	}
+	tokens, err := service.NewGoogleOAuthTokenSource(credentials.TokenSource)
+	if err != nil {
+		return googleStoreDependencies{}, err
+	}
+	client, err := service.NewGooglePlayClient(storeConfig.PackageName, tokens, nil, "")
+	if err != nil {
+		return googleStoreDependencies{}, err
+	}
+	allowlist := make(map[string]string, len(storeConfig.Products))
+	mobileProducts := make([]model.MobileIAPProduct, 0, len(storeConfig.Products))
+	for productID, product := range storeConfig.Products {
+		allowlist[productID] = product.Entitlement
+		mobileProducts = append(mobileProducts, model.MobileIAPProduct{
+			Store: model.EntitlementStoreGoogle, ProductID: productID,
+			Entitlement: product.Entitlement, BillingPeriod: product.BillingPeriod,
+		})
+	}
+	verifier, err := service.NewGooglePurchaseVerifier(client, allowlist, nil)
+	if err != nil {
+		return googleStoreDependencies{}, err
+	}
+	processor, err := service.NewGooglePurchaseProcessor(verifier, client)
+	if err != nil {
+		return googleStoreDependencies{}, err
+	}
+	return googleStoreDependencies{processor: processor, products: mobileProducts}, nil
 }
 
 // Close gracefully shuts down all services and connections

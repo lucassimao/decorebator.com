@@ -81,6 +81,7 @@ func newApplePurchaseVerifier(
 			"decorebator_monthly_premium1": "premium",
 			"decorebator_annual_premium":   "premium",
 		},
+		model.StoreEnvironmentProduction,
 		func() time.Time { return now },
 	)
 	require.NoError(t, err)
@@ -111,7 +112,7 @@ func TestApplePurchaseVerifierAcceptsAccountBoundProductionPurchase(t *testing.T
 	assert.True(t, result.Identity.MatchesAccount(model.AppleAccountIdentity{UserID: 42, AppAccountToken: accountToken}))
 }
 
-func TestApplePurchaseVerifierFallsBackToSandboxOnlyForDocumentedNotFound(t *testing.T) {
+func TestApplePurchaseVerifierUsesOnlyConfiguredSandboxEnvironment(t *testing.T) {
 	now := time.Date(2026, 8, 4, 12, 0, 0, 0, time.UTC)
 	accountToken := uuid.New()
 	payload := validApplePayload(now, accountToken)
@@ -122,14 +123,19 @@ func TestApplePurchaseVerifierFallsBackToSandboxOnlyForDocumentedNotFound(t *tes
 			model.StoreEnvironmentProduction: &service.AppleAPIError{StatusCode: http.StatusNotFound, ErrorCode: 4040010},
 		},
 	}
-	verifier := newApplePurchaseVerifier(t, client, payload, now)
+	verifier, err := service.NewApplePurchaseVerifier(
+		client, fakeAppleSignedDataVerifier{payload: payload}, "com.lsimaocosta.decorebator",
+		map[string]string{"decorebator_monthly_premium1": "premium"},
+		model.StoreEnvironmentSandbox, func() time.Time { return now },
+	)
+	require.NoError(t, err)
 	result, err := verifier.Verify(context.Background(), service.ApplePurchaseVerificationInput{
 		AuthenticatedUserID: 42, TransactionID: payload.TransactionID,
 		Account: model.AppleAccountIdentity{UserID: 42, AppAccountToken: accountToken},
 	})
 	require.NoError(t, err)
 	assert.Equal(t, model.StoreEnvironmentSandbox, result.Identity.Environment)
-	assert.Equal(t, []model.StoreEnvironment{model.StoreEnvironmentProduction, model.StoreEnvironmentSandbox}, client.calls)
+	assert.Equal(t, []model.StoreEnvironment{model.StoreEnvironmentSandbox}, client.calls)
 
 	client = &fakeAppleTransactionClient{responses: map[model.StoreEnvironment]string{}, errors: map[model.StoreEnvironment]error{
 		model.StoreEnvironmentProduction: &service.AppleAPIError{StatusCode: http.StatusTooManyRequests, ErrorCode: 4290000, Retryable: true},
@@ -227,7 +233,7 @@ func TestApplePurchaseVerifierRejectsMalformedTransactionIDsBeforeProviderCall(t
 	}
 }
 
-func TestApplePurchaseVerifierTreatsDoubleNotFoundAsInvalidEvidence(t *testing.T) {
+func TestApplePurchaseVerifierNeverFallsBackAcrossEnvironments(t *testing.T) {
 	now := time.Date(2026, 8, 4, 12, 0, 0, 0, time.UTC)
 	accountToken := uuid.New()
 	client := &fakeAppleTransactionClient{responses: map[model.StoreEnvironment]string{}, errors: map[model.StoreEnvironment]error{
@@ -240,7 +246,7 @@ func TestApplePurchaseVerifierTreatsDoubleNotFoundAsInvalidEvidence(t *testing.T
 		Account: model.AppleAccountIdentity{UserID: 42, AppAccountToken: accountToken},
 	})
 	assertAppleVerificationFailure(t, err, model.EntitlementFailureInvalidEvidence)
-	assert.Equal(t, []model.StoreEnvironment{model.StoreEnvironmentProduction, model.StoreEnvironmentSandbox}, client.calls)
+	assert.Equal(t, []model.StoreEnvironment{model.StoreEnvironmentProduction}, client.calls)
 }
 
 func TestApplePurchaseVerifierRejectsInvalidSignatureAndAuthenticatedAccount(t *testing.T) {
@@ -254,6 +260,7 @@ func TestApplePurchaseVerifierRejectsInvalidSignatureAndAuthenticatedAccount(t *
 		fakeAppleSignedDataVerifier{err: service.ErrInvalidAppleSignedData},
 		"com.lsimaocosta.decorebator",
 		map[string]string{"decorebator_monthly_premium1": "premium"},
+		model.StoreEnvironmentProduction,
 		func() time.Time { return now },
 	)
 	require.NoError(t, err)

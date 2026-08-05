@@ -84,6 +84,33 @@ func Authenticate(c *gin.Context) {
 	c.Next()
 }
 
+// ResolveEffectiveSubscription replaces only the request-scoped legacy plan
+// projection. It never mutates the JWT or users table.
+func ResolveEffectiveSubscription(access *service.EffectiveAccessService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if access == nil {
+			c.Next()
+			return
+		}
+		userAny, exists := c.Get("user")
+		user, ok := userAny.(*model.User)
+		if !exists || !ok || user == nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid user context"})
+			return
+		}
+		plan, err := access.Plan(c.Request.Context(), user.ID, user.SubscriptionPlan)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{
+				"error": "Subscription access is temporarily unavailable",
+			})
+			return
+		}
+		user.SubscriptionPlan = plan
+		c.Set("user", user)
+		c.Next()
+	}
+}
+
 func AuthenticateStatic(c *gin.Context) {
 
 	authorization := c.GetHeader("Authorization")

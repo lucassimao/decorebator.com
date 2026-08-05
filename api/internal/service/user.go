@@ -27,6 +27,11 @@ type UserService struct {
 	wordlistRepository  *repo.WordlistRepository
 	subscriptionService *SubscriptionService
 	errorReportService  *ErrorReportService
+	effectiveAccess     *EffectiveAccessService
+}
+
+func (s *UserService) SetEffectiveAccess(service *EffectiveAccessService) {
+	s.effectiveAccess = service
 }
 
 // NewUserService creates a new UserService with injected dependencies
@@ -217,6 +222,13 @@ func (s *UserService) GetProfile(ctx context.Context, userID int64) (*User, bool
 	} else {
 		planChanged = downgraded
 	}
+	if s.effectiveAccess != nil {
+		effectivePlan, accessErr := s.effectiveAccess.Plan(ctx, userID, user.SubscriptionPlan)
+		if accessErr != nil {
+			return nil, false, accessErr
+		}
+		user.SubscriptionPlan = effectivePlan
+	}
 
 	return user, planChanged, nil
 }
@@ -322,6 +334,15 @@ func (s *UserService) ValidateUserEligibilityForWorkers(ctx context.Context, use
 	// Premium users (monthly/annual) have no restrictions
 	if subscriptionPlan == model.PlanMonthly || subscriptionPlan == model.PlanAnnual {
 		return nil
+	}
+	if s.effectiveAccess != nil {
+		hasPremium, accessErr := s.effectiveAccess.HasPremium(ctx, userID)
+		if accessErr != nil {
+			return accessErr
+		}
+		if hasPremium {
+			return nil
+		}
 	}
 
 	// For free users, check wordlist and word count limits

@@ -30,6 +30,11 @@ type SubscriptionService struct {
 	webhookSecret     string
 	successURL        string
 	cancelURL         string
+	effectiveAccess   *EffectiveAccessService
+}
+
+func (s *SubscriptionService) SetEffectiveAccess(service *EffectiveAccessService) {
+	s.effectiveAccess = service
 }
 
 func NewSubscriptionService(db *pgxpool.Pool, mailService *mail.MailService, revenueCatService RevenueCatService) *SubscriptionService {
@@ -553,6 +558,19 @@ func (s *SubscriptionService) CheckSubscriptionLimits(ctx context.Context, userI
 	sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("failed to get subscription: %w", err)
+	}
+	if s.effectiveAccess != nil {
+		legacyPlan := model.PlanFree
+		if sub != nil {
+			legacyPlan = sub.Plan
+		}
+		effectivePlan, accessErr := s.effectiveAccess.Plan(ctx, userID, legacyPlan)
+		if accessErr != nil {
+			return accessErr
+		}
+		if effectivePlan != model.PlanFree {
+			return nil
+		}
 	}
 
 	// If optimistic flag is present and user appears to be on free plan, verify with RevenueCat

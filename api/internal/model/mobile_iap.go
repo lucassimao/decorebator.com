@@ -62,6 +62,9 @@ func (e MobileIAPEntitlement) Validate() error {
 	if !e.Status.Valid() {
 		return fmt.Errorf("mobile entitlement status is invalid")
 	}
+	if e.Status == EntitlementStatusPending {
+		return fmt.Errorf("pending purchase must not be encoded as current entitlement")
+	}
 	if (e.Status == EntitlementStatusActive || e.Status == EntitlementStatusGracePeriod) && e.PeriodEnd == nil {
 		return fmt.Errorf("period end is required for entitled status")
 	}
@@ -144,37 +147,150 @@ type IAPRestoreStatus string
 const (
 	IAPRestoreRestored    IAPRestoreStatus = "restored"
 	IAPRestoreNoPurchases IAPRestoreStatus = "no_purchases"
+	IAPRestorePartial     IAPRestoreStatus = "partial"
 	IAPRestorePending     IAPRestoreStatus = "pending"
 	IAPRestoreFailed      IAPRestoreStatus = "failed"
 )
 
+type IAPRestoreEvidenceStatus string
+
+const (
+	IAPRestoreEvidenceRestored  IAPRestoreEvidenceStatus = "restored"
+	IAPRestoreEvidenceUnchanged IAPRestoreEvidenceStatus = "unchanged"
+	IAPRestoreEvidenceRejected  IAPRestoreEvidenceStatus = "rejected"
+	IAPRestoreEvidenceRetryable IAPRestoreEvidenceStatus = "retryable"
+)
+
+// MobileIAPRestoreEvidenceResult deliberately exposes only the request index;
+// raw transaction IDs and purchase tokens must never be echoed to clients.
+type MobileIAPRestoreEvidenceResult struct {
+	Index  int                      `json:"index"`
+	Status IAPRestoreEvidenceStatus `json:"status"`
+	Error  *MobileIAPError          `json:"error,omitempty"`
+}
+
+func (r MobileIAPRestoreEvidenceResult) Validate() error {
+	if r.Index < 0 {
+		return fmt.Errorf("restore evidence index must be non-negative")
+	}
+	switch r.Status {
+	case IAPRestoreEvidenceRestored, IAPRestoreEvidenceUnchanged:
+		if r.Error != nil {
+			return fmt.Errorf("successful restore evidence cannot include an error")
+		}
+	case IAPRestoreEvidenceRejected:
+		if r.Error == nil || r.Error.Retryable {
+			return fmt.Errorf("rejected restore evidence requires a permanent error")
+		}
+	case IAPRestoreEvidenceRetryable:
+		if r.Error == nil || !r.Error.Retryable {
+			return fmt.Errorf("retryable restore evidence requires a retryable error")
+		}
+	default:
+		return fmt.Errorf("unsupported restore evidence status %q", r.Status)
+	}
+	if r.Error != nil {
+		return r.Error.Validate()
+	}
+	return nil
+}
+
 type MobileIAPRestoreResult struct {
-	Status            IAPRestoreStatus `json:"status"`
-	RestoredPurchases int              `json:"restoredPurchases"`
-	Error             *MobileIAPError  `json:"error,omitempty"`
+	Status             IAPRestoreStatus                 `json:"status"`
+	RestoredPurchases  int                              `json:"restoredPurchases"`
+	UnchangedPurchases int                              `json:"unchangedPurchases"`
+	RejectedPurchases  int                              `json:"rejectedPurchases"`
+	RetryablePurchases int                              `json:"retryablePurchases"`
+	Outcomes           []MobileIAPRestoreEvidenceResult `json:"outcomes"`
+	Error              *MobileIAPError                  `json:"error,omitempty"`
 }
 
 func (r MobileIAPRestoreResult) Validate() error {
-	switch r.Status {
-	case IAPRestoreNoPurchases, IAPRestorePending:
-		if r.RestoredPurchases != 0 || r.Error != nil {
-			return fmt.Errorf("restore result fields conflict with status %q", r.Status)
-		}
-	case IAPRestoreRestored:
-		if r.RestoredPurchases <= 0 || r.Error != nil {
-			return fmt.Errorf("restored result requires a positive purchase count")
-		}
-	case IAPRestoreFailed:
-		if r.RestoredPurchases != 0 || r.Error == nil {
-			return fmt.Errorf("failed restore requires an error")
-		}
-		if err := r.Error.Validate(); err != nil {
+	if r.RestoredPurchases < 0 || r.UnchangedPurchases < 0 || r.RejectedPurchases < 0 || r.RetryablePurchases < 0 {
+		return fmt.Errorf("restore counts must be non-negative")
+	}
+	if err := r.validateOutcomes(); err != nil {
+		return err
+	}
+	return r.validateStatus()
+}
+
+func (r MobileIAPRestoreResult) validateOutcomes() error {
+	counts := map[IAPRestoreEvidenceStatus]int{}
+	seen := make(map[int]struct{}, len(r.Outcomes))
+	for _, outcome := range r.Outcomes {
+		if err := outcome.Validate(); err != nil {
 			return err
 		}
+		if _, exists := seen[outcome.Index]; exists {
+			return fmt.Errorf("duplicate restore evidence index")
+		}
+		seen[outcome.Index] = struct{}{}
+		counts[outcome.Status]++
+	}
+	if counts[IAPRestoreEvidenceRestored] > r.RestoredPurchases ||
+		counts[IAPRestoreEvidenceUnchanged] > r.UnchangedPurchases ||
+		counts[IAPRestoreEvidenceRejected] > r.RejectedPurchases ||
+		counts[IAPRestoreEvidenceRetryable] > r.RetryablePurchases {
+		return fmt.Errorf("restore per-evidence outcomes exceed aggregate counts")
+	}
+	return nil
+}
+
+func (r MobileIAPRestoreResult) validateStatus() error {
+	switch r.Status {
+	case IAPRestoreNoPurchases:
+		return r.validateNoPurchases()
+	case IAPRestorePending:
+		return r.validatePending()
+	case IAPRestoreRestored:
+		return r.validateRestored()
+	case IAPRestorePartial:
+		return r.validatePartial()
+	case IAPRestoreFailed:
+		return r.validateFailed()
 	default:
 		return fmt.Errorf("unsupported restore status %q", r.Status)
 	}
+}
+
+func (r MobileIAPRestoreResult) validateNoPurchases() error {
+	if r.RestoredPurchases != 0 || r.UnchangedPurchases != 0 || r.RejectedPurchases != 0 ||
+		r.RetryablePurchases != 0 || len(r.Outcomes) != 0 || r.Error != nil {
+		return fmt.Errorf("restore result fields conflict with status %q", r.Status)
+	}
 	return nil
+}
+
+func (r MobileIAPRestoreResult) validatePending() error {
+	if r.RestoredPurchases != 0 || r.RetryablePurchases == 0 && len(r.Outcomes) > 0 || r.Error != nil {
+		return fmt.Errorf("restore result fields conflict with status %q", r.Status)
+	}
+	return nil
+}
+
+func (r MobileIAPRestoreResult) validateRestored() error {
+	if r.RestoredPurchases+r.UnchangedPurchases <= 0 || r.RejectedPurchases != 0 || r.RetryablePurchases != 0 || r.Error != nil {
+		return fmt.Errorf("restored result requires a positive purchase count")
+	}
+	return nil
+}
+
+func (r MobileIAPRestoreResult) validatePartial() error {
+	successes := r.RestoredPurchases + r.UnchangedPurchases
+	failures := r.RejectedPurchases + r.RetryablePurchases
+	mixedFailures := r.RejectedPurchases > 0 && r.RetryablePurchases > 0
+	if r.Error != nil || failures == 0 || (successes == 0 && !mixedFailures) {
+		return fmt.Errorf("partial restore requires mixed outcomes")
+	}
+	return nil
+}
+
+func (r MobileIAPRestoreResult) validateFailed() error {
+	if r.RestoredPurchases != 0 || r.UnchangedPurchases != 0 || r.Error == nil {
+		return fmt.Errorf("failed restore requires an error")
+	}
+	return r.Error.Validate()
 }
 
 type MobileIAPResponse struct {

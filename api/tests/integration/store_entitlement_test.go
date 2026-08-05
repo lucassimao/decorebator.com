@@ -13,6 +13,7 @@ import (
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/security"
+	"decorebator.com/internal/service"
 	"decorebator.com/tests/integration/setup"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
@@ -120,6 +121,71 @@ func TestStoreEntitlementRejectsOwnershipTransferWithoutPartialWrite(t *testing.
 	assert.NotContains(t, string(serialized), firstAccount.ObfuscatedExternalAccountID)
 }
 
+func TestEffectiveStoreAccessSeparatesEnvironmentAndRequiresGoogleAcknowledgement(t *testing.T) {
+	repo, db, ctx, userID, _ := prepareStoreEntitlementTest(t)
+	account, err := repo.GetOrCreateGoogleAccount(ctx, userID)
+	require.NoError(t, err)
+	now := time.Date(2026, 8, 5, 15, 0, 0, 0, time.UTC)
+
+	production := googleStoreUpdate(userID, account, "production-token", now)
+	unacknowledged := false
+	production.Acknowledged = &unacknowledged
+	_, err = repo.Apply(ctx, production, nil)
+	require.NoError(t, err)
+	grants, err := repo.HasEffectivePremiumAccess(ctx, userID, model.StoreEnvironmentProduction, now)
+	require.NoError(t, err)
+	assert.False(t, grants, "verified but unacknowledged Google state must not grant")
+
+	sandbox := googleStoreUpdate(userID, account, "sandbox-token", now.Add(time.Minute))
+	sandbox.Entitlement.Environment = model.StoreEnvironmentSandbox
+	_, err = repo.Apply(ctx, sandbox, nil)
+	require.NoError(t, err)
+	grants, err = repo.HasEffectivePremiumAccess(ctx, userID, model.StoreEnvironmentSandbox, now.Add(time.Minute))
+	require.NoError(t, err)
+	assert.True(t, grants)
+	grants, err = repo.HasEffectivePremiumAccess(ctx, userID, model.StoreEnvironmentProduction, now.Add(time.Minute))
+	require.NoError(t, err)
+	assert.False(t, grants, "sandbox access must never leak into production reads")
+
+	acknowledged := true
+	production.Acknowledged = &acknowledged
+	production.SnapshotObservedAt = now.Add(2 * time.Minute)
+	production.Entitlement.LastVerifiedAt = production.SnapshotObservedAt
+	_, err = repo.Apply(ctx, production, nil)
+	require.NoError(t, err)
+	grants, err = repo.HasEffectivePremiumAccess(ctx, userID, model.StoreEnvironmentProduction, now.Add(2*time.Minute))
+	require.NoError(t, err)
+	assert.True(t, grants)
+
+	bindings, err := repo.ListUserPurchaseBindings(
+		ctx, userID, model.EntitlementStoreGoogle, model.StoreEnvironmentProduction, 20,
+	)
+	require.NoError(t, err)
+	require.Len(t, bindings, 1)
+	assert.Equal(t, "production-token", bindings[0].ProviderRecordID)
+	assert.NotEqual(t, "sandbox-token", bindings[0].ProviderRecordID)
+
+	effective, err := service.NewEffectiveAccessService(
+		repo, model.StoreEnvironmentProduction, func() time.Time { return now.Add(2 * time.Minute) },
+	)
+	require.NoError(t, err)
+	t.Setenv("STRIPE_API_KEY", "sk_test_not_real")
+	t.Setenv("STRIPE_WEBHOOK_SECRET", "whsec_not_real")
+	t.Setenv("STRIPE_SUCCESS_URL", "https://example.invalid/success")
+	t.Setenv("STRIPE_CANCEL_URL", "https://example.invalid/cancel")
+	subscriptions := service.NewSubscriptionService(db, nil, nil)
+	subscriptions.SetEffectiveAccess(effective)
+	require.NoError(t, subscriptions.CheckSubscriptionLimits(
+		ctx, userID, model.UserActionChatSession, &service.SubscriptionCheckOptions{},
+	), "canonical store access must pass a real premium-only limit gate")
+	users := service.NewUserService(db, subscriptions, nil)
+	users.SetEffectiveAccess(effective)
+	require.NoError(t, users.ValidateUserEligibilityForWorkers(ctx, userID))
+	profile, _, err := users.GetProfile(ctx, userID)
+	require.NoError(t, err)
+	assert.Equal(t, model.PlanMonthly, profile.SubscriptionPlan, "profile must expose the effective compatibility projection")
+}
+
 func TestGoogleVoidedPurchaseRevokesOnlyCurrentBindingAndHonorsEventClock(t *testing.T) {
 	repo, db, ctx, userID, _ := prepareStoreEntitlementTest(t)
 	account, err := repo.GetOrCreateGoogleAccount(ctx, userID)
@@ -178,6 +244,12 @@ func TestGoogleVoidedHistoricalTokenCannotRevokeReplacement(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, found)
 	assert.False(t, oldBinding.Current)
+	currentBindings, err := repo.ListUserPurchaseBindings(
+		ctx, userID, model.EntitlementStoreGoogle, model.StoreEnvironmentProduction, 20,
+	)
+	require.NoError(t, err)
+	require.Len(t, currentBindings, 1, "historical replacements must not consume the bounded restore set")
+	assert.Equal(t, "new-token", currentBindings[0].ProviderRecordID)
 
 	tx, err := db.Begin(ctx)
 	require.NoError(t, err)

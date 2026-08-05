@@ -11,6 +11,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"decorebator.com/internal/model"
 )
 
 const (
@@ -23,10 +25,17 @@ const (
 type EnvironmentLookup func(string) (string, bool)
 
 type StoreIAPConfig struct {
-	Enabled  bool
-	Apple    AppleStoreConfig
-	Google   GooglePlayConfig
-	Evidence StoreEvidenceConfig
+	Enabled           bool
+	ClientEnvironment model.StoreEnvironment
+	RedisConfigured   bool
+	Apple             AppleStoreConfig
+	Google            GooglePlayConfig
+	Evidence          StoreEvidenceConfig
+}
+
+type StoreProductConfig struct {
+	Entitlement   string                 `json:"entitlement"`
+	BillingPeriod model.IAPBillingPeriod `json:"billingPeriod"`
 }
 
 type AppleStoreConfig struct {
@@ -36,12 +45,12 @@ type AppleStoreConfig struct {
 	AppAppleID int64
 	PrivateKey []byte
 	Roots      []*x509.Certificate
-	Products   map[string]string
+	Products   map[string]StoreProductConfig
 }
 
 type GooglePlayConfig struct {
 	PackageName             string
-	Products                map[string]string
+	Products                map[string]StoreProductConfig
 	PushAudience            string
 	PushServiceAccountEmail string
 	Topic                   string
@@ -81,6 +90,10 @@ func LoadStoreIAPConfigFrom(lookup EnvironmentLookup) (StoreIAPConfig, error) {
 	if !enabled {
 		return StoreIAPConfig{}, nil
 	}
+	clientEnvironment, redisConfigured, err := loadClientEnvironment(lookup)
+	if err != nil {
+		return StoreIAPConfig{}, err
+	}
 
 	apple, err := loadAppleStoreConfig(lookup)
 	if err != nil {
@@ -94,7 +107,37 @@ func LoadStoreIAPConfigFrom(lookup EnvironmentLookup) (StoreIAPConfig, error) {
 	if err != nil {
 		return StoreIAPConfig{}, err
 	}
-	return StoreIAPConfig{Enabled: true, Apple: apple, Google: googleConfig, Evidence: evidence}, nil
+	return StoreIAPConfig{
+		Enabled: true, ClientEnvironment: clientEnvironment, RedisConfigured: redisConfigured,
+		Apple: apple, Google: googleConfig, Evidence: evidence,
+	}, nil
+}
+
+func loadClientEnvironment(lookup EnvironmentLookup) (model.StoreEnvironment, bool, error) {
+	production := false
+	if raw, ok := lookup("ENV"); ok {
+		production = strings.EqualFold(strings.TrimSpace(raw), "production")
+	}
+	raw, exists := lookup("STORE_IAP_CLIENT_ENVIRONMENT")
+	if !exists || strings.TrimSpace(raw) == "" {
+		if production {
+			return "", false, fmt.Errorf("STORE_IAP_CLIENT_ENVIRONMENT is required in production")
+		}
+		raw = string(model.StoreEnvironmentSandbox)
+	}
+	environment := model.StoreEnvironment(strings.TrimSpace(raw))
+	if !environment.Valid() {
+		return "", false, fmt.Errorf("STORE_IAP_CLIENT_ENVIRONMENT must be sandbox or production")
+	}
+	if production && environment != model.StoreEnvironmentProduction {
+		return "", false, fmt.Errorf("production requires STORE_IAP_CLIENT_ENVIRONMENT=production")
+	}
+	redisHost, redisConfigured := lookup("REDIS_HOST")
+	redisConfigured = redisConfigured && strings.TrimSpace(redisHost) != ""
+	if production && !redisConfigured {
+		return "", false, fmt.Errorf("REDIS_HOST is required when store IAP is enabled in production")
+	}
+	return environment, redisConfigured, nil
 }
 
 func loadAppleStoreConfig(lookup EnvironmentLookup) (AppleStoreConfig, error) {
@@ -286,17 +329,17 @@ func loadStoreEvidenceConfig(lookup EnvironmentLookup) (StoreEvidenceConfig, err
 	return StoreEvidenceConfig{LookupKey: lookupKey, ActiveVersion: int16(active), Keys: keys}, nil
 }
 
-func loadProductCatalog(lookup EnvironmentLookup, name string) (map[string]string, error) {
+func loadProductCatalog(lookup EnvironmentLookup, name string) (map[string]StoreProductConfig, error) {
 	raw, err := requiredEnv(lookup, name)
 	if err != nil {
 		return nil, err
 	}
-	var products map[string]string
+	var products map[string]StoreProductConfig
 	if err := json.Unmarshal([]byte(raw), &products); err != nil || len(products) == 0 {
 		return nil, fmt.Errorf("%s must be a non-empty JSON object", name)
 	}
-	for product, entitlement := range products {
-		if strings.TrimSpace(product) != product || product == "" || entitlement != "premium" {
+	for product, catalog := range products {
+		if strings.TrimSpace(product) != product || product == "" || catalog.Entitlement != "premium" || !catalog.BillingPeriod.Valid() {
 			return nil, fmt.Errorf("%s contains an invalid product mapping", name)
 		}
 	}

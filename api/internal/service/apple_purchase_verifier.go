@@ -53,11 +53,12 @@ func (e *ApplePurchaseVerificationError) Unwrap() error {
 }
 
 type ApplePurchaseVerifier struct {
-	client     AppleTransactionInfoClient
-	signedData AppleSignedDataVerifier
-	bundleID   string
-	products   map[string]string
-	now        func() time.Time
+	client      AppleTransactionInfoClient
+	signedData  AppleSignedDataVerifier
+	bundleID    string
+	products    map[string]string
+	environment model.StoreEnvironment
+	now         func() time.Time
 }
 
 func NewApplePurchaseVerifier(
@@ -65,12 +66,13 @@ func NewApplePurchaseVerifier(
 	signedData AppleSignedDataVerifier,
 	bundleID string,
 	products map[string]string,
+	environment model.StoreEnvironment,
 	now func() time.Time,
 ) (*ApplePurchaseVerifier, error) {
 	if client == nil || signedData == nil {
 		return nil, fmt.Errorf("Apple API client and signed-data verifier are required")
 	}
-	if strings.TrimSpace(bundleID) == "" || len(products) == 0 {
+	if strings.TrimSpace(bundleID) == "" || len(products) == 0 || !environment.Valid() {
 		return nil, fmt.Errorf("Apple bundle ID and product catalog are required")
 	}
 	productCopy := make(map[string]string, len(products))
@@ -84,7 +86,8 @@ func NewApplePurchaseVerifier(
 		now = time.Now
 	}
 	return &ApplePurchaseVerifier{
-		client: client, signedData: signedData, bundleID: bundleID, products: productCopy, now: now,
+		client: client, signedData: signedData, bundleID: bundleID, products: productCopy,
+		environment: environment, now: now,
 	}, nil
 }
 
@@ -115,19 +118,11 @@ func (v *ApplePurchaseVerifier) fetchSignedTransaction(
 	ctx context.Context,
 	transactionID string,
 ) (string, model.StoreEnvironment, error) {
-	signedTransaction, err := v.client.GetTransactionInfo(ctx, transactionID, model.StoreEnvironmentProduction)
-	if err == nil {
-		return signedTransaction, model.StoreEnvironmentProduction, nil
-	}
-	var apiError *AppleAPIError
-	if !errors.As(err, &apiError) || !apiError.TransactionNotFound() {
-		return "", "", appleProviderFailure(err)
-	}
-	signedTransaction, err = v.client.GetTransactionInfo(ctx, transactionID, model.StoreEnvironmentSandbox)
+	signedTransaction, err := v.client.GetTransactionInfo(ctx, transactionID, v.environment)
 	if err != nil {
 		return "", "", appleProviderFailure(err)
 	}
-	return signedTransaction, model.StoreEnvironmentSandbox, nil
+	return signedTransaction, v.environment, nil
 }
 
 func (v *ApplePurchaseVerifier) validatePayload(

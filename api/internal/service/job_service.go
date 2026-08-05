@@ -126,3 +126,15 @@ func (js *JobServiceImpl) RetryJob(ctx context.Context, jobID int64) error {
 	_, err := js.riverClient.JobRetry(ctx, jobID)
 	return err
 }
+
+func (js *JobServiceImpl) ScheduleGoogleAcknowledgementRetry(ctx context.Context, bindingID int64) error {
+	if bindingID <= 0 {
+		return errors.New("valid Google purchase binding is required")
+	}
+	_, err := js.enqueueJob(ctx, &river.InsertOpts{
+		Queue:       GoogleAcknowledgementRetryQueue,
+		MaxAttempts: 18,
+		UniqueOpts:  river.UniqueOpts{ByArgs: true, ByQueue: true},
+	}, GoogleAcknowledgementRetryArgs{BindingID: bindingID}, nil)
+	return err
+}

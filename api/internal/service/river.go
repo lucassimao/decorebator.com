@@ -49,6 +49,8 @@ func NewWorkerRiverClient(
 	subscriptionService *SubscriptionService,
 	mailService *mail.MailService,
 	providerInbox *repository.ProviderEventInboxRepository,
+	googleAcknowledgementWorker *GoogleAcknowledgementRetryWorker,
+	googleAcknowledgementSweep *GoogleAcknowledgementSweepWorker,
 ) (*river.Client[pgx.Tx], error) {
 	riverWorkers := river.NewWorkers()
 	river.AddWorker(riverWorkers, NewImageGeneratorWorker(definitionService, definitionImageService, userService))
@@ -82,6 +84,12 @@ func NewWorkerRiverClient(
 			return nil, err
 		}
 		river.AddWorker(riverWorkers, healthWorker)
+	}
+	if googleAcknowledgementWorker != nil {
+		river.AddWorker(riverWorkers, googleAcknowledgementWorker)
+	}
+	if googleAcknowledgementSweep != nil {
+		river.AddWorker(riverWorkers, googleAcknowledgementSweep)
 	}
 
 	// Create periodic jobs for renewal reminders
@@ -141,18 +149,28 @@ func NewWorkerRiverClient(
 			&river.PeriodicJobOpts{RunOnStart: true},
 		))
 	}
+	if googleAcknowledgementSweep != nil {
+		periodicJobs = append(periodicJobs, river.NewPeriodicJob(
+			river.PeriodicInterval(5*time.Minute),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return GoogleAcknowledgementSweepArgs{}, &river.InsertOpts{Queue: GoogleAcknowledgementRetryQueue}
+			},
+			&river.PeriodicJobOpts{RunOnStart: true},
+		))
+	}
 
 	riverClient, err := river.NewClient(riverpgxv5.New(db), &river.Config{
 		Queues: map[string]river.QueueConfig{
-			river.QueueDefault:        {MaxWorkers: 100},
-			ImageGeneratorQueue:       {MaxWorkers: 5},
-			TextToSpeechQueue:         {MaxWorkers: 30}, //max of 50 per openai docs
-			DefinitionFetcherQueue:    {MaxWorkers: 50},
-			SubscriptionReminderQueue: {MaxWorkers: 10},
-			ExampleAudioQueue:         {MaxWorkers: 20},
-			PushNotificationQueue:     {MaxWorkers: 5},
-			"revenuecat-webhook":      {MaxWorkers: 5},
-			"stripe-webhook":          {MaxWorkers: 5},
+			river.QueueDefault:              {MaxWorkers: 100},
+			ImageGeneratorQueue:             {MaxWorkers: 5},
+			TextToSpeechQueue:               {MaxWorkers: 30}, //max of 50 per openai docs
+			DefinitionFetcherQueue:          {MaxWorkers: 50},
+			SubscriptionReminderQueue:       {MaxWorkers: 10},
+			ExampleAudioQueue:               {MaxWorkers: 20},
+			PushNotificationQueue:           {MaxWorkers: 5},
+			"revenuecat-webhook":            {MaxWorkers: 5},
+			"stripe-webhook":                {MaxWorkers: 5},
+			GoogleAcknowledgementRetryQueue: {MaxWorkers: 5},
 		},
 		Workers:      riverWorkers,
 		Logger:       common.Logger,

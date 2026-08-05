@@ -60,6 +60,8 @@ func main() {
 		appContext.SubscriptionService,
 		appContext.MailService,
 		appContext.ProviderEventInboxRepository,
+		appContext.GoogleAcknowledgementWorker,
+		appContext.GoogleAcknowledgementSweep,
 	)
 
 	if err != nil {

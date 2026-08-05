@@ -52,6 +52,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	router.Use(CORSMiddleware())
 	storeWebhookMetrics := NewStoreWebhookMetrics()
 	RegisterStoreWebhookRoutes(router, appCtx, storeWebhookMetrics)
+	RegisterMobileIAPRoutes(router, appCtx, appCtx.StoreIAPRequestLimiter)
 
 	// Routes without authentication
 	{
@@ -76,7 +77,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 
 	// Routes with authentication
 	authenticatedRoutes := router.Group("/")
-	authenticatedRoutes.Use(Authenticate, SentryUserContextMiddleware())
+	authenticatedRoutes.Use(Authenticate, ResolveEffectiveSubscription(appCtx.EffectiveAccessService), SentryUserContextMiddleware())
 	authenticatedRoutes.Use(TimeoutMiddleware(2 * time.Second))
 	{
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)

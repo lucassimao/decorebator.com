@@ -59,6 +59,7 @@ func TestMobileIAPEntitlementRejectsInvalidLifecycleViews(t *testing.T) {
 			value.PeriodEnd = nil
 		},
 		func(value *model.MobileIAPEntitlement) { value.RevokedAt = &now },
+		func(value *model.MobileIAPEntitlement) { value.Status = model.EntitlementStatusPending },
 	}
 	for _, mutate := range mutations {
 		value := valid
@@ -69,6 +70,26 @@ func TestMobileIAPEntitlementRejectsInvalidLifecycleViews(t *testing.T) {
 	revoked := valid
 	revoked.Status, revoked.PeriodEnd, revoked.RevokedAt = model.EntitlementStatusRevoked, nil, &now
 	require.NoError(t, revoked.Validate())
+}
+
+func TestMobileIAPRestoreResultPreservesMixedAndRejectedOutcomes(t *testing.T) {
+	retryable := model.MobileIAPError{Code: model.EntitlementResultRetryableProvider, MessageKey: "iap.error.unavailable", Retryable: true}
+	rejected := model.MobileIAPError{Code: model.EntitlementResultInvalidPurchase, MessageKey: "iap.error.invalid_purchase"}
+	result := model.MobileIAPRestoreResult{
+		Status:             model.IAPRestorePartial,
+		RestoredPurchases:  1,
+		RejectedPurchases:  1,
+		RetryablePurchases: 1,
+		Outcomes: []model.MobileIAPRestoreEvidenceResult{
+			{Index: 0, Status: model.IAPRestoreEvidenceRestored},
+			{Index: 1, Status: model.IAPRestoreEvidenceRejected, Error: &rejected},
+			{Index: 2, Status: model.IAPRestoreEvidenceRetryable, Error: &retryable},
+		},
+	}
+	require.NoError(t, result.Validate())
+
+	result.Status = model.IAPRestoreNoPurchases
+	require.Error(t, result.Validate(), "rejected evidence must never collapse to no_purchases")
 }
 
 func TestMobileIAPResponseValidatesCatalogAndEntitlement(t *testing.T) {
