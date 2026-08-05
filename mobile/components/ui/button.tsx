@@ -27,6 +27,7 @@ export interface ButtonProps
   loading?: boolean;
   loadingLabel?: string;
   style?: StyleProp<ViewStyle>;
+  controlStyle?: StyleProp<ViewStyle>;
 }
 
 export const Button = React.forwardRef<
@@ -48,6 +49,7 @@ export const Button = React.forwardRef<
       onBlur,
       accessibilityState,
       style,
+      controlStyle,
       ...props
     },
     ref,
@@ -93,7 +95,7 @@ export const Button = React.forwardRef<
             background: theme.colors.background.surface,
             pressed: theme.colors.background.elevated,
             foreground: theme.colors.text.primary,
-            border: theme.colors.border.medium,
+            border: theme.colors.roles.controlBorder,
             shadow: "transparent",
           };
         case "quiet":
@@ -167,6 +169,7 @@ export const Button = React.forwardRef<
               borderColor: "transparent",
               boxShadow: undefined,
             },
+            controlStyle,
           ]}
           {...props}
         >
@@ -190,6 +193,7 @@ export const Button = React.forwardRef<
                 ? theme.colors.roles.disabledText
                 : colors.foreground,
               textAlign: "center",
+              flexShrink: 1,
             }}
           >
             {loading && loadingLabel ? loadingLabel : children}

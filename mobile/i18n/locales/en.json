@@ -948,7 +948,6 @@
     "tapToFlip": "Tap to see definition",
     "tapToFlipBack": "Tap to see word",
     "examples": "Examples",
-    "navigationHint": "Use arrows to navigate",
     "reportIssue": "Report an Issue",
     "reportSubmitted": "Your report has been submitted.",
     "reportWord": "Report issue with \"{{word}}\"",
@@ -968,6 +967,18 @@
     "slowConnection": "Slow connection detected. This might take a bit longer.",
     "wordsProcessing": "Words Still Processing",
     "wordsProcessingMessage": "Your words are being processed and will be ready shortly. Please check back in a few moments.",
-    "savePosition": "Save position"
+    "savePosition": "Save position",
+    "previousCard": "Previous card",
+    "nextCard": "Next card",
+    "finishWordlist": "Finish wordlist",
+    "wordlistComplete": "Wordlist complete",
+    "completionMessage": "You reached the end of this wordlist.",
+    "cardsViewedThisVisit_one": "card viewed this visit",
+    "cardsViewedThisVisit_other": "cards viewed this visit",
+    "reviewAgain": "Review again",
+    "backToWordlists": "Back to wordlists",
+    "returnToLastCard": "Return to last card",
+    "completionNote": "Viewing cards is not scored as recall accuracy.",
+    "progressLabel": "Flashcard progress"
   }
 }

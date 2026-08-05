@@ -1,0 +1,46 @@
+appId: com.lsimaocosta.decorebator
+name: Flashcard completion and restart
+tags:
+  - smoke
+  - flashcards
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Welcome back!"
+    timeout: 15000
+- tapOn:
+    id: "email-input"
+- eraseText
+- inputText: ${EXPO_PUBLIC_TEST_USER_EMAIL}
+- tapOn:
+    id: "password-input"
+- eraseText
+- inputText: ${EXPO_PUBLIC_TEST_USER_PASSWORD}
+- tapOn:
+    id: "signin-button"
+- extendedWaitUntil:
+    visible: "My Wordlists"
+    timeout: 20000
+- tapOn: "Flashcards"
+- extendedWaitUntil:
+    visible: "(Next card|Finish wordlist)"
+    timeout: 20000
+- repeat:
+    while:
+      visible: "Next card"
+    commands:
+      - tapOn: "Next card"
+- assertVisible: "Finish wordlist"
+- tapOn: "Finish wordlist"
+- extendedWaitUntil:
+    visible: "Wordlist complete"
+    timeout: 5000
+- assertVisible: ".*viewed this visit"
+- tapOn: "Return to last card"
+- assertVisible: "Finish wordlist"
+- tapOn: "Finish wordlist"
+- assertVisible: "Wordlist complete"
+- tapOn: "Review again"
+- extendedWaitUntil:
+    visible: "(Next card|Finish wordlist)"
+    timeout: 5000

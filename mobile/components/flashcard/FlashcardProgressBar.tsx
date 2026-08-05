@@ -1,6 +1,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 interface FlashcardProgressBarProps {
   currentIndex: number;
@@ -12,12 +13,22 @@ export const FlashcardProgressBar: React.FC<FlashcardProgressBarProps> = ({
   totalWords,
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const styles = createStyles(theme);
   const progressPercentage = ((currentIndex + 1) / totalWords) * 100;
 
   return (
     <View style={styles.progressContainer}>
-      <View style={styles.progressBar}>
+      <View
+        style={styles.progressBar}
+        accessibilityRole="progressbar"
+        accessibilityLabel={t("flashcards.progressLabel")}
+        accessibilityValue={{
+          min: 0,
+          max: totalWords,
+          now: currentIndex + 1,
+        }}
+      >
         <View
           style={[styles.progressFill, { width: `${progressPercentage}%` }]}
         />

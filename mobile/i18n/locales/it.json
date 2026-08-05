@@ -909,7 +909,6 @@
     "tapToFlip": "Tocca per vedere la definizione",
     "tapToFlipBack": "Tocca per vedere la parola",
     "examples": "Esempi",
-    "navigationHint": "Usa le frecce per navigare",
     "reportIssue": "Segnala un Problema",
     "reportSubmitted": "La tua segnalazione è stata inviata.",
     "reportWord": "Segnala problema con \"{{word}}\"",
@@ -929,7 +928,19 @@
     "slowConnection": "Connessione lenta rilevata. Potrebbe richiedere un po' più di tempo.",
     "wordsProcessing": "Parole in elaborazione",
     "wordsProcessingMessage": "Le tue parole sono in elaborazione e saranno pronte a breve. Controlla di nuovo tra qualche istante.",
-    "savePosition": "Salva posizione"
+    "savePosition": "Salva posizione",
+    "previousCard": "Scheda precedente",
+    "nextCard": "Scheda successiva",
+    "finishWordlist": "Completa la lista di parole",
+    "wordlistComplete": "Lista di parole completata",
+    "completionMessage": "Hai raggiunto la fine di questa lista di parole.",
+    "cardsViewedThisVisit_one": "scheda vista in questa sessione",
+    "cardsViewedThisVisit_other": "schede viste in questa sessione",
+    "reviewAgain": "Rivedi di nuovo",
+    "backToWordlists": "Torna alle liste di parole",
+    "returnToLastCard": "Torna all'ultima scheda",
+    "completionNote": "La visualizzazione delle schede non misura la precisione del ricordo.",
+    "progressLabel": "Avanzamento delle schede"
   },
   "rateLimit": {
     "title": "Limite di velocità",

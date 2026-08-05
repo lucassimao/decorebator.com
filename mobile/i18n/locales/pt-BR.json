@@ -917,7 +917,6 @@
     "tapToFlip": "Toque para ver a definição",
     "tapToFlipBack": "Toque para ver a palavra",
     "examples": "Exemplos",
-    "navigationHint": "Use as setas para navegar",
     "reportIssue": "Relatar um Problema",
     "reportSubmitted": "Seu relato foi enviado.",
     "reportWord": "Relatar problema com \"{{word}}\"",
@@ -937,7 +936,19 @@
     "slowConnection": "Conexão lenta detectada. Isso pode demorar um pouco mais.",
     "wordsProcessing": "Palavras em Processamento",
     "wordsProcessingMessage": "Suas palavras estão sendo processadas e estarão prontas em breve. Por favor, verifique novamente em alguns momentos.",
-    "savePosition": "Salvar posição"
+    "savePosition": "Salvar posição",
+    "previousCard": "Cartão anterior",
+    "nextCard": "Próximo cartão",
+    "finishWordlist": "Concluir lista de palavras",
+    "wordlistComplete": "Lista de palavras concluída",
+    "completionMessage": "Você chegou ao fim desta lista de palavras.",
+    "cardsViewedThisVisit_one": "cartão visto nesta visita",
+    "cardsViewedThisVisit_other": "cartões vistos nesta visita",
+    "reviewAgain": "Revisar novamente",
+    "backToWordlists": "Voltar às listas de palavras",
+    "returnToLastCard": "Voltar ao último cartão",
+    "completionNote": "Ver cartões não é pontuado como precisão de memória.",
+    "progressLabel": "Progresso dos cartões"
   },
   "rateLimit": {
     "title": "Limite de Taxa",

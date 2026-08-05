@@ -914,7 +914,6 @@
     "tapToFlip": "タップして定義を表示",
     "tapToFlipBack": "タップして単語を表示",
     "examples": "例文",
-    "navigationHint": "矢印で移動",
     "reportIssue": "問題を報告",
     "reportSubmitted": "レポートが送信されました。",
     "reportWord": "\"{{word}}\"の問題を報告",
@@ -934,7 +933,19 @@
     "slowConnection": "低速接続が検出されました。もう少し時間がかかる場合があります。",
     "wordsProcessing": "単語を処理中",
     "wordsProcessingMessage": "単語を処理中です。もうしばらくお待ちください。",
-    "savePosition": "位置を保存"
+    "savePosition": "位置を保存",
+    "previousCard": "前のカード",
+    "nextCard": "次のカード",
+    "finishWordlist": "単語リストを完了",
+    "wordlistComplete": "単語リスト完了",
+    "completionMessage": "この単語リストの最後まで到達しました。",
+    "cardsViewedThisVisit_one": "今回表示したカード",
+    "cardsViewedThisVisit_other": "今回表示したカード",
+    "reviewAgain": "もう一度見る",
+    "backToWordlists": "単語リストに戻る",
+    "returnToLastCard": "最後のカードに戻る",
+    "completionNote": "カードの閲覧は、記憶の正確さとして採点されません。",
+    "progressLabel": "フラッシュカードの進捗"
   },
   "rateLimit": {
     "title": "レート制限",

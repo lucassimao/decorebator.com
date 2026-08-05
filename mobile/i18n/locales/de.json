@@ -919,7 +919,6 @@
     "tapToFlip": "Tippen für Definition",
     "tapToFlipBack": "Tippen für Wort",
     "examples": "Beispiele",
-    "navigationHint": "Mit Pfeilen navigieren",
     "reportIssue": "Problem melden",
     "reportSubmitted": "Ihr Bericht wurde übermittelt.",
     "reportWord": "Problem mit \"{{word}}\" melden",
@@ -939,7 +938,19 @@
     "slowConnection": "Langsame Verbindung erkannt. Das könnte etwas länger dauern.",
     "wordsProcessing": "Wörter werden verarbeitet",
     "wordsProcessingMessage": "Ihre Wörter werden verarbeitet und sind in Kürze bereit. Bitte schauen Sie in wenigen Momenten noch einmal nach.",
-    "savePosition": "Position speichern"
+    "savePosition": "Position speichern",
+    "previousCard": "Vorherige Karte",
+    "nextCard": "Nächste Karte",
+    "finishWordlist": "Wortliste abschließen",
+    "wordlistComplete": "Wortliste abgeschlossen",
+    "completionMessage": "Du hast das Ende dieser Wortliste erreicht.",
+    "cardsViewedThisVisit_one": "Karte bei diesem Besuch angesehen",
+    "cardsViewedThisVisit_other": "Karten bei diesem Besuch angesehen",
+    "reviewAgain": "Noch einmal ansehen",
+    "backToWordlists": "Zurück zu den Wortlisten",
+    "returnToLastCard": "Zur letzten Karte zurück",
+    "completionNote": "Das Ansehen von Karten wird nicht als Erinnerungsleistung bewertet.",
+    "progressLabel": "Fortschritt der Lernkarten"
   },
   "rateLimit": {
     "title": "Rate Limit",

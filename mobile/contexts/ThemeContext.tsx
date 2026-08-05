@@ -88,6 +88,7 @@ export interface Theme {
       error: string;
       emphasisSurface: string;
       focus: string;
+      controlBorder: string;
       disabledBackground: string;
       disabledText: string;
       scrim: string;
@@ -254,6 +255,7 @@ const lightTheme: Theme = {
       error: "#B3261E",
       emphasisSurface: "#FFF0E6",
       focus: "#315B7D",
+      controlBorder: "#8F887C",
       disabledBackground: "#E6D8CA",
       disabledText: "#675D55",
       scrim: "rgba(15, 18, 18, 0.5)",
@@ -367,6 +369,7 @@ const darkTheme: Theme = {
       error: "#FF6B6B",
       emphasisSurface: "#3A2720",
       focus: "#89B8DE",
+      controlBorder: "#929B9E",
       disabledBackground: "#394245",
       disabledText: "#C6C0B6",
       scrim: "rgba(0, 0, 0, 0.68)",

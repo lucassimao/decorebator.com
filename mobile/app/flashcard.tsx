@@ -22,8 +22,16 @@ import { ErrorType } from "@/api/errorReporting";
 import * as offlineWordlistsApi from "@/api/offlineWordlists";
 import { useErrorReporting } from "@/hooks/useErrorReporting";
 import { useOffline } from "@/hooks/useOffline";
+import {
+  flashcardPositionKey,
+  flashcardSavePositionKey,
+  resetSavedFlashcardPosition,
+  resolveFlashcardStartIndex,
+  visitFlashcard,
+} from "@/utils/flashcardSession";
 
 import { FlashcardContent } from "@/components/flashcard/FlashcardContent";
+import { FlashcardCompletion } from "@/components/flashcard/FlashcardCompletion";
 import { FlashcardHeader } from "@/components/flashcard/FlashcardHeader";
 import { FlashcardLoadingState } from "@/components/flashcard/FlashcardLoadingState";
 import { FlashcardNavigation } from "@/components/flashcard/FlashcardNavigation";
@@ -69,8 +77,13 @@ const FlashcardPractice: React.FC = () => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [animateCompletion, setAnimateCompletion] = useState(false);
   const player = useAudioPlayer();
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const visitedIndicesRef = useRef(new Set([0]));
+  const hasCelebratedPassRef = useRef(false);
+  const skipNextPositionSaveRef = useRef(false);
   const { theme } = useTheme();
   // const commonStyles = createCommonStyles(theme); // Remove if not defined
   const styles = createStyles(theme);
@@ -101,25 +114,27 @@ const FlashcardPractice: React.FC = () => {
   // Load saved position on mount
   useEffect(() => {
     const loadSavedPosition = async () => {
+      let restoredIndex = 0;
       try {
         const [savedPositionValue, savedIndex] = await Promise.all([
-          AsyncStorage.getItem(`flashcard_save_position_${wordlistId}`),
-          AsyncStorage.getItem(`flashcard_position_${wordlistId}`),
+          AsyncStorage.getItem(flashcardSavePositionKey(wordlistId)),
+          AsyncStorage.getItem(flashcardPositionKey(wordlistId)),
         ]);
 
         if (savedPositionValue !== null) {
           setSavePosition(savedPositionValue === "true");
 
-          if (savedPositionValue === "true" && savedIndex !== null) {
-            const index = parseInt(savedIndex, 10);
-            if (!isNaN(index) && index >= 0 && words && index < words.length) {
-              setCurrentIndex(index);
-            }
-          }
+          restoredIndex = resolveFlashcardStartIndex(
+            savedPositionValue,
+            savedIndex,
+            words?.length ?? 0,
+          );
         }
       } catch (error) {
         console.error("Error loading saved position:", error);
       } finally {
+        visitedIndicesRef.current = new Set([restoredIndex]);
+        setCurrentIndex(restoredIndex);
         setIsLoadingPosition(false);
       }
     };
@@ -135,10 +150,14 @@ const FlashcardPractice: React.FC = () => {
   useEffect(() => {
     const saveCurrentPosition = async () => {
       if (!savePosition || isLoadingPosition) return;
+      if (skipNextPositionSaveRef.current) {
+        skipNextPositionSaveRef.current = false;
+        return;
+      }
 
       try {
         await AsyncStorage.setItem(
-          `flashcard_position_${wordlistId}`,
+          flashcardPositionKey(wordlistId),
           currentIndex.toString(),
         );
       } catch (error) {
@@ -149,6 +168,15 @@ const FlashcardPractice: React.FC = () => {
     saveCurrentPosition();
   }, [currentIndex, savePosition, wordlistId, isLoadingPosition]);
 
+  useEffect(() => {
+    if (!isLoadingPosition) {
+      visitedIndicesRef.current = visitFlashcard(
+        visitedIndicesRef.current,
+        currentIndex,
+      );
+    }
+  }, [currentIndex, isLoadingPosition]);
+
   // Handle save position toggle
   const handleToggleSavePosition = async () => {
     const newValue = !savePosition;
@@ -156,13 +184,13 @@ const FlashcardPractice: React.FC = () => {
 
     try {
       await AsyncStorage.setItem(
-        `flashcard_save_position_${wordlistId}`,
+        flashcardSavePositionKey(wordlistId),
         newValue.toString(),
       );
 
       if (!newValue) {
         // Clear saved position when disabled
-        await AsyncStorage.removeItem(`flashcard_position_${wordlistId}`);
+        await AsyncStorage.removeItem(flashcardPositionKey(wordlistId));
       }
     } catch (error) {
       console.error("Error toggling save position:", error);
@@ -299,6 +327,34 @@ const FlashcardPractice: React.FC = () => {
     setShouldFetchDefinitions(false); // Reset definitions fetch state for new card
   };
 
+  const handleFinish = () => {
+    setAnimateCompletion(!hasCelebratedPassRef.current);
+    hasCelebratedPassRef.current = true;
+    setShowCompletion(true);
+  };
+
+  const handleReturnToLastCard = () => {
+    setAnimateCompletion(false);
+    setShowCompletion(false);
+  };
+
+  const handleReviewAgain = async () => {
+    skipNextPositionSaveRef.current = savePosition && currentIndex !== 0;
+    visitedIndicesRef.current = new Set([0]);
+    hasCelebratedPassRef.current = false;
+    setAnimateCompletion(false);
+    setShowCompletion(false);
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setShouldFetchDefinitions(false);
+
+    try {
+      await resetSavedFlashcardPosition(AsyncStorage, wordlistId, savePosition);
+    } catch (error) {
+      console.error("Error resetting saved flashcard position:", error);
+    }
+  };
+
   // Handle loading timeout for words
   useEffect(() => {
     if (isLoading || (isRetrying && isFetching)) {
@@ -395,6 +451,22 @@ const FlashcardPractice: React.FC = () => {
     );
   }
 
+  if (showCompletion) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <OfflineIndicator />
+        <FlashcardCompletion
+          wordlistName={wordlistName || ""}
+          viewedCount={visitedIndicesRef.current.size}
+          shouldAnimate={animateCompletion}
+          onReviewAgain={handleReviewAgain}
+          onBackToWordlists={() => router.back()}
+          onReturnToLastCard={handleReturnToLastCard}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <OfflineIndicator />
@@ -432,6 +504,7 @@ const FlashcardPractice: React.FC = () => {
         currentIndex={currentIndex}
         totalWords={words.length}
         onNavigate={navigateCard}
+        onFinish={handleFinish}
       />
 
       {/* Error Reporting Modal */}
