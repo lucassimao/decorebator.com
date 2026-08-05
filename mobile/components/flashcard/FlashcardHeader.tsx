@@ -36,13 +36,14 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
           style={styles.backButton}
           onPress={onClose}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
-          accessibilityHint="Return to previous screen"
+          accessibilityLabel={t("flashcards.backToWordlists")}
         >
           <Ionicons
             name="arrow-back"
             size={24}
             color={theme.colors.text.primary}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
           />
         </TouchableOpacity>
 
@@ -51,13 +52,19 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
             style={styles.headerTitle}
             accessibilityRole="header"
             accessibilityLabel={wordlistName}
+            numberOfLines={2}
+            maxFontSizeMultiplier={2}
           >
             {wordlistName}
           </Text>
           <Text
             style={styles.headerSubtitle}
             accessibilityRole="text"
-            accessibilityLabel={`Card ${currentIndex + 1} of ${totalWords}`}
+            accessibilityLabel={t("flashcards.cardCounter", {
+              current: currentIndex + 1,
+              total: totalWords,
+            })}
+            maxFontSizeMultiplier={2}
           >
             {t("flashcards.cardCounter", {
               current: currentIndex + 1,
@@ -72,12 +79,14 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
           disabled={!isOnline}
           accessibilityRole="button"
           accessibilityLabel={
-            isOnline ? "Report error" : "Report error (offline)"
+            isOnline
+              ? t("flashcards.reportIssue")
+              : t("flashcards.reportUnavailableLabel")
           }
           accessibilityHint={
             isOnline
-              ? "Report an issue with the current flashcard"
-              : "Requires internet connection"
+              ? t("flashcards.reportHint")
+              : t("flashcards.reportOfflineHint")
           }
           accessibilityState={{ disabled: !isOnline }}
         >
@@ -87,6 +96,8 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
             color={
               isOnline ? theme.colors.text.secondary : theme.colors.ui.border
             }
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
           />
         </TouchableOpacity>
       </View>
@@ -102,6 +113,8 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
                   ? theme.colors.primary
                   : theme.colors.text.secondary
               }
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
             />
             <Text
               style={[
@@ -123,8 +136,8 @@ export const FlashcardHeader: React.FC<FlashcardHeaderProps> = ({
             ios_backgroundColor={theme.colors.ui.border}
             accessibilityRole="switch"
             accessibilityLabel={t("flashcards.savePosition")}
-            accessibilityHint="Remember your position when you return to this wordlist"
-            accessibilityValue={{ text: savePosition ? "On" : "Off" }}
+            accessibilityHint={t("flashcards.savePositionHint")}
+            accessibilityState={{ checked: savePosition }}
           />
         </View>
       )}
@@ -141,9 +154,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       paddingVertical: 12,
     },
     backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: theme.colors.background.surface,
       justifyContent: "center",
       alignItems: "center",
@@ -164,9 +177,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       marginTop: 2,
     },
     reportButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: theme.colors.background.surface,
       justifyContent: "center",
       alignItems: "center",

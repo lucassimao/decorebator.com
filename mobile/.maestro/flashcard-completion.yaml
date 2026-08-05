@@ -25,6 +25,13 @@ tags:
 - extendedWaitUntil:
     visible: "(Next card|Finish wordlist)"
     timeout: 20000
+- assertVisible: "Tap to see definition"
+- tapOn: "Tap to see definition"
+- extendedWaitUntil:
+    visible: "Tap to see word"
+    timeout: 5000
+- tapOn: "Tap to see word"
+- assertVisible: "Tap to see definition"
 - repeat:
     while:
       visible: "Next card"

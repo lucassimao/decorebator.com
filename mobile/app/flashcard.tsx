@@ -1,20 +1,12 @@
 import { ErrorReportModal } from "@/components/ErrorReportModal";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useTheme } from "@/contexts/ThemeContext";
-import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 import { useAudioPlayer } from "expo-audio";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Animated,
-  Dimensions,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -36,29 +28,12 @@ import { FlashcardHeader } from "@/components/flashcard/FlashcardHeader";
 import { FlashcardLoadingState } from "@/components/flashcard/FlashcardLoadingState";
 import { FlashcardNavigation } from "@/components/flashcard/FlashcardNavigation";
 import { FlashcardProgressBar } from "@/components/flashcard/FlashcardProgressBar";
+import { FlashcardStatusState } from "@/components/flashcard/FlashcardStatusState";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width: screenWidth } = Dimensions.get("window");
-
-// Color palette
-const colors = {
-  primary: "#FF7B54",
-  success: "#4CAF50",
-  error: "#FF6B6B",
-  gold: "#FFD700",
-  background: "#FDF6E3",
-  backgroundLight: "#FFF9F0",
-  backgroundPeach: "#FFE8D6",
-  backgroundOrange: "#FFDCC3",
-  backgroundSage: "#F5F0E6",
-  textDark: "#2D3436",
-  textMedium: "#636E72",
-  textLight: "#B2BEC3",
-  white: "#FFFFFF",
-  lightBackground: "#FAFAFA",
-  borderGray: "#E0E0E0",
-  divider: "#F0F0F0",
-};
+import {
+  boundFlashcardIndex,
+  resolveFlashcardLoadState,
+} from "@/utils/flashcardPresentation";
 
 const FlashcardPractice: React.FC = () => {
   const { t } = useTranslation();
@@ -79,6 +54,10 @@ const FlashcardPractice: React.FC = () => {
   const [isRetrying, setIsRetrying] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
   const [animateCompletion, setAnimateCompletion] = useState(false);
+  const [navigationDirection, setNavigationDirection] = useState<
+    "next" | "prev"
+  >("next");
+  const [flipFocusRequest, setFlipFocusRequest] = useState(0);
   const player = useAudioPlayer();
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const visitedIndicesRef = useRef(new Set([0]));
@@ -109,7 +88,11 @@ const FlashcardPractice: React.FC = () => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  const currentWord = words?.[currentIndex];
+  const boundedCurrentIndex = boundFlashcardIndex(
+    currentIndex,
+    words?.length ?? 0,
+  );
+  const currentWord = words?.[boundedCurrentIndex];
 
   // Load saved position on mount
   useEffect(() => {
@@ -197,10 +180,6 @@ const FlashcardPractice: React.FC = () => {
     }
   };
 
-  // Animation values
-  const slideAnimation = useRef(new Animated.Value(0)).current;
-  const scaleAnimation = useRef(new Animated.Value(1)).current;
-
   // Fetch definitions using React Query with offline support
   const {
     data: definitions = [],
@@ -266,9 +245,7 @@ const FlashcardPractice: React.FC = () => {
   // Reset flip state when word changes
   useEffect(() => {
     setIsFlipped(false);
-    scaleAnimation.setValue(1);
-    slideAnimation.setValue(0);
-  }, [currentIndex, scaleAnimation, slideAnimation]);
+  }, [currentIndex]);
 
   // Handle card flip
   const flipCard = () => {
@@ -277,52 +254,25 @@ const FlashcardPractice: React.FC = () => {
       setShouldFetchDefinitions(true);
     }
 
-    Animated.parallel([
-      Animated.sequence([
-        Animated.timing(scaleAnimation, {
-          toValue: 0.95,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnimation, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-
     setIsFlipped(!isFlipped);
+    setFlipFocusRequest((request) => request + 1);
   };
 
   // Handle navigation
   const navigateCard = (direction: "next" | "prev") => {
     const newIndex =
       direction === "next"
-        ? Math.min(currentIndex + 1, (words?.length || 1) - 1)
-        : Math.max(currentIndex - 1, 0);
+        ? Math.min(boundedCurrentIndex + 1, (words?.length || 1) - 1)
+        : Math.max(boundedCurrentIndex - 1, 0);
 
-    if (newIndex === currentIndex) return;
-
-    // Slide animation
-    Animated.sequence([
-      Animated.timing(slideAnimation, {
-        toValue: direction === "next" ? -screenWidth : screenWidth,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnimation, {
-        toValue: 0,
-        duration: 0,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    if (newIndex === boundedCurrentIndex) return;
 
     // Reset flip state and definitions fetch state
     if (isFlipped) {
-      flipCard();
+      setIsFlipped(false);
     }
 
+    setNavigationDirection(direction);
     setCurrentIndex(newIndex);
     setShouldFetchDefinitions(false); // Reset definitions fetch state for new card
   };
@@ -389,7 +339,18 @@ const FlashcardPractice: React.FC = () => {
     setIsRetrying(true);
   };
 
-  if (isLoading || isLoadingPosition || (isRetrying && isFetching)) {
+  const loadState = resolveFlashcardLoadState({
+    isLoading,
+    isLoadingPosition,
+    isRetrying,
+    isFetching,
+    error,
+    words,
+    isOnline,
+    isOfflineAvailable,
+  });
+
+  if (loadState === "loading") {
     return (
       <SafeAreaView style={styles.container}>
         <FlashcardLoadingState
@@ -399,54 +360,63 @@ const FlashcardPractice: React.FC = () => {
           isLoadingPosition={isLoadingPosition}
           onRetry={handleRetryWords}
           onGoBack={() => router.back()}
-          colors={colors}
         />
       </SafeAreaView>
     );
   }
 
-  // Handle offline error state
-  if (error && !isOnline && !isOfflineAvailable) {
+  if (loadState === "processing") {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <MaterialIcons
-            name="cloud-off"
-            size={64}
-            color={theme.colors.text.secondary}
-          />
-          <Text style={styles.errorTitle}>{t("offline.premiumRequired")}</Text>
-          <Text style={styles.errorMessage}>
-            {t("offline.premiumRequiredMessage")}
-          </Text>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backButtonText}>{t("common.goBack")}</Text>
-          </TouchableOpacity>
-        </View>
+        <FlashcardLoadingState
+          isLoading={false}
+          hasTimeout={false}
+          error={error}
+          onRetry={handleRetryWords}
+          onGoBack={() => router.back()}
+        />
       </SafeAreaView>
     );
   }
 
-  if (error || !words || words.length === 0) {
+  if (loadState === "offline-unavailable") {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <MaterialIcons
-            name="error-outline"
-            size={64}
-            color={theme.colors.error}
-          />
-          <Text style={styles.errorTitle}>{t("flashcards.noWordsFound")}</Text>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backButtonText}>{t("common.goBack")}</Text>
-          </TouchableOpacity>
-        </View>
+        <FlashcardStatusState
+          icon="cloud-off"
+          title={t("flashcards.offlineUnavailableTitle")}
+          message={t("flashcards.offlineUnavailableMessage")}
+          onBack={() => router.back()}
+          assertive
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (loadState === "error") {
+    return (
+      <SafeAreaView style={styles.container}>
+        <FlashcardStatusState
+          icon="error-outline"
+          title={t("flashcards.loadErrorTitle")}
+          message={t("flashcards.loadErrorMessage")}
+          onRetry={handleRetryWords}
+          onBack={() => router.back()}
+          assertive
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (loadState === "empty") {
+    return (
+      <SafeAreaView style={styles.container}>
+        <FlashcardStatusState
+          icon="style"
+          title={t("flashcards.emptyTitle")}
+          message={t("flashcards.emptyMessage")}
+          onBack={() => router.back()}
+        />
       </SafeAreaView>
     );
   }
@@ -467,45 +437,63 @@ const FlashcardPractice: React.FC = () => {
     );
   }
 
+  if (!currentWord) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <FlashcardStatusState
+          icon="style"
+          title={t("flashcards.emptyTitle")}
+          message={t("flashcards.emptyMessage")}
+          onBack={() => router.back()}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <OfflineIndicator />
+      <ScrollView
+        nestedScrollEnabled
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.practiceContent}
+      >
+        <FlashcardHeader
+          wordlistName={wordlistName || ""}
+          currentIndex={boundedCurrentIndex}
+          totalWords={words!.length}
+          isOnline={isOnline}
+          onClose={() => router.back()}
+          onReportError={openReportModal}
+          savePosition={savePosition}
+          onToggleSavePosition={handleToggleSavePosition}
+        />
 
-      <FlashcardHeader
-        wordlistName={wordlistName || ""}
-        currentIndex={currentIndex}
-        totalWords={words.length}
-        isOnline={isOnline}
-        onClose={() => router.back()}
-        onReportError={openReportModal}
-        savePosition={savePosition}
-        onToggleSavePosition={handleToggleSavePosition}
-      />
+        <FlashcardProgressBar
+          currentIndex={boundedCurrentIndex}
+          totalWords={words!.length}
+        />
 
-      <FlashcardProgressBar
-        currentIndex={currentIndex}
-        totalWords={words.length}
-      />
+        <FlashcardContent
+          currentWord={currentWord}
+          definitions={definitions}
+          isFlipped={isFlipped}
+          focusRequestKey={flipFocusRequest}
+          navigationDirection={navigationDirection}
+          shouldFetchDefinitions={shouldFetchDefinitions}
+          loadingDefinitions={loadingDefinitions}
+          definitionsError={definitionsError}
+          onFlip={flipCard}
+          onRefetchDefinitions={refetchDefinitions}
+        />
 
-      <FlashcardContent
-        currentWord={currentWord!}
-        definitions={definitions}
-        isFlipped={isFlipped}
-        shouldFetchDefinitions={shouldFetchDefinitions}
-        loadingDefinitions={loadingDefinitions}
-        definitionsError={definitionsError}
-        slideAnimation={slideAnimation}
-        scaleAnimation={scaleAnimation}
-        onFlip={flipCard}
-        onRefetchDefinitions={refetchDefinitions}
-      />
-
-      <FlashcardNavigation
-        currentIndex={currentIndex}
-        totalWords={words.length}
-        onNavigate={navigateCard}
-        onFinish={handleFinish}
-      />
+        <FlashcardNavigation
+          currentIndex={boundedCurrentIndex}
+          totalWords={words!.length}
+          onNavigate={navigateCard}
+          onFinish={handleFinish}
+        />
+      </ScrollView>
 
       {/* Error Reporting Modal */}
       <ErrorReportModal
@@ -529,36 +517,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
       backgroundColor: theme.colors.background.default,
     },
-    errorContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      paddingHorizontal: 40,
-    },
-    errorTitle: {
-      fontSize: 20,
-      fontWeight: "600",
-      color: theme.colors.text.primary,
-      marginTop: 16,
-      marginBottom: 8,
-      textAlign: "center",
-    },
-    errorMessage: {
-      fontSize: 16,
-      color: theme.colors.text.secondary,
-      textAlign: "center",
-      lineHeight: 22,
-      marginBottom: 24,
-    },
-    backButton: {
-      backgroundColor: theme.colors.primary,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 25,
-    },
-    backButtonText: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: theme.colors.text.inverse,
+    practiceContent: {
+      flexGrow: 1,
     },
   });

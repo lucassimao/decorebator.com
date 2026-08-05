@@ -19,6 +19,9 @@ interface LoadingWithTimeoutProps {
   onRetry: () => void;
   onGoBack: () => void;
   showTimeoutActions?: boolean;
+  timeoutErrorMessage?: string;
+  slowConnectionMessage?: string;
+  backLabel?: string;
 }
 
 export const LoadingWithTimeout: React.FC<LoadingWithTimeoutProps> = ({
@@ -30,6 +33,9 @@ export const LoadingWithTimeout: React.FC<LoadingWithTimeoutProps> = ({
   onRetry,
   onGoBack,
   showTimeoutActions = true,
+  timeoutErrorMessage,
+  slowConnectionMessage,
+  backLabel,
 }) => {
   const { t } = useTranslation();
   const { theme, responsive } = useTheme();
@@ -39,7 +45,12 @@ export const LoadingWithTimeout: React.FC<LoadingWithTimeoutProps> = ({
 
   return (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color={theme.colors.primary} />
+      <ActivityIndicator
+        size="large"
+        color={theme.colors.primary}
+        accessibilityRole="progressbar"
+        accessibilityLabel={hasTimeout ? timeoutMessage : loadingMessage}
+      />
       <Text style={styles.loadingText}>
         {hasTimeout ? timeoutMessage : loadingMessage}
       </Text>
@@ -48,25 +59,41 @@ export const LoadingWithTimeout: React.FC<LoadingWithTimeoutProps> = ({
         <View style={styles.timeoutActions}>
           <Text style={styles.timeoutMessage}>
             {error?.message.includes("timeout")
-              ? t("quiz.requestTimedOut")
-              : t("quiz.slowConnection")}
+              ? timeoutErrorMessage ?? t("quiz.requestTimedOut")
+              : slowConnectionMessage ?? t("quiz.slowConnection")}
           </Text>
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={onRetry}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.retry")}
+            >
               <MaterialIcons
                 name="refresh"
                 size={responsive.getValueForSize(18, 20, 22, 24)}
                 color={theme.colors.text.inverse}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
               />
               <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.goBackButton} onPress={onGoBack}>
+            <TouchableOpacity
+              style={styles.goBackButton}
+              onPress={onGoBack}
+              accessibilityRole="button"
+              accessibilityLabel={backLabel ?? t("common.goBack")}
+            >
               <MaterialIcons
                 name="arrow-back"
                 size={responsive.getValueForSize(18, 20, 22, 24)}
                 color={theme.colors.text.secondary}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
               />
-              <Text style={styles.goBackButtonText}>{t("common.goBack")}</Text>
+              <Text style={styles.goBackButtonText}>
+                {backLabel ?? t("common.goBack")}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -106,6 +133,8 @@ const createStyles = (
     },
     actionButtons: {
       flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
       gap: responsive.spacing.elementSpacing,
     },
     retryButton: {
@@ -113,6 +142,7 @@ const createStyles = (
       alignItems: "center",
       paddingHorizontal: responsive.spacing.horizontal,
       paddingVertical: responsive.spacing.elementSpacing,
+      minHeight: theme.geometry.touchTarget,
       borderRadius: theme.borderRadius.lg,
       backgroundColor: theme.colors.primary,
       gap: responsive.spacing.elementSpacing / 2,
@@ -128,6 +158,7 @@ const createStyles = (
       alignItems: "center",
       paddingHorizontal: responsive.spacing.horizontal,
       paddingVertical: responsive.spacing.elementSpacing,
+      minHeight: theme.geometry.touchTarget,
       borderRadius: theme.borderRadius.lg,
       borderWidth: 1,
       borderColor: theme.colors.ui.border,

@@ -4,6 +4,7 @@ import { LoadingWithTimeout } from "../LoadingWithTimeout";
 import { MaterialIcons } from "@expo/vector-icons";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import { isFlashcardProcessingError } from "@/utils/flashcardPresentation";
 
 interface FlashcardLoadingStateProps {
   isLoading: boolean;
@@ -12,11 +13,6 @@ interface FlashcardLoadingStateProps {
   isLoadingPosition?: boolean;
   onRetry: () => void;
   onGoBack: () => void;
-  colors?: {
-    primary: string;
-    white: string;
-    textMedium: string;
-  };
 }
 
 export const FlashcardLoadingState: React.FC<FlashcardLoadingStateProps> = ({
@@ -26,20 +22,13 @@ export const FlashcardLoadingState: React.FC<FlashcardLoadingStateProps> = ({
   isLoadingPosition = false,
   onRetry,
   onGoBack,
-  colors = {
-    primary: "#FF7B54",
-    white: "#FFFFFF",
-    textMedium: "#636E72",
-  },
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
 
   // Check if this is a "no words with definitions" error
-  const isProcessingError =
-    error?.message?.includes("no words found") ||
-    error?.message?.includes("no definitions");
+  const isProcessingError = isFlashcardProcessingError(error);
 
   if (isProcessingError && !isLoading && !isLoadingPosition) {
     return (
@@ -48,6 +37,8 @@ export const FlashcardLoadingState: React.FC<FlashcardLoadingStateProps> = ({
           name="hourglass-empty"
           size={48}
           color={theme.colors.text.secondary}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
         />
         <Text style={styles.processingTitle}>
           {t("flashcards.wordsProcessing")}
@@ -57,25 +48,35 @@ export const FlashcardLoadingState: React.FC<FlashcardLoadingStateProps> = ({
         </Text>
         <View style={styles.actionButtons}>
           <TouchableOpacity
-            style={[styles.retryButton, { backgroundColor: colors.primary }]}
+            style={styles.retryButton}
             onPress={onRetry}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.tryAgain")}
           >
-            <MaterialIcons name="refresh" size={20} color="#FFFFFF" />
+            <MaterialIcons
+              name="refresh"
+              size={20}
+              color={theme.colors.roles.onAction}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            />
             <Text style={styles.retryButtonText}>{t("common.tryAgain")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.goBackButton, { backgroundColor: colors.white }]}
+            style={styles.goBackButton}
             onPress={onGoBack}
+            accessibilityRole="button"
+            accessibilityLabel={t("flashcards.backToWordlists")}
           >
             <MaterialIcons
               name="arrow-back"
               size={20}
-              color={colors.textMedium}
+              color={theme.colors.text.secondary}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
             />
-            <Text
-              style={[styles.goBackButtonText, { color: colors.textMedium }]}
-            >
-              {t("common.goBack")}
+            <Text style={styles.goBackButtonText}>
+              {t("flashcards.backToWordlists")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -93,6 +94,9 @@ export const FlashcardLoadingState: React.FC<FlashcardLoadingStateProps> = ({
       onRetry={onRetry}
       onGoBack={onGoBack}
       showTimeoutActions={!isLoadingPosition}
+      timeoutErrorMessage={t("flashcards.requestTimedOut")}
+      slowConnectionMessage={t("flashcards.slowConnection")}
+      backLabel={t("flashcards.backToWordlists")}
     />
   );
 };
@@ -122,6 +126,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     actionButtons: {
       flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
       gap: 12,
     },
     retryButton: {
@@ -129,11 +135,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       alignItems: "center",
       paddingHorizontal: 20,
       paddingVertical: 12,
+      minHeight: theme.geometry.touchTarget,
       borderRadius: 25,
       gap: 8,
+      backgroundColor: theme.colors.roles.action,
     },
     retryButtonText: {
-      color: "#FFFFFF",
+      color: theme.colors.roles.onAction,
       fontSize: 16,
       fontWeight: "600",
     },
@@ -142,13 +150,16 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       alignItems: "center",
       paddingHorizontal: 20,
       paddingVertical: 12,
+      minHeight: theme.geometry.touchTarget,
       borderRadius: 25,
       borderWidth: 1,
       borderColor: theme.colors.border.light,
       gap: 8,
+      backgroundColor: theme.colors.background.surface,
     },
     goBackButtonText: {
       fontSize: 16,
       fontWeight: "600",
+      color: theme.colors.text.secondary,
     },
   });

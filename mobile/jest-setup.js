@@ -205,6 +205,7 @@ jest.mock("react-native", () => ({
   ActivityIndicator: "ActivityIndicator",
   Modal: "Modal",
   AccessibilityInfo: {
+    isScreenReaderEnabled: jest.fn(() => Promise.resolve(false)),
     setAccessibilityFocus: jest.fn(),
     announceForAccessibility: jest.fn(),
   },

@@ -1,9 +1,10 @@
-import React, { useRef, useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
+  AccessibilityInfo,
+  findNodeHandle,
   View,
   Text,
   TouchableOpacity,
-  Animated,
   ScrollView,
   ActivityIndicator,
   StyleSheet,
@@ -16,18 +17,30 @@ import {
   useAudioPlayer,
   useAudioPlayerStatus,
 } from "expo-audio";
-import { Definition, Word } from "../../api/wordlists";
+import type { Definition, Word } from "../../api/wordlists";
 import { useTheme } from "@/contexts/ThemeContext";
+import Animated, {
+  cancelAnimation,
+  Easing,
+  interpolate,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import type { SharedValue } from "react-native-reanimated";
+import { flashcardSettleOffset } from "@/utils/flashcardPresentation";
 
 interface FlashcardContentProps {
   currentWord: Word;
   definitions: Definition[];
   isFlipped: boolean;
+  focusRequestKey: number;
   shouldFetchDefinitions: boolean;
   loadingDefinitions: boolean;
   definitionsError: any;
-  slideAnimation: Animated.Value;
-  scaleAnimation: Animated.Value;
+  navigationDirection: "next" | "prev";
   onFlip: () => void;
   onRefetchDefinitions: () => void;
 }
@@ -36,20 +49,28 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
   currentWord,
   definitions,
   isFlipped,
+  focusRequestKey,
   shouldFetchDefinitions,
   loadingDefinitions,
   definitionsError,
-  slideAnimation,
-  scaleAnimation,
+  navigationDirection,
   onFlip,
   onRefetchDefinitions,
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const reduceMotion = useReducedMotion();
   const player = useAudioPlayer();
   const { playing: isPlaying, didJustFinish } = useAudioPlayerStatus(player);
-  const flipAnimation = useRef(new Animated.Value(0)).current;
+  const flipProgress = useSharedValue(isFlipped ? 1 : 0);
+  const settleX = useSharedValue(0);
+  const flipPressScale = useSharedValue(1);
+  const audioPressScale = useSharedValue(1);
+  const backPressScale = useSharedValue(1);
+  const frontActionRef = useRef<React.ElementRef<typeof Pressable>>(null);
+  const backActionRef = useRef<React.ElementRef<typeof TouchableOpacity>>(null);
+  const lastFocusRequestRef = useRef(focusRequestKey);
 
   // Reset player when audio finishes
   useEffect(() => {
@@ -59,11 +80,26 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
     }
   }, [didJustFinish, player]);
 
-  // Reset flip animation when word changes
   useEffect(() => {
-    flipAnimation.setValue(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentWord?.id]);
+    cancelAnimation(flipProgress);
+    cancelAnimation(settleX);
+    flipProgress.value = 0;
+    if (reduceMotion) {
+      settleX.value = 0;
+      return;
+    }
+    settleX.value = flashcardSettleOffset(navigationDirection);
+    settleX.value = withTiming(0, {
+      duration: 160,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [
+    currentWord?.id,
+    flipProgress,
+    navigationDirection,
+    reduceMotion,
+    settleX,
+  ]);
 
   // Audio setup - replace audio when word changes
   useEffect(() => {
@@ -74,14 +110,67 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
     }
   }, [currentWord?.audioURL, player]);
 
-  // Handle flip animation
   useEffect(() => {
-    Animated.timing(flipAnimation, {
-      toValue: isFlipped ? 180 : 0,
-      duration: 600,
-      useNativeDriver: true,
-    }).start();
-  }, [isFlipped, flipAnimation]);
+    cancelAnimation(flipProgress);
+    if (reduceMotion) {
+      flipProgress.value = isFlipped ? 1 : 0;
+      return;
+    }
+    flipProgress.value = withTiming(isFlipped ? 1 : 0, {
+      duration: 420,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [flipProgress, isFlipped, reduceMotion]);
+
+  useEffect(
+    () => () => {
+      cancelAnimation(flipProgress);
+      cancelAnimation(settleX);
+      cancelAnimation(flipPressScale);
+      cancelAnimation(audioPressScale);
+      cancelAnimation(backPressScale);
+    },
+    [audioPressScale, backPressScale, flipPressScale, flipProgress, settleX],
+  );
+
+  useEffect(() => {
+    if (lastFocusRequestRef.current === focusRequestKey) return;
+    lastFocusRequestRef.current = focusRequestKey;
+
+    let cancelled = false;
+    let frame: number | undefined;
+    void AccessibilityInfo.isScreenReaderEnabled()
+      .then((enabled) => {
+        if (!enabled || cancelled) return;
+        frame = requestAnimationFrame(() => {
+          const target = isFlipped
+            ? backActionRef.current
+            : frontActionRef.current;
+          const node = target ? findNodeHandle(target) : null;
+          if (node) AccessibilityInfo.setAccessibilityFocus(node);
+        });
+      })
+      .catch(() => {
+        // Focus management is an enhancement; the card remains operable.
+      });
+
+    return () => {
+      cancelled = true;
+      if (frame !== undefined) cancelAnimationFrame(frame);
+    };
+  }, [focusRequestKey, isFlipped]);
+
+  const animatePress = (value: SharedValue<number>, pressed: boolean) => {
+    cancelAnimation(value);
+    if (reduceMotion) {
+      value.value = 1;
+      return;
+    }
+    value.value = withSpring(pressed ? 0.97 : 1, {
+      damping: 18,
+      stiffness: 320,
+    });
+  };
 
   // Play audio function
   const playAudio = async () => {
@@ -101,24 +190,33 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
     }
   };
 
-  // Animation interpolations
-  const frontInterpolate = flipAnimation.interpolate({
-    inputRange: [0, 180],
-    outputRange: ["0deg", "180deg"],
-  });
-
-  const backInterpolate = flipAnimation.interpolate({
-    inputRange: [0, 180],
-    outputRange: ["180deg", "360deg"],
-  });
-
-  const frontAnimatedStyle = {
-    transform: [{ rotateY: frontInterpolate }],
-  };
-
-  const backAnimatedStyle = {
-    transform: [{ rotateY: backInterpolate }],
-  };
+  const settleStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(Math.abs(settleX.value), [0, 12], [1, 0.72]),
+    transform: [{ translateX: settleX.value }],
+  }));
+  const frontAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { perspective: 900 },
+      { rotateY: `${interpolate(flipProgress.value, [0, 1], [0, 180])}deg` },
+    ],
+  }));
+  const backAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { perspective: 900 },
+      {
+        rotateY: `${interpolate(flipProgress.value, [0, 1], [180, 360])}deg`,
+      },
+    ],
+  }));
+  const flipPressStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: flipPressScale.value }],
+  }));
+  const audioPressStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: audioPressScale.value }],
+  }));
+  const backPressStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: backPressScale.value }],
+  }));
 
   const renderDefinitionsContent = () => {
     if (loadingDefinitions) {
@@ -126,7 +224,7 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
         <View style={styles.loadingDefinitionsContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.loadingDefinitionsText}>
-            Loading definitions...
+            {t("flashcards.loadingDefinitions")}
           </Text>
         </View>
       );
@@ -141,13 +239,15 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
             color={theme.colors.error}
           />
           <Text style={styles.errorDefinitionsText}>
-            Failed to load definitions
+            {t("flashcards.definitionsLoadError")}
           </Text>
           <TouchableOpacity
             style={styles.retryButton}
             onPress={onRefetchDefinitions}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.retry")}
           >
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
           </TouchableOpacity>
         </View>
       );
@@ -226,7 +326,7 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
       return (
         <View style={styles.noDefinitionsContainer}>
           <Text style={styles.noDefinitionsText}>
-            No definitions available for this word.
+            {t("flashcards.noDefinitions")}
           </Text>
         </View>
       );
@@ -241,84 +341,125 @@ export const FlashcardContent: React.FC<FlashcardContentProps> = ({
 
   return (
     <View style={styles.cardContainer}>
-      <View style={styles.cardTouchable}>
+      <Animated.View
+        testID="flashcard-card-region"
+        style={[styles.cardTouchable, settleStyle]}
+      >
         {/* Front of card */}
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={onFlip}
+        <Animated.View
+          testID="flashcard-front"
+          accessibilityElementsHidden={isFlipped}
+          importantForAccessibility={isFlipped ? "no-hide-descendants" : "auto"}
+          pointerEvents={isFlipped ? "none" : "auto"}
           style={[
             styles.card,
             frontAnimatedStyle,
-            {
-              transform: [
-                { translateX: slideAnimation },
-                { scale: scaleAnimation },
-                { rotateY: frontInterpolate },
-              ],
-            },
             !isFlipped ? styles.cardFront : null,
           ]}
         >
-          <View style={styles.cardContent}>
-            <Text style={styles.wordText}>{currentWord?.name}</Text>
-            {currentWord?.pronunciation && (
-              <Text style={styles.phoneticTextFront}>
-                /{currentWord?.pronunciation}/
+          <Animated.View style={[styles.cardContent, flipPressStyle]}>
+            <Pressable
+              ref={frontActionRef}
+              style={styles.flipAction}
+              onPress={onFlip}
+              onPressIn={() => animatePress(flipPressScale, true)}
+              onPressOut={() => animatePress(flipPressScale, false)}
+              accessibilityRole="button"
+              accessibilityLabel={t("flashcards.showDefinitionsLabel", {
+                word: currentWord.name,
+              })}
+            >
+              <Text
+                style={styles.wordText}
+                allowFontScaling
+                maxFontSizeMultiplier={2}
+              >
+                {currentWord.name}
               </Text>
-            )}
-            {currentWord?.audioURL && (
-              <TouchableOpacity style={styles.audioButton} onPress={playAudio}>
+              {currentWord.pronunciation && (
+                <Text
+                  style={styles.phoneticTextFront}
+                  maxFontSizeMultiplier={2}
+                >
+                  /{currentWord.pronunciation}/
+                </Text>
+              )}
+              <Text style={styles.flipHint} maxFontSizeMultiplier={2}>
+                {t("flashcards.tapToFlip")}
+              </Text>
+            </Pressable>
+          </Animated.View>
+          {currentWord?.audioURL && (
+            <Animated.View style={audioPressStyle}>
+              <TouchableOpacity
+                style={styles.audioButton}
+                onPress={playAudio}
+                onPressIn={() => animatePress(audioPressScale, true)}
+                onPressOut={() => animatePress(audioPressScale, false)}
+                accessibilityRole="button"
+                accessibilityLabel={t("flashcards.playPronunciationLabel", {
+                  word: currentWord.name,
+                })}
+              >
                 <Ionicons
                   name={isPlaying ? "pause-circle" : "play-circle"}
                   size={48}
                   color={theme.colors.primary}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
                 />
               </TouchableOpacity>
-            )}
-          </View>
-          <Text style={styles.flipHint}>{t("flashcards.tapToFlip")}</Text>
-        </TouchableOpacity>
+            </Animated.View>
+          )}
+        </Animated.View>
 
         {/* Back of card */}
         <Animated.View
+          testID="flashcard-back"
+          accessibilityElementsHidden={!isFlipped}
+          importantForAccessibility={
+            !isFlipped ? "no-hide-descendants" : "auto"
+          }
+          pointerEvents={!isFlipped ? "none" : "auto"}
           style={[
             styles.card,
             styles.cardBack,
             backAnimatedStyle,
-            {
-              transform: [
-                { translateX: slideAnimation },
-                { scale: scaleAnimation },
-                { rotateY: backInterpolate },
-              ],
-            },
             isFlipped ? styles.cardBackVisible : null,
           ]}
         >
-          <Pressable style={styles.cardTouchArea} onPress={onFlip}>
-            <ScrollView
-              style={styles.definitionsScroll}
-              contentContainerStyle={styles.definitionsScrollContent}
-              showsVerticalScrollIndicator={true}
-              bounces={true}
-              alwaysBounceVertical={false}
-              nestedScrollEnabled={true}
-              scrollEnabled={true}
-            >
-              <Pressable onPress={onFlip}>
-                {renderDefinitionsContent()}
-              </Pressable>
-            </ScrollView>
-          </Pressable>
-          <TouchableOpacity
-            style={styles.flipHintTouchable}
-            onPress={onFlip}
-            activeOpacity={0.9}
+          <ScrollView
+            style={styles.definitionsScroll}
+            contentContainerStyle={styles.definitionsScrollContent}
+            showsVerticalScrollIndicator
+            bounces
+            alwaysBounceVertical={false}
+            nestedScrollEnabled
+            accessibilityLabel={t("flashcards.definitionsLabel", {
+              word: currentWord.name,
+            })}
           >
-            <Text style={styles.flipHint}>{t("flashcards.tapToFlipBack")}</Text>
-          </TouchableOpacity>
+            {renderDefinitionsContent()}
+          </ScrollView>
+          <Animated.View style={[styles.flipHintTouchable, backPressStyle]}>
+            <TouchableOpacity
+              ref={backActionRef}
+              style={styles.backActionButton}
+              onPress={onFlip}
+              onPressIn={() => animatePress(backPressScale, true)}
+              onPressOut={() => animatePress(backPressScale, false)}
+              accessibilityRole="button"
+              accessibilityLabel={t("flashcards.showWordLabel", {
+                word: currentWord.name,
+              })}
+            >
+              <Text style={styles.flipHint}>
+                {t("flashcards.tapToFlipBack")}
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
         </Animated.View>
-      </View>
+      </Animated.View>
     </View>
   );
 };
@@ -329,9 +470,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       flex: 1,
       paddingHorizontal: 20,
       justifyContent: "center",
+      minHeight: 220,
     },
     cardTouchable: {
-      height: 400,
+      flex: 1,
+      minHeight: 220,
       position: "relative",
     },
     card: {
@@ -359,8 +502,12 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
     },
     cardContent: {
       flex: 1,
+    },
+    flipAction: {
+      flex: 1,
       justifyContent: "center",
       alignItems: "center",
+      width: "100%",
     },
     wordText: {
       fontSize: 48,
@@ -370,17 +517,18 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       marginBottom: 20,
     },
     audioButton: {
-      marginTop: 16,
+      width: 52,
+      height: 52,
+      alignSelf: "center",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 12,
     },
     flipHint: {
       fontSize: 14,
       color: theme.colors.ui.disabled,
       fontStyle: "italic",
       textAlign: "center",
-    },
-    cardTouchArea: {
-      flex: 1,
-      marginBottom: 40,
     },
     flipHintTouchable: {
       position: "absolute",
@@ -391,12 +539,18 @@ const createStyles = (theme: ReturnType<typeof useTheme>["theme"]) =>
       paddingHorizontal: 20,
       alignItems: "center",
     },
+    backActionButton: {
+      width: "100%",
+      minHeight: 44,
+      alignItems: "center",
+      justifyContent: "center",
+    },
     definitionsScroll: {
       flex: 1,
     },
     definitionsScrollContent: {
       flexGrow: 1,
-      paddingBottom: 20,
+      paddingBottom: 72,
     },
     definitionBlock: {
       marginBottom: 20,

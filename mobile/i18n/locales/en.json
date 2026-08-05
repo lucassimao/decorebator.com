@@ -979,6 +979,23 @@
     "backToWordlists": "Back to wordlists",
     "returnToLastCard": "Return to last card",
     "completionNote": "Viewing cards is not scored as recall accuracy.",
-    "progressLabel": "Flashcard progress"
+    "progressLabel": "Flashcard progress",
+    "loadingDefinitions": "Loading definitions...",
+    "definitionsLoadError": "Couldn't load definitions",
+    "noDefinitions": "No definitions are available for this word.",
+    "showDefinitionsLabel": "{{word}}. Show definitions",
+    "playPronunciationLabel": "Play pronunciation for {{word}}",
+    "definitionsLabel": "Definitions for {{word}}",
+    "showWordLabel": "Show {{word}}",
+    "reportUnavailableLabel": "Report issue (offline)",
+    "reportHint": "Report an issue with this flashcard",
+    "reportOfflineHint": "Reporting requires an internet connection",
+    "savePositionHint": "Remember this card when you return to the wordlist",
+    "offlineUnavailableTitle": "Flashcards aren't available offline",
+    "offlineUnavailableMessage": "Reconnect to practice this wordlist, or return to your wordlists.",
+    "loadErrorTitle": "Couldn't load flashcards",
+    "loadErrorMessage": "We couldn't reach the service. Check your connection and try again.",
+    "emptyTitle": "No flashcards yet",
+    "emptyMessage": "Add a word with a definition before starting flashcard practice."
   }
 }
