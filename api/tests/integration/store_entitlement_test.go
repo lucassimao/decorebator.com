@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"decorebator.com/internal/config"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/security"
@@ -169,11 +170,7 @@ func TestEffectiveStoreAccessSeparatesEnvironmentAndRequiresGoogleAcknowledgemen
 		repo, model.StoreEnvironmentProduction, func() time.Time { return now.Add(2 * time.Minute) },
 	)
 	require.NoError(t, err)
-	t.Setenv("STRIPE_API_KEY", "sk_test_not_real")
-	t.Setenv("STRIPE_WEBHOOK_SECRET", "whsec_not_real")
-	t.Setenv("STRIPE_SUCCESS_URL", "https://example.invalid/success")
-	t.Setenv("STRIPE_CANCEL_URL", "https://example.invalid/cancel")
-	subscriptions := service.NewSubscriptionService(db, nil, nil)
+	subscriptions := service.NewSubscriptionService(db, nil, nil, config.LegacyStripeConfig{})
 	subscriptions.SetEffectiveAccess(effective)
 	require.NoError(t, subscriptions.CheckSubscriptionLimits(
 		ctx, userID, model.UserActionChatSession, &service.SubscriptionCheckOptions{},

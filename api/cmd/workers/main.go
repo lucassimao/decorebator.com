@@ -62,6 +62,7 @@ func main() {
 		appContext.ProviderEventInboxRepository,
 		appContext.GoogleAcknowledgementWorker,
 		appContext.GoogleAcknowledgementSweep,
+		appContext.LegacyProviderSurfaceEnabled,
 	)
 
 	if err != nil {

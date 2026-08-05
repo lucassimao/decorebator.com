@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"os"
 	"strconv"
 	"time"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/config"
 	"decorebator.com/internal/mail"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
@@ -30,6 +30,8 @@ type SubscriptionService struct {
 	webhookSecret     string
 	successURL        string
 	cancelURL         string
+	monthlyPriceID    string
+	annualPriceID     string
 	effectiveAccess   *EffectiveAccessService
 }
 
@@ -37,30 +39,15 @@ func (s *SubscriptionService) SetEffectiveAccess(service *EffectiveAccessService
 	s.effectiveAccess = service
 }
 
-func NewSubscriptionService(db *pgxpool.Pool, mailService *mail.MailService, revenueCatService RevenueCatService) *SubscriptionService {
-	// Validate required environment variables
-	stripeKey := os.Getenv("STRIPE_API_KEY")
-	if stripeKey == "" {
-		panic("STRIPE_API_KEY environment variable is required for subscription service")
+func NewSubscriptionService(
+	db *pgxpool.Pool,
+	mailService *mail.MailService,
+	revenueCatService RevenueCatService,
+	stripeConfig config.LegacyStripeConfig,
+) *SubscriptionService {
+	if stripeConfig.APIKey != "" {
+		stripe.Key = stripeConfig.APIKey
 	}
-
-	webhookSecret := os.Getenv("STRIPE_WEBHOOK_SECRET")
-	if webhookSecret == "" {
-		panic("STRIPE_WEBHOOK_SECRET environment variable is required for subscription service")
-	}
-
-	successURL := os.Getenv("STRIPE_SUCCESS_URL")
-	if successURL == "" {
-		panic("STRIPE_SUCCESS_URL environment variable is required for subscription service")
-	}
-
-	cancelURL := os.Getenv("STRIPE_CANCEL_URL")
-	if cancelURL == "" {
-		panic("STRIPE_CANCEL_URL environment variable is required for subscription service")
-	}
-
-	// Set Stripe API key globally
-	stripe.Key = stripeKey
 
 	return &SubscriptionService{
 		db:                db,
@@ -68,10 +55,12 @@ func NewSubscriptionService(db *pgxpool.Pool, mailService *mail.MailService, rev
 		userRepo:          &repository.UserRepository{Db: db},
 		mailService:       mailService,
 		revenueCatService: revenueCatService,
-		stripeKey:         stripeKey,
-		webhookSecret:     webhookSecret,
-		successURL:        successURL,
-		cancelURL:         cancelURL,
+		stripeKey:         stripeConfig.APIKey,
+		webhookSecret:     stripeConfig.WebhookSecret,
+		successURL:        stripeConfig.SuccessURL,
+		cancelURL:         stripeConfig.CancelURL,
+		monthlyPriceID:    stripeConfig.MonthlyPriceID,
+		annualPriceID:     stripeConfig.AnnualPriceID,
 	}
 }
 
@@ -520,12 +509,11 @@ func (s *SubscriptionService) getOrCreateStripeCustomer(ctx context.Context, use
 
 // getPriceIDForPlan returns the Stripe price ID for a plan
 func (s *SubscriptionService) getPriceIDForPlan(plan model.SubscriptionPlan) string {
-	// These should be configured as environment variables
 	switch plan {
 	case model.PlanMonthly:
-		return os.Getenv("STRIPE_PRICE_ID_MONTHLY")
+		return s.monthlyPriceID
 	case model.PlanAnnual:
-		return os.Getenv("STRIPE_PRICE_ID_ANNUAL")
+		return s.annualPriceID
 	default:
 		return ""
 	}
@@ -533,13 +521,10 @@ func (s *SubscriptionService) getPriceIDForPlan(plan model.SubscriptionPlan) str
 
 // getPlanFromPriceID returns the plan for a Stripe price ID
 func (s *SubscriptionService) getPlanFromPriceID(priceID string) model.SubscriptionPlan {
-	monthlyPriceID := os.Getenv("STRIPE_PRICE_ID_MONTHLY")
-	annualPriceID := os.Getenv("STRIPE_PRICE_ID_ANNUAL")
-
 	switch priceID {
-	case monthlyPriceID:
+	case s.monthlyPriceID:
 		return model.PlanMonthly
-	case annualPriceID:
+	case s.annualPriceID:
 		return model.PlanAnnual
 	default:
 		return model.PlanFree
@@ -574,7 +559,7 @@ func (s *SubscriptionService) CheckSubscriptionLimits(ctx context.Context, userI
 	}
 
 	// If optimistic flag is present and user appears to be on free plan, verify with RevenueCat
-	if options != nil && options.HasOptimisticSubscription && (sub == nil || sub.Plan == model.PlanFree) {
+	if options != nil && options.HasOptimisticSubscription && s.revenueCatService != nil && (sub == nil || sub.Plan == model.PlanFree) {
 		hasPremium, err := s.revenueCatService.HasPremiumSubscription(ctx, strconv.FormatInt(userID, 10))
 		if err != nil {
 			common.Logger.Error("Failed to verify subscription with RevenueCat", "error", err, "user_id", userID)

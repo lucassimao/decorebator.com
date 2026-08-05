@@ -170,11 +170,16 @@ func TestLegacyProviderWebhookRoutesAreAbsentWhenDisabled(t *testing.T) {
 		}
 	})
 	router := gin.New()
-	decorebatorhttp.RegisterLegacyProviderWebhookRoutes(router, &app.Context{
-		LegacyProviderWebhooksEnabled: false,
-	})
+	appCtx := &app.Context{
+		LegacyProviderSurfaceEnabled: false,
+	}
+	decorebatorhttp.RegisterLegacyProviderPublicRoutes(router, appCtx)
+	decorebatorhttp.RegisterLegacyProviderAuthenticatedRoutes(router.Group("/"), appCtx)
 
-	for _, path := range []string{"/webhook/stripe", "/webhook/revenuecat"} {
+	for _, path := range []string{
+		"/webhook/stripe", "/webhook/revenuecat", "/subscription/checkout-session",
+		"/subscription/revenuecat/restore", "/subscription/checkout-redirect",
+	} {
 		request := httptest.NewRequest(http.MethodPost, path, strings.NewReader(`{}`))
 		response := httptest.NewRecorder()
 		assert.NotPanics(t, func() { router.ServeHTTP(response, request) })
@@ -184,9 +189,11 @@ func TestLegacyProviderWebhookRoutesAreAbsentWhenDisabled(t *testing.T) {
 
 func TestLegacyProviderWebhookRoutesArePresentWhenEnabled(t *testing.T) {
 	router := gin.New()
-	decorebatorhttp.RegisterLegacyProviderWebhookRoutes(router, &app.Context{
-		LegacyProviderWebhooksEnabled: true,
-	})
+	appCtx := &app.Context{
+		LegacyProviderSurfaceEnabled: true,
+	}
+	decorebatorhttp.RegisterLegacyProviderPublicRoutes(router, appCtx)
+	decorebatorhttp.RegisterLegacyProviderAuthenticatedRoutes(router.Group("/"), appCtx)
 
 	paths := make(map[string]bool)
 	for _, route := range router.Routes() {
@@ -194,6 +201,9 @@ func TestLegacyProviderWebhookRoutesArePresentWhenEnabled(t *testing.T) {
 	}
 	assert.True(t, paths["/webhook/stripe"])
 	assert.True(t, paths["/webhook/revenuecat"])
+	assert.True(t, paths["/subscription/checkout-session"])
+	assert.True(t, paths["/subscription/revenuecat/restore"])
+	assert.True(t, paths["/subscription/checkout-redirect"])
 }
 
 func TestStoreWebhookMetricsExposeOnlyBoundedOperationalLabels(t *testing.T) {

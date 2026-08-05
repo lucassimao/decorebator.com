@@ -1,9 +1,9 @@
 package http
 
 import (
+	"crypto/subtle"
 	"io"
 	"net/http"
-	"os"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -12,18 +12,11 @@ import (
 )
 
 // HandleRevenueCatWebhook handles RevenueCat webhook events
-func HandleRevenueCatWebhook(jobService service.JobService) gin.HandlerFunc {
+func HandleRevenueCatWebhook(jobService service.JobService, expectedToken string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 1. Verify Authorization header
 		authHeader := c.GetHeader("Authorization")
-		expectedToken, exists := os.LookupEnv("REVENUECAT_WEBHOOK_AUTHORIZATION")
-
-		if !exists {
-			common.Logger.ErrorContext(c.Request.Context(), "REVENUECAT_WEBHOOK_AUTHORIZATION is not set")
-			panic("REVENUECAT_WEBHOOK_AUTHORIZATION env is missing")
-		}
-
-		if authHeader != expectedToken {
+		if subtle.ConstantTimeCompare([]byte(authHeader), []byte(expectedToken)) != 1 {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization token"})
 			return
 		}

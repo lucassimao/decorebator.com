@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
+	"strings"
 	"time"
 )
 
@@ -16,15 +16,11 @@ type revenueCatAPIClient struct {
 	httpClient *http.Client
 }
 
-// NewRevenueCatAPIClient creates a new RevenueCat API client using the REVENUECAT_API_KEY environment variable.
-func NewRevenueCatAPIClient() RevenueCatAPIClient {
-	apiKey, exists := os.LookupEnv("REVENUECAT_API_KEY")
-	if !exists {
-		panic("REVENUECAT_API_KEY environment variable not set")
-	}
-
+// NewRevenueCatAPIClient creates a client from startup-validated configuration.
+func NewRevenueCatAPIClient(apiKey string) (RevenueCatAPIClient, error) {
+	apiKey = strings.TrimSpace(apiKey)
 	if apiKey == "" {
-		panic("REVENUECAT_API_KEY environment variable is empty")
+		return nil, fmt.Errorf("REVENUECAT_API_KEY is required")
 	}
 
 	httpClient := &http.Client{
@@ -34,7 +30,7 @@ func NewRevenueCatAPIClient() RevenueCatAPIClient {
 	return &revenueCatAPIClient{
 		apiKey:     apiKey,
 		httpClient: httpClient,
-	}
+	}, nil
 }
 
 // GetCustomerInfo fetches customer info from RevenueCat API.

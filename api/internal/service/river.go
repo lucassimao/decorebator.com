@@ -51,6 +51,7 @@ func NewWorkerRiverClient(
 	providerInbox *repository.ProviderEventInboxRepository,
 	googleAcknowledgementWorker *GoogleAcknowledgementRetryWorker,
 	googleAcknowledgementSweep *GoogleAcknowledgementSweepWorker,
+	legacyProviderSurfaceEnabled bool,
 ) (*river.Client[pgx.Tx], error) {
 	riverWorkers := river.NewWorkers()
 	river.AddWorker(riverWorkers, NewImageGeneratorWorker(definitionService, definitionImageService, userService))
@@ -74,8 +75,10 @@ func NewWorkerRiverClient(
 	river.AddWorker(riverWorkers, NewDailyPracticeReminderWorker(pushService))
 	river.AddWorker(riverWorkers, NewPushReceiptWorker(pushService))
 	river.AddWorker(riverWorkers, &NoOpWorker{})
-	river.AddWorker(riverWorkers, NewRevenueCatWebhookWorker(revenueCatService))
-	river.AddWorker(riverWorkers, NewStripeWebhookWorker(subscriptionService))
+	if legacyProviderSurfaceEnabled {
+		river.AddWorker(riverWorkers, NewRevenueCatWebhookWorker(revenueCatService))
+		river.AddWorker(riverWorkers, NewStripeWebhookWorker(subscriptionService))
+	}
 	if providerInbox != nil {
 		healthWorker, err := NewProviderEventInboxHealthWorker(
 			providerInbox, nil, providerInboxHealthGracePeriod,

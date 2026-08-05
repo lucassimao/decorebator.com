@@ -40,32 +40,62 @@ func TestStoreIAPConfigRequiresExplicitProductionDecision(t *testing.T) {
 	assert.False(t, loaded.Enabled)
 }
 
-func TestLegacyProviderWebhooksDefaultOnOutsideProduction(t *testing.T) {
-	enabled, err := config.LoadLegacyProviderWebhooksEnabledFrom(mapLookup(nil))
-	require.NoError(t, err)
-	assert.True(t, enabled)
+func TestLegacyProviderSurfaceDefaultsEnabledAndRequiresCompleteConfig(t *testing.T) {
+	_, err := config.LoadLegacyProviderConfigFrom(mapLookup(nil))
+	require.ErrorContains(t, err, "STRIPE_API_KEY")
 
-	enabled, err = config.LoadLegacyProviderWebhooksEnabledFrom(mapLookup(map[string]string{
+	loaded, err := config.LoadLegacyProviderConfigFrom(mapLookup(map[string]string{
 		"LEGACY_PROVIDER_WEBHOOKS_ENABLED": "false",
 	}))
 	require.NoError(t, err)
-	assert.False(t, enabled)
+	assert.False(t, loaded.Enabled)
 }
 
 func TestLegacyProviderWebhooksRequireExplicitProductionDecision(t *testing.T) {
-	_, err := config.LoadLegacyProviderWebhooksEnabledFrom(mapLookup(map[string]string{"ENV": "production"}))
+	_, err := config.LoadLegacyProviderConfigFrom(mapLookup(map[string]string{"ENV": "production"}))
 	require.ErrorContains(t, err, "explicitly configured in production")
 
-	enabled, err := config.LoadLegacyProviderWebhooksEnabledFrom(mapLookup(map[string]string{
+	loaded, err := config.LoadLegacyProviderConfigFrom(mapLookup(map[string]string{
 		"ENV": "production", "LEGACY_PROVIDER_WEBHOOKS_ENABLED": "false",
 	}))
 	require.NoError(t, err)
-	assert.False(t, enabled)
+	assert.False(t, loaded.Enabled)
 
-	_, err = config.LoadLegacyProviderWebhooksEnabledFrom(mapLookup(map[string]string{
+	_, err = config.LoadLegacyProviderConfigFrom(mapLookup(map[string]string{
 		"ENV": "production", "LEGACY_PROVIDER_WEBHOOKS_ENABLED": "sometimes",
 	}))
 	require.ErrorContains(t, err, "must be a boolean")
+}
+
+func TestLegacyProviderConfigRequiresEverySecretWithoutLeakingValues(t *testing.T) {
+	values := validLegacyProviderEnvironment()
+	loaded, err := config.LoadLegacyProviderConfigFrom(mapLookup(values))
+	require.NoError(t, err)
+	require.True(t, loaded.Enabled)
+	assert.Equal(t, values["STRIPE_PRICE_ID_MONTHLY"], loaded.Stripe.MonthlyPriceID)
+
+	for _, name := range []string{
+		"STRIPE_API_KEY", "STRIPE_WEBHOOK_SECRET", "STRIPE_SUCCESS_URL", "STRIPE_CANCEL_URL",
+		"STRIPE_PRICE_ID_MONTHLY", "STRIPE_PRICE_ID_ANNUAL", "REVENUECAT_API_KEY",
+		"REVENUECAT_WEBHOOK_AUTHORIZATION",
+	} {
+		invalid := validLegacyProviderEnvironment()
+		secret := invalid[name]
+		invalid[name] = "  "
+		_, err := config.LoadLegacyProviderConfigFrom(mapLookup(invalid))
+		require.ErrorContains(t, err, name)
+		assert.NotContains(t, err.Error(), secret)
+	}
+}
+
+func validLegacyProviderEnvironment() map[string]string {
+	return map[string]string{
+		"LEGACY_PROVIDER_WEBHOOKS_ENABLED": "true",
+		"STRIPE_API_KEY":                   "stripe-secret", "STRIPE_WEBHOOK_SECRET": "webhook-secret",
+		"STRIPE_SUCCESS_URL": "https://example.com/success", "STRIPE_CANCEL_URL": "https://example.com/cancel",
+		"STRIPE_PRICE_ID_MONTHLY": "price-monthly", "STRIPE_PRICE_ID_ANNUAL": "price-annual",
+		"REVENUECAT_API_KEY": "revenuecat-secret", "REVENUECAT_WEBHOOK_AUTHORIZATION": "revenuecat-webhook-secret",
+	}
 }
 
 func TestStoreIAPConfigLoadsValidatedSecretsAndBindings(t *testing.T) {

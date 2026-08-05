@@ -31,30 +31,31 @@ type Context struct {
 	JobService  service.JobService
 
 	// Services
-	WordService                   *service.WordService
-	WordlistService               *service.WordlistService
-	UserService                   *service.UserService
-	DefinitionService             *service.DefinitionService
-	DefinitionImageService        *service.DefinitionImageService
-	SubscriptionService           *service.SubscriptionService
-	RevenueCatService             service.RevenueCatService
-	LeitnerTrackingService        *service.LeitnerTrackingService
-	LeitnerSystemStrategy         *service.LeitnerSystemStrategy
-	ErrorReportService            *service.ErrorReportService
-	AnalyticsService              service.AnalyticsServiceInterface
-	RealtimeTelemetryService      *service.RealtimeTelemetryService
-	MailService                   *mail.MailService
-	StoreEntitlementRepository    *repository.StoreEntitlementRepository
-	ProviderEventInboxRepository  *repository.ProviderEventInboxRepository
-	AppleNotificationIngestor     *service.AppleNotificationIngestor
-	GoogleRTDNIngestor            *service.GoogleRTDNIngestor
-	EffectiveAccessService        *service.EffectiveAccessService
-	StoreIAPOrchestrator          *service.StoreIAPOrchestrator
-	GoogleAcknowledgementWorker   *service.GoogleAcknowledgementRetryWorker
-	GoogleAcknowledgementSweep    *service.GoogleAcknowledgementSweepWorker
-	StoreIAPRequestLimiter        *service.StoreIAPRequestLimiter
-	StoreIAPEnabled               bool
-	LegacyProviderWebhooksEnabled bool
+	WordService                  *service.WordService
+	WordlistService              *service.WordlistService
+	UserService                  *service.UserService
+	DefinitionService            *service.DefinitionService
+	DefinitionImageService       *service.DefinitionImageService
+	SubscriptionService          *service.SubscriptionService
+	RevenueCatService            service.RevenueCatService
+	LeitnerTrackingService       *service.LeitnerTrackingService
+	LeitnerSystemStrategy        *service.LeitnerSystemStrategy
+	ErrorReportService           *service.ErrorReportService
+	AnalyticsService             service.AnalyticsServiceInterface
+	RealtimeTelemetryService     *service.RealtimeTelemetryService
+	MailService                  *mail.MailService
+	StoreEntitlementRepository   *repository.StoreEntitlementRepository
+	ProviderEventInboxRepository *repository.ProviderEventInboxRepository
+	AppleNotificationIngestor    *service.AppleNotificationIngestor
+	GoogleRTDNIngestor           *service.GoogleRTDNIngestor
+	EffectiveAccessService       *service.EffectiveAccessService
+	StoreIAPOrchestrator         *service.StoreIAPOrchestrator
+	GoogleAcknowledgementWorker  *service.GoogleAcknowledgementRetryWorker
+	GoogleAcknowledgementSweep   *service.GoogleAcknowledgementSweepWorker
+	StoreIAPRequestLimiter       *service.StoreIAPRequestLimiter
+	StoreIAPEnabled              bool
+	LegacyProviderSurfaceEnabled bool
+	LegacyRevenueCatWebhookAuth  string
 
 	// Monitoring
 	// Configuration
@@ -66,6 +67,7 @@ type ContextBuilder struct {
 	context                  *Context
 	errors                   []error
 	revenueCatServiceFactory func(db *pgxpool.Pool) service.RevenueCatService
+	legacyProviderConfig     config.LegacyProviderConfig
 }
 
 // NewContext creates a new Context builder
@@ -195,11 +197,13 @@ func (b *ContextBuilder) Build() (*Context, error) {
 	if b.context.Database == nil {
 		return nil, errors.New("database connection is required")
 	}
-	legacyProviderWebhooksEnabled, err := config.LoadLegacyProviderWebhooksEnabled()
+	legacyProviderConfig, err := config.LoadLegacyProviderConfig()
 	if err != nil {
-		return nil, fmt.Errorf("failed to configure legacy provider webhooks: %w", err)
+		return nil, fmt.Errorf("failed to configure legacy provider surface: %w", err)
 	}
-	b.context.LegacyProviderWebhooksEnabled = legacyProviderWebhooksEnabled
+	b.legacyProviderConfig = legacyProviderConfig
+	b.context.LegacyProviderSurfaceEnabled = legacyProviderConfig.Enabled
+	b.context.LegacyRevenueCatWebhookAuth = legacyProviderConfig.RevenueCatWebhookAuthorization
 
 	// Initialize Redis client if not provided
 	if b.context.RedisClient == nil {
@@ -267,18 +271,23 @@ func (b *ContextBuilder) initializeServices() error {
 		b.context.MailService = mail.NewMailService(b.context.Database)
 	}
 
-	// Initialize RevenueCatService before SubscriptionService since SubscriptionService depends on it
-	if b.context.RevenueCatService == nil {
+	// Initialize RevenueCatService only while the legacy provider surface is enabled.
+	if b.context.RevenueCatService == nil && b.legacyProviderConfig.Enabled {
 		if b.revenueCatServiceFactory != nil {
 			b.context.RevenueCatService = b.revenueCatServiceFactory(b.context.Database)
 		} else {
-			apiClient := service.NewRevenueCatAPIClient()
+			apiClient, err := service.NewRevenueCatAPIClient(b.legacyProviderConfig.RevenueCatAPIKey)
+			if err != nil {
+				return err
+			}
 			b.context.RevenueCatService = service.NewRevenueCatService(b.context.Database, apiClient)
 		}
 	}
 
 	if b.context.SubscriptionService == nil {
-		b.context.SubscriptionService = service.NewSubscriptionService(b.context.Database, b.context.MailService, b.context.RevenueCatService)
+		b.context.SubscriptionService = service.NewSubscriptionService(
+			b.context.Database, b.context.MailService, b.context.RevenueCatService, b.legacyProviderConfig.Stripe,
+		)
 	}
 	if b.context.EffectiveAccessService != nil {
 		b.context.SubscriptionService.SetEffectiveAccess(b.context.EffectiveAccessService)

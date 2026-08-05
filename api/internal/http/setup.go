@@ -62,11 +62,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		router.PATCH("/password/reset", UserRoutes.ResetPassword)
 		router.POST("/password/send-reset-email", UserRoutes.SendResetPasswordEmail)
 
-		// Legacy provider webhook endpoints
-		RegisterLegacyProviderWebhookRoutes(router, appCtx)
-
-		// Redirect to local expo scheme
-		router.GET("/subscription/checkout-redirect", CheckoutRedirect())
+		RegisterLegacyProviderPublicRoutes(router, appCtx)
 
 		// Deprecated demo quiz endpoint removed
 
@@ -102,11 +98,9 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		RegisterRealtimeTelemetryRoutes(authenticatedRoutes, appCtx.RealtimeTelemetryService)
 
 		// Subscription routes
-		authenticatedRoutes.POST("/subscription/checkout-session", CreateCheckoutSession(appCtx.SubscriptionService))
 		authenticatedRoutes.GET("/subscription/status", GetSubscriptionStatus(subRepo))
 		authenticatedRoutes.GET("/subscription/history", GetSubscriptionHistory(subRepo))
-		// RevenueCat routes
-		authenticatedRoutes.POST("/subscription/revenuecat/restore", RestorePurchases(appCtx.RevenueCatService))
+		RegisterLegacyProviderAuthenticatedRoutes(authenticatedRoutes, appCtx)
 
 		// User profile routes
 		authenticatedRoutes.GET("/users", UserRoutes.GetProfile)
@@ -140,14 +134,25 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	return router
 }
 
-// RegisterLegacyProviderWebhookRoutes keeps the rollback path explicit and
-// makes both legacy providers unreachable together at the IAP-only cutover.
-func RegisterLegacyProviderWebhookRoutes(router *gin.Engine, appCtx *app.Context) {
-	if !appCtx.LegacyProviderWebhooksEnabled {
+// RegisterLegacyProviderPublicRoutes keeps the rollback surface explicit and
+// makes legacy provider ingress and redirects unreachable at IAP-only cutover.
+func RegisterLegacyProviderPublicRoutes(router *gin.Engine, appCtx *app.Context) {
+	if !appCtx.LegacyProviderSurfaceEnabled {
 		return
 	}
 	router.POST("/webhook/stripe", HandleStripeWebhook(appCtx.SubscriptionService, appCtx.JobService))
-	router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(appCtx.JobService))
+	router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(
+		appCtx.JobService, appCtx.LegacyRevenueCatWebhookAuth,
+	))
+	router.GET("/subscription/checkout-redirect", CheckoutRedirect())
+}
+
+func RegisterLegacyProviderAuthenticatedRoutes(routes *gin.RouterGroup, appCtx *app.Context) {
+	if !appCtx.LegacyProviderSurfaceEnabled {
+		return
+	}
+	routes.POST("/subscription/checkout-session", CreateCheckoutSession(appCtx.SubscriptionService))
+	routes.POST("/subscription/revenuecat/restore", RestorePurchases(appCtx.RevenueCatService))
 }
 
 func RegisterStoreWebhookRoutes(
