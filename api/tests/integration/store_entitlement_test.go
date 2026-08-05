@@ -186,6 +186,39 @@ func TestEffectiveStoreAccessSeparatesEnvironmentAndRequiresGoogleAcknowledgemen
 	assert.Equal(t, model.PlanMonthly, profile.SubscriptionPlan, "profile must expose the effective compatibility projection")
 }
 
+func TestStoreEntitlementRepeatedReceiptIsIdempotentAndRenewalAdvances(t *testing.T) {
+	repo, db, ctx, userID, _ := prepareStoreEntitlementTest(t)
+	account, err := repo.GetOrCreateGoogleAccount(ctx, userID)
+	require.NoError(t, err)
+	base := time.Date(2026, 8, 5, 15, 0, 0, 0, time.UTC)
+
+	initial := googleStoreUpdate(userID, account, "stable-purchase-token", base)
+	first, err := repo.Apply(ctx, initial, nil)
+	require.NoError(t, err)
+	assert.Equal(t, model.EntitlementResultApplied, first.Operation.Code)
+
+	duplicate, err := repo.Apply(ctx, initial, nil)
+	require.NoError(t, err)
+	assert.Equal(t, model.EntitlementOutcomeUnchanged, duplicate.Operation.Outcome)
+	assert.Equal(t, model.EntitlementResultStaleEvent, duplicate.Operation.Code)
+
+	renewedAt := base.Add(30 * 24 * time.Hour)
+	renewal := googleStoreUpdate(userID, account, "stable-purchase-token", renewedAt)
+	renewal.Entitlement.PeriodStart = initial.Entitlement.PeriodEnd
+	renewal.Entitlement.PeriodEnd = timePointer(renewedAt.Add(30 * 24 * time.Hour))
+	renewed, err := repo.Apply(ctx, renewal, nil)
+	require.NoError(t, err)
+	assert.Equal(t, model.EntitlementResultApplied, renewed.Operation.Code)
+	require.NotNil(t, renewed.Entitlement.PeriodEnd)
+	assert.True(t, renewed.Entitlement.PeriodEnd.Equal(*renewal.Entitlement.PeriodEnd))
+
+	var entitlementCount, bindingCount int
+	require.NoError(t, db.QueryRow(ctx, `SELECT count(*) FROM store_entitlements WHERE user_id=$1`, userID).Scan(&entitlementCount))
+	require.NoError(t, db.QueryRow(ctx, `SELECT count(*) FROM store_purchase_bindings WHERE user_id=$1`, userID).Scan(&bindingCount))
+	assert.Equal(t, 1, entitlementCount)
+	assert.Equal(t, 1, bindingCount)
+}
+
 func TestGoogleVoidedPurchaseRevokesOnlyCurrentBindingAndHonorsEventClock(t *testing.T) {
 	repo, db, ctx, userID, _ := prepareStoreEntitlementTest(t)
 	account, err := repo.GetOrCreateGoogleAccount(ctx, userID)

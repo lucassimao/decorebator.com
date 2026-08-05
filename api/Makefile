@@ -62,7 +62,7 @@ test: ## run containerized integration tests
 
 test-unit: ## Run unit tests
 	@echo "Running unit tests..."
-	go test -v -race -coverprofile=unit.out -covermode=atomic ./internal/tests/unit/...
+	go test -v -race -coverpkg=./internal/... -coverprofile=unit.out -covermode=atomic ./internal/tests/unit/...
 	go tool cover -func=unit.out
 
 test-integration: ## Run integration tests locally with proper cleanup
@@ -127,7 +127,7 @@ test-report: ## Run tests with detailed reporting (requires gotestsum)
 	@echo "${YELLOW}Running tests with detailed reporting...${RESET}"
 	@command -v gotestsum >/dev/null 2>&1 || { echo "Installing gotestsum@$(GOTESTSUM_VERSION)..."; go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION); }
 	@echo "Unit tests:"
-	@gotestsum --format testname -- -v -race -coverprofile=unit.out -covermode=atomic ./internal/... || true
+	@gotestsum --format testname -- -v -race -coverpkg=./internal/... -coverprofile=unit.out -covermode=atomic ./internal/... || true
 	@echo "\n${GREEN}Unit tests completed.${RESET}"
 	@echo "\n${YELLOW}Note: For integration tests, use 'make test-integration' or './scripts/run-tests.sh all'${RESET}"
 	@echo "${YELLOW}Integration tests require database setup and can't run standalone.${RESET}"
@@ -142,7 +142,7 @@ test-report-full: ## Run ALL tests with detailed reporting (includes integration
 test-ci: ## Run tests with CI-style reporting (unit tests only)
 	@echo "${YELLOW}Running CI-style tests with structured output...${RESET}"
 	@command -v gotestsum >/dev/null 2>&1 || { echo "Installing gotestsum@$(GOTESTSUM_VERSION)..."; go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION); }
-	gotestsum --junitfile unit-tests.xml --format testname -- -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+	gotestsum --junitfile unit-tests.xml --format testname -- -v -race -coverpkg=./internal/... -coverprofile=unit.out -covermode=atomic ./internal/...
 	@echo "\n${GREEN}Unit tests completed with JUnit XML output.${RESET}"
 	@echo "${YELLOW}For integration tests with full CI setup, use './scripts/run-tests.sh all'${RESET}"
 
@@ -251,7 +251,7 @@ qa-ci: qa-install ## Run QA checks with CI-style output (JUnit XML + structured 
 	@mkdir -p reports
 	@$(MAKE) lint > reports/lint.log 2>&1 || true
 	@$(MAKE) security-scan-full > reports/security.log 2>&1 || true
-	@gotestsum --junitfile reports/unit-tests.xml --format testname -- -v -race -coverprofile=reports/unit.out -covermode=atomic ./internal/... || true
+	@gotestsum --junitfile reports/unit-tests.xml --format testname -- -v -race -coverpkg=./internal/... -coverprofile=reports/unit.out -covermode=atomic ./internal/... || true
 	@gotestsum --junitfile reports/integration-tests.xml --format testname -- -v -race -count=1 -p=1 -coverpkg=./internal/... -coverprofile=reports/integration.out -covermode=atomic ./tests/integration/... || true
 	@echo "${GREEN}✅ CI-style QA checks completed - reports in ./reports/${RESET}"
 

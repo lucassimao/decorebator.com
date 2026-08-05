@@ -63,7 +63,7 @@ jobs:
           # Run tests with structured output and junit report
           # Use pkgname-and-test-fails format for better failure visibility
           gotestsum --junitfile unit-tests.xml --format pkgname-and-test-fails --jsonfile unit-tests.json -- \
-            -v -race -coverprofile=unit.out -covermode=atomic ./internal/...
+            -v -race -coverpkg=./internal/... -coverprofile=unit.out -covermode=atomic ./internal/...
           
           # Display coverage summary
           go tool cover -func=unit.out
@@ -345,7 +345,7 @@ jobs:
           # Run tests with structured output and junit report
           # Use pkgname-and-test-fails format for better failure visibility
           gotestsum --junitfile integration-tests.xml --format pkgname-and-test-fails --jsonfile integration-tests.json -- \
-            -v -race -count=1 -p=1 -coverprofile=integration.out -covermode=atomic ./tests/integration/...
+            -v -race -count=1 -p=1 -coverpkg=./internal/... -coverprofile=integration.out -covermode=atomic ./tests/integration/...
           
           # Display coverage summary
           go tool cover -func=integration.out
