@@ -29,16 +29,17 @@ const (
 type EntitlementResultCode string
 
 const (
-	EntitlementResultApplied           EntitlementResultCode = "entitlement_applied"
-	EntitlementResultPurchasePending   EntitlementResultCode = "purchase_pending"
-	EntitlementResultRevoked           EntitlementResultCode = "entitlement_revoked"
-	EntitlementResultDuplicate         EntitlementResultCode = "duplicate_event"
-	EntitlementResultRetryableProvider EntitlementResultCode = "retryable_provider_error"
-	EntitlementResultInvalidPurchase   EntitlementResultCode = "invalid_purchase"
-	EntitlementResultAccountMismatch   EntitlementResultCode = "account_mismatch"
-	EntitlementResultUnknownProduct    EntitlementResultCode = "unknown_product"
-	EntitlementResultStaleEvent        EntitlementResultCode = "stale_provider_event"
-	EntitlementResultProviderTest      EntitlementResultCode = "provider_test_event"
+	EntitlementResultApplied            EntitlementResultCode = "entitlement_applied"
+	EntitlementResultPurchasePending    EntitlementResultCode = "purchase_pending"
+	EntitlementResultRevoked            EntitlementResultCode = "entitlement_revoked"
+	EntitlementResultDuplicate          EntitlementResultCode = "duplicate_event"
+	EntitlementResultRetryableProvider  EntitlementResultCode = "retryable_provider_error"
+	EntitlementResultInvalidPurchase    EntitlementResultCode = "invalid_purchase"
+	EntitlementResultAccountMismatch    EntitlementResultCode = "account_mismatch"
+	EntitlementResultUnknownProduct     EntitlementResultCode = "unknown_product"
+	EntitlementResultStaleEvent         EntitlementResultCode = "stale_provider_event"
+	EntitlementResultProviderTest       EntitlementResultCode = "provider_test_event"
+	EntitlementResultRevocationRetained EntitlementResultCode = "revocation_retained"
 )
 
 // EntitlementOperationInput is evaluated only after transport authentication.

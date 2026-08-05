@@ -225,3 +225,24 @@ func TestProviderEventInboxPersistsProviderTestResult(t *testing.T) {
 	require.NoError(t, db.QueryRow(ctx, "SELECT result_code FROM provider_event_inbox WHERE id = $1", claimed.Claim.ID).Scan(&stored))
 	assert.Equal(t, string(model.EntitlementResultProviderTest), stored)
 }
+
+func TestProviderEventInboxPersistsRetainedRevocationResult(t *testing.T) {
+	repo, db, ctx := prepareProviderEventInboxTest(t)
+	now := time.Now().UTC()
+	input := appleProviderEventInput(t, model.StoreEnvironmentProduction)
+	claimed, err := repo.Claim(ctx, input, now, time.Minute)
+	require.NoError(t, err)
+	require.NotNil(t, claimed.Claim)
+	result, err := repo.Complete(ctx, *claimed.Claim, func(context.Context, pgx.Tx) (model.EntitlementOperationResult, error) {
+		return model.EntitlementOperationResult{
+			Outcome: model.EntitlementOutcomeUnchanged,
+			Status:  model.EntitlementStatusRevoked,
+			Code:    model.EntitlementResultRevocationRetained,
+		}, nil
+	})
+	require.NoError(t, err)
+	assert.Equal(t, model.EntitlementResultRevocationRetained, result.Code)
+	var stored string
+	require.NoError(t, db.QueryRow(ctx, "SELECT result_code FROM provider_event_inbox WHERE id=$1", claimed.Claim.ID).Scan(&stored))
+	assert.Equal(t, string(model.EntitlementResultRevocationRetained), stored)
+}
