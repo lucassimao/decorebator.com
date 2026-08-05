@@ -30,6 +30,41 @@ Unknown stores, products, entitlements, statuses, environments, or unverifiable 
 
 Provider transaction identifiers, purchase tokens, app-account identifiers, notification identifiers, and raw signed payloads are deliberately outside this lifecycle record. Their binding, uniqueness, and retention rules belong to the next Phase 1 contract items.
 
+## Store account and purchase identity binding
+
+The account binding is created by the backend before purchase. The purchase binding is created only after provider verification. Both are internal domain records with JSON serialization disabled; a later mobile API uses narrow response/request DTOs rather than exposing these records.
+
+### Apple binding
+
+1. For an authenticated internal account, the backend creates or retrieves a stable, nonzero UUID as its `appAccountToken`. The purchase-context response returns that token but accepts no client-selected `userId`.
+2. Mobile supplies the backend-issued UUID to StoreKit when starting the purchase.
+3. The backend verifies Apple's signed transaction, bundle, product, environment, and signature chain before reading identity fields.
+4. The verified transaction's `appAccountToken` must exactly match an existing `AppleAccountIdentity`. A missing, unknown, or mismatched token grants no entitlement.
+5. The backend records an `ApplePurchaseIdentity` containing the resolved internal `userId`, verified `appAccountToken`, `originalTransactionId`, environment, and verification time. The original transaction identifier represents the subscription lineage across renewals and restores.
+6. Server notifications resolve the user from the stored original transaction/app-account binding without a mobile client or a user ID in the notification request.
+
+An Apple purchase is never reassigned merely because another user is currently signed in during restore. Since there are no legacy paying customers, there is no unbound-transaction claiming exception in this contract.
+
+### Google Play binding
+
+1. For an authenticated internal account, the backend creates or retrieves a stable, PII-free `obfuscatedExternalAccountId`, at most 64 characters. Generate it from server-side entropy or a one-way keyed derivation; never send an email, raw internal user ID, or another clear-text identifier to Google.
+2. The purchase-context response returns that identifier but accepts no client-selected `userId`; mobile supplies it through `setObfuscatedAccountId` when launching BillingClient.
+3. Mobile sends only the purchase token as evidence. The backend verifies that token through `purchases.subscriptionsv2.get` before reading subscription or account state.
+4. The verified `obfuscatedExternalAccountId` must exactly match an existing `GoogleAccountIdentity`. A missing, unknown, or mismatched identifier grants no entitlement.
+5. The backend records a `GooglePurchaseIdentity` containing the resolved internal `userId`, verified obfuscated account identifier, verified purchase token, environment, and verification time.
+6. Real-time developer notifications resolve the user from the stored purchase-token binding without trusting notification/client account data. Linked-token replacement behavior is defined with verification operations in a later Phase 1 item.
+
+The Google purchase token is sensitive backend material: never serialize or log it, and design persistence so the recoverable value is encrypted or equivalently protected because subsequent Play API calls require it. A digest may support lookup/uniqueness, but cannot replace the protected token used for provider verification.
+
+### Shared binding invariants
+
+- Account identities require a positive internal `userId` and a valid provider identifier.
+- Purchase identities require the resolved user, exact account identifier, verified provider purchase identifier, valid environment, and nonzero backend verification time.
+- Provider identifiers are opaque and compared exactly; leading/trailing whitespace is rejected rather than normalized.
+- `MatchesAccount` fails closed if either record is malformed, the users differ, or the provider account identifiers differ.
+- Provider identity records are not API response models. Dedicated DTOs may expose only the pre-purchase account identifier required by StoreKit/BillingClient.
+- Atomic uniqueness and idempotency constraints are intentionally specified in the next Phase 1 item; this item defines the identity and trust relationship they must preserve.
+
 ## Canonical statuses and access
 
 | Status | Grants premium access? | Meaning |
@@ -89,7 +124,10 @@ Google test purchases map to the canonical `sandbox` environment. A purchase tok
 ## Source references
 
 - [Apple App Store Server API](https://developer.apple.com/documentation/appstoreserverapi/)
+- [Apple app account token](https://developer.apple.com/documentation/appstoreserverapi/appaccounttoken)
+- [Apple original transaction identifier](https://developer.apple.com/documentation/appstoreserverapi/originaltransactionid)
 - [Apple subscription status](https://developer.apple.com/documentation/appstoreservernotifications/status?changes=_5)
 - [Apple auto-renew status](https://developer.apple.com/documentation/appstoreserverapi/autorenewstatus?changes=_1%2C_1)
 - [Google SubscriptionPurchaseV2](https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptionsv2)
+- [Google BillingFlowParams account identifier](https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.Builder#setObfuscatedAccountId(java.lang.String))
 - [Google Play purchase verification and security](https://developer.android.com/google/play/billing/security)
