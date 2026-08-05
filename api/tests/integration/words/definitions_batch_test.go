@@ -28,6 +28,23 @@ func createWordlist(ts *setup.TestServer, token string, name string) int64 {
 	return int64(resp.JSON().Object().Value("id").Number().Raw())
 }
 
+func createWordlistForUser(t *testing.T, ts *setup.TestServer, userID int64, name, language string) int64 {
+	t.Helper()
+
+	var wordlistID int64
+	err := ts.DB.QueryRow(
+		context.Background(),
+		`INSERT INTO wordlists (name, description, user_id, language_code, pronunciation_system)
+		 VALUES ($1, 'boundary test fixture', $2, $3, 'ipa') RETURNING id`,
+		name,
+		userID,
+		language,
+	).Scan(&wordlistID)
+	require.NoError(t, err)
+
+	return wordlistID
+}
+
 // helper: create a word via API and return its ID
 func createWord(ts *setup.TestServer, token string, wordlistID int64, name string) int64 {
 	resp := ts.Expect.POST(fmt.Sprintf("/wordlists/%d/words", wordlistID)).
@@ -60,6 +77,24 @@ func addDefinitions(t *testing.T, ts *setup.TestServer, wordID int64, token stri
 		require.NoError(t, err)
 		require.Len(t, defs, 1)
 	}
+}
+
+func addDefinition(t *testing.T, ts *setup.TestServer, wordID int64, token, language, partOfSpeech, meaning string) int64 {
+	t.Helper()
+
+	svc := service.NewDefinitionService(ts.DB)
+	definitions, err := svc.SaveDefinition(context.Background(), wordID, []*model.Definition{{
+		Token:        token,
+		Language:     language,
+		Meaning:      meaning,
+		PartOfSpeech: partOfSpeech,
+		Examples:     []string{"example " + token},
+		Source:       "test",
+	}}, nil)
+	require.NoError(t, err)
+	require.Len(t, definitions, 1)
+
+	return definitions[0].ID
 }
 
 func TestGetDefinitionsBatch_Basic(t *testing.T) {
@@ -150,4 +185,95 @@ func TestGetDefinitionsBatch_ErrorsAndIsolation(t *testing.T) {
 
 	arr.Length().IsEqual(1)
 	arr.Value(0).Object().Value("wordId").Number().IsEqual(float64(w1))
+}
+
+func TestGetDefinitionsSingle_ScopesWordToPathAndUser(t *testing.T) {
+	ts := setup.NewTestServer(t)
+	defer ts.Cleanup()
+
+	token1 := ts.WithTestUser(t)
+	wordlistID1 := createWordlist(ts, token1, "single definitions owner list")
+	wordID := createWord(ts, token1, wordlistID1, "scoped-word")
+	addDefinitions(t, ts, wordID, "scoped-word", 1)
+	var userID1 int64
+	require.NoError(t, ts.DB.QueryRow(context.Background(), `SELECT user_id FROM words WHERE id = $1`, wordID).Scan(&userID1))
+	wordlistID2 := createWordlistForUser(t, ts, userID1, "single definitions other owner list", "en")
+
+	ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words/%d/definitions", wordlistID1, wordID)).
+		WithHeader("Authorization", token1).
+		Expect().
+		Status(http.StatusOK).
+		JSON().Array().Length().IsEqual(1)
+
+	// An owned word cannot be fetched through another owned wordlist's URL.
+	ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words/%d/definitions", wordlistID2, wordID)).
+		WithHeader("Authorization", token1).
+		Expect().
+		Status(http.StatusOK).
+		JSON().Array().Length().IsEqual(0)
+
+	token2 := ts.WithTestUser(t)
+	wordlistID3 := createWordlist(ts, token2, "single definitions second user")
+	ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words/%d/definitions", wordlistID3, wordID)).
+		WithHeader("Authorization", token2).
+		Expect().
+		Status(http.StatusOK).
+		JSON().Array().Length().IsEqual(0)
+
+	ts.Expect.GET(fmt.Sprintf("/wordlists/not-a-number/words/%d/definitions", wordID)).
+		WithHeader("Authorization", token1).
+		Expect().
+		Status(http.StatusBadRequest)
+}
+
+func TestQuizDistractors_AreScopedToUserWordlistLanguageAndPartOfSpeech(t *testing.T) {
+	ts := setup.NewTestServer(t)
+	defer ts.Cleanup()
+
+	token1 := ts.WithTestUser(t)
+	wordlistID1 := createWordlist(ts, token1, "distractor source")
+	targetWordID := createWord(ts, token1, wordlistID1, "target")
+	targetDefinitionID := addDefinition(t, ts, targetWordID, "target", "en", "noun", "target meaning")
+	var userID1 int64
+	require.NoError(t, ts.DB.QueryRow(context.Background(), `SELECT user_id FROM words WHERE id = $1`, targetWordID).Scan(&userID1))
+	wordlistID2 := createWordlistForUser(t, ts, userID1, "private other list", "en")
+
+	validWord1 := createWord(ts, token1, wordlistID1, "valid-one")
+	addDefinition(t, ts, validWord1, "valid-one", "en", "noun", "valid meaning one")
+	validWord2 := createWord(ts, token1, wordlistID1, "valid-two")
+	validDefinition2 := addDefinition(t, ts, validWord2, "valid-two", "en", "NOUN", "valid meaning two")
+	_, err := ts.DB.Exec(context.Background(), `UPDATE definitions SET part_of_speech_normalized = 'NOUN' WHERE id = $1`, validDefinition2)
+	require.NoError(t, err)
+	duplicateTokenWord := createWord(ts, token1, wordlistID1, "duplicate")
+	addDefinition(t, ts, duplicateTokenWord, "valid-one", "en", "noun", "valid meaning duplicate")
+	duplicateMeaningWord := createWord(ts, token1, wordlistID1, "same-meaning")
+	addDefinition(t, ts, duplicateMeaningWord, "same-meaning", "en", "noun", "target meaning")
+
+	otherListWord := createWord(ts, token1, wordlistID2, "other-list")
+	addDefinition(t, ts, otherListWord, "other-list", "en", "noun", "other list meaning")
+	differentLanguageWord := createWord(ts, token1, wordlistID1, "diff-lang")
+	addDefinition(t, ts, differentLanguageWord, "diff-lang", "es", "sustantivo", "different language meaning")
+	differentPartOfSpeechWord := createWord(ts, token1, wordlistID1, "diff-pos")
+	addDefinition(t, ts, differentPartOfSpeechWord, "diff-pos", "en", "verb", "different part of speech meaning")
+
+	token2 := ts.WithTestUser(t)
+	otherUserWordlistID := createWordlist(ts, token2, "other user list")
+	otherUserWord := createWord(ts, token2, otherUserWordlistID, "other-user")
+	addDefinition(t, ts, otherUserWord, "other-user", "en", "noun", "other user meaning")
+
+	scope := service.DistractorScope{
+		UserID:                 userID1,
+		WordlistID:             wordlistID1,
+		Language:               "en",
+		PartOfSpeechNormalized: "noun",
+	}
+	definitionService := service.NewDefinitionService(ts.DB)
+
+	tokens, err := definitionService.GetRandomTokens(context.Background(), scope, []int{int(targetDefinitionID)}, 20)
+	require.NoError(t, err)
+	require.ElementsMatch(t, []string{"valid-one", "valid-two", "same-meaning"}, tokens)
+
+	meanings, err := definitionService.GetRandomMeanings(context.Background(), scope, []int{int(targetDefinitionID)}, 20)
+	require.NoError(t, err)
+	require.ElementsMatch(t, []string{"valid meaning one", "valid meaning two", "valid meaning duplicate"}, meanings)
 }

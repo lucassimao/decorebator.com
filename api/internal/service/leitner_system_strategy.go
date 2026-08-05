@@ -65,13 +65,16 @@ type QuizType = model.QuizType
 // NextDefinition represents a word definition selected for quiz generation
 // along with its current Leitner system state and associated metadata.
 type NextDefinition struct {
-	Definition       *model.Definition // The definition content (meaning, examples, inflections, etc.)
-	LeitnerSystemID  int64             // The tracking ID for this definition in the Leitner system
-	BoxID            int64             // Current Leitner box (1-7, determines review interval)
-	WordID           int64             // The word this definition belongs to
-	WordAudioURL     string            // Audio URL for the word (if any)
-	ImageUrl         string            // URL of associated image (if any)
-	ImageDescription string            // Description of the associated image
+	Definition                   *model.Definition // The definition content (meaning, examples, inflections, etc.)
+	LeitnerSystemID              int64             // The tracking ID for this definition in the Leitner system
+	BoxID                        int64             // Current Leitner box (1-7, determines review interval)
+	WordID                       int64             // The word this definition belongs to
+	WordAudioURL                 string            // Audio URL for the word (if any)
+	ImageURL                     string            // URL of associated image (if any)
+	ImageDescription             string            // Description of the associated image
+	ScopedDistractorsChecked     bool
+	ScopedTokenDistractorCount   int
+	ScopedMeaningDistractorCount int
 }
 
 type WordlistAvailability struct {
@@ -103,10 +106,83 @@ var boxToQuizTypes = map[int64][]model.QuizType{
 const multipleChoiceDistractors = 2
 const quizTypeFilteredCandidateLimit = 50
 
+func newDistractorScope(userID, wordlistID int64, definition *model.Definition) DistractorScope {
+	return DistractorScope{
+		UserID:                 userID,
+		WordlistID:             wordlistID,
+		Language:               definition.Language,
+		PartOfSpeechNormalized: NormalizePartOfSpeech(definition.PartOfSpeech, definition.Language),
+	}
+}
+
+func requiresTokenDistractors(quizType model.QuizType) bool {
+	switch quizType {
+	case model.WordFromAudio,
+		model.WordFromMeaningAudio,
+		model.CompleteSentence,
+		model.WordFromImage,
+		model.WordFromMeaning,
+		model.WordFromExampleAudio:
+		return true
+	default:
+		return false
+	}
+}
+
+func requiresMeaningDistractors(quizType model.QuizType) bool {
+	return quizType == model.MeaningFromAudio || quizType == model.GuessMeaning
+}
+
+func hasRequiredScopedDistractors(quizType model.QuizType, definition *NextDefinition) bool {
+	if !definition.ScopedDistractorsChecked {
+		return true
+	}
+	if requiresTokenDistractors(quizType) {
+		return definition.ScopedTokenDistractorCount >= multipleChoiceDistractors
+	}
+	if requiresMeaningDistractors(quizType) {
+		return definition.ScopedMeaningDistractorCount >= multipleChoiceDistractors
+	}
+	return true
+}
+
 // ExampleUsage tracks when examples were last used for fair distribution
 type ExampleUsage struct {
 	ExampleHash string    `db:"example_hash"`
 	LastUsedAt  time.Time `db:"last_used_at"`
+}
+
+func (s *LeitnerSystemStrategy) loadScopedDistractorAvailability(
+	ctx context.Context,
+	definition *NextDefinition,
+	userID, wordlistID int64,
+	allowedTypes []model.QuizType,
+) error {
+	scope := newDistractorScope(userID, wordlistID, definition.Definition)
+	ignored := []int{int(definition.Definition.ID)}
+	needsTokens := false
+	needsMeanings := false
+	for _, quizType := range allowedTypes {
+		needsTokens = needsTokens || requiresTokenDistractors(quizType)
+		needsMeanings = needsMeanings || requiresMeaningDistractors(quizType)
+	}
+
+	if needsTokens {
+		tokens, err := s.definitionService.GetRandomTokens(ctx, scope, ignored, multipleChoiceDistractors)
+		if err != nil {
+			return fmt.Errorf("count scoped token distractors: %w", err)
+		}
+		definition.ScopedTokenDistractorCount = len(tokens)
+	}
+	if needsMeanings {
+		meanings, err := s.definitionService.GetRandomMeanings(ctx, scope, ignored, multipleChoiceDistractors)
+		if err != nil {
+			return fmt.Errorf("count scoped meaning distractors: %w", err)
+		}
+		definition.ScopedMeaningDistractorCount = len(meanings)
+	}
+	definition.ScopedDistractorsChecked = true
+	return nil
 }
 
 // getNextDefinition selects the next due definition for quiz generation.
@@ -206,7 +282,7 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 			err := rows.Scan(&definition.ID, &definition.Token, &definition.PartOfSpeech, &definition.Language, &definition.IsVerbType,
 				&definition.Meaning, &definition.MeaningAudioURL, &definition.Examples,
 				&definition.Inflections, &result.LeitnerSystemID, &result.BoxID, &definition.Sounds,
-				&definition.PhoneticNotations, &result.ImageUrl, &result.WordID, &result.ImageDescription, &result.WordAudioURL,
+				&definition.PhoneticNotations, &result.ImageURL, &result.WordID, &result.ImageDescription, &result.WordAudioURL,
 				&hoursSinceReview, &nextReviewAt, &exampleAudioFilesJSON)
 
 			if err != nil {
@@ -326,6 +402,9 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 	}
 
 	for _, candidate := range candidates {
+		if err := s.loadScopedDistractorAvailability(ctx, candidate.definition, userID, wordlistID, allowedTypes); err != nil {
+			return nil, err
+		}
 		availableTypes := availableQuizTypesForDefinition(candidate.definition)
 		if len(filterQuizTypes(availableTypes, allowedTypes)) > 0 {
 			logSelectedDefinition(userID, wordlistID, candidate.definition, candidate.hoursSinceReview, candidate.nextReviewAt, candidate.exampleAudioCount)
@@ -493,14 +572,24 @@ func (s LeitnerSystemStrategy) CreateQuiz(ctx context.Context, wordlistID, userI
 	if nextDefinition.BoxID == 3 || nextDefinition.BoxID == 7 {
 		common.Logger.Info("image_quiz_availability",
 			"boxID", nextDefinition.BoxID,
-			"hasImage", nextDefinition.ImageUrl != "",
-			"imageUrl", nextDefinition.ImageUrl,
+			"hasImage", nextDefinition.ImageURL != "",
+			"imageUrl", nextDefinition.ImageURL,
 			"imageDescription", nextDefinition.ImageDescription,
 			"selectedQuizType", quizType)
 	}
 
 	// Create quiz based on selected type
-	return s.createQuizForType(ctx, quizType, nextDefinition, word, s.definitionService)
+	distractorScope := newDistractorScope(userID, wordlistID, nextDefinition.Definition)
+
+	allowWriteFallback := len(allowedTypes) == 0
+	for _, allowedType := range allowedTypes {
+		if allowedType == model.WriteWordFromDefinition {
+			allowWriteFallback = true
+			break
+		}
+	}
+
+	return s.createQuizForType(ctx, quizType, nextDefinition, word, s.definitionService, distractorScope, allowWriteFallback)
 }
 
 func (s *LeitnerSystemStrategy) selectQuizType(ctx context.Context, def *NextDefinition, word *model.Word, userID, wordlistID int64, allowedTypes []model.QuizType) model.QuizType {
@@ -549,8 +638,8 @@ func (s *LeitnerSystemStrategy) selectQuizType(ctx context.Context, def *NextDef
 		"boxID", def.BoxID,
 		"availableTypes", availableTypes,
 		"selectedType", selectedType,
-		"imageUrl", def.ImageUrl,
-		"hasImage", def.ImageUrl != "")
+		"imageUrl", def.ImageURL,
+		"hasImage", def.ImageURL != "")
 
 	return selectedType
 }
@@ -596,9 +685,13 @@ func logSelectedDefinition(userID, wordlistID int64, def *NextDefinition, hoursS
 }
 
 func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, wordAudioURL string) bool {
+	if !hasRequiredScopedDistractors(qt, def) {
+		return false
+	}
+
 	switch qt {
 	case model.WordFromImage:
-		return def.ImageUrl != ""
+		return def.ImageURL != ""
 	case model.CompleteSentence:
 		// Use centralized method to check if definition has examples
 		return def.Definition.HasExamples()
@@ -616,7 +709,7 @@ func isQuizTypeAvailable(qt model.QuizType, def *NextDefinition, wordAudioURL st
 }
 
 // createCompleteSentenceQuiz handles the complex logic for CompleteSentence quiz type
-func (s *LeitnerSystemStrategy) createCompleteSentenceQuiz(ctx context.Context, def *NextDefinition, definitionService *DefinitionService) (string, string, []string, error) {
+func (s *LeitnerSystemStrategy) createCompleteSentenceQuiz(ctx context.Context, def *NextDefinition, definitionService *DefinitionService, distractorScope DistractorScope) (string, string, []string, error) {
 	// Use centralized method to get all appropriate examples based on part of speech
 	availableExamples := def.Definition.GetAllExamples()
 
@@ -634,7 +727,7 @@ func (s *LeitnerSystemStrategy) createCompleteSentenceQuiz(ctx context.Context, 
 	quizAnswer := extractAnswerFromExample(selectedExample, def.Definition.Token)
 
 	// Get random options (database automatically excludes tokens from ignored definition IDs)
-	options, err := definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, multipleChoiceDistractors)
+	options, err := definitionService.GetRandomTokens(ctx, distractorScope, []int{int(def.Definition.ID)}, multipleChoiceDistractors)
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -644,8 +737,8 @@ func (s *LeitnerSystemStrategy) createCompleteSentenceQuiz(ctx context.Context, 
 
 // createWordFromExampleAudioQuiz handles the complex logic for WordFromExampleAudio quiz type
 // Returns (quizAnswer, options, audioURL, error) - no visual value needed for audio quizzes
-func (s *LeitnerSystemStrategy) createWordFromExampleAudioQuiz(ctx context.Context, def *NextDefinition, definitionService *DefinitionService) (string, []string, string, error) {
-	options, err := definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, multipleChoiceDistractors)
+func (s *LeitnerSystemStrategy) createWordFromExampleAudioQuiz(ctx context.Context, def *NextDefinition, definitionService *DefinitionService, distractorScope DistractorScope) (string, []string, string, error) {
+	options, err := definitionService.GetRandomTokens(ctx, distractorScope, []int{int(def.Definition.ID)}, multipleChoiceDistractors)
 	if err != nil {
 		return "", nil, "", err
 	}
@@ -671,102 +764,76 @@ func (s *LeitnerSystemStrategy) createWordFromExampleAudioQuiz(ctx context.Conte
 	return quizAnswer, options, audioURL, nil
 }
 
-func (s *LeitnerSystemStrategy) createQuizForType(ctx context.Context, quizType model.QuizType, def *NextDefinition, word *model.Word, definitionService *DefinitionService) (*Quiz, error) {
-	var options []string
-	var value string
-	var quizAnswer string
-	var audioURL string
-	var answerIndex int
-	var err error
-
-	// Default audioURL to word's audio (only overridden for specific quiz types)
-	audioURL = word.AudioURL
-
-	switch quizType {
-	case model.MeaningFromAudio:
-		quizAnswer = def.Definition.Meaning
-		options, err = definitionService.GetRandomMeanings(ctx, []int{int(def.Definition.ID)}, multipleChoiceDistractors)
-		if err != nil {
-			return nil, err
-		}
-		value = ""
-
-	case model.WordFromAudio:
-		quizAnswer = word.Name
-		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, multipleChoiceDistractors)
-		if err != nil {
-			return nil, err
-		}
-		value = ""
-
-	case model.WordFromMeaningAudio:
-		quizAnswer = word.Name
-		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, multipleChoiceDistractors)
-		if err != nil {
-			return nil, err
-		}
-		audioURL = def.Definition.MeaningAudioURL
-		value = ""
-
-	case model.WriteWordFromDefinition:
-		value = def.Definition.Meaning
-		quizAnswer = word.Name
-		// No options for write-in quiz
-
-	case model.CompleteSentence:
-		value, quizAnswer, options, err = s.createCompleteSentenceQuiz(ctx, def, definitionService)
-		if err != nil {
-			return nil, err
-		}
-
-	case model.WordFromImage:
-		quizAnswer = extractAnswerFromImageDescription(def.ImageDescription, def.Definition.Token)
-		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, multipleChoiceDistractors)
-		if err != nil {
-			return nil, err
-		}
-		value = def.ImageUrl
-
-	case model.WordFromMeaning:
-		quizAnswer = def.Definition.Token
-		options, err = definitionService.GetRandomTokens(ctx, []int{int(def.Definition.ID)}, def.Definition.PartOfSpeech, multipleChoiceDistractors)
-		if err != nil {
-			return nil, err
-		}
-		value = def.Definition.Meaning
-
-	case model.GuessMeaning:
-		quizAnswer = def.Definition.Meaning
-		options, err = definitionService.GetRandomMeanings(ctx, []int{int(def.Definition.ID)}, multipleChoiceDistractors)
-		if err != nil {
-			return nil, err
-		}
-		value = def.Definition.Token
-
-	case model.WordFromExampleAudio:
-		quizAnswer, options, audioURL, err = s.createWordFromExampleAudioQuiz(ctx, def, definitionService)
-		if err != nil {
-			return nil, err
-		}
-		value = "" // No visual value needed for audio quiz
-
-	default:
-		return nil, fmt.Errorf("unexpected quiz type: %v", quizType)
+func (s *LeitnerSystemStrategy) handleInsufficientDistractors(
+	ctx context.Context,
+	quizType model.QuizType,
+	options []string,
+	def *NextDefinition,
+	word *model.Word,
+	definitionService *DefinitionService,
+	distractorScope DistractorScope,
+	allowWriteFallback bool,
+) (*Quiz, error) {
+	if quizType == model.WriteWordFromDefinition || len(options) >= multipleChoiceDistractors {
+		return nil, nil
 	}
 
-	// Add correct answer to options at random position (for multiple choice quizzes)
-	if quizType != model.WriteWordFromDefinition {
-		// Ensure we have enough options and don't exceed the available positions
-		maxOptions := len(options) + 1 // +1 for the correct answer
-		answerIndex = cryptoRandInt(maxOptions)
+	common.Logger.WarnContext(ctx, "insufficient scoped quiz distractors",
+		"userID", distractorScope.UserID,
+		"wordlistID", distractorScope.WordlistID,
+		"definitionID", def.Definition.ID,
+		"quizType", quizType,
+		"distractorCount", len(options))
 
-		// Insert the correct answer at the random position
+	if allowWriteFallback && def.Definition.Meaning != "" {
+		return s.createQuizForType(
+			ctx,
+			model.WriteWordFromDefinition,
+			def,
+			word,
+			definitionService,
+			distractorScope,
+			false,
+		)
+	}
+
+	return nil, common.QuizUnavailableError{
+		Reason:  common.QuizUnavailableNoMatchingQuizTypes,
+		Message: "not enough scoped distractors for the selected quiz types",
+	}
+}
+
+func (s *LeitnerSystemStrategy) finalizeQuiz(
+	ctx context.Context,
+	quizType model.QuizType,
+	value, quizAnswer, audioURL string,
+	options []string,
+	def *NextDefinition,
+	word *model.Word,
+	definitionService *DefinitionService,
+	distractorScope DistractorScope,
+	allowWriteFallback bool,
+) (*Quiz, error) {
+	if fallbackQuiz, fallbackErr := s.handleInsufficientDistractors(
+		ctx,
+		quizType,
+		options,
+		def,
+		word,
+		definitionService,
+		distractorScope,
+		allowWriteFallback,
+	); fallbackQuiz != nil || fallbackErr != nil {
+		return fallbackQuiz, fallbackErr
+	}
+
+	answerIndex := 0
+	if quizType != model.WriteWordFromDefinition {
+		answerIndex = cryptoRandInt(len(options) + 1)
 		options = append(options, "")
 		copy(options[answerIndex+1:], options[answerIndex:])
 		options[answerIndex] = quizAnswer
 	} else {
-		// For write-in quizzes, no options are needed
-		answerIndex = 0
 		options = []string{quizAnswer}
 	}
 
@@ -784,6 +851,103 @@ func (s *LeitnerSystemStrategy) createQuizForType(ctx context.Context, quizType 
 		WordID:           def.WordID,
 		DefinitionID:     def.Definition.ID,
 	}, nil
+}
+
+func (s *LeitnerSystemStrategy) createQuizForType(ctx context.Context, quizType model.QuizType, def *NextDefinition, word *model.Word, definitionService *DefinitionService, distractorScope DistractorScope, allowWriteFallback bool) (*Quiz, error) {
+	var options []string
+	var value string
+	var quizAnswer string
+	var audioURL string
+	var err error
+
+	// Default audioURL to word's audio (only overridden for specific quiz types)
+	audioURL = word.AudioURL
+
+	switch quizType {
+	case model.MeaningFromAudio:
+		quizAnswer = def.Definition.Meaning
+		options, err = definitionService.GetRandomMeanings(ctx, distractorScope, []int{int(def.Definition.ID)}, multipleChoiceDistractors)
+		if err != nil {
+			return nil, err
+		}
+		value = ""
+
+	case model.WordFromAudio:
+		quizAnswer = word.Name
+		options, err = definitionService.GetRandomTokens(ctx, distractorScope, []int{int(def.Definition.ID)}, multipleChoiceDistractors)
+		if err != nil {
+			return nil, err
+		}
+		value = ""
+
+	case model.WordFromMeaningAudio:
+		quizAnswer = word.Name
+		options, err = definitionService.GetRandomTokens(ctx, distractorScope, []int{int(def.Definition.ID)}, multipleChoiceDistractors)
+		if err != nil {
+			return nil, err
+		}
+		audioURL = def.Definition.MeaningAudioURL
+		value = ""
+
+	case model.WriteWordFromDefinition:
+		value = def.Definition.Meaning
+		quizAnswer = word.Name
+		// No options for write-in quiz
+
+	case model.CompleteSentence:
+		value, quizAnswer, options, err = s.createCompleteSentenceQuiz(ctx, def, definitionService, distractorScope)
+		if err != nil {
+			return nil, err
+		}
+
+	case model.WordFromImage:
+		quizAnswer = extractAnswerFromImageDescription(def.ImageDescription, def.Definition.Token)
+		options, err = definitionService.GetRandomTokens(ctx, distractorScope, []int{int(def.Definition.ID)}, multipleChoiceDistractors)
+		if err != nil {
+			return nil, err
+		}
+		value = def.ImageURL
+
+	case model.WordFromMeaning:
+		quizAnswer = def.Definition.Token
+		options, err = definitionService.GetRandomTokens(ctx, distractorScope, []int{int(def.Definition.ID)}, multipleChoiceDistractors)
+		if err != nil {
+			return nil, err
+		}
+		value = def.Definition.Meaning
+
+	case model.GuessMeaning:
+		quizAnswer = def.Definition.Meaning
+		options, err = definitionService.GetRandomMeanings(ctx, distractorScope, []int{int(def.Definition.ID)}, multipleChoiceDistractors)
+		if err != nil {
+			return nil, err
+		}
+		value = def.Definition.Token
+
+	case model.WordFromExampleAudio:
+		quizAnswer, options, audioURL, err = s.createWordFromExampleAudioQuiz(ctx, def, definitionService, distractorScope)
+		if err != nil {
+			return nil, err
+		}
+		value = "" // No visual value needed for audio quiz
+
+	default:
+		return nil, fmt.Errorf("unexpected quiz type: %v", quizType)
+	}
+
+	return s.finalizeQuiz(
+		ctx,
+		quizType,
+		value,
+		quizAnswer,
+		audioURL,
+		options,
+		def,
+		word,
+		definitionService,
+		distractorScope,
+		allowWriteFallback,
+	)
 }
 
 func extractAnswerFromExample(example, defaultToken string) string {

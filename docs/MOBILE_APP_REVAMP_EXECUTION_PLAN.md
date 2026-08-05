@@ -345,13 +345,17 @@ Parallel workstream A progress:
 
 These are not automatically part of the revamp. Fix them independently when evidence shows they affect correctness, security, or the launch path.
 
-- [ ] Triage unscoped distractor and definition lookups first; verify language/wordlist/user boundaries.
+- [x] Triage unscoped distractor and definition lookups first; verify language/wordlist/user boundaries.
 - [ ] Make all Apple/Google and existing webhook idempotency atomic before launch.
 - [ ] Validate the Stripe-config startup panic is gone as part of provider removal.
 - [ ] Correct the TTS language/voice contract and add a regression test.
 - [ ] Fix image-worker error-path formatting/strategy handling if still reachable.
 - [ ] Add timeouts and cancellation to outbound OpenAI clients where production work depends on them.
 - [ ] Reconcile documented and actual worker concurrency before increasing load.
+
+Parallel workstream B progress:
+
+- **2026-08-05 — definition and quiz-distractor boundaries complete.** Single-word definition reads now validate positive path IDs and require the authenticated user, URL wordlist, and word to match; an owned word cannot be fetched through another owned wordlist path, and empty authorized results serialize consistently as `[]`. Token and meaning distractors are restricted to the authenticated user's current wordlist, language, normalized part of speech, and non-target word/answer, with case-insensitive compatibility for legacy normalized values and true token deduplication before random selection. Every option-bearing quiz type receives the same explicit scope. Multiple-choice questions require two scoped distractors: unfiltered or explicitly write-enabled sessions fall back safely to write-in practice, filtered sessions return the existing client-handled `no_matching_quiz_types` 409, and filtered candidate selection skips a thin-POS head item to avoid wedging later compatible due items; the final guard remains for races. No UI prototype was needed because this item changes only authenticated repository/service behavior and preserves the mobile response shapes. Review restarted with `fable` (temporarily unavailable at its usage-limit 429); Claude `opus` verified the boundary predicates, found the one-option quiz, legacy casing, scope-wiring, deduplication, and filtered-queue risks, and approved after all were corrected and reconciled in the same thread. Four race-enabled PostgreSQL `words` tests cover cross-user, cross-list, cross-language, cross-POS, legacy casing, duplicate token/meaning, and single/batch route behavior; two root PostgreSQL tests prove distinct user/wordlist scope wiring, candidate skipping, three-option output, safe write fallback, and filtered 409. Race-enabled API unit tests, package compilation, Go formatting, changed-file lint, vet/build review checks, and staged diff checks pass. Filtered mode performs at most two bounded, indexed distractor lookups per examined candidate (maximum 50 candidates); monitor filtered-quiz latency before considering a set-based optimization.
 
 ## Explicitly removed from this revamp
 

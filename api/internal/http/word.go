@@ -114,13 +114,19 @@ func (h *WordRoutes) Update(c *gin.Context) {
 
 func (h *WordRoutes) GetDefinitions(c *gin.Context) {
 	userID := c.GetInt64("userID")
+	wordlistID, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	if err != nil || wordlistID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
+
 	wordID, err := strconv.ParseInt(c.Param("wordId"), 10, 64)
-	if err != nil {
+	if err != nil || wordID <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid word ID"})
 		return
 	}
 
-	definitions, err := h.definitionService.GetDefinitionsByWordID(c.Request.Context(), wordID, userID)
+	definitions, err := h.definitionService.GetDefinitionsByWordID(c.Request.Context(), wordlistID, wordID, userID)
 	if err != nil {
 		common.Logger.ErrorContext(c.Request.Context(), "failed to get definitions", "error", err, "userID", userID, "wordId", wordID)
 		c.String(http.StatusInternalServerError, "Could not get word definitions")

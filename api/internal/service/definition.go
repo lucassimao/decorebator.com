@@ -17,6 +17,13 @@ type DefinitionService struct {
 	definitionRepository *repo.DefinitionRepository
 }
 
+type DistractorScope struct {
+	UserID                 int64
+	WordlistID             int64
+	Language               string
+	PartOfSpeechNormalized string
+}
+
 // NewDefinitionService creates a new DefinitionService with injected dependencies
 func NewDefinitionService(db *pgxpool.Pool) *DefinitionService {
 	return &DefinitionService{
@@ -38,12 +45,28 @@ func (s *DefinitionService) SaveDefinition(ctx context.Context, tokenID int64, d
 	return definitions, nil
 }
 
-func (s *DefinitionService) GetRandomMeanings(ctx context.Context, definitionIDsToIgnore []int, size int) ([]string, error) {
-	return s.definitionRepository.GetRandomMeanings(ctx, definitionIDsToIgnore, size)
+func (s *DefinitionService) GetRandomMeanings(ctx context.Context, scope DistractorScope, definitionIDsToIgnore []int, size int) ([]string, error) {
+	return s.definitionRepository.GetRandomMeanings(
+		ctx,
+		scope.UserID,
+		scope.WordlistID,
+		scope.Language,
+		scope.PartOfSpeechNormalized,
+		definitionIDsToIgnore,
+		size,
+	)
 }
 
-func (s *DefinitionService) GetRandomTokens(ctx context.Context, definitionIDsToIgnore []int, partOfSpeech string, size int) ([]string, error) {
-	return s.definitionRepository.GetRandomTokens(ctx, definitionIDsToIgnore, partOfSpeech, size)
+func (s *DefinitionService) GetRandomTokens(ctx context.Context, scope DistractorScope, definitionIDsToIgnore []int, size int) ([]string, error) {
+	return s.definitionRepository.GetRandomTokens(
+		ctx,
+		scope.UserID,
+		scope.WordlistID,
+		scope.Language,
+		scope.PartOfSpeechNormalized,
+		definitionIDsToIgnore,
+		size,
+	)
 }
 
 func (s *DefinitionService) GetDefinitionByID(ctx context.Context, id int64) (*model.Definition, error) {
@@ -71,8 +94,8 @@ func (s *DefinitionService) didUserCreateWord(ctx context.Context, wordID, userI
 	return res, nil
 }
 
-func (s *DefinitionService) GetDefinitionsByWordID(ctx context.Context, wordID, userID int64) ([]*model.Definition, error) {
-	return s.definitionRepository.GetDefinitionsByWordID(ctx, wordID, userID)
+func (s *DefinitionService) GetDefinitionsByWordID(ctx context.Context, wordlistID, wordID, userID int64) ([]*model.Definition, error) {
+	return s.definitionRepository.GetDefinitionsByWordID(ctx, wordlistID, wordID, userID)
 }
 
 // GetDefinitionsByWordIDs returns a denormalized response including wordID, token(name) and its definitions

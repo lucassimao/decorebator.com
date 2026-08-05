@@ -96,38 +96,48 @@ func (repository *DefinitionRepository) Save(ctx context.Context, tokenID int64,
 }
 
 // all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
-func (repository *DefinitionRepository) GetRandomMeanings(ctx context.Context, definitionIDsToIgnore []int, limit int) ([]string, error) {
-	// Handle empty array case
-	if len(definitionIDsToIgnore) == 0 {
-		return []string{}, nil
-	}
-
+func (repository *DefinitionRepository) GetRandomMeanings(
+	ctx context.Context,
+	userID, wordlistID int64,
+	language, partOfSpeechNormalized string,
+	definitionIDsToIgnore []int,
+	limit int,
+) ([]string, error) {
 	query := `
-        WITH target_definitions AS (
-			SELECT DISTINCT part_of_speech 
-			FROM definitions 
-			WHERE id = ANY($1)
-		),
-        excluded_words AS (
+        WITH excluded_words AS (
 			SELECT DISTINCT wd.word_id
 			FROM word_definitions wd
-			WHERE wd.definition_id = ANY($1)
-		),
+			WHERE wd.definition_id = ANY($5)
+			),
         candidates AS (
 			SELECT DISTINCT def.meaning
 			FROM definitions def
 			JOIN word_definitions wd ON wd.definition_id = def.id
-			WHERE def.part_of_speech IN (SELECT part_of_speech FROM target_definitions)
+			JOIN words w ON w.id = wd.word_id
+			WHERE w.user_id = $1
+			AND w.wordlist_id = $2
+			AND def.language = $3
+			AND LOWER(COALESCE(NULLIF(def.part_of_speech_normalized, ''), def.part_of_speech)) = LOWER($4)
 			AND wd.word_id NOT IN (SELECT word_id FROM excluded_words)
-			AND def.id <> ALL($1)
+			AND def.id <> ALL($5)
+			AND def.meaning NOT IN (SELECT meaning FROM definitions WHERE id = ANY($5))
 		)
         SELECT meaning
         FROM candidates
         ORDER BY RANDOM(), length(meaning) ASC
-        LIMIT $2;
+		LIMIT $6;
 	`
 
-	rows, err := repository.Db.Query(ctx, query, definitionIDsToIgnore, limit)
+	rows, err := repository.Db.Query(
+		ctx,
+		query,
+		userID,
+		wordlistID,
+		language,
+		partOfSpeechNormalized,
+		definitionIDsToIgnore,
+		limit,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query random meanings for definitions %v: %w", definitionIDsToIgnore, err)
 	}
@@ -146,25 +156,45 @@ func (repository *DefinitionRepository) GetRandomMeanings(ctx context.Context, d
 	return meanings, nil
 }
 
-func (repository *DefinitionRepository) GetRandomTokens(ctx context.Context, definitionIDsToIgnore []int, partOfSpeech string, limit int) ([]string, error) {
-	// selecting random() to avoid the error 'SELECT DISTINCT, ORDER BY expressions must appear in select list (SQLSTATE 42P10)'
+func (repository *DefinitionRepository) GetRandomTokens(
+	ctx context.Context,
+	userID, wordlistID int64,
+	language, partOfSpeechNormalized string,
+	definitionIDsToIgnore []int,
+	limit int,
+) ([]string, error) {
 	query := `
-		WITH tokens AS (
-			SELECT 
-				DISTINCT token, random()
+		WITH candidate_tokens AS (
+			SELECT DISTINCT def.token
 			FROM 
 				definitions def
 			JOIN 
 				word_definitions wd ON wd.definition_id = def.id
+			JOIN
+				words w ON w.id = wd.word_id
 			WHERE 
-				part_of_speech=$1 
-				AND wd.word_id NOT IN (select word_id FROM word_definitions WHERE definition_id = ANY($2))
-				AND token NOT IN (SELECT token FROM definitions WHERE id = ANY($2))
-			ORDER BY random() LIMIT $3
+				w.user_id = $1
+				AND w.wordlist_id = $2
+				AND def.language = $3
+				AND LOWER(COALESCE(NULLIF(def.part_of_speech_normalized, ''), def.part_of_speech)) = LOWER($4)
+				AND wd.word_id NOT IN (select word_id FROM word_definitions WHERE definition_id = ANY($5))
+				AND token NOT IN (SELECT token FROM definitions WHERE id = ANY($5))
 		)
-		SELECT token FROM tokens ;
+		SELECT token
+		FROM candidate_tokens
+		ORDER BY random()
+		LIMIT $6;
 	`
-	rows, err := repository.Db.Query(ctx, query, partOfSpeech, definitionIDsToIgnore, limit)
+	rows, err := repository.Db.Query(
+		ctx,
+		query,
+		userID,
+		wordlistID,
+		language,
+		partOfSpeechNormalized,
+		definitionIDsToIgnore,
+		limit,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -313,23 +343,23 @@ func (repository *DefinitionRepository) DidUserCreateWord(ctx context.Context, w
 	return count == 1, nil
 }
 
-func (repository *DefinitionRepository) GetDefinitionsByWordID(ctx context.Context, wordID, userID int64) ([]*Definition, error) {
+func (repository *DefinitionRepository) GetDefinitionsByWordID(ctx context.Context, wordlistID, wordID, userID int64) ([]*Definition, error) {
 	query := `
 		SELECT d.id, d.token, d.language, d.part_of_speech, d.part_of_speech_normalized, d.is_verb_type, d.meaning, d.examples, d.inflections, 
 			   d.source, d.source_id, d.sounds, d.phonetic_notations, COALESCE(d.meaning_audio_url,''), d.created_at, d.updated_at
 		FROM definitions d
 		JOIN word_definitions wd ON wd.definition_id = d.id
 		JOIN words w ON w.id = wd.word_id
-		WHERE w.id = $1 AND w.user_id = $2
+		WHERE w.id = $1 AND w.wordlist_id = $2 AND w.user_id = $3
 		ORDER BY d.id ASC`
 
-	rows, err := repository.Db.Query(ctx, query, wordID, userID)
+	rows, err := repository.Db.Query(ctx, query, wordID, wordlistID, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var definitions []*Definition
+	definitions := make([]*Definition, 0)
 	for rows.Next() {
 		var def Definition
 
