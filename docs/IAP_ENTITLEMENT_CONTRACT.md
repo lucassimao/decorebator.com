@@ -151,6 +151,50 @@ Restore is provider refresh, not ownership claiming. Apple transactions and Goog
 
 Invalid authentication/signatures receive a permanent rejection and no provider API call. Unknown products and account mismatches are permanently rejected, audited without raw tokens/payloads, and surfaced to monitoring. Transient provider/API/database failures remain retryable and must not be acknowledged as successfully applied. Structured logs must use record/event digests and stable result codes; identity structs or raw Google tokens must never be formatted into logs.
 
+## Mobile IAP response contract
+
+Settings and paywall consume one server-authored state envelope after authentication. The same shape is returned after status refresh, purchase verification, and restore so React Query can replace one cache entry atomically rather than merge provider callbacks into user state.
+
+```json
+{
+  "products": [
+    {
+      "store": "apple",
+      "productId": "com.decorebator.premium.monthly",
+      "entitlement": "premium",
+      "billingPeriod": "monthly"
+    }
+  ],
+  "purchaseContext": {
+    "store": "apple",
+    "appleAppAccountToken": "db22924d-8f4b-4a7e-845e-3304f319210e"
+  },
+  "currentEntitlement": {
+    "store": "apple",
+    "productId": "com.decorebator.premium.monthly",
+    "entitlement": "premium",
+    "status": "active",
+    "periodEnd": "2026-09-04T00:00:00Z",
+    "autoRenewEnabled": true
+  },
+  "pending": null,
+  "error": null,
+  "restore": null,
+  "serverTime": "2026-08-04T00:00:00Z"
+}
+```
+
+- `products` is always an array, including `[]`, contains exactly one requested native store when nonempty, and is unique by store/product ID. It is the server allowlist mapping product IDs only to the allowlisted `premium` entitlement; it never grants access.
+- Backend catalog data deliberately excludes price, currency, introductory offer, localized title, and store legal text. Mobile joins each allowed product ID with current StoreKit/Google ProductDetails and renders only store-returned localized commerce metadata. A catalog product missing from the store response is unavailable, not displayed with a hard-coded fallback price.
+- `purchaseContext` contains exactly one backend-issued pre-purchase account identifier for the requested store: Apple app-account UUID or Google obfuscated account ID. It contains no internal user ID and no verified transaction/purchase token. It is required whenever `products` is nonempty; it may be `null` only when purchase is unavailable and the catalog is `[]`.
+- `currentEntitlement` is the only premium-state input. It contains no internal record/user IDs, provider evidence, raw payload, or environment. Mobile may display status, renewal, cancellation, and expiry but must not locally promote pending/failed purchases.
+- `pending` may coexist with a current active entitlement, such as during a plan replacement. It identifies only store, product, and start time and never grants access.
+- `error` contains an allowlisted stable code, localization key, and retryable flag. Provider messages, tokens, transaction IDs, stack traces, and account details never reach mobile. Only `retryable_provider_error` is retryable; invalid purchase, account mismatch, and unknown product are permanent. A permanent error cannot coexist with `pending`; a retryable refresh error may coexist with an already-known pending purchase.
+- `restore: null` is the only not-requested representation. After a restore request it is `restored` with a positive count, `no_purchases`, `pending`, or `failed` with a safe error. A successful empty restore is not an error.
+- `serverTime` lets UI calculate relative copy consistently; backend authorization still evaluates access independently.
+
+Native user cancellation and store-UI availability errors that happen before backend verification remain local typed client states. After any successful or pending native result, mobile sends evidence to the backend and replaces its cached IAP envelope with the server response; it never writes optimistic premium user/profile state.
+
 ## Canonical statuses and access
 
 | Status | Grants premium access? | Meaning |
