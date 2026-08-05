@@ -42,7 +42,7 @@ The following repository facts drive the order of work:
 - `[ ]` not started
 - `[-]` in progress
 - `[x]` complete with evidence linked in the notes
-- `[!]` blocked; record the owner and decision needed
+- `[b]` blocked; record the owner and decision needed
 
 ## Development protocol
 
@@ -189,7 +189,7 @@ Required work:
 - [x] Define canonical events and properties: `user_signed_up`, `wordlist_created`, `word_added`, `quiz_session_started`, `quiz_session_completed`, `quiz_answered`, and `practice_cta_opened`. Specify one event per semantic action, session identity, source/entry point, wordlist context, and failure/error outcome.
 - [x] Audit existing mobile/PostHog events before adding duplicates. Correct the current mismatch where `quiz_completed` represents individual answers rather than completed sessions.
 - [x] Add a development/dry-run sink and tests proving event names, required properties, deduplication, and exclusion of raw word/content data.
-- [ ] Produce a cohort report for 7/30/90/365-day sign-ups with signup→wordlist, signup→word, signup→first quiz, and first quiz→completed session conversion. Keep the current database baseline alongside the post-instrumentation baseline; do not compare unlike definitions.
+- [b] Produce a cohort report for 7/30/90/365-day sign-ups with signup→wordlist, signup→word, signup→first quiz, and first quiz→completed session conversion. Keep the current database baseline alongside the post-instrumentation baseline; do not compare unlike definitions.
 - [ ] Define owner-approved activation targets after the baseline is visible. Do not invent a target percentage or declare success from a local test run.
 
 Gate 0.5 acceptance:
@@ -205,6 +205,7 @@ Phase 0.5 progress:
 - **2026-08-04 — controlled store-approval registry prepared.** Added `docs/fixtures/store-approval-accounts.json` with the four owner-confirmed internal user IDs from the read-only subscription audit, provenance, re-verification date, and usage rules in `docs/fixtures/README.md`. The registry artifact excludes accounts by explicit numeric ID and contains no email, payment, or secret data; production report consumption remains a separate pending item.
 - **2026-08-04 — existing activation events audited and migrated.** Removed duplicate `signup_completed` and raw email PostHog properties, removed the raw wordlist name, added `word_added`, and replaced per-answer `quiz_completed` with session-aware `quiz_session_started`, `quiz_answered`, and `quiz_session_completed` events. Quiz counts are ref-backed for cleanup accuracy, and Sentry sign-in context no longer stores email. Targeted lint, formatting, and activation tests pass; full typecheck remains blocked by pre-existing WebRTC event-typing errors, and the full Jest suite retains unrelated Expo/mock/API-environment failures. No bulk word-add path was found; reporting sink validation and cohort reporting remain pending.
 - **2026-08-04 — activation dry-run/validation sink completed.** `mobile/utils/activationEvents.ts` now enforces event-specific required properties, rejects invalid captures before sending, supports caller-owned process-scoped dedupe keys, and keeps dry-run captures from mutating real dedupe state. Seven unit tests cover names, required fields, privacy filtering, falsy values, dry-run behavior, dedupe, and session IDs. Production PostHog delivery remains intentionally non-durable; cohort reporting and production sink validation remain pending.
+- **2026-08-04 — database cohort baseline automated; analytics comparison blocked.** Added the read-only `docs/queries/run-activation-cohort-report.sh` and SQL query, which loads the controlled registry and reports 7/30/90/365-day cohorts without hardcoded test IDs. The current run produced 7d `0/0/0/0`, 30d `4/3/2/0`, 90d `6/5/4/0`, and 365d `32/26/14/3` for signups/wordlists/words/database quiz answerers; the query labels database quiz answers as non-equivalent to completed sessions. `[b] BLOCKED — owner action: provide an authenticated production PostHog read/export credential or dashboard export, then rerun the post-instrumentation cohort comparison and record the observation window. The database-only baseline is complete; no production data was changed.`
 
 ## Phase 1 — Design the store-neutral entitlement contract
 
