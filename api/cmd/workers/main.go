@@ -29,7 +29,7 @@ func main() {
 		}
 	}()
 
-	common.SetDBPoolLimits(10, 2)
+	common.SetDBPoolLimits(service.WorkerDatabaseMaxConnections, service.WorkerDatabaseMinConnections)
 
 	// Initialize database connection (direct database URL)
 	db := common.GetDBConnection()

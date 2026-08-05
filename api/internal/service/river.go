@@ -21,6 +21,32 @@ const SubscriptionReminderQueue = "subscription_reminder"
 const ExampleAudioQueue = "example_audio"
 const PushNotificationQueue = "push_notification"
 
+// WorkerDatabaseMaxConnections is the worker process's database budget. Keep
+// DefinitionFetcherQueueMaxWorkers below this value: definition jobs currently
+// hold a transaction while producing meaning audio, so they must not be able to
+// monopolize the pool.
+const WorkerDatabaseMaxConnections int32 = 10
+const WorkerDatabaseMinConnections int32 = 2
+const DefinitionFetcherQueueMaxWorkers = 4
+
+func workerQueueConfig(legacyProviderSurfaceEnabled bool) map[string]river.QueueConfig {
+	queues := map[string]river.QueueConfig{
+		river.QueueDefault:              {MaxWorkers: 100},
+		ImageGeneratorQueue:             {MaxWorkers: 5},
+		TextToSpeechQueue:               {MaxWorkers: 30},
+		DefinitionFetcherQueue:          {MaxWorkers: DefinitionFetcherQueueMaxWorkers},
+		SubscriptionReminderQueue:       {MaxWorkers: 10},
+		ExampleAudioQueue:               {MaxWorkers: 20},
+		PushNotificationQueue:           {MaxWorkers: 5},
+		GoogleAcknowledgementRetryQueue: {MaxWorkers: 5},
+	}
+	if legacyProviderSurfaceEnabled {
+		queues["revenuecat-webhook"] = river.QueueConfig{MaxWorkers: 5}
+		queues["stripe-webhook"] = river.QueueConfig{MaxWorkers: 5}
+	}
+	return queues
+}
+
 // NoOpJobArgs is a no-op job used for periodic jobs that execute inline
 type NoOpJobArgs struct{}
 
@@ -165,18 +191,7 @@ func NewWorkerRiverClient(
 	}
 
 	riverClient, err := river.NewClient(riverpgxv5.New(db), &river.Config{
-		Queues: map[string]river.QueueConfig{
-			river.QueueDefault:              {MaxWorkers: 100},
-			ImageGeneratorQueue:             {MaxWorkers: 5},
-			TextToSpeechQueue:               {MaxWorkers: 30}, //max of 50 per openai docs
-			DefinitionFetcherQueue:          {MaxWorkers: 50},
-			SubscriptionReminderQueue:       {MaxWorkers: 10},
-			ExampleAudioQueue:               {MaxWorkers: 20},
-			PushNotificationQueue:           {MaxWorkers: 5},
-			"revenuecat-webhook":            {MaxWorkers: 5},
-			"stripe-webhook":                {MaxWorkers: 5},
-			GoogleAcknowledgementRetryQueue: {MaxWorkers: 5},
-		},
+		Queues:       workerQueueConfig(legacyProviderSurfaceEnabled),
 		Workers:      riverWorkers,
 		Logger:       common.Logger,
 		PeriodicJobs: periodicJobs,
