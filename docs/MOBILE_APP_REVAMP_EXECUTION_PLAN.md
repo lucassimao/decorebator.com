@@ -272,7 +272,7 @@ Phase 2 progress:
 
 ### Mobile
 
-- [ ] Add the selected IAP native dependency and rebuild the development client.
+- [x] Add the selected IAP native dependency and rebuild the development client.
 - [ ] Replace the settings paywall purchase path with the store-product API; show store-localized price and legal text from the store/product contract.
 - [ ] Implement purchase, pending, failure, restore, and “already entitled” states.
 - [ ] Emit the typed privacy-safe `paywall_impression`, `paywall_plan_selected`, `purchase_pending`, `purchase_succeeded`, `purchase_failed`, and `restore_completed` events from those native-IAP states; never attach receipts, transaction IDs, purchase tokens, localized price text, or raw provider errors.
