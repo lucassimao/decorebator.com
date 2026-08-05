@@ -114,6 +114,43 @@ The later additive IAP schema must provide these database-enforced constraint sh
 
 The current `subscription_events.external_event_id UNIQUE` table is not the target contract: it has no explicit store/environment namespace and existing code performs a separate existence check before insert. New provider ingestion must claim the inbox row with one atomic insert (`INSERT ... ON CONFLICT`) and apply the entitlement change in the same database transaction. The exact inbox state machine, retry result, and out-of-order comparison belong to the next server-operations item; this item defines the keys and constraints that operation must use.
 
+## Server operation contract
+
+All operations return a stable outcome/code and never infer entitlement from a client callback. `CanGrantAccess` is true only for an `applied` result whose verified status is `active` or `grace_period`; the persisted entitlement must still pass its exclusive period-end check.
+
+| Outcome | API/worker meaning | Entitlement effect |
+| --- | --- | --- |
+| `applied` | A newer verified provider state was committed atomically. | Apply the full canonical state; `revoked` removes access immediately. |
+| `unchanged` | Verified state is older than the current stored provider version or produces no transition. | No change; return current entitlement. |
+| `pending` | Provider confirms an incomplete purchase. | Persist pending evidence if useful, grant no access, and allow later refresh. |
+| `duplicate` | Event inbox already contains the delivery key. | The future handler retrieves and returns the prior result stored on that inbox row; the pure decision model emits only `duplicate_event` and never runs a second transition. |
+| `retry` | Provider timeout, rate limit, temporary 5xx, or transient infrastructure failure. | No entitlement change; keep/mark inbox retryable with bounded backoff. |
+| `rejected` | Invalid evidence/signature/app, account mismatch, or unknown product. | No entitlement change; store only safe audit metadata and a stable rejection code. |
+
+Permanent result codes are `invalid_purchase`, `account_mismatch`, and `unknown_product`; transient provider failures use `retryable_provider_error`; duplicate and stale deliveries use `duplicate_event` and `stale_provider_event`. Unknown enum/status values are invalid evidence and fail closed.
+
+### Verify purchase
+
+1. Authenticate the app session and ignore any request-body `userId`.
+2. Verify signed Apple evidence or the Google purchase token with the provider, including app/bundle/package, environment, product, and provider time.
+3. Resolve the user through the server-issued account identity and reject a missing/mismatched binding.
+4. Reject unknown products before entitlement mutation; product metadata from mobile is never authoritative.
+5. In one database transaction, upsert the mutable purchase record, compare provider ordering data, apply the canonical entitlement if newer, and persist the operation result. Pending returns success-with-pending but never premium access.
+
+### Restore and status refresh
+
+Restore is provider refresh, not ownership claiming. Apple transactions and Google tokens must resolve through an existing exact account binding; the currently signed-in user cannot take over an unbound or differently bound purchase. Refresh all known purchase lineages for the account, apply each newer verified state atomically, and return the resulting current entitlement. Empty restore is a successful no-entitlement result; transient provider failures are retryable; invalid or mismatched evidence is rejected.
+
+### Provider notification ingestion
+
+1. Authenticate the Pub/Sub push envelope or verify Apple JWS before trusting payload fields.
+2. Atomically claim the transport key. A completed duplicate returns success immediately; a retryable prior attempt may be reclaimed under a bounded lease.
+3. Resolve the stored purchase binding, then query the provider source of truth rather than applying RTDN/notification type alone.
+4. Compare provider occurrence/version data against the stored provider occurrence/version under the entitlement row lock; never compare provider time with server `lastVerifiedAt`. Older or equal state is `unchanged`; newer pending, active, grace, hold/pause/expiry, or revocation state is applied according to the lifecycle contract.
+5. Commit inbox result and entitlement mutation together. A crash before commit leaves neither applied; a crash after commit is a duplicate on redelivery.
+
+Invalid authentication/signatures receive a permanent rejection and no provider API call. Unknown products and account mismatches are permanently rejected, audited without raw tokens/payloads, and surfaced to monitoring. Transient provider/API/database failures remain retryable and must not be acknowledged as successfully applied. Structured logs must use record/event digests and stable result codes; identity structs or raw Google tokens must never be formatted into logs.
+
 ## Canonical statuses and access
 
 | Status | Grants premium access? | Meaning |
