@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -22,6 +23,10 @@ type DefinitionFetcherArgs struct {
 }
 
 func (DefinitionFetcherArgs) Kind() string { return "DefinitionFetcher" }
+
+func (w *DefinitionFetcherWorker) Timeout(*river.Job[DefinitionFetcherArgs]) time.Duration {
+	return 6 * time.Minute
+}
 
 type DefinitionFetcherWorker struct {
 	river.WorkerDefaults[DefinitionFetcherArgs]
@@ -94,7 +99,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	logger.InfoContext(ctx, "fetching definitions", "word", word.Name, "language", languageCode, "pronunciationSystem", pronunciationSystem)
 
 	span := sentry.StartSpan(ctx, "openai.definition.generate", sentry.WithDescription("openai.GetDefinition"))
-	definitionData, err := openai.GetDefinition(word.Name, languageCode, pronunciationSystem)
+	definitionData, err := openai.GetDefinition(span.Context(), word.Name, languageCode, pronunciationSystem)
 	span.Finish()
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to fetch definitions using openai", "error", err)
@@ -143,17 +148,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 		return err
 	}
-	defer func() {
-		if err == nil {
-			if commitErr := tx.Commit(ctx); commitErr != nil {
-				logger.Error("failed to commit transaction in definition fetcher worker", "error", commitErr)
-			}
-		} else {
-			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
-				logger.Error("failed to rollback transaction in definition fetcher worker", "error", rollbackErr)
-			}
-		}
-	}()
+	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
 
 	span = sentry.StartSpan(ctx, "db.definition.save", sentry.WithDescription("definitionService.SaveDefinition"))
 	definitions, err := w.definitionService.SaveDefinition(span.Context(), word.ID, definitionData.Definitions, &tx)
@@ -196,8 +191,11 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 
 		if definition.Meaning != "" {
-			response, audioErr := openai.GenerateAudio(definition.Meaning, languageCode)
+			response, audioErr := openai.GenerateAudio(ctx, definition.Meaning, languageCode)
 			if audioErr != nil {
+				if ctxErr := ctx.Err(); ctxErr != nil {
+					return ctxErr
+				}
 				logger.Error("failed to generate meaning audio", "definitionId", definition.ID, "error", audioErr)
 			} else if response.Error != nil {
 				logger.Error("OpenAI error generating meaning audio", "definitionId", definition.ID, "error", response.Error)
@@ -230,6 +228,9 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	}
 
 	logger.Info("definitions fetched", "count", len(definitions))
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit definition transaction: %w", err)
+	}
 	return nil
 }
 

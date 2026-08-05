@@ -1,12 +1,9 @@
 package openai
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
 
 	"decorebator.com/internal/common"
 )
@@ -41,7 +38,7 @@ type EphemeralTokenResponse struct {
 }
 
 // CreateEphemeralToken creates an ephemeral API key for WebRTC connection to OpenAI Realtime API
-func CreateEphemeralToken(wordlistName string, languageCode string) (*EphemeralTokenResponse, error) {
+func CreateEphemeralToken(ctx context.Context, wordlistName string, languageCode string) (*EphemeralTokenResponse, error) {
 	logger := common.Logger.With("func", "CreateEphemeralToken", "package", "openai", "wordlist", wordlistName, "language", languageCode)
 
 	logger.Debug("creating ephemeral token for realtime session")
@@ -62,30 +59,9 @@ func CreateEphemeralToken(wordlistName string, languageCode string) (*EphemeralT
 		},
 	}
 
-	requestBodyBytes, err := json.Marshal(sessionConfig)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling session config: %w", err)
-	}
-
-	req, err := http.NewRequest("POST", "https://api.openai.com/v1/realtime/client_secrets", bytes.NewBuffer(requestBodyBytes))
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("OPENAI_API_KEY")))
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
+	body, _, err := doJSON(ctx, realtimeTimeout, "/realtime/client_secrets", sessionConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to request ephemeral token API: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	var tokenResponse EphemeralTokenResponse

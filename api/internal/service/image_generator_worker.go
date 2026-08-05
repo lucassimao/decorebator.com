@@ -24,6 +24,10 @@ type ImageGeneratorArgs struct {
 
 func (ImageGeneratorArgs) Kind() string { return "ImageGenerator" }
 
+func (w *ImageGeneratorWorker) Timeout(*river.Job[ImageGeneratorArgs]) time.Duration {
+	return 4 * time.Minute
+}
+
 type ImageGeneratorWorker struct {
 	river.WorkerDefaults[ImageGeneratorArgs]
 	definitionService      *DefinitionService
@@ -101,7 +105,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	logger.Debug(prompt)
 
 	span := sentry.StartSpan(ctx, "openai.image.generate", sentry.WithDescription("openai.GenerateImage"))
-	data, err := generateWithOpenAI(prompt)
+	data, err := generateWithOpenAI(span.Context(), prompt)
 	span.Finish()
 
 	if err != nil {
@@ -220,10 +224,10 @@ func buildImagePrompt(sentence, token, meaning, languageCode string) (string, er
 	return fmt.Sprintf(template, sentence, token, meaning), nil
 }
 
-func generateWithOpenAI(prompt string) ([]byte, error) {
+func generateWithOpenAI(ctx context.Context, prompt string) ([]byte, error) {
 	var logger = common.Logger.With("func", "generateWithOpenAI")
 
-	response, err := openai.GenerateImage(prompt)
+	response, err := openai.GenerateImage(ctx, prompt)
 
 	if err != nil {
 		// [TODO] track potential causes here and decide if return nil or not

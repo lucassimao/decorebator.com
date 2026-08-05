@@ -1,12 +1,9 @@
 package openai
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
 	"strings"
 )
 
@@ -67,7 +64,7 @@ func baseLanguageCode(languageCode string) string {
 	return normalized
 }
 
-func GenerateAudio(text string, languageCode string) (*GenerateAudioResponse, error) {
+func GenerateAudio(ctx context.Context, text string, languageCode string) (*GenerateAudioResponse, error) {
 	voice := getVoiceForLanguage(languageCode)
 	instructions := getInstructionsForLanguage(languageCode, text)
 
@@ -78,32 +75,9 @@ func GenerateAudio(text string, languageCode string) (*GenerateAudioResponse, er
 		"instructions": instructions,
 	}
 
-	var requestBody, err = json.Marshal(requestBodyStruct)
+	body, responseContentType, err := doJSON(ctx, audioTimeout, "/audio/speech", requestBodyStruct)
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling request data: %w", err)
-	}
-
-	req, err := http.NewRequest("POST", "https://api.openai.com/v1/audio/speech", bytes.NewBuffer(requestBody))
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("OPENAI_API_KEY")))
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to request API endpoint: %w", err)
-	}
-	defer resp.Body.Close()
-
-	responseContentType := resp.Header.Get("content-type")
-	body, err := io.ReadAll(resp.Body)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, err
 	}
 
 	var generateAudioResponse GenerateAudioResponse

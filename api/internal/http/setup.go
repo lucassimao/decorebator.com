@@ -89,8 +89,6 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.POST("/wordlists/:wordlistId/words", CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionAddWord), WordRoutes.Create)
 		authenticatedRoutes.POST("/wordlists/:wordlistId/quizzes", quizRoutes.Create)
 		authenticatedRoutes.PATCH("/wordlists/:wordlistId/quizzes", quizRoutes.Save)
-		// Chat session endpoint - premium only
-		authenticatedRoutes.POST("/wordlists/:wordlistId/chat/session", CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionChatSession), WordlistRoutes.CreateChatSession)
 		authenticatedRoutes.POST("/errorReports", RateLimitErrorReports(appCtx.Database), ErrorReportsRoutes.Create)
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus(appCtx.Database))
 
@@ -112,6 +110,17 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.POST("/push/unregister", PushNotificationRoutes.Unregister)
 
 	}
+
+	// OpenAI Realtime token creation needs a wider provider-call budget than
+	// ordinary authenticated database routes while retaining the same guards.
+	chatRoutes := router.Group("/")
+	chatRoutes.Use(Authenticate, ResolveEffectiveSubscription(appCtx.EffectiveAccessService), SentryUserContextMiddleware())
+	chatRoutes.Use(TimeoutMiddleware(15 * time.Second))
+	chatRoutes.POST(
+		"/wordlists/:wordlistId/chat/session",
+		CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionChatSession),
+		WordlistRoutes.CreateChatSession,
+	)
 
 	workerRoutes := router.Group("/static/workers")
 	workerRoutes.Use(AuthenticateStatic)

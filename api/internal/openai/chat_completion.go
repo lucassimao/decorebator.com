@@ -1,12 +1,9 @@
 package openai
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
 	"strings"
 
 	"decorebator.com/internal/common"
@@ -290,37 +287,16 @@ func buildLanguageSpecificPrompt(token string, languageCode string, pronunciatio
 	return messages, nil
 }
 
-func chatCompletion(messages []map[string]string, schema map[string]any) (*ChatCompletionResponse, error) {
+func chatCompletion(ctx context.Context, messages []map[string]string, schema map[string]any) (*ChatCompletionResponse, error) {
 	var requestBodyStruct = map[string]any{
 		"model":           "gpt-4o",
 		"response_format": map[string]any{"type": "json_schema", "json_schema": schema},
 		"messages":        messages,
 	}
 
-	var requestBody, err = json.Marshal(requestBodyStruct)
+	body, _, err := doJSON(ctx, definitionTimeout, "/chat/completions", requestBodyStruct)
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling request data: %w", err)
-	}
-
-	req, err := http.NewRequest("POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("OPENAI_API_KEY")))
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to request API endpoint: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, err
 	}
 
 	var chatResponse ChatCompletionResponse
@@ -342,7 +318,7 @@ type DefinitionWithPronunciation struct {
 	Pronunciation string
 }
 
-func GetDefinition(token string, languageCode string, pronunciationSystem model.PronunciationSystem) (*DefinitionWithPronunciation, error) {
+func GetDefinition(ctx context.Context, token string, languageCode string, pronunciationSystem model.PronunciationSystem) (*DefinitionWithPronunciation, error) {
 	logger := common.Logger.With("token", token, "languageCode", languageCode, "pronunciationSystem", pronunciationSystem, "func", "GetDefinition", "package", "openai")
 
 	logger.Debug("defining token using chatgpt", "token", token, "language", languageCode, "pronunciationSystem", pronunciationSystem)
@@ -362,7 +338,7 @@ func GetDefinition(token string, languageCode string, pronunciationSystem model.
 	}
 
 	var chatResponse *ChatCompletionResponse
-	chatResponse, err = chatCompletion(messages, schema)
+	chatResponse, err = chatCompletion(ctx, messages, schema)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get definitions from ChatGPT: %w", err)
 	}

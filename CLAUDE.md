@@ -254,7 +254,7 @@ All background jobs are processed using **River**, a PostgreSQL-based job queue:
 **Key Features:**
 - Exponential backoff retry strategy
 - Max 5 retries per job
-- 30-second job timeout
+- Explicit per-worker timeouts for provider-backed jobs; River's default is 1 minute when a worker does not override it
 - Duplicate prevention via unique event IDs
 - Comprehensive error logging
 

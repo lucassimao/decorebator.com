@@ -21,6 +21,10 @@ type TextToSpeechArgs struct {
 
 func (TextToSpeechArgs) Kind() string { return "TextToSpeech" }
 
+func (w *TextToSpeechWorker) Timeout(*river.Job[TextToSpeechArgs]) time.Duration {
+	return 2 * time.Minute
+}
+
 type TextToSpeechWorker struct {
 	river.WorkerDefaults[TextToSpeechArgs]
 	wordService           *WordService
@@ -69,7 +73,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 		return err
 	}
 
-	response, err := openai.GenerateAudio(word.Name, languageCode)
+	response, err := openai.GenerateAudio(ctx, word.Name, languageCode)
 	if err != nil {
 		logger.Error("failed to generate audio", "error", err)
 		return err

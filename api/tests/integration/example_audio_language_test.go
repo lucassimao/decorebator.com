@@ -2,7 +2,6 @@ package integration
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -36,20 +35,21 @@ func TestExampleAudioWorkerPassesWordlistLanguageToTTS(t *testing.T) {
 		VALUES ('hola','es','noun','noun','saludo',ARRAY['Hola, mundo.'],'[]'::jsonb,'test') RETURNING id`).Scan(&definitionID))
 
 	var capturedLanguage string
-	generatorFailure := errors.New("stop before upload")
+	workCtx, cancelWork := context.WithCancel(ctx)
 	definitionService := service.NewDefinitionService(db)
 	worker := service.NewExampleAudioWorker(
 		definitionService,
 		service.NewWordService(db, definitionService, nil, nil),
 		nil,
-		func(_ string, languageCode string) (*openai.GenerateAudioResponse, error) {
+		func(requestCtx context.Context, _ string, languageCode string) (*openai.GenerateAudioResponse, error) {
 			capturedLanguage = languageCode
-			return nil, generatorFailure
+			cancelWork()
+			return nil, requestCtx.Err()
 		},
 	)
-	err := worker.Work(ctx, &river.Job[service.ExampleAudioArgs]{Args: service.ExampleAudioArgs{
+	err := worker.Work(workCtx, &river.Job[service.ExampleAudioArgs]{Args: service.ExampleAudioArgs{
 		DefinitionID: definitionID, WordID: wordID,
 	}})
-	require.NoError(t, err)
+	require.ErrorIs(t, err, context.Canceled)
 	require.Equal(t, "es", capturedLanguage)
 }

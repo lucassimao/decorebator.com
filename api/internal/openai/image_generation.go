@@ -1,12 +1,9 @@
 package openai
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
 )
 
 type ImageGenerationResponse struct {
@@ -23,7 +20,7 @@ type ImageGenerationResponse struct {
 	} `json:"error"`
 }
 
-func GenerateImage(prompt string) (*ImageGenerationResponse, error) {
+func GenerateImage(ctx context.Context, prompt string) (*ImageGenerationResponse, error) {
 	var requestBodyStruct = map[string]any{
 		"model":              "gpt-image-1.5",
 		"prompt":             prompt,
@@ -35,30 +32,9 @@ func GenerateImage(prompt string) (*ImageGenerationResponse, error) {
 		"output_format":      "jpeg",
 	}
 
-	var requestBody, err = json.Marshal(requestBodyStruct)
+	body, _, err := doJSON(ctx, imageTimeout, "/images/generations", requestBodyStruct)
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling request data: %w", err)
-	}
-
-	req, err := http.NewRequest("POST", "https://api.openai.com/v1/images/generations", bytes.NewBuffer(requestBody))
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("OPENAI_API_KEY")))
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to request API endpoint: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, err
 	}
 
 	var imageGenerationResponse ImageGenerationResponse

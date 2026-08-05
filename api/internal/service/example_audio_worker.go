@@ -27,6 +27,10 @@ type ExampleAudioArgs struct {
 
 func (ExampleAudioArgs) Kind() string { return "ExampleAudio" }
 
+func (w *ExampleAudioWorker) Timeout(*river.Job[ExampleAudioArgs]) time.Duration {
+	return 10 * time.Minute
+}
+
 type ExampleAudioWorker struct {
 	river.WorkerDefaults[ExampleAudioArgs]
 	definitionService *DefinitionService
@@ -35,7 +39,7 @@ type ExampleAudioWorker struct {
 	audioGenerator    AudioGenerator
 }
 
-type AudioGenerator func(text, languageCode string) (*openai.GenerateAudioResponse, error)
+type AudioGenerator func(ctx context.Context, text, languageCode string) (*openai.GenerateAudioResponse, error)
 
 // NewExampleAudioWorker creates a new example audio worker with dependencies
 func NewExampleAudioWorker(definitionService *DefinitionService, wordService *WordService, userService *UserService, generators ...AudioGenerator) *ExampleAudioWorker {
@@ -94,8 +98,11 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 	// 4. Generate audio for selected examples
 	for _, exampleItem := range selectedExamples {
 		// Generate audio using OpenAI TTS with language-specific voice
-		response, err := w.audioGenerator(exampleItem.ExampleText, wordlistLang)
+		response, err := w.audioGenerator(ctx, exampleItem.ExampleText, wordlistLang)
 		if err != nil {
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return ctxErr
+			}
 			// Log error but continue with other examples
 			logger.Error("failed to generate audio for example", "example", exampleItem.ExampleText, "error", err)
 			continue
@@ -119,6 +126,9 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 		// Upload audio to MinIO storage
 		audioURL, err := w.uploadAudio(ctx, response.Data, job.Args.DefinitionID, exampleItem.ExampleText)
 		if err != nil {
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return ctxErr
+			}
 			logger.Error("failed to upload audio for example", "example", exampleItem.ExampleText, "error", err)
 			continue
 		}
@@ -131,6 +141,9 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 			exampleItem.InflectionType,
 		)
 		if err != nil {
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return ctxErr
+			}
 			logger.Error("failed to save audio record for example", "example", exampleItem.ExampleText, "error", err)
 			continue
 		}
