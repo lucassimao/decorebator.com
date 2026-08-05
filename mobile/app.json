@@ -89,7 +89,8 @@
           "organization": "lucas-apps"
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-iap"
     ],
     "experiments": {
       "typedRoutes": true
