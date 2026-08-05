@@ -63,6 +63,7 @@ type AppleRenewalInfoPayload struct {
 	AutoRenewStatus          int32  `json:"autoRenewStatus"`
 	IsInBillingRetryPeriod   bool   `json:"isInBillingRetryPeriod"`
 	GracePeriodExpiresDateMS int64  `json:"gracePeriodExpiresDate"`
+	ExpirationIntent         int32  `json:"expirationIntent"`
 	Environment              string `json:"environment"`
 	SignedDateMS             int64  `json:"signedDate"`
 }
@@ -130,7 +131,7 @@ func (v *AppleJWSVerifier) VerifyAndDecodeRenewalInfo(signedRenewalInfo string) 
 	if err := v.verifyAndDecode(signedRenewalInfo, &payload); err != nil {
 		return AppleRenewalInfoPayload{}, err
 	}
-	if payload.AutoRenewProductID == "" || payload.TransactionID != "" {
+	if payload.OriginalTransactionID == "" || payload.SignedDateMS <= 0 || payload.TransactionID != "" {
 		return AppleRenewalInfoPayload{}, ErrInvalidAppleSignedData
 	}
 	return payload, nil

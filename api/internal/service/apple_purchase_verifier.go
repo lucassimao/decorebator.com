@@ -11,7 +11,10 @@ import (
 	"github.com/google/uuid"
 )
 
-const appleAutoRenewableSubscription = "Auto-Renewable Subscription"
+const (
+	appleAutoRenewableSubscription = "Auto-Renewable Subscription"
+	premiumEntitlement             = "premium"
+)
 
 type ApplePurchaseVerificationInput struct {
 	AuthenticatedUserID int64
@@ -72,7 +75,7 @@ func NewApplePurchaseVerifier(
 	}
 	productCopy := make(map[string]string, len(products))
 	for productID, entitlement := range products {
-		if strings.TrimSpace(productID) == "" || entitlement != "premium" {
+		if strings.TrimSpace(productID) == "" || entitlement != premiumEntitlement {
 			return nil, fmt.Errorf("invalid Apple product catalog entry")
 		}
 		productCopy[productID] = entitlement
@@ -159,13 +162,7 @@ func (v *ApplePurchaseVerifier) validatePayload(
 	if payload.RevocationDateMS != nil {
 		value := time.UnixMilli(*payload.RevocationDateMS).UTC()
 		revokedAt = &value
-		if payload.RevocationReason != nil {
-			reason := "apple_other"
-			if *payload.RevocationReason == 0 || *payload.RevocationReason == 1 {
-				reason = fmt.Sprintf("apple_%d", *payload.RevocationReason)
-			}
-			revocationReason = &reason
-		}
+		revocationReason = appleRevocationReason(payload.RevocationReason)
 	}
 
 	identity := model.ApplePurchaseIdentity{
@@ -182,6 +179,17 @@ func (v *ApplePurchaseVerifier) validatePayload(
 		Entitlement: entitlement, PurchaseDate: purchaseDate, ExpiresDate: expiresDate,
 		RevokedAt: revokedAt, RevocationReason: revocationReason, ProviderSignedAt: signedAt,
 	}, nil
+}
+
+func appleRevocationReason(reason *int32) *string {
+	if reason == nil {
+		return nil
+	}
+	value := "apple_other"
+	if *reason == 0 || *reason == 1 {
+		value = fmt.Sprintf("apple_%d", *reason)
+	}
+	return &value
 }
 
 func appleEnvironment(value string) (model.StoreEnvironment, bool) {

@@ -23,10 +23,34 @@ const (
 	appleProductionBaseURL = "https://api.storekit.apple.com"
 	appleSandboxBaseURL    = "https://api.storekit-sandbox.apple.com"
 	appleResponseLimit     = 1 << 20
+	appleRequestTimeout    = 15 * time.Second
 )
 
 type AppleTransactionInfoClient interface {
 	GetTransactionInfo(ctx context.Context, transactionID string, environment model.StoreEnvironment) (string, error)
+}
+
+type AppleSubscriptionStatusClient interface {
+	GetSubscriptionStatuses(context.Context, string, model.StoreEnvironment) (AppleSubscriptionStatusResponse, error)
+}
+
+type AppleSubscriptionStatusResponse struct {
+	Environment string                         `json:"environment"`
+	BundleID    string                         `json:"bundleId"`
+	AppAppleID  int64                          `json:"appAppleId"`
+	Data        []AppleSubscriptionStatusGroup `json:"data"`
+}
+
+type AppleSubscriptionStatusGroup struct {
+	SubscriptionGroupIdentifier string                             `json:"subscriptionGroupIdentifier"`
+	LastTransactions            []AppleSubscriptionLastTransaction `json:"lastTransactions"`
+}
+
+type AppleSubscriptionLastTransaction struct {
+	OriginalTransactionID string `json:"originalTransactionId"`
+	Status                int32  `json:"status"`
+	SignedTransactionInfo string `json:"signedTransactionInfo"`
+	SignedRenewalInfo     string `json:"signedRenewalInfo"`
 }
 
 type AppleAPIError struct {
@@ -116,12 +140,14 @@ func (c *AppleAppStoreClient) GetTransactionInfo(
 	if !ok {
 		return "", fmt.Errorf("unsupported Apple API environment %q", environment)
 	}
+	requestContext, cancel := context.WithTimeout(ctx, appleRequestTimeout)
+	defer cancel()
 	token, err := c.authorizationToken()
 	if err != nil {
 		return "", err
 	}
 	request, err := http.NewRequestWithContext(
-		ctx,
+		requestContext,
 		http.MethodGet,
 		baseURL+"/inApps/v1/transactions/"+url.PathEscape(transactionID),
 		nil,
@@ -166,6 +192,64 @@ func (c *AppleAppStoreClient) GetTransactionInfo(
 		return "", fmt.Errorf("decode Apple transaction response")
 	}
 	return result.SignedTransactionInfo, nil
+}
+
+func (c *AppleAppStoreClient) GetSubscriptionStatuses(
+	ctx context.Context,
+	transactionID string,
+	environment model.StoreEnvironment,
+) (AppleSubscriptionStatusResponse, error) {
+	if !validAppleTransactionID(transactionID) {
+		return AppleSubscriptionStatusResponse{}, fmt.Errorf("Apple transaction ID is invalid")
+	}
+	baseURL, ok := c.baseURLs[environment]
+	if !ok {
+		return AppleSubscriptionStatusResponse{}, fmt.Errorf("unsupported Apple API environment %q", environment)
+	}
+	requestContext, cancel := context.WithTimeout(ctx, appleRequestTimeout)
+	defer cancel()
+	token, err := c.authorizationToken()
+	if err != nil {
+		return AppleSubscriptionStatusResponse{}, err
+	}
+	request, err := http.NewRequestWithContext(
+		requestContext, http.MethodGet,
+		baseURL+"/inApps/v1/subscriptions/"+url.PathEscape(transactionID), nil,
+	)
+	if err != nil {
+		return AppleSubscriptionStatusResponse{}, fmt.Errorf("create Apple subscription-status request: %w", err)
+	}
+	request.Header.Set("Authorization", "Bearer "+token)
+	request.Header.Set("Accept", "application/json")
+	response, err := c.httpClient.Do(request)
+	if err != nil {
+		return AppleSubscriptionStatusResponse{}, fmt.Errorf("call Apple subscription-status API: %w", err)
+	}
+	defer response.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(response.Body, appleResponseLimit+1))
+	if err != nil {
+		return AppleSubscriptionStatusResponse{}, fmt.Errorf("read Apple subscription-status response: %w", err)
+	}
+	if len(body) > appleResponseLimit {
+		return AppleSubscriptionStatusResponse{}, fmt.Errorf("Apple subscription-status response exceeds limit")
+	}
+	if response.StatusCode != http.StatusOK {
+		var apiBody struct {
+			ErrorCode int64 `json:"errorCode"`
+		}
+		_ = json.Unmarshal(body, &apiBody)
+		return AppleSubscriptionStatusResponse{}, &AppleAPIError{
+			StatusCode: response.StatusCode, ErrorCode: apiBody.ErrorCode,
+			Retryable: response.StatusCode == http.StatusUnauthorized || response.StatusCode == http.StatusForbidden ||
+				response.StatusCode == http.StatusTooManyRequests || response.StatusCode >= http.StatusInternalServerError ||
+				appleErrorCodeIsRetryable(apiBody.ErrorCode),
+		}
+	}
+	var result AppleSubscriptionStatusResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return AppleSubscriptionStatusResponse{}, fmt.Errorf("decode Apple subscription-status response")
+	}
+	return result, nil
 }
 
 func appleErrorCodeIsRetryable(errorCode int64) bool {

@@ -169,10 +169,9 @@ func (v *AppleNotificationVerifier) validateRenewalInfo(
 ) error {
 	payloadEnvironment, ok := appleEnvironment(payload.Environment)
 	_, knownProduct := v.products[payload.ProductID]
-	_, knownAutoRenewProduct := v.products[payload.AutoRenewProductID]
-	if !ok || payloadEnvironment != environment || !knownProduct || !knownAutoRenewProduct ||
-		payload.OriginalTransactionID == "" || payload.AutoRenewProductID == "" ||
-		payload.TransactionID != "" || payload.SignedDateMS <= 0 {
+	if !ok || payloadEnvironment != environment || !knownProduct || payload.OriginalTransactionID == "" ||
+		payload.TransactionID != "" || payload.SignedDateMS <= 0 || payload.AutoRenewStatus < 0 || payload.AutoRenewStatus > 1 ||
+		(payload.AutoRenewStatus == 1 && payload.AutoRenewProductID == "") {
 		return ErrInvalidAppleSignedData
 	}
 	if transaction != nil && (payload.OriginalTransactionID != transaction.OriginalTransactionID || payload.ProductID != transaction.ProductID) {

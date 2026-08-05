@@ -160,7 +160,7 @@ func TestAppleNotificationVerifierFailsClosedForOuterAndNestedMismatch(t *testin
 		{"unknown transaction product", func(e *fakeAppleNotificationSignedData) { e.transaction.ProductID = "attacker.product" }},
 		{"renewal lineage mismatch", func(e *fakeAppleNotificationSignedData) { e.renewal.OriginalTransactionID = "other" }},
 		{"renewal product mismatch", func(e *fakeAppleNotificationSignedData) { e.renewal.ProductID = "decorebator_annual_premium" }},
-		{"unknown auto-renew product", func(e *fakeAppleNotificationSignedData) { e.renewal.AutoRenewProductID = "attacker.product" }},
+		{"missing enabled auto-renew product", func(e *fakeAppleNotificationSignedData) { e.renewal.AutoRenewProductID = "" }},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
