@@ -86,6 +86,34 @@ The agent may continue through all locally executable milestones without pausing
 - `docs/mockups/<item-id>/DECISION.md` includes the selected variant, rejected alternatives, Claude review outcome, unresolved limitations, acceptance states checked, and the production files expected to change.
 - Prototype approval does not replace Expo implementation tests or Maestro validation; it is the design gate that makes those implementation decisions explicit.
 
+### Animation protocol
+
+Animations are reviewed as behavior, not inferred from screenshots. Any item introducing motion must include an animation spec in its `DECISION.md` covering:
+
+- trigger and user purpose: feedback, navigation, loading, celebration, or state transition;
+- duration, delay, easing, properties, repeat count, and interruption/cancellation behavior;
+- reduced-motion behavior and a non-animated fallback that preserves comprehension and access to the action;
+- loading/error/offline behavior, unmount cleanup, and whether motion can block input;
+- performance budget and the chosen implementation: Reanimated for interactive, gesture-driven, spring, scroll, and interruptible motion; the existing native-driver `Animated` API only as a temporary compatibility path while a touched surface is migrated; and Lottie only for finite decorative illustrations that justify the asset cost. State whether each animation is new or a migration of existing `Animated` code, and do not leave both systems driving the same component.
+
+For each animated UI prototype:
+
+1. Implement the motion first in the HTML/React mockup with CSS transitions/keyframes or a small state machine to explore timing and hierarchy; capture a short screen recording or frame sequence at both phone widths.
+2. If the motion is interactive, gesture-driven, spring-based, scroll-driven, interruptible, or platform-sensitive, build a small Expo/Reanimated spike before approval. CSS alone is not evidence that native motion will feel or perform correctly.
+3. Ask Claude to review the prototype and, where applicable, the Expo spike for timing, hierarchy, motion meaning, interruption, reduced-motion fallback, and whether the animation is helping or distracting; revise within the same three-round consensus limit. If consensus is not reached after three rounds, stop the item at `[b] BLOCKED — owner decision` with the competing options and evidence; do not implement an unresolved motion choice autonomously.
+4. Implement the approved behavior in Expo with deterministic state tests, reduced-motion tests, cleanup/unmount coverage, and no animation-dependent assertions in Maestro; Maestro should wait for the resulting accessible state instead.
+5. Check the affected flow on the Android emulator for visible jank, input lock, layout shift, and completion-state correctness; this is not evidence of iOS parity. Before an interactive, gesture-driven, spring, or haptic animation ships, require a physical-device pass on both iOS and Android for gesture latency, jank, interruption, and haptic fallback. If the devices or credentials are unavailable, finish all automatable checks and mark only the release gate `[b]` with the exact owner action.
+
+Animation acceptance requires that the action and its result remain understandable with motion disabled, repeated taps do not create duplicate transitions, interrupted animations settle into a valid state, and the implementation does not introduce an obvious frame-rate or startup regression. The Claude diff review and static validation must also identify the animation system used by each touched component and fail the item if one component is driven by both legacy `Animated` and Reanimated.
+
+The motion toolbox is selected by behavior, not novelty:
+
+- Reanimated plus Gesture Handler for native, interruptible transitions, drag/swipe gestures, springs, scroll-linked effects, and shared-element-like choreography. Because neither is currently a direct mobile dependency, the first spike that needs them must add `react-native-reanimated` and `react-native-gesture-handler`, configure the Reanimated Babel/plugin requirements, provide the gesture-handler root wrapper, and confirm Expo 54/RN 0.81.5 New Architecture compatibility before feature work proceeds.
+- SVG or ordinary React Native views for lightweight programmatic shapes, loaders, progress, and feedback that should remain themeable and accessible.
+- Lottie for finite, authored vector illustrations such as onboarding or completion moments; keep the asset local, bounded, cancellable, and replaceable by a static fallback. The app already has `lottie-react-native`, but each asset still needs a bundle-size and reduced-motion review.
+- Image generation for visual exploration, custom static illustrations, texture/background concepts, and storyboard frames that help choose motion. Generated raster art is not treated as an interactive animation implementation or as a substitute for a tested native animation asset.
+- Haptics and sound only as optional reinforcement of a visible state change, with permission/platform checks and a silent fallback.
+
 ### Blocked protocol
 
 When an item needs owner-only access—production subscription data, App Store Connect, Google Play Console, Apple/Google credentials, a real device, store review, PostHog, or a paid external service—complete every automatable part first. Mark the item `[b] BLOCKED — owner action: <exact steps for Lucas>` and list the evidence already produced. Never fabricate live purchase, notification, store-review, production, or analytics evidence.
