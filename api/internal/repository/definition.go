@@ -487,15 +487,15 @@ func (repository *DefinitionRepository) CreateExampleAudio(ctx context.Context, 
 	return err
 }
 
-func (repository *DefinitionRepository) UpdateMeaningAudioURL(ctx context.Context, definitionID int64, audioURL string, tx *pgx.Tx) error {
-	query := `UPDATE definitions SET meaning_audio_url = $1 WHERE id = $2`
-
-	if tx != nil {
-		_, err := (*tx).Exec(ctx, query, audioURL, definitionID)
-		return err
+func (repository *DefinitionRepository) SetMeaningAudioURLIfEmpty(ctx context.Context, definitionID int64, audioURL string) (bool, error) {
+	command, err := repository.Db.Exec(ctx, `
+		UPDATE definitions
+		SET meaning_audio_url = $1, updated_at = NOW()
+		WHERE id = $2 AND COALESCE(meaning_audio_url, '') = ''`, audioURL, definitionID)
+	if err != nil {
+		return false, err
 	}
-	_, err := repository.Db.Exec(ctx, query, audioURL, definitionID)
-	return err
+	return command.RowsAffected() == 1, nil
 }
 
 func (repository *DefinitionRepository) GetLeastUsedExampleAudio(ctx context.Context, definitionID int64) (*model.DefinitionExampleAudio, error) {

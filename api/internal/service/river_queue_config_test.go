@@ -11,9 +11,10 @@ func TestWorkerQueueConfigCapsAndLegacyGating(t *testing.T) {
 		river.QueueDefault:              100,
 		ImageGeneratorQueue:             5,
 		TextToSpeechQueue:               30,
-		DefinitionFetcherQueue:          4,
+		DefinitionFetcherQueue:          2,
 		SubscriptionReminderQueue:       10,
 		ExampleAudioQueue:               20,
+		MeaningAudioQueue:               2,
 		PushNotificationQueue:           5,
 		GoogleAcknowledgementRetryQueue: 5,
 	}
@@ -34,8 +35,8 @@ func TestWorkerQueueConfigCapsAndLegacyGating(t *testing.T) {
 		wantTotal     int
 		wantQueues    int
 	}{
-		{name: "IAP-only", legacyEnabled: false, wantTotal: 179, wantQueues: 8},
-		{name: "legacy rollback surface", legacyEnabled: true, wantTotal: 189, wantQueues: 10},
+		{name: "IAP-only", legacyEnabled: false, wantTotal: 179, wantQueues: 9},
+		{name: "legacy rollback surface", legacyEnabled: true, wantTotal: 189, wantQueues: 11},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -69,9 +70,16 @@ func TestDefinitionQueueCannotMonopolizeWorkerDatabasePool(t *testing.T) {
 	definitionWorkers := workerQueueConfig(false)[DefinitionFetcherQueue].MaxWorkers
 	if int32(definitionWorkers) >= WorkerDatabaseMaxConnections {
 		t.Fatalf(
-			"definition MaxWorkers = %d must stay below worker DB MaxConns = %d until meaning audio leaves the transaction",
+			"definition MaxWorkers = %d must stay below worker DB MaxConns = %d until production capacity is measured",
 			definitionWorkers,
 			WorkerDatabaseMaxConnections,
+		)
+	}
+	meaningAudioWorkers := workerQueueConfig(false)[MeaningAudioQueue].MaxWorkers
+	if definitionWorkers+meaningAudioWorkers != 4 {
+		t.Fatalf(
+			"definition + meaning-audio MaxWorkers = %d, want the pre-extraction provider budget 4",
+			definitionWorkers+meaningAudioWorkers,
 		)
 	}
 }

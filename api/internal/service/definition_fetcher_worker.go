@@ -12,6 +12,7 @@ import (
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/openai"
 	"github.com/getsentry/sentry-go"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 )
@@ -191,22 +192,12 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 
 		if definition.Meaning != "" {
-			response, audioErr := openai.GenerateAudio(ctx, definition.Meaning, languageCode)
-			if audioErr != nil {
-				if ctxErr := ctx.Err(); ctxErr != nil {
-					return ctxErr
-				}
-				logger.Error("failed to generate meaning audio", "definitionId", definition.ID, "error", audioErr)
-			} else if response.Error != nil {
-				logger.Error("OpenAI error generating meaning audio", "definitionId", definition.ID, "error", response.Error)
-			} else {
-				audioURL, uploadErr := common.Upload(ctx, response.Data, "decorebator",
-					fmt.Sprintf("audio/meaning-%d.mp3", definition.ID), "audio/mpeg")
-				if uploadErr != nil {
-					logger.Error("failed to upload meaning audio", "definitionId", definition.ID, "error", uploadErr)
-				} else if updateErr := w.definitionService.UpdateMeaningAudioURL(ctx, definition.ID, audioURL, &tx); updateErr != nil {
-					logger.Error("failed to save meaning audio url", "definitionId", definition.ID, "error", updateErr)
-				}
+			// Meaning audio is quiz content, not best-effort decoration. Persist the
+			// definition and its durable outbox job as one unit so a queue insert
+			// failure retries the definition job instead of committing a definition
+			// that can never gain meaning audio.
+			if err := scheduleRequiredMeaningAudio(ctx, w.jobService, definition.ID, word.ID, job.Args.UserID, &tx); err != nil {
+				return err
 			}
 		}
 	}
@@ -230,6 +221,13 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	logger.Info("definitions fetched", "count", len(definitions))
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("failed to commit definition transaction: %w", err)
+	}
+	return nil
+}
+
+func scheduleRequiredMeaningAudio(ctx context.Context, jobService JobService, definitionID, wordID int64, userID *int64, tx *pgx.Tx) error {
+	if err := jobService.ScheduleMeaningAudioJob(ctx, definitionID, wordID, userID, tx); err != nil {
+		return fmt.Errorf("failed to queue required meaning audio for definition %d: %w", definitionID, err)
 	}
 	return nil
 }

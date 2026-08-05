@@ -19,15 +19,17 @@ const TextToSpeechQueue = "text_to_speech"
 const DefinitionFetcherQueue = "definition_fetcher"
 const SubscriptionReminderQueue = "subscription_reminder"
 const ExampleAudioQueue = "example_audio"
+const MeaningAudioQueue = "meaning_audio"
 const PushNotificationQueue = "push_notification"
 
 // WorkerDatabaseMaxConnections is the worker process's database budget. Keep
-// DefinitionFetcherQueueMaxWorkers below this value: definition jobs currently
-// hold a transaction while producing meaning audio, so they must not be able to
-// monopolize the pool.
+// definition work below this value and preserve the combined definition plus
+// meaning-audio provider budget until production queue and pool data justify an
+// increase.
 const WorkerDatabaseMaxConnections int32 = 10
 const WorkerDatabaseMinConnections int32 = 2
-const DefinitionFetcherQueueMaxWorkers = 4
+const DefinitionFetcherQueueMaxWorkers = 2
+const MeaningAudioQueueMaxWorkers = 2
 
 func workerQueueConfig(legacyProviderSurfaceEnabled bool) map[string]river.QueueConfig {
 	queues := map[string]river.QueueConfig{
@@ -37,6 +39,7 @@ func workerQueueConfig(legacyProviderSurfaceEnabled bool) map[string]river.Queue
 		DefinitionFetcherQueue:          {MaxWorkers: DefinitionFetcherQueueMaxWorkers},
 		SubscriptionReminderQueue:       {MaxWorkers: 10},
 		ExampleAudioQueue:               {MaxWorkers: 20},
+		MeaningAudioQueue:               {MaxWorkers: MeaningAudioQueueMaxWorkers},
 		PushNotificationQueue:           {MaxWorkers: 5},
 		GoogleAcknowledgementRetryQueue: {MaxWorkers: 5},
 	}
@@ -86,6 +89,7 @@ func NewWorkerRiverClient(
 	river.AddWorker(riverWorkers, NewTextToSpeechWorker(wordService, definitionService, leitnerSystemStrategy, userService))
 	river.AddWorker(riverWorkers, NewDefinitionFetcherWorker(db, wordService, definitionService, jobService, leitnerSystemStrategy, leitnerSystemStrategy.leitnerTrackingService, userService))
 	river.AddWorker(riverWorkers, NewExampleAudioWorker(definitionService, wordService, userService))
+	river.AddWorker(riverWorkers, NewMeaningAudioWorker(definitionService, wordService, userService))
 	river.AddWorker(riverWorkers, &SubscriptionReminderWorker{
 		db:          db,
 		subRepo:     repository.NewSubscriptionRepository(db),

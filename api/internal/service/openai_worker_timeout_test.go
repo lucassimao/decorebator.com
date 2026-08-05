@@ -15,6 +15,7 @@ func TestOpenAIWorkersDeclareBudgetsBeyondProviderCalls(t *testing.T) {
 		{"image", (&ImageGeneratorWorker{}).Timeout(nil), 4 * time.Minute},
 		{"definition", (&DefinitionFetcherWorker{}).Timeout(nil), 6 * time.Minute},
 		{"example-audio", (&ExampleAudioWorker{}).Timeout(nil), 10 * time.Minute},
+		{"meaning-audio", (&MeaningAudioWorker{}).Timeout(nil), 2 * time.Minute},
 	}
 	for _, test := range tests {
 		if test.got != test.want {

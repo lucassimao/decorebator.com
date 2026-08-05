@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/openai"
 	repo "decorebator.com/internal/repository"
@@ -71,8 +72,11 @@ func (s *DefinitionService) GetRandomTokens(ctx context.Context, scope Distracto
 
 func (s *DefinitionService) GetDefinitionByID(ctx context.Context, id int64) (*model.Definition, error) {
 	results, err := s.definitionRepository.Find(ctx, repo.FindArgs{ID: &id})
-	if err != nil || len(results) == 0 {
-		return nil, nil
+	if err != nil {
+		return nil, fmt.Errorf("failed to find definition %d: %w", id, err)
+	}
+	if len(results) == 0 {
+		return nil, common.NotFoundError{ID: id, Entity: "definition"}
 	}
 	return results[0], nil
 }
@@ -107,8 +111,8 @@ func (s *DefinitionService) CreateExampleAudio(ctx context.Context, definitionID
 	return s.definitionRepository.CreateExampleAudio(ctx, definitionID, exampleText, audioURL, inflectionType)
 }
 
-func (s *DefinitionService) UpdateMeaningAudioURL(ctx context.Context, definitionID int64, audioURL string, tx *pgx.Tx) error {
-	return s.definitionRepository.UpdateMeaningAudioURL(ctx, definitionID, audioURL, tx)
+func (s *DefinitionService) SetMeaningAudioURLIfEmpty(ctx context.Context, definitionID int64, audioURL string) (bool, error) {
+	return s.definitionRepository.SetMeaningAudioURLIfEmpty(ctx, definitionID, audioURL)
 }
 
 // NormalizePartOfSpeech converts a language-specific part-of-speech to normalized English

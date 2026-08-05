@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"decorebator.com/internal/common"
 	"github.com/riverqueue/river"
 )
 
@@ -46,5 +47,18 @@ func TestImageGeneratorErrorReportWithoutStrategyCancelsInsteadOfPanicking(t *te
 	var cancelErr *river.JobCancelError
 	if !errors.As(err, &cancelErr) {
 		t.Fatalf("expected JobCancelError to prevent paid retries, got %T: %v", err, err)
+	}
+}
+
+func TestImageDefinitionLookupRetriesTransientErrorsAndCancelsNotFound(t *testing.T) {
+	transient := errors.New("database temporarily unavailable")
+	if got := imageDefinitionLookupError(transient); !errors.Is(got, transient) {
+		t.Fatalf("transient lookup error = %v, want retryable original", got)
+	}
+
+	notFound := common.NotFoundError{ID: 42, Entity: "definition"}
+	var cancelErr *river.JobCancelError
+	if got := imageDefinitionLookupError(notFound); !errors.As(got, &cancelErr) {
+		t.Fatalf("not-found lookup error = %T %v, want JobCancelError", got, got)
 	}
 }

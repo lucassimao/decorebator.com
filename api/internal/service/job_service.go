@@ -16,6 +16,7 @@ type JobService interface {
 	ScheduleAudioJob(ctx context.Context, wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
 	ScheduleDefinitionJob(ctx context.Context, wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
 	ScheduleExampleAudioJob(ctx context.Context, definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
+	ScheduleMeaningAudioJob(ctx context.Context, definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
 	ScheduleStripeWebhookJob(ctx context.Context, eventID, eventType string, eventData []byte) (int64, error)
 	ScheduleRevenueCatWebhookJob(ctx context.Context, eventType string, eventData []byte) (int64, error)
 	RetryJob(ctx context.Context, jobID int64) error
@@ -77,6 +78,32 @@ func (js *JobServiceImpl) ScheduleExampleAudioJob(ctx context.Context, definitio
 		return err
 	}
 	_, err := js.riverClient.Insert(ctx, args, opts)
+	return err
+}
+
+func meaningAudioInsertOpts() *river.InsertOpts {
+	return &river.InsertOpts{
+		Queue:       MeaningAudioQueue,
+		MaxAttempts: 5,
+		UniqueOpts: river.UniqueOpts{
+			ByArgs:  true,
+			ByQueue: true,
+		},
+	}
+}
+
+func (js *JobServiceImpl) ScheduleMeaningAudioJob(ctx context.Context, definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error {
+	args := MeaningAudioArgs{
+		DefinitionID: definitionID,
+		WordID:       wordID,
+		UserID:       userID,
+	}
+
+	if tx != nil {
+		_, err := js.riverClient.InsertTx(ctx, *tx, args, meaningAudioInsertOpts())
+		return err
+	}
+	_, err := js.riverClient.Insert(ctx, args, meaningAudioInsertOpts())
 	return err
 }
 

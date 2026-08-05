@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"regexp"
@@ -70,7 +71,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	definition, err := w.definitionService.GetDefinitionByID(ctx, job.Args.DefinitionId)
 	if err != nil {
 		logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
-		return river.JobCancel(err)
+		return imageDefinitionLookupError(err)
 	}
 
 	// Get language for language-aware image generation
@@ -145,6 +146,13 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		return w.resolveErrorReport(ctx, definitionID, *job.Args.ErrorReport)
 	}
 	return nil
+}
+
+func imageDefinitionLookupError(err error) error {
+	if errors.Is(err, common.NotFoundError{}) {
+		return river.JobCancel(err)
+	}
+	return err
 }
 
 func (w *ImageGeneratorWorker) resolveErrorReport(ctx context.Context, definitionID int64, report ErrorReport) error {
