@@ -246,13 +246,17 @@ Gate 1 acceptance — complete:
 
 ### Backend
 
-- [ ] Implement Apple purchase verification using signed transaction data/JWS and the App Store Server API.
+- [x] Implement Apple purchase verification using signed transaction data/JWS and the App Store Server API.
 - [ ] Implement Apple App Store Server Notifications V2 with production and sandbox environment handling, signature validation, replay protection, and atomic event idempotency.
 - [ ] Implement Google purchase verification through the Play Developer API.
 - [ ] Handle Google pending purchases and acknowledgement; do not grant access from an unverified client callback.
 - [ ] Implement Google Real-time Developer Notifications, Pub/Sub authentication, redelivery handling, and atomic event idempotency.
 - [ ] Add store-specific secrets/configuration with startup validation and safe error reporting.
 - [ ] Add unit and integration tests for grant, renew, cancel, grace/pending, refund/revoke, restore, invalid receipt, duplicate receipt, duplicate notification, and out-of-order notification.
+
+Phase 2 progress:
+
+- **2026-08-04 — Apple transaction verification boundary complete.** Added a bounded App Store Server API `Get Transaction Info` client with five-minute ES256 authorization, production-first lookup, and sandbox fallback only for Apple's documented `4040010`; Apple retryable error codes remain retryable independently of HTTP status. Added a Go-native signed-transaction verifier matching Apple's published ES256/x5c profile: exactly three certificates, pinned Apple root, Apple leaf/intermediate OIDs, certificate validity at `signedDate`, and a raw P-256 signature check. The purchase verifier then enforces authenticated account binding, exact app-account UUID, bundle, environment, transaction ID, auto-renewable product type, and the server product allowlist before returning redacted transaction evidence. It deliberately does not derive entitlement status or auto-renew state from transaction dates; verified renewal JWS from Get All Subscription Statuses is required before the later atomic entitlement operation. Claude review began with `fable` and used the allowed temporary `opus` fallback; it found status overreach, Apple retry-code, malformed-ID, and adversarial-test gaps. All were corrected, and the final `fable` reconciliation returned `APPROVED`. Targeted race tests, changed-file lint, `go vet`, formatting, and diff checks pass; no route, persistence mutation, or production provider call is enabled by this item.
 
 ### Mobile
 
