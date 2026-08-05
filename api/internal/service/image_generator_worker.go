@@ -29,13 +29,15 @@ type ImageGeneratorWorker struct {
 	definitionService      *DefinitionService
 	definitionImageService *DefinitionImageService
 	userService            *UserService
+	leitnerSystemStrategy  *LeitnerSystemStrategy
 }
 
-func NewImageGeneratorWorker(definitionService *DefinitionService, definitionImageService *DefinitionImageService, userService *UserService) *ImageGeneratorWorker {
+func NewImageGeneratorWorker(definitionService *DefinitionService, definitionImageService *DefinitionImageService, userService *UserService, leitnerSystemStrategy *LeitnerSystemStrategy) *ImageGeneratorWorker {
 	return &ImageGeneratorWorker{
 		definitionService:      definitionService,
 		definitionImageService: definitionImageService,
 		userService:            userService,
+		leitnerSystemStrategy:  leitnerSystemStrategy,
 	}
 }
 
@@ -136,10 +138,16 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	// if this job was triggered by an error report, then mark the issue as solved
 	if job.Args.ErrorReport != nil {
-		var strategy LeitnerSystemStrategy
-		return strategy.MarkErrorResolved(ctx, *job.Args.ErrorReport)
+		return w.resolveErrorReport(ctx, definitionID, *job.Args.ErrorReport)
 	}
 	return nil
+}
+
+func (w *ImageGeneratorWorker) resolveErrorReport(ctx context.Context, definitionID int64, report ErrorReport) error {
+	if w.leitnerSystemStrategy == nil {
+		return river.JobCancel(fmt.Errorf("no leitner strategy configured for definition %d", definitionID))
+	}
+	return w.leitnerSystemStrategy.MarkErrorResolved(ctx, report)
 }
 
 // buildImagePrompt creates a language-specific prompt for image generation
@@ -209,7 +217,7 @@ func buildImagePrompt(sentence, token, meaning, languageCode string) (string, er
 		return "", fmt.Errorf("unsupported language: %s", languageCode)
 	}
 
-	return fmt.Sprintf(template, sentence, token, meaning, token), nil
+	return fmt.Sprintf(template, sentence, token, meaning), nil
 }
 
 func generateWithOpenAI(prompt string) ([]byte, error) {

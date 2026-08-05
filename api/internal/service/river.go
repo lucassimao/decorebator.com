@@ -54,7 +54,9 @@ func NewWorkerRiverClient(
 	legacyProviderSurfaceEnabled bool,
 ) (*river.Client[pgx.Tx], error) {
 	riverWorkers := river.NewWorkers()
-	river.AddWorker(riverWorkers, NewImageGeneratorWorker(definitionService, definitionImageService, userService))
+	river.AddWorker(riverWorkers, NewImageGeneratorWorker(
+		definitionService, definitionImageService, userService, leitnerSystemStrategy,
+	))
 	river.AddWorker(riverWorkers, NewTextToSpeechWorker(wordService, definitionService, leitnerSystemStrategy, userService))
 	river.AddWorker(riverWorkers, NewDefinitionFetcherWorker(db, wordService, definitionService, jobService, leitnerSystemStrategy, leitnerSystemStrategy.leitnerTrackingService, userService))
 	river.AddWorker(riverWorkers, NewExampleAudioWorker(definitionService, wordService, userService))
