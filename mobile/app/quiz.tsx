@@ -55,6 +55,8 @@ import {
 const QuizScreen: React.FC = () => {
   const navigation = useNavigation();
   const { wordlistId, wordlistName } = useLocalSearchParams();
+  const displayWordlistName =
+    typeof wordlistName === "string" ? wordlistName : "";
   const { t } = useTranslation();
   const posthog = usePostHog();
   const { user, isPremium } = useUserSession();
@@ -527,7 +529,7 @@ const QuizScreen: React.FC = () => {
     return (
       <SafeAreaView style={[commonStyles.safeArea, styles.container]}>
         <QuizHeader
-          wordlistName={String(wordlistName)}
+          wordlistName={displayWordlistName}
           correctCount={correctCount}
           quizCount={quizCount}
           isOnline={isOnline}
@@ -559,7 +561,7 @@ const QuizScreen: React.FC = () => {
       <OfflineIndicator />
 
       <QuizHeader
-        wordlistName={String(wordlistName)}
+        wordlistName={displayWordlistName}
         correctCount={correctCount}
         quizCount={quizCount}
         isOnline={isOnline}
