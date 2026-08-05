@@ -1,0 +1,1026 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Adaptive flashcard practice prototype</title>
+    <style>
+      @font-face {
+        font-family: "Space Mono";
+        src: url("../../../mobile/assets/fonts/SpaceMono-Regular.ttf")
+          format("truetype");
+      }
+      :root {
+        --canvas: #e9e3d6;
+        --paper: #fffaf0;
+        --surface: #fffefb;
+        --ink: #272b2d;
+        --muted: #666863;
+        --line: #ded7c9;
+        --control-line: #8f887c;
+        --action: #a93312;
+        --on-action: #fff;
+        --danger: #a62b1f;
+        --success: #27734c;
+        --focus: #315b7d;
+      }
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --canvas: #12181a;
+        --paper: #171d1f;
+        --surface: #252d30;
+        --ink: #f7f1e6;
+        --muted: #c0bbb1;
+        --line: #424b4e;
+        --control-line: #929b9e;
+        --action: #ff8d69;
+        --on-action: #28140d;
+        --danger: #ff9b8f;
+        --success: #79c89c;
+        --focus: #89b8de;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at 12% 0, #ffd8c8, transparent 30rem),
+          var(--canvas);
+        color: var(--ink);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      button {
+        font: inherit;
+      }
+      button:focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 3px;
+      }
+      .workbench {
+        width: min(1250px, 100%);
+        margin: auto;
+        padding: 28px;
+      }
+      .intro {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 24px;
+        margin-bottom: 22px;
+      }
+      .eyebrow,
+      .spec-label {
+        margin: 0 0 8px;
+        color: var(--action);
+        font:
+          12px/1.4 "Space Mono",
+          monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0;
+        font:
+          34px/1.15 "Space Mono",
+          monospace;
+      }
+      .intro-copy {
+        max-width: 650px;
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .control {
+        min-height: 44px;
+        padding: 0 16px;
+        border: 1px solid var(--control-line);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .stage {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: start;
+        justify-content: center;
+        gap: 22px;
+      }
+      .spec-360 {
+        width: 360px;
+      }
+      .spec-390 {
+        width: 390px;
+      }
+      .spec-430 {
+        width: 430px;
+      }
+      .phone {
+        overflow: hidden;
+        border: 9px solid #272b2d;
+        border-radius: 46px;
+        background: var(--paper);
+        box-shadow: 0 24px 60px rgba(42, 36, 28, 0.2);
+      }
+      .standard {
+        height: 844px;
+      }
+      .compact {
+        height: 640px;
+      }
+      .large {
+        height: 932px;
+      }
+      .screen {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        height: 100%;
+        padding: 24px 16px 18px;
+      }
+      .header {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) 44px;
+        align-items: center;
+        gap: 8px;
+      }
+      .icon-button,
+      .previous {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        border: 1px solid var(--control-line);
+        border-radius: 50%;
+        background: var(--surface);
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .header-copy {
+        min-width: 0;
+        text-align: center;
+      }
+      .title {
+        display: -webkit-box;
+        overflow: hidden;
+        margin: 0;
+        font-weight: 750;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+      .counter {
+        margin: 3px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .save-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        min-height: 52px;
+        padding: 6px 4px;
+      }
+      .switch {
+        width: 48px;
+        height: 28px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--action);
+        padding: 3px;
+      }
+      .switch::after {
+        display: block;
+        width: 22px;
+        height: 22px;
+        margin-left: auto;
+        border-radius: 50%;
+        background: var(--surface);
+        content: "";
+      }
+      .practice {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        min-height: 0;
+      }
+      .track {
+        height: 6px;
+        margin: 8px 4px 16px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: var(--line);
+      }
+      .fill {
+        width: 40%;
+        height: 100%;
+        background: var(--success);
+      }
+      .card-shell {
+        min-height: 0;
+        perspective: 1000px;
+      }
+      .card {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 220px;
+        transform-style: preserve-3d;
+        transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .card.is-flipped {
+        transform: rotateY(180deg);
+      }
+      .card.settling-next {
+        animation: settle-next 160ms ease-out;
+      }
+      @keyframes settle-next {
+        from {
+          opacity: 0.72;
+          translate: 12px 0;
+        }
+        to {
+          opacity: 1;
+          translate: 0 0;
+        }
+      }
+      .face {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        min-height: 0;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: var(--surface);
+        box-shadow: 0 14px 34px rgba(42, 36, 28, 0.11);
+        backface-visibility: hidden;
+      }
+      .face[aria-hidden="true"] {
+        pointer-events: none;
+      }
+      .front {
+        padding: 12px;
+        text-align: center;
+      }
+      .flip-region {
+        display: flex;
+        min-height: 0;
+        flex: 1;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+      }
+      .audio {
+        display: grid;
+        width: 52px;
+        min-height: 52px;
+        margin-top: 14px;
+        place-items: center;
+        border: 1px solid var(--control-line);
+        border-radius: 50%;
+        background: var(--surface);
+        color: var(--action);
+        font-size: 25px;
+      }
+      .back {
+        transform: rotateY(180deg);
+      }
+      .word {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        margin: 0;
+        font:
+          32px/1.18 "Space Mono",
+          monospace;
+      }
+      .phonetic,
+      .hint {
+        color: var(--muted);
+      }
+      .hint {
+        margin: auto 0 0;
+        padding-top: 18px;
+        font-size: 13px;
+      }
+      .definitions {
+        min-height: 0;
+        overflow-y: auto;
+        padding: 24px 24px 12px;
+        overscroll-behavior: contain;
+      }
+      .definition-title {
+        margin: 0 0 12px;
+        color: var(--action);
+        font:
+          12px/1.4 "Space Mono",
+          monospace;
+        text-transform: uppercase;
+      }
+      .definitions p {
+        margin: 0 0 14px;
+        line-height: 1.55;
+      }
+      .back-action {
+        min-height: 52px;
+        border: 0;
+        border-top: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--action);
+        font-weight: 750;
+      }
+      .nav {
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr);
+        align-items: stretch;
+        gap: 12px;
+        padding-top: 16px;
+      }
+      .previous {
+        width: 56px;
+        min-width: 56px;
+        height: 56px;
+      }
+      .primary,
+      .secondary {
+        min-height: 56px;
+        border: 1px solid transparent;
+        border-radius: 14px;
+        padding: 10px 18px;
+        font-weight: 800;
+      }
+      .primary {
+        background: var(--action);
+        color: var(--on-action);
+        box-shadow: 0 5px 0 color-mix(in srgb, var(--action), #000 42%);
+      }
+      .secondary {
+        border-color: var(--control-line);
+        background: var(--surface);
+        color: var(--ink);
+      }
+      .large-text {
+        font-size: 1.55rem;
+      }
+      .large-text .title {
+        font-size: 0.72em;
+      }
+      .large-text .counter,
+      .large-text .hint {
+        font-size: 0.58em;
+      }
+      .large-text .definitions {
+        font-size: 1em;
+      }
+      .large-text .definition-title {
+        font-size: 0.56em;
+      }
+      .large-text .save-row,
+      .large-text .back-action,
+      .large-text .primary,
+      .large-text .previous {
+        font-size: 0.68em;
+      }
+      .large-text .word {
+        font-size: 1.9em;
+      }
+      .large-text .phonetic {
+        font-size: 0.72em;
+      }
+      .state-screen {
+        display: flex;
+        height: 100%;
+        padding: 28px 22px;
+        flex-direction: column;
+      }
+      .status-panel {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .status-mark {
+        display: grid;
+        width: 72px;
+        height: 72px;
+        place-items: center;
+        border: 2px solid var(--danger);
+        border-radius: 50%;
+        color: var(--danger);
+        font:
+          34px/1 "Space Mono",
+          monospace;
+      }
+      .status-panel h2 {
+        margin: 24px 0 10px;
+        font:
+          25px/1.2 "Space Mono",
+          monospace;
+      }
+      .status-panel p {
+        max-width: 320px;
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .spinner {
+        width: 54px;
+        height: 54px;
+        border: 5px solid var(--line);
+        border-top-color: var(--action);
+        border-radius: 50%;
+        animation: spin 900ms linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .status-actions {
+        display: grid;
+        width: min(300px, 100%);
+        gap: 12px;
+        margin-top: 26px;
+      }
+      .axe-result {
+        min-height: 24px;
+        margin: 18px 0 0;
+        color: var(--muted);
+        font:
+          12px/1.4 "Space Mono",
+          monospace;
+      }
+      body.force-reduced .card,
+      body.force-reduced * {
+        scroll-behavior: auto !important;
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .card,
+        * {
+          scroll-behavior: auto !important;
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+        }
+      }
+      @media (max-width: 900px) {
+        .intro {
+          align-items: start;
+          flex-direction: column;
+        }
+        .stage {
+          flex-direction: column;
+          align-items: center;
+        }
+        .stage > article {
+          width: min(430px, 100%);
+        }
+        .phone {
+          width: 100%;
+        }
+      }
+      @media (max-height: 560px) {
+        .screen {
+          min-height: 560px;
+          overflow-y: auto;
+        }
+      }
+      @media (max-width: 430px) {
+        .workbench {
+          padding: 12px;
+        }
+        h1 {
+          font-size: 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="workbench">
+      <header class="intro">
+        <div>
+          <p class="eyebrow">Reliability specimen / mobile</p>
+          <h1>Practice survives constraints.</h1>
+          <p class="intro-copy">
+            One adaptive card region: it gives short phones their remaining
+            height, lets definition copy scroll inside the card, preserves
+            stable actions, and offers recovery when loading fails.
+          </p>
+        </div>
+        <div class="controls" aria-label="Prototype controls">
+          <button class="control" id="theme" type="button">Toggle theme</button>
+          <button class="control" id="motion" type="button">
+            Force reduced motion: off
+          </button>
+          <button class="control" id="flip-all" type="button">
+            Flip practice cards
+          </button>
+        </div>
+      </header>
+      <p class="axe-result" id="axe-result" role="status">Axe check pending…</p>
+
+      <section class="stage" aria-label="Flashcard state comparisons">
+        <article class="spec-390">
+          <p class="spec-label">390 × 844 / normal type</p>
+          <div class="phone standard">
+            <div class="screen">
+              <header class="header">
+                <button class="icon-button" aria-label="Back to wordlists">
+                  ←
+                </button>
+                <div class="header-copy">
+                  <h2 class="title">Travel Italian</h2>
+                  <p class="counter">Card 2 of 5</p>
+                </div>
+                <button class="icon-button" aria-label="Report this flashcard">
+                  ⚑
+                </button>
+              </header>
+              <div class="save-row">
+                <span>🔖 Save my position</span>
+                <button
+                  class="switch"
+                  role="switch"
+                  aria-checked="true"
+                  aria-label="Save my position"
+                ></button>
+              </div>
+              <div class="practice">
+                <div
+                  class="track"
+                  role="progressbar"
+                  aria-label="Flashcard progress"
+                  aria-valuemin="0"
+                  aria-valuemax="5"
+                  aria-valuenow="2"
+                >
+                  <div class="fill"></div>
+                </div>
+                <div class="card-shell">
+                  <div class="card" data-card>
+                    <div class="face front">
+                      <button
+                        class="flip-region"
+                        type="button"
+                        aria-label="per favore. Show definitions"
+                      >
+                        <h3 class="word">per favore</h3>
+                        <p class="phonetic">/per faˈvo.re/</p>
+                        <span class="hint">Tap to show definitions</span>
+                      </button>
+                      <button
+                        class="audio"
+                        type="button"
+                        aria-label="Play pronunciation for per favore"
+                      >
+                        ▶
+                      </button>
+                    </div>
+                    <div class="face back" aria-hidden="true" inert>
+                      <div
+                        class="definitions"
+                        tabindex="0"
+                        aria-label="Definitions for per favore"
+                      >
+                        <p class="definition-title">Expression</p>
+                        <p>
+                          Please; a polite phrase used when making a request.
+                        </p>
+                        <p>
+                          <strong>Example</strong><br />Un caffè, per favore.
+                        </p>
+                      </div>
+                      <button class="back-action" type="button">
+                        Show word
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <nav class="nav" aria-label="Flashcard navigation">
+                <button
+                  class="previous"
+                  type="button"
+                  aria-label="Previous card"
+                >
+                  ‹
+                </button>
+                <button class="primary" type="button">Next card →</button>
+              </nav>
+            </div>
+          </div>
+        </article>
+
+        <article class="spec-360">
+          <p class="spec-label">360 × 640 / 155% type / back</p>
+          <div class="phone compact">
+            <div class="screen large-text">
+              <header class="header">
+                <button class="icon-button" aria-label="Back to wordlists">
+                  ←
+                </button>
+                <div class="header-copy">
+                  <h2 class="title">Everyday German essentials</h2>
+                  <p class="counter">Card 4 of 12</p>
+                </div>
+                <button class="icon-button" aria-label="Report this flashcard">
+                  ⚑
+                </button>
+              </header>
+              <div class="save-row">
+                <span>Save position</span>
+                <button
+                  class="switch"
+                  role="switch"
+                  aria-checked="true"
+                  aria-label="Save my position"
+                ></button>
+              </div>
+              <div class="practice">
+                <div
+                  class="track"
+                  role="progressbar"
+                  aria-label="Flashcard progress"
+                  aria-valuemin="0"
+                  aria-valuemax="12"
+                  aria-valuenow="4"
+                >
+                  <div class="fill" style="width: 33%"></div>
+                </div>
+                <div class="card-shell">
+                  <div class="card is-flipped" data-card>
+                    <div class="face front" aria-hidden="true" inert>
+                      <button
+                        class="flip-region"
+                        type="button"
+                        aria-label="Entschuldigung. Show definitions"
+                      >
+                        <h3 class="word">Entschuldigung</h3>
+                        <span class="hint">Tap to show definitions</span>
+                      </button>
+                      <button
+                        class="audio"
+                        type="button"
+                        aria-label="Play pronunciation for Entschuldigung"
+                      >
+                        ▶
+                      </button>
+                    </div>
+                    <div class="face back">
+                      <div
+                        class="definitions"
+                        tabindex="0"
+                        aria-label="Definitions for Entschuldigung"
+                      >
+                        <p class="definition-title">Noun / expression</p>
+                        <p>
+                          Excuse me; sorry. Used to get attention or offer a
+                          polite apology.
+                        </p>
+                        <p>
+                          <strong>Example</strong><br />Entschuldigung, wo ist
+                          der Bahnhof?
+                        </p>
+                        <p>
+                          <strong>Usage note</strong><br />Also used before a
+                          polite question, when passing someone, or after a
+                          minor interruption.
+                        </p>
+                        <p>
+                          <strong>Second example</strong><br />Entschuldigung,
+                          können Sie mir bitte helfen?
+                        </p>
+                      </div>
+                      <button class="back-action" type="button">
+                        Show word
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <nav class="nav" aria-label="Flashcard navigation">
+                <button
+                  class="previous"
+                  type="button"
+                  aria-label="Previous card"
+                >
+                  ‹
+                </button>
+                <button class="primary" type="button">Next card →</button>
+              </nav>
+            </div>
+          </div>
+        </article>
+
+        <article class="spec-360">
+          <p class="spec-label">360 × 640 / 155% type / front + audio</p>
+          <div class="phone compact">
+            <div class="screen large-text">
+              <header class="header">
+                <button class="icon-button" aria-label="Back to wordlists">
+                  ←
+                </button>
+                <div class="header-copy">
+                  <h2 class="title">
+                    Portuguese words for an unforgettable afternoon
+                  </h2>
+                  <p class="counter">Card 8 of 12</p>
+                </div>
+                <button class="icon-button" aria-label="Report this flashcard">
+                  ⚑
+                </button>
+              </header>
+              <div class="save-row">
+                <span>Save position</span>
+                <button
+                  class="switch"
+                  role="switch"
+                  aria-checked="true"
+                  aria-label="Save my position"
+                ></button>
+              </div>
+              <div class="practice">
+                <div
+                  class="track"
+                  role="progressbar"
+                  aria-label="Flashcard progress"
+                  aria-valuemin="0"
+                  aria-valuemax="12"
+                  aria-valuenow="8"
+                >
+                  <div class="fill" style="width: 66%"></div>
+                </div>
+                <div class="card-shell">
+                  <div class="card" data-card>
+                    <div class="face front">
+                      <button
+                        class="flip-region"
+                        type="button"
+                        aria-label="extraordinariamente. Show definitions"
+                      >
+                        <h3 class="word">extraordinariamente</h3>
+                        <p class="phonetic">/ɐʃ.tɾɐ.oɾ.di.na.ɾi.ɐˈmẽ.tɨ/</p>
+                        <span class="hint">Tap to show definitions</span>
+                      </button>
+                      <button
+                        class="audio"
+                        type="button"
+                        aria-label="Play pronunciation for extraordinariamente"
+                      >
+                        ▶
+                      </button>
+                    </div>
+                    <div class="face back" aria-hidden="true" inert>
+                      <div
+                        class="definitions"
+                        tabindex="0"
+                        aria-label="Definitions for extraordinariamente"
+                      >
+                        <p>In an extraordinary manner.</p>
+                      </div>
+                      <button class="back-action" type="button">
+                        Show word
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <nav class="nav" aria-label="Flashcard navigation">
+                <button
+                  class="previous"
+                  type="button"
+                  aria-label="Previous card"
+                >
+                  ‹
+                </button>
+                <button class="primary" type="button">Next card →</button>
+              </nav>
+            </div>
+          </div>
+        </article>
+
+        <article class="spec-430">
+          <p class="spec-label">430 × 932 / recoverable error</p>
+          <div class="phone large">
+            <div class="state-screen">
+              <section
+                class="status-panel"
+                role="alert"
+                aria-labelledby="load-error-title"
+              >
+                <div class="status-mark" aria-hidden="true">!</div>
+                <h2 id="load-error-title">Couldn’t load flashcards</h2>
+                <p>
+                  We couldn’t reach the service. Check your connection and try
+                  again.
+                </p>
+                <div class="status-actions">
+                  <button class="primary" type="button">Try again</button>
+                  <button class="secondary" type="button">
+                    Back to wordlists
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </article>
+
+        <article class="spec-360">
+          <p class="spec-label">360 × 640 / initial loading</p>
+          <div class="phone compact">
+            <div class="state-screen">
+              <section
+                class="status-panel"
+                role="status"
+                aria-labelledby="loading-title"
+              >
+                <div class="spinner" aria-hidden="true"></div>
+                <h2 id="loading-title">Loading flashcards</h2>
+                <p>Getting this wordlist ready for practice.</p>
+              </section>
+            </div>
+          </div>
+        </article>
+
+        <article class="spec-360">
+          <p class="spec-label">360 × 640 / 10-second timeout</p>
+          <div class="phone compact">
+            <div class="state-screen">
+              <section
+                class="status-panel"
+                role="alert"
+                aria-labelledby="timeout-title"
+              >
+                <div class="status-mark" aria-hidden="true">…</div>
+                <h2 id="timeout-title">This is taking longer than expected</h2>
+                <p>
+                  You can try the request again or return to your wordlists.
+                </p>
+                <div class="status-actions">
+                  <button class="primary" type="button">Try again</button>
+                  <button class="secondary" type="button">
+                    Back to wordlists
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </article>
+
+        <article class="spec-360">
+          <p class="spec-label">360 × 640 / words processing</p>
+          <div class="phone compact">
+            <div class="state-screen">
+              <section
+                class="status-panel"
+                role="status"
+                aria-labelledby="processing-title"
+              >
+                <div class="status-mark" aria-hidden="true">◷</div>
+                <h2 id="processing-title">Words are still being prepared</h2>
+                <p>Definitions are not ready yet. Try again in a moment.</p>
+                <div class="status-actions">
+                  <button class="primary" type="button">Try again</button>
+                  <button class="secondary" type="button">
+                    Back to wordlists
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </article>
+
+        <article class="spec-360">
+          <p class="spec-label">360 × 640 / offline unavailable</p>
+          <div class="phone compact">
+            <div class="state-screen">
+              <section
+                class="status-panel"
+                role="alert"
+                aria-labelledby="offline-title"
+              >
+                <div class="status-mark" aria-hidden="true">⌁</div>
+                <h2 id="offline-title">Flashcards aren’t available offline</h2>
+                <p>
+                  Reconnect to practice this wordlist, or return to your
+                  wordlists.
+                </p>
+                <div class="status-actions">
+                  <button class="secondary" type="button">
+                    Back to wordlists
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </article>
+
+        <article class="spec-360">
+          <p class="spec-label">360 × 640 / empty wordlist</p>
+          <div class="phone compact">
+            <div class="state-screen">
+              <section
+                class="status-panel"
+                role="status"
+                aria-labelledby="empty-title"
+              >
+                <div class="status-mark" aria-hidden="true">0</div>
+                <h2 id="empty-title">No flashcards yet</h2>
+                <p>
+                  Add a word with a definition before starting flashcard
+                  practice.
+                </p>
+                <div class="status-actions">
+                  <button class="secondary" type="button">
+                    Back to wordlists
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+    <script>
+      const root = document.documentElement;
+      document.querySelector("#theme").addEventListener("click", () => {
+        root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+      });
+      document.querySelector("#motion").addEventListener("click", () => {
+        const forced = document.body.classList.toggle("force-reduced");
+        document.querySelector("#motion").textContent =
+          `Force reduced motion: ${forced ? "on" : "off"}`;
+      });
+      const syncFaces = (card) => {
+        const flipped = card.classList.contains("is-flipped");
+        const front = card.querySelector(".front");
+        const back = card.querySelector(".back");
+        front.toggleAttribute("inert", flipped);
+        back.toggleAttribute("inert", !flipped);
+        front.setAttribute("aria-hidden", String(flipped));
+        back.setAttribute("aria-hidden", String(!flipped));
+      };
+      const toggleCard = (card) => {
+        card.classList.toggle("is-flipped");
+        syncFaces(card);
+      };
+      document.querySelector("#flip-all").addEventListener("click", () => {
+        document.querySelectorAll("[data-card]").forEach(toggleCard);
+      });
+      document
+        .querySelectorAll(".flip-region, .back-action")
+        .forEach((button) => {
+          button.addEventListener("click", () =>
+            toggleCard(button.closest("[data-card]")),
+          );
+        });
+      document.querySelectorAll("[data-card]").forEach(syncFaces);
+      document.querySelectorAll(".screen .nav .primary").forEach((button) => {
+        button.addEventListener("click", () => {
+          const card = button.closest(".screen").querySelector("[data-card]");
+          if (!card) return;
+          card.classList.remove("settling-next");
+          void card.offsetWidth;
+          card.classList.add("settling-next");
+        });
+      });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.3/axe.min.js"></script>
+    <script>
+      window.addEventListener("load", async () => {
+        const status = document.querySelector("#axe-result");
+        if (!window.axe) {
+          status.textContent =
+            "Axe 4.10.3 unavailable; automated check not run.";
+          return;
+        }
+        const result = await window.axe.run(document, {
+          runOnly: {
+            type: "tag",
+            values: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"],
+          },
+        });
+        status.textContent = `Axe 4.10.3: ${result.violations.length} violations`;
+        window.__axeResult = result;
+      });
+    </script>
+  </body>
+</html>
