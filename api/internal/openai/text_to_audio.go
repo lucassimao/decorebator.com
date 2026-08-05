@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type GenerateAudioResponse struct {
@@ -22,6 +23,7 @@ type GenerateAudioResponse struct {
 
 // getVoiceForLanguage returns the optimal voice for the given language
 func getVoiceForLanguage(languageCode string) string {
+	languageCode = baseLanguageCode(languageCode)
 	voiceMap := map[string]string{
 		"en": "alloy",   // English - clear and neutral
 		"es": "nova",    // Spanish - warm and natural
@@ -40,6 +42,7 @@ func getVoiceForLanguage(languageCode string) string {
 
 // getInstructionsForLanguage returns language-specific instructions for optimal pronunciation
 func getInstructionsForLanguage(languageCode string, text string) string {
+	languageCode = baseLanguageCode(languageCode)
 	instructionsMap := map[string]string{
 		"en": "Speak in clear American English with natural pronunciation. Emphasize proper stress patterns and clear articulation.",
 		"es": "Habla en español con pronunciación clara y natural. Usa la entonación correcta y pronuncia todas las sílabas claramente.",
@@ -54,6 +57,14 @@ func getInstructionsForLanguage(languageCode string, text string) string {
 		return fmt.Sprintf("%s Text to pronounce: %s", instructions, text)
 	}
 	return fmt.Sprintf("Speak clearly and naturally. Text to pronounce: %s", text)
+}
+
+func baseLanguageCode(languageCode string) string {
+	normalized := strings.ToLower(strings.TrimSpace(languageCode))
+	if separator := strings.IndexByte(normalized, '-'); separator >= 0 {
+		normalized = normalized[:separator]
+	}
+	return normalized
 }
 
 func GenerateAudio(text string, languageCode string) (*GenerateAudioResponse, error) {

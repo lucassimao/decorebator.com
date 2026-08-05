@@ -32,14 +32,22 @@ type ExampleAudioWorker struct {
 	definitionService *DefinitionService
 	wordService       *WordService
 	userService       *UserService
+	audioGenerator    AudioGenerator
 }
 
+type AudioGenerator func(text, languageCode string) (*openai.GenerateAudioResponse, error)
+
 // NewExampleAudioWorker creates a new example audio worker with dependencies
-func NewExampleAudioWorker(definitionService *DefinitionService, wordService *WordService, userService *UserService) *ExampleAudioWorker {
+func NewExampleAudioWorker(definitionService *DefinitionService, wordService *WordService, userService *UserService, generators ...AudioGenerator) *ExampleAudioWorker {
+	generator := AudioGenerator(openai.GenerateAudio)
+	if len(generators) > 0 && generators[0] != nil {
+		generator = generators[0]
+	}
 	return &ExampleAudioWorker{
 		definitionService: definitionService,
 		wordService:       wordService,
 		userService:       userService,
+		audioGenerator:    generator,
 	}
 }
 
@@ -78,18 +86,15 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 		return err
 	}
 
-	// 3. Select appropriate voice based on language
-	voice := getVoiceForLanguage(wordlistLang)
-
-	// 4. Apply smart example selection based on part of speech
+	// 3. Apply smart example selection based on part of speech
 	selectedExamples := w.selectExamplesForAudio(definition)
 
 	logger.Info("processing examples", "count", len(selectedExamples), "partOfSpeech", definition.PartOfSpeech)
 
-	// 5. Generate audio for selected examples
+	// 4. Generate audio for selected examples
 	for _, exampleItem := range selectedExamples {
 		// Generate audio using OpenAI TTS with language-specific voice
-		response, err := openai.GenerateAudio(exampleItem.ExampleText, voice)
+		response, err := w.audioGenerator(exampleItem.ExampleText, wordlistLang)
 		if err != nil {
 			// Log error but continue with other examples
 			logger.Error("failed to generate audio for example", "example", exampleItem.ExampleText, "error", err)
@@ -184,22 +189,4 @@ func findLongestExample(examples []string) string {
 		}
 	}
 	return longest
-}
-
-// Language to voice mapping for OpenAI TTS
-func getVoiceForLanguage(language string) string {
-	voiceMap := map[string]string{
-		"en": "alloy",   // English - Clear, versatile voice
-		"es": "nova",    // Spanish - Natural pronunciation with proper accent
-		"fr": "shimmer", // French - Elegant pronunciation with proper liaison
-		"de": "echo",    // German - Clear consonants for complex grammar
-		"it": "fable",   // Italian - Expressive speech with proper intonation
-		"pt": "onyx",    // Portuguese - Deep, clear pronunciation
-		"ja": "alloy",   // Japanese - Optimized for Japanese phonetics
-	}
-
-	if voice, exists := voiceMap[language]; exists {
-		return voice
-	}
-	return "alloy" // Default fallback
 }
