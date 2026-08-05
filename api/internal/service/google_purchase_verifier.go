@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -328,7 +329,8 @@ func googleCancellation(cancellation *GoogleCanceledStateContext) (*time.Time, *
 
 func googleProviderFailure(err error) error {
 	var apiError *GooglePlayAPIError
-	if errors.As(err, &apiError) && !apiError.Retryable {
+	if errors.As(err, &apiError) && !apiError.Retryable &&
+		apiError.StatusCode != 0 && apiError.StatusCode != http.StatusUnauthorized && apiError.StatusCode != http.StatusForbidden {
 		return googlePurchaseFailure(model.EntitlementFailureInvalidEvidence, err)
 	}
 	return googlePurchaseFailure(model.EntitlementFailureProviderUnavailable, err)

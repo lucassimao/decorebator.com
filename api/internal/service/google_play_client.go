@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -23,8 +24,20 @@ type GoogleAccessTokenSource interface {
 	AccessToken(context.Context) (string, error)
 }
 
+type GoogleAccessTokenError struct {
+	Retryable bool
+	Cause     error
+}
+
+func (e *GoogleAccessTokenError) Error() string { return "Google access-token acquisition failed" }
+func (e *GoogleAccessTokenError) Unwrap() error { return e.Cause }
+
 type GooglePlaySubscriptionClient interface {
 	GetSubscription(context.Context, string) (GooglePlaySubscription, error)
+}
+
+type GooglePlaySubscriptionAcknowledger interface {
+	AcknowledgeSubscription(context.Context, string, string) error
 }
 
 type GooglePlaySubscription struct {
@@ -67,11 +80,16 @@ type GoogleCanceledStateContext struct {
 type GooglePlayAPIError struct {
 	StatusCode int
 	Retryable  bool
+	Cause      error
 }
 
 func (e *GooglePlayAPIError) Error() string {
 	return fmt.Sprintf("Google Play API request failed (status=%d)", e.StatusCode)
 }
+
+func (e *GooglePlayAPIError) Unwrap() error { return e.Cause }
+
+var ErrInvalidGoogleAcknowledgeRequest = errors.New("invalid Google acknowledge request")
 
 type GooglePlayClient struct {
 	packageName string
@@ -116,7 +134,7 @@ func (c *GooglePlayClient) GetSubscription(
 	defer cancel()
 	accessToken, err := c.tokens.AccessToken(requestContext)
 	if err != nil || strings.TrimSpace(accessToken) == "" {
-		return GooglePlaySubscription{}, &GooglePlayAPIError{StatusCode: 0, Retryable: true}
+		return GooglePlaySubscription{}, googleTokenFailure(err)
 	}
 	requestURL := fmt.Sprintf(
 		"%s/androidpublisher/v3/applications/%s/purchases/subscriptionsv2/tokens/%s",
@@ -153,6 +171,45 @@ func (c *GooglePlayClient) GetSubscription(
 	return subscription, nil
 }
 
+func (c *GooglePlayClient) AcknowledgeSubscription(
+	ctx context.Context,
+	productID string,
+	purchaseToken string,
+) error {
+	if strings.TrimSpace(productID) == "" || !validGooglePurchaseToken(purchaseToken) {
+		return ErrInvalidGoogleAcknowledgeRequest
+	}
+	requestContext, cancel := context.WithTimeout(ctx, googlePlayRequestTimeout)
+	defer cancel()
+	accessToken, err := c.tokens.AccessToken(requestContext)
+	if err != nil || strings.TrimSpace(accessToken) == "" {
+		return googleTokenFailure(err)
+	}
+	requestURL := fmt.Sprintf(
+		"%s/androidpublisher/v3/applications/%s/purchases/subscriptions/%s/tokens/%s:acknowledge",
+		c.baseURL, url.PathEscape(c.packageName), url.PathEscape(productID), url.PathEscape(purchaseToken),
+	)
+	request, err := http.NewRequestWithContext(requestContext, http.MethodPost, requestURL, strings.NewReader("{}"))
+	if err != nil {
+		return &GooglePlayAPIError{StatusCode: 0, Retryable: true}
+	}
+	request.Header.Set("Authorization", "Bearer "+accessToken)
+	request.Header.Set("Accept", "application/json")
+	request.Header.Set("Content-Type", "application/json")
+	response, err := c.httpClient.Do(request)
+	if err != nil {
+		return &GooglePlayAPIError{StatusCode: 0, Retryable: true}
+	}
+	defer response.Body.Close()
+	_, _ = io.Copy(io.Discard, io.LimitReader(response.Body, googlePlayResponseLimit))
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		return &GooglePlayAPIError{
+			StatusCode: response.StatusCode, Retryable: googlePlayRetryableStatus(response.StatusCode),
+		}
+	}
+	return nil
+}
+
 func secureGooglePlayBaseURL(baseURL *url.URL) bool {
 	if baseURL.Scheme == "https" {
 		return true
@@ -166,8 +223,17 @@ func secureGooglePlayBaseURL(baseURL *url.URL) bool {
 
 func googlePlayRetryableStatus(status int) bool {
 	return status == http.StatusRequestTimeout || status == http.StatusConflict ||
-		status == http.StatusUnauthorized || status == http.StatusForbidden ||
+		status == http.StatusUnauthorized ||
 		status == http.StatusTooManyRequests || status >= 500
+}
+
+func googleTokenFailure(err error) *GooglePlayAPIError {
+	retryable := true
+	var tokenError *GoogleAccessTokenError
+	if errors.As(err, &tokenError) {
+		retryable = tokenError.Retryable
+	}
+	return &GooglePlayAPIError{StatusCode: 0, Retryable: retryable, Cause: err}
 }
 
 func validGooglePurchaseToken(token string) bool {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -31,6 +32,43 @@ type staticGoogleTokenSource struct{ err error }
 
 func (s staticGoogleTokenSource) AccessToken(context.Context) (string, error) {
 	return "access-token", s.err
+}
+
+type fakeGoogleVerifier struct {
+	results  []service.VerifiedGooglePurchase
+	errors   []error
+	calls    int
+	overflow bool
+}
+
+func (f *fakeGoogleVerifier) Verify(
+	context.Context,
+	service.GooglePurchaseVerificationInput,
+) (service.VerifiedGooglePurchase, error) {
+	index := f.calls
+	f.calls++
+	if index >= len(f.results) || index >= len(f.errors) {
+		f.overflow = true
+		return service.VerifiedGooglePurchase{}, errors.New("unexpected verification call")
+	}
+	return f.results[index], f.errors[index]
+}
+
+type fakeGoogleAcknowledger struct {
+	calls     int
+	productID string
+	token     string
+	err       error
+}
+
+func (f *fakeGoogleAcknowledger) AcknowledgeSubscription(
+	_ context.Context,
+	productID string,
+	token string,
+) error {
+	f.calls++
+	f.productID, f.token = productID, token
+	return f.err
 }
 
 func validGoogleSubscription(now time.Time, accountID string) service.GooglePlaySubscription {
@@ -229,7 +267,7 @@ func TestGooglePlayClientAuthenticatesBoundsAndClassifiesSafeErrors(t *testing.T
 	assert.True(t, apiErr.Retryable)
 	assert.NotContains(t, err.Error(), "sensitive")
 
-	client, err = service.NewGooglePlayClient("package", staticGoogleTokenSource{err: errors.New("auth")}, http.DefaultClient, server.URL)
+	client, err = service.NewGooglePlayClient("package", staticGoogleTokenSource{err: &service.GoogleAccessTokenError{Retryable: true, Cause: errors.New("auth")}}, http.DefaultClient, server.URL)
 	require.NoError(t, err)
 	_, err = client.GetSubscription(context.Background(), "sensitive-token")
 	require.ErrorAs(t, err, &apiErr)
@@ -313,4 +351,166 @@ func TestGooglePlayClientClassifiesDocumentedStatusesAndRejectsOversizeResponses
 	var apiErr *service.GooglePlayAPIError
 	require.ErrorAs(t, err, &apiErr)
 	assert.True(t, apiErr.Retryable)
+}
+
+func TestGooglePurchaseProcessorVerifiesBeforeAcknowledgingPaidPurchase(t *testing.T) {
+	verified := service.VerifiedGooglePurchase{
+		ProductID: "decorebator_monthly_premium1", Status: model.EntitlementStatusActive,
+	}
+	verifier := &fakeGoogleVerifier{results: []service.VerifiedGooglePurchase{verified}, errors: []error{nil}}
+	acknowledger := &fakeGoogleAcknowledger{}
+	processor, err := service.NewGooglePurchaseProcessor(verifier, acknowledger)
+	require.NoError(t, err)
+	result, err := processor.VerifyAndAcknowledge(context.Background(), service.GooglePurchaseVerificationInput{PurchaseToken: "token"})
+	require.NoError(t, err)
+	assert.True(t, result.Purchase.Acknowledged)
+	assert.Equal(t, service.GoogleAcknowledgementConfirmed, result.Acknowledgement)
+	assert.Equal(t, 1, verifier.calls)
+	assert.Equal(t, 1, acknowledger.calls)
+	assert.Equal(t, verified.ProductID, acknowledger.productID)
+	assert.Equal(t, "token", acknowledger.token)
+}
+
+func TestGooglePurchaseProcessorNeverAcknowledgesPendingExpiredOrFailedVerification(t *testing.T) {
+	for _, status := range []model.EntitlementStatus{
+		model.EntitlementStatusPending, model.EntitlementStatusExpired, model.EntitlementStatusRevoked,
+	} {
+		verifier := &fakeGoogleVerifier{
+			results: []service.VerifiedGooglePurchase{{ProductID: "premium", Status: status}}, errors: []error{nil},
+		}
+		acknowledger := &fakeGoogleAcknowledger{}
+		processor, err := service.NewGooglePurchaseProcessor(verifier, acknowledger)
+		require.NoError(t, err)
+		result, err := processor.VerifyAndAcknowledge(context.Background(), service.GooglePurchaseVerificationInput{PurchaseToken: "token"})
+		require.NoError(t, err)
+		assert.Equal(t, status, result.Purchase.Status)
+		assert.False(t, result.Purchase.Acknowledged)
+		assert.Equal(t, service.GoogleAcknowledgementNotRequired, result.Acknowledgement)
+		assert.Zero(t, acknowledger.calls)
+	}
+
+	verificationErr := errors.New("verification failed")
+	verifier := &fakeGoogleVerifier{results: []service.VerifiedGooglePurchase{{}}, errors: []error{verificationErr}}
+	acknowledger := &fakeGoogleAcknowledger{}
+	processor, err := service.NewGooglePurchaseProcessor(verifier, acknowledger)
+	require.NoError(t, err)
+	_, err = processor.VerifyAndAcknowledge(context.Background(), service.GooglePurchaseVerificationInput{PurchaseToken: "token"})
+	require.ErrorIs(t, err, verificationErr)
+	assert.Zero(t, acknowledger.calls)
+}
+
+func TestGooglePurchaseProcessorConfirmsIdempotentPermanentAcknowledgeRace(t *testing.T) {
+	initial := service.VerifiedGooglePurchase{ProductID: "premium", Status: model.EntitlementStatusActive}
+	refreshed := initial
+	refreshed.Acknowledged = true
+	verifier := &fakeGoogleVerifier{
+		results: []service.VerifiedGooglePurchase{initial, refreshed}, errors: []error{nil, nil},
+	}
+	acknowledger := &fakeGoogleAcknowledger{err: &service.GooglePlayAPIError{StatusCode: http.StatusBadRequest}}
+	processor, err := service.NewGooglePurchaseProcessor(verifier, acknowledger)
+	require.NoError(t, err)
+	result, err := processor.VerifyAndAcknowledge(context.Background(), service.GooglePurchaseVerificationInput{PurchaseToken: "token"})
+	require.NoError(t, err)
+	assert.True(t, result.Purchase.Acknowledged)
+	assert.Equal(t, service.GoogleAcknowledgementConfirmed, result.Acknowledgement)
+	assert.Equal(t, 2, verifier.calls)
+	assert.Equal(t, 1, acknowledger.calls)
+}
+
+func TestGooglePlayClientSendsBoundedAuthenticatedAcknowledge(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		assert.Equal(t, http.MethodPost, request.Method)
+		assert.Equal(t, "Bearer access-token", request.Header.Get("Authorization"))
+		assert.Equal(t, "application/json", request.Header.Get("Content-Type"))
+		assert.Equal(t, "/androidpublisher/v3/applications/com.app/purchases/subscriptions/premium%2Fmonthly/tokens/token%2Fvalue:acknowledge", request.RequestURI)
+		body, err := io.ReadAll(request.Body)
+		require.NoError(t, err)
+		assert.JSONEq(t, `{}`, string(body))
+		response.WriteHeader(http.StatusNoContent)
+	}))
+	defer server.Close()
+	client, err := service.NewGooglePlayClient("com.app", staticGoogleTokenSource{}, server.Client(), server.URL)
+	require.NoError(t, err)
+	require.NoError(t, client.AcknowledgeSubscription(context.Background(), "premium/monthly", "token/value"))
+}
+
+func TestGooglePurchaseProcessorPreservesVerifiedPurchaseAcrossAcknowledgeFailures(t *testing.T) {
+	initial := service.VerifiedGooglePurchase{ProductID: "premium", Status: model.EntitlementStatusActive}
+	for _, test := range []struct {
+		name        string
+		ackErr      error
+		results     []service.VerifiedGooglePurchase
+		errors      []error
+		outcome     service.GoogleAcknowledgementOutcome
+		verifyCalls int
+	}{
+		{
+			name: "retryable skips refresh", ackErr: &service.GooglePlayAPIError{StatusCode: 503, Retryable: true},
+			results: []service.VerifiedGooglePurchase{initial}, errors: []error{nil},
+			outcome: service.GoogleAcknowledgementRetry, verifyCalls: 1,
+		},
+		{
+			name: "permanent still unacknowledged", ackErr: &service.GooglePlayAPIError{StatusCode: 403},
+			results: []service.VerifiedGooglePurchase{initial, initial}, errors: []error{nil, nil},
+			outcome: service.GoogleAcknowledgementFailed, verifyCalls: 2,
+		},
+		{
+			name: "permanent refresh unavailable", ackErr: &service.GooglePlayAPIError{StatusCode: 400},
+			results: []service.VerifiedGooglePurchase{initial, {}}, errors: []error{nil, errors.New("refresh failed")},
+			outcome: service.GoogleAcknowledgementRetry, verifyCalls: 2,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			verifier := &fakeGoogleVerifier{results: test.results, errors: test.errors}
+			acknowledger := &fakeGoogleAcknowledger{err: test.ackErr}
+			processor, err := service.NewGooglePurchaseProcessor(verifier, acknowledger)
+			require.NoError(t, err)
+			result, err := processor.VerifyAndAcknowledge(context.Background(), service.GooglePurchaseVerificationInput{PurchaseToken: "token"})
+			require.NoError(t, err)
+			assert.Equal(t, initial.ProductID, result.Purchase.ProductID)
+			assert.Equal(t, test.outcome, result.Acknowledgement)
+			assert.Error(t, result.AcknowledgementError)
+			assert.Equal(t, test.verifyCalls, verifier.calls)
+			assert.False(t, verifier.overflow)
+		})
+	}
+}
+
+func TestGooglePlayClientClassifiesAcknowledgeFailuresAndRejectsLocalInput(t *testing.T) {
+	for _, test := range []struct {
+		status int
+		retry  bool
+	}{{503, true}, {403, false}} {
+		server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, _ *http.Request) {
+			response.WriteHeader(test.status)
+		}))
+		client, err := service.NewGooglePlayClient("com.app", staticGoogleTokenSource{}, server.Client(), server.URL)
+		require.NoError(t, err)
+		err = client.AcknowledgeSubscription(context.Background(), "premium", "token")
+		var apiErr *service.GooglePlayAPIError
+		require.ErrorAs(t, err, &apiErr)
+		assert.Equal(t, test.retry, apiErr.Retryable)
+		server.Close()
+	}
+	client, err := service.NewGooglePlayClient("com.app", staticGoogleTokenSource{}, http.DefaultClient, "https://example.com")
+	require.NoError(t, err)
+	for _, input := range [][2]string{{"", "token"}, {"premium", " token"}} {
+		err = client.AcknowledgeSubscription(context.Background(), input[0], input[1])
+		require.ErrorIs(t, err, service.ErrInvalidGoogleAcknowledgeRequest)
+	}
+	requestCalls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { requestCalls++ }))
+	defer server.Close()
+	client, err = service.NewGooglePlayClient(
+		"com.app",
+		staticGoogleTokenSource{err: &service.GoogleAccessTokenError{Retryable: false, Cause: errors.New("invalid grant")}},
+		server.Client(), server.URL,
+	)
+	require.NoError(t, err)
+	err = client.AcknowledgeSubscription(context.Background(), "premium", "token")
+	var apiErr *service.GooglePlayAPIError
+	require.ErrorAs(t, err, &apiErr)
+	assert.False(t, apiErr.Retryable)
+	assert.Zero(t, requestCalls)
+	assert.NotContains(t, err.Error(), "invalid grant")
 }
