@@ -120,6 +120,104 @@ func TestStoreEntitlementRejectsOwnershipTransferWithoutPartialWrite(t *testing.
 	assert.NotContains(t, string(serialized), firstAccount.ObfuscatedExternalAccountID)
 }
 
+func TestGoogleVoidedPurchaseRevokesOnlyCurrentBindingAndHonorsEventClock(t *testing.T) {
+	repo, db, ctx, userID, _ := prepareStoreEntitlementTest(t)
+	account, err := repo.GetOrCreateGoogleAccount(ctx, userID)
+	require.NoError(t, err)
+	now := time.Date(2026, 8, 5, 15, 0, 0, 0, time.UTC)
+	update := googleStoreUpdate(userID, account, "current-token", now)
+	eventAt := now.Add(time.Minute)
+	update.EventOccurredAt = &eventAt
+	_, err = repo.Apply(ctx, update, nil)
+	require.NoError(t, err)
+	binding, found, err := repo.ResolvePurchaseBinding(
+		ctx, model.EntitlementStoreGoogle, model.StoreEnvironmentProduction, "current-token",
+	)
+	require.NoError(t, err)
+	require.True(t, found)
+	assert.True(t, binding.Current)
+
+	tx, err := db.Begin(ctx)
+	require.NoError(t, err)
+	result, err := repo.ApplyGoogleVoidedPurchase(ctx, tx, binding, eventAt, 2)
+	require.NoError(t, err)
+	require.NoError(t, tx.Commit(ctx))
+	assert.Equal(t, model.EntitlementResultRevoked, result.Code)
+	var status, reason string
+	var autoRenew bool
+	require.NoError(t, db.QueryRow(ctx, `
+		SELECT status, auto_renew_enabled, revocation_reason
+		FROM store_entitlements WHERE id=$1
+	`, binding.EntitlementID).Scan(&status, &autoRenew, &reason))
+	assert.Equal(t, string(model.EntitlementStatusRevoked), status)
+	assert.False(t, autoRenew)
+	assert.Equal(t, "google_voided_purchase_refund_type_2", reason)
+
+	tx, err = db.Begin(ctx)
+	require.NoError(t, err)
+	result, err = repo.ApplyGoogleVoidedPurchase(ctx, tx, binding, eventAt.Add(-time.Second), 1)
+	require.NoError(t, err)
+	require.NoError(t, tx.Commit(ctx))
+	assert.Equal(t, model.EntitlementResultStaleEvent, result.Code)
+}
+
+func TestGoogleVoidedHistoricalTokenCannotRevokeReplacement(t *testing.T) {
+	repo, db, ctx, userID, _ := prepareStoreEntitlementTest(t)
+	account, err := repo.GetOrCreateGoogleAccount(ctx, userID)
+	require.NoError(t, err)
+	now := time.Date(2026, 8, 5, 15, 0, 0, 0, time.UTC)
+	_, err = repo.Apply(ctx, googleStoreUpdate(userID, account, "old-token", now), nil)
+	require.NoError(t, err)
+	replacement := googleStoreUpdate(userID, account, "new-token", now.Add(time.Minute))
+	replacement.LinkedProviderID = "old-token"
+	_, err = repo.Apply(ctx, replacement, nil)
+	require.NoError(t, err)
+	oldBinding, found, err := repo.ResolvePurchaseBinding(
+		ctx, model.EntitlementStoreGoogle, model.StoreEnvironmentProduction, "old-token",
+	)
+	require.NoError(t, err)
+	require.True(t, found)
+	assert.False(t, oldBinding.Current)
+
+	tx, err := db.Begin(ctx)
+	require.NoError(t, err)
+	result, err := repo.ApplyGoogleVoidedPurchase(ctx, tx, oldBinding, now.Add(2*time.Minute), 2)
+	require.NoError(t, err)
+	require.NoError(t, tx.Commit(ctx))
+	assert.Equal(t, model.EntitlementResultStaleEvent, result.Code)
+	var status string
+	require.NoError(t, db.QueryRow(ctx, "SELECT status FROM store_entitlements WHERE id=$1", oldBinding.EntitlementID).Scan(&status))
+	assert.Equal(t, string(model.EntitlementStatusActive), status)
+}
+
+func TestGoogleVoidedLinkedTokenCannotRevokeCurrentPrimaryBinding(t *testing.T) {
+	repo, db, ctx, userID, _ := prepareStoreEntitlementTest(t)
+	account, err := repo.GetOrCreateGoogleAccount(ctx, userID)
+	require.NoError(t, err)
+	now := time.Date(2026, 8, 5, 15, 0, 0, 0, time.UTC)
+	update := googleStoreUpdate(userID, account, "new-token", now)
+	update.LinkedProviderID = "unknown-old-token"
+	_, err = repo.Apply(ctx, update, nil)
+	require.NoError(t, err)
+	linkedBinding, found, err := repo.ResolvePurchaseBinding(
+		ctx, model.EntitlementStoreGoogle, model.StoreEnvironmentProduction, "unknown-old-token",
+	)
+	require.NoError(t, err)
+	require.True(t, found)
+	assert.True(t, linkedBinding.Current)
+	assert.False(t, linkedBinding.MatchedPrimary)
+
+	tx, err := db.Begin(ctx)
+	require.NoError(t, err)
+	result, err := repo.ApplyGoogleVoidedPurchase(ctx, tx, linkedBinding, now.Add(time.Minute), 2)
+	require.NoError(t, err)
+	require.NoError(t, tx.Commit(ctx))
+	assert.Equal(t, model.EntitlementResultStaleEvent, result.Code)
+	var status string
+	require.NoError(t, db.QueryRow(ctx, "SELECT status FROM store_entitlements WHERE id=$1", linkedBinding.EntitlementID).Scan(&status))
+	assert.Equal(t, string(model.EntitlementStatusActive), status)
+}
+
 func TestStoreEntitlementCallerTransactionRollsBackOwnershipConflictToSavepoint(t *testing.T) {
 	repo, db, ctx, firstUser, secondUser := prepareStoreEntitlementTest(t)
 	firstAccount, err := repo.GetOrCreateGoogleAccount(ctx, firstUser)

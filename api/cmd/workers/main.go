@@ -59,6 +59,7 @@ func main() {
 		appContext.RevenueCatService,
 		appContext.SubscriptionService,
 		appContext.MailService,
+		appContext.ProviderEventInboxRepository,
 	)
 
 	if err != nil {

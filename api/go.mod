@@ -26,6 +26,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/stripe/stripe-go/v82 v82.1.0
 	golang.org/x/image v0.25.0
+	golang.org/x/oauth2 v0.28.0
 	golang.org/x/sync v0.15.0
 	google.golang.org/api v0.197.0
 	google.golang.org/genai v1.40.0
@@ -104,7 +105,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/goleak v1.3.0 // indirect
-	golang.org/x/oauth2 v0.28.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/grpc v1.73.0 // indirect
 	moul.io/http2curl/v2 v2.3.0 // indirect

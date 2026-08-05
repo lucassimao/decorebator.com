@@ -246,3 +246,27 @@ func TestProviderEventInboxPersistsRetainedRevocationResult(t *testing.T) {
 	require.NoError(t, db.QueryRow(ctx, "SELECT result_code FROM provider_event_inbox WHERE id=$1", claimed.Claim.ID).Scan(&stored))
 	assert.Equal(t, string(model.EntitlementResultRevocationRetained), stored)
 }
+
+func TestProviderEventInboxHealthReportsOverdueRetryableAndExpiredProcessing(t *testing.T) {
+	repo, _, ctx := prepareProviderEventInboxTest(t)
+	now := time.Date(2026, 8, 5, 16, 0, 0, 0, time.UTC)
+	retryInput := appleProviderEventInput(t, model.StoreEnvironmentProduction)
+	retryClaim, err := repo.Claim(ctx, retryInput, now.Add(-20*time.Minute), time.Minute)
+	require.NoError(t, err)
+	require.NotNil(t, retryClaim.Claim)
+	require.NoError(t, repo.MarkRetryable(ctx, *retryClaim.Claim, now.Add(-10*time.Minute)))
+
+	processingInput := appleProviderEventInput(t, model.StoreEnvironmentSandbox)
+	processingClaim, err := repo.Claim(ctx, processingInput, now.Add(-10*time.Minute), time.Minute)
+	require.NoError(t, err)
+	require.NotNil(t, processingClaim.Claim)
+
+	health, err := repo.StrandedHealth(ctx, now, 5*time.Minute)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), health.OverdueRetryable)
+	assert.Equal(t, int64(1), health.ExpiredProcessing)
+	require.NotNil(t, health.OldestRetryableDueAt)
+	require.NotNil(t, health.OldestProcessingExpiry)
+	assert.Equal(t, now.Add(-10*time.Minute), health.OldestRetryableDueAt.UTC())
+	assert.Equal(t, now.Add(-9*time.Minute), health.OldestProcessingExpiry.UTC())
+}

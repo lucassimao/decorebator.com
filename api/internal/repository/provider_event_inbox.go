@@ -42,6 +42,13 @@ type ProviderEventInboxResult struct {
 	Code      model.EntitlementResultCode
 }
 
+type ProviderEventInboxHealth struct {
+	OverdueRetryable       int64
+	ExpiredProcessing      int64
+	OldestRetryableDueAt   *time.Time
+	OldestProcessingExpiry *time.Time
+}
+
 type ProviderEventProcessor func(context.Context, pgx.Tx) (model.EntitlementOperationResult, error)
 
 func NewProviderEventInboxRepository(db *pgxpool.Pool) *ProviderEventInboxRepository {
@@ -180,6 +187,35 @@ func (r *ProviderEventInboxRepository) MarkRetryable(
 		return fmt.Errorf("provider event retry lost its lease")
 	}
 	return nil
+}
+
+// StrandedHealth returns aggregate, non-sensitive alert data. Inbox payloads
+// are intentionally not stored, so this method never attempts replay or state
+// mutation; provider redelivery and reconciliation remain the recovery paths.
+func (r *ProviderEventInboxRepository) StrandedHealth(
+	ctx context.Context,
+	now time.Time,
+	gracePeriod time.Duration,
+) (ProviderEventInboxHealth, error) {
+	if r == nil || r.db == nil || now.IsZero() || gracePeriod < 0 {
+		return ProviderEventInboxHealth{}, fmt.Errorf("valid provider inbox health inputs are required")
+	}
+	cutoff := now.UTC().Add(-gracePeriod)
+	var health ProviderEventInboxHealth
+	err := r.db.QueryRow(ctx, `
+		SELECT
+			count(*) FILTER (WHERE state = 'retryable' AND next_attempt_at <= $1),
+			count(*) FILTER (WHERE state = 'processing' AND lease_expires_at <= $1),
+			min(next_attempt_at) FILTER (WHERE state = 'retryable' AND next_attempt_at <= $1),
+			min(lease_expires_at) FILTER (WHERE state = 'processing' AND lease_expires_at <= $1)
+		FROM provider_event_inbox
+	`, cutoff).Scan(
+		&health.OverdueRetryable,
+		&health.ExpiredProcessing,
+		&health.OldestRetryableDueAt,
+		&health.OldestProcessingExpiry,
+	)
+	return health, err
 }
 
 func (r *ProviderEventInboxRepository) readDuplicate(

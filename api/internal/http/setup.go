@@ -50,6 +50,8 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(ErrorMiddleware())
 	router.Use(CORSMiddleware())
+	storeWebhookMetrics := NewStoreWebhookMetrics()
+	RegisterStoreWebhookRoutes(router, appCtx, storeWebhookMetrics)
 
 	// Routes without authentication
 	{
@@ -133,8 +135,32 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	adminRoutes.Use(AuthenticateStatic)
 	{
 		adminRoutes.GET("/errorReports/stats", GetErrorReportStats(appCtx.Database))
+		adminRoutes.GET("/store-webhooks/metrics", GetStoreWebhookMetrics(storeWebhookMetrics))
 	}
 
 	// Static-auth protected endpoints (keep original paths)
 	return router
+}
+
+func RegisterStoreWebhookRoutes(
+	router *gin.Engine,
+	appCtx *app.Context,
+	observer StoreWebhookObserver,
+) {
+	if !appCtx.StoreIAPEnabled {
+		return
+	}
+	if appCtx.AppleNotificationIngestor == nil || appCtx.GoogleRTDNIngestor == nil {
+		panic("store IAP is enabled without initialized notification receivers")
+	}
+	router.POST(
+		"/webhook/app-store",
+		TimeoutMiddleware(28*time.Second),
+		HandleAppleStoreNotification(appCtx.AppleNotificationIngestor, observer),
+	)
+	router.POST(
+		"/webhook/google-play/rtdn",
+		TimeoutMiddleware(28*time.Second),
+		HandleGooglePlayRTDN(appCtx.GoogleRTDNIngestor, observer),
+	)
 }

@@ -48,6 +48,7 @@ func NewWorkerRiverClient(
 	revenueCatService RevenueCatService,
 	subscriptionService *SubscriptionService,
 	mailService *mail.MailService,
+	providerInbox *repository.ProviderEventInboxRepository,
 ) (*river.Client[pgx.Tx], error) {
 	riverWorkers := river.NewWorkers()
 	river.AddWorker(riverWorkers, NewImageGeneratorWorker(definitionService, definitionImageService, userService))
@@ -73,6 +74,15 @@ func NewWorkerRiverClient(
 	river.AddWorker(riverWorkers, &NoOpWorker{})
 	river.AddWorker(riverWorkers, NewRevenueCatWebhookWorker(revenueCatService))
 	river.AddWorker(riverWorkers, NewStripeWebhookWorker(subscriptionService))
+	if providerInbox != nil {
+		healthWorker, err := NewProviderEventInboxHealthWorker(
+			providerInbox, nil, providerInboxHealthGracePeriod,
+		)
+		if err != nil {
+			return nil, err
+		}
+		river.AddWorker(riverWorkers, healthWorker)
+	}
 
 	// Create periodic jobs for renewal reminders
 	periodicJobs := []*river.PeriodicJob{
@@ -121,6 +131,15 @@ func NewWorkerRiverClient(
 			},
 		),
 		// Materialized view refresh job removed - now using Redis caching for analytics
+	}
+	if providerInbox != nil {
+		periodicJobs = append(periodicJobs, river.NewPeriodicJob(
+			river.PeriodicInterval(5*time.Minute),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return ProviderEventInboxHealthArgs{}, nil
+			},
+			&river.PeriodicJobOpts{RunOnStart: true},
+		))
 	}
 
 	riverClient, err := river.NewClient(riverpgxv5.New(db), &river.Config{

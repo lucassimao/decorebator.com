@@ -1,19 +1,26 @@
 package app
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/config"
 	"decorebator.com/internal/mail"
+	"decorebator.com/internal/repository"
+	"decorebator.com/internal/security"
 	"decorebator.com/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+	"golang.org/x/oauth2/google"
 )
+
+const googleAndroidPublisherScope = "https://www.googleapis.com/auth/androidpublisher"
 
 // Context holds all application services and dependencies
 type Context struct {
@@ -23,19 +30,24 @@ type Context struct {
 	JobService  service.JobService
 
 	// Services
-	WordService              *service.WordService
-	WordlistService          *service.WordlistService
-	UserService              *service.UserService
-	DefinitionService        *service.DefinitionService
-	DefinitionImageService   *service.DefinitionImageService
-	SubscriptionService      *service.SubscriptionService
-	RevenueCatService        service.RevenueCatService
-	LeitnerTrackingService   *service.LeitnerTrackingService
-	LeitnerSystemStrategy    *service.LeitnerSystemStrategy
-	ErrorReportService       *service.ErrorReportService
-	AnalyticsService         service.AnalyticsServiceInterface
-	RealtimeTelemetryService *service.RealtimeTelemetryService
-	MailService              *mail.MailService
+	WordService                  *service.WordService
+	WordlistService              *service.WordlistService
+	UserService                  *service.UserService
+	DefinitionService            *service.DefinitionService
+	DefinitionImageService       *service.DefinitionImageService
+	SubscriptionService          *service.SubscriptionService
+	RevenueCatService            service.RevenueCatService
+	LeitnerTrackingService       *service.LeitnerTrackingService
+	LeitnerSystemStrategy        *service.LeitnerSystemStrategy
+	ErrorReportService           *service.ErrorReportService
+	AnalyticsService             service.AnalyticsServiceInterface
+	RealtimeTelemetryService     *service.RealtimeTelemetryService
+	MailService                  *mail.MailService
+	StoreEntitlementRepository   *repository.StoreEntitlementRepository
+	ProviderEventInboxRepository *repository.ProviderEventInboxRepository
+	AppleNotificationIngestor    *service.AppleNotificationIngestor
+	GoogleRTDNIngestor           *service.GoogleRTDNIngestor
+	StoreIAPEnabled              bool
 
 	// Monitoring
 	// Configuration
@@ -190,6 +202,9 @@ func (b *ContextBuilder) Build() (*Context, error) {
 	}
 
 	// Initialize default services if not provided
+	if err := b.initializeStoreIAP(); err != nil {
+		return nil, fmt.Errorf("failed to initialize store IAP: %w", err)
+	}
 	if err := b.initializeServices(); err != nil {
 		return nil, fmt.Errorf("failed to initialize services: %w", err)
 	}
@@ -311,6 +326,114 @@ func (b *ContextBuilder) initializeServices() error {
 		b.context.UserService = service.NewUserService(b.context.Database, b.context.SubscriptionService, b.context.ErrorReportService)
 	}
 
+	return nil
+}
+
+func (b *ContextBuilder) initializeStoreIAP() error {
+	storeConfig, err := config.LoadStoreIAPConfig()
+	if err != nil {
+		return err
+	}
+	if !storeConfig.Enabled {
+		b.context.StoreIAPEnabled = false
+		return nil
+	}
+	protector, err := security.NewStoreEvidenceProtector(
+		storeConfig.Evidence.LookupKey,
+		storeConfig.Evidence.ActiveVersion,
+		storeConfig.Evidence.Keys,
+	)
+	if err != nil {
+		return fmt.Errorf("configure protected store evidence: %w", err)
+	}
+	entitlements, err := repository.NewStoreEntitlementRepository(b.context.Database, protector)
+	if err != nil {
+		return err
+	}
+	persistence, err := service.NewStoreEntitlementPersistence(entitlements)
+	if err != nil {
+		return err
+	}
+	appleJWS, err := service.NewAppleJWSVerifier(storeConfig.Apple.Roots)
+	if err != nil {
+		return fmt.Errorf("configure Apple signed-data verifier: %w", err)
+	}
+	appleClient, err := service.NewAppleAppStoreClient(service.AppleAppStoreClientConfig{
+		KeyID: storeConfig.Apple.KeyID, IssuerID: storeConfig.Apple.IssuerID,
+		BundleID: storeConfig.Apple.BundleID, PrivateKey: storeConfig.Apple.PrivateKey,
+	})
+	if err != nil {
+		return fmt.Errorf("configure Apple App Store client: %w", err)
+	}
+	appleProducts := make([]string, 0, len(storeConfig.Apple.Products))
+	for productID := range storeConfig.Apple.Products {
+		appleProducts = append(appleProducts, productID)
+	}
+	appleNotificationVerifier, err := service.NewAppleNotificationVerifier(
+		appleJWS, storeConfig.Apple.BundleID, storeConfig.Apple.AppAppleID, appleProducts, nil,
+	)
+	if err != nil {
+		return err
+	}
+	appleRefresher, err := service.NewAppleSubscriptionRefresher(
+		appleClient, appleJWS, storeConfig.Apple.BundleID, storeConfig.Apple.AppAppleID,
+		storeConfig.Apple.Products, nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	credentialsContext, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	credentials, err := google.FindDefaultCredentials(credentialsContext, googleAndroidPublisherScope)
+	if err != nil {
+		return fmt.Errorf("find Google Application Default Credentials: %w", err)
+	}
+	googleTokens, err := service.NewGoogleOAuthTokenSource(credentials.TokenSource)
+	if err != nil {
+		return err
+	}
+	googleClient, err := service.NewGooglePlayClient(
+		storeConfig.Google.PackageName, googleTokens, nil, "",
+	)
+	if err != nil {
+		return err
+	}
+	googleVerifier, err := service.NewGooglePurchaseVerifier(googleClient, storeConfig.Google.Products, nil)
+	if err != nil {
+		return err
+	}
+	googleProcessor, err := service.NewGooglePurchaseProcessor(googleVerifier, googleClient)
+	if err != nil {
+		return err
+	}
+	notificationRefresher, err := service.NewStoreNotificationRefresher(
+		entitlements, entitlements, appleRefresher, googleProcessor, persistence,
+	)
+	if err != nil {
+		return err
+	}
+	inbox := repository.NewProviderEventInboxRepository(b.context.Database)
+	appleIngestor, err := service.NewAppleNotificationIngestor(
+		appleNotificationVerifier, inbox, notificationRefresher.RefreshApple, nil,
+	)
+	if err != nil {
+		return err
+	}
+	googleIngestor, err := service.NewGoogleRTDNIngestor(
+		service.GoogleOIDCTokenVerifier{}, inbox, notificationRefresher.RefreshGoogle,
+		storeConfig.Google.PushAudience, storeConfig.Google.PushServiceAccountEmail,
+		storeConfig.Google.Topic, storeConfig.Google.Subscription,
+		storeConfig.Google.PackageName, nil,
+	)
+	if err != nil {
+		return err
+	}
+	b.context.StoreEntitlementRepository = entitlements
+	b.context.ProviderEventInboxRepository = inbox
+	b.context.AppleNotificationIngestor = appleIngestor
+	b.context.GoogleRTDNIngestor = googleIngestor
+	b.context.StoreIAPEnabled = true
 	return nil
 }
 

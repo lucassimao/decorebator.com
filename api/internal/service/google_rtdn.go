@@ -17,13 +17,14 @@ import (
 )
 
 const (
-	googleRTDNMaxPushBytes = 64 * 1024
-	googleRTDNLease        = 30 * time.Second
-	googleRTDNRetryDelay   = time.Minute
-	googleRTDNFutureSkew   = 5 * time.Minute
-	googleRTDNAuthTimeout  = 15 * time.Second
-	googleRTDNRefreshLimit = 20 * time.Second
-	googleRTDNVersion      = "1.0"
+	googleRTDNMaxPushBytes  = 64 * 1024
+	googleRTDNLease         = 30 * time.Second
+	googleRTDNRetryDelay    = time.Minute
+	googleRTDNFutureSkew    = 5 * time.Minute
+	googleRTDNAuthTimeout   = 15 * time.Second
+	googleRTDNRefreshLimit  = 20 * time.Second
+	googleRTDNVersion       = "1.0"
+	googleRTDNTestEventKind = "test"
 )
 
 var (
@@ -219,7 +220,7 @@ func (i *GoogleRTDNIngestor) Ingest(
 	if rejection != nil {
 		return i.complete(ctx, claim, rejectedGoogleRTDN)
 	}
-	if event.Kind == "test" {
+	if event.Kind == googleRTDNTestEventKind {
 		return i.complete(ctx, claim, acceptedGoogleRTDNTest)
 	}
 	refreshContext, cancel := context.WithTimeout(ctx, googleRTDNRefreshLimit)
@@ -329,7 +330,7 @@ func (i *GoogleRTDNIngestor) decodeDeveloperNotification(
 		return GoogleRTDNEvent{}, nil, ErrInvalidGoogleRTDNEnvelope
 	}
 	event, err := googleRTDNEventFromNotification(notification, occurredAt)
-	if err != nil || event.Kind == "test" {
+	if err != nil || event.Kind == googleRTDNTestEventKind {
 		return event, nil, err
 	}
 	semantic, err := model.GoogleRTDNSemanticIdempotencyKey(model.GoogleRTDNSemanticEvent{
@@ -360,7 +361,7 @@ func googleRTDNEventFromNotification(
 		if notification.TestNotification.Version != googleRTDNVersion {
 			return GoogleRTDNEvent{}, ErrInvalidGoogleRTDNEnvelope
 		}
-		return GoogleRTDNEvent{Kind: "test", PackageName: notification.PackageName, OccurredAt: occurredAt}, nil
+		return GoogleRTDNEvent{Kind: googleRTDNTestEventKind, PackageName: notification.PackageName, OccurredAt: occurredAt}, nil
 	}
 	if rawGoogleRTDNPresent(notification.OneTimeProductNotification) ||
 		rawGoogleRTDNPresent(notification.PendingRefundReviewNotification) {

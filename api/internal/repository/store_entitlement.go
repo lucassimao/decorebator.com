@@ -54,6 +54,8 @@ type StorePurchaseBinding struct {
 	Environment       model.StoreEnvironment
 	AccountIdentifier string `json:"-"`
 	ProviderRecordID  string `json:"-"`
+	Current           bool
+	MatchedPrimary    bool
 }
 
 type lockedStoreEntitlement struct {
@@ -298,6 +300,7 @@ func (r *StoreEntitlementRepository) ResolvePurchaseBinding(
 	var accountLookup string
 	err = r.db.QueryRow(ctx, `
 		SELECT binding.entitlement_id, binding.user_id, binding.store, binding.environment,
+		       binding.is_current,
 		       binding.provider_record_digest = $3,
 		       CASE WHEN binding.provider_record_digest = $3 THEN binding.encrypted_provider_record ELSE binding.encrypted_linked_record END,
 		       CASE WHEN binding.provider_record_digest = $3 THEN binding.encryption_key_version ELSE binding.linked_encryption_key_version END,
@@ -310,6 +313,7 @@ func (r *StoreEntitlementRepository) ResolvePurchaseBinding(
 		LIMIT 1
 	`, store, environment, lookup).Scan(
 		&binding.EntitlementID, &binding.UserID, &binding.Store, &binding.Environment,
+		&binding.Current,
 		&matchedPrimary, &matchedCiphertext, &matchedVersion,
 		&accountLookup, &accountCiphertext, &accountVersion,
 	)
@@ -323,6 +327,7 @@ func (r *StoreEntitlementRepository) ResolvePurchaseBinding(
 	if matchedPrimary {
 		matchedKind = security.StoreEvidenceProviderRecord
 	}
+	binding.MatchedPrimary = matchedPrimary
 	binding.ProviderRecordID, err = r.protector.Decrypt(security.StoreEvidenceContext{
 		UserID: binding.UserID, Store: binding.Store, Environment: &binding.Environment,
 		Kind: matchedKind, Lookup: lookup,
@@ -338,6 +343,80 @@ func (r *StoreEntitlementRepository) ResolvePurchaseBinding(
 		return StorePurchaseBinding{}, false, err
 	}
 	return binding, true, nil
+}
+
+// ApplyGoogleVoidedPurchase revokes only the currently bound entitlement for
+// an authenticated RTDN void event. Historical replacement tokens cannot
+// revoke a newer subscription cycle.
+func (r *StoreEntitlementRepository) ApplyGoogleVoidedPurchase(
+	ctx context.Context,
+	tx pgx.Tx,
+	binding StorePurchaseBinding,
+	occurredAt time.Time,
+	refundType int32,
+) (model.EntitlementOperationResult, error) {
+	if tx == nil || binding.EntitlementID <= 0 || binding.UserID <= 0 ||
+		binding.Store != model.EntitlementStoreGoogle || !binding.Environment.Valid() ||
+		occurredAt.IsZero() || refundType < 0 {
+		return model.EntitlementOperationResult{}, fmt.Errorf("valid Google voided-purchase mutation is required")
+	}
+	if !binding.Current || !binding.MatchedPrimary {
+		return model.EntitlementOperationResult{
+			Outcome: model.EntitlementOutcomeUnchanged,
+			Code:    model.EntitlementResultStaleEvent,
+		}, nil
+	}
+	var status model.EntitlementStatus
+	var lastEventOccurredAt *time.Time
+	err := tx.QueryRow(ctx, `
+		SELECT status, last_event_occurred_at
+		FROM store_entitlements
+		WHERE id=$1 AND user_id=$2 AND store=$3 AND environment=$4
+		FOR UPDATE
+	`, binding.EntitlementID, binding.UserID, binding.Store, binding.Environment).Scan(
+		&status, &lastEventOccurredAt,
+	)
+	if err != nil {
+		return model.EntitlementOperationResult{}, err
+	}
+	occurredAt = occurredAt.UTC()
+	// Equal-time void events remain restrictive. Google can emit cancellation
+	// and void notifications for one billing action at the same millisecond;
+	// dropping the latter would preserve refunded access.
+	if lastEventOccurredAt != nil && occurredAt.Before(lastEventOccurredAt.UTC()) {
+		return model.EntitlementOperationResult{
+			Outcome: model.EntitlementOutcomeUnchanged,
+			Status:  status,
+			Code:    model.EntitlementResultStaleEvent,
+		}, nil
+	}
+	reason := fmt.Sprintf("google_voided_purchase_refund_type_%d", refundType)
+	command, err := tx.Exec(ctx, `
+		UPDATE store_entitlements
+		SET status='revoked', auto_renew_enabled=FALSE,
+		    revoked_at=COALESCE(revoked_at, $5),
+		    revocation_reason=COALESCE(revocation_reason, $6),
+		    last_event_occurred_at=$5, updated_at=NOW()
+		WHERE id=$1 AND user_id=$2 AND store=$3 AND environment=$4
+	`, binding.EntitlementID, binding.UserID, binding.Store, binding.Environment, occurredAt, reason)
+	if err != nil {
+		return model.EntitlementOperationResult{}, err
+	}
+	if command.RowsAffected() != 1 {
+		return model.EntitlementOperationResult{}, fmt.Errorf("Google voided-purchase mutation lost its entitlement")
+	}
+	if status == model.EntitlementStatusRevoked {
+		return model.EntitlementOperationResult{
+			Outcome: model.EntitlementOutcomeUnchanged,
+			Status:  model.EntitlementStatusRevoked,
+			Code:    model.EntitlementResultRevocationRetained,
+		}, nil
+	}
+	return model.EntitlementOperationResult{
+		Outcome: model.EntitlementOutcomeApplied,
+		Status:  model.EntitlementStatusRevoked,
+		Code:    model.EntitlementResultRevoked,
+	}, nil
 }
 
 func (r *StoreEntitlementRepository) reencryptAccounts(

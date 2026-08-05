@@ -23,6 +23,8 @@ type fakeAppleNotificationInbox struct {
 	completeCalls int
 	retryCalls    int
 	input         repository.ProviderEventInboxInput
+	claimResult   *repository.ProviderEventInboxResult
+	claimErr      error
 }
 
 func (f *fakeAppleNotificationInbox) Claim(
@@ -33,6 +35,12 @@ func (f *fakeAppleNotificationInbox) Claim(
 ) (repository.ProviderEventInboxResult, error) {
 	f.claimCalls++
 	f.input = input
+	if f.claimResult != nil || f.claimErr != nil {
+		if f.claimResult == nil {
+			return repository.ProviderEventInboxResult{}, f.claimErr
+		}
+		return *f.claimResult, f.claimErr
+	}
 	return repository.ProviderEventInboxResult{Claim: &repository.ProviderEventClaim{
 		ID: 1, LeaseToken: uuid.New(), Input: input,
 	}}, nil
@@ -332,6 +340,37 @@ func TestAppleNotificationIngestorPersistsRetryAfterProviderFailure(t *testing.T
 	assert.Zero(t, inbox.completeCalls)
 }
 
+func TestAppleNotificationIngestorCompletesPermanentRefreshFailures(t *testing.T) {
+	now := time.Date(2026, 8, 4, 12, 0, 0, 0, time.UTC)
+	tests := []struct {
+		failure model.EntitlementOperationFailure
+		code    model.EntitlementResultCode
+	}{
+		{model.EntitlementFailureInvalidEvidence, model.EntitlementResultInvalidPurchase},
+		{model.EntitlementFailureAccountMismatch, model.EntitlementResultAccountMismatch},
+		{model.EntitlementFailureUnknownProduct, model.EntitlementResultUnknownProduct},
+	}
+	for _, test := range tests {
+		t.Run(string(test.failure), func(t *testing.T) {
+			inbox := &fakeAppleNotificationInbox{}
+			ingestor, err := service.NewAppleNotificationIngestor(
+				newAppleNotificationVerifier(t, validAppleNotificationEvidence(now)), inbox,
+				func(context.Context, service.VerifiedAppleNotification) (repository.ProviderEventProcessor, error) {
+					return nil, &service.ApplePurchaseVerificationError{Failure: test.failure}
+				},
+				func() time.Time { return now },
+			)
+			require.NoError(t, err)
+			result, err := ingestor.Ingest(context.Background(), "signed-notification")
+			require.NoError(t, err)
+			assert.Equal(t, model.EntitlementOutcomeRejected, result.Outcome)
+			assert.Equal(t, test.code, result.Code)
+			assert.Equal(t, 1, inbox.completeCalls)
+			assert.Zero(t, inbox.retryCalls)
+		})
+	}
+}
+
 func TestAppleNotificationIngestorRejectsEmptyAndOversizeBeforeClaim(t *testing.T) {
 	now := time.Date(2026, 8, 4, 12, 0, 0, 0, time.UTC)
 	evidence := validAppleNotificationEvidence(now)
@@ -347,6 +386,34 @@ func TestAppleNotificationIngestorRejectsEmptyAndOversizeBeforeClaim(t *testing.
 	for _, payload := range []string{"", strings.Repeat("x", 256*1024+1)} {
 		_, err = ingestor.Ingest(context.Background(), payload)
 		require.ErrorIs(t, err, service.ErrInvalidAppleSignedData)
+		assert.Equal(t, service.AppleNotificationAcknowledge, service.AppleNotificationDispositionOf(err))
 	}
 	assert.Zero(t, inbox.claimCalls)
+}
+
+func TestAppleNotificationIngestorExportsTypedDuplicateDispositions(t *testing.T) {
+	now := time.Date(2026, 8, 4, 12, 0, 0, 0, time.UTC)
+	evidence := validAppleNotificationEvidence(now)
+	inbox := &fakeAppleNotificationInbox{claimResult: &repository.ProviderEventInboxResult{
+		Duplicate: true, Outcome: model.EntitlementOutcomeRetry,
+		Code: model.EntitlementResultRetryableProvider,
+	}}
+	ingestor, err := service.NewAppleNotificationIngestor(
+		newAppleNotificationVerifier(t, evidence), inbox,
+		func(context.Context, service.VerifiedAppleNotification) (repository.ProviderEventProcessor, error) {
+			t.Fatal("duplicate delivery must not refresh provider state")
+			return nil, nil
+		},
+		func() time.Time { return now },
+	)
+	require.NoError(t, err)
+	_, err = ingestor.Ingest(context.Background(), "signed-notification")
+	require.Error(t, err)
+	assert.Equal(t, service.AppleNotificationRetry, service.AppleNotificationDispositionOf(err))
+
+	inbox.claimResult.Outcome = model.EntitlementOutcomeApplied
+	inbox.claimResult.Code = model.EntitlementResultApplied
+	_, err = ingestor.Ingest(context.Background(), "signed-notification")
+	require.NoError(t, err)
+	assert.Equal(t, service.AppleNotificationAcknowledge, service.AppleNotificationDispositionOf(err))
 }
