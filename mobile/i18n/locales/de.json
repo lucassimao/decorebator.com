@@ -519,7 +519,40 @@
       "paymentPending": "Zahlung ausstehend. Zugang nach Bestätigung.",
       "paymentMethodInvalid": "Zahlungsmethode ungültig. Bitte überprüfen Sie Ihre Zahlungsinformationen und versuchen Sie es erneut.",
       "receiptValidationFailed": "Beleg-Validierung fehlgeschlagen. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.",
-      "paymentSystemError": "Zahlungssystem-Konfigurationsfehler. Bitte versuchen Sie es später erneut."
+      "paymentSystemError": "Zahlungssystem-Konfigurationsfehler. Bitte versuchen Sie es später erneut.",
+      "nativeIap": {
+        "title": "Erweitere deine Wortsammlung",
+        "subtitle": "Lass deine Listen mit unbegrenztem Üben und Anreichern wachsen.",
+        "appStore": "Sicherer Kauf über den App Store",
+        "googlePlay": "Sicherer Kauf über Google Play",
+        "planGroupLabel": "Premium-Abonnements",
+        "choosePlan": "Tarif auswählen",
+        "continue": "Weiter zum Store",
+        "purchasing": "Store wird geöffnet…",
+        "pending": "Kauf ausstehend",
+        "pendingMessage": "Der Store verarbeitet diesen Kauf noch. Premium wird nach der Bestätigung aktiviert.",
+        "entitled": "Premium aktiv",
+        "entitledMessage": "Premium ist für dieses Konto aktiv.",
+        "empty": "Zurzeit sind keine Tarife verfügbar. Versuche es erneut oder stelle einen Kauf wieder her.",
+        "unavailable": "Der Store ist derzeit nicht verfügbar. Es wurde kein Kauf gestartet.",
+        "failure": "Die Store-Prüfung konnte nicht abgeschlossen werden. Versuche es erneut.",
+        "retry": "Store erneut versuchen",
+        "restoring": "Wiederherstellung…",
+        "legal": "Die Zahlung erfolgt über den Store. Das Abonnement verlängert sich automatisch bis zur Kündigung.",
+        "renewal": "{{price}} je {{period}}, automatische Verlängerung bis zur Kündigung.",
+        "offer": "Verfügbares Angebot: {{price}} für {{period}}",
+        "loading": "Abonnements werden geladen",
+        "period": {
+          "day_one": "{{count}} Tag",
+          "day_other": "{{count}} Tage",
+          "week_one": "{{count}} Woche",
+          "week_other": "{{count}} Wochen",
+          "month_one": "{{count}} Monat",
+          "month_other": "{{count}} Monate",
+          "year_one": "{{count}} Jahr",
+          "year_other": "{{count}} Jahre"
+        }
+      }
     },
     "account": {
       "title": "Konto",

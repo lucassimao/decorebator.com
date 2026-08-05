@@ -3,8 +3,7 @@ import * as usersApi from "@/api/users";
 import { Platform, Switch } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as AuthSession from "expo-auth-session";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as MailComposer from "expo-mail-composer";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -15,8 +14,7 @@ import i18n from "@/i18n";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { createCommonStyles } from "@/styles/common";
-import { usePaymentProvider } from "@/hooks/useRevenueCat";
-import RevenueCatPaywall from "@/components/RevenueCatPaywall";
+import NativeIAPPaywall from "@/components/NativeIAPPaywall";
 import { formatDate } from "@/utils/dateUtils";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -38,58 +36,18 @@ import {
   unregisterDevicePushToken,
 } from "@/utils/pushNotifications";
 
-type PlanRecurrence = "annual" | "monthly";
-
-export interface PricingPlan {
-  id: PlanRecurrence;
-  name: string;
-  price: number;
-  currency: string;
-  interval: "month" | "year";
-  features: string[];
-  popular?: boolean;
-  savings?: string;
-}
-// const { width: SCREEN_WIDTH } = Dimensions.get("window"); // Removed unused variable
-
-const getPricingPlans = (t: any): PricingPlan[] => [
-  {
-    id: "monthly",
-    name: t("settings.subscription.monthly"),
-    price: 6.99,
-    currency: "USD",
-    interval: "month",
-    features: [
-      t("settings.subscription.features.unlimitedWordlists"),
-      t("settings.subscription.features.aiEnrichment"),
-      t("settings.subscription.features.allQuizModes"),
-      t("settings.subscription.features.progressTracking"),
-      t("settings.subscription.features.prioritySupport"),
-    ],
-  },
-  {
-    id: "annual",
-    name: t("settings.subscription.yearly"),
-    price: 69.99,
-    currency: "USD",
-    interval: "year",
-    popular: true,
-    savings: t("settings.subscription.savePercent", { percent: 17 }),
-    features: [
-      t("settings.subscription.features.unlimitedWordlists"),
-      t("settings.subscription.features.aiEnrichment"),
-      t("settings.subscription.features.allQuizModes"),
-      t("settings.subscription.features.progressTracking"),
-      t("settings.subscription.features.prioritySupport"),
-    ],
-  },
-];
+const PREMIUM_FEATURE_KEYS = [
+  "unlimitedWordlists",
+  "aiEnrichment",
+  "allQuizModes",
+  "progressTracking",
+  "prioritySupport",
+] as const;
 
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
-  const [selectedPlan, setSelectedPlan] = useState<PlanRecurrence | null>(null);
-  const [showRevenueCatPaywall, setShowRevenueCatPaywall] = useState(false);
+  const [showNativeIAPPaywall, setShowNativeIAPPaywall] = useState(false);
   const { t } = useTranslation();
   const previousSubscriptionRef = useRef<string | null>(null);
   const { theme, themeMode, setThemeMode, responsive } = useTheme();
@@ -99,11 +57,6 @@ const SettingsScreen: React.FC = () => {
     profile?.notificationsEnabled ?? false,
   );
   const [notificationsLoading, setNotificationsLoading] = useState(false);
-
-  // Get payment provider
-  const { data: providerInfo } = usePaymentProvider();
-
-  const PRICING_PLANS = React.useMemo(() => getPricingPlans(t), [t]);
 
   // Fetch subscription
   const {
@@ -242,54 +195,6 @@ const SettingsScreen: React.FC = () => {
       setNotificationsLoading(false);
     }
   };
-
-  const checkoutMutation = useMutation({
-    mutationFn: async (plan: PlanRecurrence) => {
-      const redirectUri = AuthSession.makeRedirectUri({
-        scheme: "decorebator",
-        path: "settings", // Use settings path instead of stripe
-      });
-
-      const res = await subscriptionsApi.createCheckoutSession(
-        plan,
-        redirectUri,
-      );
-
-      return { checkoutUrl: res.checkoutUrl, redirectUri };
-    },
-    onSuccess: async (data) => {
-      const result = await WebBrowser.openAuthSessionAsync(
-        data.checkoutUrl,
-        data.redirectUri,
-      );
-
-      // Handle all possible result types for better Android compatibility
-      if (result.type === "success") {
-        // Direct success - refresh subscription and show success message
-        await refetchSubscription();
-        Alert.alert(
-          t("common.success"),
-          t("settings.subscription.activatedSuccess"),
-        );
-      } else if (result.type === "cancel") {
-        // User cancelled checkout - no action needed
-      } else if (result.type === "dismiss") {
-        // Browser was dismissed - could be user closing or redirect completion
-        console.log("Browser dismissed, checking subscription status");
-
-        // Wait a moment for any background processing, then refresh
-        setTimeout(async () => {
-          await refetchSubscription();
-
-          // Check if subscription changed from free to premium
-          // Note: We'll let the subscription query refetch handle the UI update
-        }, 1000);
-      }
-    },
-    onError: () => {
-      Alert.alert(t("common.error"), t("settings.subscription.checkoutError"));
-    },
-  });
 
   // Open native subscription management (no API call needed)
   const openNativeManagement = async () => {
@@ -683,108 +588,30 @@ const SettingsScreen: React.FC = () => {
               >
                 {t("settings.subscription.premiumFeatures")}
               </Text>
-              {PRICING_PLANS[0].features.map((feature, index) => (
-                <View key={index} style={styles.featureRow}>
+              {PREMIUM_FEATURE_KEYS.map((featureKey) => (
+                <View key={featureKey} style={styles.featureRow}>
                   <MaterialIcons
                     name="check-circle"
                     size={20}
                     color={theme.colors.success}
                   />
-                  <Text style={styles.featureText}>{feature}</Text>
+                  <Text style={styles.featureText}>
+                    {t(`settings.subscription.features.${featureKey}`)}
+                  </Text>
                 </View>
               ))}
             </View>
 
-            {/* Pricing Plans - Only show for Stripe */}
-            {providerInfo?.provider === "stripe" && (
-              <View style={styles.pricingContainer}>
-                {PRICING_PLANS.map((plan) => (
-                  <TouchableOpacity
-                    key={plan.id}
-                    style={[
-                      styles.pricingCard,
-                      selectedPlan === plan.id && styles.pricingCardSelected,
-                      plan.popular && styles.pricingCardPopular,
-                    ]}
-                    onPress={() => setSelectedPlan(plan.id)}
-                    activeOpacity={0.8}
-                  >
-                    {plan.popular && (
-                      <View style={styles.popularBadge}>
-                        <Text style={styles.popularText}>
-                          {t("settings.subscription.bestValue")}
-                        </Text>
-                      </View>
-                    )}
-
-                    <Text style={styles.planInterval}>{plan.name}</Text>
-                    <View style={styles.priceRow}>
-                      <Text style={styles.priceSymbol}>$</Text>
-                      <Text style={styles.priceAmount}>{plan.price}</Text>
-                      <Text style={styles.priceInterval}>/{plan.interval}</Text>
-                    </View>
-
-                    {plan.savings && (
-                      <View style={styles.savingsBadge}>
-                        <Text style={styles.savingsText}>{plan.savings}</Text>
-                      </View>
-                    )}
-
-                    <View
-                      style={[
-                        styles.radioButton,
-                        selectedPlan === plan.id && styles.radioButtonSelected,
-                      ]}
-                    >
-                      {selectedPlan === plan.id && (
-                        <View style={styles.radioButtonInner} />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
-            {/* Subscribe Button */}
             <TouchableOpacity
-              style={[
-                styles.subscribeButton,
-                !selectedPlan &&
-                  providerInfo?.provider === "stripe" &&
-                  styles.subscribeButtonDisabled,
-              ]}
-              onPress={() => {
-                if (providerInfo?.provider === "revenuecat") {
-                  // Show RevenueCat paywall
-                  setShowRevenueCatPaywall(true);
-                } else {
-                  // Use Stripe checkout
-                  selectedPlan && checkoutMutation.mutateAsync(selectedPlan);
-                }
-              }}
-              disabled={
-                providerInfo?.provider === "stripe" &&
-                (!selectedPlan || checkoutMutation.isPending)
-              }
+              testID="open-native-iap-paywall"
+              style={styles.subscribeButton}
+              onPress={() => setShowNativeIAPPaywall(true)}
               activeOpacity={0.8}
             >
-              {checkoutMutation.isPending ? (
-                <ActivityIndicator
-                  size="small"
-                  color={theme.colors.text.inverse}
-                />
-              ) : (
-                <>
-                  <Text style={styles.subscribeButtonText}>
-                    {providerInfo?.provider === "revenuecat"
-                      ? t("settings.subscription.viewPlans")
-                      : selectedPlan
-                        ? t("settings.subscription.continueToPayment")
-                        : t("settings.subscription.selectPlan")}
-                  </Text>
-                  <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-                </>
-              )}
+              <Text style={styles.subscribeButtonText}>
+                {t("settings.subscription.viewPlans")}
+              </Text>
+              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         )}
@@ -1008,25 +835,29 @@ const SettingsScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* RevenueCat Paywall Modal */}
       <Modal
-        visible={showRevenueCatPaywall}
+        visible={showNativeIAPPaywall}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowRevenueCatPaywall(false)}
+        onRequestClose={() => setShowNativeIAPPaywall(false)}
       >
-        <RevenueCatPaywall
-          onClose={() => setShowRevenueCatPaywall(false)}
-          onSuccess={(packageType) => {
-            console.log(packageType);
-
-            setShowRevenueCatPaywall(false);
-            Alert.alert(
-              t("common.success"),
-              t("settings.subscription.activatedSuccess"),
-            );
-          }}
-        />
+        {showNativeIAPPaywall ? (
+          <NativeIAPPaywall
+            visible
+            onClose={() => setShowNativeIAPPaywall(false)}
+            onEntitled={async () => {
+              await Promise.all([
+                refetchSubscription(),
+                queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
+              ]);
+              setShowNativeIAPPaywall(false);
+              Alert.alert(
+                t("common.success"),
+                t("settings.subscription.activatedSuccess"),
+              );
+            }}
+          />
+        ) : null}
       </Modal>
     </SafeAreaView>
   );
@@ -1200,101 +1031,6 @@ const createStyles = (
       color: theme.colors.text.primary,
       flex: 1,
     },
-    pricingContainer: {
-      flexDirection: "row",
-      paddingHorizontal: 20,
-      gap: 12,
-      marginBottom: 20,
-    },
-    pricingCard: {
-      flex: 1,
-      backgroundColor: theme.colors.background.surface,
-      borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.md,
-      borderWidth: 2,
-      borderColor: "transparent",
-      position: "relative",
-      ...theme.shadows.sm,
-    },
-    pricingCardSelected: {
-      borderColor: theme.colors.primary,
-    },
-    pricingCardPopular: {
-      borderColor: theme.colors.premium,
-    },
-    popularBadge: {
-      position: "absolute",
-      top: -12,
-      alignSelf: "center",
-      backgroundColor: theme.colors.premium,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    popularText: {
-      fontSize: 10,
-      fontWeight: "700",
-      color: theme.colors.text.primary,
-    },
-    planInterval: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: theme.colors.text.primary,
-      marginBottom: 8,
-      textAlign: "center",
-    },
-    priceRow: {
-      flexDirection: "row",
-      alignItems: "baseline",
-      justifyContent: "center",
-      marginBottom: 8,
-    },
-    priceSymbol: {
-      fontSize: 16,
-      color: theme.colors.text.primary,
-      fontWeight: "500",
-    },
-    priceAmount: {
-      fontSize: 28,
-      fontWeight: "700",
-      color: theme.colors.text.primary,
-    },
-    priceInterval: {
-      fontSize: 14,
-      color: theme.colors.text.secondary,
-    },
-    savingsBadge: {
-      backgroundColor: theme.colors.state.correctBackground,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: theme.borderRadius.sm,
-      alignSelf: "center",
-      marginBottom: 12,
-    },
-    savingsText: {
-      fontSize: 12,
-      fontWeight: "600",
-      color: theme.colors.success,
-    },
-    radioButton: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      borderWidth: 2,
-      borderColor: theme.colors.ui.disabled,
-      alignSelf: "center",
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    radioButtonSelected: {
-      borderColor: theme.colors.primary,
-    },
-    radioButtonInner: {
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-      backgroundColor: theme.colors.primary,
-    },
     subscribeButton: {
       flexDirection: "row",
       alignItems: "center",
@@ -1308,10 +1044,6 @@ const createStyles = (
       minHeight: responsive.spacing.minTouchTarget,
       ...theme.shadows.md,
       shadowColor: theme.colors.primary,
-    },
-    subscribeButtonDisabled: {
-      backgroundColor: theme.colors.ui.disabled,
-      shadowOpacity: 0,
     },
     subscribeButtonText: {
       fontSize: responsive.fontSizes.headline,

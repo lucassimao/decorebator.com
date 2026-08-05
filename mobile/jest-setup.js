@@ -108,6 +108,50 @@ jest.mock("react-native-purchases", () => ({
   getCustomerInfo: jest.fn(),
 }));
 
+// Reanimated's native worklets module is unavailable in Jest. Individual
+// animation tests can override this deterministic static implementation.
+jest.mock("react-native-reanimated", () => ({
+  __esModule: true,
+  default: { View: "Animated.View", Text: "Animated.Text" },
+  Easing: { cubic: "cubic", out: (value) => value },
+  cancelAnimation: jest.fn(),
+  interpolate: (value, input, output) =>
+    output[0] +
+    ((value - input[0]) / (input[1] - input[0])) * (output[1] - output[0]),
+  runOnJS: (fn) => fn,
+  useAnimatedStyle: (fn) => fn(),
+  useReducedMotion: () => false,
+  useSharedValue: (value) => ({ value }),
+  withDelay: (_delay, value) => value,
+  withSpring: (value) => value,
+  withTiming: (value, _config, callback) => {
+    callback?.(true);
+    return value;
+  },
+}));
+
+jest.mock("expo-iap", () => ({
+  ErrorCode: {
+    UserCancelled: "user-cancelled",
+    Pending: "pending",
+    DeferredPayment: "deferred-payment",
+    Unknown: "unknown",
+    ItemUnavailable: "item-unavailable",
+    SkuNotFound: "sku-not-found",
+    FeatureNotSupported: "feature-not-supported",
+  },
+  getAvailablePurchases: jest.fn(() => Promise.resolve([])),
+  isEligibleForIntroOfferIOS: jest.fn(() => Promise.resolve(false)),
+  useIAP: () => ({
+    connected: false,
+    subscriptions: [],
+    fetchProducts: jest.fn(() => Promise.resolve()),
+    requestPurchase: jest.fn(() => Promise.resolve()),
+    finishTransaction: jest.fn(() => Promise.resolve()),
+    reconnect: jest.fn(() => Promise.resolve(false)),
+  }),
+}));
+
 jest.mock("@react-native-async-storage/async-storage", () => {
   const storage = new Map();
   return {
@@ -180,6 +224,14 @@ jest.mock("@tanstack/react-query", () => ({
 jest.mock("react-native", () => ({
   Platform: { OS: "ios" },
   Alert: { alert: jest.fn() },
+  AppState: {
+    addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+  },
+  Linking: {
+    addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+    canOpenURL: jest.fn(() => Promise.resolve(true)),
+    openURL: jest.fn(() => Promise.resolve()),
+  },
   SafeAreaView: "SafeAreaView",
   ScrollView: "ScrollView",
   View: "View",

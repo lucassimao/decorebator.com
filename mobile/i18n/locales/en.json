@@ -511,7 +511,40 @@
       "paymentPending": "Payment is pending. You'll receive access once payment is confirmed.",
       "paymentMethodInvalid": "Payment method is invalid. Please check your payment information and try again.",
       "receiptValidationFailed": "Receipt validation failed. Please try again or contact support.",
-      "paymentSystemError": "Payment system configuration error. Please try again later."
+      "paymentSystemError": "Payment system configuration error. Please try again later.",
+      "nativeIap": {
+        "title": "Build your word library",
+        "subtitle": "Keep every wordlist growing with unlimited practice and enrichment.",
+        "appStore": "Secure purchase through the App Store",
+        "googlePlay": "Secure purchase through Google Play",
+        "planGroupLabel": "Premium subscription plans",
+        "choosePlan": "Choose a plan",
+        "continue": "Continue to store",
+        "purchasing": "Opening store…",
+        "pending": "Purchase pending",
+        "pendingMessage": "The store is still processing this purchase. Premium activates after confirmation.",
+        "entitled": "Premium active",
+        "entitledMessage": "Premium is active on this account.",
+        "empty": "No subscription plans are available right now. You can retry or restore a previous purchase.",
+        "unavailable": "The store is unavailable right now. No purchase has been started.",
+        "failure": "We could not complete that store check. Please retry.",
+        "retry": "Retry store",
+        "restoring": "Restoring…",
+        "legal": "Payment is charged by the store. The subscription renews automatically unless cancelled before renewal.",
+        "renewal": "{{price}} per {{period}}, auto-renewing until cancelled.",
+        "offer": "Eligible offer: {{price}} for {{period}}",
+        "loading": "Loading subscription plans",
+        "period": {
+          "day_one": "{{count}} day",
+          "day_other": "{{count}} days",
+          "week_one": "{{count}} week",
+          "week_other": "{{count}} weeks",
+          "month_one": "{{count}} month",
+          "month_other": "{{count}} months",
+          "year_one": "{{count}} year",
+          "year_other": "{{count}} years"
+        }
+      }
     },
     "account": {
       "title": "Account",

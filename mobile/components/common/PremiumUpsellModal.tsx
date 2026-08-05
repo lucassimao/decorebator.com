@@ -11,7 +11,6 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
-import { usePaymentProvider } from "@/hooks/useRevenueCat";
 
 export type PremiumUpsellContext = "analytics" | "chat";
 
@@ -30,7 +29,6 @@ export default function PremiumUpsellModal({
 }: Props) {
   const { theme, responsive } = useTheme();
   const { t } = useTranslation();
-  const providerInfo = usePaymentProvider().data;
 
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.96)).current;
@@ -99,9 +97,8 @@ export default function PremiumUpsellModal({
       onClose();
       return;
     }
-    // Default: let caller decide navigation; modal only frames the upsell.
-    // For hints, providerInfo?.provider === "revenuecat" → RevenueCatPaywall; otherwise Settings.
-    void providerInfo; // referenced for lint - caller handles routing by provider
+    // Default: let the caller navigate to Settings, where one native-store
+    // paywall owns plan selection and purchase state.
     onClose();
   };
 

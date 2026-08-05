@@ -516,7 +516,40 @@
       "paymentPending": "El pago está pendiente. Recibirás acceso una vez que se confirme el pago.",
       "paymentMethodInvalid": "El método de pago no es válido. Por favor, verifica tu información de pago e inténtalo de nuevo.",
       "receiptValidationFailed": "Falló la validación del recibo. Por favor, inténtalo de nuevo o contacta al soporte.",
-      "paymentSystemError": "Error de configuración del sistema de pago. Por favor, inténtalo de nuevo más tarde."
+      "paymentSystemError": "Error de configuración del sistema de pago. Por favor, inténtalo de nuevo más tarde.",
+      "nativeIap": {
+        "title": "Amplía tu biblioteca de palabras",
+        "subtitle": "Sigue ampliando tus listas con práctica y enriquecimiento ilimitados.",
+        "appStore": "Compra segura mediante App Store",
+        "googlePlay": "Compra segura mediante Google Play",
+        "planGroupLabel": "Planes de suscripción Premium",
+        "choosePlan": "Elige un plan",
+        "continue": "Continuar a la tienda",
+        "purchasing": "Abriendo la tienda…",
+        "pending": "Compra pendiente",
+        "pendingMessage": "La tienda aún está procesando la compra. Premium se activará tras la confirmación.",
+        "entitled": "Premium activo",
+        "entitledMessage": "Premium está activo en esta cuenta.",
+        "empty": "No hay planes disponibles ahora. Puedes reintentar o restaurar una compra.",
+        "unavailable": "La tienda no está disponible ahora. No se ha iniciado ninguna compra.",
+        "failure": "No pudimos completar la verificación de la tienda. Inténtalo de nuevo.",
+        "retry": "Reintentar tienda",
+        "restoring": "Restaurando…",
+        "legal": "La tienda realiza el cobro. La suscripción se renueva automáticamente hasta que se cancele.",
+        "renewal": "{{price}} cada {{period}}, con renovación automática hasta la cancelación.",
+        "offer": "Oferta disponible: {{price}} durante {{period}}",
+        "loading": "Cargando planes de suscripción",
+        "period": {
+          "day_one": "{{count}} día",
+          "day_other": "{{count}} días",
+          "week_one": "{{count}} semana",
+          "week_other": "{{count}} semanas",
+          "month_one": "{{count}} mes",
+          "month_other": "{{count}} meses",
+          "year_one": "{{count}} año",
+          "year_other": "{{count}} años"
+        }
+      }
     },
     "account": {
       "title": "Cuenta",

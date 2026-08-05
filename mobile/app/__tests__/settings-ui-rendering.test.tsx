@@ -1,11 +1,19 @@
 import React from "react";
-import { render } from "@testing-library/react-native";
+import { fireEvent, render } from "@testing-library/react-native";
 import SettingsScreen from "../settings";
 import { useQuery } from "@tanstack/react-query";
 import {
   createSubscriptionData,
   SUBSCRIPTION_SCENARIOS,
 } from "./utils/test-helpers";
+
+jest.mock("@/components/NativeIAPPaywall", () => {
+  const { Text } = jest.requireMock("react-native");
+  function MockNativeIAPPaywall() {
+    return <Text>settings.subscription.nativeIap.title</Text>;
+  }
+  return MockNativeIAPPaywall;
+});
 
 // Mock API modules that depend on expo-secure-store
 jest.mock("@/api/subscriptions", () => ({
@@ -47,6 +55,20 @@ describe("SettingsScreen - UI Rendering", () => {
         expect(getByTestId("upgrade-title")).toBeTruthy();
         expect(getByTestId("upgrade-subtitle")).toBeTruthy();
         expect(getByTestId("premium-features-title")).toBeTruthy();
+      });
+
+      it("opens the single native-store paywall without provider routing", () => {
+        mockUseQuery.mockReturnValue({
+          data: SUBSCRIPTION_SCENARIOS.FREE_USER,
+          isLoading: false,
+          refetch: jest.fn(),
+        });
+
+        const view = render(<SettingsScreen />);
+        fireEvent.press(view.getByTestId("open-native-iap-paywall"));
+        expect(
+          view.getByText("settings.subscription.nativeIap.title"),
+        ).toBeTruthy();
       });
 
       it("should hide upgrade section for active premium users", () => {

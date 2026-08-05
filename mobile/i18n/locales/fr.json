@@ -516,7 +516,40 @@
       "paymentPending": "Paiement en attente. Accès après confirmation.",
       "paymentMethodInvalid": "Méthode de paiement invalide. Veuillez vérifier vos informations de paiement et réessayer.",
       "receiptValidationFailed": "Échec de la validation du reçu. Veuillez réessayer ou contacter le support.",
-      "paymentSystemError": "Erreur de configuration du système de paiement. Veuillez réessayer plus tard."
+      "paymentSystemError": "Erreur de configuration du système de paiement. Veuillez réessayer plus tard.",
+      "nativeIap": {
+        "title": "Développez votre bibliothèque de mots",
+        "subtitle": "Enrichissez vos listes grâce à une pratique et un enrichissement illimités.",
+        "appStore": "Achat sécurisé via l’App Store",
+        "googlePlay": "Achat sécurisé via Google Play",
+        "planGroupLabel": "Formules d’abonnement Premium",
+        "choosePlan": "Choisissez une formule",
+        "continue": "Continuer vers la boutique",
+        "purchasing": "Ouverture de la boutique…",
+        "pending": "Achat en attente",
+        "pendingMessage": "La boutique traite encore cet achat. Premium sera activé après confirmation.",
+        "entitled": "Premium actif",
+        "entitledMessage": "Premium est actif sur ce compte.",
+        "empty": "Aucune formule n’est disponible actuellement. Réessayez ou restaurez un achat.",
+        "unavailable": "La boutique est indisponible actuellement. Aucun achat n’a été lancé.",
+        "failure": "La vérification de la boutique a échoué. Veuillez réessayer.",
+        "retry": "Réessayer la boutique",
+        "restoring": "Restauration…",
+        "legal": "Le paiement est prélevé par la boutique. L’abonnement se renouvelle automatiquement jusqu’à sa résiliation.",
+        "renewal": "{{price}} tous les {{period}}, renouvelé automatiquement jusqu’à résiliation.",
+        "offer": "Offre disponible : {{price}} pendant {{period}}",
+        "loading": "Chargement des abonnements",
+        "period": {
+          "day_one": "{{count}} jour",
+          "day_other": "{{count}} jours",
+          "week_one": "{{count}} semaine",
+          "week_other": "{{count}} semaines",
+          "month_one": "{{count}} mois",
+          "month_other": "{{count}} mois",
+          "year_one": "{{count}} an",
+          "year_other": "{{count}} ans"
+        }
+      }
     },
     "account": {
       "title": "Compte",
