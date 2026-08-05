@@ -433,6 +433,15 @@ func signAppleTestJWS(
 	now time.Time,
 	includeProfileOIDs bool,
 ) (string, *x509.Certificate) {
+	return signAppleTestPayloadJWS(t, payload, now, includeProfileOIDs)
+}
+
+func signAppleTestPayloadJWS(
+	t *testing.T,
+	payload any,
+	now time.Time,
+	includeProfileOIDs bool,
+) (string, *x509.Certificate) {
 	t.Helper()
 	rootKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	require.NoError(t, err)

@@ -33,10 +33,48 @@ type AppleTransactionPayload struct {
 	SignedDateMS          int64  `json:"signedDate"`
 	RevocationDateMS      *int64 `json:"revocationDate,omitempty"`
 	RevocationReason      *int32 `json:"revocationReason,omitempty"`
+	AutoRenewProductID    string `json:"autoRenewProductId,omitempty"`
+}
+
+type AppleNotificationData struct {
+	Environment           string `json:"environment"`
+	AppAppleID            int64  `json:"appAppleId"`
+	BundleID              string `json:"bundleId"`
+	BundleVersion         string `json:"bundleVersion"`
+	SignedTransactionInfo string `json:"signedTransactionInfo"`
+	SignedRenewalInfo     string `json:"signedRenewalInfo"`
+	Status                int32  `json:"status"`
+}
+
+type AppleNotificationPayload struct {
+	NotificationType string                 `json:"notificationType"`
+	Subtype          string                 `json:"subtype"`
+	NotificationUUID string                 `json:"notificationUUID"`
+	Data             *AppleNotificationData `json:"data"`
+	Version          string                 `json:"version"`
+	SignedDateMS     int64                  `json:"signedDate"`
+}
+
+type AppleRenewalInfoPayload struct {
+	TransactionID            string `json:"transactionId"`
+	OriginalTransactionID    string `json:"originalTransactionId"`
+	ProductID                string `json:"productId"`
+	AutoRenewProductID       string `json:"autoRenewProductId"`
+	AutoRenewStatus          int32  `json:"autoRenewStatus"`
+	IsInBillingRetryPeriod   bool   `json:"isInBillingRetryPeriod"`
+	GracePeriodExpiresDateMS int64  `json:"gracePeriodExpiresDate"`
+	Environment              string `json:"environment"`
+	SignedDateMS             int64  `json:"signedDate"`
 }
 
 type AppleSignedDataVerifier interface {
 	VerifyAndDecodeTransaction(signedTransaction string) (AppleTransactionPayload, error)
+}
+
+type AppleNotificationSignedDataVerifier interface {
+	VerifyAndDecodeNotification(signedNotification string) (AppleNotificationPayload, error)
+	VerifyAndDecodeTransaction(signedTransaction string) (AppleTransactionPayload, error)
+	VerifyAndDecodeRenewalInfo(signedRenewalInfo string) (AppleRenewalInfoPayload, error)
 }
 
 type appleJWSHeader struct {
@@ -66,46 +104,84 @@ func NewAppleJWSVerifier(roots []*x509.Certificate) (*AppleJWSVerifier, error) {
 }
 
 func (v *AppleJWSVerifier) VerifyAndDecodeTransaction(signedTransaction string) (AppleTransactionPayload, error) {
-	parts := strings.Split(signedTransaction, ".")
-	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return AppleTransactionPayload{}, ErrInvalidAppleSignedData
-	}
-
-	header, payload, err := decodeAppleJWS(parts)
-	if err != nil {
+	var payload AppleTransactionPayload
+	if err := v.verifyAndDecode(signedTransaction, &payload); err != nil {
 		return AppleTransactionPayload{}, err
 	}
-	chain, err := parseAppleCertificateChain(header.Chain)
-	if err != nil || v.verifyCertificateChain(chain, payload.SignedDateMS) != nil {
-		return AppleTransactionPayload{}, ErrInvalidAppleSignedData
-	}
-	if verifyAppleJWSSignature(parts, chain[0]) != nil {
+	if payload.TransactionID == "" || payload.AutoRenewProductID != "" {
 		return AppleTransactionPayload{}, ErrInvalidAppleSignedData
 	}
 	return payload, nil
 }
 
-func decodeAppleJWS(parts []string) (appleJWSHeader, AppleTransactionPayload, error) {
+func (v *AppleJWSVerifier) VerifyAndDecodeNotification(signedNotification string) (AppleNotificationPayload, error) {
+	var payload AppleNotificationPayload
+	if err := v.verifyAndDecode(signedNotification, &payload); err != nil {
+		return AppleNotificationPayload{}, err
+	}
+	if payload.Version == "" || payload.Data == nil {
+		return AppleNotificationPayload{}, ErrInvalidAppleSignedData
+	}
+	return payload, nil
+}
+
+func (v *AppleJWSVerifier) VerifyAndDecodeRenewalInfo(signedRenewalInfo string) (AppleRenewalInfoPayload, error) {
+	var payload AppleRenewalInfoPayload
+	if err := v.verifyAndDecode(signedRenewalInfo, &payload); err != nil {
+		return AppleRenewalInfoPayload{}, err
+	}
+	if payload.AutoRenewProductID == "" || payload.TransactionID != "" {
+		return AppleRenewalInfoPayload{}, ErrInvalidAppleSignedData
+	}
+	return payload, nil
+}
+
+func (v *AppleJWSVerifier) verifyAndDecode(signedData string, destination any) error {
+	parts := strings.Split(signedData, ".")
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return ErrInvalidAppleSignedData
+	}
+
+	header, payloadBytes, signedDateMS, err := decodeAppleJWS(parts)
+	if err != nil {
+		return err
+	}
+	chain, err := parseAppleCertificateChain(header.Chain)
+	if err != nil || v.verifyCertificateChain(chain, signedDateMS) != nil {
+		return ErrInvalidAppleSignedData
+	}
+	if verifyAppleJWSSignature(parts, chain[0]) != nil {
+		return ErrInvalidAppleSignedData
+	}
+	if err := json.Unmarshal(payloadBytes, destination); err != nil {
+		return ErrInvalidAppleSignedData
+	}
+	return nil
+}
+
+func decodeAppleJWS(parts []string) (appleJWSHeader, []byte, int64, error) {
 	headerBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
 	if err != nil {
-		return appleJWSHeader{}, AppleTransactionPayload{}, ErrInvalidAppleSignedData
+		return appleJWSHeader{}, nil, 0, ErrInvalidAppleSignedData
 	}
 	var header appleJWSHeader
 	unmarshalErr := json.Unmarshal(headerBytes, &header)
 	if unmarshalErr != nil || header.Algorithm != "ES256" || len(header.Chain) != 3 {
-		return appleJWSHeader{}, AppleTransactionPayload{}, ErrInvalidAppleSignedData
+		return appleJWSHeader{}, nil, 0, ErrInvalidAppleSignedData
 	}
 
 	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
-		return appleJWSHeader{}, AppleTransactionPayload{}, ErrInvalidAppleSignedData
+		return appleJWSHeader{}, nil, 0, ErrInvalidAppleSignedData
 	}
-	var payload AppleTransactionPayload
-	unmarshalErr = json.Unmarshal(payloadBytes, &payload)
-	if unmarshalErr != nil || payload.SignedDateMS <= 0 {
-		return appleJWSHeader{}, AppleTransactionPayload{}, ErrInvalidAppleSignedData
+	var signedPayload struct {
+		SignedDateMS int64 `json:"signedDate"`
 	}
-	return header, payload, nil
+	unmarshalErr = json.Unmarshal(payloadBytes, &signedPayload)
+	if unmarshalErr != nil || signedPayload.SignedDateMS <= 0 {
+		return appleJWSHeader{}, nil, 0, ErrInvalidAppleSignedData
+	}
+	return header, payloadBytes, signedPayload.SignedDateMS, nil
 }
 
 func (v *AppleJWSVerifier) verifyCertificateChain(chain []*x509.Certificate, signedDateMS int64) error {
