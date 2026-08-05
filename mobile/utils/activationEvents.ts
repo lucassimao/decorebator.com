@@ -38,6 +38,25 @@ export type ActivationEventProperties = {
 type ActivationEventInput = Partial<ActivationEventProperties> &
   Record<string, unknown>;
 
+const REQUIRED_PROPERTIES: Record<
+  ActivationEventName,
+  readonly (keyof ActivationEventProperties)[]
+> = {
+  user_signed_up: ["source"],
+  wordlist_created: ["wordlistId", "language", "source"],
+  word_added: ["wordlistId", "wordCount", "source"],
+  quiz_session_started: ["sessionId", "wordlistId", "source"],
+  quiz_session_completed: [
+    "sessionId",
+    "wordlistId",
+    "answeredCount",
+    "correctCount",
+    "outcome",
+  ],
+  quiz_answered: ["sessionId", "wordlistId", "correct", "responseTimeMs"],
+  practice_cta_opened: ["source"],
+};
+
 const ALLOWED_PROPERTIES = new Set<keyof ActivationEventProperties>([
   "eventVersion",
   "source",
@@ -85,6 +104,15 @@ export function createActivationEventProperties(
   return properties as ActivationEventProperties;
 }
 
+export function validateActivationEvent(
+  event: ActivationEventName,
+  properties: ActivationEventProperties,
+): string[] {
+  return REQUIRED_PROPERTIES[event].filter(
+    (property) => properties[property] === undefined,
+  );
+}
+
 export interface ActivationAnalyticsClient {
   capture: (
     event: ActivationEventName,
@@ -100,6 +128,14 @@ export interface DryRunActivationEvent {
 export interface CaptureActivationEventOptions {
   dryRun?: boolean;
   onDryRun?: (event: DryRunActivationEvent) => void;
+  dedupeKey?: string;
+  /** Caller-owned process-scoped store; this is not durable delivery tracking. */
+  dedupeStore?: Set<string>;
+  onInvalid?: (
+    event: ActivationEventName,
+    properties: ActivationEventProperties,
+    missingProperties: string[],
+  ) => void;
 }
 
 export function createActivationSessionId(): string {
@@ -111,14 +147,32 @@ export function captureActivationEvent(
   event: ActivationEventName,
   input: ActivationEventInput = {},
   options: CaptureActivationEventOptions = {},
-): void {
+): boolean {
   const properties = createActivationEventProperties(input);
+  const missingProperties = validateActivationEvent(event, properties);
+  if (missingProperties.length > 0) {
+    options.onInvalid?.(event, properties, missingProperties);
+    return false;
+  }
+
+  if (options.dedupeKey && options.dedupeStore?.has(options.dedupeKey)) {
+    return false;
+  }
+
   const capturedEvent = { event, properties };
 
   if (options.dryRun) {
     options.onDryRun?.(capturedEvent);
-    return;
+    return true;
   }
 
-  void client.capture(event, properties);
+  try {
+    void client.capture(event, properties);
+    if (options.dedupeKey && options.dedupeStore) {
+      options.dedupeStore.add(options.dedupeKey);
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }

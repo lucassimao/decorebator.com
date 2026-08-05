@@ -3,6 +3,7 @@ import {
   captureActivationEvent,
   createActivationSessionId,
   createActivationEventProperties,
+  validateActivationEvent,
   type ActivationEventName,
 } from "@/utils/activationEvents";
 
@@ -49,7 +50,12 @@ describe("activation analytics contract", () => {
     captureActivationEvent(
       posthog,
       ACTIVATION_EVENT_NAMES.QUIZ_ANSWERED,
-      { sessionId: "session-1", correct: true },
+      {
+        sessionId: "session-1",
+        wordlistId: 7,
+        correct: true,
+        responseTimeMs: 100,
+      },
       { dryRun: true, onDryRun: (event) => dryRunEvents.push(event) },
     );
 
@@ -60,10 +66,58 @@ describe("activation analytics contract", () => {
         properties: {
           eventVersion: 1,
           sessionId: "session-1",
+          wordlistId: 7,
           correct: true,
+          responseTimeMs: 100,
         },
       },
     ]);
+  });
+
+  it("reports missing event-specific properties before capture", () => {
+    expect(
+      validateActivationEvent(ACTIVATION_EVENT_NAMES.WORD_ADDED, {
+        eventVersion: 1,
+        wordlistId: 7,
+      }),
+    ).toEqual(["wordCount", "source"]);
+  });
+
+  it("suppresses a repeated event when the caller supplies a dedupe key", () => {
+    const posthog = { capture: jest.fn() };
+    const dedupeStore = new Set<string>();
+    const event = ACTIVATION_EVENT_NAMES.WORDLIST_CREATED;
+    const properties = { wordlistId: 7, language: "es", source: "test" };
+
+    expect(
+      captureActivationEvent(posthog, event, properties, {
+        dedupeKey: "wordlist-created-7",
+        dedupeStore,
+      }),
+    ).toBe(true);
+    expect(
+      captureActivationEvent(posthog, event, properties, {
+        dedupeKey: "wordlist-created-7",
+        dedupeStore,
+      }),
+    ).toBe(false);
+    expect(posthog.capture).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not consume a dedupe key during dry-run", () => {
+    const posthog = { capture: jest.fn() };
+    const dedupeStore = new Set<string>();
+
+    expect(
+      captureActivationEvent(
+        posthog,
+        ACTIVATION_EVENT_NAMES.WORDLIST_CREATED,
+        { wordlistId: 7, language: "es", source: "test" },
+        { dryRun: true, dedupeKey: "wordlist-created-7", dedupeStore },
+      ),
+    ).toBe(true);
+    expect(dedupeStore).toEqual(new Set());
+    expect(posthog.capture).not.toHaveBeenCalled();
   });
 
   it("creates a non-empty session identifier for one learning session", () => {
