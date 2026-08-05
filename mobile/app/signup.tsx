@@ -29,6 +29,10 @@ import type { Theme } from "@/contexts/ThemeContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { ResponsiveValues } from "@/contexts/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  ACTIVATION_EVENT_NAMES,
+  captureActivationEvent,
+} from "@/utils/activationEvents";
 
 const schema = z
   .object({
@@ -136,12 +140,9 @@ export default function SignUpScreen() {
         setSignUpError(new Error(t(mappedError.i18nKey)));
       }
     },
-    onSuccess: async (_, variables) => {
-      posthog.capture("user_signed_up", {
-        email: variables.email,
-      });
-      posthog.capture("signup_completed", {
-        email: variables.email,
+    onSuccess: async () => {
+      captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.USER_SIGNED_UP, {
+        source: "signup_screen",
       });
 
       // Set flag that user just signed up for welcome flow

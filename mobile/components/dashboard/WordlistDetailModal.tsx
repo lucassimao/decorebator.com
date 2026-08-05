@@ -40,6 +40,11 @@ import {
 import { LANGUAGES } from "./CreateWordlistModal";
 import { useUserSession } from "@/hooks/useUserSession";
 import { useTheme } from "@/contexts/ThemeContext";
+import { usePostHog } from "posthog-react-native";
+import {
+  ACTIVATION_EVENT_NAMES,
+  captureActivationEvent,
+} from "@/utils/activationEvents";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -74,6 +79,7 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
   const { isOnline } = useOffline();
   const { t } = useTranslation();
   const { isPremium, hasOptimisticSubscription } = useUserSession();
+  const posthog = usePostHog();
   const fabHintKey = `wordlistFabHintSeen_${wordlist.id}`;
 
   // Handle modal close with animation
@@ -170,6 +176,11 @@ export const WordlistDetailModal: React.FC<WordlistDetailModalProps> = ({
     mutationFn: (data: wordlistsApi.CreateWordDTO) =>
       wordlistsApi.addWord({ ...data, wordlistId: wordlist.id }),
     onSuccess: () => {
+      captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.WORD_ADDED, {
+        wordlistId: wordlist.id,
+        wordCount: 1,
+        source: "wordlist_detail_modal",
+      });
       queryClient.invalidateQueries({ queryKey: ["words", wordlist.id] });
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
       reset();

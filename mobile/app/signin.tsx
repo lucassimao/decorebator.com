@@ -75,9 +75,9 @@ const LoginScreen: React.FC = () => {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: usersApi.signin,
-    onSuccess: async (_, variables) => {
+    onSuccess: async () => {
       posthog.capture("user_signed_in", {
-        email: variables.email,
+        source: "signin_screen",
       });
 
       // Extract user info from JWT for Sentry
@@ -87,15 +87,12 @@ const LoginScreen: React.FC = () => {
           const decoded = decode(authorization);
           Sentry.setUser({
             id: decoded.payload.sub,
-            email: decoded.payload.email,
           });
         }
       } catch (error) {
         console.error("Error setting Sentry user:", error);
-        // Fallback to email only if JWT decode fails
-        Sentry.setUser({
-          email: variables.email,
-        });
+        // Avoid attaching raw credentials when JWT decoding fails.
+        Sentry.setTag("auth_user_context", "unavailable");
       }
 
       // Clear all cache to prevent data leakage between users

@@ -19,10 +19,20 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
-import type { PostHogEventProperties } from "@posthog/core";
+import {
+  ACTIVATION_EVENT_NAMES,
+  captureActivationEvent,
+  createActivationSessionId,
+} from "@/utils/activationEvents";
 import {
   Modal,
   ScrollView,
@@ -88,6 +98,12 @@ const QuizScreen: React.FC = () => {
   const [retryCount, setRetryCount] = useState(0);
   const quizDisplayedAtRef = useRef(0);
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const quizSessionIdRef = useRef(createActivationSessionId());
+  const quizSessionStartedAtRef = useRef<number | null>(null);
+  const quizSessionStartedRef = useRef(false);
+  const quizSessionCompletedRef = useRef(false);
+  const quizCountRef = useRef(0);
+  const correctCountRef = useRef(0);
   const [showQuizTypeModal, setShowQuizTypeModal] = useState(false);
   const [selectedQuizTypes, setSelectedQuizTypes] =
     useState<QuizType[]>(allQuizTypes);
@@ -172,6 +188,23 @@ const QuizScreen: React.FC = () => {
   }, [quiz, retryCount]); // Trigger on quiz object change or retry, not just ID
 
   useEffect(() => {
+    if (!quiz?.id || quizSessionStartedRef.current) return;
+
+    quizSessionStartedRef.current = true;
+    quizSessionStartedAtRef.current = Date.now();
+    captureActivationEvent(
+      posthog,
+      ACTIVATION_EVENT_NAMES.QUIZ_SESSION_STARTED,
+      {
+        sessionId: quizSessionIdRef.current,
+        wordlistId: Number(wordlistId),
+        quizMode: fastMode ? "fast" : "standard",
+        source: "quiz_screen",
+      },
+    );
+  }, [fastMode, posthog, quiz?.id, wordlistId]);
+
+  useEffect(() => {
     setSelectedQuizTypes(allQuizTypes);
     setDraftQuizTypes(allQuizTypes);
   }, [wordlistId, allQuizTypes]);
@@ -218,14 +251,13 @@ const QuizScreen: React.FC = () => {
     onSuccess: (_, variables) => {
       // Invalidate all analytics after answering a quiz (real-time updates)
       invalidateAllAnalytics(Number(wordlistId));
-      const captureProps: PostHogEventProperties = {
+      captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.QUIZ_ANSWERED, {
         wordlistId: Number(wordlistId),
         correct: variables.success,
         responseTimeMs: Date.now() - quizDisplayedAtRef.current,
-        ...(quiz?.id != null ? { quizId: quiz.id } : {}),
+        sessionId: quizSessionIdRef.current,
         ...(quiz?.type != null ? { quizType: quiz.type } : {}),
-      };
-      posthog.capture("quiz_completed", captureProps);
+      });
 
       if (
         quizCount === 1 &&
@@ -262,8 +294,10 @@ const QuizScreen: React.FC = () => {
     setShowResult(true);
 
     const isCorrect = index === quiz?.answerIndex;
+    quizCountRef.current += 1;
     setQuizCount((prev) => prev + 1);
     if (isCorrect) {
+      correctCountRef.current += 1;
       setCorrectCount((prev) => prev + 1);
     }
 
@@ -280,8 +314,10 @@ const QuizScreen: React.FC = () => {
       userInput.toLowerCase().trim() ===
       quiz.options[quiz.answerIndex]?.toLowerCase();
 
+    quizCountRef.current += 1;
     setQuizCount((prev) => prev + 1);
     if (isCorrect) {
+      correctCountRef.current += 1;
       setCorrectCount((prev) => prev + 1);
     }
 
@@ -294,6 +330,7 @@ const QuizScreen: React.FC = () => {
     setIsSubmitted(true);
     setShowResult(true);
 
+    quizCountRef.current += 1;
     setQuizCount((prev) => prev + 1);
     answerMutation.mutate({ success: false });
   };
@@ -308,6 +345,56 @@ const QuizScreen: React.FC = () => {
     // setCurrentQuizId(null); // Reset current quiz ID to ensure loading state shows
     refetch();
   };
+
+  const completeQuizSession = useCallback(() => {
+    if (!quizSessionStartedRef.current || quizSessionCompletedRef.current) {
+      navigation.goBack();
+      return;
+    }
+
+    quizSessionCompletedRef.current = true;
+    captureActivationEvent(
+      posthog,
+      ACTIVATION_EVENT_NAMES.QUIZ_SESSION_COMPLETED,
+      {
+        sessionId: quizSessionIdRef.current,
+        wordlistId: Number(wordlistId),
+        answeredCount: quizCountRef.current,
+        correctCount: correctCountRef.current,
+        durationMs: quizSessionStartedAtRef.current
+          ? Date.now() - quizSessionStartedAtRef.current
+          : undefined,
+        outcome: "success",
+      },
+    );
+    navigation.goBack();
+  }, [navigation, posthog, wordlistId]);
+
+  useEffect(() => {
+    const sessionId = quizSessionIdRef.current;
+
+    return () => {
+      if (!quizSessionStartedRef.current || quizSessionCompletedRef.current) {
+        return;
+      }
+
+      quizSessionCompletedRef.current = true;
+      captureActivationEvent(
+        posthog,
+        ACTIVATION_EVENT_NAMES.QUIZ_SESSION_COMPLETED,
+        {
+          sessionId,
+          wordlistId: Number(wordlistId),
+          answeredCount: quizCountRef.current,
+          correctCount: correctCountRef.current,
+          durationMs: quizSessionStartedAtRef.current
+            ? Date.now() - quizSessionStartedAtRef.current
+            : undefined,
+          outcome: "cancelled",
+        },
+      );
+    };
+  }, [posthog, wordlistId]);
 
   const handleRetryQuiz = () => {
     setRetryCount((prev) => prev + 1);
@@ -366,7 +453,7 @@ const QuizScreen: React.FC = () => {
       setPendingNavigation(true);
       return;
     }
-    navigation.goBack();
+    completeQuizSession();
   };
 
   // Handle navigation after review modal closes
@@ -374,7 +461,7 @@ const QuizScreen: React.FC = () => {
     await handleLoveIt();
     if (pendingNavigation) {
       setPendingNavigation(false);
-      navigation.goBack();
+      completeQuizSession();
     }
   };
 
@@ -382,7 +469,7 @@ const QuizScreen: React.FC = () => {
     await handleNotReally();
     if (pendingNavigation) {
       setPendingNavigation(false);
-      navigation.goBack();
+      completeQuizSession();
     }
   };
 
@@ -390,7 +477,7 @@ const QuizScreen: React.FC = () => {
     handleMaybeLater();
     if (pendingNavigation) {
       setPendingNavigation(false);
-      navigation.goBack();
+      completeQuizSession();
     }
   };
 
@@ -398,7 +485,7 @@ const QuizScreen: React.FC = () => {
     closeReviewModal();
     if (pendingNavigation) {
       setPendingNavigation(false);
-      navigation.goBack();
+      completeQuizSession();
     }
   };
 
@@ -441,7 +528,7 @@ const QuizScreen: React.FC = () => {
           quizTypeTotal={allQuizTypes.length}
           isQuizTypeDisabled={!isOnline}
           onQuizTypePress={openQuizTypeModal}
-          onBackPress={() => navigation.goBack()}
+          onBackPress={handleGoBack}
           onReportPress={openReportModal}
         />
         <View style={styles.errorContainer}>
@@ -473,7 +560,7 @@ const QuizScreen: React.FC = () => {
         quizTypeTotal={allQuizTypes.length}
         isQuizTypeDisabled={!isOnline}
         onQuizTypePress={openQuizTypeModal}
-        onBackPress={() => navigation.goBack()}
+        onBackPress={handleGoBack}
         onReportPress={openReportModal}
       />
 

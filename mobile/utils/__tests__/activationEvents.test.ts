@@ -1,6 +1,7 @@
 import {
   ACTIVATION_EVENT_NAMES,
   captureActivationEvent,
+  createActivationSessionId,
   createActivationEventProperties,
   type ActivationEventName,
 } from "@/utils/activationEvents";
@@ -63,5 +64,9 @@ describe("activation analytics contract", () => {
         },
       },
     ]);
+  });
+
+  it("creates a non-empty session identifier for one learning session", () => {
+    expect(createActivationSessionId()).toMatch(/^quiz-session-/);
   });
 });

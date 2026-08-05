@@ -25,6 +25,10 @@ import {
 } from "react-native";
 import * as Sentry from "@sentry/react-native";
 import { usePostHog } from "posthog-react-native";
+import {
+  ACTIVATION_EVENT_NAMES,
+  captureActivationEvent,
+} from "@/utils/activationEvents";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -136,10 +140,10 @@ export const CreateWordlistModal: React.FC<CreateWordlistModalProps> = ({
           language: data.languageCode,
         },
       });
-      posthog.capture("wordlist_created", {
+      captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.WORDLIST_CREATED, {
         wordlistId: data.id,
-        wordlistName: data.name,
         language: data.languageCode,
+        source: "create_wordlist_modal",
       });
       queryClient.invalidateQueries({ queryKey: ["wordlists"] });
 

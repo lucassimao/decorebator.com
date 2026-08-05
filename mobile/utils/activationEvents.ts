@@ -102,6 +102,10 @@ export interface CaptureActivationEventOptions {
   onDryRun?: (event: DryRunActivationEvent) => void;
 }
 
+export function createActivationSessionId(): string {
+  return `quiz-session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export function captureActivationEvent(
   client: ActivationAnalyticsClient,
   event: ActivationEventName,

@@ -24,7 +24,7 @@ Session semantics:
 - `quiz_answered` is emitted once per submitted answer and carries the session ID.
 - `quiz_session_completed` is emitted once when the session reaches its completion state; it must not be emitted for an individual answer.
 
-The existing call sites below are legacy inventory until the activation-event audit migrates or explicitly retires them. Do not add a second event for the same semantic action during that migration.
+The remaining events below are legacy inventory outside the activation funnel. Do not add a second event for a semantic action already covered by the canonical contract.
 
 ## Onboarding
 
@@ -42,11 +42,11 @@ The existing call sites below are legacy inventory until the activation-event au
 - `signup_started`
   - Properties: `source` (string) — currently `"signup_screen"`.
 - `signup_completed`
-  - Properties: `email` (string)
+  - Retired by the activation contract; do not emit this duplicate signup-success event.
 - `user_signed_up`
-  - Properties: `email` (string)
+  - Properties: `eventVersion` (number), `source` (string)
 - `user_signed_in`
-  - Properties: `email` (string)
+  - Properties: `source` (string)
 
 ## Dashboard
 
@@ -56,16 +56,22 @@ The existing call sites below are legacy inventory until the activation-event au
 ## Wordlists
 
 - `wordlist_created`
-  - Properties: `wordlistId` (number), `wordlistName` (string), `language` (string)
+  - Properties: `eventVersion` (number), `wordlistId` (number), `language` (string), `source` (string)
+- `word_added`
+  - Properties: `eventVersion` (number), `wordlistId` (number), `wordCount` (number), `source` (string)
 
 ## Quizzes
 
-- `quiz_completed`
-  - Properties: `wordlistId` (number), `quizId` (number | null), `quizType` (string | undefined), `correct` (boolean), `responseTimeMs` (number)
+- `quiz_session_started`
+  - Properties: `eventVersion` (number), `sessionId` (string), `wordlistId` (number), `quizMode` (string), `source` (string)
+- `quiz_answered`
+  - Properties: `eventVersion` (number), `sessionId` (string), `wordlistId` (number), `quizType` (string), `correct` (boolean), `responseTimeMs` (number)
+- `quiz_session_completed`
+  - Properties: `eventVersion` (number), `sessionId` (string), `wordlistId` (number), `answeredCount` (number), `correctCount` (number), `durationMs` (number), `outcome` (string)
 
 ## Metrics Mapping
 
-- **Signup completion rate**: `signup_started` → `signup_completed` funnel.
-- **Time to first wordlist**: time between `signup_completed` and `wordlist_created`.
-- **D1 retention**: cohort by `signup_completed`, return via `dashboard_viewed`.
-- **First quiz completion**: first occurrence of `quiz_completed`.
+- **Signup completion rate**: `signup_started` → `user_signed_up` funnel.
+- **Time to first wordlist**: time between `user_signed_up` and `wordlist_created`.
+- **D1 retention**: cohort by `user_signed_up`, return via `dashboard_viewed`.
+- **First quiz completion**: first `quiz_session_completed` with `outcome=success`.
