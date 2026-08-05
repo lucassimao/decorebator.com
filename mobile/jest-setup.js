@@ -2,6 +2,8 @@
 // Import and configure i18n for tests
 import i18n from "@/i18n";
 
+process.env.EXPO_PUBLIC_API_URL ??= "http://localhost:3000";
+
 // Mock all Expo modules that cause issues
 jest.mock("expo-secure-store", () => ({
   getItemAsync: jest.fn(),
@@ -33,6 +35,32 @@ jest.mock("expo-web-browser", () => ({
 jest.mock("expo-mail-composer", () => ({
   isAvailableAsync: jest.fn(() => Promise.resolve(true)),
   composeAsync: jest.fn(),
+}));
+
+jest.mock("expo-notifications", () => ({
+  addNotificationResponseReceivedListener: jest.fn(() => ({
+    remove: jest.fn(),
+  })),
+  clearLastNotificationResponse: jest.fn(),
+  getExpoPushTokenAsync: jest.fn(() => Promise.resolve({ data: "test-token" })),
+  getLastNotificationResponseAsync: jest.fn(() => Promise.resolve(null)),
+  getPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: "granted", canAskAgain: true }),
+  ),
+  requestPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: "granted", canAskAgain: true }),
+  ),
+  setNotificationHandler: jest.fn(),
+}));
+
+jest.mock("@/utils/offlineManager", () => ({
+  __esModule: true,
+  default: {
+    clearCache: jest.fn(() => Promise.resolve()),
+    getNetworkStatus: jest.fn(() => true),
+    setUserPremiumStatus: jest.fn(),
+    subscribeToNetworkChanges: jest.fn(() => jest.fn()),
+  },
 }));
 
 jest.mock("expo-auth-session", () => ({
@@ -160,6 +188,7 @@ jest.mock("react-native", () => ({
   TouchableOpacity: "TouchableOpacity",
   TouchableWithoutFeedback: "TouchableWithoutFeedback",
   Pressable: "Pressable",
+  Switch: "Switch",
   KeyboardAvoidingView: "KeyboardAvoidingView",
   Image: "Image",
   ImageBackground: "ImageBackground",

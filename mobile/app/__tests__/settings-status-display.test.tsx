@@ -15,7 +15,10 @@ jest.mock("@/api/subscriptions", () => ({
 }));
 
 jest.mock("@/api/users", () => ({
+  getAuthorization: jest.fn(() => null),
+  getProfile: jest.fn(),
   sigout: jest.fn(),
+  update: jest.fn(),
 }));
 
 const mockUseQuery = useQuery as jest.Mock;
