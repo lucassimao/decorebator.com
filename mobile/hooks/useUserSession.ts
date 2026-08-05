@@ -130,8 +130,6 @@ export function useUserSession(): UserSessionData {
       // Essential: Set Sentry context for error tracking
       Sentry.setUser({
         id: effectiveUser.id.toString(),
-        email: effectiveUser.email,
-        username: `${effectiveUser.firstName} ${effectiveUser.lastName}`,
       });
     }
   }, [effectiveUser, effectiveSubscription, isPremium]);

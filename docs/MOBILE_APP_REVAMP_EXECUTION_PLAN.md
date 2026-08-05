@@ -275,6 +275,7 @@ Phase 2 progress:
 - [ ] Add the selected IAP native dependency and rebuild the development client.
 - [ ] Replace the settings paywall purchase path with the store-product API; show store-localized price and legal text from the store/product contract.
 - [ ] Implement purchase, pending, failure, restore, and “already entitled” states.
+- [ ] Emit the typed privacy-safe `paywall_impression`, `paywall_plan_selected`, `purchase_pending`, `purchase_succeeded`, `purchase_failed`, and `restore_completed` events from those native-IAP states; never attach receipts, transaction IDs, purchase tokens, localized price text, or raw provider errors.
 - [ ] Remove platform/locale routing that selects Stripe or RevenueCat.
 - [ ] Ensure purchase state refreshes on app foreground and after notification/deep-link entry.
 - [ ] Keep the old provider path disabled behind a temporary rollback flag only if needed for the first release; it must not be reachable in the IAP-only product behavior.
@@ -322,12 +323,16 @@ Gate 4 acceptance:
 
 Track these independently unless Phase 0/1 identifies a direct contract dependency.
 
-- [ ] Correct the analytics plan: retain `identify`/sign-in coverage, remove PII from user properties/events, define anonymous-to-authenticated identity handling, and add onboarding, paywall impression/selection, purchase pending/success/failure, quiz start/answer/session completion, notification open, and restore outcomes.
+- [x] Correct the analytics foundation: retain id-only `identify`/sign-in coverage, remove PII from user properties/events, define anonymous-to-authenticated/reset handling, migrate onboarding and quiz activation events to the typed contract, capture privacy-safe notification opens, and define the dependent native-IAP funnel names/properties without mislabeling legacy Stripe/RevenueCat activity.
 - [ ] Decide whether quiz completion should return a session summary. If yes, add a versioned API contract with box transitions, counts, next due count, and error semantics; otherwise document the client query/aggregation contract explicitly.
 - [ ] Add due count to the intended progress-summary endpoint or remove it from the strategy’s requirement; do not infer it from reminder payloads.
 - [ ] Build a small coherent primitive layer for the revamp (Button, Card, Input, Sheet, typography/spacing tokens) on top of existing `components/ui` and shared styles.
 - [ ] Fix first-launch/auth routing, notification tap navigation, and flashcard end-of-list behavior as independently testable UX tasks.
 - [ ] Validate accessibility, reduced motion, loading/error states, offline/retry behavior, and small-screen layouts.
+
+Parallel workstream A progress:
+
+- **2026-08-05 — privacy-safe analytics foundation complete.** Expanded the typed, versioned mobile analytics contract with id-only sign-in, onboarding, native-IAP funnel, notification-open, and restore events while retaining the existing signup, wordlist, and quiz activation names. The allowlist drops raw receipt/token/content fields, notification types collapse to a three-value catalog, authenticated identity uses only the positive numeric server ID, dashboard hydration retries identification, and central auth cleanup resets PostHog through a mounted bridge for manual sign-out, token expiry, account deletion, and storage-cleanup failures. Removed email/name from both PostHog and Sentry identity and disabled Sentry default PII collection. Onboarding now uses the validated contract; warm/cold notification responses emit one bounded event per request without title, body, wordlist name, or navigation payload, deduplicate launch/listener replay, and clear the consumed native response. Review restarted with `fable` (temporarily unavailable at its usage limit); Claude `opus` found the remaining Sentry PII, token-expiry identity-reset, and cold-start-test blockers, all three were corrected, and the same reviewer returned `APPROVED`. Fourteen focused tests, full TypeScript checking, repository-wide mobile lint, targeted formatting, and diff checks pass. The full Jest run still has the previously recorded harness failures before test execution: missing API environment in signup, the broken safe-area mock path in auth, and unmocked Expo Notifications in settings; all 31 tests that loaded passed, including the 14 analytics tests. The six native-IAP funnel call sites remain explicitly attached to the dependent paywall/purchase state item because emitting them from the current Stripe/RevenueCat screen would corrupt store-funnel data.
 
 ## Parallel workstream B — Severity-driven reliability triage
 

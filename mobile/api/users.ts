@@ -5,6 +5,7 @@ import { decode } from "./jwt";
 import offlineManager from "@/utils/offlineManager";
 import * as Sentry from "@sentry/react-native";
 import { getApiBaseUrl } from "./baseUrl";
+import { requestAnalyticsIdentityReset } from "@/utils/activationEvents";
 
 export type UserProfile = {
   id: number;
@@ -98,12 +99,16 @@ export async function sigout() {
 
   Sentry.setUser(null);
 
-  if (Platform.OS === "web") {
-    localStorage.removeItem("authorization");
-  } else if (Platform.OS === "ios" || Platform.OS === "android") {
-    await SecureStore.deleteItemAsync("authorization");
-  } else {
-    throw new Error("Unknown platform: " + Platform.OS);
+  try {
+    if (Platform.OS === "web") {
+      localStorage.removeItem("authorization");
+    } else if (Platform.OS === "ios" || Platform.OS === "android") {
+      await SecureStore.deleteItemAsync("authorization");
+    } else {
+      throw new Error("Unknown platform: " + Platform.OS);
+    }
+  } finally {
+    requestAnalyticsIdentityReset();
   }
 }
 export async function signin(data: UserSignin) {

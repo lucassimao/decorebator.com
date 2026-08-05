@@ -12,6 +12,10 @@ import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { Feather } from "@expo/vector-icons";
+import {
+  ACTIVATION_EVENT_NAMES,
+  captureActivationEvent,
+} from "@/utils/activationEvents";
 
 export default function OnboardingAccount() {
   const router = useRouter();
@@ -65,7 +69,11 @@ export default function OnboardingAccount() {
   );
 
   const finish = async (to: "/signup" | "/signin") => {
-    posthog.capture("onboarding_completed");
+    captureActivationEvent(
+      posthog,
+      ACTIVATION_EVENT_NAMES.ONBOARDING_COMPLETED,
+      { destination: to === "/signup" ? "signup" : "signin" },
+    );
     router.replace(to);
   };
 

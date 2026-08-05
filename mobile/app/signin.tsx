@@ -32,6 +32,11 @@ import type { ResponsiveValues } from "@/contexts/ThemeContext";
 import { decode } from "@/api/jwt";
 import * as Sentry from "@sentry/react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  ACTIVATION_EVENT_NAMES,
+  captureActivationEvent,
+  identifyAnalyticsUser,
+} from "@/utils/activationEvents";
 interface LoginFormData {
   email: string;
   password: string;
@@ -76,15 +81,12 @@ const LoginScreen: React.FC = () => {
   const loginMutation = useMutation({
     mutationFn: usersApi.signin,
     onSuccess: async () => {
-      posthog.capture("user_signed_in", {
-        source: "signin_screen",
-      });
-
       // Extract user info from JWT for Sentry
       try {
         const authorization = usersApi.getAuthorization();
         if (authorization) {
           const decoded = decode(authorization);
+          identifyAnalyticsUser(posthog, decoded.payload.sub);
           Sentry.setUser({
             id: decoded.payload.sub,
           });
@@ -94,6 +96,10 @@ const LoginScreen: React.FC = () => {
         // Avoid attaching raw credentials when JWT decoding fails.
         Sentry.setTag("auth_user_context", "unavailable");
       }
+
+      captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.USER_SIGNED_IN, {
+        source: "signin_screen",
+      });
 
       // Clear all cache to prevent data leakage between users
       queryClient.clear();

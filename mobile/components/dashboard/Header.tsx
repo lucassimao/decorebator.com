@@ -13,6 +13,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import { identifyAnalyticsUser } from "@/utils/activationEvents";
 
 // Shimmer Element for Header Loading States
 interface HeaderShimmerElementProps {
@@ -94,12 +95,7 @@ export const Header = () => {
   useEffect(() => {
     if (!user) return;
 
-    posthog.identify(String(user.id), {
-      $set: {
-        email: user.email,
-        name: user.firstName + ` ` + user.lastName,
-      },
-    });
+    identifyAnalyticsUser(posthog, user.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 

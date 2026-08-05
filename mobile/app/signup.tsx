@@ -32,7 +32,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ACTIVATION_EVENT_NAMES,
   captureActivationEvent,
+  identifyAnalyticsUser,
 } from "@/utils/activationEvents";
+import { decode } from "@/api/jwt";
 
 const schema = z
   .object({
@@ -141,6 +143,14 @@ export default function SignUpScreen() {
       }
     },
     onSuccess: async () => {
+      const authorization = usersApi.getAuthorization();
+      if (authorization) {
+        try {
+          identifyAnalyticsUser(posthog, decode(authorization).payload.sub);
+        } catch {
+          // The dashboard profile will retry identification from the server id.
+        }
+      }
       captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.USER_SIGNED_UP, {
         source: "signup_screen",
       });

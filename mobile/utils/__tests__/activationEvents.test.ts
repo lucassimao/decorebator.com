@@ -3,6 +3,11 @@ import {
   captureActivationEvent,
   createActivationSessionId,
   createActivationEventProperties,
+  identifyAnalyticsUser,
+  normalizeNotificationType,
+  requestAnalyticsIdentityReset,
+  resetAnalyticsIdentity,
+  subscribeAnalyticsIdentityReset,
   validateActivationEvent,
   type ActivationEventName,
 } from "@/utils/activationEvents";
@@ -17,6 +22,18 @@ describe("activation analytics contract", () => {
       "quiz_session_completed",
       "quiz_answered",
       "practice_cta_opened",
+      "user_signed_in",
+      "onboarding_started",
+      "onboarding_skipped",
+      "onboarding_feature_viewed",
+      "onboarding_completed",
+      "paywall_impression",
+      "paywall_plan_selected",
+      "purchase_pending",
+      "purchase_succeeded",
+      "purchase_failed",
+      "notification_opened",
+      "restore_completed",
     ]);
   });
 
@@ -122,5 +139,64 @@ describe("activation analytics contract", () => {
 
   it("creates a non-empty session identifier for one learning session", () => {
     expect(createActivationSessionId()).toMatch(/^quiz-session-/);
+  });
+
+  it("requires privacy-safe fields for commerce and notification outcomes", () => {
+    const properties = createActivationEventProperties({
+      store: "apple",
+      productId: "premium.monthly",
+      billingPeriod: "monthly",
+      errorCode: "provider_unavailable",
+      receipt: "sensitive-receipt",
+      purchaseToken: "sensitive-token",
+    });
+
+    expect(properties).toEqual({
+      eventVersion: 1,
+      store: "apple",
+      productId: "premium.monthly",
+      billingPeriod: "monthly",
+      errorCode: "provider_unavailable",
+    });
+    expect(
+      validateActivationEvent(
+        ACTIVATION_EVENT_NAMES.PURCHASE_FAILED,
+        properties,
+      ),
+    ).toEqual([]);
+  });
+
+  it("normalizes notification types to a bounded catalog", () => {
+    expect(normalizeNotificationType("daily_practice_reminder")).toBe(
+      "daily_practice_reminder",
+    );
+    expect(normalizeNotificationType("due_items_reminder")).toBe(
+      "due_items_reminder",
+    );
+    expect(normalizeNotificationType("private-user-content")).toBe("unknown");
+    expect(normalizeNotificationType(undefined)).toBe("unknown");
+  });
+
+  it("identifies by opaque server id without user properties and resets on sign out", () => {
+    const posthog = { identify: jest.fn(), reset: jest.fn() };
+
+    expect(identifyAnalyticsUser(posthog, 42)).toBe(true);
+    expect(identifyAnalyticsUser(posthog, "invalid")).toBe(false);
+    resetAnalyticsIdentity(posthog);
+
+    expect(posthog.identify).toHaveBeenCalledWith("42");
+    expect(posthog.identify).toHaveBeenCalledTimes(1);
+    expect(posthog.reset).toHaveBeenCalledTimes(1);
+  });
+
+  it("delivers auth-layer reset requests to the mounted analytics bridge", () => {
+    const listener = jest.fn();
+    const unsubscribe = subscribeAnalyticsIdentityReset(listener);
+
+    requestAnalyticsIdentityReset();
+    unsubscribe();
+    requestAnalyticsIdentityReset();
+
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });

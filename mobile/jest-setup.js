@@ -317,6 +317,8 @@ jest.mock("expo-router", () => ({
 jest.mock("posthog-react-native", () => ({
   usePostHog: () => ({
     capture: jest.fn(),
+    identify: jest.fn(),
+    reset: jest.fn(),
   }),
 }));
 

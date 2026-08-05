@@ -6,6 +6,18 @@ export const ACTIVATION_EVENT_NAMES = {
   QUIZ_SESSION_COMPLETED: "quiz_session_completed",
   QUIZ_ANSWERED: "quiz_answered",
   PRACTICE_CTA_OPENED: "practice_cta_opened",
+  USER_SIGNED_IN: "user_signed_in",
+  ONBOARDING_STARTED: "onboarding_started",
+  ONBOARDING_SKIPPED: "onboarding_skipped",
+  ONBOARDING_FEATURE_VIEWED: "onboarding_feature_viewed",
+  ONBOARDING_COMPLETED: "onboarding_completed",
+  PAYWALL_IMPRESSION: "paywall_impression",
+  PAYWALL_PLAN_SELECTED: "paywall_plan_selected",
+  PURCHASE_PENDING: "purchase_pending",
+  PURCHASE_SUCCEEDED: "purchase_succeeded",
+  PURCHASE_FAILED: "purchase_failed",
+  NOTIFICATION_OPENED: "notification_opened",
+  RESTORE_COMPLETED: "restore_completed",
 } as const;
 
 export type ActivationEventName =
@@ -33,6 +45,22 @@ export type ActivationEventProperties = {
   responseTimeMs?: number;
   outcome?: "success" | "failure" | "cancelled";
   errorCode?: string;
+  step?: string;
+  slide?: string;
+  destination?: "signup" | "signin";
+  store?: "apple" | "google";
+  productId?: string;
+  billingPeriod?: "monthly" | "annual";
+  notificationType?:
+    | "daily_practice_reminder"
+    | "due_items_reminder"
+    | "unknown";
+  restoreStatus?:
+    | "restored"
+    | "partial"
+    | "no_purchases"
+    | "pending"
+    | "failed";
 };
 
 type ActivationEventInput = Partial<ActivationEventProperties> &
@@ -55,6 +83,18 @@ const REQUIRED_PROPERTIES: Record<
   ],
   quiz_answered: ["sessionId", "wordlistId", "correct", "responseTimeMs"],
   practice_cta_opened: ["source"],
+  user_signed_in: ["source"],
+  onboarding_started: ["source"],
+  onboarding_skipped: ["step"],
+  onboarding_feature_viewed: ["slide"],
+  onboarding_completed: ["destination"],
+  paywall_impression: ["source", "store"],
+  paywall_plan_selected: ["source", "store", "billingPeriod"],
+  purchase_pending: ["store", "productId", "billingPeriod"],
+  purchase_succeeded: ["store", "productId", "billingPeriod"],
+  purchase_failed: ["store", "productId", "errorCode"],
+  notification_opened: ["source", "notificationType"],
+  restore_completed: ["store", "restoreStatus"],
 };
 
 const ALLOWED_PROPERTIES = new Set<keyof ActivationEventProperties>([
@@ -77,6 +117,14 @@ const ALLOWED_PROPERTIES = new Set<keyof ActivationEventProperties>([
   "responseTimeMs",
   "outcome",
   "errorCode",
+  "step",
+  "slide",
+  "destination",
+  "store",
+  "productId",
+  "billingPeriod",
+  "notificationType",
+  "restoreStatus",
 ]);
 
 export function createActivationEventProperties(
@@ -140,6 +188,67 @@ export interface CaptureActivationEventOptions {
 
 export function createActivationSessionId(): string {
   return `quiz-session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export type NotificationAnalyticsType = NonNullable<
+  ActivationEventProperties["notificationType"]
+>;
+
+export function normalizeNotificationType(
+  value: unknown,
+): NotificationAnalyticsType {
+  if (value === "daily_practice_reminder" || value === "due_items_reminder") {
+    return value;
+  }
+  return "unknown";
+}
+
+export interface AnalyticsIdentityClient {
+  identify: (distinctId: string) => void;
+  reset: () => void;
+}
+
+export function identifyAnalyticsUser(
+  client: AnalyticsIdentityClient,
+  userId: number | string,
+): boolean {
+  const normalized = String(userId);
+  if (!/^\d+$/.test(normalized) || Number(normalized) <= 0) {
+    return false;
+  }
+  try {
+    client.identify(normalized);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function resetAnalyticsIdentity(client: AnalyticsIdentityClient): void {
+  try {
+    client.reset();
+  } catch {
+    // Analytics cleanup must never block local authentication cleanup.
+  }
+}
+
+const analyticsIdentityResetListeners = new Set<() => void>();
+
+export function subscribeAnalyticsIdentityReset(
+  listener: () => void,
+): () => void {
+  analyticsIdentityResetListeners.add(listener);
+  return () => analyticsIdentityResetListeners.delete(listener);
+}
+
+export function requestAnalyticsIdentityReset(): void {
+  for (const listener of analyticsIdentityResetListeners) {
+    try {
+      listener();
+    } catch {
+      // Authentication cleanup cannot depend on analytics availability.
+    }
+  }
 }
 
 export function captureActivationEvent(

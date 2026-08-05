@@ -5,6 +5,10 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import {
+  ACTIVATION_EVENT_NAMES,
+  captureActivationEvent,
+} from "@/utils/activationEvents";
 
 const OnboardingWelcome = () => {
   const router = useRouter();
@@ -52,12 +56,16 @@ const OnboardingWelcome = () => {
   );
 
   const onContinue = () => {
-    posthog.capture("onboarding_start");
+    captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.ONBOARDING_STARTED, {
+      source: "welcome",
+    });
     router.replace("/onboarding/features");
   };
 
   const onSkip = async () => {
-    posthog.capture("onboarding_skipped", { at_step: "welcome" });
+    captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.ONBOARDING_SKIPPED, {
+      step: "welcome",
+    });
     router.replace("/signup");
   };
 

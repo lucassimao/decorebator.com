@@ -13,6 +13,8 @@ import { I18nextProvider } from "react-i18next";
 import * as Sentry from "@sentry/react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
+import { NotificationOpenTracker } from "@/components/analytics/NotificationOpenTracker";
+import { AnalyticsIdentityResetBridge } from "@/components/analytics/AnalyticsIdentityResetBridge";
 
 // Prevent auto-hide so we can control when to hide it
 SplashScreen.preventAutoHideAsync();
@@ -30,9 +32,8 @@ Notifications.setNotificationHandler({
 Sentry.init({
   dsn: "https://1905051f98d938186e63c776dec05a68@o4509430877257728.ingest.us.sentry.io/4509553206099968",
 
-  // Adds more context data to events (IP address, cookies, user, etc.)
-  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
-  sendDefaultPii: true,
+  // User identity is attached explicitly as an opaque server id after auth.
+  sendDefaultPii: false,
 
   // Configure Session Replay
   replaysSessionSampleRate: 0.1,
@@ -120,6 +121,8 @@ function RootLayoutNav() {
                     },
                   }}
                 >
+                  <AnalyticsIdentityResetBridge />
+                  <NotificationOpenTracker />
                   {content}
                 </PostHogProvider>
               )}

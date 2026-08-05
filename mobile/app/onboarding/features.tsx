@@ -15,6 +15,10 @@ import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-react-native";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import LottieView, { AnimationObject } from "lottie-react-native";
+import {
+  ACTIVATION_EVENT_NAMES,
+  captureActivationEvent,
+} from "@/utils/activationEvents";
 
 const { width } = Dimensions.get("window");
 
@@ -248,9 +252,11 @@ export default function OnboardingFeatures() {
         setIndex(visible.index);
         const slide = slides[visible.index];
         if (slide) {
-          posthog.capture("onboarding_feature_viewed", {
-            slide: slide.key,
-          });
+          captureActivationEvent(
+            posthog,
+            ACTIVATION_EVENT_NAMES.ONBOARDING_FEATURE_VIEWED,
+            { slide: slide.key },
+          );
         }
       }
     },
@@ -266,13 +272,22 @@ export default function OnboardingFeatures() {
     if (next !== index) {
       ref.current?.scrollToIndex({ index: next, animated: true });
       setIndex(next);
-      posthog.capture("onboarding_feature_viewed", { slide: slides[next].key });
+      captureActivationEvent(
+        posthog,
+        ACTIVATION_EVENT_NAMES.ONBOARDING_FEATURE_VIEWED,
+        { slide: slides[next].key },
+      );
     } else {
       router.replace("/onboarding/account");
     }
   };
 
-  const onSkip = () => router.replace("/onboarding/account");
+  const onSkip = () => {
+    captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.ONBOARDING_SKIPPED, {
+      step: "features",
+    });
+    router.replace("/onboarding/account");
+  };
 
   const nextLabel =
     index === slides.length - 1
