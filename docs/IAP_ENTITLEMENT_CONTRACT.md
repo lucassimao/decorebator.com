@@ -65,6 +65,55 @@ The Google purchase token is sensitive backend material: never serialize or log 
 - Provider identity records are not API response models. Dedicated DTOs may expose only the pre-purchase account identifier required by StoreKit/BillingClient.
 - Atomic uniqueness and idempotency constraints are intentionally specified in the next Phase 1 item; this item defines the identity and trust relationship they must preserve.
 
+## Provider idempotency keys and uniqueness
+
+Provider delivery identity and purchase identity solve different problems and must not be conflated:
+
+- a purchase/transaction key identifies a provider purchase record that may be refreshed or updated as its store state changes;
+- a transport key suppresses redelivery of the exact same notification envelope;
+- a semantic event key suppresses equivalent provider events that arrive in distinct transport envelopes;
+- none of these keys decides whether an older event may overwrite newer entitlement state. Provider-version ordering is defined in the verification/ingestion operations item.
+
+Record keys and Apple notification keys use `namespace:environment:sha256`; Google RTDN event keys use `namespace:sha256` because an RTDN contains no environment before the Play API refresh. SHA-256 is calculated over length-prefixed components. Length-prefixing prevents ambiguous concatenation, namespaces prevent a transaction ID from colliding with a notification ID, and environment separation protects the purchase records for which that value is already verified. Keys are at most 128 characters and safe to log. Hashing is not encryption: any raw Google purchase token retained for future Play API calls still requires protected storage and redacted logging.
+
+The Go contract uses distinct `ProviderRecordKey` and `ProviderEventKey` types. Transaction/purchase constructors return only record keys, while notification/RTDN constructors return only event keys, preventing a mutable purchase key from being accidentally inserted into the event-deduplication path.
+
+### Apple keys
+
+| Record | Key inputs | Constraint and behavior |
+| --- | --- | --- |
+| Verified transaction | environment + `transactionId` | `UNIQUE (transaction_key)`. Repeated verification upserts the same transaction record; it must not blindly ignore a later verified revocation or other newer signed state for that transaction. |
+| Subscription lineage | environment + `originalTransactionId` | `UNIQUE (store, environment, original_transaction_key)` on the Apple purchase binding so one subscription lineage cannot be attached to two users. |
+| Notification delivery | environment + `notificationUUID` | `UNIQUE (idempotency_key)` in the provider-event inbox. A duplicate UUID returns the already-recorded result and performs no second entitlement transition. |
+
+Apple assigns a unique transaction identifier to each purchase/restore/renewal transaction and explicitly documents `notificationUUID` as the value to use to ignore duplicate notifications. The raw signed payload is verified before any key is accepted.
+
+### Google Play keys
+
+| Record | Key inputs | Constraint and behavior |
+| --- | --- | --- |
+| Purchase binding | environment + verified purchase token | `UNIQUE (store, environment, purchase_token_key)`. A token cannot be bound to multiple users. Repeated verification refreshes the same purchase record because subscription state changes under a stable token. |
+| RTDN transport delivery | Pub/Sub topic + `messageId` | `UNIQUE (idempotency_key)` in the provider-event inbox. Pub/Sub guarantees message IDs are unique within a topic; including the topic preserves that scope and allows the inbox row to be claimed before a Play API call. |
+| RTDN semantic event | package name + purchase token + notification type + `eventTimeMillis` | `UNIQUE (semantic_key)`. This suppresses equivalent RTDN business events delivered under distinct Pub/Sub message IDs before provider refresh. |
+
+Google event keys deliberately omit environment because the RTDN envelope does not contain it. The verified environment is attached to the purchase record only after `purchases.subscriptionsv2.get` returns. Google event keys are quota and duplicate-transition guards, not a source of truth: every accepted RTDN still triggers a Play Developer API refresh, and the later operation contract must compare verified provider state/version before changing entitlement. A purchase token key uniquely identifies the mutable purchase binding; it must never cause all later events for that token to be discarded.
+
+### Atomic persistence contract
+
+The later additive IAP schema must provide these database-enforced constraint shapes before provider handlers are enabled:
+
+| Target | Unique columns/index expression |
+| --- | --- |
+| Apple account binding | `app_account_token` |
+| Google account binding | `google_obfuscated_account_id` |
+| Apple subscription binding | `(store, environment, original_transaction_key)` |
+| Apple transaction record | `(store, environment, transaction_key)` |
+| Google purchase binding | `(store, environment, purchase_token_key)` |
+| Provider event inbox | `idempotency_key` |
+| Provider semantic event | partial unique index on `semantic_key WHERE semantic_key IS NOT NULL` |
+
+The current `subscription_events.external_event_id UNIQUE` table is not the target contract: it has no explicit store/environment namespace and existing code performs a separate existence check before insert. New provider ingestion must claim the inbox row with one atomic insert (`INSERT ... ON CONFLICT`) and apply the entitlement change in the same database transaction. The exact inbox state machine, retry result, and out-of-order comparison belong to the next server-operations item; this item defines the keys and constraints that operation must use.
+
 ## Canonical statuses and access
 
 | Status | Grants premium access? | Meaning |
@@ -126,8 +175,12 @@ Google test purchases map to the canonical `sandbox` environment. A purchase tok
 - [Apple App Store Server API](https://developer.apple.com/documentation/appstoreserverapi/)
 - [Apple app account token](https://developer.apple.com/documentation/appstoreserverapi/appaccounttoken)
 - [Apple original transaction identifier](https://developer.apple.com/documentation/appstoreserverapi/originaltransactionid)
+- [Apple transaction identifier](https://developer.apple.com/documentation/appstoreserverapi/transactionid)
+- [Apple notification UUID](https://developer.apple.com/documentation/appstoreservernotifications/notificationuuid)
 - [Apple subscription status](https://developer.apple.com/documentation/appstoreservernotifications/status?changes=_5)
 - [Apple auto-renew status](https://developer.apple.com/documentation/appstoreserverapi/autorenewstatus?changes=_1%2C_1)
 - [Google SubscriptionPurchaseV2](https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptionsv2)
 - [Google BillingFlowParams account identifier](https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.Builder#setObfuscatedAccountId(java.lang.String))
+- [Google real-time developer notifications](https://developer.android.com/google/play/billing/rtdn-reference)
+- [Google Pub/Sub message identifiers](https://cloud.google.com/pubsub/docs/reference/rest/v1/PubsubMessage)
 - [Google Play purchase verification and security](https://developer.android.com/google/play/billing/security)
