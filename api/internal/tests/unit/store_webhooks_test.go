@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -158,6 +159,41 @@ func TestStoreWebhookRoutesFailClosedWhenEnabledReceiversAreMissing(t *testing.T
 			gin.New(), &app.Context{StoreIAPEnabled: true}, decorebatorhttp.NewStoreWebhookMetrics(),
 		)
 	})
+}
+
+func TestLegacyProviderWebhookRoutesAreAbsentWhenDisabled(t *testing.T) {
+	previous, existed := os.LookupEnv("REVENUECAT_WEBHOOK_AUTHORIZATION")
+	require.NoError(t, os.Unsetenv("REVENUECAT_WEBHOOK_AUTHORIZATION"))
+	t.Cleanup(func() {
+		if existed {
+			require.NoError(t, os.Setenv("REVENUECAT_WEBHOOK_AUTHORIZATION", previous))
+		}
+	})
+	router := gin.New()
+	decorebatorhttp.RegisterLegacyProviderWebhookRoutes(router, &app.Context{
+		LegacyProviderWebhooksEnabled: false,
+	})
+
+	for _, path := range []string{"/webhook/stripe", "/webhook/revenuecat"} {
+		request := httptest.NewRequest(http.MethodPost, path, strings.NewReader(`{}`))
+		response := httptest.NewRecorder()
+		assert.NotPanics(t, func() { router.ServeHTTP(response, request) })
+		assert.Equal(t, http.StatusNotFound, response.Code)
+	}
+}
+
+func TestLegacyProviderWebhookRoutesArePresentWhenEnabled(t *testing.T) {
+	router := gin.New()
+	decorebatorhttp.RegisterLegacyProviderWebhookRoutes(router, &app.Context{
+		LegacyProviderWebhooksEnabled: true,
+	})
+
+	paths := make(map[string]bool)
+	for _, route := range router.Routes() {
+		paths[route.Path] = true
+	}
+	assert.True(t, paths["/webhook/stripe"])
+	assert.True(t, paths["/webhook/revenuecat"])
 }
 
 func TestStoreWebhookMetricsExposeOnlyBoundedOperationalLabels(t *testing.T) {

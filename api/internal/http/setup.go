@@ -62,11 +62,8 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		router.PATCH("/password/reset", UserRoutes.ResetPassword)
 		router.POST("/password/send-reset-email", UserRoutes.SendResetPasswordEmail)
 
-		// Stripe webhook endpoint
-		router.POST("/webhook/stripe", HandleStripeWebhook(appCtx.SubscriptionService, appCtx.JobService))
-
-		// RevenueCat webhook endpoint
-		router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(appCtx.JobService))
+		// Legacy provider webhook endpoints
+		RegisterLegacyProviderWebhookRoutes(router, appCtx)
 
 		// Redirect to local expo scheme
 		router.GET("/subscription/checkout-redirect", CheckoutRedirect())
@@ -141,6 +138,16 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 
 	// Static-auth protected endpoints (keep original paths)
 	return router
+}
+
+// RegisterLegacyProviderWebhookRoutes keeps the rollback path explicit and
+// makes both legacy providers unreachable together at the IAP-only cutover.
+func RegisterLegacyProviderWebhookRoutes(router *gin.Engine, appCtx *app.Context) {
+	if !appCtx.LegacyProviderWebhooksEnabled {
+		return
+	}
+	router.POST("/webhook/stripe", HandleStripeWebhook(appCtx.SubscriptionService, appCtx.JobService))
+	router.POST("/webhook/revenuecat", HandleRevenueCatWebhook(appCtx.JobService))
 }
 
 func RegisterStoreWebhookRoutes(

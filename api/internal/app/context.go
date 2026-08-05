@@ -31,29 +31,30 @@ type Context struct {
 	JobService  service.JobService
 
 	// Services
-	WordService                  *service.WordService
-	WordlistService              *service.WordlistService
-	UserService                  *service.UserService
-	DefinitionService            *service.DefinitionService
-	DefinitionImageService       *service.DefinitionImageService
-	SubscriptionService          *service.SubscriptionService
-	RevenueCatService            service.RevenueCatService
-	LeitnerTrackingService       *service.LeitnerTrackingService
-	LeitnerSystemStrategy        *service.LeitnerSystemStrategy
-	ErrorReportService           *service.ErrorReportService
-	AnalyticsService             service.AnalyticsServiceInterface
-	RealtimeTelemetryService     *service.RealtimeTelemetryService
-	MailService                  *mail.MailService
-	StoreEntitlementRepository   *repository.StoreEntitlementRepository
-	ProviderEventInboxRepository *repository.ProviderEventInboxRepository
-	AppleNotificationIngestor    *service.AppleNotificationIngestor
-	GoogleRTDNIngestor           *service.GoogleRTDNIngestor
-	EffectiveAccessService       *service.EffectiveAccessService
-	StoreIAPOrchestrator         *service.StoreIAPOrchestrator
-	GoogleAcknowledgementWorker  *service.GoogleAcknowledgementRetryWorker
-	GoogleAcknowledgementSweep   *service.GoogleAcknowledgementSweepWorker
-	StoreIAPRequestLimiter       *service.StoreIAPRequestLimiter
-	StoreIAPEnabled              bool
+	WordService                   *service.WordService
+	WordlistService               *service.WordlistService
+	UserService                   *service.UserService
+	DefinitionService             *service.DefinitionService
+	DefinitionImageService        *service.DefinitionImageService
+	SubscriptionService           *service.SubscriptionService
+	RevenueCatService             service.RevenueCatService
+	LeitnerTrackingService        *service.LeitnerTrackingService
+	LeitnerSystemStrategy         *service.LeitnerSystemStrategy
+	ErrorReportService            *service.ErrorReportService
+	AnalyticsService              service.AnalyticsServiceInterface
+	RealtimeTelemetryService      *service.RealtimeTelemetryService
+	MailService                   *mail.MailService
+	StoreEntitlementRepository    *repository.StoreEntitlementRepository
+	ProviderEventInboxRepository  *repository.ProviderEventInboxRepository
+	AppleNotificationIngestor     *service.AppleNotificationIngestor
+	GoogleRTDNIngestor            *service.GoogleRTDNIngestor
+	EffectiveAccessService        *service.EffectiveAccessService
+	StoreIAPOrchestrator          *service.StoreIAPOrchestrator
+	GoogleAcknowledgementWorker   *service.GoogleAcknowledgementRetryWorker
+	GoogleAcknowledgementSweep    *service.GoogleAcknowledgementSweepWorker
+	StoreIAPRequestLimiter        *service.StoreIAPRequestLimiter
+	StoreIAPEnabled               bool
+	LegacyProviderWebhooksEnabled bool
 
 	// Monitoring
 	// Configuration
@@ -194,6 +195,11 @@ func (b *ContextBuilder) Build() (*Context, error) {
 	if b.context.Database == nil {
 		return nil, errors.New("database connection is required")
 	}
+	legacyProviderWebhooksEnabled, err := config.LoadLegacyProviderWebhooksEnabled()
+	if err != nil {
+		return nil, fmt.Errorf("failed to configure legacy provider webhooks: %w", err)
+	}
+	b.context.LegacyProviderWebhooksEnabled = legacyProviderWebhooksEnabled
 
 	// Initialize Redis client if not provided
 	if b.context.RedisClient == nil {

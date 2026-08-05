@@ -20,7 +20,7 @@ func NewSubscriptionRepository(db *pgxpool.Pool) *SubscriptionRepository {
 }
 
 // CreateSubscription creates a new subscription record and records an event in a transaction
-func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscription *model.Subscription, event model.SubscriptionEvent) (int64, error) {
+func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscription *model.Subscription, event model.SubscriptionEvent) (subscriptionID int64, err error) {
 	// Create subscription and event in transaction
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
@@ -33,6 +33,7 @@ func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, subscri
 			}
 		} else {
 			if commitErr := tx.Commit(ctx); commitErr != nil {
+				subscriptionID = 0
 				err = fmt.Errorf("failed to commit transaction: %w", commitErr)
 			}
 		}
@@ -445,7 +446,7 @@ func (r *SubscriptionRepository) MarkRenewalReminderSent(ctx context.Context, su
 }
 
 // UpdateSubscription updates an existing subscription and records an event in a transaction
-func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscription *model.Subscription, event model.SubscriptionEvent) error {
+func (r *SubscriptionRepository) UpdateSubscription(ctx context.Context, subscription *model.Subscription, event model.SubscriptionEvent) (err error) {
 	// Update subscription and event in transaction
 	tx, err := r.db.Begin(ctx)
 	if err != nil {

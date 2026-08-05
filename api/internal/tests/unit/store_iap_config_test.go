@@ -40,6 +40,34 @@ func TestStoreIAPConfigRequiresExplicitProductionDecision(t *testing.T) {
 	assert.False(t, loaded.Enabled)
 }
 
+func TestLegacyProviderWebhooksDefaultOnOutsideProduction(t *testing.T) {
+	enabled, err := config.LoadLegacyProviderWebhooksEnabledFrom(mapLookup(nil))
+	require.NoError(t, err)
+	assert.True(t, enabled)
+
+	enabled, err = config.LoadLegacyProviderWebhooksEnabledFrom(mapLookup(map[string]string{
+		"LEGACY_PROVIDER_WEBHOOKS_ENABLED": "false",
+	}))
+	require.NoError(t, err)
+	assert.False(t, enabled)
+}
+
+func TestLegacyProviderWebhooksRequireExplicitProductionDecision(t *testing.T) {
+	_, err := config.LoadLegacyProviderWebhooksEnabledFrom(mapLookup(map[string]string{"ENV": "production"}))
+	require.ErrorContains(t, err, "explicitly configured in production")
+
+	enabled, err := config.LoadLegacyProviderWebhooksEnabledFrom(mapLookup(map[string]string{
+		"ENV": "production", "LEGACY_PROVIDER_WEBHOOKS_ENABLED": "false",
+	}))
+	require.NoError(t, err)
+	assert.False(t, enabled)
+
+	_, err = config.LoadLegacyProviderWebhooksEnabledFrom(mapLookup(map[string]string{
+		"ENV": "production", "LEGACY_PROVIDER_WEBHOOKS_ENABLED": "sometimes",
+	}))
+	require.ErrorContains(t, err, "must be a boolean")
+}
+
 func TestStoreIAPConfigLoadsValidatedSecretsAndBindings(t *testing.T) {
 	values := validStoreIAPEnvironment(t)
 	loaded, err := config.LoadStoreIAPConfigFrom(mapLookup(values))
