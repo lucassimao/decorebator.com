@@ -1,6 +1,30 @@
 # PostHog Events (Mobile)
 
-This document lists the PostHog events currently emitted by the mobile app and the properties sent with them.
+This document lists the PostHog events currently emitted by the mobile app and the canonical activation events being introduced by the revamp.
+
+## Canonical activation contract
+
+The typed contract lives in `utils/activationEvents.ts`. New funnel instrumentation must use these names exactly and must include `eventVersion: 1`:
+
+- `user_signed_up`
+- `wordlist_created`
+- `word_added`
+- `quiz_session_started`
+- `quiz_session_completed`
+- `quiz_answered`
+- `practice_cta_opened`
+
+Allowed properties are scalar values only: `source`, `entryPoint`, `appVersion`, `platform`, `userId`, `wordlistId`, `language`, `sessionId`, `quizMode`, `quizType`, `correct`, `answeredCount`, `correctCount`, `wordCount`, `durationMs`, `responseTimeMs`, `outcome`, and `errorCode`.
+
+Do not send email addresses, names, raw words, definitions, examples, wordlist names, audio URLs, or other user/content payloads. A dry-run sink is available to validate event names and properties without sending to PostHog.
+
+Session semantics:
+
+- `quiz_session_started` is emitted once when a learning session begins.
+- `quiz_answered` is emitted once per submitted answer and carries the session ID.
+- `quiz_session_completed` is emitted once when the session reaches its completion state; it must not be emitted for an individual answer.
+
+The existing call sites below are legacy inventory until the activation-event audit migrates or explicitly retires them. Do not add a second event for the same semantic action during that migration.
 
 ## Onboarding
 

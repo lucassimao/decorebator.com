@@ -186,7 +186,7 @@ Baseline captured on 2026-08-04, using read-only production data and excluding t
 Required work:
 
 - [ ] Keep a stable, non-production-secret registry/fixture for store-approval accounts so they are excluded from activation reporting without relying on ad-hoc user IDs.
-- [ ] Define canonical events and properties: `user_signed_up`, `wordlist_created`, `word_added`, `quiz_session_started`, `quiz_session_completed`, `quiz_answered`, and `practice_cta_opened`. Specify one event per semantic action, session identity, source/entry point, wordlist context, and failure/error outcome.
+- [x] Define canonical events and properties: `user_signed_up`, `wordlist_created`, `word_added`, `quiz_session_started`, `quiz_session_completed`, `quiz_answered`, and `practice_cta_opened`. Specify one event per semantic action, session identity, source/entry point, wordlist context, and failure/error outcome.
 - [ ] Audit existing mobile/PostHog events before adding duplicates. Correct the current mismatch where `quiz_completed` represents individual answers rather than completed sessions.
 - [ ] Add a development/dry-run sink and tests proving event names, required properties, deduplication, and exclusion of raw word/content data.
 - [ ] Produce a cohort report for 7/30/90/365-day sign-ups with signup→wordlist, signup→word, signup→first quiz, and first quiz→completed session conversion. Keep the current database baseline alongside the post-instrumentation baseline; do not compare unlike definitions.
@@ -198,6 +198,10 @@ Gate 0.5 acceptance:
 - Tests prove that a quiz answer does not count as a completed session and that retries/background duplicates do not inflate conversion.
 - A dashboard or reproducible report shows the baseline and post-release values for all four funnel transitions.
 - The owner has chosen the activation success threshold and observation window before the final release gate.
+
+Phase 0.5 progress:
+
+- **2026-08-04 — canonical activation contract defined.** Added the typed, privacy-safe event contract and dry-run capture boundary in `mobile/utils/activationEvents.ts`, with unit coverage for canonical names, scalar allowlisting, raw-content rejection, falsy values, and dry-run behavior. Documented session semantics and allowed properties in `mobile/docs/posthog-events.md`. Existing call-site migration, store-approval registry, production sink validation, cohort reporting, and owner target selection remain pending.
 
 ## Phase 1 — Design the store-neutral entitlement contract
 
