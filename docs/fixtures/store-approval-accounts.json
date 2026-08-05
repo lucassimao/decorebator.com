@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Owner-confirmed store-approval accounts excluded from activation cohorts",
+  "lastVerifiedAt": "2026-08-04",
+  "reviewAfter": "2026-09-04",
+  "evidenceRef": "docs/MOBILE_APP_REVAMP_EXECUTION_PLAN.md#phase-0-scope-and-zero-entitlement-gate",
+  "reverificationRequired": "before_each_production_report_or_subscription_cutover",
+  "accounts": [
+    {
+      "key": "store-approval-001",
+      "userId": 1,
+      "classification": "owner-confirmed-store-approval",
+      "excludeFromActivationReports": true,
+      "ownerConfirmedAt": "2026-08-04"
+    },
+    {
+      "key": "store-approval-002",
+      "userId": 8,
+      "classification": "owner-confirmed-store-approval",
+      "excludeFromActivationReports": true,
+      "ownerConfirmedAt": "2026-08-04"
+    },
+    {
+      "key": "store-approval-003",
+      "userId": 3508,
+      "classification": "owner-confirmed-store-approval",
+      "excludeFromActivationReports": true,
+      "ownerConfirmedAt": "2026-08-04"
+    },
+    {
+      "key": "store-approval-004",
+      "userId": 3511,
+      "classification": "owner-confirmed-store-approval",
+      "excludeFromActivationReports": true,
+      "ownerConfirmedAt": "2026-08-04"
+    }
+  ]
+}

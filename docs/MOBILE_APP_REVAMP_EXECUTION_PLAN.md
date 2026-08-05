@@ -185,7 +185,7 @@ Baseline captured on 2026-08-04, using read-only production data and excluding t
 
 Required work:
 
-- [ ] Keep a stable, non-production-secret registry/fixture for store-approval accounts so they are excluded from activation reporting without relying on ad-hoc user IDs.
+- [x] Keep a stable, non-production-secret registry/fixture for store-approval accounts so they are excluded from activation reporting without relying on ad-hoc user IDs.
 - [x] Define canonical events and properties: `user_signed_up`, `wordlist_created`, `word_added`, `quiz_session_started`, `quiz_session_completed`, `quiz_answered`, and `practice_cta_opened`. Specify one event per semantic action, session identity, source/entry point, wordlist context, and failure/error outcome.
 - [ ] Audit existing mobile/PostHog events before adding duplicates. Correct the current mismatch where `quiz_completed` represents individual answers rather than completed sessions.
 - [ ] Add a development/dry-run sink and tests proving event names, required properties, deduplication, and exclusion of raw word/content data.
@@ -201,7 +201,8 @@ Gate 0.5 acceptance:
 
 Phase 0.5 progress:
 
-- **2026-08-04 — canonical activation contract defined.** Added the typed, privacy-safe event contract and dry-run capture boundary in `mobile/utils/activationEvents.ts`, with unit coverage for canonical names, scalar allowlisting, raw-content rejection, falsy values, and dry-run behavior. Documented session semantics and allowed properties in `mobile/docs/posthog-events.md`. Existing call-site migration, store-approval registry, production sink validation, cohort reporting, and owner target selection remain pending.
+- **2026-08-04 — canonical activation contract defined.** Added the typed, privacy-safe event contract and dry-run capture boundary in `mobile/utils/activationEvents.ts`, with unit coverage for canonical names, scalar allowlisting, raw-content rejection, falsy values, and dry-run behavior. Documented session semantics and allowed properties in `mobile/docs/posthog-events.md`. Existing call-site migration, production sink validation, cohort reporting, and owner target selection remain pending.
+- **2026-08-04 — controlled store-approval registry prepared.** Added `docs/fixtures/store-approval-accounts.json` with the four owner-confirmed internal user IDs from the read-only subscription audit, provenance, re-verification date, and usage rules in `docs/fixtures/README.md`. The registry artifact excludes accounts by explicit numeric ID and contains no email, payment, or secret data; production report consumption remains a separate pending item.
 
 ## Phase 1 — Design the store-neutral entitlement contract
 
