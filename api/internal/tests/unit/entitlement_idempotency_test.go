@@ -41,6 +41,7 @@ func TestGoogleIdempotencyKeysNeverExposePurchaseTokens(t *testing.T) {
 	semanticKey, err := model.GoogleRTDNSemanticIdempotencyKey(model.GoogleRTDNSemanticEvent{
 		PackageName:      "com.decorebator.app",
 		PurchaseToken:    token,
+		NotificationKind: "subscription",
 		NotificationType: 4,
 		EventTimeMillis:  1770076800000,
 	})
@@ -58,6 +59,7 @@ func TestGoogleSemanticKeyChangesForDistinctBusinessEvents(t *testing.T) {
 	base := model.GoogleRTDNSemanticEvent{
 		PackageName:      "com.decorebator.app",
 		PurchaseToken:    "purchase-token",
+		NotificationKind: "subscription",
 		NotificationType: 2,
 		EventTimeMillis:  1770076800000,
 	}
@@ -66,6 +68,7 @@ func TestGoogleSemanticKeyChangesForDistinctBusinessEvents(t *testing.T) {
 
 	mutations := []func(*model.GoogleRTDNSemanticEvent){
 		func(event *model.GoogleRTDNSemanticEvent) { event.PurchaseToken = "replacement-token" },
+		func(event *model.GoogleRTDNSemanticEvent) { event.NotificationKind = "voided_subscription" },
 		func(event *model.GoogleRTDNSemanticEvent) { event.NotificationType++ },
 		func(event *model.GoogleRTDNSemanticEvent) { event.EventTimeMillis++ },
 		func(event *model.GoogleRTDNSemanticEvent) { event.PackageName = "com.decorebator.other" },
@@ -126,6 +129,7 @@ func TestProviderIdempotencyKeysRejectMalformedInputs(t *testing.T) {
 	_, err = model.GoogleRTDNSemanticIdempotencyKey(model.GoogleRTDNSemanticEvent{
 		PackageName:      "com.decorebator.app",
 		PurchaseToken:    "purchase-token",
+		NotificationKind: "subscription",
 		NotificationType: 0,
 		EventTimeMillis:  1770076800000,
 	})
@@ -134,6 +138,7 @@ func TestProviderIdempotencyKeysRejectMalformedInputs(t *testing.T) {
 	_, err = model.GoogleRTDNSemanticIdempotencyKey(model.GoogleRTDNSemanticEvent{
 		PackageName:      "com.decorebator.app",
 		PurchaseToken:    strings.Repeat("x", 16),
+		NotificationKind: "subscription",
 		NotificationType: 2,
 		EventTimeMillis:  0,
 	})

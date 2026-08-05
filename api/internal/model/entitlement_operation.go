@@ -38,6 +38,7 @@ const (
 	EntitlementResultAccountMismatch   EntitlementResultCode = "account_mismatch"
 	EntitlementResultUnknownProduct    EntitlementResultCode = "unknown_product"
 	EntitlementResultStaleEvent        EntitlementResultCode = "stale_provider_event"
+	EntitlementResultProviderTest      EntitlementResultCode = "provider_test_event"
 )
 
 // EntitlementOperationInput is evaluated only after transport authentication.

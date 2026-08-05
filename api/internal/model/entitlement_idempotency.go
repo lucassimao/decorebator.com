@@ -94,6 +94,7 @@ func GoogleRTDNTransportIdempotencyKey(
 type GoogleRTDNSemanticEvent struct {
 	PackageName      string
 	PurchaseToken    string
+	NotificationKind string
 	NotificationType int32
 	EventTimeMillis  int64
 }
@@ -104,6 +105,9 @@ func (e GoogleRTDNSemanticEvent) Validate() error {
 	}
 	if err := validateOpaqueStoreIdentifier("google purchase token", e.PurchaseToken, 0); err != nil {
 		return err
+	}
+	if e.NotificationKind != "subscription" && e.NotificationKind != "voided_subscription" {
+		return fmt.Errorf("unsupported google notification kind")
 	}
 	if e.NotificationType <= 0 {
 		return fmt.Errorf("google notification type must be positive")
@@ -127,6 +131,7 @@ func GoogleRTDNSemanticIdempotencyKey(
 		true,
 		event.PackageName,
 		event.PurchaseToken,
+		event.NotificationKind,
 		fmt.Sprintf("%d", event.NotificationType),
 		fmt.Sprintf("%d", event.EventTimeMillis),
 	)

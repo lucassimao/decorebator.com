@@ -157,7 +157,7 @@ func TestProviderEventInboxTreatsSemanticKeyConflictAsDuplicate(t *testing.T) {
 	require.NoError(t, err)
 	semantic, err := model.GoogleRTDNSemanticIdempotencyKey(model.GoogleRTDNSemanticEvent{
 		PackageName: "com.lsimaocosta.decorebator", PurchaseToken: "protected-token",
-		NotificationType: 2, EventTimeMillis: now.UnixMilli(),
+		NotificationKind: "subscription", NotificationType: 2, EventTimeMillis: now.UnixMilli(),
 	})
 	require.NoError(t, err)
 	firstInput := repository.ProviderEventInboxInput{
@@ -201,4 +201,27 @@ func TestProviderEventInboxProcessorFailureRollsBackEffectButKeepsLease(t *testi
 	require.NoError(t, db.QueryRow(ctx, "SELECT count(*) FROM provider_event_inbox_test_effects").Scan(&effectCount))
 	assert.Zero(t, effectCount)
 	require.NoError(t, repo.MarkRetryable(ctx, *claimed.Claim, now.Add(time.Minute)))
+}
+
+func TestProviderEventInboxPersistsProviderTestResult(t *testing.T) {
+	repo, db, ctx := prepareProviderEventInboxTest(t)
+	now := time.Now().UTC()
+	key, err := model.GoogleRTDNTransportIdempotencyKey("projects/app/topics/subscriptions", "test-message")
+	require.NoError(t, err)
+	claimed, err := repo.Claim(ctx, repository.ProviderEventInboxInput{
+		Store: model.EntitlementStoreGoogle, IdempotencyKey: key,
+		ProviderEventType: "test", ProviderOccurredAt: now,
+	}, now, time.Minute)
+	require.NoError(t, err)
+	require.NotNil(t, claimed.Claim)
+	result, err := repo.Complete(ctx, *claimed.Claim, func(context.Context, pgx.Tx) (model.EntitlementOperationResult, error) {
+		return model.EntitlementOperationResult{
+			Outcome: model.EntitlementOutcomeUnchanged, Code: model.EntitlementResultProviderTest,
+		}, nil
+	})
+	require.NoError(t, err)
+	assert.Equal(t, model.EntitlementResultProviderTest, result.Code)
+	var stored string
+	require.NoError(t, db.QueryRow(ctx, "SELECT result_code FROM provider_event_inbox WHERE id = $1", claimed.Claim.ID).Scan(&stored))
+	assert.Equal(t, string(model.EntitlementResultProviderTest), stored)
 }
