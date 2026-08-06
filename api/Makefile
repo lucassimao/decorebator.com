@@ -54,11 +54,18 @@ migrate-drop: ## Drop everything
 	migrate -database $$POSTGRESQL_URL -path cmd/migrate/migrations drop
 
 test: ## run containerized integration tests
-	rm -rf coverage.out coverage.html &&\
-	docker compose -f docker-compose.test.yml rm -f -s -v &&\
-	docker compose -f docker-compose.test.yml up --force-recreate --build --exit-code-from main; \
-	docker compose -f docker-compose.test.yml down -v; \
-	go tool cover -html=coverage.out -o=coverage.html
+	@set -eu; \
+		rm -f coverage.out coverage.html; \
+		cleanup() { docker compose -f docker-compose.test.yml down -v --remove-orphans >/dev/null 2>&1 || true; }; \
+		trap cleanup EXIT; \
+		trap 'exit 130' INT; \
+		trap 'exit 143' TERM; \
+		docker compose -f docker-compose.test.yml down -v --remove-orphans; \
+		docker compose -f docker-compose.test.yml up -d --wait postgres redis minio; \
+		docker compose -f docker-compose.test.yml run --rm --no-deps createbuckets; \
+		docker compose -f docker-compose.test.yml run --rm --no-deps main; \
+		test -s coverage.out || { echo "coverage.out is missing or empty" >&2; exit 1; }; \
+		go tool cover -html=coverage.out -o=coverage.html
 
 test-unit: ## Run unit tests
 	@echo "Running unit tests..."
