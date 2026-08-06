@@ -25,6 +25,11 @@ type UserRepository struct {
 // country parameter can be nil, which will insert NULL into the database
 // Note: Validation should be performed at the service layer before calling this function
 func (repository *UserRepository) Save(ctx context.Context, firstName, lastName, password, email string, country *string, preferredLanguage *string) (*User, error) {
+	canonicalEmail, err := common.NormalizeEmail(email)
+	if err != nil {
+		return nil, common.ErrInvalidEmailAddress
+	}
+	email = canonicalEmail
 	// Note: country and preferredLanguage parameters are optional and can be nil
 	// PostgreSQL will store NULL for nil pointer values
 	query := `
@@ -98,8 +103,12 @@ func (repository *UserRepository) Find(ctx context.Context, args FindUserArgs) (
 
 	argIndex := 1
 	if args.Email != nil {
-		whereConditions = append(whereConditions, fmt.Sprintf("LOWER(email) = LOWER($%d)", argIndex))
-		queryArgs = append(queryArgs, args.Email)
+		canonicalEmail, err := common.NormalizeEmail(*args.Email)
+		if err != nil {
+			return nil, common.ErrInvalidEmailAddress
+		}
+		whereConditions = append(whereConditions, fmt.Sprintf("TRANSLATE(BTRIM(email, E' \\t\\n\\r\\f\\v'), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') = $%d", argIndex))
+		queryArgs = append(queryArgs, canonicalEmail)
 		argIndex++
 	}
 

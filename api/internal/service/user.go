@@ -110,8 +110,12 @@ func (s *UserService) SaveUser(ctx context.Context, firstName, lastName, passwor
 	if firstName == "" || lastName == "" || password == "" || email == "" {
 		return nil, common.BusinessError{Message: "firstName, lastName, password, and email are required"}
 	}
+	canonicalEmail, err := common.NormalizeEmail(email)
+	if err != nil {
+		return nil, common.BusinessError{Message: "Invalid email address"}
+	}
 
-	user, err := s.userRepository.Save(ctx, firstName, lastName, password, email, country, preferredLanguage)
+	user, err := s.userRepository.Save(ctx, firstName, lastName, password, canonicalEmail, country, preferredLanguage)
 	if err != nil {
 		common.Logger.Error("failed to save new user", "error", err)
 		switch err.(type) {
@@ -135,10 +139,13 @@ func (s *UserService) UpdatePassword(ctx context.Context, userID int64, password
 
 func (s *UserService) LoginUser(ctx context.Context, email, password string) (string, error) {
 	startTime := time.Now()
-	lowerCaseEmail := strings.ToLower(email)
+	canonicalEmail, err := common.NormalizeEmail(email)
+	if err != nil {
+		return "", errors.New("invalid combination of email and/or password")
+	}
 
 	args := repo.FindUserArgs{
-		Email: &lowerCaseEmail,
+		Email: &canonicalEmail,
 	}
 
 	// Measure database query time

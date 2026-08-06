@@ -21,14 +21,14 @@ import (
 type SignupInput struct {
 	FirstName         string `json:"firstName" binding:"required"`
 	LastName          string `json:"lastName" binding:"required"`
-	Email             string `json:"email" binding:"required,email"`
+	Email             string `json:"email" binding:"required"`
 	Password          string `json:"password" binding:"required,min=5"`
 	Country           string `json:"country"`           // Optional ISO 3166-1 alpha-2 country code
 	PreferredLanguage string `json:"preferredLanguage"` // Optional language code
 }
 
 type LoginInput struct {
-	Email    string `json:"email" binding:"required,email"`
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
@@ -113,6 +113,15 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		return
 	}
 
+	canonicalEmail, err := common.NormalizeEmail(input.Email)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"validationErrors": gin.H{"email": "The email field must be a valid email address."},
+		})
+		return
+	}
+	input.Email = canonicalEmail
+
 	// Prepare country parameter (convert empty string to nil)
 	var country *string
 	if input.Country != "" {
@@ -151,7 +160,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	writeAuthenticationCookie(c, jwtToken)
 	c.Status(http.StatusCreated)
 	ctx := c.Request.Context()
-	email := input.Email
+	email := user.Email
 	if err := h.mailService.SendWelcomeEmail(ctx, email); err != nil {
 		common.Logger.ErrorContext(c.Request.Context(), "failed to send welcome email", "user_id", user.ID, "error", err)
 	}

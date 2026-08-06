@@ -56,7 +56,11 @@ func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string) 
 		return nil
 	}
 
-	result, err := m.userRepo.Find(ctx, repository.FindUserArgs{Email: &email})
+	canonicalEmail, err := common.NormalizeEmail(email)
+	if err != nil {
+		return common.ErrInvalidEmailAddress
+	}
+	result, err := m.userRepo.Find(ctx, repository.FindUserArgs{Email: &canonicalEmail})
 
 	if err != nil || len(result) != 1 {
 		logger.Warn("user not found for reset password email", "error", err, "matchCount", len(result))
@@ -463,7 +467,11 @@ func (m *MailService) SendWelcomeEmail(ctx context.Context, email string) error 
 		return nil
 	}
 
-	result, err := m.userRepo.Find(ctx, repository.FindUserArgs{Email: &email})
+	canonicalEmail, err := common.NormalizeEmail(email)
+	if err != nil {
+		return common.ErrInvalidEmailAddress
+	}
+	result, err := m.userRepo.Find(ctx, repository.FindUserArgs{Email: &canonicalEmail})
 
 	if err != nil || len(result) != 1 {
 		logger.Warn("user not found for welcome email", "error", err, "matchCount", len(result))
