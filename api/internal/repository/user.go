@@ -186,9 +186,31 @@ func (repository *UserRepository) SetNotificationsEnabled(ctx context.Context, u
 }
 
 func (repository *UserRepository) Delete(ctx context.Context, userID int64) error {
-	query := `DELETE FROM users WHERE ID = $1`
-	_, err := repository.Db.Exec(ctx, query, userID)
-	return err
+	tx, err := repository.Db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin account deletion: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	// wordlists.user_id does not cascade from users. Deleting each owned
+	// wordlist cascades through its words and their dependent rows; words.user_id
+	// itself is also a historical non-cascading key. error_reports.user_id has
+	// cascaded since migration 000031, but deleting reports explicitly keeps all
+	// account-owned cleanup inside this auditable transaction. A later failure
+	// rolls every statement back instead of leaving a partially erased account.
+	if _, err := tx.Exec(ctx, `DELETE FROM error_reports WHERE user_id=$1`, userID); err != nil {
+		return fmt.Errorf("delete account error reports: %w", err)
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM wordlists WHERE user_id=$1`, userID); err != nil {
+		return fmt.Errorf("delete account wordlists: %w", err)
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM users WHERE id=$1`, userID); err != nil {
+		return fmt.Errorf("delete account user: %w", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit account deletion: %w", err)
+	}
+	return nil
 }
 
 type UpdateUserProfileArgs struct {

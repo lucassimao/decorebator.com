@@ -175,7 +175,7 @@ func TestEffectiveStoreAccessSeparatesEnvironmentAndRequiresGoogleAcknowledgemen
 	require.NoError(t, subscriptions.CheckSubscriptionLimits(
 		ctx, userID, model.UserActionChatSession, &service.SubscriptionCheckOptions{},
 	), "canonical store access must pass a real premium-only limit gate")
-	users := service.NewUserService(db, subscriptions, nil)
+	users := service.NewUserService(db, subscriptions)
 	users.SetEffectiveAccess(effective)
 	require.NoError(t, users.ValidateUserEligibilityForWorkers(ctx, userID))
 	profile, _, err := users.GetProfile(ctx, userID)

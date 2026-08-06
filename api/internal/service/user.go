@@ -11,7 +11,6 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
-	"decorebator.com/internal/repository"
 	repo "decorebator.com/internal/repository"
 
 	"github.com/dgrijalva/jwt-go"
@@ -24,9 +23,7 @@ type User = model.User
 // UserService handles user-related operations with dependency injection
 type UserService struct {
 	userRepository      *repo.UserRepository
-	wordlistRepository  *repo.WordlistRepository
 	subscriptionService *SubscriptionService
-	errorReportService  *ErrorReportService
 	effectiveAccess     *EffectiveAccessService
 }
 
@@ -35,12 +32,10 @@ func (s *UserService) SetEffectiveAccess(service *EffectiveAccessService) {
 }
 
 // NewUserService creates a new UserService with injected dependencies
-func NewUserService(db *pgxpool.Pool, subscriptionService *SubscriptionService, errorReportService *ErrorReportService) *UserService {
+func NewUserService(db *pgxpool.Pool, subscriptionService *SubscriptionService) *UserService {
 	return &UserService{
 		userRepository:      &repo.UserRepository{Db: db},
-		wordlistRepository:  &repo.WordlistRepository{Db: db},
 		subscriptionService: subscriptionService,
-		errorReportService:  errorReportService,
 	}
 }
 
@@ -199,7 +194,7 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (st
 }
 
 func (s *UserService) GetProfile(ctx context.Context, userID int64) (*User, bool, error) {
-	users, err := s.userRepository.Find(ctx, repository.FindUserArgs{
+	users, err := s.userRepository.Find(ctx, repo.FindUserArgs{
 		ID: &userID,
 	})
 	if err != nil {
@@ -266,14 +261,7 @@ func (s *UserService) checkAndDowngradeExpiredSubscription(ctx context.Context, 
 }
 
 func (s *UserService) Delete(ctx context.Context, userID int64) error {
-	if _, deleteReportsErr := s.errorReportService.DeleteUserErrorReports(ctx, userID); deleteReportsErr != nil {
-		common.Logger.Error("failed to delete user error reports", "userId", userID, "error", deleteReportsErr)
-	}
-	if _, deleteWordlistsErr := s.wordlistRepository.DeleteAll(ctx, userID); deleteWordlistsErr != nil {
-		common.Logger.Error("failed to delete user wordlists", "userId", userID, "error", deleteWordlistsErr)
-	}
-	err := s.userRepository.Delete(ctx, userID)
-	return err
+	return s.userRepository.Delete(ctx, userID)
 }
 
 func (s *UserService) UpdateProfile(ctx context.Context, userID int64, firstName, lastName, country, preferredLanguage, profilePictureURL, password *string, dateOfBirth *time.Time, notificationsEnabled *bool) (*User, error) {
