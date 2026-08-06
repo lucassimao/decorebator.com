@@ -57,8 +57,9 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 
 	word, err := w.wordService.GetWordByID(ctx, job.Args.WordID)
 
-	if err != nil && errors.Is(err, common.NotFoundError{}) {
-		return river.JobCancel(errors.New("word not found"))
+	var notFoundErr common.NotFoundError
+	if err != nil && errors.As(err, &notFoundErr) {
+		return river.JobCancel(err)
 	}
 
 	if err != nil || word == nil {

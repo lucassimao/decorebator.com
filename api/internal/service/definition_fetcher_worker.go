@@ -72,8 +72,9 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	word, err := w.wordService.GetWordByID(ctx, wordID)
 
 	if err != nil {
-		if errors.Is(err, common.NotFoundError{}) {
-			return river.JobCancel(errors.New("word not found"))
+		var notFoundErr common.NotFoundError
+		if errors.As(err, &notFoundErr) {
+			return river.JobCancel(err)
 		}
 		if updateErr := w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", err.Error(), nil); updateErr != nil {
 			common.Logger.ErrorContext(ctx, "failed to update processing status", "wordID", wordID, "error", updateErr)

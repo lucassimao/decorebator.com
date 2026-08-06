@@ -34,7 +34,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	pushTokenRepo := &repository.PushTokenRepository{Db: appCtx.Database}
 
 	// Initialize route handlers using services from AppContext
-	var WordRoutes = NewWordRoutes(appCtx.WordService, appCtx.DefinitionService)
+	var WordRoutes = NewWordRoutes(appCtx.WordService, appCtx.WordlistService, appCtx.DefinitionService)
 	var WorkerRoutes = NewWorkerRoutes(appCtx.DefinitionService, appCtx.JobService)
 	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService, appCtx.DefinitionService)
 	var UserRoutes = NewUserRoutes(appCtx.UserService, appCtx.MailService)

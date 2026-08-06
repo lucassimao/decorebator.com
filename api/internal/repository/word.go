@@ -36,7 +36,9 @@ type OwnedWordUpdateArgs struct {
 func (repository *WordRepository) Save(ctx context.Context, name, notes string, userID, wordlistID int64, tx *pgx.Tx) (*Word, error) {
 	query := `
 		INSERT INTO words (name, wordlist_id, user_id, created_at, notes)
-		VALUES ($1, $2,$3, now(),$4)
+		SELECT $1, wordlist.id, $3, now(), $4
+		FROM wordlists AS wordlist
+		WHERE wordlist.id=$2 AND wordlist.user_id=$3
 		RETURNING id, created_at, updated_at, processing_status, processing_error, processing_started_at, processing_completed_at`
 
 	var createdAt pgtype.Timestamptz
@@ -174,9 +176,41 @@ func (repository *WordRepository) GetByID(ctx context.Context, wordID int64) (*W
 	return &w, nil
 }
 
-func (repository *WordRepository) Delete(ctx context.Context, userID, wordID int64) (int64, error) {
-	query := `DELETE FROM words WHERE user_id=$1 AND id=$2`
-	result, err := repository.Db.Exec(ctx, query, userID, wordID)
+func (repository *WordRepository) GetOwnedByID(ctx context.Context, wordID, userID int64) (*Word, error) {
+	query := `SELECT id, name, created_at, updated_at, wordlist_id, user_id,
+				COALESCE(audio_url,''), COALESCE(notes,''), COALESCE(pronunciation,''), learned,
+				processing_status, COALESCE(processing_error,''),
+				processing_started_at, processing_completed_at
+			FROM words WHERE id=$1 AND user_id=$2`
+	row := repository.Db.QueryRow(ctx, query, wordID, userID)
+	var word Word
+	if err := row.Scan(
+		&word.ID,
+		&word.Name,
+		&word.CreatedAt,
+		&word.UpdatedAt,
+		&word.WordlistID,
+		&word.UserID,
+		&word.AudioURL,
+		&word.Notes,
+		&word.Pronunciation,
+		&word.Learned,
+		&word.ProcessingStatus,
+		&word.ProcessingError,
+		&word.ProcessingStartedAt,
+		&word.ProcessingCompletedAt,
+	); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, common.NotFoundError{ID: wordID, Entity: "Word"}
+		}
+		return nil, err
+	}
+	return &word, nil
+}
+
+func (repository *WordRepository) Delete(ctx context.Context, userID, wordlistID, wordID int64) (int64, error) {
+	query := `DELETE FROM words WHERE user_id=$1 AND wordlist_id=$2 AND id=$3`
+	result, err := repository.Db.Exec(ctx, query, userID, wordlistID, wordID)
 	if err != nil {
 		return 0, err
 	}

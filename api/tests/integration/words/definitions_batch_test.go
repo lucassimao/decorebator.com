@@ -209,16 +209,14 @@ func TestGetDefinitionsSingle_ScopesWordToPathAndUser(t *testing.T) {
 	ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words/%d/definitions", wordlistID2, wordID)).
 		WithHeader("Authorization", token1).
 		Expect().
-		Status(http.StatusOK).
-		JSON().Array().Length().IsEqual(0)
+		Status(http.StatusNotFound)
 
 	token2 := ts.WithTestUser(t)
 	wordlistID3 := createWordlist(ts, token2, "single definitions second user")
 	ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words/%d/definitions", wordlistID3, wordID)).
 		WithHeader("Authorization", token2).
 		Expect().
-		Status(http.StatusOK).
-		JSON().Array().Length().IsEqual(0)
+		Status(http.StatusNotFound)
 
 	ts.Expect.GET(fmt.Sprintf("/wordlists/not-a-number/words/%d/definitions", wordID)).
 		WithHeader("Authorization", token1).

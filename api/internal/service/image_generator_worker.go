@@ -149,7 +149,8 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 }
 
 func imageDefinitionLookupError(err error) error {
-	if errors.Is(err, common.NotFoundError{}) {
+	var notFoundErr common.NotFoundError
+	if errors.As(err, &notFoundErr) {
 		return river.JobCancel(err)
 	}
 	return err

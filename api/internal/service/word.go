@@ -43,6 +43,10 @@ func (ws *WordService) GetWordByID(ctx context.Context, id int64) (*Word, error)
 	return ws.repository.GetByID(ctx, id)
 }
 
+func (ws *WordService) GetOwnedWordByID(ctx context.Context, id, userID int64) (*Word, error) {
+	return ws.repository.GetOwnedByID(ctx, id, userID)
+}
+
 // UpdateProcessingStatus updates the processing status and related fields for a word
 func (ws *WordService) UpdateProcessingStatus(ctx context.Context, wordID int64, status string, errorMsg string, tx *pgx.Tx) error {
 	updates := map[string]interface{}{
@@ -103,16 +107,11 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 		return nil, err
 	}
 
-	// db transaction mgmt
+	// Every early return rolls the transaction back. After a successful commit,
+	// Rollback returns pgx.ErrTxClosed and is intentionally ignored.
 	defer func() {
-		if err == nil {
-			if commitErr := tx.Commit(ctx); commitErr != nil {
-				common.Logger.Error("failed to commit transaction", "error", commitErr)
-			}
-		} else {
-			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
-				common.Logger.Error("failed to rollback transaction", "error", rollbackErr)
-			}
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			common.Logger.Error("failed to rollback transaction", "error", rollbackErr)
 		}
 	}()
 
@@ -120,6 +119,9 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 	if err != nil {
 		if repo.IsWordNameConflict(err) {
 			return nil, common.BusinessError{Message: "Word already exists in this wordlist"}
+		}
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, common.NotFoundError{ID: dto.WordlistID, Entity: "Wordlist"}
 		}
 		return nil, err
 	}
@@ -165,24 +167,21 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err = tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("failed to commit word creation: %w", err)
+	}
 
 	return word, nil
 }
 
-func (ws *WordService) DeleteWord(ctx context.Context, id, userID int64) (int64, error) {
-	word, err := ws.GetWordByID(ctx, id)
-	if err != nil {
-		return 0, err
-	}
-
-	if word == nil {
-		return 0, common.NotFoundError{ID: id, Entity: "Word"}
-	}
-
-	count, err := ws.repository.Delete(ctx, userID, id)
+func (ws *WordService) DeleteWord(ctx context.Context, id, wordlistID, userID int64) (int64, error) {
+	count, err := ws.repository.Delete(ctx, userID, wordlistID, id)
 	if err != nil {
 		common.Logger.Error("failed to delete word", "error", err)
 		return 0, errors.New("failed to delete word")
+	}
+	if count == 0 {
+		return 0, common.NotFoundError{ID: id, Entity: "Word"}
 	}
 
 	return count, nil

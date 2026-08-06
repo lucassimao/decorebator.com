@@ -28,21 +28,36 @@ type WordUpdateInput struct {
 
 type WordRoutes struct {
 	wordService       *service.WordService
+	wordlistService   *service.WordlistService
 	definitionService *service.DefinitionService
 }
 
 type Word = service.Word
 
-func NewWordRoutes(wordService *service.WordService, definitionService *service.DefinitionService) *WordRoutes {
+func NewWordRoutes(wordService *service.WordService, wordlistService *service.WordlistService, definitionService *service.DefinitionService) *WordRoutes {
 	return &WordRoutes{
 		wordService:       wordService,
+		wordlistService:   wordlistService,
 		definitionService: definitionService,
 	}
 }
 
 func (h *WordRoutes) GetAll(c *gin.Context) {
-	wordlistID, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	wordlistID, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	if err != nil || wordlistID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
 	userID := c.GetInt64("userID")
+	if _, err = h.wordlistService.GetWordlistByID(c.Request.Context(), wordlistID, userID); err != nil {
+		if isNotFound(err) {
+			respondNotFound(c)
+		} else {
+			common.Logger.ErrorContext(c.Request.Context(), "failed to verify wordlist ownership", "error", err, "userID", userID, "wordlistID", wordlistID)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not get user words"})
+		}
+		return
+	}
 
 	// Parse optional query parameter for filtering words with definitions
 	onlyWithDefinitions := c.Query("onlyWithDefinitions") == "true"
@@ -57,7 +72,11 @@ func (h *WordRoutes) GetAll(c *gin.Context) {
 }
 
 func (h *WordRoutes) Create(ctx *gin.Context) {
-	var wordlistID, _ = strconv.ParseInt(ctx.Param("wordlistId"), 10, 64)
+	wordlistID, parseErr := strconv.ParseInt(ctx.Param("wordlistId"), 10, 64)
+	if parseErr != nil || wordlistID <= 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
 	var userID = ctx.GetInt64("userID")
 	var input WordInput
 
@@ -69,9 +88,12 @@ func (h *WordRoutes) Create(ctx *gin.Context) {
 	var saved, err = h.wordService.SaveWord(ctx.Request.Context(), &Word{Name: input.Name, UserID: userID, WordlistID: wordlistID, Notes: input.Notes})
 	var logger = common.Logger.With("word", input.Name, "userID", userID, "endpoint", ctx.Request.URL.Path)
 	if err != nil {
-		switch err.(type) {
-		case common.BusinessError:
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		var businessErr common.BusinessError
+		switch {
+		case isNotFound(err):
+			respondNotFound(ctx)
+		case errors.As(err, &businessErr):
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": businessErr.Error()})
 		default:
 			logger.ErrorContext(ctx.Request.Context(), "failed to create word", "error", err)
 			ctx.Status(http.StatusInternalServerError)
@@ -83,14 +105,24 @@ func (h *WordRoutes) Create(ctx *gin.Context) {
 
 func (h *WordRoutes) Delete(c *gin.Context) {
 	userID := c.GetInt64("userID")
-	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
+	wordlistID, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	if err != nil || wordlistID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
+	id, err := strconv.ParseInt(c.Param("wordId"), 10, 64)
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid word ID"})
+		return
+	}
 
-	_, err := h.wordService.DeleteWord(c.Request.Context(), id, userID)
+	_, err = h.wordService.DeleteWord(c.Request.Context(), id, wordlistID, userID)
 	if err != nil {
-		if errors.Is(err, &common.NotFoundError{}) {
-			c.String(http.StatusNotFound, err.Error())
+		if isNotFound(err) {
+			respondNotFound(c)
 		} else {
-			c.String(http.StatusInternalServerError, "Couldn't delete wordlist #%d", id)
+			common.Logger.ErrorContext(c.Request.Context(), "failed to delete word", "error", err, "userID", userID, "wordlistID", wordlistID, "wordID", id)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete word"})
 		}
 		return
 	}
@@ -134,7 +166,7 @@ func (h *WordRoutes) Update(c *gin.Context) {
 		var businessErr common.BusinessError
 		switch {
 		case errors.As(err, &notFoundErr):
-			c.String(http.StatusNotFound, err.Error())
+			respondNotFound(c)
 		case errors.As(err, &businessErr):
 			c.JSON(http.StatusBadRequest, gin.H{"error": businessErr.Error()})
 		default:
@@ -158,6 +190,16 @@ func (h *WordRoutes) GetDefinitions(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid word ID"})
 		return
 	}
+	word, err := h.wordService.GetOwnedWordByID(c.Request.Context(), wordID, userID)
+	if err != nil || word.WordlistID != wordlistID {
+		if err == nil || isNotFound(err) {
+			respondNotFound(c)
+		} else {
+			common.Logger.ErrorContext(c.Request.Context(), "failed to verify word ownership", "error", err, "userID", userID, "wordId", wordID)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not get word definitions"})
+		}
+		return
+	}
 
 	definitions, err := h.definitionService.GetDefinitionsByWordID(c.Request.Context(), wordlistID, wordID, userID)
 	if err != nil {
@@ -174,7 +216,7 @@ func (h *WordRoutes) GetDefinitions(c *gin.Context) {
 func (h *WordRoutes) GetDefinitionsBatch(c *gin.Context) {
 	userID := c.GetInt64("userID")
 	wordlistID, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	if err != nil {
+	if err != nil || wordlistID <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
 		return
 	}
@@ -194,7 +236,7 @@ func (h *WordRoutes) GetDefinitionsBatch(c *gin.Context) {
 			continue
 		}
 		id, convErr := strconv.ParseInt(trimmed, 10, 64)
-		if convErr != nil {
+		if convErr != nil || id <= 0 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid id in ids parameter"})
 			return
 		}
@@ -203,6 +245,15 @@ func (h *WordRoutes) GetDefinitionsBatch(c *gin.Context) {
 
 	if len(wordIDs) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No valid ids provided"})
+		return
+	}
+	if _, err = h.wordlistService.GetWordlistByID(c.Request.Context(), wordlistID, userID); err != nil {
+		if isNotFound(err) {
+			respondNotFound(c)
+		} else {
+			common.Logger.ErrorContext(c.Request.Context(), "failed to verify wordlist ownership", "error", err, "userID", userID, "wordlistID", wordlistID)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not get definitions"})
+		}
 		return
 	}
 

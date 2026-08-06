@@ -76,7 +76,8 @@ func (w *MeaningAudioWorker) Work(ctx context.Context, job *river.Job[MeaningAud
 
 	definition, err := w.deps.getDefinition(ctx, job.Args.DefinitionID)
 	if err != nil {
-		if errors.Is(err, common.NotFoundError{}) {
+		var notFoundErr common.NotFoundError
+		if errors.As(err, &notFoundErr) {
 			return river.JobCancel(err)
 		}
 		return err

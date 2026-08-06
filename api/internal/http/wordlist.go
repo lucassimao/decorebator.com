@@ -127,8 +127,8 @@ func (h *WordlistsRoutes) GetPronunciationSystems(c *gin.Context) {
 
 func (h *WordlistsRoutes) GetByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	if err != nil {
-		c.Status(http.StatusNotFound)
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
 		return
 	}
 
@@ -136,10 +136,11 @@ func (h *WordlistsRoutes) GetByID(c *gin.Context) {
 
 	wordlist, err := h.wordlistService.GetWordlistByID(c.Request.Context(), id, userID)
 	if err != nil {
-		if errors.Is(err, &common.NotFoundError{}) {
-			c.Status(http.StatusNotFound)
+		if isNotFound(err) {
+			respondNotFound(c)
 		} else {
-			panic(err)
+			common.Logger.ErrorContext(c.Request.Context(), "failed to get wordlist", "error", err, "userID", userID, "wordlistID", id)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get wordlist"})
 		}
 		return
 	}
@@ -147,15 +148,20 @@ func (h *WordlistsRoutes) GetByID(c *gin.Context) {
 }
 
 func (h *WordlistsRoutes) Delete(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
 	var userID int64 = c.GetInt64("userID")
 
-	_, err := h.wordlistService.DeleteWordlist(c.Request.Context(), id, userID)
+	_, err = h.wordlistService.DeleteWordlist(c.Request.Context(), id, userID)
 	if err != nil {
-		if errors.Is(err, &common.NotFoundError{}) {
-			c.Status(http.StatusNotFound)
+		if isNotFound(err) {
+			respondNotFound(c)
 		} else {
-			panic(err)
+			common.Logger.ErrorContext(c.Request.Context(), "failed to delete wordlist", "error", err, "userID", userID, "wordlistID", id)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete wordlist"})
 		}
 		return
 	}
@@ -188,7 +194,7 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 	if err != nil {
 		var notFoundErr common.NotFoundError
 		if errors.As(err, &notFoundErr) {
-			c.Status(http.StatusNotFound)
+			respondNotFound(c)
 		} else {
 			switch err.(type) {
 			case common.BusinessError:
@@ -207,7 +213,7 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 func (h *WordlistsRoutes) GetProcessingStatus(c *gin.Context) {
 	wordlistIDStr := c.Param("wordlistId")
 	wordlistID, err := strconv.ParseInt(wordlistIDStr, 10, 64)
-	if err != nil {
+	if err != nil || wordlistID <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
 		return
 	}
@@ -218,7 +224,7 @@ func (h *WordlistsRoutes) GetProcessingStatus(c *gin.Context) {
 	if err != nil {
 		var notFoundErr common.NotFoundError
 		if errors.As(err, &notFoundErr) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
+			respondNotFound(c)
 		} else {
 			common.Logger.ErrorContext(c.Request.Context(), "failed to get wordlist", "wordlistId", wordlistID, "error", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get wordlist"})
@@ -295,7 +301,7 @@ func countByStatus(words []model.Word, status string) int {
 func (h *WordlistsRoutes) CreateChatSession(c *gin.Context) {
 	wordlistIDStr := c.Param("wordlistId")
 	wordlistID, err := strconv.ParseInt(wordlistIDStr, 10, 64)
-	if err != nil {
+	if err != nil || wordlistID <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
 		return
 	}
@@ -306,7 +312,7 @@ func (h *WordlistsRoutes) CreateChatSession(c *gin.Context) {
 	if err != nil {
 		var notFoundErr common.NotFoundError
 		if errors.As(err, &notFoundErr) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Wordlist not found"})
+			respondNotFound(c)
 		} else {
 			common.Logger.ErrorContext(c.Request.Context(), "failed to get wordlist for chat session", "wordlistId", wordlistID, "error", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get wordlist"})

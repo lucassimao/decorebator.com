@@ -75,12 +75,9 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 
 	// 1. Fetch definition from database
 	definition, err := w.definitionService.GetDefinitionByID(ctx, job.Args.DefinitionID)
-	if err != nil && errors.Is(err, common.NotFoundError{}) {
-		return river.JobCancel(errors.New("definition not found"))
-	}
 	if err != nil {
 		logger.Error("failed to get definition", "error", err)
-		return err
+		return exampleAudioDefinitionLookupError(err)
 	}
 
 	// 2. Get wordlist language for proper TTS voice selection
@@ -152,6 +149,14 @@ func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAud
 	}
 
 	return nil
+}
+
+func exampleAudioDefinitionLookupError(err error) error {
+	var notFoundErr common.NotFoundError
+	if errors.As(err, &notFoundErr) {
+		return river.JobCancel(err)
+	}
+	return err
 }
 
 func (w *ExampleAudioWorker) selectExamplesForAudio(definition *model.Definition) []ExampleAudioItem {
