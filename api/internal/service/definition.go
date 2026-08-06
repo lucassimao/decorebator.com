@@ -116,7 +116,7 @@ func (s *DefinitionService) SetMeaningAudioURLIfEmpty(ctx context.Context, defin
 }
 
 // NormalizePartOfSpeech converts a language-specific part-of-speech to normalized English
-// This function uses the PartOfSpeechMappings from LANGUAGE_CONFIGS as the single source of truth
+// This function uses the PartOfSpeechMappings from LanguageConfigs as the single source of truth
 func NormalizePartOfSpeech(partOfSpeech, languageCode string) string {
 	// Handle empty or nil cases
 	if partOfSpeech == "" || languageCode == "" {
@@ -124,7 +124,7 @@ func NormalizePartOfSpeech(partOfSpeech, languageCode string) string {
 	}
 
 	// Get language configuration
-	config, exists := openai.LANGUAGE_CONFIGS[languageCode]
+	config, exists := openai.LanguageConfigs[languageCode]
 	if !exists {
 		// Fallback to original value for unsupported languages
 		return partOfSpeech

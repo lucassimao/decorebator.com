@@ -72,7 +72,7 @@ func ensureGuideAndMask(cfg *Config, invertMask, dryRun, overwrite bool) (string
 	if err := writeImage(maskPath, "png", mask); err != nil {
 		return "", "", err
 	}
-	if err := os.WriteFile(hashPath, []byte(configHash), 0o644); err != nil {
+	if err := os.WriteFile(hashPath, []byte(configHash), 0o600); err != nil {
 		return "", "", err
 	}
 

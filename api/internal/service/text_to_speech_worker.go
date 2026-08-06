@@ -14,7 +14,7 @@ import (
 )
 
 type TextToSpeechArgs struct {
-	WordId      int64        `json:"wordId"`
+	WordID      int64        `json:"wordId"`
 	UserID      *int64       `json:"userId"`
 	ErrorReport *ErrorReport `json:"errorReport"`
 }
@@ -43,19 +43,19 @@ func NewTextToSpeechWorker(wordService *WordService, definitionService *Definiti
 }
 
 func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpeechArgs]) error {
-	logger := common.Logger.With("worker", "texttospeech", "WordId", job.Args.WordId, "UserId", job.Args.UserID)
+	logger := common.Logger.With("worker", "texttospeech", "WordID", job.Args.WordID, "UserID", job.Args.UserID)
 
 	// Validate user eligibility before processing (skip for admin/system jobs)
 	if job.Args.UserID != nil {
 		if err := w.userService.ValidateUserEligibilityForWorkers(ctx, *job.Args.UserID); err != nil {
 			logger.Warn("User not eligible for text-to-speech",
-				"userId", *job.Args.UserID, "wordId", job.Args.WordId, "error", err)
+				"userId", *job.Args.UserID, "wordId", job.Args.WordID, "error", err)
 			// Cancel job permanently - user needs to upgrade
 			return river.JobCancel(err)
 		}
 	}
 
-	word, err := w.wordService.GetWordByID(ctx, job.Args.WordId)
+	word, err := w.wordService.GetWordByID(ctx, job.Args.WordID)
 
 	if err != nil && errors.Is(err, common.NotFoundError{}) {
 		return river.JobCancel(errors.New("word not found"))
@@ -67,7 +67,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 	}
 
 	// Get wordlist language for language-specific audio generation
-	languageCode, _, err := w.wordService.GetWordlistLanguageAndPronunciation(ctx, job.Args.WordId)
+	languageCode, _, err := w.wordService.GetWordlistLanguageAndPronunciation(ctx, job.Args.WordID)
 	if err != nil {
 		logger.Error("failed to get wordlist language", "error", err)
 		return err

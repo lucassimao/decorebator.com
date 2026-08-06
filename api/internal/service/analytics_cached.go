@@ -45,7 +45,7 @@ func (s *CachedAnalyticsService) Stats(ctx context.Context) (*model.WordlistStat
 	cached, err := s.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var stats model.WordlistStats
-		if err := json.Unmarshal([]byte(cached), &stats); err == nil {
+		if decodeErr := json.Unmarshal([]byte(cached), &stats); decodeErr == nil {
 			return &stats, nil
 		}
 	}
@@ -142,7 +142,7 @@ func (s *CachedAnalyticsService) WordMastery(ctx context.Context) ([]model.WordM
 	cached, err := s.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var stats []model.WordMasteryStats
-		if err := json.Unmarshal([]byte(cached), &stats); err == nil {
+		if decodeErr := json.Unmarshal([]byte(cached), &stats); decodeErr == nil {
 			return stats, nil
 		}
 	}
@@ -169,7 +169,7 @@ func (s *CachedAnalyticsService) LearningProgress(ctx context.Context, days int)
 	cached, err := s.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var progress []model.LearningProgressStats
-		if err := json.Unmarshal([]byte(cached), &progress); err == nil {
+		if decodeErr := json.Unmarshal([]byte(cached), &progress); decodeErr == nil {
 			return progress, nil
 		}
 	}
@@ -196,7 +196,7 @@ func (s *CachedAnalyticsService) QuizTypePerformance(ctx context.Context) ([]mod
 	cached, err := s.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var performance []model.QuizTypePerformance
-		if err := json.Unmarshal([]byte(cached), &performance); err == nil {
+		if decodeErr := json.Unmarshal([]byte(cached), &performance); decodeErr == nil {
 			return performance, nil
 		}
 	}
@@ -223,7 +223,7 @@ func (s *CachedAnalyticsService) CurrentBoxDistribution(ctx context.Context) (*m
 	cached, err := s.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var distribution model.BoxDistribution
-		if err := json.Unmarshal([]byte(cached), &distribution); err == nil {
+		if decodeErr := json.Unmarshal([]byte(cached), &distribution); decodeErr == nil {
 			return &distribution, nil
 		}
 	}
@@ -250,7 +250,7 @@ func (s *CachedAnalyticsService) BoxDistributionHistory(ctx context.Context, day
 	cached, err := s.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var distribution []map[string]interface{}
-		if err := json.Unmarshal([]byte(cached), &distribution); err == nil {
+		if decodeErr := json.Unmarshal([]byte(cached), &distribution); decodeErr == nil {
 			return distribution, nil
 		}
 	}
@@ -277,7 +277,7 @@ func (s *CachedAnalyticsService) PracticeTime(ctx context.Context, days int) ([]
 	cached, err := s.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var practiceTime []model.PracticeTimeStats
-		if err := json.Unmarshal([]byte(cached), &practiceTime); err == nil {
+		if decodeErr := json.Unmarshal([]byte(cached), &practiceTime); decodeErr == nil {
 			return practiceTime, nil
 		}
 	}

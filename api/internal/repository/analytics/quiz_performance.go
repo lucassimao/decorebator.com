@@ -96,10 +96,10 @@ func (r *QuizPerformanceRepository) GetQuizTypePerformance(ctx context.Context, 
 	var performances []model.QuizTypePerformance
 	for rows.Next() {
 		var p model.QuizTypePerformance
-		err := rows.Scan(&p.QuizType, &p.TotalAttempts, &p.SuccessRate,
+		scanErr := rows.Scan(&p.QuizType, &p.TotalAttempts, &p.SuccessRate,
 			&p.AvgResponseMs, &p.LastUpdated)
-		if err != nil {
-			return nil, err
+		if scanErr != nil {
+			return nil, scanErr
 		}
 		performances = append(performances, p)
 	}

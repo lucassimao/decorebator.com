@@ -104,7 +104,7 @@ func ScheduleRenewalReminders(ctx context.Context, db *pgxpool.Pool, mailService
 		// Check context cancellation
 		select {
 		case <-ctx.Done():
-			logger.Warn("Context cancelled, stopping reminder processing")
+			logger.Warn("Context cancelled, stopping reminder processing") //nolint:misspell // Preserve the existing observability event text.
 			return ctx.Err()
 		default:
 		}

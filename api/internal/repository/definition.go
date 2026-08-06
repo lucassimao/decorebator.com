@@ -231,7 +231,6 @@ func (repository *DefinitionRepository) Find(ctx context.Context, args FindArgs)
 
 	if args.Name != nil {
 		filters = append(filters, fmt.Sprintf("token = $%d", index))
-		index++
 		queryArgs = append(queryArgs, *args.Name)
 	}
 

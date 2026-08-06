@@ -28,9 +28,9 @@ func NewLeitnerTrackingService(db *pgxpool.Pool) *LeitnerTrackingService {
 // Each definition starts in box 1 (immediate review) and will progress through boxes based on quiz performance.
 //
 // Parameters:
-// - wordId: The ID of the word these definitions belong to
-// - userId: The ID of the user who will be quizzed on these definitions
-// - definitionIds: Array of definition IDs to include in the Leitner system
+// - wordID: The ID of the word these definitions belong to
+// - userID: The ID of the user who will be quizzed on these definitions
+// - definitionIDs: Array of definition IDs to include in the Leitner system
 // - tx: Database transaction to ensure atomicity
 //
 // Returns an error if any database operations fail.
@@ -127,7 +127,7 @@ func (s *LeitnerTrackingService) UpdateQuizProgress(ctx context.Context, trackin
 // This is called when errors are resolved (e.g., new definitions fetched, images generated).
 //
 // Parameters:
-// - report: ErrorReport containing either DefinitionId or WordId to identify records
+// - report: ErrorReport containing either DefinitionID or WordID to identify records
 // - tx: Database transaction to ensure atomicity
 //
 // Returns an error if database operations fail.
@@ -147,12 +147,12 @@ func (s *LeitnerTrackingService) ClearTemporarySkip(ctx context.Context, report 
 // This prevents problematic definitions from appearing in quizzes for 1 hour.
 //
 // Parameters:
-// - report: ErrorReport containing either DefinitionId or WordId to identify records
+// - report: ErrorReport containing either DefinitionID or WordID to identify records
 // - tx: Database transaction to ensure atomicity
 //
 // Returns an error if database operations fail.
 func (s *LeitnerTrackingService) SetTemporarySkip(ctx context.Context, report ErrorReport, tx pgx.Tx) error {
-	if report.DefinitionId == nil && report.WordId == nil {
+	if report.DefinitionID == nil && report.WordID == nil {
 		return errors.New("definition or word missing")
 	}
 
@@ -174,12 +174,12 @@ func buildQuerySelectionFromErrorReport(report ErrorReport) (string, []interface
 	var selection string
 	var queryArgs []interface{}
 
-	if report.DefinitionId != nil {
+	if report.DefinitionID != nil {
 		selection = `WHERE definition_id = $1 AND user_id = $2`
-		queryArgs = []interface{}{*report.DefinitionId, report.UserId}
-	} else if report.WordId != nil {
+		queryArgs = []interface{}{*report.DefinitionID, report.UserID}
+	} else if report.WordID != nil {
 		selection = `WHERE word_id = $1 AND user_id = $2`
-		queryArgs = []interface{}{*report.WordId, report.UserId}
+		queryArgs = []interface{}{*report.WordID, report.UserID}
 	} else {
 		return "", nil, errors.New("either definition_id or word_id must be provided")
 	}

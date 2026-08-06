@@ -43,7 +43,7 @@ func (repository *DefinitionImageRepository) Save(ctx context.Context, dto Creat
 	}()
 
 	// existing images will be hidden
-	_, err = tx.Exec(ctx, "UPDATE definition_images SET is_visible=$1 WHERE definition_id=$2", false, dto.DefinitionId)
+	_, err = tx.Exec(ctx, "UPDATE definition_images SET is_visible=$1 WHERE definition_id=$2", false, dto.DefinitionID)
 
 	if err != nil {
 		err = &common.DatabaseError{
@@ -61,8 +61,8 @@ func (repository *DefinitionImageRepository) Save(ctx context.Context, dto Creat
 	`
 
 	// Execute the query within the transaction
-	err = tx.QueryRow(ctx, insert, dto.Api, dto.Description, dto.Model,
-		dto.Prompt, true, dto.DefinitionId, dto.URL).
+	err = tx.QueryRow(ctx, insert, dto.API, dto.Description, dto.Model,
+		dto.Prompt, true, dto.DefinitionID, dto.URL).
 		Scan(&def.ID, &def.CreatedAt)
 
 	if err != nil {

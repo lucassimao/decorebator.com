@@ -11,10 +11,10 @@ func resizeForStore(img image.Image, mode, store string, width, height int) imag
 	if mode == "exact" {
 		return resizeExact(img, width, height)
 	}
-	if mode == "openai" {
+	if mode == providerOpenAI {
 		return scaleToFill(img, width, height)
 	}
-	if store == "appstore" {
+	if store == storeAppStore {
 		return letterbox(img, width, height)
 	}
 	return scaleToFill(img, width, height)

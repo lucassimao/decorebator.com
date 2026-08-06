@@ -75,8 +75,8 @@ func main() {
 
 	m.Log = &verboseLogger{}
 
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		log.Fatalf("Migration failed: %v", err)
+	if migrateErr := m.Up(); migrateErr != nil && migrateErr != migrate.ErrNoChange {
+		log.Fatalf("Migration failed: %v", migrateErr)
 	}
 
 	ctx := context.Background()

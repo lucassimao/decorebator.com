@@ -18,7 +18,7 @@ import (
 )
 
 type ImageGeneratorArgs struct {
-	DefinitionId int64        `json:"definitionId"`
+	DefinitionID int64        `json:"definitionId"`
 	UserID       *int64       `json:"userId"`
 	ErrorReport  *ErrorReport `json:"errorReport"`
 }
@@ -54,7 +54,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	ctx = txn.Context()
 
 	var (
-		definitionID = job.Args.DefinitionId
+		definitionID = job.Args.DefinitionID
 		userID       = job.Args.UserID
 	)
 
@@ -68,9 +68,9 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		}
 	}
 
-	definition, err := w.definitionService.GetDefinitionByID(ctx, job.Args.DefinitionId)
+	definition, err := w.definitionService.GetDefinitionByID(ctx, job.Args.DefinitionID)
 	if err != nil {
-		logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionId, "error", err)
+		logger.Error("failed to get definition by id", "definitionId", job.Args.DefinitionID, "error", err)
 		return imageDefinitionLookupError(err)
 	}
 
@@ -127,12 +127,12 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	span = sentry.StartSpan(ctx, "db.definition_image.save", sentry.WithDescription("definitionImageService.SaveDefinitionImage"))
 	_, err = w.definitionImageService.SaveDefinitionImage(span.Context(), model.CreateDefinitionImageDTO{
-		Api:          model.OPENAI,
+		API:          model.OPENAI,
 		URL:          url,
 		Description:  longestExample,
 		Model:        "gpt-image-1.5",
 		Prompt:       prompt,
-		DefinitionId: definitionID,
+		DefinitionID: definitionID,
 	})
 	span.Finish()
 
@@ -198,6 +198,7 @@ func buildImagePrompt(sentence, token, meaning, languageCode string) (string, er
 			Satzkontext: %s
 			Zielwort: %s
 			Gemeinte Bedeutung: %s`,
+		//nolint:misspell // "significato" is correct Italian prompt text.
 		"it": `Crea una scena realistica, unica e chiara che trasmetta visivamente il significato della parola così come usata nella frase qui sotto.
 			La scena deve essere facile da capire a colpo d’occhio e concentrarsi su un’unica azione o situazione principale.
 			NON raffigurare la parola obiettivo nell’immagine e NON includere il testo della frase.
@@ -256,10 +257,10 @@ func generateWithOpenAI(ctx context.Context, prompt string) ([]byte, error) {
 			// [TODO] notification here elsewhere
 			logger.Warn(response.Error.Message)
 		case "content_policy_violation":
-			jsonData, err := json.Marshal(response.Error)
+			jsonData, marshalErr := json.Marshal(response.Error)
 
-			if err != nil {
-				return nil, river.JobCancel(err)
+			if marshalErr != nil {
+				return nil, river.JobCancel(marshalErr)
 			}
 
 			// aborting job

@@ -65,7 +65,7 @@ func NewSubscriptionService(
 }
 
 // CreateCheckoutSession creates a Stripe checkout session for subscription
-func (s *SubscriptionService) CreateCheckoutSession(ctx context.Context, userID int64, email string, plan model.SubscriptionPlan, redirectUri string) (*stripe.CheckoutSession, error) {
+func (s *SubscriptionService) CreateCheckoutSession(ctx context.Context, userID int64, email string, plan model.SubscriptionPlan, redirectURI string) (*stripe.CheckoutSession, error) {
 	// Get or create Stripe customer
 	stripeCustomerID, err := s.getOrCreateStripeCustomer(ctx, userID, email)
 	if err != nil {
@@ -78,7 +78,7 @@ func (s *SubscriptionService) CreateCheckoutSession(ctx context.Context, userID 
 		return nil, fmt.Errorf("invalid subscription plan: %s", plan)
 	}
 
-	successURL := fmt.Sprintf("%s?session_id={CHECKOUT_SESSION_ID}&redirect_uri=%s", s.successURL, url.QueryEscape(redirectUri))
+	successURL := fmt.Sprintf("%s?session_id={CHECKOUT_SESSION_ID}&redirect_uri=%s", s.successURL, url.QueryEscape(redirectURI))
 
 	// Create checkout session params
 	params := &stripe.CheckoutSessionParams{
@@ -204,21 +204,21 @@ func (s *SubscriptionService) handleSubscriptionCreated(ctx context.Context, eve
 	if err != nil {
 		common.Logger.Error("Failed to marshal subscription data", "error", err)
 		return err
-	} else {
-		// Create subscription with event in transaction
-		subscriptionEvent := &model.SubscriptionEvent{
-			ExternalEventID: event.ID,
-			Provider:        model.ProviderStripe,
-			EventType:       string(event.Type),
-			EventData:       string(eventData),
-		}
-
-		subID, createErr := s.subRepo.CreateSubscription(ctx, sub, *subscriptionEvent)
-		if createErr != nil {
-			return fmt.Errorf("failed to create subscription with event: %w", createErr)
-		}
-		sub.ID = subID
 	}
+
+	// Create subscription with event in transaction
+	subscriptionEvent := &model.SubscriptionEvent{
+		ExternalEventID: event.ID,
+		Provider:        model.ProviderStripe,
+		EventType:       string(event.Type),
+		EventData:       string(eventData),
+	}
+
+	subID, createErr := s.subRepo.CreateSubscription(ctx, sub, *subscriptionEvent)
+	if createErr != nil {
+		return fmt.Errorf("failed to create subscription with event: %w", createErr)
+	}
+	sub.ID = subID
 
 	// Get user details for email
 	users, err := s.userRepo.Find(ctx, repository.FindUserArgs{ID: &userID})
@@ -348,7 +348,7 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 	}
 	user := &users[0]
 
-	// Send subscription cancelled email
+	// Send subscription canceled email
 	emailData := mail.SubscriptionEmailData{
 		PlanName:         string(sub.Plan),
 		CancellationDate: sub.CurrentPeriodEnd, // Service ends at period end
@@ -476,7 +476,6 @@ func (s *SubscriptionService) sendPaymentFailedEmail(ctx context.Context, userID
 
 // getOrCreateStripeCustomer gets existing or creates new Stripe customer
 func (s *SubscriptionService) getOrCreateStripeCustomer(ctx context.Context, userID int64, email string) (string, error) {
-
 	users, err := s.userRepo.Find(ctx, repository.FindUserArgs{ID: &userID})
 	if err != nil || len(users) == 0 {
 		return "", fmt.Errorf("no user for id %d", userID)
@@ -537,7 +536,7 @@ type SubscriptionCheckOptions struct {
 }
 
 // CheckSubscriptionLimits checks if user can perform action based on subscription
-func (s *SubscriptionService) CheckSubscriptionLimits(ctx context.Context, userID int64, action model.UserAction, options *SubscriptionCheckOptions) error {
+func (s *SubscriptionService) CheckSubscriptionLimits(ctx context.Context, userID int64, action model.UserAction, options *SubscriptionCheckOptions) error { //nolint:gocyclo // Replaced during legacy-provider removal.
 	// Get user's active subscription
 	sub, err := s.subRepo.GetActiveSubscriptionForUser(ctx, userID)
 	if err != nil {

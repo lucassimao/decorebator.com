@@ -26,7 +26,6 @@ type ErrorReportRequest struct {
 }
 
 func (h *ErrorReportRoutes) Create(c *gin.Context) {
-
 	var input ErrorReportRequest
 
 	if err := c.BindJSON(&input); err != nil {
@@ -34,7 +33,7 @@ func (h *ErrorReportRoutes) Create(c *gin.Context) {
 		return
 	}
 
-	userId := c.GetInt64("userID")
+	userID := c.GetInt64("userID")
 
 	// Call service with individual parameters
 	err := h.errorReportService.ReportError(
@@ -42,7 +41,7 @@ func (h *ErrorReportRoutes) Create(c *gin.Context) {
 		input.ErrorType,
 		input.WordID,
 		input.DefinitionID,
-		userId,
+		userID,
 		input.QuizDetails,
 	)
 
@@ -62,5 +61,4 @@ func (h *ErrorReportRoutes) Create(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, gin.H{})
 	}
-
 }

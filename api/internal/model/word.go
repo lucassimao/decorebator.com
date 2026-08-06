@@ -26,10 +26,12 @@ type Word struct {
 }
 
 func (w Word) MarshalJSON() ([]byte, error) {
-	createdAt := "null"
-	updatedAt := "null"
-	processingStartedAt := "null"
-	processingCompletedAt := "null"
+	const nullTimestamp = "null"
+
+	createdAt := nullTimestamp
+	updatedAt := nullTimestamp
+	processingStartedAt := nullTimestamp
+	processingCompletedAt := nullTimestamp
 
 	if w.CreatedAt.Status == pgtype.Present {
 		createdAt = w.CreatedAt.Time.UTC().Format(time.RFC3339)

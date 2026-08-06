@@ -86,15 +86,17 @@ func CreateEphemeralToken(ctx context.Context, wordlistName string, languageCode
 
 // selectVoiceForLanguage selects an appropriate voice for the given language
 func selectVoiceForLanguage(languageCode string) string {
+	const defaultVoice = "alloy"
+
 	// Voice mapping updated for GA API - only supported voices
 	voiceMap := map[string]string{
-		"en": "alloy",   // English
-		"es": "coral",   // Spanish (nova no longer supported)
-		"fr": "shimmer", // French
-		"de": "echo",    // German
-		"it": "ballad",  // Italian (fable no longer supported)
-		"pt": "sage",    // Portuguese (onyx no longer supported)
-		"ja": "marin",   // Japanese
+		"en": defaultVoice, // English
+		"es": "coral",      // Spanish (nova no longer supported)
+		"fr": "shimmer",    // French
+		"de": "echo",       // German
+		"it": "ballad",     // Italian (fable no longer supported)
+		"pt": "sage",       // Portuguese (onyx no longer supported)
+		"ja": "marin",      // Japanese
 	}
 
 	if voice, exists := voiceMap[languageCode]; exists {
@@ -102,5 +104,5 @@ func selectVoiceForLanguage(languageCode string) string {
 	}
 
 	// Default fallback
-	return "alloy"
+	return defaultVoice
 }

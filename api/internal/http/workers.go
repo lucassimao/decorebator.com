@@ -22,7 +22,7 @@ func NewWorkerRoutes(definitionService *service.DefinitionService, jobService se
 }
 
 func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
-	definitionId, err := strconv.ParseInt(c.Param("definitionId"), 10, 64)
+	definitionID, err := strconv.ParseInt(c.Param("definitionId"), 10, 64)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid definition"})
@@ -30,10 +30,10 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 	}
 
 	// Admin context - trigger image generation
-	jobID, err := h.jobService.ScheduleImageJob(c.Request.Context(), definitionId, nil, nil, nil)
+	jobID, err := h.jobService.ScheduleImageJob(c.Request.Context(), definitionID, nil, nil, nil)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "definitionId": definitionId})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "definitionId": definitionID})
 		return
 	}
 
@@ -41,7 +41,7 @@ func (h *WorkerRoutes) GenerateNewImage(c *gin.Context) {
 }
 
 func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
-	wordId, err := strconv.ParseInt(c.Param("wordId"), 10, 64)
+	wordID, err := strconv.ParseInt(c.Param("wordId"), 10, 64)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid word"})
@@ -49,10 +49,10 @@ func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
 	}
 
 	// Admin context - trigger text to speech
-	jobID, err := h.jobService.ScheduleAudioJob(c.Request.Context(), wordId, nil, nil, nil)
+	jobID, err := h.jobService.ScheduleAudioJob(c.Request.Context(), wordID, nil, nil, nil)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordId})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordID})
 		return
 	}
 
@@ -60,7 +60,7 @@ func (h *WorkerRoutes) GenerateNewAudio(c *gin.Context) {
 }
 
 func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
-	wordId, err := strconv.ParseInt(c.Param("wordId"), 10, 64)
+	wordID, err := strconv.ParseInt(c.Param("wordId"), 10, 64)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid word"})
@@ -68,13 +68,13 @@ func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
 	}
 
 	// Admin context - delete existing definitions and trigger new generation
-	if deleteErr := h.definitionService.DeleteWordDefinitions(c.Request.Context(), wordId, nil); deleteErr != nil {
-		common.Logger.ErrorContext(c.Request.Context(), "failed to delete word definitions", "wordId", wordId, "error", deleteErr)
+	if deleteErr := h.definitionService.DeleteWordDefinitions(c.Request.Context(), wordID, nil); deleteErr != nil {
+		common.Logger.ErrorContext(c.Request.Context(), "failed to delete word definitions", "wordId", wordID, "error", deleteErr)
 	}
-	jobID, err := h.jobService.ScheduleDefinitionJob(c.Request.Context(), wordId, nil, nil, nil)
+	jobID, err := h.jobService.ScheduleDefinitionJob(c.Request.Context(), wordID, nil, nil, nil)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordId})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordID})
 		return
 	}
 
@@ -82,17 +82,17 @@ func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
 }
 
 func (h *WorkerRoutes) TriggerJob(c *gin.Context) {
-	jobId, err := strconv.ParseInt(c.Param("jobId"), 10, 64)
+	jobID, err := strconv.ParseInt(c.Param("jobId"), 10, 64)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid job"})
 		return
 	}
 
-	err = h.jobService.RetryJob(c.Request.Context(), jobId)
+	err = h.jobService.RetryJob(c.Request.Context(), jobID)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "jobId": jobId})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "jobId": jobID})
 		return
 	}
 

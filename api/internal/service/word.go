@@ -125,16 +125,16 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 	definitions, _ := ws.definitionService.findDefinitionsByName(ctx, word.Name)
 
 	if len(definitions) > 0 {
-		definitionIds := []int64{}
+		definitionIDs := []int64{}
 
 		for _, def := range definitions {
-			definitionIds = append(definitionIds, def.ID)
+			definitionIDs = append(definitionIDs, def.ID)
 		}
-		if reuseErr := ws.repository.ReuseDefinitions(ctx, word.ID, definitionIds, tx); reuseErr != nil {
+		if reuseErr := ws.repository.ReuseDefinitions(ctx, word.ID, definitionIDs, tx); reuseErr != nil {
 			common.Logger.Error("failed to reuse definitions", "wordId", word.ID, "error", reuseErr)
 		}
 
-		if includeErr := ws.leitnerTrackingService.IncludeDefinitions(ctx, word.ID, word.UserID, definitionIds, tx); includeErr != nil {
+		if includeErr := ws.leitnerTrackingService.IncludeDefinitions(ctx, word.ID, word.UserID, definitionIDs, tx); includeErr != nil {
 			common.Logger.Error("failed to include definitions in tracking system", "wordId", word.ID, "error", includeErr)
 		}
 

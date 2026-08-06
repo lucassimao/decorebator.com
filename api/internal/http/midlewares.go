@@ -24,7 +24,6 @@ import (
 const productionEnv = "production"
 
 func Authenticate(c *gin.Context) {
-
 	const BearerSchema = "Bearer "
 	authorization, err := c.Cookie("Authorization")
 
@@ -112,7 +111,6 @@ func ResolveEffectiveSubscription(access *service.EffectiveAccessService) gin.Ha
 }
 
 func AuthenticateStatic(c *gin.Context) {
-
 	authorization := c.GetHeader("Authorization")
 
 	if authorization == "" || authorization != os.Getenv("STATIC_AUTHENTICATION") {
@@ -191,7 +189,6 @@ func ErrorMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if rec := recover(); rec != nil {
-
 				var err error
 				switch v := rec.(type) {
 				case string:

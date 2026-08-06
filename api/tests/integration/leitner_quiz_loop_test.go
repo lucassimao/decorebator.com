@@ -103,9 +103,9 @@ func runQuizLoopTest(t *testing.T, server *setup.TestServer, token string, itera
 			Expect()
 
 		// Check if we got an error response
-		if quizResp.Raw().StatusCode != http.StatusOK {
+		if quizResp.Raw().StatusCode != http.StatusOK { //nolint:bodyclose // httpexpect owns the response lifecycle.
 			t.Fatalf("Failed to get quiz at iteration %d - status code: %d, response: %s",
-				i+1, quizResp.Raw().StatusCode, quizResp.Body().Raw())
+				i+1, quizResp.Raw().StatusCode, quizResp.Body().Raw()) //nolint:bodyclose // httpexpect owns the response lifecycle.
 		}
 
 		// The quiz is returned directly, not wrapped in an object

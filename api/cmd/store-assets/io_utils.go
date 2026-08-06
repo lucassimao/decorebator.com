@@ -115,13 +115,6 @@ func maxFloat(a, b float64) float64 {
 	return b
 }
 
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func fatal(err error) {
 	fmt.Fprintf(os.Stderr, "error: %v\n", err)
 	os.Exit(1)

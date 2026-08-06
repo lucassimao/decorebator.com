@@ -126,7 +126,7 @@ func (ctx *errorReportContext) checkCooldown() error {
 	}
 
 	if cooldownUntil != nil {
-		retryAfter := cooldownUntil.Sub(time.Now())
+		retryAfter := time.Until(*cooldownUntil)
 		ctx.logger.Warn("Error report blocked by cooldown",
 			"action", "error_report_cooldown_blocked",
 			"timestamp", time.Now().Unix(),
@@ -177,27 +177,27 @@ func (ctx *errorReportContext) processErrorType(tx pgx.Tx) (ErrorReport, error) 
 
 	switch ctx.errorType {
 	case SoundNotPlaying:
-		report = ErrorReport{WordId: &ctx.wordID, UserId: ctx.userID}
+		report = ErrorReport{WordID: &ctx.wordID, UserID: ctx.userID}
 		_, err = ctx.service.jobService.ScheduleAudioJob(ctx.ctx, ctx.wordID, &ctx.userID, &report, &tx)
 
 	case UnrelatedImage, MissingImage:
 		if ctx.definitionID == nil {
 			return report, fmt.Errorf("definition ID required for image-related errors")
 		}
-		report = ErrorReport{DefinitionId: ctx.definitionID, UserId: ctx.userID}
+		report = ErrorReport{DefinitionID: ctx.definitionID, UserID: ctx.userID}
 		_, err = ctx.service.jobService.ScheduleImageJob(ctx.ctx, *ctx.definitionID, &ctx.userID, &report, &tx)
 
 	case UnrelatedExample, UnrelatedMeaning:
 		err = ctx.service.definitionService.DeleteWordDefinitions(ctx.ctx, ctx.wordID, &tx)
 		if err == nil {
-			report = ErrorReport{WordId: &ctx.wordID, UserId: ctx.userID}
+			report = ErrorReport{WordID: &ctx.wordID, UserID: ctx.userID}
 			_, err = ctx.service.jobService.ScheduleDefinitionJob(ctx.ctx, ctx.wordID, &ctx.userID, &report, &tx)
 		}
 
 	case ProcessingFailed:
 		err = ctx.service.definitionService.DeleteWordDefinitions(ctx.ctx, ctx.wordID, &tx)
 		if err == nil {
-			report = ErrorReport{WordId: &ctx.wordID, UserId: ctx.userID}
+			report = ErrorReport{WordID: &ctx.wordID, UserID: ctx.userID}
 			_, err = ctx.service.jobService.ScheduleDefinitionJob(ctx.ctx, ctx.wordID, &ctx.userID, &report, &tx)
 		}
 

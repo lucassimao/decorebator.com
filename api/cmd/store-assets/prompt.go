@@ -64,13 +64,13 @@ func keywordsLine(keywords string) string {
 }
 
 func storeSafeLine(store string) string {
-	if store != "appstore" {
+	if store != storeAppStore {
 		return ""
 	}
 	return "- App Store safe area: leave at least 140px empty space above the headline; top of the headline must be below y=200px."
 }
 
-func providerGuidance(provider, store string) string {
+func providerGuidance(provider, _ string) string {
 	switch strings.ToLower(provider) {
 	case "openai":
 		return "- Prioritize precise typography and clean edges; avoid stylized or distorted letterforms. Ensure the background colors contrast with the screenshot so UI elements remain distinct."
@@ -92,7 +92,7 @@ func frameLine(store string) string {
 	}
 }
 
-func creativeGuidance(provider string, creative int) string {
+func creativeGuidance(_ string, creative int) string {
 	if creative < 0 {
 		creative = 0
 	}

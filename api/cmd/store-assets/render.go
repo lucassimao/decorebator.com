@@ -188,7 +188,7 @@ func renderAssets(cfg *Config, generator ImageGenerator, resizeMode, provider st
 }
 
 func selectStores(cfg *Config, filter string) ([]string, error) {
-	if filter == "all" {
+	if filter == filterAll {
 		stores := make([]string, 0, len(cfg.Stores))
 		for key := range cfg.Stores {
 			stores = append(stores, key)
@@ -203,7 +203,7 @@ func selectStores(cfg *Config, filter string) ([]string, error) {
 }
 
 func selectLocales(cfg *Config, filter string) []string {
-	if filter == "all" {
+	if filter == filterAll {
 		return cfg.Locales
 	}
 	for _, loc := range cfg.Locales {
@@ -215,7 +215,7 @@ func selectLocales(cfg *Config, filter string) []string {
 }
 
 func selectSlots(cfg *Config, filter string) []SlotConfig {
-	if filter == "all" {
+	if filter == filterAll {
 		return cfg.Slots
 	}
 	for _, slot := range cfg.Slots {

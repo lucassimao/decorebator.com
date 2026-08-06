@@ -41,7 +41,7 @@ type SubscriptionStatus string
 
 const (
 	StatusActive   SubscriptionStatus = "active"
-	StatusCanceled SubscriptionStatus = "cancelled"
+	StatusCanceled SubscriptionStatus = "cancelled" //nolint:misspell // Persisted legacy database value.
 	StatusPastDue  SubscriptionStatus = "past_due"
 	StatusUnpaid   SubscriptionStatus = "unpaid"
 )

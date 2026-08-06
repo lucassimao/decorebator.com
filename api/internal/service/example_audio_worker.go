@@ -61,7 +61,7 @@ type ExampleAudioItem struct {
 }
 
 func (w *ExampleAudioWorker) Work(ctx context.Context, job *river.Job[ExampleAudioArgs]) error {
-	logger := common.Logger.With("worker", "exampleaudio", "DefinitionID", job.Args.DefinitionID, "WordID", job.Args.WordID, "UserId", job.Args.UserID)
+	logger := common.Logger.With("worker", "exampleaudio", "DefinitionID", job.Args.DefinitionID, "WordID", job.Args.WordID, "UserID", job.Args.UserID)
 
 	// Validate user eligibility before processing (skip for admin/system jobs)
 	if job.Args.UserID != nil {

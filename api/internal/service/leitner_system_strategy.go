@@ -196,7 +196,7 @@ func (s *LeitnerSystemStrategy) loadScopedDistractorAvailability(
 // - NextDefinition with selected definition details and Leitner system metadata
 // - QuizUnavailableError if no definitions are due
 // - Error if database operations fail
-func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, wordlistID int64, allowedTypes []model.QuizType) (*NextDefinition, error) {
+func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, wordlistID int64, allowedTypes []model.QuizType) (*NextDefinition, error) { //nolint:gocyclo // Deterministic selection algorithm with dedicated integration coverage.
 	queryTemplate := `
 		WITH due_definitions AS (
 			SELECT 
@@ -416,26 +416,6 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 		Reason:  common.QuizUnavailableNoMatchingQuizTypes,
 		Message: "no quiz types available for selection",
 	}
-}
-
-// checkHasUnlearnedWords verifies if the user has any unlearned words in the wordlist
-func (s *LeitnerSystemStrategy) checkHasUnlearnedWords(ctx context.Context, userID, wordlistID int64) (bool, error) {
-	query := `
-		SELECT EXISTS(
-			SELECT 1 
-			FROM leitner_system_tracking lst 
-			JOIN word_definitions wd ON lst.definition_id = wd.definition_id
-			JOIN words w ON wd.word_id = w.id
-			WHERE lst.user_id = $1 
-			AND w.wordlist_id = $2 
-			AND w.learned = FALSE
-			LIMIT 1
-		)
-	`
-
-	var exists bool
-	err := s.db.QueryRow(ctx, query, userID, wordlistID).Scan(&exists)
-	return exists, err
 }
 
 // getWordlistBoxDistribution provides analytics on word distribution across boxes
@@ -1372,9 +1352,9 @@ func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(ctx context.Context,
 		WHERE lst.id = updated.id
 		RETURNING updated.new_box`
 
-	var boxId int64
+	var boxID int64
 	row := tx.QueryRow(ctx, query, quizResult.IsCorrect, quizResult.LeitnerSystemTrackingID)
-	err = row.Scan(&boxId)
+	err = row.Scan(&boxID)
 	if err != nil {
 		return err
 	}
@@ -1444,8 +1424,8 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	}
 
 	// First, get the current box_id before update
-	var currentBoxId int64
-	err = tx.QueryRow(ctx, "SELECT box_id FROM leitner_system_tracking WHERE id = $1", quizResult.LeitnerSystemTrackingID).Scan(&currentBoxId)
+	var currentBoxID int64
+	err = tx.QueryRow(ctx, "SELECT box_id FROM leitner_system_tracking WHERE id = $1", quizResult.LeitnerSystemTrackingID).Scan(&currentBoxID)
 	if err != nil {
 		return err
 	}
@@ -1457,7 +1437,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	}
 
 	// Set the quiz result data
-	quizResult.BoxID = currentBoxId
+	quizResult.BoxID = currentBoxID
 
 	// Track analytics using injected writer
 	if err = (*s.analyticsWriter).TrackQuiz(ctx, quizResult, tx); err != nil {
@@ -1536,11 +1516,11 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 // to be included in quiz generation again.
 //
 // Parameters:
-// - report: ErrorReport containing either DefinitionId or WordId to resolve
+// - report: ErrorReport containing either DefinitionID or WordID to resolve
 //
 // Returns an error if the database operations fail.
 func (s LeitnerSystemStrategy) MarkErrorResolved(ctx context.Context, report ErrorReport) error {
-	if report.DefinitionId == nil && report.WordId == nil {
+	if report.DefinitionID == nil && report.WordID == nil {
 		return errors.New("definition or word missing")
 	}
 
@@ -1570,12 +1550,12 @@ func (s LeitnerSystemStrategy) MarkErrorResolved(ctx context.Context, report Err
 	var errorReportsUpdate string
 	var queryArgs []interface{}
 
-	if report.DefinitionId != nil {
+	if report.DefinitionID != nil {
 		errorReportsUpdate = `UPDATE error_reports SET status = 'resolved', resolved_at = NOW() WHERE user_id = $1 AND definition_id = $2`
-		queryArgs = []interface{}{report.UserId, *report.DefinitionId}
-	} else if report.WordId != nil {
+		queryArgs = []interface{}{report.UserID, *report.DefinitionID}
+	} else if report.WordID != nil {
 		errorReportsUpdate = `UPDATE error_reports SET status = 'resolved', resolved_at = NOW() WHERE user_id = $1 AND word_id = $2`
-		queryArgs = []interface{}{report.UserId, *report.WordId}
+		queryArgs = []interface{}{report.UserID, *report.WordID}
 	} else {
 		return errors.New("definition or word missing")
 	}
@@ -1587,9 +1567,9 @@ func (s LeitnerSystemStrategy) MarkErrorResolved(ctx context.Context, report Err
 }
 
 type ErrorReport struct {
-	DefinitionId *int64 `json:"definitionId"`
-	WordId       *int64 `json:"wordId"`
-	UserId       int64  `json:"userId"`
+	DefinitionID *int64 `json:"definitionId"`
+	WordID       *int64 `json:"wordId"`
+	UserID       int64  `json:"userId"`
 }
 
 // selectBalancedQuizType selects a quiz type from available types, favoring those that have been used less recently.

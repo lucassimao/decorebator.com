@@ -359,7 +359,7 @@ func CreateErrorReportPayload(wordID, definitionID int64, errorType string, quiz
 		"errorType": errorType,
 	}
 
-	// Add definitionId only if it's not zero (some error types don't require it)
+	// Add definitionID only if it's not zero (some error types don't require it)
 	if definitionID != 0 {
 		payload["definitionId"] = definitionID
 	}

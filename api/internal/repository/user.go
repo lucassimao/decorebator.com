@@ -133,12 +133,12 @@ func (repository *UserRepository) Find(ctx context.Context, args FindUserArgs) (
 
 	for rows.Next() {
 		user := User{}
-		err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
+		scanErr := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
 			&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
 			&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID,
 			&user.Platform, &user.SubscriptionEndsAt, &user.NotificationsEnabled, &user.CreatedAt, &user.UpdatedAt)
-		if err != nil {
-			return nil, err
+		if scanErr != nil {
+			return nil, scanErr
 		}
 		users = append(users, user)
 	}

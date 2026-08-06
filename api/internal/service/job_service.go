@@ -59,7 +59,7 @@ func (js *JobServiceImpl) ScheduleImageJob(ctx context.Context, definitionID int
 	opts := river.InsertOpts{Queue: ImageGeneratorQueue}
 
 	return js.enqueueJob(ctx, &opts, ImageGeneratorArgs{
-		DefinitionId: definitionID,
+		DefinitionID: definitionID,
 		UserID:       userID,
 		ErrorReport:  errorReport,
 	}, tx)
@@ -69,7 +69,7 @@ func (js *JobServiceImpl) ScheduleAudioJob(ctx context.Context, wordID int64, us
 	opts := river.InsertOpts{Queue: TextToSpeechQueue}
 
 	return js.enqueueJob(ctx, &opts, TextToSpeechArgs{
-		WordId:      wordID,
+		WordID:      wordID,
 		UserID:      userID,
 		ErrorReport: errorReport,
 	}, tx)
@@ -79,7 +79,7 @@ func (js *JobServiceImpl) ScheduleDefinitionJob(ctx context.Context, wordID int6
 	opts := river.InsertOpts{Queue: DefinitionFetcherQueue}
 
 	return js.enqueueJob(ctx, &opts, DefinitionFetcherArgs{
-		WordId:      wordID,
+		WordID:      wordID,
 		UserID:      userID,
 		ErrorReport: errorReport,
 	}, tx)

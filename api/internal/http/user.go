@@ -188,7 +188,6 @@ func (h *UserRoutes) Logout(c *gin.Context) {
 }
 
 func (h *UserRoutes) ResetPassword(c *gin.Context) {
-
 	var input ResetPasswordInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -215,8 +214,8 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	if err := h.userService.UpdatePassword(c.Request.Context(), payload.UserId, input.Password); err != nil {
-		common.Logger.ErrorContext(c.Request.Context(), "failed to update password", "userId", payload.UserId, "error", err)
+	if err := h.userService.UpdatePassword(c.Request.Context(), payload.UserID, input.Password); err != nil {
+		common.Logger.ErrorContext(c.Request.Context(), "failed to update password", "userId", payload.UserID, "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
 		return
 	}
@@ -224,7 +223,6 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 }
 
 func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
-
 	var input RequestResetPasswordEmailInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -252,7 +250,7 @@ func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
 	var maxAge, path, domain, secure, httpOnly, sameSite = int64(0), "/", "localhost", false, true, http.SameSiteStrictMode
 
 	if os.Getenv("ENV") == "production" {
-		maxAge = service.AUTH_TOKEN_DURATION.Milliseconds()
+		maxAge = service.AuthTokenDuration.Milliseconds()
 		domain = "decorebator.com"
 		// requires https
 		secure = true
@@ -385,7 +383,6 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 }
 
 func (h *UserRoutes) GetProfile(c *gin.Context) {
-
 	// Get user from context (set by auth middleware)
 	userIDAny, exists := c.Get("userID")
 	if !exists {
@@ -429,7 +426,6 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 }
 
 func (h *UserRoutes) DeleteProfile(c *gin.Context) {
-
 	// Get user from context (set by auth middleware)
 	userIDAny, exists := c.Get("userID")
 	if !exists {

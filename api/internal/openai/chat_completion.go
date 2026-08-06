@@ -26,7 +26,7 @@ type LanguageConfig struct {
 // gofmt:off
 //
 //nolint:gochecknoglobals // Global language configuration map
-var LANGUAGE_CONFIGS = map[string]LanguageConfig{
+var LanguageConfigs = map[string]LanguageConfig{
 	"en": {
 		Code:             "en",
 		Name:             "English",
@@ -206,7 +206,7 @@ var LANGUAGE_CONFIGS = map[string]LanguageConfig{
 // gofmt:on
 
 func isValidPartOfSpeech(value string, languageCode string) bool {
-	config, exists := LANGUAGE_CONFIGS[languageCode]
+	config, exists := LanguageConfigs[languageCode]
 	if !exists {
 		return false
 	}
@@ -221,7 +221,7 @@ func isValidPartOfSpeech(value string, languageCode string) bool {
 
 // buildLanguageSpecificPrompt creates language-specific prompts for ChatGPT
 func buildLanguageSpecificPrompt(token string, languageCode string, pronunciationSystem model.PronunciationSystem) ([]map[string]string, error) {
-	languageConfig, exists := LANGUAGE_CONFIGS[languageCode]
+	languageConfig, exists := LanguageConfigs[languageCode]
 	if !exists {
 		return nil, fmt.Errorf("unsupported language: %s", languageCode)
 	}
@@ -378,7 +378,6 @@ func GetDefinition(ctx context.Context, token string, languageCode string, pronu
 		result.Language = languageCode
 		result.Token = token
 		result.Source = model.ChatGPT
-
 	}
 
 	logger.Debug("definitions returned.", "count", len(openAIDefinition.Results))
@@ -436,7 +435,7 @@ type OpenAPIDefinition struct {
 
 // buildDefinitionSchema creates a language-specific JSON schema for definition responses
 func buildDefinitionSchema(languageCode string) (map[string]any, error) {
-	config, exists := LANGUAGE_CONFIGS[languageCode]
+	config, exists := LanguageConfigs[languageCode]
 	if !exists {
 		return nil, fmt.Errorf("unsupported language: %s", languageCode)
 	}

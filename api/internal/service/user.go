@@ -47,7 +47,7 @@ func NewUserService(db *pgxpool.Pool, subscriptionService *SubscriptionService, 
 	return service
 }
 
-const AUTH_TOKEN_DURATION = (24 * time.Hour) * 365 // 1 year
+const AuthTokenDuration = (24 * time.Hour) * 365 // 1 year
 
 // JWT configuration cached for performance
 var (
@@ -89,7 +89,7 @@ func GenerateJWT(user User) (string, error) {
 		SubscriptionPlan: user.SubscriptionPlan,
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "Decorebator",
-			ExpiresAt: time.Now().Add(AUTH_TOKEN_DURATION).Unix(), // Token is valid for 1 year
+			ExpiresAt: time.Now().Add(AuthTokenDuration).Unix(), // Token is valid for 1 year
 			Subject:   fmt.Sprint(user.ID),
 			IssuedAt:  time.Now().Unix(),
 		},
@@ -186,17 +186,16 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (st
 			"total_ms", totalDuration.Milliseconds(),
 			"status", "success")
 		return GenerateJWT(user)
-	} else {
-		// Log performance even for failed password attempts
-		common.Logger.Info("login performance metrics",
-			"user_id", user.ID,
-			"db_query_ms", dbDuration.Milliseconds(),
-			"bcrypt_ms", bcryptDuration.Milliseconds(),
-			"total_ms", totalDuration.Milliseconds(),
-			"status", "failed_password")
-		return "", errors.New("invalid combination of email and/or password")
 	}
 
+	// Log performance even for failed password attempts
+	common.Logger.Info("login performance metrics",
+		"user_id", user.ID,
+		"db_query_ms", dbDuration.Milliseconds(),
+		"bcrypt_ms", bcryptDuration.Milliseconds(),
+		"total_ms", totalDuration.Milliseconds(),
+		"status", "failed_password")
+	return "", errors.New("invalid combination of email and/or password")
 }
 
 func (s *UserService) GetProfile(ctx context.Context, userID int64) (*User, bool, error) {

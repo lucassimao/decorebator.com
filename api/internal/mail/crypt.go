@@ -64,14 +64,13 @@ func decryptAES(key []byte, encrypted string) (string, error) {
 }
 
 type ResetPasswordPayload struct {
-	UserId    int64     `json:"userId"`
+	UserID    int64     `json:"userId"`
 	ExpiresAt time.Time `json:"expiresAt"`
 }
 
-func createResetPasswordToken(userId int64) (encryptedPayload string, err error) {
-
+func createResetPasswordToken(userID int64) (encryptedPayload string, err error) {
 	futureTime := time.Now().Add(time.Duration(30) * time.Minute)
-	payload := ResetPasswordPayload{UserId: userId, ExpiresAt: futureTime}
+	payload := ResetPasswordPayload{UserID: userID, ExpiresAt: futureTime}
 	encodedPayload, err := json.Marshal(payload)
 	if err != nil {
 		return "", err
@@ -87,7 +86,6 @@ func createResetPasswordToken(userId int64) (encryptedPayload string, err error)
 }
 
 func ValidateResetPasswordPayload(encrypted string) (*ResetPasswordPayload, error) {
-
 	key := []byte(os.Getenv("RESET_PASSWORD_PRIVATE_KEY"))
 
 	decrypted, err := decryptAES(key, encrypted)

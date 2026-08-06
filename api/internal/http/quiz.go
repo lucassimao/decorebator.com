@@ -24,13 +24,12 @@ func NewQuizRoutes(strategy common.SpacedRepetitionStrategy, userRepo *repositor
 }
 
 func (h *QuizRoutes) Create(c *gin.Context) {
-
 	txn := sentry.StartTransaction(c.Request.Context(), "quiz.create", sentry.WithDescription("QuizRoutes.Create"))
 	defer txn.Finish()
 	c.Request = c.Request.WithContext(txn.Context())
 
 	wordlistID, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
-	userId := c.GetInt64("userID")
+	userID := c.GetInt64("userID")
 
 	allowedTypes, err := parseAllowedQuizTypes(c.Query("quizTypes"))
 	if err != nil {
@@ -50,7 +49,7 @@ func (h *QuizRoutes) Create(c *gin.Context) {
 	}
 
 	span := sentry.StartSpan(c.Request.Context(), "quiz.generate", sentry.WithDescription("strategy.CreateQuiz"))
-	challenge, err := h.strategy.CreateQuiz(span.Context(), wordlistID, userId, allowedTypes)
+	challenge, err := h.strategy.CreateQuiz(span.Context(), wordlistID, userID, allowedTypes)
 	span.Finish()
 
 	if err != nil {
@@ -58,14 +57,14 @@ func (h *QuizRoutes) Create(c *gin.Context) {
 		if errors.As(err, &quizUnavailable) {
 			if quizUnavailable.Reason == common.QuizUnavailableNoDueItems {
 				common.Logger.InfoContext(c.Request.Context(), "no due items available",
-					"userID", userId,
+					"userID", userID,
 					"wordlistID", wordlistID,
 					"reason", quizUnavailable.Reason)
 				if hub := sentry.GetHubFromContext(c.Request.Context()); hub != nil {
 					hub.WithScope(func(scope *sentry.Scope) {
 						scope.SetLevel(sentry.LevelInfo)
 						scope.SetTag("quiz_unavailable_reason", string(quizUnavailable.Reason))
-						scope.SetExtra("user_id", userId)
+						scope.SetExtra("user_id", userID)
 						scope.SetExtra("wordlist_id", wordlistID)
 					})
 					hub.CaptureMessage("quiz_unavailable_no_due_items")
@@ -125,7 +124,6 @@ type SaveInput struct {
 
 // Save if the users answered correctly or not
 func (h *QuizRoutes) Save(c *gin.Context) {
-
 	txn := sentry.StartTransaction(c.Request.Context(), "quiz.answer", sentry.WithDescription("QuizRoutes.Save"))
 	defer txn.Finish()
 	c.Request = c.Request.WithContext(txn.Context())
@@ -137,7 +135,7 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 		return
 	}
 
-	userId := c.GetInt64("userID")
+	userID := c.GetInt64("userID")
 
 	// Get user from context to check if premium
 	isPremium := false
@@ -155,7 +153,7 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 		LeitnerSystemTrackingID: input.LeitnerSystemTrackingID,
 		QuizType:                model.QuizType(input.QuizType),
 		IsCorrect:               input.IsCorrect,
-		UserID:                  userId,
+		UserID:                  userID,
 		ResponseTimeMs:          input.ResponseTimeMs,
 	}, isPremium, nil)
 	span.Finish()
@@ -171,8 +169,8 @@ func (h *QuizRoutes) Save(c *gin.Context) {
 	}
 
 	if h.userRepo != nil {
-		if updateErr := h.userRepo.UpdateLastPracticeAt(c.Request.Context(), userId); updateErr != nil {
-			common.Logger.ErrorContext(c.Request.Context(), "failed to update last practice timestamp", "error", updateErr, "userID", userId)
+		if updateErr := h.userRepo.UpdateLastPracticeAt(c.Request.Context(), userID); updateErr != nil {
+			common.Logger.ErrorContext(c.Request.Context(), "failed to update last practice timestamp", "error", updateErr, "userID", userID)
 		}
 	}
 

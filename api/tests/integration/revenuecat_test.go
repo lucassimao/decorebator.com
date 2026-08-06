@@ -97,10 +97,10 @@ func TestRevenueCatWebhookSimple(t *testing.T) {
 		assert.Greater(t, jobCount, 0, "Should have enqueued at least one job")
 
 		// Create a mock API client that returns test data without making external calls
+		expiresDateStr := time.Now().Add(30 * 24 * time.Hour).Format(time.RFC3339)
 		mockAPIClient := &mocks.MockRevenueCatAPIClient{
 			GetCustomerInfoFunc: func(_ context.Context, appUserID string) (*service.CustomerInfo, error) {
 				// Return a mock customer info with active subscription
-				expiresDateStr := time.Now().Add(30 * 24 * time.Hour).Format(time.RFC3339)
 				return &service.CustomerInfo{
 					RequestDate:   time.Now().Format(time.RFC3339),
 					RequestDateMS: time.Now().Unix() * 1000,

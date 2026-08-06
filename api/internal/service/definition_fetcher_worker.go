@@ -18,7 +18,7 @@ import (
 )
 
 type DefinitionFetcherArgs struct {
-	WordId      int64        `json:"wordId"`
+	WordID      int64        `json:"wordId"`
 	UserID      *int64       `json:"userId"`
 	ErrorReport *ErrorReport `json:"errorReport"`
 }
@@ -52,22 +52,22 @@ func NewDefinitionFetcherWorker(db *pgxpool.Pool, wordService *WordService, defi
 	}
 }
 
-func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[DefinitionFetcherArgs]) error {
+func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[DefinitionFetcherArgs]) error { //nolint:gocyclo // Staged retry-sensitive worker pipeline.
 	txn := sentry.StartTransaction(ctx, "worker.DefinitionFetcher", sentry.WithOpName("queue.process"), sentry.WithTransactionSource(sentry.SourceTask))
 	defer txn.Finish()
 	ctx = txn.Context()
 
-	// Validate user eligibility before processing (skip if userId is nil - admin context)
+	// Validate user eligibility before processing (skip if userID is nil - admin context)
 	if job.Args.UserID != nil {
 		if err := w.userService.ValidateUserEligibilityForWorkers(ctx, *job.Args.UserID); err != nil {
 			common.Logger.WarnContext(ctx, "User not eligible for definition fetching",
-				"userId", *job.Args.UserID, "wordId", job.Args.WordId, "error", err)
+				"userId", *job.Args.UserID, "wordId", job.Args.WordID, "error", err)
 			// Cancel job permanently - user needs to upgrade
 			return river.JobCancel(err)
 		}
 	}
 	logger := common.Logger.With("worker", "DefinitionFetcher")
-	wordID := job.Args.WordId
+	wordID := job.Args.WordID
 
 	word, err := w.wordService.GetWordByID(ctx, wordID)
 
@@ -126,19 +126,19 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 			"validationErrors": validationErrors,
 		}
 
-		json, err := json.Marshal(details)
-		if err != nil {
+		detailsJSON, marshalErr := json.Marshal(details)
+		if marshalErr != nil {
 			if updateErr := w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", "Failed to validate definitions", nil); updateErr != nil {
 				logger.ErrorContext(ctx, "failed to update processing status", "wordID", wordID, "error", updateErr)
 			}
-			return err
+			return marshalErr
 		}
 
 		errorMsg := fmt.Sprintf("Definition validation failed: %v", validationErrors)
-		if err := w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", errorMsg, nil); err != nil {
-			logger.ErrorContext(ctx, "failed to update processing status", "wordID", wordID, "error", err)
+		if updateErr := w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", errorMsg, nil); updateErr != nil {
+			logger.ErrorContext(ctx, "failed to update processing status", "wordID", wordID, "error", updateErr)
 		}
-		return errors.New(string(json))
+		return errors.New(string(detailsJSON))
 	}
 
 	// Get database connection for transaction
@@ -176,9 +176,9 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		logger.Info("pronunciation saved", "pronunciation", definitionData.Pronunciation, "wordId", word.ID)
 	}
 
-	definitionIds := []int64{}
+	definitionIDs := []int64{}
 	for _, definition := range definitions {
-		definitionIds = append(definitionIds, definition.ID)
+		definitionIDs = append(definitionIDs, definition.ID)
 
 		_, err = w.jobService.ScheduleImageJob(ctx, definition.ID, job.Args.UserID, nil, &tx)
 
@@ -201,7 +201,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 			}
 		}
 	}
-	if includeErr := w.leitnerTrackingService.IncludeDefinitions(ctx, word.ID, word.UserID, definitionIds, tx); includeErr != nil {
+	if includeErr := w.leitnerTrackingService.IncludeDefinitions(ctx, word.ID, word.UserID, definitionIDs, tx); includeErr != nil {
 		logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)
 	}
 
@@ -237,108 +237,101 @@ func validateDefinitions(word string, definitions []*model.Definition) []string 
 	var validationErrors []string
 
 	for i, def := range definitions {
-		// Check required fields
-		if def.PartOfSpeech == "" {
-			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: missing part_of_speech", i+1))
-		}
+		validationErrors = append(validationErrors, validateDefinition(word, i+1, def)...)
+	}
 
-		if def.Meaning == "" {
-			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: missing meaning", i+1))
-		}
+	return validationErrors
+}
 
-		if def.Language == "" {
-			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: missing language", i+1))
-		}
+func validateDefinition(word string, index int, def *model.Definition) []string {
+	validationErrors := validateRequiredDefinitionFields(index, def)
 
-		if def.Token == "" {
-			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: missing token", i+1))
-		}
+	normalizedPOS := NormalizePartOfSpeech(def.PartOfSpeech, def.Language)
+	if normalizedPOS == "verb" || normalizedPOS == "phrasal verb" {
+		validationErrors = append(validationErrors, validateVerbDefinition(index, def)...)
+	} else {
+		validationErrors = append(validationErrors, validateNonVerbDefinition(index, def)...)
+	}
 
-		// Check part of speech specific requirements
-		normalizedPos := NormalizePartOfSpeech(def.PartOfSpeech, def.Language)
-		if normalizedPos == "verb" || normalizedPos == "phrasal verb" {
-			// CRITICAL: Verbs and phrasal verbs MUST have empty main examples array
-			if len(def.Examples) > 0 {
-				validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb/phrasal verb must have empty examples array but has %d examples", i+1, len(def.Examples)))
+	if def.Token != "" && !strings.EqualFold(def.Token, word) {
+		validationErrors = append(validationErrors, fmt.Sprintf("definition %d: token mismatch - expected '%s', got '%s'", index, word, def.Token))
+	}
+	return validationErrors
+}
+
+func validateRequiredDefinitionFields(index int, def *model.Definition) []string {
+	var validationErrors []string
+	if def.PartOfSpeech == "" {
+		validationErrors = append(validationErrors, fmt.Sprintf("definition %d: missing part_of_speech", index))
+	}
+	if def.Meaning == "" {
+		validationErrors = append(validationErrors, fmt.Sprintf("definition %d: missing meaning", index))
+	}
+	if def.Language == "" {
+		validationErrors = append(validationErrors, fmt.Sprintf("definition %d: missing language", index))
+	}
+	if def.Token == "" {
+		validationErrors = append(validationErrors, fmt.Sprintf("definition %d: missing token", index))
+	}
+	return validationErrors
+}
+
+func validateVerbDefinition(index int, def *model.Definition) []string {
+	var validationErrors []string
+	if len(def.Examples) > 0 {
+		validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb/phrasal verb must have empty examples array but has %d examples", index, len(def.Examples)))
+	}
+	if len(def.Inflections) == 0 {
+		return append(validationErrors, fmt.Sprintf("definition %d: verb missing inflections", index))
+	}
+
+	hasPresent, hasPast, hasPastParticiple := false, false, false
+	allExamples := make(map[string][]string)
+	for _, inflection := range def.Inflections {
+		hasPresent = hasPresent || inflection.Tense == "present"
+		hasPast = hasPast || inflection.Tense == "past"
+		hasPastParticiple = hasPastParticiple || inflection.Tense == "past participle"
+		if inflection.Inflection == "" {
+			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: inflection missing form", index))
+		}
+		if len(inflection.Examples) == 0 {
+			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: inflection %s missing examples", index, inflection.Tense))
+		}
+		for _, example := range inflection.Examples {
+			if !strings.Contains(example, "[") || !strings.Contains(example, "]") {
+				validationErrors = append(validationErrors, fmt.Sprintf("definition %d: inflection example missing brackets: %s", index, example))
 			}
-			if len(def.Inflections) == 0 {
-				validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb missing inflections", i+1))
-			} else {
-				// Validate inflections
-				hasPresent := false
-				hasPast := false
-				hasPastParticiple := false
-
-				for _, inflection := range def.Inflections {
-					if inflection.Tense == "present" {
-						hasPresent = true
-					}
-					if inflection.Tense == "past" {
-						hasPast = true
-					}
-					if inflection.Tense == "past participle" {
-						hasPastParticiple = true
-					}
-
-					if inflection.Inflection == "" {
-						validationErrors = append(validationErrors, fmt.Sprintf("definition %d: inflection missing form", i+1))
-					}
-
-					if len(inflection.Examples) == 0 {
-						validationErrors = append(validationErrors, fmt.Sprintf("definition %d: inflection %s missing examples", i+1, inflection.Tense))
-					}
-
-					// Check that examples contain the word in brackets
-					for _, example := range inflection.Examples {
-						if !strings.Contains(example, "[") || !strings.Contains(example, "]") {
-							validationErrors = append(validationErrors, fmt.Sprintf("definition %d: inflection example missing brackets: %s", i+1, example))
-						}
-					}
-				}
-
-				// Check for duplicate examples across inflections
-				allExamples := make(map[string][]string) // example -> list of tenses that have it
-				for _, inflection := range def.Inflections {
-					for _, example := range inflection.Examples {
-						allExamples[example] = append(allExamples[example], inflection.Tense)
-					}
-				}
-
-				for example, tenses := range allExamples {
-					if len(tenses) > 1 {
-						validationErrors = append(validationErrors, fmt.Sprintf("definition %d: duplicate example across inflections '%s' found in tenses: %v", i+1, example, tenses))
-					}
-				}
-
-				if !hasPresent {
-					validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb missing present tense inflection", i+1))
-				}
-				if !hasPast {
-					validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb missing past tense inflection", i+1))
-				}
-				if !hasPastParticiple {
-					validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb missing past participle inflection", i+1))
-				}
-			}
-		} else {
-			// For non-verbs, check that examples are provided
-			if len(def.Examples) == 0 {
-				validationErrors = append(validationErrors, fmt.Sprintf("definition %d: non-verb missing examples", i+1))
-			} else {
-				// Check that examples contain the word in brackets
-				for _, example := range def.Examples {
-					if !strings.Contains(example, "[") || !strings.Contains(example, "]") {
-						validationErrors = append(validationErrors, fmt.Sprintf("definition %d: example missing brackets: %s", i+1, example))
-					}
-				}
-			}
-		}
-
-		// Check that the token matches the word being defined (case insensitive)
-		if def.Token != "" && !strings.EqualFold(def.Token, word) {
-			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: token mismatch - expected '%s', got '%s'", i+1, word, def.Token))
+			allExamples[example] = append(allExamples[example], inflection.Tense)
 		}
 	}
 
+	for example, tenses := range allExamples {
+		if len(tenses) > 1 {
+			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: duplicate example across inflections '%s' found in tenses: %v", index, example, tenses))
+		}
+	}
+	if !hasPresent {
+		validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb missing present tense inflection", index))
+	}
+	if !hasPast {
+		validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb missing past tense inflection", index))
+	}
+	if !hasPastParticiple {
+		validationErrors = append(validationErrors, fmt.Sprintf("definition %d: verb missing past participle inflection", index))
+	}
+	return validationErrors
+}
+
+func validateNonVerbDefinition(index int, def *model.Definition) []string {
+	if len(def.Examples) == 0 {
+		return []string{fmt.Sprintf("definition %d: non-verb missing examples", index)}
+	}
+
+	var validationErrors []string
+	for _, example := range def.Examples {
+		if !strings.Contains(example, "[") || !strings.Contains(example, "]") {
+			validationErrors = append(validationErrors, fmt.Sprintf("definition %d: example missing brackets: %s", index, example))
+		}
+	}
 	return validationErrors
 }

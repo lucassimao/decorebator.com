@@ -125,7 +125,7 @@ func (h *WordlistsRoutes) GetPronunciationSystems(c *gin.Context) {
 	})
 }
 
-func (h *WordlistsRoutes) GetById(c *gin.Context) {
+func (h *WordlistsRoutes) GetByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
 	if err != nil {
 		c.Status(http.StatusNotFound)

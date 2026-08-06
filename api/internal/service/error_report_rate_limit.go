@@ -71,10 +71,10 @@ func (s *ErrorReportRateLimitService) CheckRateLimit(ctx context.Context, user *
 
 	if hourlyCount >= hourlyLimit {
 		// Find when the oldest report in the hour window will expire
-		oldestReportTime, err := s.repo.GetOldestReportTimeInWindow(ctx, user.ID, hourAgo)
+		oldestReportTime, lookupErr := s.repo.GetOldestReportTimeInWindow(ctx, user.ID, hourAgo)
 
 		retryAfter := time.Hour
-		if err == nil && !oldestReportTime.IsZero() {
+		if lookupErr == nil && !oldestReportTime.IsZero() {
 			retryAfter = oldestReportTime.Add(HourlyWindow).Sub(now)
 		}
 
@@ -106,10 +106,10 @@ func (s *ErrorReportRateLimitService) CheckRateLimit(ctx context.Context, user *
 
 	if dailyCount >= dailyLimit {
 		// Find when the oldest report in the day window will expire
-		oldestReportTime, err := s.repo.GetOldestReportTimeInWindow(ctx, user.ID, dayAgo)
+		oldestReportTime, lookupErr := s.repo.GetOldestReportTimeInWindow(ctx, user.ID, dayAgo)
 
 		retryAfter := DailyWindow
-		if err == nil && !oldestReportTime.IsZero() {
+		if lookupErr == nil && !oldestReportTime.IsZero() {
 			retryAfter = oldestReportTime.Add(DailyWindow).Sub(now)
 		}
 
@@ -233,11 +233,4 @@ func (s *ErrorReportRateLimitService) GetErrorReportStats(ctx context.Context, h
 	startTime := endTime.Add(-time.Duration(hours) * time.Hour)
 
 	return s.repo.GetErrorReportStats(ctx, startTime, endTime)
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }

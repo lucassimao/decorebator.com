@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"decorebator.com/internal/common"
@@ -12,12 +11,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/sync/errgroup"
-)
-
-var (
-	analyticsServiceInstance interface{}
-	analyticsServiceOnce     sync.Once
-	analyticsServiceErr      error
 )
 
 type AnalyticsService struct {
@@ -156,7 +149,7 @@ func (as *AnalyticsService) PracticeTime(ctx context.Context, days int) ([]model
 }
 
 // Stats fetches and returns statistics for the wordlist
-func (svc *AnalyticsService) Stats(ctx context.Context) (*model.WordlistStats, error) {
+func (as *AnalyticsService) Stats(ctx context.Context) (*model.WordlistStats, error) {
 	stats := &model.WordlistStats{}
 
 	// Use errgroup to run all queries concurrently
@@ -164,19 +157,19 @@ func (svc *AnalyticsService) Stats(ctx context.Context) (*model.WordlistStats, e
 
 	// 1) Wordlist mastery summary
 	g.Go(func() error {
-		return svc.fetchWordlistMasteryStats(ctx, svc.userID, svc.wordlistID, stats)
+		return as.fetchWordlistMasteryStats(ctx, as.userID, as.wordlistID, stats)
 	})
 
 	// 2) Today's activity summary for this wordlist
 	g.Go(func() error {
-		return svc.fetchWordlistTodayStats(ctx, svc.userID, svc.wordlistID, stats)
+		return as.fetchWordlistTodayStats(ctx, as.userID, as.wordlistID, stats)
 	})
 
 	// 3) Current streak for this wordlist
 	var streak int
 	g.Go(func() error {
 		var err error
-		streak, err = svc.fetchWordlistCurrentStreak(ctx, svc.userID, svc.wordlistID)
+		streak, err = as.fetchWordlistCurrentStreak(ctx, as.userID, as.wordlistID)
 		return err
 	})
 
@@ -189,8 +182,8 @@ func (svc *AnalyticsService) Stats(ctx context.Context) (*model.WordlistStats, e
 	return stats, nil
 }
 
-func (svc *AnalyticsService) fetchWordlistMasteryStats(ctx context.Context, userID, wordlistID int64, stats *model.WordlistStats) error {
-	totalWords, wordsMastered, avgMastery, bestStreak, err := svc.repo.GetWordlistMasteryStats(ctx, userID, wordlistID)
+func (as *AnalyticsService) fetchWordlistMasteryStats(ctx context.Context, userID, wordlistID int64, stats *model.WordlistStats) error {
+	totalWords, wordsMastered, avgMastery, bestStreak, err := as.repo.GetWordlistMasteryStats(ctx, userID, wordlistID)
 	if err != nil {
 		return err
 	}
@@ -202,8 +195,8 @@ func (svc *AnalyticsService) fetchWordlistMasteryStats(ctx context.Context, user
 	return nil
 }
 
-func (svc *AnalyticsService) fetchWordlistTodayStats(ctx context.Context, userID, wordlistID int64, stats *model.WordlistStats) error {
-	wordsStudiedToday, quizzesToday, accuracyToday, err := svc.repo.GetWordlistTodayStats(ctx, userID, wordlistID)
+func (as *AnalyticsService) fetchWordlistTodayStats(ctx context.Context, userID, wordlistID int64, stats *model.WordlistStats) error {
+	wordsStudiedToday, quizzesToday, accuracyToday, err := as.repo.GetWordlistTodayStats(ctx, userID, wordlistID)
 	if err != nil {
 		return err
 	}
@@ -214,8 +207,8 @@ func (svc *AnalyticsService) fetchWordlistTodayStats(ctx context.Context, userID
 	return nil
 }
 
-func (svc *AnalyticsService) fetchWordlistCurrentStreak(ctx context.Context, userID, wordlistID int64) (int, error) {
-	return svc.repo.GetWordlistCurrentStreak(ctx, userID, wordlistID)
+func (as *AnalyticsService) fetchWordlistCurrentStreak(ctx context.Context, userID, wordlistID int64) (int, error) {
+	return as.repo.GetWordlistCurrentStreak(ctx, userID, wordlistID)
 }
 
 // GetAllWordlistsProgress retrieves progress summary for all user's wordlists

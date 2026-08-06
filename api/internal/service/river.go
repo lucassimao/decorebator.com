@@ -61,7 +61,7 @@ type NoOpWorker struct {
 	river.WorkerDefaults[NoOpJobArgs]
 }
 
-func (w *NoOpWorker) Work(ctx context.Context, job *river.Job[NoOpJobArgs]) error {
+func (w *NoOpWorker) Work(_ context.Context, _ *river.Job[NoOpJobArgs]) error {
 	return nil
 }
 

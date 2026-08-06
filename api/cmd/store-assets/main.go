@@ -9,14 +9,21 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const (
+	providerOpenAI = "openai"
+	providerGemini = "gemini"
+	storeAppStore  = "appstore"
+	filterAll      = "all"
+)
+
 func main() {
 	var (
 		configPath   = flag.String("config", "cmd/store-assets/config.json", "Path to config JSON")
 		action       = flag.String("action", "render", "Action: render, translate, guide, frame")
-		store        = flag.String("store", "all", "Store: appstore, play, all")
+		store        = flag.String("store", filterAll, "Store: appstore, play, all")
 		locale       = flag.String("locale", "en", "Locale code or all")
 		slot         = flag.String("slot", "all", "Slot key or all")
-		provider     = flag.String("provider", "openai", "Image provider: openai or gemini")
+		provider     = flag.String("provider", providerOpenAI, "Image provider: openai or gemini")
 		openaiModel  = flag.String("openai-model", "", "Override OpenAI image model")
 		geminiModel  = flag.String("gemini-model", "gemini-3-pro-image-preview", "Gemini image model")
 		geminiSize   = flag.String("gemini-size", "2K", "Gemini image size: 1K, 2K, 4K")
@@ -83,7 +90,7 @@ func loadConfig(path string) (*Config, error) {
 
 func buildGenerator(cfg *Config, provider, openaiModel, geminiModel, geminiSize, geminiAspect string) (ImageGenerator, error) {
 	switch strings.ToLower(provider) {
-	case "openai":
+	case providerOpenAI:
 		model := cfg.Models.Image
 		if openaiModel != "" {
 			model = openaiModel
@@ -93,7 +100,7 @@ func buildGenerator(cfg *Config, provider, openaiModel, geminiModel, geminiSize,
 			Quality:    "high",
 			Background: "opaque",
 		}, nil
-	case "gemini":
+	case providerGemini:
 		return GeminiImageGenerator{
 			Model:       geminiModel,
 			AspectRatio: geminiAspect,
@@ -106,9 +113,9 @@ func buildGenerator(cfg *Config, provider, openaiModel, geminiModel, geminiSize,
 
 func resizeModeForProvider(provider string) string {
 	switch strings.ToLower(provider) {
-	case "gemini":
+	case providerGemini:
 		return "exact"
 	default:
-		return "openai"
+		return providerOpenAI
 	}
 }

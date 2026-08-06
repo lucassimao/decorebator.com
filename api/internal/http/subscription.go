@@ -16,7 +16,7 @@ import (
 // CreateCheckoutSessionRequest represents the request to create a checkout session
 type CreateCheckoutSessionRequest struct {
 	Plan    string `json:"plan" binding:"required,oneof=monthly annual"`
-	ExpoUri string `json:"expoUri" binding:"required"`
+	ExpoURI string `json:"expoUri" binding:"required"`
 }
 
 // CreateCheckoutSession creates a Stripe checkout session
@@ -54,7 +54,7 @@ func CreateCheckoutSession(subService *service.SubscriptionService) gin.HandlerF
 		}
 
 		// Create checkout session
-		session, err := subService.CreateCheckoutSession(c.Request.Context(), user.ID, user.Email, plan, req.ExpoUri)
+		session, err := subService.CreateCheckoutSession(c.Request.Context(), user.ID, user.Email, plan, req.ExpoURI)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create checkout session"})
 			return

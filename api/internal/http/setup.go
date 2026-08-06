@@ -65,7 +65,6 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		RegisterLegacyProviderPublicRoutes(router, appCtx)
 
 		// Deprecated demo quiz endpoint removed
-
 	}
 
 	// Routes with authentication
@@ -76,7 +75,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
 		authenticatedRoutes.POST("/wordlists", CheckSubscriptionLimits(appCtx.SubscriptionService, model.UserActionCreateWordlist), WordlistRoutes.Create)
 		authenticatedRoutes.GET("/wordlists/pronunciation-systems", WordlistRoutes.GetPronunciationSystems)
-		authenticatedRoutes.GET("/wordlists/:wordlistId", WordlistRoutes.GetById)
+		authenticatedRoutes.GET("/wordlists/:wordlistId", WordlistRoutes.GetByID)
 		authenticatedRoutes.PUT("/wordlists/:wordlistId", WordlistRoutes.Update)
 		authenticatedRoutes.DELETE("/wordlists/:wordlistId", WordlistRoutes.Delete)
 		authenticatedRoutes.GET("/wordlists/:wordlistId/processing-status", WordlistRoutes.GetProcessingStatus)
@@ -108,7 +107,6 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		// Push notification routes
 		authenticatedRoutes.POST("/push/register", PushNotificationRoutes.Register)
 		authenticatedRoutes.POST("/push/unregister", PushNotificationRoutes.Unregister)
-
 	}
 
 	// OpenAI Realtime token creation needs a wider provider-call budget than

@@ -402,7 +402,6 @@ func TestMultipleRequests(t *testing.T) {
 			if response.Raw().StatusCode == http.StatusCreated { //nolint:bodyclose // httpexpect handles body closing
 				successCount++
 			}
-
 		}
 
 		assert.Equal(t, 5, successCount, "All registrations should succeed without rate limiting")
@@ -432,7 +431,6 @@ func TestMultipleRequests(t *testing.T) {
 			if response.Raw().StatusCode == http.StatusBadRequest { //nolint:bodyclose // httpexpect handles body closing
 				unauthorizedCount++
 			}
-
 		}
 
 		assert.Equal(t, 5, unauthorizedCount, "All wrong password attempts should return 400 without rate limiting")

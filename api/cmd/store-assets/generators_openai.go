@@ -55,23 +55,23 @@ func openAIEditImage(generator OpenAIImageGenerator, req ImageRequest) (image.Im
 		_ = writer.WriteField("background", generator.Background)
 	}
 
-	if err := addFormFileIndexed(writer, "image", 0, preparedScreenshotPath); err != nil {
-		return nil, err
+	if addErr := addFormFileIndexed(writer, "image", 0, preparedScreenshotPath); addErr != nil {
+		return nil, addErr
 	}
-	if err := addFormFileIndexed(writer, "image", 1, req.GuidePath); err != nil {
-		return nil, err
+	if addErr := addFormFileIndexed(writer, "image", 1, req.GuidePath); addErr != nil {
+		return nil, addErr
 	}
 	if req.UseFrame && req.FramePath != "" {
-		if err := addFormFileIndexed(writer, "image", 2, req.FramePath); err != nil {
-			return nil, err
+		if addErr := addFormFileIndexed(writer, "image", 2, req.FramePath); addErr != nil {
+			return nil, addErr
 		}
 	}
-	if err := addFormFile(writer, "mask", req.MaskPath); err != nil {
-		return nil, err
+	if addErr := addFormFile(writer, "mask", req.MaskPath); addErr != nil {
+		return nil, addErr
 	}
 
-	if err := writer.Close(); err != nil {
-		return nil, err
+	if closeErr := writer.Close(); closeErr != nil {
+		return nil, closeErr
 	}
 
 	reqHTTP, err := http.NewRequest("POST", "https://api.openai.com/v1/images/edits", body)
@@ -93,8 +93,8 @@ func openAIEditImage(generator OpenAIImageGenerator, req ImageRequest) (image.Im
 	}
 
 	var parsed OpenAIImageResponse
-	if err := json.Unmarshal(respBody, &parsed); err != nil {
-		return nil, err
+	if decodeErr := json.Unmarshal(respBody, &parsed); decodeErr != nil {
+		return nil, decodeErr
 	}
 	if parsed.Error != nil {
 		return nil, fmt.Errorf("openai image error: %s", parsed.Error.Message)
@@ -160,8 +160,8 @@ func openAIGenerateImage(generator OpenAIImageGenerator, req ImageRequest) (imag
 	}
 
 	var parsed OpenAIImageResponse
-	if err := json.Unmarshal(respBody, &parsed); err != nil {
-		return nil, err
+	if decodeErr := json.Unmarshal(respBody, &parsed); decodeErr != nil {
+		return nil, decodeErr
 	}
 	if parsed.Error != nil {
 		return nil, fmt.Errorf("openai image error: %s", parsed.Error.Message)

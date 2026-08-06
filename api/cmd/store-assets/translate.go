@@ -37,15 +37,15 @@ func translateCopies(cfg *Config, localeFilter string, dryRun bool) error {
 			fmt.Printf("translate %s -> %s\n", loc, path)
 			continue
 		}
-		if err := os.MkdirAll(cfg.Defaults.CopyDir, 0o755); err != nil {
-			return err
+		if mkdirErr := os.MkdirAll(cfg.Defaults.CopyDir, 0o755); mkdirErr != nil {
+			return mkdirErr
 		}
 		content, err := json.MarshalIndent(translated, "", "  ")
 		if err != nil {
 			return err
 		}
-		if err := os.WriteFile(path, content, 0o644); err != nil {
-			return err
+		if writeErr := os.WriteFile(path, content, 0o600); writeErr != nil {
+			return writeErr
 		}
 		fmt.Printf("wrote %s\n", path)
 	}

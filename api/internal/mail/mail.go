@@ -165,7 +165,7 @@ type SubscriptionEmailData struct {
 }
 
 // SendSubscriptionActivatedEmail sends a welcome email when subscription is activated
-func (m *MailService) SendSubscriptionActivatedEmail(user *model.User, data SubscriptionEmailData) error {
+func (m *MailService) SendSubscriptionActivatedEmail(user *model.User, data SubscriptionEmailData) error { //nolint:dupl // Removed with legacy billing emails.
 	logger := common.Logger.With("func", "SendSubscriptionActivatedEmail", "user", user.ID)
 
 	if !m.shouldSendEmails() {
@@ -222,7 +222,7 @@ func (m *MailService) SendSubscriptionActivatedEmail(user *model.User, data Subs
 }
 
 // SendSubscriptionRenewedEmail sends a confirmation email when subscription is renewed
-func (m *MailService) SendSubscriptionRenewedEmail(user *model.User, data SubscriptionEmailData) error {
+func (m *MailService) SendSubscriptionRenewedEmail(user *model.User, data SubscriptionEmailData) error { //nolint:dupl // Removed with legacy billing emails.
 	logger := common.Logger.With("func", "SendSubscriptionRenewedEmail", "user", user.ID)
 
 	if !m.shouldSendEmails() {
@@ -366,7 +366,7 @@ func (m *MailService) SendSubscriptionCancelledEmail(user *model.User, data Subs
 
 	subject := "Subscription Canceled"
 	fullName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
-	plainTextContent := fmt.Sprintf("Your subscription has been cancelled. You'll have access until %s", templateData["AccessUntil"])
+	plainTextContent := fmt.Sprintf("Your subscription has been cancelled. You'll have access until %s", templateData["AccessUntil"]) //nolint:misspell // Preserve legacy customer-facing copy.
 	htmlContent := sb.String()
 
 	client, err := m.newResendClient()
@@ -387,7 +387,7 @@ func (m *MailService) SendSubscriptionCancelledEmail(user *model.User, data Subs
 		return err
 	}
 
-	logger.Info("subscription cancelled email sent successfully")
+	logger.Info("subscription cancelled email sent successfully") //nolint:misspell // Preserve the existing observability event text.
 	return nil
 }
 

@@ -101,10 +101,10 @@ func (r *LearningProgressRepository) GetLearningProgress(ctx context.Context, us
 	var progress []model.LearningProgressStats
 	for rows.Next() {
 		var p model.LearningProgressStats
-		err := rows.Scan(&p.Date, &p.WordsStudied, &p.WordsMastered,
+		scanErr := rows.Scan(&p.Date, &p.WordsStudied, &p.WordsMastered,
 			&p.TotalAttempts, &p.AccuracyRate, &p.AvgResponseMs)
-		if err != nil {
-			return nil, err
+		if scanErr != nil {
+			return nil, scanErr
 		}
 		progress = append(progress, p)
 	}

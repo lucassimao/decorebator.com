@@ -229,7 +229,7 @@ func (b *ContextBuilder) Build() (*Context, error) {
 }
 
 // initializeServices creates default service instances
-func (b *ContextBuilder) initializeServices() error {
+func (b *ContextBuilder) initializeServices() error { //nolint:gocyclo // Sequential dependency-injection wiring.
 	// Initialize JobService if not provided
 	if b.context.JobService == nil {
 		// Create minimal River client for job insertion only

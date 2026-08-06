@@ -125,10 +125,10 @@ func (r *WordMasteryRepository) GetWordMastery(ctx context.Context, userID, word
 	var stats []model.WordMasteryStats
 	for rows.Next() {
 		var s model.WordMasteryStats
-		err := rows.Scan(&s.WordID, &s.Word, &s.MasteryLevel,
+		scanErr := rows.Scan(&s.WordID, &s.Word, &s.MasteryLevel,
 			&s.Accuracy, &s.StreakCount, &s.LastSeenAt, &s.HighestBox)
-		if err != nil {
-			return nil, err
+		if scanErr != nil {
+			return nil, scanErr
 		}
 		stats = append(stats, s)
 	}
