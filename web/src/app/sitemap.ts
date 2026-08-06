@@ -58,6 +58,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     urls.push(createEntry(locale, '/blog', 'weekly', 0.6))
     urls.push(createEntry(locale, '/privacy', 'yearly', 0.3))
     urls.push(createEntry(locale, '/terms', 'yearly', 0.3))
+    urls.push(createEntry(locale, '/delete-account', 'yearly', 0.4))
 
     // Blog posts
     blogPosts.forEach((post) => {

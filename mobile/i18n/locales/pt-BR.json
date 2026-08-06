@@ -559,7 +559,7 @@
       "logOut": "Sair",
       "confirmLogout": "Tem certeza que deseja sair?",
       "confirmDelete": "Tem certeza que deseja excluir sua conta?",
-      "deleteWarning": "Esta ação é permanente e não pode ser desfeita. Todos os seus dados serão perdidos."
+      "deleteWarning": "Excluir sua conta retira seu perfil e seus dados de aprendizado do uso ativo. Alguns registros podem ser mantidos conforme nossa política de privacidade. Isso não cancela uma assinatura da Apple ou do Google; cancele-a primeiro na loja."
     },
     "preferences": {
       "title": "Preferências",
@@ -603,14 +603,16 @@
     "takePhoto": "Tirar Foto",
     "chooseFromLibrary": "Escolher da Biblioteca",
     "accountDeleted": "Conta Excluída",
-    "accountDeletedMessage": "Sua conta foi excluída permanentemente.",
+    "accountDeletedMessage": "Sua conta foi excluída e retirada do uso ativo.",
     "deleteAccountError": "Falha ao excluir conta. Por favor, tente novamente.",
     "permissionRequired": "Permissão Necessária",
     "photoLibraryPermission": "Por favor, permita o acesso à sua biblioteca de fotos.",
     "cameraPermission": "Por favor, permita o acesso à sua câmera.",
     "confirmDeletion": "Confirmar Exclusão",
-    "typeDeleteToConfirm": "Digite \"DELETE\" para confirmar a exclusão da conta.",
+    "continueToDeletion": "Continuar",
+    "finalDeleteWarning": "Excluir sua conta agora? Esta ação não pode ser desfeita.",
     "confirm": "Confirmar",
+    "deleteNow": "Excluir conta",
     "changePassword": {
       "title": "Alterar Senha",
       "currentPassword": "Senha Atual",

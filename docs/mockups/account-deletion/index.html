@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Delete your Decorebator account</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #fffaf1;
+        --paper-deep: #f4ead8;
+        --ink: #25302d;
+        --muted: #596560;
+        --coral: #b83e25;
+        --coral-dark: #8f2e1b;
+        --line: #d9c9ad;
+        --warning-bg: #fff0d6;
+        --warning-border: #9c5b16;
+        --white: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 90% 2%, rgb(226 111 78 / 16%), transparent 22rem),
+          linear-gradient(180deg, var(--paper), #fff 70%);
+        color: var(--ink);
+        font-family: Georgia, "Times New Roman", serif;
+      }
+
+      a {
+        color: var(--coral-dark);
+      }
+
+      a:focus-visible {
+        border-radius: 0.25rem;
+        outline: 3px solid #165d64;
+        outline-offset: 4px;
+      }
+
+      header,
+      main,
+      footer {
+        width: min(100% - 2rem, 48rem);
+        margin-inline: auto;
+      }
+
+      header {
+        display: flex;
+        min-height: 4.5rem;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand {
+        color: var(--ink);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-decoration: none;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--coral-dark);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .hero {
+        padding: 3.5rem 0 2rem;
+      }
+
+      h1 {
+        max-width: 12ch;
+        margin: 0.75rem 0 1rem;
+        font-size: clamp(2.4rem, 10vw, 4.75rem);
+        font-weight: 500;
+        letter-spacing: -0.045em;
+        line-height: 0.98;
+      }
+
+      .lede {
+        max-width: 38rem;
+        margin: 0;
+        color: var(--muted);
+        font-family: system-ui, sans-serif;
+        font-size: 1.05rem;
+        line-height: 1.65;
+      }
+
+      .warning {
+        margin: 0 0 2rem;
+        padding: 1rem 1.1rem;
+        border: 1px solid var(--warning-border);
+        border-left-width: 0.4rem;
+        border-radius: 0.75rem;
+        background: var(--warning-bg);
+        font-family: system-ui, sans-serif;
+        line-height: 1.55;
+      }
+
+      .warning h2 {
+        margin: 0 0 0.25rem;
+        font-family: system-ui, sans-serif;
+        font-size: 1rem;
+        line-height: 1.35;
+      }
+
+      .routes {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .route {
+        position: relative;
+        padding: 1.5rem;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: rgb(255 255 255 / 84%);
+        box-shadow: 0 1rem 3rem rgb(72 53 31 / 8%);
+      }
+
+      .route::before {
+        position: absolute;
+        top: 0;
+        right: 1.25rem;
+        width: 1.4rem;
+        height: 2.2rem;
+        background: var(--coral);
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%);
+        content: "";
+      }
+
+      .route h2,
+      .outcome h2 {
+        margin: 0.45rem 0 0.75rem;
+        font-size: 1.55rem;
+        line-height: 1.15;
+      }
+
+      .route p,
+      .route ol,
+      .outcome p,
+      .outcome ul {
+        color: var(--muted);
+        font-family: system-ui, sans-serif;
+        line-height: 1.6;
+      }
+
+      .route ol {
+        padding-left: 1.25rem;
+      }
+
+      .route-email {
+        margin: 0.75rem 0 0;
+        font-weight: 700;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 3rem;
+        align-items: center;
+        justify-content: center;
+        margin-top: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.65rem;
+        background: var(--coral-dark);
+        color: var(--white);
+        font-family: system-ui, sans-serif;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .button:hover {
+        background: #702313;
+      }
+
+      .outcome {
+        margin: 2rem 0;
+        padding: 1.5rem 0;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem 1.5rem;
+        padding: 0.5rem 0 3rem;
+        color: var(--muted);
+        font-family: system-ui, sans-serif;
+        font-size: 0.9rem;
+      }
+
+      @media (min-width: 42rem) {
+        .routes {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .route {
+          min-height: 22rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="#">Decorebator</a>
+      <p class="eyebrow">Account controls</p>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">Your data, your decision</p>
+        <h1 id="page-title">Delete your account</h1>
+        <p class="lede">
+          You can delete your Decorebator account in the mobile app. If you cannot sign in, request
+          deletion by email instead.
+        </p>
+      </section>
+
+      <aside class="warning" aria-labelledby="subscription-warning">
+        <h2 id="subscription-warning">Cancel any store subscription first</h2>
+        Deleting your Decorebator account does not cancel billing managed by Apple or Google.
+        Cancel it in your store subscription settings before deleting the account.
+      </aside>
+
+      <section class="routes" aria-label="Account deletion routes">
+        <article class="route">
+          <p class="eyebrow">Route 01 · fastest</p>
+          <h2>Delete in the app</h2>
+          <ol>
+            <li>Open Decorebator and sign in.</li>
+            <li>Go to Settings, then Profile.</li>
+            <li>Choose Delete account and confirm.</li>
+          </ol>
+          <p>The app signs you out when deletion succeeds.</p>
+        </article>
+
+        <article class="route">
+          <p class="eyebrow">Route 02 · no app access</p>
+          <h2>Request deletion</h2>
+          <p>
+            Email us from the address on your account and tell us that address—nothing else. Never
+            send a password, receipt, purchase token, or payment information.
+          </p>
+          <p>
+            We reply to verify account ownership before deleting anything. Verified requests are
+            completed within the timeframe stated in our <a href="#">privacy policy</a>.
+          </p>
+          <p class="route-email">
+            <a href="mailto:privacy@decorebator.com">privacy@decorebator.com</a>
+          </p>
+          <a
+            class="button"
+            href="mailto:privacy@decorebator.com?subject=Decorebator%20account%20deletion%20request"
+          >
+            Email deletion request
+          </a>
+        </article>
+      </section>
+
+      <section class="outcome" aria-labelledby="outcome-title">
+        <p class="eyebrow">What happens next</p>
+        <h2 id="outcome-title">Deletion removes your learning account</h2>
+        <ul>
+          <li>Your profile, wordlists, and learning progress are removed from active use.</li>
+          <li>Some records may be retained when required for legal, security, or transaction obligations.</li>
+          <li>Deleting the account does not itself request a refund from Apple or Google.</li>
+        </ul>
+      </section>
+    </main>
+    <footer>
+      <a href="#">Privacy policy</a>
+      <a href="#">Terms of service</a>
+      <span>Need help? <a href="mailto:privacy@decorebator.com">privacy@decorebator.com</a></span>
+    </footer>
+  </body>
+</html>

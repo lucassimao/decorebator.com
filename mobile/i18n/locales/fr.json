@@ -559,7 +559,7 @@
       "logOut": "Se Déconnecter",
       "confirmLogout": "Êtes-vous sûr de vouloir vous déconnecter ?",
       "confirmDelete": "Êtes-vous sûr de vouloir supprimer votre compte ?",
-      "deleteWarning": "Cette action est permanente et ne peut pas être annulée. Toutes vos données seront perdues."
+      "deleteWarning": "La suppression de votre compte retire votre profil et vos données d'apprentissage de l'utilisation active. Certains éléments peuvent être conservés selon notre politique de confidentialité. Elle n'annule pas un abonnement Apple ou Google ; résiliez-le d'abord dans la boutique."
     },
     "preferences": {
       "title": "Préférences",
@@ -603,14 +603,16 @@
     "takePhoto": "Prendre une Photo",
     "chooseFromLibrary": "Choisir dans la Bibliothèque",
     "accountDeleted": "Compte Supprimé",
-    "accountDeletedMessage": "Votre compte a été supprimé définitivement.",
+    "accountDeletedMessage": "Votre compte a été supprimé et n’est plus utilisé activement.",
     "deleteAccountError": "Échec de la suppression du compte. Veuillez réessayer.",
     "permissionRequired": "Permission Requise",
     "photoLibraryPermission": "Veuillez autoriser l'accès à votre bibliothèque de photos.",
     "cameraPermission": "Veuillez autoriser l'accès à votre caméra.",
     "confirmDeletion": "Confirmer la Suppression",
-    "typeDeleteToConfirm": "Tapez \"DELETE\" pour confirmer la suppression du compte.",
+    "continueToDeletion": "Continuer",
+    "finalDeleteWarning": "Supprimer votre compte maintenant ? Cette action est irréversible.",
     "confirm": "Confirmer",
+    "deleteNow": "Supprimer le compte",
     "changePassword": {
       "title": "Changer le Mot de Passe",
       "currentPassword": "Mot de Passe Actuel",

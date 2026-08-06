@@ -57,7 +57,8 @@
     "careers": "Carreiras",
     "privacy": "Política de privacidade",
     "terms": "Termos de serviço",
-    "getStartedFree": "Baixar App"
+    "getStartedFree": "Baixar App",
+    "deleteAccount": "Excluir conta"
   },
   "hero": {
     "title": "Domine qualquer idioma com <highlight>flashcards com IA</highlight>",
@@ -1637,6 +1638,44 @@
       "instagram": "Decorebator no Instagram",
       "linkedin": "Decorebator no LinkedIn"
     }
+  },
+  "accountDeletion": {
+    "metadataTitle": "Excluir sua conta",
+    "metadataDescription": "Saiba como excluir sua conta Decorebator pelo app ou solicitar a exclusão quando não conseguir entrar.",
+    "eyebrow": "Seus dados, sua decisão",
+    "title": "Excluir sua conta",
+    "lede": "Você pode excluir sua conta Decorebator pelo aplicativo móvel. Se não conseguir entrar, solicite a exclusão por e-mail.",
+    "routesLabel": "Formas de excluir a conta",
+    "warning": {
+      "title": "Cancele primeiro qualquer assinatura da loja",
+      "body": "Excluir sua conta Decorebator não cancela cobranças gerenciadas pela Apple ou pelo Google. Cancele primeiro nas configurações de assinaturas da loja."
+    },
+    "inApp": {
+      "eyebrow": "Opção 01 · mais rápida",
+      "title": "Excluir pelo app",
+      "step1": "Abra o Decorebator e entre na sua conta.",
+      "step2": "Acesse Configurações e depois Conta.",
+      "step3": "Escolha Excluir conta e confirme.",
+      "success": "O app encerra sua sessão quando a exclusão é concluída."
+    },
+    "email": {
+      "eyebrow": "Opção 02 · sem acesso ao app",
+      "title": "Solicitar exclusão",
+      "instructions": "Envie um e-mail pelo endereço cadastrado na conta e informe apenas esse endereço. Nunca envie senha, recibo, token de compra ou dados de pagamento.",
+      "verification": "Responderemos para confirmar que a conta pertence a você antes de excluir qualquer dado. Solicitações verificadas são concluídas no prazo informado em nossa <privacyPolicy>política de privacidade</privacyPolicy>.",
+      "address": "privacy@decorebator.com",
+      "button": "Solicitar exclusão por e-mail"
+    },
+    "outcome": {
+      "eyebrow": "O que acontece depois",
+      "title": "A exclusão remove sua conta de aprendizagem",
+      "profile": "Seu perfil, listas de palavras e progresso deixam de ser usados ativamente.",
+      "retention": "Alguns registros podem ser mantidos por obrigações legais, de segurança ou de transações.",
+      "refund": "Excluir a conta não solicita, por si só, um reembolso à Apple ou ao Google."
+    },
+    "privacyPolicy": "Política de privacidade",
+    "termsOfService": "Termos de serviço",
+    "help": "Precisa de ajuda?"
   },
   "socialProof": {
     "title": "Junte-se a milhares aprendendo <highlight>mais inteligente, não mais difícil</highlight>",

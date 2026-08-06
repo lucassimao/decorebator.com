@@ -562,7 +562,7 @@
       "logOut": "Abmelden",
       "confirmLogout": "Sind Sie sicher, dass Sie sich abmelden möchten?",
       "confirmDelete": "Sind Sie sicher, dass Sie Ihr Konto löschen möchten?",
-      "deleteWarning": "Diese Aktion ist dauerhaft und kann nicht rückgängig gemacht werden. Alle Ihre Daten gehen verloren."
+      "deleteWarning": "Wenn Sie Ihr Konto löschen, werden Ihr Profil und Ihre Lerndaten nicht mehr aktiv verwendet. Einige Daten können gemäß unserer Datenschutzrichtlinie aufbewahrt werden. Ein Apple- oder Google-Abonnement wird dadurch nicht gekündigt; kündigen Sie es zuerst im Store."
     },
     "preferences": {
       "title": "Einstellungen",
@@ -606,14 +606,16 @@
     "takePhoto": "Foto aufnehmen",
     "chooseFromLibrary": "Aus Bibliothek wählen",
     "accountDeleted": "Konto gelöscht",
-    "accountDeletedMessage": "Ihr Konto wurde dauerhaft gelöscht.",
+    "accountDeletedMessage": "Ihr Konto wurde gelöscht und wird nicht mehr aktiv verwendet.",
     "deleteAccountError": "Fehler beim Löschen des Kontos. Bitte versuchen Sie es erneut.",
     "permissionRequired": "Berechtigung erforderlich",
     "photoLibraryPermission": "Bitte erlauben Sie den Zugriff auf Ihre Fotobibliothek.",
     "cameraPermission": "Bitte erlauben Sie den Zugriff auf Ihre Kamera.",
     "confirmDeletion": "Löschung bestätigen",
-    "typeDeleteToConfirm": "Geben Sie \"DELETE\" ein, um die Kontolöschung zu bestätigen.",
+    "continueToDeletion": "Fortfahren",
+    "finalDeleteWarning": "Konto jetzt löschen? Dies kann nicht rückgängig gemacht werden.",
     "confirm": "Bestätigen",
+    "deleteNow": "Konto löschen",
     "changePassword": {
       "title": "Passwort ändern",
       "currentPassword": "Aktuelles Passwort",

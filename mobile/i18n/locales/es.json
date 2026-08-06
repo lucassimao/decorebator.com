@@ -559,7 +559,7 @@
       "logOut": "Cerrar Sesión",
       "confirmLogout": "¿Estás seguro de que quieres cerrar sesión?",
       "confirmDelete": "¿Estás seguro de que quieres eliminar tu cuenta?",
-      "deleteWarning": "Esta acción es permanente y no se puede deshacer. Todos tus datos se perderán."
+      "deleteWarning": "Al eliminar tu cuenta, tu perfil y tus datos de aprendizaje dejan de utilizarse activamente. Algunos registros pueden conservarse según nuestra política de privacidad. Esto no cancela una suscripción de Apple o Google; cancélala primero en la tienda."
     },
     "preferences": {
       "title": "Preferencias",
@@ -603,14 +603,16 @@
     "takePhoto": "Tomar Foto",
     "chooseFromLibrary": "Elegir de la Biblioteca",
     "accountDeleted": "Cuenta Eliminada",
-    "accountDeletedMessage": "Tu cuenta ha sido eliminada permanentemente.",
+    "accountDeletedMessage": "Tu cuenta se ha eliminado y ya no se utiliza activamente.",
     "deleteAccountError": "Error al eliminar la cuenta. Por favor intenta de nuevo.",
     "permissionRequired": "Permiso Requerido",
     "photoLibraryPermission": "Por favor permite el acceso a tu biblioteca de fotos.",
     "cameraPermission": "Por favor permite el acceso a tu cámara.",
     "confirmDeletion": "Confirmar Eliminación",
-    "typeDeleteToConfirm": "Escribe \"DELETE\" para confirmar la eliminación de la cuenta.",
+    "continueToDeletion": "Continuar",
+    "finalDeleteWarning": "¿Eliminar tu cuenta ahora? Esta acción no se puede deshacer.",
     "confirm": "Confirmar",
+    "deleteNow": "Eliminar cuenta",
     "changePassword": {
       "title": "Cambiar Contraseña",
       "currentPassword": "Contraseña Actual",

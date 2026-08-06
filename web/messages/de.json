@@ -57,7 +57,8 @@
     "careers": "Karriere",
     "privacy": "Datenschutzrichtlinie",
     "terms": "Nutzungsbedingungen",
-    "getStartedFree": "App herunterladen"
+    "getStartedFree": "App herunterladen",
+    "deleteAccount": "Konto löschen"
   },
   "hero": {
     "title": "Lerne jede Sprache mit <highlight>KI‑gestützten Karteikarten</highlight>",
@@ -789,6 +790,44 @@
       "missingToken": "Der Reset-Link fehlt oder ist ungültig. Bitte fordern Sie einen neuen an."
     },
     "success": "Passwort wurde erfolgreich zurückgesetzt!"
+  },
+  "accountDeletion": {
+    "metadataTitle": "Konto löschen",
+    "metadataDescription": "Erfahren Sie, wie Sie Ihr Decorebator-Konto in der App löschen oder die Löschung beantragen, wenn Sie sich nicht anmelden können.",
+    "eyebrow": "Ihre Daten, Ihre Entscheidung",
+    "title": "Konto löschen",
+    "lede": "Sie können Ihr Decorebator-Konto in der mobilen App löschen. Wenn Sie sich nicht anmelden können, beantragen Sie die Löschung stattdessen per E-Mail.",
+    "routesLabel": "Wege zur Kontolöschung",
+    "warning": {
+      "title": "Store-Abonnement zuerst kündigen",
+      "body": "Durch das Löschen Ihres Decorebator-Kontos wird eine von Apple oder Google verwaltete Abrechnung nicht beendet. Kündigen Sie das Abonnement zuerst in den Einstellungen Ihres Stores."
+    },
+    "inApp": {
+      "eyebrow": "Weg 01 · am schnellsten",
+      "title": "In der App löschen",
+      "step1": "Öffnen Sie Decorebator und melden Sie sich an.",
+      "step2": "Gehen Sie zu Einstellungen und dann zu Konto.",
+      "step3": "Wählen Sie Konto löschen und bestätigen Sie.",
+      "success": "Nach erfolgreicher Löschung werden Sie von der App abgemeldet."
+    },
+    "email": {
+      "eyebrow": "Weg 02 · kein App-Zugriff",
+      "title": "Löschung beantragen",
+      "instructions": "Senden Sie uns eine E-Mail von der Adresse Ihres Kontos und nennen Sie nur diese Adresse. Senden Sie niemals Passwort, Beleg, Kauf-Token oder Zahlungsdaten.",
+      "verification": "Wir antworten, um die Kontoinhaberschaft zu bestätigen, bevor wir etwas löschen. Bestätigte Anfragen werden innerhalb der in unserer <privacyPolicy>Datenschutzrichtlinie</privacyPolicy> genannten Frist bearbeitet.",
+      "address": "privacy@decorebator.com",
+      "button": "Löschung per E-Mail beantragen"
+    },
+    "outcome": {
+      "eyebrow": "Was danach geschieht",
+      "title": "Die Löschung entfernt Ihr Lernkonto",
+      "profile": "Ihr Profil, Ihre Wortlisten und Ihr Lernfortschritt werden nicht mehr aktiv verwendet.",
+      "retention": "Einige Daten können aufbewahrt werden, wenn dies aus rechtlichen, Sicherheits- oder Transaktionsgründen erforderlich ist.",
+      "refund": "Die Kontolöschung stellt keinen Erstattungsantrag bei Apple oder Google."
+    },
+    "privacyPolicy": "Datenschutzrichtlinie",
+    "termsOfService": "Nutzungsbedingungen",
+    "help": "Brauchen Sie Hilfe?"
   },
   "socialProof": {
     "title": "Schließe dich Tausenden an und lerne <highlight>smarter, nicht härter</highlight>",

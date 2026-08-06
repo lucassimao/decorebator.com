@@ -57,7 +57,8 @@
     "careers": "Carrières",
     "privacy": "Politique de confidentialité",
     "terms": "Conditions d'utilisation",
-    "getStartedFree": "Télécharger l'App"
+    "getStartedFree": "Télécharger l'App",
+    "deleteAccount": "Supprimer le compte"
   },
   "hero": {
     "title": "Maîtrisez n'importe quelle langue avec <highlight>des flashcards propulsées par l’IA</highlight>",
@@ -985,6 +986,44 @@
       "missingToken": "Le lien de réinitialisation est manquant ou invalide. Veuillez en demander un nouveau."
     },
     "success": "Le mot de passe a été réinitialisé avec succès !"
+  },
+  "accountDeletion": {
+    "metadataTitle": "Supprimer votre compte",
+    "metadataDescription": "Découvrez comment supprimer votre compte Decorebator dans l’app ou demander sa suppression si vous ne pouvez pas vous connecter.",
+    "eyebrow": "Vos données, votre décision",
+    "title": "Supprimer votre compte",
+    "lede": "Vous pouvez supprimer votre compte Decorebator dans l’application mobile. Si vous ne pouvez pas vous connecter, demandez sa suppression par e-mail.",
+    "routesLabel": "Méthodes de suppression du compte",
+    "warning": {
+      "title": "Résiliez d’abord tout abonnement en boutique",
+      "body": "La suppression de votre compte Decorebator n’arrête pas la facturation gérée par Apple ou Google. Résiliez d’abord l’abonnement dans les réglages de votre boutique."
+    },
+    "inApp": {
+      "eyebrow": "Méthode 01 · la plus rapide",
+      "title": "Supprimer dans l’app",
+      "step1": "Ouvrez Decorebator et connectez-vous.",
+      "step2": "Accédez à Réglages, puis Compte.",
+      "step3": "Choisissez Supprimer le compte et confirmez.",
+      "success": "L’application vous déconnecte lorsque la suppression réussit."
+    },
+    "email": {
+      "eyebrow": "Méthode 02 · sans accès à l’app",
+      "title": "Demander la suppression",
+      "instructions": "Écrivez-nous depuis l’adresse associée à votre compte et indiquez uniquement cette adresse. N’envoyez jamais de mot de passe, reçu, jeton d’achat ou donnée de paiement.",
+      "verification": "Nous vous répondrons afin de vérifier que le compte vous appartient avant toute suppression. Les demandes vérifiées sont traitées dans le délai indiqué dans notre <privacyPolicy>politique de confidentialité</privacyPolicy>.",
+      "address": "privacy@decorebator.com",
+      "button": "Demander la suppression par e-mail"
+    },
+    "outcome": {
+      "eyebrow": "Ce qui se passe ensuite",
+      "title": "La suppression retire votre compte d’apprentissage",
+      "profile": "Votre profil, vos listes de mots et votre progression ne sont plus utilisés activement.",
+      "retention": "Certains éléments peuvent être conservés pour respecter des obligations légales, de sécurité ou de transaction.",
+      "refund": "La suppression du compte ne constitue pas une demande de remboursement auprès d’Apple ou Google."
+    },
+    "privacyPolicy": "Politique de confidentialité",
+    "termsOfService": "Conditions d’utilisation",
+    "help": "Besoin d’aide ?"
   },
   "socialProof": {
     "title": "Rejoignez des milliers d’apprenants <highlight>plus intelligents, pas plus durs</highlight>",

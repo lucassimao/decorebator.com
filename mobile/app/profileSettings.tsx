@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import i18n, { supportedLanguages } from "@/i18n";
 import { useTheme } from "@/contexts/ThemeContext";
 import { searchCountries, getCountryDisplayName } from "@/utils/countries";
+import { showAccountDeletionConfirmation } from "@/utils/accountDeletionConfirmation";
 import {
   ActivityIndicator,
   Alert,
@@ -269,31 +270,11 @@ const ProfileSettingsScreen: React.FC = () => {
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      t("settings.account.deleteAccount"),
-      t("settings.account.deleteWarning"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("settings.account.deleteAccount"),
-          style: "destructive",
-          onPress: () => {
-            Alert.alert(
-              t("profile.confirmDeletion"),
-              t("profile.typeDeleteToConfirm"),
-              [
-                { text: t("common.cancel"), style: "cancel" },
-                {
-                  text: t("profile.confirm"),
-                  style: "destructive",
-                  onPress: () => deleteAccountMutation.mutate(),
-                },
-              ],
-            );
-          },
-        },
-      ],
-    );
+    showAccountDeletionConfirmation({
+      alert: Alert.alert,
+      onConfirm: () => deleteAccountMutation.mutate(),
+      t,
+    });
   };
 
   const getCountryName = (code: string) => {

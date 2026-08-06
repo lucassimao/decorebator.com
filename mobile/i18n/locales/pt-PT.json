@@ -559,7 +559,7 @@
       "logOut": "Terminar Sessão",
       "confirmLogout": "Tem a certeza que deseja terminar sessão?",
       "confirmDelete": "Tem a certeza que deseja eliminar a sua conta?",
-      "deleteWarning": "Esta ação é permanente e não pode ser anulada. Todos os seus dados serão perdidos."
+      "deleteWarning": "Eliminar a sua conta retira o perfil e os dados de aprendizagem da utilização ativa. Alguns registos podem ser mantidos conforme a nossa política de privacidade. Isto não cancela uma subscrição da Apple ou da Google; cancele-a primeiro na loja."
     },
     "preferences": {
       "title": "Preferências",
@@ -603,14 +603,16 @@
     "takePhoto": "Tirar Foto",
     "chooseFromLibrary": "Escolher da Biblioteca",
     "accountDeleted": "Conta Eliminada",
-    "accountDeletedMessage": "A sua conta foi eliminada permanentemente.",
+    "accountDeletedMessage": "A sua conta foi eliminada e retirada da utilização ativa.",
     "deleteAccountError": "Falha ao eliminar conta. Por favor, tente novamente.",
     "permissionRequired": "Permissão Necessária",
     "photoLibraryPermission": "Por favor, permita o acesso à sua biblioteca de fotos.",
     "cameraPermission": "Por favor, permita o acesso à sua câmara.",
     "confirmDeletion": "Confirmar Eliminação",
-    "typeDeleteToConfirm": "Digite \"DELETE\" para confirmar a eliminação da conta.",
+    "continueToDeletion": "Continuar",
+    "finalDeleteWarning": "Eliminar a sua conta agora? Esta ação não pode ser anulada.",
     "confirm": "Confirmar",
+    "deleteNow": "Eliminar conta",
     "changePassword": {
       "title": "Alterar Palavra-passe",
       "currentPassword": "Palavra-passe Atual",

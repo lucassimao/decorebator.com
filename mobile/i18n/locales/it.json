@@ -559,7 +559,7 @@
       "logOut": "Esci",
       "confirmLogout": "Sei sicuro di voler uscire?",
       "confirmDelete": "Sei sicuro di voler eliminare il tuo account?",
-      "deleteWarning": "Questa azione è permanente e non può essere annullata. Tutti i tuoi dati andranno persi."
+      "deleteWarning": "Eliminando il tuo account, il profilo e i dati di apprendimento non vengono più utilizzati attivamente. Alcuni dati possono essere conservati secondo la nostra informativa sulla privacy. Questa operazione non annulla un abbonamento Apple o Google; annullalo prima nello store."
     },
     "preferences": {
       "title": "Preferenze",
@@ -603,14 +603,16 @@
     "takePhoto": "Scatta Foto",
     "chooseFromLibrary": "Scegli dalla Libreria",
     "accountDeleted": "Account Eliminato",
-    "accountDeletedMessage": "Il tuo account è stato eliminato permanentemente.",
+    "accountDeletedMessage": "Il tuo account è stato eliminato e non viene più utilizzato attivamente.",
     "deleteAccountError": "Impossibile eliminare l'account. Per favore riprova.",
     "permissionRequired": "Permesso Richiesto",
     "photoLibraryPermission": "Per favore consenti l'accesso alla tua libreria foto.",
     "cameraPermission": "Per favore consenti l'accesso alla tua fotocamera.",
     "confirmDeletion": "Conferma Eliminazione",
-    "typeDeleteToConfirm": "Digita \"DELETE\" per confermare l'eliminazione dell'account.",
+    "continueToDeletion": "Continua",
+    "finalDeleteWarning": "Eliminare l'account adesso? Questa operazione non può essere annullata.",
     "confirm": "Conferma",
+    "deleteNow": "Elimina account",
     "changePassword": {
       "title": "Cambia Password",
       "currentPassword": "Password Attuale",

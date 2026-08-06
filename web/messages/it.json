@@ -57,7 +57,8 @@
     "careers": "Carriere",
     "privacy": "Privacy",
     "terms": "Termini di servizio",
-    "getStartedFree": "Scarica l'App"
+    "getStartedFree": "Scarica l'App",
+    "deleteAccount": "Elimina account"
   },
   "hero": {
     "title": "Impara qualsiasi lingua con <highlight>flashcard potenziate dall’IA</highlight>",
@@ -941,6 +942,44 @@
       "missingToken": "Il link di reimpostazione è mancante o non valido. Richiedine uno nuovo."
     },
     "success": "La password è stata reimpostata con successo!"
+  },
+  "accountDeletion": {
+    "metadataTitle": "Elimina il tuo account",
+    "metadataDescription": "Scopri come eliminare il tuo account Decorebator nell’app o richiederne l’eliminazione se non riesci ad accedere.",
+    "eyebrow": "I tuoi dati, la tua decisione",
+    "title": "Elimina il tuo account",
+    "lede": "Puoi eliminare il tuo account Decorebator nell’app mobile. Se non riesci ad accedere, richiedi l’eliminazione via e-mail.",
+    "routesLabel": "Modalità di eliminazione dell’account",
+    "warning": {
+      "title": "Annulla prima ogni abbonamento dello store",
+      "body": "L’eliminazione dell’account Decorebator non interrompe la fatturazione gestita da Apple o Google. Annulla prima l’abbonamento nelle impostazioni dello store."
+    },
+    "inApp": {
+      "eyebrow": "Modalità 01 · la più rapida",
+      "title": "Elimina nell’app",
+      "step1": "Apri Decorebator e accedi.",
+      "step2": "Vai a Impostazioni, quindi Account.",
+      "step3": "Seleziona Elimina account e conferma.",
+      "success": "L’app esegue la disconnessione quando l’eliminazione riesce."
+    },
+    "email": {
+      "eyebrow": "Modalità 02 · senza accesso all’app",
+      "title": "Richiedi l’eliminazione",
+      "instructions": "Scrivici dall’indirizzo associato al tuo account e indica solo quell’indirizzo. Non inviare mai password, ricevute, token di acquisto o dati di pagamento.",
+      "verification": "Ti risponderemo per verificare la titolarità dell’account prima di eliminare qualsiasi dato. Le richieste verificate vengono completate entro i tempi indicati nella nostra <privacyPolicy>informativa sulla privacy</privacyPolicy>.",
+      "address": "privacy@decorebator.com",
+      "button": "Richiedi l’eliminazione via e-mail"
+    },
+    "outcome": {
+      "eyebrow": "Cosa succede dopo",
+      "title": "L’eliminazione rimuove il tuo account di apprendimento",
+      "profile": "Il tuo profilo, gli elenchi di parole e i progressi non vengono più utilizzati attivamente.",
+      "retention": "Alcuni dati possono essere conservati per obblighi legali, di sicurezza o relativi alle transazioni.",
+      "refund": "L’eliminazione dell’account non costituisce una richiesta di rimborso ad Apple o Google."
+    },
+    "privacyPolicy": "Informativa sulla privacy",
+    "termsOfService": "Termini di servizio",
+    "help": "Hai bisogno di aiuto?"
   },
   "socialProof": {
     "title": "Unisciti a migliaia di persone che imparano <highlight>in modo più intelligente</highlight>",

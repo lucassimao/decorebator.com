@@ -554,7 +554,7 @@
       "logOut": "Log Out",
       "confirmLogout": "Are you sure you want to log out?",
       "confirmDelete": "Are you sure you want to delete your account?",
-      "deleteWarning": "This action is permanent and cannot be undone. All your data will be lost."
+      "deleteWarning": "Deleting your account removes your profile and learning data from active use. Some records may be retained as described in our privacy policy. This does not cancel an Apple or Google subscription; cancel it in your store first."
     },
     "preferences": {
       "title": "Preferences",
@@ -613,14 +613,16 @@
     "takePhoto": "Take Photo",
     "chooseFromLibrary": "Choose from Library",
     "accountDeleted": "Account Deleted",
-    "accountDeletedMessage": "Your account has been permanently deleted.",
+    "accountDeletedMessage": "Your account has been deleted and removed from active use.",
     "deleteAccountError": "Failed to delete account. Please try again.",
     "permissionRequired": "Permission Required",
     "photoLibraryPermission": "Please allow access to your photo library.",
     "cameraPermission": "Please allow access to your camera.",
     "confirmDeletion": "Confirm Deletion",
-    "typeDeleteToConfirm": "Please type \"DELETE\" to confirm account deletion.",
+    "continueToDeletion": "Continue",
+    "finalDeleteWarning": "Delete your account now? This cannot be undone.",
     "confirm": "Confirm",
+    "deleteNow": "Delete account",
     "changePassword": {
       "title": "Change Password",
       "currentPassword": "Current Password",

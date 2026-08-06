@@ -57,6 +57,7 @@
     "careers": "Careers",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
+    "deleteAccount": "Delete Account",
     "getStartedFree": "Download App"
   },
   "hero": {
@@ -1619,6 +1620,44 @@
       "box7Description": "Words in Box 7 (Mastered)",
       "topWordsTitle": "Top Words by Mastery"
     }
+  },
+  "accountDeletion": {
+    "metadataTitle": "Delete Your Account",
+    "metadataDescription": "Learn how to delete your Decorebator account in the app or request deletion when you cannot sign in.",
+    "eyebrow": "Your data, your decision",
+    "title": "Delete your account",
+    "lede": "You can delete your Decorebator account in the mobile app. If you cannot sign in, request deletion by email instead.",
+    "routesLabel": "Account deletion routes",
+    "warning": {
+      "title": "Cancel any store subscription first",
+      "body": "Deleting your Decorebator account does not cancel billing managed by Apple or Google. Cancel it in your store subscription settings before deleting the account."
+    },
+    "inApp": {
+      "eyebrow": "Route 01 · fastest",
+      "title": "Delete in the app",
+      "step1": "Open Decorebator and sign in.",
+      "step2": "Go to Settings, then Account.",
+      "step3": "Choose Delete account and confirm.",
+      "success": "The app signs you out when deletion succeeds."
+    },
+    "email": {
+      "eyebrow": "Route 02 · no app access",
+      "title": "Request deletion",
+      "instructions": "Email us from the address on your account and tell us that address—nothing else. Never send a password, receipt, purchase token, or payment information.",
+      "verification": "We reply to verify account ownership before deleting anything. Verified requests are completed within the timeframe stated in our <privacyPolicy>privacy policy</privacyPolicy>.",
+      "address": "privacy@decorebator.com",
+      "button": "Email deletion request"
+    },
+    "outcome": {
+      "eyebrow": "What happens next",
+      "title": "Deletion removes your learning account",
+      "profile": "Your profile, wordlists, and learning progress are removed from active use.",
+      "retention": "Some records may be retained when required for legal, security, or transaction obligations.",
+      "refund": "Deleting the account does not itself request a refund from Apple or Google."
+    },
+    "privacyPolicy": "Privacy policy",
+    "termsOfService": "Terms of service",
+    "help": "Need help?"
   },
   "socialProof": {
     "title": "Join thousands learning <highlight>smarter, not harder</highlight>",

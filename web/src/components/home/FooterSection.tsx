@@ -30,7 +30,7 @@ const FooterSection: React.FC = () => {
             <Link href={`/${locale}`} className="group mb-4 inline-flex items-center gap-2">
               <Image
                 src="/logo.png"
-                alt="Decorebator"
+                alt=""
                 width={36}
                 height={36}
                 className="transition-transform duration-200 group-hover:rotate-6"
@@ -58,9 +58,9 @@ const FooterSection: React.FC = () => {
 
           {/* Navigation column */}
           <div>
-            <h5 className="mb-4 text-sm font-semibold tracking-wider text-slate-200 uppercase">
+            <h3 className="mb-4 text-sm font-semibold tracking-wider text-slate-200 uppercase">
               Product
-            </h5>
+            </h3>
             <ul className="space-y-3">
               <li>
                 <a
@@ -112,9 +112,9 @@ const FooterSection: React.FC = () => {
 
           {/* Support column */}
           <div>
-            <h5 className="mb-4 text-sm font-semibold tracking-wider text-slate-200 uppercase">
+            <h3 className="mb-4 text-sm font-semibold tracking-wider text-slate-200 uppercase">
               {t('support')}
-            </h5>
+            </h3>
             <ul className="space-y-3">
               <li>
                 <Link
@@ -138,6 +138,14 @@ const FooterSection: React.FC = () => {
                   className="text-sm transition-colors hover:text-white"
                 >
                   {tNav('terms')}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={`/${locale}/delete-account`}
+                  className="text-sm transition-colors hover:text-white"
+                >
+                  {tNav('deleteAccount')}
                 </Link>
               </li>
             </ul>

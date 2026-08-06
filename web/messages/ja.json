@@ -57,7 +57,8 @@
     "careers": "採用",
     "privacy": "プライバシーポリシー",
     "terms": "利用規約",
-    "getStartedFree": "アプリをダウンロード"
+    "getStartedFree": "アプリをダウンロード",
+    "deleteAccount": "アカウントを削除"
   },
   "hero": {
     "title": "<highlight>AI搭載フラッシュカード</highlight>であらゆる言語を習得",
@@ -1621,6 +1622,44 @@
       "box7Description": "ボックス7の単語（習得済み）",
       "topWordsTitle": "習得度別上位単語"
     }
+  },
+  "accountDeletion": {
+    "metadataTitle": "アカウントを削除",
+    "metadataDescription": "Decorebatorアカウントをアプリ内で削除する方法、またはログインできない場合に削除を依頼する方法をご案内します。",
+    "eyebrow": "あなたのデータ、あなたの選択",
+    "title": "アカウントを削除",
+    "lede": "Decorebatorアカウントはモバイルアプリ内で削除できます。ログインできない場合は、メールで削除を依頼してください。",
+    "routesLabel": "アカウント削除の方法",
+    "warning": {
+      "title": "先にストアのサブスクリプションを解約してください",
+      "body": "Decorebatorアカウントを削除しても、AppleまたはGoogleが管理する課金は停止されません。先にストアのサブスクリプション設定から解約してください。"
+    },
+    "inApp": {
+      "eyebrow": "方法01 · 最速",
+      "title": "アプリ内で削除",
+      "step1": "Decorebatorを開いてログインします。",
+      "step2": "「設定」から「アカウント」を開きます。",
+      "step3": "「アカウントを削除」を選び、確認します。",
+      "success": "削除が完了するとアプリからログアウトします。"
+    },
+    "email": {
+      "eyebrow": "方法02 · アプリにアクセスできない場合",
+      "title": "削除を依頼",
+      "instructions": "アカウントに登録したメールアドレスから、そのアドレスだけを記載してご連絡ください。パスワード、領収書、購入トークン、支払い情報は送らないでください。",
+      "verification": "削除前にアカウント所有者であることを確認するため、こちらから返信します。確認済みの依頼は<privacyPolicy>プライバシーポリシー</privacyPolicy>に記載された期間内に処理します。",
+      "address": "privacy@decorebator.com",
+      "button": "メールで削除を依頼"
+    },
+    "outcome": {
+      "eyebrow": "削除後について",
+      "title": "学習アカウントが利用対象から削除されます",
+      "profile": "プロフィール、単語リスト、学習進捗は以後アクティブに利用されません。",
+      "retention": "法令、セキュリティ、取引上の義務により、一部の記録を保持する場合があります。",
+      "refund": "アカウント削除だけではAppleまたはGoogleへの返金申請にはなりません。"
+    },
+    "privacyPolicy": "プライバシーポリシー",
+    "termsOfService": "利用規約",
+    "help": "お困りですか？"
   },
   "socialProof": {
     "title": "何千人もの学習者が <highlight>より賢く、より効率的に</highlight> 学んでいます",

@@ -555,7 +555,7 @@
       "logOut": "ログアウト",
       "confirmLogout": "ログアウトしてもよろしいですか？",
       "confirmDelete": "アカウントを削除してもよろしいですか？",
-      "deleteWarning": "この操作は永続的で取り消せません。すべてのデータが失われます。"
+      "deleteWarning": "アカウントを削除すると、プロフィールと学習データはアクティブな利用対象から外れます。一部の記録はプライバシーポリシーに従って保持される場合があります。Apple または Google のサブスクリプションは解約されないため、先にストアで解約してください。"
     },
     "preferences": {
       "title": "環境設定",
@@ -599,14 +599,16 @@
     "takePhoto": "写真を撮る",
     "chooseFromLibrary": "ライブラリから選択",
     "accountDeleted": "アカウント削除",
-    "accountDeletedMessage": "アカウントは完全に削除されました。",
+    "accountDeletedMessage": "アカウントは削除され、アクティブな利用対象から外れました。",
     "deleteAccountError": "アカウントの削除に失敗しました。もう一度お試しください。",
     "permissionRequired": "許可が必要です",
     "photoLibraryPermission": "写真ライブラリへのアクセスを許可してください。",
     "cameraPermission": "カメラへのアクセスを許可してください。",
     "confirmDeletion": "削除の確認",
-    "typeDeleteToConfirm": "アカウント削除を確認するには「DELETE」と入力してください。",
+    "continueToDeletion": "続行",
+    "finalDeleteWarning": "今すぐアカウントを削除しますか？この操作は取り消せません。",
     "confirm": "確認",
+    "deleteNow": "アカウントを削除",
     "changePassword": {
       "title": "パスワード変更",
       "currentPassword": "現在のパスワード",
