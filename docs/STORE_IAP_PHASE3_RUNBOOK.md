@@ -28,8 +28,8 @@ Status: automatable preparation in progress; no build, submission, console mutat
 
 1. Deploy a nonproduction API with migrations through `000076`, `STORE_IAP_ENABLED=true`, `STORE_IAP_CLIENT_ENVIRONMENT=sandbox`, separate Redis/evidence keys, Apple sandbox credentials, and Google test credentials/catalog; do not reuse production evidence encryption keys or production entitlement rows.
 2. Add `EXPO_PUBLIC_API_URL=https://<sandbox-api-host>` to the EAS `preview` environment and verify the resolved Expo public config contains that HTTPS host before building.
-3. Confirm backend catalogs exactly map Apple monthly/annual product IDs and Google `p1m`/`p2m` to `premium` with monthly/annual periods.
-4. In App Store Connect, verify both auto-renewable products are available to the TestFlight build, have complete localized name/description/review screenshot metadata, and configure separate production and sandbox HTTPS URLs as App Store Server Notifications V2.
+3. Confirm backend catalogs exactly map Apple monthly/annual product IDs and Google `p1m`/`p2m` to `premium`. Resolve the current `p1m` `P4W` versus calendar-month contract mismatch before mapping its billing period; do not label four-week renewal as monthly without explicit owner approval and corresponding copy/contract changes.
+4. In App Store Connect, verify the expected monthly `decorebator_monthly_premium1` and annual `decorebator_annual_premium` IDs (or record and propagate the actual IDs), confirm both auto-renewable products are available to the TestFlight build, have complete localized name/description/review screenshot metadata, and configure separate production and sandbox HTTPS URLs as App Store Server Notifications V2.
 5. In Play Console, complete missing localized subscription listings; verify `p1m` and `p2m` are active and available to the internal track; add controlled license testers and have each tester opt in.
 6. In Google Cloud/Play Console, verify the RTDN topic, authenticated push subscription, exact OIDC audience/service-account binding, retry policy, dead-letter topic/subscription, and Play Console **Send Test Message** result.
 7. Build with `eas build --platform all --profile store-test`. Do not use the production submit profile. Submit iOS to App Store Connect/TestFlight and Android with `eas submit --platform android --profile store-test` only after owner authorization.
@@ -97,5 +97,6 @@ Use Play Console **Send Test Message** to prove topic publication, then prove th
 
 1. Provide or authorize deployment of the separate sandbox API and add its URL to EAS `preview` as `EXPO_PUBLIC_API_URL`.
 2. Authorize store-test builds/submissions and provide access to a physical iOS device plus an Android device/emulator signed into controlled tester accounts.
-3. Complete/authorize the missing Play subscription localizations and confirm Apple product metadata, notification URLs, review metadata, and TestFlight tester group.
-4. Choose whether to perform one refundable production smoke purchase per store or explicitly waive it with the residual risk recorded.
+3. Decide whether Google `p1m` must become calendar-monthly or is intentionally billed every four weeks, then authorize the corresponding Play base-plan and application-contract changes.
+4. Complete/authorize the missing Play subscription localizations and confirm Apple product IDs/metadata, notification URLs, review metadata, and TestFlight tester group.
+5. Choose whether to perform one refundable production smoke purchase per store or explicitly waive it with the residual risk recorded.

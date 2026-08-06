@@ -33,7 +33,7 @@ Items are sorted by priority: expected impact on conversion/retention/engagement
 | **Fix-as-you-touch** | #16–#20 + Appendix A | Paid down in the same PR whenever a screen is redesigned under #8 |
 | **Backend week 1** | #22 critical fixes, #23 quick wins | Broken endpoint, panic loops, JWT key validation, Sentry PII, graceful shutdown, health checks |
 | **Backend weeks 2–4** | #24 indexes + timeouts, #23 hardening, #25 cost | Index-only perf wins first, then rate limiting/token lifetimes, then AI cost |
-| **Payments migration** | #21 phases 0–2 | Entitlement refactor first, then a clean cutover — no paying users yet, so no dual-stack tail and no backfill |
+| **Payments migration** | #21 phases 0–4 per `MOBILE_APP_REVAMP_EXECUTION_PLAN.md` | Additive native IAP first; remove Stripe/RevenueCat only after Gate 3 store validation, with no customer backfill |
 
 ---
 
@@ -355,11 +355,9 @@ Premium features simultaneously use the two worst gating patterns: **bait-and-ta
 2. **US iOS margin.** Native IAP means 15% under Apple's Small Business Program (a near-certainty at these price points), vs Stripe's ~2.9%+30¢ — model the delta at ~12pp. In exchange: native purchase UX for the highest-ARPU segment, no external-browser flow, no injunction-dependent legality, and one less integration to maintain.
 3. **Sandbox/production bifurcation and store test accounts** become our problem directly (RC normalized this before) — hence the `store_environment` column.
 
-**Phasing (clean cutover):**
+**Phasing (authoritative dependency order):**
 
-- **Phase 0 (prerequisite):** extract `CheckSubscriptionLimits` out of the Stripe service into a standalone `EntitlementService` (`subscription.go:551-599` currently mixes entitlements into the Stripe service and calls RevenueCat), and fix the stale-JWT entitlement bug (#23) — premium state must come from the DB, not a 1-year-old token claim, or store-side renewals/refunds won't take effect. This also removes the boot-time coupling where `NewSubscriptionService` **panics without Stripe env vars** (`subscription.go:35-71`).
-- **Phase 1:** build Apple + Google verification, notification endpoints, linkage table, and the schema migration; ship the mobile IAP client.
-- **Phase 2:** delete everything in one pass — `stripe-go`, `react-native-purchases`, all `stripe*`/`revenuecat*` service/worker/handler files, both webhook routes, `usePaymentProvider` and the Settings Stripe UI, the `revenuecat_events` table, and all 8+ payment env vars. No read-only tail, no waiting period.
+The implementation and validation sequence is owned by `docs/MOBILE_APP_REVAMP_EXECUTION_PLAN.md`; this strategy describes direction and must not be used as a competing execution checklist. The required order is: (0) classify every effective entitlement and fix the activation measurement baseline; (1) approve the store-neutral entitlement, identity, idempotency, operation, and mobile contracts; (2) implement additive Apple/Google verification, notifications, persistence, effective-access projection, and native mobile IAP while the legacy providers remain available for rollback; (3) prove the complete lifecycle in App Store sandbox/TestFlight and Google Play internal testing, reconcile the controlled approval accounts, and rerun the production entitlement audit; then (4) remove Stripe/RevenueCat code, routes, jobs, schema, dependencies, configuration, and reachable checkout behavior in one reviewed cutover. Live provider deletion cannot precede Gate 3, and final release still requires the measurement and store-owner gates recorded in the execution plan.
 
 **Success metric:** one purchase path per platform; purchase→entitlement latency < 5s; refunds revoke access automatically; zero reconciliation bugs of the class listed in #22.
 
