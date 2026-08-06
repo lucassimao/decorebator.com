@@ -7,7 +7,7 @@
     "build": "next build && next-sitemap",
     "test:account-deletion": "node --test scripts/accountDeletionContract.test.mjs",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "sitemap": "next-sitemap"
