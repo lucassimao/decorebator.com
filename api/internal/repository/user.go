@@ -10,6 +10,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"github.com/jackc/pgx"
+	pgxv5 "github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -175,6 +176,12 @@ func (repository *UserRepository) UpdateLastPracticeAt(ctx context.Context, user
 	return err
 }
 
+func (repository *UserRepository) Exists(ctx context.Context, userID int64) (bool, error) {
+	var exists bool
+	err := repository.Db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM users WHERE id=$1)`, userID).Scan(&exists)
+	return exists, err
+}
+
 func (repository *UserRepository) SetNotificationsEnabled(ctx context.Context, userID int64, enabled bool) error {
 	_, err := repository.Db.Exec(ctx, `
 		UPDATE users
@@ -185,7 +192,9 @@ func (repository *UserRepository) SetNotificationsEnabled(ctx context.Context, u
 	return err
 }
 
-func (repository *UserRepository) Delete(ctx context.Context, userID int64) error {
+type AccountCleanupScheduler func(context.Context, pgxv5.Tx, string) error
+
+func (repository *UserRepository) Delete(ctx context.Context, userID int64, schedulers ...AccountCleanupScheduler) error {
 	tx, err := repository.Db.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin account deletion: %w", err)
@@ -203,6 +212,14 @@ func (repository *UserRepository) Delete(ctx context.Context, userID int64) erro
 	}
 	if _, err := tx.Exec(ctx, `DELETE FROM wordlists WHERE user_id=$1`, userID); err != nil {
 		return fmt.Errorf("delete account wordlists: %w", err)
+	}
+	for _, schedule := range schedulers {
+		if schedule == nil {
+			continue
+		}
+		if err := schedule(ctx, tx, fmt.Sprintf("users/%d-", userID)); err != nil {
+			return fmt.Errorf("schedule account object cleanup: %w", err)
+		}
 	}
 	if _, err := tx.Exec(ctx, `DELETE FROM users WHERE id=$1`, userID); err != nil {
 		return fmt.Errorf("delete account user: %w", err)

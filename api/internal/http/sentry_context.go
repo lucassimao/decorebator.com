@@ -48,12 +48,10 @@ func sentryRequestContextMiddleware() gin.HandlerFunc {
 		// Set request context in Sentry scope immediately
 		hub.WithScope(func(scope *sentry.Scope) {
 			scope.SetContext("request", map[string]interface{}{
-				"url":          reqCtx.URL,
-				"method":       reqCtx.Method,
-				"path":         reqCtx.Path,
-				"query_params": reqCtx.QueryParams,
-				"user_agent":   reqCtx.UserAgent,
-				"remote_ip":    reqCtx.RemoteIP,
+				"url":        reqCtx.URL,
+				"method":     reqCtx.Method,
+				"path":       reqCtx.Path,
+				"user_agent": reqCtx.UserAgent,
 			})
 		})
 
@@ -63,10 +61,7 @@ func sentryRequestContextMiddleware() gin.HandlerFunc {
 			userCtx := common.CreateUserContextFromGin(c, authType)
 			if userCtx != nil && userCtx.ID != "" {
 				hub.WithScope(func(scope *sentry.Scope) {
-					scope.SetUser(sentry.User{
-						ID:    userCtx.ID,
-						Email: userCtx.Email,
-					})
+					scope.SetUser(sentry.User{ID: userCtx.ID})
 
 					// Set additional user tags
 					scope.SetTag("auth_type", userCtx.AuthType)
@@ -107,10 +102,7 @@ func SentryUserContextMiddleware() gin.HandlerFunc {
 			userCtx := common.CreateUserContextFromGin(c, authType)
 			if userCtx != nil && userCtx.ID != "" {
 				hub.WithScope(func(scope *sentry.Scope) {
-					scope.SetUser(sentry.User{
-						ID:    userCtx.ID,
-						Email: userCtx.Email,
-					})
+					scope.SetUser(sentry.User{ID: userCtx.ID})
 
 					// Set additional user tags
 					scope.SetTag("auth_type", userCtx.AuthType)

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
 
 	"decorebator.com/internal/common"
 	"github.com/jackc/pgx/v5"
@@ -17,9 +18,29 @@ type JobService interface {
 	ScheduleDefinitionJob(ctx context.Context, wordID int64, userID *int64, errorReport *ErrorReport, tx *pgx.Tx) (int64, error)
 	ScheduleExampleAudioJob(ctx context.Context, definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
 	ScheduleMeaningAudioJob(ctx context.Context, definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
+	ScheduleAccountCleanupJob(ctx context.Context, profileObjectPrefix string, tx *pgx.Tx) error
+	ScheduleProfileObjectCleanupJob(ctx context.Context, profileObjectName string) error
 	ScheduleStripeWebhookJob(ctx context.Context, eventID, eventType string, eventData []byte) (int64, error)
 	ScheduleRevenueCatWebhookJob(ctx context.Context, eventType string, eventData []byte) (int64, error)
 	RetryJob(ctx context.Context, jobID int64) error
+}
+
+func (js *JobServiceImpl) ScheduleProfileObjectCleanupJob(ctx context.Context, profileObjectName string) error {
+	_, err := js.enqueueJob(ctx, &river.InsertOpts{
+		Queue:       AccountCleanupQueue,
+		MaxAttempts: 25,
+		ScheduledAt: time.Now().Add(5 * time.Minute),
+	}, AccountCleanupArgs{ProfileObjectName: profileObjectName}, nil)
+	return err
+}
+
+func (js *JobServiceImpl) ScheduleAccountCleanupJob(ctx context.Context, profileObjectPrefix string, tx *pgx.Tx) error {
+	_, err := js.enqueueJob(ctx, &river.InsertOpts{
+		Queue:       AccountCleanupQueue,
+		MaxAttempts: 25,
+		ScheduledAt: time.Now().Add(5 * time.Minute),
+	}, AccountCleanupArgs{ProfileObjectPrefix: profileObjectPrefix}, tx)
+	return err
 }
 
 // JobServiceImpl implements JobService using River client

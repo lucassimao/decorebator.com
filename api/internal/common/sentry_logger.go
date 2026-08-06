@@ -92,25 +92,19 @@ func (h *SentryHandler) Handle(ctx context.Context, r slog.Record) error {
 				Headers: map[string]string{
 					"User-Agent": reqCtx.UserAgent,
 				},
-				QueryString: reqCtx.QueryParams,
 			}
 			// Also add as context for additional detail
 			event.Contexts["request"] = map[string]interface{}{
-				"url":          reqCtx.URL,
-				"method":       reqCtx.Method,
-				"path":         reqCtx.Path,
-				"query_params": reqCtx.QueryParams,
-				"user_agent":   reqCtx.UserAgent,
-				"remote_ip":    reqCtx.RemoteIP,
+				"url":        reqCtx.URL,
+				"method":     reqCtx.Method,
+				"path":       reqCtx.Path,
+				"user_agent": reqCtx.UserAgent,
 			}
 		}
 
 		// Add user context from Go context if available
 		if userCtx := GetUserContext(ctx); userCtx != nil && userCtx.ID != "" {
-			event.User = sentry.User{
-				ID:    userCtx.ID,
-				Email: userCtx.Email,
-			}
+			event.User = sentry.User{ID: userCtx.ID}
 			// Add user tags
 			if event.Tags == nil {
 				event.Tags = make(map[string]string)
@@ -196,21 +190,16 @@ func CaptureException(ctx context.Context, err error, attrs map[string]interface
 		// Set request context from enhanced context
 		if reqCtx := GetRequestContext(ctx); reqCtx != nil {
 			scope.SetContext("request", map[string]interface{}{
-				"url":          reqCtx.URL,
-				"method":       reqCtx.Method,
-				"path":         reqCtx.Path,
-				"query_params": reqCtx.QueryParams,
-				"user_agent":   reqCtx.UserAgent,
-				"remote_ip":    reqCtx.RemoteIP,
+				"url":        reqCtx.URL,
+				"method":     reqCtx.Method,
+				"path":       reqCtx.Path,
+				"user_agent": reqCtx.UserAgent,
 			})
 		}
 
 		// Set user context from enhanced context
 		if userCtx := GetUserContext(ctx); userCtx != nil && userCtx.ID != "" {
-			scope.SetUser(sentry.User{
-				ID:    userCtx.ID,
-				Email: userCtx.Email,
-			})
+			scope.SetUser(sentry.User{ID: userCtx.ID})
 			scope.SetTag("auth_type", userCtx.AuthType)
 			if userCtx.SubscriptionPlan != "" {
 				scope.SetTag("subscription_plan", userCtx.SubscriptionPlan)

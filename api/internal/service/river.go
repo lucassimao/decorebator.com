@@ -41,6 +41,7 @@ func workerQueueConfig(legacyProviderSurfaceEnabled bool) map[string]river.Queue
 		ExampleAudioQueue:               {MaxWorkers: 20},
 		MeaningAudioQueue:               {MaxWorkers: MeaningAudioQueueMaxWorkers},
 		PushNotificationQueue:           {MaxWorkers: 5},
+		AccountCleanupQueue:             {MaxWorkers: 2},
 		GoogleAcknowledgementRetryQueue: {MaxWorkers: 5},
 	}
 	if legacyProviderSurfaceEnabled {
@@ -106,6 +107,7 @@ func NewWorkerRiverClient(
 	river.AddWorker(riverWorkers, NewDueItemsReminderWorker(pushService))
 	river.AddWorker(riverWorkers, NewDailyPracticeReminderWorker(pushService))
 	river.AddWorker(riverWorkers, NewPushReceiptWorker(pushService))
+	river.AddWorker(riverWorkers, NewAccountCleanupWorker())
 	river.AddWorker(riverWorkers, &NoOpWorker{})
 	if legacyProviderSurfaceEnabled {
 		river.AddWorker(riverWorkers, NewRevenueCatWebhookWorker(revenueCatService))

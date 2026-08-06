@@ -17,6 +17,7 @@ func TestWorkerQueueConfigCapsAndLegacyGating(t *testing.T) {
 		MeaningAudioQueue:               2,
 		PushNotificationQueue:           5,
 		GoogleAcknowledgementRetryQueue: 5,
+		AccountCleanupQueue:             2,
 	}
 
 	for queue, want := range wantBase {
@@ -35,8 +36,8 @@ func TestWorkerQueueConfigCapsAndLegacyGating(t *testing.T) {
 		wantTotal     int
 		wantQueues    int
 	}{
-		{name: "IAP-only", legacyEnabled: false, wantTotal: 179, wantQueues: 9},
-		{name: "legacy rollback surface", legacyEnabled: true, wantTotal: 189, wantQueues: 11},
+		{name: "IAP-only", legacyEnabled: false, wantTotal: 181, wantQueues: 10},
+		{name: "legacy rollback surface", legacyEnabled: true, wantTotal: 191, wantQueues: 12},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

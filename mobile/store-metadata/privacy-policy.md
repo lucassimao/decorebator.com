@@ -77,7 +77,7 @@ Decorebator ("we," "our," or "us") is committed to protecting your privacy. This
 
 - Vocabulary terms are sent to OpenAI for content generation
 - Payment information is processed securely by Stripe
-- Analytics data is anonymized and aggregated
+- Approved analytics events exclude email and raw learning content
 - No personal data is sold to third parties
 
 ### Legal Requirements
@@ -106,7 +106,7 @@ We may disclose information if required by law, court order, or to protect our r
 
 - **Access**: View your personal information in app settings
 - **Update**: Modify your profile and preferences anytime
-- **Delete**: Request complete account deletion
+- **Delete**: Request deletion of your account and learning data
 - **Export**: Download your learning data
 
 ### Privacy Controls
@@ -128,13 +128,14 @@ We may disclose information if required by law, court order, or to protect our r
 
 - Personal information: Retained while account is active
 - Learning progress: Preserved for educational continuity
-- Analytics data: Aggregated and anonymized after 90 days
+- Analytics data: Retained according to the configured service-provider retention period
 
 ### Deleted Accounts
 
-- Personal information: Deleted within 30 days
-- Learning data: Permanently removed
-- Legal requirements: Some data may be retained as required by law
+- Active database: Your account, profile, wordlists, and learning progress are removed when deletion succeeds
+- Profile pictures: Public profile-picture objects are queued for retried removal
+- Service providers and backups: Limited copies may remain until their configured retention periods expire
+- Legal requirements: Records may be retained when required by law, security, or transaction obligations
 
 ## Children's Privacy
 

@@ -26,7 +26,7 @@ func InitSentry() error {
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:            sentryDsn,
 		Debug:          false, // Set to false in production to reduce overhead
-		SendDefaultPII: true,
+		SendDefaultPII: false,
 		EnableLogs:     os.Getenv("ENV") == ProductionEnv,
 		// Performance optimizations
 		SampleRate:       1.0, // Capture 100% of errors
@@ -43,8 +43,9 @@ func InitSentry() error {
 			if log.Level == sentry.LogLevelTrace {
 				return nil
 			}
-			return log
+			return scrubSentryLog(log)
 		},
+		BeforeSend: scrubSentryEvent,
 	})
 
 	if err != nil {

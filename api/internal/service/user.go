@@ -14,6 +14,7 @@ import (
 	repo "decorebator.com/internal/repository"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -25,6 +26,8 @@ type UserService struct {
 	userRepository      *repo.UserRepository
 	subscriptionService *SubscriptionService
 	effectiveAccess     *EffectiveAccessService
+	jobService          JobService
+	deleteProfileObject func(context.Context, string, string) error
 }
 
 func (s *UserService) SetEffectiveAccess(service *EffectiveAccessService) {
@@ -32,11 +35,16 @@ func (s *UserService) SetEffectiveAccess(service *EffectiveAccessService) {
 }
 
 // NewUserService creates a new UserService with injected dependencies
-func NewUserService(db *pgxpool.Pool, subscriptionService *SubscriptionService) *UserService {
-	return &UserService{
+func NewUserService(db *pgxpool.Pool, subscriptionService *SubscriptionService, jobs ...JobService) *UserService {
+	service := &UserService{
 		userRepository:      &repo.UserRepository{Db: db},
 		subscriptionService: subscriptionService,
+		deleteProfileObject: common.MinIODeleteObject,
 	}
+	if len(jobs) > 0 {
+		service.jobService = jobs[0]
+	}
+	return service
 }
 
 const AUTH_TOKEN_DURATION = (24 * time.Hour) * 365 // 1 year
@@ -261,7 +269,29 @@ func (s *UserService) checkAndDowngradeExpiredSubscription(ctx context.Context, 
 }
 
 func (s *UserService) Delete(ctx context.Context, userID int64) error {
-	return s.userRepository.Delete(ctx, userID)
+	if s.jobService == nil {
+		return errors.New("account cleanup scheduler is unavailable")
+	}
+	return s.userRepository.Delete(ctx, userID, func(ctx context.Context, tx pgx.Tx, prefix string) error {
+		return s.jobService.ScheduleAccountCleanupJob(ctx, prefix, &tx)
+	})
+}
+
+func (s *UserService) Exists(ctx context.Context, userID int64) (bool, error) {
+	return s.userRepository.Exists(ctx, userID)
+}
+
+func (s *UserService) CompensateProfileUpload(ctx context.Context, objectName string) error {
+	if s.deleteProfileObject == nil {
+		return errors.New("profile object deleter is unavailable")
+	}
+	if err := s.deleteProfileObject(ctx, profilePictureBucket, objectName); err == nil {
+		return nil
+	}
+	if s.jobService == nil {
+		return errors.New("account cleanup scheduler is unavailable")
+	}
+	return s.jobService.ScheduleProfileObjectCleanupJob(ctx, objectName)
 }
 
 func (s *UserService) UpdateProfile(ctx context.Context, userID int64, firstName, lastName, country, preferredLanguage, profilePictureURL, password *string, dateOfBirth *time.Time, notificationsEnabled *bool) (*User, error) {

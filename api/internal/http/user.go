@@ -320,7 +320,17 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 
 	// Upload profile picture if provided
 	var url *string
+	var uploadedObjectName string
 	if input.UpdateProfilePictureInput != nil {
+		exists, err := h.userService.Exists(c.Request.Context(), user.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify user."})
+			return
+		}
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+			return
+		}
 
 		cmd := input.UpdateProfilePictureInput
 
@@ -336,6 +346,7 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload profile picture."})
 			return
 		}
+		uploadedObjectName = objectName
 		url = &uploadResult
 	}
 
@@ -353,6 +364,11 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 	// Update user profile
 	updatedUser, err := h.userService.UpdateProfile(c.Request.Context(), user.ID, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, newPassword, dateOfBirth, input.NotificationsEnabled)
 	if err != nil {
+		if uploadedObjectName != "" {
+			if cleanupErr := h.userService.CompensateProfileUpload(c.Request.Context(), uploadedObjectName); cleanupErr != nil {
+				common.Logger.ErrorContext(c.Request.Context(), "failed to compensate profile picture upload", "object", uploadedObjectName, "error", cleanupErr)
+			}
+		}
 		switch err.(type) {
 		case common.BusinessError:
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

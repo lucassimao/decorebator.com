@@ -347,7 +347,7 @@ func (b *ContextBuilder) initializeServices() error {
 
 	// Initialize UserService after subscription/effective-access dependencies.
 	if b.context.UserService == nil {
-		b.context.UserService = service.NewUserService(b.context.Database, b.context.SubscriptionService)
+		b.context.UserService = service.NewUserService(b.context.Database, b.context.SubscriptionService, b.context.JobService)
 	}
 	if b.context.EffectiveAccessService != nil {
 		b.context.UserService.SetEffectiveAccess(b.context.EffectiveAccessService)

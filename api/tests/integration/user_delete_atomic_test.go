@@ -7,8 +7,12 @@ import (
 	"time"
 
 	"decorebator.com/internal/repository"
+	"decorebator.com/internal/service"
 	"decorebator.com/tests/integration/setup"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
+	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -25,12 +29,19 @@ func TestUserRepositoryDeleteRemovesAccountDataAtomically(t *testing.T) {
 	require.NoError(t, setup.CleanTestData(db))
 
 	repo := &repository.UserRepository{Db: db}
+	riverClient, err := river.NewClient(riverpgxv5.New(db), &river.Config{})
+	require.NoError(t, err)
+	jobs := service.NewJobService(riverClient)
+	scheduleCleanup := func(ctx context.Context, tx pgx.Tx, prefix string) error {
+		return jobs.ScheduleAccountCleanupJob(ctx, prefix, &tx)
+	}
 
 	t.Run("deletes the user and non-cascading account data", func(t *testing.T) {
 		userID := createUserDeletionFixture(ctx, t, db, "success")
 
-		require.NoError(t, repo.Delete(ctx, userID))
+		require.NoError(t, repo.Delete(ctx, userID, scheduleCleanup))
 		assertUserDeletionCounts(ctx, t, db, userID, 0, 0, 0, 0)
+		assertCleanupJobCount(ctx, t, db, userID, 1)
 	})
 
 	t.Run("rolls every deletion back when the user delete fails", func(t *testing.T) {
@@ -56,9 +67,20 @@ func TestUserRepositoryDeleteRemovesAccountDataAtomically(t *testing.T) {
 			require.NoError(t, cleanupErr)
 		}()
 
-		require.ErrorContains(t, repo.Delete(ctx, userID), "forced user deletion failure")
+		require.ErrorContains(t, repo.Delete(ctx, userID, scheduleCleanup), "forced user deletion failure")
 		assertUserDeletionCounts(ctx, t, db, userID, 1, 1, 1, 1)
+		assertCleanupJobCount(ctx, t, db, userID, 0)
 	})
+}
+
+func assertCleanupJobCount(ctx context.Context, t *testing.T, db *pgxpool.Pool, userID int64, want int) {
+	t.Helper()
+	var count int
+	require.NoError(t, db.QueryRow(ctx, `
+		SELECT count(*) FROM river_job
+		WHERE kind='account_cleanup' AND args->>'profile_object_prefix'=$1
+	`, fmt.Sprintf("users/%d-", userID)).Scan(&count))
+	assert.Equal(t, want, count)
 }
 
 func createUserDeletionFixture(ctx context.Context, t *testing.T, db *pgxpool.Pool, suffix string) int64 {

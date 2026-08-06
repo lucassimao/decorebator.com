@@ -47,7 +47,7 @@ export default function PrivacyPolicy() {
                 <ul class="list-disc pl-6 mb-4 space-y-2">
                   <li>Device type and operating system</li>
                   <li>App version and language settings</li>
-                  <li>Anonymous usage analytics (PostHog)</li>
+                  <li>Usage analytics associated with an internal account identifier (PostHog)</li>
                   <li>Error logs and crash reports (Sentry)</li>
                   <li>IP address (for security purposes only)</li>
                 </ul>
@@ -99,7 +99,7 @@ export default function PrivacyPolicy() {
                 <ul class="list-disc pl-6 mb-4 space-y-2">
                   <li>Vocabulary terms are sent to OpenAI for content generation</li>
                   <li>Payment information is processed securely by Stripe</li>
-                  <li>Analytics data is anonymized and aggregated</li>
+                  <li>Approved analytics events exclude email and raw learning content</li>
                   <li>No personal data is sold to third parties</li>
                 </ul>
                 
@@ -136,7 +136,7 @@ export default function PrivacyPolicy() {
                 <ul class="list-disc pl-6 mb-4 space-y-2">
                   <li><strong>Access</strong>: View your personal information in app settings</li>
                   <li><strong>Update</strong>: Modify your profile and preferences anytime</li>
-                  <li><strong>Delete</strong>: Request complete account deletion</li>
+                  <li><strong>Delete</strong>: Request deletion of your account and learning data</li>
                   <li><strong>Export</strong>: Download your learning data</li>
                 </ul>
                 
@@ -164,14 +164,15 @@ export default function PrivacyPolicy() {
                 <ul class="list-disc pl-6 mb-4 space-y-2">
                   <li>Personal information: Retained while account is active</li>
                   <li>Learning progress: Preserved for educational continuity</li>
-                  <li>Analytics data: Aggregated and anonymized after 90 days</li>
+                  <li>Analytics data: Retained according to the configured service-provider retention period</li>
                 </ul>
                 
                 <h4 class="text-lg font-semibold mb-3 mt-6">Deleted Accounts</h4>
                 <ul class="list-disc pl-6 mb-4 space-y-2">
-                  <li>Personal information: Deleted within 30 days</li>
-                  <li>Learning data: Permanently removed</li>
-                  <li>Legal requirements: Some data may be retained as required by law</li>
+                  <li>Active database: Your account, profile, wordlists, and learning progress are removed when deletion succeeds</li>
+                  <li>Profile pictures: Public profile-picture objects are queued for retried removal</li>
+                  <li>Service providers and backups: Limited copies may remain until their configured retention periods expire</li>
+                  <li>Legal requirements: Records may be retained when required by law, security, or transaction obligations</li>
                 </ul>
               `}
             />

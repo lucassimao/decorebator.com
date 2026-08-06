@@ -210,7 +210,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 					slog.Any("original_error", origErr),
 					slog.String("path", c.FullPath()),
 					slog.String("method", c.Request.Method),
-					slog.String("url", c.Request.URL.String()),
+					slog.String("url", c.Request.URL.Path),
 				}
 
 				// optionally include userID
@@ -233,7 +233,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 						// Set error context
 						scope.SetTag("error_type", "panic")
 						scope.SetContext("request", map[string]interface{}{
-							"url":    c.Request.URL.String(),
+							"url":    c.Request.URL.Path,
 							"method": c.Request.Method,
 							"path":   c.FullPath(),
 						})

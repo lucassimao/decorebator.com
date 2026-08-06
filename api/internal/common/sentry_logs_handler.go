@@ -108,6 +108,9 @@ func addSentryAttrs(attrs *[]attribute.Builder, prefix string, a slog.Attr) {
 	if key == "" && a.Value.Kind() != slog.KindGroup {
 		return
 	}
+	if sensitiveSentryKey(key) {
+		return
+	}
 
 	value := a.Value.Resolve()
 	switch value.Kind() {
