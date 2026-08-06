@@ -9,6 +9,7 @@
     "web": "expo start --web",
     "test": "jest",
     "test:watch": "jest --watchAll",
+    "test:store-config": "node --test scripts/storeTestConfig.test.mjs",
     "prepare": "husky",
     "expo:update": "expo install --fix",
     "android-emulator": "$ANDROID_SDK_ROOT/emulator/emulator -avd Galaxy_S25_Ultra_6_9_inch --gpu host --feature-vulkan=false",

@@ -13,6 +13,16 @@
       "distribution": "internal",
       "channel": "preview"
     },
+    "store-test": {
+      "channel": "store-test",
+      "environment": "preview",
+      "ios": {
+        "autoIncrement": "buildNumber"
+      },
+      "android": {
+        "autoIncrement": "versionCode"
+      }
+    },
     "production": {
       "channel": "production",
       "ios": {
@@ -24,8 +34,20 @@
     }
   },
   "submit": {
+    "store-test": {
+      "ios": {
+        "ascAppId": "6749329064"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./decorebator-465316-0520ea65e130.json",
+        "track": "internal",
+        "releaseStatus": "completed"
+      }
+    },
     "production": {
-      "ios": {},
+      "ios": {
+        "ascAppId": "6749329064"
+      },
       "android": {
         "serviceAccountKeyPath": "./decorebator-465316-0520ea65e130.json",
         "track": "production"
