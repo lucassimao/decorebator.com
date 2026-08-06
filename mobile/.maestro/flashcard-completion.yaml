@@ -4,18 +4,11 @@ tags:
   - smoke
   - flashcards
 ---
+- stopApp
 - launchApp
 - extendedWaitUntil:
     visible: "Welcome back!"
     timeout: 15000
-- tapOn:
-    id: "email-input"
-- eraseText
-- inputText: ${EXPO_PUBLIC_TEST_USER_EMAIL}
-- tapOn:
-    id: "password-input"
-- eraseText
-- inputText: ${EXPO_PUBLIC_TEST_USER_PASSWORD}
 - tapOn:
     id: "signin-button"
 - extendedWaitUntil:

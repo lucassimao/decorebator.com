@@ -150,6 +150,10 @@ The following remain sequential and cannot be parallelized: zero-entitlement cla
 
 After all code items are complete, run the full applicable API, mobile, and web validation, the full Maestro suite, and the production-readiness checks in Phase 3. Owner-only store configuration, production smoke purchase, release submission, and live monitoring remain `[b]` until the owner performs them and records the evidence.
 
+Final local UI validation progress:
+
+- [x] **2026-08-06 — full Android Maestro suite complete.** Provisioned fresh local-only Postgres/Redis/MinIO state, applied migrations through `000076` plus River migrations, started the development API and Metro, booted the Android 34 `Maestro_ANDROID_pixel_6_android-34` AVD, and ran the complete checked-in suite together. `first-launch-routing.yaml` and `flashcard-completion.yaml` both pass in the final rerun (`2/2` flows in 1m38s). Added an idempotent local fixture script that hashes the development test password through stdin, seeds one completed flashcard without calling OpenAI or sending email, never prints credentials, and succeeds on repeated runs. The flashcard flow now cold-starts and uses the app's canonical `__DEV__` credential prefill instead of cursor-dependent text erasure, which had left a stale email suffix and caused a false login failure. Fable audited the current schema, fixture transaction/idempotency, credential boundary, flow determinism, README, and evidence scope, then returned `APPROVED`; after its process-list hardening suggestion was adopted, the same Fable reconciliation returned `APPROVED`. Bash syntax, two consecutive seed runs, TypeScript, repository-wide mobile lint, and all 33 Jest suites/249 tests pass. This evidence covers the Android emulator only; physical iOS/Android animation checks and store builds remain owner-gated.
+
 ## Phase 0 — Scope and zero-entitlement gate
 
 This phase is read-only except for documenting decisions. Nothing that drops provider code or schema may start before it passes.
