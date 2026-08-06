@@ -170,9 +170,46 @@ func (repository *WordlistRepository) DeleteAll(ctx context.Context, userID int6
 	return result.RowsAffected(), nil
 }
 
-func (repository *WordlistRepository) Update(ctx context.Context, wordlist *Wordlist) (int64, error) {
-	query := `UPDATE wordlists SET name=$1, description=$2,language_code=$3 updated_at=NOW() WHERE user_id=$4 AND ID=$5`
-	result, err := repository.Db.Exec(ctx, query, wordlist.Name, wordlist.Description, wordlist.LanguageCode, wordlist.UserID, wordlist.ID)
+type UpdateWordlistArgs struct {
+	ID                  int64
+	OwnerID             int64
+	Name                string
+	Description         string
+	LanguageCode        string
+	PronunciationSystem *model.PronunciationSystem
+}
+
+func (repository *WordlistRepository) Update(ctx context.Context, args UpdateWordlistArgs) (int64, error) {
+	var pronunciationSystem any
+	if args.PronunciationSystem != nil {
+		pronunciationSystem = string(*args.PronunciationSystem)
+	}
+
+	query := `
+		UPDATE wordlists
+		SET name=$1,
+			description=$2,
+			language_code=$3::varchar,
+			pronunciation_system=CASE
+				WHEN $4::varchar IS NOT NULL THEN $4::varchar
+				WHEN language_code=$3::varchar THEN pronunciation_system
+				WHEN $3::varchar='ja' THEN 'romaji'
+				WHEN $3::varchar IN ('zh', 'zh-cn', 'zh-tw') THEN 'pinyin'
+				WHEN $3::varchar IN ('ko', 'kr') THEN 'hangul'
+				ELSE 'ipa'
+			END,
+			updated_at=NOW()
+		WHERE user_id=$5 AND id=$6`
+	result, err := repository.Db.Exec(
+		ctx,
+		query,
+		args.Name,
+		args.Description,
+		args.LanguageCode,
+		pronunciationSystem,
+		args.OwnerID,
+		args.ID,
+	)
 
 	if err != nil {
 		return 0, err

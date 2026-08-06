@@ -93,17 +93,44 @@ func (wls *WordlistService) DeleteWordlist(ctx context.Context, id, userID int64
 	return count, nil
 }
 
-func (wls *WordlistService) UpdateWordlist(ctx context.Context, wordlist *Wordlist) error {
-	count, err := wls.repository.Update(ctx, wordlist)
+type WordlistUpdate struct {
+	ID                  int64
+	UserID              int64
+	Name                string
+	Description         string
+	LanguageCode        string
+	PronunciationSystem *model.PronunciationSystem
+}
+
+func (wls *WordlistService) UpdateWordlist(ctx context.Context, update WordlistUpdate) error {
+	if update.ID <= 0 || update.UserID <= 0 {
+		return common.BusinessError{Message: "Wordlist and user IDs must be positive"}
+	}
+	if update.Name == "" || update.LanguageCode == "" {
+		return common.BusinessError{Message: "Name and language code are required"}
+	}
+	if update.PronunciationSystem != nil &&
+		!model.IsPronunciationSystemSupported(update.LanguageCode, *update.PronunciationSystem) {
+		return common.BusinessError{Message: "Pronunciation system not supported for this language"}
+	}
+
+	count, err := wls.repository.Update(ctx, repo.UpdateWordlistArgs{
+		ID:                  update.ID,
+		OwnerID:             update.UserID,
+		Name:                update.Name,
+		Description:         update.Description,
+		LanguageCode:        update.LanguageCode,
+		PronunciationSystem: update.PronunciationSystem,
+	})
 	if err != nil {
 		wrappedErr := fmt.Errorf(
-			"failed to update wordlist %d : %w", wordlist.ID, err,
+			"failed to update wordlist %d : %w", update.ID, err,
 		)
 		return wrappedErr
 	}
 
 	if count == 0 {
-		return common.NotFoundError{ID: wordlist.ID, Entity: "Wordlist"}
+		return common.NotFoundError{ID: update.ID, Entity: "Wordlist"}
 	}
 	return nil
 }

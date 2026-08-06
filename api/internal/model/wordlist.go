@@ -46,6 +46,17 @@ func GetSupportedPronunciationSystems(languageCode string) []PronunciationSystem
 	}
 }
 
+// IsPronunciationSystemSupported reports whether a pronunciation system is
+// valid for the requested language according to the create/read contract.
+func IsPronunciationSystemSupported(languageCode string, pronunciationSystem PronunciationSystem) bool {
+	for _, supported := range GetSupportedPronunciationSystems(languageCode) {
+		if supported == pronunciationSystem {
+			return true
+		}
+	}
+	return false
+}
+
 // CanChangePronunciationSystem returns true if the language allows changing pronunciation system
 func CanChangePronunciationSystem(languageCode string) bool {
 	switch languageCode {

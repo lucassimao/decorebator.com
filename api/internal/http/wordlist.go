@@ -165,17 +165,29 @@ func (h *WordlistsRoutes) Delete(c *gin.Context) {
 func (h *WordlistsRoutes) Update(c *gin.Context) {
 	var input WordlistInput
 
-	id, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
 
-	if err := c.BindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if bindErr := c.BindJSON(&input); bindErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": bindErr.Error()})
 		return
 	}
 
 	var userID int64 = c.GetInt64("userID")
-	err := h.wordlistService.UpdateWordlist(c.Request.Context(), &Wordlist{ID: id, Name: input.Name, Description: input.Description, LanguageCode: input.LanguageCode, UserID: userID})
+	err = h.wordlistService.UpdateWordlist(c.Request.Context(), service.WordlistUpdate{
+		ID:                  id,
+		Name:                input.Name,
+		Description:         input.Description,
+		LanguageCode:        input.LanguageCode,
+		PronunciationSystem: input.PronunciationSystem,
+		UserID:              userID,
+	})
 	if err != nil {
-		if errors.Is(err, common.NotFoundError{}) {
+		var notFoundErr common.NotFoundError
+		if errors.As(err, &notFoundErr) {
 			c.Status(http.StatusNotFound)
 		} else {
 			switch err.(type) {
