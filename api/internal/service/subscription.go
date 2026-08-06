@@ -358,8 +358,7 @@ func (s *SubscriptionService) handleSubscriptionDeleted(ctx context.Context, eve
 	if err := s.mailService.SendSubscriptionCancelledEmail(user, emailData); err != nil {
 		// Log error but don't fail the webhook
 		common.CaptureError(ctx, err, "Failed to send subscription canceled email",
-			"user_id", sub.UserID,
-			"email", user.Email)
+			"user_id", sub.UserID)
 	}
 
 	return nil

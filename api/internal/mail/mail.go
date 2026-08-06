@@ -49,7 +49,7 @@ var resetPasswordEmailTemplate string
 
 // SendResetPasswordEmail sends a password reset email to the specified address
 func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string) error {
-	logger := common.Logger.With("func", "SendResetPasswordEmail", "email", email)
+	logger := common.Logger.With("func", "SendResetPasswordEmail")
 
 	if !m.shouldSendEmails() {
 		logger.Warn("emails disabled via DISABLE_EMAILS flag. skipping reset password email")
@@ -64,6 +64,7 @@ func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string) 
 	}
 
 	user := result[0]
+	logger = logger.With("user_id", user.ID)
 	encryptedPayload, err := createResetPasswordToken(user.ID)
 	if err != nil {
 		logger.Error("failed to create reset password token", "error", err)
@@ -450,7 +451,7 @@ func (m *MailService) SendPaymentFailedEmail(user *model.User, data Subscription
 
 // SendWelcomeEmail sends a welcome email to new users
 func (m *MailService) SendWelcomeEmail(ctx context.Context, email string) error {
-	logger := common.Logger.With("func", "SendWelcomeEmail", "email", email)
+	logger := common.Logger.With("func", "SendWelcomeEmail")
 
 	if !m.shouldSendEmails() {
 		logger.Warn("emails disabled via DISABLE_EMAILS flag. skipping welcome email")
@@ -470,6 +471,7 @@ func (m *MailService) SendWelcomeEmail(ctx context.Context, email string) error 
 	}
 
 	user := result[0]
+	logger = logger.With("user_id", user.ID)
 
 	templateSource := resolveWelcomeTemplate(user.PreferredLanguage)
 	subject := resolveWelcomeSubject(user.PreferredLanguage)

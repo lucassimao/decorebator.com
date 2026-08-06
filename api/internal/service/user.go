@@ -150,13 +150,11 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (st
 		// Check if error is due to context timeout/cancellation
 		if errors.Is(err, context.DeadlineExceeded) {
 			common.Logger.Error("login request timed out",
-				"email", lowerCaseEmail,
 				"db_query_ms", dbDuration.Milliseconds())
 			return "", err
 		}
 		if errors.Is(err, context.Canceled) {
 			common.Logger.Error("login request was canceled",
-				"email", lowerCaseEmail,
 				"db_query_ms", dbDuration.Milliseconds())
 			return "", err
 		}
@@ -182,7 +180,7 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (st
 	// Log performance metrics for successful login attempts
 	if err == nil {
 		common.Logger.Info("login performance metrics",
-			"email", lowerCaseEmail,
+			"user_id", user.ID,
 			"db_query_ms", dbDuration.Milliseconds(),
 			"bcrypt_ms", bcryptDuration.Milliseconds(),
 			"total_ms", totalDuration.Milliseconds(),
@@ -191,7 +189,7 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (st
 	} else {
 		// Log performance even for failed password attempts
 		common.Logger.Info("login performance metrics",
-			"email", lowerCaseEmail,
+			"user_id", user.ID,
 			"db_query_ms", dbDuration.Milliseconds(),
 			"bcrypt_ms", bcryptDuration.Milliseconds(),
 			"total_ms", totalDuration.Milliseconds(),

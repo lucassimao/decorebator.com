@@ -23,7 +23,7 @@ func scrubSentryEvent(event *sentry.Event, _ *sentry.EventHint) *sentry.Event {
 		event.Request.Data = ""
 		event.Request.Env = nil
 		for key := range event.Request.Headers {
-			if sensitiveSentryKey(key) {
+			if sensitiveTelemetryKey(key) {
 				delete(event.Request.Headers, key)
 			}
 		}
@@ -40,7 +40,7 @@ func scrubSentryLog(log *sentry.Log) *sentry.Log {
 		return nil
 	}
 	for key := range log.Attributes {
-		if sensitiveSentryKey(key) {
+		if sensitiveTelemetryKey(key) {
 			delete(log.Attributes, key)
 		}
 	}
@@ -49,7 +49,7 @@ func scrubSentryLog(log *sentry.Log) *sentry.Log {
 
 func scrubSentryMap(values map[string]any) {
 	for key, value := range values {
-		if sensitiveSentryKey(key) {
+		if sensitiveTelemetryKey(key) {
 			delete(values, key)
 			continue
 		}
@@ -58,7 +58,7 @@ func scrubSentryMap(values map[string]any) {
 			scrubSentryMap(nested)
 		case map[string]string:
 			for nestedKey := range nested {
-				if sensitiveSentryKey(nestedKey) {
+				if sensitiveTelemetryKey(nestedKey) {
 					delete(nested, nestedKey)
 				}
 			}
@@ -66,8 +66,8 @@ func scrubSentryMap(values map[string]any) {
 	}
 }
 
-func sensitiveSentryKey(key string) bool {
-	normalized := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(key, "-", "_"), " ", "_"))
+func sensitiveTelemetryKey(key string) bool {
+	normalized := normalizedTelemetryKey(key)
 	for _, fragment := range []string{
 		"email", "authorization", "cookie", "password", "token", "secret",
 		"query", "remote_ip", "ip_address", "x_forwarded_for", "x_real_ip",
@@ -77,4 +77,8 @@ func sensitiveSentryKey(key string) bool {
 		}
 	}
 	return false
+}
+
+func normalizedTelemetryKey(key string) string {
+	return strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(key, "-", "_"), " ", "_"))
 }

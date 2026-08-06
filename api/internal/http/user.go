@@ -153,7 +153,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	ctx := c.Request.Context()
 	email := input.Email
 	if err := h.mailService.SendWelcomeEmail(ctx, email); err != nil {
-		common.Logger.ErrorContext(c.Request.Context(), "failed to send welcome email", "email", email, "error", err)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to send welcome email", "user_id", user.ID, "error", err)
 	}
 }
 
@@ -243,7 +243,7 @@ func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
 
 	err := h.mailService.SendResetPasswordEmail(c.Request.Context(), input.Email)
 	if err != nil {
-		common.Logger.ErrorContext(c.Request.Context(), "failed to send reset password email", "email", input.Email, "error", err)
+		common.Logger.ErrorContext(c.Request.Context(), "failed to send reset password email", "error", err)
 	}
 	c.Status(http.StatusOK)
 }

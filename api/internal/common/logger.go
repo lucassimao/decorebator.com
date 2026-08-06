@@ -27,5 +27,6 @@ func init() {
 		handler = NewMultiHandler(handlers...)
 	}
 
+	handler = NewPrivacyHandler(handler)
 	Logger = slog.New(handler)
 }
