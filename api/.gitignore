@@ -13,5 +13,5 @@ coverage-integration.html
 gosec-results.json
 api*.aab
 *.apk
-api
+/api
 cmd/store-assets/screenshots/
