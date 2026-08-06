@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -17,6 +18,19 @@ type Word = model.Word
 
 type WordRepository struct {
 	Db *pgxpool.Pool
+}
+
+const wordlistNameUniqueConstraint = "words_wordlist_id_name_unique"
+
+type OwnedWordUpdateArgs struct {
+	ID               int64
+	OwnerID          int64
+	TargetWordlistID int64
+	Name             *string
+	Notes            *string
+	Learned          *bool
+	AudioURL         *string
+	Pronunciation    *string
 }
 
 func (repository *WordRepository) Save(ctx context.Context, name, notes string, userID, wordlistID int64, tx *pgx.Tx) (*Word, error) {
@@ -214,6 +228,49 @@ func (repository *WordRepository) Update(ctx context.Context, word *Word, tx *pg
 	}
 
 	return result.RowsAffected(), nil
+}
+
+// UpdateOwned atomically verifies ownership of both the source word and target
+// wordlist while preserving every omitted field. The media pointers exist for
+// trusted internal callers; the public HTTP input never exposes them.
+func (repository *WordRepository) UpdateOwned(ctx context.Context, args OwnedWordUpdateArgs) (int64, error) {
+	query := `
+		UPDATE words AS word
+		SET name=COALESCE($4::varchar, word.name),
+			notes=COALESCE($5::text, word.notes),
+			learned=COALESCE($6::boolean, word.learned),
+			audio_url=COALESCE($7::text, word.audio_url),
+			pronunciation=COALESCE($8::varchar, word.pronunciation),
+			wordlist_id=target.id,
+			updated_at=NOW()
+		FROM wordlists AS target
+		WHERE word.id=$1
+			AND word.user_id=$2
+			AND target.id=$3
+			AND target.user_id=$2`
+
+	result, err := repository.Db.Exec(
+		ctx,
+		query,
+		args.ID,
+		args.OwnerID,
+		args.TargetWordlistID,
+		args.Name,
+		args.Notes,
+		args.Learned,
+		args.AudioURL,
+		args.Pronunciation,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+func IsWordNameConflict(err error) bool {
+	var postgresError *pgconn.PgError
+	return errors.As(err, &postgresError) && postgresError.Code == "23505" &&
+		postgresError.ConstraintName == wordlistNameUniqueConstraint
 }
 
 func (repository *WordRepository) GetLatestAudioURL(ctx context.Context, word string) (string, error) {

@@ -173,10 +173,16 @@ export async function deleteWord(
 }
 
 export async function updateWord(
-  dto: Pick<Word, "id" | "wordlistId" | "learned" | "name" | "notes">,
+  dto: Pick<Word, "id" | "wordlistId"> &
+    Partial<Pick<Word, "learned" | "name" | "notes">>,
 ) {
   const endpoint = API_URL + `/wordlists/${dto.wordlistId}/words/${dto.id}`;
-  await callAPI("PUT", endpoint, JSON.stringify(dto));
+  const { learned, name, notes, wordlistId } = dto;
+  await callAPI(
+    "PUT",
+    endpoint,
+    JSON.stringify({ learned, name, notes, wordlistId }),
+  );
 }
 export async function newQuiz(
   wordlistId: number,

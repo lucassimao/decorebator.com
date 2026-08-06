@@ -17,6 +17,15 @@ type WordInput struct {
 	Learned bool   `json:"learned"`
 }
 
+// WordUpdateInput contains only fields a user may change. Pointer fields retain
+// the difference between an omitted value and an explicit zero value.
+type WordUpdateInput struct {
+	Name       *string `json:"name"`
+	Notes      *string `json:"notes"`
+	Learned    *bool   `json:"learned"`
+	WordlistID *int64  `json:"wordlistId"`
+}
+
 type WordRoutes struct {
 	wordService       *service.WordService
 	definitionService *service.DefinitionService
@@ -89,22 +98,46 @@ func (h *WordRoutes) Delete(c *gin.Context) {
 }
 
 func (h *WordRoutes) Update(c *gin.Context) {
-	var input WordInput
+	var input WordUpdateInput
 
-	id, _ := strconv.ParseInt(c.Param("wordId"), 10, 64)
-	wordlistID, _ := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("wordId"), 10, 64)
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid word ID"})
+		return
+	}
+	wordlistID, err := strconv.ParseInt(c.Param("wordlistId"), 10, 64)
+	if err != nil || wordlistID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
+		return
+	}
 	userID := c.GetInt64("userID")
 
-	if err := c.BindJSON(&input); err != nil {
+	if err = c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if input.WordlistID != nil && *input.WordlistID != wordlistID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "wordlistId must match the route"})
+		return
+	}
 
-	err := h.wordService.UpdateWord(c.Request.Context(), &Word{ID: id, Name: input.Name, UserID: userID, Learned: input.Learned, WordlistID: wordlistID}, nil)
+	err = h.wordService.UpdateOwnedWord(c.Request.Context(), service.OwnedWordUpdate{
+		ID:               id,
+		OwnerID:          userID,
+		TargetWordlistID: wordlistID,
+		Name:             input.Name,
+		Notes:            input.Notes,
+		Learned:          input.Learned,
+	})
 	if err != nil {
-		if errors.Is(err, common.NotFoundError{}) {
+		var notFoundErr common.NotFoundError
+		var businessErr common.BusinessError
+		switch {
+		case errors.As(err, &notFoundErr):
 			c.String(http.StatusNotFound, err.Error())
-		} else {
+		case errors.As(err, &businessErr):
+			c.JSON(http.StatusBadRequest, gin.H{"error": businessErr.Error()})
+		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update word"})
 		}
 		return

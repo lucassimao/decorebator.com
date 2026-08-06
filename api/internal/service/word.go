@@ -118,6 +118,9 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 
 	word, err := ws.repository.Save(ctx, trimmedName, dto.Notes, dto.UserID, dto.WordlistID, &tx)
 	if err != nil {
+		if repo.IsWordNameConflict(err) {
+			return nil, common.BusinessError{Message: "Word already exists in this wordlist"}
+		}
 		return nil, err
 	}
 
@@ -193,6 +196,53 @@ func (ws *WordService) UpdateWord(ctx context.Context, word *Word, tx *pgx.Tx) e
 
 	if count == 0 {
 		return common.NotFoundError{ID: word.ID, Entity: "Word"}
+	}
+	return nil
+}
+
+type OwnedWordUpdate struct {
+	ID               int64
+	OwnerID          int64
+	TargetWordlistID int64
+	Name             *string
+	Notes            *string
+	Learned          *bool
+}
+
+// UpdateOwnedWord applies a presence-aware public update. Source ownership,
+// target ownership, and the mutation are evaluated by one PostgreSQL statement.
+func (ws *WordService) UpdateOwnedWord(ctx context.Context, update OwnedWordUpdate) error {
+	if update.ID <= 0 || update.OwnerID <= 0 || update.TargetWordlistID <= 0 {
+		return common.BusinessError{Message: "Word, user, and wordlist IDs must be positive"}
+	}
+
+	if update.Name != nil {
+		normalizedName := strings.ToLower(strings.TrimSpace(*update.Name))
+		if normalizedName == "" {
+			return common.BusinessError{Message: "Word name is required"}
+		}
+		if utf8.RuneCountInString(normalizedName) > 15 {
+			return common.BusinessError{Message: "words must be limited to 15 chars"}
+		}
+		update.Name = &normalizedName
+	}
+
+	count, err := ws.repository.UpdateOwned(ctx, repo.OwnedWordUpdateArgs{
+		ID:               update.ID,
+		OwnerID:          update.OwnerID,
+		TargetWordlistID: update.TargetWordlistID,
+		Name:             update.Name,
+		Notes:            update.Notes,
+		Learned:          update.Learned,
+	})
+	if err != nil {
+		if repo.IsWordNameConflict(err) {
+			return common.BusinessError{Message: "Word already exists in this wordlist"}
+		}
+		return err
+	}
+	if count == 0 {
+		return common.NotFoundError{ID: update.ID, Entity: "Word"}
 	}
 	return nil
 }
