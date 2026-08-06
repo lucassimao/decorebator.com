@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -74,12 +73,12 @@ func loadConfig(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	var cfg Config
-	if err := json.Unmarshal(content, &cfg); err != nil {
+	cfg, err := parseConfig(content)
+	if err != nil {
 		return nil, err
 	}
 	cfg.ConfigPath = path
-	return &cfg, nil
+	return cfg, nil
 }
 
 func buildGenerator(cfg *Config, provider, openaiModel, geminiModel, geminiSize, geminiAspect string) (ImageGenerator, error) {

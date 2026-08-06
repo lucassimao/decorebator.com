@@ -11,6 +11,7 @@ Local-only CLI for generating App Store and Google Play screenshots using GPT Im
   - App Store (iPhone 11): `api/cmd/store-assets/frames/iphone11.png`
   - Play Store (Pixel 8 Pro): `api/cmd/store-assets/frames/pixel8pro.png`
 - Edit copy in `api/cmd/store-assets/store-copy/en.json` (English). Other locales are auto-generated.
+- Run `go test ./cmd/store-assets` before rendering. The generator rejects missing/empty slots, legacy payment-provider names, hard-coded currency prices, and unsupported trial/discount claims.
 - Run `go mod tidy` in `api/` after dependency changes.
 
 ## Commands

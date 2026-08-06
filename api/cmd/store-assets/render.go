@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -233,9 +232,12 @@ func loadCopyFile(cfg *Config, locale string) (CopyFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	var copyFile CopyFile
-	if err := json.Unmarshal(content, &copyFile); err != nil {
+	copyFile, err := parseCopyFile(content)
+	if err != nil {
 		return nil, err
+	}
+	if err := validateStoreCopy(copyFile, cfg.Slots); err != nil {
+		return nil, fmt.Errorf("invalid %s store copy: %w", locale, err)
 	}
 	return copyFile, nil
 }
