@@ -50,6 +50,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(ErrorMiddleware())
 	router.Use(CORSMiddleware())
+	RegisterHealthRoutes(router, appCtx.Database)
 	storeWebhookMetrics := NewStoreWebhookMetrics()
 	RegisterStoreWebhookRoutes(router, appCtx, storeWebhookMetrics)
 	RegisterMobileIAPRoutes(router, appCtx, appCtx.StoreIAPRequestLimiter)
