@@ -34,6 +34,7 @@ type Context struct {
 	WordService                  *service.WordService
 	WordlistService              *service.WordlistService
 	UserService                  *service.UserService
+	AuthTokens                   *service.AccessTokenService
 	DefinitionService            *service.DefinitionService
 	DefinitionImageService       *service.DefinitionImageService
 	SubscriptionService          *service.SubscriptionService
@@ -150,6 +151,11 @@ func (b *ContextBuilder) WithUserService(userService *service.UserService) *Cont
 	return b
 }
 
+func (b *ContextBuilder) WithAuthTokens(authTokens *service.AccessTokenService) *ContextBuilder {
+	b.context.AuthTokens = authTokens
+	return b
+}
+
 // WithSubscriptionService sets a custom subscription service
 func (b *ContextBuilder) WithSubscriptionService(subscriptionService *service.SubscriptionService) *ContextBuilder {
 	b.context.SubscriptionService = subscriptionService
@@ -204,6 +210,16 @@ func (b *ContextBuilder) Build() (*Context, error) {
 	b.legacyProviderConfig = legacyProviderConfig
 	b.context.LegacyProviderSurfaceEnabled = legacyProviderConfig.Enabled
 	b.context.LegacyRevenueCatWebhookAuth = legacyProviderConfig.RevenueCatWebhookAuthorization
+	if b.context.AuthTokens == nil {
+		authConfig, err := config.LoadAuthConfig()
+		if err != nil {
+			return nil, fmt.Errorf("failed to configure authentication: %w", err)
+		}
+		b.context.AuthTokens, err = service.NewAccessTokenService(authConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize authentication: %w", err)
+		}
+	}
 
 	// Initialize Redis client if not provided
 	if b.context.RedisClient == nil {
@@ -347,7 +363,12 @@ func (b *ContextBuilder) initializeServices() error { //nolint:gocyclo // Sequen
 
 	// Initialize UserService after subscription/effective-access dependencies.
 	if b.context.UserService == nil {
-		b.context.UserService = service.NewUserService(b.context.Database, b.context.SubscriptionService, b.context.JobService)
+		b.context.UserService = service.NewUserService(
+			b.context.Database,
+			b.context.SubscriptionService,
+			b.context.AuthTokens,
+			b.context.JobService,
+		)
 	}
 	if b.context.EffectiveAccessService != nil {
 		b.context.UserService.SetEffectiveAccess(b.context.EffectiveAccessService)

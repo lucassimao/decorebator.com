@@ -14,8 +14,8 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
+	"decorebator.com/internal/repository"
 	"decorebator.com/internal/service"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
@@ -23,64 +23,35 @@ import (
 
 const productionEnv = "production"
 
-func Authenticate(c *gin.Context) {
-	const BearerSchema = "Bearer "
-	authorization, err := c.Cookie("Authorization")
-
-	if err == http.ErrNoCookie {
-		// fallback to header
-		authorization = c.GetHeader("Authorization")
-	}
-
-	if authorization == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization missing"})
-		return
-	}
-
-	tokenString := strings.TrimPrefix(authorization, BearerSchema)
-
-	if tokenString == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token not found"})
-		return
-	}
-
-	token, err := jwt.ParseWithClaims(tokenString, &service.Claims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+func Authenticate(tokens *service.AccessTokenService, users *repository.UserRepository) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		const BearerSchema = "Bearer "
+		authorization, err := c.Cookie("Authorization")
+		if err == http.ErrNoCookie {
+			authorization = c.GetHeader("Authorization")
 		}
-		return []byte(os.Getenv("JWT_KEY")), nil
-	})
-
-	if err != nil || !token.Valid {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token validation error"})
-		return
+		if authorization == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization missing"})
+			return
+		}
+		tokenString := strings.TrimPrefix(authorization, BearerSchema)
+		userID, err := tokens.Validate(tokenString)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token validation error"})
+			return
+		}
+		currentUsers, err := users.Find(c.Request.Context(), repository.FindUserArgs{ID: &userID})
+		if err != nil || len(currentUsers) != 1 {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			return
+		}
+		user := currentUsers[0]
+		user.PasswordHash = ""
+		user.StripeCustomerID = nil
+		c.Set("userID", userID)
+		c.Set("user", &user)
+		c.Next()
 	}
-
-	claims, ok := token.Claims.(*service.Claims)
-
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		return
-	}
-
-	userID, err := strconv.ParseInt(claims.Subject, 10, 64)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		return
-	}
-
-	// Set userID for backward compatibility
-	c.Set("userID", userID)
-
-	// Also set user object with subscription info
-	user := &model.User{
-		ID:               userID,
-		Email:            claims.Email,
-		SubscriptionPlan: claims.SubscriptionPlan,
-	}
-	c.Set("user", user)
-
-	c.Next()
 }
 
 // ResolveEffectiveSubscription replaces only the request-scoped legacy plan

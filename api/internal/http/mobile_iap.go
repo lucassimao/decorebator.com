@@ -30,9 +30,10 @@ func RegisterMobileIAPRoutes(
 	router *gin.Engine,
 	appCtx *app.Context,
 	limiter *service.StoreIAPRequestLimiter,
+	authenticate gin.HandlerFunc,
 ) {
 	routes := router.Group("/subscription/iap")
-	routes.Use(Authenticate, ResolveEffectiveSubscription(appCtx.EffectiveAccessService), SentryUserContextMiddleware())
+	routes.Use(authenticate, ResolveEffectiveSubscription(appCtx.EffectiveAccessService), SentryUserContextMiddleware())
 	routes.Use(TimeoutMiddleware(25 * time.Second))
 	routes.GET("/context", getMobileIAPContext(appCtx))
 	routes.POST("/apple/verify", verifyMobileIAPApple(appCtx, limiter))

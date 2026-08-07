@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/jackc/pgx/pgtype"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // PronunciationSystem represents the pronunciation system for a wordlist
@@ -87,10 +87,10 @@ func (w Wordlist) MarshalJSON() ([]byte, error) {
 		createdAtValue any
 		updatedAtValue any
 	)
-	if w.CreatedAt.Status == pgtype.Present {
+	if w.CreatedAt.Valid {
 		createdAtValue = w.CreatedAt.Time.UTC().Format(time.RFC3339)
 	}
-	if w.UpdatedAt.Status == pgtype.Present {
+	if w.UpdatedAt.Valid {
 		updatedAtValue = w.UpdatedAt.Time.UTC().Format(time.RFC3339)
 	}
 
@@ -155,9 +155,9 @@ func (w *Wordlist) UnmarshalJSON(data []byte) error {
 		if err != nil {
 			return err
 		}
-		w.CreatedAt = pgtype.Timestamptz{Time: createdAtTime, Status: pgtype.Present}
+		w.CreatedAt = pgtype.Timestamptz{Time: createdAtTime, Valid: true}
 	} else {
-		w.CreatedAt = pgtype.Timestamptz{Status: pgtype.Null}
+		w.CreatedAt = pgtype.Timestamptz{Valid: false}
 	}
 
 	// Handle UpdatedAt
@@ -166,9 +166,9 @@ func (w *Wordlist) UnmarshalJSON(data []byte) error {
 		if err != nil {
 			return err
 		}
-		w.UpdatedAt = pgtype.Timestamptz{Time: updatedAtTime, Status: pgtype.Present}
+		w.UpdatedAt = pgtype.Timestamptz{Time: updatedAtTime, Valid: true}
 	} else {
-		w.UpdatedAt = pgtype.Timestamptz{Status: pgtype.Null}
+		w.UpdatedAt = pgtype.Timestamptz{Valid: false}
 	}
 
 	return nil

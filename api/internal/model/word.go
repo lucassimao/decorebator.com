@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jackc/pgx/pgtype"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Word struct {
@@ -33,19 +33,19 @@ func (w Word) MarshalJSON() ([]byte, error) {
 	processingStartedAt := nullTimestamp
 	processingCompletedAt := nullTimestamp
 
-	if w.CreatedAt.Status == pgtype.Present {
+	if w.CreatedAt.Valid {
 		createdAt = w.CreatedAt.Time.UTC().Format(time.RFC3339)
 	}
 
-	if w.UpdatedAt.Status == pgtype.Present {
+	if w.UpdatedAt.Valid {
 		updatedAt = w.UpdatedAt.Time.UTC().Format(time.RFC3339)
 	}
 
-	if w.ProcessingStartedAt.Status == pgtype.Present {
+	if w.ProcessingStartedAt.Valid {
 		processingStartedAt = w.ProcessingStartedAt.Time.UTC().Format(time.RFC3339)
 	}
 
-	if w.ProcessingCompletedAt.Status == pgtype.Present {
+	if w.ProcessingCompletedAt.Valid {
 		processingCompletedAt = w.ProcessingCompletedAt.Time.UTC().Format(time.RFC3339)
 	}
 
@@ -97,9 +97,9 @@ func (w *Word) UnmarshalJSON(data []byte) error {
 		if err != nil {
 			return err
 		}
-		w.CreatedAt = pgtype.Timestamptz{Time: createdAtTime, Status: pgtype.Present}
+		w.CreatedAt = pgtype.Timestamptz{Time: createdAtTime, Valid: true}
 	} else {
-		w.CreatedAt = pgtype.Timestamptz{Status: pgtype.Null}
+		w.CreatedAt = pgtype.Timestamptz{Valid: false}
 	}
 
 	// Handle UpdatedAt
@@ -108,9 +108,9 @@ func (w *Word) UnmarshalJSON(data []byte) error {
 		if err != nil {
 			return err
 		}
-		w.UpdatedAt = pgtype.Timestamptz{Time: updatedAtTime, Status: pgtype.Present}
+		w.UpdatedAt = pgtype.Timestamptz{Time: updatedAtTime, Valid: true}
 	} else {
-		w.UpdatedAt = pgtype.Timestamptz{Status: pgtype.Null}
+		w.UpdatedAt = pgtype.Timestamptz{Valid: false}
 	}
 
 	// Handle ProcessingStartedAt
@@ -119,9 +119,9 @@ func (w *Word) UnmarshalJSON(data []byte) error {
 		if err != nil {
 			return err
 		}
-		w.ProcessingStartedAt = pgtype.Timestamptz{Time: processingStartedAtTime, Status: pgtype.Present}
+		w.ProcessingStartedAt = pgtype.Timestamptz{Time: processingStartedAtTime, Valid: true}
 	} else {
-		w.ProcessingStartedAt = pgtype.Timestamptz{Status: pgtype.Null}
+		w.ProcessingStartedAt = pgtype.Timestamptz{Valid: false}
 	}
 
 	// Handle ProcessingCompletedAt
@@ -130,9 +130,9 @@ func (w *Word) UnmarshalJSON(data []byte) error {
 		if err != nil {
 			return err
 		}
-		w.ProcessingCompletedAt = pgtype.Timestamptz{Time: processingCompletedAtTime, Status: pgtype.Present}
+		w.ProcessingCompletedAt = pgtype.Timestamptz{Time: processingCompletedAtTime, Valid: true}
 	} else {
-		w.ProcessingCompletedAt = pgtype.Timestamptz{Status: pgtype.Null}
+		w.ProcessingCompletedAt = pgtype.Timestamptz{Valid: false}
 	}
 
 	return nil

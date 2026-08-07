@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/jackc/pgx/pgtype"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type User struct {
@@ -71,11 +71,11 @@ func (u User) MarshalJSON() ([]byte, error) {
 
 	userMap["notificationsEnabled"] = u.NotificationsEnabled
 
-	if u.CreatedAt.Status == pgtype.Present {
+	if u.CreatedAt.Valid {
 		userMap["createdAt"] = u.CreatedAt.Time.UTC().Format(time.RFC3339)
 	}
 
-	if u.UpdatedAt.Status == pgtype.Present {
+	if u.UpdatedAt.Valid {
 		userMap["updatedAt"] = u.UpdatedAt.Time.UTC().Format(time.RFC3339)
 	}
 

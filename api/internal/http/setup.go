@@ -31,6 +31,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	// Create repository instances
 	subRepo := repository.NewSubscriptionRepository(appCtx.Database)
 	userRepo := &repository.UserRepository{Db: appCtx.Database}
+	authenticate := Authenticate(appCtx.AuthTokens, userRepo)
 	pushTokenRepo := &repository.PushTokenRepository{Db: appCtx.Database}
 
 	// Initialize route handlers using services from AppContext
@@ -53,7 +54,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	RegisterHealthRoutes(router, appCtx.Database)
 	storeWebhookMetrics := NewStoreWebhookMetrics()
 	RegisterStoreWebhookRoutes(router, appCtx, storeWebhookMetrics)
-	RegisterMobileIAPRoutes(router, appCtx, appCtx.StoreIAPRequestLimiter)
+	RegisterMobileIAPRoutes(router, appCtx, appCtx.StoreIAPRequestLimiter, authenticate)
 
 	// Routes without authentication
 	{
@@ -70,7 +71,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 
 	// Routes with authentication
 	authenticatedRoutes := router.Group("/")
-	authenticatedRoutes.Use(Authenticate, ResolveEffectiveSubscription(appCtx.EffectiveAccessService), SentryUserContextMiddleware())
+	authenticatedRoutes.Use(authenticate, ResolveEffectiveSubscription(appCtx.EffectiveAccessService), SentryUserContextMiddleware())
 	authenticatedRoutes.Use(TimeoutMiddleware(2 * time.Second))
 	{
 		authenticatedRoutes.GET("/wordlists", WordlistRoutes.GetAll)
@@ -113,7 +114,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	// OpenAI Realtime token creation needs a wider provider-call budget than
 	// ordinary authenticated database routes while retaining the same guards.
 	chatRoutes := router.Group("/")
-	chatRoutes.Use(Authenticate, ResolveEffectiveSubscription(appCtx.EffectiveAccessService), SentryUserContextMiddleware())
+	chatRoutes.Use(authenticate, ResolveEffectiveSubscription(appCtx.EffectiveAccessService), SentryUserContextMiddleware())
 	chatRoutes.Use(TimeoutMiddleware(15 * time.Second))
 	chatRoutes.POST(
 		"/wordlists/:wordlistId/chat/session",

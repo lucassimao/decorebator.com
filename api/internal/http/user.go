@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/config"
 	"decorebator.com/internal/mail"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/service"
@@ -149,7 +150,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	}
 
 	// Generate JWT directly from user object - no re-authentication needed
-	jwtToken, err := service.GenerateJWT(*user)
+	jwtToken, err := h.userService.GenerateAccessToken(user.ID)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -259,7 +260,7 @@ func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
 	var maxAge, path, domain, secure, httpOnly, sameSite = int64(0), "/", "localhost", false, true, http.SameSiteStrictMode
 
 	if os.Getenv("ENV") == "production" {
-		maxAge = service.AuthTokenDuration.Milliseconds()
+		maxAge = int64(config.AccessTokenDuration / time.Second)
 		domain = "decorebator.com"
 		// requires https
 		secure = true
@@ -405,7 +406,7 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 		return
 	}
 
-	user, planChanged, err := h.userService.GetProfile(c.Request.Context(), userID)
+	user, _, err := h.userService.GetProfile(c.Request.Context(), userID)
 	if err != nil {
 		// If user not found (e.g., deleted), return 401 instead of 500
 		if err.Error() == "user not found" {
@@ -414,17 +415,6 @@ func (h *UserRoutes) GetProfile(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error."})
 		}
 		return
-	}
-
-	// If plan was downgraded, generate new JWT with updated plan
-	if planChanged {
-		newJWT, jwtErr := service.GenerateJWT(*user)
-		if jwtErr == nil {
-			c.Header("authorization", newJWT)
-		} else {
-			// Log error but don't fail the request
-			common.Logger.ErrorContext(c.Request.Context(), "failed to generate new JWT after plan downgrade", "userId", userID, "error", jwtErr)
-		}
 	}
 
 	// hide unnecessary data

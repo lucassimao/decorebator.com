@@ -12,7 +12,6 @@ import (
 	"decorebator.com/internal/service"
 	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/pgtype"
 )
 
 type WordlistInput struct {
@@ -265,10 +264,10 @@ func (h *WordlistsRoutes) GetProcessingStatus(c *gin.Context) {
 		}
 
 		// Format timestamps
-		if word.ProcessingStartedAt.Status == pgtype.Present {
+		if word.ProcessingStartedAt.Valid {
 			info.ProcessingStartedAt = word.ProcessingStartedAt.Time.Format(time.RFC3339)
 		}
-		if word.ProcessingCompletedAt.Status == pgtype.Present {
+		if word.ProcessingCompletedAt.Valid {
 			info.ProcessingCompletedAt = word.ProcessingCompletedAt.Time.Format(time.RFC3339)
 		}
 

@@ -4,16 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	repo "decorebator.com/internal/repository"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -26,6 +23,7 @@ type UserService struct {
 	userRepository      *repo.UserRepository
 	subscriptionService *SubscriptionService
 	effectiveAccess     *EffectiveAccessService
+	authTokens          *AccessTokenService
 	jobService          JobService
 	deleteProfileObject func(context.Context, string, string) error
 }
@@ -35,10 +33,16 @@ func (s *UserService) SetEffectiveAccess(service *EffectiveAccessService) {
 }
 
 // NewUserService creates a new UserService with injected dependencies
-func NewUserService(db *pgxpool.Pool, subscriptionService *SubscriptionService, jobs ...JobService) *UserService {
+func NewUserService(
+	db *pgxpool.Pool,
+	subscriptionService *SubscriptionService,
+	authTokens *AccessTokenService,
+	jobs ...JobService,
+) *UserService {
 	service := &UserService{
 		userRepository:      &repo.UserRepository{Db: db},
 		subscriptionService: subscriptionService,
+		authTokens:          authTokens,
 		deleteProfileObject: common.MinIODeleteObject,
 	}
 	if len(jobs) > 0 {
@@ -47,62 +51,11 @@ func NewUserService(db *pgxpool.Pool, subscriptionService *SubscriptionService, 
 	return service
 }
 
-const AuthTokenDuration = (24 * time.Hour) * 365 // 1 year
-
-// JWT configuration cached for performance
-var (
-	jwtKey     []byte
-	jwtEnv     string
-	jwtOnce    sync.Once
-	jwtInitErr error
-)
-
-// jwt.StandardClaims is an embedded type to provide expiry time, issued at time, etc.
-type Claims struct {
-	Email            string                 `json:"email"`
-	Environment      string                 `json:"environment"`
-	SubscriptionPlan model.SubscriptionPlan `json:"subscriptionPlan"`
-	jwt.StandardClaims
-}
-
-// initJWTConfig initializes JWT configuration once for performance
-func initJWTConfig() {
-	jwtKeyStr := os.Getenv("JWT_KEY")
-	if jwtKeyStr == "" {
-		jwtInitErr = errors.New("JWT_KEY environment variable is required")
-		return
+func (s *UserService) GenerateAccessToken(userID int64) (string, error) {
+	if s.authTokens == nil {
+		return "", errors.New("access-token service is unavailable")
 	}
-	jwtKey = []byte(jwtKeyStr)
-	jwtEnv = os.Getenv("ENV")
-}
-
-func GenerateJWT(user User) (string, error) {
-	// Initialize JWT configuration once
-	jwtOnce.Do(initJWTConfig)
-	if jwtInitErr != nil {
-		return "", jwtInitErr
-	}
-
-	claims := &Claims{
-		Email:            user.Email,
-		Environment:      jwtEnv, // Use cached environment value
-		SubscriptionPlan: user.SubscriptionPlan,
-		StandardClaims: jwt.StandardClaims{
-			Issuer:    "Decorebator",
-			ExpiresAt: time.Now().Add(AuthTokenDuration).Unix(), // Token is valid for 1 year
-			Subject:   fmt.Sprint(user.ID),
-			IssuedAt:  time.Now().Unix(),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey) // Use cached JWT key
-
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
+	return s.authTokens.Issue(userID)
 }
 
 func (s *UserService) SaveUser(ctx context.Context, firstName, lastName, password, email string, country *string, preferredLanguage *string) (*User, error) {
@@ -192,7 +145,7 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (st
 			"bcrypt_ms", bcryptDuration.Milliseconds(),
 			"total_ms", totalDuration.Milliseconds(),
 			"status", "success")
-		return GenerateJWT(user)
+		return s.GenerateAccessToken(user.ID)
 	}
 
 	// Log performance even for failed password attempts

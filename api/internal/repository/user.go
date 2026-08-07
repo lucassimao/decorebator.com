@@ -9,8 +9,7 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
-	"github.com/jackc/pgx"
-	pgxv5 "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -132,9 +131,6 @@ func (repository *UserRepository) Find(ctx context.Context, args FindUserArgs) (
 	query := builder.String()
 	rows, err := repository.Db.Query(ctx, query, queryArgs...)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return users, nil
-		}
 		return nil, err
 	}
 
@@ -201,7 +197,7 @@ func (repository *UserRepository) SetNotificationsEnabled(ctx context.Context, u
 	return err
 }
 
-type AccountCleanupScheduler func(context.Context, pgxv5.Tx, string) error
+type AccountCleanupScheduler func(context.Context, pgx.Tx, string) error
 
 func (repository *UserRepository) Delete(ctx context.Context, userID int64, schedulers ...AccountCleanupScheduler) error {
 	tx, err := repository.Db.Begin(ctx)

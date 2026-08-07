@@ -23,7 +23,7 @@ func TestGracePeriodPlanDowngrade(t *testing.T) {
 	ts := setup.NewTestServer(t)
 	defer ts.Cleanup()
 
-	t.Run("UserBeyondGracePeriod_PlanDowngradedWithJWTRefresh", func(t *testing.T) {
+	t.Run("UserBeyondGracePeriod_PlanDowngradedWithoutJWTRefresh", func(t *testing.T) {
 		ctx := context.Background()
 
 		// Create a test user
@@ -63,9 +63,8 @@ func TestGracePeriodPlanDowngrade(t *testing.T) {
 			Expect().
 			Status(200)
 
-		// Verify new JWT was returned in Authorization header
-		newToken := profileResp.Header("Authorization").NotEmpty().Raw()
-		assert.NotEqual(t, initialToken, newToken, "Should receive new JWT token")
+		// Plan is resolved from current server state, never from access-token claims.
+		profileResp.Header("Authorization").IsEmpty()
 
 		// Verify response body shows updated plan
 		profileResp.JSON().Object().Value("subscriptionPlan").String().IsEqual("free")
@@ -77,10 +76,6 @@ func TestGracePeriodPlanDowngrade(t *testing.T) {
 			userID).Scan(&updatedPlan)
 		require.NoError(t, err)
 		assert.Equal(t, model.PlanFree, updatedPlan, "User plan should be downgraded to free")
-
-		// Verify JWT payload contains updated plan
-		decoded := setup.DecodeJWT(t, newToken)
-		assert.Equal(t, "free", decoded["subscriptionPlan"], "JWT should contain updated subscription plan")
 	})
 
 	t.Run("UserWithinGracePeriod_PlanMaintained", func(t *testing.T) {
@@ -287,9 +282,8 @@ func TestGracePeriodPlanDowngrade(t *testing.T) {
 			Expect().
 			Status(200)
 
-		// Verify new JWT was returned (plan should be downgraded)
-		newToken := profileResp.Header("Authorization").NotEmpty().Raw()
-		assert.NotEqual(t, initialToken, newToken, "Should receive new JWT token at grace period boundary")
+		// The subject-only access token is unchanged; current plan comes from PostgreSQL.
+		profileResp.Header("Authorization").IsEmpty()
 
 		// Verify response body shows updated plan
 		profileResp.JSON().Object().Value("subscriptionPlan").String().IsEqual("free")
