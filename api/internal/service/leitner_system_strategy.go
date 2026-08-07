@@ -212,11 +212,12 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
 			JOIN words w ON w.id = lst.word_id
-			JOIN word_definitions wd ON wd.definition_id = def.id AND wd.word_id = w.id
+			JOIN word_definitions wd ON wd.definition_id = lst.definition_id AND wd.word_id = lst.word_id
 			LEFT JOIN definition_images di ON di.definition_id = def.id AND di.is_visible=TRUE
 			WHERE 
 				lst.user_id = $1
 				AND w.wordlist_id = $2
+				AND w.user_id = $1
 				AND w.learned = FALSE
 				AND def.meaning IS NOT NULL
 				AND lst.next_review_at IS NOT NULL
@@ -359,9 +360,9 @@ func (s *LeitnerSystemStrategy) getNextDefinition(ctx context.Context, userID, w
 				   COUNT(CASE WHEN lst.next_review_at IS NOT NULL AND lst.next_review_at <= NOW() THEN 1 END) as due_now
 			FROM leitner_system_tracking lst 
 			JOIN definitions def ON lst.definition_id = def.id
-			JOIN word_definitions wd ON def.id = wd.definition_id
-			JOIN words w ON wd.word_id = w.id
-			WHERE lst.user_id = $1 AND w.wordlist_id = $2
+			JOIN word_definitions wd ON wd.definition_id = lst.definition_id AND wd.word_id = lst.word_id
+			JOIN words w ON w.id = lst.word_id
+			WHERE lst.user_id = $1 AND w.user_id = $1 AND w.wordlist_id = $2
 		`
 		var totalWords, unlearnedWords, withMeaning, notSkipped, dueNow int
 		debugErr := s.db.QueryRow(ctx, debugQuery, userID, wordlistID).Scan(&totalWords, &unlearnedWords, &withMeaning, &notSkipped, &dueNow)
@@ -425,9 +426,10 @@ func (s *LeitnerSystemStrategy) getWordlistBoxDistribution(ctx context.Context, 
 			lst.box_id,
 			COUNT(*) as word_count
 		FROM leitner_system_tracking lst
-		JOIN word_definitions wd ON lst.definition_id = wd.definition_id
-		JOIN words w ON wd.word_id = w.id
+		JOIN word_definitions wd ON wd.definition_id = lst.definition_id AND wd.word_id = lst.word_id
+		JOIN words w ON w.id = lst.word_id
 		WHERE lst.user_id = $1 
+		AND w.user_id = $1
 		AND w.wordlist_id = $2
 		AND w.learned = FALSE
 		GROUP BY lst.box_id
@@ -1222,9 +1224,9 @@ func (s *LeitnerSystemStrategy) clearEarliestSkipsIfNeeded(ctx context.Context, 
 	availableCountQuery := `
 		SELECT COUNT(*) as available_count 
 		FROM leitner_system_tracking lst 
-		JOIN word_definitions wd ON lst.definition_id = wd.definition_id
-		JOIN words w ON wd.word_id = w.id 
-		WHERE lst.user_id = $1 AND w.wordlist_id = $2 
+		JOIN word_definitions wd ON wd.definition_id = lst.definition_id AND wd.word_id = lst.word_id
+		JOIN words w ON w.id = lst.word_id
+		WHERE lst.user_id = $1 AND w.user_id = $1 AND w.wordlist_id = $2
 		AND w.learned = FALSE 
 		AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < NOW())
 		AND lst.id != $3  -- Exclude current one being updated
@@ -1248,9 +1250,9 @@ func (s *LeitnerSystemStrategy) clearEarliestSkipsIfNeeded(ctx context.Context, 
 		WHERE id IN (
 			SELECT lst.id 
 			FROM leitner_system_tracking lst 
-			JOIN word_definitions wd ON lst.definition_id = wd.definition_id
-			JOIN words w ON wd.word_id = w.id 
-			WHERE lst.user_id = $1 AND w.wordlist_id = $2 
+			JOIN word_definitions wd ON wd.definition_id = lst.definition_id AND wd.word_id = lst.word_id
+			JOIN words w ON w.id = lst.word_id
+			WHERE lst.user_id = $1 AND w.user_id = $1 AND w.wordlist_id = $2
 			AND w.learned = FALSE 
 			AND lst.temporarily_skipped_until IS NOT NULL
 			AND lst.id != $3  -- Don't clear the current one being updated
@@ -1411,6 +1413,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 				AND lst.definition_id = $3
 				AND lst.word_id = $4
 				AND w.wordlist_id = $5
+				AND w.user_id = $2
 		)
 	`, quizResult.LeitnerSystemTrackingID, quizResult.UserID, quizResult.DefinitionID, quizResult.WordID, quizResult.WordlistID).Scan(&trackingExists)
 	if verifyErr != nil {

@@ -109,6 +109,7 @@ func (r *WordMasteryRepository) GetWordMastery(ctx context.Context, userID, word
 		LEFT JOIN leitner_system_tracking lst 
 			ON lst.word_id = wm.word_id AND lst.user_id = wm.user_id
 		WHERE wm.user_id = $1 
+		  AND w.user_id = $1
 		  AND w.wordlist_id = $2 
 		  AND w.learned = FALSE  -- Only show active learning words
 		GROUP BY wm.word_id, w.name, wm.mastery_level, 

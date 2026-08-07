@@ -38,6 +38,7 @@ func (r *PushNotificationRepository) FindDailyReminderCandidates(ctx context.Con
 			FROM leitner_system_tracking lst
 			JOIN words w ON w.id = lst.word_id
 			WHERE lst.next_review_at IS NOT NULL
+				AND w.user_id = lst.user_id
 				AND lst.next_review_at <= $1
 				AND w.learned = FALSE
 				AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < $1)
@@ -102,8 +103,9 @@ func (r *PushNotificationRepository) FindDueItemsReminderCandidates(ctx context.
 				COUNT(*) AS due_count
 			FROM leitner_system_tracking lst
 			JOIN words w ON w.id = lst.word_id
-			JOIN wordlists wl ON wl.id = w.wordlist_id
+			JOIN wordlists wl ON wl.id = w.wordlist_id AND wl.user_id = w.user_id
 			WHERE lst.next_review_at IS NOT NULL
+				AND w.user_id = lst.user_id
 				AND lst.next_review_at <= $1
 				AND w.learned = FALSE
 				AND (lst.temporarily_skipped_until IS NULL OR lst.temporarily_skipped_until < $1)

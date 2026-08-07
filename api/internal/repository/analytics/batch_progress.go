@@ -164,8 +164,9 @@ func (r *BatchProgressRepository) GetDueCounts(ctx context.Context, userID int64
 		FROM leitner_system_tracking lst
 		JOIN definitions def ON def.id = lst.definition_id
 		JOIN words w ON w.id = lst.word_id
-		JOIN word_definitions wd ON wd.definition_id = def.id AND wd.word_id = w.id
+		JOIN word_definitions wd ON wd.definition_id = lst.definition_id AND wd.word_id = lst.word_id
 		WHERE lst.user_id = $1
+			AND w.user_id = $1
 			AND w.learned = FALSE
 			AND def.meaning IS NOT NULL
 			AND lst.next_review_at IS NOT NULL

@@ -51,6 +51,7 @@ func (r *BoxDistributionRepository) UpsertBoxDistribution(ctx context.Context, u
 			FROM leitner_system_tracking lst
 			JOIN words w ON lst.word_id = w.id
 			WHERE lst.user_id = $1 
+			  AND w.user_id = $1
 			  AND w.wordlist_id = $2 
 			  AND w.learned = FALSE  -- Only count active learning words
 			GROUP BY lst.word_id
@@ -116,6 +117,7 @@ func (r *BoxDistributionRepository) GetCurrentBoxDistribution(ctx context.Contex
 			FROM leitner_system_tracking lst
 			JOIN words w ON lst.word_id = w.id
 			WHERE lst.user_id = $1 
+			  AND w.user_id = $1
 			  AND w.wordlist_id = $2 
 			  AND w.learned = FALSE  -- Only count active learning words
 			GROUP BY lst.word_id
