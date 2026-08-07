@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/security"
 	"github.com/google/uuid"
@@ -447,7 +448,7 @@ func (r *StoreEntitlementRepository) Apply(
 	if err != nil {
 		return StoreEntitlementApplyResult{}, err
 	}
-	defer func() { _ = managed.Rollback(ctx) }()
+	defer common.RollbackTx(ctx, managed, "store entitlement apply")
 	result, err := r.applyInTx(ctx, managed, update)
 	if err != nil {
 		return StoreEntitlementApplyResult{}, err
@@ -473,7 +474,7 @@ func (r *StoreEntitlementRepository) ReencryptEvidenceBatch(
 	if err != nil {
 		return 0, err
 	}
-	defer func() { _ = tx.Rollback(ctx) }()
+	defer common.RollbackTx(ctx, tx, "store entitlement re-encryption")
 	updated, err := r.reencryptAccounts(ctx, tx, fromVersion, limit)
 	if err != nil {
 		return 0, err

@@ -151,7 +151,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		if beginErr != nil {
 			return beginErr
 		}
-		defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
+		defer common.RollbackTx(ctx, tx, "image regeneration persistence")
 
 		span = sentry.StartSpan(ctx, "db.definition_image.save", sentry.WithDescription("definitionImageService.SaveDefinitionImageTx"))
 		_, err = w.definitionImageService.SaveDefinitionImageTx(span.Context(), imageDTO, tx)

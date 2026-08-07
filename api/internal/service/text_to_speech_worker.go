@@ -132,7 +132,7 @@ func (w *TextToSpeechWorker) persistRegeneratedWordAudio(ctx context.Context, wo
 	if err != nil {
 		return err
 	}
-	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
+	defer common.RollbackTx(ctx, tx, "word audio regeneration persistence")
 	if err := w.wordService.UpdateWord(ctx, word, &tx); err != nil {
 		return err
 	}

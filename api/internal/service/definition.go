@@ -115,6 +115,33 @@ func (s *DefinitionService) DeleteWordDefinitions(ctx context.Context, wordID in
 	return s.definitionRepository.DeleteWordDefinitions(ctx, wordID, tx)
 }
 
+// ScheduleDefinitionRegeneration removes the current definition relationships
+// and inserts the durable replacement job atomically. A worker can never observe
+// the job before commit, and an enqueue or commit failure preserves the content.
+func (s *DefinitionService) ScheduleDefinitionRegeneration(
+	ctx context.Context,
+	wordID int64,
+	jobService JobService,
+) (int64, error) {
+	if jobService == nil {
+		return 0, fmt.Errorf("job service is required")
+	}
+
+	var jobID int64
+	err := pgx.BeginFunc(ctx, s.definitionRepository.Db, func(tx pgx.Tx) error {
+		if err := s.DeleteWordDefinitions(ctx, wordID, &tx); err != nil {
+			return err
+		}
+		var scheduleErr error
+		jobID, scheduleErr = jobService.ScheduleDefinitionJob(ctx, wordID, nil, nil, &tx)
+		return scheduleErr
+	})
+	if err != nil {
+		return 0, fmt.Errorf("failed to schedule definition regeneration: %w", err)
+	}
+	return jobID, nil
+}
+
 func (s *DefinitionService) didUserCreateWord(ctx context.Context, wordID, userID int64) (bool, error) {
 	res, err := s.definitionRepository.DidUserCreateWord(ctx, wordID, userID)
 	if err != nil {

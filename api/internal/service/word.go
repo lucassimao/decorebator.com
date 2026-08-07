@@ -107,13 +107,7 @@ func (ws *WordService) SaveWord(ctx context.Context, dto *Word) (*Word, error) {
 		return nil, err
 	}
 
-	// Every early return rolls the transaction back. After a successful commit,
-	// Rollback returns pgx.ErrTxClosed and is intentionally ignored.
-	defer func() {
-		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
-			common.Logger.Error("failed to rollback transaction", "error", rollbackErr)
-		}
-	}()
+	defer common.RollbackTx(ctx, tx, "word save")
 
 	word, err := ws.repository.Save(ctx, trimmedName, dto.Notes, dto.UserID, dto.WordlistID, &tx)
 	if err != nil {

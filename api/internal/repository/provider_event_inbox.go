@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -121,7 +122,7 @@ func (r *ProviderEventInboxRepository) Complete(
 	if err != nil {
 		return ProviderEventInboxResult{}, err
 	}
-	defer func() { _ = tx.Rollback(ctx) }()
+	defer common.RollbackTx(ctx, tx, "provider event completion")
 
 	var eventID int64
 	err = tx.QueryRow(ctx, `

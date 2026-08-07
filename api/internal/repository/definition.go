@@ -23,30 +23,28 @@ type DefinitionRepository struct {
 }
 
 func (repository *DefinitionRepository) Save(ctx context.Context, tokenID int64, definitions []*Definition, tx *pgx.Tx) ([]*Definition, error) {
-	var managedTx pgx.Tx
-	var err error
-
-	// If no transaction provided, create and manage our own
-	if tx == nil {
-		managedTx, err = repository.Db.Begin(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to begin transaction: %w", err)
-		}
-		defer func() {
-			if err == nil {
-				if commitErr := managedTx.Commit(ctx); commitErr != nil {
-					common.Logger.Error("failed to commit transaction in definition repository", "error", commitErr)
-				}
-			} else {
-				if rollbackErr := managedTx.Rollback(ctx); rollbackErr != nil {
-					common.Logger.Error("failed to rollback transaction in definition repository", "error", rollbackErr)
-				}
-			}
-		}()
-	} else {
-		managedTx = *tx
+	if tx != nil {
+		return repository.saveTx(ctx, tokenID, definitions, *tx)
 	}
 
+	var saved []*Definition
+	err := pgx.BeginFunc(ctx, repository.Db, func(managedTx pgx.Tx) error {
+		var saveErr error
+		saved, saveErr = repository.saveTx(ctx, tokenID, definitions, managedTx)
+		return saveErr
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to save definitions transaction: %w", err)
+	}
+	return saved, nil
+}
+
+func (repository *DefinitionRepository) saveTx(
+	ctx context.Context,
+	tokenID int64,
+	definitions []*Definition,
+	tx pgx.Tx,
+) ([]*Definition, error) {
 	// Prepare the definitions insert
 	definitionsInsert := `
         INSERT INTO 
@@ -69,7 +67,7 @@ func (repository *DefinitionRepository) Save(ctx context.Context, tokenID int64,
 		meaning := strings.ToValidUTF8(def.Meaning, "")
 
 		// Execute the query within the transaction
-		err := managedTx.QueryRow(ctx, definitionsInsert, def.Token,
+		err := tx.QueryRow(ctx, definitionsInsert, def.Token,
 			def.Language, def.PartOfSpeech, def.PartOfSpeechNormalized, meaning, def.Examples, def.Inflections,
 			def.Source, def.SourceID, def.Sounds, def.PhoneticNotations).Scan(&def.ID, &createdAt, &updatedAt)
 
@@ -84,7 +82,7 @@ func (repository *DefinitionRepository) Save(ctx context.Context, tokenID int64,
 		def.UpdatedAt = updatedAt
 		definitions[i] = def
 
-		_, err = managedTx.Exec(ctx, wordDefinitionsInsert, tokenID, def.ID)
+		_, err = tx.Exec(ctx, wordDefinitionsInsert, tokenID, def.ID)
 
 		if err != nil {
 			common.Logger.Error("failed to insert word_definition", "def.ID", def.ID, "tokenID", tokenID)
@@ -431,63 +429,55 @@ func (repository *DefinitionRepository) Find(ctx context.Context, args FindArgs)
 	return results, nil
 }
 
-// Delete definitions and word_definitions only if they are associated to a single word.
-// If associated to more than one word, then just dele word_definitions entries.
-// If tx is nil, a new transaction is created and managed internally.
+// DeleteWordDefinitions removes every definition relationship for a word.
+// Definitions used only by this word are deleted; shared definitions remain for
+// their other words. Tracking/history for removed shared relationships is also
+// deleted so no orphaned learning state survives without a word-definition link.
 func (repository *DefinitionRepository) DeleteWordDefinitions(ctx context.Context, wordID int64, tx *pgx.Tx) error {
-	var managedTx pgx.Tx
-	var err error
-
-	// If no transaction provided, create and manage our own
-	if tx == nil {
-		managedTx, err = repository.Db.Begin(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to begin transaction: %w", err)
-		}
-		defer func() {
-			if err == nil {
-				if commitErr := managedTx.Commit(ctx); commitErr != nil {
-					common.Logger.Error("failed to commit transaction in definition repository", "error", commitErr)
-				}
-			} else {
-				if rollbackErr := managedTx.Rollback(ctx); rollbackErr != nil {
-					common.Logger.Error("failed to rollback transaction in definition repository", "error", rollbackErr)
-				}
-			}
-		}()
-	} else {
-		managedTx = *tx
+	if tx != nil {
+		return repository.deleteWordDefinitionsTx(ctx, wordID, *tx)
 	}
 
-	query := `SELECT count(distinct word_id) as count
-				FROM word_definitions 
-				WHERE definition_id IN (SELECT definition_id from word_definitions WHERE word_id=$1)`
-
-	row := managedTx.QueryRow(ctx, query, wordID)
-	var count int
-
-	err = row.Scan(&count)
-
+	err := pgx.BeginFunc(ctx, repository.Db, func(managedTx pgx.Tx) error {
+		return repository.deleteWordDefinitionsTx(ctx, wordID, managedTx)
+	})
 	if err != nil {
-		common.Logger.Error("failed to query how many words use the same definition", "error", err, "wordID", wordID)
-		return err
+		return fmt.Errorf("failed to delete word definitions transaction: %w", err)
+	}
+	return nil
+}
+
+func (repository *DefinitionRepository) deleteWordDefinitionsTx(ctx context.Context, wordID int64, tx pgx.Tx) error {
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM leitner_system_tracking lst
+		USING word_definitions wd
+		WHERE wd.word_id=$1
+		  AND lst.word_id=wd.word_id
+		  AND lst.definition_id=wd.definition_id
+	`, wordID); err != nil {
+		return fmt.Errorf("failed to delete word definition tracking: %w", err)
 	}
 
-	// just one word use these definitions. Drop them'll
-	if count == 1 {
-		// deleting from definitions table cascades to word_definitions and definition_images
-		_, err = managedTx.Exec(ctx, "DELETE FROM definitions WHERE id in (SELECT definition_id from word_definitions WHERE word_id=$1)", wordID)
-		if err != nil {
-			return errors.New("failed to delete definitions")
-		}
-	} else {
-		// definitions are shared. will only delete entries in the many to many table
-		_, err = managedTx.Exec(ctx, "DELETE from word_definitions WHERE word_id=$1", wordID)
-		if err != nil {
-			return errors.New("failed to delete word_definitions")
-		}
+	// Delete each exclusive definition independently. The old aggregate count
+	// preserved every exclusive definition whenever any definition in the target
+	// set was also linked to another word.
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM definitions d
+		WHERE EXISTS (
+			SELECT 1 FROM word_definitions target
+			WHERE target.word_id=$1 AND target.definition_id=d.id
+		)
+		AND NOT EXISTS (
+			SELECT 1 FROM word_definitions other
+			WHERE other.definition_id=d.id AND other.word_id<>$1
+		)
+	`, wordID); err != nil {
+		return fmt.Errorf("failed to delete exclusive definitions: %w", err)
 	}
 
+	if _, err := tx.Exec(ctx, `DELETE FROM word_definitions WHERE word_id=$1`, wordID); err != nil {
+		return fmt.Errorf("failed to delete shared word definitions: %w", err)
+	}
 	return nil
 }
 

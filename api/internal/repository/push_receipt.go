@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"decorebator.com/internal/common"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -31,9 +32,7 @@ func (r *PushReceiptRepository) InsertTickets(ctx context.Context, inserts []Pus
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = tx.Rollback(ctx)
-	}()
+	defer common.RollbackTx(ctx, tx, "push receipt insert")
 
 	for _, insert := range inserts {
 		_, err := tx.Exec(ctx, `

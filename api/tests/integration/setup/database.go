@@ -2,6 +2,7 @@ package setup
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -133,7 +134,7 @@ func CleanTestData(db *pgxpool.Pool) error {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+		if rollbackErr := tx.Rollback(context.WithoutCancel(ctx)); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
 			fmt.Printf("Warning: failed to rollback transaction: %v\n", rollbackErr)
 		}
 	}()
@@ -192,8 +193,8 @@ func WithTransaction(t *testing.T, db *pgxpool.Pool, fn func(tx pgx.Tx)) {
 
 	defer func() {
 		// Always rollback for test isolation
-		err := tx.Rollback(ctx)
-		if err != nil && err != pgx.ErrTxClosed {
+		err := tx.Rollback(context.WithoutCancel(ctx))
+		if err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 			t.Errorf("Failed to rollback transaction: %v", err)
 		}
 	}()

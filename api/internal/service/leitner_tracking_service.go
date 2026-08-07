@@ -60,21 +60,18 @@ func (s *LeitnerTrackingService) IncludeDefinitions(ctx context.Context, wordID,
 //
 // Returns an error if database operations fail.
 func (s *LeitnerTrackingService) UpdateQuizProgress(ctx context.Context, trackingID int64, isCorrect bool, tx *pgx.Tx) error {
-	var execTx pgx.Tx
 	if tx != nil {
-		execTx = *tx
-	} else {
-		// Create transaction if none provided
-		newTx, err := s.db.Begin(ctx)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			_ = newTx.Rollback(ctx) // Log rollback error but don't override the original error
-		}()
-		execTx = newTx
+		return updateQuizProgressTx(ctx, trackingID, isCorrect, *tx)
 	}
+	if err := pgx.BeginFunc(ctx, s.db, func(managedTx pgx.Tx) error {
+		return updateQuizProgressTx(ctx, trackingID, isCorrect, managedTx)
+	}); err != nil {
+		return err
+	}
+	return nil
+}
 
+func updateQuizProgressTx(ctx context.Context, trackingID int64, isCorrect bool, tx pgx.Tx) error {
 	// Proper Leitner system logic with temporary skip on incorrect answers
 	query := `
 		WITH updated AS (
@@ -108,19 +105,10 @@ func (s *LeitnerTrackingService) UpdateQuizProgress(ctx context.Context, trackin
 		FROM updated
 		WHERE lst.id = updated.id`
 
-	_, err := execTx.Exec(ctx, query, isCorrect, trackingID)
+	_, err := tx.Exec(ctx, query, isCorrect, trackingID)
 	if err != nil {
 		return err
 	}
-
-	// If we created the transaction, commit it
-	if tx == nil {
-		err = execTx.Commit(ctx)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 

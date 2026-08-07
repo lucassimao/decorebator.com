@@ -208,7 +208,7 @@ func (repository *UserRepository) Delete(ctx context.Context, userID int64, sche
 	if err != nil {
 		return fmt.Errorf("begin account deletion: %w", err)
 	}
-	defer func() { _ = tx.Rollback(ctx) }()
+	defer common.RollbackTx(ctx, tx, "account deletion")
 
 	// wordlists.user_id does not cascade from users. Deleting each owned
 	// wordlist cascades through its words and their dependent rows; words.user_id

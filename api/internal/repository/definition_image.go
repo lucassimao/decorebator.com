@@ -29,7 +29,7 @@ func (repository *DefinitionImageRepository) Save(ctx context.Context, dto Creat
 			Err: err,
 		}
 	}
-	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
+	defer common.RollbackTx(ctx, tx, "definition image save")
 
 	definitionImage, err := repository.SaveTx(ctx, dto, tx)
 	if err != nil {

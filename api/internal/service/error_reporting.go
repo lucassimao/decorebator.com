@@ -157,7 +157,7 @@ func (ctx *errorReportContext) executeTransaction() error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx.ctx)) }()
+	defer common.RollbackTx(ctx.ctx, tx, "error report submission")
 
 	if validationErr := ctx.lockAndValidateTarget(tx); validationErr != nil {
 		return validationErr

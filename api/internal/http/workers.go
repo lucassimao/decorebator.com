@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"decorebator.com/internal/common"
 	"decorebator.com/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -67,11 +66,9 @@ func (h *WorkerRoutes) GenerateNewDefinition(c *gin.Context) {
 		return
 	}
 
-	// Admin context - delete existing definitions and trigger new generation
-	if deleteErr := h.definitionService.DeleteWordDefinitions(c.Request.Context(), wordID, nil); deleteErr != nil {
-		common.Logger.ErrorContext(c.Request.Context(), "failed to delete word definitions", "wordId", wordID, "error", deleteErr)
-	}
-	jobID, err := h.jobService.ScheduleDefinitionJob(c.Request.Context(), wordID, nil, nil, nil)
+	// Admin context - delete existing definitions and trigger new generation as
+	// one transaction so either both durable changes commit or neither does.
+	jobID, err := h.definitionService.ScheduleDefinitionRegeneration(c.Request.Context(), wordID, h.jobService)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "wordId": wordID})

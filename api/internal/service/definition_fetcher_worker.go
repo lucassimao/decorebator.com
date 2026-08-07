@@ -160,7 +160,7 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 		return beginErr
 	}
-	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
+	defer common.RollbackTx(ctx, tx, "definition generation persistence")
 
 	span = sentry.StartSpan(ctx, "db.definition.save", sentry.WithDescription("definitionService.SaveDefinition"))
 	var reportedDefinitionID *int64

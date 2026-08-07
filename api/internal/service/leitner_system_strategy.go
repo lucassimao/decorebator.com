@@ -1281,30 +1281,7 @@ func (s *LeitnerSystemStrategy) clearEarliestSkipsIfNeeded(ctx context.Context, 
 	return clearedCount, nil
 }
 
-func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(ctx context.Context, quizResult QuizResult, transactionPtr *pgx.Tx) error {
-	var tx pgx.Tx
-	var err error
-
-	if transactionPtr == nil {
-		tx, err = s.db.Begin(ctx)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			if err == nil {
-				if commitErr := tx.Commit(ctx); commitErr != nil {
-					common.Logger.Error("failed to commit transaction in leitner system", "error", commitErr)
-				}
-			} else {
-				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
-					common.Logger.Error("failed to rollback transaction in leitner system", "error", rollbackErr)
-				}
-			}
-		}()
-	} else {
-		tx = *transactionPtr
-	}
-
+func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(ctx context.Context, quizResult QuizResult, tx pgx.Tx) error {
 	// If answer is incorrect, check if we need to clear some skips to prevent blocking all definitions
 	if !quizResult.IsCorrect {
 		clearedCount, clearErr := s.clearEarliestSkipsIfNeeded(ctx, quizResult.UserID, quizResult.WordlistID, quizResult.LeitnerSystemTrackingID, tx)
@@ -1356,7 +1333,7 @@ func (s *LeitnerSystemStrategy) updateLeitnerSystemTracking(ctx context.Context,
 
 	var boxID int64
 	row := tx.QueryRow(ctx, query, quizResult.IsCorrect, quizResult.LeitnerSystemTrackingID)
-	err = row.Scan(&boxID)
+	err := row.Scan(&boxID)
 	if err != nil {
 		return err
 	}
@@ -1380,7 +1357,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	ctx context.Context,
 	quizResult QuizResult,
 	isPremium bool,
-	transactionPtr *pgx.Tx) (returnErr error) {
+	transactionPtr *pgx.Tx) error {
 	var tx pgx.Tx
 	var err error
 	ownsTransaction := transactionPtr == nil
@@ -1390,13 +1367,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 		if err != nil {
 			return err
 		}
-		defer func() {
-			if returnErr != nil {
-				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
-					common.Logger.Error("failed to rollback transaction in leitner system", "error", rollbackErr)
-				}
-			}
-		}()
+		defer common.RollbackTx(ctx, tx, "quiz result")
 	} else {
 		tx = *transactionPtr
 	}
@@ -1434,7 +1405,7 @@ func (s LeitnerSystemStrategy) SaveQuizResult(
 	}
 
 	// Update the Leitner system tracking
-	err = s.updateLeitnerSystemTracking(ctx, quizResult, &tx)
+	err = s.updateLeitnerSystemTracking(ctx, quizResult, tx)
 	if err != nil {
 		return err
 	}
@@ -1531,7 +1502,7 @@ func (s LeitnerSystemStrategy) MarkErrorResolved(ctx context.Context, report Err
 	if err != nil {
 		return err
 	}
-	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
+	defer common.RollbackTx(ctx, tx, "error report resolution")
 
 	if err := s.MarkErrorResolvedTx(ctx, report, report, tx); err != nil {
 		return err
