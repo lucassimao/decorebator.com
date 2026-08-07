@@ -33,10 +33,7 @@ func NewDefinitionService(db *pgxpool.Pool) *DefinitionService {
 }
 
 func (s *DefinitionService) SaveDefinition(ctx context.Context, tokenID int64, definitions []*model.Definition, tx *pgx.Tx) ([]*model.Definition, error) {
-	// Set normalized part-of-speech for each definition before saving
-	for _, def := range definitions {
-		def.PartOfSpeechNormalized = NormalizePartOfSpeech(def.PartOfSpeech, def.Language)
-	}
+	normalizeDefinitionsForPersistence(definitions)
 
 	definitions, err := s.definitionRepository.Save(ctx, tokenID, definitions, tx)
 	if err != nil {
@@ -44,6 +41,35 @@ func (s *DefinitionService) SaveDefinition(ctx context.Context, tokenID int64, d
 	}
 
 	return definitions, nil
+}
+
+func (s *DefinitionService) RegenerateDefinitions(
+	ctx context.Context,
+	wordID, userID int64,
+	reportedDefinitionID *int64,
+	definitions []*model.Definition,
+	tx pgx.Tx,
+) ([]*model.Definition, error) {
+	normalizeDefinitionsForPersistence(definitions)
+	if reportedDefinitionID == nil {
+		return s.definitionRepository.Save(ctx, wordID, definitions, &tx)
+	}
+	regenerated, err := s.definitionRepository.ReplaceReportedDefinition(
+		ctx, wordID, userID, *reportedDefinitionID, definitions, tx,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to replace reported definition: %w", err)
+	}
+	return regenerated, nil
+}
+
+func normalizeDefinitionsForPersistence(definitions []*model.Definition) {
+	for _, def := range definitions {
+		def.PartOfSpeechNormalized = NormalizePartOfSpeech(def.PartOfSpeech, def.Language)
+		for index, example := range def.Examples {
+			def.Examples[index] = strings.ToValidUTF8(example, "")
+		}
+	}
 }
 
 func (s *DefinitionService) GetRandomMeanings(ctx context.Context, scope DistractorScope, definitionIDsToIgnore []int, size int) ([]string, error) {

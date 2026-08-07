@@ -95,6 +95,168 @@ func (repository *DefinitionRepository) Save(ctx context.Context, tokenID int64,
 	return definitions, nil
 }
 
+// ReplaceReportedDefinition installs regenerated content without deleting the
+// reported word's learning state. Exclusive definitions are updated in place;
+// shared definitions are copied and only the reported word's relationship and
+// history are moved to the replacement.
+func (repository *DefinitionRepository) ReplaceReportedDefinition(
+	ctx context.Context,
+	wordID, userID, reportedDefinitionID int64,
+	definitions []*Definition,
+	tx pgx.Tx,
+) ([]*Definition, error) {
+	if len(definitions) == 0 {
+		return nil, errors.New("replacement definition missing")
+	}
+
+	var lockedWordID int64
+	if err := tx.QueryRow(ctx, `
+		SELECT id FROM words WHERE id=$1 AND user_id=$2 FOR UPDATE
+	`, wordID, userID).Scan(&lockedWordID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, common.NotFoundError{ID: wordID, Entity: "word"}
+		}
+		return nil, err
+	}
+
+	var existingNormalizedPOS string
+	if err := tx.QueryRow(ctx, `
+		SELECT COALESCE(NULLIF(d.part_of_speech_normalized, ''), d.part_of_speech)
+		FROM definitions d
+		JOIN word_definitions wd ON wd.definition_id=d.id
+		WHERE d.id=$1 AND wd.word_id=$2
+		FOR UPDATE OF d, wd
+	`, reportedDefinitionID, wordID).Scan(&existingNormalizedPOS); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, common.NotFoundError{ID: reportedDefinitionID, Entity: "word definition"}
+		}
+		return nil, err
+	}
+
+	replacement, err := selectReportedDefinitionReplacement(
+		ctx, tx, wordID, reportedDefinitionID, existingNormalizedPOS, definitions,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var relationshipCount int
+	if err := tx.QueryRow(ctx, `
+		SELECT COUNT(DISTINCT word_id)
+		FROM word_definitions
+		WHERE definition_id=$1
+	`, reportedDefinitionID).Scan(&relationshipCount); err != nil {
+		return nil, err
+	}
+
+	if relationshipCount == 1 {
+		if _, err := tx.Exec(ctx, `DELETE FROM definition_images WHERE definition_id=$1`, reportedDefinitionID); err != nil {
+			return nil, err
+		}
+		if _, err := tx.Exec(ctx, `DELETE FROM definition_example_audio WHERE definition_id=$1`, reportedDefinitionID); err != nil {
+			return nil, err
+		}
+		if err := tx.QueryRow(ctx, `
+			UPDATE definitions SET
+				token=$2, language=$3, part_of_speech=$4,
+				part_of_speech_normalized=$5, meaning=$6, examples=$7,
+				inflections=$8, source=$9, source_id=$10, sounds=$11,
+				phonetic_notations=$12, meaning_audio_url=NULL, updated_at=NOW()
+			WHERE id=$1
+			RETURNING created_at, updated_at
+		`, reportedDefinitionID, replacement.Token, replacement.Language,
+			replacement.PartOfSpeech, replacement.PartOfSpeechNormalized,
+			strings.ToValidUTF8(replacement.Meaning, ""), replacement.Examples,
+			replacement.Inflections, replacement.Source, replacement.SourceID,
+			replacement.Sounds, replacement.PhoneticNotations,
+		).Scan(&replacement.CreatedAt, &replacement.UpdatedAt); err != nil {
+			return nil, err
+		}
+		replacement.ID = reportedDefinitionID
+	} else {
+		inserted, err := repository.Save(ctx, wordID, []*Definition{replacement}, &tx)
+		if err != nil {
+			return nil, err
+		}
+		replacement = inserted[0]
+		if _, err := tx.Exec(ctx, `
+			UPDATE leitner_system_tracking
+			SET definition_id=$1
+			WHERE definition_id=$2 AND word_id=$3 AND user_id=$4
+		`, replacement.ID, reportedDefinitionID, wordID, userID); err != nil {
+			return nil, err
+		}
+		if _, err := tx.Exec(ctx, `
+			UPDATE quiz_performance
+			SET definition_id=$1
+			WHERE definition_id=$2 AND word_id=$3 AND user_id=$4
+		`, replacement.ID, reportedDefinitionID, wordID, userID); err != nil {
+			return nil, err
+		}
+		if _, err := tx.Exec(ctx, `
+			DELETE FROM word_definitions
+			WHERE definition_id=$1 AND word_id=$2
+		`, reportedDefinitionID, wordID); err != nil {
+			return nil, err
+		}
+	}
+
+	// A targeted report replaces only the reported meaning/example. Other
+	// provider results describe relationships that are already present and must
+	// not be appended as duplicate definitions on every regeneration.
+	return []*Definition{replacement}, nil
+}
+
+func canonicalDefinitionMeaning(meaning string) string {
+	return strings.ToLower(strings.TrimSpace(meaning))
+}
+
+func selectReportedDefinitionReplacement(
+	ctx context.Context,
+	tx pgx.Tx,
+	wordID, reportedDefinitionID int64,
+	existingNormalizedPOS string,
+	definitions []*Definition,
+) (*Definition, error) {
+	otherMeanings := make(map[string]struct{})
+	rows, err := tx.Query(ctx, `
+		SELECT meaning
+		FROM definitions d
+		JOIN word_definitions wd ON wd.definition_id=d.id
+		WHERE wd.word_id=$1 AND d.id<>$2
+	`, wordID, reportedDefinitionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var meaning string
+		if err := rows.Scan(&meaning); err != nil {
+			return nil, err
+		}
+		otherMeanings[canonicalDefinitionMeaning(meaning)] = struct{}{}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	for _, definition := range definitions {
+		if !strings.EqualFold(definition.PartOfSpeechNormalized, existingNormalizedPOS) {
+			continue
+		}
+		if _, duplicate := otherMeanings[canonicalDefinitionMeaning(definition.Meaning)]; !duplicate {
+			return definition, nil
+		}
+	}
+	for _, definition := range definitions {
+		if strings.EqualFold(definition.PartOfSpeechNormalized, existingNormalizedPOS) {
+			return definition, nil
+		}
+	}
+	return definitions[0], nil
+}
+
 // all other defitions for the same word defined by the the records which ids are in definitionIdsToIgnore will be ignored too
 func (repository *DefinitionRepository) GetRandomMeanings(
 	ctx context.Context,

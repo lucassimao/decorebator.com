@@ -52,6 +52,18 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	txn := sentry.StartTransaction(ctx, "worker.ImageGenerator", sentry.WithOpName("queue.process"), sentry.WithTransactionSource(sentry.SourceTask))
 	defer txn.Finish()
 	ctx = txn.Context()
+	if job.Args.ErrorReport != nil {
+		if w.leitnerSystemStrategy == nil {
+			return river.JobCancel(errors.New("no leitner strategy configured for reported image regeneration"))
+		}
+		pending, err := w.leitnerSystemStrategy.IsErrorPending(ctx, *job.Args.ErrorReport)
+		if err != nil {
+			return err
+		}
+		if !pending {
+			return nil
+		}
+	}
 
 	var (
 		definitionID = job.Args.DefinitionID
@@ -125,15 +137,39 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 
 	logger.Debug("image generated", "definitionId", definitionID, "url", url)
 
-	span = sentry.StartSpan(ctx, "db.definition_image.save", sentry.WithDescription("definitionImageService.SaveDefinitionImage"))
-	_, err = w.definitionImageService.SaveDefinitionImage(span.Context(), model.CreateDefinitionImageDTO{
+	imageDTO := model.CreateDefinitionImageDTO{
 		API:          model.OPENAI,
 		URL:          url,
 		Description:  longestExample,
 		Model:        "gpt-image-1.5",
 		Prompt:       prompt,
 		DefinitionID: definitionID,
-	})
+	}
+
+	if job.Args.ErrorReport != nil {
+		tx, beginErr := w.leitnerSystemStrategy.db.Begin(ctx)
+		if beginErr != nil {
+			return beginErr
+		}
+		defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
+
+		span = sentry.StartSpan(ctx, "db.definition_image.save", sentry.WithDescription("definitionImageService.SaveDefinitionImageTx"))
+		_, err = w.definitionImageService.SaveDefinitionImageTx(span.Context(), imageDTO, tx)
+		span.Finish()
+		if err != nil {
+			return err
+		}
+		if resolutionErr := w.leitnerSystemStrategy.MarkErrorResolvedTx(ctx, *job.Args.ErrorReport, *job.Args.ErrorReport, tx); resolutionErr != nil {
+			return resolutionErr
+		}
+		if commitErr := tx.Commit(ctx); commitErr != nil {
+			return fmt.Errorf("failed to commit reported image regeneration: %w", commitErr)
+		}
+		return nil
+	}
+
+	span = sentry.StartSpan(ctx, "db.definition_image.save", sentry.WithDescription("definitionImageService.SaveDefinitionImage"))
+	_, err = w.definitionImageService.SaveDefinitionImage(span.Context(), imageDTO)
 	span.Finish()
 
 	if err != nil {
@@ -141,10 +177,6 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 		return err
 	}
 
-	// if this job was triggered by an error report, then mark the issue as solved
-	if job.Args.ErrorReport != nil {
-		return w.resolveErrorReport(ctx, definitionID, *job.Args.ErrorReport)
-	}
 	return nil
 }
 

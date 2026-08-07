@@ -246,12 +246,12 @@ func TestErrorReporting_SnapshotComparison_DestructiveVsNonDestructive(t *testin
 	}
 
 	// Verify foreign key handling differences
-	assertDefinitionIDNullified(t, server.DB, wordID1)                // Destructive - NULL
-	assertDefinitionIDPreserved(t, server.DB, wordID2, definitionID2) // Non-destructive - preserved
+	assertDefinitionIDPreserved(t, server.DB, wordID1, definitionID1)
+	assertDefinitionIDPreserved(t, server.DB, wordID2, definitionID2)
 
 	// Verify definition existence differences
-	assertDefinitionDeleted(t, server.DB, definitionID1)    // Destructive - deleted
-	assertDefinitionNotDeleted(t, server.DB, definitionID2) // Non-destructive - preserved
+	assertDefinitionNotDeleted(t, server.DB, definitionID1)
+	assertDefinitionNotDeleted(t, server.DB, definitionID2)
 }
 
 // TestErrorReporting_QuizContext_SnapshotIncludesQuizDetails tests that quiz context

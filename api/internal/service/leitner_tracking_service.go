@@ -37,7 +37,8 @@ func NewLeitnerTrackingService(db *pgxpool.Pool) *LeitnerTrackingService {
 func (s *LeitnerTrackingService) IncludeDefinitions(ctx context.Context, wordID, userID int64, definitionIDs []int64, tx pgx.Tx) error {
 	for _, definitionID := range definitionIDs {
 		query := `INSERT INTO leitner_system_tracking (user_id, definition_id, box_id, word_id, updated_at, next_review_at)
-		VALUES ($1, $2, $3, $4, NOW(), NOW())`
+		VALUES ($1, $2, $3, $4, NOW(), NOW())
+		ON CONFLICT (definition_id, word_id) DO NOTHING`
 
 		_, err := tx.Exec(ctx, query, userID, definitionID, 1, wordID)
 		if err != nil {
@@ -174,7 +175,10 @@ func buildQuerySelectionFromErrorReport(report ErrorReport) (string, []interface
 	var selection string
 	var queryArgs []interface{}
 
-	if report.DefinitionID != nil {
+	if report.DefinitionID != nil && report.WordID != nil {
+		selection = `WHERE definition_id = $1 AND word_id = $2 AND user_id = $3`
+		queryArgs = []interface{}{*report.DefinitionID, *report.WordID, report.UserID}
+	} else if report.DefinitionID != nil {
 		selection = `WHERE definition_id = $1 AND user_id = $2`
 		queryArgs = []interface{}{*report.DefinitionID, report.UserID}
 	} else if report.WordID != nil {

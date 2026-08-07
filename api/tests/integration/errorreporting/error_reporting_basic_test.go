@@ -12,7 +12,8 @@ import (
 )
 
 // TestErrorReporting_UnrelatedMeaning_BasicFlow tests the basic error reporting flow
-// for unrelated meaning errors, which should delete definitions and create content snapshots
+// for unrelated meaning errors, which retain definitions until replacement commits
+// and create content snapshots.
 func TestErrorReporting_UnrelatedMeaning_BasicFlow(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
@@ -45,11 +46,10 @@ func TestErrorReporting_UnrelatedMeaning_BasicFlow(t *testing.T) {
 		"token":          "water",
 	})
 
-	// Verify definition was deleted (destructive operation)
-	assertDefinitionDeleted(t, server.DB, definitionID)
-
-	// Verify foreign key was nullified for destructive operation
-	assertDefinitionIDNullified(t, server.DB, wordID)
+	// The report transaction retains the exact definition relationship and key;
+	// the worker replaces content atomically after generation succeeds.
+	assertDefinitionNotDeleted(t, server.DB, definitionID)
+	assertDefinitionIDPreserved(t, server.DB, wordID, definitionID)
 
 	// Verify River job was triggered for definition fetching
 	assertDefinitionFetcherJobTriggered(t, server.DB, wordID)
@@ -336,7 +336,7 @@ func TestErrorReporting_UnrelatedExample_DefinitionRegeneration(t *testing.T) {
 	// Verify definition exists before error report
 	assertRecordCount(t, server.DB, "definitions", "id = $1", 1, definitionID)
 
-	// Submit error report for unrelated example (destructive operation)
+	// Submit error report for unrelated example regeneration.
 	resp := submitErrorReport(server, token, wordID, definitionID, "_unrelated_example")
 	resp.Status(200)
 
@@ -351,11 +351,8 @@ func TestErrorReporting_UnrelatedExample_DefinitionRegeneration(t *testing.T) {
 		"token":          "chat",
 	})
 
-	// Verify definition was deleted (destructive operation)
-	assertDefinitionDeleted(t, server.DB, definitionID)
-
-	// Verify foreign key was nullified for destructive operation
-	assertDefinitionIDNullified(t, server.DB, wordID)
+	assertDefinitionNotDeleted(t, server.DB, definitionID)
+	assertDefinitionIDPreserved(t, server.DB, wordID, definitionID)
 
 	// Verify River job was triggered for definition fetching
 	assertDefinitionFetcherJobTriggered(t, server.DB, wordID)

@@ -232,7 +232,7 @@ func TestErrorReporting_SideEffects_LeitnerSystemUpdate(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, trackingExistsBefore, "Leitner system tracking should exist before error report")
 
-	// Submit error report (destructive type that deletes definitions)
+	// Submit an error report that temporarily skips this exact learning row.
 	server.Expect.POST("/errorReports").
 		WithHeader("Authorization", token).
 		WithJSON(map[string]interface{}{
@@ -243,7 +243,7 @@ func TestErrorReporting_SideEffects_LeitnerSystemUpdate(t *testing.T) {
 		Expect().
 		Status(200)
 
-	// Verify that Leitner system tracking was cleaned up (CASCADE delete when definitions are deleted)
+	// Tracking and history remain in place while regeneration is pending.
 	var trackingExistsAfter bool
 	err = server.DB.QueryRow(ctx, `
 		SELECT EXISTS(
@@ -253,7 +253,15 @@ func TestErrorReporting_SideEffects_LeitnerSystemUpdate(t *testing.T) {
 		)
 	`, wordID).Scan(&trackingExistsAfter)
 	require.NoError(t, err)
-	assert.False(t, trackingExistsAfter, "Leitner system tracking should be deleted after destructive error report due to CASCADE constraint")
+	assert.True(t, trackingExistsAfter, "Leitner system tracking must survive pending regeneration")
+	var temporarilySkipped bool
+	err = server.DB.QueryRow(ctx, `
+		SELECT temporarily_skipped_until IS NOT NULL
+		FROM leitner_system_tracking
+		WHERE user_id=(SELECT user_id FROM words WHERE id=$1) AND word_id=$1 AND definition_id=$2
+	`, wordID, definitionID).Scan(&temporarilySkipped)
+	require.NoError(t, err)
+	assert.True(t, temporarilySkipped, "reported content should be skipped only until replacement commits")
 
 	// Verify that River job was triggered for definition fetching (to regenerate deleted definitions)
 	var jobCount int
@@ -364,7 +372,7 @@ func TestErrorReporting_SideEffects_DatabaseConsistency(t *testing.T) {
 	token := server.WithTestUser(t)
 	ctx := context.Background()
 
-	// Create wordlist and word for destructive operation test
+	// Create wordlist and word for atomic regeneration submission.
 	createResp := server.Expect.POST("/wordlists").
 		WithHeader("Authorization", token).
 		WithJSON(map[string]interface{}{
@@ -416,7 +424,7 @@ func TestErrorReporting_SideEffects_DatabaseConsistency(t *testing.T) {
 	assert.Equal(t, 1, wordDefinitionCount, "Should have 1 word_definition initially")
 	assert.Equal(t, 0, errorReportCount, "Should have 0 error reports initially")
 
-	// Submit destructive error report
+	// Submit regeneration error report.
 	server.Expect.POST("/errorReports").
 		WithHeader("Authorization", token).
 		WithJSON(map[string]interface{}{
@@ -435,14 +443,14 @@ func TestErrorReporting_SideEffects_DatabaseConsistency(t *testing.T) {
 	err = server.DB.QueryRow(ctx, "SELECT COUNT(*) FROM error_reports WHERE word_id = $1", wordID).Scan(&errorReportCount)
 	require.NoError(t, err)
 
-	// Verify final state after destructive operation
-	assert.Equal(t, 0, definitionCount, "Definition should be deleted after destructive error report")
-	assert.Equal(t, 0, wordDefinitionCount, "Word_definition should be deleted after destructive error report")
+	// The report transaction cannot remove content before the replacement worker commits.
+	assert.Equal(t, 1, definitionCount, "Definition should remain while regeneration is pending")
+	assert.Equal(t, 1, wordDefinitionCount, "Word_definition should remain while regeneration is pending")
 	assert.Equal(t, 1, errorReportCount, "Should have 1 error report after submission")
 
-	// Verify error report has content snapshot even though definition is deleted
+	// Verify error report has a content snapshot for diagnostics and recovery.
 	var hasSnapshot bool
 	err = server.DB.QueryRow(ctx, "SELECT content_snapshot IS NOT NULL FROM error_reports WHERE word_id = $1", wordID).Scan(&hasSnapshot)
 	require.NoError(t, err)
-	assert.True(t, hasSnapshot, "Error report should have content snapshot even after definition deletion")
+	assert.True(t, hasSnapshot, "Error report should have a content snapshot while regeneration is pending")
 }

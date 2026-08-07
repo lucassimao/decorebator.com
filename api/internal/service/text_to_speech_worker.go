@@ -44,6 +44,10 @@ func NewTextToSpeechWorker(wordService *WordService, definitionService *Definiti
 
 func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpeechArgs]) error {
 	logger := common.Logger.With("worker", "texttospeech", "WordID", job.Args.WordID, "UserID", job.Args.UserID)
+	skip, pendingErr := w.shouldSkipReportedAudio(ctx, job.Args.ErrorReport)
+	if pendingErr != nil || skip {
+		return pendingErr
+	}
 
 	// Validate user eligibility before processing (skip for admin/system jobs)
 	if job.Args.UserID != nil {
@@ -106,15 +110,37 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 
 	logger.Debug("audio generated", "wordId", word.ID, "url", word.AudioURL, "word", word.Name)
 
-	err = w.wordService.UpdateWord(ctx, word, nil)
+	return w.persistRegeneratedWordAudio(ctx, word, job.Args.ErrorReport)
+}
+
+func (w *TextToSpeechWorker) shouldSkipReportedAudio(ctx context.Context, report *ErrorReport) (bool, error) {
+	if report == nil {
+		return false, nil
+	}
+	if w.leitnerSystemStrategy == nil {
+		return false, river.JobCancel(errors.New("no leitner strategy configured for reported audio regeneration"))
+	}
+	pending, err := w.leitnerSystemStrategy.IsErrorPending(ctx, *report)
+	return !pending, err
+}
+
+func (w *TextToSpeechWorker) persistRegeneratedWordAudio(ctx context.Context, word *Word, report *ErrorReport) error {
+	if report == nil {
+		return w.wordService.UpdateWord(ctx, word, nil)
+	}
+	tx, err := w.leitnerSystemStrategy.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
-
-	// if this job was triggered by an error report, then mark the issue as solved
-	if job.Args.ErrorReport != nil {
-		return w.leitnerSystemStrategy.MarkErrorResolved(ctx, *job.Args.ErrorReport)
+	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
+	if err := w.wordService.UpdateWord(ctx, word, &tx); err != nil {
+		return err
 	}
-
+	if err := w.leitnerSystemStrategy.MarkErrorResolvedTx(ctx, *report, *report, tx); err != nil {
+		return err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit reported audio regeneration: %w", err)
+	}
 	return nil
 }

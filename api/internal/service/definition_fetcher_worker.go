@@ -56,6 +56,15 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	txn := sentry.StartTransaction(ctx, "worker.DefinitionFetcher", sentry.WithOpName("queue.process"), sentry.WithTransactionSource(sentry.SourceTask))
 	defer txn.Finish()
 	ctx = txn.Context()
+	if job.Args.ErrorReport != nil {
+		pending, err := w.leitnerSystemStrategy.IsErrorPending(ctx, *job.Args.ErrorReport)
+		if err != nil {
+			return err
+		}
+		if !pending {
+			return nil
+		}
+	}
 
 	// Validate user eligibility before processing (skip if userID is nil - admin context)
 	if job.Args.UserID != nil {
@@ -145,34 +154,43 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 	// Get database connection for transaction
 	tx, err := w.db.Begin(ctx)
 	if err != nil {
-		if err = w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", "Failed to start database transaction", nil); err != nil {
-			logger.ErrorContext(ctx, "failed to update processing status", "wordId", wordID, "error", err)
+		beginErr := err
+		if updateErr := w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", "Failed to start database transaction", nil); updateErr != nil {
+			logger.ErrorContext(ctx, "failed to update processing status", "wordId", wordID, "error", updateErr)
 		}
-		return err
+		return beginErr
 	}
 	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
 
 	span = sentry.StartSpan(ctx, "db.definition.save", sentry.WithDescription("definitionService.SaveDefinition"))
-	definitions, err := w.definitionService.SaveDefinition(span.Context(), word.ID, definitionData.Definitions, &tx)
+	var reportedDefinitionID *int64
+	if job.Args.ErrorReport != nil {
+		reportedDefinitionID = job.Args.ErrorReport.DefinitionID
+	}
+	definitions, err := w.definitionService.RegenerateDefinitions(
+		span.Context(), word.ID, word.UserID, reportedDefinitionID, definitionData.Definitions, tx,
+	)
 	span.Finish()
 
 	if err != nil {
+		regenerationErr := err
 		logger.Error("failed to save definitions", "error", err)
-		if err = w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", "Failed to save definitions", nil); err != nil {
-			logger.Error("failed to update processing status", "wordId", wordID, "error", err)
+		if updateErr := w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", "Failed to save definitions", nil); updateErr != nil {
+			logger.Error("failed to update processing status", "wordId", wordID, "error", updateErr)
 		}
-		return err
+		return regenerationErr
 	}
 
 	// Save pronunciation to word table
 	if definitionData.Pronunciation != "" {
 		err = w.wordService.UpdatePronunciation(ctx, word.ID, definitionData.Pronunciation, &tx)
 		if err != nil {
+			pronunciationErr := err
 			logger.Error("failed to save pronunciation", "error", err)
-			if err = w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", "Failed to save pronunciation", nil); err != nil {
-				logger.Error("failed to update processing status", "wordId", wordID, "error", err)
+			if updateErr := w.wordService.UpdateProcessingStatus(ctx, wordID, "failed", "Failed to save pronunciation", nil); updateErr != nil {
+				logger.Error("failed to update processing status", "wordId", wordID, "error", updateErr)
 			}
-			return err
+			return pronunciationErr
 		}
 		logger.Info("pronunciation saved", "pronunciation", definitionData.Pronunciation, "wordId", word.ID)
 	}
@@ -184,12 +202,12 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		_, err = w.jobService.ScheduleImageJob(ctx, definition.ID, job.Args.UserID, nil, &tx)
 
 		if err != nil {
-			logger.Error("failed to trigger image generator", "definitionId", definition.ID, "error", err)
+			return fmt.Errorf("failed to queue image for definition %d: %w", definition.ID, err)
 		}
 
 		err = w.jobService.ScheduleExampleAudioJob(ctx, definition.ID, word.ID, job.Args.UserID, &tx)
 		if err != nil {
-			logger.Error("failed to queue example audio job", "definitionId", definition.ID, "wordId", word.ID, "error", err)
+			return fmt.Errorf("failed to queue example audio for definition %d: %w", definition.ID, err)
 		}
 
 		if definition.Meaning != "" {
@@ -203,20 +221,23 @@ func (w *DefinitionFetcherWorker) Work(ctx context.Context, job *river.Job[Defin
 		}
 	}
 	if includeErr := w.leitnerTrackingService.IncludeDefinitions(ctx, word.ID, word.UserID, definitionIDs, tx); includeErr != nil {
-		logger.Error("failed to include definitions in quiz strategy", "wordId", word.ID, "error", includeErr)
+		return fmt.Errorf("failed to include definitions in quiz strategy: %w", includeErr)
 	}
 
 	// if this job was triggered by an error report, then mark the issue as solved
 	if job.Args.ErrorReport != nil {
-		if err := w.leitnerSystemStrategy.MarkErrorResolved(ctx, *job.Args.ErrorReport); err != nil {
+		replacementReport := *job.Args.ErrorReport
+		if replacementReport.DefinitionID != nil {
+			replacementReport.DefinitionID = &definitions[0].ID
+		}
+		if err := w.leitnerSystemStrategy.MarkErrorResolvedTx(ctx, *job.Args.ErrorReport, replacementReport, tx); err != nil {
 			return err
 		}
 	}
 
 	// Update word processing status to "completed"
 	if err := w.wordService.UpdateProcessingStatus(ctx, wordID, "completed", "", &tx); err != nil {
-		logger.Error("failed to update processing status to completed", "wordId", wordID, "error", err)
-		// Don't fail the whole operation if status update fails
+		return fmt.Errorf("failed to update processing status to completed: %w", err)
 	}
 
 	logger.Info("definitions fetched", "count", len(definitions))

@@ -7,6 +7,7 @@ import (
 
 	"decorebator.com/internal/common"
 	rep "decorebator.com/internal/repository"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -30,5 +31,13 @@ func (s *DefinitionImageService) SaveDefinitionImage(ctx context.Context, dto re
 		return nil, fmt.Errorf(msg+": %w", err)
 	}
 
+	return definitionImage, nil
+}
+
+func (s *DefinitionImageService) SaveDefinitionImageTx(ctx context.Context, dto rep.CreateDefinitionImageDTO, tx pgx.Tx) (*rep.DefinitionImage, error) {
+	definitionImage, err := s.definitionImageRepository.SaveTx(ctx, dto, tx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to save definition image: %w", err)
+	}
 	return definitionImage, nil
 }

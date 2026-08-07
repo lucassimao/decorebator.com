@@ -1528,48 +1528,93 @@ func (s LeitnerSystemStrategy) MarkErrorResolved(ctx context.Context, report Err
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err == nil {
-			if commitErr := tx.Commit(ctx); commitErr != nil {
-				common.Logger.Error("failed to commit transaction in mark error resolved", "error", commitErr)
-			}
-		} else {
-			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
-				common.Logger.Error("failed to rollback transaction in mark error resolved", "error", rollbackErr)
-			}
-		}
-	}()
+	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
 
-	// Clear temporary skip using tracking service
-	err = s.leitnerTrackingService.ClearTemporarySkip(ctx, report, tx)
-	if err != nil {
+	if err := s.MarkErrorResolvedTx(ctx, report, report, tx); err != nil {
 		return err
 	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit error resolution: %w", err)
+	}
+	return nil
+}
 
-	// Mark error reports as resolved (this is not part of tracking, so we handle it here)
-	var errorReportsUpdate string
-	var queryArgs []interface{}
+// IsErrorPending prevents a retried River job from repeating provider work
+// after its previous attempt committed successfully but crashed before acking.
+func (s LeitnerSystemStrategy) IsErrorPending(ctx context.Context, report ErrorReport) (bool, error) {
+	selection, queryArgs, err := buildErrorReportSelection(report)
+	if err != nil {
+		return false, err
+	}
+	var pending bool
+	err = s.db.QueryRow(ctx, `SELECT EXISTS(
+		SELECT 1 FROM error_reports WHERE status='pending' AND `+selection+`
+	)`, queryArgs...).Scan(&pending)
+	return pending, err
+}
 
-	if report.DefinitionID != nil {
-		errorReportsUpdate = `UPDATE error_reports SET status = 'resolved', resolved_at = NOW() WHERE user_id = $1 AND definition_id = $2`
-		queryArgs = []interface{}{report.UserID, *report.DefinitionID}
-	} else if report.WordID != nil {
-		errorReportsUpdate = `UPDATE error_reports SET status = 'resolved', resolved_at = NOW() WHERE user_id = $1 AND word_id = $2`
-		queryArgs = []interface{}{report.UserID, *report.WordID}
-	} else {
+var ErrErrorReportNotPending = errors.New("error report is no longer pending")
+
+// MarkErrorResolvedTx clears the replacement tracking row and resolves the
+// original report in the same transaction that installs regenerated content.
+func (s LeitnerSystemStrategy) MarkErrorResolvedTx(ctx context.Context, originalReport, replacementReport ErrorReport, tx pgx.Tx) error {
+	if originalReport.DefinitionID == nil && originalReport.WordID == nil {
 		return errors.New("definition or word missing")
 	}
 
-	// Mark error reports as resolved
-	_, err = tx.Exec(ctx, errorReportsUpdate, queryArgs...)
+	selection, queryArgs, err := buildErrorReportSelection(originalReport)
+	if err != nil {
+		return err
+	}
+	tag, err := tx.Exec(ctx, `
+		UPDATE error_reports
+		SET status='resolved', resolved_at=NOW(), updated_at=NOW()
+		WHERE status='pending' AND `+selection, queryArgs...)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrErrorReportNotPending
+	}
 
-	return err
+	// Clear the replacement's temporary skip only after proving that this exact
+	// job still owns a pending report. A superseded job then rolls back its
+	// content transaction instead of re-exposing the newer report's bad item.
+	return s.leitnerTrackingService.ClearTemporarySkip(ctx, replacementReport, tx)
+}
+
+func buildErrorReportSelection(report ErrorReport) (string, []any, error) {
+	errorTypeClause := ""
+	if report.ErrorType != "" {
+		errorTypeClause = " AND error_type=$4"
+	}
+	if report.DefinitionID != nil && report.WordID != nil {
+		args := []any{report.UserID, *report.DefinitionID, *report.WordID}
+		if report.ErrorType != "" {
+			args = append(args, report.ErrorType)
+		}
+		return `user_id=$1 AND definition_id=$2 AND word_id=$3` + errorTypeClause, args, nil
+	}
+	if report.DefinitionID != nil {
+		if report.ErrorType != "" {
+			return `user_id=$1 AND definition_id=$2 AND error_type=$3`, []any{report.UserID, *report.DefinitionID, report.ErrorType}, nil
+		}
+		return `user_id=$1 AND definition_id=$2`, []any{report.UserID, *report.DefinitionID}, nil
+	}
+	if report.WordID != nil {
+		if report.ErrorType != "" {
+			return `user_id=$1 AND word_id=$2 AND error_type=$3`, []any{report.UserID, *report.WordID, report.ErrorType}, nil
+		}
+		return `user_id=$1 AND word_id=$2`, []any{report.UserID, *report.WordID}, nil
+	}
+	return "", nil, errors.New("definition or word missing")
 }
 
 type ErrorReport struct {
 	DefinitionID *int64 `json:"definitionId"`
 	WordID       *int64 `json:"wordId"`
 	UserID       int64  `json:"userId"`
+	ErrorType    string `json:"errorType,omitempty"`
 }
 
 // selectBalancedQuizType selects a quiz type from available types, favoring those that have been used less recently.

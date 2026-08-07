@@ -6,6 +6,7 @@ import (
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -21,33 +22,36 @@ func NewDefinitionImageRepository(db *pgxpool.Pool) *DefinitionImageRepository {
 }
 
 func (repository *DefinitionImageRepository) Save(ctx context.Context, dto CreateDefinitionImageDTO) (*DefinitionImage, error) {
-	var def DefinitionImage
-
-	// Start a transaction
 	tx, err := repository.db.Begin(ctx)
 	if err != nil {
-		err = &common.DatabaseError{
+		return nil, &common.DatabaseError{
 			Msg: "failed to open transaction",
 			Err: err,
 		}
+	}
+	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
+
+	definitionImage, err := repository.SaveTx(ctx, dto, tx)
+	if err != nil {
 		return nil, err
 	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, &common.DatabaseError{Msg: "failed to commit transaction", Err: err}
+	}
+	return definitionImage, nil
+}
 
-	// handle rollback if needed
-	defer func() {
-		if err != nil {
-			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
-				common.Logger.Error("failed to rollback transaction in definition image repository", "error", rollbackErr)
-			}
-		}
-	}()
+// SaveTx hides prior images and inserts the replacement in the caller's
+// transaction so report resolution can commit atomically with the new image.
+func (repository *DefinitionImageRepository) SaveTx(ctx context.Context, dto CreateDefinitionImageDTO, tx pgx.Tx) (*DefinitionImage, error) {
+	var def DefinitionImage
 
 	// existing images will be hidden
-	_, err = tx.Exec(ctx, "UPDATE definition_images SET is_visible=$1 WHERE definition_id=$2", false, dto.DefinitionID)
+	_, err := tx.Exec(ctx, "UPDATE definition_images SET is_visible=$1 WHERE definition_id=$2", false, dto.DefinitionID)
 
 	if err != nil {
 		err = &common.DatabaseError{
-			Msg: fmt.Sprintf("failed to hide existing images for definition #%d", def.ID),
+			Msg: fmt.Sprintf("failed to hide existing images for definition #%d", dto.DefinitionID),
 			Err: err,
 		}
 		return nil, err
@@ -68,14 +72,6 @@ func (repository *DefinitionImageRepository) Save(ctx context.Context, dto Creat
 	if err != nil {
 		err = &common.DatabaseError{
 			Msg: "failed to insert definition",
-			Err: err,
-		}
-		return nil, err
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		err = &common.DatabaseError{
-			Msg: "failed to commit transaction",
 			Err: err,
 		}
 		return nil, err

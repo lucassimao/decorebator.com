@@ -48,25 +48,6 @@ func assertContentSnapshotContains(t *testing.T, db *pgxpool.Pool, wordID int64,
 	assert.True(t, exists, "Snapshot should contain captured_at timestamp")
 }
 
-func assertDefinitionDeleted(t *testing.T, db *pgxpool.Pool, definitionID int64) {
-	ctx := context.Background()
-	var count int
-	err := db.QueryRow(ctx, "SELECT COUNT(*) FROM definitions WHERE id = $1", definitionID).Scan(&count)
-	require.NoError(t, err)
-	assert.Equal(t, 0, count, "Definition should be deleted")
-}
-
-func assertDefinitionIDNullified(t *testing.T, db *pgxpool.Pool, wordID int64) {
-	ctx := context.Background()
-	var definitionID *int64
-	err := db.QueryRow(ctx, `
-		SELECT definition_id FROM error_reports 
-		WHERE word_id = $1 ORDER BY reported_at DESC LIMIT 1
-	`, wordID).Scan(&definitionID)
-	require.NoError(t, err)
-	assert.Nil(t, definitionID, "Definition ID should be NULL for destructive operations")
-}
-
 func assertDefinitionNotDeleted(t *testing.T, db *pgxpool.Pool, definitionID int64) {
 	ctx := context.Background()
 	var count int

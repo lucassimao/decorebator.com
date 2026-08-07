@@ -192,6 +192,21 @@ func (r *ErrorReportRepository) GetErrorReportStats(ctx context.Context, startTi
 
 // CheckCooldown checks if a user is in cooldown for a specific error report
 func (r *ErrorReportRepository) CheckCooldown(ctx context.Context, userID int64, wordID int64, definitionID *int64, errorType string) (*time.Time, error) {
+	return checkCooldown(ctx, r.db, userID, wordID, definitionID, errorType)
+}
+
+// CheckCooldownTx performs the authoritative cooldown check inside the caller's
+// transaction. Error reporting uses this after locking the owned word so two
+// concurrent requests cannot both pass the initial advisory check.
+func (r *ErrorReportRepository) CheckCooldownTx(ctx context.Context, tx pgx.Tx, userID int64, wordID int64, definitionID *int64, errorType string) (*time.Time, error) {
+	return checkCooldown(ctx, tx, userID, wordID, definitionID, errorType)
+}
+
+type cooldownQuerier interface {
+	QueryRow(context.Context, string, ...any) pgx.Row
+}
+
+func checkCooldown(ctx context.Context, querier cooldownQuerier, userID int64, wordID int64, definitionID *int64, errorType string) (*time.Time, error) {
 	var cooldownUntil *time.Time
 
 	// Convert pointer to interface{} for SQL parameter
@@ -213,7 +228,7 @@ func (r *ErrorReportRepository) CheckCooldown(ctx context.Context, userID int64,
 		LIMIT 1
 	`
 
-	err := r.db.QueryRow(ctx, query, userID, wordID, defIDParam, errorType).Scan(&cooldownUntil)
+	err := querier.QueryRow(ctx, query, userID, wordID, defIDParam, errorType).Scan(&cooldownUntil)
 	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
@@ -290,6 +305,15 @@ func (r *ErrorReportRepository) UpsertErrorReport(ctx context.Context, tx pgx.Tx
 			AND definition_id IS NOT DISTINCT FROM $2
 			AND word_id = $3
 			AND status = 'pending'
+			AND CASE
+				WHEN error_type IN ('_unrelated_meaning', '_unrelated_example') THEN 'definition'
+				WHEN error_type IN ('_unrelated_image', '_missing_image') THEN 'image'
+				ELSE error_type
+			END = CASE
+				WHEN $4 IN ('_unrelated_meaning', '_unrelated_example') THEN 'definition'
+				WHEN $4 IN ('_unrelated_image', '_missing_image') THEN 'image'
+				ELSE $4
+			END
 	`, userID, defIDParam, wordID, errorType, snapshotJSON)
 	if err != nil {
 		return err
