@@ -23,32 +23,41 @@ import (
 
 const productionEnv = "production"
 
-func Authenticate(tokens *service.AccessTokenService, users *repository.UserRepository) gin.HandlerFunc {
+func Authenticate(sessions *service.AuthSessionService, users *repository.UserRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		const BearerSchema = "Bearer "
-		authorization, err := c.Cookie("Authorization")
-		if err == http.ErrNoCookie {
-			authorization = c.GetHeader("Authorization")
+		authorization := c.GetHeader("Authorization")
+		if authorization == "" {
+			authorization, _ = c.Cookie("Authorization")
 		}
 		if authorization == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization missing"})
 			return
 		}
 		tokenString := strings.TrimPrefix(authorization, BearerSchema)
-		userID, err := tokens.Validate(tokenString)
+		identity, err := sessions.ValidateAccess(c.Request.Context(), tokenString)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token validation error"})
+			if errors.Is(err, service.ErrInvalidAccessToken) || errors.Is(err, repository.ErrSessionExpired) {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token validation error"})
+			} else {
+				c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Authentication temporarily unavailable"})
+			}
 			return
 		}
-		currentUsers, err := users.Find(c.Request.Context(), repository.FindUserArgs{ID: &userID})
-		if err != nil || len(currentUsers) != 1 {
+		currentUsers, err := users.Find(c.Request.Context(), repository.FindUserArgs{ID: &identity.UserID})
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Authentication temporarily unavailable"})
+			return
+		}
+		if len(currentUsers) != 1 {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			return
 		}
 		user := currentUsers[0]
 		user.PasswordHash = ""
 		user.StripeCustomerID = nil
-		c.Set("userID", userID)
+		c.Set("userID", identity.UserID)
+		c.Set("sessionID", identity.SessionID)
 		c.Set("user", &user)
 		c.Next()
 	}

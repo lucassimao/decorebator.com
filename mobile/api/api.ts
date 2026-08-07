@@ -3,7 +3,7 @@ import {
   DEFAULT_ERROR,
   TOKEN_VALIDATION_ERROR,
 } from "./constants";
-import { getAuthorization, sigout } from "./users";
+import { authenticatedFetch, getAuthorization, sigout } from "./users";
 import { router } from "expo-router";
 
 export async function callAPI<T>(
@@ -27,7 +27,7 @@ export async function callAPI<T>(
 
   // Race between fetch and timeout
   const response = await Promise.race([
-    fetch(endpoint, {
+    authenticatedFetch(endpoint, {
       method,
       headers: {
         authorization,

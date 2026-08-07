@@ -1,4 +1,4 @@
-import { getAuthorization } from "./users";
+import { authenticatedFetch, getAuthorization } from "./users";
 import { DEFAULT_ERROR } from "./constants";
 import { Platform, Linking } from "react-native";
 import { getApiBaseUrl } from "./baseUrl";
@@ -36,7 +36,7 @@ export async function createCheckoutSession(
     throw new Error("Authentication required");
   }
 
-  const response = await fetch(endpoint, {
+  const response = await authenticatedFetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -61,7 +61,7 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
     throw new Error("Authentication required");
   }
 
-  const response = await fetch(endpoint, {
+  const response = await authenticatedFetch(endpoint, {
     method: "GET",
     headers: {
       Authorization: authorization,

@@ -23,7 +23,13 @@ type UserRepository struct {
 // Save creates a new user in the database
 // country parameter can be nil, which will insert NULL into the database
 // Note: Validation should be performed at the service layer before calling this function
-func (repository *UserRepository) Save(ctx context.Context, firstName, lastName, password, email string, country *string, preferredLanguage *string) (*User, error) {
+func (repository *UserRepository) Save(
+	ctx context.Context,
+	firstName, lastName, password, email string,
+	country *string,
+	preferredLanguage *string,
+	transactions ...pgx.Tx,
+) (*User, error) {
 	canonicalEmail, err := common.NormalizeEmail(email)
 	if err != nil {
 		return nil, common.ErrInvalidEmailAddress
@@ -66,7 +72,13 @@ func (repository *UserRepository) Save(ctx context.Context, firstName, lastName,
 		preferredLanguageParam = nil
 	}
 
-	err = repository.Db.QueryRow(ctx, query, firstName, lastName, user.PasswordHash, email, countryParam, preferredLanguageParam, model.PlanFree, true).Scan(
+	var queryer interface {
+		QueryRow(context.Context, string, ...any) pgx.Row
+	} = repository.Db
+	if len(transactions) > 0 {
+		queryer = transactions[0]
+	}
+	err = queryer.QueryRow(ctx, query, firstName, lastName, user.PasswordHash, email, countryParam, preferredLanguageParam, model.PlanFree, true).Scan(
 		&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
 		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt, &user.NotificationsEnabled)
 	if err != nil {
@@ -155,20 +167,18 @@ func (repository *UserRepository) Find(ctx context.Context, args FindUserArgs) (
 }
 
 func (repository *UserRepository) UpdatePassword(ctx context.Context, userID int64, newPassword string) error {
-	query := `UPDATE users SET password_hash = $1, updated_at=NOW() WHERE ID = $2`
-
 	bytes, err := bcrypt.GenerateFromPassword([]byte(newPassword), common.GetBcryptCost())
-	passwordHash := string(bytes)
 	if err != nil {
 		return err
 	}
-
-	_, err = repository.Db.Exec(ctx, query, passwordHash, userID)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return pgx.BeginFunc(ctx, repository.Db, func(tx pgx.Tx) error {
+		if _, err := tx.Exec(ctx, `
+			UPDATE users SET password_hash=$1,updated_at=NOW() WHERE id=$2
+		`, string(bytes), userID); err != nil {
+			return err
+		}
+		return revokeAuthSessionsTx(ctx, tx, userID, "password_reset")
+	})
 }
 
 func (repository *UserRepository) UpdateLastPracticeAt(ctx context.Context, userID int64) error {
@@ -275,23 +285,49 @@ func (repository *UserRepository) UpdateUserProfile(ctx context.Context, args Up
 		passwordHash = &hash
 	}
 
-	user := User{}
-	err := repository.Db.QueryRow(ctx, query,
-		args.ID, args.FirstName, args.LastName, args.Country, args.DateOfBirth, args.PreferredLanguage,
-		args.ProfilePictureURL, passwordHash, args.NotificationsEnabled).Scan(
-		&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
-		&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
-		&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt,
-		&user.NotificationsEnabled, &user.CreatedAt, &user.UpdatedAt)
+	update := func(queryer interface {
+		QueryRow(context.Context, string, ...any) pgx.Row
+	}) (*User, error) {
+		user := User{}
+		err := queryer.QueryRow(ctx, query,
+			args.ID, args.FirstName, args.LastName, args.Country, args.DateOfBirth, args.PreferredLanguage,
+			args.ProfilePictureURL, passwordHash, args.NotificationsEnabled).Scan(
+			&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash,
+			&user.ProfilePictureURL, &user.Country, &user.DateOfBirth, &user.PreferredLanguage,
+			&user.SubscriptionPlan, &user.SubscriptionStatus, &user.StripeCustomerID, &user.SubscriptionEndsAt,
+			&user.NotificationsEnabled, &user.CreatedAt, &user.UpdatedAt)
 
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, common.BusinessError{Message: "User not found"}
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, common.BusinessError{Message: "User not found"}
+			}
+			return nil, err
 		}
-		return nil, err
+		return &user, nil
 	}
+	if args.Password == nil {
+		return update(repository.Db)
+	}
+	var updated *User
+	err := pgx.BeginFunc(ctx, repository.Db, func(tx pgx.Tx) error {
+		var updateErr error
+		updated, updateErr = update(tx)
+		if updateErr != nil {
+			return updateErr
+		}
+		return revokeAuthSessionsTx(ctx, tx, args.ID, "password_change")
+	})
+	return updated, err
+}
 
-	return &user, nil
+func revokeAuthSessionsTx(ctx context.Context, tx pgx.Tx, userID int64, reason string) error {
+	_, err := tx.Exec(ctx, `
+		UPDATE auth_session_families
+		SET revoked_at=COALESCE(revoked_at,NOW()),
+			revocation_reason=COALESCE(revocation_reason,$2)
+		WHERE user_id=$1
+	`, userID, reason)
+	return err
 }
 
 // UpdateSubscriptionPlan updates a user's subscription plan

@@ -40,7 +40,7 @@ func TestSignupLoginFlow(t *testing.T) {
 		require.NotEmpty(t, authToken, "Authorization token should be present")
 
 		// Verify JWT token is also set as cookie
-		signupResponse.Cookies().ContainsOnly("Authorization")
+		signupResponse.Cookies().ContainsOnly("Authorization", "RefreshToken")
 		cookie := signupResponse.Cookie("Authorization")
 		cookie.Value().NotEmpty()
 		assert.Equal(t, authToken, cookie.Value().Raw(), "Token in header should match cookie")
@@ -64,7 +64,7 @@ func TestSignupLoginFlow(t *testing.T) {
 		require.NotEmpty(t, loginToken, "Authorization token should be present after login")
 
 		// Verify JWT token is also set as cookie
-		loginResponse.Cookies().ContainsOnly("Authorization")
+		loginResponse.Cookies().ContainsOnly("Authorization", "RefreshToken")
 		loginCookie := loginResponse.Cookie("Authorization")
 		loginCookie.Value().NotEmpty()
 		assert.Equal(t, loginToken, loginCookie.Value().Raw(), "Login token in header should match cookie")

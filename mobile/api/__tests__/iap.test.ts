@@ -11,6 +11,7 @@ jest.mock("@/api/baseUrl", () => ({
 }));
 jest.mock("@/api/users", () => ({
   getAuthorization: jest.fn(),
+  authenticatedFetch: (...args: Parameters<typeof fetch>) => fetch(...args),
 }));
 
 const envelope = {

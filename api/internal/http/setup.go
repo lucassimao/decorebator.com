@@ -31,14 +31,14 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	// Create repository instances
 	subRepo := repository.NewSubscriptionRepository(appCtx.Database)
 	userRepo := &repository.UserRepository{Db: appCtx.Database}
-	authenticate := Authenticate(appCtx.AuthTokens, userRepo)
+	authenticate := Authenticate(appCtx.AuthSessions, userRepo)
 	pushTokenRepo := &repository.PushTokenRepository{Db: appCtx.Database}
 
 	// Initialize route handlers using services from AppContext
 	var WordRoutes = NewWordRoutes(appCtx.WordService, appCtx.WordlistService, appCtx.DefinitionService)
 	var WorkerRoutes = NewWorkerRoutes(appCtx.DefinitionService, appCtx.JobService)
 	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService, appCtx.DefinitionService)
-	var UserRoutes = NewUserRoutes(appCtx.UserService, appCtx.MailService)
+	var UserRoutes = NewUserRoutes(appCtx.UserService, appCtx.MailService, appCtx.AuthSessions)
 	// Use Leitner strategy from AppContext
 	var quizRoutes = NewQuizRoutes(appCtx.LeitnerSystemStrategy, userRepo)
 	var ErrorReportsRoutes = NewErrorReportRoutes(appCtx.ErrorReportService)
@@ -59,7 +59,8 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	// Routes without authentication
 	{
 		router.POST("/users", UserRoutes.SignUp)
-		router.GET("/logout", UserRoutes.Logout)
+		router.POST("/logout", UserRoutes.Logout)
+		router.POST("/session/refresh", UserRoutes.Refresh)
 		router.POST("/login", UserRoutes.Login)
 		router.PATCH("/password/reset", UserRoutes.ResetPassword)
 		router.POST("/password/send-reset-email", UserRoutes.SendResetPasswordEmail)

@@ -35,6 +35,7 @@ type Context struct {
 	WordlistService              *service.WordlistService
 	UserService                  *service.UserService
 	AuthTokens                   *service.AccessTokenService
+	AuthSessions                 *service.AuthSessionService
 	DefinitionService            *service.DefinitionService
 	DefinitionImageService       *service.DefinitionImageService
 	SubscriptionService          *service.SubscriptionService
@@ -211,13 +212,22 @@ func (b *ContextBuilder) Build() (*Context, error) {
 	b.context.LegacyProviderSurfaceEnabled = legacyProviderConfig.Enabled
 	b.context.LegacyRevenueCatWebhookAuth = legacyProviderConfig.RevenueCatWebhookAuthorization
 	if b.context.AuthTokens == nil {
-		authConfig, err := config.LoadAuthConfig()
-		if err != nil {
-			return nil, fmt.Errorf("failed to configure authentication: %w", err)
+		authConfig, authErr := config.LoadAuthConfig()
+		if authErr != nil {
+			return nil, fmt.Errorf("failed to configure authentication: %w", authErr)
 		}
 		b.context.AuthTokens, err = service.NewAccessTokenService(authConfig)
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize authentication: %w", err)
+		}
+	}
+	if b.context.AuthSessions == nil {
+		b.context.AuthSessions, err = service.NewAuthSessionService(
+			repository.NewAuthSessionRepository(b.context.Database),
+			b.context.AuthTokens,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize auth sessions: %w", err)
 		}
 	}
 
@@ -366,7 +376,7 @@ func (b *ContextBuilder) initializeServices() error { //nolint:gocyclo // Sequen
 		b.context.UserService = service.NewUserService(
 			b.context.Database,
 			b.context.SubscriptionService,
-			b.context.AuthTokens,
+			b.context.AuthSessions,
 			b.context.JobService,
 		)
 	}

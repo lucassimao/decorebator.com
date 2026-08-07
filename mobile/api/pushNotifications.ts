@@ -1,5 +1,5 @@
 import { DEFAULT_ERROR } from "./constants";
-import { getAuthorization } from "./users";
+import { authenticatedFetch, getAuthorization } from "./users";
 import * as Sentry from "@sentry/react-native";
 import { getApiBaseUrl } from "./baseUrl";
 
@@ -19,7 +19,7 @@ export async function registerPushToken(input: RegisterPushTokenInput) {
     throw new Error("Authentication required");
   }
 
-  const response = await fetch(endpoint, {
+  const response = await authenticatedFetch(endpoint, {
     method: "POST",
     body: JSON.stringify(input),
     headers: {
@@ -61,7 +61,7 @@ export async function unregisterPushToken(expoPushToken: string) {
     throw new Error("Authentication required");
   }
 
-  const response = await fetch(endpoint, {
+  const response = await authenticatedFetch(endpoint, {
     method: "POST",
     body: JSON.stringify({ expoPushToken }),
     headers: {

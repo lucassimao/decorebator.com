@@ -1,4 +1,4 @@
-import { getAuthorization } from "./users";
+import { authenticatedFetch, getAuthorization } from "./users";
 import { DEFAULT_ERROR } from "./constants";
 import { Platform } from "react-native";
 import { getApiBaseUrl } from "./baseUrl";
@@ -36,7 +36,7 @@ export async function restorePurchases(appUserId: string): Promise<void> {
     platform: platform as "ios" | "android",
   };
 
-  const response = await fetch(endpoint, {
+  const response = await authenticatedFetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

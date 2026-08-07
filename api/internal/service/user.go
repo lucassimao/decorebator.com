@@ -20,10 +20,11 @@ type User = model.User
 
 // UserService handles user-related operations with dependency injection
 type UserService struct {
+	db                  *pgxpool.Pool
 	userRepository      *repo.UserRepository
 	subscriptionService *SubscriptionService
 	effectiveAccess     *EffectiveAccessService
-	authTokens          *AccessTokenService
+	authSessions        *AuthSessionService
 	jobService          JobService
 	deleteProfileObject func(context.Context, string, string) error
 }
@@ -36,13 +37,14 @@ func (s *UserService) SetEffectiveAccess(service *EffectiveAccessService) {
 func NewUserService(
 	db *pgxpool.Pool,
 	subscriptionService *SubscriptionService,
-	authTokens *AccessTokenService,
+	authSessions *AuthSessionService,
 	jobs ...JobService,
 ) *UserService {
 	service := &UserService{
+		db:                  db,
 		userRepository:      &repo.UserRepository{Db: db},
 		subscriptionService: subscriptionService,
-		authTokens:          authTokens,
+		authSessions:        authSessions,
 		deleteProfileObject: common.MinIODeleteObject,
 	}
 	if len(jobs) > 0 {
@@ -51,14 +53,20 @@ func NewUserService(
 	return service
 }
 
-func (s *UserService) GenerateAccessToken(userID int64) (string, error) {
-	if s.authTokens == nil {
-		return "", errors.New("access-token service is unavailable")
+func (s *UserService) CreateSession(ctx context.Context, userID int64) (SessionCredentials, error) {
+	if s.authSessions == nil {
+		return SessionCredentials{}, errors.New("auth-session service is unavailable")
 	}
-	return s.authTokens.Issue(userID)
+	return s.authSessions.Create(ctx, userID)
 }
 
-func (s *UserService) SaveUser(ctx context.Context, firstName, lastName, password, email string, country *string, preferredLanguage *string) (*User, error) {
+func (s *UserService) SaveUser(
+	ctx context.Context,
+	firstName, lastName, password, email string,
+	country *string,
+	preferredLanguage *string,
+	transactions ...pgx.Tx,
+) (*User, error) {
 	// Validate required parameters
 	if firstName == "" || lastName == "" || password == "" || email == "" {
 		return nil, common.BusinessError{Message: "firstName, lastName, password, and email are required"}
@@ -68,7 +76,7 @@ func (s *UserService) SaveUser(ctx context.Context, firstName, lastName, passwor
 		return nil, common.BusinessError{Message: "Invalid email address"}
 	}
 
-	user, err := s.userRepository.Save(ctx, firstName, lastName, password, canonicalEmail, country, preferredLanguage)
+	user, err := s.userRepository.Save(ctx, firstName, lastName, password, canonicalEmail, country, preferredLanguage, transactions...)
 	if err != nil {
 		common.Logger.Error("failed to save new user", "error", err)
 		switch err.(type) {
@@ -81,6 +89,31 @@ func (s *UserService) SaveUser(ctx context.Context, firstName, lastName, passwor
 	return user, nil
 }
 
+func (s *UserService) SaveUserAndSession(
+	ctx context.Context,
+	firstName, lastName, password, email string,
+	country *string,
+	preferredLanguage *string,
+) (*User, SessionCredentials, error) {
+	var user *User
+	var credentials SessionCredentials
+	err := pgx.BeginFunc(ctx, s.db, func(tx pgx.Tx) error {
+		var saveErr error
+		user, saveErr = s.SaveUser(
+			ctx, firstName, lastName, password, email, country, preferredLanguage, tx,
+		)
+		if saveErr != nil {
+			return saveErr
+		}
+		credentials, saveErr = s.authSessions.CreateTx(ctx, tx, user.ID)
+		return saveErr
+	})
+	if err != nil {
+		return nil, SessionCredentials{}, err
+	}
+	return user, credentials, nil
+}
+
 func (s *UserService) UpdatePassword(ctx context.Context, userID int64, password string) error {
 	err := s.userRepository.UpdatePassword(ctx, userID, password)
 	if err != nil {
@@ -90,11 +123,11 @@ func (s *UserService) UpdatePassword(ctx context.Context, userID int64, password
 	return nil
 }
 
-func (s *UserService) LoginUser(ctx context.Context, email, password string) (string, error) {
+func (s *UserService) LoginUser(ctx context.Context, email, password string) (SessionCredentials, error) {
 	startTime := time.Now()
 	canonicalEmail, err := common.NormalizeEmail(email)
 	if err != nil {
-		return "", errors.New("invalid combination of email and/or password")
+		return SessionCredentials{}, errors.New("invalid combination of email and/or password")
 	}
 
 	args := repo.FindUserArgs{
@@ -111,21 +144,21 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (st
 		if errors.Is(err, context.DeadlineExceeded) {
 			common.Logger.Error("login request timed out",
 				"db_query_ms", dbDuration.Milliseconds())
-			return "", err
+			return SessionCredentials{}, err
 		}
 		if errors.Is(err, context.Canceled) {
 			common.Logger.Error("login request was canceled",
 				"db_query_ms", dbDuration.Milliseconds())
-			return "", err
+			return SessionCredentials{}, err
 		}
 		common.Logger.Error("failed to login user",
 			"error", err,
 			"db_query_ms", dbDuration.Milliseconds())
-		return "", errors.New("could not process your request. Try again later")
+		return SessionCredentials{}, errors.New("could not process your request. Try again later")
 	}
 
 	if len(results) != 1 {
-		return "", errors.New("invalid combination of email and/or password")
+		return SessionCredentials{}, errors.New("invalid combination of email and/or password")
 	}
 
 	user := results[0]
@@ -145,7 +178,7 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (st
 			"bcrypt_ms", bcryptDuration.Milliseconds(),
 			"total_ms", totalDuration.Milliseconds(),
 			"status", "success")
-		return s.GenerateAccessToken(user.ID)
+		return s.CreateSession(ctx, user.ID)
 	}
 
 	// Log performance even for failed password attempts
@@ -155,7 +188,22 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (st
 		"bcrypt_ms", bcryptDuration.Milliseconds(),
 		"total_ms", totalDuration.Milliseconds(),
 		"status", "failed_password")
-	return "", errors.New("invalid combination of email and/or password")
+	return SessionCredentials{}, errors.New("invalid combination of email and/or password")
+}
+
+func (s *UserService) VerifyPassword(ctx context.Context, email, password string) error {
+	canonicalEmail, err := common.NormalizeEmail(email)
+	if err != nil {
+		return errors.New("invalid combination of email and/or password")
+	}
+	users, err := s.userRepository.Find(ctx, repo.FindUserArgs{Email: &canonicalEmail})
+	if err != nil || len(users) != 1 {
+		return errors.New("invalid combination of email and/or password")
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(users[0].PasswordHash), []byte(password)); err != nil {
+		return errors.New("invalid combination of email and/or password")
+	}
+	return nil
 }
 
 func (s *UserService) GetProfile(ctx context.Context, userID int64) (*User, bool, error) {

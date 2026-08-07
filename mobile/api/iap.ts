@@ -1,5 +1,5 @@
 import { getApiBaseUrl } from "@/api/baseUrl";
-import { getAuthorization } from "@/api/users";
+import { authenticatedFetch, getAuthorization } from "@/api/users";
 
 export type IAPStore = "apple" | "google";
 export type IAPBillingPeriod = "monthly" | "annual";
@@ -85,7 +85,7 @@ async function requestIAP(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetch(`${API_URL}${path}`, {
+    const response = await authenticatedFetch(`${API_URL}${path}`, {
       method,
       headers: {
         Authorization: authorization,

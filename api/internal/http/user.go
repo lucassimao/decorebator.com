@@ -13,6 +13,7 @@ import (
 	"decorebator.com/internal/config"
 	"decorebator.com/internal/mail"
 	"decorebator.com/internal/model"
+	"decorebator.com/internal/repository"
 	"decorebator.com/internal/service"
 	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
@@ -64,15 +65,21 @@ type UpdateProfilePictureInput struct {
 }
 
 type UserRoutes struct {
-	userService *service.UserService
-	mailService *mail.MailService
+	userService  *service.UserService
+	mailService  *mail.MailService
+	authSessions *service.AuthSessionService
 }
 
 // NewUserRoutes creates a new UserRoutes with injected dependencies
-func NewUserRoutes(userService *service.UserService, mailService *mail.MailService) *UserRoutes {
+func NewUserRoutes(
+	userService *service.UserService,
+	mailService *mail.MailService,
+	authSessions *service.AuthSessionService,
+) *UserRoutes {
 	return &UserRoutes{
-		userService: userService,
-		mailService: mailService,
+		userService:  userService,
+		mailService:  mailService,
+		authSessions: authSessions,
 	}
 }
 
@@ -136,7 +143,9 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	}
 
 	span := sentry.StartSpan(c.Request.Context(), "auth.user.create", sentry.WithDescription("userService.SaveUser"))
-	user, err := h.userService.SaveUser(span.Context(), input.FirstName, input.LastName, input.Password, input.Email, country, preferredLanguage)
+	user, credentials, err := h.userService.SaveUserAndSession(
+		span.Context(), input.FirstName, input.LastName, input.Password, input.Email, country, preferredLanguage,
+	)
 	span.Finish()
 
 	if err != nil {
@@ -150,15 +159,7 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 	}
 
 	// Generate JWT directly from user object - no re-authentication needed
-	jwtToken, err := h.userService.GenerateAccessToken(user.ID)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.Header("authorization", jwtToken)
-	writeAuthenticationCookie(c, jwtToken)
+	writeSessionCredentials(c, credentials)
 	c.Status(http.StatusCreated)
 	ctx := c.Request.Context()
 	email := user.Email
@@ -180,20 +181,44 @@ func (h *UserRoutes) Login(c *gin.Context) {
 	}
 
 	span := sentry.StartSpan(c.Request.Context(), "auth.user.login", sentry.WithDescription("userService.LoginUser"))
-	jwtToken, err := h.userService.LoginUser(span.Context(), input.Email, input.Password)
+	credentials, err := h.userService.LoginUser(span.Context(), input.Email, input.Password)
 	span.Finish()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
-	c.Header("authorization", jwtToken)
-	writeAuthenticationCookie(c, jwtToken)
+	writeSessionCredentials(c, credentials)
 	c.Status(http.StatusOK)
 }
 
 func (h *UserRoutes) Logout(c *gin.Context) {
+	if err := h.authSessions.Logout(c.Request.Context(), readRefreshToken(c)); err != nil {
+		common.Logger.ErrorContext(c.Request.Context(), "failed to revoke auth session", "error", err)
+		c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Logout temporarily unavailable"})
+		return
+	}
 	writeAuthenticationCookie(c, "")
+	writeRefreshCookie(c, "")
+	c.Status(http.StatusOK)
+}
+
+func (h *UserRoutes) Refresh(c *gin.Context) {
+	credentials, err := h.authSessions.Refresh(c.Request.Context(), readRefreshToken(c))
+	if err != nil {
+		if errors.Is(err, repository.ErrInvalidRefreshToken) ||
+			errors.Is(err, repository.ErrRefreshTokenReplay) ||
+			errors.Is(err, repository.ErrSessionExpired) {
+			writeAuthenticationCookie(c, "")
+			writeRefreshCookie(c, "")
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Session expired"})
+		} else {
+			common.Logger.ErrorContext(c.Request.Context(), "failed to refresh auth session", "error", err)
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Authentication temporarily unavailable"})
+		}
+		return
+	}
+	writeSessionCredentials(c, credentials)
 	c.Status(http.StatusOK)
 }
 
@@ -281,6 +306,39 @@ func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
 	}
 }
 
+func writeSessionCredentials(c *gin.Context, credentials service.SessionCredentials) {
+	c.Header("authorization", credentials.AccessToken)
+	if c.GetHeader("X-Auth-Client") == "native" {
+		c.Header("X-Refresh-Token", credentials.RefreshToken)
+		return
+	}
+	writeAuthenticationCookie(c, credentials.AccessToken)
+	writeRefreshCookie(c, credentials.RefreshToken)
+}
+
+func writeRefreshCookie(c *gin.Context, refreshToken string) {
+	maxAge, domain, secure := int(0), "localhost", false
+	if os.Getenv("ENV") == "production" {
+		maxAge = int(service.RefreshIdleDuration / time.Second)
+		domain, secure = "decorebator.com", true
+	}
+	if refreshToken == "" {
+		maxAge = -1
+	}
+	c.SetSameSite(http.SameSiteStrictMode)
+	c.SetCookie("RefreshToken", refreshToken, maxAge, "/", domain, secure, true)
+}
+
+func readRefreshToken(c *gin.Context) string {
+	if c.GetHeader("X-Auth-Client") == "native" {
+		return c.GetHeader("X-Refresh-Token")
+	}
+	if token, err := c.Cookie("RefreshToken"); err == nil {
+		return token
+	}
+	return ""
+}
+
 func canConvertToInt(n int64) bool {
 	return n >= int64(math.MinInt) && n <= int64(math.MaxInt)
 }
@@ -317,7 +375,7 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 
 	var newPassword *string
 	if input.UpdatePasswordInput != nil {
-		_, err := h.userService.LoginUser(c.Request.Context(), user.Email, input.UpdatePasswordInput.CurrentPassword)
+		err := h.userService.VerifyPassword(c.Request.Context(), user.Email, input.UpdatePasswordInput.CurrentPassword)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Could not update password."})
 			return
@@ -388,6 +446,10 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 
 	// Remove password hash from response
 	updatedUser.PasswordHash = ""
+	if newPassword != nil {
+		writeAuthenticationCookie(c, "")
+		writeRefreshCookie(c, "")
+	}
 
 	c.JSON(http.StatusOK, updatedUser)
 }

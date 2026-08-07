@@ -7,15 +7,18 @@ import (
 	"decorebator.com/internal/config"
 	"decorebator.com/internal/service"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const authTestKey = "0123456789abcdef0123456789abcdef"
 
+var authTestSessionID = uuid.MustParse("6ebc8901-77b8-4bb8-9328-c41b6b3817a2")
+
 func TestAccessTokenContainsOnlyBoundAuthorizationClaims(t *testing.T) {
 	tokens := newTestAccessTokens(t)
-	signed, err := tokens.Issue(42)
+	signed, err := tokens.Issue(42, authTestSessionID)
 	require.NoError(t, err)
 
 	claims := jwt.MapClaims{}
@@ -25,19 +28,21 @@ func TestAccessTokenContainsOnlyBoundAuthorizationClaims(t *testing.T) {
 	assert.Equal(t, config.AuthIssuer, claims["iss"])
 	assert.Equal(t, "test", claims["environment"])
 	assert.Equal(t, "access", claims["tokenType"])
+	assert.Equal(t, authTestSessionID.String(), claims["sid"])
 	assert.NotContains(t, claims, "email")
 	assert.NotContains(t, claims, "subscriptionPlan")
 
-	userID, err := tokens.Validate(signed)
+	identity, err := tokens.Validate(signed)
 	require.NoError(t, err)
-	assert.Equal(t, int64(42), userID)
+	assert.Equal(t, int64(42), identity.UserID)
+	assert.Equal(t, authTestSessionID, identity.SessionID)
 }
 
 func TestAccessTokenRejectsWrongAlgorithmAndLegacyOrMismatchedClaims(t *testing.T) {
 	tokens := newTestAccessTokens(t)
 	now := time.Now().UTC().Truncate(time.Second)
 	valid := service.AccessTokenClaims{
-		Environment: "test", TokenType: "access",
+		Environment: "test", TokenType: "access", SessionID: authTestSessionID.String(),
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer: config.AuthIssuer, Subject: "7", Audience: jwt.ClaimStrings{config.AuthAudience},
 			IssuedAt: jwt.NewNumericDate(now), NotBefore: jwt.NewNumericDate(now),

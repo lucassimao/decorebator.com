@@ -106,7 +106,7 @@ func TestUserRegistration(t *testing.T) {
 				require.NotEmpty(t, token, "Authorization token should be present")
 
 				// Verify JWT token is also set as cookie
-				response.Cookies().ContainsOnly("Authorization")
+				response.Cookies().ContainsOnly("Authorization", "RefreshToken")
 				cookie := response.Cookie("Authorization")
 				cookie.Value().NotEmpty()
 				assert.Equal(t, token, cookie.Value().Raw(), "Token in header should match cookie")
@@ -189,7 +189,7 @@ func TestUserLogin(t *testing.T) {
 				require.NotEmpty(t, token, "Authorization token should be present")
 
 				// Verify JWT token is also set as cookie
-				response.Cookies().ContainsOnly("Authorization")
+				response.Cookies().ContainsOnly("Authorization", "RefreshToken")
 				cookie := response.Cookie("Authorization")
 				cookie.Value().NotEmpty()
 				assert.Equal(t, token, cookie.Value().Raw(), "Token in header should match cookie")
@@ -346,14 +346,14 @@ func TestUserLogout(t *testing.T) {
 	token := server.WithTestUser(t)
 
 	t.Run("successful logout", func(t *testing.T) { //nolint:revive // t is used for testing
-		server.Expect.GET("/logout").
+		server.Expect.POST("/logout").
 			WithHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
 			Expect().
 			Status(http.StatusOK)
 	})
 
 	t.Run("logout without token", func(t *testing.T) { //nolint:revive // t is used for testing
-		server.Expect.GET("/logout").
+		server.Expect.POST("/logout").
 			Expect().
 			Status(http.StatusOK) // Logout endpoint allows access without token
 	})
