@@ -35,17 +35,15 @@ func TestSignupLoginFlow(t *testing.T) {
 			Expect().
 			Status(http.StatusCreated)
 
-		// Verify signup response contains JWT token in Authorization header
-		authToken := signupResponse.Header("Authorization").NotEmpty().Raw()
-		require.NotEmpty(t, authToken, "Authorization token should be present")
+		signupResponse.Header("Authorization").IsEmpty()
+		signupResponse.Cookies().IsEmpty()
+		signupResponse.JSON().Object().Value("message").String().NotEmpty()
+		server.Expect.POST("/login").WithJSON(map[string]interface{}{
+			"email": testUser["email"], "password": testUser["password"],
+		}).Expect().Status(http.StatusBadRequest)
+		server.VerifyTestSignup(t, testUser["email"].(string), testUser["password"].(string))
 
-		// Verify JWT token is also set as cookie
-		signupResponse.Cookies().ContainsOnly("Authorization", "RefreshToken")
-		cookie := signupResponse.Cookie("Authorization")
-		cookie.Value().NotEmpty()
-		assert.Equal(t, authToken, cookie.Value().Raw(), "Token in header should match cookie")
-
-		t.Log("✓ User successfully created and JWT token received")
+		t.Log("✓ User created pending mailbox verification")
 
 		// Step 2: Login with the created user credentials
 		t.Log("Step 2: Logging in with created user credentials")
@@ -69,8 +67,7 @@ func TestSignupLoginFlow(t *testing.T) {
 		loginCookie.Value().NotEmpty()
 		assert.Equal(t, loginToken, loginCookie.Value().Raw(), "Login token in header should match cookie")
 
-		// Verify both tokens are valid JWT tokens (they might be different due to different generation times)
-		assert.Greater(t, len(authToken), 20, "Signup token should be a valid JWT")
+		// Verify the post-verification token is a valid JWT.
 		assert.Greater(t, len(loginToken), 20, "Login token should be a valid JWT")
 
 		t.Logf("✓ User successfully logged in with token: %s", loginToken[:20]+"...")
@@ -169,13 +166,13 @@ func TestSignupLoginFlow(t *testing.T) {
 		response := server.Expect.POST("/users").
 			WithJSON(secondUser).
 			Expect().
-			Status(http.StatusBadRequest) // API returns 400 for duplicate email (business rule violation)
+			Status(http.StatusCreated)
 
-		errorJSON := response.JSON().Object()
-		errorJSON.ContainsKey("error")
-		errorJSON.Value("error").IsEqual("Email already exists.")
+		response.Header("Authorization").IsEmpty()
+		response.Cookies().IsEmpty()
+		response.JSON().Object().Value("message").String().NotEmpty()
 
-		t.Log("✓ Signup correctly rejected for duplicate email")
+		t.Log("✓ Duplicate signup preserves the generic public contract")
 	})
 
 	t.Run("signup with invalid data", func(t *testing.T) {
@@ -316,14 +313,10 @@ func TestSignupLoginFlow(t *testing.T) {
 				}
 
 				// Step 1: Sign up user with country
-				signupResponse := server.Expect.POST("/users").
+				server.Expect.POST("/users").
 					WithJSON(testUser).
 					Expect().
 					Status(http.StatusCreated)
-
-				// Verify JWT token received
-				authToken := signupResponse.Header("Authorization").NotEmpty().Raw()
-				require.NotEmpty(t, authToken, "Authorization token should be present")
 
 				// Step 2: Verify country is stored correctly in database
 				ctx := context.Background()
@@ -362,14 +355,10 @@ func TestSignupLoginFlow(t *testing.T) {
 		}
 
 		// Step 1: Sign up user without country field
-		signupResponse := server.Expect.POST("/users").
+		server.Expect.POST("/users").
 			WithJSON(testUser).
 			Expect().
 			Status(http.StatusCreated)
-
-		// Verify JWT token received
-		authToken := signupResponse.Header("Authorization").NotEmpty().Raw()
-		require.NotEmpty(t, authToken, "Authorization token should be present")
 
 		// Step 2: Verify country is nil in database
 		ctx := context.Background()
@@ -489,14 +478,13 @@ func TestSignupWithLanguageParameter(t *testing.T) {
 
 			// Step 1: Sign up user with language parameter
 			t.Logf("Step 1: Creating user with preferredLanguage=%s", tc.preferredLanguage)
-			signupResponse := server.Expect.POST("/users").
+			server.Expect.POST("/users").
 				WithJSON(testUser).
 				Expect().
 				Status(http.StatusCreated)
 
-			// Verify signup response contains JWT token
-			authToken := signupResponse.Header("Authorization").NotEmpty().Raw()
-			require.NotEmpty(t, authToken, "Authorization token should be present")
+			server.VerifyTestSignup(t, testUser["email"].(string), testUser["password"].(string))
+			authToken := server.LoginTestUser(testUser["email"].(string), testUser["password"].(string))
 
 			t.Log("✓ User successfully created with language parameter")
 

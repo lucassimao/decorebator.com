@@ -48,7 +48,7 @@ func (m *MailService) shouldSendEmails() bool {
 var resetPasswordEmailTemplate string
 
 // SendResetPasswordEmail sends a password reset email to the specified address
-func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string) error {
+func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string, deliveryKeys ...string) error {
 	logger := common.Logger.With("func", "SendResetPasswordEmail")
 
 	if !m.shouldSendEmails() {
@@ -58,18 +58,22 @@ func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string) 
 
 	canonicalEmail, err := common.NormalizeEmail(email)
 	if err != nil {
-		return common.ErrInvalidEmailAddress
+		logger.Debug("discarding reset request without a deliverable account")
+		return nil
 	}
 	result, err := m.userRepo.Find(ctx, repository.FindUserArgs{Email: &canonicalEmail})
 
 	if err != nil || len(result) != 1 {
-		logger.Warn("user not found for reset password email", "error", err, "matchCount", len(result))
-		return fmt.Errorf("no user found")
+		if err != nil {
+			return fmt.Errorf("find reset recipient: %w", err)
+		}
+		logger.Debug("discarding reset request without a deliverable account")
+		return nil
 	}
 
 	user := result[0]
 	logger = logger.With("user_id", user.ID)
-	encryptedPayload, err := createResetPasswordToken(user.ID)
+	encryptedPayload, err := IssueResetPasswordToken(ctx, m.db, user.ID, deliveryKeys...)
 	if err != nil {
 		logger.Error("failed to create reset password token", "error", err)
 		return err
@@ -103,13 +107,20 @@ func (m *MailService) SendResetPasswordEmail(ctx context.Context, email string) 
 		return err
 	}
 
-	_, err = client.Emails.Send(&resend.SendEmailRequest{
+	request := &resend.SendEmailRequest{
 		From:    "Decorebator <support@decorebator.com>",
 		To:      []string{fmt.Sprintf("%s <%s>", fullName, user.Email)},
 		Subject: subject,
 		Text:    plainTextContent,
 		Html:    htmlContent,
-	})
+	}
+	if len(deliveryKeys) > 0 {
+		_, err = client.Emails.SendWithOptions(ctx, request, &resend.SendEmailOptions{
+			IdempotencyKey: "reset-password/" + deliveryKeys[0],
+		})
+	} else {
+		_, err = client.Emails.SendWithContext(ctx, request)
+	}
 	if err != nil {
 		logger.Error("failed to send reset password email", "error", err)
 		return err

@@ -32,6 +32,10 @@ func (f failingReportedDefinitionJobService) ScheduleAudioJob(_ context.Context,
 	return 1, nil
 }
 
+func (f failingReportedDefinitionJobService) ScheduleResetPasswordEmailJob(context.Context, string, ...pgx.Tx) error {
+	return nil
+}
+
 func TestErrorRegenerationSubmissionPreservesLearningAndUnrelatedDefinitions(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()

@@ -4,6 +4,7 @@ import React, { useState, FormEvent, Suspense } from 'react'
 import { LockClosedIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { isPasswordTooLong, isPasswordTooShort } from '@/utils/passwordPolicy'
 
 // Separate component that uses useSearchParams
 const ResetPasswordFormContent: React.FC = () => {
@@ -27,8 +28,13 @@ const ResetPasswordFormContent: React.FC = () => {
       return
     }
 
-    if (newPassword.length < 4) {
+    if (isPasswordTooShort(newPassword)) {
       setError(t('errors.tooShort'))
+      return
+    }
+
+    if (isPasswordTooLong(newPassword)) {
+      setError(t('errors.tooLong'))
       return
     }
 
@@ -106,6 +112,8 @@ const ResetPasswordFormContent: React.FC = () => {
               type="password"
               autoComplete="new-password"
               required
+              minLength={8}
+              maxLength={72}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="block w-full appearance-none rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 shadow-sm transition duration-150 ease-in-out focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm"
@@ -126,6 +134,8 @@ const ResetPasswordFormContent: React.FC = () => {
               type="password"
               autoComplete="new-password"
               required
+              minLength={8}
+              maxLength={72}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="block w-full appearance-none rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 shadow-sm transition duration-150 ease-in-out focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm"

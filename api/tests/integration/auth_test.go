@@ -39,7 +39,7 @@ func TestUserRegistration(t *testing.T) {
 				"firstName": "Jane",
 				"lastName":  "Smith",
 			},
-			expectedStatus: http.StatusBadRequest, // API returns 400 for business rule violations
+			expectedStatus: http.StatusCreated,
 			shouldHaveUser: false,
 		},
 		{
@@ -76,7 +76,7 @@ func TestUserRegistration(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.name, func(_ *testing.T) {
 			// Special handling for duplicate email test
 			if tt.name == "duplicate email registration" {
 				// First create the user
@@ -101,15 +101,8 @@ func TestUserRegistration(t *testing.T) {
 				Status(tt.expectedStatus)
 
 			if tt.shouldHaveUser {
-				// Signup returns empty body but JWT token in Authorization header
-				token := response.Header("Authorization").NotEmpty().Raw()
-				require.NotEmpty(t, token, "Authorization token should be present")
-
-				// Verify JWT token is also set as cookie
-				response.Cookies().ContainsOnly("Authorization", "RefreshToken")
-				cookie := response.Cookie("Authorization")
-				cookie.Value().NotEmpty()
-				assert.Equal(t, token, cookie.Value().Raw(), "Token in header should match cookie")
+				response.Header("Authorization").IsEmpty()
+				response.JSON().Object().Value("message").String().NotEmpty()
 			}
 		})
 	}
@@ -124,6 +117,7 @@ func TestUserLogin(t *testing.T) {
 		WithJSON(signupInput).
 		Expect().
 		Status(http.StatusCreated)
+	server.VerifyTestSignup(t, signupInput.Email, signupInput.Password)
 
 	tests := []struct {
 		name           string
@@ -260,7 +254,7 @@ func TestPasswordReset(t *testing.T) {
 				"email": signupInput.Email,
 			}).
 			Expect().
-			Status(http.StatusOK)
+			Status(http.StatusAccepted)
 		// Endpoint returns empty body on success
 	})
 
@@ -270,7 +264,7 @@ func TestPasswordReset(t *testing.T) {
 				"email": "nonexistent@example.com",
 			}).
 			Expect().
-			Status(http.StatusOK) // Should still return 200 for security
+			Status(http.StatusAccepted)
 	})
 
 	t.Run("reset password with invalid token", func(t *testing.T) { //nolint:revive // t is used for testing

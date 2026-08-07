@@ -1567,7 +1567,8 @@
     "helpText": "Remember to choose a strong password you haven't used before.",
     "errors": {
       "fillBothFields": "Please fill in both password fields.",
-      "tooShort": "Password must be at least 4 characters long.",
+      "tooShort": "Password must be at least 8 characters long.",
+      "tooLong": "Password must be at most 72 UTF-8 bytes long.",
       "noMatch": "Passwords do not match.",
       "resetFailed": "Failed to reset password. Please try again.",
       "tokenExpired": "This reset link has expired. Please request a new one.",

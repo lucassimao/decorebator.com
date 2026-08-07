@@ -91,7 +91,8 @@
       "agreeToTerms": "J'accepte les Conditions d'utilisation et la Politique de confidentialité",
       "termsCheckboxHint": "Appuyez pour basculer l'accord aux conditions d'utilisation et à la politique de confidentialité",
       "mustAgreeToTerms": "Vous devez accepter les Conditions d'utilisation et la Politique de confidentialité pour continuer",
-      "fullNameError": "Veuillez entrer votre nom complet"
+      "fullNameError": "Veuillez entrer votre nom complet",
+      "successMessage": "Consultez votre e-mail pour obtenir les instructions relatives à votre compte"
     },
     "forgotPassword": {
       "title": "Mot de passe oublié ?",
@@ -667,7 +668,8 @@
     "passwordRequired": "Mot de passe obligatoire",
     "fieldRequired": "Obligatoire",
     "emailExists": "Email déjà enregistré",
-    "shortPassword": "Trop court (min 5 cars)",
+    "shortPassword": "Trop court (8 caractères min.)",
+    "longPassword": "Trop long (72 octets UTF-8 max.)",
     "signupFailed": "Inscription échouée. Réessayez."
   },
   "success": {

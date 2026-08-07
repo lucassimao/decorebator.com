@@ -36,6 +36,7 @@ type Context struct {
 	UserService                  *service.UserService
 	AuthTokens                   *service.AccessTokenService
 	AuthSessions                 *service.AuthSessionService
+	AuthRateLimiter              *service.AuthRateLimiter
 	DefinitionService            *service.DefinitionService
 	DefinitionImageService       *service.DefinitionImageService
 	SubscriptionService          *service.SubscriptionService
@@ -58,6 +59,7 @@ type Context struct {
 	StoreIAPEnabled              bool
 	LegacyProviderSurfaceEnabled bool
 	LegacyRevenueCatWebhookAuth  string
+	TrustedProxyCIDRs            []string
 
 	// Monitoring
 	// Configuration
@@ -204,6 +206,9 @@ func (b *ContextBuilder) Build() (*Context, error) {
 	if b.context.Database == nil {
 		return nil, errors.New("database connection is required")
 	}
+	if err := validateRuntimeSecurityConfiguration(b.context.Environment); err != nil {
+		return nil, err
+	}
 	legacyProviderConfig, err := config.LoadLegacyProviderConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to configure legacy provider surface: %w", err)
@@ -211,6 +216,14 @@ func (b *ContextBuilder) Build() (*Context, error) {
 	b.legacyProviderConfig = legacyProviderConfig
 	b.context.LegacyProviderSurfaceEnabled = legacyProviderConfig.Enabled
 	b.context.LegacyRevenueCatWebhookAuth = legacyProviderConfig.RevenueCatWebhookAuthorization
+	trustedProxyConfig, err := config.LoadTrustedProxyConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to configure trusted proxies: %w", err)
+	}
+	if b.context.Environment == "production" && len(trustedProxyConfig.CIDRs) == 0 && !trustedProxyConfig.DirectMode {
+		return nil, errors.New("production requires trusted proxy CIDRs or explicit direct-client traffic mode")
+	}
+	b.context.TrustedProxyCIDRs = trustedProxyConfig.CIDRs
 	if b.context.AuthTokens == nil {
 		authConfig, authErr := config.LoadAuthConfig()
 		if authErr != nil {
@@ -233,13 +246,24 @@ func (b *ContextBuilder) Build() (*Context, error) {
 
 	// Initialize Redis client if not provided
 	if b.context.RedisClient == nil {
-		redisClient, err := common.GetRedisClient()
-		if err != nil {
-			common.Logger.Warn("Failed to initialize Redis client", "error", err)
+		redisClient, redisErr := common.GetRedisClient()
+		if redisErr != nil {
+			common.Logger.Warn("Failed to initialize Redis client", "error", redisErr)
 			// Redis is optional, continue without it
 			b.context.RedisClient = nil
 		} else {
 			b.context.RedisClient = redisClient
+		}
+	}
+	if b.context.AuthRateLimiter == nil {
+		b.context.AuthRateLimiter, err = service.NewAuthRateLimiter(
+			b.context.RedisClient,
+			b.context.Environment == "production",
+			b.context.Environment,
+			nil,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize auth rate limiter: %w", err)
 		}
 	}
 
@@ -252,6 +276,22 @@ func (b *ContextBuilder) Build() (*Context, error) {
 	}
 
 	return b.context, nil
+}
+
+func validateRuntimeSecurityConfiguration(environment string) error {
+	if err := common.ValidateRuntimeEnvironment(environment); err != nil {
+		return fmt.Errorf("failed to configure runtime environment: %w", err)
+	}
+	if err := common.ValidateBcryptConfiguration(environment); err != nil {
+		return fmt.Errorf("failed to configure password hashing: %w", err)
+	}
+	if err := mail.ValidateResetPasswordConfiguration(); err != nil {
+		return fmt.Errorf("failed to configure password reset: %w", err)
+	}
+	if err := mail.ValidateActivationDeliveryConfiguration(environment); err != nil {
+		return fmt.Errorf("failed to configure account activation delivery: %w", err)
+	}
+	return nil
 }
 
 // initializeServices creates default service instances
@@ -373,12 +413,16 @@ func (b *ContextBuilder) initializeServices() error { //nolint:gocyclo // Sequen
 
 	// Initialize UserService after subscription/effective-access dependencies.
 	if b.context.UserService == nil {
-		b.context.UserService = service.NewUserService(
+		userService, err := service.NewUserService(
 			b.context.Database,
 			b.context.SubscriptionService,
 			b.context.AuthSessions,
 			b.context.JobService,
 		)
+		if err != nil {
+			return fmt.Errorf("failed to initialize user service: %w", err)
+		}
+		b.context.UserService = userService
 	}
 	if b.context.EffectiveAccessService != nil {
 		b.context.UserService.SetEffectiveAccess(b.context.EffectiveAccessService)

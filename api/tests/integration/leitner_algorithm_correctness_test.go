@@ -16,7 +16,7 @@ func TestLeitnerNullUpdatedAtAssumption(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 	ctx := context.Background()
-	_, err := server.AppContext.UserService.SaveUser(ctx, "Boundary", "Sentinel", "test123", "boundary-sentinel@example.com", nil, nil)
+	_, err := server.AppContext.UserService.SaveUser(ctx, "Boundary", "Sentinel", "testpass123", "boundary-sentinel@example.com", nil, nil)
 	require.NoError(t, err)
 
 	// Create basic test data using services
@@ -80,7 +80,7 @@ func TestCreateQuizHandlesInsufficientScopedDistractors(t *testing.T) {
 	defer server.Cleanup()
 	ctx := context.Background()
 
-	user, err := server.AppContext.UserService.SaveUser(ctx, "Solo", "Learner", "test123", "solo-learner@example.com", nil, nil)
+	user, err := server.AppContext.UserService.SaveUser(ctx, "Solo", "Learner", "testpass123", "solo-learner@example.com", nil, nil)
 	require.NoError(t, err)
 	wordlist, err := server.AppContext.WordlistService.SaveWordlist(ctx, &service.Wordlist{
 		Name:         "Solo list",
@@ -136,7 +136,7 @@ func TestCreateQuizHandlesInsufficientScopedDistractors(t *testing.T) {
 // createBasicLeitnerDataUsingServices creates minimal test data using service calls
 func createBasicLeitnerDataUsingServices(ctx context.Context, t *testing.T, server *setup.TestServer) (userID, wordlistID int64) {
 	// 1. Create test user using UserService
-	user, err := server.AppContext.UserService.SaveUser(ctx, "Test", "User", "test123", "test@example.com", nil, nil)
+	user, err := server.AppContext.UserService.SaveUser(ctx, "Test", "User", "testpass123", "test@example.com", nil, nil)
 	require.NoError(t, err)
 	require.NotNil(t, user)
 	userID = user.ID

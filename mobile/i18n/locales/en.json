@@ -79,7 +79,8 @@
       "termsCheckboxHint": "Tap to toggle agreement to terms and privacy policy",
       "backHint": "Go back to previous step",
       "mustAgreeToTerms": "You must agree to the Terms of Service and Privacy Policy to continue",
-      "fullNameError": "Please enter your full name"
+      "fullNameError": "Please enter your full name",
+      "successMessage": "Check your email for account instructions"
     },
     "forgotPassword": {
       "title": "Forgot your password?",
@@ -684,7 +685,8 @@
     "passwordRequired": "Password is required",
     "fieldRequired": "Required",
     "emailExists": "Email already registered",
-    "shortPassword": "Too short (min 5 chars)",
+    "shortPassword": "Too short (min 8 chars)",
+    "longPassword": "Too long (max 72 UTF-8 bytes)",
     "signupFailed": "Sign up failed. Please try again."
   },
   "success": {

@@ -73,6 +73,16 @@ func RunMigrations(db *pgxpool.Pool) error {
 	if err != nil && err != migrate.ErrNoChange {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
+	// Production enables AUTH-3 writes only after every pre-AUTH-3 API and
+	// worker has drained. The isolated test fleet has no mixed binaries.
+	_, err = db.Exec(context.Background(), `
+		UPDATE auth_hardening_rollout_state
+		SET writes_enabled=TRUE,updated_at=NOW()
+		WHERE singleton=TRUE
+	`)
+	if err != nil {
+		return fmt.Errorf("enable auth hardening for isolated tests: %w", err)
+	}
 
 	// Migration 52 deliberately removes the historical app-owned River schema.
 	// Recreate the current queue schema from River's bundled migrations so tests

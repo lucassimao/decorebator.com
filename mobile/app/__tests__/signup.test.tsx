@@ -8,6 +8,7 @@ import { getDetectedCountry } from "@/utils/countryDetection";
 import { useTheme } from "@/contexts/ThemeContext";
 import { usePostHog } from "posthog-react-native";
 import { useSnackbar } from "@/hooks/useSnackbar";
+import { router } from "expo-router";
 
 // Mock NetInfo
 jest.mock("@react-native-community/netinfo", () => ({
@@ -149,10 +150,17 @@ describe("SignUpScreen", () => {
 
     (getDetectedCountry as jest.Mock).mockReturnValue("US");
 
-    // Simple useMutation mock - just make the form submission work
+    // Exercise the production mutation callbacks as well as the API call.
     const { useMutation } = require("@tanstack/react-query");
-    (useMutation as jest.Mock).mockImplementation(() => ({
-      mutate: usersApi.signup as jest.Mock,
+    (useMutation as jest.Mock).mockImplementation((options) => ({
+      mutate: async (input: usersApi.UserSignup) => {
+        try {
+          await options.mutationFn(input);
+          options.onSuccess?.();
+        } catch (error) {
+          options.onError?.(error);
+        }
+      },
       isPending: false,
     }));
   });
@@ -233,8 +241,15 @@ describe("SignUpScreen", () => {
       { timeout: 2000 },
     );
 
-    // Note: onSuccess callback testing is complex with our current mock setup
-    // For now, we verify the core signup API call works correctly
+    const snackbar = (useSnackbar as jest.Mock).mock.results[0].value;
+    await waitFor(() => {
+      expect(snackbar.show).toHaveBeenCalledWith(
+        "Check your email for account instructions",
+        "success",
+        5000,
+      );
+      expect(router.replace).toHaveBeenCalledWith("/signin");
+    });
   });
 
   it("handles signup API call correctly", async () => {

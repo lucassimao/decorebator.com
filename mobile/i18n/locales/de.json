@@ -94,7 +94,8 @@
       "termsCheckboxHint": "Tippen um die Zustimmung zu den Nutzungsbedingungen und Datenschutzrichtlinien umzuschalten",
       "backHint": "Zurück zum vorherigen Schritt",
       "mustAgreeToTerms": "Sie müssen den Nutzungsbedingungen und der Datenschutzerklärung zustimmen, um fortzufahren",
-      "fullNameError": "Bitte geben Sie Ihren vollständigen Namen ein"
+      "fullNameError": "Bitte geben Sie Ihren vollständigen Namen ein",
+      "successMessage": "Prüfe deine E-Mails auf Anweisungen zu deinem Konto"
     },
     "forgotPassword": {
       "title": "Passwort vergessen?",
@@ -677,7 +678,8 @@
     "passwordRequired": "Passwort ist erforderlich",
     "fieldRequired": "Erforderlich",
     "emailExists": "E-Mail bereits registriert",
-    "shortPassword": "Zu kurz (min 5 Zeichen)",
+    "shortPassword": "Zu kurz (min. 8 Zeichen)",
+    "longPassword": "Zu lang (max. 72 UTF-8-Bytes)",
     "signupFailed": "Registrierung fehlgeschlagen. Erneut versuchen."
   },
   "success": {

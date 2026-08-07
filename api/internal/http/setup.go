@@ -7,6 +7,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
+	"decorebator.com/internal/service"
 	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 )
@@ -38,13 +39,18 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	var WordRoutes = NewWordRoutes(appCtx.WordService, appCtx.WordlistService, appCtx.DefinitionService)
 	var WorkerRoutes = NewWorkerRoutes(appCtx.DefinitionService, appCtx.JobService)
 	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService, appCtx.DefinitionService)
-	var UserRoutes = NewUserRoutes(appCtx.UserService, appCtx.MailService, appCtx.AuthSessions)
+	var UserRoutes = NewUserRoutes(
+		appCtx.UserService, appCtx.AuthSessions, appCtx.AuthRateLimiter, appCtx.JobService,
+	)
 	// Use Leitner strategy from AppContext
 	var quizRoutes = NewQuizRoutes(appCtx.LeitnerSystemStrategy, userRepo)
 	var ErrorReportsRoutes = NewErrorReportRoutes(appCtx.ErrorReportService)
 	var PushNotificationRoutes = NewPushNotificationRoutes(pushTokenRepo)
 
 	router := gin.New()
+	if err := router.SetTrustedProxies(appCtx.TrustedProxyCIDRs); err != nil {
+		panic("invalid trusted proxy configuration: " + err.Error())
+	}
 
 	// Sentry middlewares (includes sentrygin + context capture) - completely self-contained
 	router.Use(SentryMiddlewares()...)
@@ -58,12 +64,12 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 
 	// Routes without authentication
 	{
-		router.POST("/users", UserRoutes.SignUp)
+		router.POST("/users", RateLimitAuthSource(appCtx.AuthRateLimiter, service.AuthLimitSignup), UserRoutes.SignUp)
 		router.POST("/logout", UserRoutes.Logout)
 		router.POST("/session/refresh", UserRoutes.Refresh)
-		router.POST("/login", UserRoutes.Login)
-		router.PATCH("/password/reset", UserRoutes.ResetPassword)
-		router.POST("/password/send-reset-email", UserRoutes.SendResetPasswordEmail)
+		router.POST("/login", RateLimitAuthSource(appCtx.AuthRateLimiter, service.AuthLimitLogin), UserRoutes.Login)
+		router.PATCH("/password/reset", RateLimitAuthSource(appCtx.AuthRateLimiter, service.AuthLimitResetConsume), UserRoutes.ResetPassword)
+		router.POST("/password/send-reset-email", RateLimitAuthSource(appCtx.AuthRateLimiter, service.AuthLimitResetRequest), UserRoutes.SendResetPasswordEmail)
 
 		RegisterLegacyProviderPublicRoutes(router, appCtx)
 

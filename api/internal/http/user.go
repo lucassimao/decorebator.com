@@ -1,6 +1,7 @@
 package http
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"math"
@@ -24,7 +25,7 @@ type SignupInput struct {
 	FirstName         string `json:"firstName" binding:"required"`
 	LastName          string `json:"lastName" binding:"required"`
 	Email             string `json:"email" binding:"required"`
-	Password          string `json:"password" binding:"required,min=5"`
+	Password          string `json:"password" binding:"required"`
 	Country           string `json:"country"`           // Optional ISO 3166-1 alpha-2 country code
 	PreferredLanguage string `json:"preferredLanguage"` // Optional language code
 }
@@ -66,20 +67,23 @@ type UpdateProfilePictureInput struct {
 
 type UserRoutes struct {
 	userService  *service.UserService
-	mailService  *mail.MailService
 	authSessions *service.AuthSessionService
+	authLimiter  *service.AuthRateLimiter
+	jobService   service.JobService
 }
 
 // NewUserRoutes creates a new UserRoutes with injected dependencies
 func NewUserRoutes(
 	userService *service.UserService,
-	mailService *mail.MailService,
 	authSessions *service.AuthSessionService,
+	authLimiter *service.AuthRateLimiter,
+	jobService service.JobService,
 ) *UserRoutes {
 	return &UserRoutes{
 		userService:  userService,
-		mailService:  mailService,
 		authSessions: authSessions,
+		authLimiter:  authLimiter,
+		jobService:   jobService,
 	}
 }
 
@@ -120,6 +124,12 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, body)
 		return
 	}
+	if err := common.ValidatePassword(input.Password); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"validationErrors": gin.H{"password": err.Error()},
+		})
+		return
+	}
 
 	canonicalEmail, err := common.NormalizeEmail(input.Email)
 	if err != nil {
@@ -129,6 +139,9 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		return
 	}
 	input.Email = canonicalEmail
+	if !applyAuthLimit(c, h.authLimiter, service.AuthLimitSignup, service.AuthLimitAccount, canonicalEmail) {
+		return
+	}
 
 	// Prepare country parameter (convert empty string to nil)
 	var country *string
@@ -142,30 +155,18 @@ func (h *UserRoutes) SignUp(c *gin.Context) {
 		preferredLanguage = &input.PreferredLanguage
 	}
 
-	span := sentry.StartSpan(c.Request.Context(), "auth.user.create", sentry.WithDescription("userService.SaveUser"))
-	user, credentials, err := h.userService.SaveUserAndSession(
+	span := sentry.StartSpan(c.Request.Context(), "auth.user.create", sentry.WithDescription("userService.RegisterPendingUser"))
+	err = h.userService.RegisterPendingUser(
 		span.Context(), input.FirstName, input.LastName, input.Password, input.Email, country, preferredLanguage,
 	)
 	span.Finish()
 
 	if err != nil {
-		switch err.(type) {
-		case common.BusinessError:
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
+		common.Logger.ErrorContext(c.Request.Context(), "failed to register account", "error", err)
+		c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Account registration temporarily unavailable"})
 		return
 	}
-
-	// Generate JWT directly from user object - no re-authentication needed
-	writeSessionCredentials(c, credentials)
-	c.Status(http.StatusCreated)
-	ctx := c.Request.Context()
-	email := user.Email
-	if err := h.mailService.SendWelcomeEmail(ctx, email); err != nil {
-		common.Logger.ErrorContext(c.Request.Context(), "failed to send welcome email", "user_id", user.ID, "error", err)
-	}
+	c.JSON(http.StatusCreated, gin.H{"message": "If the address can be used, account instructions will be sent."})
 }
 
 func (h *UserRoutes) Login(c *gin.Context) {
@@ -179,13 +180,34 @@ func (h *UserRoutes) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	canonicalEmail, err := common.NormalizeEmail(input.Email)
+	if err != nil {
+		canonicalEmail = "invalid:" + strings.ToLower(input.Email)
+	}
+	if !applyAuthLimit(c, h.authLimiter, service.AuthLimitLogin, service.AuthLimitAccount, canonicalEmail) {
+		return
+	}
 	span := sentry.StartSpan(c.Request.Context(), "auth.user.login", sentry.WithDescription("userService.LoginUser"))
 	credentials, err := h.userService.LoginUser(span.Context(), input.Email, input.Password)
 	span.Finish()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password"})
+		if errors.Is(err, service.ErrInvalidLoginCredentials) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password"})
+			return
+		}
+		if releaseErr := h.authLimiter.Release(
+			c.Request.Context(), service.AuthLimitLogin, service.AuthLimitAccount, canonicalEmail,
+		); releaseErr != nil {
+			common.Logger.ErrorContext(c.Request.Context(), "failed to refund login limiter reservation", "error", releaseErr)
+		}
+		common.Logger.ErrorContext(c.Request.Context(), "login infrastructure failure", "error", err)
+		c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Authentication temporarily unavailable"})
 		return
+	}
+	if clearErr := h.authLimiter.Clear(
+		c.Request.Context(), service.AuthLimitLogin, service.AuthLimitAccount, canonicalEmail,
+	); clearErr != nil {
+		common.Logger.ErrorContext(c.Request.Context(), "failed to clear successful login limiter bucket", "error", clearErr)
 	}
 
 	writeSessionCredentials(c, credentials)
@@ -248,9 +270,33 @@ func (h *UserRoutes) ResetPassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "token_invalid"})
 		return
 	}
-
-	if err := h.userService.UpdatePassword(c.Request.Context(), payload.UserID, input.Password); err != nil {
-		common.Logger.ErrorContext(c.Request.Context(), "failed to update password", "userId", payload.UserID, "error", err)
+	var resetErr error
+	if payload.Legacy {
+		resetErr = h.userService.ResetLegacyPassword(
+			c.Request.Context(), payload.UserID, input.Token, input.Password,
+		)
+	} else {
+		resetErr = h.userService.ResetPasswordAndVerifyEmail(
+			c.Request.Context(), payload.UserID, payload.TokenID, input.Password,
+		)
+	}
+	if resetErr != nil {
+		if errors.Is(resetErr, service.ErrAuthHardeningWritesDisabled) {
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Password reset temporarily unavailable"})
+			return
+		}
+		var businessError common.BusinessError
+		if errors.As(resetErr, &businessError) {
+			if businessError.Error() == "token_invalid" && !applyAuthLimit(
+				c, h.authLimiter, service.AuthLimitResetConsume, service.AuthLimitAccount,
+				fmt.Sprintf("user:%d", payload.UserID),
+			) {
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": businessError.Error()})
+			return
+		}
+		common.Logger.ErrorContext(c.Request.Context(), "failed to update password", "userId", payload.UserID, "error", resetErr)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
 		return
 	}
@@ -273,12 +319,25 @@ func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, body)
 		return
 	}
-
-	err := h.mailService.SendResetPasswordEmail(c.Request.Context(), input.Email)
+	canonicalEmail, err := common.NormalizeEmail(input.Email)
+	queuedEmail := canonicalEmail
 	if err != nil {
-		common.Logger.ErrorContext(c.Request.Context(), "failed to send reset password email", "error", err)
+		digest := sha256.Sum256([]byte(strings.ToLower(strings.TrimSpace(input.Email))))
+		canonicalEmail = fmt.Sprintf("invalid:%x", digest)
+		queuedEmail = ""
 	}
-	c.Status(http.StatusOK)
+	if !applyAuthLimit(
+		c, h.authLimiter, service.AuthLimitResetRequest, service.AuthLimitAccount, canonicalEmail,
+	) {
+		return
+	}
+
+	if err := h.jobService.ScheduleResetPasswordEmailJob(c.Request.Context(), queuedEmail); err != nil {
+		common.Logger.ErrorContext(c.Request.Context(), "failed to enqueue reset password email", "error", err)
+		c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Password reset temporarily unavailable"})
+		return
+	}
+	c.JSON(http.StatusAccepted, gin.H{"message": "If the account exists, reset instructions will be sent."})
 }
 
 func writeAuthenticationCookie(c *gin.Context, jwtToken string) {

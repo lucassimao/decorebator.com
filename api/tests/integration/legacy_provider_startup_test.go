@@ -25,6 +25,7 @@ func TestLegacyProviderSurfaceDisabledBuildsWithoutProviderCredentials(t *testin
 	}
 
 	t.Setenv("LEGACY_PROVIDER_WEBHOOKS_ENABLED", "false")
+	t.Setenv("RESET_PASSWORD_PRIVATE_KEY", "test-reset-password-key-32-chars")
 	for _, name := range legacyProviderEnvironmentNames() {
 		t.Setenv(name, "")
 	}
@@ -104,6 +105,7 @@ func TestLegacyProviderSurfaceEnabledFailsStartupWithoutCredentials(t *testing.T
 		t.Skip("Skipping integration test")
 	}
 	t.Setenv("LEGACY_PROVIDER_WEBHOOKS_ENABLED", "true")
+	t.Setenv("RESET_PASSWORD_PRIVATE_KEY", "test-reset-password-key-32-chars")
 	for _, name := range legacyProviderEnvironmentNames() {
 		t.Setenv(name, "")
 	}

@@ -91,7 +91,8 @@
       "agreeToTerms": "Accetto i Termini di Servizio e l'Informativa sulla Privacy",
       "termsCheckboxHint": "Tocca per attivare l'accordo ai termini di servizio e alla politica sulla privacy",
       "mustAgreeToTerms": "Devi accettare i Termini di Servizio e l'Informativa sulla Privacy per continuare",
-      "fullNameError": "Inserisci il tuo nome completo"
+      "fullNameError": "Inserisci il tuo nome completo",
+      "successMessage": "Controlla la tua email per le istruzioni relative all'account"
     },
     "forgotPassword": {
       "title": "Password dimenticata?",
@@ -667,7 +668,8 @@
     "passwordRequired": "Password obbligatoria",
     "fieldRequired": "Obbligatorio",
     "emailExists": "Email già registrata",
-    "shortPassword": "Troppo corta (min 5 car)",
+    "shortPassword": "Troppo corta (min. 8 caratteri)",
+    "longPassword": "Troppo lunga (max. 72 byte UTF-8)",
     "signupFailed": "Registrazione fallita. Riprova."
   },
   "success": {

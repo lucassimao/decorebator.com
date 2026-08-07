@@ -978,7 +978,8 @@
     "helpText": "Choisissez un mot de passe fort que vous n'avez pas utilisé auparavant.",
     "errors": {
       "fillBothFields": "Veuillez remplir les deux champs de mot de passe.",
-      "tooShort": "Le mot de passe doit comporter au moins 4 caractères.",
+      "tooShort": "Le mot de passe doit comporter au moins 8 caractères.",
+      "tooLong": "Le mot de passe doit comporter au maximum 72 octets UTF-8.",
       "noMatch": "Les mots de passe ne correspondent pas.",
       "resetFailed": "Échec de la réinitialisation du mot de passe. Veuillez réessayer.",
       "tokenExpired": "Ce lien de réinitialisation a expiré. Veuillez en demander un nouveau.",

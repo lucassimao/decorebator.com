@@ -171,6 +171,7 @@ export const TraditionalSignupForm: React.FC<TraditionalSignupFormProps> = ({
                   errors.password && styles.inputError,
                 ]}
                 placeholder={t("auth.signup.passwordPlaceholder")}
+                maxLength={72}
                 placeholderTextColor={theme.colors.text.placeholder}
                 value={value}
                 onChangeText={onChange}

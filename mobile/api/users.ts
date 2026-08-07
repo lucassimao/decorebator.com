@@ -90,7 +90,6 @@ export async function signup(data: UserSignup) {
       DEFAULT_ERROR;
     throw new Error(message);
   }
-  saveSessionResponse(response);
 }
 
 export async function sigout() {
@@ -319,8 +318,10 @@ async function clearLocalCredentials() {
     if (Platform.OS === "web") {
       localStorage.removeItem("authorization");
     } else if (Platform.OS === "ios" || Platform.OS === "android") {
-      await SecureStore.deleteItemAsync("authorization");
-      await SecureStore.deleteItemAsync("refreshToken");
+      await Promise.allSettled([
+        SecureStore.deleteItemAsync("authorization"),
+        SecureStore.deleteItemAsync("refreshToken"),
+      ]);
     } else {
       throw new Error("Unknown platform: " + Platform.OS);
     }
@@ -329,6 +330,10 @@ async function clearLocalCredentials() {
     cachedRefreshToken = null;
     requestAnalyticsIdentityReset();
   }
+}
+
+export async function clearSessionCredentials() {
+  await clearLocalCredentials();
 }
 
 export async function authenticatedFetch(

@@ -85,6 +85,9 @@ func GetBcryptCost() int {
 		if cost, err := strconv.Atoi(costStr); err == nil {
 			// Validate cost is within bcrypt limits
 			if cost >= bcrypt.MinCost && cost <= bcrypt.MaxCost {
+				if os.Getenv("ENV") == "production" && cost < ProductionBcryptMinimumCost {
+					return ProductionBcryptMinimumCost
+				}
 				return cost
 			}
 		}

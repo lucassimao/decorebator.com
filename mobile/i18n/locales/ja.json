@@ -91,7 +91,8 @@
       "agreeToTerms": "利用規約とプライバシーポリシーに同意します",
       "termsCheckboxHint": "利用規約とプライバシーポリシーへの同意を切り替えるにはタップしてください",
       "mustAgreeToTerms": "続行するには利用規約とプライバシーポリシーに同意する必要があります",
-      "fullNameError": "フルネームを入力してください"
+      "fullNameError": "フルネームを入力してください",
+      "successMessage": "アカウントに関する手順をメールでご確認ください"
     },
     "forgotPassword": {
       "title": "パスワードをお忘れですか？",
@@ -663,7 +664,8 @@
     "passwordRequired": "パスワードは必須です",
     "fieldRequired": "必須",
     "emailExists": "メール既に登録済み",
-    "shortPassword": "短すぎます（最小5文字）",
+    "shortPassword": "短すぎます（最小8文字）",
+    "longPassword": "長すぎます（UTF-8で最大72バイト）",
     "signupFailed": "登録失敗。再試行してください。"
   },
   "success": {

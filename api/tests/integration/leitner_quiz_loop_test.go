@@ -10,6 +10,7 @@ import (
 	"decorebator.com/tests/integration/setup"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // TestLeitnerQuizLoop_ReproducesProductionIssue reproduces the quiz loop issue from production
@@ -24,7 +25,7 @@ func TestLeitnerQuizLoop_ReproducesProductionIssue(t *testing.T) {
 	loginResp := server.Expect.POST("/login").
 		WithJSON(map[string]interface{}{
 			"email":    "lsimaocosta+bs1@gmail.com",
-			"password": "test123", // We'll use a test password
+			"password": "testpass123", // We'll use a test password
 		}).
 		Expect().
 		Status(http.StatusOK)
@@ -44,7 +45,7 @@ func TestLeitnerQuizLoop_50Iterations(t *testing.T) {
 	loginResp := server.Expect.POST("/login").
 		WithJSON(map[string]interface{}{
 			"email":    "lsimaocosta+bs1@gmail.com",
-			"password": "test123",
+			"password": "testpass123",
 		}).
 		Expect().
 		Status(http.StatusOK)
@@ -62,7 +63,7 @@ func TestLeitnerQuizLoop_200Iterations(t *testing.T) {
 	loginResp := server.Expect.POST("/login").
 		WithJSON(map[string]interface{}{
 			"email":    "lsimaocosta+bs1@gmail.com",
-			"password": "test123",
+			"password": "testpass123",
 		}).
 		Expect().
 		Status(http.StatusOK)
@@ -80,7 +81,7 @@ func TestLeitnerQuizLoop_500Iterations(t *testing.T) {
 	loginResp := server.Expect.POST("/login").
 		WithJSON(map[string]interface{}{
 			"email":    "lsimaocosta+bs1@gmail.com",
-			"password": "test123",
+			"password": "testpass123",
 		}).
 		Expect().
 		Status(http.StatusOK)
@@ -221,14 +222,15 @@ func seedProductionData(t *testing.T, pool *pgxpool.Pool) {
 	tx, err := pool.Begin(ctx)
 	require.NoError(t, err)
 	defer tx.Rollback(ctx)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte("testpass123"), bcrypt.MinCost)
+	require.NoError(t, err)
 
 	// 1. Insert user (with test password)
 	_, err = tx.Exec(ctx, `
 		INSERT INTO users (id, first_name, last_name, email, password_hash, subscription_plan)
-		VALUES (5, 'lucas', 'Simao', 'lsimaocosta+bs1@gmail.com', 
-			'$2a$04$9ISNUxY0GO31nYuzMQ.hK.cInjBGTMl.zHqfSeVlUtObNmogFo4Je', 'monthly')
+		VALUES (5, 'lucas', 'Simao', 'lsimaocosta+bs1@gmail.com', $1, 'monthly')
 		ON CONFLICT (id) DO UPDATE SET subscription_plan = EXCLUDED.subscription_plan
-	`) // password is "test123"
+	`, string(passwordHash))
 	require.NoError(t, err)
 
 	// 2. Insert wordlist

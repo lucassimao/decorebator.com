@@ -31,6 +31,7 @@ func TestEmailIdentityUsesOneCanonicalContract(t *testing.T) {
 		}).
 		Expect().
 		Status(http.StatusCreated)
+	server.VerifyTestSignup(t, "http.case+identity@example.com", "password123")
 	server.Expect.POST("/login").
 		WithJSON(map[string]string{
 			"password": "password123",
@@ -54,6 +55,10 @@ func TestEmailIdentityUsesOneCanonicalContract(t *testing.T) {
 	var storedEmail string
 	require.NoError(t, server.DB.QueryRow(ctx, `SELECT email FROM users WHERE id=$1`, user.ID).Scan(&storedEmail))
 	assert.Equal(t, canonicalEmail, storedEmail)
+	require.NoError(t, func() error {
+		_, updateErr := server.DB.Exec(ctx, `UPDATE users SET email=$1 WHERE id=$2`, " Mixed.Case+Identity@Example.COM ", user.ID)
+		return updateErr
+	}())
 
 	token, err := server.AppContext.UserService.LoginUser(ctx, "\tMIXED.CASE+IDENTITY@EXAMPLE.COM ", "password123")
 	require.NoError(t, err)

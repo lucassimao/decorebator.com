@@ -12,7 +12,6 @@ import { useTranslation } from "react-i18next";
 import { backendLanguageMap } from "@/hooks/useI18n";
 import { getDetectedCountry } from "@/utils/countryDetection";
 import { mapErrorToI18n } from "@/utils/errorMapping";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   ImageBackground,
   Keyboard,
@@ -23,29 +22,12 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import z from "zod";
 import { authLightTheme } from "@/theme/authTheme";
 import type { Theme } from "@/contexts/ThemeContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { ResponsiveValues } from "@/contexts/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  ACTIVATION_EVENT_NAMES,
-  captureActivationEvent,
-  identifyAnalyticsUser,
-} from "@/utils/activationEvents";
-import { decode } from "@/api/jwt";
-
-const schema = z
-  .object({
-    fullName: z
-      .string()
-      .min(2, "Required")
-      .regex(/\s/, "Please enter your full name"),
-    email: z.string().email().min(2, "Required"),
-    password: z.string().min(5, "Required"),
-  })
-  .required();
+import { createSignupSchema, type SignupFormData } from "@/utils/signupSchema";
 
 export default function SignUpScreen() {
   const [signUpError, setSignUpError] = React.useState<Error | null>(null);
@@ -53,6 +35,11 @@ export default function SignUpScreen() {
   const [keyboardVisible, setKeyboardVisible] = React.useState(false);
   const snackbar = useSnackbar();
   const { t, i18n } = useTranslation();
+  const schema = React.useMemo(
+    () =>
+      createSignupSchema(t("errors.shortPassword"), t("errors.longPassword")),
+    [t],
+  );
   const posthog = usePostHog();
 
   // Always use light theme for auth screens
@@ -133,7 +120,7 @@ export default function SignUpScreen() {
 
       if (mappedError.isFieldError && mappedError.field) {
         // Set error on specific field to display translated message below the input
-        setError(mappedError.field as keyof typeof schema._type, {
+        setError(mappedError.field as keyof SignupFormData, {
           type: "manual",
           message: t(mappedError.i18nKey),
         });
@@ -142,30 +129,9 @@ export default function SignUpScreen() {
         setSignUpError(new Error(t(mappedError.i18nKey)));
       }
     },
-    onSuccess: async () => {
-      const authorization = usersApi.getAuthorization();
-      if (authorization) {
-        try {
-          identifyAnalyticsUser(posthog, decode(authorization).payload.sub);
-        } catch {
-          // The dashboard profile will retry identification from the server id.
-        }
-      }
-      captureActivationEvent(posthog, ACTIVATION_EVENT_NAMES.USER_SIGNED_UP, {
-        source: "signup_screen",
-      });
-
-      // Set flag that user just signed up for welcome flow
-      try {
-        await AsyncStorage.setItem("justSignedUp", "true");
-        if (__DEV__) {
-          console.log("Set justSignedUp flag to true");
-        }
-      } catch (error) {
-        console.warn("Failed to set signup flag:", error);
-      }
-
-      router.replace("/dashboard");
+    onSuccess: () => {
+      snackbar.show(t("auth.signup.successMessage"), "success", 5000);
+      router.replace("/signin");
     },
   });
 
@@ -182,7 +148,7 @@ export default function SignUpScreen() {
   const { setError } = form;
 
   const onSubmit = React.useCallback(
-    (data: z.infer<typeof schema>) => {
+    (data: SignupFormData) => {
       // Split full name into first and last names
       const nameParts = data.fullName.trim().split(/\s+/);
       const firstName = nameParts[0];

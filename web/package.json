@@ -6,6 +6,7 @@
     "dev": "next dev --turbopack -p 4000",
     "build": "next build && next-sitemap",
     "test:account-deletion": "node --test scripts/accountDeletionContract.test.mjs",
+    "test:password-policy": "node --test scripts/passwordPolicyContract.test.mjs",
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write .",

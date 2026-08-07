@@ -90,6 +90,7 @@ func TestRestorePurchases(t *testing.T) {
 			WithJSON(signupInput).
 			Expect().
 			Status(201)
+		ts.VerifyTestSignup(t, signupInput.Email, signupInput.Password)
 
 		// Get user auth token from login response header
 		loginResp := ts.Expect.POST("/login").
@@ -169,6 +170,7 @@ func TestRestorePurchases(t *testing.T) {
 			WithJSON(signupInput).
 			Expect().
 			Status(201)
+		ts.VerifyTestSignup(t, signupInput.Email, signupInput.Password)
 
 		// Get user auth token from login response header
 		loginResp := ts.Expect.POST("/login").
@@ -238,6 +240,7 @@ func TestRestorePurchases(t *testing.T) {
 			WithJSON(signupInput).
 			Expect().
 			Status(201)
+		ts.VerifyTestSignup(t, signupInput.Email, signupInput.Password)
 
 		// Get user auth token from login response header
 		loginResp := ts.Expect.POST("/login").

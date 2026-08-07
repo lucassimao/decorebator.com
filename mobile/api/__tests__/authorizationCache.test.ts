@@ -18,14 +18,20 @@ jest.mock("@/utils/offlineManager", () => ({
   },
 }));
 
-const { authenticatedFetch, getAuthorization, signin, sigout } =
-  jest.requireActual<typeof import("@/api/users")>("@/api/users");
+const {
+  authenticatedFetch,
+  clearSessionCredentials,
+  getAuthorization,
+  signin,
+  sigout,
+} = jest.requireActual<typeof import("@/api/users")>("@/api/users");
 
 describe("authorization cache", () => {
   const freshToken = "e30.eyJzdWJzY3JpcHRpb25QbGFuIjoiZnJlZSJ9.signature";
   const freshRefresh = "refresh-token-value";
   beforeEach(() => {
     jest.clearAllMocks();
+    (SecureStore.deleteItemAsync as jest.Mock).mockResolvedValue(undefined);
   });
 
   it("reads secure storage only once across repeated consumers", () => {
@@ -60,6 +66,40 @@ describe("authorization cache", () => {
 
   it("clears cached access even when sign-out storage cleanup completes later", async () => {
     await sigout();
+
+    expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith("authorization");
+    expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith("refreshToken");
+    expect(getAuthorization()).toBeNull();
+  });
+
+  it("clears native credentials immediately after a password security action", async () => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        headers: {
+          get: (name: string) =>
+            name.toLowerCase() === "authorization" ? freshToken : freshRefresh,
+        },
+      } as unknown as Response),
+    );
+    await signin({ email: "test@example.com", password: "secret" });
+
+    await clearSessionCredentials();
+
+    expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith("authorization");
+    expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith("refreshToken");
+    expect(getAuthorization()).toBeNull();
+  });
+
+  it("attempts both native credential deletions when one secure-store call fails", async () => {
+    (SecureStore.deleteItemAsync as jest.Mock).mockImplementation(
+      async (name) => {
+        if (name === "authorization")
+          throw new Error("secure store unavailable");
+      },
+    );
+
+    await expect(clearSessionCredentials()).resolves.toBeUndefined();
 
     expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith("authorization");
     expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith("refreshToken");

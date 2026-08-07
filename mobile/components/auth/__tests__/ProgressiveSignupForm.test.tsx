@@ -2,7 +2,6 @@ import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import z from "zod";
 import { ProgressiveSignupForm } from "../ProgressiveSignupForm";
 import { authLightTheme } from "@/theme/authTheme";
 import {
@@ -10,6 +9,7 @@ import {
   getResponsiveSpacing,
 } from "@/utils/responsive";
 import type { ResponsiveValues } from "@/contexts/ThemeContext";
+import { createSignupSchema, type SignupFormData } from "@/utils/signupSchema";
 
 // Mock expo-web-browser
 jest.mock("expo-web-browser", () => ({
@@ -21,19 +21,7 @@ jest.mock("expo-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-// Define the schema matching the real signup form
-const signupSchema = z
-  .object({
-    fullName: z
-      .string()
-      .min(2, "Required")
-      .regex(/\s/, "Please enter your full name"),
-    email: z.string().email().min(2, "Required"),
-    password: z.string().min(5, "Required"),
-  })
-  .required();
-
-type SignupFormData = z.infer<typeof signupSchema>;
+const signupSchema = createSignupSchema("Required", "Too long");
 
 // Test wrapper component that provides form context
 const TestWrapper: React.FC<{

@@ -1545,7 +1545,8 @@
     "helpText": "Lembre-se de escolher uma senha forte que você não usou antes.",
     "errors": {
       "fillBothFields": "Preencha ambos os campos de senha.",
-      "tooShort": "Senha deve ter pelo menos 4 caracteres.",
+      "tooShort": "Senha deve ter pelo menos 8 caracteres.",
+      "tooLong": "A senha deve ter no máximo 72 bytes UTF-8.",
       "noMatch": "Senhas não coincidem.",
       "resetFailed": "Falha ao redefinir senha. Tente novamente.",
       "tokenExpired": "Este link de redefinição expirou. Solicite um novo.",

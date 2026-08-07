@@ -24,6 +24,11 @@ This suite is local-development evidence only. It must never point at the produc
 
 The flashcard flow cold-starts the development client and uses its `__DEV__` credential prefill. The fixture script reads the same two test variables, hashes the password locally, and passes only the hash and email into the local Postgres container. The flow does not embed credentials.
 
+The signup flow generates a timestamped local-only address on every run so its
+three-per-hour account bucket cannot make repeated local or CI runs flaky. It
+asserts the generic mailbox-instructions response and never requires mailbox
+access or creates a production account.
+
 ## Full local gate
 
 Run every checked-in flow together after the final UI change:

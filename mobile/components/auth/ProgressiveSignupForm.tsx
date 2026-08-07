@@ -301,6 +301,7 @@ export const ProgressiveSignupForm: React.FC<ProgressiveSignupFormProps> = ({
                       errors.password && styles.inputError,
                     ]}
                     placeholder={t("auth.signup.passwordPlaceholder")}
+                    maxLength={72}
                     placeholderTextColor={theme.colors.text.placeholder}
                     value={value}
                     onChangeText={onChange}

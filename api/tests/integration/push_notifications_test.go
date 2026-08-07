@@ -154,6 +154,7 @@ func newAuthedPushTestServer(t *testing.T) (*setup.TestServer, string, int64) {
 		WithJSON(signupInput).
 		Expect().
 		Status(http.StatusCreated)
+	ts.VerifyTestSignup(t, signupInput.Email, signupInput.Password)
 
 	loginResp := ts.Expect.POST("/login").
 		WithJSON(httphandlers.LoginInput{

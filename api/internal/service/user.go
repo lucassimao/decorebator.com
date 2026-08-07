@@ -2,9 +2,13 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"decorebator.com/internal/common"
@@ -18,6 +22,10 @@ import (
 
 type User = model.User
 
+var ErrInvalidLoginCredentials = errors.New("invalid combination of email and/or password")
+
+var ErrAuthHardeningWritesDisabled = errors.New("AUTH-3 writes are disabled for rollback")
+
 // UserService handles user-related operations with dependency injection
 type UserService struct {
 	db                  *pgxpool.Pool
@@ -26,6 +34,9 @@ type UserService struct {
 	effectiveAccess     *EffectiveAccessService
 	authSessions        *AuthSessionService
 	jobService          JobService
+	dummyPasswordHash   []byte
+	passwordComparisons atomic.Uint64
+	pendingLookups      atomic.Uint64
 	deleteProfileObject func(context.Context, string, string) error
 }
 
@@ -39,18 +50,25 @@ func NewUserService(
 	subscriptionService *SubscriptionService,
 	authSessions *AuthSessionService,
 	jobs ...JobService,
-) *UserService {
+) (*UserService, error) {
+	dummyPasswordHash, err := bcrypt.GenerateFromPassword(
+		[]byte("decorebator-auth-timing-sentinel"), common.GetBcryptCost(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("initialize login timing hash: %w", err)
+	}
 	service := &UserService{
 		db:                  db,
 		userRepository:      &repo.UserRepository{Db: db},
 		subscriptionService: subscriptionService,
 		authSessions:        authSessions,
+		dummyPasswordHash:   dummyPasswordHash,
 		deleteProfileObject: common.MinIODeleteObject,
 	}
 	if len(jobs) > 0 {
 		service.jobService = jobs[0]
 	}
-	return service
+	return service, nil
 }
 
 func (s *UserService) CreateSession(ctx context.Context, userID int64) (SessionCredentials, error) {
@@ -70,6 +88,9 @@ func (s *UserService) SaveUser(
 	// Validate required parameters
 	if firstName == "" || lastName == "" || password == "" || email == "" {
 		return nil, common.BusinessError{Message: "firstName, lastName, password, and email are required"}
+	}
+	if err := common.ValidatePassword(password); err != nil {
+		return nil, common.BusinessError{Message: err.Error()}
 	}
 	canonicalEmail, err := common.NormalizeEmail(email)
 	if err != nil {
@@ -114,7 +135,101 @@ func (s *UserService) SaveUserAndSession(
 	return user, credentials, nil
 }
 
+// RegisterPendingUser creates an account that cannot authenticate until the
+// mailbox owner follows the generic account-security email. Duplicate emails
+// intentionally produce the same successful outcome as new registrations.
+func (s *UserService) RegisterPendingUser(
+	ctx context.Context,
+	firstName, lastName, password, email string,
+	country *string,
+	preferredLanguage *string,
+) error {
+	if s.jobService == nil {
+		return errors.New("account security job service is unavailable")
+	}
+	if err := common.ValidatePassword(password); err != nil {
+		return common.BusinessError{Message: err.Error()}
+	}
+	pendingPassword, err := newPendingAccountPassword()
+	if err != nil {
+		return err
+	}
+	err = pgx.BeginFunc(ctx, s.db, func(tx pgx.Tx) error {
+		if stateErr := requireAuthHardeningWrites(ctx, tx); stateErr != nil {
+			return stateErr
+		}
+		user, saveErr := s.SaveUser(
+			ctx, firstName, lastName, pendingPassword, email, country, preferredLanguage, tx,
+		)
+		if saveErr != nil {
+			return saveErr
+		}
+		_, saveErr = tx.Exec(ctx, `
+			INSERT INTO pending_email_verifications (user_id) VALUES ($1)
+		`, user.ID)
+		if saveErr != nil {
+			return saveErr
+		}
+		return s.jobService.ScheduleResetPasswordEmailJob(ctx, email, tx)
+	})
+	if err == nil {
+		return nil
+	}
+	var businessError common.BusinessError
+	if errors.As(err, &businessError) && businessError.Error() == "Email already exists." {
+		return pgx.BeginFunc(ctx, s.db, func(tx pgx.Tx) error {
+			if stateErr := requireAuthHardeningWrites(ctx, tx); stateErr != nil {
+				return stateErr
+			}
+			return s.jobService.ScheduleResetPasswordEmailJob(ctx, email, tx)
+		})
+	}
+	return err
+}
+
+func requireAuthHardeningWrites(ctx context.Context, tx pgx.Tx) error {
+	var writesEnabled bool
+	if err := tx.QueryRow(ctx, `
+		SELECT writes_enabled
+		FROM auth_hardening_rollout_state
+		WHERE singleton=TRUE
+		FOR SHARE
+	`).Scan(&writesEnabled); err != nil {
+		return fmt.Errorf("read auth-hardening rollout state: %w", err)
+	}
+	if !writesEnabled {
+		return ErrAuthHardeningWritesDisabled
+	}
+	return nil
+}
+
+func newPendingAccountPassword() (string, error) {
+	var random [32]byte
+	if _, err := rand.Read(random[:]); err != nil {
+		return "", fmt.Errorf("generate pending-account password: %w", err)
+	}
+	return base64.RawURLEncoding.EncodeToString(random[:]), nil
+}
+
+func (s *UserService) isEmailVerificationPending(ctx context.Context, userID int64, transactions ...pgx.Tx) (bool, error) {
+	s.pendingLookups.Add(1)
+	var queryer interface {
+		QueryRow(context.Context, string, ...any) pgx.Row
+	} = s.db
+	if len(transactions) > 0 {
+		queryer = transactions[0]
+	}
+	var pending bool
+	err := queryer.QueryRow(ctx, `
+		SELECT EXISTS(SELECT 1 FROM pending_email_verifications WHERE user_id=$1)
+	`, userID).Scan(&pending)
+	return pending, err
+}
+
 func (s *UserService) UpdatePassword(ctx context.Context, userID int64, password string) error {
+	if err := common.ValidatePassword(password); err != nil {
+		return common.BusinessError{Message: err.Error()}
+	}
 	err := s.userRepository.UpdatePassword(ctx, userID, password)
 	if err != nil {
 		common.Logger.Error("failed to save new user", "error", err)
@@ -127,17 +242,63 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (Se
 	startTime := time.Now()
 	canonicalEmail, err := common.NormalizeEmail(email)
 	if err != nil {
-		return SessionCredentials{}, errors.New("invalid combination of email and/or password")
+		s.passwordComparisons.Add(1)
+		_ = bcrypt.CompareHashAndPassword(s.dummyPasswordHash, []byte(password))
+		if _, pendingErr := s.isEmailVerificationPending(ctx, 0); pendingErr != nil {
+			return SessionCredentials{}, errors.New("could not process your request. Try again later")
+		}
+		return SessionCredentials{}, ErrInvalidLoginCredentials
 	}
 
-	args := repo.FindUserArgs{
-		Email: &canonicalEmail,
-	}
-
-	// Measure database query time
 	dbStart := time.Now()
-	results, err := s.userRepository.Find(ctx, args)
-	dbDuration := time.Since(dbStart)
+	var user User
+	var credentials SessionCredentials
+	var passwordMatches, pending bool
+	var bcryptDuration time.Duration
+	err = pgx.BeginFunc(ctx, s.db, func(tx pgx.Tx) error {
+		lockedUser, findErr := s.userRepository.FindLoginUserForUpdate(ctx, tx, canonicalEmail)
+		if findErr != nil && !errors.Is(findErr, pgx.ErrNoRows) {
+			return findErr
+		}
+		if findErr == nil {
+			user = lockedUser
+		}
+
+		users := []User(nil)
+		if user.ID > 0 {
+			users = []User{user}
+		}
+		bcryptStart := time.Now()
+		_, passwordMatches = compareLoginPassword(
+			users,
+			password,
+			s.dummyPasswordHash,
+			func(hash, supplied []byte) error {
+				s.passwordComparisons.Add(1)
+				return bcrypt.CompareHashAndPassword(hash, supplied)
+			},
+		)
+		bcryptDuration = time.Since(bcryptStart)
+
+		pendingLookupID := int64(0)
+		if user.ID > 0 {
+			pendingLookupID = user.ID
+		}
+		pending, findErr = s.isEmailVerificationPending(ctx, pendingLookupID, tx)
+		if findErr != nil {
+			return findErr
+		}
+		if !passwordMatches || pending {
+			return nil
+		}
+		if s.authSessions == nil {
+			return errors.New("auth-session service is unavailable")
+		}
+		var createErr error
+		credentials, createErr = s.authSessions.CreateTx(ctx, tx, user.ID)
+		return createErr
+	})
+	dbDuration := time.Since(dbStart) - bcryptDuration
 
 	if err != nil {
 		// Check if error is due to context timeout/cancellation
@@ -157,38 +318,151 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (Se
 		return SessionCredentials{}, errors.New("could not process your request. Try again later")
 	}
 
-	if len(results) != 1 {
-		return SessionCredentials{}, errors.New("invalid combination of email and/or password")
-	}
-
-	user := results[0]
-
-	// Measure bcrypt comparison time
-	bcryptStart := time.Now()
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
-	bcryptDuration := time.Since(bcryptStart)
-
 	totalDuration := time.Since(startTime)
 
 	// Log performance metrics for successful login attempts
-	if err == nil {
+	if passwordMatches {
+		if pending {
+			return SessionCredentials{}, ErrInvalidLoginCredentials
+		}
 		common.Logger.Info("login performance metrics",
 			"user_id", user.ID,
 			"db_query_ms", dbDuration.Milliseconds(),
 			"bcrypt_ms", bcryptDuration.Milliseconds(),
 			"total_ms", totalDuration.Milliseconds(),
 			"status", "success")
-		return s.CreateSession(ctx, user.ID)
+		return credentials, nil
 	}
 
 	// Log performance even for failed password attempts
-	common.Logger.Info("login performance metrics",
-		"user_id", user.ID,
+	logFields := []any{
 		"db_query_ms", dbDuration.Milliseconds(),
 		"bcrypt_ms", bcryptDuration.Milliseconds(),
 		"total_ms", totalDuration.Milliseconds(),
-		"status", "failed_password")
-	return SessionCredentials{}, errors.New("invalid combination of email and/or password")
+		"status", "failed_password",
+	}
+	if user.ID > 0 {
+		logFields = append(logFields, "user_id", user.ID)
+	}
+	common.Logger.Info("login performance metrics", logFields...)
+	return SessionCredentials{}, ErrInvalidLoginCredentials
+}
+
+// AuthPasswordComparisonCount supports authentication observability and proves
+// that every login path performs exactly one password-hash comparison.
+func (s *UserService) AuthPasswordComparisonCount() uint64 {
+	return s.passwordComparisons.Load()
+}
+
+func (s *UserService) AuthPendingLookupCount() uint64 {
+	return s.pendingLookups.Load()
+}
+
+func (s *UserService) ResetPasswordAndVerifyEmail(
+	ctx context.Context,
+	userID int64,
+	tokenID string,
+	password string,
+) error {
+	if err := common.ValidatePassword(password); err != nil {
+		return common.BusinessError{Message: err.Error()}
+	}
+	if tokenID == "" {
+		return common.BusinessError{Message: "token_invalid"}
+	}
+	tokenHash := sha256.Sum256([]byte(tokenID))
+	return pgx.BeginFunc(ctx, s.db, func(tx pgx.Tx) error {
+		if stateErr := requireAuthHardeningWrites(ctx, tx); stateErr != nil {
+			return stateErr
+		}
+		if lockErr := lockAuthUser(ctx, tx, userID); lockErr != nil {
+			return lockErr
+		}
+		var consumed bool
+		err := tx.QueryRow(ctx, `
+			UPDATE password_reset_tokens
+			SET consumed_at=NOW()
+			WHERE token_hash=$1 AND user_id=$2 AND consumed_at IS NULL AND expires_at > NOW()
+			RETURNING true
+		`, tokenHash[:], userID).Scan(&consumed)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return common.BusinessError{Message: "token_invalid"}
+		}
+		if err != nil || !consumed {
+			return err
+		}
+		err = s.userRepository.UpdatePassword(ctx, userID, password, tx)
+		if err != nil {
+			return err
+		}
+		_, err = tx.Exec(ctx, `DELETE FROM pending_email_verifications WHERE user_id=$1`, userID)
+		return err
+	})
+}
+
+func (s *UserService) ResetLegacyPassword(
+	ctx context.Context,
+	userID int64,
+	encryptedToken string,
+	password string,
+) error {
+	if err := common.ValidatePassword(password); err != nil {
+		return common.BusinessError{Message: err.Error()}
+	}
+	if userID <= 0 || encryptedToken == "" {
+		return common.BusinessError{Message: "token_invalid"}
+	}
+	tokenHash := sha256.Sum256([]byte(encryptedToken))
+	return pgx.BeginFunc(ctx, s.db, func(tx pgx.Tx) error {
+		if stateErr := requireAuthHardeningWrites(ctx, tx); stateErr != nil {
+			return stateErr
+		}
+		if lockErr := lockAuthUser(ctx, tx, userID); lockErr != nil {
+			return lockErr
+		}
+		var consumed bool
+		err := tx.QueryRow(ctx, `
+			INSERT INTO legacy_password_reset_consumptions (token_hash,user_id)
+			VALUES ($1,$2)
+			ON CONFLICT (token_hash) DO NOTHING
+			RETURNING true
+		`, tokenHash[:], userID).Scan(&consumed)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return common.BusinessError{Message: "token_invalid"}
+		}
+		if err != nil || !consumed {
+			return err
+		}
+		if err = s.userRepository.UpdatePassword(ctx, userID, password, tx); err != nil {
+			return err
+		}
+		_, err = tx.Exec(ctx, `DELETE FROM pending_email_verifications WHERE user_id=$1`, userID)
+		return err
+	})
+}
+
+func lockAuthUser(ctx context.Context, tx pgx.Tx, userID int64) error {
+	var lockedUserID int64
+	if err := tx.QueryRow(ctx, `SELECT id FROM users WHERE id=$1 FOR UPDATE`, userID).Scan(&lockedUserID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func compareLoginPassword(
+	users []User,
+	password string,
+	dummyHash []byte,
+	compare func([]byte, []byte) error,
+) (User, bool) {
+	user := User{}
+	hash := dummyHash
+	if len(users) == 1 {
+		user = users[0]
+		hash = []byte(user.PasswordHash)
+	}
+	compareErr := compare(hash, []byte(password))
+	return user, len(users) == 1 && compareErr == nil
 }
 
 func (s *UserService) VerifyPassword(ctx context.Context, email, password string) error {
@@ -309,8 +583,10 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID int64, firstName
 		return nil, common.BusinessError{Message: "Last name is required"}
 	}
 
-	if password != nil && strings.TrimSpace(*password) == "" {
-		return nil, common.BusinessError{Message: "Password is required"}
+	if password != nil {
+		if err := common.ValidatePassword(*password); err != nil {
+			return nil, common.BusinessError{Message: err.Error()}
+		}
 	}
 
 	args := repo.UpdateUserProfileArgs{

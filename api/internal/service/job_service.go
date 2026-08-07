@@ -20,9 +20,26 @@ type JobService interface {
 	ScheduleMeaningAudioJob(ctx context.Context, definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
 	ScheduleAccountCleanupJob(ctx context.Context, profileObjectPrefix string, tx *pgx.Tx) error
 	ScheduleProfileObjectCleanupJob(ctx context.Context, profileObjectName string) error
+	ScheduleResetPasswordEmailJob(ctx context.Context, email string, transactions ...pgx.Tx) error
 	ScheduleStripeWebhookJob(ctx context.Context, eventID, eventType string, eventData []byte) (int64, error)
 	ScheduleRevenueCatWebhookJob(ctx context.Context, eventType string, eventData []byte) (int64, error)
 	RetryJob(ctx context.Context, jobID int64) error
+}
+
+func (js *JobServiceImpl) ScheduleResetPasswordEmailJob(
+	ctx context.Context,
+	email string,
+	transactions ...pgx.Tx,
+) error {
+	var tx *pgx.Tx
+	if len(transactions) > 0 {
+		tx = &transactions[0]
+	}
+	_, err := js.enqueueJob(ctx, &river.InsertOpts{
+		Queue:       ResetPasswordEmailQueue,
+		MaxAttempts: 5,
+	}, ResetPasswordEmailArgs{Email: email}, tx)
+	return err
 }
 
 func (js *JobServiceImpl) ScheduleProfileObjectCleanupJob(ctx context.Context, profileObjectName string) error {

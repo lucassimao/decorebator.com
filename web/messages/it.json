@@ -934,7 +934,8 @@
     "helpText": "Scegli una password forte che non hai usato prima.",
     "errors": {
       "fillBothFields": "Compila entrambi i campi della password.",
-      "tooShort": "La password deve contenere almeno 4 caratteri.",
+      "tooShort": "La password deve contenere almeno 8 caratteri.",
+      "tooLong": "La password deve contenere al massimo 72 byte UTF-8.",
       "noMatch": "Le password non coincidono.",
       "resetFailed": "Impossibile reimpostare la password. Riprova.",
       "tokenExpired": "Questo link di reimpostazione è scaduto. Richiedine uno nuovo.",

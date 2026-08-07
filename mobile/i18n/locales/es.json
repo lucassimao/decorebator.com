@@ -91,7 +91,8 @@
       "agreeToTerms": "Acepto los Términos de Servicio y Política de Privacidad",
       "termsCheckboxHint": "Toca para alternar el acuerdo con los términos de servicio y política de privacidad",
       "mustAgreeToTerms": "Debes aceptar los Términos de Servicio y Política de Privacidad para continuar",
-      "fullNameError": "Por favor, ingresa tu nombre completo"
+      "fullNameError": "Por favor, ingresa tu nombre completo",
+      "successMessage": "Revisa tu correo electrónico para ver las instrucciones de la cuenta"
     },
     "forgotPassword": {
       "title": "¿Olvidaste tu contraseña?",
@@ -667,7 +668,8 @@
     "passwordRequired": "La contraseña es obligatoria",
     "fieldRequired": "Obligatorio",
     "emailExists": "Email ya registrado",
-    "shortPassword": "Muy corta (mín 5 chars)",
+    "shortPassword": "Muy corta (mín. 8 caracteres)",
+    "longPassword": "Muy larga (máx. 72 bytes UTF-8)",
     "signupFailed": "Registro falló. Inténtalo de nuevo."
   },
   "success": {

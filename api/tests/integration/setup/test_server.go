@@ -5,15 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
 	"decorebator.com/internal/app"
 	http_internal "decorebator.com/internal/http"
+	"decorebator.com/internal/mail"
 	"decorebator.com/internal/service"
 	"github.com/gavv/httpexpect/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"github.com/riverqueue/river"
 	"github.com/stretchr/testify/require"
 )
@@ -34,6 +37,9 @@ type AppContextConfigFunc func(builder *app.ContextBuilder) *app.ContextBuilder
 
 // NewTestServer creates a new test server instance using the real API routes
 func NewTestServer(t *testing.T, configFunc ...AppContextConfigFunc) *TestServer {
+	if os.Getenv("RESET_PASSWORD_PRIVATE_KEY") == "" {
+		t.Setenv("RESET_PASSWORD_PRIVATE_KEY", "test-reset-password-key-32-chars")
+	}
 	// Set gin to test mode
 	gin.SetMode(gin.TestMode)
 
@@ -49,8 +55,13 @@ func NewTestServer(t *testing.T, configFunc ...AppContextConfigFunc) *TestServer
 	require.NoError(t, err, "Failed to clean test data before starting")
 
 	// Configure Context for testing
+	redisOptions, err := redis.ParseURL(getTestRedisURL())
+	require.NoError(t, err, "Failed to parse test Redis URL")
+	redisClient := redis.NewClient(redisOptions)
+	require.NoError(t, redisClient.Ping(t.Context()).Err(), "Failed to ping test Redis")
 	builder := app.NewContext().
 		WithDatabase(db).
+		WithRedisClient(redisClient).
 		WithEnvironment("test")
 
 	// Apply custom configuration if provided
@@ -102,8 +113,38 @@ func NewTestServer(t *testing.T, configFunc ...AppContextConfigFunc) *TestServer
 	}
 }
 
+func getTestRedisURL() string {
+	if redisURL := os.Getenv("REDIS_URL"); redisURL != "" {
+		return redisURL
+	}
+	return "redis://localhost:6380"
+}
+
+// VerifyTestSignup simulates following the mailbox link after assertions about
+// the public signup response have completed.
+func (ts *TestServer) VerifyTestSignup(t *testing.T, email, password string) {
+	t.Helper()
+	var userID int64
+	err := ts.DB.QueryRow(t.Context(), `SELECT id FROM users WHERE email=$1`, email).Scan(&userID)
+	require.NoError(t, err)
+	token, err := mail.IssueResetPasswordToken(t.Context(), ts.DB, userID)
+	require.NoError(t, err)
+	payload, err := mail.ValidateResetPasswordPayload(token)
+	require.NoError(t, err)
+	require.NoError(t, ts.AppContext.UserService.ResetPasswordAndVerifyEmail(
+		t.Context(), userID, payload.TokenID, password,
+	))
+}
+
+func (ts *TestServer) LoginTestUser(email, password string) string {
+	response := ts.Expect.POST("/login").
+		WithJSON(http_internal.LoginInput{Email: email, Password: password}).
+		Expect().Status(200)
+	return response.Header("Authorization").NotEmpty().Raw()
+}
+
 // WithTestUser creates a test user and returns authentication token
-func (ts *TestServer) WithTestUser(_ *testing.T) string {
+func (ts *TestServer) WithTestUser(t *testing.T) string {
 	signupInput := GenerateSignupInput()
 
 	// Register user
@@ -111,18 +152,10 @@ func (ts *TestServer) WithTestUser(_ *testing.T) string {
 		WithJSON(signupInput).
 		Expect().
 		Status(201)
+	ts.VerifyTestSignup(t, signupInput.Email, signupInput.Password)
 
 	// Login to get token
-	loginResp := ts.Expect.POST("/login").
-		WithJSON(http_internal.LoginInput{
-			Email:    signupInput.Email,
-			Password: signupInput.Password,
-		}).
-		Expect().
-		Status(200)
-
-	// Login returns token in Authorization header, not JSON body
-	return loginResp.Header("Authorization").NotEmpty().Raw()
+	return ts.LoginTestUser(signupInput.Email, signupInput.Password)
 }
 
 // WithPremiumUser creates a premium test user with active subscription
@@ -134,6 +167,7 @@ func (ts *TestServer) WithPremiumUser(t *testing.T) string {
 		WithJSON(signupInput).
 		Expect().
 		Status(201)
+	ts.VerifyTestSignup(t, signupInput.Email, signupInput.Password)
 
 	// Get user ID and update subscription before first login
 	ctx := context.Background()

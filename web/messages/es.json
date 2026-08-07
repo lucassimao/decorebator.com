@@ -909,7 +909,8 @@
     "helpText": "Recuerda elegir una contraseña segura que no hayas usado antes.",
     "errors": {
       "fillBothFields": "Por favor, completa ambos campos de contraseña.",
-      "tooShort": "La contraseña debe tener al menos 4 caracteres.",
+      "tooShort": "La contraseña debe tener al menos 8 caracteres.",
+      "tooLong": "La contraseña debe tener como máximo 72 bytes UTF-8.",
       "noMatch": "Las contraseñas no coinciden.",
       "resetFailed": "No se pudo restablecer la contraseña. Inténtalo de nuevo.",
       "tokenExpired": "Este enlace de restablecimiento ha caducado. Solicita uno nuevo.",

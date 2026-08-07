@@ -126,25 +126,25 @@ func TestExpiredRefreshFamilyFailsClosed(t *testing.T) {
 	server.Expect.GET("/users").WithHeader("Authorization", credentials.access).Expect().Status(http.StatusUnauthorized)
 }
 
-func TestSignupRollsBackWhenSessionPersistenceFails(t *testing.T) {
+func TestSignupRollsBackWhenPendingVerificationPersistenceFails(t *testing.T) {
 	server := setup.NewTestServer(t)
 	defer server.Cleanup()
 	_, err := server.DB.Exec(t.Context(), `
-		CREATE FUNCTION fail_auth_refresh_insert() RETURNS trigger LANGUAGE plpgsql AS $$
-		BEGIN RAISE EXCEPTION 'forced auth refresh failure'; END $$;
-		CREATE TRIGGER fail_auth_refresh_insert
-		BEFORE INSERT ON auth_refresh_tokens
-		FOR EACH ROW EXECUTE FUNCTION fail_auth_refresh_insert();
+		CREATE FUNCTION fail_pending_verification_insert() RETURNS trigger LANGUAGE plpgsql AS $$
+		BEGIN RAISE EXCEPTION 'forced pending verification failure'; END $$;
+		CREATE TRIGGER fail_pending_verification_insert
+		BEFORE INSERT ON pending_email_verifications
+		FOR EACH ROW EXECUTE FUNCTION fail_pending_verification_insert();
 	`)
 	require.NoError(t, err)
 	defer func() {
 		_, _ = server.DB.Exec(t.Context(), `
-			DROP TRIGGER IF EXISTS fail_auth_refresh_insert ON auth_refresh_tokens;
-			DROP FUNCTION IF EXISTS fail_auth_refresh_insert();
+			DROP TRIGGER IF EXISTS fail_pending_verification_insert ON pending_email_verifications;
+			DROP FUNCTION IF EXISTS fail_pending_verification_insert();
 		`)
 	}()
 	signup := setup.GenerateSignupInput()
-	server.Expect.POST("/users").WithJSON(signup).Expect().Status(http.StatusInternalServerError)
+	server.Expect.POST("/users").WithJSON(signup).Expect().Status(http.StatusServiceUnavailable)
 	var users int
 	require.NoError(t, server.DB.QueryRow(t.Context(), `SELECT COUNT(*) FROM users WHERE email=$1`, signup.Email).Scan(&users))
 	assert.Zero(t, users)
@@ -188,10 +188,15 @@ func TestRefreshInfrastructureFailurePreservesCredential(t *testing.T) {
 func createNativeSession(t *testing.T, server *setup.TestServer) nativeSessionCredentials {
 	t.Helper()
 	signup := setup.GenerateSignupInput()
-	response := server.Expect.POST("/users").
+	server.Expect.POST("/users").
 		WithHeader("X-Auth-Client", "native").
 		WithJSON(signup).
 		Expect().Status(http.StatusCreated)
+	server.VerifyTestSignup(t, signup.Email, signup.Password)
+	response := server.Expect.POST("/login").
+		WithHeader("X-Auth-Client", "native").
+		WithJSON(map[string]string{"email": signup.Email, "password": signup.Password}).
+		Expect().Status(http.StatusOK)
 	return nativeSessionCredentials{
 		access:   response.Header("Authorization").NotEmpty().Raw(),
 		refresh:  response.Header("X-Refresh-Token").NotEmpty().Raw(),

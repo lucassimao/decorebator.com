@@ -81,10 +81,11 @@ func TestGracePeriodPlanDowngrade(t *testing.T) {
 	t.Run("UserWithinGracePeriod_PlanMaintained", func(t *testing.T) {
 		// Create a test user
 		signupInput := setup.GenerateSignupInput()
-		signupResp := ts.Expect.POST("/users").
+		ts.Expect.POST("/users").
 			WithJSON(signupInput).
 			Expect().
 			Status(201)
+		ts.VerifyTestSignup(t, signupInput.Email, signupInput.Password)
 
 		// Get user ID and initial auth token
 		ctx := context.Background()
@@ -94,7 +95,7 @@ func TestGracePeriodPlanDowngrade(t *testing.T) {
 			signupInput.Email).Scan(&userID)
 		require.NoError(t, err)
 
-		initialToken := signupResp.Header("Authorization").NotEmpty().Raw()
+		initialToken := ts.LoginTestUser(signupInput.Email, signupInput.Password)
 
 		// Update user to have monthly plan
 		_, err = ts.DB.Exec(ctx,
@@ -150,13 +151,14 @@ func TestGracePeriodPlanDowngrade(t *testing.T) {
 	t.Run("FreeUser_NoChangeNeeded", func(t *testing.T) {
 		// Create a test user (defaults to free plan)
 		signupInput := setup.GenerateSignupInput()
-		signupResp := ts.Expect.POST("/users").
+		ts.Expect.POST("/users").
 			WithJSON(signupInput).
 			Expect().
 			Status(201)
+		ts.VerifyTestSignup(t, signupInput.Email, signupInput.Password)
 
 		// Get initial auth token
-		initialToken := signupResp.Header("Authorization").NotEmpty().Raw()
+		initialToken := ts.LoginTestUser(signupInput.Email, signupInput.Password)
 
 		// Call GetProfile endpoint
 		profileResp := ts.Expect.GET("/users").
@@ -176,10 +178,11 @@ func TestGracePeriodPlanDowngrade(t *testing.T) {
 	t.Run("ActiveSubscription_NoDowngrade", func(t *testing.T) {
 		// Create a test user
 		signupInput := setup.GenerateSignupInput()
-		signupResp := ts.Expect.POST("/users").
+		ts.Expect.POST("/users").
 			WithJSON(signupInput).
 			Expect().
 			Status(201)
+		ts.VerifyTestSignup(t, signupInput.Email, signupInput.Password)
 
 		// Get user ID and initial auth token
 		ctx := context.Background()
@@ -189,7 +192,7 @@ func TestGracePeriodPlanDowngrade(t *testing.T) {
 			signupInput.Email).Scan(&userID)
 		require.NoError(t, err)
 
-		initialToken := signupResp.Header("Authorization").NotEmpty().Raw()
+		initialToken := ts.LoginTestUser(signupInput.Email, signupInput.Password)
 
 		// Update user to have monthly plan
 		_, err = ts.DB.Exec(ctx,

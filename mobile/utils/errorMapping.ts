@@ -10,14 +10,6 @@ interface ErrorMapping {
 }
 
 const errorMappings: ErrorMapping[] = [
-  // Main signup BusinessError - exact match from API
-  {
-    pattern: "Email already exists.",
-    i18nKey: "errors.emailExists",
-    isFieldError: true,
-    field: "email",
-  },
-
   // Validation errors for signup fields - exact matches from API
   {
     pattern: "The email field is required.",
@@ -50,8 +42,14 @@ const errorMappings: ErrorMapping[] = [
     field: "email",
   },
   {
-    pattern: "The password field must be at least 5 characters long.",
+    pattern: "password must contain at least 8 characters",
     i18nKey: "errors.shortPassword",
+    isFieldError: true,
+    field: "password",
+  },
+  {
+    pattern: "password must contain at most 72 UTF-8 bytes",
+    i18nKey: "errors.longPassword",
     isFieldError: true,
     field: "password",
   },

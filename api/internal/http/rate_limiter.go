@@ -1,6 +1,7 @@
 package http
 
 import (
+	"net"
 	"net/http"
 
 	"decorebator.com/internal/common"
@@ -9,6 +10,48 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+func RateLimitAuthSource(limiter *service.AuthRateLimiter, operation service.AuthLimitOperation) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		source := canonicalAuthSource(c.ClientIP())
+		if !applyAuthLimit(c, limiter, operation, service.AuthLimitSource, source) {
+			return
+		}
+		c.Next()
+	}
+}
+
+func canonicalAuthSource(source string) string {
+	if parsed := net.ParseIP(source); parsed != nil {
+		return parsed.String()
+	}
+	return source
+}
+
+func applyAuthLimit(
+	c *gin.Context,
+	limiter *service.AuthRateLimiter,
+	operation service.AuthLimitOperation,
+	dimension service.AuthLimitDimension,
+	value string,
+) bool {
+	decision, err := limiter.Check(c.Request.Context(), operation, dimension, value)
+	if err != nil {
+		common.Logger.ErrorContext(c.Request.Context(), "auth limiter unavailable",
+			"operation", operation, "dimension", dimension, "error", err)
+		c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Authentication temporarily unavailable"})
+		return false
+	}
+	if decision.Allowed {
+		return true
+	}
+	retryAfter := service.RetryAfterSeconds(decision.RetryAfter)
+	c.Header("Retry-After", retryAfter)
+	common.Logger.WarnContext(c.Request.Context(), "auth rate limit reached",
+		"operation", operation, "dimension", dimension, "retry_after_seconds", retryAfter)
+	c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests"})
+	return false
+}
 
 // RateLimitErrorReports middleware checks rate limits for error reporting
 func RateLimitErrorReports(db *pgxpool.Pool) gin.HandlerFunc {

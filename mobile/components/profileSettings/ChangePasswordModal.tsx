@@ -15,12 +15,19 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import * as userApi from "@/api/users";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
+import { router } from "expo-router";
+import {
+  isPasswordTooLong,
+  isPasswordTooShort,
+  passwordCodePointLength,
+} from "@/utils/passwordPolicy";
+import { completePasswordChange } from "@/utils/completePasswordChange";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -77,20 +84,20 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
         updatePassword: data,
       });
     },
-    onSuccess: () => {
-      Alert.alert(
-        t("common.success"),
-        t("profile.changePassword.passwordChanged"),
-        [
-          {
-            text: t("common.ok"),
-            onPress: () => {
-              reset();
-              onClose();
-            },
-          },
-        ],
-      );
+    onSuccess: async () => {
+      await completePasswordChange({
+        clearCredentials: userApi.clearSessionCredentials,
+        presentSuccess: (onConfirm) => {
+          Alert.alert(
+            t("common.success"),
+            t("profile.changePassword.passwordChanged"),
+            [{ text: t("common.ok"), onPress: onConfirm }],
+          );
+        },
+        resetForm: reset,
+        close: onClose,
+        redirectToSignIn: () => router.replace("/signin"),
+      });
     },
     onError: (error: Error) => {
       Alert.alert(
@@ -151,8 +158,8 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       return { text: "", color: theme.colors.ui.border, percentage: 0 };
 
     let strength = 0;
-    if (password.length >= 8) strength++;
-    if (password.length >= 12) strength++;
+    if (passwordCodePointLength(password) >= 8) strength++;
+    if (passwordCodePointLength(password) >= 12) strength++;
     if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
     if (/\d/.test(password)) strength++;
     if (/[^a-zA-Z\d]/.test(password)) strength++;
@@ -284,11 +291,13 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                 name="newPassword"
                 rules={{
                   required: t("profile.changePassword.newPasswordRequired"),
-                  minLength: {
-                    value: 8,
-                    message: t("profile.changePassword.minLength", { min: 8 }),
-                  },
                   validate: (value) => {
+                    if (isPasswordTooShort(value)) {
+                      return t("profile.changePassword.minLength", { min: 8 });
+                    }
+                    if (isPasswordTooLong(value)) {
+                      return t("errors.longPassword");
+                    }
                     if (value === watch("currentPassword")) {
                       return t("profile.changePassword.mustBeDifferent");
                     }
@@ -410,51 +419,19 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               )}
             </View>
 
-            {/* Password Requirements */}
+            {/* Enforced password requirements */}
             <View style={styles.requirementsContainer}>
               <Text style={styles.requirementsTitle}>
                 {t("profile.changePassword.passwordRequirements")}
               </Text>
               <View style={styles.requirement}>
-                <MaterialIcons
-                  name="check-circle"
-                  size={16}
-                  color={
-                    newPassword?.length >= 8
-                      ? theme.colors.success
-                      : theme.colors.ui.disabled
-                  }
-                />
                 <Text style={styles.requirementText}>
                   {t("profile.changePassword.atLeast8Characters")}
                 </Text>
               </View>
               <View style={styles.requirement}>
-                <MaterialIcons
-                  name="check-circle"
-                  size={16}
-                  color={
-                    /[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword)
-                      ? theme.colors.success
-                      : theme.colors.ui.disabled
-                  }
-                />
                 <Text style={styles.requirementText}>
-                  {t("profile.changePassword.upperAndLowercase")}
-                </Text>
-              </View>
-              <View style={styles.requirement}>
-                <MaterialIcons
-                  name="check-circle"
-                  size={16}
-                  color={
-                    /\d/.test(newPassword)
-                      ? theme.colors.success
-                      : theme.colors.ui.disabled
-                  }
-                />
-                <Text style={styles.requirementText}>
-                  {t("profile.changePassword.atLeastOneNumber")}
+                  {t("errors.longPassword")}
                 </Text>
               </View>
             </View>

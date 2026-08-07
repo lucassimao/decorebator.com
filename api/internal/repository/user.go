@@ -20,6 +20,27 @@ type UserRepository struct {
 	Db *pgxpool.Pool
 }
 
+// FindLoginUserForUpdate serializes successful authentication and session
+// creation with password changes that lock the same user row.
+func (repository *UserRepository) FindLoginUserForUpdate(
+	ctx context.Context,
+	tx pgx.Tx,
+	email string,
+) (User, error) {
+	var user User
+	err := tx.QueryRow(ctx, `
+		SELECT id,password_hash
+		FROM users
+		WHERE TRANSLATE(
+			BTRIM(email, E' \t\n\r\f\v'),
+			'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+			'abcdefghijklmnopqrstuvwxyz'
+		)=$1
+		FOR UPDATE
+	`, email).Scan(&user.ID, &user.PasswordHash)
+	return user, err
+}
+
 // Save creates a new user in the database
 // country parameter can be nil, which will insert NULL into the database
 // Note: Validation should be performed at the service layer before calling this function
@@ -166,19 +187,23 @@ func (repository *UserRepository) Find(ctx context.Context, args FindUserArgs) (
 	return users, nil
 }
 
-func (repository *UserRepository) UpdatePassword(ctx context.Context, userID int64, newPassword string) error {
+func (repository *UserRepository) UpdatePassword(ctx context.Context, userID int64, newPassword string, transactions ...pgx.Tx) error {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(newPassword), common.GetBcryptCost())
 	if err != nil {
 		return err
 	}
-	return pgx.BeginFunc(ctx, repository.Db, func(tx pgx.Tx) error {
+	update := func(tx pgx.Tx) error {
 		if _, err := tx.Exec(ctx, `
 			UPDATE users SET password_hash=$1,updated_at=NOW() WHERE id=$2
 		`, string(bytes), userID); err != nil {
 			return err
 		}
 		return revokeAuthSessionsTx(ctx, tx, userID, "password_reset")
-	})
+	}
+	if len(transactions) > 0 {
+		return update(transactions[0])
+	}
+	return pgx.BeginFunc(ctx, repository.Db, update)
 }
 
 func (repository *UserRepository) UpdateLastPracticeAt(ctx context.Context, userID int64) error {
