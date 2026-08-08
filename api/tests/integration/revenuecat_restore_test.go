@@ -94,6 +94,7 @@ func TestRestorePurchases(t *testing.T) {
 
 		// Get user auth token from login response header
 		loginResp := ts.Expect.POST("/login").
+			WithHeader("X-Auth-Client", "native").
 			WithJSON(map[string]string{
 				"email":    signupInput.Email,
 				"password": signupInput.Password,
@@ -174,6 +175,7 @@ func TestRestorePurchases(t *testing.T) {
 
 		// Get user auth token from login response header
 		loginResp := ts.Expect.POST("/login").
+			WithHeader("X-Auth-Client", "native").
 			WithJSON(map[string]string{
 				"email":    signupInput.Email,
 				"password": signupInput.Password,
@@ -244,6 +246,7 @@ func TestRestorePurchases(t *testing.T) {
 
 		// Get user auth token from login response header
 		loginResp := ts.Expect.POST("/login").
+			WithHeader("X-Auth-Client", "native").
 			WithJSON(map[string]string{
 				"email":    signupInput.Email,
 				"password": signupInput.Password,

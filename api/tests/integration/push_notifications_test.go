@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
@@ -129,7 +130,6 @@ func TestPushNotificationUnregister(t *testing.T) {
 
 	// Unregister should deactivate the token
 	ts.Expect.POST("/push/unregister").
-		WithHeader("Authorization", token).
 		WithJSON(map[string]any{
 			"expoPushToken": expoToken,
 		}).
@@ -142,6 +142,31 @@ func TestPushNotificationUnregister(t *testing.T) {
 	`, userID, expoToken).Scan(&isActive)
 	require.NoError(t, err, "push token should exist")
 	assert.False(t, isActive, "token should be deactivated after unregister")
+}
+
+func TestPushNotificationUnregisterRejectsMalformedCapability(t *testing.T) {
+	ts := setup.NewTestServer(t)
+	defer ts.Cleanup()
+
+	ts.Expect.POST("/push/unregister").
+		WithJSON(map[string]any{"expoPushToken": "not-a-push-token"}).
+		Expect().
+		Status(http.StatusBadRequest)
+}
+
+func TestPushNotificationUnregisterRejectsOversizedBody(t *testing.T) {
+	ts := setup.NewTestServer(t)
+	defer ts.Cleanup()
+
+	request, err := http.NewRequestWithContext(
+		t.Context(), http.MethodPost, ts.BaseURL+"/push/unregister", bytes.NewReader(bytes.Repeat([]byte("x"), 513)),
+	)
+	require.NoError(t, err)
+	request.Header.Set("Content-Type", "application/json")
+	response, err := http.DefaultClient.Do(request)
+	require.NoError(t, err)
+	defer response.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 }
 
 func newAuthedPushTestServer(t *testing.T) (*setup.TestServer, string, int64) {
@@ -157,6 +182,7 @@ func newAuthedPushTestServer(t *testing.T) (*setup.TestServer, string, int64) {
 	ts.VerifyTestSignup(t, signupInput.Email, signupInput.Password)
 
 	loginResp := ts.Expect.POST("/login").
+		WithHeader("X-Auth-Client", "native").
 		WithJSON(httphandlers.LoginInput{
 			Email:    signupInput.Email,
 			Password: signupInput.Password,

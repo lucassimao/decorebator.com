@@ -124,10 +124,15 @@ func TestWordMasteryEndpoint_ErrorCases(t *testing.T) {
 			Status(http.StatusBadRequest)
 	})
 
-	t.Run("UnauthorizedAccess", func(_ *testing.T) {
-		server.Expect.GET("/analytics/wordlists/1/word-mastery").
-			Expect().
-			Status(http.StatusUnauthorized)
+	t.Run("UnauthorizedAccess", func(t *testing.T) {
+		request, err := http.NewRequestWithContext(
+			t.Context(), http.MethodGet, server.BaseURL+"/analytics/wordlists/1/word-mastery", nil,
+		)
+		require.NoError(t, err)
+		response, err := server.Server.Client().Do(request)
+		require.NoError(t, err)
+		defer response.Body.Close()
+		assert.Equal(t, http.StatusUnauthorized, response.StatusCode)
 	})
 }
 

@@ -3,7 +3,12 @@ import {
   DEFAULT_ERROR,
   TOKEN_VALIDATION_ERROR,
 } from "./constants";
-import { authenticatedFetch, getAuthorization, sigout } from "./users";
+import {
+  authenticatedFetch,
+  authenticationHeaders,
+  clearSessionCredentials,
+  hasAuthenticationSession,
+} from "./users";
 import { router } from "expo-router";
 
 export async function callAPI<T>(
@@ -12,36 +17,34 @@ export async function callAPI<T>(
   body?: string,
   timeoutMs = 15000, // 15 second default timeout
 ): Promise<T> {
-  const authorization = getAuthorization();
-
-  if (!authorization) {
+  if (!hasAuthenticationSession()) {
     throw new Error(AUTH_REQUIRED_ERROR);
   }
 
-  // Create timeout promise
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => {
-      reject(new Error(`Request timeout after ${timeoutMs}ms`));
-    }, timeoutMs);
-  });
-
-  // Race between fetch and timeout
-  const response = await Promise.race([
-    authenticatedFetch(endpoint, {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  let response: Response;
+  let responseBody: any;
+  try {
+    response = await authenticatedFetch(endpoint, {
       method,
       headers: {
-        authorization,
+        ...authenticationHeaders(),
       },
       body,
       credentials: "include",
-    }),
-    timeoutPromise,
-  ]);
-
-  let responseBody: any;
-
-  if (response.status !== 204) {
-    responseBody = await response.json();
+      signal: controller.signal,
+    });
+    if (response.status !== 204) {
+      responseBody = await response.json();
+    }
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error(`Request timeout after ${timeoutMs}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
   if (!response.ok) {
     const message =
@@ -50,7 +53,7 @@ export async function callAPI<T>(
       DEFAULT_ERROR;
 
     if (message === TOKEN_VALIDATION_ERROR) {
-      await sigout();
+      await clearSessionCredentials();
       router.dismissAll();
       router.replace("/signin");
     } else {

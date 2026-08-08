@@ -1,4 +1,8 @@
-import { authenticatedFetch, getAuthorization } from "./users";
+import {
+  authenticatedFetch,
+  authenticationHeaders,
+  hasAuthenticationSession,
+} from "./users";
 import { DEFAULT_ERROR } from "./constants";
 import { Platform } from "react-native";
 import { getApiBaseUrl } from "./baseUrl";
@@ -14,9 +18,7 @@ interface RestorePurchasesRequest {
 
 export async function restorePurchases(appUserId: string): Promise<void> {
   const endpoint = `${API_URL}/subscription/revenuecat/restore`;
-  const authorization = getAuthorization();
-
-  if (!authorization) {
+  if (!hasAuthenticationSession()) {
     throw new Error("Authentication required");
   }
 
@@ -40,7 +42,7 @@ export async function restorePurchases(appUserId: string): Promise<void> {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: authorization,
+      ...authenticationHeaders(),
     },
     body: JSON.stringify(request),
   });

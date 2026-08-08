@@ -18,7 +18,8 @@ prompt_file=$1
 result_file=$2
 review_repository=${3:-$(pwd)}
 review_attempt_seconds=${CLAUDE_REVIEW_ATTEMPT_SECONDS:-300}
-codex_attempt_seconds=${CODEX_REVIEW_ATTEMPT_SECONDS:-600}
+codex_attempt_seconds=${CODEX_REVIEW_ATTEMPT_SECONDS:-1800}
+codex_review_model=${CODEX_REVIEW_MODEL:-gpt-5.6-sol}
 
 [[ -s "$prompt_file" ]] || fail "prompt file is missing or empty: ${prompt_file}"
 [[ -d "$review_repository" ]] || fail "repository directory does not exist: ${review_repository}"
@@ -163,6 +164,8 @@ while true; do
 
   timeout "${codex_attempt_seconds}s" codex exec \
     --ephemeral \
+    --ignore-user-config \
+    --model "$codex_review_model" \
     -C "$review_repository" \
     -s read-only \
     -c 'model_reasoning_effort="xhigh"' \

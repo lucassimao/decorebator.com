@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
@@ -6,12 +5,16 @@ import { Platform } from "react-native";
 import i18n from "@/i18n";
 import { getDeviceTimezone } from "@/utils/dateUtils";
 import * as pushApi from "@/api/pushNotifications";
+import {
+  beginPushTokenRegistration,
+  completePushTokenRegistration,
+  deactivateStoredPushToken,
+  getStoredPushToken,
+  scheduleStoredPushTokenDeactivation,
+} from "@/utils/pushTokenStorage";
+import { getAuthenticationSessionEpoch } from "@/api/users";
 
-const PUSH_TOKEN_STORAGE_KEY = "expoPushToken";
-
-export async function getStoredPushToken(): Promise<string | null> {
-  return AsyncStorage.getItem(PUSH_TOKEN_STORAGE_KEY);
-}
+export { getStoredPushToken } from "@/utils/pushTokenStorage";
 
 export async function registerDevicePushToken(options: {
   prompt: boolean;
@@ -24,17 +27,37 @@ export async function registerDevicePushToken(options: {
     return null;
   }
 
+  const sessionOrigin = getAuthenticationSessionEpoch();
+  const assertSessionOrigin = () => {
+    if (!sessionOrigin || getAuthenticationSessionEpoch() !== sessionOrigin) {
+      throw new Error("Session changed during push registration");
+    }
+  };
+
   const existingToken = await getStoredPushToken();
+  assertSessionOrigin();
   if (existingToken) {
+    const registrationGeneration = beginPushTokenRegistration();
     const timezone = getDeviceTimezone();
     try {
-      await pushApi.registerPushToken({
-        expoPushToken: existingToken,
-        platform: Platform.OS === "ios" ? "ios" : "android",
-        deviceId: Device.osInternalBuildId || Device.modelId || undefined,
-        timezone,
-        locale: i18n.language,
-      });
+      const registered = await completePushTokenRegistration(
+        registrationGeneration,
+        existingToken,
+        (signal) => {
+          assertSessionOrigin();
+          return pushApi.registerPushToken(
+            {
+              expoPushToken: existingToken,
+              platform: Platform.OS === "ios" ? "ios" : "android",
+              deviceId: Device.osInternalBuildId || Device.modelId || undefined,
+              timezone,
+              locale: i18n.language,
+            },
+            signal,
+          );
+        },
+      );
+      if (!registered) return null;
     } catch (error) {
       console.warn("Failed to register push token", {
         timezone,
@@ -46,9 +69,11 @@ export async function registerDevicePushToken(options: {
   }
 
   const permissions = await Notifications.getPermissionsAsync();
+  assertSessionOrigin();
   let status = permissions.status;
   if (status !== "granted" && options.prompt) {
     const requested = await Notifications.requestPermissionsAsync();
+    assertSessionOrigin();
     status = requested.status;
   }
   if (status !== "granted") {
@@ -61,23 +86,37 @@ export async function registerDevicePushToken(options: {
   const tokenResponse = projectId
     ? await Notifications.getExpoPushTokenAsync({ projectId })
     : await Notifications.getExpoPushTokenAsync();
+  assertSessionOrigin();
 
   const expoPushToken = tokenResponse.data;
   if (!expoPushToken) {
     return null;
   }
 
+  const registrationGeneration = beginPushTokenRegistration();
+
   const deviceId = Device.osInternalBuildId || Device.modelId || undefined;
   const timezone = getDeviceTimezone();
 
   try {
-    await pushApi.registerPushToken({
+    const registered = await completePushTokenRegistration(
+      registrationGeneration,
       expoPushToken,
-      platform: Platform.OS === "ios" ? "ios" : "android",
-      deviceId,
-      timezone,
-      locale: i18n.language,
-    });
+      (signal) => {
+        assertSessionOrigin();
+        return pushApi.registerPushToken(
+          {
+            expoPushToken,
+            platform: Platform.OS === "ios" ? "ios" : "android",
+            deviceId,
+            timezone,
+            locale: i18n.language,
+          },
+          signal,
+        );
+      },
+    );
+    if (!registered) return null;
   } catch (error) {
     console.warn("Failed to register push token", {
       timezone,
@@ -86,16 +125,15 @@ export async function registerDevicePushToken(options: {
     throw error;
   }
 
-  await AsyncStorage.setItem(PUSH_TOKEN_STORAGE_KEY, expoPushToken);
   return expoPushToken;
 }
 
 export async function unregisterDevicePushToken(): Promise<void> {
-  const storedToken = await getStoredPushToken();
-  if (!storedToken) {
-    return;
-  }
+  await deactivateStoredPushToken();
+}
 
-  await pushApi.unregisterPushToken(storedToken);
-  await AsyncStorage.removeItem(PUSH_TOKEN_STORAGE_KEY);
+export function resumeStoredPushTokenDeactivation(): void {
+  if (Platform.OS !== "web") {
+    scheduleStoredPushTokenDeactivation();
+  }
 }

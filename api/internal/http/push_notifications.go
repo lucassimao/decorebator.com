@@ -2,12 +2,15 @@ package http
 
 import (
 	"net/http"
+	"regexp"
 	"time"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/repository"
 	"github.com/gin-gonic/gin"
 )
+
+var expoPushTokenPattern = regexp.MustCompile(`^Expo(?:nent)?PushToken\[[A-Za-z0-9_-]{8,180}\]$`)
 
 type PushNotificationRoutes struct {
 	pushRepo *repository.PushTokenRepository
@@ -26,6 +29,7 @@ type registerPushTokenInput struct {
 }
 
 func (h *PushNotificationRoutes) Register(c *gin.Context) {
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 512)
 	var input registerPushTokenInput
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -33,6 +37,10 @@ func (h *PushNotificationRoutes) Register(c *gin.Context) {
 	}
 	if input.Platform != "ios" && input.Platform != "android" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid platform"})
+		return
+	}
+	if !expoPushTokenPattern.MatchString(input.ExpoPushToken) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid push token"})
 		return
 	}
 	if _, err := time.LoadLocation(input.Timezone); err != nil {
@@ -71,20 +79,27 @@ type unregisterPushTokenInput struct {
 }
 
 func (h *PushNotificationRoutes) Unregister(c *gin.Context) {
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 512)
 	var input unregisterPushTokenInput
-	if err := c.BindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid push token request"})
+		return
+	}
+	if !expoPushTokenPattern.MatchString(input.ExpoPushToken) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid push token"})
 		return
 	}
 
-	userID := c.GetInt64("userID")
 	if h.pushRepo == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "push repository unavailable"})
 		return
 	}
 
-	if err := h.pushRepo.Deactivate(c.Request.Context(), userID, input.ExpoPushToken); err != nil {
-		common.Logger.ErrorContext(c.Request.Context(), "failed to deactivate push token", "error", err, "userID", userID)
+	// Unregistration is intentionally a possession-based public operation: an
+	// expired local session must still be able to stop notifications for the
+	// exact opaque device token it holds. Registration remains authenticated.
+	if err := h.pushRepo.DeactivateByTokens(c.Request.Context(), []string{input.ExpoPushToken}); err != nil {
+		common.Logger.ErrorContext(c.Request.Context(), "failed to deactivate push token", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unregister token"})
 		return
 	}

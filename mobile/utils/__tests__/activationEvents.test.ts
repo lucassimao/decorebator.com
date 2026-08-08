@@ -189,14 +189,19 @@ describe("activation analytics contract", () => {
     expect(posthog.reset).toHaveBeenCalledTimes(1);
   });
 
-  it("delivers auth-layer reset requests to the mounted analytics bridge", () => {
+  it("delivers mounted resets and latches a reset while the bridge is absent", () => {
     const listener = jest.fn();
     const unsubscribe = subscribeAnalyticsIdentityReset(listener);
 
     requestAnalyticsIdentityReset();
     unsubscribe();
     requestAnalyticsIdentityReset();
+    const replacementListener = jest.fn();
+    const unsubscribeReplacement =
+      subscribeAnalyticsIdentityReset(replacementListener);
+    unsubscribeReplacement();
 
     expect(listener).toHaveBeenCalledTimes(1);
+    expect(replacementListener).toHaveBeenCalledTimes(1);
   });
 });

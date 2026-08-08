@@ -260,8 +260,7 @@ const SettingsScreen: React.FC = () => {
       router.replace("/signin");
     } catch (error) {
       console.error("Logout error:", error);
-      // Force navigation even if cleanup fails
-      router.replace("/signin");
+      Alert.alert(t("common.error"), t("errors.general"));
     }
   };
 

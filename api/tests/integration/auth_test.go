@@ -171,22 +171,18 @@ func TestUserLogin(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.name, func(_ *testing.T) {
 			response := server.Expect.POST("/login").
 				WithJSON(tt.credentials).
 				Expect().
 				Status(tt.expectedStatus)
 
 			if tt.shouldHaveJWT {
-				// Login returns empty body but JWT token in Authorization header
-				token := response.Header("Authorization").NotEmpty().Raw()
-				require.NotEmpty(t, token, "Authorization token should be present")
-
-				// Verify JWT token is also set as cookie
+				response.Header("Authorization").IsEmpty()
+				response.Header("X-Refresh-Token").IsEmpty()
 				response.Cookies().ContainsOnly("Authorization", "RefreshToken")
 				cookie := response.Cookie("Authorization")
 				cookie.Value().NotEmpty()
-				assert.Equal(t, token, cookie.Value().Raw(), "Token in header should match cookie")
 			}
 		})
 	}
@@ -226,14 +222,17 @@ func TestJWTAuthentication(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) { //nolint:revive // t is used in the test logic
-			request := server.Expect.GET("/users")
-
+		t.Run(tt.name, func(t *testing.T) {
+			request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, server.BaseURL+"/users", nil)
+			require.NoError(t, err)
 			if tt.token != "" {
-				request = request.WithHeader("Authorization", fmt.Sprintf("Bearer %s", tt.token))
+				request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tt.token))
 			}
 
-			request.Expect().Status(tt.expectedStatus)
+			response, err := server.Server.Client().Do(request)
+			require.NoError(t, err)
+			defer response.Body.Close()
+			assert.Equal(t, tt.expectedStatus, response.StatusCode)
 		})
 	}
 }

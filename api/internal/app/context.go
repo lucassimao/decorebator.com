@@ -60,6 +60,7 @@ type Context struct {
 	LegacyProviderSurfaceEnabled bool
 	LegacyRevenueCatWebhookAuth  string
 	TrustedProxyCIDRs            []string
+	HTTPSecurity                 config.HTTPSecurityConfig
 
 	// Monitoring
 	// Configuration
@@ -209,21 +210,10 @@ func (b *ContextBuilder) Build() (*Context, error) {
 	if err := validateRuntimeSecurityConfiguration(b.context.Environment); err != nil {
 		return nil, err
 	}
-	legacyProviderConfig, err := config.LoadLegacyProviderConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to configure legacy provider surface: %w", err)
+	if err := b.loadBoundaryConfiguration(); err != nil {
+		return nil, err
 	}
-	b.legacyProviderConfig = legacyProviderConfig
-	b.context.LegacyProviderSurfaceEnabled = legacyProviderConfig.Enabled
-	b.context.LegacyRevenueCatWebhookAuth = legacyProviderConfig.RevenueCatWebhookAuthorization
-	trustedProxyConfig, err := config.LoadTrustedProxyConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to configure trusted proxies: %w", err)
-	}
-	if b.context.Environment == "production" && len(trustedProxyConfig.CIDRs) == 0 && !trustedProxyConfig.DirectMode {
-		return nil, errors.New("production requires trusted proxy CIDRs or explicit direct-client traffic mode")
-	}
-	b.context.TrustedProxyCIDRs = trustedProxyConfig.CIDRs
+	var err error
 	if b.context.AuthTokens == nil {
 		authConfig, authErr := config.LoadAuthConfig()
 		if authErr != nil {
@@ -256,9 +246,10 @@ func (b *ContextBuilder) Build() (*Context, error) {
 		}
 	}
 	if b.context.AuthRateLimiter == nil {
+		deployed := b.context.Environment == "production" || b.context.Environment == "staging"
 		b.context.AuthRateLimiter, err = service.NewAuthRateLimiter(
 			b.context.RedisClient,
-			b.context.Environment == "production",
+			deployed,
 			b.context.Environment,
 			nil,
 		)
@@ -276,6 +267,33 @@ func (b *ContextBuilder) Build() (*Context, error) {
 	}
 
 	return b.context, nil
+}
+
+func (b *ContextBuilder) loadBoundaryConfiguration() error {
+	legacyProviderConfig, err := config.LoadLegacyProviderConfig()
+	if err != nil {
+		return fmt.Errorf("failed to configure legacy provider surface: %w", err)
+	}
+	b.legacyProviderConfig = legacyProviderConfig
+	b.context.LegacyProviderSurfaceEnabled = legacyProviderConfig.Enabled
+	b.context.LegacyRevenueCatWebhookAuth = legacyProviderConfig.RevenueCatWebhookAuthorization
+
+	trustedProxyConfig, err := config.LoadTrustedProxyConfig()
+	if err != nil {
+		return fmt.Errorf("failed to configure trusted proxies: %w", err)
+	}
+	deployed := b.context.Environment == "production" || b.context.Environment == "staging"
+	if deployed && len(trustedProxyConfig.CIDRs) == 0 && !trustedProxyConfig.DirectMode {
+		return errors.New("deployed environments require trusted proxy CIDRs or explicit direct-client traffic mode")
+	}
+	b.context.TrustedProxyCIDRs = trustedProxyConfig.CIDRs
+
+	httpSecurity, err := config.LoadHTTPSecurityConfig(b.context.Environment)
+	if err != nil {
+		return fmt.Errorf("failed to configure HTTP security: %w", err)
+	}
+	b.context.HTTPSecurity = httpSecurity
+	return nil
 }
 
 func validateRuntimeSecurityConfiguration(environment string) error {

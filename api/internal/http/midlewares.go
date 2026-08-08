@@ -2,17 +2,19 @@ package http
 
 import (
 	"context"
+	"crypto/sha256"
+	"crypto/subtle"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
 
 	"decorebator.com/internal/common"
+	"decorebator.com/internal/config"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
 	"decorebator.com/internal/service"
@@ -23,12 +25,16 @@ import (
 
 const productionEnv = "production"
 
-func Authenticate(sessions *service.AuthSessionService, users *repository.UserRepository) gin.HandlerFunc {
+func Authenticate(
+	sessions *service.AuthSessionService,
+	users *repository.UserRepository,
+	policy config.HTTPSecurityConfig,
+) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		const BearerSchema = "Bearer "
 		authorization := c.GetHeader("Authorization")
 		if authorization == "" {
-			authorization, _ = c.Cookie("Authorization")
+			authorization, _ = c.Cookie(authenticationCookieName(policy))
 		}
 		if authorization == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization missing"})
@@ -90,43 +96,41 @@ func ResolveEffectiveSubscription(access *service.EffectiveAccessService) gin.Ha
 	}
 }
 
-func AuthenticateStatic(c *gin.Context) {
-	authorization := c.GetHeader("Authorization")
-
-	if authorization == "" || authorization != os.Getenv("STATIC_AUTHENTICATION") {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Wrong credentials"})
-		return
+func AuthenticateStatic(expected string) gin.HandlerFunc {
+	expectedHash := sha256.Sum256([]byte(expected))
+	return func(c *gin.Context) {
+		providedHash := sha256.Sum256([]byte(c.GetHeader("Authorization")))
+		if expected == "" || subtle.ConstantTimeCompare(providedHash[:], expectedHash[:]) != 1 {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Wrong credentials"})
+			return
+		}
+		c.Next()
 	}
-
-	c.Next()
 }
 
-func CORSMiddleware() gin.HandlerFunc {
+func CORSMiddleware(policy config.HTTPSecurityConfig) gin.HandlerFunc {
+	allowedOrigins := make(map[string]struct{}, len(policy.AllowedOrigins))
+	for _, origin := range policy.AllowedOrigins {
+		allowedOrigins[origin] = struct{}{}
+	}
 	return func(c *gin.Context) {
-		// Allow only a single, valid origin per request. Multiple values are invalid per CORS spec
-		// and may be coalesced by proxies (e.g., Cloudflare) into a comma-separated list, causing failures.
-		allowedOrigins := map[string]struct{}{
-			"https://decorebator.com":     {},
-			"https://www.decorebator.com": {},
+		c.Writer.Header().Set("Vary", "Origin")
+		originHeaders := c.Request.Header.Values("Origin")
+		if len(originHeaders) > 1 {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Malformed Origin header"})
+			return
 		}
-
 		origin := c.Request.Header.Get("Origin")
-		if os.Getenv("ENV") == productionEnv {
-			if origin != "" {
-				if _, ok := allowedOrigins[origin]; ok {
-					c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
-					c.Writer.Header().Set("Vary", "Origin")
-				}
+		if origin != "" {
+			if _, allowed := allowedOrigins[origin]; !allowed {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Origin not allowed"})
+				return
 			}
-		} else {
-			if origin != "" {
-				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
-				c.Writer.Header().Set("Vary", "Origin")
-			}
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		}
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Type, Content-Length, Authorization, Cookie, Retry-After")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Cookie")
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Type, Content-Length, Retry-After")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 
 		if c.Request.Method == "OPTIONS" {
@@ -134,6 +138,33 @@ func CORSMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		c.Next()
+	}
+}
+
+func SecurityHeaders(production bool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		headers := c.Writer.Header()
+		headers.Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
+		headers.Set("Cache-Control", "no-store")
+		headers.Set("X-Frame-Options", "DENY")
+		headers.Set("X-Content-Type-Options", "nosniff")
+		headers.Set("Referrer-Policy", "no-referrer")
+		headers.Set("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()")
+		if production {
+			headers.Set("Strict-Transport-Security", "max-age=31536000")
+		}
+		c.Next()
+	}
+}
+
+func ExpireLegacyParentDomainCookies(policy config.HTTPSecurityConfig) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if policy.LegacyCookieDomain != "" && policy.LegacyCookieDomain != policy.CookieDomain {
+			c.SetSameSite(http.SameSiteStrictMode)
+			c.SetCookie("Authorization", "", -1, "/", policy.LegacyCookieDomain, policy.SecureCookies, true)
+			c.SetCookie("RefreshToken", "", -1, "/", policy.LegacyCookieDomain, policy.SecureCookies, true)
+		}
 		c.Next()
 	}
 }
@@ -197,12 +228,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 					}
 				}
 
-				if os.Getenv("ENV") == productionEnv {
-					attrs = append(attrs, slog.Any("stack_trace", stackTrace))
-				} else {
-					// In development, include stack trace in the log
-					attrs = append(attrs, slog.Any("stack_trace", stackTrace))
-				}
+				attrs = append(attrs, slog.Any("stack_trace", stackTrace))
 
 				// Capture the error with Sentry if available
 				if hub := sentrygin.GetHubFromContext(c); hub != nil {
@@ -255,7 +281,7 @@ func CheckSubscriptionLimits(subService *service.SubscriptionService, action mod
 		}
 		user, ok := userAny.(*model.User)
 		if !ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type in context"})
 			return
 		}
 

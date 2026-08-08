@@ -4,6 +4,7 @@ interface CompletePasswordChangeOptions {
   resetForm: () => void;
   close: () => void;
   redirectToSignIn: () => void;
+  clearInMemoryState: () => void;
 }
 
 export async function completePasswordChange({
@@ -12,8 +13,10 @@ export async function completePasswordChange({
   resetForm,
   close,
   redirectToSignIn,
+  clearInMemoryState,
 }: CompletePasswordChangeOptions): Promise<void> {
   await clearCredentials();
+  clearInMemoryState();
   presentSuccess(() => {
     resetForm();
     close();

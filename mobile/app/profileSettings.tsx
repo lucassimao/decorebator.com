@@ -192,11 +192,11 @@ const ProfileSettingsScreen: React.FC = () => {
   const deleteAccountMutation = useMutation({
     mutationFn: userApi.deleteProfile,
     onSuccess: () => {
+      queryClient.clear();
       Alert.alert(
         t("profile.accountDeleted"),
         t("profile.accountDeletedMessage"),
       );
-      userApi.sigout();
       router.dismissAll();
       router.replace("/signup");
     },

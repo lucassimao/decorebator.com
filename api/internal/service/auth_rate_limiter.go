@@ -17,10 +17,11 @@ type AuthLimitOperation string
 type AuthLimitDimension string
 
 const (
-	AuthLimitSignup       AuthLimitOperation = "signup"
-	AuthLimitLogin        AuthLimitOperation = "login"
-	AuthLimitResetRequest AuthLimitOperation = "reset_request"
-	AuthLimitResetConsume AuthLimitOperation = "reset_consume"
+	AuthLimitSignup         AuthLimitOperation = "signup"
+	AuthLimitLogin          AuthLimitOperation = "login"
+	AuthLimitResetRequest   AuthLimitOperation = "reset_request"
+	AuthLimitResetConsume   AuthLimitOperation = "reset_consume"
+	AuthLimitPushUnregister AuthLimitOperation = "push_unregister"
 
 	AuthLimitSource  AuthLimitDimension = "source"
 	AuthLimitAccount AuthLimitDimension = "account"
@@ -231,14 +232,15 @@ func authLimitDecision(count int64, retryAfter time.Duration, policy authLimitPo
 
 func authLimitPolicyFor(operation AuthLimitOperation, dimension AuthLimitDimension) (authLimitPolicy, bool) {
 	policies := map[string]authLimitPolicy{
-		string(AuthLimitSignup) + ":" + string(AuthLimitSource):        {limit: 100, window: time.Hour},
-		string(AuthLimitSignup) + ":" + string(AuthLimitAccount):       {limit: 3, window: time.Hour},
-		string(AuthLimitLogin) + ":" + string(AuthLimitSource):         {limit: 30, window: 10 * time.Minute},
-		string(AuthLimitLogin) + ":" + string(AuthLimitAccount):        {limit: 5, window: 10 * time.Minute},
-		string(AuthLimitResetRequest) + ":" + string(AuthLimitSource):  {limit: 10, window: time.Hour},
-		string(AuthLimitResetRequest) + ":" + string(AuthLimitAccount): {limit: 3, window: time.Hour},
-		string(AuthLimitResetConsume) + ":" + string(AuthLimitSource):  {limit: 10, window: time.Hour},
-		string(AuthLimitResetConsume) + ":" + string(AuthLimitAccount): {limit: 5, window: time.Hour},
+		string(AuthLimitSignup) + ":" + string(AuthLimitSource):         {limit: 100, window: time.Hour},
+		string(AuthLimitSignup) + ":" + string(AuthLimitAccount):        {limit: 3, window: time.Hour},
+		string(AuthLimitLogin) + ":" + string(AuthLimitSource):          {limit: 30, window: 10 * time.Minute},
+		string(AuthLimitLogin) + ":" + string(AuthLimitAccount):         {limit: 5, window: 10 * time.Minute},
+		string(AuthLimitResetRequest) + ":" + string(AuthLimitSource):   {limit: 10, window: time.Hour},
+		string(AuthLimitResetRequest) + ":" + string(AuthLimitAccount):  {limit: 3, window: time.Hour},
+		string(AuthLimitResetConsume) + ":" + string(AuthLimitSource):   {limit: 10, window: time.Hour},
+		string(AuthLimitResetConsume) + ":" + string(AuthLimitAccount):  {limit: 5, window: time.Hour},
+		string(AuthLimitPushUnregister) + ":" + string(AuthLimitSource): {limit: 30, window: 10 * time.Minute},
 	}
 	policy, ok := policies[string(operation)+":"+string(dimension)]
 	return policy, ok

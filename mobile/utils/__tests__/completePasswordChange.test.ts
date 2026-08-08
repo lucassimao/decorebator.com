@@ -12,6 +12,7 @@ describe("completePasswordChange", () => {
     const resetForm = jest.fn();
     const close = jest.fn();
     const redirectToSignIn = jest.fn();
+    const clearInMemoryState = jest.fn();
     let confirm: (() => void) | undefined;
 
     await completePasswordChange({
@@ -22,11 +23,13 @@ describe("completePasswordChange", () => {
       resetForm,
       close,
       redirectToSignIn,
+      clearInMemoryState,
     });
 
     expect(deleteAccess).toHaveBeenCalledTimes(1);
     expect(deleteRefresh).toHaveBeenCalledTimes(1);
     expect(confirm).toBeDefined();
+    expect(clearInMemoryState).toHaveBeenCalledTimes(1);
     confirm?.();
     expect(resetForm).toHaveBeenCalledTimes(1);
     expect(close).toHaveBeenCalledTimes(1);

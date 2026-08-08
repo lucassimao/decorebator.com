@@ -233,15 +233,28 @@ export function resetAnalyticsIdentity(client: AnalyticsIdentityClient): void {
 }
 
 const analyticsIdentityResetListeners = new Set<() => void>();
+let analyticsIdentityResetPending = false;
 
 export function subscribeAnalyticsIdentityReset(
   listener: () => void,
 ): () => void {
   analyticsIdentityResetListeners.add(listener);
+  if (analyticsIdentityResetPending) {
+    analyticsIdentityResetPending = false;
+    try {
+      listener();
+    } catch {
+      // Authentication cleanup cannot depend on analytics availability.
+    }
+  }
   return () => analyticsIdentityResetListeners.delete(listener);
 }
 
 export function requestAnalyticsIdentityReset(): void {
+  if (analyticsIdentityResetListeners.size === 0) {
+    analyticsIdentityResetPending = true;
+    return;
+  }
   for (const listener of analyticsIdentityResetListeners) {
     try {
       listener();

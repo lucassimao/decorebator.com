@@ -1,5 +1,9 @@
 import { getApiBaseUrl } from "@/api/baseUrl";
-import { authenticatedFetch, getAuthorization } from "@/api/users";
+import {
+  authenticatedFetch,
+  authenticationHeaders,
+  hasAuthenticationSession,
+} from "@/api/users";
 
 export type IAPStore = "apple" | "google";
 export type IAPBillingPeriod = "monthly" | "annual";
@@ -79,8 +83,7 @@ async function requestIAP(
   method: "GET" | "POST",
   body?: unknown,
 ): Promise<MobileIAPResponse> {
-  const authorization = getAuthorization();
-  if (!authorization) throw new Error("Authentication required");
+  if (!hasAuthenticationSession()) throw new Error("Authentication required");
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -88,7 +91,7 @@ async function requestIAP(
     const response = await authenticatedFetch(`${API_URL}${path}`, {
       method,
       headers: {
-        Authorization: authorization,
+        ...authenticationHeaders(),
         ...(body === undefined ? {} : { "Content-Type": "application/json" }),
       },
       body: body === undefined ? undefined : JSON.stringify(body),

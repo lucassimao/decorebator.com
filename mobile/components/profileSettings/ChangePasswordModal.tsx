@@ -16,7 +16,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import * as userApi from "@/api/users";
 import { useTranslation } from "react-i18next";
@@ -52,6 +52,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const queryClient = useQueryClient();
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -96,7 +97,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
         },
         resetForm: reset,
         close: onClose,
-        redirectToSignIn: () => router.replace("/signin"),
+        clearInMemoryState: () => queryClient.clear(),
+        redirectToSignIn: () => {
+          router.dismissAll();
+          router.replace("/signin");
+        },
       });
     },
     onError: (error: Error) => {

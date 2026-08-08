@@ -32,7 +32,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	// Create repository instances
 	subRepo := repository.NewSubscriptionRepository(appCtx.Database)
 	userRepo := &repository.UserRepository{Db: appCtx.Database}
-	authenticate := Authenticate(appCtx.AuthSessions, userRepo)
+	authenticate := Authenticate(appCtx.AuthSessions, userRepo, appCtx.HTTPSecurity)
 	pushTokenRepo := &repository.PushTokenRepository{Db: appCtx.Database}
 
 	// Initialize route handlers using services from AppContext
@@ -41,6 +41,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	var WordlistRoutes = NewWordlistsRoutes(appCtx.WordlistService, appCtx.WordService, appCtx.DefinitionService)
 	var UserRoutes = NewUserRoutes(
 		appCtx.UserService, appCtx.AuthSessions, appCtx.AuthRateLimiter, appCtx.JobService,
+		appCtx.HTTPSecurity,
 	)
 	// Use Leitner strategy from AppContext
 	var quizRoutes = NewQuizRoutes(appCtx.LeitnerSystemStrategy, userRepo)
@@ -56,7 +57,9 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 	router.Use(SentryMiddlewares()...)
 	router.Use(gin.Logger())
 	router.Use(ErrorMiddleware())
-	router.Use(CORSMiddleware())
+	router.Use(SecurityHeaders(appCtx.HTTPSecurity.SecureCookies))
+	router.Use(ExpireLegacyParentDomainCookies(appCtx.HTTPSecurity))
+	router.Use(CORSMiddleware(appCtx.HTTPSecurity))
 	RegisterHealthRoutes(router, appCtx.Database)
 	storeWebhookMetrics := NewStoreWebhookMetrics()
 	RegisterStoreWebhookRoutes(router, appCtx, storeWebhookMetrics)
@@ -67,9 +70,17 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		router.POST("/users", RateLimitAuthSource(appCtx.AuthRateLimiter, service.AuthLimitSignup), UserRoutes.SignUp)
 		router.POST("/logout", UserRoutes.Logout)
 		router.POST("/session/refresh", UserRoutes.Refresh)
+		router.POST("/session/legacy-cookie-cleanup", func(c *gin.Context) {
+			c.Status(204)
+		})
 		router.POST("/login", RateLimitAuthSource(appCtx.AuthRateLimiter, service.AuthLimitLogin), UserRoutes.Login)
 		router.PATCH("/password/reset", RateLimitAuthSource(appCtx.AuthRateLimiter, service.AuthLimitResetConsume), UserRoutes.ResetPassword)
 		router.POST("/password/send-reset-email", RateLimitAuthSource(appCtx.AuthRateLimiter, service.AuthLimitResetRequest), UserRoutes.SendResetPasswordEmail)
+		router.POST(
+			"/push/unregister",
+			RateLimitAuthSource(appCtx.AuthRateLimiter, service.AuthLimitPushUnregister),
+			PushNotificationRoutes.Unregister,
+		)
 
 		RegisterLegacyProviderPublicRoutes(router, appCtx)
 
@@ -115,7 +126,6 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 
 		// Push notification routes
 		authenticatedRoutes.POST("/push/register", PushNotificationRoutes.Register)
-		authenticatedRoutes.POST("/push/unregister", PushNotificationRoutes.Unregister)
 	}
 
 	// OpenAI Realtime token creation needs a wider provider-call budget than
@@ -129,21 +139,23 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		WordlistRoutes.CreateChatSession,
 	)
 
-	workerRoutes := router.Group("/static/workers")
-	workerRoutes.Use(AuthenticateStatic)
-	{
-		workerRoutes.POST("/imageGenerator/:definitionId", WorkerRoutes.GenerateNewImage)
-		workerRoutes.POST("/textToAudio/:wordId", WorkerRoutes.GenerateNewAudio)
-		workerRoutes.POST("/definition/:wordId", WorkerRoutes.GenerateNewDefinition)
-		workerRoutes.POST("/retry/:jobId", WorkerRoutes.TriggerJob)
-	}
+	if appCtx.HTTPSecurity.StaticAuthentication != "" {
+		staticAuthentication := AuthenticateStatic(appCtx.HTTPSecurity.StaticAuthentication)
+		workerRoutes := router.Group("/static/workers")
+		workerRoutes.Use(staticAuthentication)
+		{
+			workerRoutes.POST("/imageGenerator/:definitionId", WorkerRoutes.GenerateNewImage)
+			workerRoutes.POST("/textToAudio/:wordId", WorkerRoutes.GenerateNewAudio)
+			workerRoutes.POST("/definition/:wordId", WorkerRoutes.GenerateNewDefinition)
+			workerRoutes.POST("/retry/:jobId", WorkerRoutes.TriggerJob)
+		}
 
-	// Admin routes with static authentication
-	adminRoutes := router.Group("/static/admin")
-	adminRoutes.Use(AuthenticateStatic)
-	{
-		adminRoutes.GET("/errorReports/stats", GetErrorReportStats(appCtx.Database))
-		adminRoutes.GET("/store-webhooks/metrics", GetStoreWebhookMetrics(storeWebhookMetrics))
+		adminRoutes := router.Group("/static/admin")
+		adminRoutes.Use(staticAuthentication)
+		{
+			adminRoutes.GET("/errorReports/stats", GetErrorReportStats(appCtx.Database))
+			adminRoutes.GET("/store-webhooks/metrics", GetStoreWebhookMetrics(storeWebhookMetrics))
+		}
 	}
 
 	// Static-auth protected endpoints (keep original paths)

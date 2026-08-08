@@ -13,6 +13,12 @@ jest.mock("@/api/subscriptions", () => ({
 
 jest.mock("@/api/users", () => ({
   getAuthorization: jest.fn(() => null),
+  hasAuthenticationSession: jest.fn(() => false),
+  getAuthenticationSessionEpoch: jest.fn(() => null),
+  isAuthenticationSessionReady: jest.fn(() => true),
+  subscribeAuthenticationSessionChanges: jest.fn(() => jest.fn()),
+  clearSessionScopedCaches: jest.fn(() => Promise.resolve()),
+  persistSessionSnapshot: jest.fn(() => Promise.resolve()),
   getProfile: jest.fn(),
   sigout: jest.fn(),
   update: jest.fn(),

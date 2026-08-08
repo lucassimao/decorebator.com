@@ -4,13 +4,15 @@ import {
   verifyApplePurchase,
   verifyGooglePurchase,
 } from "@/api/iap";
-import { getAuthorization } from "@/api/users";
+import { authenticationHeaders, hasAuthenticationSession } from "@/api/users";
 
 jest.mock("@/api/baseUrl", () => ({
   getApiBaseUrl: () => "https://api.test",
 }));
 jest.mock("@/api/users", () => ({
   getAuthorization: jest.fn(),
+  hasAuthenticationSession: jest.fn(() => true),
+  authenticationHeaders: jest.fn(() => ({ Authorization: "test-token" })),
   authenticatedFetch: (...args: Parameters<typeof fetch>) => fetch(...args),
 }));
 
@@ -27,7 +29,10 @@ const envelope = {
 describe("native IAP API", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (getAuthorization as jest.Mock).mockReturnValue("Bearer test");
+    (hasAuthenticationSession as jest.Mock).mockReturnValue(true);
+    (authenticationHeaders as jest.Mock).mockReturnValue({
+      Authorization: "Bearer test",
+    });
     global.fetch = jest.fn().mockResolvedValue({
       status: 200,
       json: async () => envelope,
@@ -75,7 +80,7 @@ describe("native IAP API", () => {
       "Invalid native IAP response",
     );
 
-    (getAuthorization as jest.Mock).mockReturnValue(null);
+    (hasAuthenticationSession as jest.Mock).mockReturnValue(false);
     await expect(getMobileIAPContext("apple")).rejects.toThrow(
       "Authentication required",
     );

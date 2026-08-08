@@ -57,20 +57,18 @@ func TestSignupLoginFlow(t *testing.T) {
 			Expect().
 			Status(http.StatusOK)
 
-		// Verify login response contains JWT token in Authorization header
-		loginToken := loginResponse.Header("Authorization").NotEmpty().Raw()
-		require.NotEmpty(t, loginToken, "Authorization token should be present after login")
-
-		// Verify JWT token is also set as cookie
+		// Browser login is cookie-only and must not expose credentials in response headers.
+		loginResponse.Header("Authorization").IsEmpty()
+		loginResponse.Header("X-Refresh-Token").IsEmpty()
 		loginResponse.Cookies().ContainsOnly("Authorization", "RefreshToken")
 		loginCookie := loginResponse.Cookie("Authorization")
 		loginCookie.Value().NotEmpty()
-		assert.Equal(t, loginToken, loginCookie.Value().Raw(), "Login token in header should match cookie")
+		loginToken := loginCookie.Value().Raw()
 
 		// Verify the post-verification token is a valid JWT.
 		assert.Greater(t, len(loginToken), 20, "Login token should be a valid JWT")
 
-		t.Logf("✓ User successfully logged in with token: %s", loginToken[:20]+"...")
+		t.Log("✓ User successfully logged in with cookie-only browser credentials")
 
 		// Step 3: Verify the user exists in database with correct data
 		t.Log("Step 3: Verifying user data in database")

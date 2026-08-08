@@ -15,6 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import { NotificationOpenTracker } from "@/components/analytics/NotificationOpenTracker";
 import { AnalyticsIdentityResetBridge } from "@/components/analytics/AnalyticsIdentityResetBridge";
+import { AuthenticationSessionBoundary } from "@/components/auth/AuthenticationSessionBoundary";
 
 // Prevent auto-hide so we can control when to hide it
 SplashScreen.preventAutoHideAsync();
@@ -100,34 +101,40 @@ function RootLayoutNav() {
     </Stack>
   );
 
+  const sessionContent = (
+    <AuthenticationSessionBoundary>
+      <SnackbarProvider>
+        <UpgradePromptDialogProvider>
+          {Platform.OS !== "web" ? <NotificationOpenTracker /> : null}
+          {content}
+        </UpgradePromptDialogProvider>
+      </SnackbarProvider>
+    </AuthenticationSessionBoundary>
+  );
+
   return (
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <LanguageInitializer />
-          <SnackbarProvider>
-            <UpgradePromptDialogProvider>
-              {Platform.OS === "web" ? (
-                content
-              ) : (
-                <PostHogProvider
-                  apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
-                  options={{
-                    host: "https://us.i.posthog.com",
-                    disabled: __DEV__,
-                    customStorage: {
-                      getItem: AsyncStorage.getItem,
-                      setItem: AsyncStorage.setItem,
-                    },
-                  }}
-                >
-                  <AnalyticsIdentityResetBridge />
-                  <NotificationOpenTracker />
-                  {content}
-                </PostHogProvider>
-              )}
-            </UpgradePromptDialogProvider>
-          </SnackbarProvider>
+          {Platform.OS === "web" ? (
+            sessionContent
+          ) : (
+            <PostHogProvider
+              apiKey={process.env.EXPO_PUBLIC_POSTHOG_KEY}
+              options={{
+                host: "https://us.i.posthog.com",
+                disabled: __DEV__,
+                customStorage: {
+                  getItem: AsyncStorage.getItem,
+                  setItem: AsyncStorage.setItem,
+                },
+              }}
+            >
+              <AnalyticsIdentityResetBridge />
+              {sessionContent}
+            </PostHogProvider>
+          )}
         </ThemeProvider>
       </QueryClientProvider>
     </I18nextProvider>

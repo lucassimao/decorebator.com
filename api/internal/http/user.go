@@ -1,12 +1,12 @@
 package http
 
 import (
+	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
 	"math"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -67,9 +67,15 @@ type UpdateProfilePictureInput struct {
 
 type UserRoutes struct {
 	userService  *service.UserService
-	authSessions *service.AuthSessionService
+	authSessions userAuthSessions
 	authLimiter  *service.AuthRateLimiter
 	jobService   service.JobService
+	httpSecurity config.HTTPSecurityConfig
+}
+
+type userAuthSessions interface {
+	Logout(context.Context, string) error
+	Refresh(context.Context, string) (service.SessionCredentials, error)
 }
 
 // NewUserRoutes creates a new UserRoutes with injected dependencies
@@ -78,12 +84,14 @@ func NewUserRoutes(
 	authSessions *service.AuthSessionService,
 	authLimiter *service.AuthRateLimiter,
 	jobService service.JobService,
+	httpSecurity config.HTTPSecurityConfig,
 ) *UserRoutes {
 	return &UserRoutes{
 		userService:  userService,
 		authSessions: authSessions,
 		authLimiter:  authLimiter,
 		jobService:   jobService,
+		httpSecurity: httpSecurity,
 	}
 }
 
@@ -210,29 +218,32 @@ func (h *UserRoutes) Login(c *gin.Context) {
 		common.Logger.ErrorContext(c.Request.Context(), "failed to clear successful login limiter bucket", "error", clearErr)
 	}
 
-	writeSessionCredentials(c, credentials)
+	writeSessionCredentials(c, h.httpSecurity, credentials)
 	c.Status(http.StatusOK)
 }
 
 func (h *UserRoutes) Logout(c *gin.Context) {
-	if err := h.authSessions.Logout(c.Request.Context(), readRefreshToken(c)); err != nil {
+	// The browser must lose both HttpOnly capabilities even when server-side
+	// revocation is temporarily unavailable. The client keeps a durable retry
+	// barrier for the uncertain revocation outcome.
+	writeAuthenticationCookie(c, h.httpSecurity, "")
+	writeRefreshCookie(c, h.httpSecurity, "")
+	if err := h.authSessions.Logout(c.Request.Context(), readRefreshToken(c, h.httpSecurity)); err != nil {
 		common.Logger.ErrorContext(c.Request.Context(), "failed to revoke auth session", "error", err)
 		c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Logout temporarily unavailable"})
 		return
 	}
-	writeAuthenticationCookie(c, "")
-	writeRefreshCookie(c, "")
 	c.Status(http.StatusOK)
 }
 
 func (h *UserRoutes) Refresh(c *gin.Context) {
-	credentials, err := h.authSessions.Refresh(c.Request.Context(), readRefreshToken(c))
+	credentials, err := h.authSessions.Refresh(c.Request.Context(), readRefreshToken(c, h.httpSecurity))
 	if err != nil {
 		if errors.Is(err, repository.ErrInvalidRefreshToken) ||
 			errors.Is(err, repository.ErrRefreshTokenReplay) ||
 			errors.Is(err, repository.ErrSessionExpired) {
-			writeAuthenticationCookie(c, "")
-			writeRefreshCookie(c, "")
+			writeAuthenticationCookie(c, h.httpSecurity, "")
+			writeRefreshCookie(c, h.httpSecurity, "")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Session expired"})
 		} else {
 			common.Logger.ErrorContext(c.Request.Context(), "failed to refresh auth session", "error", err)
@@ -240,7 +251,7 @@ func (h *UserRoutes) Refresh(c *gin.Context) {
 		}
 		return
 	}
-	writeSessionCredentials(c, credentials)
+	writeSessionCredentials(c, h.httpSecurity, credentials)
 	c.Status(http.StatusOK)
 }
 
@@ -340,62 +351,70 @@ func (h *UserRoutes) SendResetPasswordEmail(c *gin.Context) {
 	c.JSON(http.StatusAccepted, gin.H{"message": "If the account exists, reset instructions will be sent."})
 }
 
-func writeAuthenticationCookie(c *gin.Context, jwtToken string) {
-	var maxAge, path, domain, secure, httpOnly, sameSite = int64(0), "/", "localhost", false, true, http.SameSiteStrictMode
-
-	if os.Getenv("ENV") == "production" {
-		maxAge = int64(config.AccessTokenDuration / time.Second)
-		domain = "decorebator.com"
-		// requires https
-		secure = true
-	}
+func writeAuthenticationCookie(c *gin.Context, policy config.HTTPSecurityConfig, jwtToken string) {
+	maxAge := int64(config.AccessTokenDuration / time.Second)
 
 	if !canConvertToInt(maxAge) {
 		panic("maxAge can not be safely converted to int")
 	}
 
-	c.SetSameSite(sameSite)
+	c.SetSameSite(http.SameSiteStrictMode)
+	cookieName := authenticationCookieName(policy)
 
 	if len(jwtToken) > 0 {
-		c.SetCookie("Authorization", jwtToken, int(maxAge), path, domain, secure, httpOnly)
+		c.SetCookie(cookieName, jwtToken, int(maxAge), "/", policy.CookieDomain, policy.SecureCookies, true)
 	} else {
 		// clear cookie
 		common.Logger.DebugContext(c.Request.Context(), "Clearing authorization cookie")
-		c.SetCookie("Authorization", "", int(-1), path, domain, secure, httpOnly)
+		c.SetCookie(cookieName, "", int(-1), "/", policy.CookieDomain, policy.SecureCookies, true)
 	}
 }
 
-func writeSessionCredentials(c *gin.Context, credentials service.SessionCredentials) {
-	c.Header("authorization", credentials.AccessToken)
-	if c.GetHeader("X-Auth-Client") == "native" {
+func writeSessionCredentials(c *gin.Context, policy config.HTTPSecurityConfig, credentials service.SessionCredentials) {
+	if isNativeCredentialRequest(c) {
+		c.Header("Authorization", credentials.AccessToken)
 		c.Header("X-Refresh-Token", credentials.RefreshToken)
 		return
 	}
-	writeAuthenticationCookie(c, credentials.AccessToken)
-	writeRefreshCookie(c, credentials.RefreshToken)
+	writeAuthenticationCookie(c, policy, credentials.AccessToken)
+	writeRefreshCookie(c, policy, credentials.RefreshToken)
 }
 
-func writeRefreshCookie(c *gin.Context, refreshToken string) {
-	maxAge, domain, secure := int(0), "localhost", false
-	if os.Getenv("ENV") == "production" {
-		maxAge = int(service.RefreshIdleDuration / time.Second)
-		domain, secure = "decorebator.com", true
-	}
+func writeRefreshCookie(c *gin.Context, policy config.HTTPSecurityConfig, refreshToken string) {
+	maxAge := int(service.RefreshIdleDuration / time.Second)
 	if refreshToken == "" {
 		maxAge = -1
 	}
 	c.SetSameSite(http.SameSiteStrictMode)
-	c.SetCookie("RefreshToken", refreshToken, maxAge, "/", domain, secure, true)
+	c.SetCookie(refreshCookieName(policy), refreshToken, maxAge, "/", policy.CookieDomain, policy.SecureCookies, true)
 }
 
-func readRefreshToken(c *gin.Context) string {
-	if c.GetHeader("X-Auth-Client") == "native" {
+func readRefreshToken(c *gin.Context, policy config.HTTPSecurityConfig) string {
+	if isNativeCredentialRequest(c) {
 		return c.GetHeader("X-Refresh-Token")
 	}
-	if token, err := c.Cookie("RefreshToken"); err == nil {
+	if token, err := c.Cookie(refreshCookieName(policy)); err == nil {
 		return token
 	}
 	return ""
+}
+
+func authenticationCookieName(policy config.HTTPSecurityConfig) string {
+	if policy.SecureCookies {
+		return "__Host-Authorization"
+	}
+	return "Authorization"
+}
+
+func refreshCookieName(policy config.HTTPSecurityConfig) string {
+	if policy.SecureCookies {
+		return "__Host-RefreshToken"
+	}
+	return "RefreshToken"
+}
+
+func isNativeCredentialRequest(c *gin.Context) bool {
+	return c.GetHeader("X-Auth-Client") == "native" && len(c.Request.Header.Values("Origin")) == 0
 }
 
 func canConvertToInt(n int64) bool {
@@ -506,8 +525,8 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 	// Remove password hash from response
 	updatedUser.PasswordHash = ""
 	if newPassword != nil {
-		writeAuthenticationCookie(c, "")
-		writeRefreshCookie(c, "")
+		writeAuthenticationCookie(c, h.httpSecurity, "")
+		writeRefreshCookie(c, h.httpSecurity, "")
 	}
 
 	c.JSON(http.StatusOK, updatedUser)
@@ -565,5 +584,7 @@ func (h *UserRoutes) DeleteProfile(c *gin.Context) {
 		return
 	}
 
+	writeAuthenticationCookie(c, h.httpSecurity, "")
+	writeRefreshCookie(c, h.httpSecurity, "")
 	c.Status(http.StatusNoContent)
 }

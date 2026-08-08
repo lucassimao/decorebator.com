@@ -1,14 +1,26 @@
-import { getAuthorization, getProfile, type UserProfile } from "@/api/users";
+import {
+  hasAuthenticationSession,
+  isAuthenticationSessionReady,
+  clearSessionScopedCaches,
+  getAuthenticationSessionEpoch,
+  getProfile,
+  persistSessionSnapshot,
+  subscribeAuthenticationSessionChanges,
+  type UserProfile,
+} from "@/api/users";
 import {
   getSubscriptionStatus,
   type SubscriptionStatus,
 } from "@/api/subscriptions";
 import offlineManager from "@/utils/offlineManager";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 import * as Sentry from "@sentry/react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { registerDevicePushToken } from "@/utils/pushNotifications";
+import {
+  registerDevicePushToken,
+  resumeStoredPushTokenDeactivation,
+} from "@/utils/pushNotifications";
 
 interface UserSessionData {
   // User essentials
@@ -36,10 +48,66 @@ interface UserSessionData {
 }
 
 export function useUserSession(): UserSessionData {
-  const hasAuthorization = Boolean(getAuthorization());
+  const queryClient = useQueryClient();
+  const [sessionEpoch, setSessionEpoch] = useState(
+    getAuthenticationSessionEpoch,
+  );
+  const [sessionReady, setSessionReady] = useState(
+    isAuthenticationSessionReady,
+  );
+  const sessionEpochRef = useRef(sessionEpoch);
+  const sessionTransitionRef = useRef(0);
+  const hasCurrentAuthentication = hasAuthenticationSession();
+  const hasAuthorization = Boolean(sessionEpoch) && hasCurrentAuthentication;
   const [cachedUser, setCachedUser] = useState<UserProfile | null>(null);
   const [cachedSubscription, setCachedSubscription] =
     useState<SubscriptionStatus | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const handleSessionChange = (nextEpoch: string | null) => {
+      const authenticationReady = isAuthenticationSessionReady();
+      if (nextEpoch === sessionEpochRef.current) {
+        setSessionReady(authenticationReady);
+        return;
+      }
+      const transition = ++sessionTransitionRef.current;
+      setSessionReady(false);
+      sessionEpochRef.current = null;
+      setSessionEpoch(null);
+      queryClient.clear();
+      setCachedUser(null);
+      setCachedSubscription(null);
+      offlineManager.setUserPremiumStatus(false);
+      Sentry.setUser(null);
+      clearSessionScopedCaches()
+        .then(() => {
+          if (
+            active &&
+            transition === sessionTransitionRef.current &&
+            getAuthenticationSessionEpoch() === nextEpoch
+          ) {
+            sessionEpochRef.current = nextEpoch;
+            setSessionEpoch(nextEpoch);
+            setSessionReady(authenticationReady);
+          }
+        })
+        .catch((error) => {
+          // Fail closed: never enable a new identity while data from the
+          // previous identity may still be durable on the device.
+          console.error("Error clearing changed browser session cache:", error);
+        });
+    };
+    const unsubscribe =
+      subscribeAuthenticationSessionChanges(handleSessionChange);
+    // Close the render-to-effect race: an epoch may have changed before the
+    // listener was installed, in which case no storage event can be replayed.
+    handleSessionChange(getAuthenticationSessionEpoch());
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [queryClient]);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,7 +180,10 @@ export function useUserSession(): UserSessionData {
   const hasOptimisticSubscription =
     effectiveSubscription?.hasOptimisticSubscription ?? false;
   const isLoading =
-    hasAuthorization && (userLoading || subscriptionLoading) && !effectiveUser;
+    !sessionReady ||
+    (hasAuthorization &&
+      (userLoading || subscriptionLoading) &&
+      !effectiveUser);
   const isOnline = offlineManager.getNetworkStatus();
   const error = hasAuthorization
     ? !isOnline && effectiveUser
@@ -131,10 +202,11 @@ export function useUserSession(): UserSessionData {
   // Essential side effects only
   useEffect(() => {
     if (effectiveUser) {
-      AsyncStorage.multiSet([
-        ["cachedUserProfile", JSON.stringify(effectiveUser)],
-        ["cachedSubscription", JSON.stringify(effectiveSubscription)],
-      ]).catch((error) => {
+      persistSessionSnapshot(
+        effectiveUser,
+        effectiveSubscription,
+        sessionEpoch ?? "",
+      ).catch((error) => {
         console.warn("Failed to persist cached session:", error);
       });
 
@@ -146,10 +218,14 @@ export function useUserSession(): UserSessionData {
         id: effectiveUser.id.toString(),
       });
     }
-  }, [effectiveUser, effectiveSubscription, isPremium]);
+  }, [effectiveUser, effectiveSubscription, isPremium, sessionEpoch]);
 
   useEffect(() => {
-    if (!effectiveUser?.notificationsEnabled) {
+    if (!effectiveUser) {
+      return;
+    }
+    if (!effectiveUser.notificationsEnabled) {
+      resumeStoredPushTokenDeactivation();
       return;
     }
     registerDevicePushToken({ prompt: false }).catch((error) => {
@@ -162,7 +238,7 @@ export function useUserSession(): UserSessionData {
         },
       });
     });
-  }, [effectiveUser?.id, effectiveUser?.notificationsEnabled]);
+  }, [effectiveUser]);
 
   return {
     // User essentials

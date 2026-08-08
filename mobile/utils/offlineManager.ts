@@ -77,6 +77,8 @@ interface RetryConfig {
   backoffMultiplier: number;
 }
 
+class OfflineCacheIdentityChangedError extends Error {}
+
 class OfflineManager {
   private isServer =
     Platform.OS === "web" &&
@@ -106,6 +108,53 @@ class OfflineManager {
     maxDelayMs: 30000,
     backoffMultiplier: 2,
   };
+  private cacheGeneration = 0;
+  private inFlightCacheWrites = new Set<Promise<void>>();
+
+  private trackCacheWrite(
+    operation: (generation: number) => Promise<void>,
+    originatingGeneration = this.cacheGeneration,
+  ): Promise<void> {
+    const generation = originatingGeneration;
+    const write = operation(generation).finally(() => {
+      this.inFlightCacheWrites.delete(write);
+    });
+    this.inFlightCacheWrites.add(write);
+    return write;
+  }
+
+  private assertCacheGeneration(generation: number) {
+    if (generation !== this.cacheGeneration) {
+      throw new OfflineCacheIdentityChangedError(
+        "Offline cache identity changed during write",
+      );
+    }
+  }
+
+  public captureCacheGeneration(): number {
+    return this.cacheGeneration;
+  }
+
+  private async guardCacheRead<T>(
+    generation: number,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    this.assertCacheGeneration(generation);
+    const result = await operation();
+    this.assertCacheGeneration(generation);
+    return result;
+  }
+
+  private cacheReadFallback<T>(error: unknown): T | null {
+    if (error instanceof OfflineCacheIdentityChangedError) throw error;
+    return null;
+  }
+
+  private async writeCacheItem(generation: number, key: string, value: string) {
+    this.assertCacheGeneration(generation);
+    await AsyncStorage.setItem(key, value);
+    this.assertCacheGeneration(generation);
+  }
 
   constructor() {
     if (this.isServer) {
@@ -524,42 +573,54 @@ class OfflineManager {
   }
 
   // Quiz caching methods with atomic operations
-  public async cacheQuiz(wordlistId: number, quiz: Quiz): Promise<void> {
+  public async cacheQuiz(
+    wordlistId: number,
+    quiz: Quiz,
+    originatingGeneration = this.cacheGeneration,
+  ): Promise<void> {
     if (!this.isPremium) return;
 
-    await this.withErrorRecovery(async () => {
-      const cacheKey = `${QUIZ_CACHE_KEY}${wordlistId}-${quiz.id}`;
-      const cachedData: CachedQuiz = {
-        quiz,
-        timestamp: Date.now(),
-        wordlistId,
-      };
+    await this.trackCacheWrite(
+      (generation) =>
+        this.withErrorRecovery(async () => {
+          const cacheKey = `${QUIZ_CACHE_KEY}${wordlistId}-${quiz.id}`;
+          const cachedData: CachedQuiz = {
+            quiz,
+            timestamp: Date.now(),
+            wordlistId,
+          };
 
-      // Atomic operation with rollback capability
-      await this.atomicCacheOperation(async () => {
-        // Cache the quiz data
-        await AsyncStorage.setItem(cacheKey, JSON.stringify(cachedData));
+          // Atomic operation with rollback capability
+          await this.atomicCacheOperation(async () => {
+            // Cache the quiz data
+            await this.writeCacheItem(
+              generation,
+              cacheKey,
+              JSON.stringify(cachedData),
+            );
 
-        // Cache associated assets
-        await this.cacheQuizAssets(quiz);
-      }, [
-        // Rollback: remove quiz data if asset caching fails
-        async () => AsyncStorage.removeItem(cacheKey),
-      ]);
-    }, "Quiz caching");
+            // Cache associated assets
+            await this.cacheQuizAssets(quiz, generation);
+          }, [
+            // Rollback: remove quiz data if asset caching fails
+            async () => AsyncStorage.removeItem(cacheKey),
+          ]);
+        }, "Quiz caching"),
+      originatingGeneration,
+    );
   }
 
-  private async cacheQuizAssets(quiz: Quiz): Promise<void> {
+  private async cacheQuizAssets(quiz: Quiz, generation: number): Promise<void> {
     const assetPromises: Promise<void>[] = [];
 
     // Cache image for WORD_FROM_IMAGE quiz type (value contains image URL)
     if (quiz.type === "WORD_FROM_IMAGE" && quiz.value) {
-      assetPromises.push(this.cacheAsset(quiz.value, "image"));
+      assetPromises.push(this.cacheAsset(quiz.value, "image", generation));
     }
 
     // Cache audio URL if present (for audio-based quiz types)
     if (quiz.audioURL) {
-      assetPromises.push(this.cacheAsset(quiz.audioURL, "audio"));
+      assetPromises.push(this.cacheAsset(quiz.audioURL, "audio", generation));
     }
 
     await this.promiseAllSettledPolyfill(assetPromises);
@@ -568,6 +629,7 @@ class OfflineManager {
   private async cacheAsset(
     url: string,
     type: "image" | "audio",
+    generation: number,
   ): Promise<void> {
     try {
       const filename = this.getFilenameFromUrl(url);
@@ -578,7 +640,8 @@ class OfflineManager {
       if (fileInfo.exists) {
         // Update timestamp
         const metaKey = `${CACHE_PREFIX}asset_meta_${filename}`;
-        await AsyncStorage.setItem(
+        await this.writeCacheItem(
+          generation,
           metaKey,
           JSON.stringify({
             localUri,
@@ -590,11 +653,13 @@ class OfflineManager {
 
       // Download and cache
       const downloadResult = await FileSystem.downloadAsync(url, localUri);
+      this.assertCacheGeneration(generation);
 
       if (downloadResult.status === 200) {
         // Store metadata
         const metaKey = `${CACHE_PREFIX}asset_meta_${filename}`;
-        await AsyncStorage.setItem(
+        await this.writeCacheItem(
+          generation,
           metaKey,
           JSON.stringify({
             localUri,
@@ -613,47 +678,54 @@ class OfflineManager {
     return filename || `cached_${Date.now()}`;
   }
 
-  public async getCachedQuiz(wordlistId: number): Promise<Quiz | null> {
+  public async getCachedQuiz(
+    wordlistId: number,
+    originatingGeneration = this.cacheGeneration,
+  ): Promise<Quiz | null> {
+    this.assertCacheGeneration(originatingGeneration);
     if (!this.isPremium || this.networkState.isOnline) return null;
 
     try {
-      // Get all keys from AsyncStorage
-      const allKeys = await AsyncStorage.getAllKeys();
+      return await this.guardCacheRead(originatingGeneration, async () => {
+        // Get all keys from AsyncStorage
+        const allKeys = await AsyncStorage.getAllKeys();
 
-      // Find keys that match the pattern for this wordlist
-      const wordlistQuizKeys = allKeys.filter((key) =>
-        key.startsWith(`${QUIZ_CACHE_KEY}${wordlistId}-`),
-      );
+        // Find keys that match the pattern for this wordlist
+        const wordlistQuizKeys = allKeys.filter((key) =>
+          key.startsWith(`${QUIZ_CACHE_KEY}${wordlistId}-`),
+        );
 
-      if (wordlistQuizKeys.length === 0) return null;
+        if (wordlistQuizKeys.length === 0) return null;
 
-      // Randomize the order of keys to avoid always returning the same quiz
-      const shuffledKeys = this.shuffleArray([...wordlistQuizKeys]);
+        // Randomize the order of keys to avoid always returning the same quiz
+        const shuffledKeys = this.shuffleArray([...wordlistQuizKeys]);
 
-      // Try to find a valid cached quiz from the randomized list
-      for (const cacheKey of shuffledKeys) {
-        const cachedDataStr = await AsyncStorage.getItem(cacheKey);
+        // Try to find a valid cached quiz from the randomized list
+        for (const cacheKey of shuffledKeys) {
+          const cachedDataStr = await AsyncStorage.getItem(cacheKey);
 
-        if (!cachedDataStr) continue;
+          if (!cachedDataStr) continue;
 
-        const cachedData: CachedQuiz = JSON.parse(cachedDataStr);
+          const cachedData: CachedQuiz = JSON.parse(cachedDataStr);
 
-        // Check if cache is expired
-        if (this.isCacheExpired(cachedData.timestamp)) {
-          await AsyncStorage.removeItem(cacheKey);
-          continue;
+          // Check if cache is expired
+          if (this.isCacheExpired(cachedData.timestamp)) {
+            await AsyncStorage.removeItem(cacheKey);
+            continue;
+          }
+
+          // Validate all required assets are available
+          const validatedQuiz = await this.validateQuizAssets(cachedData.quiz);
+
+          if (validatedQuiz) {
+            return validatedQuiz;
+          }
         }
 
-        // Validate all required assets are available
-        const validatedQuiz = await this.validateQuizAssets(cachedData.quiz);
-
-        if (validatedQuiz) {
-          return validatedQuiz;
-        }
-      }
-
-      return null;
+        return null;
+      });
     } catch (error) {
+      if (error instanceof OfflineCacheIdentityChangedError) throw error;
       console.error("Error retrieving cached quiz:", error);
       return null;
     }
@@ -815,75 +887,105 @@ class OfflineManager {
   }
 
   // Words caching methods with atomic operations
-  public async cacheWords(wordlistId: number, words: Word[]): Promise<void> {
+  public async cacheWords(
+    wordlistId: number,
+    words: Word[],
+    originatingGeneration = this.cacheGeneration,
+  ): Promise<void> {
     if (!this.isPremium) return;
 
-    await this.withErrorRecovery(async () => {
-      const cacheKey = `${WORDS_CACHE_KEY}${wordlistId}`;
-      const cachedData: CachedWords = {
-        words,
-        timestamp: Date.now(),
-        wordlistId,
-      };
+    await this.trackCacheWrite(
+      (generation) =>
+        this.withErrorRecovery(async () => {
+          const cacheKey = `${WORDS_CACHE_KEY}${wordlistId}`;
+          const cachedData: CachedWords = {
+            words,
+            timestamp: Date.now(),
+            wordlistId,
+          };
 
-      await this.atomicCacheOperation(async () => {
-        await AsyncStorage.setItem(cacheKey, JSON.stringify(cachedData));
-      });
-    }, "Words caching");
+          await this.atomicCacheOperation(async () => {
+            await this.writeCacheItem(
+              generation,
+              cacheKey,
+              JSON.stringify(cachedData),
+            );
+          });
+        }, "Words caching"),
+      originatingGeneration,
+    );
   }
 
   // Wordlists caching for offline dashboard access
-  public async cacheWordlists(wordlists: Wordlist[]): Promise<void> {
-    await this.withErrorRecovery(async () => {
-      const cachedData: CachedWordlists = {
-        wordlists,
-        timestamp: Date.now(),
-      };
+  public async cacheWordlists(
+    wordlists: Wordlist[],
+    originatingGeneration = this.cacheGeneration,
+  ): Promise<void> {
+    await this.trackCacheWrite(
+      (generation) =>
+        this.withErrorRecovery(async () => {
+          const cachedData: CachedWordlists = {
+            wordlists,
+            timestamp: Date.now(),
+          };
 
-      await this.atomicCacheOperation(async () => {
-        await AsyncStorage.setItem(
-          WORDLISTS_CACHE_KEY,
-          JSON.stringify(cachedData),
-        );
-      });
-    }, "Wordlists caching");
+          await this.atomicCacheOperation(async () => {
+            await this.writeCacheItem(
+              generation,
+              WORDLISTS_CACHE_KEY,
+              JSON.stringify(cachedData),
+            );
+          });
+        }, "Wordlists caching"),
+      originatingGeneration,
+    );
   }
 
-  public async getCachedWordlists(): Promise<Wordlist[] | null> {
-    return this.withErrorRecovery(async () => {
-      const cachedDataStr = await AsyncStorage.getItem(WORDLISTS_CACHE_KEY);
-      if (!cachedDataStr) return null;
+  public async getCachedWordlists(
+    originatingGeneration = this.cacheGeneration,
+  ): Promise<Wordlist[] | null> {
+    return this.guardCacheRead(originatingGeneration, () =>
+      this.withErrorRecovery(async () => {
+        const cachedDataStr = await AsyncStorage.getItem(WORDLISTS_CACHE_KEY);
+        if (!cachedDataStr) return null;
 
-      const cachedData: CachedWordlists = JSON.parse(cachedDataStr);
+        const cachedData: CachedWordlists = JSON.parse(cachedDataStr);
 
-      if (this.isCacheExpired(cachedData.timestamp)) {
-        await AsyncStorage.removeItem(WORDLISTS_CACHE_KEY);
-        return null;
-      }
+        if (this.isCacheExpired(cachedData.timestamp)) {
+          await AsyncStorage.removeItem(WORDLISTS_CACHE_KEY);
+          return null;
+        }
 
-      return cachedData.wordlists;
-    }, "Cached wordlists retrieval").catch(() => null);
+        return cachedData.wordlists;
+      }, "Cached wordlists retrieval"),
+    ).catch((error) => this.cacheReadFallback<Wordlist[]>(error));
   }
 
-  public async getCachedWords(wordlistId: number): Promise<Word[] | null> {
+  public async getCachedWords(
+    wordlistId: number,
+    originatingGeneration = this.cacheGeneration,
+  ): Promise<Word[] | null> {
+    this.assertCacheGeneration(originatingGeneration);
     if (!this.isPremium) return null;
 
-    return this.withErrorRecovery(async () => {
-      const cacheKey = `${WORDS_CACHE_KEY}${wordlistId}`;
-      const cachedDataStr = await AsyncStorage.getItem(cacheKey);
+    return this.guardCacheRead(originatingGeneration, () =>
+      this.withErrorRecovery(async () => {
+        const cacheKey = `${WORDS_CACHE_KEY}${wordlistId}`;
+        const cachedDataStr = await AsyncStorage.getItem(cacheKey);
 
-      if (!cachedDataStr) return null;
+        if (!cachedDataStr) return null;
 
-      const cachedData: CachedWords = JSON.parse(cachedDataStr);
+        const cachedData: CachedWords = JSON.parse(cachedDataStr);
 
-      // Check if cache is expired
-      if (this.isCacheExpired(cachedData.timestamp)) {
-        await AsyncStorage.removeItem(cacheKey);
-        return null;
-      }
+        // Check if cache is expired
+        if (this.isCacheExpired(cachedData.timestamp)) {
+          await AsyncStorage.removeItem(cacheKey);
+          return null;
+        }
 
-      return cachedData.words;
-    }, "Cached words retrieval").catch(() => null);
+        return cachedData.words;
+      }, "Cached words retrieval"),
+    ).catch((error) => this.cacheReadFallback<Word[]>(error));
   }
 
   // Definitions caching methods with atomic operations
@@ -891,32 +993,42 @@ class OfflineManager {
     wordlistId: number,
     wordId: number,
     definitions: Definition[],
+    originatingGeneration = this.cacheGeneration,
   ): Promise<void> {
     if (!this.isPremium) return;
 
-    await this.withErrorRecovery(async () => {
-      const cacheKey = `${DEFINITIONS_CACHE_KEY}${wordlistId}-${wordId}`;
-      const cachedData: CachedDefinitions = {
-        definitions,
-        timestamp: Date.now(),
-        wordlistId,
-        wordId,
-      };
+    await this.trackCacheWrite(
+      (generation) =>
+        this.withErrorRecovery(async () => {
+          const cacheKey = `${DEFINITIONS_CACHE_KEY}${wordlistId}-${wordId}`;
+          const cachedData: CachedDefinitions = {
+            definitions,
+            timestamp: Date.now(),
+            wordlistId,
+            wordId,
+          };
 
-      await this.atomicCacheOperation(async () => {
-        await AsyncStorage.setItem(cacheKey, JSON.stringify(cachedData));
+          await this.atomicCacheOperation(async () => {
+            await this.writeCacheItem(
+              generation,
+              cacheKey,
+              JSON.stringify(cachedData),
+            );
 
-        // Cache any images referenced in definitions
-        await this.cacheDefinitionAssets(definitions);
-      }, [
-        // Rollback: remove definitions if asset caching fails
-        async () => AsyncStorage.removeItem(cacheKey),
-      ]);
-    }, "Definitions caching");
+            // Cache any images referenced in definitions
+            await this.cacheDefinitionAssets(definitions, generation);
+          }, [
+            // Rollback: remove definitions if asset caching fails
+            async () => AsyncStorage.removeItem(cacheKey),
+          ]);
+        }, "Definitions caching"),
+      originatingGeneration,
+    );
   }
 
   private async cacheDefinitionAssets(
     definitions: Definition[],
+    generation: number,
   ): Promise<void> {
     const assetPromises: Promise<void>[] = [];
 
@@ -929,7 +1041,9 @@ class OfflineManager {
       if (definition.sounds && definition.sounds.length > 0) {
         for (const sound of definition.sounds) {
           if (sound.link) {
-            assetPromises.push(this.cacheAsset(sound.link, "audio"));
+            assetPromises.push(
+              this.cacheAsset(sound.link, "audio", generation),
+            );
           }
         }
       }
@@ -941,30 +1055,34 @@ class OfflineManager {
   public async getCachedDefinitions(
     wordlistId: number,
     wordId: number,
+    originatingGeneration = this.cacheGeneration,
   ): Promise<Definition[] | null> {
+    this.assertCacheGeneration(originatingGeneration);
     if (!this.isPremium) return null;
 
-    return this.withErrorRecovery(async () => {
-      const cacheKey = `${DEFINITIONS_CACHE_KEY}${wordlistId}-${wordId}`;
-      const cachedDataStr = await AsyncStorage.getItem(cacheKey);
+    return this.guardCacheRead(originatingGeneration, () =>
+      this.withErrorRecovery(async () => {
+        const cacheKey = `${DEFINITIONS_CACHE_KEY}${wordlistId}-${wordId}`;
+        const cachedDataStr = await AsyncStorage.getItem(cacheKey);
 
-      if (!cachedDataStr) return null;
+        if (!cachedDataStr) return null;
 
-      const cachedData: CachedDefinitions = JSON.parse(cachedDataStr);
+        const cachedData: CachedDefinitions = JSON.parse(cachedDataStr);
 
-      // Check if cache is expired
-      if (this.isCacheExpired(cachedData.timestamp)) {
-        await AsyncStorage.removeItem(cacheKey);
-        return null;
-      }
+        // Check if cache is expired
+        if (this.isCacheExpired(cachedData.timestamp)) {
+          await AsyncStorage.removeItem(cacheKey);
+          return null;
+        }
 
-      // Validate and update asset URLs to local paths if offline
-      const validatedDefinitions = await this.validateDefinitionAssets(
-        cachedData.definitions,
-      );
+        // Validate and update asset URLs to local paths if offline
+        const validatedDefinitions = await this.validateDefinitionAssets(
+          cachedData.definitions,
+        );
 
-      return validatedDefinitions;
-    }, "Cached definitions retrieval").catch(() => null);
+        return validatedDefinitions;
+      }, "Cached definitions retrieval"),
+    ).catch((error) => this.cacheReadFallback<Definition[]>(error));
   }
 
   private async validateDefinitionAssets(
@@ -1043,12 +1161,13 @@ class OfflineManager {
     wordlistId: number,
     words: Word[],
     getDefinitions: (wordId: number) => Promise<Definition[]>,
+    originatingGeneration = this.cacheGeneration,
   ): Promise<void> {
     if (!this.isPremium) return;
 
     try {
       // Cache the words list
-      await this.cacheWords(wordlistId, words);
+      await this.cacheWords(wordlistId, words, originatingGeneration);
 
       // Cache definitions for each word (with some throttling to avoid overwhelming the API)
       for (let i = 0; i < words.length; i++) {
@@ -1056,13 +1175,19 @@ class OfflineManager {
 
         try {
           const definitions = await getDefinitions(word.id);
-          await this.cacheDefinitions(wordlistId, word.id, definitions);
+          await this.cacheDefinitions(
+            wordlistId,
+            word.id,
+            definitions,
+            originatingGeneration,
+          );
 
           // Small delay to avoid overwhelming the server
           if (i < words.length - 1) {
             await new Promise((resolve) => setTimeout(resolve, 100));
           }
         } catch (error) {
+          if (error instanceof OfflineCacheIdentityChangedError) throw error;
           console.error(
             `Error caching definitions for word ${word.name}:`,
             error,
@@ -1071,6 +1196,7 @@ class OfflineManager {
         }
       }
     } catch (error) {
+      if (error instanceof OfflineCacheIdentityChangedError) throw error;
       console.error("Error preloading wordlist for offline:", error);
     }
   }
@@ -1147,17 +1273,35 @@ class OfflineManager {
   }
 
   public async clearCache(): Promise<void> {
+    this.cacheGeneration += 1;
+    const pendingWrites = Array.from(this.inFlightCacheWrites);
+    if (pendingWrites.length > 0) {
+      await Promise.allSettled(pendingWrites);
+    }
+    let keys: readonly string[] = [];
+    const failures: unknown[] = [];
     try {
-      // Clear quiz cache
-      const keys = await AsyncStorage.getAllKeys();
+      keys = await AsyncStorage.getAllKeys();
+    } catch (error) {
+      console.error("Error listing offline cache keys:", error);
+      failures.push(error);
+    }
+    try {
       const cacheKeys = keys.filter((key) => key.startsWith(CACHE_PREFIX));
       await AsyncStorage.multiRemove(cacheKeys);
-
-      // Clear asset files
+    } catch (error) {
+      console.error("Error clearing offline cache storage:", error);
+      failures.push(error);
+    }
+    try {
       await FileSystem.deleteAsync(ASSET_CACHE_DIR, { idempotent: true });
       await this.ensureAssetDirectory();
     } catch (error) {
-      console.error("Error clearing cache:", error);
+      console.error("Error clearing offline cache assets:", error);
+      failures.push(error);
+    }
+    if (failures.length > 0) {
+      throw new AggregateError(failures, "Offline cache cleanup incomplete");
     }
   }
 
@@ -1238,6 +1382,7 @@ class OfflineManager {
     try {
       return await operation();
     } catch (error) {
+      if (error instanceof OfflineCacheIdentityChangedError) throw error;
       console.warn(`${context} failed, attempting recovery:`, error);
 
       // Attempt to clean up corrupted cache entries

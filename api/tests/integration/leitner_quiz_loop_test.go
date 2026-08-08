@@ -23,6 +23,7 @@ func TestLeitnerQuizLoop_ReproducesProductionIssue(t *testing.T) {
 
 	// Login as the production user
 	loginResp := server.Expect.POST("/login").
+		WithHeader("X-Auth-Client", "native").
 		WithJSON(map[string]interface{}{
 			"email":    "lsimaocosta+bs1@gmail.com",
 			"password": "testpass123", // We'll use a test password
@@ -43,6 +44,7 @@ func TestLeitnerQuizLoop_50Iterations(t *testing.T) {
 	seedProductionData(t, server.DB)
 
 	loginResp := server.Expect.POST("/login").
+		WithHeader("X-Auth-Client", "native").
 		WithJSON(map[string]interface{}{
 			"email":    "lsimaocosta+bs1@gmail.com",
 			"password": "testpass123",
@@ -61,6 +63,7 @@ func TestLeitnerQuizLoop_200Iterations(t *testing.T) {
 	seedProductionData(t, server.DB)
 
 	loginResp := server.Expect.POST("/login").
+		WithHeader("X-Auth-Client", "native").
 		WithJSON(map[string]interface{}{
 			"email":    "lsimaocosta+bs1@gmail.com",
 			"password": "testpass123",
@@ -79,6 +82,7 @@ func TestLeitnerQuizLoop_500Iterations(t *testing.T) {
 	seedProductionData(t, server.DB)
 
 	loginResp := server.Expect.POST("/login").
+		WithHeader("X-Auth-Client", "native").
 		WithJSON(map[string]interface{}{
 			"email":    "lsimaocosta+bs1@gmail.com",
 			"password": "testpass123",

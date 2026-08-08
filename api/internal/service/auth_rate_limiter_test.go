@@ -45,6 +45,28 @@ func TestAuthRateLimiterFailsClosedWhenRedisIsRequired(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestPushUnregisterLimiterIsSourceScoped(t *testing.T) {
+	limiter, err := NewAuthRateLimiter(nil, false, "test", nil)
+	require.NoError(t, err)
+	for range 30 {
+		decision, checkErr := limiter.Check(
+			context.Background(), AuthLimitPushUnregister, AuthLimitSource, "192.0.2.1",
+		)
+		require.NoError(t, checkErr)
+		require.True(t, decision.Allowed)
+	}
+	blocked, err := limiter.Check(
+		context.Background(), AuthLimitPushUnregister, AuthLimitSource, "192.0.2.1",
+	)
+	require.NoError(t, err)
+	assert.False(t, blocked.Allowed)
+	otherSource, err := limiter.Check(
+		context.Background(), AuthLimitPushUnregister, AuthLimitSource, "192.0.2.2",
+	)
+	require.NoError(t, err)
+	assert.True(t, otherSource.Allowed)
+}
+
 func TestAuthRateLimiterReleasesInfrastructureReservationsAndClearsSuccess(t *testing.T) {
 	limiter, err := NewAuthRateLimiter(nil, false, "test", nil)
 	require.NoError(t, err)

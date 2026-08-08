@@ -138,6 +138,7 @@ func (ts *TestServer) VerifyTestSignup(t *testing.T, email, password string) {
 
 func (ts *TestServer) LoginTestUser(email, password string) string {
 	response := ts.Expect.POST("/login").
+		WithHeader("X-Auth-Client", "native").
 		WithJSON(http_internal.LoginInput{Email: email, Password: password}).
 		Expect().Status(200)
 	return response.Header("Authorization").NotEmpty().Raw()
@@ -208,6 +209,7 @@ func (ts *TestServer) WithPremiumUser(t *testing.T) string {
 
 	// Login to get token with premium subscription
 	loginResp := ts.Expect.POST("/login").
+		WithHeader("X-Auth-Client", "native").
 		WithJSON(http_internal.LoginInput{
 			Email:    signupInput.Email,
 			Password: signupInput.Password,

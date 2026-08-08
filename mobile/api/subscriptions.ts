@@ -1,4 +1,8 @@
-import { authenticatedFetch, getAuthorization } from "./users";
+import {
+  authenticatedFetch,
+  authenticationHeaders,
+  hasAuthenticationSession,
+} from "./users";
 import { DEFAULT_ERROR } from "./constants";
 import { Platform, Linking } from "react-native";
 import { getApiBaseUrl } from "./baseUrl";
@@ -30,9 +34,7 @@ export async function createCheckoutSession(
   expoUri: string,
 ): Promise<CheckoutSessionResponse> {
   const endpoint = `${API_URL}/subscription/checkout-session`;
-  const authorization = getAuthorization();
-
-  if (!authorization) {
+  if (!hasAuthenticationSession()) {
     throw new Error("Authentication required");
   }
 
@@ -40,7 +42,7 @@ export async function createCheckoutSession(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: authorization,
+      ...authenticationHeaders(),
     },
     body: JSON.stringify({ plan, expoUri }),
   });
@@ -55,17 +57,13 @@ export async function createCheckoutSession(
 
 export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
   const endpoint = `${API_URL}/subscription/status`;
-  const authorization = getAuthorization();
-
-  if (!authorization) {
+  if (!hasAuthenticationSession()) {
     throw new Error("Authentication required");
   }
 
   const response = await authenticatedFetch(endpoint, {
     method: "GET",
-    headers: {
-      Authorization: authorization,
-    },
+    headers: authenticationHeaders(),
   });
 
   if (!response.ok) {
