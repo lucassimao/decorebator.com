@@ -34,6 +34,8 @@ services:
 
   createbuckets:
     image: minio/mc
+    env_file:
+      - .env.test
     depends_on:
       minio:
         condition: service_healthy
@@ -41,8 +43,8 @@ services:
       /bin/sh -c "
       set -eu;
       mc alias set myminio http://minio:9000 testuser testpass123;
-      mc mb --ignore-existing myminio/decorebator;
-      mc anonymous set download myminio/decorebator;"
+      mc mb --ignore-existing myminio/$${MINIO_BUCKET:-decorebator};
+      mc anonymous set download myminio/$${MINIO_BUCKET:-decorebator};"
 
   main:                         
     image: golang:1.25.5
@@ -71,6 +73,8 @@ services:
       REDIS_PORT: 6379
       MINIO_HOST: minio
       MINIO_PORT: 9000
+      PROFILE_IMAGE_ANDROID_FIXTURE: ${PROFILE_IMAGE_ANDROID_FIXTURE:-}
+      PROFILE_IMAGE_IOS_FIXTURE: ${PROFILE_IMAGE_IOS_FIXTURE:-}
 
   postgres:
     image: postgres:15

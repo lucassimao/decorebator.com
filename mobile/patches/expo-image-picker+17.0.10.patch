@@ -1,0 +1,270 @@
+diff --git a/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/MediaHandler.kt b/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/MediaHandler.kt
+index 22076ad..f5e4022 100644
+--- a/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/MediaHandler.kt
++++ b/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/MediaHandler.kt
+@@ -53,7 +53,12 @@ internal class MediaHandler(
+       CompressionImageExporter(appContextProvider, options.quality)
+     }
+     val mimeType = requireNotNull(getType(context.contentResolver, sourceUri)) // this won't be null due to previous checks
+-    val outputFile = createOutputFile(cacheDirectory, mimeType.toImageFileExtension())
++    val extension = mimeType.toImageFileExtension()
++    val outputFile = if (options.quality == ImagePickerConstants.MAXIMUM_QUALITY) {
++      File.createTempFile("profile-picker-source-", extension, cacheDirectory)
++    } else {
++      createOutputFile(cacheDirectory, extension)
++    }
+
+     val exportedImage = exporter.exportAsync(sourceUri, outputFile, context.contentResolver)
+     val base64 = options.base64.takeIf { it }
+diff --git a/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/exporters/RawImageExporter.kt b/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/exporters/RawImageExporter.kt
+index 92ae2f2..4993f4d 100644
+--- a/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/exporters/RawImageExporter.kt
++++ b/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/exporters/RawImageExporter.kt
+@@ -2,7 +2,7 @@ package expo.modules.imagepicker.exporters
+
+ import android.content.ContentResolver
+ import android.net.Uri
+-import expo.modules.imagepicker.copyFile
++import expo.modules.imagepicker.FailedToReadFileException
+ import java.io.File
+
+ class RawImageExporter : ImageExporter {
+@@ -11,12 +11,21 @@ class RawImageExporter : ImageExporter {
+     output: File,
+     contentResolver: ContentResolver
+   ): ImageExportResult {
+-    copyFile(source, output, contentResolver)
+-    val dimensionsExporter = DimensionsExporter(output)
++    try {
++      contentResolver.openInputStream(source).use { input ->
++        ProfileImagePickerBoundedCopy.copy(
++          requireNotNull(input) { "Image picker source cannot be opened" },
++          output,
++        )
++      }
++    } catch (error: Throwable) {
++      output.delete()
++      throw FailedToReadFileException(output, error)
++    }
+
+     return ImageExportResult(
+-      dimensionsExporter.width,
+-      dimensionsExporter.height,
++      0,
++      0,
+       output
+     )
+   }
+diff --git a/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/exporters/bounded/ProfileImagePickerBoundedCopy.kt b/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/exporters/bounded/ProfileImagePickerBoundedCopy.kt
+new file mode 100644
+index 0000000..1a894cd
+--- /dev/null
++++ b/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/exporters/bounded/ProfileImagePickerBoundedCopy.kt
+@@ -0,0 +1,46 @@
++package expo.modules.imagepicker.exporters
++
++import java.io.File
++import java.io.FileOutputStream
++import java.io.InputStream
++
++internal object ProfileImagePickerBoundedCopy {
++  const val MAX_BYTES = 25L * 1024L * 1024L
++  private const val STALE_MILLIS = 60L * 60L * 1000L
++  private const val SWEEP_LIMIT = 32
++
++  fun copy(input: InputStream, output: File) {
++    sweepStale(output.parentFile)
++    try {
++      FileOutputStream(output).use { target ->
++        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
++        var copied = 0L
++        while (true) {
++          val count = input.read(buffer)
++          if (count < 0) break
++          if (count == 0) continue
++          copied += count
++          require(copied <= MAX_BYTES) { "Image picker source is too large" }
++          target.write(buffer, 0, count)
++        }
++        require(copied > 0L) { "Image picker source is empty" }
++      }
++    } catch (error: Throwable) {
++      output.delete()
++      throw error
++    }
++  }
++
++  internal fun sweepStale(directory: File?, nowMillis: Long = System.currentTimeMillis()): Int {
++    val stale = directory?.listFiles()?.asSequence()
++      ?.filter {
++        it.isFile && it.name.startsWith("profile-picker-source-") &&
++          nowMillis - it.lastModified() >= STALE_MILLIS
++      }
++      ?.sortedBy { it.lastModified() }
++      ?.take(SWEEP_LIMIT)
++      ?.toList()
++      .orEmpty()
++    return stale.count { it.delete() || !it.exists() }
++  }
++}
+diff --git a/node_modules/expo-image-picker/ios/MediaHandler.swift b/node_modules/expo-image-picker/ios/MediaHandler.swift
+index 6e4fbe1..85cbacf 100644
+--- a/node_modules/expo-image-picker/ios/MediaHandler.swift
++++ b/node_modules/expo-image-picker/ios/MediaHandler.swift
+@@ -126,50 +126,40 @@ internal struct MediaHandler {
+       && options.preferredAssetRepresentationMode == .current
+
+     if fastPath {
+-      // Attempt to obtain original file URL
+-      if let targetUrl = try? await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<URL, Error>)
++      // Fail closed instead of entering the unbounded Data/UIImage fallback. The
++      // app's linked processor performs all metadata probing and raster work.
++      let targetUrl = try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<URL, Error>)
+         in itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.image.identifier) { url, error in
+           guard let srcUrl = url else {
+             return continuation.resume(throwing: error ?? FailedToReadImageException())
+           }
+           do {
+-            let destUrl = try generateUrl(withFileExtension: "." + srcUrl.pathExtension)
+-            try FileManager.default.copyItem(at: srcUrl, to: destUrl)
++            let destUrl = try generateProfilePickerSourceUrl(
++              withFileExtension: "." + srcUrl.pathExtension
++            )
++            try ProfileImagePickerBoundedCopy.copy(from: srcUrl, to: destUrl)
+             continuation.resume(returning: destUrl)
+           } catch {
+             continuation.resume(throwing: error)
+           }
+         }
+-      }) {
+-        let cachedUrl = targetUrl
+-        let fileExtension = "." + cachedUrl.pathExtension
+-
+-        let size = ImageUtils.readVisualSizeFrom(url: cachedUrl) ?? .zero
+-        let fileSize = getFileSize(from: cachedUrl)
+-        let mimeType = getMimeType(from: cachedUrl.pathExtension)
+-        let fileName = itemProvider.suggestedName.map { $0 + fileExtension }
+-
+-        // Conditionally read raw data only if needed to avoid unnecessary I/O
+-        var rawData: Data?
+-        if options.base64 || options.exif {
+-          rawData = try? Data(contentsOf: cachedUrl)
+-        }
+-
+-        let base64 = options.base64 ? rawData?.base64EncodedString() : nil
+-        let exif = options.exif ? (rawData.flatMap { ImageUtils.readExifFrom(data: $0) }) : nil
++      })
++      let fileExtension = "." + targetUrl.pathExtension
++      let fileSize = getFileSize(from: targetUrl)
++      let mimeType = getMimeType(from: targetUrl.pathExtension)
++      let fileName = itemProvider.suggestedName.map { $0 + fileExtension }
+
+-        return AssetInfo(
+-          assetId: selectedImage.assetIdentifier,
+-          uri: cachedUrl.absoluteString,
+-          width: Double(size.width),
+-          height: Double(size.height),
+-          fileName: fileName,
+-          fileSize: fileSize,
+-          mimeType: mimeType,
+-          base64: base64,
+-          exif: exif
+-        )
+-      }
++      return AssetInfo(
++        assetId: selectedImage.assetIdentifier,
++        uri: targetUrl.absoluteString,
++        width: 0,
++        height: 0,
++        fileName: fileName,
++        fileSize: fileSize,
++        mimeType: mimeType,
++        base64: nil,
++        exif: nil
++      )
+     }
+
+     // If fast copy path failed or was not available because of the props
+@@ -470,6 +460,13 @@ internal struct MediaHandler {
+     return URL(fileURLWithPath: path)
+   }
+
++  private func generateProfilePickerSourceUrl(withFileExtension: String) throws -> URL {
++    let generated = try generateUrl(withFileExtension: withFileExtension)
++    return generated.deletingLastPathComponent().appendingPathComponent(
++      "profile-picker-source-\(UUID().uuidString)\(withFileExtension)"
++    )
++  }
++
+   private func generatePairedUrls(photoFileExtension: String, videoFileExtension: String) throws
+     -> (URL, URL) {
+     let parsedVideoFileExtension =
+diff --git a/node_modules/expo-image-picker/ios/ProfileImagePickerBoundedCopy.swift b/node_modules/expo-image-picker/ios/ProfileImagePickerBoundedCopy.swift
+new file mode 100644
+index 0000000..8a45aea
+--- /dev/null
++++ b/node_modules/expo-image-picker/ios/ProfileImagePickerBoundedCopy.swift
+@@ -0,0 +1,63 @@
++// Local safety patch: keep attacker-controlled gallery files bounded before
++// ImageIO or UIKit receives them. See patches/expo-image-picker+17.0.10.patch.
++import Foundation
++
++enum ProfileImagePickerBoundedCopyError: Error {
++  case invalid
++}
++
++enum ProfileImagePickerBoundedCopy {
++  static let maxBytes = 25 * 1024 * 1024
++  private static let staleAge: TimeInterval = 60 * 60
++  private static let sweepLimit = 32
++
++  static func copy(from sourceURL: URL, to targetURL: URL) throws {
++    sweepStale(in: targetURL.deletingLastPathComponent())
++    guard FileManager.default.createFile(atPath: targetURL.path, contents: nil) else {
++      throw ProfileImagePickerBoundedCopyError.invalid
++    }
++    do {
++      let input = try FileHandle(forReadingFrom: sourceURL)
++      let output = try FileHandle(forWritingTo: targetURL)
++      defer {
++        try? input.close()
++        try? output.close()
++      }
++      var copied = 0
++      while let chunk = try input.read(upToCount: 8192), !chunk.isEmpty {
++        copied += chunk.count
++        guard copied <= maxBytes else {
++          throw ProfileImagePickerBoundedCopyError.invalid
++        }
++        try output.write(contentsOf: chunk)
++      }
++      guard copied > 0 else {
++        throw ProfileImagePickerBoundedCopyError.invalid
++      }
++    } catch {
++      try? FileManager.default.removeItem(at: targetURL)
++      throw error
++    }
++  }
++
++  @discardableResult
++  static func sweepStale(in directory: URL, now: Date = Date()) -> Int {
++    let keys: Set<URLResourceKey> = [.contentModificationDateKey, .isRegularFileKey]
++    let candidates = (try? FileManager.default.contentsOfDirectory(
++      at: directory,
++      includingPropertiesForKeys: Array(keys),
++      options: [.skipsHiddenFiles]
++    )) ?? []
++    let stale = candidates.compactMap { url -> (URL, Date)? in
++      guard url.lastPathComponent.hasPrefix("profile-picker-source-"),
++            let values = try? url.resourceValues(forKeys: keys),
++            values.isRegularFile == true,
++            let modified = values.contentModificationDate,
++            now.timeIntervalSince(modified) >= staleAge else { return nil }
++      return (url, modified)
++    }.sorted { $0.1 < $1.1 }.prefix(sweepLimit)
++    return stale.reduce(into: 0) { removed, candidate in
++      if (try? FileManager.default.removeItem(at: candidate.0)) != nil { removed += 1 }
++    }
++  }
++}

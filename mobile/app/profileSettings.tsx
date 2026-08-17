@@ -17,6 +17,11 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { searchCountries, getCountryDisplayName } from "@/utils/countries";
 import { showAccountDeletionConfirmation } from "@/utils/accountDeletionConfirmation";
 import {
+  discardProfileImageSource,
+  uploadProfilePicture,
+} from "@/utils/profileImageUpload";
+import { runProfileImageSelection } from "@/utils/profileImageSelection";
+import {
   ActivityIndicator,
   Alert,
   Animated,
@@ -36,44 +41,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-async function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => {
-      reader.abort();
-      reject(new Error("Problem reading blob as base64"));
-    };
-    reader.onload = () => {
-      // reader.result is something like "data:image/png;base64,iVBORw0KGgoAAAANS…"
-      // If you only need the raw base64 (no data: prefix), split it out:
-      const dataUrl = reader.result as string;
-      const base64 = dataUrl.split(",")[1];
-      resolve(base64);
-    };
-    reader.readAsDataURL(blob);
-  });
-}
-
-const uploadProfilePicture = async (uri: string): Promise<string> => {
-  const response = await fetch(uri);
-  const blob = await response.blob();
-
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  const base64Data = await blobToBase64(blob);
-
-  const parts = uri.split(".");
-  const extension = parts[parts.length - 1].toLowerCase();
-  const res = await userApi.update({
-    updateProfilePicture: {
-      base64Data,
-      extension,
-    },
-  });
-
-  return res.profilePictureUrl;
-};
 
 const ProfileSettingsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -206,54 +173,72 @@ const ProfileSettingsScreen: React.FC = () => {
   });
 
   const handlePickImage = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permissionResult.granted) {
-      Alert.alert(
-        t("profile.permissionRequired"),
-        t("profile.photoLibraryPermission"),
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
+    if (Platform.OS === "web") return;
+    const sessionEpoch = userApi.getAuthenticationSessionEpoch();
+    if (!sessionEpoch) return;
+    await runProfileImageSelection({
+      sessionEpoch,
+      getSessionEpoch: userApi.getAuthenticationSessionEpoch,
+      requestPermission: ImagePicker.requestMediaLibraryPermissionsAsync,
+      launchPicker: () =>
+        ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ["images"],
+          allowsEditing: false,
+          quality: 1,
+          preferredAssetRepresentationMode:
+            ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Current,
+        }),
+      onPermissionDenied: () =>
+        Alert.alert(
+          t("profile.permissionRequired"),
+          t("profile.photoLibraryPermission"),
+        ),
+      onSelectionError: () =>
+        Alert.alert(t("common.error"), t("quiz.imageLoadError")),
+      onDiscarded: (asset) => discardProfileImageSource(asset.uri),
+      onSelected: (asset, selectedEpoch) => {
+        setTempProfilePicture(asset.uri);
+        uploadPictureMutation.mutate({
+          source: asset,
+          sessionEpoch: selectedEpoch,
+        });
+      },
     });
-
-    if (!result.canceled && result.assets[0]) {
-      setTempProfilePicture(result.assets[0].uri);
-      uploadPictureMutation.mutate(result.assets[0].uri);
-    }
   };
 
   const handleTakePhoto = async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-
-    if (!permissionResult.granted) {
-      Alert.alert(
-        t("profile.permissionRequired"),
-        t("profile.cameraPermission"),
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
+    if (Platform.OS === "web") return;
+    const sessionEpoch = userApi.getAuthenticationSessionEpoch();
+    if (!sessionEpoch) return;
+    await runProfileImageSelection({
+      sessionEpoch,
+      getSessionEpoch: userApi.getAuthenticationSessionEpoch,
+      requestPermission: ImagePicker.requestCameraPermissionsAsync,
+      launchPicker: () =>
+        ImagePicker.launchCameraAsync({
+          allowsEditing: false,
+          quality: 1,
+        }),
+      onPermissionDenied: () =>
+        Alert.alert(
+          t("profile.permissionRequired"),
+          t("profile.cameraPermission"),
+        ),
+      onSelectionError: () =>
+        Alert.alert(t("common.error"), t("quiz.imageLoadError")),
+      onDiscarded: (asset) => discardProfileImageSource(asset.uri),
+      onSelected: (asset, selectedEpoch) => {
+        setTempProfilePicture(asset.uri);
+        uploadPictureMutation.mutate({
+          source: asset,
+          sessionEpoch: selectedEpoch,
+        });
+      },
     });
-
-    if (!result.canceled && result.assets[0]) {
-      setTempProfilePicture(result.assets[0].uri);
-      uploadPictureMutation.mutate(result.assets[0].uri);
-    }
   };
 
   const handleProfilePicturePress = () => {
+    if (Platform.OS === "web") return;
     Alert.alert(t("profile.changePhoto"), t("profile.chooseOption"), [
       { text: t("profile.takePhoto"), onPress: handleTakePhoto },
       { text: t("profile.chooseFromLibrary"), onPress: handlePickImage },
@@ -331,9 +316,16 @@ const ProfileSettingsScreen: React.FC = () => {
           {/* Profile Picture */}
           <View style={styles.profilePictureSection}>
             <TouchableOpacity
+              testID={
+                uploadPictureMutation.isPending
+                  ? "profile-picture-upload-pending"
+                  : "profile-picture-button"
+              }
               style={styles.profilePictureContainer}
               onPress={handleProfilePicturePress}
-              disabled={uploadPictureMutation.isPending}
+              disabled={
+                Platform.OS === "web" || uploadPictureMutation.isPending
+              }
             >
               {uploadPictureMutation.isPending ? (
                 <View style={styles.uploadingOverlay}>

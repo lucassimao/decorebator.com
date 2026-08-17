@@ -13,7 +13,14 @@ For local development, use `.env.local` or `.env.development` with a local API U
 
 ## OTA updates
 
-`npm run ota:prod` publishes a production OTA using `eas update`.
+`npm run ota:prod` publishes a production OTA using `eas update`. OTA publishing
+is fail-closed until `NATIVE_RUNTIME_READY_VERSION` exactly matches the current
+app version. Set that value only after matching iOS and Android binaries have
+been built and made available on the target channel.
+
+The generic form requires its target explicitly, for example
+`npm run ota -- preview`. A message may be supplied with `--message "text"` or
+the `OTA_MESSAGE` environment variable.
 
 ## Runtime policy: appVersion
 
@@ -26,26 +33,21 @@ The app uses:
 ### Release flow
 
 - **Store release = new runtime.**
-  - Bump `expo.version` (e.g., `1.1.1`).
+  - Bump `expo.version` (e.g., `1.1.2`).
   - Build and submit new binaries.
 - **OTA updates stay on the current store version.**
   - Any JS-only changes after release are safe OTAs for that version.
 
 ### Suggested flow
 
-1. Decide on a new store version (e.g., `1.1.1`).
+1. Decide on a new store version (e.g., `1.1.2`).
 2. Run `npm run version:bump` (updates `package.json` and `app.json` only).
 3. Build & submit the binaries:
    - `eas build --platform ios --profile production`
    - `eas build --platform android --profile production`
-4. After approval, publish JS-only changes via OTA:
-   - `npm run ota:prod`
-
-You can override the runtime guard for one-off cases with:
-
-```
-ALLOW_RUNTIME_MISMATCH=1 npm run ota:prod
-```
+4. After both matching native binaries are available on the target channel,
+   publish JS-only changes via OTA:
+   - `NATIVE_RUNTIME_READY_VERSION=1.1.2 npm run ota:prod`
 
 You can also customize the update message:
 

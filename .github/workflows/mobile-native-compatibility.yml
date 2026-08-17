@@ -1,0 +1,141 @@
+name: Mobile native compatibility
+
+on:
+  pull_request:
+    paths:
+      - "mobile/**"
+      - "api/**"
+      - ".github/workflows/mobile-native-compatibility.yml"
+  push:
+    paths:
+      - "mobile/**"
+      - "api/**"
+      - ".github/workflows/mobile-native-compatibility.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  javascript-and-android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run test:native-runtime
+      - run: npm test -- --runInBand
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:web-profile-route
+      - run: npx expo prebuild --platform android --clean --no-install
+      - run: ./gradlew :expo:compileDebugKotlin :profile-image-processor:compileDebugKotlin :profile-image-processor:testDebugUnitTest
+        working-directory: mobile/android
+        env:
+          PROFILE_IMAGE_ANDROID_FIXTURE: /tmp/android-profile-image.jpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-profile-image-fixture
+          path: /tmp/android-profile-image.jpg
+
+  ios-native-module:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npx expo prebuild --platform ios --clean --no-install
+      - run: npx pod-install ios
+      - name: Exercise iOS Simulator image processing with real fixtures
+        run: |
+          simulator_app=/tmp/ProfileImageProcessorSmoke.app
+          mkdir -p "$simulator_app"
+          simulator_arch=$(uname -m)
+          xcrun --sdk iphonesimulator swiftc \
+            -target "${simulator_arch}-apple-ios15.1-simulator" \
+            -framework CoreGraphics \
+            -framework Foundation \
+            -framework ImageIO \
+            -framework UniformTypeIdentifiers \
+            node_modules/expo-image-picker/ios/ProfileImagePickerBoundedCopy.swift \
+            modules/profile-image-processor/ios/ProfileImageProcessorCore.swift \
+            modules/profile-image-processor/ios-tests/main.swift \
+            -o "$simulator_app/ProfileImageProcessorSmoke"
+          cp modules/profile-image-processor/ios-tests/Info.plist "$simulator_app/Info.plist"
+          codesign --force --sign - "$simulator_app"
+          simulator_id=$(xcrun simctl list devices available -j | ruby -rjson -e \
+            'devices=JSON.parse(STDIN.read)["devices"].values.flatten; puts devices.find { |d| d["isAvailable"] && d["name"].start_with?("iPhone") }["udid"]')
+          xcrun simctl boot "$simulator_id" || true
+          xcrun simctl bootstatus "$simulator_id" -b
+          xcrun simctl install "$simulator_id" "$simulator_app"
+          app_container=$(xcrun simctl get_app_container "$simulator_id" com.decorebator.profile-image-processor-smoke app)
+          data_container=$(xcrun simctl get_app_container "$simulator_id" com.decorebator.profile-image-processor-smoke data)
+          SIMCTL_CHILD_PROFILE_IMAGE_IOS_FIXTURE="$data_container/Documents/ios-profile-image.jpg" \
+            xcrun simctl spawn "$simulator_id" "$app_container/ProfileImageProcessorSmoke"
+          cp "$data_container/Documents/ios-profile-image.jpg" /tmp/ios-profile-image.jpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-profile-image-fixture
+          path: /tmp/ios-profile-image.jpg
+      - name: Compile iOS simulator app and linked native module
+        run: >-
+          xcodebuild
+          -workspace ios/decorebator.xcworkspace
+          -scheme decorebator
+          -configuration Debug
+          -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+          build
+
+  native-output-server-contract:
+    runs-on: ubuntu-latest
+    needs: [javascript-and-android, ios-native-module]
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-profile-image-fixture
+          path: api/test-fixtures
+      - uses: actions/download-artifact@v4
+        with:
+          name: ios-profile-image-fixture
+          path: api/test-fixtures
+      - name: Create test environment
+        run: cp .env.test.example .env.test
+      - name: Start profile persistence dependencies
+        run: |
+          docker compose -f docker-compose.test.yml up -d --wait postgres redis minio
+          docker compose -f docker-compose.test.yml run --rm --no-deps createbuckets
+      - name: Validate native bytes through normalizer and profile persistence
+        env:
+          PROFILE_IMAGE_ANDROID_FIXTURE: /app/test-fixtures/android-profile-image.jpg
+          PROFILE_IMAGE_IOS_FIXTURE: /app/test-fixtures/ios-profile-image.jpg
+        run: |
+          docker compose -f docker-compose.test.yml run --rm --no-deps main \
+            go test -count=1 ./internal/common -run '^TestNativeProfileImageFixturesSatisfyServerContract$'
+          docker compose -f docker-compose.test.yml run --rm --no-deps main \
+            go test -count=1 ./tests/integration -run '^TestNativeProfileImageFixturesUploadAndPersist$'
+      - name: Stop profile persistence dependencies
+        if: always()
+        run: docker compose -f docker-compose.test.yml down -v --remove-orphans

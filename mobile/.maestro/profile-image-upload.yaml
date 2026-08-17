@@ -1,0 +1,57 @@
+appId: com.lsimaocosta.decorebator
+name: Profile image selection and upload
+tags:
+  - profile
+  - upload
+---
+- clearState
+- launchApp
+- runFlow:
+    when:
+      visible: "http://10.0.2.2:8081"
+    commands:
+      - tapOn: "http://10.0.2.2:8081"
+- extendedWaitUntil:
+    visible: "This is the developer menu. It gives you access to useful tools in your development builds."
+    timeout: 15000
+- tapOn: "Continue"
+- runFlow:
+    when:
+      visible: "Connected to:"
+    commands:
+      - back
+- extendedWaitUntil:
+    visible: "Welcome to"
+    timeout: 20000
+- tapOn: "Skip"
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: "Welcome back!"
+    timeout: 10000
+- tapOn:
+    id: "signin-button"
+- extendedWaitUntil:
+    visible: "My Wordlists"
+    timeout: 20000
+- openLink: "decorebator://profileSettings"
+- extendedWaitUntil:
+    visible: "Profile Settings"
+    timeout: 10000
+- tapOn:
+    id: "profile-picture-button"
+- tapOn: "Choose from Library"
+- runFlow:
+    when:
+      visible: "Allow all"
+    commands:
+      - tapOn: "Allow all"
+- extendedWaitUntil:
+    visible: "Photos"
+    timeout: 10000
+- tapOn:
+    point: "20%,25%"
+- extendedWaitUntil:
+    visible:
+      id: "profile-picture-button"
+    timeout: 30000

@@ -3,12 +3,16 @@ package http
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
+	"unicode/utf8"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/config"
@@ -19,6 +23,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type SignupInput struct {
@@ -62,15 +67,53 @@ type UpdatePasswordInput struct {
 
 type UpdateProfilePictureInput struct {
 	Base64Data string `json:"base64Data"`
-	Extension  string `json:"extension"`
+	Extension  string `json:"extension,omitempty"`
+}
+
+const updateProfileRequestLimit = 8 << 20
+const profileCleanupTimeout = 1500 * time.Millisecond
+const profileReconciliationScheduleTimeout = 500 * time.Millisecond
+
+type profileUploadAdmission struct {
+	mu     sync.Mutex
+	users  map[int64]struct{}
+	global chan struct{}
+}
+
+func newProfileUploadAdmission(maxConcurrent int) *profileUploadAdmission {
+	return &profileUploadAdmission{users: make(map[int64]struct{}), global: make(chan struct{}, maxConcurrent)}
+}
+
+func (a *profileUploadAdmission) tryAcquire(userID int64) (func(), bool) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if _, exists := a.users[userID]; exists {
+		return nil, false
+	}
+	select {
+	case a.global <- struct{}{}:
+		a.users[userID] = struct{}{}
+	default:
+		return nil, false
+	}
+	return func() {
+		a.mu.Lock()
+		delete(a.users, userID)
+		<-a.global
+		a.mu.Unlock()
+	}, true
 }
 
 type UserRoutes struct {
-	userService  *service.UserService
-	authSessions userAuthSessions
-	authLimiter  *service.AuthRateLimiter
-	jobService   service.JobService
-	httpSecurity config.HTTPSecurityConfig
+	userService           *service.UserService
+	authSessions          userAuthSessions
+	authLimiter           *service.AuthRateLimiter
+	jobService            service.JobService
+	httpSecurity          config.HTTPSecurityConfig
+	profileBodies         chan struct{}
+	profileUploads        *profileUploadAdmission
+	profileUserExists     func(context.Context, int64) (bool, error)
+	normalizeProfileImage func(context.Context, string) (common.ProfileImage, error)
 }
 
 type userAuthSessions interface {
@@ -87,11 +130,15 @@ func NewUserRoutes(
 	httpSecurity config.HTTPSecurityConfig,
 ) *UserRoutes {
 	return &UserRoutes{
-		userService:  userService,
-		authSessions: authSessions,
-		authLimiter:  authLimiter,
-		jobService:   jobService,
-		httpSecurity: httpSecurity,
+		userService:           userService,
+		authSessions:          authSessions,
+		authLimiter:           authLimiter,
+		jobService:            jobService,
+		httpSecurity:          httpSecurity,
+		profileBodies:         make(chan struct{}, 8),
+		profileUploads:        newProfileUploadAdmission(2),
+		profileUserExists:     userService.Exists,
+		normalizeProfileImage: common.NormalizeProfileImage,
 	}
 }
 
@@ -421,80 +468,92 @@ func canConvertToInt(n int64) bool {
 	return n >= int64(math.MinInt) && n <= int64(math.MaxInt)
 }
 
-func (h *UserRoutes) UpdateProfile(c *gin.Context) {
-	var input UpdateProfileInput
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		var ve validator.ValidationErrors
-		var body any
-
-		if errors.As(err, &ve) {
-			body = gin.H{"validationErrors": translateValidationErrors(ve)}
-		} else {
-			body = gin.H{"error": err.Error()}
-		}
-
-		c.AbortWithStatusJSON(http.StatusBadRequest, body)
-		return
-	}
-
+func (h *UserRoutes) UpdateProfile(c *gin.Context) { //nolint:gocyclo // staged profile mutation keeps every side effect explicit
 	// Get user from context (set by auth middleware)
 	userAsAny, exists := c.Get("user")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
-
 	user, ok := userAsAny.(*model.User)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user"})
 		return
 	}
+	if c.Request.ContentLength > updateProfileRequestLimit {
+		c.AbortWithStatusJSON(http.StatusRequestEntityTooLarge, gin.H{"error": "Profile update is too large."})
+		return
+	}
+	select {
+	case h.profileBodies <- struct{}{}:
+	default:
+		c.Header("Retry-After", "1")
+		c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Profile updates are temporarily busy."})
+		return
+	}
+	bodyAdmissionHeld := true
+	defer func() {
+		if bodyAdmissionHeld {
+			<-h.profileBodies
+		}
+	}()
+	clearReadDeadline := setProfileReadDeadline(c.Request.Context(), c.Writer)
+	defer clearReadDeadline()
+	stopBodyCancellation := closeBodyOnContextDone(c.Request.Context(), c.Request.Body)
+	defer stopBodyCancellation()
+
+	var input UpdateProfileInput
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, updateProfileRequestLimit)
+	decoder := json.NewDecoder(c.Request.Body)
+	if err := decoder.Decode(&input); err != nil {
+		clearReadDeadline()
+		writeProfileDecodeError(c, err)
+		return
+	}
+	if err := requireJSONWhitespaceEOF(decoder, c.Request.Body); err != nil {
+		clearReadDeadline()
+		writeProfileDecodeError(c, err)
+		return
+	}
+	clearReadDeadline()
+	var releaseUpload func()
+	if input.UpdateProfilePictureInput != nil {
+		var acquired bool
+		releaseUpload, acquired = h.profileUploads.tryAcquire(user.ID)
+		if !acquired {
+			c.Header("Retry-After", "1")
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "Another profile picture update is in progress."})
+			return
+		}
+		defer releaseUpload()
+	}
+	if err := validateProfileInputBounds(input); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	<-h.profileBodies
+	bodyAdmissionHeld = false
 
 	var newPassword *string
 	if input.UpdatePasswordInput != nil {
 		err := h.userService.VerifyPassword(c.Request.Context(), user.Email, input.UpdatePasswordInput.CurrentPassword)
 		if err != nil {
+			if c.Request.Context().Err() != nil || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				c.JSON(http.StatusRequestTimeout, gin.H{"error": "Profile update timed out."})
+				return
+			}
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Could not update password."})
 			return
 		}
 
 		newPassword = &input.UpdatePasswordInput.NewPassword
 	}
-
-	// Upload profile picture if provided
-	var url *string
-	var uploadedObjectName string
-	if input.UpdateProfilePictureInput != nil {
-		exists, err := h.userService.Exists(c.Request.Context(), user.ID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify user."})
-			return
-		}
-		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
-			return
-		}
-
-		cmd := input.UpdateProfilePictureInput
-
-		imgBytes, mimeType, err := common.DecodeImageBase64(cmd.Base64Data)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image format."})
-			return
-		}
-
-		objectName := fmt.Sprintf("users/%d-%d.%s", user.ID, time.Now().Unix(), cmd.Extension)
-		uploadResult, err := common.Upload(c.Request.Context(), imgBytes, "decorebator", objectName, mimeType)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload profile picture."})
-			return
-		}
-		uploadedObjectName = objectName
-		url = &uploadResult
+	if err := service.ValidateProfileUpdate(input.FirstName, input.LastName, newPassword); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	// Parse date of birth if provided
+	// Parse and validate every non-image field before creating an object.
 	var dateOfBirth *time.Time
 	if input.DateOfBirth != nil && *input.DateOfBirth != "" {
 		parsedDate, err := time.Parse("2006-01-02", *input.DateOfBirth)
@@ -505,13 +564,126 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 		dateOfBirth = &parsedDate
 	}
 
-	// Update user profile
-	updatedUser, err := h.userService.UpdateProfile(c.Request.Context(), user.ID, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, newPassword, dateOfBirth, input.NotificationsEnabled)
-	if err != nil {
-		if uploadedObjectName != "" {
-			if cleanupErr := h.userService.CompensateProfileUpload(c.Request.Context(), uploadedObjectName); cleanupErr != nil {
-				common.Logger.ErrorContext(c.Request.Context(), "failed to compensate profile picture upload", "object", uploadedObjectName, "error", cleanupErr)
+	// Upload profile picture if provided
+	var url *string
+	var uploadedReceipt common.UploadReceipt
+	var cleanupIntentID int64
+	var err error
+	if input.UpdateProfilePictureInput != nil {
+		exists, existenceErr := h.profileUserExists(c.Request.Context(), user.ID)
+		if existenceErr != nil {
+			if c.Request.Context().Err() != nil || errors.Is(existenceErr, context.Canceled) || errors.Is(existenceErr, context.DeadlineExceeded) {
+				c.JSON(http.StatusRequestTimeout, gin.H{"error": "Profile update timed out."})
+				return
 			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify user."})
+			return
+		}
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+			return
+		}
+
+		cmd := input.UpdateProfilePictureInput
+
+		image, imageErr := h.normalizeProfileImage(c.Request.Context(), cmd.Base64Data)
+		if imageErr != nil {
+			if errors.Is(imageErr, common.ErrProfileImageBusy) {
+				c.Header("Retry-After", "1")
+				c.JSON(http.StatusTooManyRequests, gin.H{"error": "Profile image processing is busy."})
+				return
+			}
+			if errors.Is(imageErr, context.Canceled) || errors.Is(imageErr, context.DeadlineExceeded) {
+				c.JSON(http.StatusRequestTimeout, gin.H{"error": "Profile update timed out."})
+				return
+			}
+			if errors.Is(imageErr, common.ErrProfileImageTooLarge) {
+				c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "Profile image is too large."})
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image format."})
+			return
+		}
+		legacyExtension := strings.ToLower(strings.TrimSpace(cmd.Extension))
+		if legacyExtension != "" && legacyExtension != image.Extension && !(legacyExtension == "jpeg" && image.Extension == "jpg") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image format."})
+			return
+		}
+
+		objectNonce := common.GenerateRandomString(16)
+		if objectNonce == "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload profile picture."})
+			return
+		}
+		objectName := fmt.Sprintf("users/%d-%s.%s", user.ID, objectNonce, image.Extension)
+		profileBucket := common.MinIOBucketName()
+		plannedURL, urlErr := common.MinIOObjectURL(profileBucket, objectName)
+		if urlErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to prepare profile picture upload."})
+			return
+		}
+		// Commit a reference-aware exact-key cleanup intent before the external
+		// side effect. A crash or database outage after PUT cannot orphan the key.
+		cleanupIntentID, err = h.userService.ScheduleUncertainProfileUploadCleanup(
+			c.Request.Context(), user.ID, profileBucket, objectName, plannedURL,
+		)
+		if err != nil {
+			if c.Request.Context().Err() != nil || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				c.JSON(http.StatusRequestTimeout, gin.H{"error": "Profile update timed out."})
+			} else {
+				c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Profile picture upload is temporarily unavailable."})
+			}
+			return
+		}
+		uploadResult, uploadErr := common.UploadWithReceipt(c.Request.Context(), image.Data, profileBucket, objectName, image.ContentType)
+		if uploadErr != nil {
+			// The random key cannot collide with another upload. Remove every
+			// version in case the object store committed before an ambiguous error.
+			cleanupErr := runProfileCleanup(c.Request.Context(), func(cleanupContext context.Context) error {
+				return common.MinIODeleteObjectAllVersions(cleanupContext, profileBucket, objectName)
+			})
+			if cleanupErr != nil {
+				common.Logger.ErrorContext(context.WithoutCancel(c.Request.Context()), "failed immediate uncertain profile picture cleanup", "object", objectName, "error", cleanupErr)
+			}
+			if errors.Is(uploadErr, context.Canceled) || errors.Is(uploadErr, context.DeadlineExceeded) || c.Request.Context().Err() != nil {
+				c.JSON(http.StatusRequestTimeout, gin.H{"error": "Profile update timed out."})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload profile picture."})
+			}
+			return
+		}
+		uploadedReceipt = uploadResult
+		url = &uploadResult.URL
+	}
+
+	// Update user profile
+	var updatedUser *service.User
+	if uploadedReceipt.ObjectName != "" {
+		updatedUser, err = h.userService.UpdateProfileWithUploadIntent(c.Request.Context(), user.ID, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, newPassword, dateOfBirth, input.NotificationsEnabled, cleanupIntentID, uploadedReceipt)
+	} else {
+		updatedUser, err = h.userService.UpdateProfile(c.Request.Context(), user.ID, input.FirstName, input.LastName, input.Country, input.PreferredLanguage, url, newPassword, dateOfBirth, input.NotificationsEnabled)
+	}
+	persistenceAmbiguous := err != nil && !isDefinitiveProfilePersistenceFailure(err)
+	if err != nil {
+		if uploadedReceipt.ObjectName != "" {
+			var cleanupErr error
+			if !persistenceAmbiguous {
+				cleanupErr = runProfileCleanup(c.Request.Context(), func(cleanupContext context.Context) error {
+					return h.userService.CompensateProfileUpload(cleanupContext, user.ID, uploadedReceipt)
+				})
+			}
+			if cleanupErr != nil && c.Request.Context().Err() == nil {
+				reconcileContext, cancelReconcile := context.WithTimeout(c.Request.Context(), profileReconciliationScheduleTimeout)
+				reconcileErr := h.userService.ScheduleProfileUploadReconciliation(reconcileContext, user.ID, uploadedReceipt)
+				cancelReconcile()
+				if reconcileErr != nil {
+					common.Logger.ErrorContext(context.WithoutCancel(c.Request.Context()), "failed to compensate profile picture upload", "object", uploadedReceipt.ObjectName, "error", errors.Join(cleanupErr, reconcileErr))
+				}
+			}
+		}
+		if profileRequestTimedOut(c.Request.Context(), err) {
+			c.JSON(http.StatusRequestTimeout, gin.H{"error": "Profile update timed out."})
+			return
 		}
 		switch err.(type) {
 		case common.BusinessError:
@@ -530,6 +702,129 @@ func (h *UserRoutes) UpdateProfile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, updatedUser)
+}
+
+func setProfileReadDeadline(ctx context.Context, writer http.ResponseWriter) func() {
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return func() {}
+	}
+	controller := http.NewResponseController(writer)
+	if err := controller.SetReadDeadline(deadline); err != nil {
+		return func() {}
+	}
+	return func() { _ = controller.SetReadDeadline(time.Time{}) }
+}
+
+func runProfileCleanup(ctx context.Context, cleanup func(context.Context) error) error {
+	cleanupContext, cancelCleanup := context.WithTimeout(ctx, profileCleanupTimeout)
+	defer cancelCleanup()
+	return cleanup(cleanupContext)
+}
+
+func profileRequestTimedOut(ctx context.Context, err error) bool {
+	return ctx.Err() != nil || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
+}
+
+func isDefinitiveProfilePersistenceFailure(err error) bool {
+	var businessError common.BusinessError
+	if errors.As(err, &businessError) {
+		return true
+	}
+	var postgresError *pgconn.PgError
+	return errors.As(err, &postgresError)
+}
+
+func validateProfileInputBounds(input UpdateProfileInput) error {
+	if input.FirstName != nil && (len(*input.FirstName) > 400 || utf8.RuneCountInString(*input.FirstName) > 100) {
+		return errors.New("first name is too long")
+	}
+	if input.LastName != nil && (len(*input.LastName) > 400 || utf8.RuneCountInString(*input.LastName) > 100) {
+		return errors.New("last name is too long")
+	}
+	if input.Country != nil && len(*input.Country) > 2 {
+		return errors.New("country code is too long")
+	}
+	if input.PreferredLanguage != nil && len(*input.PreferredLanguage) > 10 {
+		return errors.New("preferred language is too long")
+	}
+	if input.DateOfBirth != nil && len(*input.DateOfBirth) > len("2006-01-02") {
+		return errors.New("date of birth is invalid")
+	}
+	if input.UpdatePasswordInput != nil && len(input.UpdatePasswordInput.CurrentPassword) > common.PasswordMaxBytes {
+		return errors.New("current password is too long")
+	}
+	if input.UpdatePasswordInput != nil && len(input.UpdatePasswordInput.NewPassword) > common.PasswordMaxBytes {
+		return errors.New("new password is too long")
+	}
+	return nil
+}
+
+func requireJSONWhitespaceEOF(decoder *json.Decoder, body io.Reader) error {
+	reader := io.MultiReader(decoder.Buffered(), body)
+	buffer := make([]byte, 4096)
+	hasTrailingValue := false
+	for {
+		count, err := reader.Read(buffer)
+		for _, value := range buffer[:count] {
+			if value != ' ' && value != '\t' && value != '\r' && value != '\n' {
+				hasTrailingValue = true
+			}
+		}
+		if err != nil {
+			if !errors.Is(err, io.EOF) {
+				return err
+			}
+			break
+		}
+	}
+	if hasTrailingValue {
+		return errors.New("request body must contain one JSON value")
+	}
+	return nil
+}
+
+func writeProfileDecodeError(c *gin.Context, err error) {
+	if c.Request.Context().Err() != nil {
+		closeProfileConnection(c)
+		c.AbortWithStatusJSON(http.StatusRequestTimeout, gin.H{"error": "Profile update timed out."})
+		return
+	}
+	var timeoutError interface{ Timeout() bool }
+	if errors.As(err, &timeoutError) && timeoutError.Timeout() {
+		closeProfileConnection(c)
+		c.AbortWithStatusJSON(http.StatusRequestTimeout, gin.H{"error": "Profile update timed out."})
+		return
+	}
+	var maxBytesError *http.MaxBytesError
+	if errors.As(err, &maxBytesError) {
+		c.AbortWithStatusJSON(http.StatusRequestEntityTooLarge, gin.H{"error": "Profile update is too large."})
+		return
+	}
+	var validationErrors validator.ValidationErrors
+	if errors.As(err, &validationErrors) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"validationErrors": translateValidationErrors(validationErrors)})
+		return
+	}
+	c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid profile update."})
+}
+
+func closeProfileConnection(c *gin.Context) {
+	c.Header("Connection", "close")
+	c.Request.Close = true
+}
+
+func closeBodyOnContextDone(ctx context.Context, body io.Closer) func() {
+	done := make(chan struct{})
+	var once sync.Once
+	go func() {
+		select {
+		case <-ctx.Done():
+			_ = body.Close()
+		case <-done:
+		}
+	}()
+	return func() { once.Do(func() { close(done) }) }
 }
 
 func (h *UserRoutes) GetProfile(c *gin.Context) {

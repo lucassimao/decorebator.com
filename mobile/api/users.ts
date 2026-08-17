@@ -55,7 +55,6 @@ export type UpdateInput = {
   // if set, triggers profile pic update
   updateProfilePicture?: {
     base64Data: string;
-    extension: string;
   };
 };
 

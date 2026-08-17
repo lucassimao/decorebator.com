@@ -280,6 +280,7 @@ type UpdateUserProfileArgs struct {
 	ProfilePictureURL    *string
 	Password             *string
 	NotificationsEnabled *bool
+	Transaction          pgx.Tx
 }
 
 func (repository *UserRepository) UpdateUserProfile(ctx context.Context, args UpdateUserProfileArgs) (*User, error) {
@@ -329,6 +330,16 @@ func (repository *UserRepository) UpdateUserProfile(ctx context.Context, args Up
 			return nil, err
 		}
 		return &user, nil
+	}
+	if args.Transaction != nil {
+		updated, err := update(args.Transaction)
+		if err != nil || args.Password == nil {
+			return updated, err
+		}
+		if err := revokeAuthSessionsTx(ctx, args.Transaction, args.ID, "password_change"); err != nil {
+			return nil, err
+		}
+		return updated, nil
 	}
 	if args.Password == nil {
 		return update(repository.Db)

@@ -126,7 +126,7 @@ func (w *ImageGeneratorWorker) Work(ctx context.Context, job *river.Job[ImageGen
 	}
 
 	span = sentry.StartSpan(ctx, "storage.upload", sentry.WithDescription("minio.Upload"))
-	url, err := common.Upload(span.Context(), data, "decorebator",
+	url, err := common.Upload(span.Context(), data, common.MinIOBucketName(),
 		fmt.Sprintf("images/definition-%d-%d.png", definitionID, time.Now().Unix()), "image/png")
 	span.Finish()
 

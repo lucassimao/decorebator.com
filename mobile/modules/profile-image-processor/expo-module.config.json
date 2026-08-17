@@ -1,0 +1,12 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "podspecPath": "ProfileImageProcessor.podspec",
+    "modules": ["ProfileImageProcessorModule"]
+  },
+  "android": {
+    "modules": [
+      "expo.modules.profileimageprocessor.ProfileImageProcessorModule"
+    ]
+  }
+}

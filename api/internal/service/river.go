@@ -108,7 +108,8 @@ func NewWorkerRiverClient(
 	river.AddWorker(riverWorkers, NewDueItemsReminderWorker(pushService))
 	river.AddWorker(riverWorkers, NewDailyPracticeReminderWorker(pushService))
 	river.AddWorker(riverWorkers, NewPushReceiptWorker(pushService))
-	river.AddWorker(riverWorkers, NewAccountCleanupWorker())
+	river.AddWorker(riverWorkers, NewAccountCleanupWorker(db))
+	river.AddWorker(riverWorkers, NewProfileUploadReconciliationWorker(db))
 	river.AddWorker(riverWorkers, NewResetPasswordEmailWorker(mailService))
 	river.AddWorker(riverWorkers, &NoOpWorker{})
 	if legacyProviderSurfaceEnabled {

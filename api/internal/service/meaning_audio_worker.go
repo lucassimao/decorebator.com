@@ -44,7 +44,7 @@ func NewMeaningAudioWorker(definitionService *DefinitionService, wordService *Wo
 		},
 		generateAudio: openai.GenerateAudio,
 		uploadAudio: func(ctx context.Context, data []byte, objectName string) (string, error) {
-			return common.Upload(ctx, data, "decorebator", objectName, "audio/mpeg")
+			return common.Upload(ctx, data, common.MinIOBucketName(), objectName, "audio/mpeg")
 		},
 		setURLIfEmpty: definitionService.SetMeaningAudioURLIfEmpty,
 	})

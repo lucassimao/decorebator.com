@@ -121,12 +121,18 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 
 		// User profile routes
 		authenticatedRoutes.GET("/users", UserRoutes.GetProfile)
-		authenticatedRoutes.PATCH("/users", UserRoutes.UpdateProfile)
 		authenticatedRoutes.DELETE("/users", UserRoutes.DeleteProfile)
 
 		// Push notification routes
 		authenticatedRoutes.POST("/push/register", PushNotificationRoutes.Register)
 	}
+
+	// Image normalization and object storage need a wider but still bounded
+	// end-to-end budget than ordinary database-only authenticated routes. Keep
+	// this below the mobile client's 15-second request deadline.
+	profileRoutes := router.Group("/")
+	profileRoutes.Use(TimeoutMiddleware(12*time.Second), authenticate, ResolveEffectiveSubscription(appCtx.EffectiveAccessService), SentryUserContextMiddleware())
+	profileRoutes.PATCH("/users", UserRoutes.UpdateProfile)
 
 	// OpenAI Realtime token creation needs a wider provider-call budget than
 	// ordinary authenticated database routes while retaining the same guards.

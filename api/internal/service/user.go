@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+	"unicode/utf8"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -28,16 +29,17 @@ var ErrAuthHardeningWritesDisabled = errors.New("AUTH-3 writes are disabled for 
 
 // UserService handles user-related operations with dependency injection
 type UserService struct {
-	db                  *pgxpool.Pool
-	userRepository      *repo.UserRepository
-	subscriptionService *SubscriptionService
-	effectiveAccess     *EffectiveAccessService
-	authSessions        *AuthSessionService
-	jobService          JobService
-	dummyPasswordHash   []byte
-	passwordComparisons atomic.Uint64
-	pendingLookups      atomic.Uint64
-	deleteProfileObject func(context.Context, string, string) error
+	db                      *pgxpool.Pool
+	userRepository          *repo.UserRepository
+	subscriptionService     *SubscriptionService
+	effectiveAccess         *EffectiveAccessService
+	authSessions            *AuthSessionService
+	jobService              JobService
+	dummyPasswordHash       []byte
+	passwordComparisons     atomic.Uint64
+	pendingLookups          atomic.Uint64
+	deleteProfileObject     func(context.Context, string, string, string) error
+	profileObjectReferenced func(context.Context, int64, string) (bool, error)
 }
 
 func (s *UserService) SetEffectiveAccess(service *EffectiveAccessService) {
@@ -63,7 +65,14 @@ func NewUserService(
 		subscriptionService: subscriptionService,
 		authSessions:        authSessions,
 		dummyPasswordHash:   dummyPasswordHash,
-		deleteProfileObject: common.MinIODeleteObject,
+		deleteProfileObject: common.MinIODeleteObjectVersion,
+		profileObjectReferenced: func(ctx context.Context, userID int64, objectURL string) (bool, error) {
+			var referenced bool
+			err := db.QueryRow(ctx, `SELECT EXISTS(
+				SELECT 1 FROM users WHERE id=$1 AND profile_picture_url=$2
+			)`, userID, objectURL).Scan(&referenced)
+			return referenced, err
+		},
 	}
 	if len(jobs) > 0 {
 		service.jobService = jobs[0]
@@ -560,33 +569,77 @@ func (s *UserService) Exists(ctx context.Context, userID int64) (bool, error) {
 	return s.userRepository.Exists(ctx, userID)
 }
 
-func (s *UserService) CompensateProfileUpload(ctx context.Context, objectName string) error {
-	if s.deleteProfileObject == nil {
-		return errors.New("profile object deleter is unavailable")
+func (s *UserService) CompensateProfileUpload(ctx context.Context, userID int64, receipt common.UploadReceipt) error {
+	if s.profileObjectReferenced == nil {
+		return errors.New("profile object reference checker is unavailable")
 	}
-	if err := s.deleteProfileObject(ctx, profilePictureBucket, objectName); err == nil {
+	referenced, referenceErr := s.profileObjectReferenced(ctx, userID, receipt.URL)
+	if referenceErr == nil && referenced {
 		return nil
 	}
+	if referenceErr == nil && s.deleteProfileObject != nil {
+		if err := s.deleteProfileObject(ctx, receipt.Bucket, receipt.ObjectName, receipt.VersionID); err == nil {
+			return nil
+		}
+	}
+	return s.ScheduleProfileUploadReconciliation(ctx, userID, receipt)
+}
+
+func (s *UserService) ScheduleProfileUploadReconciliation(ctx context.Context, userID int64, receipt common.UploadReceipt) error {
 	if s.jobService == nil {
 		return errors.New("account cleanup scheduler is unavailable")
 	}
-	return s.jobService.ScheduleProfileObjectCleanupJob(ctx, objectName)
+	_, err := s.jobService.ScheduleProfileUploadReconciliationJob(ctx, ProfileUploadReconciliationArgs{
+		UserID: userID, Bucket: receipt.Bucket, ObjectName: receipt.ObjectName,
+		ObjectURL: receipt.URL, ObjectVersionID: receipt.VersionID,
+	})
+	return err
+}
+
+func (s *UserService) ScheduleUncertainProfileUploadCleanup(ctx context.Context, userID int64, bucket, objectName, objectURL string) (int64, error) {
+	if s.jobService == nil {
+		return 0, errors.New("profile upload reconciliation scheduler is unavailable")
+	}
+	return s.jobService.ScheduleProfileUploadReconciliationJob(ctx, ProfileUploadReconciliationArgs{
+		UserID: userID, Bucket: bucket, ObjectName: objectName, ObjectURL: objectURL, DeleteAllVersions: true,
+	})
+}
+
+func ValidateProfileUpdate(firstName, lastName, password *string) error {
+	if firstName != nil && strings.TrimSpace(*firstName) == "" {
+		return common.BusinessError{Message: "First name is required"}
+	}
+	if firstName != nil && (len(*firstName) > 400 || utf8.RuneCountInString(*firstName) > 100) {
+		return common.BusinessError{Message: "First name is too long"}
+	}
+	if lastName != nil && strings.TrimSpace(*lastName) == "" {
+		return common.BusinessError{Message: "Last name is required"}
+	}
+	if lastName != nil && (len(*lastName) > 400 || utf8.RuneCountInString(*lastName) > 100) {
+		return common.BusinessError{Message: "Last name is too long"}
+	}
+	if password != nil {
+		if err := common.ValidatePassword(*password); err != nil {
+			return common.BusinessError{Message: err.Error()}
+		}
+	}
+	return nil
 }
 
 func (s *UserService) UpdateProfile(ctx context.Context, userID int64, firstName, lastName, country, preferredLanguage, profilePictureURL, password *string, dateOfBirth *time.Time, notificationsEnabled *bool) (*User, error) {
-	// Validate required fields
-	if firstName != nil && strings.TrimSpace(*firstName) == "" {
-		return nil, common.BusinessError{Message: "First name is required"}
-	}
+	return s.updateProfile(ctx, userID, firstName, lastName, country, preferredLanguage, profilePictureURL, password, dateOfBirth, notificationsEnabled, 0, common.UploadReceipt{})
+}
 
-	if lastName != nil && strings.TrimSpace(*lastName) == "" {
-		return nil, common.BusinessError{Message: "Last name is required"}
+func (s *UserService) UpdateProfileWithUploadIntent(ctx context.Context, userID int64, firstName, lastName, country, preferredLanguage, profilePictureURL, password *string, dateOfBirth *time.Time, notificationsEnabled *bool, cleanupIntentID int64, receipt common.UploadReceipt) (*User, error) {
+	if cleanupIntentID <= 0 || receipt.ObjectName == "" || profilePictureURL == nil || *profilePictureURL != receipt.URL {
+		return nil, errors.New("invalid profile upload persistence intent")
 	}
+	return s.updateProfile(ctx, userID, firstName, lastName, country, preferredLanguage, profilePictureURL, password, dateOfBirth, notificationsEnabled, cleanupIntentID, receipt)
+}
 
-	if password != nil {
-		if err := common.ValidatePassword(*password); err != nil {
-			return nil, common.BusinessError{Message: err.Error()}
-		}
+func (s *UserService) updateProfile(ctx context.Context, userID int64, firstName, lastName, country, preferredLanguage, profilePictureURL, password *string, dateOfBirth *time.Time, notificationsEnabled *bool, cleanupIntentID int64, receipt common.UploadReceipt) (*User, error) {
+	if err := ValidateProfileUpdate(firstName, lastName, password); err != nil {
+		return nil, err
 	}
 
 	args := repo.UpdateUserProfileArgs{
@@ -601,14 +654,33 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID int64, firstName
 		NotificationsEnabled: notificationsEnabled,
 	}
 
-	user, err := s.userRepository.UpdateUserProfile(ctx, args)
+	var user *User
+	var err error
+	if cleanupIntentID > 0 {
+		if s.jobService == nil {
+			return nil, errors.New("profile upload reconciliation scheduler is unavailable")
+		}
+		err = pgx.BeginFunc(ctx, s.db, func(tx pgx.Tx) error {
+			if finalizeErr := s.jobService.FinalizeProfileUploadReconciliationJob(ctx, cleanupIntentID, ProfileUploadReconciliationArgs{
+				UserID: userID, Bucket: receipt.Bucket, ObjectName: receipt.ObjectName,
+				ObjectURL: receipt.URL, ObjectVersionID: receipt.VersionID,
+			}, tx); finalizeErr != nil {
+				return finalizeErr
+			}
+			args.Transaction = tx
+			user, err = s.userRepository.UpdateUserProfile(ctx, args)
+			return err
+		})
+	} else {
+		user, err = s.userRepository.UpdateUserProfile(ctx, args)
+	}
 	if err != nil {
 		common.Logger.Error("failed to update user profile", "error", err, "userID", userID)
 		switch err.(type) {
 		case common.BusinessError:
 			return nil, err
 		default:
-			return nil, errors.New("could not update user profile")
+			return nil, fmt.Errorf("could not update user profile: %w", err)
 		}
 	}
 

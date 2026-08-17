@@ -191,7 +191,7 @@ func (w *ExampleAudioWorker) uploadAudio(ctx context.Context, audioData []byte, 
 	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(exampleText)))[:8]
 	filename := fmt.Sprintf("audio/example-%d-%s.mp3", definitionID, hash)
 
-	audioURL, err := common.Upload(ctx, audioData, "decorebator", filename, "audio/mpeg")
+	audioURL, err := common.Upload(ctx, audioData, common.MinIOBucketName(), filename, "audio/mpeg")
 	if err != nil {
 		return "", err
 	}

@@ -52,7 +52,7 @@ is_substantive_review() {
 
   [[ -s "$candidate" ]] || return 1
   nonblank_lines=$(awk 'NF { count++ } END { print count + 0 }' "$candidate")
-  [[ "$nonblank_lines" -ge 3 ]] && [[ $(wc -c <"$candidate") -ge 200 ]] && has_review_verdict "$candidate"
+  [[ "$nonblank_lines" -ge 2 ]] && [[ $(wc -c <"$candidate") -ge 200 ]] && has_review_verdict "$candidate"
 }
 
 if is_substantive_review "$result_file"; then

@@ -282,8 +282,10 @@ func TestPasswordReset(t *testing.T) {
 
 func TestUserProfile(t *testing.T) {
 	server := setup.NewTestServer(t)
+	defer server.Cleanup()
 
 	token := server.WithTestUser(t)
+	var userID int64
 
 	t.Run("get user profile", func(t *testing.T) { //nolint:revive // t is used for testing
 		response := server.Expect.GET("/users").
@@ -298,13 +300,15 @@ func TestUserProfile(t *testing.T) {
 		json.ContainsKey("lastName")
 		json.ContainsKey("subscriptionPlan")
 		json.NotContainsKey("password")
+		userID = int64(json.Value("id").Number().Raw())
 	})
 
-	t.Run("update user profile", func(t *testing.T) { //nolint:revive // t is used for testing
+	t.Run("update user profile", func(t *testing.T) {
 		updateData := map[string]interface{}{
-			"firstName": "UpdatedFirst",
-			"lastName":  "UpdatedLast",
-			"country":   "US",
+			"firstName":            "UpdatedFirst",
+			"lastName":             "UpdatedLast",
+			"country":              "US",
+			"notificationsEnabled": false,
 		}
 
 		response := server.Expect.PATCH("/users").
@@ -317,6 +321,16 @@ func TestUserProfile(t *testing.T) {
 		json.Value("firstName").IsEqual("UpdatedFirst")
 		json.Value("lastName").IsEqual("UpdatedLast")
 		json.Value("country").IsEqual("US")
+		json.Value("notificationsEnabled").IsEqual(false)
+
+		var firstName, country string
+		var notificationsEnabled bool
+		require.NoError(t, server.DB.QueryRow(t.Context(), `
+			SELECT first_name, country, notifications_enabled FROM users WHERE id=$1
+		`, userID).Scan(&firstName, &country, &notificationsEnabled))
+		assert.Equal(t, "UpdatedFirst", firstName)
+		assert.Equal(t, "US", country)
+		assert.False(t, notificationsEnabled)
 	})
 
 	t.Run("delete user account", func(t *testing.T) { //nolint:revive // t is used for testing

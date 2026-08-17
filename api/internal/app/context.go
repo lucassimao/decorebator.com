@@ -210,6 +210,9 @@ func (b *ContextBuilder) Build() (*Context, error) {
 	if err := validateRuntimeSecurityConfiguration(b.context.Environment); err != nil {
 		return nil, err
 	}
+	if err := common.ConfigureMinIOFromEnvironment(b.context.Environment); err != nil {
+		return nil, fmt.Errorf("failed to configure object storage: %w", err)
+	}
 	if err := b.loadBoundaryConfiguration(); err != nil {
 		return nil, err
 	}

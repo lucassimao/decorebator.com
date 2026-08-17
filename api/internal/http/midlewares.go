@@ -43,6 +43,10 @@ func Authenticate(
 		tokenString := strings.TrimPrefix(authorization, BearerSchema)
 		identity, err := sessions.ValidateAccess(c.Request.Context(), tokenString)
 		if err != nil {
+			if c.Request.Context().Err() != nil || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				c.AbortWithStatusJSON(http.StatusRequestTimeout, gin.H{"error": "Request timeout - please try again"})
+				return
+			}
 			if errors.Is(err, service.ErrInvalidAccessToken) || errors.Is(err, repository.ErrSessionExpired) {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token validation error"})
 			} else {
@@ -52,6 +56,10 @@ func Authenticate(
 		}
 		currentUsers, err := users.Find(c.Request.Context(), repository.FindUserArgs{ID: &identity.UserID})
 		if err != nil {
+			if c.Request.Context().Err() != nil || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				c.AbortWithStatusJSON(http.StatusRequestTimeout, gin.H{"error": "Request timeout - please try again"})
+				return
+			}
 			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "Authentication temporarily unavailable"})
 			return
 		}
@@ -85,6 +93,10 @@ func ResolveEffectiveSubscription(access *service.EffectiveAccessService) gin.Ha
 		}
 		plan, err := access.Plan(c.Request.Context(), user.ID, user.SubscriptionPlan)
 		if err != nil {
+			if c.Request.Context().Err() != nil || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				c.AbortWithStatusJSON(http.StatusRequestTimeout, gin.H{"error": "Request timeout - please try again"})
+				return
+			}
 			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{
 				"error": "Subscription access is temporarily unavailable",
 			})

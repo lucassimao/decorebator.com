@@ -4,12 +4,15 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
+
+var ErrDecodedDataTooLarge = errors.New("decoded data is too large")
 
 // GenerateRandomString returns a URL-safe random string of n bytes (hex-encoded length 2n)
 func GenerateRandomString(n int) string {
@@ -34,6 +37,13 @@ func GenerateRandomString(n int) string {
 //
 // Returns (data, contentType, nil) on success, or (nil, "", err) on failure.
 func DecodeImageBase64(b64 string) ([]byte, string, error) {
+	return DecodeImageBase64Bounded(b64, 0)
+}
+
+// DecodeImageBase64Bounded rejects encoded input before allocation when its
+// maximum decoded size can exceed maxDecodedBytes. A nonpositive limit keeps
+// the legacy unbounded behavior for non-user-controlled callers.
+func DecodeImageBase64Bounded(b64 string, maxDecodedBytes int) ([]byte, string, error) {
 	var contentType string
 
 	// 1) Check for a `data:` URI prefix
@@ -44,36 +54,86 @@ func DecodeImageBase64(b64 string) ([]byte, string, error) {
 			return nil, "", errors.New("invalid data URI format")
 		}
 
-		header := parts[0] // e.g. "data:image/png;base64"
+		header := parts[0]
 		payload := parts[1]
-
-		// Extract MIME type between "data:" and the first ";" (or end-of-string)
-		// Example: header == "data:image/png;base64"
-		//   semicolonIndex == len("data:image/png")
-		if semicolonIndex := strings.Index(header, ";"); semicolonIndex != -1 {
-			contentType = header[len("data:"):semicolonIndex]
-		} else {
-			// No semicolon – maybe someone gave "data:image/png,<base64>"
-			contentType = header[len("data:"):]
+		switch header {
+		case "data:image/jpeg;base64":
+			contentType = "image/jpeg"
+		case "data:image/jpg;base64":
+			contentType = "image/jpg"
+		case "data:image/png;base64":
+			contentType = "image/png"
+		default:
+			return nil, "", errors.New("unsupported data URI header")
 		}
-
-		// Replace b64 with just the Base64 payload (after the comma)
 		b64 = payload
 	}
-
-	// 2) Attempt standard Base64 decode
-	decoded, err := base64.StdEncoding.DecodeString(b64)
-	if err == nil {
-		return decoded, contentType, nil
+	// Select the alphabet before allocating so URL-safe payloads do not first
+	// allocate a full failed standard-decoding buffer.
+	encoding, ok := strictPaddedBase64Encoding(b64)
+	if !ok {
+		return nil, "", errors.New("invalid base64 data")
 	}
-
-	// 3) If that fails, try URL‐safe Base64 (in case it's encoded with '-' and '_')
-	decoded, err = base64.URLEncoding.DecodeString(b64)
-	if err == nil {
+	if maxDecodedBytes > 0 && exactBase64DecodedLen(b64) > maxDecodedBytes {
+		return nil, "", fmt.Errorf("%w: limit is %d bytes", ErrDecodedDataTooLarge, maxDecodedBytes)
+	}
+	decoded, err := encoding.Strict().DecodeString(b64)
+	if err == nil && (maxDecodedBytes <= 0 || len(decoded) <= maxDecodedBytes) {
 		return decoded, contentType, nil
 	}
 
 	return nil, "", errors.New("invalid base64 data")
+}
+
+func strictPaddedBase64Encoding(encoded string) (*base64.Encoding, bool) { //nolint:gocyclo // canonical alphabet and padding grammar is explicit
+	if encoded == "" || len(encoded)%4 != 0 || strings.ContainsAny(encoded, "\r\n\t ") {
+		return nil, false
+	}
+	paddingStart := strings.IndexByte(encoded, '=')
+	if paddingStart < 0 {
+		paddingStart = len(encoded)
+	}
+	padding := len(encoded) - paddingStart
+	if padding > 2 || strings.Contains(encoded[:paddingStart], "=") {
+		return nil, false
+	}
+	for _, character := range encoded[paddingStart:] {
+		if character != '=' {
+			return nil, false
+		}
+	}
+	hasStandard, hasURL := false, false
+	for _, character := range encoded[:paddingStart] {
+		switch {
+		case character >= 'A' && character <= 'Z',
+			character >= 'a' && character <= 'z',
+			character >= '0' && character <= '9':
+		case character == '+' || character == '/':
+			hasStandard = true
+		case character == '-' || character == '_':
+			hasURL = true
+		default:
+			return nil, false
+		}
+	}
+	if hasStandard && hasURL {
+		return nil, false
+	}
+	if hasURL {
+		return base64.URLEncoding, true
+	}
+	return base64.StdEncoding, true
+}
+
+func exactBase64DecodedLen(encoded string) int {
+	decodedLen := base64.StdEncoding.DecodedLen(len(encoded))
+	if strings.HasSuffix(encoded, "==") {
+		return decodedLen - 2
+	}
+	if strings.HasSuffix(encoded, "=") {
+		return decodedLen - 1
+	}
+	return decodedLen
 }
 
 // GetBcryptCost returns the appropriate bcrypt cost factor based on the environment

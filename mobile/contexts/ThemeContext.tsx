@@ -193,7 +193,7 @@ const sharedMotion: Theme["motion"] = {
 };
 
 // Light theme definition
-const lightTheme: Theme = {
+export const lightTheme: Theme = {
   mode: "light",
   colors: {
     background: {

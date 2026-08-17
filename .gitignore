@@ -4,6 +4,15 @@ problems/
 # Expo CNG / Prebuild native folders (generated)
 mobile/android/
 mobile/ios/
+!mobile/modules/**/android/
+!mobile/modules/**/android/build.gradle
+!mobile/modules/**/android/src/
+!mobile/modules/**/android/src/**
+mobile/modules/**/android/build/
+mobile/modules/**/android/.gradle/
+mobile/modules/**/android/.cxx/
+!mobile/modules/**/ios/
+!mobile/modules/**/ios/*.swift
 
 # Local asset generation outputs
 api/.local/

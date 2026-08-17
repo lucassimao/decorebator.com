@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"decorebator.com/internal/common"
@@ -19,7 +21,8 @@ type JobService interface {
 	ScheduleExampleAudioJob(ctx context.Context, definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
 	ScheduleMeaningAudioJob(ctx context.Context, definitionID int64, wordID int64, userID *int64, tx *pgx.Tx) error
 	ScheduleAccountCleanupJob(ctx context.Context, profileObjectPrefix string, tx *pgx.Tx) error
-	ScheduleProfileObjectCleanupJob(ctx context.Context, profileObjectName string) error
+	ScheduleProfileUploadReconciliationJob(ctx context.Context, args ProfileUploadReconciliationArgs) (int64, error)
+	FinalizeProfileUploadReconciliationJob(ctx context.Context, jobID int64, args ProfileUploadReconciliationArgs, transactions ...pgx.Tx) error
 	ScheduleResetPasswordEmailJob(ctx context.Context, email string, transactions ...pgx.Tx) error
 	ScheduleStripeWebhookJob(ctx context.Context, eventID, eventType string, eventData []byte) (int64, error)
 	ScheduleRevenueCatWebhookJob(ctx context.Context, eventType string, eventData []byte) (int64, error)
@@ -42,13 +45,56 @@ func (js *JobServiceImpl) ScheduleResetPasswordEmailJob(
 	return err
 }
 
-func (js *JobServiceImpl) ScheduleProfileObjectCleanupJob(ctx context.Context, profileObjectName string) error {
-	_, err := js.enqueueJob(ctx, &river.InsertOpts{
+func (js *JobServiceImpl) ScheduleProfileUploadReconciliationJob(ctx context.Context, args ProfileUploadReconciliationArgs) (int64, error) {
+	return js.enqueueJob(ctx, &river.InsertOpts{
 		Queue:       AccountCleanupQueue,
 		MaxAttempts: 25,
 		ScheduledAt: time.Now().Add(5 * time.Minute),
-	}, AccountCleanupArgs{ProfileObjectName: profileObjectName}, nil)
-	return err
+	}, args, nil)
+}
+
+func (js *JobServiceImpl) FinalizeProfileUploadReconciliationJob(ctx context.Context, jobID int64, args ProfileUploadReconciliationArgs, transactions ...pgx.Tx) error {
+	encoded, err := json.Marshal(args)
+	if err != nil {
+		return fmt.Errorf("encode profile upload reconciliation: %w", err)
+	}
+	var updatedID int64
+	query := func() interface{ Scan(...any) error } {
+		if len(transactions) > 0 {
+			return transactions[0].QueryRow(ctx, `
+				UPDATE river_job SET args=$2::jsonb
+				WHERE id=$1 AND kind='profile_upload_reconciliation_v1'
+				  AND state='scheduled'
+				  AND (args->>'user_id')::bigint=$3
+				  AND args->>'bucket'=$4
+				  AND args->>'object_name'=$5
+				  AND args->>'object_url'=$6
+				  AND COALESCE((args->>'delete_all_versions')::boolean, false)=true
+				  AND COALESCE(args->>'object_version_id', '')=''
+				RETURNING id
+			`, jobID, encoded, args.UserID, args.Bucket, args.ObjectName, args.ObjectURL)
+		}
+		return js.riverClient.Driver().GetExecutor().QueryRow(ctx, `
+			UPDATE river_job SET args=$2::jsonb
+			WHERE id=$1 AND kind='profile_upload_reconciliation_v1'
+			  AND state='scheduled'
+			  AND (args->>'user_id')::bigint=$3
+			  AND args->>'bucket'=$4
+			  AND args->>'object_name'=$5
+			  AND args->>'object_url'=$6
+			  AND COALESCE((args->>'delete_all_versions')::boolean, false)=true
+			  AND COALESCE(args->>'object_version_id', '')=''
+			RETURNING id
+		`, jobID, encoded, args.UserID, args.Bucket, args.ObjectName, args.ObjectURL)
+	}
+	err = query().Scan(&updatedID)
+	if err != nil {
+		return fmt.Errorf("finalize profile upload reconciliation intent: %w", err)
+	}
+	if updatedID != jobID {
+		return errors.New("finalized an unexpected profile upload reconciliation intent")
+	}
+	return nil
 }
 
 func (js *JobServiceImpl) ScheduleAccountCleanupJob(ctx context.Context, profileObjectPrefix string, tx *pgx.Tx) error {
@@ -56,7 +102,7 @@ func (js *JobServiceImpl) ScheduleAccountCleanupJob(ctx context.Context, profile
 		Queue:       AccountCleanupQueue,
 		MaxAttempts: 25,
 		ScheduledAt: time.Now().Add(5 * time.Minute),
-	}, AccountCleanupArgs{ProfileObjectPrefix: profileObjectPrefix}, tx)
+	}, AccountCleanupArgs{ProfileBuckets: common.MinIOCleanupBuckets(), ProfileObjectPrefix: profileObjectPrefix}, tx)
 	return err
 }
 

@@ -63,6 +63,8 @@ test: ## run containerized integration tests
 		docker compose -f docker-compose.test.yml down -v --remove-orphans; \
 		docker compose -f docker-compose.test.yml up -d --wait postgres redis minio; \
 		docker compose -f docker-compose.test.yml run --rm --no-deps createbuckets; \
+		docker compose -f docker-compose.test.yml run --rm --no-deps main \
+			go test -count=1 -run '^TestLegacyMobileCameraUploadIsDownscaledServerSide$$' ./tests/integration; \
 		docker compose -f docker-compose.test.yml run --rm --no-deps main; \
 		test -s coverage.out || { echo "coverage.out is missing or empty" >&2; exit 1; }; \
 		go tool cover -html=coverage.out -o=coverage.html

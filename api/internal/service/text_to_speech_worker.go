@@ -100,7 +100,7 @@ func (w *TextToSpeechWorker) Work(ctx context.Context, job *river.Job[TextToSpee
 		return fmt.Errorf("OpenAI error: %s", response.Error.Message)
 	}
 
-	word.AudioURL, err = common.Upload(ctx, response.Data, "decorebator",
+	word.AudioURL, err = common.Upload(ctx, response.Data, common.MinIOBucketName(),
 		fmt.Sprintf("audio/audio-%d-%s.mp3", word.ID, strings.ReplaceAll(word.Name, " ", "-")), "audio/mpeg")
 
 	if err != nil {

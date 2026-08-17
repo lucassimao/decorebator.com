@@ -54,4 +54,4 @@ expo-env.d.ts
 decorebator-465316-0520ea65e130.json
 ios/build/
 ios/Pods/
-android/
+/android/
