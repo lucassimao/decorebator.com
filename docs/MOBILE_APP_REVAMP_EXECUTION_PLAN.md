@@ -334,7 +334,7 @@ Cutover classification is intentionally narrow:
 | QA-COVERAGE-1 | Repair unit-test discovery, then raise real aggregate API coverage from 23.7% unit/39.8% integration to the unchanged 70% unit and 80% integration thresholds without exclusions or denominator tricks | CUTOVER | MAP-1; may proceed package-by-package beside disjoint milestones |
 | UPLOAD-1 | Bound and validate profile uploads with server-owned object naming and safe storage behavior | CUTOVER; [-] local validation complete on 2026-08-17, platform gates pending | HTTP-SEC-1 |
 | API-BOUND-1 | Bound list/batch/telemetry payloads and enforce ownership without exposing password material | CUTOVER; [x] complete 2026-08-17 | HTTP-SEC-1 |
-| API-RATE-1 | Make error-report and other stateful quota checks fail closed with accurate counters | CUTOVER | API-BOUND-1 |
+| API-RATE-1 | Make error-report and other stateful quota checks fail closed with accurate counters | CUTOVER; [x] complete 2026-08-17 | API-BOUND-1 |
 | OPS-HEALTH-1 | Expose unauthenticated liveness and bounded database readiness endpoints | CUTOVER; complete locally on 2026-08-06 | API-SHUT-1 |
 | CACHE-1 | Make analytics cache writes/invalidation correct for all plans and recover Redis after transient boot failure | REVAMP | MAP-1 |
 | DB-PERF-1 | Add reversible hot-path indexes and prove query-plan use locally before owner-gated production application | REVAMP | API-DATA-2 |
@@ -612,6 +612,20 @@ Every UI-bearing item follows the committed HTML/React prototype, accessibility-
   trustworthy provider/session usage remains owned by `REALTIME-1`, and the
   unchanged aggregate coverage thresholds remain owned by `QA-COVERAGE-1`.
 - `API-RATE-1`: quota-read/storage errors fail closed with a typed retryable response instead of calling the protected handler; counters reflect committed real reports; cooldown/hour/day boundaries are atomic under concurrency; rejected attempts do not corrupt usage; and tests cover database failure, concurrent submissions, retries, and `Retry-After` semantics.
+  **2026-08-17 — complete.** Added append-only quota events backed by the
+  database clock, serialized per-user quota decisions, and wrote quota usage and
+  the derived legacy counter in the same transaction as successful error-report
+  work. Quota storage/read failures now return a typed retryable 503 without
+  invoking the protected handler, while 429 and 503 responses expose consistent
+  safe `Retry-After` values. Rejected attempts, retried upserts, and rolled-back
+  transactions do not consume quota. Focused failing-to-passing outage coverage,
+  concurrent submission/retry/rollback integration regressions, the complete
+  race-enabled error-reporting package, API format/lint, and the recursive host
+  integration matrix pass; the latter completed all four test packages at 40.8%
+  aggregate coverage. A fresh GPT-5.6 Terra `xhigh` adversarial review verified
+  transaction locking, rollback, migration/backfill safety, typed error
+  classification, safe error text, and header/body retry semantics, then returned
+  `APPROVED`. Aggregate coverage thresholds remain owned by `QA-COVERAGE-1`.
 
 ### Runtime and operations acceptance boundaries
 

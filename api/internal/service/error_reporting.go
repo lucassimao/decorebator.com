@@ -41,6 +41,7 @@ type ErrorReportService struct {
 	definitionService      *DefinitionService
 	wordService            *WordService
 	leitnerTrackingService *LeitnerTrackingService
+	rateLimitService       *ErrorReportRateLimitService
 	jobService             JobService
 	logger                 *slog.Logger
 }
@@ -53,6 +54,7 @@ func NewErrorReportService(db *pgxpool.Pool, definitionService *DefinitionServic
 		definitionService:      definitionService,
 		wordService:            wordService,
 		leitnerTrackingService: leitnerTrackingService,
+		rateLimitService:       NewErrorReportRateLimitService(db),
 		jobService:             jobService,
 		logger:                 common.Logger,
 	}
@@ -132,7 +134,7 @@ func (ctx *errorReportContext) checkCooldownTx(tx pgx.Tx) error {
 func (ctx *errorReportContext) cooldownResult(cooldownUntil *time.Time, err error) error {
 	if err != nil {
 		ctx.logger.Error("failed to check cooldown", "error", err)
-		return err
+		return ErrorReportQuotaUnavailableError{cause: err}
 	}
 
 	if cooldownUntil != nil {
@@ -155,12 +157,16 @@ func (ctx *errorReportContext) cooldownResult(cooldownUntil *time.Time, err erro
 func (ctx *errorReportContext) executeTransaction() error {
 	tx, err := ctx.service.db.Begin(ctx.ctx)
 	if err != nil {
-		return err
+		return ErrorReportQuotaUnavailableError{cause: err}
 	}
 	defer common.RollbackTx(ctx.ctx, tx, "error report submission")
 
 	if validationErr := ctx.lockAndValidateTarget(tx); validationErr != nil {
 		return validationErr
+	}
+	quotaUser, quotaLockErr := ctx.service.rateLimitService.LockUserQuota(ctx.ctx, tx, ctx.userID)
+	if quotaLockErr != nil {
+		return quotaLockErr
 	}
 	if cooldownErr := ctx.checkCooldownTx(tx); cooldownErr != nil {
 		return cooldownErr
@@ -177,8 +183,21 @@ func (ctx *errorReportContext) executeTransaction() error {
 	if err := ctx.completeReport(tx, report); err != nil {
 		return err
 	}
+	// Check quota as close as possible to the durable event write. The user row
+	// lock held above serializes concurrent submissions, and any rejection rolls
+	// the report/cooldown/job work back with no usage corruption.
+	quotaUsage, quotaErr := ctx.service.rateLimitService.CheckRateLimitTx(ctx.ctx, tx, quotaUser)
+	if quotaErr != nil {
+		return quotaErr
+	}
+	if err := ctx.service.rateLimitService.RecordCommittedReportTx(ctx.ctx, tx, ctx.userID, quotaUsage); err != nil {
+		return err
+	}
 	if err := tx.Commit(ctx.ctx); err != nil {
-		return fmt.Errorf("failed to commit error report transaction: %w", err)
+		return ErrorReportQuotaUnavailableError{
+			cause:   fmt.Errorf("commit error report transaction: %w", err),
+			message: "failed to commit error report transaction",
+		}
 	}
 	return nil
 }
@@ -310,7 +329,10 @@ func (ctx *errorReportContext) updateLastRegeneratedTimestamp(tx pgx.Tx) error {
 func (ctx *errorReportContext) setCooldownPeriod(tx pgx.Tx) error {
 	cooldownDuration := time.Hour // 1 hour cooldown as agreed
 	cooldownUntilTime := time.Now().Add(cooldownDuration)
-	return ctx.service.repo.SetCooldown(ctx.ctx, tx, ctx.userID, ctx.wordID, ctx.definitionID, string(ctx.errorType), cooldownUntilTime)
+	if err := ctx.service.repo.SetCooldown(ctx.ctx, tx, ctx.userID, ctx.wordID, ctx.definitionID, string(ctx.errorType), cooldownUntilTime); err != nil {
+		return ErrorReportQuotaUnavailableError{cause: err}
+	}
+	return nil
 }
 
 // buildContentSnapshot creates a content snapshot and determines final foreign key strategy

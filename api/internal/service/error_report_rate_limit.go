@@ -8,6 +8,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -48,158 +49,154 @@ func (e RateLimitError) Error() string {
 	return e.Message
 }
 
+// ErrorReportQuotaUnavailableError means a durable quota read or write could
+// not be completed. Callers must fail closed and may safely retry later; it
+// intentionally does not expose the underlying storage error to clients.
+type ErrorReportQuotaUnavailableError struct {
+	cause   error
+	message string
+}
+
+func (e ErrorReportQuotaUnavailableError) Error() string {
+	if e.message != "" {
+		return e.message
+	}
+	return "error report quota temporarily unavailable"
+}
+
+func (e ErrorReportQuotaUnavailableError) Unwrap() error {
+	return e.cause
+}
+
 // CheckRateLimit checks if a user has exceeded their error report rate limits
 func (s *ErrorReportRateLimitService) CheckRateLimit(ctx context.Context, user *model.User) error {
-	// Determine limits based on subscription
-	hourlyLimit := FreeHourlyLimit
-	dailyLimit := FreeDailyLimit
-	if user.SubscriptionPlan == model.PlanMonthly || user.SubscriptionPlan == model.PlanAnnual {
-		hourlyLimit = PremiumHourlyLimit
-		dailyLimit = PremiumDailyLimit
-	}
-
-	now := time.Now()
-	hourAgo := now.Add(-HourlyWindow)
-	dayAgo := now.Add(-DailyWindow)
-
-	// Check hourly limit
-	hourlyCount, err := s.repo.CountUserReportsInWindow(ctx, user.ID, hourAgo)
+	usage, err := s.repo.GetQuotaUsage(ctx, user.ID)
 	if err != nil {
-		common.Logger.Error("Failed to check hourly rate limit", "error", err)
-		return err
+		common.Logger.Error("failed to read error report quota", "error", err)
+		return ErrorReportQuotaUnavailableError{cause: err}
 	}
+	return checkErrorReportQuota(user, usage)
+}
 
-	if hourlyCount >= hourlyLimit {
-		// Find when the oldest report in the hour window will expire
-		oldestReportTime, lookupErr := s.repo.GetOldestReportTimeInWindow(ctx, user.ID, hourAgo)
+// CheckRateLimitTx performs the authoritative check inside the error report
+// transaction. The transaction must hold LockUserQuota first so concurrent
+// submissions cannot pass the same count before either records its event.
+func (s *ErrorReportRateLimitService) CheckRateLimitTx(ctx context.Context, tx pgx.Tx, user *model.User) (repository.ErrorReportQuotaUsage, error) {
+	usage, err := s.repo.GetQuotaUsageTx(ctx, tx, user.ID)
+	if err != nil {
+		common.Logger.Error("failed to read error report quota", "error", err)
+		return repository.ErrorReportQuotaUsage{}, ErrorReportQuotaUnavailableError{cause: err}
+	}
+	if err := checkErrorReportQuota(user, usage); err != nil {
+		return repository.ErrorReportQuotaUsage{}, err
+	}
+	return usage, nil
+}
 
-		retryAfter := time.Hour
-		if lookupErr == nil && !oldestReportTime.IsZero() {
-			retryAfter = oldestReportTime.Add(HourlyWindow).Sub(now)
-		}
+// LockUserQuota serializes the authoritative quota check with its committed
+// event write and retrieves the current subscription tier under that same row
+// lock. A missing user is an unavailable/invalid authenticated state, so
+// callers must not continue with an unbounded report submission.
+func (s *ErrorReportRateLimitService) LockUserQuota(ctx context.Context, tx pgx.Tx, userID int64) (*model.User, error) {
+	var subscriptionPlan model.SubscriptionPlan
+	err := tx.QueryRow(ctx, `
+		SELECT subscription_plan
+		FROM users
+		WHERE id=$1
+		FOR UPDATE
+	`, userID).Scan(&subscriptionPlan)
+	if err != nil {
+		common.Logger.Error("failed to lock error report quota", "error", err)
+		return nil, ErrorReportQuotaUnavailableError{cause: err}
+	}
+	return &model.User{ID: userID, SubscriptionPlan: subscriptionPlan}, nil
+}
 
-		// Log rate limit hit for monitoring
-		common.Logger.Warn("Error report rate limit hit",
-			"userId", user.ID,
-			"limitType", "hourly",
-			"limit", hourlyLimit,
-			"attempts", hourlyCount,
-			"subscription", user.SubscriptionPlan,
-			"action", "rate_limit_hourly_exceeded",
-		)
+// RecordCommittedReportTx records one successful submission and updates the
+// derived legacy counters in the same transaction. If either storage write
+// fails, the caller rolls every report side effect back rather than allowing a
+// counter bypass.
+func (s *ErrorReportRateLimitService) RecordCommittedReportTx(ctx context.Context, tx pgx.Tx, userID int64, usage repository.ErrorReportQuotaUsage) error {
+	if err := s.repo.RecordQuotaEventTx(ctx, tx, userID); err != nil {
+		common.Logger.Error("failed to record error report quota event", "error", err)
+		return ErrorReportQuotaUnavailableError{cause: err}
+	}
+	if err := s.repo.UpdateRateLimitTrackingTx(ctx, tx, userID, usage.HourlyCount+1, usage.DailyCount+1, usage.CheckedAt); err != nil {
+		common.Logger.Error("failed to update error report quota counters", "error", err)
+		return ErrorReportQuotaUnavailableError{cause: err}
+	}
+	return nil
+}
 
+func checkErrorReportQuota(user *model.User, usage repository.ErrorReportQuotaUsage) error {
+	hourlyLimit, dailyLimit := errorReportLimitsFor(user)
+	if usage.HourlyCount >= hourlyLimit {
 		return RateLimitError{
 			Message:    fmt.Sprintf("Hourly limit exceeded. You can report %d errors per hour.", hourlyLimit),
-			RetryAfter: retryAfter,
+			RetryAfter: quotaRetryAfter(usage.OldestHourly, HourlyWindow, usage.CheckedAt),
 			Limit:      hourlyLimit,
 			Remaining:  0,
 			WindowType: "hourly",
 		}
 	}
-
-	// Check daily limit
-	dailyCount, err := s.repo.CountUserReportsInWindow(ctx, user.ID, dayAgo)
-	if err != nil {
-		common.Logger.Error("Failed to check daily rate limit", "error", err)
-		return nil // Don't block on database failures
-	}
-
-	if dailyCount >= dailyLimit {
-		// Find when the oldest report in the day window will expire
-		oldestReportTime, lookupErr := s.repo.GetOldestReportTimeInWindow(ctx, user.ID, dayAgo)
-
-		retryAfter := DailyWindow
-		if lookupErr == nil && !oldestReportTime.IsZero() {
-			retryAfter = oldestReportTime.Add(DailyWindow).Sub(now)
-		}
-
-		// Log rate limit hit for monitoring
-		common.Logger.Warn("Error report rate limit hit",
-			"userId", user.ID,
-			"limitType", "daily",
-			"limit", dailyLimit,
-			"attempts", dailyCount,
-			"subscription", user.SubscriptionPlan,
-			"action", "rate_limit_daily_exceeded",
-		)
-
+	if usage.DailyCount >= dailyLimit {
 		return RateLimitError{
 			Message:    fmt.Sprintf("Daily limit exceeded. You can report %d errors per day.", dailyLimit),
-			RetryAfter: retryAfter,
+			RetryAfter: quotaRetryAfter(usage.OldestDaily, DailyWindow, usage.CheckedAt),
 			Limit:      dailyLimit,
 			Remaining:  0,
 			WindowType: "daily",
 		}
 	}
-
-	// Log successful rate limit check
-	common.Logger.Info("Error report rate limit check passed",
-		"userId", user.ID,
-		"hourlyCount", hourlyCount,
-		"hourlyLimit", hourlyLimit,
-		"dailyCount", dailyCount,
-		"dailyLimit", dailyLimit,
-	)
-
-	// Update rate limit tracking table (for backup/analytics)
-	err = s.repo.UpdateRateLimitTracking(ctx, user.ID, hourlyCount, dailyCount, now)
-	if err != nil {
-		// Log but don't fail
-		common.Logger.Error("Failed to update rate limit tracking", "error", err)
-	}
-
 	return nil
+}
+
+func errorReportLimitsFor(user *model.User) (hourlyLimit, dailyLimit int) {
+	if user.SubscriptionPlan == model.PlanMonthly || user.SubscriptionPlan == model.PlanAnnual {
+		return PremiumHourlyLimit, PremiumDailyLimit
+	}
+	return FreeHourlyLimit, FreeDailyLimit
+}
+
+func quotaRetryAfter(oldest *time.Time, window time.Duration, now time.Time) time.Duration {
+	if oldest == nil {
+		return window
+	}
+	retryAfter := oldest.Add(window).Sub(now)
+	if retryAfter < time.Second {
+		return time.Second
+	}
+	return retryAfter
 }
 
 // GetRateLimitStatus returns the current rate limit status for a user
 func (s *ErrorReportRateLimitService) GetRateLimitStatus(ctx context.Context, user *model.User) (map[string]interface{}, error) {
-	// Determine limits based on subscription
-	hourlyLimit := FreeHourlyLimit
-	dailyLimit := FreeDailyLimit
-	if user.SubscriptionPlan == model.PlanMonthly || user.SubscriptionPlan == model.PlanAnnual {
-		hourlyLimit = PremiumHourlyLimit
-		dailyLimit = PremiumDailyLimit
-	}
-
-	now := time.Now()
-	hourAgo := now.Add(-HourlyWindow)
-	dayAgo := now.Add(-DailyWindow)
-
-	// Get current counts
-	hourlyCount, dailyCount, err := s.repo.CountUserReportsInWindows(ctx, user.ID, hourAgo, dayAgo)
+	hourlyLimit, dailyLimit := errorReportLimitsFor(user)
+	usage, err := s.repo.GetQuotaUsage(ctx, user.ID)
 	if err != nil {
-		hourlyCount = 0
-		dailyCount = 0
+		return nil, ErrorReportQuotaUnavailableError{cause: err}
 	}
 
-	// Calculate reset times
-	var hourlyResetIn, dailyResetIn int
-
-	if hourlyCount > 0 {
-		oldestHourly, err := s.repo.GetOldestReportTimeInWindow(ctx, user.ID, hourAgo)
-		if err == nil && !oldestHourly.IsZero() {
-			hourlyResetIn = int(oldestHourly.Add(HourlyWindow).Sub(now).Seconds())
-		}
+	hourlyResetIn := 0
+	if usage.OldestHourly != nil {
+		hourlyResetIn = int(quotaRetryAfter(usage.OldestHourly, HourlyWindow, usage.CheckedAt).Seconds())
 	}
-
-	if dailyCount > 0 {
-		oldestDaily, err := s.repo.GetOldestReportTimeInWindow(ctx, user.ID, dayAgo)
-		if err == nil && !oldestDaily.IsZero() {
-			dailyResetIn = int(oldestDaily.Add(DailyWindow).Sub(now).Seconds())
-		}
+	dailyResetIn := 0
+	if usage.OldestDaily != nil {
+		dailyResetIn = int(quotaRetryAfter(usage.OldestDaily, DailyWindow, usage.CheckedAt).Seconds())
 	}
 
 	return map[string]interface{}{
 		"hourly": map[string]interface{}{
 			"limit":     hourlyLimit,
-			"used":      hourlyCount,
-			"remaining": max(0, hourlyLimit-hourlyCount),
+			"used":      usage.HourlyCount,
+			"remaining": max(0, hourlyLimit-usage.HourlyCount),
 			"resetsIn":  max(0, hourlyResetIn),
 		},
 		"daily": map[string]interface{}{
 			"limit":     dailyLimit,
-			"used":      dailyCount,
-			"remaining": max(0, dailyLimit-dailyCount),
+			"used":      usage.DailyCount,
+			"remaining": max(0, dailyLimit-usage.DailyCount),
 			"resetsIn":  max(0, dailyResetIn),
 		},
 	}, nil

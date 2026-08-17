@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -66,6 +67,11 @@ func GetUserErrorReportStatus(db *pgxpool.Pool) gin.HandlerFunc {
 		// Get rate limit status
 		status, err := rateLimitService.GetRateLimitStatus(c.Request.Context(), user)
 		if err != nil {
+			var quotaUnavailableErr service.ErrorReportQuotaUnavailableError
+			if errors.As(err, &quotaUnavailableErr) {
+				writeErrorReportQuotaUnavailable(c)
+				return
+			}
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get rate limit status"})
 			return
 		}

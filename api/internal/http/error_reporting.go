@@ -1,7 +1,9 @@
 package http
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 
 	service "decorebator.com/internal/service"
 
@@ -46,12 +48,29 @@ func (h *ErrorReportRoutes) Create(c *gin.Context) {
 	)
 
 	if err != nil {
+		var rateLimitErr service.RateLimitError
+		if errors.As(err, &rateLimitErr) {
+			writeErrorReportRateLimit(c, rateLimitErr)
+			return
+		}
+		var quotaUnavailableErr service.ErrorReportQuotaUnavailableError
+		if errors.As(err, &quotaUnavailableErr) {
+			writeErrorReportQuotaUnavailable(c)
+			return
+		}
 		// Handle cooldown errors specifically
-		if cooldownErr, ok := err.(service.CooldownError); ok {
+		var cooldownErr service.CooldownError
+		if errors.As(err, &cooldownErr) {
+			retryAfter := service.RetryAfterSeconds(cooldownErr.RetryAfter)
+			retryAfterSeconds, conversionErr := strconv.Atoi(retryAfter)
+			if conversionErr != nil {
+				retryAfterSeconds = 1
+			}
+			c.Header("Retry-After", retryAfter)
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"error":         cooldownErr.Message,
 				"cooldownUntil": cooldownErr.CooldownUntil.Unix(),
-				"retryAfter":    int(cooldownErr.RetryAfter.Seconds()),
+				"retryAfter":    retryAfterSeconds,
 				"windowType":    "cooldown", // Indicate this is a cooldown, not a rate limit
 			})
 			return

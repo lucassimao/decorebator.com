@@ -2,6 +2,9 @@ package errorreporting
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"sync"
 	"testing"
 
 	"decorebator.com/internal/model"
@@ -99,6 +102,133 @@ func TestErrorReporting_RateLimit_FreeUser(t *testing.T) {
 
 	// Verify rate limit error message
 	errorResp.JSON().Object().HasValue("error", "Hourly limit exceeded. You can report 3 errors per hour.")
+	errorResp.Header("Retry-After").NotEmpty()
+	require.Positive(t, int(errorResp.JSON().Object().Value("retryAfter").Number().Raw()))
+	require.Equal(t,
+		errorResp.Header("Retry-After").Raw(),
+		formatRetryAfter(int(errorResp.JSON().Object().Value("retryAfter").Number().Raw())),
+	)
+}
+
+func TestErrorReporting_ConcurrentSubmissionsUseCommittedQuotaEvents(t *testing.T) {
+	server := setup.NewTestServer(t)
+	defer server.Cleanup()
+
+	ctx := context.Background()
+	token := server.WithTestUser(t)
+	var userID int64
+	require.NoError(t, server.DB.QueryRow(ctx, `SELECT id FROM users ORDER BY id DESC LIMIT 1`).Scan(&userID))
+	wordlistID := createTestWordlist(server, token, "Concurrent quota", "en")
+	definitionService := service.NewDefinitionService(server.DB)
+
+	type target struct {
+		wordID       int64
+		definitionID int64
+	}
+	targets := make([]target, service.FreeHourlyLimit+1)
+	for i := range targets {
+		wordID := createTestWord(server, token, wordlistID, fmt.Sprintf("quota-word-%d", i))
+		definitionID := createTestDefinition(t, definitionService, wordID, &model.Definition{
+			Token: "quota", Language: "en", PartOfSpeech: "noun",
+			Meaning: "Concurrent quota meaning", Examples: []string{"A concurrent quota example."}, Source: "api_rate_1",
+		})
+		targets[i] = target{wordID: wordID, definitionID: definitionID}
+	}
+
+	start := make(chan struct{})
+	errs := make([]error, len(targets))
+	var wg sync.WaitGroup
+	for index, reportTarget := range targets {
+		wg.Add(1)
+		go func(index int, reportTarget target) {
+			defer wg.Done()
+			<-start
+			errs[index] = server.AppContext.ErrorReportService.ReportError(
+				context.Background(), service.UnrelatedMeaning, reportTarget.wordID, &reportTarget.definitionID, userID, nil,
+			)
+		}(index, reportTarget)
+	}
+	close(start)
+	wg.Wait()
+
+	succeeded := 0
+	limited := 0
+	var rejectedTarget target
+	for index, err := range errs {
+		if err == nil {
+			succeeded++
+			continue
+		}
+		var rateLimitErr service.RateLimitError
+		if errors.As(err, &rateLimitErr) {
+			limited++
+			rejectedTarget = targets[index]
+			continue
+		}
+		require.NoError(t, err)
+	}
+	require.Equal(t, service.FreeHourlyLimit, succeeded)
+	require.Equal(t, 1, limited)
+
+	var quotaEvents, reports, hourlyCount, dailyCount int
+	require.NoError(t, server.DB.QueryRow(ctx, `SELECT count(*) FROM error_report_quota_events WHERE user_id=$1`, userID).Scan(&quotaEvents))
+	require.NoError(t, server.DB.QueryRow(ctx, `SELECT count(*) FROM error_reports WHERE user_id=$1`, userID).Scan(&reports))
+	require.NoError(t, server.DB.QueryRow(ctx, `SELECT hourly_count, daily_count FROM error_report_limits WHERE user_id=$1`, userID).Scan(&hourlyCount, &dailyCount))
+	require.Equal(t, service.FreeHourlyLimit, quotaEvents)
+	require.Equal(t, service.FreeHourlyLimit, reports)
+	require.Equal(t, service.FreeHourlyLimit, hourlyCount)
+	require.Equal(t, service.FreeHourlyLimit, dailyCount)
+
+	err := server.AppContext.ErrorReportService.ReportError(
+		ctx, service.UnrelatedMeaning, rejectedTarget.wordID, &rejectedTarget.definitionID, userID, nil,
+	)
+	var rateLimitErr service.RateLimitError
+	require.ErrorAs(t, err, &rateLimitErr)
+	require.Positive(t, rateLimitErr.RetryAfter)
+	require.NoError(t, server.DB.QueryRow(ctx, `SELECT count(*) FROM error_report_quota_events WHERE user_id=$1`, userID).Scan(&quotaEvents))
+	require.Equal(t, service.FreeHourlyLimit, quotaEvents)
+}
+
+func TestErrorReporting_UpsertedSubmissionAddsCommittedQuotaEvent(t *testing.T) {
+	server := setup.NewTestServer(t)
+	defer server.Cleanup()
+
+	ctx := context.Background()
+	token := server.WithTestUser(t)
+	var userID int64
+	require.NoError(t, server.DB.QueryRow(ctx, `SELECT id FROM users ORDER BY id DESC LIMIT 1`).Scan(&userID))
+	wordlistID := createTestWordlist(server, token, "Upsert quota", "en")
+	wordID := createTestWord(server, token, wordlistID, "upsert-quota")
+	definitionID := createTestDefinition(t, service.NewDefinitionService(server.DB), wordID, &model.Definition{
+		Token: "upsert-quota", Language: "en", PartOfSpeech: "noun",
+		Meaning: "A report whose pending row is updated.", Examples: []string{"The retry is counted."}, Source: "api_rate_1",
+	})
+
+	require.NoError(t, server.AppContext.ErrorReportService.ReportError(
+		ctx, service.UnrelatedMeaning, wordID, &definitionID, userID, nil,
+	))
+	_, err := server.DB.Exec(ctx, `
+		UPDATE error_report_cooldowns
+		SET cooldown_until=NOW() - INTERVAL '1 second'
+		WHERE user_id=$1 AND word_id=$2 AND definition_id=$3 AND error_type=$4
+	`, userID, wordID, definitionID, service.UnrelatedMeaning)
+	require.NoError(t, err)
+	require.NoError(t, server.AppContext.ErrorReportService.ReportError(
+		ctx, service.UnrelatedMeaning, wordID, &definitionID, userID, nil,
+	))
+
+	var quotaEvents, pendingReports, hourlyCount, dailyCount int
+	require.NoError(t, server.DB.QueryRow(ctx, `SELECT count(*) FROM error_report_quota_events WHERE user_id=$1`, userID).Scan(&quotaEvents))
+	require.NoError(t, server.DB.QueryRow(ctx, `SELECT count(*) FROM error_reports WHERE user_id=$1 AND status='pending'`, userID).Scan(&pendingReports))
+	require.NoError(t, server.DB.QueryRow(ctx, `SELECT hourly_count, daily_count FROM error_report_limits WHERE user_id=$1`, userID).Scan(&hourlyCount, &dailyCount))
+	require.Equal(t, 2, quotaEvents)
+	require.Equal(t, 1, pendingReports, "the existing pending report is updated in place")
+	require.Equal(t, 2, hourlyCount)
+	require.Equal(t, 2, dailyCount)
+}
+
+func formatRetryAfter(value int) string {
+	return fmt.Sprintf("%d", value)
 }
 
 // TestErrorReporting_RateLimit_PremiumUser tests that premium users have higher rate limits

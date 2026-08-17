@@ -1,8 +1,10 @@
 package http
 
 import (
+	"errors"
 	"net"
 	"net/http"
+	"strconv"
 
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
@@ -76,23 +78,40 @@ func RateLimitErrorReports(db *pgxpool.Pool) gin.HandlerFunc {
 		// Check rate limits
 		err := rateLimitService.CheckRateLimit(c.Request.Context(), user)
 		if err != nil {
-			if rateLimitErr, ok := err.(service.RateLimitError); ok {
-				c.JSON(http.StatusTooManyRequests, gin.H{
-					"error":      rateLimitErr.Message,
-					"retryAfter": int(rateLimitErr.RetryAfter.Seconds()),
-					"limit":      rateLimitErr.Limit,
-					"remaining":  rateLimitErr.Remaining,
-					"windowType": rateLimitErr.WindowType,
-				})
-				c.Abort()
+			var rateLimitErr service.RateLimitError
+			if errors.As(err, &rateLimitErr) {
+				writeErrorReportRateLimit(c, rateLimitErr)
 				return
 			}
-			// Other errors - log but don't block
-			common.Logger.ErrorContext(c.Request.Context(), "Rate limit check failed", "error", err)
-			c.Next()
+			common.Logger.ErrorContext(c.Request.Context(), "error report quota unavailable", "error", err)
+			writeErrorReportQuotaUnavailable(c)
 			return
 		}
 
 		c.Next()
 	}
+}
+
+func writeErrorReportRateLimit(c *gin.Context, rateLimitErr service.RateLimitError) {
+	retryAfter := service.RetryAfterSeconds(rateLimitErr.RetryAfter)
+	retryAfterSeconds, err := strconv.Atoi(retryAfter)
+	if err != nil {
+		retryAfterSeconds = 1
+	}
+	c.Header("Retry-After", retryAfter)
+	c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
+		"error":      rateLimitErr.Message,
+		"retryAfter": retryAfterSeconds,
+		"limit":      rateLimitErr.Limit,
+		"remaining":  rateLimitErr.Remaining,
+		"windowType": rateLimitErr.WindowType,
+	})
+}
+
+func writeErrorReportQuotaUnavailable(c *gin.Context) {
+	c.Header("Retry-After", "1")
+	c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{
+		"error":      "Error reporting temporarily unavailable",
+		"retryAfter": 1,
+	})
 }

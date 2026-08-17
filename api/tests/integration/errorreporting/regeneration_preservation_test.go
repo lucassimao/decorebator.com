@@ -408,11 +408,12 @@ func TestErrorRegenerationRollsBackEverySideEffectWhenJobInsertionFails(t *testi
 	)
 	require.ErrorContains(t, err, "forced definition job insertion failure")
 
-	var linkCount, reportCount, cooldownCount, skippedCount, regeneratedCount int
+	var linkCount, reportCount, quotaEventCount, cooldownCount, skippedCount, regeneratedCount int
 	require.NoError(t, server.DB.QueryRow(ctx, `
 		SELECT COUNT(*) FROM word_definitions WHERE word_id=$1 AND definition_id=$2
 	`, wordID, definition.ID).Scan(&linkCount))
 	require.NoError(t, server.DB.QueryRow(ctx, `SELECT COUNT(*) FROM error_reports`).Scan(&reportCount))
+	require.NoError(t, server.DB.QueryRow(ctx, `SELECT COUNT(*) FROM error_report_quota_events`).Scan(&quotaEventCount))
 	require.NoError(t, server.DB.QueryRow(ctx, `SELECT COUNT(*) FROM error_report_cooldowns`).Scan(&cooldownCount))
 	require.NoError(t, server.DB.QueryRow(ctx, `
 		SELECT COUNT(*) FROM leitner_system_tracking
@@ -423,6 +424,7 @@ func TestErrorRegenerationRollsBackEverySideEffectWhenJobInsertionFails(t *testi
 	`, definition.ID).Scan(&regeneratedCount))
 	assert.Equal(t, 1, linkCount)
 	assert.Zero(t, reportCount)
+	assert.Zero(t, quotaEventCount)
 	assert.Zero(t, cooldownCount)
 	assert.Zero(t, skippedCount)
 	assert.Zero(t, regeneratedCount)

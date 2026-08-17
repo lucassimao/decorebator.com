@@ -117,6 +117,7 @@ func CleanTestData(db *pgxpool.Pool) error {
 		"learning_progress",
 		"quiz_type_analytics",
 		"box_distribution_snapshot",
+		"error_report_quota_events",
 		"error_reports",
 		"error_report_cooldowns",
 		"error_report_limits",

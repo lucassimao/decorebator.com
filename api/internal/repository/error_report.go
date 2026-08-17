@@ -21,43 +21,78 @@ func NewErrorReportRepository(db *pgxpool.Pool) *ErrorReportRepository {
 	}
 }
 
-// CountUserReportsInWindow counts error reports for a user within a time window
-func (r *ErrorReportRepository) CountUserReportsInWindow(ctx context.Context, userID int64, since time.Time) (int, error) {
-	var count int
-	err := r.db.QueryRow(ctx, `
-		SELECT COUNT(*) 
-		FROM error_reports 
-		WHERE user_id = $1 AND reported_at > $2
-	`, userID, since).Scan(&count)
-	return count, err
+// ErrorReportQuotaUsage is the durable rolling-window usage for a user. The
+// checked-at timestamp comes from PostgreSQL so window inclusion and retry
+// calculations share the same clock.
+type ErrorReportQuotaUsage struct {
+	CheckedAt    time.Time
+	HourlyCount  int
+	DailyCount   int
+	OldestHourly *time.Time
+	OldestDaily  *time.Time
 }
 
-// GetOldestReportTimeInWindow gets the oldest report time for a user within a window
-func (r *ErrorReportRepository) GetOldestReportTimeInWindow(ctx context.Context, userID int64, since time.Time) (time.Time, error) {
-	var oldestTime time.Time
-	err := r.db.QueryRow(ctx, `
-		SELECT MIN(reported_at) 
-		FROM error_reports 
-		WHERE user_id = $1 AND reported_at > $2
-	`, userID, since).Scan(&oldestTime)
-	return oldestTime, err
+// GetQuotaUsage returns quota usage from append-only committed submission
+// events. error_reports is deliberately not used because a pending report can
+// be updated in place after its cooldown expires.
+func (r *ErrorReportRepository) GetQuotaUsage(ctx context.Context, userID int64) (ErrorReportQuotaUsage, error) {
+	return getQuotaUsage(ctx, r.db, userID)
 }
 
-// CountUserReportsInWindows counts reports in both hourly and daily windows
-func (r *ErrorReportRepository) CountUserReportsInWindows(ctx context.Context, userID int64, hourAgo, dayAgo time.Time) (hourlyCount, dailyCount int, err error) {
-	err = r.db.QueryRow(ctx, `
-		SELECT 
-			COUNT(CASE WHEN reported_at > $2 THEN 1 END) as hourly_count,
-			COUNT(CASE WHEN reported_at > $3 THEN 1 END) as daily_count
-		FROM error_reports 
-		WHERE user_id = $1 AND reported_at > $3
-	`, userID, hourAgo, dayAgo).Scan(&hourlyCount, &dailyCount)
-	return
+// GetQuotaUsageTx reads the authoritative usage inside the submission
+// transaction, after the caller has serialized the user's quota row.
+func (r *ErrorReportRepository) GetQuotaUsageTx(ctx context.Context, tx pgx.Tx, userID int64) (ErrorReportQuotaUsage, error) {
+	return getQuotaUsage(ctx, tx, userID)
 }
 
-// UpdateRateLimitTracking updates the rate limit tracking table
-func (r *ErrorReportRepository) UpdateRateLimitTracking(ctx context.Context, userID int64, hourlyCount, dailyCount int, now time.Time) error {
-	_, err := r.db.Exec(ctx, `
+type quotaUsageQuerier interface {
+	QueryRow(context.Context, string, ...any) pgx.Row
+}
+
+func getQuotaUsage(ctx context.Context, querier quotaUsageQuerier, userID int64) (ErrorReportQuotaUsage, error) {
+	var usage ErrorReportQuotaUsage
+	err := querier.QueryRow(ctx, `
+		WITH bounds AS (
+			SELECT statement_timestamp() AS checked_at
+		)
+		SELECT
+			bounds.checked_at,
+			COUNT(event.id) FILTER (WHERE event.reported_at > bounds.checked_at - INTERVAL '1 hour'),
+			COUNT(event.id),
+			MIN(event.reported_at) FILTER (WHERE event.reported_at > bounds.checked_at - INTERVAL '1 hour'),
+			MIN(event.reported_at)
+		FROM bounds
+		LEFT JOIN error_report_quota_events event
+			ON event.user_id = $1
+			AND event.reported_at > bounds.checked_at - INTERVAL '24 hours'
+		GROUP BY bounds.checked_at
+	`, userID).Scan(
+		&usage.CheckedAt,
+		&usage.HourlyCount,
+		&usage.DailyCount,
+		&usage.OldestHourly,
+		&usage.OldestDaily,
+	)
+	return usage, err
+}
+
+// RecordQuotaEventTx writes exactly one durable event for a report submission.
+// It is called only after all report work succeeds and remains in the same
+// transaction, so failed or rejected attempts never consume quota.
+func (r *ErrorReportRepository) RecordQuotaEventTx(ctx context.Context, tx pgx.Tx, userID int64) error {
+	_, err := tx.Exec(ctx, `
+		INSERT INTO error_report_quota_events (user_id, reported_at)
+		VALUES ($1, statement_timestamp())
+	`, userID)
+	return err
+}
+
+// UpdateRateLimitTrackingTx keeps the legacy status/analytics row in sync with
+// the committed event that was just added. It is not the authorization source
+// of truth; append-only quota events are, because they preserve rolling-window
+// boundaries and retry timestamps.
+func (r *ErrorReportRepository) UpdateRateLimitTrackingTx(ctx context.Context, tx pgx.Tx, userID int64, hourlyCount, dailyCount int, now time.Time) error {
+	_, err := tx.Exec(ctx, `
 		INSERT INTO error_report_limits (user_id, hourly_count, daily_count, last_hour_reset, last_day_reset)
 		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (user_id) DO UPDATE SET
