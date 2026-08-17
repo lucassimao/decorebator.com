@@ -398,13 +398,15 @@ The implementation and validation sequence is owned by `docs/MOBILE_APP_REVAMP_E
 - **No rate limiting on any auth endpoint**: unlimited credential stuffing against `/login` (each attempt burns a ~60ms bcrypt hash — also a CPU-DoS), unlimited password-reset email bombing via Resend, unlimited signup (each free account can trigger OpenAI spend). The codebase's only rate limiter guards `/errorReports`.
 - **Auth tokens are being shipped to Sentry**: `SendDefaultPII: true` (`common/sentry_init.go:29`) attaches request headers and cookies — where the 1-year `Authorization` JWT lives — and production logs at Debug level into Sentry Logs, including every login email. Credential-theft path + GDPR exposure + ingest cost.
 - **Unauthenticated open redirect**: `GET /subscription/checkout-redirect` redirects to any `redirect_uri` (`http/subscription.go:190-200`); a webhook-signature test bypass is compiled into the production binary (`subscription.go:126-130`); the RevenueCat webhook handler does a non-constant-time compare and **panics if its env var is unset** — both go away with #21, but not for ~12 months of dual-stack.
-- **Unvalidated uploads**: profile pictures have no size cap anywhere (no `MaxBytesReader` in the codebase — a 500MB base64 body is a trivial memory DoS), attacker-controlled MIME type and file extension, path traversal into arbitrary bucket prefixes, and a world-readable bucket → stored XSS on the storage origin (`http/user.go:327-339`).
+- **Unvalidated uploads (closed locally by `UPLOAD-1` on 2026-08-17)**: the original path had no body/decoded/canonical size caps, trusted caller-controlled media metadata and extension, and allowed unsafe object naming. The implemented contract now performs bounded admission and canonical raster validation, uses server-owned user-scoped keys/content types, reuses a startup MinIO client, and reconciles ambiguous object/reference outcomes durably; matching 1.1.2 store binaries and OTA proof remain owner release gates.
 - **Quiz distractors leak other users' private content**: `GetRandomMeanings`/`GetRandomTokens` draw from the **global** definitions table with no user, wordlist, or even *language* filter (`repository/definition.go:105-166`) — cross-tenant disclosure, wrong-language distractors, and (combined with prompt injection via user-supplied tokens interpolated into a *system* message, `openai/chat_completion.go:281-286`) a content-poisoning vector into other users' quizzes.
 - Assorted: login timing side-channel enables user enumeration; 5-char minimum passwords (and reset/update paths enforce even less); `BCRYPT_COST` env override accepted in production; deprecated `dgrijalva/jwt-go` (CVE-2020-26160); permissive dev CORS that fails *open* if `ENV` is misspelled; no security headers; missing `c.Abort()` after a failed middleware check.
 
 **Why it matters.** Any one of the first four is incident-report material. The JWT items are also hard blockers for #21 (store-driven renewals/refunds must take effect without re-login). And the pre-revamp period is the cheapest time to rotate token semantics — fewer users are affected than after the growth work succeeds.
 
 **Goal.** Startup fail-fast config validation; short-lived tokens + refresh; rate limiting on all four auth endpoints; `SendDefaultPII` off + PII scrubbed from logs; upload validation + global body limits; distractors scoped by language and pool; the checklist in Appendix C closed.
+
+**Current execution status (2026-08-17).** `AUTH-1`–`AUTH-3`, `HTTP-SEC-1`, `UPLOAD-1`, `API-BOUND-1`, and `API-RATE-1` are locally complete with the evidence recorded in `MOBILE_APP_REVAMP_EXECUTION_PLAN.md`. Remaining deployed configuration, legacy-cookie rollout, store binaries, OTA proof, and later security/cutover milestones retain their explicit owner gates.
 
 ---
 
@@ -517,7 +519,7 @@ Severity: **C** = critical (broken feature, panic loop, or exploitable), **H** =
 | M | `CheckReceipts` loop has no progress guarantee on persistent update failure | `push_notification_service.go:223-275` |
 | M | One invalid user-supplied timezone string kills the reminder query for **all** users in that run | `repository/push_notifications.go:58,134` |
 | M | Account deletion non-transactional; child-delete failures only logged | `service/user.go:256-265` |
-| M | Error-report rate limit bypassable: fails open on DB error, and upserts don't increment the count | `rate_limiter.go:47-50`, `repository/error_report.go:281-308` |
+| M | Error-report rate limit bypassable: original implementation failed open on DB error and undercounted upserts. Closed locally by `API-RATE-1` with serialized append-only quota events and atomic committed-work accounting | `rate_limiter.go`, `repository/error_report.go`, migration `000081` |
 | M | pgx **v3** sentinel (`pgx.ErrNoRows`) compared against pgx/v5 errors — never matches; v3 driver shipped in the binary | `repository/user.go:12,125,244` |
 | M | `learning_progress.words_mastered` never written — permanently 0; 30-day progress query returns 29 days (exclusive bound) | migration `000030`; `learning_progress.go:91` |
 
@@ -530,7 +532,7 @@ Severity: **C** = critical (broken feature, panic loop, or exploitable), **H** =
 | H | No rate limiting on `/login`, `/users`, `/password/send-reset-email`, `/password/reset` — credential stuffing, bcrypt CPU-DoS, email bombing, signup-driven OpenAI spend | `http/setup.go:54-73` |
 | H | `SendDefaultPII: true` ships cookies (incl. the 1-year JWT) to Sentry; prod logs Debug→Sentry incl. login emails | `common/sentry_init.go:29`, `common/logger.go:8,25`, `service/user.go:176-190` |
 | H | Unauthenticated open redirect on `/subscription/checkout-redirect` | `http/subscription.go:190-200` |
-| H | Profile upload: no body size cap anywhere, attacker-controlled MIME + extension, path traversal in object key, public bucket → stored XSS | `http/user.go:327-339`, `common/utils.go:36-77`, `common/minio.go:46` |
+| H | Profile upload: original path had no body cap, caller-controlled MIME/extension, unsafe object naming, and public-origin stored-content risk. Closed locally by `UPLOAD-1`; matching 1.1.2 store binaries and OTA proof remain owner-gated | `http/user.go`, `common/profile_image.go`, `common/minio.go` |
 | H | Quiz distractors drawn from the global corpus with no user/list/language filter — cross-tenant content disclosure + wrong-language options + poisoning vector | `repository/definition.go:105-127,151-166` |
 | M | User token interpolated into the OpenAI **system** message with naive quoting — prompt injection; poisoned output propagates into image prompts | `openai/chat_completion.go:281,286`, `image_generator_worker.go:212` |
 | M | Stripe webhook test-signature bypass compiled into production; RC webhook non-constant-time compare + panics on missing env var (unauthenticated route) | `subscription.go:126-130`, `http/revenuecat.go:23,26` |
@@ -556,8 +558,8 @@ Severity: **C** = critical (broken feature, panic loop, or exploitable), **H** =
 | H | Non-sargable `DATE(created_at)` predicate + missing `(user_id, wordlist_id, created_at)` index — runs inside the quiz-answer write tx | `analytics/learning_progress.go:44-50`, migration `000030` |
 | M | Expensive 4-table diagnostic query on every "no due items" response (the engaged-user steady state) | `leitner_system_strategy.go:278-291` |
 | M | Quiz selection materializes 50 full definitions (19-column GROUP BY + JSON_AGG) to use 1; practice-ahead fallback re-runs the whole query unindexed | `leitner_system_strategy.go:104,124-181,256-266` |
-| M | Unbounded queries: word mastery, all-words, definitions batch (uncapped `ids`), filterless user `Find` (dumps password hashes); `IndentedJSON` + no gzip on the largest payloads | `analytics/word_mastery.go:94-117`, `http/word.go:41,47,130,171,178`, `repository/user.go` |
-| M | New MinIO client + TLS handshake per upload; bytes fully buffered; no presigned URLs; ACL sent as inert user metadata | `common/minio.go:33-46` |
+| M | Unbounded list/batch/telemetry and secret-serialization paths. Closed locally by `API-BOUND-1` with stable pagination, explicit caps, ownership checks, telemetry bounds, and JSON secret redaction | `http/word.go`, `http/wordlist.go`, `http/realtime_telemetry.go`, `repository/user.go` |
+| M | Per-upload MinIO client construction and ambiguous object/reference cleanup. Closed locally by `UPLOAD-1` with one startup client, server-owned metadata, and durable version-aware reconciliation | `common/minio.go`, `common/profile_image.go`, `service/profile_upload_reconciliation_worker.go` |
 | M | 2s global timeout on all authenticated routes, and the middleware doesn't cancel work — timed-out requests still run to completion | `http/setup.go:78`, `http/midlewares.go:136-161` |
 | M | pgBouncer URL swapped in but pgx not configured for transaction pooling (prepared-statement errors); documented `DISABLE_PREPARED_STATEMENTS` flag doesn't exist | `cmd/api/server.go:24-26`, `common/database.go:47-59` |
 | M | Migrations without `lock_timeout`/`statement_timeout`; non-concurrent index builds; `sslmode=disable` hardcoded | `cmd/migrate/main.go:48,78` |
