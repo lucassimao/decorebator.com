@@ -11,12 +11,18 @@ import {
 } from "./users";
 import { router } from "expo-router";
 
-export async function callAPI<T>(
+export type APIResponseWithMetadata<T> = {
+  body: T;
+  nextCursor: string | null;
+  definitionsContinuation?: string | null;
+};
+
+export async function callAPIWithMetadata<T>(
   method: "GET" | "POST" | "DELETE" | "PATCH" | "PUT",
   endpoint: string,
   body?: string,
   timeoutMs = 15000, // 15 second default timeout
-): Promise<T> {
+): Promise<APIResponseWithMetadata<T>> {
   if (!hasAuthenticationSession()) {
     throw new Error(AUTH_REQUIRED_ERROR);
   }
@@ -63,5 +69,23 @@ export async function callAPI<T>(
       throw error;
     }
   }
-  return responseBody;
+  const nextCursor = response.headers.get("X-Next-Cursor")?.trim() || null;
+  const definitionsContinuation =
+    response.headers.get("X-Definitions-Continuation")?.trim() || null;
+  return { body: responseBody, nextCursor, definitionsContinuation };
+}
+
+export async function callAPI<T>(
+  method: "GET" | "POST" | "DELETE" | "PATCH" | "PUT",
+  endpoint: string,
+  body?: string,
+  timeoutMs = 15000,
+): Promise<T> {
+  const response = await callAPIWithMetadata<T>(
+    method,
+    endpoint,
+    body,
+    timeoutMs,
+  );
+  return response.body;
 }

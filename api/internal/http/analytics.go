@@ -47,6 +47,16 @@ func RegisterAnalyticsRoutes(r *gin.RouterGroup, wordlistService *service.Wordli
 // getWordlistWordMastery returns word mastery statistics for a wordlist
 func getWordlistWordMastery(wordlistService *service.WordlistService, db *pgxpool.Pool) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		limit, pageErr := parsePageLimit(c)
+		if pageErr != nil {
+			writeInvalidPage(c, pageErr)
+			return
+		}
+		cursor, cursorErr := parseMasteryCursor(c.Query("cursor"))
+		if cursorErr != nil {
+			writeInvalidPage(c, cursorErr)
+			return
+		}
 		wordlistID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wordlist ID"})
@@ -78,7 +88,7 @@ func getWordlistWordMastery(wordlistService *service.WordlistService, db *pgxpoo
 			return
 		}
 
-		stats, err := analyticsService.WordMastery(c.Request.Context())
+		stats, err := analyticsService.WordMastery(c.Request.Context(), limit, cursor)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch mastery stats"})
 			return
@@ -91,7 +101,9 @@ func getWordlistWordMastery(wordlistService *service.WordlistService, db *pgxpoo
 
 		c.JSON(http.StatusOK, gin.H{
 			"wordlist_id": wordlistID,
-			"stats":       stats,
+			"stats": pageItemsWithCursor(c, limit, stats, func(stat model.WordMasteryStats) string {
+				return encodeMasteryPageCursor(stat.MasteryLevel, stat.LastSeenAt, stat.WordID)
+			}),
 		})
 	}
 }
@@ -461,6 +473,11 @@ func getWordlistStats(wordlistService *service.WordlistService, db *pgxpool.Pool
 // getProgressSummary returns progress summary for all user's wordlists
 func getProgressSummary(db *pgxpool.Pool) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		page, pageErr := parsePageRequest(c)
+		if pageErr != nil {
+			writeInvalidPage(c, pageErr)
+			return
+		}
 		userID := c.GetInt64("userID")
 
 		userObj, ok := getUserFromContext(c)
@@ -480,7 +497,7 @@ func getProgressSummary(db *pgxpool.Pool) gin.HandlerFunc {
 			return
 		}
 
-		summary, err := analyticsService.ProgressSummary(c.Request.Context())
+		summary, err := analyticsService.ProgressSummary(c.Request.Context(), page.Limit, page.Cursor)
 		if err != nil {
 			common.Logger.ErrorContext(c.Request.Context(), "Failed to fetch progress summary", "error", err, "userID", userID)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch progress summary"})
@@ -494,6 +511,7 @@ func getProgressSummary(db *pgxpool.Pool) gin.HandlerFunc {
 			summary.Wordlists = []model.WordlistProgress{}
 		}
 
+		summary.Wordlists = pageItems(c, page, summary.Wordlists, func(wordlist model.WordlistProgress) int64 { return wordlist.WordlistID })
 		c.JSON(http.StatusOK, summary)
 	}
 }

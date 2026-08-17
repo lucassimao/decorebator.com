@@ -43,12 +43,17 @@ func NewWordlistsRoutes(wordlistService *service.WordlistService, wordService *s
 }
 
 func (h *WordlistsRoutes) GetAll(c *gin.Context) {
+	page, err := parsePageRequest(c)
+	if err != nil {
+		writeInvalidPage(c, err)
+		return
+	}
 	var userID int64 = c.GetInt64("userID")
-	wordlists, err := h.wordlistService.GetUserWordlistsWithWordStats(c.Request.Context(), userID)
+	wordlists, err := h.wordlistService.GetUserWordlistsWithWordStats(c.Request.Context(), userID, page.Limit, page.Cursor)
 	if err != nil {
 		panic(err)
 	}
-	c.JSON(http.StatusOK, wordlists)
+	c.JSON(http.StatusOK, pageItems(c, page, wordlists, func(wordlist *Wordlist) int64 { return wordlist.ID }))
 }
 
 func (h *WordlistsRoutes) Create(c *gin.Context) {
@@ -210,6 +215,11 @@ func (h *WordlistsRoutes) Update(c *gin.Context) {
 
 // GetProcessingStatus returns the processing status of words in a wordlist
 func (h *WordlistsRoutes) GetProcessingStatus(c *gin.Context) {
+	page, pageErr := parsePageRequest(c)
+	if pageErr != nil {
+		writeInvalidPage(c, pageErr)
+		return
+	}
 	wordlistIDStr := c.Param("wordlistId")
 	wordlistID, err := strconv.ParseInt(wordlistIDStr, 10, 64)
 	if err != nil || wordlistID <= 0 {
@@ -232,10 +242,17 @@ func (h *WordlistsRoutes) GetProcessingStatus(c *gin.Context) {
 	}
 
 	// Get words from wordlist using word service
-	words, err := h.wordService.GetWordByWordlist(c.Request.Context(), wordlist.ID, userID, false)
+	words, err := h.wordService.GetWordByWordlist(c.Request.Context(), wordlist.ID, userID, false, page.Limit, page.Cursor)
 
 	if err != nil {
 		common.Logger.ErrorContext(c.Request.Context(), "failed to get words processing status", "wordlistId", wordlistID, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get processing status"})
+		return
+	}
+	words = pageItems(c, page, words, func(word Word) int64 { return word.ID })
+	summary, err := h.wordService.GetWordProcessingSummary(c.Request.Context(), wordlist.ID, userID)
+	if err != nil {
+		common.Logger.ErrorContext(c.Request.Context(), "failed to get word processing summary", "wordlistId", wordlistID, "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get processing status"})
 		return
 	}
@@ -277,23 +294,13 @@ func (h *WordlistsRoutes) GetProcessingStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"words": processingInfos,
 		"summary": gin.H{
-			"total":      len(words),
-			"pending":    countByStatus(words, "pending"),
-			"processing": countByStatus(words, "processing"),
-			"completed":  countByStatus(words, "completed"),
-			"failed":     countByStatus(words, "failed"),
+			"total":      summary.Total,
+			"pending":    summary.Pending,
+			"processing": summary.Processing,
+			"completed":  summary.Completed,
+			"failed":     summary.Failed,
 		},
 	})
-}
-
-func countByStatus(words []model.Word, status string) int {
-	count := 0
-	for _, w := range words {
-		if w.ProcessingStatus == status {
-			count++
-		}
-	}
-	return count
 }
 
 // CreateChatSession creates an ephemeral token for realtime chat with OpenAI

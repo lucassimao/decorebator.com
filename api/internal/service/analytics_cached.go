@@ -9,6 +9,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
+	analyticsrepo "decorebator.com/internal/repository/analytics"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
@@ -24,6 +25,8 @@ type CachedAnalyticsService struct {
 	wordlistID int64
 	cacheTTL   time.Duration
 }
+
+const analyticsCacheScanCount int64 = 100
 
 // NewCachedAnalyticsService creates a new cached analytics service
 func NewCachedAnalyticsService(db *pgxpool.Pool, cache *redis.Client, cfg AnalyticsConfig) (*CachedAnalyticsService, error) {
@@ -98,8 +101,8 @@ func (s *CachedAnalyticsService) Stats(ctx context.Context) (*model.WordlistStat
 }
 
 // ProgressSummary gets progress summary with caching
-func (s *CachedAnalyticsService) ProgressSummary(ctx context.Context) (*model.ProgressSummaryResponse, error) {
-	cacheKey := fmt.Sprintf("analytics:progress-summary:v2:%d", s.userID)
+func (s *CachedAnalyticsService) ProgressSummary(ctx context.Context, limit int, cursor *int64) (*model.ProgressSummaryResponse, error) {
+	cacheKey := fmt.Sprintf("analytics:progress-summary:v3:%d:%d:%d", s.userID, limit, pageCursorValue(cursor))
 
 	// Try cache first
 	cached, cacheErr := s.cache.Get(ctx, cacheKey).Result()
@@ -112,7 +115,7 @@ func (s *CachedAnalyticsService) ProgressSummary(ctx context.Context) (*model.Pr
 	}
 
 	if summary == nil {
-		progress, progressErr := s.repo.GetAllWordlistsProgress(ctx, s.userID)
+		progress, progressErr := s.repo.GetAllWordlistsProgress(ctx, s.userID, limit+1, cursor)
 		if progressErr != nil {
 			return nil, progressErr
 		}
@@ -125,7 +128,11 @@ func (s *CachedAnalyticsService) ProgressSummary(ctx context.Context) (*model.Pr
 		}
 	}
 
-	dueCounts, err := s.repo.GetDueCounts(ctx, s.userID)
+	wordlistIDs := make([]int64, 0, len(summary.Wordlists))
+	for _, wordlist := range summary.Wordlists {
+		wordlistIDs = append(wordlistIDs, wordlist.WordlistID)
+	}
+	dueCounts, err := s.repo.GetDueCounts(ctx, s.userID, wordlistIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -135,8 +142,8 @@ func (s *CachedAnalyticsService) ProgressSummary(ctx context.Context) (*model.Pr
 }
 
 // WordMastery gets word mastery with caching
-func (s *CachedAnalyticsService) WordMastery(ctx context.Context) ([]model.WordMasteryStats, error) {
-	cacheKey := fmt.Sprintf("analytics:mastery:%d:%d", s.userID, s.wordlistID)
+func (s *CachedAnalyticsService) WordMastery(ctx context.Context, limit int, cursor *analyticsrepo.WordMasteryCursor) ([]model.WordMasteryStats, error) {
+	cacheKey := fmt.Sprintf("analytics:mastery:v3:%d:%d:%d:%s", s.userID, s.wordlistID, limit, masteryCursorCacheKey(cursor))
 
 	// Try cache first
 	cached, err := s.cache.Get(ctx, cacheKey).Result()
@@ -148,7 +155,7 @@ func (s *CachedAnalyticsService) WordMastery(ctx context.Context) ([]model.WordM
 	}
 
 	// Compute from database
-	stats, err := s.repo.GetWordMastery(ctx, s.userID, s.wordlistID)
+	stats, err := s.repo.GetWordMastery(ctx, s.userID, s.wordlistID, limit+1, cursor)
 	if err != nil {
 		return nil, err
 	}
@@ -159,6 +166,24 @@ func (s *CachedAnalyticsService) WordMastery(ctx context.Context) ([]model.WordM
 	}
 
 	return stats, nil
+}
+
+func pageCursorValue(cursor *int64) int64 {
+	if cursor == nil {
+		return 0
+	}
+	return *cursor
+}
+
+func masteryCursorCacheKey(cursor *analyticsrepo.WordMasteryCursor) string {
+	if cursor == nil {
+		return "first"
+	}
+	lastSeenAt := "nil"
+	if cursor.LastSeenAt != nil {
+		lastSeenAt = cursor.LastSeenAt.UTC().Format(time.RFC3339Nano)
+	}
+	return fmt.Sprintf("%s:%s:%d", cursor.MasteryLevel, lastSeenAt, cursor.WordID)
 }
 
 // LearningProgress gets learning progress with caching
@@ -337,26 +362,46 @@ func (s *CachedAnalyticsService) InvalidateWordlistAnalytics(ctx context.Context
 		return nil // No cache available, nothing to invalidate
 	}
 
-	keys := []string{
+	return invalidateAnalyticsCachePatterns(ctx, s.cache, analyticsCacheInvalidationPatterns(userID, wordlistID)...)
+}
+
+// analyticsCacheInvalidationPatterns covers every variant of cache keys that
+// includes a page cursor or user-selectable time window. Exact deletes leave
+// stale pages behind as soon as a key format is versioned.
+func analyticsCacheInvalidationPatterns(userID, wordlistID int64) []string {
+	return []string{
 		fmt.Sprintf("analytics:stats:%d:%d", userID, wordlistID),
 		fmt.Sprintf("analytics:mastery:%d:%d", userID, wordlistID),
-		fmt.Sprintf("analytics:progress:%d:%d", userID, wordlistID),
+		fmt.Sprintf("analytics:mastery:*:%d:%d:*", userID, wordlistID),
+		fmt.Sprintf("analytics:progress:%d:%d:*", userID, wordlistID),
 		fmt.Sprintf("analytics:quiz-performance:%d:%d", userID, wordlistID),
 		fmt.Sprintf("analytics:box-distribution:%d:%d", userID, wordlistID),
-		fmt.Sprintf("analytics:practice-time:%d:%d", userID, wordlistID),
+		fmt.Sprintf("analytics:practice-time:%d:%d:*", userID, wordlistID),
+		fmt.Sprintf("analytics:historical-box-distribution:%d:%d:*", userID, wordlistID),
 		fmt.Sprintf("analytics:progress-summary:%d", userID),
-		fmt.Sprintf("analytics:progress-summary:v2:%d", userID),
+		fmt.Sprintf("analytics:progress-summary:v*:%d:*", userID),
 	}
+}
 
-	// Also invalidate historical box distribution caches with common day ranges
-	for days := 7; days <= 365; days += 7 {
-		keys = append(keys, fmt.Sprintf("analytics:historical-box-distribution:%d:%d:%d", userID, wordlistID, days))
+func invalidateAnalyticsCachePatterns(ctx context.Context, cache *redis.Client, patterns ...string) error {
+	for _, pattern := range patterns {
+		var cursor uint64
+		for {
+			keys, nextCursor, err := cache.Scan(ctx, cursor, pattern, analyticsCacheScanCount).Result()
+			if err != nil {
+				return err
+			}
+			if len(keys) > 0 {
+				if err := cache.Del(ctx, keys...).Err(); err != nil {
+					return err
+				}
+			}
+			cursor = nextCursor
+			if cursor == 0 {
+				break
+			}
+		}
 	}
-
-	if len(keys) > 0 {
-		return s.cache.Del(ctx, keys...).Err()
-	}
-
 	return nil
 }
 

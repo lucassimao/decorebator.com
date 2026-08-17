@@ -11,7 +11,7 @@ type User struct {
 	ID                   int64               `json:"id"`
 	FirstName            string              `json:"firstName"`
 	LastName             string              `json:"lastName"`
-	PasswordHash         string              `json:"passwordHash"`
+	PasswordHash         string              `json:"-"`
 	Email                string              `json:"email"`
 	ProfilePictureURL    *string             `json:"profilePictureUrl,omitempty"`
 	Country              *string             `json:"country,omitempty"`
@@ -19,7 +19,7 @@ type User struct {
 	PreferredLanguage    *string             `json:"preferredLanguage,omitempty"`
 	SubscriptionPlan     SubscriptionPlan    `json:"subscriptionPlan"`
 	SubscriptionStatus   *SubscriptionStatus `json:"subscriptionStatus,omitempty"`
-	StripeCustomerID     *string             `json:"stripeCustomerId,omitempty"`
+	StripeCustomerID     *string             `json:"-"`
 	Platform             *PlatformType       `json:"platform,omitempty"`
 	SubscriptionEndsAt   *time.Time          `json:"subscriptionEndsAt,omitempty"`
 	NotificationsEnabled bool                `json:"notificationsEnabled"`
@@ -32,7 +32,6 @@ func (u User) MarshalJSON() ([]byte, error) {
 		"id":               u.ID,
 		"firstName":        u.FirstName,
 		"lastName":         u.LastName,
-		"passwordHash":     u.PasswordHash,
 		"email":            u.Email,
 		"subscriptionPlan": u.SubscriptionPlan,
 	}
@@ -55,10 +54,6 @@ func (u User) MarshalJSON() ([]byte, error) {
 
 	if u.SubscriptionStatus != nil {
 		userMap["subscriptionStatus"] = *u.SubscriptionStatus
-	}
-
-	if u.StripeCustomerID != nil {
-		userMap["stripeCustomerId"] = *u.StripeCustomerID
 	}
 
 	if u.Platform != nil {

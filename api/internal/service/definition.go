@@ -151,13 +151,13 @@ func (s *DefinitionService) didUserCreateWord(ctx context.Context, wordID, userI
 	return res, nil
 }
 
-func (s *DefinitionService) GetDefinitionsByWordID(ctx context.Context, wordlistID, wordID, userID int64) ([]*model.Definition, error) {
-	return s.definitionRepository.GetDefinitionsByWordID(ctx, wordlistID, wordID, userID)
+func (s *DefinitionService) GetDefinitionsByWordID(ctx context.Context, wordlistID, wordID, userID int64, limit int, cursor *int64) ([]*model.Definition, error) {
+	return s.definitionRepository.GetDefinitionsByWordID(ctx, wordlistID, wordID, userID, limit+1, cursor)
 }
 
 // GetDefinitionsByWordIDs returns a denormalized response including wordID, token(name) and its definitions
-func (s *DefinitionService) GetDefinitionsByWordIDs(ctx context.Context, wordlistID, userID int64, wordIDs []int64) ([]repo.WordDefinitionsResponse, error) {
-	return s.definitionRepository.GetDefinitionsByWordIDs(ctx, wordlistID, userID, wordIDs)
+func (s *DefinitionService) GetDefinitionsByWordIDs(ctx context.Context, wordlistID, userID int64, wordIDs []int64, definitionCursors map[int64]int64) (repo.DefinitionBatchPage, error) {
+	return s.definitionRepository.GetDefinitionsByWordIDs(ctx, wordlistID, userID, wordIDs, definitionCursors)
 }
 
 func (s *DefinitionService) CreateExampleAudio(ctx context.Context, definitionID int64, exampleText, audioURL, inflectionType string) error {

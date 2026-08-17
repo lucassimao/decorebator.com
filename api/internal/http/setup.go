@@ -112,7 +112,7 @@ func SetupRoutes(appCtx *app.Context) *gin.Engine {
 		authenticatedRoutes.GET("/errorReports/status", GetUserErrorReportStatus(appCtx.Database))
 
 		RegisterAnalyticsRoutes(authenticatedRoutes, appCtx.WordlistService, appCtx.Database)
-		RegisterRealtimeTelemetryRoutes(authenticatedRoutes, appCtx.RealtimeTelemetryService)
+		RegisterRealtimeTelemetryRoutes(authenticatedRoutes, appCtx.WordlistService, appCtx.RealtimeTelemetryService)
 
 		// Subscription routes
 		authenticatedRoutes.GET("/subscription/status", GetSubscriptionStatus(subRepo))

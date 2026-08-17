@@ -131,9 +131,9 @@ type Subscription struct {
 	ID                       int64                `json:"id"`
 	UserID                   int64                `json:"userId"`
 	Provider                 SubscriptionProvider `json:"provider"`
-	StripeSubscriptionID     *string              `json:"stripeSubscriptionId,omitempty"`
-	StripeCustomerID         *string              `json:"stripeCustomerId,omitempty"`
-	RevenueCatSubscriptionID *string              `json:"revenuecatSubscriptionId,omitempty"`
+	StripeSubscriptionID     *string              `json:"-"`
+	StripeCustomerID         *string              `json:"-"`
+	RevenueCatSubscriptionID *string              `json:"-"`
 	AppStoreProductID        *string              `json:"appStoreProductId,omitempty"`
 	Platform                 *PlatformType        `json:"platform,omitempty"`
 	Plan                     SubscriptionPlan     `json:"plan"`

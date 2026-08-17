@@ -1,5 +1,14 @@
-import { callAPI } from "./api";
+import {
+  callAPI,
+  callAPIWithMetadata,
+  type APIResponseWithMetadata,
+} from "./api";
 import { getApiBaseUrl } from "./baseUrl";
+import {
+  createPaginationSessionGuard,
+  getAllPages,
+  PaginationError,
+} from "./pagination";
 
 const API_URL = getApiBaseUrl();
 
@@ -107,8 +116,11 @@ export type CreateWordlistDTO = Pick<
 
 export async function getUserWordlists() {
   const endpoint = API_URL + "/wordlists";
-  const body = await callAPI<Wordlist[]>("GET", endpoint);
-  return body;
+  return getAllPages<Wordlist[], Wordlist>({
+    endpoint,
+    getItems: (body) => requireArray(body, "wordlists"),
+    getItemKey: (wordlist) => requireItemKey(wordlist.id, "wordlist"),
+  });
 }
 
 export async function getWords(
@@ -120,8 +132,11 @@ export async function getWords(
     ? `${baseEndpoint}?onlyWithDefinitions=true`
     : baseEndpoint;
 
-  const body = await callAPI<Word[]>("GET", endpoint);
-  return body;
+  return getAllPages<Word[], Word>({
+    endpoint,
+    getItems: (body) => requireArray(body, "words"),
+    getItemKey: (word) => requireItemKey(word.id, "word"),
+  });
 }
 
 export async function deleteWordlist(wordlistId: number): Promise<void> {
@@ -217,8 +232,11 @@ export async function getWordDefinitions(
   const endpoint =
     API_URL + `/wordlists/${wordlistId}/words/${wordId}/definitions`;
 
-  const body = await callAPI<Definition[]>("GET", endpoint);
-  return body;
+  return getAllPages<Definition[], Definition>({
+    endpoint,
+    getItems: (body) => requireArray(body, "definitions"),
+    getItemKey: (definition) => requireItemKey(definition.id, "definition"),
+  });
 }
 
 export type PronunciationSystemsResponse = {
@@ -261,9 +279,69 @@ export async function getProcessingStatus(
   wordlistId: number,
 ): Promise<ProcessingStatusResponse> {
   const endpoint = API_URL + `/wordlists/${wordlistId}/processing-status`;
+  let latestSummary: ProcessingStatusResponse["summary"] | undefined;
 
-  const body = await callAPI<ProcessingStatusResponse>("GET", endpoint);
-  return body;
+  const words = await getAllPages<ProcessingStatusResponse, ProcessingInfo>({
+    endpoint,
+    getItems: (body) => requireArray(body?.words, "processing status words"),
+    getItemKey: (word) => requireItemKey(word.id, "processing-status word"),
+    onPage: (body) => {
+      latestSummary = requireProcessingSummary(body?.summary);
+    },
+  });
+
+  if (latestSummary === undefined) {
+    throw new PaginationError(
+      "Processing status response is missing a summary",
+    );
+  }
+  return {
+    words,
+    summary: latestSummary,
+  };
+}
+
+function requireArray<T>(value: unknown, responseField: string): T[] {
+  if (!Array.isArray(value)) {
+    throw new PaginationError(
+      `Invalid paginated ${responseField} response: expected an array`,
+    );
+  }
+  return value as T[];
+}
+
+function requireItemKey(value: unknown, itemName: string): string {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
+    throw new PaginationError(
+      `Invalid paginated ${itemName} response: expected a positive ID`,
+    );
+  }
+  return String(value);
+}
+
+function requireProcessingSummary(
+  value: unknown,
+): ProcessingStatusResponse["summary"] {
+  if (typeof value !== "object" || value === null) {
+    throw new PaginationError(
+      "Processing status response is missing a summary",
+    );
+  }
+  const summary = value as ProcessingStatusResponse["summary"];
+  for (const field of [
+    "total",
+    "pending",
+    "processing",
+    "completed",
+    "failed",
+  ] as const) {
+    if (!Number.isInteger(summary[field]) || summary[field] < 0) {
+      throw new PaginationError(
+        "Processing status response has an invalid summary",
+      );
+    }
+  }
+  return summary;
 }
 
 // Realtime Chat Session Types and API
@@ -308,6 +386,11 @@ type WordDefinitionsBatchResponse = {
   definitions: Definition[];
 };
 
+const MAX_DEFINITION_BATCH_WORD_IDS = 50;
+const MAX_DEFINITION_BATCH_WORDS = 500;
+const MAX_DEFINITION_BATCH_PAGES = 100;
+const MAX_DEFINITION_BATCH_ITEMS = 10_000;
+
 // Fetch definitions for multiple words in a single request and map to chat shape
 export async function getDefinitionsForWords(
   wordlistId: number,
@@ -315,20 +398,151 @@ export async function getDefinitionsForWords(
 ): Promise<WordWithDefinitions[]> {
   if (!wordIds || wordIds.length === 0) return [];
 
-  const idsParam = wordIds.join(",");
-  const endpoint =
-    API_URL + `/wordlists/${wordlistId}/words/definitions?ids=${idsParam}`;
+  const uniqueWordIds = validateDefinitionBatchWordIDs(wordIds);
+  const assertSessionUnchanged = createPaginationSessionGuard();
+  assertSessionUnchanged();
+  const definitionsByWord = new Map<number, WordDefinitionsBatchResponse>();
+  const definitionIDsByWord = new Map<number, Set<number>>();
+  let totalDefinitions = 0;
 
-  const resp = await callAPI<WordDefinitionsBatchResponse[]>("GET", endpoint);
+  for (
+    let start = 0;
+    start < uniqueWordIds.length;
+    start += MAX_DEFINITION_BATCH_WORD_IDS
+  ) {
+    const wordIDs = uniqueWordIds.slice(
+      start,
+      start + MAX_DEFINITION_BATCH_WORD_IDS,
+    );
+    const requestedWordIDs = new Set(wordIDs);
+    const seenContinuations = new Set<string>();
+    let continuation: string | null = null;
+
+    for (let page = 0; page < MAX_DEFINITION_BATCH_PAGES; page += 1) {
+      assertSessionUnchanged();
+      const response: APIResponseWithMetadata<WordDefinitionsBatchResponse[]> =
+        await callAPIWithMetadata<WordDefinitionsBatchResponse[]>(
+          "GET",
+          getDefinitionBatchEndpoint(wordlistId, wordIDs, continuation),
+        );
+      assertSessionUnchanged();
+
+      const responseItems = requireArray<WordDefinitionsBatchResponse>(
+        response.body,
+        "batched definitions",
+      );
+      const pageDefinitionIDs = new Set<string>();
+      for (const item of responseItems) {
+        if (
+          !Number.isSafeInteger(item?.wordId) ||
+          !requestedWordIDs.has(item.wordId)
+        ) {
+          throw new PaginationError(
+            "Batched definitions response contains an unexpected word",
+          );
+        }
+        const definitions = requireArray<Definition>(
+          item.definitions,
+          "batched definition items",
+        );
+        let aggregate = definitionsByWord.get(item.wordId);
+        if (aggregate === undefined) {
+          aggregate = { wordId: item.wordId, name: item.name, definitions: [] };
+          definitionsByWord.set(item.wordId, aggregate);
+          definitionIDsByWord.set(item.wordId, new Set());
+        } else if (aggregate.name !== item.name) {
+          throw new PaginationError(
+            "Batched definitions response changed a word name mid-request",
+          );
+        }
+
+        const seenDefinitionIDs = definitionIDsByWord.get(item.wordId)!;
+        for (const definition of definitions) {
+          if (!Number.isSafeInteger(definition?.id) || definition.id <= 0) {
+            throw new PaginationError(
+              "Batched definitions response contains an invalid definition",
+            );
+          }
+          const pageDefinitionKey = `${item.wordId}:${definition.id}`;
+          if (pageDefinitionIDs.has(pageDefinitionKey)) {
+            throw new PaginationError(
+              "Batched definitions response contains a duplicate definition",
+            );
+          }
+          pageDefinitionIDs.add(pageDefinitionKey);
+          // Repeating the original IDs is allowed by the server continuation
+          // contract. Those earlier definitions may be returned again, so do
+          // not aggregate them twice.
+          if (seenDefinitionIDs.has(definition.id)) continue;
+          if (totalDefinitions >= MAX_DEFINITION_BATCH_ITEMS) {
+            throw new PaginationError(
+              "Batched definitions item ceiling reached",
+            );
+          }
+          seenDefinitionIDs.add(definition.id);
+          aggregate.definitions.push(definition);
+          totalDefinitions += 1;
+        }
+      }
+
+      continuation = response.definitionsContinuation?.trim() || null;
+      if (continuation === null) break;
+      if (seenContinuations.has(continuation)) {
+        throw new PaginationError(
+          "Batched definitions response contains a repeated continuation",
+        );
+      }
+      seenContinuations.add(continuation);
+      if (page === MAX_DEFINITION_BATCH_PAGES - 1) {
+        throw new PaginationError("Batched definitions page ceiling reached");
+      }
+    }
+  }
 
   // Map server definition model to chat-friendly minimal shape
-  return resp.map((item) => ({
+  return Array.from(definitionsByWord.values()).map((item) => ({
     name: item.name,
-    definitions: (item.definitions || []).map((def) => ({
+    definitions: item.definitions.map((def) => ({
       id: def.id,
       meaning: def.meaning,
       partOfSpeech: def.partOfSpeech || "",
       examples: def.examples || [],
     })),
   }));
+}
+
+function validateDefinitionBatchWordIDs(wordIds: number[]): number[] {
+  if (wordIds.length > MAX_DEFINITION_BATCH_WORDS) {
+    throw new PaginationError("Batched definitions word ceiling reached");
+  }
+  const seenWordIDs = new Set<number>();
+  for (const wordId of wordIds) {
+    if (!Number.isSafeInteger(wordId) || wordId <= 0) {
+      throw new PaginationError(
+        "Batched definitions request contains an invalid word",
+      );
+    }
+    if (seenWordIDs.has(wordId)) {
+      throw new PaginationError(
+        "Batched definitions request contains a duplicate word",
+      );
+    }
+    seenWordIDs.add(wordId);
+  }
+  return wordIds;
+}
+
+function getDefinitionBatchEndpoint(
+  wordlistId: number,
+  wordIds: number[],
+  continuation: string | null,
+): string {
+  const endpoint = new URL(
+    API_URL + `/wordlists/${wordlistId}/words/definitions`,
+  );
+  endpoint.searchParams.set("ids", wordIds.join(","));
+  if (continuation !== null) {
+    endpoint.searchParams.set("definitionCursors", continuation);
+  }
+  return endpoint.toString();
 }

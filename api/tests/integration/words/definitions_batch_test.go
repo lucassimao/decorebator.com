@@ -2,8 +2,12 @@ package words
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"testing"
 
 	"decorebator.com/internal/model"
@@ -11,6 +15,38 @@ import (
 	"decorebator.com/tests/integration/setup"
 	"github.com/stretchr/testify/require"
 )
+
+func decodeDefinitionContinuation(t *testing.T, raw string) map[int64]int64 {
+	t.Helper()
+
+	decoded, err := base64.RawURLEncoding.DecodeString(raw)
+	require.NoError(t, err)
+	var cursors map[int64]int64
+	require.NoError(t, json.Unmarshal(decoded, &cursors))
+	return cursors
+}
+
+func batchDefinitionIDs(t *testing.T, raw []interface{}) map[int64][]int64 {
+	t.Helper()
+
+	definitionsByWord := make(map[int64][]int64, len(raw))
+	for _, item := range raw {
+		word, ok := item.(map[string]interface{})
+		require.True(t, ok)
+		wordID, ok := word["wordId"].(float64)
+		require.True(t, ok)
+		definitions, ok := word["definitions"].([]interface{})
+		require.True(t, ok)
+		for _, item := range definitions {
+			definition, ok := item.(map[string]interface{})
+			require.True(t, ok)
+			definitionID, ok := definition["id"].(float64)
+			require.True(t, ok)
+			definitionsByWord[int64(wordID)] = append(definitionsByWord[int64(wordID)], int64(definitionID))
+		}
+	}
+	return definitionsByWord
+}
 
 // helper: create a wordlist via API and return its ID
 func createWordlist(ts *setup.TestServer, token string, name string) int64 {
@@ -27,7 +63,6 @@ func createWordlist(ts *setup.TestServer, token string, name string) int64 {
 
 	return int64(resp.JSON().Object().Value("id").Number().Raw())
 }
-
 func createWordlistForUser(t *testing.T, ts *setup.TestServer, userID int64, name, language string) int64 {
 	t.Helper()
 
@@ -222,6 +257,174 @@ func TestGetDefinitionsSingle_ScopesWordToPathAndUser(t *testing.T) {
 		WithHeader("Authorization", token1).
 		Expect().
 		Status(http.StatusBadRequest)
+}
+
+func TestWordAndDefinitionListsUseBoundedKeysetPages(t *testing.T) {
+	ts := setup.NewTestServer(t)
+	defer ts.Cleanup()
+
+	token := ts.WithTestUser(t)
+	wordlistID := createWordlist(ts, token, "bounded pages")
+	word1 := createWord(ts, token, wordlistID, "alpha")
+	word2 := createWord(ts, token, wordlistID, "beta")
+	createWord(ts, token, wordlistID, "gamma")
+
+	firstPage := ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words", wordlistID)).
+		WithQuery("limit", "2").
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusOK)
+	firstPage.JSON().Array().Length().IsEqual(2)
+	cursor := firstPage.Header("X-Next-Cursor").NotEmpty().Raw()
+
+	secondPage := ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words", wordlistID)).
+		WithQuery("limit", "2").
+		WithQuery("cursor", cursor).
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusOK)
+	secondPage.JSON().Array().Length().IsEqual(1)
+	secondPage.Header("X-Next-Cursor").IsEmpty()
+	secondPage.JSON().Array().Value(0).Object().Value("id").Number().IsEqual(float64(word1))
+
+	addDefinitions(t, ts, word1, "alpha", 3)
+	definitionsPage := ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words/%d/definitions", wordlistID, word1)).
+		WithQuery("limit", "2").
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusOK)
+	definitionsPage.JSON().Array().Length().IsEqual(2)
+	definitionCursor := definitionsPage.Header("X-Next-Cursor").NotEmpty().Raw()
+	nextDefinitionsPage := ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words/%d/definitions", wordlistID, word1)).
+		WithQuery("limit", "2").
+		WithQuery("cursor", definitionCursor).
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusOK)
+	nextDefinitionsPage.JSON().Array().Length().IsEqual(1)
+
+	ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words/definitions", wordlistID)).
+		WithQuery("ids", fmt.Sprintf("%d,%d", word2, word2)).
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusBadRequest)
+
+	tooManyIDs := make([]string, 0, 51)
+	for i := 1; i <= 51; i++ {
+		tooManyIDs = append(tooManyIDs, strconv.Itoa(i))
+	}
+	ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words/definitions", wordlistID)).
+		WithQuery("ids", strings.Join(tooManyIDs, ",")).
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusBadRequest)
+}
+
+func TestProcessingStatusSummaryCoversTheWholeWordlistWhileItemsArePaged(t *testing.T) {
+	ts := setup.NewTestServer(t)
+	defer ts.Cleanup()
+
+	token := ts.WithTestUser(t)
+	wordlistID := createWordlist(ts, token, "processing summary")
+	word1 := createWord(ts, token, wordlistID, "queued")
+	word2 := createWord(ts, token, wordlistID, "active")
+	word3 := createWord(ts, token, wordlistID, "done")
+	_, err := ts.DB.Exec(context.Background(), `
+		UPDATE words
+		SET processing_status = CASE id
+			WHEN $1 THEN 'pending'
+			WHEN $2 THEN 'processing'
+			WHEN $3 THEN 'completed'
+		END
+		WHERE id IN ($1, $2, $3)
+	`, word1, word2, word3)
+	require.NoError(t, err)
+
+	response := ts.Expect.GET(fmt.Sprintf("/wordlists/%d/processing-status", wordlistID)).
+		WithQuery("limit", "2").
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusOK).
+		JSON().Object()
+	response.Value("words").Array().Length().IsEqual(2)
+	summary := response.Value("summary").Object()
+	summary.Value("total").Number().IsEqual(3)
+	summary.Value("pending").Number().IsEqual(1)
+	summary.Value("processing").Number().IsEqual(1)
+	summary.Value("completed").Number().IsEqual(1)
+}
+
+func TestDefinitionsBatchContinuationIsCumulativeForUnevenWords(t *testing.T) {
+	ts := setup.NewTestServer(t)
+	defer ts.Cleanup()
+
+	token := ts.WithTestUser(t)
+	wordlistID := createWordlist(ts, token, "definition continuation")
+	wordA := createWord(ts, token, wordlistID, "many defs a")
+	wordB := createWord(ts, token, wordlistID, "many defs b")
+	wordWithoutDefinitions := createWord(ts, token, wordlistID, "no defs")
+	addDefinitions(t, ts, wordA, "many defs a", 120)
+	addDefinitions(t, ts, wordB, "many defs b", 60)
+	ids := fmt.Sprintf("%d,%d,%d", wordA, wordB, wordWithoutDefinitions)
+
+	first := ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words/definitions", wordlistID)).
+		WithQuery("ids", ids).
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusOK)
+	firstDefinitions := batchDefinitionIDs(t, first.JSON().Array().Raw())
+	require.Len(t, firstDefinitions[wordA], 50)
+	require.Len(t, firstDefinitions[wordB], 50)
+	require.NotContains(t, firstDefinitions, wordWithoutDefinitions)
+	firstContinuation := first.Header("X-Definitions-Continuation").NotEmpty().Raw()
+	firstCursors := decodeDefinitionContinuation(t, firstContinuation)
+	require.Equal(t, map[int64]int64{
+		wordA:                  firstDefinitions[wordA][49],
+		wordB:                  firstDefinitions[wordB][49],
+		wordWithoutDefinitions: 0,
+	}, firstCursors)
+
+	second := ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words/definitions", wordlistID)).
+		WithQuery("ids", ids).
+		WithQuery("definitionCursors", firstContinuation).
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusOK)
+	secondDefinitions := batchDefinitionIDs(t, second.JSON().Array().Raw())
+	require.Len(t, secondDefinitions[wordA], 50)
+	require.Len(t, secondDefinitions[wordB], 10)
+	secondContinuation := second.Header("X-Definitions-Continuation").NotEmpty().Raw()
+	secondCursors := decodeDefinitionContinuation(t, secondContinuation)
+	require.Equal(t, map[int64]int64{
+		wordA:                  secondDefinitions[wordA][49],
+		wordB:                  secondDefinitions[wordB][9],
+		wordWithoutDefinitions: 0,
+	}, secondCursors)
+
+	third := ts.Expect.GET(fmt.Sprintf("/wordlists/%d/words/definitions", wordlistID)).
+		WithQuery("ids", ids).
+		WithQuery("definitionCursors", secondContinuation).
+		WithHeader("Authorization", token).
+		Expect().
+		Status(http.StatusOK)
+	thirdDefinitions := batchDefinitionIDs(t, third.JSON().Array().Raw())
+	require.Len(t, thirdDefinitions[wordA], 20)
+	require.NotContains(t, thirdDefinitions, wordB)
+	require.NotContains(t, thirdDefinitions, wordWithoutDefinitions)
+	third.Header("X-Definitions-Continuation").IsEmpty()
+
+	seen := make(map[int64]struct{}, 180)
+	for _, page := range []map[int64][]int64{firstDefinitions, secondDefinitions, thirdDefinitions} {
+		for _, wordID := range []int64{wordA, wordB} {
+			for _, definitionID := range page[wordID] {
+				require.NotContains(t, seen, definitionID)
+				seen[definitionID] = struct{}{}
+			}
+		}
+	}
+	require.Len(t, append(append(firstDefinitions[wordA], secondDefinitions[wordA]...), thirdDefinitions[wordA]...), 120)
+	require.Len(t, append(firstDefinitions[wordB], secondDefinitions[wordB]...), 60)
+	require.Len(t, seen, 180)
 }
 
 func TestQuizDistractors_AreScopedToUserWordlistLanguageAndPartOfSpeech(t *testing.T) {

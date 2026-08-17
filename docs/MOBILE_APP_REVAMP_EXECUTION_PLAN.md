@@ -333,7 +333,7 @@ Cutover classification is intentionally narrow:
 | QA-LOG-1 | Redact authorization/cookie headers and fixture identifiers from verbose integration/CI HTTP output without hiding assertion context | REVAMP | HTTP-SEC-1 |
 | QA-COVERAGE-1 | Repair unit-test discovery, then raise real aggregate API coverage from 23.7% unit/39.8% integration to the unchanged 70% unit and 80% integration thresholds without exclusions or denominator tricks | CUTOVER | MAP-1; may proceed package-by-package beside disjoint milestones |
 | UPLOAD-1 | Bound and validate profile uploads with server-owned object naming and safe storage behavior | CUTOVER; [-] local validation complete on 2026-08-17, platform gates pending | HTTP-SEC-1 |
-| API-BOUND-1 | Bound list/batch/telemetry payloads and enforce ownership without exposing password material | CUTOVER | HTTP-SEC-1 |
+| API-BOUND-1 | Bound list/batch/telemetry payloads and enforce ownership without exposing password material | CUTOVER; [x] complete 2026-08-17 | HTTP-SEC-1 |
 | API-RATE-1 | Make error-report and other stateful quota checks fail closed with accurate counters | CUTOVER | API-BOUND-1 |
 | OPS-HEALTH-1 | Expose unauthenticated liveness and bounded database readiness endpoints | CUTOVER; complete locally on 2026-08-06 | API-SHUT-1 |
 | CACHE-1 | Make analytics cache writes/invalidation correct for all plans and recover Redis after transient boot failure | REVAMP | MAP-1 |
@@ -492,6 +492,15 @@ test discovery/coverage infrastructure plus tests for packages disjoint from
 tests, or this tracker. Merge order is `API-BOUND-1` first, then rebase the
 coverage lane onto that result, reconcile only test/infrastructure conflicts,
 and run the aggregate API matrix and unchanged 70%/80% thresholds.
+The coordinated `API-BOUND-1` mobile-consumer lane uses branch
+`codex/api-bound-mobile`, worktree `/tmp/decorebator-api-bound-mobile`,
+dependency `57b9cef`, and may edit only `mobile/api/**` plus focused mobile API
+tests needed to consume the server's bounded cursor contract without silently
+dropping existing wordlist, word, definition, processing-status, or analytics
+data. It must not edit API implementation, UI, native modules, this tracker, or
+coverage infrastructure. Merge the API implementation first, then rebase and
+merge this consumer lane before closing `API-BOUND-1`; the coverage lane rebases
+after both parts.
 
 | Lane | Milestones | Primary write scope | Collision and merge rule |
 |---|---|---|---|
@@ -585,6 +594,23 @@ Every UI-bearing item follows the committed HTML/React prototype, accessibility-
 
   **2026-08-17 — local implementation and Linux/Android validation complete; iOS evidence pending.** The exact Docker-backed API matrix, race-enabled API units, API format/lint, all 48 mobile suites/328 tests, mobile typecheck/lint, five native-runtime tests, the real Expo Router web export, plan validation, shell syntax, and `git diff --check` pass. Android clean prebuild/module/app compilation passes; 45 Robolectric cases pass on API 24, 28, and 36. The emitted metadata-free 1500×500 baseline JPEG passes the actual Go normalizer and the authenticated PostgreSQL/MinIO persistence test. The affected profile-image Maestro flow passes on a visible Android 14/API 34 `Large_Phone_414x896` AVD: the dev client signs in, opens Profile Settings, selects the deterministic system Photo Picker fixture, returns without an image error, and leaves a contract-valid database URL plus one MinIO object. The repeatable x86_64 AVD build/start/prepare commands are checked in. A fresh GPT-5.6 Terra `xhigh` adversarial review after the native JPEG metadata-strip correction ended `APPROVED` with no material finding. `[b] BLOCKED — owner action before closing UPLOAD-1: run the checked-in native-compatibility workflow on a macOS runner to compile the linked iOS target and execute its installed Simulator fixture. After local closure, ship matching iOS and Android 1.1.2 binaries before setting matching OTA proof; no store, OTA, production, or push action was performed.`
 - `API-BOUND-1`: assign explicit maximum IDs/items/page sizes and stable pagination to every currently unbounded list/batch endpoint; reject duplicate/invalid IDs before database work; never serialize password hashes or internal secrets; validate Realtime wordlist ownership; and cap telemetry turns, strings, numeric ranges, and body size before allocation. `REALTIME-1` separately owns trustworthy provider/session usage rather than accepting client totals as billing truth.
+  **2026-08-17 — complete.** Added explicit page, ID, body, string,
+  collection, and numeric bounds; stable composite/opaque cursors; cumulative
+  per-word definition continuations; ownership-before-persistence for Realtime
+  telemetry; and JSON redaction for password hashes and provider identifiers.
+  First-party mobile consumers now aggregate every bounded page with duplicate,
+  repeated-cursor, item/page-ceiling, and authentication-epoch guards, preserving
+  existing caller response shapes. Runtime validation caught and corrected an
+  overlong integration fixture and a missing CTE alias before the final SQL-backed
+  continuation regressions and the complete containerized API matrix passed.
+  Race-enabled affected Go packages, API format/lint, all 50 mobile Jest suites
+  (341 tests), mobile typecheck/lint, and `git diff --check` pass. A fresh
+  GPT-5.6 Terra `xhigh` adversarial review reconciled pagination compatibility,
+  analytics cache invalidation, true processing totals, preserved ordering,
+  telemetry pre-allocation bounds, and uneven-depth definition continuation,
+  then returned `APPROVED`. This closes strategy findings M-23 and M-28;
+  trustworthy provider/session usage remains owned by `REALTIME-1`, and the
+  unchanged aggregate coverage thresholds remain owned by `QA-COVERAGE-1`.
 - `API-RATE-1`: quota-read/storage errors fail closed with a typed retryable response instead of calling the protected handler; counters reflect committed real reports; cooldown/hour/day boundaries are atomic under concurrency; rejected attempts do not corrupt usage; and tests cover database failure, concurrent submissions, retries, and `Retry-After` semantics.
 
 ### Runtime and operations acceptance boundaries

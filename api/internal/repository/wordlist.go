@@ -53,6 +53,8 @@ type FindWordlistArgs struct {
 	OwnerID                  *int64
 	ComputeWordsCount        bool
 	ComputeWordsLearnedCount bool
+	Limit                    int
+	Cursor                   *int64
 }
 
 func (repository *WordlistRepository) Find(ctx context.Context, args FindWordlistArgs) ([]*Wordlist, error) {
@@ -90,6 +92,11 @@ func (repository *WordlistRepository) Find(ctx context.Context, args FindWordlis
 		whereConditions = append(whereConditions, fmt.Sprintf("wordlists.user_id = $%d", index))
 		queryArgs = append(queryArgs, *args.OwnerID)
 	}
+	if args.Cursor != nil {
+		index++
+		whereConditions = append(whereConditions, fmt.Sprintf("wordlists.id < $%d", index))
+		queryArgs = append(queryArgs, *args.Cursor)
+	}
 
 	if len(whereConditions) > 0 {
 		builder.WriteString(" WHERE ")
@@ -103,6 +110,9 @@ func (repository *WordlistRepository) Find(ctx context.Context, args FindWordlis
 
 	// Add ORDER BY
 	builder.WriteString(" ORDER BY wordlists.id DESC")
+	index++
+	builder.WriteString(fmt.Sprintf(" LIMIT $%d", index))
+	queryArgs = append(queryArgs, args.Limit)
 
 	query := builder.String()
 	rows, err := repository.Db.Query(ctx, query, queryArgs...)

@@ -31,7 +31,7 @@ func (r *RealtimeTelemetryRepository) InsertRealtimeChatTelemetry(ctx context.Co
 	if telemetry.DeviceInfo != nil {
 		deviceJSON, marshalErr := json.Marshal(telemetry.DeviceInfo)
 		if marshalErr != nil {
-			return err
+			return marshalErr
 		}
 		str := string(deviceJSON)
 		deviceJSONString = &str

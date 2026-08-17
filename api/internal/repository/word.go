@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"decorebator.com/internal/common"
@@ -18,6 +19,14 @@ type Word = model.Word
 
 type WordRepository struct {
 	Db *pgxpool.Pool
+}
+
+type WordProcessingSummary struct {
+	Total      int
+	Pending    int
+	Processing int
+	Completed  int
+	Failed     int
 }
 
 const wordlistNameUniqueConstraint = "words_wordlist_id_name_unique"
@@ -105,8 +114,14 @@ func (repository *WordRepository) ReuseDefinitions(ctx context.Context, wordID i
 
 // GetWordsByWordlist returns words from wordlist with optional filtering
 // onlyWithDefinitions: if true, returns only words that have definitions with meanings
-func (repository *WordRepository) GetWordsByWordlist(ctx context.Context, wordlistID, userID int64, onlyWithDefinitions bool) ([]Word, error) {
+func (repository *WordRepository) GetWordsByWordlist(ctx context.Context, wordlistID, userID int64, onlyWithDefinitions bool, limit int, cursor *int64) ([]Word, error) {
 	var query string
+	queryArgs := []any{wordlistID, userID}
+	cursorClause := ""
+	if cursor != nil {
+		cursorClause = " AND w.id < $3"
+		queryArgs = append(queryArgs, *cursor)
+	}
 
 	if onlyWithDefinitions {
 		query = `SELECT DISTINCT w.id, w.name, w.created_at, w.updated_at, 
@@ -117,17 +132,18 @@ func (repository *WordRepository) GetWordsByWordlist(ctx context.Context, wordli
 				FROM words w
 				INNER JOIN word_definitions wd ON w.id = wd.word_id
 				INNER JOIN definitions d ON wd.definition_id = d.id
-				WHERE w.wordlist_id=$1 AND w.user_id=$2 AND d.meaning IS NOT NULL AND d.meaning != ''
-				ORDER BY w.id DESC`
+				WHERE w.wordlist_id=$1 AND w.user_id=$2 AND d.meaning IS NOT NULL AND d.meaning != ''` + cursorClause + `
+				ORDER BY w.id DESC LIMIT $` + strconv.Itoa(len(queryArgs)+1)
 	} else {
 		query = `SELECT id, name, created_at, updated_at, COALESCE(audio_url,''), 
 					COALESCE(notes,''), COALESCE(pronunciation,''), learned,
 					processing_status, COALESCE(processing_error,''), 
 					processing_started_at, processing_completed_at
-				FROM words WHERE wordlist_id=$1 AND user_id=$2 ORDER BY id DESC`
+				FROM words AS w WHERE wordlist_id=$1 AND user_id=$2` + cursorClause + ` ORDER BY id DESC LIMIT $` + strconv.Itoa(len(queryArgs)+1)
 	}
+	queryArgs = append(queryArgs, limit)
 
-	rows, err := repository.Db.Query(ctx, query, wordlistID, userID)
+	rows, err := repository.Db.Query(ctx, query, queryArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -151,6 +167,29 @@ func (repository *WordRepository) GetWordsByWordlist(ctx context.Context, wordli
 		return nil, err
 	}
 	return words, nil
+}
+
+// GetWordProcessingSummary reports totals across the complete owned wordlist,
+// independently of the bounded page used to render item-level status.
+func (repository *WordRepository) GetWordProcessingSummary(ctx context.Context, wordlistID, userID int64) (WordProcessingSummary, error) {
+	var summary WordProcessingSummary
+	err := repository.Db.QueryRow(ctx, `
+		SELECT
+			COUNT(*),
+			COUNT(*) FILTER (WHERE processing_status = 'pending'),
+			COUNT(*) FILTER (WHERE processing_status = 'processing'),
+			COUNT(*) FILTER (WHERE processing_status = 'completed'),
+			COUNT(*) FILTER (WHERE processing_status = 'failed')
+		FROM words
+		WHERE wordlist_id = $1 AND user_id = $2
+	`, wordlistID, userID).Scan(
+		&summary.Total,
+		&summary.Pending,
+		&summary.Processing,
+		&summary.Completed,
+		&summary.Failed,
+	)
+	return summary, err
 }
 
 func (repository *WordRepository) GetByID(ctx context.Context, wordID int64) (*Word, error) {

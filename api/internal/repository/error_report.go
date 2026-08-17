@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -11,6 +12,8 @@ import (
 type ErrorReportRepository struct {
 	db *pgxpool.Pool
 }
+
+const MaxActiveErrorReportCooldowns = 100
 
 func NewErrorReportRepository(db *pgxpool.Pool) *ErrorReportRepository {
 	return &ErrorReportRepository{
@@ -65,8 +68,27 @@ func (r *ErrorReportRepository) UpdateRateLimitTracking(ctx context.Context, use
 	return err
 }
 
-// GetUserActiveCooldowns gets all active cooldowns for a user
-func (r *ErrorReportRepository) GetUserActiveCooldowns(ctx context.Context, userID int64) ([]ErrorReportCooldown, error) {
+// ErrorReportCooldownCursor is the stable keyset for active cooldowns.
+// The full ordering tuple is necessary because a user can have multiple
+// cooldowns with the same expiry time.
+type ErrorReportCooldownCursor struct {
+	CooldownUntil time.Time
+	WordID        int64
+	DefinitionID  int64
+	ErrorType     string
+}
+
+// GetUserActiveCooldowns returns a bounded, keyset-paginated cooldown page.
+func (r *ErrorReportRepository) GetUserActiveCooldowns(ctx context.Context, userID int64, limit int, cursor *ErrorReportCooldownCursor) ([]ErrorReportCooldown, error) {
+	args := []interface{}{userID}
+	cursorClause := ""
+	if cursor != nil {
+		args = append(args, cursor.CooldownUntil, cursor.WordID, cursor.DefinitionID, cursor.ErrorType)
+		cursorClause = `
+			AND (cooldown_until, COALESCE(word_id, 0), COALESCE(definition_id, 0), error_type) < ($2, $3, $4, $5)`
+	}
+	args = append(args, limit)
+
 	rows, err := r.db.Query(ctx, `
 		SELECT 
 			COALESCE(word_id, 0) as word_id,
@@ -75,8 +97,9 @@ func (r *ErrorReportRepository) GetUserActiveCooldowns(ctx context.Context, user
 			cooldown_until
 		FROM error_report_cooldowns
 		WHERE user_id = $1 AND cooldown_until > NOW()
-		ORDER BY cooldown_until DESC
-	`, userID)
+		`+cursorClause+`
+		ORDER BY cooldown_until DESC, COALESCE(word_id, 0) DESC, COALESCE(definition_id, 0) DESC, error_type DESC
+		LIMIT $`+strconv.Itoa(len(args)), args...)
 	if err != nil {
 		return nil, err
 	}

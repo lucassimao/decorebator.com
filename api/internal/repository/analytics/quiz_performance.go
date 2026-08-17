@@ -2,6 +2,7 @@ package analytics
 
 import (
 	"context"
+	"strconv"
 
 	"decorebator.com/internal/model"
 	"github.com/jackc/pgx/v5"
@@ -12,6 +13,8 @@ import (
 type QuizPerformanceRepository struct {
 	db *pgxpool.Pool
 }
+
+const maxQuizPerformanceTypes = 20
 
 // NewQuizPerformanceRepository creates a new quiz performance repository
 func NewQuizPerformanceRepository(db *pgxpool.Pool) *QuizPerformanceRepository {
@@ -84,7 +87,8 @@ func (r *QuizPerformanceRepository) GetQuizTypePerformance(ctx context.Context, 
 		FROM quiz_performance qp
 		WHERE qp.user_id = $1 AND qp.wordlist_id = $2
 		GROUP BY qp.quiz_type
-		ORDER BY success_rate DESC
+		ORDER BY success_rate DESC, qp.quiz_type ASC
+		LIMIT ` + strconv.Itoa(maxQuizPerformanceTypes) + `
 	`
 
 	rows, err := r.db.Query(ctx, query, userID, wordlistID)

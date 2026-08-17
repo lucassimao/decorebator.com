@@ -494,17 +494,24 @@ func (repository *DefinitionRepository) DidUserCreateWord(ctx context.Context, w
 	return count == 1, nil
 }
 
-func (repository *DefinitionRepository) GetDefinitionsByWordID(ctx context.Context, wordlistID, wordID, userID int64) ([]*Definition, error) {
+func (repository *DefinitionRepository) GetDefinitionsByWordID(ctx context.Context, wordlistID, wordID, userID int64, limit int, cursor *int64) ([]*Definition, error) {
+	queryArgs := []any{wordID, wordlistID, userID}
+	cursorClause := ""
+	if cursor != nil {
+		cursorClause = " AND d.id > $4"
+		queryArgs = append(queryArgs, *cursor)
+	}
 	query := `
 		SELECT d.id, d.token, d.language, d.part_of_speech, d.part_of_speech_normalized, d.is_verb_type, d.meaning, d.examples, d.inflections, 
 			   d.source, d.source_id, d.sounds, d.phonetic_notations, COALESCE(d.meaning_audio_url,''), d.created_at, d.updated_at
 		FROM definitions d
 		JOIN word_definitions wd ON wd.definition_id = d.id
 		JOIN words w ON w.id = wd.word_id
-		WHERE w.id = $1 AND w.wordlist_id = $2 AND w.user_id = $3
-		ORDER BY d.id ASC`
+		WHERE w.id = $1 AND w.wordlist_id = $2 AND w.user_id = $3` + cursorClause + `
+		ORDER BY d.id ASC LIMIT $` + strconv.Itoa(len(queryArgs)+1)
+	queryArgs = append(queryArgs, limit)
 
-	rows, err := repository.Db.Query(ctx, query, wordID, wordlistID, userID)
+	rows, err := repository.Db.Query(ctx, query, queryArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -534,6 +541,11 @@ type FindArgs struct {
 	Name *string
 }
 
+const (
+	MaxDefinitionBatchWordIDs    = 50
+	MaxDefinitionsPerBatchWordID = 50
+)
+
 func NewDefinitionRepository(db *pgxpool.Pool) *DefinitionRepository {
 	return &DefinitionRepository{Db: db}
 }
@@ -545,55 +557,96 @@ type WordDefinitionsResponse struct {
 	Definitions []Definition `json:"definitions"`
 }
 
+// DefinitionBatchPage keeps the existing response array while exposing a
+// per-word keyset for callers that need every definition.
+type DefinitionBatchPage struct {
+	Results     []WordDefinitionsResponse
+	NextCursors map[int64]int64
+}
+
 // GetDefinitionsByWordIDs fetches definitions for multiple word IDs, scoped to user and wordlist
-func (repository *DefinitionRepository) GetDefinitionsByWordIDs(ctx context.Context, wordlistID, userID int64, wordIDs []int64) ([]WordDefinitionsResponse, error) {
+func (repository *DefinitionRepository) GetDefinitionsByWordIDs(ctx context.Context, wordlistID, userID int64, wordIDs []int64, definitionCursors map[int64]int64) (DefinitionBatchPage, error) {
 	if len(wordIDs) == 0 {
-		return []WordDefinitionsResponse{}, nil
+		return DefinitionBatchPage{Results: []WordDefinitionsResponse{}}, nil
+	}
+	if len(wordIDs) > MaxDefinitionBatchWordIDs {
+		return DefinitionBatchPage{}, fmt.Errorf("definition batch may contain at most %d word IDs", MaxDefinitionBatchWordIDs)
+	}
+	requestedWordIDs := make([]int64, len(wordIDs))
+	afterDefinitionIDs := make([]int64, len(wordIDs))
+	copy(requestedWordIDs, wordIDs)
+	for index, wordID := range wordIDs {
+		afterDefinitionIDs[index] = definitionCursors[wordID]
 	}
 
 	query := `
-        SELECT 
+		WITH requested_words AS (
+			SELECT word_id, after_definition_id
+			FROM unnest($3::bigint[], $4::bigint[]) AS requested(word_id, after_definition_id)
+		), matched_definitions AS (
+		SELECT
             w.id as word_id,
             d.token as name,
             d.id, d.token, d.language, d.part_of_speech, d.part_of_speech_normalized, d.is_verb_type, d.meaning, d.examples, d.inflections,
-            d.source, d.source_id, d.sounds, d.phonetic_notations, COALESCE(d.meaning_audio_url,''), d.created_at, d.updated_at
+			d.source, d.source_id, d.sounds, d.phonetic_notations, COALESCE(d.meaning_audio_url,'') AS meaning_audio_url, d.created_at, d.updated_at,
+			ROW_NUMBER() OVER (PARTITION BY w.id ORDER BY d.id ASC) AS definition_position
         FROM words w
         JOIN word_definitions wd ON wd.word_id = w.id
         JOIN definitions d ON d.id = wd.definition_id
-        WHERE w.wordlist_id = $1 AND w.user_id = $2 AND w.id = ANY($3)
-        ORDER BY w.id ASC, d.id ASC`
+		JOIN requested_words requested ON requested.word_id = w.id
+        WHERE w.wordlist_id = $1 AND w.user_id = $2 AND d.id > requested.after_definition_id
+		)
+		SELECT word_id, name, id, token, language, part_of_speech, part_of_speech_normalized, is_verb_type, meaning, examples, inflections,
+		source, source_id, sounds, phonetic_notations, meaning_audio_url, created_at, updated_at, definition_position
+		FROM matched_definitions
+		WHERE definition_position <= $5
+		ORDER BY word_id ASC, id ASC`
 
-	rows, err := repository.Db.Query(ctx, query, wordlistID, userID, wordIDs)
+	rows, err := repository.Db.Query(ctx, query, wordlistID, userID, requestedWordIDs, afterDefinitionIDs, MaxDefinitionsPerBatchWordID+1)
 	if err != nil {
-		return nil, err
+		return DefinitionBatchPage{}, err
 	}
 	defer rows.Close()
 
 	// Group rows by word_id
 	grouped := make(map[int64]*WordDefinitionsResponse)
 	order := make([]int64, 0)
+	// Keep a complete cumulative cursor for every requested word. If any word
+	// has another page, callers must resend the whole map so words that finish
+	// earlier do not reset to definition ID zero on a later request.
+	nextCursors := make(map[int64]int64, len(wordIDs))
+	for _, wordID := range wordIDs {
+		nextCursors[wordID] = definitionCursors[wordID]
+	}
+	hasMore := false
 
 	for rows.Next() {
 		var wordID int64
 		var name string
 		var def Definition
+		var position int
 		if scanErr := rows.Scan(
 			&wordID, &name,
 			&def.ID, &def.Token, &def.Language, &def.PartOfSpeech, &def.PartOfSpeechNormalized, &def.IsVerbType, &def.Meaning,
 			&def.Examples, &def.Inflections, &def.Source, &def.SourceID, &def.Sounds, &def.PhoneticNotations,
-			&def.MeaningAudioURL, &def.CreatedAt, &def.UpdatedAt,
+			&def.MeaningAudioURL, &def.CreatedAt, &def.UpdatedAt, &position,
 		); scanErr != nil {
-			return nil, scanErr
+			return DefinitionBatchPage{}, scanErr
 		}
 
 		if _, exists := grouped[wordID]; !exists {
 			grouped[wordID] = &WordDefinitionsResponse{WordID: wordID, Name: name, Definitions: make([]Definition, 0)}
 			order = append(order, wordID)
 		}
+		if position > MaxDefinitionsPerBatchWordID {
+			hasMore = true
+			continue
+		}
 		grouped[wordID].Definitions = append(grouped[wordID].Definitions, def)
+		nextCursors[wordID] = def.ID
 	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return DefinitionBatchPage{}, err
 	}
 
 	// Preserve ascending order by first appearance
@@ -601,7 +654,10 @@ func (repository *DefinitionRepository) GetDefinitionsByWordIDs(ctx context.Cont
 	for _, id := range order {
 		results = append(results, *grouped[id])
 	}
-	return results, nil
+	if !hasMore {
+		nextCursors = nil
+	}
+	return DefinitionBatchPage{Results: results, NextCursors: nextCursors}, nil
 }
 
 func (repository *DefinitionRepository) GetDefinitionByID(ctx context.Context, definitionID int64) (*Definition, error) {

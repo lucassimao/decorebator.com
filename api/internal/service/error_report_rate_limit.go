@@ -205,11 +205,28 @@ func (s *ErrorReportRateLimitService) GetRateLimitStatus(ctx context.Context, us
 	}, nil
 }
 
-// GetUserActiveCooldowns returns all active cooldowns for a user
-func (s *ErrorReportRateLimitService) GetUserActiveCooldowns(ctx context.Context, userID int64) ([]map[string]interface{}, error) {
-	cooldowns, err := s.repo.GetUserActiveCooldowns(ctx, userID)
+// ErrorReportCooldownCursor is the stable keyset for active cooldowns.
+type ErrorReportCooldownCursor = repository.ErrorReportCooldownCursor
+
+// GetUserActiveCooldowns returns a bounded, keyset-paginated cooldown page.
+// It fetches one extra row so callers can publish a next cursor without a
+// count query.
+func (s *ErrorReportRateLimitService) GetUserActiveCooldowns(ctx context.Context, userID int64, limit int, cursor *ErrorReportCooldownCursor) ([]map[string]interface{}, *ErrorReportCooldownCursor, error) {
+	cooldowns, err := s.repo.GetUserActiveCooldowns(ctx, userID, limit+1, cursor)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
+	}
+
+	var next *ErrorReportCooldownCursor
+	if len(cooldowns) > limit {
+		lastVisible := cooldowns[limit-1]
+		next = &ErrorReportCooldownCursor{
+			CooldownUntil: lastVisible.CooldownUntil,
+			WordID:        lastVisible.WordID,
+			DefinitionID:  lastVisible.DefinitionID,
+			ErrorType:     lastVisible.ErrorType,
+		}
+		cooldowns = cooldowns[:limit]
 	}
 
 	result := make([]map[string]interface{}, len(cooldowns))
@@ -224,7 +241,7 @@ func (s *ErrorReportRateLimitService) GetUserActiveCooldowns(ctx context.Context
 		}
 	}
 
-	return result, nil
+	return result, next, nil
 }
 
 // GetErrorReportStats returns error reporting statistics for monitoring

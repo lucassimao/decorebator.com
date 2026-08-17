@@ -8,6 +8,7 @@ import (
 	"decorebator.com/internal/common"
 	"decorebator.com/internal/model"
 	"decorebator.com/internal/repository"
+	analyticsrepo "decorebator.com/internal/repository/analytics"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/sync/errgroup"
@@ -28,8 +29,8 @@ type LeitnerAnalyticsWriter interface {
 // AnalyticsServiceInterface defines the methods that both regular and cached analytics services must implement
 type AnalyticsServiceInterface interface {
 	Stats(ctx context.Context) (*model.WordlistStats, error)
-	ProgressSummary(ctx context.Context) (*model.ProgressSummaryResponse, error)
-	WordMastery(ctx context.Context) ([]model.WordMasteryStats, error)
+	ProgressSummary(ctx context.Context, limit int, cursor *int64) (*model.ProgressSummaryResponse, error)
+	WordMastery(ctx context.Context, limit int, cursor *analyticsrepo.WordMasteryCursor) ([]model.WordMasteryStats, error)
 	LearningProgress(ctx context.Context, days int) ([]model.LearningProgressStats, error)
 	QuizTypePerformance(ctx context.Context) ([]model.QuizTypePerformance, error)
 	CurrentBoxDistribution(ctx context.Context) (*model.BoxDistribution, error)
@@ -114,8 +115,8 @@ func (as *AnalyticsService) TrackQuiz(ctx context.Context, result QuizResult, tx
 }
 
 // GetWordMastery retrieves mastery stats for all words in a wordlist
-func (as *AnalyticsService) WordMastery(ctx context.Context) ([]model.WordMasteryStats, error) {
-	return as.repo.GetWordMastery(ctx, as.userID, as.wordlistID)
+func (as *AnalyticsService) WordMastery(ctx context.Context, limit int, cursor *analyticsrepo.WordMasteryCursor) ([]model.WordMasteryStats, error) {
+	return as.repo.GetWordMastery(ctx, as.userID, as.wordlistID, limit+1, cursor)
 }
 
 // GetQuizTypePerformance retrieves performance stats by quiz type for a specific wordlist
@@ -212,13 +213,17 @@ func (as *AnalyticsService) fetchWordlistCurrentStreak(ctx context.Context, user
 }
 
 // GetAllWordlistsProgress retrieves progress summary for all user's wordlists
-func (as *AnalyticsService) ProgressSummary(ctx context.Context) (*model.ProgressSummaryResponse, error) {
-	progress, err := as.repo.GetAllWordlistsProgress(ctx, as.userID)
+func (as *AnalyticsService) ProgressSummary(ctx context.Context, limit int, cursor *int64) (*model.ProgressSummaryResponse, error) {
+	progress, err := as.repo.GetAllWordlistsProgress(ctx, as.userID, limit+1, cursor)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get wordlists progress: %w", err)
 	}
 
-	dueCounts, err := as.repo.GetDueCounts(ctx, as.userID)
+	wordlistIDs := make([]int64, 0, len(progress))
+	for _, wordlist := range progress {
+		wordlistIDs = append(wordlistIDs, wordlist.WordlistID)
+	}
+	dueCounts, err := as.repo.GetDueCounts(ctx, as.userID, wordlistIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get due counts: %w", err)
 	}

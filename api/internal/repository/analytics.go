@@ -19,7 +19,7 @@ type QuizPerformanceRepositoryInterface interface {
 // WordMasteryRepositoryInterface defines word mastery operations
 type WordMasteryRepositoryInterface interface {
 	UpsertWordMastery(ctx context.Context, tx pgx.Tx, userID, wordID int64, boxID int64, isCorrect bool) error
-	GetWordMastery(ctx context.Context, userID, wordlistID int64) ([]model.WordMasteryStats, error)
+	GetWordMastery(ctx context.Context, userID, wordlistID int64, limit int, cursor *analytics.WordMasteryCursor) ([]model.WordMasteryStats, error)
 	GetWordlistMasteryStats(ctx context.Context, userID, wordlistID int64) (int, int, *float64, *int, error)
 }
 
@@ -45,8 +45,8 @@ type DashboardStatsRepositoryInterface interface {
 
 // BatchProgressRepositoryInterface defines batch progress operations
 type BatchProgressRepositoryInterface interface {
-	GetAllWordlistsProgress(ctx context.Context, userID int64) ([]model.WordlistProgress, error)
-	GetDueCounts(ctx context.Context, userID int64) (map[int64]int, error)
+	GetAllWordlistsProgress(ctx context.Context, userID int64, limit int, cursor *int64) ([]model.WordlistProgress, error)
+	GetDueCounts(ctx context.Context, userID int64, wordlistIDs []int64) (map[int64]int, error)
 }
 
 // AnalyticsRepositoryInterface combines all analytics operations
@@ -99,8 +99,8 @@ func (r *AnalyticsRepository) UpsertWordMastery(ctx context.Context, tx pgx.Tx, 
 	return r.WordMastery.UpsertWordMastery(ctx, tx, userID, wordID, boxID, isCorrect)
 }
 
-func (r *AnalyticsRepository) GetWordMastery(ctx context.Context, userID, wordlistID int64) ([]model.WordMasteryStats, error) {
-	return r.WordMastery.GetWordMastery(ctx, userID, wordlistID)
+func (r *AnalyticsRepository) GetWordMastery(ctx context.Context, userID, wordlistID int64, limit int, cursor *analytics.WordMasteryCursor) ([]model.WordMasteryStats, error) {
+	return r.WordMastery.GetWordMastery(ctx, userID, wordlistID, limit, cursor)
 }
 
 func (r *AnalyticsRepository) GetWordlistMasteryStats(ctx context.Context, userID, wordlistID int64) (int, int, *float64, *int, error) {
@@ -143,10 +143,10 @@ func (r *AnalyticsRepository) GetPracticeTime(ctx context.Context, userID, wordl
 }
 
 // Batch Progress Operations - delegate to sub-repository
-func (r *AnalyticsRepository) GetAllWordlistsProgress(ctx context.Context, userID int64) ([]model.WordlistProgress, error) {
-	return r.BatchProgress.GetAllWordlistsProgress(ctx, userID)
+func (r *AnalyticsRepository) GetAllWordlistsProgress(ctx context.Context, userID int64, limit int, cursor *int64) ([]model.WordlistProgress, error) {
+	return r.BatchProgress.GetAllWordlistsProgress(ctx, userID, limit, cursor)
 }
 
-func (r *AnalyticsRepository) GetDueCounts(ctx context.Context, userID int64) (map[int64]int, error) {
-	return r.BatchProgress.GetDueCounts(ctx, userID)
+func (r *AnalyticsRepository) GetDueCounts(ctx context.Context, userID int64, wordlistIDs []int64) (map[int64]int, error) {
+	return r.BatchProgress.GetDueCounts(ctx, userID, wordlistIDs)
 }

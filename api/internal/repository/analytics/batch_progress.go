@@ -3,6 +3,7 @@ package analytics
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"decorebator.com/internal/model"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -41,7 +42,13 @@ func NewBatchProgressRepository(db *pgxpool.Pool) *BatchProgressRepository {
 //   - Returns: wordlist_id, name, language_code, totals, mastery stats, streak, last_activity
 //
 // Used for dashboard overview showing all wordlists with comprehensive progress metrics.
-func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, userID int64) ([]model.WordlistProgress, error) {
+func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, userID int64, limit int, cursor *int64) ([]model.WordlistProgress, error) {
+	queryArgs := []any{userID}
+	cursorClause := ""
+	if cursor != nil {
+		cursorClause = " AND wl.id > $2"
+		queryArgs = append(queryArgs, *cursor)
+	}
 	query := `
 		WITH wordlist_stats AS (
 			SELECT 
@@ -58,7 +65,7 @@ func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, u
 			FROM wordlists wl
 			LEFT JOIN words w ON wl.id = w.wordlist_id AND w.user_id = $1 AND w.learned = FALSE
 			LEFT JOIN word_mastery wm ON w.id = wm.word_id AND wm.user_id = $1
-			WHERE wl.user_id = $1
+			WHERE wl.user_id = $1` + cursorClause + `
 			GROUP BY wl.id, wl.name, wl.language_code
 		),
 		recent_activity AS (
@@ -122,10 +129,11 @@ func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, u
 		FROM wordlist_stats ws
 		LEFT JOIN recent_activity ra ON ws.wordlist_id = ra.wordlist_id
 		LEFT JOIN streaks s ON ws.wordlist_id = s.wordlist_id
-		ORDER BY ws.wordlist_id;
-	`
+		ORDER BY ws.wordlist_id ASC
+		LIMIT $` + strconv.Itoa(len(queryArgs)+1)
+	queryArgs = append(queryArgs, limit)
 
-	rows, err := r.db.Query(ctx, query, userID)
+	rows, err := r.db.Query(ctx, query, queryArgs...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get wordlists progress: %w", err)
 	}
@@ -156,7 +164,10 @@ func (r *BatchProgressRepository) GetAllWordlistsProgress(ctx context.Context, u
 // GetDueCounts returns a fresh per-wordlist count of definitions due now. It is
 // intentionally separate from the cacheable progress aggregates because the
 // answer changes as next_review_at crosses the current time.
-func (r *BatchProgressRepository) GetDueCounts(ctx context.Context, userID int64) (map[int64]int, error) {
+func (r *BatchProgressRepository) GetDueCounts(ctx context.Context, userID int64, wordlistIDs []int64) (map[int64]int, error) {
+	if len(wordlistIDs) == 0 {
+		return map[int64]int{}, nil
+	}
 	query := `
 		SELECT
 			w.wordlist_id,
@@ -166,6 +177,7 @@ func (r *BatchProgressRepository) GetDueCounts(ctx context.Context, userID int64
 		JOIN words w ON w.id = lst.word_id
 		JOIN word_definitions wd ON wd.definition_id = lst.definition_id AND wd.word_id = lst.word_id
 		WHERE lst.user_id = $1
+			AND w.wordlist_id = ANY($2)
 			AND w.user_id = $1
 			AND w.learned = FALSE
 			AND def.meaning IS NOT NULL
@@ -175,7 +187,7 @@ func (r *BatchProgressRepository) GetDueCounts(ctx context.Context, userID int64
 		GROUP BY w.wordlist_id
 	`
 
-	rows, err := r.db.Query(ctx, query, userID)
+	rows, err := r.db.Query(ctx, query, userID, wordlistIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get due counts: %w", err)
 	}

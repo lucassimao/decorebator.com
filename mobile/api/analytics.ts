@@ -1,5 +1,6 @@
 import { callAPI } from "./api";
 import { getApiBaseUrl } from "./baseUrl";
+import { getAllPages, PaginationError } from "./pagination";
 
 export interface WordlistStats {
   totalWords: number;
@@ -101,8 +102,11 @@ export async function getWordlistWordMastery(
   wordlistId: number,
 ): Promise<WordMasteryStats[]> {
   const endpoint = `${BASE_URL}/analytics/wordlists/${wordlistId}/word-mastery`;
-  const payload = await callAPI<{ stats: WordMasteryStats[] }>("GET", endpoint);
-  return payload.stats || [];
+  return getAllPages<{ stats: WordMasteryStats[] }, WordMasteryStats>({
+    endpoint,
+    getItems: (payload) => requireArray(payload?.stats, "word mastery stats"),
+    getItemKey: (stat) => requireItemKey(stat.wordId, "word mastery stat"),
+  });
 }
 
 // 3) Get learning progress for the last N days
@@ -259,10 +263,31 @@ export interface ProgressSummaryResponse {
 
 export async function getProgressSummary(): Promise<ProgressSummaryResponse> {
   const endpoint = `${BASE_URL}/analytics/progress-summary`;
-  const response = await callAPI<ProgressSummaryResponse>("GET", endpoint);
-
-  // Ensure valid response structure - this is critical for DashboardStats
   return {
-    wordlists: Array.isArray(response.wordlists) ? response.wordlists : [],
+    wordlists: await getAllPages<ProgressSummaryResponse, WordlistProgress>({
+      endpoint,
+      getItems: (response) =>
+        requireArray(response?.wordlists, "progress summary wordlists"),
+      getItemKey: (wordlist) =>
+        requireItemKey(wordlist.wordlistId, "progress summary wordlist"),
+    }),
   };
+}
+
+function requireArray<T>(value: unknown, responseField: string): T[] {
+  if (!Array.isArray(value)) {
+    throw new PaginationError(
+      `Invalid paginated ${responseField} response: expected an array`,
+    );
+  }
+  return value as T[];
+}
+
+function requireItemKey(value: unknown, itemName: string): string {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
+    throw new PaginationError(
+      `Invalid paginated ${itemName} response: expected a positive ID`,
+    );
+  }
+  return String(value);
 }

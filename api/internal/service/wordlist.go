@@ -28,11 +28,13 @@ func NewWordlistService(db *pgxpool.Pool) *WordlistService {
 // Legacy global instance for backward compatibility during migration
 
 // GetUserWordlistsWithWordStats returns wordlists with word statistics
-func (wls *WordlistService) GetUserWordlistsWithWordStats(ctx context.Context, userID int64) ([]*Wordlist, error) {
+func (wls *WordlistService) GetUserWordlistsWithWordStats(ctx context.Context, userID int64, limit int, cursor *int64) ([]*Wordlist, error) {
 	args := repo.FindWordlistArgs{
 		OwnerID:                  &userID,
 		ComputeWordsCount:        true,
 		ComputeWordsLearnedCount: true,
+		Limit:                    limit + 1,
+		Cursor:                   cursor,
 	}
 	result, err := wls.repository.Find(ctx, args)
 	if err != nil {
@@ -60,6 +62,7 @@ func (wls *WordlistService) GetWordlistByID(ctx context.Context, id, userID int6
 	args := repo.FindWordlistArgs{
 		ID:      &id,
 		OwnerID: &userID,
+		Limit:   1,
 	}
 	result, err := wls.repository.Find(ctx, args)
 	if err != nil {

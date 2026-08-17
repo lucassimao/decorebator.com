@@ -2,6 +2,7 @@ package analytics
 
 import (
 	"context"
+	"strconv"
 
 	"decorebator.com/internal/model"
 	"github.com/jackc/pgx/v5"
@@ -90,7 +91,30 @@ func (r *WordMasteryRepository) UpsertWordMastery(ctx context.Context, tx pgx.Tx
 // - Orders by mastery_level DESC, then last_seen_at DESC for best-first sorting
 //
 // Returns array of WordMasteryStats with comprehensive learning metrics per word.
-func (r *WordMasteryRepository) GetWordMastery(ctx context.Context, userID, wordlistID int64) ([]model.WordMasteryStats, error) {
+func (r *WordMasteryRepository) GetWordMastery(ctx context.Context, userID, wordlistID int64, limit int, cursor *WordMasteryCursor) ([]model.WordMasteryStats, error) {
+	queryArgs := []any{userID, wordlistID}
+	cursorClause := ""
+	if cursor != nil {
+		if cursor.LastSeenAt == nil {
+			cursorClause = ` AND (
+				wm.mastery_level < $3::numeric OR
+				(wm.mastery_level = $3::numeric AND (
+					wm.last_seen_at IS NOT NULL OR
+					(wm.last_seen_at IS NULL AND wm.word_id < $4)
+				))
+			)`
+			queryArgs = append(queryArgs, cursor.MasteryLevel, cursor.WordID)
+		} else {
+			cursorClause = ` AND (
+				wm.mastery_level < $3::numeric OR
+				(wm.mastery_level = $3::numeric AND (
+					wm.last_seen_at < $4 OR
+					(wm.last_seen_at = $4 AND wm.word_id < $5)
+				))
+			)`
+			queryArgs = append(queryArgs, cursor.MasteryLevel, *cursor.LastSeenAt, cursor.WordID)
+		}
+	}
 	query := `
 		SELECT 
 			wm.word_id,
@@ -111,13 +135,14 @@ func (r *WordMasteryRepository) GetWordMastery(ctx context.Context, userID, word
 		WHERE wm.user_id = $1 
 		  AND w.user_id = $1
 		  AND w.wordlist_id = $2 
-		  AND w.learned = FALSE  -- Only show active learning words
+		  AND w.learned = FALSE` + cursorClause + ` -- Only show active learning words
 		GROUP BY wm.word_id, w.name, wm.mastery_level, 
 				 wm.total_attempts, wm.correct_attempts, wm.streak_count, wm.last_seen_at
-		ORDER BY wm.mastery_level DESC, wm.last_seen_at DESC
-	`
+		ORDER BY wm.mastery_level DESC, wm.last_seen_at DESC NULLS FIRST, wm.word_id DESC
+		LIMIT $` + strconv.Itoa(len(queryArgs)+1)
+	queryArgs = append(queryArgs, limit)
 
-	rows, err := r.db.Query(ctx, query, userID, wordlistID)
+	rows, err := r.db.Query(ctx, query, queryArgs...)
 	if err != nil {
 		return nil, err
 	}

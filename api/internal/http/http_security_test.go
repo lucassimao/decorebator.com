@@ -45,6 +45,8 @@ func TestCORSUsesExplicitAllowlistAndStopsRejectedOrigins(t *testing.T) {
 	assert.NotContains(t, allowed.Header().Get("Access-Control-Allow-Headers"), "Cookie")
 	assert.NotContains(t, allowed.Header().Get("Access-Control-Allow-Headers"), "Authorization")
 	assert.NotContains(t, allowed.Header().Get("Access-Control-Expose-Headers"), "Authorization")
+	assert.Contains(t, allowed.Header().Get("Access-Control-Expose-Headers"), "X-Next-Cursor")
+	assert.Contains(t, allowed.Header().Get("Access-Control-Expose-Headers"), "X-Definitions-Continuation")
 
 	rejected := httptest.NewRecorder()
 	rejectedRequest := httptest.NewRequest(http.MethodPost, "/state", nil)

@@ -164,6 +164,16 @@ func GetSubscriptionStatus(subRepo *repository.SubscriptionRepository) gin.Handl
 // GetSubscriptionHistory returns the user's subscription history
 func GetSubscriptionHistory(subRepo *repository.SubscriptionRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		limit, pageErr := parsePageLimit(c)
+		if pageErr != nil {
+			writeInvalidPage(c, pageErr)
+			return
+		}
+		cursor, cursorErr := parseSubscriptionCursor(c.Query("cursor"))
+		if cursorErr != nil {
+			writeInvalidPage(c, cursorErr)
+			return
+		}
 		// Get user from context
 		userAny, exists := c.Get("user")
 		if !exists {
@@ -177,13 +187,13 @@ func GetSubscriptionHistory(subRepo *repository.SubscriptionRepository) gin.Hand
 		}
 
 		// Get subscription history
-		subscriptions, err := subRepo.GetUserSubscriptionHistory(c.Request.Context(), user.ID)
+		subscriptions, err := subRepo.GetUserSubscriptionHistory(c.Request.Context(), user.ID, limit+1, cursor)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get subscription history"})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"subscriptions": subscriptions})
+		c.JSON(http.StatusOK, gin.H{"subscriptions": pageItemsWithCursor(c, limit, subscriptions, encodeSubscriptionCursor)})
 	}
 }
 

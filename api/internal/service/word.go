@@ -24,6 +24,8 @@ type WordService struct {
 	leitnerTrackingService *LeitnerTrackingService
 }
 
+type WordProcessingSummary = repo.WordProcessingSummary
+
 // NewWordService creates a new word service with dependencies
 func NewWordService(db *pgxpool.Pool, definitionService *DefinitionService, jobService JobService, leitnerTrackingService *LeitnerTrackingService) *WordService {
 	return &WordService{
@@ -35,8 +37,12 @@ func NewWordService(db *pgxpool.Pool, definitionService *DefinitionService, jobS
 }
 
 // GetWordByWordlist returns words from wordlist with optional filtering
-func (ws *WordService) GetWordByWordlist(ctx context.Context, wordlistID, userID int64, onlyWithDefinitions bool) ([]Word, error) {
-	return ws.repository.GetWordsByWordlist(ctx, wordlistID, userID, onlyWithDefinitions)
+func (ws *WordService) GetWordByWordlist(ctx context.Context, wordlistID, userID int64, onlyWithDefinitions bool, limit int, cursor *int64) ([]Word, error) {
+	return ws.repository.GetWordsByWordlist(ctx, wordlistID, userID, onlyWithDefinitions, limit+1, cursor)
+}
+
+func (ws *WordService) GetWordProcessingSummary(ctx context.Context, wordlistID, userID int64) (WordProcessingSummary, error) {
+	return ws.repository.GetWordProcessingSummary(ctx, wordlistID, userID)
 }
 
 func (ws *WordService) GetWordByID(ctx context.Context, id int64) (*Word, error) {

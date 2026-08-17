@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"decorebator.com/internal/model"
@@ -13,6 +14,13 @@ import (
 
 type SubscriptionRepository struct {
 	db *pgxpool.Pool
+}
+
+// SubscriptionHistoryCursor preserves the legacy created_at-descending history
+// order and uses ID as its unique tie-breaker.
+type SubscriptionHistoryCursor struct {
+	CreatedAt time.Time
+	ID        int64
 }
 
 func NewSubscriptionRepository(db *pgxpool.Pool) *SubscriptionRepository {
@@ -240,18 +248,25 @@ func (r *SubscriptionRepository) HasProcessedEvent(ctx context.Context, external
 }
 
 // GetUserSubscriptionHistory retrieves all subscriptions for a user
-func (r *SubscriptionRepository) GetUserSubscriptionHistory(ctx context.Context, userID int64) ([]*model.Subscription, error) {
+func (r *SubscriptionRepository) GetUserSubscriptionHistory(ctx context.Context, userID int64, limit int, cursor *SubscriptionHistoryCursor) ([]*model.Subscription, error) {
+	queryArgs := []any{userID}
+	cursorClause := ""
+	if cursor != nil {
+		cursorClause = " AND (created_at, id) < ($2, $3)"
+		queryArgs = append(queryArgs, cursor.CreatedAt, cursor.ID)
+	}
 	query := `
 		SELECT id, user_id, stripe_subscription_id, stripe_customer_id,
 			   plan, status, current_period_start, current_period_end,
 			   cancel_at_period_end, canceled_at, trial_end,
 			   amount_cents, currency, created_at, updated_at
 		FROM subscriptions
-		WHERE user_id = $1
-		ORDER BY created_at DESC
-	`
+		WHERE user_id = $1` + cursorClause + `
+		ORDER BY created_at DESC, id DESC
+		LIMIT $` + strconv.Itoa(len(queryArgs)+1)
+	queryArgs = append(queryArgs, limit)
 
-	rows, err := r.db.Query(ctx, query, userID)
+	rows, err := r.db.Query(ctx, query, queryArgs...)
 	if err != nil {
 		return nil, err
 	}
