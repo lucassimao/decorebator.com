@@ -37,6 +37,9 @@ type AppContextConfigFunc func(builder *app.ContextBuilder) *app.ContextBuilder
 
 // NewTestServer creates a new test server instance using the real API routes
 func NewTestServer(t *testing.T, configFunc ...AppContextConfigFunc) *TestServer {
+	// Access-token validation binds tokens to ENV. Keep the real test server
+	// self-contained even when callers invoke go test outside the shell runner.
+	t.Setenv("ENV", "test")
 	if os.Getenv("RESET_PASSWORD_PRIVATE_KEY") == "" {
 		t.Setenv("RESET_PASSWORD_PRIVATE_KEY", "test-reset-password-key-32-chars")
 	}
