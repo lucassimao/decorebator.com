@@ -479,6 +479,20 @@ Milestone acceptance evidence is cumulative: a focused regression must fail befo
 
 The catalog supports hybrid parallelism, not unrestricted concurrency. Before opening worktrees, the integration owner records the exact milestone IDs, branches, allowed paths, dependency SHA, and merge order in the execution plan. The following are maximum scopes; a milestone narrows them further.
 
+**2026-08-17 active lanes.** Integration owner remains on
+`claude/mobile-app-revamp-strategy-eitc81` and alone owns this tracker.
+`API-BOUND-1` uses branch `codex/api-bound-1`, worktree
+`/tmp/decorebator-api-bound-1`, dependency `a990025`, and may edit bounded
+list/batch/telemetry HTTP, service, repository, and focused contract-test paths
+under `api/`; it must not edit upload/account-cleanup behavior or this tracker.
+`QA-COVERAGE-1` uses branch `codex/qa-coverage-1`, worktree
+`/tmp/decorebator-qa-coverage-1`, dependency `a990025`, and is restricted to
+test discovery/coverage infrastructure plus tests for packages disjoint from
+`API-BOUND-1`; it must not rewrite production behavior, thresholds, upload
+tests, or this tracker. Merge order is `API-BOUND-1` first, then rebase the
+coverage lane onto that result, reconcile only test/infrastructure conflicts,
+and run the aggregate API matrix and unchanged 70%/80% thresholds.
+
 | Lane | Milestones | Primary write scope | Collision and merge rule |
 |---|---|---|---|
 | Integration/tracker | `MAP-1`, shared contracts, final validation | `docs/MOBILE_APP_REVAMP_EXECUTION_PLAN.md`, cross-package contract docs, migration-number allocation | Sole owner of the tracker and next migration number; contract lands before consumer lanes rebase |

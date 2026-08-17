@@ -98,9 +98,9 @@ try pickerExactHandle.truncate(atOffset: UInt64(ProfileImagePickerBoundedCopy.ma
 try pickerExactHandle.close()
 let pickerExactTarget = root.appendingPathComponent("picker-exact-target.bin")
 try ProfileImagePickerBoundedCopy.copy(from: pickerExactSource, to: pickerExactTarget)
+let pickerExactSize = try pickerExactTarget.resourceValues(forKeys: [.fileSizeKey]).fileSize
 try requireSmoke(
-  (try pickerExactTarget.resourceValues(forKeys: [.fileSizeKey]).fileSize) ==
-    ProfileImagePickerBoundedCopy.maxBytes,
+  pickerExactSize == ProfileImagePickerBoundedCopy.maxBytes,
   "picker handoff changed an exact-limit source"
 )
 
@@ -123,8 +123,10 @@ let malformedPickerSource = root.appendingPathComponent("picker-malformed-source
 try Data("metadata probe must happen later".utf8).write(to: malformedPickerSource)
 let malformedPickerTarget = root.appendingPathComponent("picker-malformed-target.bin")
 try ProfileImagePickerBoundedCopy.copy(from: malformedPickerSource, to: malformedPickerTarget)
+let malformedPickerTargetData = try Data(contentsOf: malformedPickerTarget)
+let malformedPickerSourceData = try Data(contentsOf: malformedPickerSource)
 try requireSmoke(
-  try Data(contentsOf: malformedPickerTarget) == Data(contentsOf: malformedPickerSource),
+  malformedPickerTargetData == malformedPickerSourceData,
   "picker handoff decoded or changed malformed input"
 )
 
@@ -207,8 +209,9 @@ try exactHandle.truncate(atOffset: UInt64(maxProfileImageSourceBytes))
 try exactHandle.close()
 let exactSnapshot = root.appendingPathComponent("exact-snapshot.bin")
 try ProfileImageProcessorCore.snapshotSource(inputURL: exactSource, snapshotURL: exactSnapshot)
+let exactSnapshotSize = try exactSnapshot.resourceValues(forKeys: [.fileSizeKey]).fileSize
 try requireSmoke(
-  (try exactSnapshot.resourceValues(forKeys: [.fileSizeKey]).fileSize) == maxProfileImageSourceBytes,
+  exactSnapshotSize == maxProfileImageSourceBytes,
   "exact source byte limit was not preserved"
 )
 
@@ -231,11 +234,12 @@ let large = try ProfileImageProcessorCore.prepare(inputURL: largeInput, outputUR
 try requireSmoke(large.sourceWidth == 3000 && large.sourceHeight == 1000, "source dimensions changed")
 try requireSmoke(max(large.width, large.height) <= 2048, "output dimensions exceed limit")
 try requireSmoke(large.size > 0 && large.size <= 5 * 1024 * 1024, "output byte size is invalid")
-let markers = jpegFrameMarkers(try Data(contentsOf: largeOutput))
+let largeOutputData = try Data(contentsOf: largeOutput)
+let markers = jpegFrameMarkers(largeOutputData)
 try requireSmoke(markers.contains(0xc0), "output is not baseline JPEG")
 try requireSmoke(!markers.contains(0xc2), "output is progressive JPEG")
 try requireSmoke(
-  jpegMetadataMarkers(try Data(contentsOf: largeOutput)).isEmpty,
+  jpegMetadataMarkers(largeOutputData).isEmpty,
   "output retained JPEG metadata"
 )
 

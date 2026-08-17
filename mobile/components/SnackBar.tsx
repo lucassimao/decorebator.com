@@ -27,7 +27,7 @@ export default function SnackBar({
 }: SnackBarProps) {
   const translateY = useRef(new Animated.Value(100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
-  const timeoutRef = useRef<number>(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { t } = useTranslation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
@@ -78,6 +78,7 @@ export default function SnackBar({
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
     };
   }, [visible, duration, hide, opacity, translateY]);
